@@ -57,7 +57,6 @@ import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionToken;
 import org.fedoraproject.candlepin.model.User;
-import org.fedoraproject.candlepin.model.UserCurator;
 import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.pki.PKIReader;
 import org.fedoraproject.candlepin.pki.impl.BouncyCastlePKIReader;
@@ -67,8 +66,6 @@ import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestDateUtil;
 import org.fedoraproject.candlepin.test.TestUtil;
-import org.jboss.resteasy.plugins.providers.atom.Entry;
-import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -653,73 +650,6 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         Event e1 = eventFactory.consumerCreated(consumer);
         eventCurator.create(e1);
         return e1;
-    }
-
-    @Test
-    public void testConsumersAtomFeed() {
-        Owner owner2 = new Owner("anotherOwner");
-        ownerCurator.create(owner2);
-
-        securityInterceptor.enable();
-        crudInterceptor.enable();
-
-        // Make a consumer, we'll look for this creation event:
-        Event e1 = createConsumerCreatedEvent(owner);
-        Consumer c = consumerCurator.find(e1.getEntityId());
-
-        // Make another consumer in this org, we do *not* want to see this in
-        // the results:
-        createConsumerCreatedEvent(owner);
-
-        // Create another consumer in a different org, again do not want to see
-        // this:
-        securityInterceptor.disable();
-        crudInterceptor.disable();
-        setupPrincipal(owner2, Access.ALL);
-        securityInterceptor.enable();
-        crudInterceptor.enable();
-        createConsumerCreatedEvent(owner2);
-
-        // Make sure we're acting as the correct owner admin:
-        securityInterceptor.disable();
-        crudInterceptor.disable();
-        setupPrincipal(principal);
-        securityInterceptor.enable();
-        crudInterceptor.enable();
-
-        Feed feed = consumerResource.getConsumerAtomFeed(c.getUuid());
-        assertEquals(1, feed.getEntries().size());
-        Entry entry = feed.getEntries().get(0);
-        assertEquals(e1.getTimestamp(), entry.getPublished());
-    }
-
-    @Test(expected = ForbiddenException.class)
-    public void testOwnerCannotAccessAnotherOwnersAtomFeed() {
-        Owner owner2 = new Owner("anotherOwner");
-        ownerCurator.create(owner2);
-
-        securityInterceptor.enable();
-        crudInterceptor.enable();
-
-        Event e1 = createConsumerCreatedEvent(owner);
-        Consumer c = consumerCurator.find(e1.getEntityId());
-
-        // Should see no results:
-        setupPrincipal(owner2, Access.ALL);
-        consumerResource.getConsumerAtomFeed(c.getUuid());
-    }
-
-    @Test(expected = ForbiddenException.class)
-    public void testConsumerRoleCannotAccessAtomFeed() {
-        Consumer c = TestUtil.createConsumer(owner);
-        consumerTypeCurator.create(c.getType());
-        consumerCurator.create(c);
-        setupPrincipal(new ConsumerPrincipal(c));
-
-        securityInterceptor.enable();
-        crudInterceptor.enable();
-
-        consumerResource.getConsumerAtomFeed(c.getUuid());
     }
 
     /**

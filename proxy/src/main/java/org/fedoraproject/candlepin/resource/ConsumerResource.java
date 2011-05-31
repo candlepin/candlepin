@@ -833,19 +833,6 @@ public class ConsumerResource {
     }
 
     @GET
-    @Produces("application/atom+xml")
-    @Path("{consumer_uuid}/atom")
-    public Feed getConsumerAtomFeed(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
-        String path = String.format("/consumers/%s/atom", consumerUuid);
-        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
-        Feed feed = this.eventAdapter.toFeed(
-            this.eventCurator.listMostRecent(FEED_LIMIT, consumer), path);
-        feed.setTitle("Event feed for consumer " + consumer.getUuid());
-        return feed;
-    }
-
-    @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}/events")
     public List<Event> getConsumerEvents(

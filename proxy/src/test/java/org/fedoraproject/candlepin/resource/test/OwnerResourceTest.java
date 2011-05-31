@@ -393,27 +393,87 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ownerResource.getOwnerAtomFeed(owner.getKey());
     }
 
+    @Test(expected = ForbiddenException.class)
+    public void consumerCannotAccessConsumerAtomFeed() {
+        Consumer c = TestUtil.createConsumer(owner);
+        consumerTypeCurator.create(c.getType());
+        consumerCurator.create(c);
+        setupPrincipal(new ConsumerPrincipal(c));
+
+        securityInterceptor.enable();
+        crudInterceptor.enable();
+
+        ownerResource.getConsumerAtomFeed(owner.getKey(), c.getUuid());
+    }
+
+    @Test(expected = ForbiddenException.class)
+    public void ownerCannotAccessAnotherOwnersConsumerAtomFeed() {
+        Owner owner2 = new Owner("anotherOwner");
+        ownerCurator.create(owner2);
+
+        securityInterceptor.enable();
+        crudInterceptor.enable();
+
+        Event e1 = createConsumerCreatedEvent(owner);
+        Consumer c = consumerCurator.find(e1.getEntityId());
+
+        // Should see no results:
+        setupPrincipal(owner2, Access.ALL);
+        ownerResource.getConsumerAtomFeed(owner.getKey(), c.getUuid());
+    }
+
     @Test
-    public void testEntitlementsRevocationWithFifoOrder() {
+    public void consumersAtomFeed() {
+        Owner owner2 = new Owner("anotherOwner");
+        ownerCurator.create(owner2);
+
+        // Make a consumer, we'll look for this creation event:
+        Event e1 = createConsumerCreatedEvent(owner);
+        Consumer c = consumerCurator.find(e1.getEntityId());
+
+        // Make another consumer in this org, we do *not* want to see this in
+        // the results:
+        createConsumerCreatedEvent(owner);
+
+        // Create another consumer in a different org, again do not want to see
+        // this:
+        setupPrincipal(owner2, Access.ALL);
+        // leaving the interceptors off here because consumer types are created
+        // by the test harness, which will fail if the interceptors are turned on
+        createConsumerCreatedEvent(owner2);
+
+        // Make sure we're acting as the correct owner admin:
+        setupPrincipal(owner, Access.ALL);
+        securityInterceptor.enable();
+        crudInterceptor.enable();
+
+        Feed feed = ownerResource.getConsumerAtomFeed(owner.getKey(), c.getUuid());
+        assertEquals(1, feed.getEntries().size());
+        Entry entry = feed.getEntries().get(0);
+        assertEquals(e1.getTimestamp(), entry.getPublished());
+    }
+
+    @Test
+    public void testEntitlementsRevocationWithFifoOrder() throws Exception {
         Pool pool = doTestEntitlementsRevocationCommon(7, 4, 4, true);
         assertTrue(this.poolCurator.find(pool.getId()).getConsumed() == 4);
     }
 
     @Test
-    public void testEntitlementsRevocationWithLifoOrder() {
+    public void testEntitlementsRevocationWithLifoOrder() throws Exception {
         Pool pool = doTestEntitlementsRevocationCommon(7, 4, 5, false);
         assertEquals(5L, this.poolCurator.find(pool.getId()).getConsumed()
             .longValue());
     }
 
     @Test
-    public void testEntitlementsRevocationWithNoOverflow() {
+    public void testEntitlementsRevocationWithNoOverflow() throws Exception {
         Pool pool = doTestEntitlementsRevocationCommon(10, 4, 5, false);
         assertTrue(this.poolCurator.find(pool.getId()).getConsumed() == 9);
     }
 
     private Pool doTestEntitlementsRevocationCommon(long subQ, int e1, int e2,
-        boolean fifo) {
+        boolean fifo) throws ParseException {
         Product prod = TestUtil.createProduct();
         productCurator.create(prod);
         Pool pool = createPoolAndSub(createOwner(), prod, 1000L,
@@ -445,7 +505,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
      * @return
      */
     private Entitlement createEntitlementWithQ(Pool pool, Owner owner,
-        Consumer consumer, int quantity, String date) {
+        Consumer consumer, int quantity, String date) throws ParseException {
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
         Entitlement e1 = createEntitlement(owner, consumer, pool, null);
         e1.setQuantity(quantity);
@@ -454,13 +514,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         this.entitlementCurator.create(e1);
         this.poolCurator.merge(e1.getPool());
         this.poolCurator.refresh(pool);
-        try {
-            e1.setCreated(dateFormat.parse(date));
-            this.entitlementCurator.merge(e1);
-        }
-        catch (ParseException e) {
-            e.printStackTrace();
-        }
+
+        e1.setCreated(dateFormat.parse(date));
+        this.entitlementCurator.merge(e1);
+        
         return e1;
     }
 

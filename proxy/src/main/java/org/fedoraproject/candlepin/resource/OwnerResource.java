@@ -421,6 +421,20 @@ public class OwnerResource {
     }
 
     @GET
+    @Produces("application/atom+xml")
+    @Path("{owner_key}/consumers/{consumer_uuid}/atom")
+    public Feed getConsumerAtomFeed(
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
+        @PathParam("consumer_uuid") String consumerUuid) {
+        String path = String.format("/consumers/%s/atom", consumerUuid);
+        Consumer consumer = findConsumer(consumerUuid);
+        Feed feed = this.eventAdapter.toFeed(
+            this.eventCurator.listMostRecent(FEED_LIMIT, consumer), path);
+        feed.setTitle("Event feed for consumer " + consumer.getUuid());
+        return feed;
+    }
+
+    @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/events")
     public List<Event> getEvents(@PathParam("owner_key") String ownerKey) {
@@ -474,6 +488,16 @@ public class OwnerResource {
         }
 
         return user;
+    }
+
+    private Consumer findConsumer(String consumerUuid) {
+        Consumer consumer = consumerCurator.findByUuid(consumerUuid);
+
+        if (consumer == null) {
+            throw new NotFoundException(i18n.tr("No such consumer: {0}",
+                consumerUuid));
+        }
+        return consumer;
     }
 
     /**
