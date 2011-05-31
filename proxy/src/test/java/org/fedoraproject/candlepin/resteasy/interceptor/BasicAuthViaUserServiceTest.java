@@ -18,15 +18,20 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.when;
 
-import org.apache.commons.codec.binary.Base64;
 import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
+import org.fedoraproject.candlepin.auth.permissions.Permission;
+import org.fedoraproject.candlepin.exceptions.UnauthorizedException;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.OwnerPermission;
 import org.fedoraproject.candlepin.model.Role;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
+
+import com.google.inject.Injector;
+
+import org.apache.commons.codec.binary.Base64;
 import org.jboss.resteasy.specimpl.HttpHeadersImpl;
 import org.jboss.resteasy.specimpl.MultivaluedMapImpl;
 import org.jboss.resteasy.spi.HttpRequest;
@@ -34,14 +39,15 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
 
-import com.google.inject.Injector;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
-import org.fedoraproject.candlepin.auth.permissions.Permission;
 
 public class BasicAuthViaUserServiceTest {
 
@@ -58,6 +64,8 @@ public class BasicAuthViaUserServiceTest {
         headers = new HttpHeadersImpl();
         headers.setRequestHeaders(new MultivaluedMapImpl<String, String>());
         when(request.getHttpHeaders()).thenReturn(headers);
+        I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
+        when(injector.getInstance(I18n.class)).thenReturn(i18n);
         this.auth = new BasicAuth(userService, ownerCurator, injector);
     }
 
@@ -87,7 +95,7 @@ public class BasicAuthViaUserServiceTest {
      *
      * @throws Exception
      */
-    @Test
+    @Test(expected = UnauthorizedException.class)
     public void invalidUserPassword() throws Exception {
         setUserAndPassword("billy", "madison");
         when(userService.validateUser("billy", "madison")).thenReturn(false);
