@@ -289,8 +289,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals(2, pools.size());
     }
 
-    @Test
-    public void testOwnerAdminCannotAccessAnotherOwnersPools() {
+    @Test(expected=ForbiddenException.class)
+    public void ownerAdminCannotAccessAnotherOwnersPools() {
         Owner evilOwner = new Owner("evilowner");
         ownerCurator.create(evilOwner);
         setupPrincipal(evilOwner, Access.ALL);
@@ -306,9 +306,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         crudInterceptor.enable();
 
         // Filtering should just cause this to return no results:
-        List<Pool> pools = ownerResource.ownerEntitlementPools(owner.getKey(),
-            null, null, true, null);
-        assertEquals(0, pools.size());
+        ownerResource.ownerEntitlementPools(owner.getKey(), null, null, true, null);
     }
 
     @Test(expected = ForbiddenException.class)
@@ -345,12 +343,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testOwnersAtomFeed() {
+    public void ownersAtomFeed() {
         Owner owner2 = new Owner("anotherOwner");
         ownerCurator.create(owner2);
-
-        securityInterceptor.enable();
-        crudInterceptor.enable();
 
         Event e1 = createConsumerCreatedEvent(owner);
         // Make an event from another owner:
@@ -359,28 +354,30 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         // Make sure we're acting as the correct owner admin:
         setupPrincipal(owner, Access.ALL);
 
+        securityInterceptor.enable();
+        crudInterceptor.enable();
+
         Feed feed = ownerResource.getOwnerAtomFeed(owner.getKey());
         assertEquals(1, feed.getEntries().size());
         Entry entry = feed.getEntries().get(0);
         assertEquals(e1.getTimestamp(), entry.getPublished());
     }
 
-    @Test
-    public void testOwnerCannotAccessAnotherOwnersAtomFeed() {
+    @Test(expected=ForbiddenException.class)
+    public void ownerCannotAccessAnotherOwnersAtomFeed() {
         Owner owner2 = new Owner("anotherOwner");
         ownerCurator.create(owner2);
-
-        securityInterceptor.enable();
-        crudInterceptor.enable();
 
         // Or more specifically, gets no results, the call will not error out
         // because he has the correct role.
         createConsumerCreatedEvent(owner);
 
         setupPrincipal(owner2, Access.ALL);
-        Feed feed = ownerResource.getOwnerAtomFeed(owner.getKey());
-        System.out.println(feed);
-        assertEquals(0, feed.getEntries().size());
+
+        securityInterceptor.enable();
+        crudInterceptor.enable();
+
+        ownerResource.getOwnerAtomFeed(owner.getKey());
     }
 
     @Test(expected = ForbiddenException.class)

@@ -84,6 +84,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.xml.bind.DatatypeConverter;
+import org.fedoraproject.candlepin.auth.interceptor.Verify;
 
 /**
  * Owner Resource
@@ -409,7 +410,8 @@ public class OwnerResource {
     @GET
     @Produces("application/atom+xml")
     @Path("{owner_key}/atom")
-    public Feed getOwnerAtomFeed(@PathParam("owner_key") String ownerKey) {
+    public Feed getOwnerAtomFeed(@PathParam("owner_key")
+            @Verify(Owner.class) String ownerKey) {
         Owner o = findOwner(ownerKey);
         String path = String.format("/owners/%s/atom", ownerKey);
         Feed feed = this.eventAdapter.toFeed(
