@@ -307,6 +307,7 @@ public class Owner extends AbstractHibernateObject implements Serializable,
      *
      * @return this
      */
+    @XmlTransient
     @Override
     public Owner getOwner() {
         return this;
