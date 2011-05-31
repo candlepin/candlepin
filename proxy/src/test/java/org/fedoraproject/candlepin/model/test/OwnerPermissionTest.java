@@ -24,28 +24,45 @@ import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 
 import org.junit.Test;
 
-public class PermissionTest extends DatabaseTestFixture {
+public class OwnerPermissionTest extends DatabaseTestFixture {
 
     @Test
     public void testCreate() throws Exception {
-        
+
         Owner o = createOwner();
         OwnerPermission p = new OwnerPermission(o, Access.ALL);
         permissionCurator.create(p);
-        
+
         OwnerPermission lookedUp = permissionCurator.find(p.getId());
         assertNotNull(lookedUp);
         assertEquals(o.getId(), lookedUp.getOwner().getId());
         assertEquals(Access.ALL, lookedUp.getAccess());
     }
-    
+
     @Test
     public void testEquality() throws Exception {
         Owner o = createOwner();
         OwnerPermission basePerm = new OwnerPermission(o, Access.ALL);
-        
+
         OwnerPermission equalPerm = new OwnerPermission(o, Access.ALL);
         assertFalse(basePerm == equalPerm);
     }
 
+    @Test
+    public void testFindOrCreate() throws Exception {
+        Owner o = createOwner();
+        int count = permissionCurator.listAll().size();
+        OwnerPermission p = permissionCurator.findOrCreate(o, Access.ALL);
+        assertEquals(count + 1, permissionCurator.listAll().size());
+        OwnerPermission p2 = permissionCurator.findOrCreate(o, Access.ALL);
+        assertEquals(count + 1, permissionCurator.listAll().size());
+    }
+
+    @Test
+    public void testFindByOwnerAndAccess() throws Exception {
+        Owner o = createOwner();
+        OwnerPermission p = permissionCurator.findOrCreate(o, Access.ALL);
+        OwnerPermission lookedUp = permissionCurator.findByOwnerAndAccess(o, Access.ALL);
+        assertEquals(p.getId(), lookedUp.getId());
+    }
 }

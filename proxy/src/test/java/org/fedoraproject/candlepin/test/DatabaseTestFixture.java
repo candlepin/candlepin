@@ -46,7 +46,7 @@ import org.fedoraproject.candlepin.model.Role;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.OwnerPermission;
-import org.fedoraproject.candlepin.model.PermissionCurator;
+import org.fedoraproject.candlepin.model.OwnerPermissionCurator;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
@@ -111,7 +111,7 @@ public class DatabaseTestFixture {
     protected HttpServletRequest httpServletRequest;
     protected EntitlementCertificateCurator entCertCurator;
     protected CertificateSerialCurator certSerialCurator;
-    protected PermissionCurator permissionCurator;
+    protected OwnerPermissionCurator permissionCurator;
     protected RoleCurator roleCurator;
     protected I18n i18n;
     protected TestingInterceptor crudInterceptor;
@@ -152,7 +152,7 @@ public class DatabaseTestFixture {
         productCertificateCurator = injector.getInstance(ProductCertificateCurator.class);
         consumerCurator = injector.getInstance(ConsumerCurator.class);
         eventCurator = injector.getInstance(EventCurator.class);
-        permissionCurator = injector.getInstance(PermissionCurator.class);
+        permissionCurator = injector.getInstance(OwnerPermissionCurator.class);
         roleCurator = injector.getInstance(RoleCurator.class);
 
         consumerTypeCurator = injector.getInstance(ConsumerTypeCurator.class);

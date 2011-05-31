@@ -21,7 +21,7 @@ import java.util.LinkedList;
 
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerPermission;
-import org.fedoraproject.candlepin.model.PermissionCurator;
+import org.fedoraproject.candlepin.model.OwnerPermissionCurator;
 import org.fedoraproject.candlepin.model.RoleCurator;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.model.UserCurator;
@@ -42,11 +42,11 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
 
     private UserCurator userCurator;
     private RoleCurator roleCurator;
-    private PermissionCurator permCurator;
+    private OwnerPermissionCurator permCurator;
     
     @Inject
     public DefaultUserServiceAdapter(UserCurator userCurator, RoleCurator roleCurator,
-        PermissionCurator permCurator) {
+        OwnerPermissionCurator permCurator) {
         this.userCurator = userCurator;
         this.roleCurator = roleCurator;
     }

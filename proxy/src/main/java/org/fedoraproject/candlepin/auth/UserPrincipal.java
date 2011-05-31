@@ -39,6 +39,8 @@ public class UserPrincipal extends Principal {
     public UserPrincipal(String username) {
         this(username, null);
 
+        // TODO: a little risky, quite easy to just use the easier constructor
+        // available not expecting it to be a super admin:
         this.admin = true;
     }
 

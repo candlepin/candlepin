@@ -65,7 +65,7 @@ public class Role extends AbstractHibernateObject {
         inverseJoinColumns = @JoinColumn(name = "permission_id"))
     private Set<OwnerPermission> permissions = new HashSet<OwnerPermission>();
 
-    @Column(unique=true)
+    @Column(unique = true)
     private String name;
 
     public Role(String name, Set<User> users, Set<OwnerPermission> memberships) {
