@@ -14,6 +14,21 @@
  */
 package org.fedoraproject.candlepin.audit;
 
+import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.PrincipalData;
+import org.fedoraproject.candlepin.model.AccessControlEnforced;
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.Persisted;
+import org.fedoraproject.candlepin.util.Util;
+
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.FilterDefs;
+import org.hibernate.annotations.Filters;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.ParamDef;
+
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -29,57 +44,42 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
-import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.PrincipalData;
-import org.fedoraproject.candlepin.model.AccessControlEnforced;
-import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.Persisted;
-import org.fedoraproject.candlepin.util.Util;
-import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.FilterDefs;
-import org.hibernate.annotations.Filters;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.ParamDef;
-
 /**
- * Event - Base class for Candlepin events.
- *
- * Serves as both our semi-permanent audit history in the database, as well as an
- * integral part of the event queue.
+ * Event - Base class for Candlepin events. Serves as both our semi-permanent
+ * audit history in the database, as well as an integral part of the event
+ * queue.
  */
 @Entity
 @Table(name = "cp_event")
 @XmlRootElement(namespace = "http://fedorahosted.org/candlepin/Event")
 @XmlAccessorType(XmlAccessType.PROPERTY)
-@FilterDefs({
-    @FilterDef(
-        name = "Event_OWNER_FILTER", 
-        parameters = @ParamDef(name = "owner_ids", type = "string")
-    )
-})
-@Filters({
-    @Filter(name = "Event_OWNER_FILTER", 
-        condition = "ownerId in (:owner_ids)"
-    )
-})
+@FilterDefs({ @FilterDef(name = "Event_OWNER_FILTER", parameters = @ParamDef(name = "owner_ids", type = "string")) })
+@Filters({ @Filter(name = "Event_OWNER_FILTER", condition = "ownerId in (:owner_ids)") })
 public class Event implements Persisted, AccessControlEnforced {
 
     private static final long serialVersionUID = 1L;
-    
+
     /**
      * Type - Constant representing the type of this event.
      */
-    public enum Type { CREATED, MODIFIED, DELETED }
+    public enum Type {
+        CREATED, MODIFIED, DELETED
+    }
 
     /**
      * Target the type of entity operated on.
      */
-    public enum Target { CONSUMER, OWNER, ENTITLEMENT, POOL, EXPORT, 
-        IMPORT, USER, ROLE, SUBSCRIPTION
+    public enum Target {
+        CONSUMER, OWNER, ENTITLEMENT, POOL, EXPORT, IMPORT, USER, ROLE, SUBSCRIPTION
     }
-    
+
+    /**
+     * Describes the value in the referenceId field
+     */
+    public enum ReferenceType {
+        POOL
+    }
+
     // Uniquely identifies the event:
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -90,17 +90,18 @@ public class Event implements Persisted, AccessControlEnforced {
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private Type type;
-    
+
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private Target target;
 
-    //This should be there, but may not be
-    //moo
+    // This should be there, but may not be
+    // moo
     @Column(nullable = true)
     private String targetName;
 
-    // String representation of the principal. We probably should not be reconstructing
+    // String representation of the principal. We probably should not be
+    // reconstructing
     // any stored principal object.
     @Column(nullable = false, name = "principal")
     private String principalStore;
@@ -112,31 +113,46 @@ public class Event implements Persisted, AccessControlEnforced {
     // The entity type can be determined from the type field.
     @Column(nullable = false)
     private String entityId;
-    
+
     @Column(nullable = false)
     private String ownerId;
 
     @Column(nullable = true)
     private String consumerId;
 
+    // Generic id field in case a cross reference is needed to some other entity
+    // Use with reference type
+    @Column(nullable = true)
+    private String referenceId;
+
+    // Classifies Generic id field in case a cross reference is needed to some
+    // other entity
+    // Use with reference id
+    @Column(nullable = true)
+    @Enumerated(EnumType.STRING)
+    private ReferenceType referenceType;
+
     // Both old/new may be null for creation/deletion events. These are marked
-    // Transient as we decided we do not necessarily want to store the object state
-    // in our Events table. The Event passing through the message queue will still
+    // Transient as we decided we do not necessarily want to store the object
+    // state
+    // in our Events table. The Event passing through the message queue will
+    // still
     // carry them.
     @Transient
     private String oldEntity;
     @Transient
     private String newEntity;
-    
+
     @Transient
-    private String messageText;    
+    private String messageText;
 
     public Event() {
     }
 
-    public Event(Type type, Target target, String targetName, Principal principal,
-        String ownerId, String consumerId, String entityId,
-        String oldEntity, String newEntity) {
+    public Event(Type type, Target target, String targetName,
+        Principal principal, String ownerId, String consumerId,
+        String entityId, String oldEntity, String newEntity,
+        String referenceId, ReferenceType referenceType) {
         this.type = type;
         this.target = target;
         this.targetName = targetName;
@@ -144,11 +160,13 @@ public class Event implements Persisted, AccessControlEnforced {
         // TODO: toString good enough? Need something better?
         this.principalStore = Util.toJson(principal.getData());
         this.ownerId = ownerId;
-        
+
         this.entityId = entityId;
         this.oldEntity = oldEntity;
         this.newEntity = newEntity;
         this.consumerId = consumerId;
+        this.referenceId = referenceId;
+        this.referenceType = referenceType;
 
         // Set the timestamp to the current date and time.
         this.timestamp = new Date();
@@ -177,9 +195,10 @@ public class Event implements Persisted, AccessControlEnforced {
     public void setTarget(Target target) {
         this.target = target;
     }
-    
+
     public PrincipalData getPrincipal() {
-        return (PrincipalData) Util.fromJson(this.principalStore, PrincipalData.class);
+        return (PrincipalData) Util.fromJson(this.principalStore,
+            PrincipalData.class);
     }
 
     public void setPrincipal(PrincipalData principal) {
@@ -201,8 +220,24 @@ public class Event implements Persisted, AccessControlEnforced {
     public void setOwnerId(String ownerId) {
         this.ownerId = ownerId;
     }
-    
-    @XmlTransient    
+
+    public String getReferenceId() {
+        return referenceId;
+    }
+
+    public void setReferenceId(String referenceId) {
+        this.referenceId = referenceId;
+    }
+
+    public ReferenceType getReferenceType() {
+        return referenceType;
+    }
+
+    public void setReferenceType(ReferenceType referenceType) {
+        this.referenceType = referenceType;
+    }
+
+    @XmlTransient
     public String getPrincipalStore() {
         return principalStore;
     }
@@ -210,19 +245,20 @@ public class Event implements Persisted, AccessControlEnforced {
     public void setPrincipalStore(String principalStore) {
         this.principalStore = principalStore;
     }
-    
+
     public String getEntityId() {
         return entityId;
     }
 
     public void setEntityId(String entityId) {
         this.entityId = entityId;
-    }    
+    }
 
     @XmlTransient
     public String getOldEntity() {
         return oldEntity;
     }
+
     public void setOldEntity(String oldEntity) {
         this.oldEntity = oldEntity;
     }
@@ -231,14 +267,15 @@ public class Event implements Persisted, AccessControlEnforced {
     public String getNewEntity() {
         return newEntity;
     }
+
     public void setNewEntity(String newEntity) {
         this.newEntity = newEntity;
     }
 
     public String toString() {
         return "Event [" + "id=" + getId() + ", target=" + getTarget() +
-               ", type=" + getType() + ", time=" + getTimestamp() +
-               ", entity=" + getEntityId() + "]";
+            ", type=" + getType() + ", time=" + getTimestamp() + ", entity=" +
+            getEntityId() + "]";
     }
 
     /*
@@ -283,8 +320,8 @@ public class Event implements Persisted, AccessControlEnforced {
      */
     public void setTargetName(String targetName) {
         this.targetName = targetName;
-    }    
-    
+    }
+
     /**
      * @return the messageText
      */
@@ -297,5 +334,5 @@ public class Event implements Persisted, AccessControlEnforced {
      */
     public void setMessageText(String messageText) {
         this.messageText = messageText;
-    }    
+    }
 }

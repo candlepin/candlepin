@@ -18,7 +18,6 @@ import org.fedoraproject.candlepin.audit.Statistic;
 import org.fedoraproject.candlepin.audit.Statistic.EntryType;
 import org.fedoraproject.candlepin.audit.Statistic.ValueType;
 import org.fedoraproject.candlepin.audit.StatisticCurator;
-import org.fedoraproject.candlepin.config.Config;
 
 import com.google.inject.Inject;
 
@@ -40,7 +39,6 @@ public class StatisticHistoryTask implements Job {
     public static final String DEFAULT_SCHEDULE = "0 0 1 * * ?"; // run every
                                                                  // day at 1 AM
 
-    private Config config;
     private EntityManager entityManager;
     private StatisticCurator statCurator;
 
@@ -49,12 +47,12 @@ public class StatisticHistoryTask implements Job {
     /**
      * Instantiates a new certificate revocation list task.
      *
-     * @param conf the conf
+     * @param entityManager the EntityManager
+     * @param statCurator the StatisticCurator
      */
     @Inject
-    public StatisticHistoryTask(EntityManager entityManager, Config conf,
+    public StatisticHistoryTask(EntityManager entityManager,
         StatisticCurator statCurator) {
-        this.config = conf;
         this.entityManager = entityManager;
         this.statCurator = statCurator;
     }
