@@ -27,6 +27,7 @@ import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.google.inject.Provider;
 import java.util.Collection;
 import java.util.HashMap;
@@ -54,12 +55,8 @@ public class SecurityInterceptor implements MethodInterceptor {
 
     @Inject private Provider<Principal> principalProvider;
     @Inject private Provider<I18n> i18nProvider;
+    @Inject private Injector injector;
 
-    @Inject private OwnerCurator ownerCurator;
-    @Inject private ConsumerCurator consumerCurator;
-    @Inject private EntitlementCurator entitlementCurator;
-    @Inject private PoolCurator poolCurator;
-    
     // TODO:  This would not really be needed if we were consistent about what
     //        we use as IDs in our urls!
     private final Map<Class, EntityStore> storeMap;
@@ -147,29 +144,52 @@ public class SecurityInterceptor implements MethodInterceptor {
     }
 
     private class OwnerStore implements EntityStore {
+        private OwnerCurator ownerCurator;
+
         @Override
         public Object lookup(String key) {
+            if (ownerCurator == null) {
+                ownerCurator = injector.getInstance(OwnerCurator.class);
+            }
+
             return ownerCurator.lookupByKey(key);
         }
     }
 
     private class ConsumerStore implements EntityStore {
+        private ConsumerCurator consumerCurator;
+
         @Override
         public Object lookup(String key) {
+            if (consumerCurator == null) {
+                consumerCurator = injector.getInstance(ConsumerCurator.class);
+            }
+
             return consumerCurator.findByUuid(key);
         }
     }
 
     private class EntitlementStore implements EntityStore {
+        private EntitlementCurator entitlementCurator;
+
         @Override
         public Object lookup(String key) {
+            if (entitlementCurator == null) {
+                entitlementCurator = injector.getInstance(EntitlementCurator.class);
+            }
             return entitlementCurator.find(key);
         }
     }
 
     private class PoolStore implements EntityStore {
+        private PoolCurator poolCurator;
+
         @Override
         public Object lookup(String key) {
+            if (poolCurator == null) {
+                poolCurator = injector.getInstance(PoolCurator.class);
+            }
+
             return poolCurator.find(key);
         }
     }
