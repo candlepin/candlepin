@@ -54,11 +54,6 @@ input[type='text'], input[type='search'], textarea {
     background: -moz-linear-gradient(top, #d9eeff, white 10px, white);
     background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#d9eeff), to(white), color-stop(0.2, white)); }
 
-img.graph {
-  display: block;
-  width: 767px;
-  margin: 1em auto 2em; }
-
 hr.shade {
   position: absolute;
   display: block;
@@ -73,7 +68,7 @@ hr.shade {
 
 #header {
   background: #f3f8fb url(../images/header-bg.jpg) no-repeat top center;
-  border-bottom: 2px solid #FA6363;
+  border-bottom: 2px solid #F10606;
   height: 47px; }
   #header a {
     text-decoration: none; }
@@ -96,7 +91,7 @@ hr.shade {
     color: #8e0404; }
 
 #navigation {
-  background: #FA6363 url(../images/splash-bg.jpg) no-repeat center -20px;
+  background: #454543 url(../images/splash-bg.jpg) no-repeat center -20px;
   background-size: cover;
   min-height: 38px;
   clear: both; }
@@ -112,8 +107,8 @@ hr.shade {
     padding: 8px 12px 7px;
     text-transform: uppercase; }
     #navigation a:hover {
-      color: #8e0404;
-      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+      color: #F10606;
+      text-shadow: 0 1px 0 #8e0404;
       -moz-text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
       -webkit-text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
       border-bottom: 4px solid white;
@@ -121,7 +116,7 @@ hr.shade {
 
 #front-page-main-upper {
   position: relative;
-  background: #FA6363 url(../images/splash-bg.jpg) no-repeat top center;
+  background: #454543 url(../images/splash-bg.jpg) no-repeat top center;
   background-size: cover;
   color: white;
   height: 277px;
@@ -142,8 +137,8 @@ hr.shade {
   #front-page-main-upper h2 {
     font-size: 200%;
     margin: 0;
-    color: #8e0404;
-    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+    color: #F10606;
+    text-shadow: 0 1px 0 #8e0404;
     -moz-text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
     -webkit-text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5); }
   #front-page-main-upper a {
@@ -229,7 +224,7 @@ hr.shade {
 
 #footer {
   position: relative;
-  background: #e0eef4 url(../images/footer-bg.jpg) no-repeat top center;
+  background: #454543 url(../images/footer-bg.jpg) no-repeat top center;
   clear: both;
   min-height: 150px;
   font-size: 95%;
@@ -343,7 +338,8 @@ hr.shade {
 
 /* CSS specific to the main content area */
 .section-grouping {
-  background: #FDC5C5;
+  background: #757772;
+  color: white;
   padding: 1em 1em 0.5em;
   border-top: 1px solid #eaeaea;
   border-bottom: 1px solid #dadada;
