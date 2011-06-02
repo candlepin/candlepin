@@ -14,44 +14,31 @@
  */
 package org.fedoraproject.candlepin.resteasy.interceptor;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.exceptions.CandlepinException;
-import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.exceptions.ServiceUnavailableException;
-import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
-import org.fedoraproject.candlepin.model.Role;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import org.fedoraproject.candlepin.auth.permissions.Permission;
 import org.fedoraproject.candlepin.exceptions.UnauthorizedException;
 
 /**
  * BasicAuth
  */
-class BasicAuth implements AuthProvider {
+class BasicAuth extends UserAuth {
 
     private Logger log = Logger.getLogger(BasicAuth.class);
-    private UserServiceAdapter userServiceAdapter;
-    private OwnerCurator ownerCurator;
-    private Injector injector;
 
     @Inject
     BasicAuth(UserServiceAdapter userServiceAdapter, OwnerCurator ownerCurator,
         Injector injector) {
-        this.userServiceAdapter = userServiceAdapter;
-        this.ownerCurator = ownerCurator;
-        this.injector = injector;
+        super(userServiceAdapter, ownerCurator, injector);
     }
 
     public Principal getPrincipal(HttpRequest request) {
@@ -104,35 +91,5 @@ class BasicAuth implements AuthProvider {
                 .tr("Error contacting user service"));
         }
         return null;
-    }
-
-    private Principal createPrincipal(String username) {
-        Set<Permission> perms = new HashSet<Permission>();
-        for (Role r : userServiceAdapter.getRoles(username)) {
-            perms.addAll(r.getPermissions());
-        }
-        
-        return new UserPrincipal(username, perms);
-    }
-
-    /*
-     * This does not use the auth util code, since it does
-     * allow basic auth with no owner.
-     */
-    private Owner lookupOwner(Owner owner) {
-        Owner o = this.ownerCurator.lookupByKey(owner.getKey());
-        if (o == null) {
-            if (owner.getKey() == null) {
-                throw new NotFoundException(
-                    "An owner does not exist for a null org id");
-            }
-
-            log.warn("Creating principal for owner not yet in database: " +
-                owner.getKey());
-
-            o = owner;
-        }
-
-        return o;
     }
 }
