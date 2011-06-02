@@ -85,62 +85,62 @@ public class ConfigProperties {
     public static final String SHARD_PASSWORD = "candlepin.shard.password";
     public static final String SHARD_WEBAPP = "candlepin.shard.webapp";
 
-    public static final Map<String, String> DEFAULT_PROPERTIES = 
+    public static final Map<String, String> DEFAULT_PROPERTIES =
         new HashMap<String, String>() {
 
-        private static final long serialVersionUID = 1L;
-        {
-            this.put(CANDLEPIN_URL, "https://localhost");
+            private static final long serialVersionUID = 1L;
+            {
+                this.put(CANDLEPIN_URL, "https://localhost");
 
-            this.put(CA_KEY, "/etc/candlepin/certs/candlepin-ca.key");
-            this.put(CA_CERT, "/etc/candlepin/certs/candlepin-ca.crt");
-            this.put(CA_CERT_UPSTREAM,
-                "/etc/candlepin/certs/candlepin-upstream-ca.crt");
+                this.put(CA_KEY, "/etc/candlepin/certs/candlepin-ca.key");
+                this.put(CA_CERT, "/etc/candlepin/certs/candlepin-ca.crt");
+                this.put(CA_CERT_UPSTREAM,
+                    "/etc/candlepin/certs/candlepin-upstream-ca.crt");
 
-            this.put(ACTIVATION_DEBUG_PREFIX, "");
+                this.put(ACTIVATION_DEBUG_PREFIX, "");
 
-            this.put(HORNETQ_BASE_DIR, "/var/lib/candlepin/hornetq");
-            this.put(HORNETQ_LARGE_MSG_SIZE, new Integer(10 * 1024).toString());
-            this.put(AUDIT_LISTENERS,
-                "org.fedoraproject.candlepin.audit.DatabaseListener," +
-                    "org.fedoraproject.candlepin.audit.LoggingListener," +
-                    "org.fedoraproject.candlepin.audit.ActivationListener");
-            this.put(AUDIT_LOG_FILE, "/var/log/candlepin/audit.log");
-            this.put(AUDIT_LOG_VERBOSE, "false");
+                this.put(HORNETQ_BASE_DIR, "/var/lib/candlepin/hornetq");
+                this.put(HORNETQ_LARGE_MSG_SIZE, new Integer(10 * 1024).toString());
+                this.put(AUDIT_LISTENERS,
+                    "org.fedoraproject.candlepin.audit.DatabaseListener," +
+                        "org.fedoraproject.candlepin.audit.LoggingListener," +
+                        "org.fedoraproject.candlepin.audit.ActivationListener");
+                this.put(AUDIT_LOG_FILE, "/var/log/candlepin/audit.log");
+                this.put(AUDIT_LOG_VERBOSE, "false");
 
-            this.put(PRETTY_PRINT, "false");
-            this.put(REVOKE_ENTITLEMENT_IN_FIFO_ORDER, "true");
-            this.put(CRL_FILE_PATH, "/var/lib/candlepin/candlepin-crl.crl");
+                this.put(PRETTY_PRINT, "false");
+                this.put(REVOKE_ENTITLEMENT_IN_FIFO_ORDER, "true");
+                this.put(CRL_FILE_PATH, "/var/lib/candlepin/candlepin-crl.crl");
 
-            this.put(SYNC_WORK_DIR, "/var/cache/candlepin/sync");
-            this.put(CONSUMER_FACTS_MATCHER, ".*");
-            this.put(TRUSTED_AUTHENTICATION, "true");
-            this.put(SSL_AUTHENTICATION, "true");
-            this.put(OAUTH_AUTHENTICATION, "true");
-            this.put(BASIC_AUTHENTICATION, "true");
+                this.put(SYNC_WORK_DIR, "/var/cache/candlepin/sync");
+                this.put(CONSUMER_FACTS_MATCHER, ".*");
+                this.put(TRUSTED_AUTHENTICATION, "true");
+                this.put(SSL_AUTHENTICATION, "true");
+                this.put(OAUTH_AUTHENTICATION, "true");
+                this.put(BASIC_AUTHENTICATION, "true");
 
-            // Pinsetter
-            this.put("org.quartz.threadPool.class",
-                "org.quartz.simpl.SimpleThreadPool");
-            this.put("org.quartz.threadPool.threadCount", "15");
-            this.put("org.quartz.threadPool.threadPriority", "5");
-            this.put(DEFAULT_TASKS, StringUtils.join(DEFAULT_TASK_LIST, ","));
+                // Pinsetter
+                this.put("org.quartz.threadPool.class",
+                    "org.quartz.simpl.SimpleThreadPool");
+                this.put("org.quartz.threadPool.threadCount", "15");
+                this.put("org.quartz.threadPool.threadPriority", "5");
+                this.put(DEFAULT_TASKS, StringUtils.join(DEFAULT_TASK_LIST, ","));
 
-            this.put(AMQP_INTEGRATION_ENABLED, String.valueOf(false));
-            this.put(AMQP_CONNECT_STRING,
-                "tcp://localhost:5671?ssl='true'&ssl_cert_alias='amqp-client'");
-            this.put(AMQP_KEYSTORE, "/etc/candlepin/certs/amqp/keystore");
-            this.put(AMQP_KEYSTORE_PASSWORD, "password");
-            this.put(AMQP_TRUSTSTORE, "/etc/candlepin/certs/amqp/truststore");
-            this.put(AMQP_TRUSTSTORE_PASSWORD, "password");
-            this.put(IDENTITY_CERT_YEAR_ADDENDUM, "1");
-            this.put(SHARD_WEBAPP, "candlepin");
+                this.put(AMQP_INTEGRATION_ENABLED, String.valueOf(false));
+                this.put(AMQP_CONNECT_STRING,
+                    "tcp://localhost:5671?ssl='true'&ssl_cert_alias='amqp-client'");
+                this.put(AMQP_KEYSTORE, "/etc/candlepin/certs/amqp/keystore");
+                this.put(AMQP_KEYSTORE_PASSWORD, "password");
+                this.put(AMQP_TRUSTSTORE, "/etc/candlepin/certs/amqp/truststore");
+                this.put(AMQP_TRUSTSTORE_PASSWORD, "password");
+                this.put(IDENTITY_CERT_YEAR_ADDENDUM, "1");
+                this.put(SHARD_WEBAPP, "candlepin");
 
-            // defaults
-            this.put(SHARD_USERNAME, "admin");
-            this.put(SHARD_PASSWORD, "admin");
-        }
-    };
+                // defaults
+                this.put(SHARD_USERNAME, "admin");
+                this.put(SHARD_PASSWORD, "admin");
+            }
+        };
     public static final String CRL_FILE_PATH = "candlepin.crl.file";
     public static final String IDENTITY_CERT_YEAR_ADDENDUM =
                                "candlepin.identityCert.yr.addendum";

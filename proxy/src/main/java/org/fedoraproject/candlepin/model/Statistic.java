@@ -14,7 +14,6 @@
  */
 package org.fedoraproject.candlepin.model;
 
-
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.Column;
@@ -40,7 +39,8 @@ public class Statistic extends AbstractHibernateObject {
      * EntryType - Constant representing the type of this stat entry.
      */
     public enum EntryType {
-        TotalConsumers, ConsumersBySocketCount, TotalSubscriptionCount, TotalSubscriptionConsumed, PerProduct, PerPool
+        TotalConsumers, ConsumersBySocketCount, TotalSubscriptionCount,
+          TotalSubscriptionConsumed, PerProduct, PerPool
     }
 
     /**

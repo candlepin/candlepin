@@ -53,7 +53,8 @@ import javax.xml.bind.annotation.XmlTransient;
 @Table(name = "cp_event")
 @XmlRootElement(namespace = "http://fedorahosted.org/candlepin/Event")
 @XmlAccessorType(XmlAccessType.PROPERTY)
-@FilterDefs({ @FilterDef(name = "Event_OWNER_FILTER", parameters = @ParamDef(name = "owner_ids", type = "string")) })
+@FilterDefs({ @FilterDef(name = "Event_OWNER_FILTER",
+    parameters = @ParamDef(name = "owner_ids", type = "string")) })
 @Filters({ @Filter(name = "Event_OWNER_FILTER", condition = "ownerId in (:owner_ids)") })
 public class Event implements Persisted, AccessControlEnforced {
 

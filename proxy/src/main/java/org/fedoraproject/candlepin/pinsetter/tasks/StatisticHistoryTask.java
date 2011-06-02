@@ -122,8 +122,8 @@ public class StatisticHistoryTask implements Job {
 
     private int totalSubscriptionCount(String ownerId) {
         int subscriptionCountTotal = 0;
-        String subscriptionCountString = "select sum(quantity) from Pool p"
-            + " where p.owner.id = :ownerId";
+        String subscriptionCountString = "select sum(quantity) from Pool p" +
+            " where p.owner.id = :ownerId";
         Query subscriptionCountQuery = currentSession().createQuery(
             subscriptionCountString).setString("ownerId", ownerId);
         Long subCount = (Long) subscriptionCountQuery.iterate().next();
@@ -140,8 +140,8 @@ public class StatisticHistoryTask implements Job {
 
         // Total Subscription Consumed (Raw Count and Percentage)
         int entitlementCountTotal = 0;
-        String entitlementCountString = "select sum(quantity) from Entitlement e"
-            + " where e.owner.id = :ownerId";
+        String entitlementCountString = "select sum(quantity) from Entitlement e" +
+            " where e.owner.id = :ownerId";
         Query entitlementCountQuery = currentSession().createQuery(
             entitlementCountString).setString("ownerId", ownerId);
         Long entCount = (Long) entitlementCountQuery.iterate().next();
@@ -161,14 +161,14 @@ public class StatisticHistoryTask implements Job {
     }
 
     private void perPool(String ownerId) {
-        String poolString = "select id from Pool p"
-            + " where p.owner.id = :ownerId";
+        String poolString = "select id from Pool p" +
+            " where p.owner.id = :ownerId";
         Query poolQuery = currentSession().createQuery(poolString).setString(
             "ownerId", ownerId);
         Iterator poolIter = poolQuery.iterate();
-        String perPoolString = "select count(e) from Event e "
-            + "where e.target = 'ENTITLEMENT' and e.referenceType = 'POOL' "
-            + "and e.type = :type and e.referenceId = :referenceId";
+        String perPoolString = "select count(e) from Event e " +
+            "where e.target = 'ENTITLEMENT' and e.referenceType = 'POOL' " +
+            "and e.type = :type and e.referenceId = :referenceId";
         while (poolIter.hasNext()) {
             String poolId = (String) poolIter.next();
 
@@ -184,8 +184,8 @@ public class StatisticHistoryTask implements Job {
                 .intValue());
             int perPoolConsumedCount = perPoolUsedCount - perPoolDeletedCount;
 
-            String totalPoolCountString = "select quantity from Pool p"
-                + " where p.id = :poolId";
+            String totalPoolCountString = "select quantity from Pool p" +
+                " where p.id = :poolId";
             Query totalPoolCountQuery = currentSession().createQuery(
                 totalPoolCountString).setString("poolId", poolId);
 
@@ -211,14 +211,14 @@ public class StatisticHistoryTask implements Job {
     }
 
     private void perProduct(String ownerId) {
-        String productString = "select distinct p.productName from Pool p"
-            + " where p.owner.id = :ownerId";
+        String productString = "select distinct p.productName from Pool p" +
+            " where p.owner.id = :ownerId";
         Query productQuery = currentSession().createQuery(productString)
             .setString("ownerId", ownerId);
         Iterator productIter = productQuery.iterate();
-        String perProductString = "select count(e) from Event e "
-            + "where e.target = 'ENTITLEMENT' and e.referenceType = 'POOL' "
-            + "and e.type = :type and e.targetName = :productName";
+        String perProductString = "select count(e) from Event e " +
+            "where e.target = 'ENTITLEMENT' and e.referenceType = 'POOL' " +
+            "and e.type = :type and e.targetName = :productName";
         while (productIter.hasNext()) {
             String productName = (String) productIter.next();
 
@@ -237,8 +237,8 @@ public class StatisticHistoryTask implements Job {
             int perProductConsumedCount = perProductUsedCount -
                 perProductDeletedCount;
 
-            String totalProductCountString = "select sum(quantity) from Pool p"
-                + " where p.productName = :productName";
+            String totalProductCountString = "select sum(quantity) from Pool p" +
+                " where p.productName = :productName";
             Query totalProductCountQuery = currentSession().createQuery(
                 totalProductCountString).setString("productName", productName);
             Long tpCount = (Long) totalProductCountQuery.iterate().next();
@@ -246,7 +246,8 @@ public class StatisticHistoryTask implements Job {
                 .intValue());
             int productPercentage = 0;
             if (totalProductCountTotal > 0) {
-                productPercentage = (perProductConsumedCount * 100 / totalProductCountTotal);
+                productPercentage = (perProductConsumedCount * 100 /
+                                     totalProductCountTotal);
             }
             Statistic perPoolCountPercentageStatistic = new Statistic(
                 EntryType.PerProduct, ValueType.Percentage, productName,
