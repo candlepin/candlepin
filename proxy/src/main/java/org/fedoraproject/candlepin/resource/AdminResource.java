@@ -27,7 +27,11 @@ import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 
 import com.google.inject.Inject;
+
+import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.SystemPrincipal;
 import org.fedoraproject.candlepin.auth.interceptor.SecurityHole;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
 /**
  * Candlepin server administration REST calls.
@@ -71,6 +75,9 @@ public class AdminResource {
             return "Already initialized.";
         }
         log.info("Initializing Candlepin database.");
+
+        // Push the system principal so we can create all these entries as a superuser
+        ResteasyProviderFactory.pushContext(Principal.class, new SystemPrincipal());
 
         for (ConsumerTypeEnum type : ConsumerTypeEnum.values()) {
             ConsumerType created = new ConsumerType(type); 
