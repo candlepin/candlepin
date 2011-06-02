@@ -31,9 +31,8 @@ class TrustedUserAuth extends UserAuth {
     public static final String USER_HEADER = "cp-user";
 
     @Inject
-    TrustedUserAuth(UserServiceAdapter userServiceAdaper,
-        OwnerCurator ownerCurator, Injector injector) {
-        super(userServiceAdaper, ownerCurator, injector);
+    TrustedUserAuth(UserServiceAdapter userServiceAdaper, Injector injector) {
+        super(userServiceAdaper, injector);
     }
 
     public Principal getPrincipal(HttpRequest request) {

@@ -78,8 +78,7 @@ public class AuthInterceptor implements PreProcessInterceptor {
         if (config.oAuthEnabled()) {
             log.debug("OAuth Authentication is enabled.");
             TrustedConsumerAuth consumerAuth = new TrustedConsumerAuth(consumerCurator);
-            TrustedUserAuth userAuth = new TrustedUserAuth(userService, ownerCurator,
-                injector);
+            TrustedUserAuth userAuth = new TrustedUserAuth(userService, injector);
             TrustedExternalSystemAuth systemAuth = new TrustedExternalSystemAuth();
             providers
                 .add(new OAuth(consumerAuth, userAuth, systemAuth, injector, config));
@@ -88,7 +87,7 @@ public class AuthInterceptor implements PreProcessInterceptor {
         // basic http access
         if (config.basicAuthEnabled()) {
             log.debug("Basic Authentication is enabled.");
-            providers.add(new BasicAuth(userService, ownerCurator, injector));
+            providers.add(new BasicAuth(userService, injector));
         }
         // consumer certificates
         if (config.sslAuthEnabled()) {
@@ -99,8 +98,7 @@ public class AuthInterceptor implements PreProcessInterceptor {
         if (config.trustedAuthEnabled()) {
             log.debug("Trusted Authentication is enabled.");
             providers.add(new TrustedConsumerAuth(consumerCurator));
-            providers.add(new TrustedUserAuth(userService, ownerCurator,
-                injector));
+            providers.add(new TrustedUserAuth(userService, injector));
         }
     }
 

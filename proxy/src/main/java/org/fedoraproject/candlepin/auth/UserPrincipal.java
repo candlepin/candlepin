@@ -130,4 +130,13 @@ public class UserPrincipal extends Principal {
         return owners;
     }
 
+    @Override
+    public boolean canAccess(Object target, Access access) {
+        if (this.admin) {
+            return true;
+        }
+
+        return super.canAccess(target, access);
+    }
+
 }

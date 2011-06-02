@@ -26,6 +26,7 @@ import com.google.inject.Injector;
 import java.util.ArrayList;
 import org.fedoraproject.candlepin.auth.permissions.Permission;
 import org.fedoraproject.candlepin.model.Role;
+import org.fedoraproject.candlepin.model.User;
 
 /**
  * UserAuth
@@ -33,36 +34,38 @@ import org.fedoraproject.candlepin.model.Role;
 public abstract class UserAuth implements AuthProvider {
 
     protected UserServiceAdapter userServiceAdapter;
-    protected OwnerCurator ownerCurator;
     protected Injector injector;
-    protected I18n i18n;
 
-    public UserAuth(UserServiceAdapter userServiceAdapter,
-        OwnerCurator ownerCurator, Injector injector) {
+    public UserAuth(UserServiceAdapter userServiceAdapter, Injector injector) {
         this.userServiceAdapter = userServiceAdapter;
-        this.ownerCurator = ownerCurator;
         this.injector = injector;
-        i18n = this.injector.getInstance(I18n.class);
     }
 
     /**
      * Creates a user principal for a given username
      */
     protected Principal createPrincipal(String username) {
-        List<Permission> permissions = new ArrayList<Permission>();
+        User user = userServiceAdapter.findByLogin(username);
 
-        // flatten out the permissions from the combined roles
-        for (Role role : this.userServiceAdapter.getRoles(username)) {
-            permissions.addAll(role.getPermissions());
+        if (user.isSuperAdmin()) {
+            return new UserPrincipal(username);
         }
+        else {
+            List<Permission> permissions = new ArrayList<Permission>();
 
-        Principal principal = new UserPrincipal(username, permissions);
+            // flatten out the permissions from the combined roles
+            for (Role role : this.userServiceAdapter.getRoles(username)) {
+                permissions.addAll(role.getPermissions());
+            }
 
-        // TODO:  Look up owner here?
-        // Old code was doing this:  fullOwners.add(AuthUtil.lookupOwner(owner, 
-        // ownerCurator));
+            Principal principal = new UserPrincipal(username, permissions);
 
-        return principal;
+            // TODO:  Look up owner here?
+            // Old code was doing this:  fullOwners.add(AuthUtil.lookupOwner(owner,
+            // ownerCurator));
+
+            return principal;
+        }
     }
 
 }

@@ -37,7 +37,7 @@ public abstract class Principal implements Serializable {
         this.permissions.add(permission);
     }
 
-    public final boolean canAccess(Object target, Access access) {
+    public boolean canAccess(Object target, Access access) {
         for (Permission permission : permissions) {
             if (permission.canAccess(target, access)) {
                 // if any of the principal's permissions allows access, then

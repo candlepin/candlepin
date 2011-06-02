@@ -19,7 +19,6 @@ import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.exceptions.CandlepinException;
 import org.fedoraproject.candlepin.exceptions.ServiceUnavailableException;
-import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.xnap.commons.i18n.I18n;
@@ -36,11 +35,11 @@ class BasicAuth extends UserAuth {
     private Logger log = Logger.getLogger(BasicAuth.class);
 
     @Inject
-    BasicAuth(UserServiceAdapter userServiceAdapter, OwnerCurator ownerCurator,
-        Injector injector) {
-        super(userServiceAdapter, ownerCurator, injector);
+    BasicAuth(UserServiceAdapter userServiceAdapter, Injector injector) {
+        super(userServiceAdapter, injector);
     }
 
+    @Override
     public Principal getPrincipal(HttpRequest request) {
         I18n i18n = injector.getInstance(I18n.class);
         try {
@@ -78,18 +77,17 @@ class BasicAuth extends UserAuth {
         catch (CandlepinException e) {
             if (log.isDebugEnabled()) {
                 log.debug("Error getting principal " + e);
-                e.printStackTrace();
             }
             throw e;
         }
         catch (Exception e) {
             if (log.isDebugEnabled()) {
                 log.debug("Error getting principal " + e);
-                e.printStackTrace();
             }
             throw new ServiceUnavailableException(i18n
                 .tr("Error contacting user service"));
         }
         return null;
     }
+
 }

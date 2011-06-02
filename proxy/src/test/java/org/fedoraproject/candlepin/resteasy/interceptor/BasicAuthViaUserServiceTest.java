@@ -23,7 +23,6 @@ import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.auth.permissions.Permission;
 import org.fedoraproject.candlepin.exceptions.UnauthorizedException;
 import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.OwnerPermission;
 import org.fedoraproject.candlepin.model.Role;
 import org.fedoraproject.candlepin.model.User;
@@ -54,7 +53,6 @@ public class BasicAuthViaUserServiceTest {
     @Mock private HttpRequest request;
     private HttpHeadersImpl headers;
     @Mock private UserServiceAdapter userService;
-    @Mock private OwnerCurator ownerCurator;
     @Mock private Injector injector;
     private BasicAuth auth;
 
@@ -66,7 +64,7 @@ public class BasicAuthViaUserServiceTest {
         when(request.getHttpHeaders()).thenReturn(headers);
         I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         when(injector.getInstance(I18n.class)).thenReturn(i18n);
-        this.auth = new BasicAuth(userService, ownerCurator, injector);
+        this.auth = new BasicAuth(userService, injector);
     }
 
     /**
@@ -122,7 +120,6 @@ public class BasicAuthViaUserServiceTest {
             new HashSet<User>(), permissions)});
         when(userService.getRoles("user")).thenReturn(roles);
         
-        when(ownerCurator.lookupByKey("user")).thenReturn(owner);
         UserPrincipal expected = new UserPrincipal("user", 
                 new ArrayList<Permission>(permissions));
         assertEquals(expected, this.auth.getPrincipal(request));
