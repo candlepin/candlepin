@@ -19,7 +19,10 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.SystemPrincipal;
 import org.fedoraproject.candlepin.model.RulesCurator;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ContextFactory;
 import org.mozilla.javascript.Script;
@@ -85,11 +88,16 @@ public class JsRulesProvider implements Provider<JsRules> {
     private void compileRules(RulesCurator rulesCurator) {
         scriptLock.writeLock().lock();
         
+        // XXX: we need a principal to access the rules,
+        // but pushing and popping system principal could be a bad idea
+        Principal systemPrincipal = new SystemPrincipal();
+        ResteasyProviderFactory.pushContext(Principal.class, systemPrincipal);
         // Check to see if we need to recompile. we do this inside the write lock just to
         // avoid race conditions where we might double compile
         Date newUpdated = rulesCurator.getUpdated();
         if (newUpdated.equals(this.updated)) {
             scriptLock.writeLock().unlock();
+            ResteasyProviderFactory.popContextData(Principal.class);
             return;
         }
         
@@ -107,6 +115,7 @@ public class JsRulesProvider implements Provider<JsRules> {
         }
         finally {
             Context.exit();
+            ResteasyProviderFactory.popContextData(Principal.class);
             scriptLock.writeLock().unlock();
         }
     }
