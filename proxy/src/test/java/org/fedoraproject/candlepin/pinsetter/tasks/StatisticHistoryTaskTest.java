@@ -29,7 +29,8 @@ public class StatisticHistoryTaskTest extends DatabaseTestFixture {
     @Before
     public void init() {
         super.init();
-        this.task = new StatisticHistoryTask(entityManager(), statisticCurator);
+        this.task = new StatisticHistoryTask(entityManager(), statisticCurator,
+            ownerCurator, consumerCurator);
     }
 
     @Test
