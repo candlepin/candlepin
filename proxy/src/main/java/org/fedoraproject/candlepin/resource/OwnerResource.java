@@ -105,7 +105,6 @@ public class OwnerResource {
     private EventAdapter eventAdapter;
     private static Logger log = Logger.getLogger(OwnerResource.class);
     private EventCurator eventCurator;
-    private ProductCurator productCurator;
     private Importer importer;
     private ExporterMetadataCurator exportCurator;
     private ImportRecordCurator importRecordCurator;
@@ -129,7 +128,6 @@ public class OwnerResource {
 
         this.ownerCurator = ownerCurator;
         this.ownerInfoCurator = ownerInfoCurator;
-        this.productCurator = productCurator;
         this.poolCurator = poolCurator;
         this.subscriptionCurator = subscriptionCurator;
         this.activationKeyCurator = activationKeyCurator;

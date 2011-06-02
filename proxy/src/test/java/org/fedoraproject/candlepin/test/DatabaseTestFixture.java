@@ -14,6 +14,15 @@
  */
 package org.fedoraproject.candlepin.test;
 
+import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.servlet.http.HttpServletRequest;
+
 import org.fedoraproject.candlepin.CandlepinCommonTestingModule;
 import org.fedoraproject.candlepin.CandlepinNonServletEnvironmentTestingModule;
 import org.fedoraproject.candlepin.TestingInterceptor;
@@ -55,6 +64,8 @@ import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.util.DateSource;
+import org.junit.Before;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -63,18 +74,6 @@ import com.google.inject.util.Modules;
 import com.wideplay.warp.persist.PersistenceService;
 import com.wideplay.warp.persist.UnitOfWork;
 import com.wideplay.warp.persist.WorkManager;
-
-import org.junit.Before;
-import org.xnap.commons.i18n.I18n;
-
-import java.util.Date;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * Test fixture for test classes requiring access to the database.
@@ -211,7 +210,6 @@ public class DatabaseTestFixture {
      *
      * @return an entitlement pool and matching subscription.
      */
-<<<<<<< HEAD
     protected Pool createPoolAndSub(Owner owner, Product product,
         Long quantity, Date startDate, Date endDate) {
         Pool p = new Pool(owner, product.getId(), product.getName(),
@@ -220,15 +218,6 @@ public class DatabaseTestFixture {
         Subscription sub = new Subscription(owner, product,
             new HashSet<Product>(), quantity, startDate, endDate,
             TestUtil.createDate(2010, 2, 12));
-=======
-    protected Pool createPoolAndSub(Owner owner, Product product, Long quantity,
-        Date startDate, Date endDate) {
-        Pool p = new Pool(owner, product.getId(), product.getName(),
-            new HashSet<ProvidedProduct>(), quantity,
-                startDate, endDate, DEFAULT_CONTRACT, DEFAULT_ACCOUNT);
-        Subscription sub = new Subscription(owner, product, new HashSet<Product>(),
-            quantity, startDate, endDate, TestUtil.createDate(2010, 2, 12));
->>>>>>> Remove autosubscribe, since we really do not need it
         subCurator.create(sub);
         p.setSubscriptionId(sub.getId());
         poolCurator.create(p);
@@ -253,18 +242,12 @@ public class DatabaseTestFixture {
     protected Subscription createSubscription() {
         Product p = TestUtil.createProduct();
         productCurator.create(p);
-<<<<<<< HEAD
-        Subscription sub = new Subscription(createOwner(), p,
-            new HashSet<Product>(), 1000L, TestUtil.createDate(2000, 1, 1),
-            TestUtil.createDate(2010, 1, 1), TestUtil.createDate(2000, 1, 1));
-=======
         Subscription sub = new Subscription(createOwner(),
                                             p, new HashSet<Product>(),
                                             1000L,
                                             TestUtil.createDate(2000, 1, 1),
                                             TestUtil.createDate(2010, 1, 1),
                                             TestUtil.createDate(2000, 1, 1));
->>>>>>> Remove autosubscribe, since we really do not need it
         subCurator.create(sub);
         return sub;
 
@@ -279,12 +262,8 @@ public class DatabaseTestFixture {
         return TestUtil.createEntitlement(owner, consumer, pool, cert);
     }
 
-<<<<<<< HEAD
     protected EntitlementCertificate createEntitlementCertificate(String key,
         String cert) {
-=======
-    protected EntitlementCertificate createEntitlementCertificate(String key, String cert) {
->>>>>>> Remove autosubscribe, since we really do not need it
         EntitlementCertificate toReturn = new EntitlementCertificate();
         CertificateSerial certSerial = new CertificateSerial(new Date());
         certSerialCurator.create(certSerial);

@@ -29,6 +29,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
@@ -53,16 +54,19 @@ public class ActivationKeyResource {
     private PoolCurator poolCurator;
     private I18n i18n;
     private ConsumerResource consumerResource;
+    private EventSink eventSink;
 
     @Inject
     public ActivationKeyResource(ActivationKeyCurator activationKeyCurator,
         I18n i18n,
         PoolCurator poolCurator,
-        ConsumerResource consumerResource) {
+        ConsumerResource consumerResource,
+        EventSink eventSink) {
         this.activationKeyCurator = activationKeyCurator;
         this.i18n = i18n;
         this.poolCurator = poolCurator;
         this.consumerResource = consumerResource;
+        this.eventSink = eventSink;
     }
 
     @GET
@@ -167,6 +171,7 @@ public class ActivationKeyResource {
         this.verifyName(activationKey);
         ActivationKey newKey = activationKeyCurator
             .create(activationKey);
+        eventSink.emitActivationKeyCreated(newKey);
 
         return newKey;
     }

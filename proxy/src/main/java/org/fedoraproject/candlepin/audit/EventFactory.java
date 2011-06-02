@@ -14,15 +14,7 @@
  */
 package org.fedoraproject.candlepin.audit;
 
-import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.guice.PrincipalProvider;
-import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.Entitlement;
-import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.Pool;
-import org.fedoraproject.candlepin.model.Subscription;
-
-import com.google.inject.Inject;
+import java.util.List;
 
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.AnnotationIntrospector;
@@ -36,10 +28,18 @@ import org.codehaus.jackson.map.ser.BeanPropertyWriter;
 import org.codehaus.jackson.map.ser.BeanSerializer;
 import org.codehaus.jackson.map.ser.CustomSerializerFactory;
 import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
+import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.guice.PrincipalProvider;
+import org.fedoraproject.candlepin.model.ActivationKey;
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.Subscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
+import com.google.inject.Inject;
 
 /**
  * EventFactory
@@ -73,6 +73,17 @@ public class EventFactory {
         Event e = new Event(Event.Type.CREATED, Event.Target.CONSUMER,
             newConsumer.getName(), principal, principal.getOwner().getId(),
             newConsumer.getId(), newConsumer.getId(), null, newEntityJson,
+            null, null);
+        return e;
+    }
+
+    public Event activationKeyCreated(ActivationKey key) {
+        String newEntityJson = entityToJson(key);
+        Principal principal = principalProvider.get();
+
+        Event e = new Event(Event.Type.CREATED, Event.Target.ACTIVATIONKEY,
+            key.getName(), principal, key.getOwner().getId(),
+            null, null, null, newEntityJson,
             null, null);
         return e;
     }

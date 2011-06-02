@@ -14,21 +14,6 @@
  */
 package org.fedoraproject.candlepin.audit;
 
-import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.PrincipalData;
-import org.fedoraproject.candlepin.model.AccessControlEnforced;
-import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.Persisted;
-import org.fedoraproject.candlepin.util.Util;
-
-import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.FilterDefs;
-import org.hibernate.annotations.Filters;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.ParamDef;
-
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -43,6 +28,20 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
+import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.PrincipalData;
+import org.fedoraproject.candlepin.model.AccessControlEnforced;
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.Persisted;
+import org.fedoraproject.candlepin.util.Util;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.FilterDefs;
+import org.hibernate.annotations.Filters;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.ParamDef;
 
 /**
  * Event - Base class for Candlepin events. Serves as both our semi-permanent
@@ -71,7 +70,8 @@ public class Event implements Persisted, AccessControlEnforced {
      * Target the type of entity operated on.
      */
     public enum Target {
-        CONSUMER, OWNER, ENTITLEMENT, POOL, EXPORT, IMPORT, USER, ROLE, SUBSCRIPTION
+        CONSUMER, OWNER, ENTITLEMENT, POOL, EXPORT, IMPORT, USER, ROLE, SUBSCRIPTION,
+        ACTIVATIONKEY
     }
 
     /**

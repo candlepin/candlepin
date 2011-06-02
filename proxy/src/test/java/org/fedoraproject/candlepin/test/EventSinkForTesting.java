@@ -16,6 +16,7 @@ package org.fedoraproject.candlepin.test;
 
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventSink;
+import org.fedoraproject.candlepin.model.ActivationKey;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
@@ -65,5 +66,9 @@ public class EventSinkForTesting implements EventSink {
 
     @Override
     public void emitSubscriptionModified(Subscription old, Subscription newSub) {
+    }
+
+    @Override
+    public void emitActivationKeyCreated(ActivationKey key) {
     }
 }

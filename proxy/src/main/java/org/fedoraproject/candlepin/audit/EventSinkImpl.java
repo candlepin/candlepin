@@ -18,11 +18,11 @@ import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
+import org.fedoraproject.candlepin.model.ActivationKey;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Subscription;
-
 import org.hornetq.api.core.HornetQException;
 import org.hornetq.api.core.TransportConfiguration;
 import org.hornetq.api.core.client.ClientMessage;
@@ -40,7 +40,7 @@ import com.google.inject.Singleton;
  */
 @Singleton
 public class EventSinkImpl implements EventSink {
-    
+
     private static Logger log = Logger.getLogger(EventSinkImpl.class);
     private EventFactory eventFactory;
     private ClientSessionFactory factory;
@@ -70,7 +70,7 @@ public class EventSinkImpl implements EventSink {
         return HornetQClient.createClientSessionFactory(
             new TransportConfiguration(InVMConnectorFactory.class.getName()));
     }
-    
+
     public void sendEvent(Event event) {
         if (log.isDebugEnabled()) {
             log.debug("Sending event - " + event);
@@ -85,7 +85,7 @@ public class EventSinkImpl implements EventSink {
             log.error("Error while trying to send event: " + event, e);
         }
     }
-    
+
     public void emitConsumerCreated(Consumer newConsumer) {
         Event e = eventFactory.consumerCreated(newConsumer);
         sendEvent(e);
@@ -100,19 +100,24 @@ public class EventSinkImpl implements EventSink {
         Event e = eventFactory.ownerMigrated(owner);
         sendEvent(e);
     }
-    
+
     public void emitPoolCreated(Pool newPool) {
         Event e = eventFactory.poolCreated(newPool);
         sendEvent(e);
     }
-    
+
     public void emitExportCreated(Consumer consumer) {
         Event e = eventFactory.exportCreated(consumer);
         sendEvent(e);
     }
-    
+
     public void emitImportCreated(Owner owner) {
         Event e = eventFactory.importCreated(owner);
+        sendEvent(e);
+    }
+
+    public void emitActivationKeyCreated(ActivationKey key) {
+        Event e = eventFactory.activationKeyCreated(key);
         sendEvent(e);
     }
 
