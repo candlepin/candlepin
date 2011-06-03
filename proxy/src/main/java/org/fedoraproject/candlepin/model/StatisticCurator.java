@@ -17,6 +17,10 @@ package org.fedoraproject.candlepin.model;
 
 import com.wideplay.warp.persist.Transactional;
 
+import org.hibernate.criterion.Restrictions;
+
+import java.util.List;
+
 /**
  * ContentCurator
  */
@@ -30,5 +34,10 @@ public class StatisticCurator extends AbstractHibernateCurator<Statistic> {
     public Statistic create(Statistic s) {
         super.create(s);
         return s;
+    }
+
+    public List<Statistic> getFullStatisticsByOwner(Owner owner) {
+        return (List<Statistic>) currentSession().createCriteria(Statistic.class)
+        .add(Restrictions.eq("ownerId", owner.getId())).list();
     }
 }

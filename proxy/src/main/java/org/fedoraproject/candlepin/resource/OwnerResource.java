@@ -41,6 +41,8 @@ import org.fedoraproject.candlepin.model.OwnerInfoCurator;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.ProductCurator;
+import org.fedoraproject.candlepin.model.Statistic;
+import org.fedoraproject.candlepin.model.StatisticCurator;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
 import org.fedoraproject.candlepin.model.SubscriptionToken;
@@ -108,6 +110,7 @@ public class OwnerResource {
     private Importer importer;
     private ExporterMetadataCurator exportCurator;
     private ImportRecordCurator importRecordCurator;
+    private StatisticCurator statisticCurator;
     private PoolManager poolManager;
     private static final int FEED_LIMIT = 1000;
 
@@ -115,7 +118,7 @@ public class OwnerResource {
     public OwnerResource(OwnerCurator ownerCurator, PoolCurator poolCurator,
         ProductCurator productCurator, SubscriptionCurator subscriptionCurator,
         SubscriptionTokenCurator subscriptionTokenCurator,
-        ConsumerCurator consumerCurator, I18n i18n,
+        ConsumerCurator consumerCurator, StatisticCurator statisticCurator, I18n i18n,
         UserServiceAdapter userService, EventSink sink,
         EventFactory eventFactory, EventCurator eventCurator,
         EventAdapter eventAdapter, Importer importer, PoolManager poolManager,
@@ -131,6 +134,7 @@ public class OwnerResource {
         this.subscriptionCurator = subscriptionCurator;
         this.subscriptionTokenCurator = subscriptionTokenCurator;
         this.consumerCurator = consumerCurator;
+        this.statisticCurator = statisticCurator;
         this.userService = userService;
         this.i18n = i18n;
         this.sink = sink;
@@ -559,6 +563,17 @@ public class OwnerResource {
             recordImportFailure(owner, e);
             throw e;
         }
+    }
+
+    @GET
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{owner_key}/statistics")
+    @AllowRoles(roles = { Role.OWNER_ADMIN })
+    public List<Statistic> getStatistics(
+        @PathParam("owner_key") String ownerKey) {
+        Owner o = findOwner(ownerKey);
+        return statisticCurator.getFullStatisticsByOwner(o);
     }
 
     private void recordImportSuccess(Owner owner) {

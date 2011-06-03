@@ -15,7 +15,6 @@
 package org.fedoraproject.candlepin.pinsetter.tasks;
 
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Statistic;
@@ -51,7 +50,6 @@ public class StatisticHistoryTask implements Job {
     private EntityManager entityManager;
     private StatisticCurator statCurator;
     private OwnerCurator ownerCurator;
-    private ConsumerCurator consumerCurator;
 
     private static Logger log = Logger.getLogger(StatisticHistoryTask.class);
 
@@ -63,12 +61,10 @@ public class StatisticHistoryTask implements Job {
      */
     @Inject
     public StatisticHistoryTask(EntityManager entityManager,
-        StatisticCurator statCurator, OwnerCurator ownerCurator,
-        ConsumerCurator consumerCurator) {
+        StatisticCurator statCurator, OwnerCurator ownerCurator) {
         this.entityManager = entityManager;
         this.statCurator = statCurator;
         this.ownerCurator = ownerCurator;
-        this.consumerCurator = consumerCurator;
     }
 
     @Override
