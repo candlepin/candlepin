@@ -50,6 +50,9 @@ data["owners"].each do |new_owner|
     puts "   user: #{user['username']}"
     cp.create_user(owner['key'], user['username'], user['password'])
   end
+  
+  # Create one dummy activation key for the owner
+  cp.create_activation_key({"name" => "Default Key"}, owner['key']) 
 end
 
 owners = cp.list_owners({:fetch => true})
@@ -127,11 +130,6 @@ data['products'].each do |product|
               subscription = cp.create_subscription(owner_key,
                   product_ret['id'], LARGE_SUB_QUANTITY, provided_products,
                   contract_number, '12331131231', startDate1, endDate1)
-
-              # Create a random int token for each subscription:
-              token = cp.create_subscription_token({'token' => rand(10000000000),
-                  'subscription' => {'id' => subscription['id']}})
-              contract_number += 1
 
               # Create a subscription for the future:
               subscription = cp.create_subscription(owner_key, product_ret['id'],

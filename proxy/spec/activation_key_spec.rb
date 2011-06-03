@@ -32,8 +32,6 @@ describe 'Activation Keys' do
   it 'should allow pools to be added and removed to activation keys' do
     @cp.add_pool_to_key(@activation_key['id'], @pool['id'])
 	key = @cp.get_activation_key(@activation_key['id'])
-	puts key.to_json
-	puts key['pools']
 	key['pools'].length.should == 1
     @cp.remove_pool_from_key(@activation_key['id'], @pool['id'])
 	key = @cp.get_activation_key(@activation_key['id'])

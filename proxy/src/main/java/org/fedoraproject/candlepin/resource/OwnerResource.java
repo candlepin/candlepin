@@ -336,6 +336,24 @@ public class OwnerResource {
     }
 
     /**
+     * Allow the creation of an activation key from the owner resource
+     *
+     * @param ownerKey id of the owner whose keys are sought.
+     * @return the activation keys for the owner of the given id.
+     */
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{owner_key}/activation_keys")
+    @AllowRoles(roles = { Role.OWNER_ADMIN })
+    public ActivationKey createActivationKey(
+        @PathParam("owner_key") String ownerKey, ActivationKey activationKey) {
+        Owner owner = findOwner(ownerKey);
+        activationKey.setOwner(owner);
+
+        return this.activationKeyCurator.create(activationKey);
+    }
+
+    /**
      * Return the consumers for the owner of the given id.
      *
      * @param ownerKey id of the owner whose consumers are sought.
