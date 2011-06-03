@@ -27,6 +27,7 @@ import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
+import org.fedoraproject.candlepin.util.Util;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -54,14 +55,14 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         productCurator.create(product1);
 
         pool1 = createPoolAndSub(owner, product1, 1L,
-            dateSource.currentDate(), dateSource.currentDate());
+            Util.yesterday(), Util.tomorrow());
         poolCurator.create(pool1);
 
         Product product2 = TestUtil.createProduct();
         productCurator.create(product2);
 
         pool2 = createPoolAndSub(owner, product2, 1L,
-            dateSource.currentDate(), dateSource.currentDate());
+            Util.yesterday(), Util.tomorrow());
         poolCurator.create(pool2);
         
         ConsumerType consumerType = new ConsumerType("system");
@@ -275,6 +276,44 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testConsumerTypeCountByPoolExcludesFuturePools() {
+        ConsumerType type = consumerTypeCurator.lookupByLabel("system");
+        pool1.setAttribute("requires_consumer_type", type.getLabel());
+        pool1.setStartDate(Util.tomorrow());
+        owner.addEntitlementPool(pool1);
+
+        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+
+        Map<String, Integer> expectedPoolCount = new HashMap<String, Integer>() {
+            {
+                put("system", 0);
+                put("domain", 0);
+            }
+        };
+
+        assertEquals(expectedPoolCount, info.getConsumerTypeCountByPool());
+    }
+
+    @Test
+    public void testConsumerTypeCountByPoolExcludesExpiredPools() {
+        ConsumerType type = consumerTypeCurator.lookupByLabel("system");
+        pool1.setAttribute("requires_consumer_type", type.getLabel());
+        pool1.setEndDate(Util.yesterday());
+        owner.addEntitlementPool(pool1);
+
+        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+
+        Map<String, Integer> expectedPoolCount = new HashMap<String, Integer>() {
+            {
+                put("system", 0);
+                put("domain", 0);
+            }
+        };
+
+        assertEquals(expectedPoolCount, info.getConsumerTypeCountByPool());
+    }
+
+    @Test
     public void testOwnerInfoEntitlementsConsumedByFamilyPutsFamilylessInNone() {
         owner.addEntitlementPool(pool1);
 
@@ -361,6 +400,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         assertEquals(expected, info.getEntitlementsConsumedByFamily());
     }
 
+    @Test
     public void testConsumerGuestCount() {
         ConsumerType type = consumerTypeCurator.lookupByLabel("system");
         Consumer guest1 = new Consumer("test-consumer", "test-user", owner, type);
