@@ -87,13 +87,14 @@ public class StatisticHistoryTask implements Job {
         }
         catch (HibernateException e) {
             log.error("Cannot store: ", e);
+            throw new JobExecutionException(e);
         }
     }
 
     private void totalConsumers(Owner owner) {
         int count = owner.getConsumers().size();
         Statistic consumerCountStatistic = new Statistic(
-            EntryType.TotalConsumers, ValueType.Raw, null, count, owner.getId());
+            EntryType.TOTALCONSUMERS, ValueType.RAW, null, count, owner.getId());
         statCurator.create(consumerCountStatistic);
     }
 
@@ -110,7 +111,7 @@ public class StatisticHistoryTask implements Job {
         }
         for (String sockets : map.keySet()) {
             Statistic socketCountStatistic = new Statistic(
-                EntryType.ConsumersBySocketCount, ValueType.Raw, sockets,
+                EntryType.CONSUMERSBYSOCKETCOUNT, ValueType.RAW, sockets,
                 map.get(sockets), owner.getId());
             statCurator.create(socketCountStatistic);
         }
@@ -125,7 +126,7 @@ public class StatisticHistoryTask implements Job {
         Long subCount = (Long) subscriptionCountQuery.iterate().next();
         subscriptionCountTotal = (subCount == null ? 0 : subCount.intValue());
         Statistic subscriptionCountStatistic = new Statistic(
-            EntryType.TotalSubscriptionCount, ValueType.Raw, null,
+            EntryType.TOTALSUBSCRIPTIONCOUNT, ValueType.RAW, null,
             subscriptionCountTotal, ownerId);
         statCurator.create(subscriptionCountStatistic);
         return subscriptionCountTotal;
@@ -143,7 +144,7 @@ public class StatisticHistoryTask implements Job {
         Long entCount = (Long) entitlementCountQuery.iterate().next();
         entitlementCountTotal = (entCount == null ? 0 : entCount.intValue());
         Statistic entitlementCountRawStatistic = new Statistic(
-            EntryType.TotalSubscriptionConsumed, ValueType.Raw, null,
+            EntryType.TOTALSUBSCRIPTIONCONSUMED, ValueType.RAW, null,
             entitlementCountTotal, ownerId);
         statCurator.create(entitlementCountRawStatistic);
         int percentage = 0;
@@ -151,7 +152,7 @@ public class StatisticHistoryTask implements Job {
             percentage = (entitlementCountTotal * 100 / subscriptionCountTotal);
         }
         Statistic entitlementCountPercentageStatistic = new Statistic(
-            EntryType.TotalSubscriptionConsumed, ValueType.Percentage, null,
+            EntryType.TOTALSUBSCRIPTIONCONSUMED, ValueType.PERCENTAGE, null,
             percentage, ownerId);
         statCurator.create(entitlementCountPercentageStatistic);
     }
@@ -192,15 +193,15 @@ public class StatisticHistoryTask implements Job {
                 poolPercentage = (perPoolConsumedCount * 100 / totalPoolCountTotal);
             }
             Statistic perPoolCountPercentageStatistic = new Statistic(
-                EntryType.PerPool, ValueType.Percentage, poolId,
+                EntryType.PerPool, ValueType.PERCENTAGE, poolId,
                 poolPercentage, ownerId);
             statCurator.create(perPoolCountPercentageStatistic);
             Statistic perPoolCountUsedStatistic = new Statistic(
-                EntryType.PerPool, ValueType.Used, poolId, perPoolUsedCount,
+                EntryType.PerPool, ValueType.USED, poolId, perPoolUsedCount,
                 ownerId);
             statCurator.create(perPoolCountUsedStatistic);
             Statistic perPoolCountConsumedStatistic = new Statistic(
-                EntryType.PerPool, ValueType.Consumed, poolId,
+                EntryType.PerPool, ValueType.CONSUMED, poolId,
                 perPoolConsumedCount, ownerId);
             statCurator.create(perPoolCountConsumedStatistic);
         }
@@ -246,22 +247,21 @@ public class StatisticHistoryTask implements Job {
                                      totalProductCountTotal);
             }
             Statistic perPoolCountPercentageStatistic = new Statistic(
-                EntryType.PerProduct, ValueType.Percentage, productName,
+                EntryType.PerProduct, ValueType.PERCENTAGE, productName,
                 productPercentage, ownerId);
             statCurator.create(perPoolCountPercentageStatistic);
             Statistic perPoolCountUsedStatistic = new Statistic(
-                EntryType.PerProduct, ValueType.Used, productName,
+                EntryType.PerProduct, ValueType.USED, productName,
                 perProductUsedCount, ownerId);
             statCurator.create(perPoolCountUsedStatistic);
             Statistic perPoolCountConsumedStatistic = new Statistic(
-                EntryType.PerProduct, ValueType.Consumed, productName,
+                EntryType.PerProduct, ValueType.CONSUMED, productName,
                 perProductConsumedCount, ownerId);
             statCurator.create(perPoolCountConsumedStatistic);
         }
     }
 
     protected Session currentSession() {
-        Session sess = (Session) entityManager.getDelegate();
-        return sess;
+        return (Session) entityManager.getDelegate();
     }
 }

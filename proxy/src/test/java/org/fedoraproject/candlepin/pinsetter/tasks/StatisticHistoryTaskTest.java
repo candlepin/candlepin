@@ -15,12 +15,13 @@
 package org.fedoraproject.candlepin.pinsetter.tasks;
 
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.quartz.JobExecutionException;
 
 /**
- * CertificateRevocationListTaskTest
+ * StatisticHistoryTaskTest
  */
 
 public class StatisticHistoryTaskTest extends DatabaseTestFixture {

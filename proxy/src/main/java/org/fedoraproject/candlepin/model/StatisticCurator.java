@@ -32,8 +32,7 @@ public class StatisticCurator extends AbstractHibernateCurator<Statistic> {
 
     @Transactional
     public Statistic create(Statistic s) {
-        super.create(s);
-        return s;
+        return super.create(s);
     }
 
     public List<Statistic> getFullStatisticsByOwner(Owner owner) {
