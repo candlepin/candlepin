@@ -83,7 +83,7 @@ public class EventFactory {
 
         Event e = new Event(Event.Type.CREATED, Event.Target.ACTIVATIONKEY,
             key.getName(), principal, key.getOwner().getId(),
-            null, null, null, newEntityJson,
+            null, key.getId(), null, newEntityJson,
             null, null);
         return e;
     }

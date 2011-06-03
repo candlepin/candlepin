@@ -350,7 +350,11 @@ public class OwnerResource {
         Owner owner = findOwner(ownerKey);
         activationKey.setOwner(owner);
 
-        return this.activationKeyCurator.create(activationKey);
+        ActivationKey newKey = activationKeyCurator.create(activationKey);
+        System.out.println(newKey);
+        sink.emitActivationKeyCreated(newKey);
+
+        return newKey;
     }
 
     /**

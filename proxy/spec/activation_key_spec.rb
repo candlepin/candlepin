@@ -20,6 +20,14 @@ describe 'Activation Keys' do
     @activation_key = @cp.create_activation_key(activation_key)
   end
 
+  it 'should allow creating keys under an owner' do
+    new_key = {
+        'name' => random_string('test_token'),
+    }
+    created_key = @cp.create_activation_key(new_key, @owner['key'])
+    created_key['id'].should_not be_nil
+  end
+
   it 'should allow owners to list existing activation keys' do
     keys = @cp.list_activation_keys()
     keys.length.should >= 1
