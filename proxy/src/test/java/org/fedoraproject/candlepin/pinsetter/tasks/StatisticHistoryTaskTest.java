@@ -15,7 +15,6 @@
 package org.fedoraproject.candlepin.pinsetter.tasks;
 
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.quartz.JobExecutionException;
@@ -33,7 +32,7 @@ public class StatisticHistoryTaskTest extends DatabaseTestFixture {
         this.task = new StatisticHistoryTask(entityManager(), statisticCurator);
     }
 
-    @Test()
+    @Test
     public void executeTest() throws JobExecutionException {
         this.beginTransaction();
         task.execute(null);
