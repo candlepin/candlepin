@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.3.13
+Version: 0.3.14
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -145,6 +145,14 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Fri Jun 03 2011 jesus m. rodriguez <jesusr@redhat.com> 0.3.14-1
+- checkstyle cleaning (jesusr@redhat.com)
+- 710141: only show active pools in ownerinfo (jbowes@redhat.com)
+- Add in the translation config (bkearney@redhat.com)
+- Removed prepend product ids for custom. (wpoteat@redhat.com)
+- Change in test data to remove use of decimals in product ids
+  (wpoteat@redhat.com)
+
 * Fri May 13 2011 jesus m. rodriguez <jmrodri@gmail.com> 0.3.13-1
 - we REALLY need candlepin-deps 0.0.13 or earlier, not 0.0.16.
 
