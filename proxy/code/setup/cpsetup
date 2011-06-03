@@ -84,6 +84,13 @@ class TomcatSetup(object):
         config.write(updated)
         file.close
 
+    def fix_perms(self):
+        run_command("chmod g+x /var/log/tomcat6")
+        run_command("chmod g+x /etc/tomcat6/")
+        run_command("chown tomcat:tomcat -R /var/lib/tomcat6")
+        run_command("chown tomcat:tomcat -R /var/lib/tomcat6")
+        run_command("chown tomcat:tomcat -R /var/cache/tomcat6")
+
     def stop(self):
         run_command("/sbin/service tomcat6 stop")
 
@@ -175,6 +182,7 @@ def main(argv):
    
     # Stop tomcat before we wipe the DB otherwise you get errors from pg
     tsetup = TomcatSetup('/etc/tomcat6')
+    tsetup.fix_perms()
     tsetup.stop()
     
     dbsetup = DbSetup("candlepin", "candlepin")

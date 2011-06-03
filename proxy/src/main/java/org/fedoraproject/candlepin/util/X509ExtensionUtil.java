@@ -14,19 +14,20 @@
  */
 package org.fedoraproject.candlepin.util;
 
-import java.text.SimpleDateFormat;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-
-import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductContent;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.pki.X509ExtensionWrapper;
+
+import org.apache.log4j.Logger;
+
+import java.text.SimpleDateFormat;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * X509ExtensionUtil
@@ -37,11 +38,10 @@ public class X509ExtensionUtil {
     private SimpleDateFormat iso8601DateFormat;
 
     public X509ExtensionUtil() {
-        //Output everything in UTC
+        // Output everything in UTC
         this.iso8601DateFormat = Util.getUTCDateFormat();
     }
 
-    
     public Set<X509ExtensionWrapper> consumerExtensions(Consumer consumer) {
         Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<X509ExtensionWrapper>();
 
@@ -50,8 +50,8 @@ public class X509ExtensionUtil {
         String consumerOid = OIDUtil.REDHAT_OID + "." +
             OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.SYSTEM_NAMESPACE_KEY);
         toReturn.add(new X509ExtensionWrapper(consumerOid + "." +
-            OIDUtil.SYSTEM_OIDS.get(OIDUtil.UUID_KEY), false,
-            consumer.getUuid()));
+            OIDUtil.SYSTEM_OIDS.get(OIDUtil.UUID_KEY), false, consumer
+            .getUuid()));
 
         return toReturn;
     }
@@ -68,19 +68,19 @@ public class X509ExtensionUtil {
             OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ORDER_NAMESPACE_KEY);
         if (sub.getProduct().getId() != null) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_NAME_KEY), false,
-                ent.getPool().getProductName()));
+                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_NAME_KEY), false, ent
+                .getPool().getProductName()));
         }
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-            OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_NUMBER_KEY), false,
-            sub.getId().toString()));
+            OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_NUMBER_KEY), false, sub
+            .getId().toString()));
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-            OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SKU_KEY), false,
-            sub.getProduct().getId().toString()));
+            OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SKU_KEY), false, sub
+            .getProduct().getId().toString()));
         // TODO: regnum? virtlimit/socketlimit?
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-            OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_QUANTITY_KEY), false,
-            sub.getQuantity().toString()));
+            OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_QUANTITY_KEY), false, sub
+            .getQuantity().toString()));
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
             OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_STARTDATE_KEY), false,
             iso8601DateFormat.format(sub.getStartDate())));
@@ -88,7 +88,8 @@ public class X509ExtensionUtil {
             OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_ENDDATE_KEY), false,
             iso8601DateFormat.format(sub.getEndDate())));
         // TODO : use keys
-        String warningPeriod = sub.getProduct().getAttributeValue("warning_period");
+        String warningPeriod = sub.getProduct().getAttributeValue(
+            "warning_period");
         if (warningPeriod == null) {
             warningPeriod = "0";
         }
@@ -101,7 +102,7 @@ public class X509ExtensionUtil {
                 false, sub.getContractNumber()));
         }
         // Add the account number
-        if (sub.getAccountNumber() != null) { 
+        if (sub.getAccountNumber() != null) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_ACCOUNT_NUMBER_KEY),
                 false, sub.getAccountNumber()));
@@ -110,19 +111,23 @@ public class X509ExtensionUtil {
         String mgmt = sub.getProduct().getAttributeValue("management_enabled");
         mgmt = (mgmt == null) ? "0" : mgmt;
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-            OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_PROVIDES_MANAGEMENT_KEY), false, mgmt));
-        
-        String supportLevel = sub.getProduct().getAttributeValue("support_level");
+            OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_PROVIDES_MANAGEMENT_KEY),
+            false, mgmt));
+
+        String supportLevel = sub.getProduct().getAttributeValue(
+            "support_level");
         String supportType = sub.getProduct().getAttributeValue("support_type");
         if (supportLevel != null) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SUPPORT_LEVEL), false, supportLevel));
+                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SUPPORT_LEVEL), false,
+                supportLevel));
         }
         if (supportType != null) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SUPPORT_TYPE), false, supportType));
+                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SUPPORT_TYPE), false,
+                supportType));
         }
-        
+
         return toReturn;
     }
 
@@ -148,20 +153,21 @@ public class X509ExtensionUtil {
         // replace ith approriate hash for product, we can maybe get away with
         // faking this
         toReturn.add(new X509ExtensionWrapper(productOid + "." +
-            OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_NAME_KEY), false,
-            product.getName()));
+            OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_NAME_KEY), false, product
+            .getName()));
 
-        // XXX include version, arch, and provides here (after defined in attributes)
-        
+        // XXX include version, arch, and provides here (after defined in
+        // attributes)
+
         // dummy provides i used for testing
-        //toReturn.add(new X509ExtensionWrapper(productOid + "." +
-        //    OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_PROVIDES_KEY), false,
-        //    new DERUTF8String("TAG1,TAG2,TAG3")));
+        // toReturn.add(new X509ExtensionWrapper(productOid + "." +
+        // OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_PROVIDES_KEY), false,
+        // new DERUTF8String("TAG1,TAG2,TAG3")));
         return toReturn;
     }
 
-    public Set<X509ExtensionWrapper> contentExtensions(Set<ProductContent> productContent,
-        String contentPrefix) {
+    public Set<X509ExtensionWrapper> contentExtensions(
+        Set<ProductContent> productContent, String contentPrefix) {
 
         Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<X509ExtensionWrapper>();
 
@@ -180,11 +186,11 @@ public class X509ExtensionUtil {
                     .get(OIDUtil.CHANNEL_FAMILY_NAMESPACE_KEY) + "." +
                 pc.getContent().getId().toString() + "." +
                 OIDUtil.CF_REPO_TYPE.get(pc.getContent().getType());
-            toReturn.add(new X509ExtensionWrapper(contentOid, false,
-                pc.getContent().getType()));
+            toReturn.add(new X509ExtensionWrapper(contentOid, false, pc
+                .getContent().getType()));
             toReturn.add(new X509ExtensionWrapper(contentOid + "." +
-                OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_NAME_KEY), false,
-                pc.getContent().getName()));
+                OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_NAME_KEY), false, pc
+                .getContent().getName()));
             toReturn.add(new X509ExtensionWrapper(contentOid + "." +
                 OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_LABEL_KEY), false,
                 pc.getContent().getLabel()));
@@ -198,18 +204,13 @@ public class X509ExtensionUtil {
                 OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_GPG_URL_KEY), false,
                 pc.getContent().getGpgUrl()));
             toReturn.add(new X509ExtensionWrapper(contentOid + "." +
-                OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_FLEX_QUANTITY_KEY),
-                false, pc.getFlexEntitlement().toString()));
-            toReturn.add(new X509ExtensionWrapper(contentOid + "." +
-                OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_PHYS_QUANTITY_KEY),
-                false, pc.getPhysicalEntitlement().toString()));
-            toReturn.add(new X509ExtensionWrapper(contentOid + "." +
-                OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_ENABLED), false,
-                (pc.getEnabled()) ? "1" : "0"));
+                OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_ENABLED), false, (pc
+                .getEnabled()) ? "1" : "0"));
 
             // Include metadata expiry if specified on the content:
             if (pc.getContent().getMetadataExpire() != null) {
-                toReturn.add(new X509ExtensionWrapper(contentOid + "." +
+                toReturn.add(new X509ExtensionWrapper(
+                    contentOid + "." +
                     OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_METADATA_EXPIRE),
                     false, pc.getContent().getMetadataExpire().toString()));
             }

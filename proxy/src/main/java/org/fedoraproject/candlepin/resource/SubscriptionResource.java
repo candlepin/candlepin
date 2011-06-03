@@ -26,7 +26,6 @@ import javax.ws.rs.core.MediaType;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.model.Subscription;
-import org.fedoraproject.candlepin.model.SubscriptionCurator;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
@@ -46,17 +45,15 @@ import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 public class SubscriptionResource {
     private static Logger log = Logger.getLogger(SubscriptionResource.class);
 
-    private SubscriptionCurator subCurator;
     private SubscriptionServiceAdapter subService;
     private ConsumerCurator consumerCurator;
 
     private I18n i18n;
 
     @Inject
-    public SubscriptionResource(SubscriptionCurator subCurator,
-        SubscriptionServiceAdapter subService, ConsumerCurator consumerCurator,
+    public SubscriptionResource(SubscriptionServiceAdapter subService, 
+        ConsumerCurator consumerCurator,
         I18n i18n) {
-        this.subCurator = subCurator;
         this.subService = subService;
         this.consumerCurator = consumerCurator;
         this.i18n = i18n;
@@ -65,7 +62,7 @@ public class SubscriptionResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<Subscription> getSubscriptions() {
-        return subCurator.listAll();
+        return subService.getSubscriptions();
     }
 
     @GET
@@ -110,11 +107,11 @@ public class SubscriptionResource {
         @PathParam("subscription_id") String subscriptionIdString) {
         
         Subscription subscription = verifyAndFind(subscriptionIdString);
-        subCurator.delete(subscription);
+        subService.deleteSubscription(subscription);
     }
 
     private Subscription verifyAndFind(String subscriptionId) {
-        Subscription subscription = subCurator.find(subscriptionId);
+        Subscription subscription = subService.getSubscription(subscriptionId);
 
         if (subscription == null) {
             throw new BadRequestException(

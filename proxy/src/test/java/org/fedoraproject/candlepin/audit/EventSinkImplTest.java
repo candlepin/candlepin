@@ -74,7 +74,7 @@ public class EventSinkImplTest {
         when(mockClientSession.createProducer(anyString())).thenReturn(mockClientProducer);
         when(mockClientSession.createMessage(anyBoolean())).thenReturn(mockClientMessage);
         when(mockClientMessage.getBodyBuffer()).thenReturn(
-            HornetQBuffers.fixedBuffer(1000));
+            HornetQBuffers.fixedBuffer(2000));
         this.mapper = spy(new ObjectMapper());
         this.eventSinkImpl = createEventSink(mockSessionFactory);
     }

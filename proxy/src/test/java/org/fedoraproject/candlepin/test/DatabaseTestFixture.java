@@ -25,6 +25,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.fedoraproject.candlepin.CandlepinCommonTestingModule;
 import org.fedoraproject.candlepin.CandlepinNonServletEnvironmentTestingModule;
 import org.fedoraproject.candlepin.TestingInterceptor;
+import org.fedoraproject.candlepin.audit.StatisticCurator;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.auth.Access;
@@ -66,8 +67,6 @@ import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.util.DateSource;
-import org.junit.Before;
-import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -77,6 +76,18 @@ import com.wideplay.warp.persist.PersistenceService;
 import com.wideplay.warp.persist.UnitOfWork;
 import com.wideplay.warp.persist.WorkManager;
 import org.fedoraproject.candlepin.auth.permissions.Permission;
+
+import org.junit.Before;
+import org.xnap.commons.i18n.I18n;
+
+import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * Test fixture for test classes requiring access to the database.
@@ -88,7 +99,7 @@ public class DatabaseTestFixture {
 
     protected EntityManagerFactory emf;
     protected Injector injector;
-    
+
     protected OwnerCurator ownerCurator;
     protected UserCurator userCurator;
     protected ProductCurator productCurator;
@@ -118,45 +129,42 @@ public class DatabaseTestFixture {
     protected TestingInterceptor securityInterceptor;
     protected EntitlementCertServiceAdapter entitlementCertService;
     protected CandlepinPoolManager poolManager;
+    protected StatisticCurator statisticCurator;
 
     @Before
     public void init() {
         Module guiceOverrideModule = getGuiceOverrideModule();
         CandlepinCommonTestingModule testingModule = new CandlepinCommonTestingModule();
         if (guiceOverrideModule == null) {
-            injector = Guice.createInjector(
-                    testingModule,
-                    new CandlepinNonServletEnvironmentTestingModule(),
-                    PersistenceService.usingJpa()
-                        .across(UnitOfWork.REQUEST)
-                        .buildModule()
-            );
+            injector = Guice.createInjector(testingModule,
+                new CandlepinNonServletEnvironmentTestingModule(),
+                PersistenceService.usingJpa().across(UnitOfWork.REQUEST)
+                    .buildModule());
         }
         else {
-            injector = Guice.createInjector(
-                Modules.override(testingModule).with(
-                    guiceOverrideModule),
+            injector = Guice.createInjector(Modules.override(testingModule)
+                .with(guiceOverrideModule),
                 new CandlepinNonServletEnvironmentTestingModule(),
-                PersistenceService.usingJpa()
-                    .across(UnitOfWork.REQUEST)
-                    .buildModule()
-            );
+                PersistenceService.usingJpa().across(UnitOfWork.REQUEST)
+                    .buildModule());
         }
-        
-        injector.getInstance(EntityManagerFactory.class); 
+
+        injector.getInstance(EntityManagerFactory.class);
         emf = injector.getProvider(EntityManagerFactory.class).get();
-        
+
         ownerCurator = injector.getInstance(OwnerCurator.class);
         userCurator = injector.getInstance(UserCurator.class);
         productCurator = injector.getInstance(ProductCurator.class);
-        productCertificateCurator = injector.getInstance(ProductCertificateCurator.class);
+        productCertificateCurator = injector
+            .getInstance(ProductCertificateCurator.class);
         consumerCurator = injector.getInstance(ConsumerCurator.class);
         eventCurator = injector.getInstance(EventCurator.class);
         permissionCurator = injector.getInstance(OwnerPermissionCurator.class);
         roleCurator = injector.getInstance(RoleCurator.class);
 
         consumerTypeCurator = injector.getInstance(ConsumerTypeCurator.class);
-        certificateCurator = injector.getInstance(SubscriptionsCertificateCurator.class);
+        certificateCurator = injector
+            .getInstance(SubscriptionsCertificateCurator.class);
         poolCurator = injector.getInstance(PoolCurator.class);
         entitlementCurator = injector.getInstance(EntitlementCurator.class);
         attributeCurator = injector.getInstance(ProductAttributeCurator.class);
@@ -165,32 +173,37 @@ public class DatabaseTestFixture {
         subTokenCurator = injector.getInstance(SubscriptionTokenCurator.class);
         contentCurator = injector.getInstance(ContentCurator.class);
         unitOfWork = injector.getInstance(WorkManager.class);
-        
+
         productAdapter = injector.getInstance(ProductServiceAdapter.class);
         subAdapter = injector.getInstance(SubscriptionServiceAdapter.class);
-        entCertCurator = injector.getInstance(EntitlementCertificateCurator.class);
-        certSerialCurator = injector.getInstance(CertificateSerialCurator.class);
-        entitlementCertService = injector.getInstance(EntitlementCertServiceAdapter.class);
+        entCertCurator = injector
+            .getInstance(EntitlementCertificateCurator.class);
+        certSerialCurator = injector
+            .getInstance(CertificateSerialCurator.class);
+        entitlementCertService = injector
+            .getInstance(EntitlementCertServiceAdapter.class);
         poolManager = injector.getInstance(CandlepinPoolManager.class);
+        statisticCurator = injector.getInstance(StatisticCurator.class);
         i18n = injector.getInstance(I18n.class);
-        
+
         crudInterceptor = testingModule.crudInterceptor();
-        securityInterceptor = testingModule.securityInterceptor(); 
-        
-        dateSource = (DateSourceForTesting) injector.getInstance(DateSource.class);
+        securityInterceptor = testingModule.securityInterceptor();
+
+        dateSource = (DateSourceForTesting) injector
+            .getInstance(DateSource.class);
         dateSource.currentDate(TestDateUtil.date(2010, 1, 1));
     }
-    
+
     protected Module getGuiceOverrideModule() {
         return null;
     }
-        
+
     protected EntityManager entityManager() {
         return injector.getProvider(EntityManager.class).get();
     }
-    
+
     /**
-     * Helper to open a new db transaction. Pretty simple for now, but may 
+     * Helper to open a new db transaction. Pretty simple for now, but may
      * require additional logic and error handling down the road.
      */
     protected void beginTransaction() {
@@ -198,8 +211,8 @@ public class DatabaseTestFixture {
     }
 
     /**
-     * Helper to commit the current db transaction. Pretty simple for now, but may 
-     * require additional logic and error handling down the road.
+     * Helper to commit the current db transaction. Pretty simple for now, but
+     * may require additional logic and error handling down the road.
      */
     protected void commitTransaction() {
         entityManager().getTransaction().commit();
@@ -207,15 +220,17 @@ public class DatabaseTestFixture {
 
     /**
      * Create an entitlement pool and matching subscription.
+     *
      * @return an entitlement pool and matching subscription.
      */
-    protected Pool createPoolAndSub(Owner owner, Product product, Long quantity,
-        Date startDate, Date endDate) {
-        Pool p = new Pool(owner, product.getId(), product.getName(), 
-            new HashSet<ProvidedProduct>(), quantity, 
-                startDate, endDate, DEFAULT_CONTRACT, DEFAULT_ACCOUNT);
-        Subscription sub = new Subscription(owner, product, new HashSet<Product>(), 
-            quantity, startDate, endDate, TestUtil.createDate(2010, 2, 12));
+    protected Pool createPoolAndSub(Owner owner, Product product,
+        Long quantity, Date startDate, Date endDate) {
+        Pool p = new Pool(owner, product.getId(), product.getName(),
+            new HashSet<ProvidedProduct>(), quantity, startDate, endDate,
+            DEFAULT_CONTRACT, DEFAULT_ACCOUNT);
+        Subscription sub = new Subscription(owner, product,
+            new HashSet<Product>(), quantity, startDate, endDate,
+            TestUtil.createDate(2010, 2, 12));
         subCurator.create(sub);
         p.setSubscriptionId(sub.getId());
         return poolCurator.create(p);
@@ -228,46 +243,45 @@ public class DatabaseTestFixture {
     }
 
     protected Consumer createConsumer(Owner owner) {
-        ConsumerType type = new ConsumerType("test-consumer-type-" + TestUtil.randomInt());
+        ConsumerType type = new ConsumerType("test-consumer-type-" +
+            TestUtil.randomInt());
         consumerTypeCurator.create(type);
         Consumer c = new Consumer("test-consumer", "test-user", owner, type);
         consumerCurator.create(c);
         return c;
     }
-    
+
     protected Subscription createSubscription() {
         Product p = TestUtil.createProduct();
         productCurator.create(p);
-        Subscription sub = new Subscription(createOwner(), 
-                                            p, new HashSet<Product>(),
-                                            1000L,
-                                            TestUtil.createDate(2000, 1, 1),
-                                            TestUtil.createDate(2010, 1, 1), 
-                                            TestUtil.createDate(2000, 1, 1));
+        Subscription sub = new Subscription(createOwner(), p,
+            new HashSet<Product>(), 1000L, TestUtil.createDate(2000, 1, 1),
+            TestUtil.createDate(2010, 1, 1), TestUtil.createDate(2000, 1, 1));
         subCurator.create(sub);
         return sub;
 
     }
-    
+
     protected SubscriptionToken createSubscriptionToken() {
         Subscription sub = createSubscription();
-       
+
         SubscriptionToken token = new SubscriptionToken();
         token.setToken("this_is_a_test_token");
-       
+
         token.setSubscription(sub);
         sub.getTokens().add(token);
         subCurator.create(sub);
         subTokenCurator.create(token);
         return token;
     }
-    
+
     protected Entitlement createEntitlement(Owner owner, Consumer consumer,
         Pool pool, EntitlementCertificate cert) {
         return TestUtil.createEntitlement(owner, consumer, pool, cert);
     }
-    
-    protected EntitlementCertificate createEntitlementCertificate(String key, String cert) {
+
+    protected EntitlementCertificate createEntitlementCertificate(String key,
+        String cert) {
         EntitlementCertificate toReturn = new EntitlementCertificate();
         CertificateSerial certSerial = new CertificateSerial(new Date());
         certSerialCurator.create(certSerial);

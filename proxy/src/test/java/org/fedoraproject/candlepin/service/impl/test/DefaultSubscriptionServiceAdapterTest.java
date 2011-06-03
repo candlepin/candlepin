@@ -151,7 +151,7 @@ public class DefaultSubscriptionServiceAdapterTest extends DatabaseTestFixture {
         Mockito.when(consumer.getName()).thenReturn("megaman");
 
         SubscriptionServiceAdapter adapter =
-                new DefaultSubscriptionServiceAdapter(subCurator, config, null);
+                new DefaultSubscriptionServiceAdapter(subCurator, config, null, null);
 
         assertTrue(adapter.canActivateSubscription(consumer));
     }
@@ -166,7 +166,7 @@ public class DefaultSubscriptionServiceAdapterTest extends DatabaseTestFixture {
         Mockito.when(consumer.getName()).thenReturn("superman");
 
         SubscriptionServiceAdapter adapter =
-                new DefaultSubscriptionServiceAdapter(subCurator, config, null);
+                new DefaultSubscriptionServiceAdapter(subCurator, config, null, null);
 
         assertFalse(adapter.canActivateSubscription(consumer));
     }
@@ -181,7 +181,7 @@ public class DefaultSubscriptionServiceAdapterTest extends DatabaseTestFixture {
         Mockito.when(consumer.getName()).thenReturn("anything");
 
         SubscriptionServiceAdapter adapter =
-                new DefaultSubscriptionServiceAdapter(subCurator, config, null);
+                new DefaultSubscriptionServiceAdapter(subCurator, config, null, null);
 
         assertFalse(adapter.canActivateSubscription(consumer));
     }
@@ -196,7 +196,7 @@ public class DefaultSubscriptionServiceAdapterTest extends DatabaseTestFixture {
         Mockito.when(consumer.getName()).thenReturn("anything");
 
         SubscriptionServiceAdapter adapter =
-                new DefaultSubscriptionServiceAdapter(subCurator, config, null);
+                new DefaultSubscriptionServiceAdapter(subCurator, config, null, null);
 
         assertFalse(adapter.canActivateSubscription(consumer));
     }

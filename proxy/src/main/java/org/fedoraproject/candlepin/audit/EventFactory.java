@@ -14,7 +14,15 @@
  */
 package org.fedoraproject.candlepin.audit;
 
-import java.util.List;
+import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.guice.PrincipalProvider;
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.Subscription;
+
+import com.google.inject.Inject;
 
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.AnnotationIntrospector;
@@ -28,18 +36,10 @@ import org.codehaus.jackson.map.ser.BeanPropertyWriter;
 import org.codehaus.jackson.map.ser.BeanSerializer;
 import org.codehaus.jackson.map.ser.CustomSerializerFactory;
 import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
-import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.guice.PrincipalProvider;
-import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.Entitlement;
-import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.Pool;
-import org.fedoraproject.candlepin.model.Subscription;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.inject.Inject;
+import java.util.List;
 
 /**
  * EventFactory
@@ -49,6 +49,7 @@ public class EventFactory {
     private final ObjectMapper mapper;
     private final ObjectWriter entitlementWriter;
     private static Logger logger = LoggerFactory.getLogger(EventFactory.class);
+
     @Inject
     public EventFactory(PrincipalProvider principalProvider) {
         this.principalProvider = principalProvider;
@@ -68,23 +69,23 @@ public class EventFactory {
     public Event consumerCreated(Consumer newConsumer) {
         String newEntityJson = entityToJson(newConsumer);
         Principal principal = principalProvider.get();
-        
-        
         Event e = new Event(Event.Type.CREATED, Event.Target.CONSUMER, 
             newConsumer.getName(), principal, newConsumer.getOwner().getId(),
-            newConsumer.getId(), newConsumer.getId(), null, newEntityJson);
+            newConsumer.getId(), newConsumer.getId(), null, newEntityJson,
+            null, null);
         return e;
-    }    
-    
+    }
+
     public Event consumerModified(Consumer newConsumer) {
         String newEntityJson = entityToJson(newConsumer);
         Principal principal = principalProvider.get();
         
         return new Event(Event.Type.MODIFIED, Event.Target.CONSUMER, 
             newConsumer.getName(), principal, newConsumer.getOwner().getId(),
-            newConsumer.getId(), newConsumer.getId(), null, newEntityJson);
+            newConsumer.getId(), newConsumer.getId(), null, newEntityJson,
+            null, null);
     }
-    
+
     public Event consumerModified(Consumer oldConsumer, Consumer newConsumer) {
         String oldEntityJson = entityToJson(oldConsumer);
         String newEntityJson = entityToJson(newConsumer);
@@ -92,23 +93,24 @@ public class EventFactory {
         
         return new Event(Event.Type.MODIFIED, Event.Target.CONSUMER, 
             oldConsumer.getName(), principal, newConsumer.getOwner().getId(),
-            oldConsumer.getId(), oldConsumer.getId(), oldEntityJson, newEntityJson);
+            oldConsumer.getId(), oldConsumer.getId(), oldEntityJson, newEntityJson,
+            null, null);
     }
 
     public Event consumerDeleted(Consumer oldConsumer) {
         String oldEntityJson = entityToJson(oldConsumer);
 
         Event e = new Event(Event.Type.DELETED, Event.Target.CONSUMER,
-            oldConsumer.getName(), principalProvider.get(), 
-            oldConsumer.getOwner().getId(), oldConsumer.getId(), oldConsumer.getId(), 
-            oldEntityJson, null);
+            oldConsumer.getName(), principalProvider.get(), oldConsumer
+                .getOwner().getId(), oldConsumer.getId(), oldConsumer.getId(),
+            oldEntityJson, null, null, null);
         return e;
     }
 
     public Event entitlementCreated(Entitlement e) {
         return entitlementEvent(e, Event.Type.CREATED);
     }
-    
+
     public Event entitlementDeleted(Entitlement e) {
         return entitlementEvent(e, Event.Type.DELETED);
     }
@@ -127,9 +129,10 @@ public class EventFactory {
         else {
             latest = json;
         }
-        return new Event(type, Event.Target.ENTITLEMENT,
-            e.getPool().getProductName(), principalProvider.get(), owner.getId(), 
-            e.getConsumer().getId(), e.getId(), old, latest);
+        return new Event(type, Event.Target.ENTITLEMENT, e.getPool()
+            .getProductName(), principalProvider.get(), owner.getId(), e
+            .getConsumer().getId(), e.getId(), old, latest,
+            e.getPool().getId(), Event.ReferenceType.POOL);
     }
 
     /**
@@ -149,16 +152,17 @@ public class EventFactory {
 
     public Event ownerCreated(Owner newOwner) {
         String newEntityJson = entityToJson(newOwner);
-        Event e = new Event(Event.Type.CREATED, Event.Target.OWNER, 
-            newOwner.getDisplayName(), principalProvider.get(), newOwner.getId(), null,
-            newOwner.getId(), null, newEntityJson);
+        Event e = new Event(Event.Type.CREATED, Event.Target.OWNER,
+            newOwner.getDisplayName(), principalProvider.get(),
+            newOwner.getId(), null, newOwner.getId(), null, newEntityJson,
+            null, null);
         return e;
     }
-    
+
     public Event ownerDeleted(Owner owner) {
         Event e = new Event(Event.Type.DELETED, Event.Target.OWNER,
-            owner.getDisplayName(), principalProvider.get(), owner.getId(), null, 
-            owner.getId(), entityToJson(owner), null);
+            owner.getDisplayName(), principalProvider.get(), owner.getId(),
+            null, owner.getId(), entityToJson(owner), null, null, null);
         return e;
     }
 
@@ -166,7 +170,7 @@ public class EventFactory {
         String ownerJson = entityToJson(owner);
         Event e = new Event(Event.Type.MODIFIED, Event.Target.OWNER,
             owner.getDisplayName(), principalProvider.get(), owner.getId(),
-            null, owner.getId(), ownerJson, ownerJson);
+            null, owner.getId(), ownerJson, ownerJson, null, null);
 
         return e;
     }
@@ -175,55 +179,56 @@ public class EventFactory {
         String newEntityJson = entityToJson(newPool);
         Owner o = newPool.getOwner();
         Event e = new Event(Event.Type.CREATED, Event.Target.POOL,
-            newPool.getProductName(), principalProvider.get(), o.getId(), null, 
-            newPool.getId(), null, newEntityJson);
+            newPool.getProductName(), principalProvider.get(), o.getId(), null,
+            newPool.getId(), null, newEntityJson, null, null);
         return e;
     }
-    
+
     public Event poolChangedFrom(Pool before) {
         Owner o = before.getOwner();
         Event e = new Event(Event.Type.MODIFIED, Event.Target.POOL,
             before.getProductName(), principalProvider.get(), o.getId(), null,
-            before.getId(), entityToJson(before), null);
+            before.getId(), entityToJson(before), null, null, null);
         return e;
     }
-    
+
     public void poolChangedTo(Event e, Pool after) {
         e.setNewEntity(entityToJson(after));
     }
-    
+
     public Event poolDeleted(Pool pool) {
         String oldJson = entityToJson(pool);
         Owner o = pool.getOwner();
         Event e = new Event(Event.Type.DELETED, Event.Target.POOL,
             pool.getProductName(), principalProvider.get(), o.getId(), null,
-            pool.getId(), oldJson, null);
+            pool.getId(), oldJson, null, null, null);
         return e;
     }
 
-    
     public Event exportCreated(Consumer consumer) {
         Principal principal = principalProvider.get();
         Event e = new Event(Event.Type.CREATED, Event.Target.EXPORT, consumer.getName(), 
             principal, consumer.getOwner().getId(), consumer.getId(),
-            consumer.getId(), null, entityToJson(consumer));
+            consumer.getId(), null, entityToJson(consumer),
+            null, null);
         return e;
     }
-    
+
     public Event importCreated(Owner owner) {
         Principal principal = principalProvider.get();
-        Event e = new Event(Event.Type.CREATED, Event.Target.IMPORT, owner.getDisplayName(),
-            principal, owner.getId(), null, owner.getId(), null, entityToJson(owner));
+        Event e = new Event(Event.Type.CREATED, Event.Target.IMPORT,
+            owner.getDisplayName(), principal, owner.getId(), null,
+            owner.getId(), null, entityToJson(owner), null, null);
         return e;
     }
-    
+
     public Event subscriptionCreated(Subscription subscription) {
         Principal principal = principalProvider.get();
 
         Event e = new Event(Event.Type.CREATED, Event.Target.SUBSCRIPTION,
             subscription.getProduct().getName(), principal, 
             subscription.getOwner().getId(), null, subscription.getId(), null,
-            entityToJson(subscription));
+            entityToJson(subscription), null, null);
         return e;
     }
 
@@ -233,25 +238,25 @@ public class EventFactory {
         Principal principal = principalProvider.get();
         return new Event(Event.Type.MODIFIED, Event.Target.SUBSCRIPTION,
             oldSub.getProduct().getName(), principal, newSub.getOwner().getId(),
-            null, newSub.getId(), olds, news);
+            null, newSub.getId(), olds, news, null, null);
     }
 
     public Event subscriptionDeleted(Subscription todelete) {
         String oldJson = entityToJson(todelete);
         Owner o = todelete.getOwner();
         Event e = new Event(Event.Type.DELETED, Event.Target.SUBSCRIPTION,
-            todelete.getProduct().getName(), principalProvider.get(), o.getId(), 
-            null, todelete.getId(), oldJson, null);
+            todelete.getProduct().getName(), principalProvider.get(),
+            o.getId(), null, todelete.getId(), oldJson, null, null, null);
         return e;
     }
 
     private String entityToJson(Object entity) {
         String newEntityJson = "";
         // TODO: Throw an auditing exception here
-    
+
         // Drop data on consumer we do not want serialized, Jackson doesn't
         // seem to care about XmlTransient annotations when used here:
-    
+
         try {
             newEntityJson = mapper.writeValueAsString(entity);
         }
@@ -284,7 +289,7 @@ public class EventFactory {
             }
         }
     }
-    
+
     private static class CandlepinSerializerFactory extends
         CustomSerializerFactory {
 

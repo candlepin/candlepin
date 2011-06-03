@@ -84,8 +84,6 @@ public class Product extends AbstractHibernateObject implements Linkable {
     @JoinTable(name = "cp_product_dependent_products")
     private Set<String> dependentProductIds = new HashSet<String>();
 
-    public static final String CUSTOM_PREFIX = "23";
-
     /**
      * Constructor Use this variant when creating a new object to persist.
      * 
@@ -143,7 +141,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
 
     /**
      * sets the product name.
-     *
+     * 
      * @param name name of the product
      */
     public void setName(String name) {
@@ -349,7 +347,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
     /**
      * Returns true if this product has a content set which modifies the given
      * product:
-     *
+     * 
      * @param productId
      * @return true if this product modifies the given product ID
      */

@@ -49,10 +49,14 @@ import java.util.Map;
 @RunWith(MockitoJUnitRunner.class)
 public class AMQPSubscriptionEventTest {
 
-    @Mock private ObjectMapper mapper;
-    @Mock private Principal principal;
-    @Mock private PKIReader reader;
-    @Mock private PKIUtility pkiutil;
+    @Mock
+    private ObjectMapper mapper;
+    @Mock
+    private Principal principal;
+    @Mock
+    private PKIReader reader;
+    @Mock
+    private PKIUtility pkiutil;
 
     private AMQPBusEventAdapter eventAdapter;
 
@@ -65,8 +69,9 @@ public class AMQPSubscriptionEventTest {
     public void subscriptionCreated() throws Exception {
         verifySubscriptionEvent(Event.Type.CREATED);
     }
-    
-    @Test public void subscriptionModified() throws Exception {
+
+    @Test
+    public void subscriptionModified() throws Exception {
         verifySubscriptionEvent(Event.Type.MODIFIED);
     }
 
@@ -74,23 +79,25 @@ public class AMQPSubscriptionEventTest {
     // for each entry?
     private void verifySubscriptionEvent(Event.Type type) throws Exception {
         // given
-        Event event = new Event(type, Event.Target.SUBSCRIPTION,
-            "name", principal, "1", "1", "33", "Old Subscription", "New Subscription");
+        Event event = new Event(type, Event.Target.SUBSCRIPTION, "name",
+            principal, "1", "1", "33", "Old Subscription", "New Subscription",
+            null, null);
 
         Subscription sub = mock(Subscription.class, Mockito.RETURNS_DEEP_STUBS);
 
-        when(mapper.readValue("New Subscription", Subscription.class)).thenReturn(sub);
+        when(mapper.readValue("New Subscription", Subscription.class))
+            .thenReturn(sub);
         when(sub.getId()).thenReturn("8a8b64a32c568ec4012c568ef30a001c");
         when(sub.getOwner().getKey()).thenReturn("test-owner");
         when(sub.getProduct().getId()).thenReturn("test-product-id");
         when(sub.getCertificate().getCert()).thenReturn("test-cert");
         when(sub.getCertificate().getKey()).thenReturn("test-key");
-        when(pkiutil.getPemEncoded((X509Certificate) null))
-                .thenReturn("ca-cert".getBytes());
+        when(pkiutil.getPemEncoded((X509Certificate) null)).thenReturn(
+            "ca-cert".getBytes());
 
         when(sub.getProvidedProducts()).thenReturn(
-                Sets.newHashSet(createProductWithContent(
-                "content1", "http://dummy.com/content", "/path/to/RPM-GPG-KEY")));
+            Sets.newHashSet(createProductWithContent("content1",
+                "http://dummy.com/content", "/path/to/RPM-GPG-KEY")));
 
         // when
         this.eventAdapter.apply(event);
@@ -109,18 +116,20 @@ public class AMQPSubscriptionEventTest {
         content.put("content_rel_url", "http://dummy.com/content");
         content.put("gpg_key_url", "/path/to/RPM-GPG-KEY");
 
-        expectedMap.put("content_sets", Arrays.asList(new Map[] { content }));
+        expectedMap.put("content_sets", Arrays.asList(new Map[]{ content }));
 
-        verify(mapper).writeValueAsString(argThat(hasEntry("event", expectedMap)));
+        verify(mapper).writeValueAsString(
+            argThat(hasEntry("event", expectedMap)));
     }
 
-    private Product createProductWithContent(String label, String url, String gpgurl) {
+    private Product createProductWithContent(String label, String url,
+        String gpgurl) {
         Product product = new Product(label, label);
         Content content = new Content();
         content.setLabel(label);
         content.setContentUrl(url);
         content.setGpgUrl(gpgurl);
-        
+
         product.setContent(Sets.newHashSet(content));
 
         return product;
@@ -130,11 +139,13 @@ public class AMQPSubscriptionEventTest {
     public void subscriptionDeleted() throws IOException {
         // given
         Event event = new Event(Event.Type.DELETED, Event.Target.SUBSCRIPTION,
-            "name", principal, "1", "1", "33", "Old Subscription", "New Subscription");
+            "name", principal, "1", "1", "33", "Old Subscription",
+            "New Subscription", null, null);
 
         Subscription sub = mock(Subscription.class, Mockito.RETURNS_DEEP_STUBS);
-        
-        when(mapper.readValue("New Subscription", Subscription.class)).thenReturn(sub);
+
+        when(mapper.readValue("New Subscription", Subscription.class))
+            .thenReturn(sub);
         when(sub.getOwner().getKey()).thenReturn("test-owner");
 
         // when
@@ -145,6 +156,7 @@ public class AMQPSubscriptionEventTest {
         expectedMap.put("id", "33");
         expectedMap.put("owner", "test-owner");
 
-        verify(mapper).writeValueAsString(argThat(hasEntry("event", expectedMap)));
+        verify(mapper).writeValueAsString(
+            argThat(hasEntry("event", expectedMap)));
     }
 }

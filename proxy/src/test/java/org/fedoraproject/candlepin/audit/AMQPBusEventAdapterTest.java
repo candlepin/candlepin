@@ -48,24 +48,27 @@ import java.util.List;
 @RunWith(Parameterized.class)
 public class AMQPBusEventAdapterTest {
 
-    @Mock private ObjectMapper mapper;
-    @Mock private Principal principal;
+    @Mock
+    private ObjectMapper mapper;
+    @Mock
+    private Principal principal;
 
     private AMQPBusEventAdapter eventAdapter;
     private Event event;
 
     private Event.Type type;
     private Event.Target target;
-    @Mock private PKIReader reader;
-    @Mock private PKIUtility pkiutil;
+    @Mock
+    private PKIReader reader;
+    @Mock
+    private PKIUtility pkiutil;
 
     /**
-     * This defines the event targets that we care about creating AMQP events for.
+     * This defines the event targets that we care about creating AMQP events
+     * for.
      */
-    private static final Event.Target[] SUPPORTED_TARGETS = new Event.Target[] {
-        Event.Target.CONSUMER,
-        Event.Target.SUBSCRIPTION
-    };
+    private static final Event.Target[] SUPPORTED_TARGETS = new Event.Target[]{
+        Event.Target.CONSUMER, Event.Target.SUBSCRIPTION };
 
     /**
      * Defines the test data.
@@ -78,7 +81,7 @@ public class AMQPBusEventAdapterTest {
 
         for (Event.Type type : Event.Type.values()) {
             for (Event.Target target : SUPPORTED_TARGETS) {
-                data.add(new Object[] { type, target });
+                data.add(new Object[]{ type, target });
             }
         }
 
@@ -96,8 +99,8 @@ public class AMQPBusEventAdapterTest {
 
         // given
         this.eventAdapter = new AMQPBusEventAdapter(mapper, reader, pkiutil);
-        this.event = new Event(this.type, this.target, "name", principal, "1", "1", "42",
-            "Old Entity", "New Entity");
+        this.event = new Event(this.type, this.target, "name", principal, "1",
+            "1", "42", "Old Entity", "New Entity", null, null);
     }
 
     /**
@@ -129,8 +132,8 @@ public class AMQPBusEventAdapterTest {
         this.eventAdapter.apply(this.event);
 
         // then
-        verify(mapper).writeValueAsString(argThat(
-            hasEntry(equalTo("event"), hasEntry("id", "42"))));
+        verify(mapper).writeValueAsString(
+            argThat(hasEntry(equalTo("event"), hasEntry("id", "42"))));
     }
 
 }

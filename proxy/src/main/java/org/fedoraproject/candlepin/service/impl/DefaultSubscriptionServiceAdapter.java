@@ -15,11 +15,15 @@
 package org.fedoraproject.candlepin.service.impl;
 
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
@@ -41,12 +45,14 @@ public class DefaultSubscriptionServiceAdapter implements
     private SubscriptionCurator subCurator;
     private String activationPrefix;
     private I18n i18n;
+    private ProductCurator prodCurator;
 
     @Inject
     public DefaultSubscriptionServiceAdapter(SubscriptionCurator subCurator,
-            Config config, I18n i18n) {
+            Config config, I18n i18n, ProductCurator prodCurator) {
         this.subCurator = subCurator;
         this.i18n = i18n;
+        this.prodCurator = prodCurator;
 
         this.activationPrefix = config.getString(ConfigProperties.ACTIVATION_DEBUG_PREFIX);
         if ("".equals(this.activationPrefix)) {
@@ -139,6 +145,24 @@ public class DefaultSubscriptionServiceAdapter implements
         
         throw new ServiceUnavailableException(
                 i18n.tr("Standalone candlepin does not support activation."));
+    }
+    
+    @Override
+    public Subscription createSubscription(Subscription subscription) {
+        subscription.setProduct(prodCurator.find(subscription.getProduct()
+            .getId()));
+        Set<Product> provided = new HashSet<Product>();
+        for (Product incoming : subscription.getProvidedProducts()) {
+            provided.add(prodCurator.find(incoming.getId()));
+        }
+        subscription.setProvidedProducts(provided);
+        Subscription s = subCurator.create(subscription);
+        return s;
+    }
+    
+    @Override
+    public void deleteSubscription(Subscription s) {
+        subCurator.delete(s);
     }
 
 }

@@ -34,6 +34,7 @@ import org.fedoraproject.candlepin.model.SubscriptionCurator;
 import org.fedoraproject.candlepin.model.SubscriptionTokenCurator;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.resource.OwnerResource;
+import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.junit.Before;
 import org.junit.Test;
@@ -60,13 +61,15 @@ public class OwnerDeleteResourceTest {
     @Mock private UserServiceAdapter userService;
     @Mock private EventFactory eventFactory;
     @Mock private EventSink eventSink;
+    @Mock private SubscriptionServiceAdapter subAdapter;
 
     @Before
     public void init() {
         this.ownerResource = new OwnerResource(ownerCurator, poolCurator,
                 null, subscriptionCurator, subscriptionTokenCurator,
                 consumerCurator, null, userService, eventSink, eventFactory,
-                null, null, null, poolManager, exportCurator, null, importRecordCurator);
+                null, null, null, poolManager, exportCurator, null, importRecordCurator, 
+                subAdapter);
     }
 
     @Test
