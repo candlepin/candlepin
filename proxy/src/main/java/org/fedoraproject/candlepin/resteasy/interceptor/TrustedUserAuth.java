@@ -15,7 +15,6 @@
 package org.fedoraproject.candlepin.resteasy.interceptor;
 
 import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.jboss.resteasy.spi.HttpRequest;
 

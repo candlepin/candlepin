@@ -35,7 +35,7 @@ public class ConsumerPermission extends TypedPermission<Consumer> {
 
     @Override
     public boolean canAccessTarget(Consumer target, Access action) {
-       return this.consumer.getUuid().equals(target.getUuid());
+        return this.consumer.getUuid().equals(target.getUuid());
     }
 
 }

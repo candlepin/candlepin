@@ -289,7 +289,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals(2, pools.size());
     }
 
-    @Test(expected=ForbiddenException.class)
+    @Test(expected = ForbiddenException.class)
     public void ownerAdminCannotAccessAnotherOwnersPools() {
         Owner evilOwner = new Owner("evilowner");
         ownerCurator.create(evilOwner);
@@ -363,7 +363,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals(e1.getTimestamp(), entry.getPublished());
     }
 
-    @Test(expected=ForbiddenException.class)
+    @Test(expected = ForbiddenException.class)
     public void ownerCannotAccessAnotherOwnersAtomFeed() {
         Owner owner2 = new Owner("anotherOwner");
         ownerCurator.create(owner2);

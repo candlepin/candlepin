@@ -21,7 +21,6 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
 import org.fedoraproject.candlepin.audit.Event;
 
 import org.fedoraproject.candlepin.auth.Access;
@@ -89,15 +88,15 @@ public class OwnerPermission extends AbstractHibernateObject implements Permissi
 
     @Override
     public boolean canAccess(Object target, Access access) {
-       if (target instanceof Owned) {
-           // TODO:  Just check the key here?
-           return this.owner.equals(((Owned) target).getOwner());
-       }
-       // special case for events
-       else if (target instanceof Event) {
+        if (target instanceof Owned) {
+            // TODO:  Just check the key here?
+            return this.owner.equals(((Owned) target).getOwner());
+        }
+        // special case for events
+        else if (target instanceof Event) {
             return this.owner.getId().equals(((Event) target).getOwnerId());
-       }
+        }
 
-       return false;
+        return false;
     }
 }

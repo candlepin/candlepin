@@ -18,9 +18,7 @@ import java.util.List;
 
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
-import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
-import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Injector;
 import java.util.ArrayList;

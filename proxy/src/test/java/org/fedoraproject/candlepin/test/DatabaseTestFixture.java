@@ -80,15 +80,6 @@ import org.fedoraproject.candlepin.auth.permissions.Permission;
 import org.junit.Before;
 import org.xnap.commons.i18n.I18n;
 
-import java.util.Date;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.servlet.http.HttpServletRequest;
-
 /**
  * Test fixture for test classes requiring access to the database.
  */

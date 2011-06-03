@@ -14,15 +14,6 @@
  */
 package org.fedoraproject.candlepin.auth;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import org.fedoraproject.candlepin.model.Owner;
-
-import org.fedoraproject.candlepin.model.OwnerPermission;
-
 /**
  * PrincipalData is a DTO for principal information until we move to 
  * Jackson 1.7 where were can store real JSON in strings.

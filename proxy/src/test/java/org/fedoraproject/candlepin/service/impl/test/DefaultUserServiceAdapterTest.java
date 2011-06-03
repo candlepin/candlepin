@@ -128,7 +128,8 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
     
     @Test
     public void emtpyRolesForNoLogin() {
-        Assert.assertArrayEquals(new Access[] {}, this.service.getRoles("made_up").toArray());
+        Assert.assertArrayEquals(new Access[] {},
+            this.service.getRoles("made_up").toArray());
     }
     
     @Test
