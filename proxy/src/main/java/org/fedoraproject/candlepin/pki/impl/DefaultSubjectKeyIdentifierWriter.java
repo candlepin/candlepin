@@ -29,12 +29,11 @@ import org.bouncycastle.x509.extension.SubjectKeyIdentifierStructure;
  */
 public class DefaultSubjectKeyIdentifierWriter implements SubjectKeyIdentifierWriter {
 
-    /* (non-Javadoc)
-     * @see org.fedoraproject.candlepin.pki.SubjectKeyIdentifierWriter#getSubjectKeyIdentifier()
-     */
     @Override
-    public DEREncodable getSubjectKeyIdentifier(KeyPair clientKeyPair, Set<X509ExtensionWrapper> extensions) throws CertificateParsingException, IOException {
+    public DEREncodable getSubjectKeyIdentifier(KeyPair clientKeyPair,
+        Set<X509ExtensionWrapper> extensions)
+        throws CertificateParsingException, IOException {
+
         return new SubjectKeyIdentifierStructure(clientKeyPair.getPublic());
     }
-
 }

@@ -106,7 +106,8 @@ public class CrlGeneratorTest {
     
     @Before
     public void init() throws Exception {
-        this.pkiUtility = new BouncyCastlePKIUtility(pkiReader, new DefaultSubjectKeyIdentifierWriter());
+        this.pkiUtility = new BouncyCastlePKIUtility(pkiReader,
+                              new DefaultSubjectKeyIdentifierWriter());
         this.generator = new CrlGenerator(curator, pkiUtility);
         
         when(pkiReader.getCaKey()).thenReturn(KP.getPrivate());

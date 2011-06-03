@@ -26,12 +26,13 @@ import org.bouncycastle.asn1.DEREncodable;
  */
 public interface SubjectKeyIdentifierWriter {
     /**
-     * @param clientKeyPair
-     * @param extensions
-     * @return
-     * @throws IOException
-     * @throws CertificateParsingException
+     * @param clientKeyPair the key
+     * @param extensions extensions to look for
+     * @return encoded value
+     * @throws IOException reading certificiate
+     * @throws CertificateParsingException parsing certificate
      */
     DEREncodable getSubjectKeyIdentifier(KeyPair clientKeyPair,
-        Set<X509ExtensionWrapper> extensions) throws CertificateParsingException, IOException;
+        Set<X509ExtensionWrapper> extensions)
+        throws CertificateParsingException, IOException;
 }

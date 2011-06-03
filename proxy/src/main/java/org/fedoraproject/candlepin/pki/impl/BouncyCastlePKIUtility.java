@@ -88,7 +88,8 @@ public class BouncyCastlePKIUtility extends PKIUtility {
     protected static Logger log = Logger.getLogger(BouncyCastlePKIUtility.class);
 
     @Inject
-    public BouncyCastlePKIUtility(PKIReader reader, SubjectKeyIdentifierWriter subjectKeyWriter) {
+    public BouncyCastlePKIUtility(PKIReader reader,
+                                  SubjectKeyIdentifierWriter subjectKeyWriter) {
         super(reader, subjectKeyWriter);
     }
 
