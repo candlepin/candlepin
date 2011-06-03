@@ -47,6 +47,7 @@ import org.fedoraproject.candlepin.policy.PoolRules;
 import org.fedoraproject.candlepin.policy.js.JsRules;
 import org.fedoraproject.candlepin.policy.js.JsRulesProvider;
 import org.fedoraproject.candlepin.policy.js.pool.JsPoolRules;
+import org.fedoraproject.candlepin.resource.ActivateResource;
 import org.fedoraproject.candlepin.resource.ActivationKeyResource;
 import org.fedoraproject.candlepin.resource.AdminResource;
 import org.fedoraproject.candlepin.resource.AtomFeedResource;
@@ -127,6 +128,7 @@ public class CandlepinModule extends AbstractModule {
         bind(MigrationResource.class);
         bind(SubscriptionResource.class);
         bind(ActivationKeyResource.class);
+        bind(ActivateResource.class);
         bind(CertificateSerialResource.class);
         bind(CrlResource.class);
         bind(JobResource.class);

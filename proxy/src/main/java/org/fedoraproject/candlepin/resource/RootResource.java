@@ -62,6 +62,7 @@ public class RootResource {
         RESOURCE_CLASSES.add(StatusResource.class);
         RESOURCE_CLASSES.add(SubscriptionResource.class);
         RESOURCE_CLASSES.add(ActivationKeyResource.class);
+        RESOURCE_CLASSES.add(ActivateResource.class);
     }
 
     @Inject
