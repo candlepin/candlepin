@@ -423,6 +423,10 @@ class Candlepin
   def get_activation_key(key_id)
     return get("/activation_keys/#{key_id}")
   end
+  
+  def update_activation_key(key)
+    return put("/activation_keys/#{key['id']}", key)
+  end
 
   def delete_activation_key(key_id)
     return delete("/activation_keys/#{key_id}")

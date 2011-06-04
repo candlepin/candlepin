@@ -32,6 +32,12 @@ describe 'Activation Keys' do
     keys = @cp.list_activation_keys()
     keys.length.should >= 1
   end
+  
+  it 'should allow updating of names' do
+    @activation_key['name'] = "ObiWan"
+    @activation_key = @cp.update_activation_key(@activation_key)
+    @activation_key['name'].should == "ObiWan"
+  end  
 
   it 'should allow owners to delete their activation keys' do
     @cp.delete_activation_key(@activation_key['id'])

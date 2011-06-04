@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.resource.test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -54,6 +55,10 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         assertNotNull(key.getId());
         key = activationKeyResource.getActivationKey(key.getId());
         assertNotNull(key);
+        key.setName("JarJarBinks");
+        key = activationKeyResource.updateActivationKey(key.getId(), key);
+        key = activationKeyResource.getActivationKey(key.getId());
+        assertEquals("JarJarBinks", key.getName());
         activationKeyResource.deleteActivationKey(key.getId());
         try {
             key = activationKeyResource.getActivationKey(key.getId());
