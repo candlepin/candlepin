@@ -37,18 +37,18 @@ import com.google.inject.Inject;
  * EventAdapterImpl
  */
 public class EventAdapterImpl implements EventAdapter {
-    
+
     private static HashMap<String, String> messages;
-    
+
     private I18n i18n;
     private Config config;
-    
+
     @Inject
     public EventAdapterImpl(Config config, I18n i18n) {
         this.config = config;
         this.i18n = i18n;
     }
-    
+
     @Override
     public Feed toFeed(List<Event> events, String path) {
         String url =  config.getString(ConfigProperties.CANDLEPIN_URL) + path + "/";
@@ -57,7 +57,7 @@ public class EventAdapterImpl implements EventAdapter {
         feed.getAuthors().add(new Person("Red Hat, Inc."));
         try {
             feed.setId(new URI(url));
-        } 
+        }
         catch (Exception e) {
             // ignore, shouldn't happen
         }
@@ -68,7 +68,7 @@ public class EventAdapterImpl implements EventAdapter {
 
         // Add the friendly message text
         this.addMessageText(events);
-        
+
         for (Event e : events) {
             Entry entry = new Entry();
             entry.setTitle(e.getMessageText());
@@ -85,7 +85,7 @@ public class EventAdapterImpl implements EventAdapter {
             entry.setId(eventURI);
             entry.getLinks().add(
                 new Link(
-                    "alternate", 
+                    "alternate",
                     eventURI,
                     MediaType.APPLICATION_JSON_TYPE));
 
@@ -104,40 +104,40 @@ public class EventAdapterImpl implements EventAdapter {
 
         return feed;
     }
-    
+
     public void addMessageText(List<Event> events) {
         for (Event event : events) {
             String eventType = (event.getTarget().name() + event.getType().name());
             String message = messages.get(eventType);
             if (message == null) {
                 message = i18n.tr("Unknown event for user {0} and target {1}");
-            }     
+            }
             PrincipalData pd = event.getPrincipal();
-            event.setMessageText(i18n.tr(message, 
+            event.setMessageText(i18n.tr(message,
                 pd.getName(),
                 event.getTargetName()));
         }
     }
-    
+
     //TODO: Make them nicer strings if the system did it
     static {
         messages = new HashMap<String, String>();
         messages.put("CONSUMERCREATED", I18n.marktr("{0} created new consumer {1}"));
         messages.put("CONSUMERMODIFED", I18n.marktr("{0} modifed the consumer {1}"));
-        messages.put("CONSUMERDELETED", I18n.marktr("{0} deleted the consumer {1}")); 
+        messages.put("CONSUMERDELETED", I18n.marktr("{0} deleted the consumer {1}"));
         messages.put("OWNERCREATED", I18n.marktr("{0} created new owner {1}"));
         messages.put("OWNERMODIFED", I18n.marktr("{0} modifed the owner {1}"));
         messages.put("OWNERDELETED", I18n.marktr("{0} deleted the owner {1}"));
-        messages.put("ENTITLEMENTCREATED", 
+        messages.put("ENTITLEMENTCREATED",
             I18n.marktr("{0} consumed a subscription for product {1}"));
-        messages.put("ENTITLEMENTMODIFED", 
+        messages.put("ENTITLEMENTMODIFED",
             I18n.marktr("{0} modified a subscription for product {1}"));
-        messages.put("ENTITLEMENTDELETED", 
-            I18n.marktr("{0} returned the subscription for {1}")); 
+        messages.put("ENTITLEMENTDELETED",
+            I18n.marktr("{0} returned the subscription for {1}"));
         messages.put("POOLCREATED", I18n.marktr("{0} created a pool for product {1}"));
         messages.put("POOLMODIFED", I18n.marktr("{0} modified a pool for product {1}"));
         messages.put("POOLDELETED", I18n.marktr("{0} deleted a pool for product {1}"));
-        messages.put("EXPORTCREATED", 
+        messages.put("EXPORTCREATED",
             I18n.marktr("{0} created an export for consumer {1}"));
         messages.put("IMPORTCREATED", I18n.marktr("{0} imported a manifest for owner {1}"));
         messages.put("USERCREATED", I18n.marktr("{0} created new user {1}"));
@@ -146,12 +146,16 @@ public class EventAdapterImpl implements EventAdapter {
         messages.put("ROLECREATED", I18n.marktr("{0} created new role {1}"));
         messages.put("ROLEMODIFED", I18n.marktr("{0} modifed the role {1}"));
         messages.put("ROLEDELETED", I18n.marktr("{0} deleted the role {1}"));
-        messages.put("SUBSCRIPTIONCREATED", 
+        messages.put("SUBSCRIPTIONCREATED",
             I18n.marktr("{0} created new subscription for product {1}"));
-        messages.put("SUBSCRIPTIONMODIFED", 
+        messages.put("SUBSCRIPTIONMODIFED",
             I18n.marktr("{0} modifed a subscription for product {1}"));
-        messages.put("SUBSCRIPTIONDELETED", 
-            I18n.marktr("{0} deleted a subscription for product{1}"));        
+        messages.put("SUBSCRIPTIONDELETED",
+            I18n.marktr("{0} deleted a subscription for product {1}"));
+        messages.put("ACTIVATIONKEYCREATED",
+            I18n.marktr("{0} created the activation key {1}"));
+        messages.put("ACTIVATIONKEYDELETED",
+            I18n.marktr("{0} deleted the activation key {1}"));
     }
-      
+
 }
