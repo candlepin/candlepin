@@ -15,10 +15,14 @@
 package org.fedoraproject.candlepin.model;
 
 
+import org.fedoraproject.candlepin.model.Statistic.EntryType;
+
 import com.wideplay.warp.persist.Transactional;
 
+import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -35,8 +39,40 @@ public class StatisticCurator extends AbstractHibernateCurator<Statistic> {
         return super.create(s);
     }
 
-    public List<Statistic> getFullStatisticsByOwner(Owner owner) {
-        return (List<Statistic>) currentSession().createCriteria(Statistic.class)
-        .add(Restrictions.eq("ownerId", owner.getId())).list();
+    @SuppressWarnings("unchecked")
+    public List<Statistic> getStatisticsByOwner(Owner owner, String qType, String reference, Date from, Date to) {
+        Criteria c = currentSession().createCriteria(Statistic.class);
+        c.add(Restrictions.eq("ownerId", owner.getId()));
+        if(qType != null && !qType.trim().equals("")){
+            if(qType.equals("TOTALCONSUMERS")){
+                c.add(Restrictions.eq("entryType",EntryType.TOTALCONSUMERS));
+            }
+            if(qType.equals("CONSUMERSBYSOCKETCOUNT")){
+                c.add(Restrictions.eq("entryType",EntryType.CONSUMERSBYSOCKETCOUNT));
+            }
+            if(qType.equals("TOTALSUBSCRIPTIONCOUNT")){
+                c.add(Restrictions.eq("entryType",EntryType.TOTALSUBSCRIPTIONCOUNT));
+            }
+            if(qType.equals("TOTALSUBSCRIPTIONCONSUMED")){
+                c.add(Restrictions.eq("entryType",EntryType.TOTALSUBSCRIPTIONCONSUMED));
+            }
+            if(qType.equals("PERPRODUCT")){
+                c.add(Restrictions.eq("entryType",EntryType.PERPRODUCT));
+            }
+            if(qType.equals("PERPOOL")){
+                c.add(Restrictions.eq("entryType",EntryType.PERPOOL));
+            }
+        }
+        if(reference != null && !reference.trim().equals("")){
+            c.add(Restrictions.eq("valueReference", reference));
+        }
+        if (from != null) {
+            c.add(Restrictions.ge("created", from));
+        }
+        if (to != null) {
+            c.add(Restrictions.le("created", to));
+        }
+        return (List<Statistic>) c.list();
+
     }
 }

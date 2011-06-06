@@ -40,11 +40,11 @@ import java.util.Map;
 import javax.persistence.EntityManager;
 
 /**
- * StatisticHistoryTask.
+ * StatisticHistoryTask. 
  */
 public class StatisticHistoryTask implements Job {
 
-    public static final String DEFAULT_SCHEDULE = "0 0 1 * * ?"; // run every
+    public static final String DEFAULT_SCHEDULE = "0 1 * * * ?"; // run every
                                                                  // day at 1 AM
 
     private EntityManager entityManager;
@@ -152,7 +152,7 @@ public class StatisticHistoryTask implements Job {
             percentage = (entitlementCountTotal * 100 / subscriptionCountTotal);
         }
         Statistic entitlementCountPercentageStatistic = new Statistic(
-            EntryType.TOTALSUBSCRIPTIONCONSUMED, ValueType.PERCENTAGE, null,
+            EntryType.TOTALSUBSCRIPTIONCONSUMED, ValueType.PERCENTAGECONSUMED, null,
             percentage, ownerId);
         statCurator.create(entitlementCountPercentageStatistic);
     }
@@ -193,15 +193,15 @@ public class StatisticHistoryTask implements Job {
                 poolPercentage = (perPoolConsumedCount * 100 / totalPoolCountTotal);
             }
             Statistic perPoolCountPercentageStatistic = new Statistic(
-                EntryType.PerPool, ValueType.PERCENTAGE, poolId,
+                EntryType.PERPOOL, ValueType.PERCENTAGECONSUMED, poolId,
                 poolPercentage, ownerId);
             statCurator.create(perPoolCountPercentageStatistic);
             Statistic perPoolCountUsedStatistic = new Statistic(
-                EntryType.PerPool, ValueType.USED, poolId, perPoolUsedCount,
+                EntryType.PERPOOL, ValueType.USED, poolId, perPoolUsedCount,
                 ownerId);
             statCurator.create(perPoolCountUsedStatistic);
             Statistic perPoolCountConsumedStatistic = new Statistic(
-                EntryType.PerPool, ValueType.CONSUMED, poolId,
+                EntryType.PERPOOL, ValueType.CONSUMED, poolId,
                 perPoolConsumedCount, ownerId);
             statCurator.create(perPoolCountConsumedStatistic);
         }
@@ -247,15 +247,15 @@ public class StatisticHistoryTask implements Job {
                                      totalProductCountTotal);
             }
             Statistic perPoolCountPercentageStatistic = new Statistic(
-                EntryType.PerProduct, ValueType.PERCENTAGE, productName,
+                EntryType.PERPRODUCT, ValueType.PERCENTAGECONSUMED, productName,
                 productPercentage, ownerId);
             statCurator.create(perPoolCountPercentageStatistic);
             Statistic perPoolCountUsedStatistic = new Statistic(
-                EntryType.PerProduct, ValueType.USED, productName,
+                EntryType.PERPRODUCT, ValueType.USED, productName,
                 perProductUsedCount, ownerId);
             statCurator.create(perPoolCountUsedStatistic);
             Statistic perPoolCountConsumedStatistic = new Statistic(
-                EntryType.PerProduct, ValueType.CONSUMED, productName,
+                EntryType.PERPRODUCT, ValueType.CONSUMED, productName,
                 perProductConsumedCount, ownerId);
             statCurator.create(perPoolCountConsumedStatistic);
         }

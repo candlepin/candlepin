@@ -14,27 +14,6 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.xml.bind.DatatypeConverter;
-
-import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventAdapter;
 import org.fedoraproject.candlepin.audit.EventFactory;
@@ -75,6 +54,11 @@ import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.fedoraproject.candlepin.sync.Importer;
 import org.fedoraproject.candlepin.sync.ImporterException;
 import org.fedoraproject.candlepin.sync.SyncDataFormatException;
+
+import com.google.inject.Inject;
+import com.wideplay.warp.persist.Transactional;
+
+import org.apache.log4j.Logger;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
@@ -83,8 +67,25 @@ import org.jboss.resteasy.util.GenericType;
 import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
 
-import com.google.inject.Inject;
-import com.wideplay.warp.persist.Transactional;
+import java.io.File;
+import java.io.IOException;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.xml.bind.DatatypeConverter;
 
 /**
  * Owner Resource
@@ -394,7 +395,7 @@ public class OwnerResource {
 
         Date activeOnDate = new Date();
         if (activeOn != null) {
-            activeOnDate = parseActiveOnString(activeOn);
+            activeOnDate = parseDateString(activeOn);
         }
 
         Consumer c = null;
@@ -608,11 +609,28 @@ public class OwnerResource {
     @Path("{owner_key}/statistics")
     @AllowRoles(roles = { Role.OWNER_ADMIN })
     public List<Statistic> getStatistics(
-        @PathParam("owner_key") String ownerKey) {
+        @PathParam("owner_key") String ownerKey,
+        @QueryParam("from") String from,
+        @QueryParam("to") String to) {
         Owner o = findOwner(ownerKey);
-        return statisticCurator.getFullStatisticsByOwner(o);
+        return statisticCurator.getStatisticsByOwner(o, "", "", parseDateString(from), parseDateString(to));
     }
 
+    @GET
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{owner_key}/statistics/{type}")
+    @AllowRoles(roles = { Role.OWNER_ADMIN })
+    public List<Statistic> getStatistics(
+        @PathParam("owner_key") String ownerKey,
+        @PathParam("type") String qType, 
+        @QueryParam("reference") String reference,
+        @QueryParam("from") String from,
+        @QueryParam("to") String to) {
+        Owner o = findOwner(ownerKey);
+        return statisticCurator.getStatisticsByOwner(o, qType, reference, parseDateString(from), parseDateString(to));
+    }
+    
     private void recordImportSuccess(Owner owner) {
         ImportRecord record = new ImportRecord(owner);
         record.recordStatus(ImportRecord.Status.SUCCESS,
@@ -637,8 +655,11 @@ public class OwnerResource {
         return this.importRecordCurator.findRecords(owner);
     }
 
-    private Date parseActiveOnString(String activeOn) {
+    private Date parseDateString(String activeOn) {
         Date d;
+        if(activeOn == null || activeOn.trim().equals("")) {
+            return null;
+        }
         try {
             d = DatatypeConverter.parseDateTime(activeOn).getTime();
         }

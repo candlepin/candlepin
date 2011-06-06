@@ -40,14 +40,14 @@ public class Statistic extends AbstractHibernateObject {
      */
     public enum EntryType {
         TOTALCONSUMERS, CONSUMERSBYSOCKETCOUNT, TOTALSUBSCRIPTIONCOUNT,
-          TOTALSUBSCRIPTIONCONSUMED, PerProduct, PerPool
+          TOTALSUBSCRIPTIONCONSUMED, PERPRODUCT, PERPOOL
     }
 
     /**
      * ValueType the type of value.
      */
     public enum ValueType {
-        RAW, PERCENTAGE, USED, CONSUMED
+        RAW, PERCENTAGECONSUMED, USED, CONSUMED
     }
 
     // Uniquely identifies the statistic:
