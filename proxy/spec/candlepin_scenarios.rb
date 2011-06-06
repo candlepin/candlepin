@@ -13,11 +13,13 @@ module CandlepinScenarios
         @owners = []
         @products = []
         @users = []
+        @roles = []
       end
 
       after do
-        @owners.reverse_each { |owner| @cp.delete_owner owner.key }
-        @users.reverse_each { |user| @cp.delete_user user['username'] }
+  #      @roles.reverse_each { |r| @cp.delete_role r['id'] }
+  #      @owners.reverse_each { |owner| @cp.delete_owner owner.key }
+  #      @users.reverse_each { |user| @cp.delete_user user['username'] }
 
         # TODO:  delete products?
       end
@@ -72,6 +74,12 @@ module CandlepinMethods
     @users << user
     # TODO: add permission for user
     return user
+  end
+
+  def create_role(perms)
+    name = random_string 'test_role'
+    role = @cp.create_role(name, perms)
+    @roles << role
   end
 
   def consumer_client(cp_client, consumer_name, type=:system, username=nil, facts= {})

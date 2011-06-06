@@ -17,11 +17,17 @@ package org.fedoraproject.candlepin.resource;
 import com.google.inject.Inject;
 import java.util.List;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.OwnerCurator;
+import org.fedoraproject.candlepin.model.OwnerPermission;
 import org.fedoraproject.candlepin.model.Role;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
@@ -33,16 +39,26 @@ import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 public class RoleResource {
 
     private UserServiceAdapter userService;
+    private OwnerCurator ownerCurator;
 
     @Inject
-    public RoleResource(UserServiceAdapter userService) {
+    public RoleResource(UserServiceAdapter userService, OwnerCurator ownerCurator) {
         this.userService = userService;
+        this.ownerCurator = ownerCurator;
     }
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    public void createRole(Role role) {
-        this.userService.createRole(role);
+    public Role createRole(Role role) {
+        
+        // Attach actual owner objects to each incoming permission:
+        for (OwnerPermission p : role.getPermissions()) {
+            Owner temp = p.getOwner();
+            p.setOwner(ownerCurator.lookupByKey(temp.getKey()));
+        }
+        
+        Role r = this.userService.createRole(role);
+        return r;
     }
 
 //    @GET
@@ -51,6 +67,14 @@ public class RoleResource {
 //    public Role getRole(String name) {
 //        return roleCurator.lookupByName(name);
 //    }
+    
+    @DELETE
+    @Path("/{owner_key}")
+    public void deleteRole(@PathParam("role_id") String roleId) {
+        this.userService.deleteRole(roleId);
+    }
+
+
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)

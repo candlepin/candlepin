@@ -120,6 +120,13 @@ public class LDAPUserServiceAdapter implements UserServiceAdapter {
     }
 
     @Override
+    public void deleteRole(String roleId) {
+        throw new UnsupportedOperationException(
+            "This implementation does not support deleting roles!");
+        
+    }
+
+    @Override
     public List<User> listByOwner(Owner owner) {
         throw new UnsupportedOperationException(
             "This implementation does not support deleting Users!");

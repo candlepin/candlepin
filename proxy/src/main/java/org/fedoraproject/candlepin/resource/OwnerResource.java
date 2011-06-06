@@ -36,6 +36,8 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.OwnerInfo;
 import org.fedoraproject.candlepin.model.OwnerInfoCurator;
+import org.fedoraproject.candlepin.model.OwnerPermission;
+import org.fedoraproject.candlepin.model.OwnerPermissionCurator;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.ProductCurator;
@@ -107,6 +109,7 @@ public class OwnerResource {
     private Importer importer;
     private ExporterMetadataCurator exportCurator;
     private ImportRecordCurator importRecordCurator;
+    private OwnerPermissionCurator permissionCurator;
     private PoolManager poolManager;
     private static final int FEED_LIMIT = 1000;
 
@@ -121,7 +124,8 @@ public class OwnerResource {
         ExporterMetadataCurator exportCurator,
         OwnerInfoCurator ownerInfoCurator,
         ImportRecordCurator importRecordCurator,
-        SubscriptionServiceAdapter subService) {
+        SubscriptionServiceAdapter subService,
+        OwnerPermissionCurator permCurator) {
 
         this.ownerCurator = ownerCurator;
         this.ownerInfoCurator = ownerInfoCurator;
@@ -141,6 +145,7 @@ public class OwnerResource {
         this.poolManager = poolManager;
         this.eventAdapter = eventAdapter;
         this.subService = subService;
+        this.permissionCurator = permCurator;
     }
 
     /**
@@ -285,6 +290,10 @@ public class OwnerResource {
         for (ImportRecord record : importRecordCurator.findRecords(owner)) {
             log.info("Deleting import record:  " + record);
             importRecordCurator.delete(record);
+        }
+        for (OwnerPermission perm : permissionCurator.findByOwner(owner)) {
+            log.info("Deleting permission: " + perm.getAccess());
+            permissionCurator.delete(perm);
         }
 
         log.info("Deleting owner: " + owner);

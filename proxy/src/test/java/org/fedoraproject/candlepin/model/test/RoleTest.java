@@ -71,5 +71,5 @@ public class RoleTest extends DatabaseTestFixture {
         assertEquals(1, roles.get(0).getUsers().size());
         assertEquals(1, roles.get(0).getPermissions().size());
     }
-
+    
 }

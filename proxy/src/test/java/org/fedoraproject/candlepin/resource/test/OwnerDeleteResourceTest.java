@@ -29,6 +29,7 @@ import org.fedoraproject.candlepin.model.ExporterMetadataCurator;
 import org.fedoraproject.candlepin.model.ImportRecordCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
+import org.fedoraproject.candlepin.model.OwnerPermissionCurator;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
 import org.fedoraproject.candlepin.model.SubscriptionTokenCurator;
@@ -62,6 +63,7 @@ public class OwnerDeleteResourceTest {
     @Mock private EventFactory eventFactory;
     @Mock private EventSink eventSink;
     @Mock private SubscriptionServiceAdapter subAdapter;
+    @Mock private OwnerPermissionCurator permCurator;
 
     @Before
     public void init() {
@@ -69,7 +71,7 @@ public class OwnerDeleteResourceTest {
                 null, subscriptionCurator, subscriptionTokenCurator,
                 consumerCurator, null, userService, eventSink, eventFactory,
                 null, null, null, poolManager, exportCurator, null, importRecordCurator, 
-                subAdapter);
+                subAdapter, permCurator);
     }
 
     @Test

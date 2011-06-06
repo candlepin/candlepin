@@ -49,6 +49,7 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
         OwnerPermissionCurator permCurator) {
         this.userCurator = userCurator;
         this.roleCurator = roleCurator;
+        this.permCurator = permCurator;
     }
     
     @Override
@@ -85,7 +86,7 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
         this.roleCurator.create(role);
         return role;
     }
-
+    
     @Override
     public boolean validateUser(String username, String password) {
         User user = this.userCurator.findByLogin(username);
@@ -121,6 +122,12 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
     @Override
     public User findByLogin(String login) {
         return userCurator.findByLogin(login);
+    }
+
+    @Override
+    public void deleteRole(String roleId) {
+        Role r = roleCurator.find(roleId);
+        roleCurator.delete(r);
     }
 
 }

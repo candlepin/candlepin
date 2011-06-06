@@ -14,6 +14,8 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import java.util.List;
+
 import org.fedoraproject.candlepin.auth.Access;
 import org.hibernate.criterion.Restrictions;
 
@@ -45,5 +47,10 @@ public class OwnerPermissionCurator extends AbstractHibernateCurator<OwnerPermis
         return (OwnerPermission) currentSession().createCriteria(OwnerPermission.class)
             .add(Restrictions.eq("owner", owner))
             .add(Restrictions.eq("access", access)).uniqueResult();
+    }
+
+    public List<OwnerPermission> findByOwner(Owner owner) {
+        return currentSession().createCriteria(OwnerPermission.class)
+            .add(Restrictions.eq("owner", owner)).list();
     }
 }

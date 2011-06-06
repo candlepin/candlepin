@@ -153,6 +153,18 @@ class Candlepin
     post("/users", user)
   end
 
+  def create_role(name, perms)
+    role = {
+      :name => name,
+      :permissions => perms,
+    }
+    post("/roles", role)
+  end
+
+  def list_roles
+    get("/roles")
+  end
+
   def delete_user(username)
     uri = "/users/#{username}"
     delete uri

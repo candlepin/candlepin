@@ -39,6 +39,8 @@ public interface UserServiceAdapter {
     List<Role> getRoles(String username);
 
     List<Role> listRoles();
+    
+    void deleteRole(String roleId);
 
     /**
      * Does this user service implementation support creation/deletion
