@@ -302,7 +302,7 @@
                 "warning_period": 30,
                 "management_enabled" : 0,
                 "support_level" : "None",
-                "support_type" : "Self-Support"                
+                "support_type" : "Self-Support"
             }
         },
         {
@@ -317,7 +317,7 @@
                 "warning_period": 30,
                 "management_enabled" : 0,
                 "support_level" : "Standard",
-                "support_type" : "L1-L3"                       
+                "support_type" : "L1-L3"
             }
         },
         {
@@ -365,7 +365,7 @@
                 "warning_period": 30,
                 "management_enabled" : 1,
                 "support_level" : "Standard",
-                "support_type" : "L1-L3"                       
+                "support_type" : "L1-L3"
             }
         },
         {
@@ -387,7 +387,7 @@
                 "warning_period": 30,
                 "management_enabled" : 1,
                 "support_level" : "Premium",
-                "support_type" : "L1-L3"          
+                "support_type" : "L1-L3"
             }
         },
         {
@@ -409,7 +409,7 @@
                 "warning_period": 30,
                 "management_enabled" : 1,
                 "support_level" : "Premium",
-                "support_type" : "L1-L3"          
+                "support_type" : "L1-L3"
             }
         },
         {
@@ -431,7 +431,7 @@
                 "warning_period": 30,
                 "management_enabled" : 1,
                 "support_level" : "Basic",
-                "support_type" : "L1-L3"                          
+                "support_type" : "L1-L3"
             }
         },
         {
@@ -508,7 +508,7 @@
                 "warning_period": 30,
                 "management_enabled" : 1,
                 "support_level" : "Standard",
-                "support_type" : "L1-L3"                    
+                "support_type" : "L1-L3"
             }
         },
         {
