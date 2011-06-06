@@ -22,18 +22,12 @@ import javax.ws.rs.core.MediaType;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
-import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.OwnerCurator;
-import org.fedoraproject.candlepin.model.OwnerPermission;
-import org.fedoraproject.candlepin.model.Role;
-import org.fedoraproject.candlepin.model.RoleCurator;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 
 import com.google.inject.Inject;
 
-import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.SystemPrincipal;
 import org.fedoraproject.candlepin.auth.interceptor.SecurityHole;
@@ -49,17 +43,12 @@ public class AdminResource {
     
     private ConsumerTypeCurator consumerTypeCurator;
     private UserServiceAdapter userService;
-    private RoleCurator roleCurator;
-    private OwnerCurator ownerCurator;
 
     @Inject
     public AdminResource(ConsumerTypeCurator consumerTypeCurator,
-            UserServiceAdapter userService, RoleCurator roleCurator,
-            OwnerCurator ownerCurator) {
+            UserServiceAdapter userService) {
         this.consumerTypeCurator = consumerTypeCurator;
         this.userService = userService;
-        this.roleCurator = roleCurator;
-        this.ownerCurator = ownerCurator;
     }
 
     /**
@@ -100,15 +89,6 @@ public class AdminResource {
         try {
             User defaultAdmin = new User("admin", "admin", true);
             userService.createUser(defaultAdmin);
-
-            Owner o = new Owner("admin-test", "admin test");
-            ownerCurator.create(o);
-
-            Role adminRole = new Role();
-            adminRole.addUser(defaultAdmin);
-            adminRole.addPermission(new OwnerPermission(o,
-                Access.ALL));
-            roleCurator.create(adminRole);
         } 
         catch (UnsupportedOperationException e) {
             log.info("Admin creation is not supported!");

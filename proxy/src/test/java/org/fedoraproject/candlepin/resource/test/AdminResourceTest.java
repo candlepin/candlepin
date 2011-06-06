@@ -48,7 +48,7 @@ public class AdminResourceTest {
         ctc = mock(ConsumerTypeCurator.class);
         usa = mock(UserServiceAdapter.class);
         roleCurator = mock(RoleCurator.class);
-        ar = new AdminResource(ctc, usa, roleCurator);
+        ar = new AdminResource(ctc, usa);
     }
     
     @Test
