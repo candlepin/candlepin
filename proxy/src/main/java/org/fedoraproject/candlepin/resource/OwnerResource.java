@@ -613,7 +613,8 @@ public class OwnerResource {
         @QueryParam("from") String from,
         @QueryParam("to") String to) {
         Owner o = findOwner(ownerKey);
-        return statisticCurator.getStatisticsByOwner(o, "", "", parseDateString(from), parseDateString(to));
+        return statisticCurator.getStatisticsByOwner(o, "", "", 
+                                  parseDateString(from), parseDateString(to));
     }
 
     @GET
@@ -628,7 +629,8 @@ public class OwnerResource {
         @QueryParam("from") String from,
         @QueryParam("to") String to) {
         Owner o = findOwner(ownerKey);
-        return statisticCurator.getStatisticsByOwner(o, qType, reference, parseDateString(from), parseDateString(to));
+        return statisticCurator.getStatisticsByOwner(o, qType, reference, 
+                                  parseDateString(from), parseDateString(to));
     }
     
     private void recordImportSuccess(Owner owner) {
@@ -657,7 +659,7 @@ public class OwnerResource {
 
     private Date parseDateString(String activeOn) {
         Date d;
-        if(activeOn == null || activeOn.trim().equals("")) {
+        if (activeOn == null || activeOn.trim().equals("")) {
             return null;
         }
         try {
