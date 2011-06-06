@@ -120,6 +120,8 @@ public class BasicAuthViaUserServiceTest {
             new HashSet<User>(), permissions)});
         when(userService.getRoles("user")).thenReturn(roles);
         
+        when(userService.findByLogin("user")).thenReturn(new User());
+        
         UserPrincipal expected = new UserPrincipal("user", 
                 new ArrayList<Permission>(permissions));
         assertEquals(expected, this.auth.getPrincipal(request));
