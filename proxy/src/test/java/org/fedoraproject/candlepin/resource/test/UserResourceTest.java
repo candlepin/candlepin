@@ -16,9 +16,7 @@ package org.fedoraproject.candlepin.resource.test;
 
 import static org.junit.Assert.assertEquals;
 
-import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.User;
-import org.fedoraproject.candlepin.resource.OwnerResource;
 import org.fedoraproject.candlepin.resource.UserResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.junit.Before;

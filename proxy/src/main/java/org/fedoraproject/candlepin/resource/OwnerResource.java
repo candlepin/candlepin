@@ -372,7 +372,7 @@ public class OwnerResource {
      *
      * @param ownerKey
      * @param userLogin
-     * @return
+     * @return the associated user
      *
      * @deprecated use the membership resource instead!
      */
@@ -380,12 +380,13 @@ public class OwnerResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/users")
+    @Deprecated
     public User associateUser(@PathParam("owner_key") String ownerKey,
                               @QueryParam("user_login") String userLogin) {
         User user = findUser(userLogin);
-        Owner owner = findOwner(ownerKey);
 
-        //ownerCurator.merge(owner);
+        // HEY LOOK!  THIS IS NOT ACTUALLY DOING ANYTHING!
+
         return user;
     }
 
