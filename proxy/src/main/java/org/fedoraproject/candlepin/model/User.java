@@ -27,6 +27,7 @@ import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 import org.hibernate.annotations.GenericGenerator;
 
@@ -123,6 +124,7 @@ public class User extends AbstractHibernateObject {
      * @deprecated use {@link #getMemberships()} instead
      */
     @Deprecated
+    @XmlTransient
     public Set<Owner> getOwners() {
         Set<Owner> owners = new HashSet<Owner>();
         for (Role role : getRoles()) {
@@ -137,6 +139,7 @@ public class User extends AbstractHibernateObject {
     /**
      * @return the roles
      */
+    @XmlTransient
     public Set<Role> getRoles() {
         return roles;
     }
@@ -151,6 +154,7 @@ public class User extends AbstractHibernateObject {
      * Iterates user's roles and returns all unique permissions.
      * @return all of this user's unique permissions.
      */
+    @XmlTransient
     public Set<OwnerPermission> getPermissions() {
         Set<OwnerPermission> perms = new HashSet<OwnerPermission>();
         for (Role r : getRoles()) {

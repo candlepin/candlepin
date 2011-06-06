@@ -12,10 +12,12 @@ module CandlepinScenarios
         @cp = Candlepin.new('admin', 'admin')
         @owners = []
         @products = []
+        @users = []
       end
 
       after do
         @owners.reverse_each { |owner| @cp.delete_owner owner.key }
+        @users.reverse_each { |user| @cp.delete_user user['username'] }
 
         # TODO:  delete products?
       end
@@ -60,8 +62,16 @@ module CandlepinMethods
   end
 
   def user_client(owner, user_name)
-    @cp.create_user(owner.key, user_name, 'password')
+    create_user(owner.key, user_name, 'password')
     Candlepin.new(user_name, 'password')
+  end
+
+  def create_user(owner, username, password)
+    user = @cp.create_user(username, password)
+    pp user
+    @users << user
+    # TODO: add permission for user
+    return user
   end
 
   def consumer_client(cp_client, consumer_name, type=:system, username=nil, facts= {})

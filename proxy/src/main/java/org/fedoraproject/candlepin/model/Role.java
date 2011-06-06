@@ -35,7 +35,7 @@ import org.hibernate.annotations.GenericGenerator;
  */
 @Entity
 @Table(name = "cp_role")
-public class Role extends AbstractHibernateObject {
+public class Role extends AbstractHibernateObject implements Linkable {
 
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -76,6 +76,18 @@ public class Role extends AbstractHibernateObject {
 
     public Role() {
         // JPA
+    }
+
+    public String getHref() {
+        return "/roles/" + getId();
+    }
+
+    @Override
+    public void setHref(String href) {
+        /*
+         * No-op, here to aid with updating objects which have nested objects
+         * that were originally sent down to the client in HATEOAS form.
+         */
     }
 
     @Override

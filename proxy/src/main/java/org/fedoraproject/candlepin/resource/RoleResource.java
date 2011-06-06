@@ -24,6 +24,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import org.fedoraproject.candlepin.model.Role;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
+import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 
 /**
  *
@@ -53,6 +54,7 @@ public class RoleResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @Wrapped(element = "roles")
     public List<Role> getRoles() {
         // TODO:  Add in filter options
         return userService.listRoles();

@@ -144,13 +144,18 @@ class Candlepin
     end
   end
 
-  def create_user(owner_key, login, password)
+  def create_user(login, password)
     user = {
       'username' => login,
       'password' => password
     }
 
-    post("/owners/#{owner_key}/users", user)
+    post("/users", user)
+  end
+
+  def delete_user(username)
+    uri = "/users/#{username}"
+    delete uri
   end
 
   def list_consumer_types

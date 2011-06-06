@@ -23,6 +23,7 @@ import static org.mockito.Mockito.when;
 
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
+import org.fedoraproject.candlepin.model.RoleCurator;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.resource.AdminResource;
@@ -40,12 +41,14 @@ public class AdminResourceTest {
     private ConsumerTypeCurator ctc;
     private UserServiceAdapter usa;
     private AdminResource ar;
+    private RoleCurator roleCurator;
     
     @Before
     public void init() {
         ctc = mock(ConsumerTypeCurator.class);
         usa = mock(UserServiceAdapter.class);
-        ar = new AdminResource(ctc, usa);
+        roleCurator = mock(RoleCurator.class);
+        ar = new AdminResource(ctc, usa, roleCurator);
     }
     
     @Test
