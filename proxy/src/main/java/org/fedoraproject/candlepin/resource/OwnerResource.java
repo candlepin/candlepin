@@ -230,10 +230,8 @@ public class OwnerResource {
     @DELETE
     @Path("/{owner_key}")
     @Produces(MediaType.APPLICATION_JSON)
-    // FIXME No way this is as easy as this :)
     public void deleteOwner(@PathParam("owner_key") String ownerKey,
-        @QueryParam("revoke") @DefaultValue("true") boolean revoke,
-        @Context Principal principal) {
+        @QueryParam("revoke") @DefaultValue("true") boolean revoke) {
         Owner owner = findOwner(ownerKey);
         Event e = eventFactory.ownerDeleted(owner);
 

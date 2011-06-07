@@ -83,7 +83,7 @@ public class OwnerDeleteResourceTest {
         when(userService.listByOwner(rackspace)).thenThrow(
                 new UnsupportedOperationException("This should never be called"));
 
-        this.ownerResource.deleteOwner("rackspace", true, null);
+        this.ownerResource.deleteOwner("rackspace", true);
 
         // Just asking for the users will throw an exception anyway, but this
         // just to be super duper sure
@@ -105,7 +105,7 @@ public class OwnerDeleteResourceTest {
         when(userService.isReadyOnly()).thenReturn(false);
         when(userService.listByOwner(compucorp)).thenReturn(users);
 
-        this.ownerResource.deleteOwner("compucorp", true, null);
+        this.ownerResource.deleteOwner("compucorp", true);
 
         // Make sure they were deleted in the service
         verify(userService).deleteUser(users.get(0));

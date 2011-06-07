@@ -91,8 +91,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test
     public void testSimpleDeleteOwner() {
         String id = owner.getId();
-        ownerResource.deleteOwner(owner.getKey(), true, TestUtil.createPrincipal(
-            "someuser", owner, Access.ALL));
+        ownerResource.deleteOwner(owner.getKey(), true);
         owner = ownerCurator.find(id);
         assertNull(owner);
     }
@@ -251,7 +250,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals(1, poolCurator.listByOwner(owner).size());
         assertEquals(1, entitlementCurator.listByOwner(owner).size());
 
-        ownerResource.deleteOwner(owner.getKey(), true, null);
+        ownerResource.deleteOwner(owner.getKey(), true);
 
         assertEquals(0, consumerCurator.listByOwner(owner).size());
         assertNull(consumerCurator.findByUuid(c1.getUuid()));
@@ -326,7 +325,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
         crudInterceptor.enable();
 
-        ownerResource.deleteOwner(owner.getKey(), true, principal);
+        ownerResource.deleteOwner(owner.getKey(), true);
     }
 
     private Event createConsumerCreatedEvent(Owner o) {
@@ -550,5 +549,15 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         this.ownerResource.createOwner(child);
         throw new RuntimeException(
             "OwnerResource should have thrown BadRequestException");
+    }
+
+    @Test
+    public void cleanupWithOutstandingPermissions() {
+        OwnerPermission p = permissionCurator.findOrCreate(owner, Access.ALL);
+        Role r = new Role();
+        r.setName("rolename");
+        r.getPermissions().add(p);
+        roleCurator.create(r);
+        ownerResource.deleteOwner(owner.getKey(), false);
     }
 }
