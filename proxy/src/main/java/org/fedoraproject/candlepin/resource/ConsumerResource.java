@@ -272,10 +272,10 @@ public class ConsumerResource {
         if (owner == null) {
             throw new BadRequestException(i18n.tr("Owner {0} does not exist", ownerKey));
         }
-        if (!user.getOwners().contains(owner)) {
-            throw new BadRequestException(i18n.tr("User {0} is not a member of owner {1}",
-                    user.getUsername(), ownerKey));
-        }
+//        if (!user.getOwners().contains(owner)) {
+//            throw new BadRequestException(i18n.tr("User {0} is not a member of owner {1}",
+//                    user.getUsername(), ownerKey));
+//        }
 
         consumer.setUsername(user.getUsername());
         consumer.setOwner(owner);

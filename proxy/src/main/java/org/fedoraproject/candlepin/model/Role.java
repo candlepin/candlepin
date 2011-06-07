@@ -25,6 +25,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import org.hibernate.annotations.ForeignKey;
@@ -43,16 +44,9 @@ public class Role extends AbstractHibernateObject implements Linkable {
     @Column(length = 32)
     private String id;
 
-    @ManyToMany(targetEntity = User.class)
-    @ForeignKey(
-        name = "fk_user_id",
-        inverseName = "fk_role_id")
-    @JoinTable(
-        name = "cp_role_users",
-        joinColumns = @JoinColumn(name = "role_id"),
-        inverseJoinColumns = @JoinColumn(name = "user_id"))
-    private Set<User> users = new HashSet<User>();
-    
+    @OneToMany(mappedBy = "role", cascade = {CascadeType.ALL})
+    private Set<RoleUser> roleUsers = new HashSet<RoleUser>();
+
     @ManyToMany(
         targetEntity = OwnerPermission.class,
         cascade = { CascadeType.PERSIST})
@@ -68,10 +62,14 @@ public class Role extends AbstractHibernateObject implements Linkable {
     @Column(unique = true)
     private String name;
 
-    public Role(String name, Set<User> users, Set<OwnerPermission> memberships) {
+    public Role(String name, Set<RoleUser> roleUsers, Set<OwnerPermission> memberships) {
         this.name = name;
-        this.users = users;
+        this.roleUsers = roleUsers;
         this.permissions = memberships;
+    }
+
+    public Role(String name) {
+        this.name = name;
     }
 
     public Role() {
@@ -107,18 +105,17 @@ public class Role extends AbstractHibernateObject implements Linkable {
         this.name = name;
     }
 
-    public Set<User> getUsers() {
-        return users;
-    }
-
-    public void setUsers(Set<User> users) {
-        this.users = users;
+    public Set<RoleUser> getRoleUsers() {
+        return roleUsers;
     }
     
+    public void setRoleUsers(Set<RoleUser> roleUsers) {
+        this.roleUsers = roleUsers;
+    }
+
     public void addUser(User u) {
-        if (this.users.add(u)) {
-            u.addRole(this);
-        }
+        RoleUser ru = new RoleUser(this, u);
+        this.roleUsers.add(ru);
     }
     
     public Set<OwnerPermission> getPermissions() {

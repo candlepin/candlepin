@@ -30,6 +30,7 @@ import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.model.Role;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerPermission;
+import org.fedoraproject.candlepin.model.RoleUser;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 
@@ -77,8 +78,7 @@ public class LDAPUserServiceAdapter implements UserServiceAdapter {
     @Override
     public List<Role> getRoles(String username) {
         List<Role> roles = new ArrayList<Role>();
-        Set<User> users = new HashSet<User>();
-        users.add(new User(username, null));
+        User user = new User(username, null);
 
         try {
             String dn = getDN(username);
@@ -89,8 +89,10 @@ public class LDAPUserServiceAdapter implements UserServiceAdapter {
             Set<OwnerPermission> permissions = new HashSet<OwnerPermission>();
             permissions.add(new OwnerPermission(new Owner(orgName), Access.ALL));
 
-            // not persisting this, so I think it is ok to give it a dummy name
-            roles.add(new Role("ldap", users, permissions));
+            // Not persisting this, so I think it is ok to give it a dummy name:
+            Role r = new Role("ldap", new HashSet<RoleUser>(), permissions);
+            r.addUser(user);
+            roles.add(r);
         }
         catch (LDAPException e) {
             //eat it

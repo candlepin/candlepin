@@ -24,6 +24,7 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerPermission;
 import org.fedoraproject.candlepin.model.OwnerPermissionCurator;
 import org.fedoraproject.candlepin.model.RoleCurator;
+import org.fedoraproject.candlepin.model.RoleUser;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.model.UserCurator;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
@@ -63,7 +64,7 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
         User user = this.userCurator.findByLogin(username);
 
         if (user != null) {
-            return new ArrayList<Role>(user.getRoles());
+            return roleCurator.listForUser(user);
         }
 
         return Collections.emptyList();
@@ -77,13 +78,6 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
     @Override
     public Role createRole(Role role) {
         Set<OwnerPermission> actualPermissions = new HashSet<OwnerPermission>();
-        Set<User> actualUsers = new HashSet<User>();
-
-        for (User user : role.getUsers()) {
-            User actualUser = findByLogin(user.getUsername());
-            actualUsers.add(actualUser);
-        }
-        role.setUsers(actualUsers);
         
         for (OwnerPermission permission : role.getPermissions()) {
             actualPermissions.add(this.permCurator.findOrCreate(
@@ -122,7 +116,9 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
         List<Role> roles = roleCurator.listForOwner(owner);
         Set<User> users = new HashSet<User>();
         for (Role r : roles) {
-            users.addAll(r.getUsers());
+            for (RoleUser ru : r.getRoleUsers()) {
+                users.add(ru.getUser());
+            }
         }
         return new LinkedList<User>(users);
     }
