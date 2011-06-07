@@ -61,7 +61,11 @@ public class RoleResource {
         // Attach actual owner objects to each incoming permission:
         for (OwnerPermission p : role.getPermissions()) {
             Owner temp = p.getOwner();
-            p.setOwner(ownerCurator.lookupByKey(temp.getKey()));
+            Owner actual = ownerCurator.lookupByKey(temp.getKey());
+            if (actual == null) {
+                throw new NotFoundException(i18n.tr("No such owner: {0}", temp.getKey()));
+            }
+            p.setOwner(actual);
         }
         
         Role r = this.userService.createRole(role);

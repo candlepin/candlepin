@@ -64,7 +64,7 @@ module CandlepinMethods
   end
 
   def user_client(owner, user_name)
-    create_user(owner.key, user_name, 'password')
+    create_user(owner, user_name, 'password')
     Candlepin.new(user_name, 'password')
   end
 
@@ -75,7 +75,6 @@ module CandlepinMethods
     create_role(nil, [{
       :owner => {:key => owner['key']},
       :access => 'ALL'}], [user["username"]])
-      
     return user
   end
 
