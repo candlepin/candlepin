@@ -73,7 +73,7 @@ module CandlepinMethods
     @users << user
     # Create a role for user to administer the given owner:
     create_role(nil, [{
-      :owner => {:key => @test_owner['key']},
+      :owner => {:key => owner['key']},
       :access => 'ALL'}], [user["username"]])
       
     return user
