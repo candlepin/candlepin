@@ -161,6 +161,10 @@ class Candlepin
     post("/roles", role)
   end
 
+  def update_role(role)
+    put("/roles/#{role['id']}", role)
+  end
+
   def list_roles
     get("/roles")
   end

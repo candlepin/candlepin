@@ -175,4 +175,14 @@ public class LDAPUserServiceAdapter implements UserServiceAdapter {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    @Override
+    public Role updateRole(Role r) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public Role getRole(String roleId) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
 }

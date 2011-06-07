@@ -36,7 +36,11 @@ public interface UserServiceAdapter {
 
     Role createRole(Role r);
 
+    Role updateRole(Role r);
+    
     List<Role> getRoles(String username);
+    
+    Role getRole(String roleId);
 
     List<Role> listRoles();
     

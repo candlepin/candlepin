@@ -70,9 +70,9 @@ module CandlepinMethods
 
   def create_user(owner, username, password)
     user = @cp.create_user(username, password)
-    pp user
     @users << user
     # TODO: add permission for user
+    # Create a role for user to administer the given owner:
     return user
   end
 
@@ -80,6 +80,7 @@ module CandlepinMethods
     name = random_string 'test_role'
     role = @cp.create_role(name, perms)
     @roles << role
+    return role
   end
 
   def consumer_client(cp_client, consumer_name, type=:system, username=nil, facts= {})

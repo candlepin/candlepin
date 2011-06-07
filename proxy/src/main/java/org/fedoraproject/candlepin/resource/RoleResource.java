@@ -20,17 +20,21 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.OwnerPermission;
 import org.fedoraproject.candlepin.model.Role;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
+import org.jboss.resteasy.spi.BadRequestException;
+import org.xnap.commons.i18n.I18n;
 
 /**
  *
@@ -40,11 +44,14 @@ public class RoleResource {
 
     private UserServiceAdapter userService;
     private OwnerCurator ownerCurator;
+    private I18n i18n;
 
     @Inject
-    public RoleResource(UserServiceAdapter userService, OwnerCurator ownerCurator) {
+    public RoleResource(UserServiceAdapter userService, OwnerCurator ownerCurator,
+        I18n i18n) {
         this.userService = userService;
         this.ownerCurator = ownerCurator;
+        this.i18n = i18n;
     }
 
     @POST
@@ -61,6 +68,38 @@ public class RoleResource {
         return r;
     }
 
+    @PUT
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Path("{role_id}")
+    public Role updateRole(@PathParam("role_id") String roleId, Role role) {
+        
+        if (!roleId.equals(role.getId())) {
+            throw new BadRequestException(i18n.tr("Role ID does not match path."));
+        }
+        
+        Role existingRole = lookupRole(roleId);
+        existingRole.setName(role.getName());
+        existingRole.getPermissions().clear();
+        existingRole.getPermissions().addAll(role.getPermissions());
+        
+        // Attach actual owner objects to each incoming permission:
+        for (OwnerPermission p : existingRole.getPermissions()) {
+            Owner temp = p.getOwner();
+            p.setOwner(ownerCurator.lookupByKey(temp.getKey()));
+        }
+        
+        Role r = this.userService.updateRole(existingRole);
+        return r;
+    }
+    
+    private Role lookupRole(String roleId) {
+        Role role = userService.getRole(roleId);
+        if (role == null) {
+            throw new NotFoundException(i18n.tr("No such role: {0}", roleId));
+        }
+        return role;
+    }
+
 //    @GET
 //    @Path("{name}")
 //    @Produces(MediaType.APPLICATION_JSON)
@@ -69,7 +108,7 @@ public class RoleResource {
 //    }
     
     @DELETE
-    @Path("/{owner_key}")
+    @Path("/{role_id}")
     public void deleteRole(@PathParam("role_id") String roleId) {
         this.userService.deleteRole(roleId);
     }

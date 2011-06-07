@@ -130,4 +130,21 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
         roleCurator.delete(r);
     }
 
+    @Override
+    public Role updateRole(Role r) {
+        Set<OwnerPermission> newPermissions = new HashSet<OwnerPermission>();
+        for (OwnerPermission incomingPerm : r.getPermissions()) {
+            newPermissions.add(this.permCurator.findOrCreate(
+                incomingPerm.getOwner(), incomingPerm.getAccess()));
+        }
+        r.getPermissions().clear();
+        r.getPermissions().addAll(newPermissions);
+        return roleCurator.merge(r);
+    }
+
+    @Override
+    public Role getRole(String roleId) {
+        return roleCurator.find(roleId);
+    }
+
 }
