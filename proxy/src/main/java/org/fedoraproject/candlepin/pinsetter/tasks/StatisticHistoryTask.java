@@ -44,7 +44,7 @@ import javax.persistence.EntityManager;
  */
 public class StatisticHistoryTask implements Job {
 
-    public static final String DEFAULT_SCHEDULE = "0 1 * * * ?"; // run every
+    public static final String DEFAULT_SCHEDULE = "0 0 1 * * ?"; // run every
                                                                  // day at 1 AM
 
     private EntityManager entityManager;
