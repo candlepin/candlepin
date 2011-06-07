@@ -34,6 +34,11 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import javax.ws.rs.DELETE;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -59,11 +64,13 @@ public class SecurityInterceptor implements MethodInterceptor {
 
     // TODO:  This would not really be needed if we were consistent about what
     //        we use as IDs in our urls!
+    @SuppressWarnings("rawtypes")
     private final Map<Class, EntityStore> storeMap;
 
     private static Logger log = Logger.getLogger(SecurityInterceptor.class);
 
 
+    @SuppressWarnings("rawtypes")
     public SecurityInterceptor() {
         this.storeMap = new HashMap<Class, EntityStore>();
 
@@ -81,10 +88,7 @@ public class SecurityInterceptor implements MethodInterceptor {
         Principal principal = this.principalProvider.get();
         log.debug("Invoked.");
 
-        // Temp!  If we are going to introspect the HTTP request, then we
-        //        are going to have to move this to be a RestEasy interceptor
-        //        instead!
-        Access access = Access.ALL;
+        Access access = findRequiredAccessType(invocation);
 
         Collection<Object> params = findVerifiedParameters(invocation);
 
@@ -113,6 +117,33 @@ public class SecurityInterceptor implements MethodInterceptor {
         String error = "Insufficient permissions";
         throw new ForbiddenException(i18n.tr(error));
     }
+
+    /**
+     * Scans the method annotations for RESTEasy annotations, to determine
+     * the HTTP verbs used, and converts that to a minimum required access type.
+     * 
+     * @param invocation method invocation object
+     * @return the required minimum access type
+     */
+    private Access findRequiredAccessType(MethodInvocation invocation) {
+        
+        // Assume the minimum level to start with, and bump up as we see
+        // stricter annotations
+        Access minimumLevel = Access.READ_ONLY;
+        
+        // If we had write or delete access types, that would go here,
+        // and we'd only break on the access.all type.
+        for (Annotation annotation : invocation.getMethod().getAnnotations()) {
+            if (annotation instanceof PUT ||
+                annotation instanceof POST ||
+                annotation instanceof DELETE) {
+                minimumLevel = Access.ALL;
+                break;
+            }
+            // Other annotations are GET, HEAD, and OPTIONS. assume read only for those.
+        }
+        return minimumLevel;
+    }
     
     /**
      * Scans the parameters for the method being invoked.
@@ -126,6 +157,7 @@ public class SecurityInterceptor implements MethodInterceptor {
         for (int i = 0; i < m.getParameterAnnotations().length; i++) {
             for (Annotation a : m.getParameterAnnotations()[i]) {
                 if (a instanceof Verify) {
+                    @SuppressWarnings("rawtypes")
                     Class verifyType = ((Verify) a).value();
                     String verifyParam = (String) invocation.getArguments()[i];
 
