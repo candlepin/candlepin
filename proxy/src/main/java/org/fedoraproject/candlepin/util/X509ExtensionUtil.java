@@ -127,6 +127,12 @@ public class X509ExtensionUtil {
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SUPPORT_TYPE), false,
                 supportType));
         }
+        String stackingId = sub.getProduct().getAttributeValue("stacking_id");
+        if (stackingId != null) {
+            toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
+                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_STACKING_ID), false,
+                stackingId));
+        }
 
         return toReturn;
     }

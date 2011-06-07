@@ -14,10 +14,38 @@
  */
 package org.fedoraproject.candlepin.service.impl.test;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.when;
-import static org.mockito.Matchers.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.argThat;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import org.fedoraproject.candlepin.model.CertificateSerialCurator;
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.Content;
+import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.EntitlementCurator;
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductAttribute;
+import org.fedoraproject.candlepin.model.Subscription;
+import org.fedoraproject.candlepin.pki.PKIUtility;
+import org.fedoraproject.candlepin.pki.X509ExtensionWrapper;
+import org.fedoraproject.candlepin.service.ProductServiceAdapter;
+import org.fedoraproject.candlepin.service.impl.DefaultEntitlementCertServiceAdapter;
+import org.fedoraproject.candlepin.util.X509ExtensionUtil;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.ArgumentMatcher;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.runners.MockitoJUnitRunner;
 
 import java.math.BigInteger;
 import java.security.KeyPair;
@@ -30,29 +58,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
-import org.fedoraproject.candlepin.model.CertificateSerialCurator;
-import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.Content;
-import org.fedoraproject.candlepin.model.Entitlement;
-import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.Pool;
-import org.fedoraproject.candlepin.model.EntitlementCurator;
-import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.model.ProductAttribute;
-import org.fedoraproject.candlepin.model.Subscription;
-import org.fedoraproject.candlepin.pki.PKIUtility;
-import org.fedoraproject.candlepin.pki.X509ExtensionWrapper;
-import org.fedoraproject.candlepin.service.ProductServiceAdapter;
-import org.fedoraproject.candlepin.service.impl.DefaultEntitlementCertServiceAdapter;
-import org.fedoraproject.candlepin.util.X509ExtensionUtil;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.ArgumentMatcher;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
 
 /**
  * DefaultEntitlementCertServiceAdapter
@@ -318,6 +323,20 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
 
     @Test
+    public void stackingIdByAttribute() throws Exception {
+
+        ProductAttribute attr = new ProductAttribute("stacking_id", "3456");
+        subscription.getProduct().addAttribute(attr);
+        certServiceAdapter.createX509Certificate(entitlement, subscription,
+            product, new BigInteger("1234"), keyPair());
+
+        verify(mockedPKI).createX509Certificate(any(String.class),
+            argThat(new ListContainsStackingId("3456")), any(Date.class),
+            any(Date.class), any(KeyPair.class), any(BigInteger.class),
+            any(String.class));
+    }
+
+    @Test
     public void supportValuesPresentOnCertIfAttributePresent() throws Exception {
 
         ProductAttribute attr = new ProductAttribute("support_level", "Premium");
@@ -492,6 +511,13 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         public ListContainsSupportType(String value) {
             super(value, "1.3.6.1.4.1.2312.9.4.16");
+        }
+    }
+
+    static class ListContainsStackingId extends OidMatcher {
+
+        public ListContainsStackingId(String value) {
+            super(value, "1.3.6.1.4.1.2312.9.4.17");
         }
     }
 
