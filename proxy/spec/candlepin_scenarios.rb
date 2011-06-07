@@ -70,16 +70,21 @@ module CandlepinMethods
 
   def create_user(owner, username, password)
     user = @cp.create_user(username, password)
+    pp user["username"]
     @users << user
-    # TODO: add permission for user
     # Create a role for user to administer the given owner:
+    create_role(nil, [{
+      :owner => {:key => @test_owner['key']},
+      :access => 'ALL'}], [user["username"]])
+      
     return user
   end
 
-  def create_role(perms)
-    name = random_string 'test_role'
-    role = @cp.create_role(name, perms)
+  def create_role(name=nil, perms=nil, usernames=nil)
+    name ||= random_string 'test_role'
+    role = @cp.create_role(name, perms, usernames)
     @roles << role
+    pp role
     return role
   end
 

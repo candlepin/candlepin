@@ -153,10 +153,17 @@ class Candlepin
     post("/users", user)
   end
 
-  def create_role(name, perms)
+  def create_role(name, perms=nil, usernames=nil)
+    perms ||= []
+    usernames ||= []
+    users = []
+    usernames.each do |username|
+      users << {:username => username}
+    end
     role = {
       :name => name,
       :permissions => perms,
+      :users => users,
     }
     post("/roles", role)
   end

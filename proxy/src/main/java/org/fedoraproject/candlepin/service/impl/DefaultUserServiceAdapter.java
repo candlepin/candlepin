@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.LinkedList;
 
+import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerPermission;
 import org.fedoraproject.candlepin.model.OwnerPermissionCurator;
@@ -76,7 +77,14 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
     @Override
     public Role createRole(Role role) {
         Set<OwnerPermission> actualPermissions = new HashSet<OwnerPermission>();
+        Set<User> actualUsers = new HashSet<User>();
 
+        for (User user : role.getUsers()) {
+            User actualUser = findByLogin(user.getUsername());
+            actualUsers.add(actualUser);
+        }
+        role.setUsers(actualUsers);
+        
         for (OwnerPermission permission : role.getPermissions()) {
             actualPermissions.add(this.permCurator.findOrCreate(
                     permission.getOwner(), permission.getAccess()));
