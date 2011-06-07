@@ -71,6 +71,8 @@ import org.fedoraproject.candlepin.resource.UserResource;
 import org.fedoraproject.candlepin.resteasy.JsonProvider;
 import org.fedoraproject.candlepin.resteasy.interceptor.AuthInterceptor;
 import org.fedoraproject.candlepin.resteasy.interceptor.PinsetterAsyncInterceptor;
+import org.fedoraproject.candlepin.service.UniqueIdGenerator;
+import org.fedoraproject.candlepin.service.impl.DefaultUniqueIdGenerator;
 import org.fedoraproject.candlepin.sync.ConsumerExporter;
 import org.fedoraproject.candlepin.sync.ConsumerTypeExporter;
 import org.fedoraproject.candlepin.sync.EntitlementCertExporter;
@@ -144,6 +146,7 @@ public class CandlepinModule extends AbstractModule {
         bind(JsRulesProvider.class).asEagerSingleton();
         bind(JsRules.class).toProvider(JsRulesProvider.class);
         bind(UserResource.class);
+        bind(UniqueIdGenerator.class).to(DefaultUniqueIdGenerator.class);
 
         bind(I18n.class).toProvider(I18nProvider.class);
         bind(AuthInterceptor.class);

@@ -13,26 +13,21 @@
  * in this software or its documentation.
  */
 package org.fedoraproject.candlepin.resource.test;
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.anyLong;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
+
+import java.util.Locale;
 
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.model.Content;
 import org.fedoraproject.candlepin.model.ContentCurator;
 import org.fedoraproject.candlepin.resource.ContentResource;
-
+import org.fedoraproject.candlepin.service.impl.DefaultUniqueIdGenerator;
 import org.junit.Before;
 import org.junit.Test;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
-
-import java.util.Locale;
 /**
  * ContentResourceTest
  */
@@ -46,7 +41,7 @@ public class ContentResourceTest {
     public void init() {
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         cc = mock(ContentCurator.class);
-        cr = new ContentResource(cc, i18n);
+        cr = new ContentResource(cc, i18n, new DefaultUniqueIdGenerator());
     }
     
     @Test

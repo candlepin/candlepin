@@ -29,6 +29,7 @@ import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.model.Content;
 import org.fedoraproject.candlepin.model.ContentCurator;
+import org.fedoraproject.candlepin.service.UniqueIdGenerator;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
@@ -41,11 +42,14 @@ public class ContentResource {
 
     private ContentCurator contentCurator;
     private I18n i18n;
+    private UniqueIdGenerator idGenerator;
 
     @Inject
-    public ContentResource(ContentCurator contentCurator, I18n i18n) {
+    public ContentResource(ContentCurator contentCurator, I18n i18n,
+        UniqueIdGenerator idGenerator) {
         this.i18n = i18n;
         this.contentCurator = contentCurator;
+        this.idGenerator = idGenerator;
     }
     
     @GET
@@ -72,6 +76,11 @@ public class ContentResource {
     @Produces(MediaType.APPLICATION_JSON)
     @AllowRoles(roles = {Role.SUPER_ADMIN})
     public Content createContent(Content content) {
+        if (content.getId() == null || content.getId().trim().length() == 0) {
+            content.setId(idGenerator.generateId());
+            return contentCurator.create(content);
+        }
+
         Content lookedUp  = contentCurator.find(content.getId());
         if (lookedUp != null) {
             return lookedUp;

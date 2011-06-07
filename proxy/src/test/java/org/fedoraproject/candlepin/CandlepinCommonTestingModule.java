@@ -56,10 +56,12 @@ import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
+import org.fedoraproject.candlepin.service.UniqueIdGenerator;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultIdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultProductServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultSubscriptionServiceAdapter;
+import org.fedoraproject.candlepin.service.impl.DefaultUniqueIdGenerator;
 import org.fedoraproject.candlepin.service.impl.DefaultUserServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.stub.StubEntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.test.DateSourceForTesting;
@@ -150,6 +152,7 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
             DefaultIdentityCertServiceAdapter.class);
         bind(PoolRules.class).to(JsPoolRules.class);
         bind(PoolManager.class).to(CandlepinPoolManager.class);
+        bind(UniqueIdGenerator.class).to(DefaultUniqueIdGenerator.class);
 
         bind(Function.class).annotatedWith(Names.named("endDateGenerator"))
             .to(ExpiryDateFunction.class).in(Singleton.class);

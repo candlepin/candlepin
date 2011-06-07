@@ -14,21 +14,6 @@
  */
 package org.fedoraproject.candlepin.service.impl;
 
-import org.fedoraproject.candlepin.model.Content;
-import org.fedoraproject.candlepin.model.ContentCurator;
-import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.model.ProductCertificate;
-import org.fedoraproject.candlepin.model.ProductCertificateCurator;
-import org.fedoraproject.candlepin.model.ProductCurator;
-import org.fedoraproject.candlepin.pki.PKIUtility;
-import org.fedoraproject.candlepin.pki.X509ExtensionWrapper;
-import org.fedoraproject.candlepin.service.ProductServiceAdapter;
-import org.fedoraproject.candlepin.util.X509ExtensionUtil;
-
-import com.google.inject.Inject;
-
-import org.apache.log4j.Logger;
-
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
@@ -39,6 +24,21 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
+
+import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.model.Content;
+import org.fedoraproject.candlepin.model.ContentCurator;
+import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductCertificate;
+import org.fedoraproject.candlepin.model.ProductCertificateCurator;
+import org.fedoraproject.candlepin.model.ProductCurator;
+import org.fedoraproject.candlepin.pki.PKIUtility;
+import org.fedoraproject.candlepin.pki.X509ExtensionWrapper;
+import org.fedoraproject.candlepin.service.ProductServiceAdapter;
+import org.fedoraproject.candlepin.service.UniqueIdGenerator;
+import org.fedoraproject.candlepin.util.X509ExtensionUtil;
+
+import com.google.inject.Inject;
 
 /**
  * Default implementation of the ProductserviceAdapter.
@@ -57,17 +57,20 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
     private ProductCertificateCurator prodCertCurator;
     private PKIUtility pki;
     private X509ExtensionUtil extensionUtil;
+    private UniqueIdGenerator idGenerator;
 
     @Inject
     public DefaultProductServiceAdapter(ProductCurator prodCurator,
         ProductCertificateCurator prodCertCurator, PKIUtility pki,
-        X509ExtensionUtil extensionUtil, ContentCurator contentCurator) {
+        X509ExtensionUtil extensionUtil, ContentCurator contentCurator,
+        UniqueIdGenerator idGenerator) {
 
         this.prodCurator = prodCurator;
         this.prodCertCurator = prodCertCurator;
         this.pki = pki;
         this.extensionUtil = extensionUtil;
         this.contentCurator = contentCurator;
+        this.idGenerator = idGenerator;
     }
 
     @Override
@@ -91,16 +94,12 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
     public Product createProduct(Product product) {
         if ((prodCurator.find(product.getId()) == null)) {
             if (product.getCustom()) {
-                product.setId(generateId(product.getName()));
+                product.setId(idGenerator.generateId());
             }
             Product newProduct = prodCurator.create(product);
             return newProduct;
         }
         return prodCurator.find(product.getId());
-    }
-
-    private String generateId(String name) {
-        return "" + (new Date()).getTime();
     }
 
     @Override
