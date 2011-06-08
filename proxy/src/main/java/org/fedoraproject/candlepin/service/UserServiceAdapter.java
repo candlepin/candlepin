@@ -38,14 +38,18 @@ public interface UserServiceAdapter {
 
     Role updateRole(Role r);
     
+    void addUserToRole(Role role, User user);
+    
+    void deleteRole(String roleId);
+
     List<Role> getRoles(String username);
     
     Role getRole(String roleId);
 
     List<Role> listRoles();
     
-    void deleteRole(String roleId);
-
+    
+    
     /**
      * Does this user service implementation support creation/deletion
      * of {@link User}s?

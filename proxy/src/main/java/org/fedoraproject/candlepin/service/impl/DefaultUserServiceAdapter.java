@@ -154,4 +154,10 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
         return roleCurator.find(roleId);
     }
 
+    @Override
+    public void addUserToRole(Role role, User user) {
+        role.addUser(user);
+        roleCurator.merge(role);
+    }
+
 }

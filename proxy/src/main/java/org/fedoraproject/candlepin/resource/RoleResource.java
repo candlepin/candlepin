@@ -31,6 +31,7 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.OwnerPermission;
 import org.fedoraproject.candlepin.model.Role;
+import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.spi.BadRequestException;
@@ -104,6 +105,14 @@ public class RoleResource {
         return role;
     }
 
+    private User lookupUser(String username) {
+        User user = userService.findByLogin(username);
+        if (user == null) {
+            throw new NotFoundException(i18n.tr("No such user: {0}", username));
+        }
+        return user;
+    }
+
 //    @GET
 //    @Path("{name}")
 //    @Produces(MediaType.APPLICATION_JSON)
@@ -115,6 +124,16 @@ public class RoleResource {
     @Path("/{role_id}")
     public void deleteRole(@PathParam("role_id") String roleId) {
         this.userService.deleteRole(roleId);
+    }
+    
+    @POST
+    @Path("/{role_id}/users/{username}")
+    public Role addUser(@PathParam("role_id") String roleId, 
+        @PathParam("username") String username) {
+        Role role = lookupRole(roleId);
+        User user = lookupUser(username);
+        userService.addUserToRole(role, user);
+        return role;
     }
 
 

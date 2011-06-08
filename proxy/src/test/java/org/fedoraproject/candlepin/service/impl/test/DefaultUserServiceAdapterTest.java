@@ -209,4 +209,15 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
         assertNotNull(foo);
         assertEquals(foo, u);
     }
+    
+    @Test
+    public void addUserToRole() {
+        Role adminRole = createAdminRole(owner);
+        roleCurator.create(adminRole);
+        User user = new User("testuser", "password");
+        service.createUser(user);
+        service.addUserToRole(adminRole, user);
+        adminRole = service.getRole(adminRole.getId());
+        assertEquals(1, adminRole.getUsers().size());
+    }
 }

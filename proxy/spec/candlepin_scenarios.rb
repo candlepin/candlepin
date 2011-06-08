@@ -68,19 +68,26 @@ module CandlepinMethods
     Candlepin.new(user_name, 'password')
   end
 
+  # Creates the given user, with access to a role giving them full permissions
+  # in the given owner:
   def create_user(owner, username, password)
     user = @cp.create_user(username, password)
     @users << user
     # Create a role for user to administer the given owner:
-    create_role(nil, [{
-      :owner => {:key => owner['key']},
-      :access => 'ALL'}], [user["username"]])
+    role = create_role(nil, owner['key'], 'ALL')
+    @cp.add_role_user(role['id'], user['username'])
     return user
   end
 
-  def create_role(name=nil, perms=nil, usernames=nil)
+  # Create a role with a single permission. Additional permissions can be added
+  # with the appropriate API calls.
+  def create_role(name, owner_key, access_type)
     name ||= random_string 'test_role'
-    role = @cp.create_role(name, perms, usernames)
+    perms = [{
+      :owner => {:key => owner_key},
+      :access => access_type,
+    }]
+    role = @cp.create_role(name, perms)
     @roles << role
     return role
   end

@@ -153,17 +153,12 @@ class Candlepin
     post("/users", user)
   end
 
-  def create_role(name, perms=nil, usernames=nil)
+  # TODO: drop perms here too?
+  def create_role(name, perms=nil)
     perms ||= []
-    usernames ||= []
-    users = []
-    usernames.each do |username|
-      users << {:username => username}
-    end
     role = {
       :name => name,
       :permissions => perms,
-      :users => users,
     }
     post("/roles", role)
   end
@@ -174,6 +169,10 @@ class Candlepin
 
   def delete_role(roleid)
     delete("/roles/#{roleid}")
+  end
+
+  def add_role_user(role_id, username)
+    post("/roles/#{role_id}/users/#{username}")
   end
 
   def list_roles
