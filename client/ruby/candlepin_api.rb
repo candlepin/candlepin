@@ -172,6 +172,10 @@ class Candlepin
     put("/roles/#{role['id']}", role)
   end
 
+  def delete_role(roleid)
+    delete("/roles/#{roleid}")
+  end
+
   def list_roles
     get("/roles")
   end
