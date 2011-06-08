@@ -113,12 +113,12 @@ public class RoleResource {
         return user;
     }
 
-//    @GET
-//    @Path("{name}")
-//    @Produces(MediaType.APPLICATION_JSON)
-//    public Role getRole(String name) {
-//        return roleCurator.lookupByName(name);
-//    }
+    @GET
+    @Path("{role_id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Role getRole(@PathParam("role_id") String roleId) {
+        return lookupRole(roleId);
+    }
     
     @DELETE
     @Path("/{role_id}")

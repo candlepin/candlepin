@@ -179,6 +179,10 @@ class Candlepin
     get("/roles")
   end
 
+  def get_role(role_id)
+    get("/roles/#{role_id}")
+  end
+
   def delete_user(username)
     uri = "/users/#{username}"
     delete uri

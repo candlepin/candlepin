@@ -11,8 +11,6 @@ describe 'Role Resource' do
     @username = random_string 'user' 
     @user_cp = user_client(@test_owner, @username)
 
-    @role = create_role(nil, @test_owner['key'], 'ALL')
-
   end
 
   it 'should create roles' do
@@ -40,6 +38,14 @@ describe 'Role Resource' do
   end
 
   it 'should add users to a role' do
+    role = create_role(nil, @test_owner['key'], 'ALL')
+    role['users'].size.should == 0
+
+    role = @cp.add_role_user(role['id'], @username)
+    role['users'].size.should == 1
+
+    role = @cp.get_role(role['id'])
+    role['users'].size.should == 1
   end
  
 end
