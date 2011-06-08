@@ -40,7 +40,7 @@ public class RoleTest extends DatabaseTestFixture {
         
         Role lookedUp = roleCurator.find(r.getId());
         assertEquals(1, lookedUp.getPermissions().size());
-        assertEquals(1, lookedUp.getMemberships().size());
+        assertEquals(1, lookedUp.getRoleUsers().size());
     }
     
     private Role createRole(Owner o) {
@@ -68,7 +68,7 @@ public class RoleTest extends DatabaseTestFixture {
         List<Role> roles = roleCurator.listForOwner(o);
         assertEquals(1, roles.size());
         assertEquals(r1, roles.get(0));
-        assertEquals(1, roles.get(0).getMemberships().size());
+        assertEquals(1, roles.get(0).getRoleUsers().size());
         assertEquals(1, roles.get(0).getPermissions().size());
     }
     
@@ -81,8 +81,8 @@ public class RoleTest extends DatabaseTestFixture {
     public void testListForUser() {
         Owner o = createOwner();
         Role role = createRole(o);
-        assertEquals(1, role.getMemberships().size());
-        User user = role.getMemberships().iterator().next().getUser();
+        assertEquals(1, role.getRoleUsers().size());
+        User user = role.getRoleUsers().iterator().next().getUser();
         List<Role> lookedUp = roleCurator.listForUser(user);
         assertEquals(1, lookedUp.size());
         assertEquals(role.getId(), lookedUp.get(0).getId());

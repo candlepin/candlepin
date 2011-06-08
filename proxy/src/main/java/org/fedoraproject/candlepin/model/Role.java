@@ -45,7 +45,7 @@ public class Role extends AbstractHibernateObject implements Linkable {
     private String id;
 
     @OneToMany(mappedBy = "role", cascade = {CascadeType.ALL})
-    private Set<Membership> memberships = new HashSet<Membership>();
+    private Set<RoleUser> roleUsers = new HashSet<RoleUser>();
 
     @ManyToMany(
         targetEntity = OwnerPermission.class,
@@ -62,10 +62,10 @@ public class Role extends AbstractHibernateObject implements Linkable {
     @Column(unique = true)
     private String name;
 
-    public Role(String name, Set<Membership> memberships, Set<OwnerPermission> perms) {
+    public Role(String name, Set<RoleUser> roleUsers, Set<OwnerPermission> memberships) {
         this.name = name;
-        this.memberships = memberships;
-        this.permissions = perms;
+        this.roleUsers = roleUsers;
+        this.permissions = memberships;
     }
 
     public Role(String name) {
@@ -105,19 +105,19 @@ public class Role extends AbstractHibernateObject implements Linkable {
         this.name = name;
     }
 
-    public Set<Membership> getMemberships() {
-        return memberships;
+    public Set<RoleUser> getRoleUsers() {
+        return roleUsers;
     }
-
-    public void setMemberships(Set<Membership> memberships) {
-        this.memberships = memberships;
+    
+    public void setRoleUsers(Set<RoleUser> roleUsers) {
+        this.roleUsers = roleUsers;
     }
 
     public void addUser(User u) {
-        Membership ru = new Membership(this, u);
-        this.memberships.add(ru);
+        RoleUser ru = new RoleUser(this, u);
+        this.roleUsers.add(ru);
     }
-
+    
     public Set<OwnerPermission> getPermissions() {
         return permissions;
     }

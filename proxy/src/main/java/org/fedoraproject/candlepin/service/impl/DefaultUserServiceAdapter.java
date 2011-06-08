@@ -19,11 +19,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.LinkedList;
 
+import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerPermission;
 import org.fedoraproject.candlepin.model.OwnerPermissionCurator;
 import org.fedoraproject.candlepin.model.RoleCurator;
-import org.fedoraproject.candlepin.model.Membership;
+import org.fedoraproject.candlepin.model.RoleUser;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.model.UserCurator;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
@@ -31,6 +32,7 @@ import org.fedoraproject.candlepin.util.Util;
 
 import com.google.inject.Inject;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import org.fedoraproject.candlepin.model.Role;
 
@@ -114,7 +116,7 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
         List<Role> roles = roleCurator.listForOwner(owner);
         Set<User> users = new HashSet<User>();
         for (Role r : roles) {
-            for (Membership ru : r.getMemberships()) {
+            for (RoleUser ru : r.getRoleUsers()) {
                 users.add(ru.getUser());
             }
         }

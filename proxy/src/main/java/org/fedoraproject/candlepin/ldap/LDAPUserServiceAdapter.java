@@ -30,7 +30,7 @@ import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.model.Role;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerPermission;
-import org.fedoraproject.candlepin.model.Membership;
+import org.fedoraproject.candlepin.model.RoleUser;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 
@@ -90,7 +90,7 @@ public class LDAPUserServiceAdapter implements UserServiceAdapter {
             permissions.add(new OwnerPermission(new Owner(orgName), Access.ALL));
 
             // Not persisting this, so I think it is ok to give it a dummy name:
-            Role r = new Role("ldap", new HashSet<Membership>(), permissions);
+            Role r = new Role("ldap", new HashSet<RoleUser>(), permissions);
             r.addUser(user);
             roles.add(r);
         }

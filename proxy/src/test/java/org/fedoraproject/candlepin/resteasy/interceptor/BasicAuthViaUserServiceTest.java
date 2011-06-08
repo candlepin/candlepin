@@ -25,7 +25,7 @@ import org.fedoraproject.candlepin.exceptions.UnauthorizedException;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerPermission;
 import org.fedoraproject.candlepin.model.Role;
-import org.fedoraproject.candlepin.model.Membership;
+import org.fedoraproject.candlepin.model.RoleUser;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 
@@ -118,7 +118,7 @@ public class BasicAuthViaUserServiceTest {
         permissions.add(new OwnerPermission(owner, Access.ALL));
         
         List<Role> roles = Arrays.asList(new Role [] {new Role("test_role",
-            new HashSet<Membership>(), permissions)});
+            new HashSet<RoleUser>(), permissions)});
         when(userService.getRoles("user")).thenReturn(roles);
         
         when(userService.findByLogin("user")).thenReturn(new User());

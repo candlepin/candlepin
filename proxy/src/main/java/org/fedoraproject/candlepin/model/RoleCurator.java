@@ -36,10 +36,10 @@ public class RoleCurator extends AbstractHibernateCurator<Role> {
 
     public List<Role> listForUser(User u) {
         // TODO: should be able to do this with just a query?
-        List<Membership> roleUsers = (List<Membership>) currentSession().createCriteria(
-            Membership.class).add(Restrictions.eq("user", u)).list();
+        List<RoleUser> roleUsers = (List<RoleUser>) currentSession().createCriteria(
+            RoleUser.class).add(Restrictions.eq("user", u)).list();
         List<Role> roles = new LinkedList<Role>();
-        for (Membership ru : roleUsers) {
+        for (RoleUser ru : roleUsers) {
             roles.add(ru.getRole());
         }
         return roles;
