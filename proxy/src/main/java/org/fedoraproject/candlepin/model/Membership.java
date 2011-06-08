@@ -35,7 +35,7 @@ import javax.xml.bind.annotation.XmlTransient;
  */
 @Entity
 @Table(name = "cp_role_users")
-public class RoleUser extends AbstractHibernateObject {
+public class Membership extends AbstractHibernateObject {
 
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -52,10 +52,10 @@ public class RoleUser extends AbstractHibernateObject {
     @Column(nullable = false)
     private User user;
 
-    public RoleUser() {
+    public Membership() {
     }
 
-    public RoleUser(Role role, User user) {
+    public Membership(Role role, User user) {
         setRole(role);
         setUser(user);
     }
@@ -70,8 +70,8 @@ public class RoleUser extends AbstractHibernateObject {
         if (this == other) {
             return true;
         }
-        if (other instanceof RoleUser) {
-            RoleUser that = (RoleUser) other;
+        if (other instanceof Membership) {
+            Membership that = (Membership) other;
             return role.equals(that.getRole()) && user.equals(that.getUser());
         }
         return false;
