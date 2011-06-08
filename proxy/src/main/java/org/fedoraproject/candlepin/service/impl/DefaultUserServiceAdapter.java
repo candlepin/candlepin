@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.LinkedList;
 
-import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerPermission;
 import org.fedoraproject.candlepin.model.OwnerPermissionCurator;
