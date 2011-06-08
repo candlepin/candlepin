@@ -290,6 +290,7 @@ public class OwnerResource {
         
         for (OwnerPermission perm : permissionCurator.findByOwner(owner)) {
             log.info("Deleting permission: " + perm.getAccess());
+            perm.getRole().getPermissions().remove(perm);
             permissionCurator.delete(perm);
         }
 
