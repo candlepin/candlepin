@@ -14,15 +14,11 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import java.util.Set;
-
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlTransient;
@@ -56,9 +52,11 @@ public class OwnerPermission extends AbstractHibernateObject implements Permissi
     @Index(name = "cp_permission_owner_fk_idx")
     private Owner owner;
     
-    @ManyToMany(mappedBy = "permissions",
-        cascade = CascadeType.REMOVE)
-    private Set<Role> roles;
+    @ManyToOne
+    @ForeignKey(name = "fk_permission_role")
+    @JoinColumn(nullable = false)
+    @Index(name = "cp_permission_role_fk_idx")
+    private Role role;
     
     private Access access;
 
@@ -111,11 +109,11 @@ public class OwnerPermission extends AbstractHibernateObject implements Permissi
     }
 
     @XmlTransient
-    public Set<Role> getRoles() {
-        return roles;
+    public Role getRole() {
+        return role;
     }
 
-    public void setRoles(Set<Role> roles) {
-        this.roles = roles;
+    public void setRole(Role role) {
+        this.role = role;
     }
 }

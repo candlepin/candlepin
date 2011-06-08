@@ -287,8 +287,9 @@ public class DatabaseTestFixture {
     }
 
     protected Principal setupPrincipal(String username, Owner owner, Access verb) {
-        OwnerPermission p = permissionCurator.findOrCreate(owner, verb);
-        Principal ownerAdmin = new UserPrincipal(username,  Arrays.asList(new Permission[] {
+        OwnerPermission p = new OwnerPermission(owner, verb);
+        // Only need a detached owner permission here:
+        Principal ownerAdmin = new UserPrincipal(username, Arrays.asList(new Permission[] {
             p}));
         setupPrincipal(ownerAdmin);
         return ownerAdmin;
@@ -308,7 +309,7 @@ public class DatabaseTestFixture {
 
     public Role createAdminRole(Owner owner) {
         OwnerPermission p = new OwnerPermission(owner, Access.ALL);
-        Role role = new Role();
+        Role role = new Role("testrole" + TestUtil.randomInt());
         role.addPermission(p);
         return role;
     }

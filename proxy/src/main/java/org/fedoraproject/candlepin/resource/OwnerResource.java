@@ -287,6 +287,7 @@ public class OwnerResource {
             log.info("Deleting import record:  " + record);
             importRecordCurator.delete(record);
         }
+        
         for (OwnerPermission perm : permissionCurator.findByOwner(owner)) {
             log.info("Deleting permission: " + perm.getAccess());
             permissionCurator.delete(perm);

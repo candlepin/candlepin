@@ -25,6 +25,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import org.hibernate.annotations.ForeignKey;
@@ -53,21 +54,16 @@ public class Role extends AbstractHibernateObject implements Linkable {
         inverseJoinColumns = @JoinColumn(name = "user_id"))
     private Set<User> users = new HashSet<User>();
     
-    @ManyToMany(
-        targetEntity = OwnerPermission.class,
-        cascade = { CascadeType.PERSIST})
-    @ForeignKey(
-        name = "fk_permission_id",
-        inverseName = "fk_role_id")
-    @JoinTable(
-        name = "cp_role_permissions",
-        joinColumns = @JoinColumn(name = "role_id"),
-        inverseJoinColumns = @JoinColumn(name = "permission_id"))
+    @OneToMany(mappedBy = "role", cascade = CascadeType.ALL)
     private Set<OwnerPermission> permissions = new HashSet<OwnerPermission>();
 
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     private String name;
 
+    public Role(String name) {
+        this.name = name;
+    }
+    
     public Role(String name, Set<User> users, Set<OwnerPermission> memberships) {
         this.name = name;
         this.users = users;
@@ -131,5 +127,6 @@ public class Role extends AbstractHibernateObject implements Linkable {
     
     public void addPermission(OwnerPermission p) {
         this.permissions.add(p);
+        p.setRole(this);
     }
 }

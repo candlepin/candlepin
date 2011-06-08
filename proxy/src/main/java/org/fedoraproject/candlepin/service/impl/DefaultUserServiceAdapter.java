@@ -75,7 +75,6 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
 
     @Override
     public Role createRole(Role role) {
-        Set<OwnerPermission> actualPermissions = new HashSet<OwnerPermission>();
         Set<User> actualUsers = new HashSet<User>();
 
         for (User user : role.getUsers()) {
@@ -85,11 +84,9 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
         role.setUsers(actualUsers);
         
         for (OwnerPermission permission : role.getPermissions()) {
-            actualPermissions.add(this.permCurator.findOrCreate(
-                    permission.getOwner(), permission.getAccess()));
+            permission.setRole(role);
         }
 
-        role.setPermissions(actualPermissions);
         this.roleCurator.create(role);
         return role;
     }
@@ -139,13 +136,13 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
 
     @Override
     public Role updateRole(Role r) {
-        Set<OwnerPermission> newPermissions = new HashSet<OwnerPermission>();
-        for (OwnerPermission incomingPerm : r.getPermissions()) {
-            newPermissions.add(this.permCurator.findOrCreate(
-                incomingPerm.getOwner(), incomingPerm.getAccess()));
-        }
-        r.getPermissions().clear();
-        r.getPermissions().addAll(newPermissions);
+//        Set<OwnerPermission> newPermissions = new HashSet<OwnerPermission>();
+//        for (OwnerPermission incomingPerm : r.getPermissions()) {
+//            newPermissions.add(this.permCurator.findOrCreate(
+//                incomingPerm.getOwner(), incomingPerm.getAccess()));
+//        }
+//        r.getPermissions().clear();
+//        r.getPermissions().addAll(newPermissions);
         return roleCurator.merge(r);
     }
 

@@ -136,8 +136,6 @@ public class RoleResource {
         return role;
     }
 
-
-
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "roles")

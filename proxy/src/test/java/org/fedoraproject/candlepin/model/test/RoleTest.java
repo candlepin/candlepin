@@ -25,18 +25,25 @@ import org.fedoraproject.candlepin.model.OwnerPermission;
 import org.fedoraproject.candlepin.model.Role;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
+import org.fedoraproject.candlepin.test.TestUtil;
 
 
+import org.junit.Before;
 import org.junit.Test;
 
 public class RoleTest extends DatabaseTestFixture {
+    
+    private Owner owner;
+    
+    @Before
+    public void setUp() throws Exception {
+        owner = createOwner();
+    }
 
     @Test
     public void testCreate() throws Exception {
         
-        Owner o = createOwner();
-        
-        Role r = createRole(o);
+        Role r = createRole(owner);
         
         Role lookedUp = roleCurator.find(r.getId());
         assertEquals(1, lookedUp.getPermissions().size());
@@ -44,13 +51,12 @@ public class RoleTest extends DatabaseTestFixture {
     }
     
     private Role createRole(Owner o) {
-        OwnerPermission p = new OwnerPermission(o, Access.ALL);
-        permissionCurator.create(p);
-        
         User user = new User(RandomStringUtils.random(5), "pass");
         userCurator.create(user);
         
-        Role r = new Role();
+        OwnerPermission p = new OwnerPermission(o, Access.ALL);
+        
+        Role r = new Role("role" + TestUtil.randomInt());
         r.addPermission(p);
         r.addUser(user);
         roleCurator.create(r);
@@ -59,17 +65,32 @@ public class RoleTest extends DatabaseTestFixture {
     
     @Test
     public void testListForOwner() {
-        Owner o = createOwner();
         Owner o2 = createOwner();
         
-        Role r1 = createRole(o);
+        Role r1 = createRole(owner);
         createRole(o2);
         
-        List<Role> roles = roleCurator.listForOwner(o);
+        List<Role> roles = roleCurator.listForOwner(owner);
         assertEquals(1, roles.size());
         assertEquals(r1, roles.get(0));
         assertEquals(1, roles.get(0).getUsers().size());
         assertEquals(1, roles.get(0).getPermissions().size());
+    }
+    
+    @Test
+    public void testAddPermission() {
+        Role role = new Role("myrole");
+        roleCurator.create(role);
+        role.addPermission(new OwnerPermission(owner, Access.ALL));
+        role = roleCurator.find(role.getId());
+        assertEquals(1, role.getPermissions().size());
+        OwnerPermission perm = role.getPermissions().iterator().next();
+        assertNotNull(perm.getId());
+    }
+    
+    @Test
+    public void testNoDuplicatePermissionsInSameRole() {
+        fail();
     }
     
 }

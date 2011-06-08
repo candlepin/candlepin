@@ -105,7 +105,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         user.setPassword("somepassword");
         userCurator.create(user);
 
-        Role role = new Role();
+        Role role = new Role("dummyrole");
         role.addUser(user);
         role.addPermission(new OwnerPermission(owner, Access.ALL));
         user.addRole(role);
@@ -553,10 +553,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void cleanupWithOutstandingPermissions() {
-        OwnerPermission p = permissionCurator.findOrCreate(owner, Access.ALL);
-        Role r = new Role();
-        r.setName("rolename");
-        r.getPermissions().add(p);
+        OwnerPermission p = new OwnerPermission(owner, Access.ALL);
+        Role r = new Role("rolename");
+        r.addPermission(p);
         roleCurator.create(r);
         ownerResource.deleteOwner(owner.getKey(), false);
     }
