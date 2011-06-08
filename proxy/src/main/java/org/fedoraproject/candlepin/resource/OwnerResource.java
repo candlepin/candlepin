@@ -402,7 +402,8 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/subscriptions")
     public Subscription createSubscription(
-        @PathParam("owner_key") String ownerKey, Subscription subscription) {
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
+        Subscription subscription) {
         Owner o = findOwner(ownerKey);
         subscription.setOwner(o);
         return subService.createSubscription(subscription);
@@ -438,7 +439,8 @@ public class OwnerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/events")
-    public List<Event> getEvents(@PathParam("owner_key") String ownerKey) {
+    public List<Event> getEvents(
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
         Owner o = findOwner(ownerKey);
         List<Event> events = this.eventCurator.listMostRecent(FEED_LIMIT, o);
         if (events != null) {
@@ -452,7 +454,7 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/subscriptions")
     public List<Subscription> getSubscriptions(
-        @PathParam("owner_key") String ownerKey) {
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
         Owner o = findOwner(ownerKey);
         return subService.getSubscriptions(o);
     }
@@ -465,7 +467,8 @@ public class OwnerResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/users")
-    public List<User> getUsers(@PathParam("owner_key") String ownerKey) {
+    public List<User> getUsers(
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
         Owner o = findOwner(ownerKey);
         return userService.listByOwner(o);
     }
@@ -513,7 +516,8 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}")
     @Transactional
-    public Owner updateOwner(@PathParam("owner_key") String key, Owner owner) {
+    public Owner updateOwner(@PathParam("owner_key") @Verify(Owner.class) String key,
+        Owner owner) {
         Owner toUpdate = findOwner(key);
         log.debug("Updating");
         toUpdate.setDisplayName(owner.getDisplayName());
@@ -535,7 +539,8 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/subscriptions")
     public JobDetail refreshPools(
-        @PathParam("owner_key") String ownerKey,
+        // TODO: Can we verify with autocreate?
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @QueryParam("auto_create_owner") @DefaultValue("false") Boolean autoCreateOwner) {
 
         Owner owner = ownerCurator.lookupByKey(ownerKey);
@@ -568,7 +573,7 @@ public class OwnerResource {
     @POST
     @Path("{owner_key}/imports")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public void importData(@PathParam("owner_key") String ownerKey,
+    public void importData(@PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         MultipartInput input) {
         Owner owner = findOwner(ownerKey);
 
@@ -604,6 +609,15 @@ public class OwnerResource {
         }
     }
 
+    @GET
+    @Path("{owner_key}/imports")
+    public List<ImportRecord> getImports(
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
+        Owner owner = findOwner(ownerKey);
+        
+        return this.importRecordCurator.findRecords(owner);
+    }
+
     private void recordImportSuccess(Owner owner) {
         ImportRecord record = new ImportRecord(owner);
         record.recordStatus(ImportRecord.Status.SUCCESS,
@@ -619,13 +633,6 @@ public class OwnerResource {
         this.importRecordCurator.create(record);
     }
 
-    @GET
-    @Path("{owner_key}/imports")
-    public List<ImportRecord> getImports(@PathParam("owner_key") String ownerKey) {
-        Owner owner = findOwner(ownerKey);
-
-        return this.importRecordCurator.findRecords(owner);
-    }
 
     private Date parseActiveOnString(String activeOn) {
         Date d;
