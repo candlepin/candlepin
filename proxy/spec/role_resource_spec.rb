@@ -28,7 +28,11 @@ describe 'Role Resource' do
   it 'should delete roles' do
     orig_count = @cp.list_roles().size
 
-    new_role = create_role(nil, @test_owner['key'], 'ALL')
+    perms = [{
+      :owner => {:key => @test_owner['key']},
+      :access => 'ALL',
+    }]
+    new_role = @cp.create_role(random_string('testrole'), perms)
 
     @cp.list_roles().size.should == orig_count + 1
     @cp.delete_role(new_role['id'])
@@ -38,20 +42,6 @@ describe 'Role Resource' do
   it 'should add users to a role' do
   end
  
-#  it 'should add permissions to existing roles' do
-#    # TODO: failing right now, PUT implementation not yet working.
-#    role = create_role(nil, [])
-#    new_role = create_role(nil, @test_owner['key'], 'ALL')
-#    role['permissions'].size.should == 0
-#    role['permissions'] << {
-#      :owner => {:key => @test_owner['key']},
-#      :access => 'ALL',
-#    }
-#    role = @cp.update_role(role)
-#    role['permissions'].size.should == 1
-#  end
-
-
 end
 
 

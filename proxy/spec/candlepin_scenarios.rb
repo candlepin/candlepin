@@ -17,9 +17,9 @@ module CandlepinScenarios
       end
 
       after do
-  #      @roles.reverse_each { |r| @cp.delete_role r['id'] }
-  #      @owners.reverse_each { |owner| @cp.delete_owner owner.key }
-  #      @users.reverse_each { |user| @cp.delete_user user['username'] }
+        @roles.reverse_each { |r| @cp.delete_role r['id'] }
+        @owners.reverse_each { |owner| @cp.delete_owner owner.key }
+        #@users.reverse_each { |user| @cp.delete_user user['username'] }
 
         # TODO:  delete products?
       end
