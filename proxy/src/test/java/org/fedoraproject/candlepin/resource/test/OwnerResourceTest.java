@@ -108,13 +108,14 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Role role = new Role();
         role.addUser(user);
         role.addPermission(new OwnerPermission(owner, Access.ALL));
+        user.addRole(role);
         roleCurator.create(role);
 
         User user2 = new User();
         user2.setUsername("someotherusername");
         user2.setPassword("someotherpassword");
-        role.addUser(user2);
 
+        user2.addRole(role);
         userCurator.create(user2);
         roleCurator.merge(role);
 

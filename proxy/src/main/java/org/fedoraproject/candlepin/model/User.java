@@ -15,15 +15,19 @@
 package org.fedoraproject.candlepin.model;
 
 import java.util.Formatter;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 import org.hibernate.annotations.GenericGenerator;
 
@@ -46,6 +50,9 @@ public class User extends AbstractHibernateObject {
     @Column(length = 32)
     private String id;
 
+    @ManyToMany(targetEntity = Role.class, mappedBy = "users")
+    private Set<Role> roles = new HashSet<Role>();
+
     @Column(nullable = false, unique = true)
     private String username;
 
@@ -54,6 +61,7 @@ public class User extends AbstractHibernateObject {
     private boolean superAdmin;
 
     public User() {
+        this.roles = new HashSet<Role>();
     }
 
     public User(String login, String password) {
@@ -106,6 +114,53 @@ public class User extends AbstractHibernateObject {
      */
     public void setPassword(String password) {
         this.hashedPassword = Util.hash(password);
+    }
+
+    /**
+     * Looks up permissions to find associated owners.
+     *
+     * @return associated owners
+     *
+     * @deprecated use {@link #getMemberships()} instead
+     */
+    @Deprecated
+    @XmlTransient
+    public Set<Owner> getOwners() {
+        Set<Owner> owners = new HashSet<Owner>();
+        for (Role role : getRoles()) {
+            for (OwnerPermission p : role.getPermissions()) {
+                owners.add(p.getOwner());
+            }
+        }
+
+        return owners;
+    }
+
+    /**
+     * @return the roles
+     */
+    @XmlTransient
+    public Set<Role> getRoles() {
+        return roles;
+    }
+    
+    public void addRole(Role r) {
+        if (this.roles.add(r)) {
+            r.addUser(this);
+        }
+    }
+    
+    /**
+     * Iterates user's roles and returns all unique permissions.
+     * @return all of this user's unique permissions.
+     */
+    @XmlTransient
+    public Set<OwnerPermission> getPermissions() {
+        Set<OwnerPermission> perms = new HashSet<OwnerPermission>();
+        for (Role r : getRoles()) {
+            perms.addAll(r.getPermissions());
+        }
+        return perms;
     }
 
     /**

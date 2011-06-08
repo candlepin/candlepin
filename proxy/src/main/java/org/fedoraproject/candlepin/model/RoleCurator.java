@@ -14,7 +14,6 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import java.util.LinkedList;
 import java.util.List;
 
 import org.hibernate.criterion.Restrictions;
@@ -32,17 +31,6 @@ public class RoleCurator extends AbstractHibernateCurator<Role> {
         return this.currentSession().createCriteria(Role.class)
             .createCriteria("permissions")
             .add(Restrictions.eq("owner", o)).list();
-    }
-
-    public List<Role> listForUser(User u) {
-        // TODO: should be able to do this with just a query?
-        List<RoleUser> roleUsers = (List<RoleUser>) currentSession().createCriteria(
-            RoleUser.class).add(Restrictions.eq("user", u)).list();
-        List<Role> roles = new LinkedList<Role>();
-        for (RoleUser ru : roleUsers) {
-            roles.add(ru.getRole());
-        }
-        return roles;
     }
 
     /**
