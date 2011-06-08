@@ -35,6 +35,8 @@ import org.quartz.JobExecutionContext;
 @Table(name = "cp_job")
 public class JobStatus extends AbstractHibernateObject {
 
+    public static final String OWNER_KEY = "owner_key";
+
     /**
      * Indicates possible states for a particular job.
      */
@@ -51,12 +53,18 @@ public class JobStatus extends AbstractHibernateObject {
     private Date startTime;
     private Date finishTime;
     private String result;
+    private String ownerKey;
 
     public JobStatus() { }
 
     public JobStatus(JobDetail jobDetail) {
         this.id = jobDetail.getName();
         this.state = JobState.CREATED;
+        this.ownerKey = getOwnerKey(jobDetail);
+    }
+
+    private String getOwnerKey(JobDetail jobDetail) {
+        return (String) jobDetail.getJobDataMap().get(OWNER_KEY);
     }
 
     public void update(JobExecutionContext context) {
@@ -104,6 +112,10 @@ public class JobStatus extends AbstractHibernateObject {
 
     public void setState(JobState state) {
         this.state = state;
+    }
+
+    public String getOwnerKey() {
+        return ownerKey;
     }
 
     public String getStatusPath() {

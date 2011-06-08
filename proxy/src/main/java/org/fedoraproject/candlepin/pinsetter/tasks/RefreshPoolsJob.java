@@ -18,6 +18,7 @@ import com.google.inject.Inject;
 import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
+import org.fedoraproject.candlepin.pinsetter.core.model.JobStatus;
 import org.fedoraproject.candlepin.util.Util;
 import org.quartz.Job;
 import org.quartz.JobDataMap;
@@ -30,8 +31,6 @@ import org.quartz.JobExecutionException;
  * {@link Owner}.
  */
 public class RefreshPoolsJob implements Job {
-
-    private static final String OWNER_KEY = "owner_key";
 
     private OwnerCurator ownerCurator;
     private PoolManager poolManager;
@@ -52,7 +51,7 @@ public class RefreshPoolsJob implements Job {
      */
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
-        String ownerKey = context.getMergedJobDataMap().getString(OWNER_KEY);
+        String ownerKey = context.getMergedJobDataMap().getString(JobStatus.OWNER_KEY);
         Owner owner = ownerCurator.lookupByKey(ownerKey);
 
         poolManager.refreshPools(owner);
@@ -72,7 +71,7 @@ public class RefreshPoolsJob implements Job {
         JobDetail detail = new JobDetail("refresh_pools_" + Util.generateUUID(),
                 RefreshPoolsJob.class);
         JobDataMap map = new JobDataMap();
-        map.put(OWNER_KEY, owner.getKey());
+        map.put(JobStatus.OWNER_KEY, owner.getKey());
 
         detail.setJobDataMap(map);
 
