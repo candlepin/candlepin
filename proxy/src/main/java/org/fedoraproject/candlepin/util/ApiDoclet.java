@@ -32,6 +32,7 @@ import org.codehaus.jackson.map.ObjectMapper;
  */
 public class ApiDoclet {
     private static final String RETURN_CODE_TAG = "httpcode";
+    private static final String DEPRECATED_TAG = "deprecated";
 
     private static String outputDir;
     private static ObjectMapper mapper = new ObjectMapper();
@@ -116,6 +117,7 @@ public class ApiDoclet {
     static class RestMethod {
         private String method;
         private String description;
+        private String deprecated;
         private List<HttpStatusCode> httpStatusCodes;
 
         private RestMethod(MethodDoc doc) {
@@ -123,6 +125,10 @@ public class ApiDoclet {
 
             for (Tag tag : doc.tags(RETURN_CODE_TAG)) {
                 this.httpStatusCodes.add(new HttpStatusCode(tag));
+            }
+
+            for (Tag tag : doc.tags(DEPRECATED_TAG)) {
+                this.deprecated = tag.text();
             }
 
             this.method = doc.qualifiedName();
@@ -136,6 +142,11 @@ public class ApiDoclet {
         public String getDescription() {
             return this.description;
         }
+
+        public String getDeprecated() {
+            return this.deprecated;
+        }
+
 
         public List<HttpStatusCode> getHttpStatusCodes() {
             return this.httpStatusCodes;

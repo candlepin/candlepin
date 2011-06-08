@@ -82,19 +82,7 @@ public class ApiCrawler {
     private RestApiCall processMethod(String rootPath, Method m) {
         RestApiCall apiCall = new RestApiCall();
 
-        Path subPath = m.getAnnotation(Path.class);
-        if (subPath != null) {
-            if (rootPath.endsWith("/") || subPath.value().startsWith("/")) {
-                apiCall.setUrl(rootPath + subPath.value());
-            }
-            else {
-                apiCall.setUrl(rootPath + "/" + subPath.value());
-            }
-        }
-        else {
-            apiCall.setUrl(rootPath);
-        }
-
+        processPath(rootPath, m, apiCall);
         processHttpVerb(m, apiCall);
         processQueryParams(m, apiCall);
 
@@ -109,6 +97,21 @@ public class ApiCrawler {
         apiCall.setMethod(getQualifiedName(m));
 
         return apiCall;
+    }
+
+    private void processPath(String rootPath, Method m, RestApiCall apiCall) {
+        Path subPath = m.getAnnotation(Path.class);
+        if (subPath != null) {
+            if (rootPath.endsWith("/") || subPath.value().startsWith("/")) {
+                apiCall.setUrl(rootPath + subPath.value());
+            }
+            else {
+                apiCall.setUrl(rootPath + "/" + subPath.value());
+            }
+        }
+        else {
+            apiCall.setUrl(rootPath);
+        }
     }
 
     private void processHttpVerb(Method m, RestApiCall apiCall) {
