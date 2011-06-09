@@ -73,7 +73,7 @@ public class ActivateResourceTest extends DatabaseTestFixture {
         fail("No excpetion was thrown");
     }
 
-    //FIXME once ownergeddon is in
+    //FIXME wait for ownergeddon to work
     /*
     @Test
     public void testCustomerCreateWithOneKeyWorks() {
@@ -90,7 +90,7 @@ public class ActivateResourceTest extends DatabaseTestFixture {
         Principal principal = new NoAuthPrincipal();
         ArrayList<String> keys = new ArrayList<String>();
         keys.add(key.getId());
-        con = activationKeyResource.activate(con, principal, "test", keys);
+        con = activateResource.activate(con, principal, "test", keys);
         assertEquals(owner.getId(), con.getOwner().getId());
         fail("No excpetion was thrown");
     }*/

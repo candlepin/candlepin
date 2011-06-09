@@ -49,9 +49,11 @@ public class ActivateResource {
 
     @Inject
     public ActivateResource(ConsumerResource consumerResource,
+        ActivationKeyCurator activationKeyCurator,
         I18n i18n) {
         this.consumerResource = consumerResource;
         this.i18n = i18n;
+        this.activationKeyCurator = activationKeyCurator;
     }
 
     @POST
@@ -60,7 +62,7 @@ public class ActivateResource {
     @AllowRoles(roles = { Role.NO_AUTH})
     public Consumer activate(Consumer consumer, @Context Principal principal,
         @QueryParam("username") String userName,
-        @QueryParam("activation_keys") List<String> keyStrings)
+        @QueryParam("activation_key") List<String> keyStrings)
         throws BadRequestException {
 
         // first, look for keys. If it is not found, throw an exception
@@ -81,16 +83,17 @@ public class ActivateResource {
                         i18n.tr("The keys provided are for different owners"));
                 }
             }
-            keys.add(findKey(keyString));
+            keys.add(key);
         }
 
+        throw new BadRequestException("Fix once Ownergeddon is working");
         // set the owner on the principal off of the first key
-        principal.setOwner(owner);
+        //principal.setOwner(owner);
 
         // Create the consumer via the normal path
-        Consumer newConsumer = consumerResource.create(consumer, principal, userName);
+        //Consumer newConsumer = consumerResource.create(consumer, principal, userName);
 
-        return newConsumer;
+        //return newConsumer;
     }
 
     protected ActivationKey findKey(String activationKeyId) {
