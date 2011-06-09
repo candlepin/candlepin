@@ -58,12 +58,12 @@ public class ActivateResourceTest extends DatabaseTestFixture {
         Principal principal = new NoAuthPrincipal();
         ArrayList<String> keys = new ArrayList<String>();
         try {
-            activateResource.activate(con, principal, "test", keys);
+            activateResource.activate(con, principal, keys);
         }
         catch (BadRequestException e) {
             // expected, lets try null
             try {
-                activateResource.activate(con, principal, "test", null);
+                activateResource.activate(con, principal, null);
             }
             catch (BadRequestException ee) {
                 // expected, lets try null
