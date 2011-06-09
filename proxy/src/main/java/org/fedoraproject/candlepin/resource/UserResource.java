@@ -15,12 +15,20 @@
 package org.fedoraproject.candlepin.resource;
 
 
+import java.util.LinkedList;
+import java.util.List;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.interceptor.SecurityHole;
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.xnap.commons.i18n.I18n;
@@ -37,11 +45,14 @@ public class UserResource {
   
     private UserServiceAdapter userService;
     private I18n i18n;
+    private OwnerCurator ownerCurator;
     
     @Inject
-    public UserResource(UserServiceAdapter userService, I18n i18n) {
+    public UserResource(UserServiceAdapter userService, I18n i18n,
+        OwnerCurator ownerCurator) {
         this.userService = userService;
         this.i18n = i18n;
+        this.ownerCurator = ownerCurator;
     }
     
     @GET
@@ -56,6 +67,24 @@ public class UserResource {
     @Produces(MediaType.APPLICATION_JSON)
     public User createUser(User user) {
         return userService.createUser(user);
+    }
+
+    @GET
+    @Path("/{username}/owners")
+    @Produces(MediaType.APPLICATION_JSON)
+    @SecurityHole
+    public List<Owner> listUsersOwners(@PathParam("username") String username,
+        @Context Principal principal) {
+
+        List<Owner> owners = new LinkedList<Owner>();
+        User user = userService.findByLogin(username);
+        if (user.isSuperAdmin()) {
+            owners.addAll(ownerCurator.listAll());
+        }
+        else {
+            owners.addAll(user.getOwners());
+        }
+        return owners;
     }
 
 }
