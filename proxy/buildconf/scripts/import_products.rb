@@ -40,15 +40,19 @@ data["owners"].each do |new_owner|
 
   # Kind of a hack to allow users under
   # the default 'admin' owner
-  if owner_name == 'admin'
-    owner = { 'key' => 'admin' }
-  else
-    owner = cp.create_owner(owner_name)
-  end
+  owner = cp.create_owner(owner_name)
+
+  # Create a role for the new owner:
+  perms = [{
+    :owner => {:key => owner['key']},
+    :access => 'ALL',
+  }]
+  role = cp.create_role("#{owner_name} Admin Role", perms)
 
   users.each do |user|
     puts "   user: #{user['username']}"
-    cp.create_user(owner['key'], user['username'], user['password'])
+    cp.create_user(user['username'], user['password'])
+    cp.add_role_user(role['id'], user['username'])
   end
 end
 
