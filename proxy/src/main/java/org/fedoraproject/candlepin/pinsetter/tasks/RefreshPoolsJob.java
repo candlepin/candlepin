@@ -15,10 +15,14 @@
 package org.fedoraproject.candlepin.pinsetter.tasks;
 
 import com.google.inject.Inject;
+
+import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.SystemPrincipal;
 import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.util.Util;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -55,7 +59,11 @@ public class RefreshPoolsJob implements Job {
         String ownerKey = context.getMergedJobDataMap().getString(OWNER_KEY);
         Owner owner = ownerCurator.lookupByKey(ownerKey);
 
+        // Assume that we verified the request in the resource layer:
+        Principal system = new SystemPrincipal();
+        ResteasyProviderFactory.pushContext(Principal.class, system);
         poolManager.refreshPools(owner);
+        ResteasyProviderFactory.popContextData(Principal.class);
 
         context.setResult("Pools refreshed for owner " + owner.getDisplayName());
     }
