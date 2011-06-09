@@ -14,6 +14,14 @@
  */
 package org.fedoraproject.candlepin.service;
 
+/**
+ * Service interface for generating UIDs.
+ * UniqueIdGenerator
+ */
 public interface UniqueIdGenerator {
-    public String generateId();
+    /**
+     * Does the needful, creates the UUID.
+     * @return a new UUID
+     */
+    String generateId();
 }
