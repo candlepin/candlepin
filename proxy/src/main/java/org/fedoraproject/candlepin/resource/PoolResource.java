@@ -15,8 +15,12 @@
 package org.fedoraproject.candlepin.resource;
 
 import org.fedoraproject.candlepin.audit.EventSink;
+import org.fedoraproject.candlepin.auth.Access;
+import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.interceptor.SecurityHole;
 import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
+import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
@@ -39,6 +43,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.xml.bind.DatatypeConverter;
 
@@ -101,11 +106,12 @@ public class PoolResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "pools")
     @Deprecated
+    @SecurityHole
     public List<Pool> list(@QueryParam("owner") String ownerId,
         @QueryParam("consumer") String consumerUuid,
         @QueryParam("product") String productId,
         @QueryParam("listall") @DefaultValue("false") boolean listAll,
-        @QueryParam("activeon") String activeOn) {
+        @QueryParam("activeon") String activeOn, @Context Principal principal) {
 
         // Make sure we were given sane query parameters:
         if (consumerUuid != null && ownerId != null) {
@@ -130,6 +136,13 @@ public class PoolResource {
                 throw new NotFoundException(i18n.tr("consumer: {0} not found",
                     consumerUuid));
             }
+            
+            // Now that we have a consumer, check that this principal can access it:
+            if (!principal.canAccess(c, Access.READ_ONLY)) {
+                throw new ForbiddenException(i18n.tr("User {0} cannot access consumer {1}", 
+                    principal.getPrincipalName(), consumerUuid));
+            }
+
             if (listAll) {
                 o = c.getOwner();
             }
@@ -139,7 +152,16 @@ public class PoolResource {
             if (o == null) {
                 throw new NotFoundException(i18n.tr("owner: {0}", ownerId));
             }
+            // Now that we have an owner, check that this principal can access it:
+            if (!principal.canAccess(o, Access.READ_ONLY)) {
+                throw new ForbiddenException(i18n.tr("User {0} cannot access owner {1}", 
+                    principal.getPrincipalName(), o.getKey()));
+            }
         }
+        
+        // TODO: if we have no consumer, and no owner specified, how do we do a security 
+        // check here? 
+        
         return poolCurator.listAvailableEntitlementPools(c, o, productId,
             activeOnDate, true, listAll);
     }

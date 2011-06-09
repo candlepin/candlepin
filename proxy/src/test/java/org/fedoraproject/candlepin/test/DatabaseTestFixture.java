@@ -302,9 +302,10 @@ public class DatabaseTestFixture {
         return principal;
     }
 
-    protected void setupPrincipal(Principal p) {
+    protected Principal setupPrincipal(Principal p) {
         // TODO: might be good to get rid of this singleton
         TestPrincipalProviderSetter.get().setPrincipal(p);
+        return p;
     }
 
     public Role createAdminRole(Owner owner) {
