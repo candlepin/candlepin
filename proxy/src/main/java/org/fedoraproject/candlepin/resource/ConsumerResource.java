@@ -670,7 +670,7 @@ public class ConsumerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{consumer_uuid}/entitlements")
     public List<Entitlement> bind(
-        @PathParam("consumer_uuid") String consumerUuid,
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @QueryParam("pool") String poolIdString,
         @QueryParam("token") String token,
         @QueryParam("product") String[] productIds,
