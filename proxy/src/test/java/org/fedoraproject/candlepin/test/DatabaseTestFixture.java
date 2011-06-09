@@ -116,7 +116,6 @@ public class DatabaseTestFixture {
     protected OwnerPermissionCurator permissionCurator;
     protected RoleCurator roleCurator;
     protected I18n i18n;
-    protected TestingInterceptor crudInterceptor;
     protected TestingInterceptor securityInterceptor;
     protected EntitlementCertServiceAdapter entitlementCertService;
     protected CandlepinPoolManager poolManager;
@@ -177,7 +176,6 @@ public class DatabaseTestFixture {
         statisticCurator = injector.getInstance(StatisticCurator.class);
         i18n = injector.getInstance(I18n.class);
 
-        crudInterceptor = testingModule.crudInterceptor();
         securityInterceptor = testingModule.securityInterceptor();
 
         dateSource = (DateSourceForTesting) injector

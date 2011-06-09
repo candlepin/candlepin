@@ -27,14 +27,9 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
-import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.FilterDefs;
-import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
-import org.hibernate.annotations.ParamDef;
 
 /**
  * Represents certificate used to entitle a consumer
@@ -44,25 +39,6 @@ import org.hibernate.annotations.ParamDef;
 @Entity
 @Table(name = "cp_ent_certificate")
 
-@FilterDefs({
-    @FilterDef(
-        name = "EntitlementCertificate_CONSUMER_FILTER", 
-        parameters = @ParamDef(name = "consumer_id", type = "string")
-    ),
-    @FilterDef(
-        name = "EntitlementCertificate_OWNER_FILTER", 
-        parameters = @ParamDef(name = "owner_ids", type = "string")
-    )
-})
-@Filters({
-    @Filter(name = "EntitlementCertificate_CONSUMER_FILTER", 
-        condition = "entitlement_id in (select e.id " +
-            "from cp_entitlement e where e.consumer_id = :consumer_id)"),
-    @Filter(name = "Consumer_CONSUMER_FILTER", 
-        condition = "id in (select c.id from cp_ent_certificate c " +
-            "inner join cp_entitlement e on c.entitlement_id = e.id " +
-                "and c.owner_id in (:owner_ids))")
-})
 public class EntitlementCertificate extends AbstractCertificate {
     @Id
     @GeneratedValue(generator = "system-uuid")

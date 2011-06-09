@@ -19,12 +19,7 @@ import org.fedoraproject.candlepin.auth.PrincipalData;
 import org.fedoraproject.candlepin.model.Persisted;
 import org.fedoraproject.candlepin.util.Util;
 
-import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.FilterDefs;
-import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.ParamDef;
 
 import java.util.Date;
 
@@ -50,17 +45,6 @@ import javax.xml.bind.annotation.XmlTransient;
 @Table(name = "cp_event")
 @XmlRootElement(namespace = "http://fedorahosted.org/candlepin/Event")
 @XmlAccessorType(XmlAccessType.PROPERTY)
-@FilterDefs({
-    @FilterDef(
-        name = "Event_OWNER_FILTER",
-        parameters = @ParamDef(name = "owner_ids", type = "string")
-    )
-})
-@Filters({
-    @Filter(name = "Event_OWNER_FILTER",
-        condition = "ownerId in (:owner_ids)"
-    )
-})
 public class Event implements Persisted {
 
     private static final long serialVersionUID = 1L;

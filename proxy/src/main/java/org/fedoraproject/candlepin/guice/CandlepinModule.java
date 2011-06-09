@@ -177,13 +177,13 @@ public class CandlepinModule extends AbstractModule {
                 Matchers.not(Matchers.annotatedWith(SecurityHole.class)),
                 securityEnforcer);
         
-        AccessControlInterceptor accessControlInterceptor = new AccessControlInterceptor();
-        requestInjection(accessControlInterceptor);
-        
-        bindInterceptor(
-            Matchers.subclassesOf(AbstractHibernateCurator.class),
-            Matchers.annotatedWith(EnforceAccessControl.class), 
-            accessControlInterceptor);
+//        AccessControlInterceptor accessControlInterceptor = new AccessControlInterceptor();
+//        requestInjection(accessControlInterceptor);
+//        
+//        bindInterceptor(
+//            Matchers.subclassesOf(AbstractHibernateCurator.class),
+//            Matchers.annotatedWith(EnforceAccessControl.class), 
+//            accessControlInterceptor);
         
         //amqp stuff below...
         

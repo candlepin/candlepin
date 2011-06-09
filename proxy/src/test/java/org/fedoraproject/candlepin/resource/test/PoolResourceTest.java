@@ -199,7 +199,6 @@ public class PoolResourceTest extends DatabaseTestFixture {
         
         Principal anotherPrincipal = setupPrincipal(owner2, Access.ALL);
         securityInterceptor.enable();
-        crudInterceptor.enable();
         
         poolResource.list(owner1.getId(), null, null, false, null, anotherPrincipal);
     }
@@ -209,7 +208,6 @@ public class PoolResourceTest extends DatabaseTestFixture {
     public void testConsumerCannotListPoolsForAnotherOwnersConsumer() {
         Principal p = setupPrincipal(new ConsumerPrincipal(foreignConsumer));
         securityInterceptor.enable();
-        crudInterceptor.enable();
         
         poolResource.list(null, passConsumer.getUuid(), null, false, null, p);
     }
@@ -218,7 +216,6 @@ public class PoolResourceTest extends DatabaseTestFixture {
     public void consumerCannotListPoolsForAnotherOwner() {
         Principal p = setupPrincipal(new ConsumerPrincipal(foreignConsumer));
         securityInterceptor.enable();
-        crudInterceptor.enable();
 
         poolResource.list(owner1.getId(), null, null, false, null, p);
     }

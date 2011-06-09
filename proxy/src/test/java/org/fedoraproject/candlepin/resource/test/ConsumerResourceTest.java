@@ -396,7 +396,6 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         setupPrincipal(new ConsumerPrincipal(evilConsumer));
 
         securityInterceptor.enable();
-        crudInterceptor.enable();
 
         consumerResource.getEntitlementCertificates(consumer.getUuid(), null);
     }
@@ -426,7 +425,6 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         setupPrincipal(new ConsumerPrincipal(evilConsumer));
 
         securityInterceptor.enable();
-        crudInterceptor.enable();
 
         consumerResource.deleteConsumer(consumer.getUuid(), principal);
     }
@@ -452,7 +450,6 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     public void getConsumersCerts() {
         setupAdminPrincipal("admin");
         securityInterceptor.enable();
-        crudInterceptor.enable();
 
         assertEquals(0,
             consumerResource.getEntitlementCertificates(consumer.getUuid(),
@@ -470,7 +467,6 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         setupPrincipal(evilOwner, Access.ALL);
         securityInterceptor.enable();
-        crudInterceptor.enable();
 
         consumerResource.getEntitlementCertificates(consumer.getUuid(), null);
     }
@@ -479,7 +475,6 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     public void testConsumerCannotListAllConsumers() {
         setupPrincipal(new ConsumerPrincipal(consumer));
         securityInterceptor.enable();
-        crudInterceptor.enable();
 
         consumerResource.list(null, null, null);
     }
@@ -495,7 +490,6 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         setupPrincipal(new ConsumerPrincipal(consumer));
         securityInterceptor.enable();
-        crudInterceptor.enable();
 
         assertEquals(3,
             consumerResource.listEntitlements(consumer.getUuid(), null).size());
@@ -516,7 +510,6 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         setupPrincipal(new ConsumerPrincipal(evilConsumer));
         securityInterceptor.enable();
-        crudInterceptor.enable();
 
         consumerResource.listEntitlements(consumer.getUuid(), null);
     }
@@ -534,7 +527,6 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         ownerCurator.create(evilOwner);
 
         securityInterceptor.enable();
-        crudInterceptor.enable();
         setupPrincipal(evilOwner, Access.ALL);
 
         consumerResource.listEntitlements(consumer.getUuid(), null);
@@ -550,7 +542,6 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
             null, null, 1, null, null);
 
         securityInterceptor.enable();
-        crudInterceptor.enable();
 
         assertEquals(3,
             consumerResource.listEntitlements(consumer.getUuid(), null).size());

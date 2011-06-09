@@ -134,12 +134,12 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
             Matchers.not(Matchers.annotatedWith(SecurityHole.class)),
             securityInterceptor);
 
-        AccessControlInterceptor crud = new AccessControlInterceptor();
-        requestInjection(crud);
-        crudInterceptor = new TestingInterceptor(crud);
-
-        bindInterceptor(Matchers.subclassesOf(AbstractHibernateCurator.class),
-            Matchers.annotatedWith(EnforceAccessControl.class), crudInterceptor);
+//        AccessControlInterceptor crud = new AccessControlInterceptor();
+//        requestInjection(crud);
+//        crudInterceptor = new TestingInterceptor(crud);
+//
+//        bindInterceptor(Matchers.subclassesOf(AbstractHibernateCurator.class),
+//            Matchers.annotatedWith(EnforceAccessControl.class), crudInterceptor);
         bind(CertificateRevocationListTask.class);
         // temporary
         bind(IdentityCertServiceAdapter.class).to(

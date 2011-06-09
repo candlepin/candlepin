@@ -267,7 +267,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         setupPrincipal(new ConsumerPrincipal(c));
 
         securityInterceptor.enable();
-        crudInterceptor.enable();
 
         ownerResource.getOwner(owner.getKey());
     }
@@ -302,7 +301,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         poolCurator.create(pool2);
 
         securityInterceptor.enable();
-        crudInterceptor.enable();
 
         // Filtering should just cause this to return no results:
         ownerResource.ownerEntitlementPools(owner.getKey(), null, null, true, null);
@@ -313,7 +311,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         setupPrincipal(owner, Access.ALL);
 
         securityInterceptor.enable();
-        crudInterceptor.enable();
 
         ownerResource.list(null);
     }
@@ -323,7 +320,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Principal principal = setupPrincipal(owner, Access.ALL);
 
         securityInterceptor.enable();
-        crudInterceptor.enable();
 
         ownerResource.deleteOwner(owner.getKey(), true);
     }
@@ -354,7 +350,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         setupPrincipal(owner, Access.ALL);
 
         securityInterceptor.enable();
-        crudInterceptor.enable();
 
         Feed feed = ownerResource.getOwnerAtomFeed(owner.getKey());
         assertEquals(1, feed.getEntries().size());
@@ -374,7 +369,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         setupPrincipal(owner2, Access.ALL);
 
         securityInterceptor.enable();
-        crudInterceptor.enable();
 
         ownerResource.getOwnerAtomFeed(owner.getKey());
     }
@@ -387,7 +381,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         setupPrincipal(new ConsumerPrincipal(c));
 
         securityInterceptor.enable();
-        crudInterceptor.enable();
 
         ownerResource.getOwnerAtomFeed(owner.getKey());
     }
@@ -400,7 +393,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         setupPrincipal(new ConsumerPrincipal(c));
 
         securityInterceptor.enable();
-        crudInterceptor.enable();
 
         ownerResource.getConsumerAtomFeed(owner.getKey(), c.getUuid());
     }
@@ -411,7 +403,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ownerCurator.create(owner2);
 
         securityInterceptor.enable();
-        crudInterceptor.enable();
 
         Event e1 = createConsumerCreatedEvent(owner);
         Consumer c = consumerCurator.find(e1.getEntityId());
@@ -444,7 +435,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         // Make sure we're acting as the correct owner admin:
         setupPrincipal(owner, Access.ALL);
         securityInterceptor.enable();
-        crudInterceptor.enable();
 
         Feed feed = ownerResource.getConsumerAtomFeed(owner.getKey(), c.getUuid());
         assertEquals(1, feed.getEntries().size());

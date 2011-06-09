@@ -19,15 +19,10 @@ import org.fedoraproject.candlepin.util.Util;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CollectionOfElements;
-import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.FilterDefs;
-import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
 import org.hibernate.annotations.MapKeyManyToMany;
-import org.hibernate.annotations.ParamDef;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -65,24 +60,6 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@FilterDefs({
-    @FilterDef(
-        name = "Consumer_OWNER_FILTER",
-        parameters = @ParamDef(name = "owner_ids", type = "string")
-    ),
-    @FilterDef(
-        name = "Consumer_CONSUMER_FILTER",
-        parameters = @ParamDef(name = "consumer_id", type = "string")
-    )
-})
-@Filters({
-    @Filter(name = "Consumer_OWNER_FILTER",
-        condition = "owner_id in (:owner_ids)"
-    ),
-    @Filter(name = "Consumer_CONSUMER_FILTER",
-        condition = "id = :consumer_id"
-    )
-})
 @Table(name = "cp_consumer")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Consumer extends AbstractHibernateObject implements Linkable, Owned {
