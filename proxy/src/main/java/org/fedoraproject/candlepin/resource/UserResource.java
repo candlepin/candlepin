@@ -18,6 +18,7 @@ package org.fedoraproject.candlepin.resource;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -67,6 +68,15 @@ public class UserResource {
     @Produces(MediaType.APPLICATION_JSON)
     public User createUser(User user) {
         return userService.createUser(user);
+    }
+
+    @DELETE
+    @Path("/{username}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public void deleteUser(@PathParam("username") String username) {
+        User user = userService.findByLogin(username);
+
+        userService.deleteUser(user);
     }
 
     @GET

@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.resource.test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.resource.UserResource;
@@ -47,4 +48,16 @@ public class UserResourceTest extends DatabaseTestFixture {
         assertEquals(user.getId(), u.getId());
     }
 
+    @Test
+    public void testDeleteUser() {
+
+        User user = new User();
+        user.setUsername("henri");
+        user.setPassword("password");
+
+        userResource.createUser(user);
+
+        userResource.deleteUser("henri");
+        assertNull(userResource.getUserInfo("henri"));
+    }
 }
