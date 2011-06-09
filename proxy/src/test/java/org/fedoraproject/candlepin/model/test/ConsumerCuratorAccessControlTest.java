@@ -58,7 +58,8 @@ public class ConsumerCuratorAccessControlTest extends DatabaseTestFixture {
     public void consumerCannnotCreateAConsumer() {
         Owner owner = createOwner();
         
-        setupPrincipal(owner, Access.ALL);
+        Consumer consumer = createConsumer(owner);
+        setupPrincipal(new ConsumerPrincipal(consumer));
         securityInterceptor.enable();
         crudInterceptor.enable();
         

@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.auth;
 
+import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.auth.permissions.Permission;
 import org.fedoraproject.candlepin.util.Util;
 
@@ -27,6 +28,7 @@ import java.util.List;
  */
 public abstract class Principal implements Serializable {
 
+    private Logger log = Logger.getLogger(Principal.class);
     protected List<Permission> permissions = new ArrayList<Permission>();
 
     public abstract String getType();
@@ -38,7 +40,10 @@ public abstract class Principal implements Serializable {
     }
 
     public boolean canAccess(Object target, Access access) {
+        log.debug(this.getClass().getName() + " principal checking for access to: " + 
+            target.getClass().getName());
         for (Permission permission : permissions) {
+            log.debug(" perm class: " + permission.getClass().getName());
             if (permission.canAccess(target, access)) {
                 // if any of the principal's permissions allows access, then
                 // we are good to go
@@ -47,6 +52,8 @@ public abstract class Principal implements Serializable {
         }
 
         // none of the permissions grants access, so this target is not allowed
+        log.warn("Refused principal: '" + getPrincipalName() + "' access to: " + 
+            target.getClass().getName());
         return false;
     }
     

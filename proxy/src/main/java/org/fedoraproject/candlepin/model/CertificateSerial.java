@@ -31,7 +31,7 @@ import org.hibernate.annotations.GenericGenerator;
  */
 @Entity
 @Table(name = "cp_cert_serial")
-public class CertificateSerial extends AbstractHibernateObject{
+public class CertificateSerial extends AbstractHibernateObject {
 
     @Id
     @GeneratedValue(generator = "serial-number")

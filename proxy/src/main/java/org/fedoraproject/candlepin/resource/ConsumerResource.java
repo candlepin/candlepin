@@ -18,6 +18,7 @@ import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventAdapter;
 import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
+import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.SystemPrincipal;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
@@ -86,6 +87,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+
+import org.fedoraproject.candlepin.auth.interceptor.SecurityHole;
 import org.fedoraproject.candlepin.auth.interceptor.Verify;
 
 /**
@@ -205,7 +208,13 @@ public class ConsumerResource {
     }
 
     /**
-     * Create a Consumer
+     * Create a Consumer.
+     * 
+     * NOTE: Opening this method up to everyone, as we have nothing we can reliably verify
+     * in the method signature. Instead we have to figure out what owner this consumer is 
+     * destined for (due to backward compatability with existing clients which do not 
+     * specify an owner during registration), and then check the access to the specified 
+     * owner in the method itself.
      * 
      * @param consumer Consumer metadata
      * @return newly created Consumer
@@ -215,6 +224,7 @@ public class ConsumerResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @SecurityHole
     public Consumer create(Consumer consumer, @Context Principal principal,
         @QueryParam("username") String userName, @QueryParam("owner") String ownerKey)
         throws BadRequestException {
@@ -272,9 +282,10 @@ public class ConsumerResource {
         if (owner == null) {
             throw new BadRequestException(i18n.tr("Owner {0} does not exist", ownerKey));
         }
-        if (!user.getOwners().contains(owner)) {
-            throw new BadRequestException(i18n.tr("User {0} is not a member of owner {1}",
-                    user.getUsername(), ownerKey));
+        
+        if (!principal.canAccess(owner, Access.ALL)) {
+            throw new ForbiddenException(i18n.tr("User {0} cannot access owner {1}", 
+                principal.getPrincipalName(), owner.getKey()));
         }
 
         consumer.setUsername(user.getUsername());

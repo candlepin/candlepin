@@ -23,8 +23,6 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlTransient;
 
-import org.fedoraproject.candlepin.audit.Event;
-
 import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.auth.permissions.Permission;
 import org.hibernate.annotations.ForeignKey;
@@ -100,12 +98,14 @@ public class OwnerPermission extends AbstractHibernateObject implements Permissi
             // TODO:  Just check the key here?
             return this.owner.equals(((Owned) target).getOwner());
         }
+        
+        // If it isn't owned, allow access:
+        // TODO: this makes me nervous...
+        return true;
         // special case for events
-        else if (target instanceof Event) {
-            return this.owner.getId().equals(((Event) target).getOwnerId());
-        }
-
-        return false;
+//        else if (target instanceof Event) {
+//            return this.owner.getId().equals(((Event) target).getOwnerId());
+//        }
     }
 
     @XmlTransient

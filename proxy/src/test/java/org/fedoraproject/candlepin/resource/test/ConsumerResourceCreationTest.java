@@ -15,6 +15,8 @@
 package org.fedoraproject.candlepin.resource.test;
 
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Locale;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
@@ -23,6 +25,7 @@ import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
+import org.fedoraproject.candlepin.auth.permissions.Permission;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
@@ -69,6 +72,7 @@ public class ConsumerResourceCreationTest {
     private ConsumerResource resource;
     private ConsumerType system;
     private Owner owner;
+    private Role role;
 
     @Before
     public void init() throws Exception {
@@ -84,7 +88,7 @@ public class ConsumerResourceCreationTest {
         owner = new Owner("test_owner");
         User user = new User(USER, "");
         OwnerPermission p = new OwnerPermission(owner, Access.ALL);
-        Role role = new Role();
+        role = new Role();
         role.addPermission(p);
         role.addUser(user);
 
@@ -104,7 +108,9 @@ public class ConsumerResourceCreationTest {
 
     private Consumer createConsumer(String consumerName) {
         Consumer consumer = new Consumer(consumerName, null, null, system);
-        Principal principal = new UserPrincipal(USER, null);
+        Collection<Permission> perms = new HashSet<Permission>();
+        perms.addAll(role.getPermissions());
+        Principal principal = new UserPrincipal(USER, perms);
 
         return this.resource.create(consumer, principal, USER, owner.getKey());
     }
