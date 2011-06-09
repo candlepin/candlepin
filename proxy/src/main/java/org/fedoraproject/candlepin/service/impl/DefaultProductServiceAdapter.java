@@ -14,18 +14,6 @@
  */
 package org.fedoraproject.candlepin.service.impl;
 
-import java.io.IOException;
-import java.math.BigInteger;
-import java.security.GeneralSecurityException;
-import java.security.KeyPair;
-import java.security.cert.X509Certificate;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
-
-import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Content;
 import org.fedoraproject.candlepin.model.ContentCurator;
 import org.fedoraproject.candlepin.model.Product;
@@ -39,6 +27,19 @@ import org.fedoraproject.candlepin.service.UniqueIdGenerator;
 import org.fedoraproject.candlepin.util.X509ExtensionUtil;
 
 import com.google.inject.Inject;
+
+import org.apache.log4j.Logger;
+
+import java.io.IOException;
+import java.math.BigInteger;
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+import java.security.cert.X509Certificate;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Default implementation of the ProductserviceAdapter.
@@ -93,7 +94,7 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
     @Override
     public Product createProduct(Product product) {
         if ((prodCurator.find(product.getId()) == null)) {
-            if (product.getCustom()) {
+            if (product.getId() == null || product.getId().trim().equals("")) {
                 product.setId(idGenerator.generateId());
             }
             Product newProduct = prodCurator.create(product);
