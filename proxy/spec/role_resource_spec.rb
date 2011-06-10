@@ -68,6 +68,7 @@ describe 'Role Resource' do
     @cp.delete_role_permission(role['id'], role_perm['id'])
     role = @cp.get_role(new_role['id'])
     role.permissions.size.should == 1
+    role.permissions[0].access.should == 'READ_ONLY'
 
     @cp.delete_role(new_role['id'])
   end
