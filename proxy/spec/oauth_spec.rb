@@ -33,9 +33,9 @@ describe 'OAuth' do
 
   before(:each) do
     @owner = create_owner "oauth-owner"
-    @user = @cp.create_user(@owner.key, "oauth-user", 'password')
+    @user = create_user(@owner, "oauth-user", 'password')
     @consumer = @cp.register("oauth-consumer", :system, nil, {},
-                             @user.username)
+                             @user.username, @owner.key)
   end
 
   def make_request(oauth_consumer, oauth_secret, uri, headers = {})
