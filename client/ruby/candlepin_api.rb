@@ -398,9 +398,14 @@ class Candlepin
 
   def list_consumers(args={})
     query = "/consumers?"
+
+    # Ideally, call this method with an owner parameter. Only
+    # super admins will be able to call without and list all
+    # consumers.
+    query = "/owners/#{args[:owner]}/consumers?" if args[:owner]
+
     query << "username=#{args[:username]}&" if args[:username]
     query << "type=#{args[:type]}&" if args[:type]
-    query << "owner=#{args[:owner]}&" if args[:owner]
     get(query)
   end
 

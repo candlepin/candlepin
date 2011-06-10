@@ -16,6 +16,8 @@ package org.fedoraproject.candlepin.resource.test;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.never;
@@ -64,6 +66,7 @@ public class OwnerDeleteResourceTest {
     @Mock private EventSink eventSink;
     @Mock private SubscriptionServiceAdapter subAdapter;
     @Mock private OwnerPermissionCurator permCurator;
+    @Mock private ConsumerTypeCurator consumerTypeCurator;
 
     @Before
     public void init() {
@@ -71,7 +74,7 @@ public class OwnerDeleteResourceTest {
                 null, subscriptionCurator, subscriptionTokenCurator,
                 consumerCurator, null, userService, eventSink, eventFactory,
                 null, null, null, poolManager, exportCurator, null, importRecordCurator, 
-                subAdapter, permCurator);
+                subAdapter, permCurator, consumerTypeCurator);
     }
 
     @Test

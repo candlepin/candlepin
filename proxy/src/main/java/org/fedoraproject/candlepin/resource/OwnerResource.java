@@ -23,6 +23,8 @@ import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.CandlepinException;
 import org.fedoraproject.candlepin.exceptions.IseException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
+import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
+import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -109,6 +111,7 @@ public class OwnerResource {
     private ImportRecordCurator importRecordCurator;
     private OwnerPermissionCurator permissionCurator;
     private PoolManager poolManager;
+    private ConsumerTypeCurator consumerTypeCurator;
     private static final int FEED_LIMIT = 1000;
 
     @Inject
@@ -123,7 +126,8 @@ public class OwnerResource {
         OwnerInfoCurator ownerInfoCurator,
         ImportRecordCurator importRecordCurator,
         SubscriptionServiceAdapter subService,
-        OwnerPermissionCurator permCurator) {
+        OwnerPermissionCurator permCurator,
+        ConsumerTypeCurator consumerTypeCurator) {
 
         this.ownerCurator = ownerCurator;
         this.ownerInfoCurator = ownerInfoCurator;
@@ -144,6 +148,7 @@ public class OwnerResource {
         this.eventAdapter = eventAdapter;
         this.subService = subService;
         this.permissionCurator = permCurator;
+        this.consumerTypeCurator = consumerTypeCurator;
     }
 
     /**
@@ -328,11 +333,33 @@ public class OwnerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/consumers")
-    public List<Consumer> ownerConsumers(@PathParam("owner_key") String ownerKey) {
+    public List<Consumer> ownerConsumers(@PathParam("owner_key") @Verify(Owner.class) String ownerKey,
+        @QueryParam("username") String userName,
+        @QueryParam("type") String typeLabel) {
 
         Owner owner = findOwner(ownerKey);
-        return new LinkedList<Consumer>(owner.getConsumers());
+
+        ConsumerType type = null;
+
+        if (typeLabel != null) {
+            type = lookupConsumerType(typeLabel);
+        }
+
+        // We don't look up the user and warn if it doesn't exist here to not
+        // give away usernames
+        return consumerCurator.listByUsernameAndType(userName, type, owner);
     }
+
+    private ConsumerType lookupConsumerType(String label) {
+        ConsumerType type = consumerTypeCurator.lookupByLabel(label);
+
+        if (type == null) {
+            throw new BadRequestException(i18n.tr("No such consumer type: {0}",
+                label));
+        }
+        return type;
+    }
+
 
     /**
      * Return the entitlement pools for the owner of the given id.

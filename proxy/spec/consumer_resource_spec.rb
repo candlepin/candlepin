@@ -34,7 +34,7 @@ describe 'Consumer Resource' do
     user2 = user_client(owner2, random_string("user2"))
     consumer2 = consumer_client(user2, random_string("consumer2"))
 
-    user2.list_consumers.length.should == 1
+    user2.list_consumers({:owner => owner2['key']}).length.should == 1
   end
 
   it 'lets a super admin filter consumers by owner' do
@@ -57,7 +57,7 @@ describe 'Consumer Resource' do
     consumer1 = consumer_client(user1, random_string("consumer1"))
     consumer2 = consumer_client(user1, random_string("consumer2"), 'candlepin')
 
-    user1.list_consumers({:type => 'system'}).length.should == 1
+    user1.list_consumers({:type => 'system', :owner => owner1['key']}).length.should == 1
   end
 
   it 'lets a super admin see a peson consumer with a given username' do
