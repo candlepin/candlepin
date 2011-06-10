@@ -16,6 +16,8 @@ package org.fedoraproject.candlepin.resource;
 
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Access;
+
+import org.fedoraproject.candlepin.auth.interceptor.Verify;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.interceptor.SecurityHole;
 import org.fedoraproject.candlepin.controller.PoolManager;
@@ -177,7 +179,7 @@ public class PoolResource {
     @GET
     @Path("/{pool_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Pool getPool(@PathParam("pool_id") String id) {
+    public Pool getPool(@PathParam("pool_id") @Verify(Pool.class) String id) {
         Pool toReturn = poolCurator.find(id);
 
         if (toReturn != null) {
