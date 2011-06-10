@@ -15,9 +15,11 @@
 package org.fedoraproject.candlepin.model;
 
 import java.util.Date;
+import java.util.List;
 
 import org.fedoraproject.candlepin.pinsetter.core.model.JobStatus;
 import org.fedoraproject.candlepin.pinsetter.core.model.JobStatus.JobState;
+import org.hibernate.criterion.Restrictions;
 
 /**
  *
@@ -34,5 +36,10 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
                .setDate("date", deadLineDt)
                .setInteger("completed", JobState.FINISHED.ordinal())
                .executeUpdate();
+    }
+
+    public List<JobStatus> findByOwnerKey(String ownerKey) {
+        return this.currentSession().createCriteria(JobStatus.class)
+        .add(Restrictions.eq("ownerKey", ownerKey)).list();
     }
 }

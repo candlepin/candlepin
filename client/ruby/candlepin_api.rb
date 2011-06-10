@@ -494,6 +494,10 @@ class Candlepin
     get "/owners/#{owner_key}/imports"
   end
 
+  def list_jobs(owner_key)
+    get "/jobs?owner=#{owner_key}"
+  end
+
   def import(owner_key, filename)
     post_file "/owners/#{owner_key}/imports", File.new(filename)
   end
