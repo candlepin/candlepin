@@ -25,6 +25,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import org.fedoraproject.candlepin.auth.interceptor.Verify;
+
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -40,7 +42,6 @@ import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 import org.fedoraproject.candlepin.controller.PoolManager;
-
 
 /**
  * REST api gateway for the User object.
@@ -126,7 +127,7 @@ public class EntitlementResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{dbid}")
-    public Entitlement getEntitlement(@PathParam("dbid") String dbid) {
+    public Entitlement getEntitlement(@PathParam("dbid") @Verify(Entitlement.class) String dbid) {
         Entitlement toReturn = entitlementCurator.find(dbid);
         if (toReturn != null) {
             return toReturn;

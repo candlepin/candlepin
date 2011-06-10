@@ -58,7 +58,7 @@ import org.hibernate.annotations.Index;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_entitlement")
-public class Entitlement extends AbstractHibernateObject implements Linkable {
+public class Entitlement extends AbstractHibernateObject implements Linkable, Owned {
 
     private static final long serialVersionUID = 1L;
 
