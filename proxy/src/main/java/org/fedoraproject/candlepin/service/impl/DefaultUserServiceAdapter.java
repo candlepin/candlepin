@@ -14,14 +14,10 @@
  */
 package org.fedoraproject.candlepin.service.impl;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.LinkedList;
-
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerPermission;
 import org.fedoraproject.candlepin.model.OwnerPermissionCurator;
+import org.fedoraproject.candlepin.model.Role;
 import org.fedoraproject.candlepin.model.RoleCurator;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.model.UserCurator;
@@ -32,7 +28,10 @@ import com.google.inject.Inject;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import org.fedoraproject.candlepin.model.Role;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 /**
  * A {@link UserServiceAdapter} implementation backed by a {@link UserCurator}
@@ -157,4 +156,9 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
         roleCurator.merge(role);
     }
 
+    @Override
+    public void removeUserFromRole(Role role, User user) {
+        role.removeUser(user);
+        roleCurator.merge(role);
+    }
 }

@@ -14,6 +14,10 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import org.fedoraproject.candlepin.util.Util;
+
+import org.hibernate.annotations.GenericGenerator;
+
 import java.util.Formatter;
 import java.util.HashSet;
 import java.util.Set;
@@ -28,10 +32,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
-import org.hibernate.annotations.GenericGenerator;
-
-import org.fedoraproject.candlepin.util.Util;
 
 /**
  * Represents the user.
@@ -150,6 +150,12 @@ public class User extends AbstractHibernateObject {
         }
     }
     
+    public void removeRole(Role r) {
+        if (this.roles.remove(r)) {
+            r.removeUser(this);
+        }
+    }
+
     /**
      * Iterates user's roles and returns all unique permissions.
      * @return all of this user's unique permissions.

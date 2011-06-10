@@ -14,24 +14,25 @@
  */
 package org.fedoraproject.candlepin.ldap;
 
+import org.fedoraproject.candlepin.auth.Access;
+import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.OwnerPermission;
+import org.fedoraproject.candlepin.model.Role;
+import org.fedoraproject.candlepin.model.User;
+import org.fedoraproject.candlepin.service.UserServiceAdapter;
+
 import com.google.inject.Inject;
 import com.novell.ldap.LDAPConnection;
 import com.novell.ldap.LDAPEntry;
 import com.novell.ldap.LDAPException;
-import java.util.ArrayList;
 
+import org.apache.log4j.Logger;
+
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.auth.Access;
-import org.fedoraproject.candlepin.config.Config;
-import org.fedoraproject.candlepin.model.Role;
-import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.OwnerPermission;
-import org.fedoraproject.candlepin.model.User;
-import org.fedoraproject.candlepin.service.UserServiceAdapter;
 
 /**
  * An LDAP based user service
@@ -187,6 +188,11 @@ public class LDAPUserServiceAdapter implements UserServiceAdapter {
 
     @Override
     public void addUserToRole(Role role, User user) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void removeUserFromRole(Role role, User user) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

@@ -191,6 +191,16 @@ public class RoleResource {
         return role;
     }
 
+    @DELETE
+    @Path("/{role_id}/users/{username}")
+    public Role deleteUser(@PathParam("role_id") String roleId,
+        @PathParam("username") String username) {
+        Role role = lookupRole(roleId);
+        User user = lookupUser(username);
+        userService.removeUserFromRole(role, user);
+        return role;
+    }
+
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "roles")

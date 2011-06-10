@@ -14,6 +14,9 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.GenericGenerator;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -27,9 +30,6 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-
-import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.GenericGenerator;
 
 /**
  * Roles represent the relationship between users and the permissions they have. 
@@ -116,7 +116,13 @@ public class Role extends AbstractHibernateObject implements Linkable {
             u.addRole(this);
         }
     }
-    
+
+    public void removeUser(User u) {
+        if(this.users.remove(u)){
+            u.removeRole(this);
+        }
+    }
+
     public Set<OwnerPermission> getPermissions() {
         return permissions;
     }

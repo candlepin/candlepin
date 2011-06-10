@@ -37,7 +37,7 @@ describe 'Role Resource' do
     @cp.list_roles().size.should == orig_count
   end
 
-  it 'should add users to a role' do
+  it 'should add users to a role, then delete user from the role' do
     role = create_role(nil, @test_owner['key'], 'ALL')
     role['users'].size.should == 0
 
@@ -46,6 +46,10 @@ describe 'Role Resource' do
 
     role = @cp.get_role(role['id'])
     role['users'].size.should == 1
+
+    @cp.delete_role_user(role['id'], @username)
+    next_role = @cp.get_role(role['id'])
+    next_role['users'].size.should == 0
   end
 
   it 'should add a new permission to a role, then delete the original permission' do

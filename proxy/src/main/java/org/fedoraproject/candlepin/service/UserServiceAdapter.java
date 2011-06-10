@@ -14,11 +14,11 @@
  */
 package org.fedoraproject.candlepin.service;
 
-import java.util.List;
-
-import org.fedoraproject.candlepin.model.Role;
 import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.Role;
 import org.fedoraproject.candlepin.model.User;
+
+import java.util.List;
 
 /**
  * UserServiceAdapter
@@ -40,6 +40,9 @@ public interface UserServiceAdapter {
     
     void addUserToRole(Role role, User user);
     
+    void removeUserFromRole(Role role, User user);
+
+
     void deleteRole(String roleId);
 
     List<Role> getRoles(String username);
