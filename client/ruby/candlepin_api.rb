@@ -57,7 +57,8 @@ class Candlepin
     return @links[resource]
   end
 
-  def register(name, type=:system, uuid=nil, facts={}, username=nil)
+  def register(name, type=:system, uuid=nil, facts={}, username=nil,
+              owner_key=nil)
     consumer = {
       :type => {:label => type},
       :name => name,
@@ -66,8 +67,9 @@ class Candlepin
 
     consumer[:uuid] = uuid if not uuid.nil?
 
-    path = get_path("consumers")
-    path += "?username=#{username}" if username
+    path = get_path("consumers") + "?"
+    path = path + "owner=#{owner_key}&" if not owner_key.nil?
+    path += "username=#{username}&" if username
     @consumer = post(path, consumer)
     return @consumer
   end
@@ -393,8 +395,8 @@ class Candlepin
   def list_consumers(args={})
     query = "/consumers?"
     query << "username=#{args[:username]}&" if args[:username]
-    query << "type=#{args[:type]}" if args[:type]
-    query << "owner=#{args[:owner]}" if args[:owner]
+    query << "type=#{args[:type]}&" if args[:type]
+    query << "owner=#{args[:owner]}&" if args[:owner]
     get(query)
   end
 

@@ -92,8 +92,8 @@ module CandlepinMethods
     return role
   end
 
-  def consumer_client(cp_client, consumer_name, type=:system, username=nil, facts= {})
-    consumer = cp_client.register(consumer_name, type, nil, facts, username)
+  def consumer_client(cp_client, consumer_name, type=:system, username=nil, facts= {}, owner_key=nil)
+    consumer = cp_client.register(consumer_name, type, nil, facts, username, owner_key)
     Candlepin.new(nil, nil, consumer.idCert.cert, consumer.idCert.key)
   end
 

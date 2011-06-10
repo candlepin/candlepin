@@ -75,10 +75,10 @@ describe 'Consumer Resource' do
     username = random_string "user1"
     user1 = user_client(owner1, username)
     consumer1 = consumer_client(@cp, random_string("consumer1"), 'person',
-                                username)
+                                username, {}, owner1['key'])
 
     @cp.list_consumers({:type => 'person',
-                       :username => username}).length.should == 1
+        :username => username, :owner => owner1['key']}).length.should == 1
   end
 
   it 'does not let an owner admin create person consumer for another owner' do
