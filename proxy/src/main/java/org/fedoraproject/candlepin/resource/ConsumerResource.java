@@ -195,7 +195,7 @@ public class ConsumerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}")
-    public Consumer getConsumer(@PathParam("consumer_uuid") String uuid) {
+    public Consumer getConsumer(@PathParam("consumer_uuid") @Verify(Consumer.class) String uuid) {
         Consumer consumer = verifyAndLookupConsumer(uuid);
 
         if (consumer != null) {
@@ -414,7 +414,7 @@ public class ConsumerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}")
     @Transactional
-    public void deleteConsumer(@PathParam("consumer_uuid") String uuid,
+    public void deleteConsumer(@PathParam("consumer_uuid") @Verify(Consumer.class) String uuid,
         @Context Principal principal) {
         log.debug("deleting  consumer_uuid" + uuid);
         Consumer toDelete = verifyAndLookupConsumer(uuid);
@@ -446,7 +446,7 @@ public class ConsumerResource {
     @Path("{consumer_uuid}/certificates")
     @Produces(MediaType.APPLICATION_JSON)
     public List<EntitlementCertificate> getEntitlementCertificates(
-        @PathParam("consumer_uuid") String consumerUuid,
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @QueryParam("serials") String serials) {
 
         log.debug("Getting client certificates for consumer: " + consumerUuid);
@@ -486,7 +486,7 @@ public class ConsumerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "serials")
     public List<CertificateSerialDto> getEntitlementCertificateSerials(
-        @PathParam("consumer_uuid") String consumerUuid) {
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
 
         log.debug("Getting client certificate serials for consumer: " +
             consumerUuid);
@@ -767,7 +767,7 @@ public class ConsumerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{consumer_uuid}/owner")
-    public Owner getOwner(@PathParam("consumer_uuid") String consumerUuid) {
+    public Owner getOwner(@PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
 
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
         return consumer.getOwner();
@@ -780,7 +780,7 @@ public class ConsumerResource {
      */
     @DELETE
     @Path("/{consumer_uuid}/entitlements")
-    public void unbindAll(@PathParam("consumer_uuid") String consumerUuid) {
+    public void unbindAll(@PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
 
         // FIXME: just a stub, needs CertifcateService (and/or a
         // CertificateCurator) to lookup by serialNumber
@@ -808,7 +808,7 @@ public class ConsumerResource {
      */
     @DELETE
     @Path("/{consumer_uuid}/entitlements/{dbid}")
-    public void unbind(@PathParam("consumer_uuid") String consumerUuid,
+    public void unbind(@PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @PathParam("dbid") String dbid, @Context Principal principal) {
 
         verifyAndLookupConsumer(consumerUuid);
@@ -825,7 +825,7 @@ public class ConsumerResource {
 
     @DELETE
     @Path("/{consumer_uuid}/certificates/{serial}")
-    public void unbindBySerial(@PathParam("consumer_uuid") String consumerUuid,
+    public void unbindBySerial(@PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @PathParam("serial") Long serial) {
 
         verifyAndLookupConsumer(consumerUuid);
@@ -846,7 +846,7 @@ public class ConsumerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}/events")
     public List<Event> getConsumerEvents(
-        @PathParam("consumer_uuid") String consumerUuid) {
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
         List<Event> events = this.eventCurator.listMostRecent(FEED_LIMIT,
             consumer);
@@ -859,7 +859,7 @@ public class ConsumerResource {
     @PUT
     @Path("/{consumer_uuid}/certificates")
     public void regenerateEntitlementCertificates(
-        @PathParam("consumer_uuid") String consumerUuid,
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @QueryParam("entitlement") String entitlementId) {
         if (entitlementId != null) {
             Entitlement e = verifyAndLookupEntitlement(entitlementId);
@@ -910,7 +910,7 @@ public class ConsumerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}")
     public Consumer regenerateIdentityCertificates(
-        @PathParam("consumer_uuid") String uuid) {
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid) {
 
         Consumer c = verifyAndLookupConsumer(uuid);
 
