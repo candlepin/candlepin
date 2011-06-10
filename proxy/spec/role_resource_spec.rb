@@ -47,6 +47,30 @@ describe 'Role Resource' do
     role = @cp.get_role(role['id'])
     role['users'].size.should == 1
   end
+
+  it 'should add a new permission to a role, then delete the original permission' do
+
+    perms = [{
+      :owner => {:key => @test_owner['key']},
+      :access => 'ALL',
+    }]
+    new_role = @cp.create_role(random_string('testrole'), perms)
+    role_perm = new_role.permissions[0]
+
+    perm = {
+      :owner => @test_owner['key'],
+      :access => 'READ_ONLY',
+    }
+    @cp.add_role_permission(new_role['id'], perm)
+    role = @cp.get_role(new_role['id'])
+    role.permissions.size.should == 2
+
+    @cp.delete_role_permission(role['id'], role_perm['id'])
+    role = @cp.get_role(new_role['id'])
+    role.permissions.size.should == 1
+
+    @cp.delete_role(new_role['id'])
+  end
  
 end
 

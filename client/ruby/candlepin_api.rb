@@ -175,6 +175,14 @@ class Candlepin
     post("/roles/#{role_id}/users/#{username}")
   end
 
+  def add_role_permission(role_id, permission)
+    post("/roles/#{role_id}/permissions", permission)
+  end
+
+  def delete_role_permission(role_id, permission_id)
+    delete("/roles/#{role_id}/permissions/#{permission_id}")
+  end
+
   def list_roles
     get("/roles")
   end

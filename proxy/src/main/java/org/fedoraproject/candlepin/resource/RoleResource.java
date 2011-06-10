@@ -14,8 +14,25 @@
  */
 package org.fedoraproject.candlepin.resource;
 
+import org.fedoraproject.candlepin.exceptions.NotFoundException;
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.OwnerCurator;
+import org.fedoraproject.candlepin.model.OwnerPermission;
+import org.fedoraproject.candlepin.model.OwnerPermissionCurator;
+import org.fedoraproject.candlepin.model.Role;
+import org.fedoraproject.candlepin.model.User;
+import org.fedoraproject.candlepin.service.UserServiceAdapter;
+
 import com.google.inject.Inject;
+
+import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
+import org.jboss.resteasy.spi.BadRequestException;
+import org.xnap.commons.i18n.I18n;
+
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -26,17 +43,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import org.fedoraproject.candlepin.exceptions.NotFoundException;
-import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.OwnerCurator;
-import org.fedoraproject.candlepin.model.OwnerPermission;
-import org.fedoraproject.candlepin.model.Role;
-import org.fedoraproject.candlepin.model.User;
-import org.fedoraproject.candlepin.service.UserServiceAdapter;
-import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
-import org.jboss.resteasy.spi.BadRequestException;
-import org.xnap.commons.i18n.I18n;
-
 /**
  *
  */
@@ -45,14 +51,16 @@ public class RoleResource {
 
     private UserServiceAdapter userService;
     private OwnerCurator ownerCurator;
+    private OwnerPermissionCurator permissionCurator;
     private I18n i18n;
 
     @Inject
     public RoleResource(UserServiceAdapter userService, OwnerCurator ownerCurator,
-        I18n i18n) {
+        OwnerPermissionCurator permCurator, I18n i18n) {
         this.userService = userService;
         this.ownerCurator = ownerCurator;
         this.i18n = i18n;
+        this.permissionCurator = permCurator;
     }
 
     @POST
@@ -85,15 +93,62 @@ public class RoleResource {
         Role existingRole = lookupRole(roleId);
         existingRole.setName(role.getName());
         existingRole.getPermissions().clear();
-        existingRole.getPermissions().addAll(role.getPermissions());
         
         // Attach actual owner objects to each incoming permission:
-        for (OwnerPermission p : existingRole.getPermissions()) {
+        for (OwnerPermission p : role.getPermissions()) {
             Owner temp = p.getOwner();
             p.setOwner(ownerCurator.lookupByKey(temp.getKey()));
+            existingRole.addPermission(p);
+        }
+
+        Role r = this.userService.updateRole(existingRole);
+        return r;
+    }
+
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Path("{role_id}/permissions")
+    public Role updateRolePermissions(@PathParam("role_id") String roleId, OwnerPermission permission) {
+
+        Role existingRole = lookupRole(roleId);
+
+        // Attach actual owner objects to each incoming permission:
+        Owner temp = permission.getOwner();
+        Owner real = ownerCurator.lookupByKey(temp.getKey());
+        permission.setOwner(real);
+        existingRole.addPermission(permission);
+
+        Role r = this.userService.updateRole(existingRole);
+        return r;
+    }
+
+    @DELETE
+    @Path("{role_id}/permissions/{perm_id}")
+    public Role deleteRolePermissions(@PathParam("role_id") String roleId,
+                                      @PathParam("perm_id") String permissionId) {
+
+        Role existingRole = lookupRole(roleId);
+        Set<OwnerPermission> picks = new HashSet<OwnerPermission>();
+        boolean found = true;
+        OwnerPermission toRemove = null;
+        for(OwnerPermission op : existingRole.getPermissions()){
+            if(!op.getId().equals(permissionId)){
+                picks.add(op);
+            }
+            else{
+                found = true;
+                toRemove = op;
+            }
+
+        }
+        if(!found){
+            throw new NotFoundException(i18n.tr("No such permission: {0} in role: {1}", permissionId, roleId ));
         }
         
+        existingRole.setPermissions(picks);
         Role r = this.userService.updateRole(existingRole);
+        toRemove.setOwner(null);
+        permissionCurator.delete(toRemove);
         return r;
     }
     
