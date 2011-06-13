@@ -397,7 +397,7 @@ public class ConsumerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}")
     @Transactional
-    public void updateConsumer(@PathParam("consumer_uuid") String uuid,
+    public void updateConsumer(@PathParam("consumer_uuid") @Verify(Consumer.class) String uuid,
         Consumer consumer, @Context Principal principal) {
         Consumer toUpdate = verifyAndLookupConsumer(uuid);
 
