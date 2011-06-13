@@ -23,6 +23,7 @@ import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import com.google.inject.Injector;
 import java.util.ArrayList;
 import org.fedoraproject.candlepin.auth.permissions.Permission;
+import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.model.Role;
 import org.fedoraproject.candlepin.model.User;
 
@@ -44,6 +45,9 @@ public abstract class UserAuth implements AuthProvider {
      */
     protected Principal createPrincipal(String username) {
         User user = userServiceAdapter.findByLogin(username);
+        if (user == null) {
+            throw new BadRequestException("user " + username + " not found");
+        }
 
         if (user.isSuperAdmin()) {
             return new UserPrincipal(username);
