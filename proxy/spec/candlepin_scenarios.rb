@@ -72,7 +72,9 @@ module CandlepinMethods
   # in the given owner:
   def create_user(owner, username, password)
     user = @cp.create_user(username, password)
-    @users << user
+    # Only append to the list of things to clean up if the @roles exists.
+    # This is so the method can be used in before(:all) blocks.
+    @users << user if not @users.nil?
     # Create a role for user to administer the given owner:
     role = create_role(nil, owner['key'], 'ALL')
     @cp.add_role_user(role['id'], user['username'])
@@ -88,7 +90,10 @@ module CandlepinMethods
       :access => access_type,
     }]
     role = @cp.create_role(name, perms)
-    @roles << role
+
+    # Only append to the list of things to clean up if the @roles exists.
+    # This is so the method can be used in before(:all) blocks.
+    @roles << role if not @roles.nil?
     return role
   end
 
@@ -162,7 +167,13 @@ module ExportMethods
     @cp = Candlepin.new('admin', 'admin')
     @owner = @cp.create_owner(random_string('test_owner'))
 
-    owner_client = user_client(@owner, random_string('testuser'))
+    @user = @cp.create_user(random_string('testuser'), 'password')
+    Candlepin.new(@user['username'], 'password')
+    # Create a role for user to administer the given owner:
+    role = create_role(nil, @owner['key'], 'ALL')
+    @cp.add_role_user(role['id'], @user['username'])
+    owner_client = Candlepin.new(@user['username'], 'password')
+
     @flex_days = 30
     product1 = create_product(random_string(), random_string(),
         {:attributes => {"flex_expiry" => @flex_days.to_s}})
@@ -247,6 +258,7 @@ module ExportMethods
     Dir.chdir(@orig_working_dir)
     FileUtils.rm_rf(@tmp_dir)
     @cp.delete_owner(@owner.key)
+    @cp.delete_user @user['username']
   end
 
   def cleanup_candlepin_export_update

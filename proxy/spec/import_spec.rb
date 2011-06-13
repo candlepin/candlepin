@@ -7,6 +7,7 @@ describe 'Candlepin Import' do
   include CandlepinScenarios
 
   before(:all) do
+    @users = []
     create_candlepin_export()
     @import_owner = @cp.create_owner(random_string("test_owner"))
     @import_owner_client = user_client(@import_owner, random_string('testuser'))
