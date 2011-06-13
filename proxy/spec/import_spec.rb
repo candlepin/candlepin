@@ -20,7 +20,7 @@ describe 'Candlepin Import' do
   end
 
   it 'creates pools' do
-    pools = @import_owner_client.list_pools
+    pools = @import_owner_client.list_pools({:owner => @import_owner['id']})
     pools.length.should == 2
   end
 
