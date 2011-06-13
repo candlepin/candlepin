@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.resource.test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
@@ -73,5 +74,21 @@ public class StatusResourceTest {
         assertEquals("Unknown", s.getRelease());
         assertEquals("Unknown", s.getVersion());
         assertTrue(s.getResult().booleanValue());
+    }
+
+    @Test
+    public void testDBDown() throws Exception {
+        PrintStream ps = new PrintStream(new File(this.getClass()
+            .getClassLoader().getResource("candlepin_info.properties").toURI()));
+        ps.println("version=${version}");
+        ps.println("release=${release}");
+        when(rulesCurator.listAll()).thenThrow(new RuntimeException());
+        StatusResource sr = new StatusResource(rulesCurator);
+        Status s = sr.status();
+        ps.close();
+        assertNotNull(s);
+        assertEquals("${release}", s.getRelease());
+        assertEquals("${version}", s.getVersion());
+        assertFalse(s.getResult().booleanValue());
     }
 }
