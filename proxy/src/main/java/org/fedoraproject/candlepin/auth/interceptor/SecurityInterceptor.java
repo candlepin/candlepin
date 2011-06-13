@@ -86,7 +86,7 @@ public class SecurityInterceptor implements MethodInterceptor {
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
         Principal principal = this.principalProvider.get();
-        log.debug("Invoked security interceptor.");
+        log.debug("Invoked security interceptor " + invocation.getMethod());
 
         Access access = findRequiredAccessType(invocation);
 

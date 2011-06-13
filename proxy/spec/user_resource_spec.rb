@@ -14,7 +14,7 @@ describe 'User Resource' do
 
   it 'should create users' do
     orig_count = @cp.list_users_by_owner(@test_owner['key']).size
-    create_user(@test_owner['key'], random_string('testuser'), 'password')
+    create_user(@test_owner, random_string('testuser'), 'password')
     @cp.list_users_by_owner(@test_owner['key']).size.should == orig_count + 1
   end
 
