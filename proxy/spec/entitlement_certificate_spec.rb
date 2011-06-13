@@ -128,31 +128,21 @@ describe 'Entitlement Certificate' do
 
   it "won't let one consumer regenerate another's certificates" do
     @system.list_certificates.length.should == 1
+    @system2 = consumer_client(@user, random_string('system2'))
 
-    begin
-      @system2 = consumer_client(@user, random_string('system1'))
+    lambda do
       @system2.put("/consumers/#{@system.uuid}/certificates")
-    rescue RestClient::Exception => e
-      e.http_code.should == 403
-    else
-      assert(fail, "Excepted exception was not raised")
-    end
-
+    end.should raise_exception(RestClient::Forbidden)
   end
 
   it "won't let one consumer regenerate another's certificate by entitlement" do
     @system.list_certificates.length.should == 1
-    ents = @system.list_entitlements()
+    ents = @system.list_entitlements
+    @system2 = consumer_client(@user, random_string('system2'))
 
-    begin
-      @system2 = consumer_client(@user, random_string('system1'))
-      @system2.regenerate_entitlement_certificates_for_entitlement(ents[0].id)
-    rescue RestClient::Exception => e
-      e.http_code.should == 403
-    else
-      assert(fail, "Excepted exception was not raised")
-    end
-
+    lambda do
+      @system2.regenerate_entitlement_certificates_for_entitlement(ents.first.id, @system.uuid)
+    end.should raise_exception(RestClient::Forbidden)
   end
 
 end
