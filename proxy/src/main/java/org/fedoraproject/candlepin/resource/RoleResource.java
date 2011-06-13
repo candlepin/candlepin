@@ -66,7 +66,7 @@ public class RoleResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     public Role createRole(Role role) {
-        
+
         // Attach actual owner objects to each incoming permission:
         for (OwnerPermission p : role.getPermissions()) {
             Owner temp = p.getOwner();
@@ -76,7 +76,7 @@ public class RoleResource {
             }
             p.setOwner(actual);
         }
-        
+
         Role r = this.userService.createRole(role);
         return r;
     }
@@ -85,15 +85,15 @@ public class RoleResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("{role_id}")
     public Role updateRole(@PathParam("role_id") String roleId, Role role) {
-        
+
         if (!roleId.equals(role.getId())) {
             throw new BadRequestException(i18n.tr("Role ID does not match path."));
         }
-        
+
         Role existingRole = lookupRole(roleId);
         existingRole.setName(role.getName());
         existingRole.getPermissions().clear();
-        
+
         // Attach actual owner objects to each incoming permission:
         for (OwnerPermission p : role.getPermissions()) {
             Owner temp = p.getOwner();
@@ -144,14 +144,14 @@ public class RoleResource {
         if(!found){
             throw new NotFoundException(i18n.tr("No such permission: {0} in role: {1}", permissionId, roleId ));
         }
-        
+
         existingRole.setPermissions(picks);
         Role r = this.userService.updateRole(existingRole);
         toRemove.setOwner(null);
         permissionCurator.delete(toRemove);
         return r;
     }
-    
+
     private Role lookupRole(String roleId) {
         Role role = userService.getRole(roleId);
         if (role == null) {
@@ -174,16 +174,16 @@ public class RoleResource {
     public Role getRole(@PathParam("role_id") String roleId) {
         return lookupRole(roleId);
     }
-    
+
     @DELETE
     @Path("/{role_id}")
     public void deleteRole(@PathParam("role_id") String roleId) {
         this.userService.deleteRole(roleId);
     }
-    
+
     @POST
     @Path("/{role_id}/users/{username}")
-    public Role addUser(@PathParam("role_id") String roleId, 
+    public Role addUser(@PathParam("role_id") String roleId,
         @PathParam("username") String username) {
         Role role = lookupRole(roleId);
         User user = lookupUser(username);
@@ -208,5 +208,5 @@ public class RoleResource {
         // TODO:  Add in filter options
         return userService.listRoles();
     }
-    
+
 }
