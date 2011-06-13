@@ -92,7 +92,7 @@ public class EventFactory {
         Principal principal = principalProvider.get();
         
         return new Event(Event.Type.MODIFIED, Event.Target.CONSUMER, 
-            oldConsumer.getName(), principal, newConsumer.getOwner().getId(),
+            oldConsumer.getName(), principal, oldConsumer.getOwner().getId(),
             oldConsumer.getId(), oldConsumer.getId(), oldEntityJson, newEntityJson,
             null, null);
     }

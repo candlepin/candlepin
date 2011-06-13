@@ -86,7 +86,7 @@ public class SecurityInterceptor implements MethodInterceptor {
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
         Principal principal = this.principalProvider.get();
-        log.debug("Invoked.");
+        log.debug("Invoked security interceptor.");
 
         Access access = findRequiredAccessType(invocation);
 
@@ -101,7 +101,7 @@ public class SecurityInterceptor implements MethodInterceptor {
         for (Object param : params) {
             // if this principal cannot access any of the annotated parameters,
             // then deny access here
-            if (!principal.canAccess(param, access)) {
+            if (param == null || !principal.canAccess(param, access)) {
                 denyAccess(principal, invocation);
             }
         }
@@ -163,7 +163,14 @@ public class SecurityInterceptor implements MethodInterceptor {
 
                     // Use the correct curator (in storeMap) to look up the actual
                     // entity with the annotated argument
-                    parameters.add(storeMap.get(verifyType).lookup(verifyParam));
+                    Object entity = storeMap.get(verifyType).lookup(verifyParam);
+                    if (entity == null) {
+                        // This is bad, we're verifying a parameter with an ID which
+                        // doesn't seem to exist in the DB. Error will be thrown in
+                        // invoke though.
+                        log.error("No such entity: " + verifyType + " id: " + verifyParam);
+                    }
+                    parameters.add(entity);
                 }
             }
         }
