@@ -21,7 +21,20 @@ describe 'Role Resource' do
     @cp.list_roles().size.should == orig_count + 1
   end
 
+  it 'should update just the name' do
+    new_role = create_role('testrole', @test_owner['key'], 'ALL')
+    new_role['name'] = 'testroleupdated'
+    perm = {
+      :owner => @test_owner['key'],
+      :access => 'READ_ONLY',
+    }
+    new_role.permissions[0] = perm
 
+    @cp.update_role(new_role)
+    updatedrole = @cp.get_role(new_role['id'])
+    updatedrole['name'].should == 'testroleupdated'
+    updatedrole.permissions[0].access.should == 'ALL'
+  end
 
   it 'should delete roles' do
     orig_count = @cp.list_roles().size
