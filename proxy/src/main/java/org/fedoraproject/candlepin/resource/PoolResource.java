@@ -161,8 +161,13 @@ public class PoolResource {
             }
         }
         
-        // TODO: if we have no consumer, and no owner specified, how do we do a security 
-        // check here? 
+        // If we have no consumer, and no owner specified, kick 'em out unless they
+        // have full system access (this is the same as requesting all pools in
+        // the system).
+        if (consumerUuid == null && ownerId == null && !principal.hasFullAccess()) {
+            throw new ForbiddenException(i18n.tr("User {0} cannot access all pools.",
+                    principal.getPrincipalName()));
+        }
         
         return poolCurator.listAvailableEntitlementPools(c, o, productId,
             activeOnDate, true, listAll);

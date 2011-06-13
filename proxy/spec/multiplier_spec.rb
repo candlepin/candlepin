@@ -5,7 +5,7 @@ describe 'Multiplier Products' do
   include CandlepinScenarios
 
   before(:each) do
-    @owner = create_owner 'some_owner'
+    @owner = create_owner random_string('some_owner')
     @user = user_client(@owner, 'guy')
   end
 
@@ -14,7 +14,7 @@ describe 'Multiplier Products' do
     @cp.create_subscription(@owner.key, calendaring.id, 4)
     @cp.refresh_pools @owner.key
 
-    pools = @user.list_pools
+    pools = @user.list_pools :owner => @owner.id
 
     pools.should have(1).things
     pools.first.quantity.should == 100
@@ -25,7 +25,7 @@ describe 'Multiplier Products' do
     @cp.create_subscription(@owner.key, product.id, 34)
     @cp.refresh_pools @owner.key
 
-    pools = @user.list_pools
+    pools = @user.list_pools :owner => @owner.id
 
     pools.should have(1).things
     pools.first.quantity.should == 34
@@ -36,7 +36,7 @@ describe 'Multiplier Products' do
     @cp.create_subscription(@owner.key, product.id, 18)
     @cp.refresh_pools @owner.key
 
-    pools = @user.list_pools
+    pools = @user.list_pools :owner => @owner.id
 
     pools.should have(1).things
     pools.first.quantity.should == 18
@@ -52,7 +52,7 @@ describe 'Multiplier Products' do
     # Now we refresh again to update the pool
     @cp.refresh_pools @owner.key
 
-    pools = @user.list_pools
+    pools = @user.list_pools :owner => @owner.id
 
     pools.should have(1).things
     pools.first.quantity.should == 500
