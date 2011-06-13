@@ -109,6 +109,9 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
 
     @Override
     public void deleteUser(User user) {
+        for (Role r : user.getRoles()) {
+            user.removeRole(r);
+        }
         userCurator.delete(user);
     }
 
