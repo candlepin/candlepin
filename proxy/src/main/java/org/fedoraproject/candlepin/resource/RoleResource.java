@@ -92,17 +92,8 @@ public class RoleResource {
 
         Role existingRole = lookupRole(roleId);
         existingRole.setName(role.getName());
-        existingRole.getPermissions().clear();
 
-        // Attach actual owner objects to each incoming permission:
-        for (OwnerPermission p : role.getPermissions()) {
-            Owner temp = p.getOwner();
-            p.setOwner(ownerCurator.lookupByKey(temp.getKey()));
-            existingRole.addPermission(p);
-        }
-
-        Role r = this.userService.updateRole(existingRole);
-        return r;
+        return this.userService.updateRole(existingRole);
     }
 
     @POST
