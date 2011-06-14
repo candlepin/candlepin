@@ -28,6 +28,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.interceptor.SecurityHole;
+import org.fedoraproject.candlepin.exceptions.GoneException;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.User;
@@ -75,8 +76,11 @@ public class UserResource {
     @Produces(MediaType.APPLICATION_JSON)
     public void deleteUser(@PathParam("username") String username) {
         User user = userService.findByLogin(username);
-
-        userService.deleteUser(user);
+        if (user == null){
+            throw new GoneException("user " + username + " not found");
+        } else {
+            userService.deleteUser(user);
+        }
     }
 
     @GET

@@ -256,8 +256,8 @@ module ExportMethods
   def cleanup_candlepin_export
     Dir.chdir(@orig_working_dir)
     FileUtils.rm_rf(@tmp_dir)
+    #this will also delete the owner's users
     @cp.delete_owner(@owner.key)
-    @cp.delete_user @user['username']
   end
 
   def cleanup_candlepin_export_update
