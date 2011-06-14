@@ -5,14 +5,21 @@ describe 'Consumer Resource' do
   include CandlepinMethods
   include CandlepinScenarios
 
-  it 'allows super admins to see all consumers' do
-    owner1 = create_owner random_string('test_owner1')
-    user1 = user_client(owner1, random_string("user1"))
-    consumer1 = consumer_client(user1, random_string("consumer1"))
+  before(:each) do
+    @owner1 = create_owner random_string('test_owner1')
+    @username1 = random_string("user1")
+    @consumername1 = random_string("consumer1")
+    @user1 = user_client(@owner1, @username1)
+    @consumer1 = consumer_client(@user1, @consumername1)
 
-    owner2 = create_owner random_string('test_owner2')
-    user2 = user_client(owner2, random_string("user2"))
-    consumer2 = consumer_client(user2, random_string("consumer2"))
+    @owner2 = create_owner random_string('test_owner2')
+    @username2 = random_string("user2")
+    @user2 = user_client(@owner2, @username2)
+    @consumer2 = consumer_client(@user2, random_string("consumer2"))
+  end
+
+
+  it 'allows super admins to see all consumers' do
 
     uuids = []
     @cp.list_consumers.each do |c|
@@ -21,49 +28,28 @@ describe 'Consumer Resource' do
       # TODO: Find a better way once client is more HATEOASy.
       uuids << c['href'].split('/')[-1]
     end
-    uuids.include?(consumer1.uuid).should be_true
-    uuids.include?(consumer2.uuid).should be_true
+    uuids.include?(@consumer1.uuid).should be_true
+    uuids.include?(@consumer2.uuid).should be_true
   end
 
   it 'lets an owner admin see only their consumers' do
-    owner1 = create_owner random_string('test_owner1')
-    user1 = user_client(owner1, random_string("user1"))
-    consumer1 = consumer_client(user1, random_string("consumer1"))
-
-    owner2 = create_owner random_string('test_owner2')
-    user2 = user_client(owner2, random_string("user2"))
-    consumer2 = consumer_client(user2, random_string("consumer2"))
-
-    user2.list_consumers({:owner => owner2['key']}).length.should == 1
+    @user2.list_consumers({:owner => @owner2['key']}).length.should == 1
   end
 
   it 'lets a super admin filter consumers by owner' do
-    owner1 = create_owner random_string('test_owner1')
-    user1 = user_client(owner1, random_string("user1"))
-    consumer1 = consumer_client(user1, random_string("consumer1"))
-
-    owner2 = create_owner random_string('test_owner2')
-    user2 = user_client(owner2, random_string("user2"))
-    consumer2 = consumer_client(user2, random_string("consumer2"))
-
     @cp.list_consumers.size.should > 1
-    @cp.list_consumers({:owner => owner1.key}).size.should == 1
+    @cp.list_consumers({:owner => @owner1['key']}).size.should == 1
   end
 
 
   it 'lets an owner see only their system consumer types' do
-    owner1 = create_owner random_string('test_owner1')
-    user1 = user_client(owner1, random_string("user1"))
-    consumer1 = consumer_client(user1, random_string("consumer1"))
-    consumer2 = consumer_client(user1, random_string("consumer2"), 'candlepin')
-
-    user1.list_consumers({:type => 'system', :owner => owner1['key']}).length.should == 1
+    @user1.list_consumers({:type => 'system', :owner => @owner1['key']}).length.should == 1
   end
 
   it 'lets a super admin see a peson consumer with a given username' do
-    owner1 = create_owner random_string('test_owner1')
-    username = random_string "user1"
-    user1 = user_client(owner1, username)
+
+    username = random_string("user1")
+    user1 = user_client(@owner1, username)
     consumer1 = consumer_client(user1, random_string("consumer1"), 'person')
 
     @cp.list_consumers({:type => 'person',

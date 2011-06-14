@@ -28,6 +28,7 @@ import javax.ws.rs.core.MediaType;
 
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.interceptor.SecurityHole;
+import org.fedoraproject.candlepin.exceptions.ConflictException;
 import org.fedoraproject.candlepin.exceptions.GoneException;
 import org.fedoraproject.candlepin.auth.interceptor.Verify;
 import org.fedoraproject.candlepin.model.Owner;
@@ -70,6 +71,9 @@ public class UserResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public User createUser(User user) {
+        if (userService.findByLogin(user.getUsername()) != null) {
+            throw new ConflictException("user " + user.getUsername() + " already exists");
+        }
         return userService.createUser(user);
     }
 

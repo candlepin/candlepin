@@ -25,6 +25,12 @@ describe 'User Resource' do
     }.should raise_exception(RestClient::Gone)
   end
 
+  it "should return a 409 for creating an existing user" do
+    # Try listing for the test user:
+    lambda {
+      create_user(@test_owner, @username, 'password')
+    }.should raise_exception(RestClient::Conflict)
+  end
 
 #  it 'should allow a user to list their owners' do
 #    visible_owners = @user_cp.list_users_owners(@username)
