@@ -99,7 +99,7 @@ public class EntitlementImporterTest {
         verify(curator, never()).create(testSub);
         verify(curator).merge(testSub);
         verify(curator, never()).delete(testSub);
-        verify(sink, atLeastOnce()).emitSubscriptionModified(null, testSub);
+        verify(sink, atLeastOnce()).emitSubscriptionModified(testSub, testSub);
     }
     
     @Test
