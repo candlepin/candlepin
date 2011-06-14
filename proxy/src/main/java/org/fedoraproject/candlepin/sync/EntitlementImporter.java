@@ -154,7 +154,7 @@ public class EntitlementImporter {
                 existingSubByEntitlement.remove(subscription.getUpstreamPoolId());
 
                 // send updated event
-                sink.emitSubscriptionModified(null, subscription);
+                sink.emitSubscriptionModified(local, subscription);
             }
         }
         
