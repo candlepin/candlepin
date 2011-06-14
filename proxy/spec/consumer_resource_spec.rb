@@ -144,7 +144,7 @@ describe 'Consumer Resource' do
                           :attribute => { :arch => 'i386, x86_64'})
     subs = @cp.create_subscription(owner.key, prod.id)
     @cp.refresh_pools(owner.key)
-    pool = cp_client.list_pools.first
+    pool = cp_client.list_pools({:owner => owner['id']}).first
 
     cp_client.consume_pool(pool.id).size.should == 1
   end

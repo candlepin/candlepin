@@ -93,9 +93,15 @@ public class OwnerPermission extends AbstractHibernateObject implements Permissi
     }
 
     @Override
-    public boolean canAccess(Object target, Access access) {
+    public boolean canAccess(Object target, Access requiredAccess) {
         if (target instanceof Owned) {
-            return owner.getKey().equals(((Owned) target).getOwner().getKey());
+            // First make sure the owner matches:
+            if (owner.getKey().equals(((Owned) target).getOwner().getKey())) {
+                // Make sure access matches, if we have ALL then pass regardless:
+                if (this.access == Access.ALL || this.access == requiredAccess) {
+                    return true;
+                }
+            }
         }
         
         // If asked to verify access to an object that does not implement Owned,

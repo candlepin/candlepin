@@ -18,6 +18,7 @@ import org.fedoraproject.candlepin.auth.permissions.ConsumerEntitlementPermissio
 import org.fedoraproject.candlepin.auth.permissions.ConsumerPermission;
 import org.fedoraproject.candlepin.auth.permissions.ConsumerPoolPermission;
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.OwnerPermission;
 
 /**
  *
@@ -32,6 +33,13 @@ public class ConsumerPrincipal extends Principal {
         addPermission(new ConsumerPermission(consumer));
         addPermission(new ConsumerEntitlementPermission(consumer));
         addPermission(new ConsumerPoolPermission(consumer));
+
+        // Consumer principals should also get an implicit permission
+        // granting them read-only access to their owner. This allows
+        // things like listing pools for an owner, etc.
+        addPermission(new OwnerPermission(consumer.getOwner(),
+                    Access.READ_ONLY));
+
     }
 
     public Consumer getConsumer() {
