@@ -47,7 +47,7 @@ describe 'Sub-Pool' do
   end
 
   it 'inherits provided products from parent pool' do
-    derived_pool = @system.list_pools({:product => @derived_product.id,
+    derived_pool = @cp.list_pools({:product => @derived_product.id,
       :owner => @owner.id})[0]
     derived_pool['providedProducts'].size.should == 2
   end
