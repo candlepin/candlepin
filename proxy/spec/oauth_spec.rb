@@ -71,11 +71,11 @@ describe 'OAuth' do
     res.code.should == '200'
   end
 
-  it 'returns 401 if an unknown user is given' do
+  it 'returns 400 if an unknown user is given' do
     res = make_request(oauth_consumer, oauth_secret,
                        "/candlepin/entitlements",
                        {'cp-user' => "some unknown user"})
-    res.code.should == '401'
+    res.code.should == '400'
   end
 
   it 'lets a caller act as a consumer' do

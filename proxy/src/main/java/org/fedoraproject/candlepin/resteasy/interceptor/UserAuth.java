@@ -25,7 +25,6 @@ import com.google.inject.Injector;
 import java.util.ArrayList;
 import org.fedoraproject.candlepin.auth.permissions.Permission;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
-import org.fedoraproject.candlepin.exceptions.UnauthorizedException;
 import org.fedoraproject.candlepin.model.Role;
 import org.fedoraproject.candlepin.model.User;
 import org.xnap.commons.i18n.I18n;
@@ -54,11 +53,6 @@ public abstract class UserAuth implements AuthProvider {
         User user = userServiceAdapter.findByLogin(username);
         if (user == null) {
             throw new BadRequestException("user " + username + " not found");
-        }
-
-        if (user == null) {
-            log.error("No such user: " + username);
-            throw new UnauthorizedException(i18n.tr("Invalid username: " + username));
         }
 
         if (user.isSuperAdmin()) {
