@@ -14,8 +14,6 @@
  */
 package org.fedoraproject.candlepin.pinsetter.tasks;
 
-import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.SystemPrincipal;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.controller.CrlGenerator;
@@ -25,7 +23,6 @@ import com.google.inject.Inject;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -81,10 +78,7 @@ public class CertificateRevocationListTask implements Job {
 
         try {
             File crlFile = new File(filePath);
-            Principal systemPrincipal = new SystemPrincipal();
-            ResteasyProviderFactory.pushContext(Principal.class, systemPrincipal);
             this.updateCRL(crlFile, "CN=test, UID=" + UUID.randomUUID());
-            ResteasyProviderFactory.popContextData(Principal.class);
         }
         catch (CRLException e) {
             log.error(e);

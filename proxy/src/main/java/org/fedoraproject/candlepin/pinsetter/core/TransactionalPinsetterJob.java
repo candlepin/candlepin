@@ -14,6 +14,9 @@
  */
 package org.fedoraproject.candlepin.pinsetter.core;
 
+import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.SystemPrincipal;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -24,6 +27,8 @@ import com.wideplay.warp.persist.WorkManager;
  * TransactionalPinsetterJob - wrapper to execute our pinsetter jobs in a db unit of work
  * only as big as a single job execution, avoiding the caching we'd have from the app's
  * default http request scope.
+ * 
+ * A System principal is also provided, for event emission
  */
 class TransactionalPinsetterJob implements Job {
 
@@ -47,9 +52,12 @@ class TransactionalPinsetterJob implements Job {
          */
         workManager.beginWork();
         try {
+            Principal systemPrincipal = new SystemPrincipal();
+            ResteasyProviderFactory.pushContext(Principal.class, systemPrincipal);
             wrappedJob.execute(context);
         }
         finally {
+            ResteasyProviderFactory.popContextData(Principal.class);
             workManager.endWork();
         }
 
