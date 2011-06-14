@@ -101,7 +101,7 @@ describe 'Pool Resource' do
     pool = admin_cp.list_pools({:owner => owner.id})[0]
 
     consumer1_cp = consumer_client(admin_cp, random_string('testsystem'),
-      :system, nil, {"cpu.architecture" => "X86_64"})
+      :system, nil, {"uname.machine" => "X86_64"})
 
     pools = consumer1_cp.list_pools({:consumer => consumer1_cp.uuid,
       :listall => true})

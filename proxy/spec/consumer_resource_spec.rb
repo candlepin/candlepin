@@ -153,7 +153,7 @@ describe 'Consumer Resource' do
     owner = create_owner random_string('owner')
     owner_client = user_client(owner, random_string('testowner'))
     cp_client = consumer_client(owner_client, random_string('consumer123'), :system,
-                                nil, 'cpu.architecture' => 'x86_64')
+                                nil, 'uname.machine' => 'x86_64')
     prod = create_product('product', random_string('product-multiple-arch'),
                           :attribute => { :arch => 'i386, x86_64'})
     subs = @cp.create_subscription(owner.key, prod.id)
