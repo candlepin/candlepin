@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.4.2
+Version: 0.4.3
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -145,6 +145,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Tue Jun 14 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.3-1
+- require candlepin-deps 0.0.16 (jesusr@redhat.com)
+
 * Mon Jun 13 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.2-1
 - matches current state of custom product (wpoteat@redhat.com)
 - Add a unit test for the db being down (bkearney@redhat.com)
