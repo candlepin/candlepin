@@ -16,6 +16,7 @@ package org.fedoraproject.candlepin.resteasy.interceptor;
 
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
@@ -24,8 +25,10 @@ import com.google.inject.Injector;
 import java.util.ArrayList;
 import org.fedoraproject.candlepin.auth.permissions.Permission;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
+import org.fedoraproject.candlepin.exceptions.UnauthorizedException;
 import org.fedoraproject.candlepin.model.Role;
 import org.fedoraproject.candlepin.model.User;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * UserAuth
@@ -34,10 +37,14 @@ public abstract class UserAuth implements AuthProvider {
 
     protected UserServiceAdapter userServiceAdapter;
     protected Injector injector;
+    protected I18n i18n;
+
+    private static Logger log = Logger.getLogger(UserAuth.class);
 
     public UserAuth(UserServiceAdapter userServiceAdapter, Injector injector) {
         this.userServiceAdapter = userServiceAdapter;
         this.injector = injector;
+        this.i18n = this.injector.getInstance(I18n.class);
     }
 
     /**
@@ -47,6 +54,11 @@ public abstract class UserAuth implements AuthProvider {
         User user = userServiceAdapter.findByLogin(username);
         if (user == null) {
             throw new BadRequestException("user " + username + " not found");
+        }
+
+        if (user == null) {
+            log.error("No such user: " + username);
+            throw new UnauthorizedException(i18n.tr("Invalid username: " + username));
         }
 
         if (user.isSuperAdmin()) {

@@ -17,11 +17,11 @@ package org.fedoraproject.candlepin.auth;
 import java.util.LinkedList;
 import java.util.List;
 import org.fedoraproject.candlepin.auth.permissions.Permission;
+import org.fedoraproject.candlepin.auth.permissions.UserUserPermission;
 import org.fedoraproject.candlepin.model.OwnerPermission;
 
 import java.util.Collection;
 import org.fedoraproject.candlepin.model.Owner;
-
 
 /**
  *
@@ -42,6 +42,7 @@ public class UserPrincipal extends Principal {
         // TODO: a little risky, quite easy to just use the easier constructor
         // available not expecting it to be a super admin:
         this.admin = true;
+        addPermissionToManageSelf();
     }
 
     public UserPrincipal(String username, Collection<Permission> permissions) {
@@ -52,6 +53,16 @@ public class UserPrincipal extends Principal {
         }
         
         this.admin = false;
+        addPermissionToManageSelf();
+    }
+
+
+    /*
+     * User principals should have an implicit permission to view their own
+     * data.
+     */
+    private void addPermissionToManageSelf() {
+        this.permissions.add(new UserUserPermission(username));
     }
 
     public String getUsername() {

@@ -29,6 +29,7 @@ import javax.ws.rs.core.MediaType;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.interceptor.SecurityHole;
 import org.fedoraproject.candlepin.exceptions.GoneException;
+import org.fedoraproject.candlepin.auth.interceptor.Verify;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.User;
@@ -60,7 +61,8 @@ public class UserResource {
     @GET
     @Path("/{username}")
     @Produces(MediaType.APPLICATION_JSON)
-    public User getUserInfo(@PathParam("username") String username) {        
+    public User getUserInfo(@PathParam("username")
+        @Verify(User.class) String username) {
         return userService.findByLogin(username);
     }
 
@@ -87,7 +89,8 @@ public class UserResource {
     @Path("/{username}/owners")
     @Produces(MediaType.APPLICATION_JSON)
     @SecurityHole
-    public List<Owner> listUsersOwners(@PathParam("username") String username,
+    public List<Owner> listUsersOwners(@PathParam("username") @Verify(User.class)
+        String username,
         @Context Principal principal) {
 
         List<Owner> owners = new LinkedList<Owner>();

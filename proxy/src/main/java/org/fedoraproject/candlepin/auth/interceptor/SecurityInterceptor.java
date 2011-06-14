@@ -24,6 +24,7 @@ import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
+import org.fedoraproject.candlepin.exceptions.IseException;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
@@ -47,6 +48,8 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
+import org.fedoraproject.candlepin.model.User;
+import org.fedoraproject.candlepin.service.UserServiceAdapter;
 
 /**
  * Interceptor for enforcing role based access to REST API methods.
@@ -69,7 +72,6 @@ public class SecurityInterceptor implements MethodInterceptor {
 
     private static Logger log = Logger.getLogger(SecurityInterceptor.class);
 
-
     @SuppressWarnings("rawtypes")
     public SecurityInterceptor() {
         this.storeMap = new HashMap<Class, EntityStore>();
@@ -78,6 +80,8 @@ public class SecurityInterceptor implements MethodInterceptor {
         storeMap.put(Consumer.class, new ConsumerStore());
         storeMap.put(Entitlement.class, new EntitlementStore());
         storeMap.put(Pool.class, new PoolStore());
+        storeMap.put(User.class, new UserStore());
+
     }
 
     /**
@@ -151,6 +155,7 @@ public class SecurityInterceptor implements MethodInterceptor {
      * @return
      */
     private Collection<Object> findVerifiedParameters(MethodInvocation invocation) {
+        I18n i18n = this.i18nProvider.get();
         List<Object> parameters = new LinkedList<Object>();
         Method m = invocation.getMethod();
 
@@ -163,6 +168,10 @@ public class SecurityInterceptor implements MethodInterceptor {
 
                     // Use the correct curator (in storeMap) to look up the actual
                     // entity with the annotated argument
+                    if (!storeMap.containsKey(verifyType)) {
+                        log.error("No store configured to verify: " + verifyType);
+                        throw new IseException(i18n.tr("Unable to verify request."));
+                    }
                     Object entity = storeMap.get(verifyType).lookup(verifyParam);
                     if (entity == null) {
                         // This is bad, we're verifying a parameter with an ID which
@@ -233,5 +242,17 @@ public class SecurityInterceptor implements MethodInterceptor {
         }
     }
     
+    private class UserStore implements EntityStore {
+        private UserServiceAdapter userService;
+
+        @Override
+        public Object lookup(String username) {
+            if (userService == null) {
+                userService = injector.getInstance(UserServiceAdapter.class);
+            }
+
+            return userService.findByLogin(username);
+        }
+    }
 
 }

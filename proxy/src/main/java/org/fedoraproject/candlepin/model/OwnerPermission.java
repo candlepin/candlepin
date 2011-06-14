@@ -95,13 +95,13 @@ public class OwnerPermission extends AbstractHibernateObject implements Permissi
     @Override
     public boolean canAccess(Object target, Access access) {
         if (target instanceof Owned) {
-            // TODO:  Just check the key here?
-            return this.owner.equals(((Owned) target).getOwner());
+            return owner.getKey().equals(((Owned) target).getOwner().getKey());
         }
         
-        // If it isn't owned, allow access:
-        // TODO: this makes me nervous...
-        return true;
+        // If asked to verify access to an object that does not implement Owned,
+        // as far as this permission goes, we probably have to deny access.
+        return false;
+
         // special case for events
 //        else if (target instanceof Event) {
 //            return this.owner.getId().equals(((Event) target).getOwnerId());

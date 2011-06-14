@@ -22,7 +22,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-
 /**
  * An entity interacting with Candlepin
  */
@@ -45,6 +44,7 @@ public abstract class Principal implements Serializable {
         for (Permission permission : permissions) {
             log.debug(" perm class: " + permission.getClass().getName());
             if (permission.canAccess(target, access)) {
+                log.debug("  permission granted");
                 // if any of the principal's permissions allows access, then
                 // we are good to go
                 return true;
