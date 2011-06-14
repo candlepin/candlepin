@@ -180,7 +180,7 @@ public class DefaultRulesTest {
 
     @Test
     public void architectureMismatchShouldGenerateWarning() {
-        Pool pool = setupArchTest("arch", "x86_64", "cpu.architecture", "i686");
+        Pool pool = setupArchTest("arch", "x86_64", "uname.machine", "i686");
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
             .getResult();
@@ -190,7 +190,7 @@ public class DefaultRulesTest {
 
     @Test
     public void missingConsumerArchitectureShouldGenerateWarning() {
-        Pool pool = setupArchTest("arch", "x86_64", "cpu.architecture",
+        Pool pool = setupArchTest("arch", "x86_64", "uname.machine",
             "x86_64");
 
         // Get rid of the facts that setupTest set.
@@ -204,7 +204,7 @@ public class DefaultRulesTest {
 
     @Test
     public void architectureMatches() {
-        Pool pool = setupArchTest("arch", "x86_64", "cpu.architecture",
+        Pool pool = setupArchTest("arch", "x86_64", "uname.machine",
             "x86_64");
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
             .getResult();
@@ -214,7 +214,7 @@ public class DefaultRulesTest {
 
     @Test
     public void x86ArchitectureProvidesI386() {
-        Pool pool = setupArchTest("arch", "x86", "cpu.architecture", "i386");
+        Pool pool = setupArchTest("arch", "x86", "uname.machine", "i386");
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
             .getResult();
         assertFalse(result.hasErrors());
@@ -223,7 +223,7 @@ public class DefaultRulesTest {
 
     @Test
     public void x86ArchitectureProvidesI586() {
-        Pool pool = setupArchTest("arch", "x86", "cpu.architecture", "i586");
+        Pool pool = setupArchTest("arch", "x86", "uname.machine", "i586");
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
             .getResult();
         assertFalse(result.hasErrors());
@@ -232,7 +232,7 @@ public class DefaultRulesTest {
 
     @Test
     public void x86ArchitectureProvidesI686() {
-        Pool pool = setupArchTest("arch", "x86", "cpu.architecture", "i686");
+        Pool pool = setupArchTest("arch", "x86", "uname.machine", "i686");
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
             .getResult();
         assertFalse(result.hasErrors());
@@ -424,7 +424,7 @@ public class DefaultRulesTest {
         Product product = new Product(productId, "A test product");
         ProductAttribute pa = new ProductAttribute("arch", "x86");
         product.addAttribute(pa);
-        consumer.setFact("cpu.architecture", "i586");
+        consumer.setFact("uname.machine", "i586");
         Pool pool = TestUtil.createPool(owner, product);
         pool.setId("DEAD-BEEF");
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
@@ -443,7 +443,7 @@ public class DefaultRulesTest {
         Product product = new Product(productId, "A test product");
         ProductAttribute pa = new ProductAttribute("arch", "x86");
         product.addAttribute(pa);
-        consumer.setFact("cpu.architecture", "x86_64");
+        consumer.setFact("uname.machine", "x86_64");
         Pool pool = TestUtil.createPool(owner, product);
         pool.setId("DEAD-BEEF");
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
@@ -469,7 +469,7 @@ public class DefaultRulesTest {
         Product product = new Product(productId, "A test product");
         ProductAttribute pa = new ProductAttribute("arch", "x86");
         product.addAttribute(pa);
-        consumer.setFact("cpu.architecture", "x86_64");
+        consumer.setFact("uname.machine", "x86_64");
         Pool pool = TestUtil.createPool(owner, product);
         pool.setId("DEAD-BEEF");
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);

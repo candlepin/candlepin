@@ -123,8 +123,8 @@ function architectureMatches(product, consumer) {
         }
 
         if(!supportedArches.contains('ALL') &&
-           (!consumer.hasFact("cpu.architecture")  ||
-            !supportedArches.contains(consumer.getFact('cpu.architecture').toUpperCase())
+           (!consumer.hasFact("uname.machine")  ||
+            !supportedArches.contains(consumer.getFact('uname.machine').toUpperCase())
             )
           ){
            return false;

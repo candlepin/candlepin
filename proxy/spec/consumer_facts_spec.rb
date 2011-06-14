@@ -10,8 +10,8 @@ describe 'Consumer Facts' do
     user = user_client(owner, random_string("user"))
 
     facts = {
-      'cpu.architecture' => 'i686',
-      'uname.system'     => 'Linux',
+      'uname.machine' => 'i686',
+      'uname.system'  => 'Linux',
     }
 
     @consumer = user.register(random_string("consumer"), :system, nil, facts)
@@ -23,7 +23,7 @@ describe 'Consumer Facts' do
 
   it 'allows a single fact to be added' do
     updated_facts = {
-      'cpu.architecture' => 'x86_64',
+      'uname.machine'    => 'x86_64',
       'uname.system'     => 'Linux',
       'memory.memtotal'  => '100',
     }
@@ -35,7 +35,7 @@ describe 'Consumer Facts' do
 
   it 'allows a fact to be updated' do
     updated_facts = {
-      'cpu.architecture' => 'x86_64',
+      'uname.machine'    => 'x86_64',
       'uname.system'     => 'BSD',
     }
     @consumer_api.update_facts(updated_facts)
@@ -46,7 +46,7 @@ describe 'Consumer Facts' do
 
   it 'allows a fact to be removed' do
     updated_facts = {
-      'cpu.architecture' => 'x86_64',
+      'uname.machine' => 'x86_64',
     }
     @consumer_api.update_facts(updated_facts)
 
@@ -56,7 +56,7 @@ describe 'Consumer Facts' do
 
   it 'emits an event when facts are updated' do
     updated_facts = {
-      'cpu.architecture' => 'x86_64',
+      'uname.machine'    => 'x86_64',
       'uname.system'     => 'Linux',
     }
     @consumer_api.update_facts(updated_facts)
@@ -69,7 +69,7 @@ describe 'Consumer Facts' do
 
   it 'does not emit an event when facts do not change' do
     updated_facts = {
-      'cpu.architecture' => 'i686',
+      'uname.machine'    => 'i686',
       'uname.system'     => 'Linux',
     }
     @consumer_api.update_facts(updated_facts)
