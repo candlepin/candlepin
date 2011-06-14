@@ -22,7 +22,7 @@ function export_name_space() {
 /* Utility functions */
 function contains(a, obj) {
 	for (var i = 0; i < a.length; i++) {
-	   var result = a[i] == obj
+	   var result = a[i] == obj;
 		if (result) {
 			return true;
 		}
@@ -44,7 +44,7 @@ function getRelevantProvidedProducts(pool, products) {
 	var provided = [];
 
 	for (var i = 0 ; i < products.length ; i++) {
-		var product = products[i]
+		var product = products[i];
 		if (pool.provides(product.getId())) {
 			provided.push(product);
 		}
