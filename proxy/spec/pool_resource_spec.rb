@@ -9,11 +9,11 @@ describe 'Pool Resource' do
     owner1 = create_owner random_string('test_owner')
     owner1_client = user_client(owner1, random_string('testuser'))
 
-    product = create_product()
+    product = create_product
     @cp.create_subscription(owner1.key, product.id, 10)
     @cp.refresh_pools(owner1.key)
 
-    pool = owner1_client.list_pools.first
+    pool = owner1_client.list_pools(:owner => owner1.id).first
 
     consumer_client = consumer_client(owner1_client, random_string('testsystem'))
     p = consumer_client.get_pool(pool.id)
@@ -26,11 +26,11 @@ describe 'Pool Resource' do
     owner2 = create_owner random_string('test_owner')
     owner2_client = user_client(owner2, random_string('testuser'))
 
-    product = create_product()
+    product = create_product
     @cp.create_subscription(owner2.key, product.id, 10)
     @cp.refresh_pools(owner2.key)
 
-    pool = owner2_client.list_pools.first
+    pool = owner2_client.list_pools(:owner => owner2.id).first
 
     consumer_client = consumer_client(owner1_client, random_string('testsystem'))
     lambda {
@@ -44,11 +44,11 @@ describe 'Pool Resource' do
     owner2 = create_owner random_string('test_owner')
     owner2_client = user_client(owner2, random_string('testuser'))
 
-    product = create_product()
+    product = create_product
     @cp.create_subscription(owner2.key, product.id, 10)
     @cp.refresh_pools(owner2.key)
 
-    pool = owner2_client.list_pools.first
+    pool = owner2_client.list_pools(:owner => owner2.id).first
 
     lambda {
       owner1_client.get_pool(pool.id)
