@@ -56,7 +56,7 @@ public abstract class UserAuth implements AuthProvider {
         }
 
         if (user.isSuperAdmin()) {
-            return new UserPrincipal(username);
+            return new UserPrincipal(username, null, true);
         }
         else {
             List<Permission> permissions = new ArrayList<Permission>();
@@ -66,7 +66,7 @@ public abstract class UserAuth implements AuthProvider {
                 permissions.addAll(role.getPermissions());
             }
 
-            Principal principal = new UserPrincipal(username, permissions);
+            Principal principal = new UserPrincipal(username, permissions, false);
 
             // TODO:  Look up owner here?
             // Old code was doing this:  fullOwners.add(AuthUtil.lookupOwner(owner,

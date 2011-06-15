@@ -288,13 +288,13 @@ public class DatabaseTestFixture {
         OwnerPermission p = new OwnerPermission(owner, verb);
         // Only need a detached owner permission here:
         Principal ownerAdmin = new UserPrincipal(username, Arrays.asList(new Permission[] {
-            p}));
+            p}), false);
         setupPrincipal(ownerAdmin);
         return ownerAdmin;
     }
 
     protected Principal setupAdminPrincipal(String username) {
-        UserPrincipal principal = new UserPrincipal(username);
+        UserPrincipal principal = new UserPrincipal(username, null, true);
         setupPrincipal(principal);
         
         return principal;

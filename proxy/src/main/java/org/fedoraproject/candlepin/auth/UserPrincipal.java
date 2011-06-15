@@ -32,27 +32,19 @@ public class UserPrincipal extends Principal {
     private boolean admin;
 
     /**
-     * Create a user principal with full system access.
+     * Create a user principal
      * 
      * @param username
      */
-    public UserPrincipal(String username) {
-        this(username, null);
 
-        // TODO: a little risky, quite easy to just use the easier constructor
-        // available not expecting it to be a super admin:
-        this.admin = true;
-        addPermissionToManageSelf();
-    }
-
-    public UserPrincipal(String username, Collection<Permission> permissions) {
+    public UserPrincipal(String username, Collection<Permission> permissions, Boolean admin) {
         this.username = username;
+        this.admin = admin;
 
         if (permissions != null) {
             this.permissions.addAll(permissions);
         }
         
-        this.admin = false;
         addPermissionToManageSelf();
     }
 

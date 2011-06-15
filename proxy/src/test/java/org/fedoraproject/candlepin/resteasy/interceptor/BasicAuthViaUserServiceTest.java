@@ -123,7 +123,7 @@ public class BasicAuthViaUserServiceTest {
         when(userService.findByLogin("user")).thenReturn(new User());
         
         UserPrincipal expected = new UserPrincipal("user", 
-                new ArrayList<Permission>(permissions));
+                new ArrayList<Permission>(permissions), false);
         assertEquals(expected, this.auth.getPrincipal(request));
     }
 

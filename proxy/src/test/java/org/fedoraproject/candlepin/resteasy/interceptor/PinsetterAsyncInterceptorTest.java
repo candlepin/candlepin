@@ -66,7 +66,7 @@ public class PinsetterAsyncInterceptorTest {
         List<Permission> permissions = Arrays.asList(new Permission[] {
             new OwnerPermission(new Owner("test_owner"), Access.ALL)
         });
-        Principal principal = new UserPrincipal("testing", permissions);
+        Principal principal = new UserPrincipal("testing", permissions, false);
         when(this.principalProvider.get()).thenReturn(principal);
 
         JobDetail detail = new JobDetail();
@@ -83,7 +83,7 @@ public class PinsetterAsyncInterceptorTest {
         List<Permission> permissions = Arrays.asList(new Permission[] {
             new OwnerPermission(new Owner("test_owner"), Access.ALL)
         });
-        Principal principal = new UserPrincipal("testing", permissions);
+        Principal principal = new UserPrincipal("testing", permissions, false);
 
         when(this.principalProvider.get()).thenReturn(principal);
 

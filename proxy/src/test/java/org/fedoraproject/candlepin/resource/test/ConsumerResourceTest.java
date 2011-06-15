@@ -133,7 +133,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         roleCurator.create(ownerAdminRole);
 
         principal = new UserPrincipal(USER_NAME, 
-                new ArrayList<Permission>(ownerAdminRole.getPermissions()));
+                new ArrayList<Permission>(ownerAdminRole.getPermissions()), false);
         setupPrincipal(principal);
 
         consumer = TestUtil.createConsumer(standardSystemType, owner);
@@ -233,7 +233,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         Consumer submitted = consumerResource.create(
             toSubmit,
             new UserPrincipal(someuser.getUsername(), Arrays.asList(new Permission [] {
-                new OwnerPermission(owner, Access.ALL) })),
+                new OwnerPermission(owner, Access.ALL) }), false),
             someuser.getUsername(),
             owner.getKey());
 

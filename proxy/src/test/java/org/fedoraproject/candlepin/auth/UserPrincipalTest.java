@@ -45,7 +45,7 @@ public class UserPrincipalTest {
     public void init() {
         owner = mock(Owner.class);
         ownerPerm = mock(OwnerPermission.class);
-        user = new UserPrincipal("icup");
+        user = new UserPrincipal("icup", null, true);
     }
 
     @Test
@@ -61,7 +61,7 @@ public class UserPrincipalTest {
 
     @Test
     public void shouldNotBeAnAdmin() {
-        UserPrincipal up = new UserPrincipal("notadmin", null);
+        UserPrincipal up = new UserPrincipal("notadmin", null, false);
         assertFalse(up.hasFullAccess());
     }
 
@@ -73,7 +73,7 @@ public class UserPrincipalTest {
         List<Permission> ops = new ArrayList<Permission>();
         ops.add(ownerPerm);
 
-        UserPrincipal up = new UserPrincipal("admin", ops);
+        UserPrincipal up = new UserPrincipal("admin", ops, false);
 
         List<Owner> owners = up.getOwners();
         assertNotNull(owners);
@@ -88,7 +88,7 @@ public class UserPrincipalTest {
         List<Permission> ops = new ArrayList<Permission>();
         ops.add(ownerPerm);
 
-        UserPrincipal up = new UserPrincipal("admin", ops);
+        UserPrincipal up = new UserPrincipal("admin", ops, false);
 
         List<String> keys = up.getOwnerKeys();
         assertNotNull(keys);
@@ -103,7 +103,7 @@ public class UserPrincipalTest {
         List<Permission> ops = new ArrayList<Permission>();
         ops.add(ownerPerm);
 
-        UserPrincipal up = new UserPrincipal("admin", ops);
+        UserPrincipal up = new UserPrincipal("admin", ops, false);
 
         List<String> ids = up.getOwnerIds();
         assertNotNull(ids);
@@ -114,7 +114,7 @@ public class UserPrincipalTest {
     public void permsShouldNotAffectOwners() {
         List<Permission> perms = new ArrayList<Permission>();
         perms.add(mock(Permission.class));
-        UserPrincipal up = new UserPrincipal("admin", perms);
+        UserPrincipal up = new UserPrincipal("admin", perms, false);
         assertTrue(up.getOwners().isEmpty());
     }
 }

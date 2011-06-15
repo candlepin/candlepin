@@ -110,7 +110,7 @@ public class ConsumerResourceCreationTest {
         Consumer consumer = new Consumer(consumerName, null, null, system);
         Collection<Permission> perms = new HashSet<Permission>();
         perms.addAll(role.getPermissions());
-        Principal principal = new UserPrincipal(USER, perms);
+        Principal principal = new UserPrincipal(USER, perms, false);
 
         return this.resource.create(consumer, principal, USER, owner.getKey());
     }

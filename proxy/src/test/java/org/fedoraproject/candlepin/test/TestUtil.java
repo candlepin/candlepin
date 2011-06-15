@@ -196,7 +196,7 @@ public class TestUtil {
 
     public static UserPrincipal createPrincipal(String username, Owner owner, Access role) {
         return new UserPrincipal(username,  Arrays.asList(new Permission[] {
-            new OwnerPermission(owner, role)}));
+            new OwnerPermission(owner, role)}), false);
     }
 
     public static UserPrincipal createOwnerPrincipal() {

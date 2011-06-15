@@ -56,7 +56,7 @@ public class TestPrincipalProvider extends PrincipalProvider {
             List<Permission> permissions = new ArrayList<Permission>();
             permissions.add(new OwnerPermission(owner, Access.ALL));
 
-            principal = new UserPrincipal("Default User", permissions);
+            principal = new UserPrincipal("Default User", permissions, false);
         }   
         return principal;
     }
