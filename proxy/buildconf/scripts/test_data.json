@@ -85,68 +85,222 @@
     ],
     "owners": [
         {
-            "name": "admin",
-            "users": [
-                {
-                    "password": "password",
-                    "username": "testuser1"
-                },
-                {
-                    "password": "password",
-                    "username": "testuser2"
-                }
-            ]
+            "name": "admin"
         },
         {
-            "name": "snowwhite",
-            "users": [
-                {
-                    "password": "password",
-                    "username": "doc"
-                },
-                {
-                    "password": "password",
-                    "username": "grumpy"
-                },
-                {
-                    "password": "password",
-                    "username": "happy"
-                },
-                {
-                    "password": "password",
-                    "username": "sleepy"
-                },
-                {
-                    "password": "password",
-                    "username": "bashful"
-                },
-                {
-                    "password": "password",
-                    "username": "sneezy"
-                },
-                {
-                    "password": "password",
-                    "username": "dopey"
-                }
-            ]
+            "name": "snowwhite"
         },
         {
-            "name": "donaldduck",
-            "users" : [
-                {
-                    "password": "password",
-                    "username": "huey"
-                },
-                {
-                    "password": "password",
-                    "username": "duey"
-                },
-                {
-                    "password": "password",
-                    "username": "louie"
-                }
-            ]
+            "name": "donaldduck"
         }
+    ],
+    "users": [
+        {
+            "password": "password",
+            "username": "testuser1",
+            "superadmin": "true"
+        },
+        {
+            "password": "password",
+            "username": "testuser2"
+        },
+        {
+            "password": "password",
+            "username": "testuser3"
+        },
+        {
+            "password": "password",
+            "username": "doc",
+            "superadmin": "true"
+        },
+        {
+            "password": "password",
+            "username": "grumpy"
+        },
+        {
+            "password": "password",
+            "username": "happy"
+        },
+        {
+            "password": "password",
+            "username": "sleepy"
+        },
+        {
+            "password": "password",
+            "username": "bashful"
+        },
+        {
+            "password": "password",
+            "username": "sneezy"
+        },
+        {
+            "password": "password",
+            "username": "dopey"
+        },
+        {
+            "password": "password",
+            "username": "huey",
+            "superadmin": "true"
+        },
+        {
+            "password": "password",
+            "username": "duey"
+        },
+        {
+            "password": "password",
+            "username": "louie"
+        },
+        {
+            "password": "password",
+            "username": "mickey"
+        },
+        {
+            "password": "password",
+            "username": "minnie"
+        }
+    ],
+    "roles": [
+	{
+            "name": "admin-all",
+            "permissions": [
+		{
+		    "owner": "admin",
+		    "access": "ALL"
+		}
+             ],
+            "users": [
+		{
+		    "username": "testuser1"
+                },
+                {
+		    "username": "testuser2"
+		}
+             ]
+	},
+	{
+            "name": "admin-ro",
+            "permissions": [
+		{
+		    "owner": "admin",
+		    "access": "READ_ONLY"
+		}
+             ],
+            "users": [
+		{
+		    "username": "testuser3"
+                }
+             ]
+	},
+	{
+            "name": "snowwhite-all",
+            "permissions": [
+		{
+		    "owner": "snowwhite",
+		    "access": "ALL"
+		}
+             ],
+            "users": [
+		{
+		    "username": "doc"
+                },
+                {
+		    "username": "grumpy"
+		}
+             ]
+	},
+	{
+            "name": "snowwhite-ro",
+            "permissions": [
+		{
+		    "owner": "snowwhite",
+		    "access": "READ_ONLY"
+		}
+             ],
+            "users": [
+		{
+		    "username": "happy"
+                },
+		{
+		    "username": "sleepy"
+                },
+		{
+		    "username": "bashful"
+                },
+		{
+		    "username": "sneezy"
+                },
+		{
+		    "username": "dopey"
+                }
+             ]
+	},
+	{
+            "name": "donaldduck-all",
+            "permissions": [
+		{
+		    "owner": "donaldduck",
+		    "access": "ALL"
+		}
+             ],
+            "users": [
+		{
+		    "username": "huey"
+                },
+                {
+		    "username": "duey"
+		}
+             ]
+	},
+	{
+            "name": "donaldduck-ro",
+            "permissions": [
+		{
+		    "owner": "donaldduck",
+		    "access": "READ_ONLY"
+		}
+             ],
+            "users": [
+                {
+		    "username": "louie"
+		}
+             ]
+	},
+	{
+            "name": "donaldduck-all-snowwhite-ro",
+            "permissions": [
+		{
+		    "owner": "donaldduck",
+		    "access": "ALL"
+		},
+		{
+		    "owner": "snowwhite",
+		    "access": "READ_ONLY"
+		}
+             ],
+            "users": [
+                {
+		    "username": "mickey"
+		}
+             ]
+	},
+	{
+            "name": "donaldduck-ro-snowwhite-all",
+            "permissions": [
+		{
+		    "owner": "donaldduck",
+		    "access": "READ_ONLY"
+		},
+		{
+		    "owner": "snowwhite",
+		    "access": "ALL"
+		}
+             ],
+            "users": [
+                {
+		    "username": "minnie"
+		}
+             ]
+	}
     ],
     "products": [
         {

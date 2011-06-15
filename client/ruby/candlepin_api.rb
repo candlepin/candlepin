@@ -146,10 +146,11 @@ class Candlepin
     end
   end
 
-  def create_user(login, password)
+  def create_user(login, password, superadmin)
     user = {
       'username' => login,
-      'password' => password
+      'password' => password,
+      'superAdmin' => superadmin
     }
 
     post("/users", user)
