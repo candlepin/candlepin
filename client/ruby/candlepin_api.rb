@@ -146,7 +146,7 @@ class Candlepin
     end
   end
 
-  def create_user(login, password, superadmin)
+  def create_user(login, password, superadmin=false)
     user = {
       'username' => login,
       'password' => password,
