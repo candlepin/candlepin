@@ -26,6 +26,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
+import org.fedoraproject.candlepin.exceptions.ConflictException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.Content;
 import org.fedoraproject.candlepin.model.ContentCurator;
@@ -123,6 +124,9 @@ public class ProductResource {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     public Product createProduct(Product product) {
+        if (prodAdapter.getProductById(product.getId()) != null) {
+            throw new ConflictException("product " + product.getName() + " already exists");
+        }
         return prodAdapter.createProduct(product);
     }   
     
