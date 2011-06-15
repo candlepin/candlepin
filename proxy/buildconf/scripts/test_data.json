@@ -654,7 +654,216 @@
                 "warning_period": 30
             }
         },
+
         {
+            "name": "Awesome OS for i686/x86_64 Bits",
+            "id": "100000000000007",
+            "version": "3.11",
+            "arch": "x86_64,i686",
+            "attributes": {
+                "sockets": 128,
+                "warning_period": 30
+            },
+            "content": [
+                [11113, true],
+                [0, false],
+                [1, true]
+            ]
+        },
+        {
+            "name": "Awesome OS for i686/x86_64",
+            "id": "awesomeos-i686-x86_64",
+            "version": "3.11",
+            "arch": "x86_64,i686",
+            "type": "MKT",
+            "provided_products": [
+                "100000000000007"
+            ],
+            "attributes": {
+                "sockets": 16,
+                "warning_period": 30
+            }
+        },
+       {
+            "name": "Awesome OS for x86_64/s390x Bits",
+            "id": "100000000000008",
+            "version": "3.11",
+            "arch": "x86_64,s390x",
+            "attributes": {
+                "sockets": 128,
+                "warning_period": 30
+            },
+            "content": [
+                [11113, true],
+                [0, false],
+                [1, true]
+            ]
+        },
+        {
+            "name": "Awesome OS for x86_64/s390x",
+            "id": "awesomeos-x86_64-s390x",
+            "version": "3.11",
+            "arch": "x86_64,s390x",
+            "type": "MKT",
+            "provided_products": [
+                "100000000000008"
+            ],
+            "attributes": {
+                "sockets": 16,
+                "warning_period": 30
+            }
+        },
+       {
+            "name": "Awesome OS for Intel x86_64/i686/ia64 Bits",
+            "id": "100000000000009",
+            "version": "3.11",
+            "arch": "x86_64,i686,ia64",
+            "attributes": {
+                "sockets": 128,
+                "warning_period": 30
+            },
+            "content": [
+                [11113, true],
+                [0, false],
+                [1, true]
+            ]
+        },
+        {
+            "name": "Awesome OS for Intel x86_64/i686/ia64",
+            "id": "awesomeos-x86_64/i686/ia64",
+            "version": "3.11",
+            "arch": "x86_64,i686,ia64",
+            "type": "MKT",
+            "provided_products": [
+                "100000000000009"
+            ],
+            "attributes": {
+                "sockets": 16,
+                "warning_period": 30
+            }
+        },
+       {
+            "name": "Awesome OS for z80/x86_64 Bits",
+            "id": "100000000000010",
+            "version": "3.11",
+            "arch": "z80,x86_64",
+            "attributes": {
+                "sockets": 128,
+                "warning_period": 30
+            },
+            "content": [
+                [11113, true],
+                [0, false],
+                [1, true]
+            ]
+        },
+        {
+            "name": "Awesome OS for  z80/x86_64",
+            "id": "awesomeos-z80-x86_64",
+            "version": "3.11",
+            "arch": "z80,x86_64",
+            "type": "MKT",
+            "provided_products": [
+                "100000000000010"
+            ],
+            "attributes": {
+                "sockets": 16,
+                "warning_period": 30
+            }
+        },
+
+      {
+            "name": "Awesome OS for x86_64/i686/ia64/ppc/ppc64/s390x/s390 Bits",
+            "id": "100000000000011",
+            "version": "3.11",
+            "arch": "x86_64,i686,ia64,ppc,ppc64,s390x,s390",
+            "attributes": {
+                "sockets": 128,
+                "warning_period": 30
+            },
+            "content": [
+                [11113, true],
+                [0, false],
+                [1, true]
+            ]
+        },
+
+        {
+            "name": "Awesome OS for x86_64/i686/ia64/ppc/ppc64/s390x/s390",
+            "id": "awesomeos-everything",
+            "version": "3.11",
+            "arch": "x86_64,i686,ia64,ppc,ppc64,s390x,s390",
+            "type": "MKT",
+            "provided_products": [
+                "100000000000011"
+            ],
+            "attributes": {
+                "sockets": 16,
+                "warning_period": 30
+            }
+        },
+    {
+            "name": "Awesome OS for x86_64/ALL Bits",
+            "id": "100000000000012",
+            "version": "3.11",
+            "arch": "x86_64,ALL",
+            "attributes": {
+                "sockets": 128,
+                "warning_period": 30
+            },
+            "content": [
+                [11113, true],
+                [0, false],
+                [1, true]
+            ]
+        },
+
+        {
+            "name": "Awesome OS for x86_64/ALL",
+            "id": "awesomeos-x86_64-ALL",
+            "version": "3.11",
+            "arch": "x86_64,ALL",
+            "type": "MKT",
+            "provided_products": [
+                "100000000000012"
+            ],
+            "attributes": {
+                "sockets": 16,
+                "warning_period": 30
+            }
+        },
+    {
+            "name": "Awesome OS for z80/ALL Bits",
+            "id": "100000000000013",
+            "version": "3.11",
+            "arch": "z80,ALL",
+            "attributes": {
+                "sockets": 128,
+                "warning_period": 30
+            },
+            "content": [
+                [11113, true],
+                [0, false],
+                [1, true]
+            ]
+        },
+
+        {
+            "name": "Awesome OS for z80/ALL",
+            "id": "awesomeos-z80-ALL",
+            "version": "3.11",
+            "arch": "z80,ALL",
+            "type": "MKT",
+            "provided_products": [
+                "100000000000013"
+            ],
+            "attributes": {
+                "sockets": 16,
+                "warning_period": 30
+            }
+        },
+
+     {
             "name": "Awesome OS for Premium Architectures",
             "id": "awesomeos-ppc64",
             "arch": "ppc64",
