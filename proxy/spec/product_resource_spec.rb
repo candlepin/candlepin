@@ -17,15 +17,5 @@ describe 'Product Resource' do
     prod['productContent'].should be_empty
   end
 
-  it 'create and delete a product' do
-    prod = create_product
-    @cp.delete_product(prod['id'])
-  end
-
-  it 'delete an unknown product' do
-    lambda {
-       @cp.delete_product('this-is-not-a-product')
-    }.should raise_exception(RestClient::ResourceNotFound)
-  end
 end
 
