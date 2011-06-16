@@ -100,15 +100,20 @@ public class PoolResourceTest extends DatabaseTestFixture {
         consumerTypeCurator.create(foreignConsumer.getType());
         consumerCurator.create(foreignConsumer);
 
-        // Run these tests as an owner admin:
+        // Run most of these tests as an owner admin:
         adminPrincipal = setupPrincipal(owner1, Access.ALL);
     }
     
+    @Test(expected = ForbiddenException.class)
+    public void testUserCannotListAllPools() {
+        List<Pool> pools = poolResource.list(null, null, null, false, null, adminPrincipal);
+        assertEquals(3, pools.size());
+    }
+
     @Test
     public void testListAll() {
-        Principal superAdminPrincipal = setupAdminPrincipal("fakeSuperAdmin");
         List<Pool> pools = poolResource.list(null, null, null, false, null,
-            superAdminPrincipal);
+            setupAdminPrincipal("superadmin"));
         assertEquals(3, pools.size());
     }
    
@@ -142,8 +147,8 @@ public class PoolResourceTest extends DatabaseTestFixture {
     
     @Test(expected = ForbiddenException.class)
     public void testCannotListPoolsInAnotherOwner() {
-        List<Pool> pools = poolResource.list(owner2.getId(), null, product2.getId(), false,
-            null, adminPrincipal);
+        List<Pool> pools = poolResource.list(owner2.getId(), null, product2.getId(),
+            false, null, adminPrincipal);
         assertEquals(0, pools.size());
     }
 
@@ -229,10 +234,11 @@ public class PoolResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testActiveOnDate() {
+        // Need to be a super admin to do this:
         String activeOn = new Integer(START_YEAR + 1).toString();
-        List<Pool> pools = poolResource.list(owner1.getId(), null, null, false, activeOn, 
-            adminPrincipal);
-        assertEquals(2, pools.size());
+        List<Pool> pools = poolResource.list(null, null, null, false, activeOn, 
+            setupAdminPrincipal("superadmin"));
+        assertEquals(3, pools.size());
 
         activeOn = new Integer(START_YEAR - 1).toString();
         pools = poolResource.list(owner1.getId(), null, null, false, activeOn,
