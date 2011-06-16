@@ -19,6 +19,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.fedoraproject.candlepin.auth.Access;
+
 /**
  * Annotation for specifying RESTful parameters that represent some protected
  * entity, such as a Consumer or Owner.
@@ -28,4 +30,6 @@ import java.lang.annotation.Target;
 public @interface Verify {
 
     Class value();
+
+    Access require() default Access.NONE;
 }

@@ -83,6 +83,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.xml.bind.DatatypeConverter;
+
+import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.auth.interceptor.Verify;
 
 /**
@@ -368,8 +370,9 @@ public class OwnerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/pools")
-    public List<Pool> ownerEntitlementPools(
-        @PathParam("owner_key") String ownerKey,
+    public List<Pool> getPools(
+        @PathParam("owner_key")
+            @Verify(value = Owner.class, require = Access.READ_POOLS) String ownerKey,
         @QueryParam("consumer") String consumerUuid,
         @QueryParam("product") String productId,
         @QueryParam("listall") @DefaultValue("false") boolean listAll,

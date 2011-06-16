@@ -227,6 +227,14 @@ public class PoolResourceTest extends DatabaseTestFixture {
         poolResource.list(owner1.getId(), null, null, false, null, p);
     }
 
+    @Test
+    public void consumerCanListOwnersPools() {
+        Principal p = setupPrincipal(new ConsumerPrincipal(passConsumer));
+        securityInterceptor.enable();
+
+        poolResource.list(owner1.getId(), null, null, false, null, p);
+    }
+
     @Test(expected = BadRequestException.class)
     public void testBadActiveOnDate() {
         poolResource.list(owner1.getId(), null, null, false, "bc", adminPrincipal);

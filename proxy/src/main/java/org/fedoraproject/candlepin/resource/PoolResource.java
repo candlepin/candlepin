@@ -155,7 +155,7 @@ public class PoolResource {
                 throw new NotFoundException(i18n.tr("owner: {0}", ownerId));
             }
             // Now that we have an owner, check that this principal can access it:
-            if (!principal.canAccess(o, Access.READ_ONLY)) {
+            if (!principal.canAccess(o, Access.READ_POOLS)) {
                 throw new ForbiddenException(i18n.tr("User {0} cannot access owner {1}", 
                     principal.getPrincipalName(), o.getKey()));
             }

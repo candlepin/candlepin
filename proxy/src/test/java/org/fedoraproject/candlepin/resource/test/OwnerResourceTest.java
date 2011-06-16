@@ -272,6 +272,18 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testConsumerCanListPools() {
+        Consumer c = TestUtil.createConsumer(owner);
+        consumerTypeCurator.create(c.getType());
+        consumerCurator.create(c);
+        setupPrincipal(new ConsumerPrincipal(c));
+
+        securityInterceptor.enable();
+
+        ownerResource.getPools(owner.getKey(), null, null, false, null);
+    }
+
+    @Test
     public void testOwnerAdminCanGetPools() {
         setupPrincipal(owner, Access.ALL);
 
@@ -282,7 +294,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         poolCurator.create(pool1);
         poolCurator.create(pool2);
 
-        List<Pool> pools = ownerResource.ownerEntitlementPools(owner.getKey(),
+        List<Pool> pools = ownerResource.getPools(owner.getKey(),
             null, null, true, null);
         assertEquals(2, pools.size());
     }
@@ -303,7 +315,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         // Filtering should just cause this to return no results:
-        ownerResource.ownerEntitlementPools(owner.getKey(), null, null, true, null);
+        ownerResource.getPools(owner.getKey(), null, null, true, null);
     }
 
     @Test(expected = ForbiddenException.class)
@@ -395,6 +407,29 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         ownerResource.getConsumerAtomFeed(owner.getKey(), c.getUuid());
+    }
+
+    @Test(expected = ForbiddenException.class)
+    public void consumerCannotListAllConsumersInOwner() {
+        Consumer c = TestUtil.createConsumer(owner);
+        consumerTypeCurator.create(c.getType());
+        consumerCurator.create(c);
+        setupPrincipal(new ConsumerPrincipal(c));
+
+        securityInterceptor.enable();
+
+        ownerResource.ownerConsumers(owner.getKey(), null, null);
+    }
+
+    public void consumerCanListPools() {
+        Consumer c = TestUtil.createConsumer(owner);
+        consumerTypeCurator.create(c.getType());
+        consumerCurator.create(c);
+        setupPrincipal(new ConsumerPrincipal(c));
+
+        securityInterceptor.enable();
+
+        ownerResource.getPools(owner.getKey(), null, null, false, null);
     }
 
     @Test(expected = ForbiddenException.class)

@@ -30,10 +30,7 @@ import org.xnap.commons.i18n.I18n;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Provider;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.DELETE;
@@ -92,23 +89,9 @@ public class SecurityInterceptor implements MethodInterceptor {
         Principal principal = this.principalProvider.get();
         log.debug("Invoked security interceptor " + invocation.getMethod());
 
-        Access access = findRequiredAccessType(invocation);
+        Access defaultAccess = getAssumedAccessType(invocation);
 
-        Collection<Object> params = findVerifiedParameters(invocation);
-
-        // if there are no params, then deny access if the principal doesn't
-        // have full system access
-        if (params.isEmpty() && !principal.hasFullAccess()) {
-            denyAccess(principal, invocation);
-        }
-
-        for (Object param : params) {
-            // if this principal cannot access any of the annotated parameters,
-            // then deny access here
-            if (param == null || !principal.canAccess(param, access)) {
-                denyAccess(principal, invocation);
-            }
-        }
+        verifyParameters(invocation, principal, defaultAccess);
 
         return invocation.proceed();
     }
@@ -124,12 +107,13 @@ public class SecurityInterceptor implements MethodInterceptor {
 
     /**
      * Scans the method annotations for RESTEasy annotations, to determine
-     * the HTTP verbs used, and converts that to a minimum required access type.
+     * the HTTP verbs used. We'll assume this is the required access type, but any
+     * Verify annotation which specifies an access type can override this later.
      * 
      * @param invocation method invocation object
      * @return the required minimum access type
      */
-    private Access findRequiredAccessType(MethodInvocation invocation) {
+    private Access getAssumedAccessType(MethodInvocation invocation) {
         
         // Assume the minimum level to start with, and bump up as we see
         // stricter annotations
@@ -150,21 +134,33 @@ public class SecurityInterceptor implements MethodInterceptor {
     }
     
     /**
-     * Scans the parameters for the method being invoked.
-     *
-     * @return
+     * Scans the parameters for the method being invoked looking for those annotated with
+     * Verify, and checks that the principal has access to them all.
      */
-    private Collection<Object> findVerifiedParameters(MethodInvocation invocation) {
+    private void verifyParameters(MethodInvocation invocation,
+        Principal principal, Access defaultAccess) {
+
         I18n i18n = this.i18nProvider.get();
-        List<Object> parameters = new LinkedList<Object>();
         Method m = invocation.getMethod();
+
+        // Need to check after examining all parameters to see if we found any:
+        boolean foundVerifiedParameters = false;
 
         for (int i = 0; i < m.getParameterAnnotations().length; i++) {
             for (Annotation a : m.getParameterAnnotations()[i]) {
                 if (a instanceof Verify) {
+                    foundVerifiedParameters = true;
+                    Access requiredAccess = defaultAccess;
+
                     @SuppressWarnings("rawtypes")
                     Class verifyType = ((Verify) a).value();
+                    if (((Verify) a).require() != Access.NONE) {
+                        requiredAccess = ((Verify) a).require();
+                    }
                     String verifyParam = (String) invocation.getArguments()[i];
+
+                    log.debug("Verifying " + requiredAccess + " access to " + verifyType +
+                        ": " + verifyParam);
 
                     // Use the correct curator (in storeMap) to look up the actual
                     // entity with the annotated argument
@@ -178,13 +174,22 @@ public class SecurityInterceptor implements MethodInterceptor {
                         // doesn't seem to exist in the DB. Error will be thrown in
                         // invoke though.
                         log.error("No such entity: " + verifyType + " id: " + verifyParam);
+                        denyAccess(principal, invocation);
                     }
-                    parameters.add(entity);
+
+                    // Deny access if the entity to be verified turns out to be null, or
+                    // the principal cannot access it:
+                    if (!principal.canAccess(entity, requiredAccess)) {
+                        denyAccess(principal, invocation);
+                    }
                 }
             }
         }
 
-        return parameters;
+        // If we found no parameters, this method can only be called by super admins:
+        if (!foundVerifiedParameters && !principal.hasFullAccess()) {
+            denyAccess(principal, invocation);
+        }
     }
 
     private interface EntityStore {

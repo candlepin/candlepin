@@ -84,7 +84,7 @@ describe 'Consumer Resource' do
   it 'returns a 404 for a non-existant consumer' do
     lambda do
       @cp.get_consumer('fake-uuid')
-    end.should raise_exception(RestClient::ResourceNotFound)
+    end.should raise_exception(RestClient::Forbidden)
   end
 
   it 'lets a consumer view their own information' do

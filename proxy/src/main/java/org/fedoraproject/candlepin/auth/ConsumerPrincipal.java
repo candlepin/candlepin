@@ -35,11 +35,9 @@ public class ConsumerPrincipal extends Principal {
         addPermission(new ConsumerPoolPermission(consumer));
 
         // Consumer principals should also get an implicit permission
-        // granting them read-only access to their owner. This allows
-        // things like listing pools for an owner, etc.
+        // granting them read-only access to their owners pools.
         addPermission(new OwnerPermission(consumer.getOwner(),
-                    Access.READ_ONLY));
-
+                    Access.READ_POOLS));
     }
 
     public Consumer getConsumer() {

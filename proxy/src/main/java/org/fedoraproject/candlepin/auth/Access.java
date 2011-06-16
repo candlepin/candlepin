@@ -18,5 +18,6 @@ package org.fedoraproject.candlepin.auth;
  *
  */
 public enum Access {
-    ALL, READ_ONLY;
+    // TODO: NONE - kind of a hack for Verify to have a default access type...
+    NONE, ALL, READ_ONLY, READ_POOLS;
 }
