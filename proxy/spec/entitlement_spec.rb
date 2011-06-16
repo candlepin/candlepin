@@ -6,7 +6,7 @@ describe 'Entitlements' do
   include CandlepinScenarios
   
   before(:each) do
-    @owner = create_owner 'test_owner'
+    @owner = create_owner random_string 'test_owner'
     @monitoring = create_product(nil, random_string('monitoring'))
     @virt = create_product(nil, random_string('virtualization_host'))
     @super_awesome = create_product(nil, random_string('super_awesome'), 

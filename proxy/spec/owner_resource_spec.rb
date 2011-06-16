@@ -36,6 +36,38 @@ describe 'Owner Resource' do
     users.length.should == 2
   end
 
+  it "does not let read only users refresh pools" do
+    owner = create_owner random_string('test_owner')
+    ro_owner_client = user_client(owner, random_string('testuser'), true)
+    rw_owner_client = user_client(owner, random_string('testuser'), true)
+    product = create_product
+    @cp.create_subscription(owner.key, product.id, 10)
+
+
+    #these should both fail, only superadmin can refresh pools
+    lambda do
+      ro_owner_client.refresh_pools(owner.key)
+    end.should raise_exception(RestClient::Forbidden)
+
+    lambda do
+      rw_owner_client.refresh_pools(owner.key)
+    end.should raise_exception(RestClient::Forbidden)
+   
+  end
+
+  it "does not let read only users register systems" do
+    owner = create_owner random_string('test_owner')
+    ro_owner_client = user_client(owner, random_string('testuser'), true)
+    rw_owner_client = user_client(owner, random_string('testuser'), false)
+
+    #this will work
+    rw_owner_client.register('systemBar')
+    #and this will fail
+    lambda do
+      ro_owner_client.register('systemFoo')
+    end.should raise_exception(RestClient::Forbidden)
+  end
+
   it "lets owners be updated" do
     owner = create_owner random_string("test_owner2")
     original_key = owner.key

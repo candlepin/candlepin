@@ -62,20 +62,21 @@ module CandlepinMethods
       random_str, params)
   end
 
-  def user_client(owner, user_name)
-    create_user(owner, user_name, 'password')
+  def user_client(owner, user_name, readonly=false)
+    create_user(owner, user_name, 'password', readonly)
     Candlepin.new(user_name, 'password')
   end
 
   # Creates the given user, with access to a role giving them full permissions
   # in the given owner:
-  def create_user(owner, username, password)
+  def create_user(owner, username, password, readonly=false)
     user = @cp.create_user(username, password)
     # Only append to the list of things to clean up if the @roles exists.
     # This is so the method can be used in before(:all) blocks.
     @users << user if not @users.nil?
     # Create a role for user to administer the given owner:
-    role = create_role(nil, owner['key'], 'ALL')
+    perm = readonly ? 'READ_ONLY' : 'ALL'
+    role = create_role(nil, owner['key'], perm)
     @cp.add_role_user(role['id'], user['username'])
     return user
   end
