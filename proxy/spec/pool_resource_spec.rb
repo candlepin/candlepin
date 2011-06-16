@@ -44,7 +44,7 @@ describe 'Pool Resource' do
     owner2 = create_owner random_string('test_owner')
     owner2_client = user_client(owner2, random_string('testuser'))
 
-    product = create_product
+    product = create_product(random_string 'buskers')
     @cp.create_subscription(owner2.key, product.id, 10)
     @cp.refresh_pools(owner2.key)
 
