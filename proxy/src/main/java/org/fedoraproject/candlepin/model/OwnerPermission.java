@@ -35,7 +35,6 @@ import org.hibernate.annotations.Index;
  */
 @Entity
 @Table(name = "cp_owner_permission")
-//    uniqueConstraints = { @UniqueConstraint(columnNames = {"owner_id", "access"}) })
 public class OwnerPermission extends AbstractHibernateObject implements Permission {
 
     @Id
@@ -96,22 +95,25 @@ public class OwnerPermission extends AbstractHibernateObject implements Permissi
     public boolean canAccess(Object target, Access requiredAccess) {
         if (target instanceof Owned) {
             // First make sure the owner matches:
-            if (owner.getKey().equals(((Owned) target).getOwner().getKey())) {
-                // Make sure access matches, if we have ALL then pass regardless:
-                if (this.access == Access.ALL || this.access == requiredAccess) {
-                    return true;
-                }
+            if (owner.getKey().equals(((Owned) target).getOwner().getKey()) &&
+                providesAccess(requiredAccess)) {
+                return true;
             }
         }
         
         // If asked to verify access to an object that does not implement Owned,
         // as far as this permission goes, we probably have to deny access.
         return false;
+    }
 
-        // special case for events
-//        else if (target instanceof Event) {
-//            return this.owner.getId().equals(((Event) target).getOwnerId());
-//        }
+    /**
+     * Return true if this permission provides the requested access type.
+     * If we have ALL, assume a match, otherwise do an explicit comparison.
+     *
+     * @return true if we provide the given access level.
+     */
+    public boolean providesAccess(Access requiredAccess) {
+        return (this.access == Access.ALL || this.access == requiredAccess);
     }
 
     @XmlTransient
