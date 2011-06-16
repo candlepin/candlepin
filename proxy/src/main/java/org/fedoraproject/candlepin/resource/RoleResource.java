@@ -99,7 +99,8 @@ public class RoleResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("{role_id}/permissions")
-    public Role updateRolePermissions(@PathParam("role_id") String roleId, OwnerPermission permission) {
+    public Role updateRolePermissions(@PathParam("role_id") String roleId,
+        OwnerPermission permission) {
 
         Role existingRole = lookupRole(roleId);
 
@@ -122,18 +123,19 @@ public class RoleResource {
         Set<OwnerPermission> picks = new HashSet<OwnerPermission>();
         boolean found = true;
         OwnerPermission toRemove = null;
-        for(OwnerPermission op : existingRole.getPermissions()){
-            if(!op.getId().equals(permissionId)){
+        for (OwnerPermission op : existingRole.getPermissions()) {
+            if (!op.getId().equals(permissionId)) {
                 picks.add(op);
             }
-            else{
+            else {
                 found = true;
                 toRemove = op;
             }
 
         }
-        if(!found){
-            throw new NotFoundException(i18n.tr("No such permission: {0} in role: {1}", permissionId, roleId ));
+        if (!found) {
+            throw new NotFoundException(i18n.tr("No such permission: {0} in role: {1}",
+                permissionId, roleId));
         }
 
         existingRole.setPermissions(picks);

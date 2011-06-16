@@ -71,10 +71,10 @@ public class OwnerDeleteResourceTest {
     @Before
     public void init() {
         this.ownerResource = new OwnerResource(ownerCurator, poolCurator,
-                null, subscriptionCurator, subscriptionTokenCurator,
-                consumerCurator, null, userService, eventSink, eventFactory,
-                null, null, null, poolManager, exportCurator, null, importRecordCurator, 
-                subAdapter, permCurator, consumerTypeCurator);
+                subscriptionCurator, subscriptionTokenCurator, consumerCurator,
+                null, userService, eventSink, eventFactory, null,
+                null, null, poolManager, exportCurator, null, importRecordCurator, subAdapter, 
+                permCurator, consumerTypeCurator);
     }
 
     @Test

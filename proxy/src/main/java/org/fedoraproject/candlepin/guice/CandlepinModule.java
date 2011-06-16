@@ -19,15 +19,12 @@ import org.fedoraproject.candlepin.audit.AMQPBusPublisher;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.audit.EventSinkImpl;
 import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.interceptor.AccessControlInterceptor;
-import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
 import org.fedoraproject.candlepin.auth.interceptor.SecurityInterceptor;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.controller.CandlepinPoolManager;
 import org.fedoraproject.candlepin.controller.CrlGenerator;
 import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.exceptions.CandlepinExceptionMapper;
-import org.fedoraproject.candlepin.model.AbstractHibernateCurator;
 import org.fedoraproject.candlepin.pinsetter.core.GuiceJobFactory;
 import org.fedoraproject.candlepin.pinsetter.core.PinsetterJobListener;
 import org.fedoraproject.candlepin.pinsetter.core.PinsetterKernel;
@@ -177,7 +174,8 @@ public class CandlepinModule extends AbstractModule {
                 Matchers.not(Matchers.annotatedWith(SecurityHole.class)),
                 securityEnforcer);
         
-//        AccessControlInterceptor accessControlInterceptor = new AccessControlInterceptor();
+//        AccessControlInterceptor accessControlInterceptor =
+//              new AccessControlInterceptor();
 //        requestInjection(accessControlInterceptor);
 //        
 //        bindInterceptor(

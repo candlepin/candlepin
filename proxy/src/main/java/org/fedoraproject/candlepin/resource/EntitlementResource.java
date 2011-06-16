@@ -127,7 +127,8 @@ public class EntitlementResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{dbid}")
-    public Entitlement getEntitlement(@PathParam("dbid") @Verify(Entitlement.class) String dbid) {
+    public Entitlement getEntitlement(
+        @PathParam("dbid") @Verify(Entitlement.class) String dbid) {
         Entitlement toReturn = entitlementCurator.find(dbid);
         if (toReturn != null) {
             return toReturn;

@@ -118,7 +118,7 @@ public class Role extends AbstractHibernateObject implements Linkable {
     }
 
     public void removeUser(User u) {
-        if(this.users.remove(u)){
+        if (this.users.remove(u)) {
             u.removeRole(this);
         }
     }

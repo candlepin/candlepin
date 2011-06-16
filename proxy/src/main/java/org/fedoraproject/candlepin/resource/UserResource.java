@@ -82,9 +82,10 @@ public class UserResource {
     @Produces(MediaType.APPLICATION_JSON)
     public void deleteUser(@PathParam("username") String username) {
         User user = userService.findByLogin(username);
-        if (user == null){
+        if (user == null) {
             throw new GoneException("user " + username + " not found");
-        } else {
+        }
+        else {
             userService.deleteUser(user);
         }
     }

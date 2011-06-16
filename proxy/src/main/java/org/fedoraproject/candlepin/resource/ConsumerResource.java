@@ -195,7 +195,8 @@ public class ConsumerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}")
-    public Consumer getConsumer(@PathParam("consumer_uuid") @Verify(Consumer.class) String uuid) {
+    public Consumer getConsumer(
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid) {
         Consumer consumer = verifyAndLookupConsumer(uuid);
 
         if (consumer != null) {
@@ -397,7 +398,8 @@ public class ConsumerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}")
     @Transactional
-    public void updateConsumer(@PathParam("consumer_uuid") @Verify(Consumer.class) String uuid,
+    public void updateConsumer(
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid,
         Consumer consumer, @Context Principal principal) {
         Consumer toUpdate = verifyAndLookupConsumer(uuid);
 
@@ -422,7 +424,8 @@ public class ConsumerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}")
     @Transactional
-    public void deleteConsumer(@PathParam("consumer_uuid") @Verify(Consumer.class) String uuid,
+    public void deleteConsumer(
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid,
         @Context Principal principal) {
         log.debug("deleting  consumer_uuid" + uuid);
         Consumer toDelete = verifyAndLookupConsumer(uuid);
@@ -775,7 +778,8 @@ public class ConsumerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{consumer_uuid}/owner")
-    public Owner getOwner(@PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
+    public Owner getOwner(
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
 
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
         return consumer.getOwner();
@@ -788,7 +792,8 @@ public class ConsumerResource {
      */
     @DELETE
     @Path("/{consumer_uuid}/entitlements")
-    public void unbindAll(@PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
+    public void unbindAll(
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
 
         // FIXME: just a stub, needs CertifcateService (and/or a
         // CertificateCurator) to lookup by serialNumber
@@ -816,7 +821,8 @@ public class ConsumerResource {
      */
     @DELETE
     @Path("/{consumer_uuid}/entitlements/{dbid}")
-    public void unbind(@PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
+    public void unbind(
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @PathParam("dbid") String dbid, @Context Principal principal) {
 
         verifyAndLookupConsumer(consumerUuid);
@@ -833,7 +839,8 @@ public class ConsumerResource {
 
     @DELETE
     @Path("/{consumer_uuid}/certificates/{serial}")
-    public void unbindBySerial(@PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
+    public void unbindBySerial(
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @PathParam("serial") Long serial) {
 
         verifyAndLookupConsumer(consumerUuid);

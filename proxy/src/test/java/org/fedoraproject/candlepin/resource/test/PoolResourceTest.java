@@ -142,8 +142,8 @@ public class PoolResourceTest extends DatabaseTestFixture {
     
     @Test(expected = ForbiddenException.class)
     public void testCannotListPoolsInAnotherOwner() {
-        List<Pool> pools = poolResource.list(owner2.getId(), null, product2.getId(), false, null, 
-            adminPrincipal);
+        List<Pool> pools = poolResource.list(owner2.getId(), null, product2.getId(), false,
+            null, adminPrincipal);
         assertEquals(0, pools.size());
     }
 

@@ -41,7 +41,6 @@ import org.fedoraproject.candlepin.model.OwnerPermission;
 import org.fedoraproject.candlepin.model.OwnerPermissionCurator;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
-import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
 import org.fedoraproject.candlepin.model.SubscriptionToken;
@@ -105,7 +104,6 @@ public class OwnerResource {
     private EventAdapter eventAdapter;
     private static Logger log = Logger.getLogger(OwnerResource.class);
     private EventCurator eventCurator;
-    private ProductCurator productCurator;
     private Importer importer;
     private ExporterMetadataCurator exportCurator;
     private ImportRecordCurator importRecordCurator;
@@ -116,13 +114,13 @@ public class OwnerResource {
 
     @Inject
     public OwnerResource(OwnerCurator ownerCurator, PoolCurator poolCurator,
-        ProductCurator productCurator, SubscriptionCurator subscriptionCurator,
+        SubscriptionCurator subscriptionCurator,
         SubscriptionTokenCurator subscriptionTokenCurator,
-        ConsumerCurator consumerCurator, I18n i18n,
-        UserServiceAdapter userService, EventSink sink,
-        EventFactory eventFactory, EventCurator eventCurator,
-        EventAdapter eventAdapter, Importer importer, PoolManager poolManager,
-        ExporterMetadataCurator exportCurator,
+        ConsumerCurator consumerCurator,
+        I18n i18n, UserServiceAdapter userService,
+        EventSink sink, EventFactory eventFactory,
+        EventCurator eventCurator, EventAdapter eventAdapter,
+        Importer importer, PoolManager poolManager, ExporterMetadataCurator exportCurator,
         OwnerInfoCurator ownerInfoCurator,
         ImportRecordCurator importRecordCurator,
         SubscriptionServiceAdapter subService,
@@ -131,7 +129,6 @@ public class OwnerResource {
 
         this.ownerCurator = ownerCurator;
         this.ownerInfoCurator = ownerInfoCurator;
-        this.productCurator = productCurator;
         this.poolCurator = poolCurator;
         this.subscriptionCurator = subscriptionCurator;
         this.subscriptionTokenCurator = subscriptionTokenCurator;
@@ -333,7 +330,8 @@ public class OwnerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/consumers")
-    public List<Consumer> ownerConsumers(@PathParam("owner_key") @Verify(Owner.class) String ownerKey,
+    public List<Consumer> ownerConsumers(
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @QueryParam("username") String userName,
         @QueryParam("type") String typeLabel) {
 
