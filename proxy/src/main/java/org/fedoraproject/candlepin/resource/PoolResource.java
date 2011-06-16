@@ -20,7 +20,6 @@ import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.auth.interceptor.Verify;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.interceptor.SecurityHole;
-import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
@@ -57,7 +56,6 @@ import javax.xml.bind.DatatypeConverter;
 public class PoolResource {
 
     private PoolCurator poolCurator;
-    private PoolManager poolManager;
     private ConsumerCurator consumerCurator;
     private OwnerCurator ownerCurator;
     private I18n i18n;
@@ -65,12 +63,11 @@ public class PoolResource {
     @Inject
     public PoolResource(PoolCurator poolCurator,
         ConsumerCurator consumerCurator, OwnerCurator ownerCurator, I18n i18n,
-        EventSink eventSink, PoolManager poolManager) {
+        EventSink eventSink) {
         this.poolCurator = poolCurator;
         this.consumerCurator = consumerCurator;
         this.ownerCurator = ownerCurator;
         this.i18n = i18n;
-        this.poolManager = poolManager;
     }
 
     private Date parseActiveOnString(String activeOn) {
