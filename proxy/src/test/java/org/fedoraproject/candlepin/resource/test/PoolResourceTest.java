@@ -106,7 +106,9 @@ public class PoolResourceTest extends DatabaseTestFixture {
     
     @Test
     public void testListAll() {
-        List<Pool> pools = poolResource.list(null, null, null, false, null, adminPrincipal);
+        Principal superAdminPrincipal = setupAdminPrincipal("fakeSuperAdmin");
+        List<Pool> pools = poolResource.list(null, null, null, false, null,
+            superAdminPrincipal);
         assertEquals(3, pools.size());
     }
    
@@ -228,9 +230,9 @@ public class PoolResourceTest extends DatabaseTestFixture {
     @Test
     public void testActiveOnDate() {
         String activeOn = new Integer(START_YEAR + 1).toString();
-        List<Pool> pools = poolResource.list(null, null, null, false, activeOn, 
+        List<Pool> pools = poolResource.list(owner1.getId(), null, null, false, activeOn, 
             adminPrincipal);
-        assertEquals(3, pools.size());
+        assertEquals(2, pools.size());
 
         activeOn = new Integer(START_YEAR - 1).toString();
         pools = poolResource.list(owner1.getId(), null, null, false, activeOn,
