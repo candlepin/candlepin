@@ -23,6 +23,7 @@ import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.pki.PKIUtility;
 import org.fedoraproject.candlepin.pki.X509ExtensionWrapper;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
+import org.fedoraproject.candlepin.service.UniqueIdGenerator;
 import org.fedoraproject.candlepin.util.X509ExtensionUtil;
 
 import com.google.inject.Inject;
@@ -57,17 +58,20 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
     private ProductCertificateCurator prodCertCurator;
     private PKIUtility pki;
     private X509ExtensionUtil extensionUtil;
+    private UniqueIdGenerator idGenerator;
 
     @Inject
     public DefaultProductServiceAdapter(ProductCurator prodCurator,
         ProductCertificateCurator prodCertCurator, PKIUtility pki,
-        X509ExtensionUtil extensionUtil, ContentCurator contentCurator) {
+        X509ExtensionUtil extensionUtil, ContentCurator contentCurator,
+        UniqueIdGenerator idGenerator) {
 
         this.prodCurator = prodCurator;
         this.prodCertCurator = prodCertCurator;
         this.pki = pki;
         this.extensionUtil = extensionUtil;
         this.contentCurator = contentCurator;
+        this.idGenerator = idGenerator;
     }
 
     @Override
@@ -90,17 +94,13 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
     @Override
     public Product createProduct(Product product) {
         if ((prodCurator.find(product.getId()) == null)) {
-            if (product.getCustom()) {
-                product.setId(generateId(product.getName()));
+            if (product.getId() == null || product.getId().trim().equals("")) {
+                product.setId(idGenerator.generateId());
             }
             Product newProduct = prodCurator.create(product);
             return newProduct;
         }
         return prodCurator.find(product.getId());
-    }
-
-    private String generateId(String name) {
-        return "" + (new Date()).getTime();
     }
 
     @Override

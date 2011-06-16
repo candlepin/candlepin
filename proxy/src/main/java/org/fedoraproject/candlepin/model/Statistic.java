@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.audit;
+package org.fedoraproject.candlepin.model;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -22,7 +22,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import org.fedoraproject.candlepin.model.AbstractHibernateObject;
 import org.hibernate.annotations.GenericGenerator;
 
 /**
@@ -40,15 +39,15 @@ public class Statistic extends AbstractHibernateObject {
      * EntryType - Constant representing the type of this stat entry.
      */
     public enum EntryType {
-        TotalConsumers, ConsumersBySocketCount, TotalSubscriptionCount,
-        TotalSubscriptionConsumed, PerProduct, PerPool
+        TOTALCONSUMERS, CONSUMERSBYSOCKETCOUNT, TOTALSUBSCRIPTIONCOUNT,
+          TOTALSUBSCRIPTIONCONSUMED, PERPRODUCT, PERPOOL
     }
 
     /**
      * ValueType the type of value.
      */
     public enum ValueType {
-        Raw, Percentage, Used, Consumed
+        RAW, PERCENTAGECONSUMED, USED, CONSUMED
     }
 
     // Uniquely identifies the statistic:
@@ -76,15 +75,20 @@ public class Statistic extends AbstractHibernateObject {
     @Column(nullable = false)
     private int value;
 
+    //
+    @Column(nullable = true, name = "owner_id")
+    private String ownerId;
+
     public Statistic() {
     }
 
     public Statistic(EntryType entryType, ValueType valueType,
-        String valueReference, int value) {
+        String valueReference, int value, String ownerId) {
         this.entryType = entryType;
         this.valueType = valueType;
         this.valueReference = valueReference;
         this.value = value;
+        this.ownerId = ownerId;
     }
 
     public String getId() {
@@ -125,6 +129,14 @@ public class Statistic extends AbstractHibernateObject {
 
     public void setValue(int value) {
         this.value = value;
+    }
+
+    public String getOwnerId() {
+        return ownerId;
+    }
+
+    public void setOwnerId(String ownerId) {
+        this.ownerId = ownerId;
     }
 
     public String toString() {

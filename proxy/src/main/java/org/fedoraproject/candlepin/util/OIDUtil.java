@@ -52,6 +52,7 @@ public final class OIDUtil {
     public static final String ORDER_PROVIDES_MANAGEMENT_KEY = "Provides Management";
     public static final String ORDER_SUPPORT_LEVEL = "Support Level";
     public static final String ORDER_SUPPORT_TYPE = "Support Type";
+    public static final String ORDER_STACKING_ID = "Stacking Id";
 
     public static final String OP_NAME_KEY = "Name";
     public static final String OP_VERSION_KEY = "Version";
@@ -126,6 +127,7 @@ public final class OIDUtil {
         ORDER_OIDS.put(ORDER_PROVIDES_MANAGEMENT_KEY, "14");
         ORDER_OIDS.put(ORDER_SUPPORT_LEVEL, "15");
         ORDER_OIDS.put(ORDER_SUPPORT_TYPE, "16");
+        ORDER_OIDS.put(ORDER_STACKING_ID, "17");
 
         // load order product oids
         ORDER_PRODUCT_OIDS.put(OP_NAME_KEY, "1");

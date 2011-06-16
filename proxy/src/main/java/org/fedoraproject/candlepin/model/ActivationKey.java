@@ -14,80 +14,101 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Index;
 
 /**
  * SubscriptionToken
  */
 @XmlRootElement
 @Entity
-@Table(name = "cp_subscription_token")
-public class SubscriptionToken extends AbstractHibernateObject {
+@Table(name = "cp_activation_key")
+public class ActivationKey extends AbstractHibernateObject {
 
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
     private String id;
-    
-    @Column(nullable = true, unique = true)
-    private String token;
-    
+
+    @Column(nullable = false)
+    private String name;
+
     @ManyToOne
-    @ForeignKey(name = "fk_subscription_token")
-    @JoinColumn
-    private Subscription subscription;
-    
+    @ForeignKey(name = "fk_activation_key_owner")
+    @JoinColumn(nullable = false)
+    @Index(name = "cp_activation_key_owner_fk_idx")
+    private Owner owner;
+
+    @OneToMany
+    @JoinTable(name = "cp_activationkey_pool",
+        joinColumns = @JoinColumn(name = "key_id"),
+        inverseJoinColumns = @JoinColumn(name = "pool_id")
+    )
+    private List<Pool> pools = new ArrayList<Pool>();
+
     public String getId() {
         return this.id;
     }
-    
+
     public void setId(String id) {
         this.id = id;
     }
 
-
     /**
-     * @param subscription the subscription to set
+     * @return the name
      */
-    public void setSubscription(Subscription subscription) {
-        this.subscription = subscription;
+    public String getName() {
+        return name;
     }
 
-
     /**
-     * @return the subscription
+     * @param name the name to set
      */
-    @XmlTransient
-    public Subscription getSubscription() {
-        return subscription;
+    public void setName(String name) {
+        this.name = name;
     }
 
-
     /**
-     * @param token the token to set
+     * @return the pool
      */
-    public void setToken(String token) {
-        this.token = token;
+    public List<Pool> getPools() {
+        return pools;
     }
 
-
     /**
-     * @return the token
+     * @param pools the pool to set
      */
-    public String getToken() {
-        return token;
+    public void setPools(List<Pool> pools) {
+        this.pools = pools;
     }
 
+    /**
+     * @return the owner
+     */
+    public Owner getOwner() {
+        return owner;
+    }
+
+    /**
+     * @param owner the owner to set
+     */
+    public void setOwner(Owner owner) {
+        this.owner = owner;
+    }
 }

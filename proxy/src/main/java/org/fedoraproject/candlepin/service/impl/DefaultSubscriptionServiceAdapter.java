@@ -93,12 +93,6 @@ public class DefaultSubscriptionServiceAdapter implements
     }
 
     @Override
-    public List<Subscription> getSubscriptionForToken(Owner owner, String token,
-        String email, String emailLocale) {
-        return subCurator.listBySubscriptionTokenID(token);
-    }
-
-    @Override
     public List<Subscription> getSubscriptionsSince(Owner owner, Date sinceDate) {
         return subCurator.listByOwnerSince(owner, sinceDate);
     }

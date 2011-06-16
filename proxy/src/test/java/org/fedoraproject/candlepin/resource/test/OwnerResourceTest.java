@@ -19,6 +19,11 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.HashSet;
+import java.util.List;
+
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
@@ -29,6 +34,7 @@ import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
+import org.fedoraproject.candlepin.model.ActivationKey;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
@@ -39,20 +45,14 @@ import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.resource.OwnerResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
-
 import org.jboss.resteasy.plugins.providers.atom.Entry;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
 import org.fedoraproject.candlepin.model.OwnerPermission;
 import org.fedoraproject.candlepin.model.Role;
-
 /**
  * OwnerResourceTest
  */
@@ -494,6 +494,17 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     public void testEntitlementsRevocationWithNoOverflow() throws Exception {
         Pool pool = doTestEntitlementsRevocationCommon(10, 4, 5, false);
         assertTrue(this.poolCurator.find(pool.getId()).getConsumed() == 9);
+    }
+
+    @Test
+    public void testActivationKeyCreateRead() {
+        ActivationKey key = new ActivationKey();
+        key.setName("dd");
+        key = ownerResource.createActivationKey(owner.getKey(), key);
+        assertNotNull(key.getId());
+        assertEquals(key.getOwner().getId(), owner.getId());
+        List<ActivationKey> keys = ownerResource.ownerActivationKeys(owner.getKey());
+        assertEquals(1, keys.size());
     }
 
     private Pool doTestEntitlementsRevocationCommon(long subQ, int e1, int e2,

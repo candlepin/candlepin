@@ -14,18 +14,20 @@
  */
 package org.fedoraproject.candlepin.resource.test;
 
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import java.util.ArrayList;
 import java.util.List;
 
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.any;
 
 import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.controller.PoolManager;
+import org.fedoraproject.candlepin.model.ActivationKeyCurator;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ExporterMetadataCurator;
 import org.fedoraproject.candlepin.model.ImportRecordCurator;
@@ -33,8 +35,8 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.OwnerPermissionCurator;
 import org.fedoraproject.candlepin.model.PoolCurator;
+import org.fedoraproject.candlepin.model.StatisticCurator;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
-import org.fedoraproject.candlepin.model.SubscriptionTokenCurator;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.resource.OwnerResource;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
@@ -58,7 +60,8 @@ public class OwnerDeleteResourceTest {
     @Mock private PoolManager poolManager;
     @Mock private PoolCurator poolCurator;
     @Mock private SubscriptionCurator subscriptionCurator;
-    @Mock private SubscriptionTokenCurator subscriptionTokenCurator;
+    @Mock private StatisticCurator statisticCurator;
+    @Mock private ActivationKeyCurator subscriptionTokenCurator;
     @Mock private ExporterMetadataCurator exportCurator;
     @Mock private ImportRecordCurator importRecordCurator;
     @Mock private UserServiceAdapter userService;
@@ -72,7 +75,7 @@ public class OwnerDeleteResourceTest {
     public void init() {
         this.ownerResource = new OwnerResource(ownerCurator, poolCurator,
                 subscriptionCurator, subscriptionTokenCurator, consumerCurator,
-                null, userService, eventSink, eventFactory, null,
+                statisticCurator, null, userService, eventSink, eventFactory, null,
                 null, null, poolManager, exportCurator, null, importRecordCurator, subAdapter, 
                 permCurator, consumerTypeCurator);
     }

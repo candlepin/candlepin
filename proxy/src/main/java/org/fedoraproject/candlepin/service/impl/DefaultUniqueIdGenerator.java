@@ -12,27 +12,22 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.model;
+package org.fedoraproject.candlepin.service.impl;
 
-import java.util.List;
+import java.util.Date;
 
-import org.hibernate.criterion.Restrictions;
+import org.fedoraproject.candlepin.service.UniqueIdGenerator;
 
 /**
- * SubscriptionTokenCurator
+ * DefaultUniqueIdGenerator
  */
-public class SubscriptionTokenCurator extends AbstractHibernateCurator<SubscriptionToken> {
+public class DefaultUniqueIdGenerator implements UniqueIdGenerator {
 
-    protected SubscriptionTokenCurator() {
-        super(SubscriptionToken.class);
+    /* (non-Javadoc)
+     * @see org.fedoraproject.candlepin.service.UniqueIdGenerator#generateId()
+     */
+    @Override
+    public String generateId() {
+        return "" + (new Date()).getTime();
     }
-
-    public List<SubscriptionToken> listByOwner(Owner o) {
-        List<SubscriptionToken> tokens = currentSession().createCriteria(
-            SubscriptionToken.class)
-            .createAlias("subscription", "sub")
-            .add(Restrictions.eq("sub.owner", o)).list();
-        return tokens;
-    }
-
 }

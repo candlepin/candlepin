@@ -37,18 +37,18 @@ import com.google.inject.Inject;
  * EventAdapterImpl
  */
 public class EventAdapterImpl implements EventAdapter {
-    
+
     private static final HashMap<String, String> MESSAGES;
-    
+
     private I18n i18n;
     private Config config;
-    
+
     @Inject
     public EventAdapterImpl(Config config, I18n i18n) {
         this.config = config;
         this.i18n = i18n;
     }
-    
+
     @Override
     public Feed toFeed(List<Event> events, String path) {
         String url =  config.getString(ConfigProperties.CANDLEPIN_URL) + path + "/";
@@ -57,7 +57,7 @@ public class EventAdapterImpl implements EventAdapter {
         feed.getAuthors().add(new Person("Red Hat, Inc."));
         try {
             feed.setId(new URI(url));
-        } 
+        }
         catch (Exception e) {
             // ignore, shouldn't happen
         }
@@ -68,7 +68,7 @@ public class EventAdapterImpl implements EventAdapter {
 
         // Add the friendly message text
         this.addMessageText(events);
-        
+
         for (Event e : events) {
             Entry entry = new Entry();
             entry.setTitle(e.getMessageText());
@@ -85,7 +85,7 @@ public class EventAdapterImpl implements EventAdapter {
             entry.setId(eventURI);
             entry.getLinks().add(
                 new Link(
-                    "alternate", 
+                    "alternate",
                     eventURI,
                     MediaType.APPLICATION_JSON_TYPE));
 
@@ -104,21 +104,21 @@ public class EventAdapterImpl implements EventAdapter {
 
         return feed;
     }
-    
+
     public void addMessageText(List<Event> events) {
         for (Event event : events) {
             String eventType = (event.getTarget().name() + event.getType().name());
             String message = MESSAGES.get(eventType);
             if (message == null) {
                 message = i18n.tr("Unknown event for user {0} and target {1}");
-            }     
+            }
             PrincipalData pd = event.getPrincipal();
-            event.setMessageText(i18n.tr(message, 
+            event.setMessageText(i18n.tr(message,
                 pd.getName(),
                 event.getTargetName()));
         }
     }
-    
+
     //TODO: Make them nicer strings if the system did it
     static {
         MESSAGES = new HashMap<String, String>();
@@ -133,7 +133,7 @@ public class EventAdapterImpl implements EventAdapter {
         MESSAGES.put("ENTITLEMENTMODIFED",
             I18n.marktr("{0} modified a subscription for product {1}"));
         MESSAGES.put("ENTITLEMENTDELETED",
-            I18n.marktr("{0} returned the subscription for {1}")); 
+            I18n.marktr("{0} returned the subscription for {1}"));
         MESSAGES.put("POOLCREATED", I18n.marktr("{0} created a pool for product {1}"));
         MESSAGES.put("POOLMODIFED", I18n.marktr("{0} modified a pool for product {1}"));
         MESSAGES.put("POOLDELETED", I18n.marktr("{0} deleted a pool for product {1}"));
@@ -151,7 +151,11 @@ public class EventAdapterImpl implements EventAdapter {
         MESSAGES.put("SUBSCRIPTIONMODIFED",
             I18n.marktr("{0} modifed a subscription for product {1}"));
         MESSAGES.put("SUBSCRIPTIONDELETED",
-            I18n.marktr("{0} deleted a subscription for product{1}"));        
+            I18n.marktr("{0} deleted a subscription for product {1}"));
+        MESSAGES.put("ACTIVATIONKEYCREATED",
+            I18n.marktr("{0} created the activation key {1}"));
+        MESSAGES.put("ACTIVATIONKEYDELETED",
+            I18n.marktr("{0} deleted the activation key {1}"));
     }
-      
+
 }

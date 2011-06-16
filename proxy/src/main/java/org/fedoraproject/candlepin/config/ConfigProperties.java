@@ -15,13 +15,15 @@
 
 package org.fedoraproject.candlepin.config;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask;
 import org.fedoraproject.candlepin.pinsetter.tasks.ImportRecordJob;
 import org.fedoraproject.candlepin.pinsetter.tasks.JobCleaner;
+import org.fedoraproject.candlepin.pinsetter.tasks.StatisticHistoryTask;
+
 import org.hibernate.tool.hbm2x.StringUtils;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Defines a map of default properties used to prepopulate the {@link Config}.
@@ -32,79 +34,77 @@ public class ConfigProperties {
     }
 
     public static final String CANDLEPIN_URL = "candlepin.url";
-    
+
     public static final String CA_KEY = "candlepin.ca_key";
     public static final String CA_CERT = "candlepin.ca_cert";
     public static final String CA_CERT_UPSTREAM = "candlepin.upstream_ca_cert";
     public static final String CA_KEY_PASSWORD = "candlepin.ca_key_password";
-    
+
     public static final String HORNETQ_BASE_DIR = "candlepin.audit.hornetq.base_dir";
     public static final String HORNETQ_LARGE_MSG_SIZE =
-        "candlepin.audit.hornetq.large_msg_size";
+                                      "candlepin.audit.hornetq.large_msg_size";
     public static final String AUDIT_LISTENERS = "candlepin.audit.listeners";
     public static final String AUDIT_LOG_FILE = "candlepin.audit.log_file";
     public static final String AUDIT_LOG_VERBOSE = "candlepin.audit.log_verbose";
 
     public static final String PRETTY_PRINT = "candlepin.pretty_print";
     public static final String REVOKE_ENTITLEMENT_IN_FIFO_ORDER = 
-        "candlepin.entitlement.revoke.order.fifo";
+                                      "candlepin.entitlement.revoke.order.fifo";
     public static final String ACTIVATION_DEBUG_PREFIX =
-        "candlepin.subscription.activation.debug_prefix";
+                                      "candlepin.subscription.activation.debug_prefix";
 
-    
     // Authentication
     public static final String TRUSTED_AUTHENTICATION = "candlepin.auth.trusted.enabled";
-    public static final String SSL_AUTHENTICATION = "candlepin.auth.ssl.enabled";    
+    public static final String SSL_AUTHENTICATION = "candlepin.auth.ssl.enabled";
     public static final String OAUTH_AUTHENTICATION = "candlepin.auth.oauth.enabled";
-    public static final String BASIC_AUTHENTICATION = "candlepin.auth.basic.enabled";    
+    public static final String BASIC_AUTHENTICATION = "candlepin.auth.basic.enabled";
 
-    //AMQP stuff
-    public static final String AMQP_INTEGRATION_ENABLED = 
-        "candlepin.amqp.enable";
+    // AMQP stuff
+    public static final String AMQP_INTEGRATION_ENABLED = "candlepin.amqp.enable";
     public static final String AMQP_CONNECT_STRING = "candlepin.amqp.connect";
     public static final String AMQP_KEYSTORE = "candlepin.amqp.keystore";
     public static final String AMQP_KEYSTORE_PASSWORD = "candlepin.amqp.keystore_password";
     public static final String AMQP_TRUSTSTORE = "candlepin.amqp.truststore";
     public static final String AMQP_TRUSTSTORE_PASSWORD =
-        "candlepin.amqp.truststore_password";
-    
+                                        "candlepin.amqp.truststore_password";
+
     // Pinsetter
     public static final String TASKS = "pinsetter.tasks";
     public static final String DEFAULT_TASKS = "pinsetter.default_tasks";
-    
-    private static final String[] DEFAULT_TASK_LIST = new String[] {
+
+    private static final String[] DEFAULT_TASK_LIST = new String[]{
         CertificateRevocationListTask.class.getName(),
-        JobCleaner.class.getName(),
-        ImportRecordJob.class.getName()
-    };
-    
+        JobCleaner.class.getName(), ImportRecordJob.class.getName(),
+        StatisticHistoryTask.class.getName() };
+
     public static final String SYNC_WORK_DIR = "candlepin.sync.work_dir";
     public static final String CONSUMER_FACTS_MATCHER =
-        "candlepin.consumer.facts.match_regex";
-    
+                                  "candlepin.consumer.facts.match_regex";
+
     public static final String SHARD_USERNAME = "candlepin.shard.username";
     public static final String SHARD_PASSWORD = "candlepin.shard.password";
     public static final String SHARD_WEBAPP = "candlepin.shard.webapp";
 
-    public static final Map<String, String> DEFAULT_PROPERTIES = 
+    public static final Map<String, String> DEFAULT_PROPERTIES =
         new HashMap<String, String>() {
+
             private static final long serialVersionUID = 1L;
             {
                 this.put(CANDLEPIN_URL, "https://localhost");
-                
+
                 this.put(CA_KEY, "/etc/candlepin/certs/candlepin-ca.key");
                 this.put(CA_CERT, "/etc/candlepin/certs/candlepin-ca.crt");
-                this.put(CA_CERT_UPSTREAM, 
+                this.put(CA_CERT_UPSTREAM,
                     "/etc/candlepin/certs/candlepin-upstream-ca.crt");
 
                 this.put(ACTIVATION_DEBUG_PREFIX, "");
-                
+
                 this.put(HORNETQ_BASE_DIR, "/var/lib/candlepin/hornetq");
                 this.put(HORNETQ_LARGE_MSG_SIZE, new Integer(10 * 1024).toString());
                 this.put(AUDIT_LISTENERS,
                     "org.fedoraproject.candlepin.audit.DatabaseListener," +
-                    "org.fedoraproject.candlepin.audit.LoggingListener," + 
-                    "org.fedoraproject.candlepin.audit.ActivationListener");
+                        "org.fedoraproject.candlepin.audit.LoggingListener," +
+                        "org.fedoraproject.candlepin.audit.ActivationListener");
                 this.put(AUDIT_LOG_FILE, "/var/log/candlepin/audit.log");
                 this.put(AUDIT_LOG_VERBOSE, "false");
 
@@ -117,16 +117,15 @@ public class ConfigProperties {
                 this.put(TRUSTED_AUTHENTICATION, "true");
                 this.put(SSL_AUTHENTICATION, "true");
                 this.put(OAUTH_AUTHENTICATION, "true");
-                this.put(BASIC_AUTHENTICATION, "true");                       
+                this.put(BASIC_AUTHENTICATION, "true");
 
-                
                 // Pinsetter
-                this.put("org.quartz.threadPool.class", 
+                this.put("org.quartz.threadPool.class",
                     "org.quartz.simpl.SimpleThreadPool");
                 this.put("org.quartz.threadPool.threadCount", "15");
                 this.put("org.quartz.threadPool.threadPriority", "5");
                 this.put(DEFAULT_TASKS, StringUtils.join(DEFAULT_TASK_LIST, ","));
-                
+
                 this.put(AMQP_INTEGRATION_ENABLED, String.valueOf(false));
                 this.put(AMQP_CONNECT_STRING,
                     "tcp://localhost:5671?ssl='true'&ssl_cert_alias='amqp-client'");
@@ -144,5 +143,5 @@ public class ConfigProperties {
         };
     public static final String CRL_FILE_PATH = "candlepin.crl.file";
     public static final String IDENTITY_CERT_YEAR_ADDENDUM =
-            "candlepin.identityCert.yr.addendum";
+                               "candlepin.identityCert.yr.addendum";
 }

@@ -20,6 +20,7 @@ import org.fedoraproject.candlepin.auth.interceptor.SecurityInterceptor;
 import org.fedoraproject.candlepin.config.CandlepinCommonTestConfig;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.controller.CandlepinPoolManager;
+import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.guice.CandlepinModule;
 import org.fedoraproject.candlepin.guice.I18nProvider;
 import org.fedoraproject.candlepin.guice.JPAInitializer;
@@ -35,21 +36,28 @@ import org.fedoraproject.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.fedoraproject.candlepin.pki.impl.BouncyCastlePKIUtility;
 import org.fedoraproject.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
 import org.fedoraproject.candlepin.policy.Enforcer;
+import org.fedoraproject.candlepin.policy.PoolRules;
+import org.fedoraproject.candlepin.policy.js.JsRules;
+import org.fedoraproject.candlepin.policy.js.JsRulesProvider;
+import org.fedoraproject.candlepin.policy.js.pool.JsPoolRules;
+import org.fedoraproject.candlepin.resource.ActivateResource;
+import org.fedoraproject.candlepin.resource.ActivationKeyResource;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.resource.EntitlementResource;
 import org.fedoraproject.candlepin.resource.OwnerResource;
 import org.fedoraproject.candlepin.resource.PoolResource;
 import org.fedoraproject.candlepin.resource.ProductResource;
 import org.fedoraproject.candlepin.resource.SubscriptionResource;
-import org.fedoraproject.candlepin.resource.SubscriptionTokenResource;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
+import org.fedoraproject.candlepin.service.UniqueIdGenerator;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultIdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultProductServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultSubscriptionServiceAdapter;
+import org.fedoraproject.candlepin.service.impl.DefaultUniqueIdGenerator;
 import org.fedoraproject.candlepin.service.impl.DefaultUserServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.stub.StubEntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.test.DateSourceForTesting;
@@ -69,11 +77,6 @@ import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
 import com.wideplay.warp.persist.jpa.JpaUnit;
 import org.fedoraproject.candlepin.auth.interceptor.SecurityHole;
-import org.fedoraproject.candlepin.controller.PoolManager;
-import org.fedoraproject.candlepin.policy.PoolRules;
-import org.fedoraproject.candlepin.policy.js.JsRules;
-import org.fedoraproject.candlepin.policy.js.JsRulesProvider;
-import org.fedoraproject.candlepin.policy.js.pool.JsPoolRules;
 
 public class CandlepinCommonTestingModule extends CandlepinModule {
 
@@ -93,15 +96,17 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
         bind(PoolResource.class);
         bind(EntitlementResource.class);
         bind(OwnerResource.class);
-        bind(SubscriptionResource.class);        
-        bind(SubscriptionTokenResource.class);
+        bind(SubscriptionResource.class);
+        bind(ActivationKeyResource.class);
+        bind(ActivateResource.class);
         bind(ProductServiceAdapter.class)
             .to(DefaultProductServiceAdapter.class);
         bind(ProductResource.class);
         bind(DateSource.class).to(DateSourceForTesting.class)
             .asEagerSingleton();
         bind(Enforcer.class).to(EnforcerForTesting.class); // .to(JavascriptEnforcer.class);
-        bind(SubjectKeyIdentifierWriter.class).to(DefaultSubjectKeyIdentifierWriter.class);
+        bind(SubjectKeyIdentifierWriter.class).to(
+            DefaultSubjectKeyIdentifierWriter.class);
         bind(PKIUtility.class).to(BouncyCastlePKIUtility.class);
         bind(PKIReader.class).to(PKIReaderForTesting.class).asEagerSingleton();
         bind(SubscriptionServiceAdapter.class).to(
@@ -117,7 +122,7 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
 
         bind(JsRulesProvider.class).asEagerSingleton();
         bind(JsRules.class).toProvider(JsRulesProvider.class);
-        
+
         bind(PrincipalProvider.class).to(TestPrincipalProvider.class);
         bind(Principal.class).toProvider(TestPrincipalProvider.class);
         bind(EventSink.class).to(EventSinkForTesting.class);
@@ -143,8 +148,8 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
             DefaultIdentityCertServiceAdapter.class);
         bind(PoolRules.class).to(JsPoolRules.class);
         bind(PoolManager.class).to(CandlepinPoolManager.class);
-        
-        //flexible end date for identity certificates
+        bind(UniqueIdGenerator.class).to(DefaultUniqueIdGenerator.class);
+
         bind(Function.class).annotatedWith(Names.named("endDateGenerator"))
             .to(ExpiryDateFunction.class).in(Singleton.class);
     }

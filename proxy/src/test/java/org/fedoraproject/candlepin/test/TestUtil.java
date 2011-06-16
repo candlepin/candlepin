@@ -18,6 +18,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
@@ -25,6 +26,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.auth.permissions.Permission;
+import org.fedoraproject.candlepin.model.ActivationKey;
 import org.fedoraproject.candlepin.model.CertificateSerial;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
@@ -38,17 +40,16 @@ import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductAttribute;
 import org.fedoraproject.candlepin.model.ProvidedProduct;
 import org.fedoraproject.candlepin.model.Subscription;
-import org.fedoraproject.candlepin.model.SubscriptionToken;
 import org.fedoraproject.candlepin.model.User;
 
 /**
  * TestUtil for creating various testing objects.
- * 
+ *
  * Objects backed by the database are not persisted, the caller is expected to persist
  * the entities returned and any dependent objects.
  */
 public class TestUtil {
-    
+
     private TestUtil() {
     }
 
@@ -63,7 +64,7 @@ public class TestUtil {
     public static Consumer createConsumer() {
         return createConsumer(createConsumerType(), new Owner("Test Owner " + randomInt()));
     }
-    
+
     /**
      * Create a consumer with a new owner
      * @return Consumer
@@ -80,9 +81,9 @@ public class TestUtil {
     public static ConsumerType createConsumerType() {
         return new ConsumerType("test-consumer-type-" + randomInt());
     }
-    
+
     private static final Random RANDOM = new Random(System.currentTimeMillis());
-    
+
     public static int randomInt() {
         return RANDOM.nextInt(10000);
     }
@@ -94,31 +95,31 @@ public class TestUtil {
 
         ProductAttribute a2 = new ProductAttribute("a2", "a2");
         rhel.addAttribute(a2);
-        
+
         return rhel;
     }
-    
+
     public static ProvidedProduct createProvidedProduct(String id, String name) {
         ProvidedProduct p = new ProvidedProduct(id, name);
         return p;
     }
-    
+
     public static Product createProduct() {
         int random =  randomInt();
         return createProduct(String.valueOf(random), "test-product-" + random);
     }
-    
+
     public static ProvidedProduct createProvidedProduct() {
         int random =  randomInt();
         return createProvidedProduct("test-provided-product-" + random,
             "Test Provided Product " + random);
     }
-    
+
     public static Subscription createSubscription(Product product) {
         Owner owner = new Owner("Test Owner " + randomInt());
         return createSubscription(owner, product);
     }
-    
+
     public static Subscription createSubscription() {
         return createSubscription(createProduct());
     }
@@ -129,16 +130,7 @@ public class TestUtil {
             createDate(2050, 1, 1), createDate(2000, 1, 1));
         return sub;
     }
-    
-    public static SubscriptionToken createSubscriptionToken() {
-        
-        SubscriptionToken st = new SubscriptionToken();
-        st.setToken("this_is_a_test_token");
-        
-        return st;
-        
-    }
-    
+
     public static Pool createPool(Product product) {
         return createPool(new Owner("Test Owner " + randomInt()), product);
     }
@@ -150,21 +142,21 @@ public class TestUtil {
     public static Pool createPool(Owner owner, Product product, int quantity) {
         return createPool(owner, product, new HashSet<ProvidedProduct>(), quantity);
     }
-    
+
     public static Pool createPool(Owner owner, Product product,
         Set<ProvidedProduct> providedProducts, int quantity) {
 
-        Pool pool = new Pool(owner, product.getId(), product.getName(), 
+        Pool pool = new Pool(owner, product.getId(), product.getName(),
             providedProducts, Long.valueOf(quantity),
             TestUtil.createDate(2009, 11, 30), TestUtil.createDate(2015, 11, 30),
             "SUB234598S", "ACC123");
 
         return pool;
     }
-    
+
     public static Date createDate(int year, int month, int day) {
         Calendar cal = Calendar.getInstance();
-            
+
         cal.set(Calendar.YEAR, year);
         // Watchout, Java expects month as 0-11
         cal.set(Calendar.MONTH, month - 1);
@@ -178,18 +170,18 @@ public class TestUtil {
         Date jsqlD = new Date(cal.getTime().getTime());
         return jsqlD;
     }
-    
+
     public static String xmlToBase64String(String xml) {
-        
+
 //        byte[] bytes = Base64.encode(xml);
         Base64 encoder = new Base64();
         byte [] bytes = encoder.encode(xml.getBytes());
-        
+
         StringBuilder buf = new StringBuilder();
         for (byte b : bytes) {
             buf.append((char) Integer.parseInt(Integer.toHexString(b), 16));
         }
-                
+
         return buf.toString();
     }
 
@@ -249,8 +241,19 @@ public class TestUtil {
     
     public void addPermissionToUser(User u, Access role, Owner o) {
         // Check if a permission already exists for this verb and owner:
+    }
         
         
+
+    public static ActivationKey createActivationKey(Owner owner, List<Pool> pools) {
+        ActivationKey key = new ActivationKey();
+        key.setOwner(owner);
+        key.setName("A Test Key");
+        if (pools != null) {
+            key.setPools(pools);
+        }
+
+        return key;
     }
 
 }

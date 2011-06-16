@@ -14,13 +14,6 @@
  */
 package org.fedoraproject.candlepin.audit;
 
-import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.PrincipalData;
-import org.fedoraproject.candlepin.model.Persisted;
-import org.fedoraproject.candlepin.util.Util;
-
-import org.hibernate.annotations.GenericGenerator;
-
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -35,6 +28,12 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
+import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.PrincipalData;
+import org.fedoraproject.candlepin.model.Persisted;
+import org.fedoraproject.candlepin.util.Util;
+import org.hibernate.annotations.GenericGenerator;
 
 /**
  * Event - Base class for Candlepin events. Serves as both our semi-permanent
@@ -60,7 +59,8 @@ public class Event implements Persisted {
      * Target the type of entity operated on.
      */
     public enum Target {
-        CONSUMER, OWNER, ENTITLEMENT, POOL, EXPORT, IMPORT, USER, ROLE, SUBSCRIPTION
+        CONSUMER, OWNER, ENTITLEMENT, POOL, EXPORT, IMPORT, USER, ROLE, SUBSCRIPTION,
+        ACTIVATIONKEY
     }
 
     /**

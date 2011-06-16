@@ -15,12 +15,15 @@
 package org.fedoraproject.candlepin.resource;
 
 import com.google.inject.Inject;
+import java.util.Collection;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.model.JobCurator;
 import org.fedoraproject.candlepin.pinsetter.core.model.JobStatus;
 import org.fedoraproject.candlepin.pinsetter.core.model.JobStatus.JobState;
@@ -36,6 +39,16 @@ public class JobResource {
     @Inject
     public JobResource(JobCurator curator) {
         this.curator = curator;
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public Collection<JobStatus> getStatuses(@QueryParam("owner") String ownerKey) {
+        if (ownerKey == null || ownerKey.isEmpty()) {
+            throw new BadRequestException("You must specify an owner key.");
+        }
+
+        return this.curator.findByOwnerKey(ownerKey);
     }
 
     @GET

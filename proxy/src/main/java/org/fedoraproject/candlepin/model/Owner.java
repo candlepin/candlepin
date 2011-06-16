@@ -14,8 +14,6 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import org.hibernate.annotations.GenericGenerator;
-
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
@@ -32,7 +30,9 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
 import org.fedoraproject.candlepin.resteasy.InfoProperty;
+import org.hibernate.annotations.GenericGenerator;
 
 /**
  * Represents the owner of entitlements. This is akin to an organization,
@@ -67,6 +67,9 @@ public class Owner extends AbstractHibernateObject implements Serializable,
     @OneToMany(mappedBy = "owner", targetEntity = Consumer.class)
     private Set<Consumer> consumers;
 
+    @OneToMany(mappedBy = "owner", targetEntity = ActivationKey.class)
+    private Set<ActivationKey> activationKeys;
+
     // EntitlementPool is the owning side of this relationship.
     @OneToMany(mappedBy = "owner", targetEntity = Pool.class)
     private Set<Pool> pools;
@@ -88,7 +91,7 @@ public class Owner extends AbstractHibernateObject implements Serializable,
 
     /**
      * Constructor with required parameters.
-     * 
+     *
      * @param key Owner's unique identifier
      * @param displayName Owner's name - suitable for UI
      */
@@ -194,7 +197,7 @@ public class Owner extends AbstractHibernateObject implements Serializable,
 
     /**
      * Add a consumer to this owner
-     * 
+     *
      * @param c consumer for this owner.
      */
     public void addConsumer(Consumer c) {
@@ -205,7 +208,7 @@ public class Owner extends AbstractHibernateObject implements Serializable,
 
     /**
      * add owner to the pool, and reference to the pool.
-     * 
+     *
      * @param pool EntitlementPool for this owner.
      */
     public void addEntitlementPool(Pool pool) {
@@ -313,4 +316,18 @@ public class Owner extends AbstractHibernateObject implements Serializable,
         return this;
     }
 
+    /**
+     * @return the activationKeys
+     */
+    @XmlTransient
+    public Set<ActivationKey> getActivationKeys() {
+        return activationKeys;
+    }
+
+    /**
+     * @param activationKeys the activationKeys to set
+     */
+    public void setActivationKeys(Set<ActivationKey> activationKeys) {
+        this.activationKeys = activationKeys;
+    }
 }

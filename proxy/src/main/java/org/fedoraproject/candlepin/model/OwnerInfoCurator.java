@@ -25,6 +25,7 @@ import org.hibernate.Session;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 
+import java.util.Date;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -74,8 +75,14 @@ public class OwnerInfoCurator {
             info.addTypeTotal(type, consumers, entitlements);
         }
 
+        Date now = new Date();
         info.setConsumerTypesByPool(consumerTypeCurator.listAll());
         for (Pool pool : owner.getPools()) {
+            // clients using the ownerinfo details are only concerned with pools
+            // active *right now*
+            if (now.before(pool.getStartDate()) || now.after(pool.getEndDate())) {
+                continue;
+            }
             // do consumerTypeCountByPool
             String consumerType = getAttribute(pool, "requires_consumer_type");
             if (consumerType == null || consumerType.trim().equals("")) {

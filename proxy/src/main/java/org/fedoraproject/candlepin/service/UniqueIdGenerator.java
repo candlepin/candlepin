@@ -12,24 +12,16 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.audit;
-
-import org.fedoraproject.candlepin.model.AbstractHibernateCurator;
-
-import com.wideplay.warp.persist.Transactional;
+package org.fedoraproject.candlepin.service;
 
 /**
- * ContentCurator
+ * Service interface for generating UIDs.
+ * UniqueIdGenerator
  */
-public class StatisticCurator extends AbstractHibernateCurator<Statistic> {
-
-    public StatisticCurator() {
-        super(Statistic.class);
-    }
-
-    @Transactional
-    public Statistic create(Statistic s) {
-        super.create(s);
-        return s;
-    }
+public interface UniqueIdGenerator {
+    /**
+     * Does the needful, creates the UUID.
+     * @return a new UUID
+     */
+    String generateId();
 }

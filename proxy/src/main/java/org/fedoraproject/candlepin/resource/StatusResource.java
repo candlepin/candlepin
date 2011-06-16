@@ -23,6 +23,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.model.Status;
 
 import com.google.inject.Inject;
@@ -35,19 +36,22 @@ import org.fedoraproject.candlepin.auth.interceptor.SecurityHole;
 public class StatusResource {
 
     private static Logger log = Logger.getLogger(StatusResource.class);
-    
+
     /**
      * The current version of candlepin
      */
     private String version = "Unknown";
-    
+
     /**
      * The current git release
      */
     private String release = "Unknown";
-    
+
+    private RulesCurator rulesCurator;
+
     @Inject
-    public StatusResource() {
+    public StatusResource(RulesCurator rulesCurator) {
+        this.rulesCurator = rulesCurator;
         try {
             InputStream in = this.getClass().getClassLoader().
                 getResourceAsStream("candlepin_info.properties");
@@ -61,7 +65,7 @@ public class StatusResource {
                 release = props.getProperty("release");
             }
             in.close();
-        } 
+        }
         catch (Exception e) {
             log.error("Can not load candlepin_info.properties", e);
         }
@@ -69,14 +73,21 @@ public class StatusResource {
 
     /**
      * status to see if a server is up and running
-     * 
+     *
      * @return the running status
      */
     @GET
     @Produces({ MediaType.APPLICATION_JSON})
     @SecurityHole
     public Status status() {
-        Status status = new Status(true, version, release);
+        boolean good = true;
+        try {
+            rulesCurator.listAll();
+        }
+        catch (Exception e) {
+            good = false;
+        }
+        Status status = new Status(good, version, release);
         return status;
     }
 }

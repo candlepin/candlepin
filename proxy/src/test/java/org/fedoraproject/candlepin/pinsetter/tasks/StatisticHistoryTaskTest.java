@@ -20,7 +20,7 @@ import org.junit.Test;
 import org.quartz.JobExecutionException;
 
 /**
- * CertificateRevocationListTaskTest
+ * StatisticHistoryTaskTest
  */
 
 public class StatisticHistoryTaskTest extends DatabaseTestFixture {
@@ -29,7 +29,8 @@ public class StatisticHistoryTaskTest extends DatabaseTestFixture {
     @Before
     public void init() {
         super.init();
-        this.task = new StatisticHistoryTask(entityManager(), statisticCurator);
+        this.task = new StatisticHistoryTask(entityManager(), statisticCurator,
+            ownerCurator);
     }
 
     @Test

@@ -18,6 +18,19 @@
     <link href='css/site-wide.css' media='screen, projection' rel='stylesheet' />
     <script src='http://ajax.googleapis.com/ajax/libs/jquery/1.6/jquery.min.js' type='text/javascript'></script>
     <script src='js/candlepin.js' type='text/javascript'></script>
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-23829956-1']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>    
   </head>
   <body>
     <div id='header'>
@@ -52,6 +65,9 @@
           <a href='news.html'>
             News
           </a>
+          <a href='https://fedorahosted.org/candlepin/'>
+            Wiki
+          </a>          
           <a href='contact.html'>
             Contact Us
           </a>
@@ -60,7 +76,7 @@
     </div>
     <div class='container_24 clearfix' id='main'>
       <div class='grid_24'>
-        <h1>About Candlepin</h1>
+        <h1>About The Suite</h1>
         <div class='section-grouping'>
           <h2>
             Federated Subscription Management
@@ -80,6 +96,7 @@
         </div>
         <br />
         <br />
+        <h1>About Candlepin</h1>        
         <div class='section-grouping'>
           <h2>
             Pluggable Architecture
@@ -119,7 +136,28 @@
         </div>    
         <br />
         <br />
-      </div>
+        <div class='section-grouping'>
+          <h2>
+            Data Model
+          </h2>
+          <p>
+            The basic data model which candlepin uses can be seen 
+            <a href="https://fedorahosted.org/candlepin/wiki/Disambiguation_of_terms">here.</a>
+          </p> 
+          </div>
+        <br />
+        <br />
+        <h1>About Headpin</h1>  
+        <div class='section-grouping'>
+          <h2>
+            Overview
+          </h2>
+          <p>
+            An overview for the Headpin deployment can be seen  
+            <a href="https://fedorahosted.org/candlepin/wiki/headpin/Overview">here.</a>
+          </p> 
+          </div>                
+      </div>   
     </div>
     <div class='clear'></div>
    <div id='footer'>

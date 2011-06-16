@@ -20,7 +20,7 @@ describe 'Custom Product' do
 
     product1 = create_product(@owner.key + '_product_1', @owner.key + '_product_1',
         {:custom => false})
-    product2 = create_product(@owner.key + '_product_2', @owner.key + '_product_2',
+    product2 = create_product('', @owner.key + '_product_2',
         {:custom => true})
     content = create_content({:metadata_expire => 6000,
       :required_tags => "TAG1,TAG2"})
@@ -41,7 +41,7 @@ describe 'Custom Product' do
     candlepin_client.consume_pool(pool2.id)[0]
 
     product1.id.should == @owner.key + '_product_1'
-    product2.id.should_not == @owner.key + '_product_2'
+    product2.id.should_not == ''
 
  end
 

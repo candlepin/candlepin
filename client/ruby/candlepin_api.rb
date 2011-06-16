@@ -325,7 +325,6 @@ class Candlepin
   def create_product(id, name, params={}, dependentProductIds=[])
 
     multiplier = params[:multiplier] || 1
-    custom = params[:custom] || false
     attributes = params[:attributes] || {}
     #if product don't have type attributes, create_product will fail on server
     #side.
@@ -333,7 +332,6 @@ class Candlepin
     product = {
       'name' => name,
       'id' => id,
-      'custom' => custom,
       'multiplier' => multiplier,
       'attributes' => attributes.collect {|k,v| {'name' => k, 'value' => v}},
       'dependentProductIds' => dependentProductIds
@@ -366,10 +364,6 @@ class Candlepin
     path = "/consumers/#{uuid}/entitlements?product=#{product}"
     path << "&quantity=#{quantity}" if quantity
     post(path)
-  end
-
-  def consume_token(token)
-    post("/consumers/#{@uuid}/entitlements?token=#{token}")
   end
 
   def list_users_by_owner(owner_key)
@@ -463,16 +457,44 @@ class Candlepin
     return delete("/subscriptions/#{subscription_id}")
   end
 
-  def list_subscription_tokens
-    return get("/subscriptiontokens")
+  def list_activation_keys
+    return get("/activation_keys")
   end
 
-  def create_subscription_token(data)
-    return post("/subscriptiontokens", data)
+  def create_activation_key(data, owner_key=nil)
+    if ! owner_key.nil?
+        return post("/owners/#{owner_key}/activation_keys", data)
+    else
+        return post("/activation_keys", data)    
+    end
   end
 
-  def delete_subscription_token(subscription)
-    return delete("/subscriptiontokens/#{subscription}")
+  def get_activation_keys(owner_key)
+    return get("owner/#{owner_key}/activation_keys")
+  end
+  
+  def get_activation_key(key_id)
+    return get("/activation_keys/#{key_id}")
+  end
+  
+  def update_activation_key(key)
+    return put("/activation_keys/#{key['id']}", key)
+  end
+
+  def delete_activation_key(key_id)
+    return delete("/activation_keys/#{key_id}")
+  end
+
+  def activation_key_pools(key_id)
+    return get("/activation_keys/#{key_id}/pools")
+  end
+
+  def add_pool_to_key(key_id, pool_id)
+    return post("/activation_keys/#{key_id}/pools/#{pool_id}")
+  end
+
+  def remove_pool_from_key(key_id, pool_id)
+    return delete("/activation_keys/#{key_id}/pools/#{pool_id}")
   end
 
   def list_certificates(serials = [])
@@ -525,6 +547,10 @@ class Candlepin
 
   def list_imports(owner_key)
     get "/owners/#{owner_key}/imports"
+  end
+
+  def list_jobs(owner_key)
+    get "/jobs?owner=#{owner_key}"
   end
 
   def import(owner_key, filename)

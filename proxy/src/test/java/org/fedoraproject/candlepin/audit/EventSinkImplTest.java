@@ -28,10 +28,13 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
+
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.guice.PrincipalProvider;
+import org.fedoraproject.candlepin.model.ActivationKey;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
@@ -185,5 +188,23 @@ public class EventSinkImplTest {
         verify(mockClientProducer).send(any(ClientMessage.class));
     }
 
+    @Test
+    public void emptyKeyShouldEmitSuccessfully()
+        throws Exception {
+        ActivationKey key = TestUtil.createActivationKey(new Owner("deadbeef"), null);
+        eventSinkImpl.emitActivationKeyCreated(key);
+        verify(mockClientProducer).send(any(ClientMessage.class));
+    }
+
+    @Test
+    public void keyWithPoolsShouldEmitSuccessfully()
+        throws Exception {
+        ArrayList<Pool> pools = new ArrayList<Pool>();
+        pools.add(TestUtil.createPool(TestUtil.createProduct()));
+        pools.add(TestUtil.createPool(TestUtil.createProduct()));
+        ActivationKey key = TestUtil.createActivationKey(new Owner("deadbeef"), pools);
+        eventSinkImpl.emitActivationKeyCreated(key);
+        verify(mockClientProducer).send(any(ClientMessage.class));
+    }
 
 }

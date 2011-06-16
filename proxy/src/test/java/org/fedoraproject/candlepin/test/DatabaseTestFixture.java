@@ -22,15 +22,17 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.servlet.http.HttpServletRequest;
 
+
 import org.fedoraproject.candlepin.CandlepinCommonTestingModule;
 import org.fedoraproject.candlepin.CandlepinNonServletEnvironmentTestingModule;
 import org.fedoraproject.candlepin.TestingInterceptor;
-import org.fedoraproject.candlepin.audit.StatisticCurator;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.controller.CandlepinPoolManager;
 import org.fedoraproject.candlepin.guice.TestPrincipalProviderSetter;
+import org.fedoraproject.candlepin.model.ActivationKey;
+import org.fedoraproject.candlepin.model.ActivationKeyCurator;
 import org.fedoraproject.candlepin.model.CertificateSerial;
 import org.fedoraproject.candlepin.model.CertificateSerialCurator;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -57,16 +59,17 @@ import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.model.ProvidedProduct;
 import org.fedoraproject.candlepin.model.RoleCurator;
 import org.fedoraproject.candlepin.model.RulesCurator;
+import org.fedoraproject.candlepin.model.StatisticCurator;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
-import org.fedoraproject.candlepin.model.SubscriptionToken;
-import org.fedoraproject.candlepin.model.SubscriptionTokenCurator;
 import org.fedoraproject.candlepin.model.SubscriptionsCertificateCurator;
 import org.fedoraproject.candlepin.model.UserCurator;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.util.DateSource;
+import org.junit.Before;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -76,9 +79,6 @@ import com.wideplay.warp.persist.PersistenceService;
 import com.wideplay.warp.persist.UnitOfWork;
 import com.wideplay.warp.persist.WorkManager;
 import org.fedoraproject.candlepin.auth.permissions.Permission;
-
-import org.junit.Before;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * Test fixture for test classes requiring access to the database.
@@ -107,7 +107,7 @@ public class DatabaseTestFixture {
     protected RulesCurator rulesCurator;
     protected EventCurator eventCurator;
     protected SubscriptionCurator subCurator;
-    protected SubscriptionTokenCurator subTokenCurator;
+    protected ActivationKeyCurator activationKeyCurator;
     protected ContentCurator contentCurator;
     protected WorkManager unitOfWork;
     protected HttpServletRequest httpServletRequest;
@@ -160,7 +160,7 @@ public class DatabaseTestFixture {
         attributeCurator = injector.getInstance(ProductAttributeCurator.class);
         rulesCurator = injector.getInstance(RulesCurator.class);
         subCurator = injector.getInstance(SubscriptionCurator.class);
-        subTokenCurator = injector.getInstance(SubscriptionTokenCurator.class);
+        activationKeyCurator = injector.getInstance(ActivationKeyCurator.class);
         contentCurator = injector.getInstance(ContentCurator.class);
         unitOfWork = injector.getInstance(WorkManager.class);
 
@@ -200,8 +200,13 @@ public class DatabaseTestFixture {
     }
 
     /**
+<<<<<<< HEAD
      * Helper to commit the current db transaction. Pretty simple for now, but
      * may require additional logic and error handling down the road.
+=======
+     * Helper to commit the current db transaction. Pretty simple for now, but may
+     * require additional logic and error handling down the road.
+>>>>>>> Remove autosubscribe, since we really do not need it
      */
     protected void commitTransaction() {
         entityManager().getTransaction().commit();
@@ -243,25 +248,19 @@ public class DatabaseTestFixture {
     protected Subscription createSubscription() {
         Product p = TestUtil.createProduct();
         productCurator.create(p);
-        Subscription sub = new Subscription(createOwner(), p,
-            new HashSet<Product>(), 1000L, TestUtil.createDate(2000, 1, 1),
-            TestUtil.createDate(2010, 1, 1), TestUtil.createDate(2000, 1, 1));
+        Subscription sub = new Subscription(createOwner(),
+                                            p, new HashSet<Product>(),
+                                            1000L,
+                                            TestUtil.createDate(2000, 1, 1),
+                                            TestUtil.createDate(2010, 1, 1),
+                                            TestUtil.createDate(2000, 1, 1));
         subCurator.create(sub);
         return sub;
 
     }
 
-    protected SubscriptionToken createSubscriptionToken() {
-        Subscription sub = createSubscription();
-
-        SubscriptionToken token = new SubscriptionToken();
-        token.setToken("this_is_a_test_token");
-
-        token.setSubscription(sub);
-        sub.getTokens().add(token);
-        subCurator.create(sub);
-        subTokenCurator.create(token);
-        return token;
+    protected ActivationKey createActivationKey(Owner owner) {
+        return TestUtil.createActivationKey(owner, null);
     }
 
     protected Entitlement createEntitlement(Owner owner, Consumer consumer,

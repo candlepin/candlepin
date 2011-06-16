@@ -14,11 +14,6 @@
  */
 package org.fedoraproject.candlepin.servlet.filter;
 
-import org.fedoraproject.candlepin.model.Status;
-import org.fedoraproject.candlepin.resource.StatusResource;
-
-import com.google.inject.Singleton;
-
 import java.io.IOException;
 
 import javax.servlet.Filter;
@@ -28,6 +23,11 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
+
+import org.fedoraproject.candlepin.model.Status;
+import org.fedoraproject.candlepin.resource.StatusResource;
+
+import com.google.inject.Singleton;
 
 /**
  * VersionFilter
@@ -47,7 +47,7 @@ public class VersionFilter implements Filter {
         chain.doFilter(request, response);
         HttpServletResponse rsp = (HttpServletResponse) response;
 
-        Status status = new StatusResource().status();
+        Status status = new StatusResource(null).status();
         rsp.addHeader(VERSION_HEADER, status.getVersion() + "-" +
             status.getRelease());
     }

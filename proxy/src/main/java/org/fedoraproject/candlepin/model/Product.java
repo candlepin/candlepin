@@ -61,9 +61,6 @@ public class Product extends AbstractHibernateObject implements Linkable {
     @Column
     private Long multiplier;
 
-    @Column
-    private boolean custom = false;
-
     // NOTE: we need a product "type" so we can tell what class of
     // product we are...
 
@@ -165,20 +162,6 @@ public class Product extends AbstractHibernateObject implements Linkable {
         else {
             this.multiplier = Math.max(1L, multiplier);
         }
-    }
-
-    /**
-     * @return is this a custom product
-     */
-    public boolean getCustom() {
-        return custom;
-    }
-
-    /**
-     * sets custom product state.
-     */
-    public void setCustom(boolean custom) {
-        this.custom = custom;
     }
 
     public void setAttributes(Set<ProductAttribute> attributes) {

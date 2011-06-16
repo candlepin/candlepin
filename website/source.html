@@ -18,6 +18,20 @@
     <link href='css/site-wide.css' media='screen, projection' rel='stylesheet' />
     <script src='http://ajax.googleapis.com/ajax/libs/jquery/1.6/jquery.min.js' type='text/javascript'></script>
     <script src='js/candlepin.js' type='text/javascript'></script>
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-23829956-1']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>    
+    
   </head>
   <body>
     <div id='header'>
@@ -49,12 +63,12 @@
           <a href='projects.html'>
             Projects
           </a>
-          <a href='/wiki'>
-            Wiki
-          </a>
           <a href='news.html'>
             News
           </a>
+          <a href='https://fedorahosted.org/candlepin/'>
+            Wiki
+          </a>          
           <a href='contact.html'>
             Contact Us
           </a>
@@ -68,11 +82,13 @@
         <div class='section-grouping'>
           <h3>Candlepin</h3>
           <pre><a href="http://git.fedorahosted.org/git/?p=candlepin.git">http://git.fedorahosted.org/git/?p=candlepin.git</a></pre>
+          <h4><a href="https://fedorahosted.org/candlepin/wiki/Deployment">Build Instructions</a></h4>          
         </div>
         <br />
         <div class='section-grouping'>
           <h3>Headpin</h3>
           <pre><a href="http://git.fedorahosted.org/git/?p=headpin.git">http://git.fedorahosted.org/git/?p=headpin.git</a></pre>
+          <h4><a href="https://fedorahosted.org/candlepin/wiki/headpin/Building">Build Instructions</a></h4>
         </div>
         <br />
         <div class='section-grouping'>

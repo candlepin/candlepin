@@ -15,16 +15,23 @@
 package org.fedoraproject.candlepin.resource.test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-
-import org.fedoraproject.candlepin.model.Status;
-import org.fedoraproject.candlepin.resource.StatusResource;
-
-import org.junit.Test;
+import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.PrintStream;
+import java.util.ArrayList;
+
+import org.fedoraproject.candlepin.model.Rules;
+import org.fedoraproject.candlepin.model.RulesCurator;
+import org.fedoraproject.candlepin.model.Status;
+import org.fedoraproject.candlepin.resource.StatusResource;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 
 /**
@@ -32,13 +39,21 @@ import java.io.PrintStream;
  */
 public class StatusResourceTest {
 
+    @Mock private RulesCurator rulesCurator;
+
+    @Before
+    public void setUp() {
+        MockitoAnnotations.initMocks(this);
+        when(rulesCurator.listAll()).thenReturn(new ArrayList<Rules>());
+    }
+
     @Test
     public void status() throws Exception {
         PrintStream ps = new PrintStream(new File(this.getClass()
             .getClassLoader().getResource("candlepin_info.properties").toURI()));
         ps.println("version=${version}");
         ps.println("release=${release}");
-        StatusResource sr = new StatusResource();
+        StatusResource sr = new StatusResource(rulesCurator);
         Status s = sr.status();
         ps.close();
         assertNotNull(s);
@@ -52,12 +67,28 @@ public class StatusResourceTest {
         PrintStream ps = new PrintStream(new File(this.getClass()
             .getClassLoader().getResource("candlepin_info.properties").toURI()));
         ps.println("foo");
-        StatusResource sr = new StatusResource();
+        StatusResource sr = new StatusResource(rulesCurator);
         Status s = sr.status();
         ps.close();
         assertNotNull(s);
         assertEquals("Unknown", s.getRelease());
         assertEquals("Unknown", s.getVersion());
         assertTrue(s.getResult().booleanValue());
+    }
+
+    @Test
+    public void testDBDown() throws Exception {
+        PrintStream ps = new PrintStream(new File(this.getClass()
+            .getClassLoader().getResource("candlepin_info.properties").toURI()));
+        ps.println("version=${version}");
+        ps.println("release=${release}");
+        when(rulesCurator.listAll()).thenThrow(new RuntimeException());
+        StatusResource sr = new StatusResource(rulesCurator);
+        Status s = sr.status();
+        ps.close();
+        assertNotNull(s);
+        assertEquals("${release}", s.getRelease());
+        assertEquals("${version}", s.getVersion());
+        assertFalse(s.getResult().booleanValue());
     }
 }

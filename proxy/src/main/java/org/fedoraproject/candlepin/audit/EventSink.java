@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.audit;
 
+import org.fedoraproject.candlepin.model.ActivationKey;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
@@ -33,14 +34,16 @@ public interface EventSink {
     void emitOwnerMigrated(Owner owner);
 
     void emitPoolCreated(Pool newPool);
-    
+
     void emitExportCreated(Consumer consumer);
-    
+
     void emitImportCreated(Owner owner);
 
     void emitSubscriptionCreated(Subscription subscription);
 
     void emitSubscriptionModified(Subscription old, Subscription newSub);
+
+    void emitActivationKeyCreated(ActivationKey key);
 
     Event createSubscriptionDeleted(Subscription todelete);
 }

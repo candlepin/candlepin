@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.4.1
+Version: 0.4.3
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -19,7 +19,7 @@ BuildArch: noarch
 BuildRequires: java >= 0:1.6.0
 BuildRequires: ant >= 0:1.7.0
 BuildRequires: gettext
-BuildRequires: candlepin-deps >= 0:0.0.15
+BuildRequires: candlepin-deps >= 0:0.0.16
 %define __jar_repack %{nil}
 
 %description
@@ -145,6 +145,85 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Tue Jun 14 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.3-1
+- require candlepin-deps 0.0.16 (jesusr@redhat.com)
+
+* Mon Jun 13 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.2-1
+- matches current state of custom product (wpoteat@redhat.com)
+- Add a unit test for the db being down (bkearney@redhat.com)
+- Enhance the Status resource to return false if the DB is down (bkearney@redhat.com)
+- Adding job query by owner key. (jharris@redhat.com)
+- Improve the url structure for activation keys (bkearney@redhat.com)
+- Chanege the name of the activatoin key parameters (bkearney@redhat.com)
+- Id generation for products is now based on the lack of an id. The custom tag
+  has been removed. (wpoteat@redhat.com)
+- unque id is now being generated for content if no id has been specified
+  (ddolguik@redhat.com)
+- Adding owner key to job status. (jharris@redhat.com)
+- only use version 9 of the pgsql jar, since it still supports pgsql 8
+  (cduryee@redhat.com)
+- OID for Stacking Id (wpoteat@redhat.com)
+- Once a day, not once a minute (wpoteat@redhat.com)
+- whitespace cleanup (alikins@redhat.com)
+- Updates for REST query. Path param of entryType. Query params of
+  valueReference, fromDate, and toDate. (wpoteat@redhat.com)
+- Missed updating the key. It is in now (bkearney@redhat.com)
+- Add messages for the activation key events (bkearney@redhat.com)
+- Events were not being persisted. (bkearney@redhat.com)
+- Add in an /owners/{oid}/activationKeys api to support data loading
+  (bkearney@redhat.com)
+- Move activate to its own root resource (bkearney@redhat.com)
+- Added key creation events (bkearney@redhat.com)
+- Tests fail, but need to wait for the security work before going further
+  (bkearney@redhat.com)
+- Remove autosubscribe, since we really do not need it (bkearney@redhat.com)
+- basic model spec tests. (bkearney@redhat.com)
+- Resource for add/removing pools from keys. Unit tests pass, but not the spec
+  tests (bkearney@redhat.com)
+- Add /owners/foo/activation_keys (bkearney@redhat.com)
+- Add Activation Key model, removing all the subscirption token business
+  (bkearney@redhat.com)
+- Changes for code review. (wpoteat@redhat.com)
+- 710141: only show active pools in ownerinfo (jbowes@redhat.com)
+- Style changes Added resource for retrieving statistic set based on owner
+  (wpoteat@redhat.com)
+- Package move for java classes (wpoteat@redhat.com)
+- Stat History queries populated as per first set of data. (wpoteat@redhat.com)
+- Need to merge the strings before pushing them (bkearney@redhat.com)
+- Stop using SNAPSHOT qpid releases. (dgoodwin@redhat.com)
+- Fix tomcat permissions in cpsetup. (dgoodwin@redhat.com)
+- Buffer was too small (bkearney@redhat.com)
+- Extracted the new strings (bkearney@redhat.com)
+- Change the project vesion for zanata (bkearney@redhat.com)
+- And the rest of the files for the commit (wpoteat@redhat.com)
+- First checkin for stats reporting. Only puts number of consumers into DB each
+  day. (wpoteat@redhat.com)
+- Add the zanata.xml file for translations (bkearney@redhat.com)
+- Include Postgresql 9.0 JDBC driver for F15 deployments. (dgoodwin@redhat.com)
+- Remove assumptions that we have subs in our db. (dgoodwin@redhat.com)
+- Remove prepend on custom product ids (wpoteat@redhat.com)
+- Update of test data to remove the use of decimal points in product ids.
+  (wpoteat@redhat.com)
+- Revert changes to test. Method privilege was reverted. (wpoteat@redhat.com)
+- Reverted change to method security. Wrong method for my use.
+  (wpoteat@redhat.com)
+- Add missed user resource spec tests. (dgoodwin@redhat.com)
+- removed Physical and Flex Guest Entitlement counts from content certificate
+  (wpoteat@redhat.com)
+- removed change to Content class for getContentUrl (wpoteat@redhat.com)
+- getContentUrl prepended with /$owner/$env (wpoteat@redhat.com)
+- change to test as admin can see owners (wpoteat@redhat.com)
+- ignore test to verify this was intentional (jmrodri@gmail.com)
+- don't look at /etc/candlepin during unit test runs (jmrodri@gmail.com)
+- added privilege for list on owner (wpoteat@redhat.com)
+- Implement GET /users/{username}/owners, add verifyUser option to AccessRoles.
+  (dgoodwin@redhat.com)
+- As a subscription manager client, I would like to know which owner
+  I am registered to: Do via API Call. (wpoteat@redhat.com)
+- Update hibernate filters for multi-owner users. (dgoodwin@redhat.com)
+- As an API user, I would like to be able to query pools resources specific
+  to and owner. (wpoteat@redhat.com)
+
 * Thu May 12 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.1-1
 - require candlepin-deps 0.0.15 (jesusr@redhat.com)
 - fix checkstyle (jesusr@redhat.com)

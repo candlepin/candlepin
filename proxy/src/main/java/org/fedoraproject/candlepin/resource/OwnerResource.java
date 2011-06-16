@@ -23,6 +23,8 @@ import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.CandlepinException;
 import org.fedoraproject.candlepin.exceptions.IseException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
+import org.fedoraproject.candlepin.model.ActivationKey;
+import org.fedoraproject.candlepin.model.ActivationKeyCurator;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -41,10 +43,10 @@ import org.fedoraproject.candlepin.model.OwnerPermission;
 import org.fedoraproject.candlepin.model.OwnerPermissionCurator;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
+import org.fedoraproject.candlepin.model.Statistic;
+import org.fedoraproject.candlepin.model.StatisticCurator;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
-import org.fedoraproject.candlepin.model.SubscriptionToken;
-import org.fedoraproject.candlepin.model.SubscriptionTokenCurator;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.pinsetter.tasks.RefreshPoolsJob;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
@@ -96,7 +98,8 @@ public class OwnerResource {
     private OwnerInfoCurator ownerInfoCurator;
     private PoolCurator poolCurator;
     private SubscriptionCurator subscriptionCurator;
-    private SubscriptionTokenCurator subscriptionTokenCurator;
+    private ActivationKeyCurator activationKeyCurator;
+    private StatisticCurator statisticCurator;
     private UserServiceAdapter userService;
     private SubscriptionServiceAdapter subService;
     private ConsumerCurator consumerCurator;
@@ -117,8 +120,9 @@ public class OwnerResource {
     @Inject
     public OwnerResource(OwnerCurator ownerCurator, PoolCurator poolCurator,
         SubscriptionCurator subscriptionCurator,
-        SubscriptionTokenCurator subscriptionTokenCurator,
+        ActivationKeyCurator activationKeyCurator,
         ConsumerCurator consumerCurator,
+        StatisticCurator statisticCurator,
         I18n i18n, UserServiceAdapter userService,
         EventSink sink, EventFactory eventFactory,
         EventCurator eventCurator, EventAdapter eventAdapter,
@@ -133,8 +137,9 @@ public class OwnerResource {
         this.ownerInfoCurator = ownerInfoCurator;
         this.poolCurator = poolCurator;
         this.subscriptionCurator = subscriptionCurator;
-        this.subscriptionTokenCurator = subscriptionTokenCurator;
+        this.activationKeyCurator = activationKeyCurator;
         this.consumerCurator = consumerCurator;
+        this.statisticCurator = statisticCurator;
         this.userService = userService;
         this.i18n = i18n;
         this.sink = sink;
@@ -152,7 +157,7 @@ public class OwnerResource {
 
     /**
      * Return list of Owners.
-     * 
+     *
      * @return list of Owners
      */
     @GET
@@ -175,7 +180,7 @@ public class OwnerResource {
 
     /**
      * Return the owner identified by the given ID.
-     * 
+     *
      * @param ownerKey Owner ID.
      * @return the owner identified by the given id.
      */
@@ -188,7 +193,7 @@ public class OwnerResource {
 
     /**
      * Return the owner's info identified by the given ID.
-     * 
+     *
      * @param ownerKey Owner ID.
      * @return the info of the owner identified by the given id.
      */
@@ -202,7 +207,7 @@ public class OwnerResource {
 
     /**
      * Creates a new Owner
-     * 
+     *
      * @return the new owner
      */
     @POST
@@ -268,10 +273,10 @@ public class OwnerResource {
                 consumerCurator.delete(c);
             }
         }
-        for (SubscriptionToken token : subscriptionTokenCurator
+        for (ActivationKey key : activationKeyCurator
             .listByOwner(owner)) {
-            log.info("Deleting subscription token: " + token);
-            subscriptionTokenCurator.delete(token);
+            log.info("Deleting activation key: " + key);
+            activationKeyCurator.delete(key);
         }
         for (Subscription s : subscriptionCurator.listByOwner(owner)) {
             log.info("Deleting subscription: " + s);
@@ -304,7 +309,7 @@ public class OwnerResource {
 
     /**
      * Return the entitlements for the owner of the given id.
-     * 
+     *
      * @param ownerKey id of the owner whose entitlements are sought.
      * @return the entitlements for the owner of the given id.
      */
@@ -324,8 +329,46 @@ public class OwnerResource {
     }
 
     /**
+     * Return the activation keys for the owner of the given id.
+     *
+     * @param ownerKey id of the owner whose keys are sought.
+     * @return the activation keys for the owner of the given id.
+     */
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{owner_key}/activation_keys")
+    public List<ActivationKey> ownerActivationKeys(
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
+        Owner owner = findOwner(ownerKey);
+
+        return this.activationKeyCurator.listByOwner(owner);
+    }
+
+    /**
+     * Allow the creation of an activation key from the owner resource
+     *
+     * @param ownerKey id of the owner whose keys are sought.
+     * @return the activation keys for the owner of the given id.
+     */
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{owner_key}/activation_keys")
+    public ActivationKey createActivationKey(
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
+        ActivationKey activationKey) {
+        Owner owner = findOwner(ownerKey);
+        activationKey.setOwner(owner);
+
+        ActivationKey newKey = activationKeyCurator.create(activationKey);
+        System.out.println(newKey);
+        sink.emitActivationKeyCreated(newKey);
+
+        return newKey;
+    }
+
+    /**
      * Return the consumers for the owner of the given id.
-     * 
+     *
      * @param ownerKey id of the owner whose consumers are sought.
      * @return the consumers for the owner of the given id.
      */
@@ -363,7 +406,7 @@ public class OwnerResource {
 
     /**
      * Return the entitlement pools for the owner of the given id.
-     * 
+     *
      * @param ownerKey id of the owner whose entitlement pools are sought.
      * @return the entitlement pools for the owner of the given id.
      */
@@ -382,7 +425,7 @@ public class OwnerResource {
 
         Date activeOnDate = new Date();
         if (activeOn != null) {
-            activeOnDate = parseActiveOnString(activeOn);
+            activeOnDate = parseDateString(activeOn);
         }
 
         Consumer c = null;
@@ -535,7 +578,7 @@ public class OwnerResource {
 
     /**
      * expose updates for owners
-     * 
+     *
      * @param key
      * @param owner
      * @return the update {@link Owner}
@@ -559,7 +602,7 @@ public class OwnerResource {
      * 'Tickle' an owner to have all of their entitlement pools synced with
      * their subscriptions. This method (and the one below may not be entirely
      * RESTful, as the updated data is not supplied as an argument.
-     * 
+     *
      * @param ownerKey unique id key of the owner whose pools should be updated
      * @return the status of the pending job
      */
@@ -646,6 +689,34 @@ public class OwnerResource {
         return this.importRecordCurator.findRecords(owner);
     }
 
+    @GET
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{owner_key}/statistics")
+    public List<Statistic> getStatistics(
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
+        @QueryParam("from") String from,
+        @QueryParam("to") String to) {
+        Owner o = findOwner(ownerKey);
+        return statisticCurator.getStatisticsByOwner(o, "", "", 
+                                  parseDateString(from), parseDateString(to));
+    }
+
+    @GET
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{owner_key}/statistics/{type}")
+    public List<Statistic> getStatistics(
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
+        @PathParam("type") String qType, 
+        @QueryParam("reference") String reference,
+        @QueryParam("from") String from,
+        @QueryParam("to") String to) {
+        Owner o = findOwner(ownerKey);
+        return statisticCurator.getStatisticsByOwner(o, qType, reference, 
+                                  parseDateString(from), parseDateString(to));
+    }
+    
     private void recordImportSuccess(Owner owner) {
         ImportRecord record = new ImportRecord(owner);
         record.recordStatus(ImportRecord.Status.SUCCESS,
@@ -662,8 +733,11 @@ public class OwnerResource {
     }
 
 
-    private Date parseActiveOnString(String activeOn) {
+    private Date parseDateString(String activeOn) {
         Date d;
+        if (activeOn == null || activeOn.trim().equals("")) {
+            return null;
+        }
         try {
             d = DatatypeConverter.parseDateTime(activeOn).getTime();
         }
