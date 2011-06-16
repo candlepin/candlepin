@@ -240,6 +240,87 @@ public class DefaultRulesTest {
     }
 
     @Test
+    public void EmptyUname() {
+        Pool pool = setupArchTest("arch", "s390x,x86", "uname.machine", "");
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
+            .getResult();
+        assertFalse(result.hasErrors());
+        assertTrue(result.hasWarnings());
+    }
+
+    @Test
+    public void EmptyArch() {
+        Pool pool = setupArchTest("arch", "", "uname.machine", "x86_64");
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
+            .getResult();
+        assertFalse(result.hasErrors());
+        assertTrue(result.hasWarnings());
+    }
+
+    @Test
+    public void DuplicateArchesMatches() {
+        Pool pool = setupArchTest("arch", "x86_64,x86_64", "uname.machine", "x86_64");
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
+            .getResult();
+        assertFalse(result.hasErrors());
+        assertFalse(result.hasWarnings());
+    }
+
+    @Test
+    public void DuplicateArchesNoMatches() {
+        Pool pool = setupArchTest("arch", "x86_64,x86_64", "uname.machine", "z80");
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
+            .getResult();
+        assertFalse(result.hasErrors());
+        assertTrue(result.hasWarnings());
+    }
+
+    @Test
+    public void CommaSplitArchesTrailingComma() {
+        Pool pool = setupArchTest("arch", "x86_64,x86_64,", "uname.machine", "x86_64");
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
+            .getResult();
+        assertFalse(result.hasErrors());
+        assertFalse(result.hasWarnings());
+    }
+
+    @Test
+    public void CommaSplitArchesExtraSpaces() {
+        Pool pool = setupArchTest("arch", "x86_64,  z80 ", "uname.machine", "x86_64");
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
+            .getResult();
+        assertFalse(result.hasErrors());
+        assertFalse(result.hasWarnings());
+    }
+
+    @Test
+    public void multipleArchesNoMatches() {
+        Pool pool = setupArchTest("arch", "s390x,z80,ppc64", "uname.machine", "i686");
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
+            .getResult();
+        assertFalse(result.hasErrors());
+        assertTrue(result.hasWarnings());
+    }
+
+    @Test
+    public void multipleArchesMatches() {
+        Pool pool = setupArchTest("arch", "s390x,x86", "uname.machine", "i686");
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
+            .getResult();
+        assertFalse(result.hasErrors());
+        assertFalse(result.hasWarnings());
+    }
+
+    @Test
+    public void goodArchNoUnameMachine() {
+        Pool pool = setupArchTest("arch", "x86", "something.not.uname", "i686");
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
+            .getResult();
+        assertFalse(result.hasErrors());
+        assertTrue(result.hasWarnings());
+    }
+
+    @Test
     public void fewerThanMaximumNumberOfSocketsShouldNotGenerateWarning() {
         Pool pool = setupArchTest("sockets", "128", "cpu.cpu_socket(s)", "2");
 
