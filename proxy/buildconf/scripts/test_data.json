@@ -654,7 +654,65 @@
                 "warning_period": 30
             }
         },
+       {
+            "name": "Awesome OS for x86 Bits",
+            "id": "100000000000020",
+            "version": "8.6",
+            "arch": "x86",
+            "attributes": {
+                "sockets": 128,
+                "warning_period": 30
+            },
+            "content": [
+                [11113, true],
+                [0, false],
+                [1, true]
+            ]
+        },
+        {
+            "name": "Awesome OS for x86",
+            "id": "awesomeos-x86",
+            "version": "8.6",
+            "arch": "x86",
+            "type": "MKT",
+            "provided_products": [
+                "100000000000020"
+            ],
+            "attributes": {
+                "sockets": 16,
+                "warning_period": 30
+            }
+        },
 
+      {
+            "name": "Awesome OS for x86/x64_64 Bits",
+            "id": "100000000000022",
+            "version": "8.64",
+            "arch": "x86,x86_64",
+            "attributes": {
+                "sockets": 128,
+                "warning_period": 30
+            },
+            "content": [
+                [11113, true],
+                [0, false],
+                [1, true]
+            ]
+        },
+        {
+            "name": "Awesome OS for x86/x86_64",
+            "id": "awesomeos-x86-x86_64",
+            "version": "8.64",
+            "arch": "x86,x86_64",
+            "type": "MKT",
+            "provided_products": [
+                "100000000000022"
+            ],
+            "attributes": {
+                "sockets": 16,
+                "warning_period": 30
+            }
+        },
         {
             "name": "Awesome OS for i686/x86_64 Bits",
             "id": "100000000000007",
