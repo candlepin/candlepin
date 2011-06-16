@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.util.Util;
 
 import org.hibernate.annotations.GenericGenerator;
@@ -119,17 +120,19 @@ public class User extends AbstractHibernateObject {
     /**
      * Looks up permissions to find associated owners.
      *
-     * @return associated owners
+     * WARNING: will return *any* owner this user has a permission for, regardless
+     * of what access level it is.
      *
-     * @deprecated use {@link #getMemberships()} instead
+     * @return associated owners
      */
-    @Deprecated
     @XmlTransient
-    public Set<Owner> getOwners() {
+    public Set<Owner> getOwners(Access accessLevel) {
         Set<Owner> owners = new HashSet<Owner>();
         for (Role role : getRoles()) {
             for (OwnerPermission p : role.getPermissions()) {
-                owners.add(p.getOwner());
+                if (p.providesAccess(accessLevel)) {
+                    owners.add(p.getOwner());
+                }
             }
         }
 

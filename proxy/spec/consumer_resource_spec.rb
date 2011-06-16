@@ -81,7 +81,7 @@ describe 'Consumer Resource' do
     end.should raise_exception(RestClient::Forbidden)
   end
 
-  it 'returns a 404 for a non-existant consumer' do
+  it 'returns a 403 for a non-existant consumer' do
     lambda do
       @cp.get_consumer('fake-uuid')
     end.should raise_exception(RestClient::Forbidden)

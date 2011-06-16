@@ -26,6 +26,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.interceptor.SecurityHole;
 import org.fedoraproject.candlepin.exceptions.ConflictException;
@@ -104,7 +105,7 @@ public class UserResource {
             owners.addAll(ownerCurator.listAll());
         }
         else {
-            owners.addAll(user.getOwners());
+            owners.addAll(user.getOwners(Access.ALL));
         }
         return owners;
     }
