@@ -436,7 +436,7 @@ public class OwnerResource {
                 throw new NotFoundException(i18n.tr("consumer: {0} not found",
                     consumerUuid));
             }
-            if (c.getOwner().getId().equals(owner.getId())) {
+            if (!c.getOwner().getId().equals(owner.getId())) {
                 throw new BadRequestException(
                     "Consumer specified does not belong to owner on path");
             }
