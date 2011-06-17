@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.resource;
 
+import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
@@ -99,10 +100,17 @@ public class RoleResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("{role_id}/permissions")
-    public Role updateRolePermissions(@PathParam("role_id") String roleId,
+    public Role addRolePermission(@PathParam("role_id") String roleId,
         OwnerPermission permission) {
 
         Role existingRole = lookupRole(roleId);
+        
+
+        // Don't allow NONE permissions to be created, this is currently just for 
+        // internal use:
+        if (permission.getAccess().equals(Access.NONE)) {
+            throw new BadRequestException(i18n.tr("Access type NONE not supported."));
+        }
 
         // Attach actual owner objects to each incoming permission:
         Owner temp = permission.getOwner();
@@ -116,7 +124,7 @@ public class RoleResource {
 
     @DELETE
     @Path("{role_id}/permissions/{perm_id}")
-    public Role deleteRolePermissions(@PathParam("role_id") String roleId,
+    public Role removeRolePermission(@PathParam("role_id") String roleId,
                                       @PathParam("perm_id") String permissionId) {
 
         Role existingRole = lookupRole(roleId);
