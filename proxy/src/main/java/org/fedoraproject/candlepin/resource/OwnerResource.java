@@ -445,30 +445,6 @@ public class OwnerResource {
             activeOnDate, true, listAll);
     }
 
-    // ----- User -----
-    /**
-     * Associates a user with this owner.
-     *
-     * @param ownerKey
-     * @param userLogin
-     * @return the associated user
-     *
-     * @deprecated use the membership resource instead!
-     */
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{owner_key}/users")
-    @Deprecated
-    public User associateUser(@PathParam("owner_key") String ownerKey,
-                              @QueryParam("user_login") String userLogin) {
-        User user = findUser(userLogin);
-
-        // HEY LOOK!  THIS IS NOT ACTUALLY DOING ANYTHING!
-
-        return user;
-    }
-
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
