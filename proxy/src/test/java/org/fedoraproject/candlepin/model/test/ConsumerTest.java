@@ -142,13 +142,15 @@ public class ConsumerTest extends DatabaseTestFixture {
 
         ConsumerResource consumerResource = injector.getInstance(ConsumerResource.class);
         consumer.setFact("FACT", "FACT_VALUE");
-        consumerResource.updateConsumer(consumer.getUuid(), consumer, new ConsumerPrincipal(consumer));
+        consumerResource.updateConsumer(consumer.getUuid(), consumer,
+            new ConsumerPrincipal(consumer));
 
         Consumer lookedUp = consumerCurator.find(consumer.getId());
         Date lookedUpDate = lookedUp.getUpdated();
         assertEquals("FACT_VALUE", lookedUp.getFact("FACT"));
 
-        assertTrue("Last updated date was not changed.", beforeUpdateDate.before(lookedUpDate));
+        assertTrue("Last updated date was not changed.",
+            beforeUpdateDate.before(lookedUpDate));
     }
 
     @Test
