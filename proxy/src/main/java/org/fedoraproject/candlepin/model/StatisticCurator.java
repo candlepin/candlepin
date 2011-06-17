@@ -48,30 +48,40 @@ public class StatisticCurator extends AbstractHibernateCurator<Statistic> {
         if (qType != null && !qType.trim().equals("")) {
             if (qType.equals("TOTALCONSUMERS")) {
                 c.add(Restrictions.eq("entryType", EntryType.TOTALCONSUMERS));
-            } else if (qType.equals("CONSUMERSBYSOCKETCOUNT")) {
+            } 
+            else if (qType.equals("CONSUMERSBYSOCKETCOUNT")) {
                 c.add(Restrictions.eq("entryType", EntryType.CONSUMERSBYSOCKETCOUNT));
-            } else if (qType.equals("TOTALSUBSCRIPTIONCOUNT")) {
+            } 
+            else if (qType.equals("TOTALSUBSCRIPTIONCOUNT")) {
                 c.add(Restrictions.eq("entryType", EntryType.TOTALSUBSCRIPTIONCOUNT));
-            } else if (qType.equals("TOTALSUBSCRIPTIONCONSUMED")) {
+            } 
+            else if (qType.equals("TOTALSUBSCRIPTIONCONSUMED")) {
                 c.add(Restrictions.eq("entryType", EntryType.TOTALSUBSCRIPTIONCONSUMED));
-            } else if (qType.equals("PERPRODUCT")) {
+            } 
+            else if (qType.equals("PERPRODUCT")) {
                 c.add(Restrictions.eq("entryType", EntryType.PERPRODUCT));
-            } else if (qType.equals("PERPOOL")) {
+            } 
+            else if (qType.equals("PERPOOL")) {
                 c.add(Restrictions.eq("entryType", EntryType.PERPOOL));
-            } else{
+            } 
+            else {
                 // no match, no filter
             }
         }
         if (vType != null && !vType.trim().equals("")) {
             if (vType.equals("RAW")) {
                 c.add(Restrictions.eq("valueType", ValueType.RAW));
-            } else if (vType.equals("USED")) {
+            } 
+            else if (vType.equals("USED")) {
                 c.add(Restrictions.eq("valueType", ValueType.USED));
-            } else if (vType.equals("CONSUMED")) {
+            } 
+            else if (vType.equals("CONSUMED")) {
                 c.add(Restrictions.eq("valueType", ValueType.CONSUMED));
-            } else if (vType.equals("PERCENTAGECONSUMED")) {
+            } 
+            else if (vType.equals("PERCENTAGECONSUMED")) {
                 c.add(Restrictions.eq("valueType", ValueType.PERCENTAGECONSUMED));
-            } else{
+            } 
+            else {
                 //no match, no filter
             }
         }        

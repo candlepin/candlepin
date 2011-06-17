@@ -672,10 +672,10 @@ public class OwnerResource {
     }
     
     
-    private Date getFromDate(String from, String to, String days){
-        if(days != null && !days.trim().equals("")){
-            if(to != null && !to.trim().equals("") ||
-                from != null && !from.trim().equals("")){
+    private Date getFromDate(String from, String to, String days) {
+        if (days != null && !days.trim().equals("")) {
+            if (to != null && !to.trim().equals("") ||
+                from != null && !from.trim().equals("")) {
                 throw new BadRequestException("You can use either the to/from " +
                                                "date parameters or the number of " +
                                                "days parameter, but not both");
@@ -683,16 +683,17 @@ public class OwnerResource {
         }
 
         Date daysDate = null;
-        if(days != null && !days.trim().equals("")){
-            long MILLIS_IN_A_DAY = 1000*60*60*24;  
+        if (days != null && !days.trim().equals("")) {
+            long mills = 1000 * 60 * 60 * 24;  
             int number = Integer.parseInt(days);
-            daysDate = new Date(new Date().getTime() - (number * MILLIS_IN_A_DAY));
+            daysDate = new Date(new Date().getTime() - (number * mills));
         }
         
         Date fromDate = null;
-        if(daysDate != null){
+        if (daysDate != null) {
             fromDate = daysDate;
-        } else {
+        } 
+        else {
             fromDate = parseDateString(from);
         }
         
