@@ -20,7 +20,7 @@ describe 'Entitlements' do
     @cp.refresh_pools(@owner.key)
 
     #create consumer 
-    @user = user_client(@owner, 'billy')
+    @user = user_client(@owner, random_string('billy'))
     @system = consumer_client(@user, 'system6')
   end 
 
