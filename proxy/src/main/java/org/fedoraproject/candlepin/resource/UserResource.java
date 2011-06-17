@@ -94,7 +94,6 @@ public class UserResource {
     @GET
     @Path("/{username}/owners")
     @Produces(MediaType.APPLICATION_JSON)
-    @SecurityHole
     public List<Owner> listUsersOwners(@PathParam("username") @Verify(User.class)
         String username,
         @Context Principal principal) {
