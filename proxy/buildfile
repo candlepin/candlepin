@@ -381,6 +381,11 @@ RSpec::Core::RakeTask.new do |task|
     task.rspec_opts << "-e '#{only_run}'"
   end
 
+  fullrun = ENV['fullrun']
+  if fullrun.nil?
+    task.rspec_opts << "--fail-fast"
+  end
+
   dots = ENV['dots']
   if not dots.nil?
     task.rspec_opts << "-fp"
