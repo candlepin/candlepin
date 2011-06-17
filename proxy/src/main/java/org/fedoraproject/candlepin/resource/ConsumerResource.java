@@ -69,6 +69,7 @@ import org.xnap.commons.i18n.I18n;
 import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -364,7 +365,7 @@ public class ConsumerResource {
         Consumer consumer, @Context Principal principal) {
         Consumer toUpdate = verifyAndLookupConsumer(uuid);
 
-        log.debug("Updating");
+        log.debug("Updating consumer.");
 
         if (!toUpdate.factsAreEqual(consumer)) {
             log.debug("Facts are not equal, updating them");
@@ -372,6 +373,10 @@ public class ConsumerResource {
 
             // TODO: Just updating the facts for now
             toUpdate.setFacts(consumer.getFacts());
+
+            // Set the updated date here b/c @PreUpdate will not get fired
+            // since only the facts table will receive the update.
+            toUpdate.setUpdated(new Date());
             sink.sendEvent(event);
         }
     }
