@@ -227,10 +227,21 @@ class Candlepin
     get("/pools/#{poolid}")
   end
 
+  # Deprecated, unless you're a super admin actually looking to list all pools:
   def list_pools(params = {})
     path = "/pools?"
     path << "consumer=#{params[:consumer]}&" if params[:consumer]
     path << "owner=#{params[:owner]}&" if params[:owner]
+    path << "product=#{params[:product]}&" if params[:product]
+    path << "listall=#{params[:listall]}&" if params[:listall]
+    results = get(path)
+
+    return results
+  end
+
+  def list_owner_pools(owner_key, params = {})
+    path = "/owners/#{owner_key}/pools?"
+    path << "consumer=#{params[:consumer]}&" if params[:consumer]
     path << "product=#{params[:product]}&" if params[:product]
     path << "listall=#{params[:listall]}&" if params[:listall]
     results = get(path)

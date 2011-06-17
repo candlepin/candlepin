@@ -36,6 +36,15 @@ describe 'Owner Resource' do
     users.length.should == 2
   end
 
+  it "lets owners list pools" do
+    owner = create_owner random_string("test_owner1")
+    product = create_product
+    @cp.create_subscription(owner['key'], product.id, 10)
+    @cp.refresh_pools(owner['key'])
+    pools = @cp.list_owner_pools(owner['key'])
+    pools.length.should == 1
+  end
+
   it "does not let read only users refresh pools" do
     owner = create_owner random_string('test_owner')
     ro_owner_client = user_client(owner, random_string('testuser'), true)
