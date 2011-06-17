@@ -63,7 +63,7 @@ public class AdminResource {
     @GET
     @Produces({MediaType.TEXT_PLAIN})
     @Path("init")
-    @SecurityHole
+    @SecurityHole(noAuth = true)
     public String initialize() {
         log.debug("Called initialize()");
 

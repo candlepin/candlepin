@@ -76,7 +76,6 @@ import com.google.inject.Singleton;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
 import com.wideplay.warp.persist.jpa.JpaUnit;
-import org.fedoraproject.candlepin.auth.interceptor.SecurityHole;
 
 public class CandlepinCommonTestingModule extends CandlepinModule {
 
@@ -133,15 +132,8 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
 
         bindInterceptor(Matchers.inPackage(Package
             .getPackage("org.fedoraproject.candlepin.resource")), 
-            Matchers.not(Matchers.annotatedWith(SecurityHole.class)),
-            securityInterceptor);
+            Matchers.any(), securityInterceptor);
 
-//        AccessControlInterceptor crud = new AccessControlInterceptor();
-//        requestInjection(crud);
-//        crudInterceptor = new TestingInterceptor(crud);
-//
-//        bindInterceptor(Matchers.subclassesOf(AbstractHibernateCurator.class),
-//            Matchers.annotatedWith(EnforceAccessControl.class), crudInterceptor);
         bind(CertificateRevocationListTask.class);
         // temporary
         bind(IdentityCertServiceAdapter.class).to(

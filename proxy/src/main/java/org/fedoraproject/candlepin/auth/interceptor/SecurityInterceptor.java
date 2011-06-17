@@ -86,8 +86,22 @@ public class SecurityInterceptor implements MethodInterceptor {
      */
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
-        Principal principal = this.principalProvider.get();
+
         log.debug("Invoked security interceptor " + invocation.getMethod());
+
+        SecurityHole securityHole = checkForSecurityHoleAnnotation(invocation);
+        // If method is annotated with SecurityHole and requires no authentication,
+        // allow to proceed:
+        if (securityHole != null && securityHole.noAuth()) {
+            log.warn("Allowing invocation to proceed with no authentication required.");
+            return invocation.proceed();
+        }
+
+        Principal principal = this.principalProvider.get();
+
+        if (securityHole != null) {
+            return invocation.proceed();
+        }
 
         Access defaultAccess = getAssumedAccessType(invocation);
 
@@ -103,6 +117,16 @@ public class SecurityInterceptor implements MethodInterceptor {
 
         String error = "Insufficient permissions";
         throw new ForbiddenException(i18n.tr(error));
+    }
+
+    private SecurityHole checkForSecurityHoleAnnotation(MethodInvocation invocation) {
+        for (Annotation annotation : invocation.getMethod().getAnnotations()) {
+            if (annotation instanceof SecurityHole) {
+                return (SecurityHole) annotation;
+            }
+        }
+
+        return null;
     }
 
     /**

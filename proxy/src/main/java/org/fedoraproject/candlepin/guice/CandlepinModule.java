@@ -92,7 +92,6 @@ import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
 import com.wideplay.warp.persist.jpa.JpaUnit;
 
-import org.fedoraproject.candlepin.auth.interceptor.SecurityHole;
 /**
  * CandlepinProductionConfiguration
  */
@@ -175,27 +174,16 @@ public class CandlepinModule extends AbstractModule {
         SecurityInterceptor securityEnforcer = new SecurityInterceptor();
         requestInjection(securityEnforcer);
         bindInterceptor(resourcePkgMatcher, 
-                Matchers.not(Matchers.annotatedWith(SecurityHole.class)),
-                securityEnforcer);
+                Matchers.any(), securityEnforcer);
 
-//        AccessControlInterceptor accessControlInterceptor =
-//              new AccessControlInterceptor();
-//        requestInjection(accessControlInterceptor);
-//        
-//        bindInterceptor(
-//            Matchers.subclassesOf(AbstractHibernateCurator.class),
-//            Matchers.annotatedWith(EnforceAccessControl.class), 
-//            accessControlInterceptor);
-
-        //amqp stuff below...
-
+        // AMQP stuff:
         bind(Function.class).annotatedWith(Names.named("abc"))
                 .to(AMQPBusEventAdapter.class).in(Singleton.class);
-      //for lazy loading.
+      // for lazy loading:
         bind(AMQPBusPublisher.class).toProvider(AMQPBusPubProvider.class)
                 .in(Singleton.class);
 
-        //flexible end date for identity certificates
+        // flexible end date for identity certificates
         bind(Function.class).annotatedWith(Names.named("endDateGenerator"))
             .to(ExpiryDateFunction.class).in(Singleton.class);
     }

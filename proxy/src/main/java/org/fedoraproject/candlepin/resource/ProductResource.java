@@ -25,6 +25,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import org.fedoraproject.candlepin.auth.interceptor.SecurityHole;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.Content;
@@ -87,6 +88,7 @@ public class ProductResource {
     @GET
     @Path("/{product_uuid}")    
     @Produces(MediaType.APPLICATION_JSON)
+    @SecurityHole
     public Product getProduct(@PathParam("product_uuid") String pid) {
         Product toReturn = prodAdapter.getProductById(pid);
 
@@ -101,6 +103,7 @@ public class ProductResource {
     @GET
     @Path("/{product_uuid}/certificate")
     @Produces(MediaType.APPLICATION_JSON)
+    @SecurityHole
     public ProductCertificate getProductCertificate(
         @PathParam("product_uuid") String productId) {
         

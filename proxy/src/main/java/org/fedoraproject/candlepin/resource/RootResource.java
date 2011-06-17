@@ -70,7 +70,7 @@ public class RootResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @SecurityHole
+    @SecurityHole(noAuth = true)
     public List<Link> getRootResources() {
         List<Link> links = new LinkedList<Link>();
         for (Class c : RESOURCE_CLASSES) {
