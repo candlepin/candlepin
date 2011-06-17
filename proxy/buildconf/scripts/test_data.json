@@ -935,7 +935,7 @@
         },
         {
             "name": "Awesome OS for Intel x86_64/i686/ia64",
-            "id": "awesomeos-x86_64/i686/ia64",
+            "id": "awesomeos-x86_64-i686-ia64",
             "version": "3.11",
             "arch": "x86_64,i686,ia64",
             "type": "MKT",
