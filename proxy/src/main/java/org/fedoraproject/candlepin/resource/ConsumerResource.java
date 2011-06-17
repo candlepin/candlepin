@@ -842,7 +842,8 @@ public class ConsumerResource {
     @Produces("application/zip")
     @Path("{consumer_uuid}/export")
     public File exportData(@Context HttpServletResponse response,
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
+        @PathParam("consumer_uuid")
+            @Verify(value = Consumer.class, require = Access.ALL) String consumerUuid) {
 
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
         if (!consumer.getType().isType(ConsumerTypeEnum.CANDLEPIN)) {

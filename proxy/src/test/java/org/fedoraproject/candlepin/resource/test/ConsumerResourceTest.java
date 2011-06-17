@@ -74,6 +74,9 @@ import org.mockito.runners.MockitoJUnitRunner;
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 import java.util.ArrayList;
+
+import javax.servlet.http.HttpServletResponse;
+
 import org.fedoraproject.candlepin.auth.permissions.Permission;
 
 /**
@@ -290,6 +293,16 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         consumer = consumerResource.create(consumer, principal, null, null);
 
         assertEquals(USER_NAME, consumer.getUsername());
+    }
+
+    @Test(expected = ForbiddenException.class)
+    public void testReadOnlyUsersCantGenerateExports() {
+        consumer.setType(consumerTypeCurator.create(
+            new ConsumerType(ConsumerTypeEnum.CANDLEPIN)));
+        consumerCurator.update(consumer);
+        setupPrincipal(owner, Access.READ_ONLY);
+        securityInterceptor.enable();
+        consumerResource.exportData(mock(HttpServletResponse.class), consumer.getUuid());
     }
 
     @Test
