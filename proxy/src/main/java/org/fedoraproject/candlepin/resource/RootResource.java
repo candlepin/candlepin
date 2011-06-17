@@ -18,6 +18,13 @@ package org.fedoraproject.candlepin.resource;
  * RootResource
  */
 
+import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
+
+import com.google.inject.Inject;
+
+import org.apache.log4j.Logger;
+
 import java.util.LinkedList;
 import java.util.List;
 
@@ -25,12 +32,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-
-import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.auth.Role;
-import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
-
-import com.google.inject.Inject;
 
 /**
  * A root resource, responsible for returning client a struct of links to the
@@ -59,6 +60,7 @@ public class RootResource {
         RESOURCE_CLASSES.add(PoolResource.class);
         RESOURCE_CLASSES.add(ProductResource.class);
         RESOURCE_CLASSES.add(RulesResource.class);
+        RESOURCE_CLASSES.add(StatisticResource.class);
         RESOURCE_CLASSES.add(StatusResource.class);
         RESOURCE_CLASSES.add(SubscriptionResource.class);
         RESOURCE_CLASSES.add(ActivationKeyResource.class);
