@@ -200,7 +200,8 @@ public class OwnerResource {
     @GET
     @Path("/{owner_key}/info")
     @Produces(MediaType.APPLICATION_JSON)
-    public OwnerInfo getOwnerInfo(@PathParam("owner_key") String ownerKey) {
+    public OwnerInfo getOwnerInfo(@PathParam("owner_key")
+        @Verify(Owner.class) String ownerKey) {
         Owner owner = findOwner(ownerKey);
         return ownerInfoCurator.lookupByOwner(owner);
     }
@@ -317,7 +318,7 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/entitlements")
     public List<Entitlement> ownerEntitlements(
-        @PathParam("owner_key") String ownerKey) {
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
         Owner owner = findOwner(ownerKey);
 
         List<Entitlement> toReturn = new LinkedList<Entitlement>();
