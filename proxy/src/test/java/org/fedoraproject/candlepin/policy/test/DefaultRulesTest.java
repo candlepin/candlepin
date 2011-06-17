@@ -353,6 +353,19 @@ public class DefaultRulesTest {
         assertTrue(result.hasWarnings());
     }
 
+    @Test
+    public void ZeroConsumerSocketsShouldGenerateWarning() {
+        Pool pool = setupArchTest("sockets", "0", "cpu.cpu_socket(s)", "2");
+
+        // Get rid of the facts that setupTest set.
+        consumer.setFacts(new HashMap<String, String>());
+
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
+            .getResult();
+        assertFalse(result.hasErrors());
+        assertTrue(result.hasWarnings());
+    }
+
     private Pool setupArchTest(final String attributeName,
         String attributeValue, final String factName, final String factValue) {
 
