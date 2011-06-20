@@ -14,10 +14,32 @@
  */
 package org.fedoraproject.candlepin.resource;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
+import javax.xml.bind.DatatypeConverter;
+
+import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventAdapter;
 import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
+import org.fedoraproject.candlepin.auth.Access;
+import org.fedoraproject.candlepin.auth.interceptor.Verify;
 import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.CandlepinException;
@@ -25,10 +47,10 @@ import org.fedoraproject.candlepin.exceptions.IseException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.ActivationKey;
 import org.fedoraproject.candlepin.model.ActivationKeyCurator;
-import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
-import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
+import org.fedoraproject.candlepin.model.ConsumerType;
+import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EventCurator;
 import org.fedoraproject.candlepin.model.ExporterMetadata;
@@ -54,11 +76,6 @@ import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.fedoraproject.candlepin.sync.Importer;
 import org.fedoraproject.candlepin.sync.ImporterException;
 import org.fedoraproject.candlepin.sync.SyncDataFormatException;
-
-import com.google.inject.Inject;
-import com.wideplay.warp.persist.Transactional;
-
-import org.apache.log4j.Logger;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
@@ -67,27 +84,8 @@ import org.jboss.resteasy.util.GenericType;
 import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.xml.bind.DatatypeConverter;
-
-import org.fedoraproject.candlepin.auth.Access;
-import org.fedoraproject.candlepin.auth.interceptor.Verify;
+import com.google.inject.Inject;
+import com.wideplay.warp.persist.Transactional;
 
 /**
  * Owner Resource
@@ -250,11 +248,6 @@ public class OwnerResource {
 
     private void cleanupAndDelete(Owner owner, boolean revokeCerts) {
         log.info("Cleaning up owner: " + owner);
-        if (!userService.isReadyOnly()) {
-            for (User u : userService.listByOwner(owner)) {
-                userService.deleteUser(u);
-            }
-        }
         for (Consumer c : consumerCurator.listByOwner(owner)) {
             log.info("Deleting consumer: " + c);
 
@@ -297,7 +290,7 @@ public class OwnerResource {
             log.info("Deleting import record:  " + record);
             importRecordCurator.delete(record);
         }
-        
+
         for (OwnerPermission perm : permissionCurator.findByOwner(owner)) {
             log.info("Deleting permission: " + perm.getAccess());
             perm.getRole().getPermissions().remove(perm);
@@ -507,20 +500,6 @@ public class OwnerResource {
         return subService.getSubscriptions(o);
     }
 
-    /**
-     * @param ownerKey
-     * @return list of users under that owner name
-     */
-    @GET
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{owner_key}/users")
-    public List<User> getUsers(
-        @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
-        Owner o = findOwner(ownerKey);
-        return userService.listByOwner(o);
-    }
-
     private Owner findOwner(String key) {
         Owner owner = ownerCurator.lookupByKey(key);
 
@@ -662,7 +641,7 @@ public class OwnerResource {
     public List<ImportRecord> getImports(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
         Owner owner = findOwner(ownerKey);
-        
+
         return this.importRecordCurator.findRecords(owner);
     }
 
@@ -676,13 +655,13 @@ public class OwnerResource {
         @QueryParam("to") String to,
         @QueryParam("days") String days) {
         Owner o = findOwner(ownerKey);
- 
+
         if (o == null) {
             throw new NotFoundException(i18n.tr(
                 "owner with key: {0} was not found.", ownerKey));
         }
-        
-        return statisticCurator.getStatisticsByOwner(o, "", "", "", 
+
+        return statisticCurator.getStatisticsByOwner(o, "", "", "",
                                 getFromDate(from, to, days), parseDateString(to));
     }
 
@@ -692,46 +671,46 @@ public class OwnerResource {
     @Path("{owner_key}/statistics/{type}")
     public List<Statistic> getStatistics(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
-        @PathParam("type") String qType, 
+        @PathParam("type") String qType,
         @QueryParam("reference") String reference,
         @QueryParam("from") String from,
         @QueryParam("to") String to,
         @QueryParam("days") String days) {
         Owner o = findOwner(ownerKey);
-        
+
         if (o == null) {
             throw new NotFoundException(i18n.tr(
                 "owner with key: {0} was not found.", ownerKey));
         }
 
-        return statisticCurator.getStatisticsByOwner(o, qType, reference, "", 
+        return statisticCurator.getStatisticsByOwner(o, qType, reference, "",
                                 getFromDate(from, to, days), parseDateString(to));
     }
-    
+
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/statistics/{qtype}/{vtype}")
     public List<Statistic> getStatistics(
         @Verify(Owner.class) @PathParam("owner_key") String ownerKey,
-        @PathParam("qtype") String qType, 
+        @PathParam("qtype") String qType,
         @PathParam("vtype") String vType,
         @QueryParam("reference") String reference,
         @QueryParam("from") String from,
         @QueryParam("to") String to,
         @QueryParam("days") String days) {
         Owner o = findOwner(ownerKey);
-        
+
         if (o == null) {
             throw new NotFoundException(i18n.tr(
                 "owner with key: {0} was not found.", ownerKey));
         }
 
-        return statisticCurator.getStatisticsByOwner(o, qType, reference, vType, 
+        return statisticCurator.getStatisticsByOwner(o, qType, reference, vType,
                                 getFromDate(from, to, days), parseDateString(to));
     }
-    
-    
+
+
     private Date getFromDate(String from, String to, String days) {
         if (days != null && !days.trim().equals("")) {
             if (to != null && !to.trim().equals("") ||
@@ -744,22 +723,22 @@ public class OwnerResource {
 
         Date daysDate = null;
         if (days != null && !days.trim().equals("")) {
-            long mills = 1000 * 60 * 60 * 24;  
+            long mills = 1000 * 60 * 60 * 24;
             int number = Integer.parseInt(days);
             daysDate = new Date(new Date().getTime() - (number * mills));
         }
-        
+
         Date fromDate = null;
         if (daysDate != null) {
             fromDate = daysDate;
-        } 
+        }
         else {
             fromDate = parseDateString(from);
         }
-        
+
         return fromDate;
     }
-    
+
     private void recordImportSuccess(Owner owner) {
         ImportRecord record = new ImportRecord(owner);
         record.recordStatus(ImportRecord.Status.SUCCESS,

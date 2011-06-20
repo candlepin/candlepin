@@ -12,12 +12,6 @@ describe 'User Resource' do
     @user_cp = user_client(@test_owner, @username)
   end
 
-  it 'should create users' do
-    orig_count = @cp.list_users_by_owner(@test_owner['key']).size
-    create_user(@test_owner, random_string('testuser'), 'password')
-    @cp.list_users_by_owner(@test_owner['key']).size.should == orig_count + 1
-  end
-
   it "should return a 410 for deleting an unknown user" do
     # Try listing for the test user:
     lambda {

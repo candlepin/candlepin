@@ -14,7 +14,12 @@
  */
 package org.fedoraproject.candlepin.service.impl;
 
-import org.fedoraproject.candlepin.model.Owner;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.fedoraproject.candlepin.model.OwnerPermission;
 import org.fedoraproject.candlepin.model.OwnerPermissionCurator;
 import org.fedoraproject.candlepin.model.Role;
@@ -26,13 +31,6 @@ import org.fedoraproject.candlepin.util.Util;
 
 import com.google.inject.Inject;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-
 /**
  * A {@link UserServiceAdapter} implementation backed by a {@link UserCurator}
  * for user creation and persistance.
@@ -42,7 +40,7 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
     private UserCurator userCurator;
     private RoleCurator roleCurator;
     private OwnerPermissionCurator permCurator;
-    
+
     @Inject
     public DefaultUserServiceAdapter(UserCurator userCurator, RoleCurator roleCurator,
         OwnerPermissionCurator permCurator) {
@@ -50,7 +48,7 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
         this.roleCurator = roleCurator;
         this.permCurator = permCurator;
     }
-    
+
     @Override
     public User createUser(User user) {
         return this.userCurator.create(user);
@@ -66,7 +64,7 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
 
         return Collections.emptyList();
     }
-    
+
     @Override
     public List<Role> listRoles() {
         return roleCurator.listAll();
@@ -81,7 +79,7 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
             actualUsers.add(actualUser);
         }
         role.setUsers(actualUsers);
-        
+
         for (OwnerPermission permission : role.getPermissions()) {
             permission.setRole(role);
         }
@@ -89,16 +87,16 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
         this.roleCurator.create(role);
         return role;
     }
-    
+
     @Override
     public boolean validateUser(String username, String password) {
         User user = this.userCurator.findByLogin(username);
         String hashedPassword = Util.hash(password);
-        
+
         if (user != null && password != null && hashedPassword != null) {
             return hashedPassword.equals(user.getHashedPassword());
         }
-        
+
         return false;
     }
 
@@ -113,16 +111,6 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
             user.removeRole(r);
         }
         userCurator.delete(user);
-    }
-
-    @Override
-    public List<User> listByOwner(Owner owner) {
-        List<Role> roles = roleCurator.listForOwner(owner);
-        Set<User> users = new HashSet<User>();
-        for (Role r : roles) {
-            users.addAll(r.getUsers());
-        }
-        return new LinkedList<User>(users);
     }
 
     @Override

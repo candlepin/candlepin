@@ -14,17 +14,25 @@
  */
 package org.fedoraproject.candlepin.service;
 
-import org.fedoraproject.candlepin.model.Owner;
+import java.util.List;
+
 import org.fedoraproject.candlepin.model.Role;
 import org.fedoraproject.candlepin.model.User;
-
-import java.util.List;
 
 /**
  * UserServiceAdapter
  */
 public interface UserServiceAdapter {
-    
+
+    /**
+     * Does this user service implementation support creation/deletion
+     * of {@link User}s?
+     *
+     * @return if this implementation prohibits user creation/deletion via
+     *          this API
+     */
+    boolean isReadyOnly();
+
     /**
      * Validates the credentials of a given user
      * @param username
@@ -34,40 +42,26 @@ public interface UserServiceAdapter {
      */
     boolean validateUser(String username, String password) throws Exception;
 
+    User createUser(User user);
+
+    void deleteUser(User user);
+
+    User findByLogin(String login);
+
     Role createRole(Role r);
 
     Role updateRole(Role r);
-    
-    void addUserToRole(Role role, User user);
-    
-    void removeUserFromRole(Role role, User user);
 
+    void addUserToRole(Role role, User user);
+
+    void removeUserFromRole(Role role, User user);
 
     void deleteRole(String roleId);
 
     List<Role> getRoles(String username);
-    
+
     Role getRole(String roleId);
 
     List<Role> listRoles();
-    
-    
-    
-    /**
-     * Does this user service implementation support creation/deletion
-     * of {@link User}s?
-     *
-     * @return if this implementation prohibits user creation/deletion via
-     *          this API
-     */
-    boolean isReadyOnly();
-    
-    User createUser(User user);
-    
-    void deleteUser(User user);
-    
-    List<User> listByOwner(Owner owner);
-    
-    User findByLogin(String login);
-   
+
 }

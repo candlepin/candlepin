@@ -23,7 +23,6 @@ import static org.mockito.Mockito.when;
 
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.model.User;
-
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -36,7 +35,7 @@ public class LDAPUserServiceAdapterTest {
 
     private LDAPUserServiceAdapter lusa;
     private Config config;
-    
+
     @Before
     public void init() {
         config = mock(Config.class);
@@ -47,22 +46,17 @@ public class LDAPUserServiceAdapterTest {
             .thenReturn("localhost");
         lusa = new LDAPUserServiceAdapter(config);
     }
-    
+
     @Test
     public void getDN() {
         assertEquals("uid=foomanchu,dc=test,dc=com", lusa.getDN("foomanchu"));
     }
-    
-    @Test(expected = UnsupportedOperationException.class)
-    public void listByOwner() {
-        lusa.listByOwner(null);
-    }
-    
+
     @Ignore("needs mock LDAP server") @Test
     public void validateUser() {
         assertTrue(lusa.validateUser("user", "securepassword"));
     }
-    
+
     @Test
     public void deleteUser() {
         User user = mock(User.class);

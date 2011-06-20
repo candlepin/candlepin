@@ -377,13 +377,6 @@ class Candlepin
     post(path)
   end
 
-  def list_users_by_owner(owner_key)
-
-    path = "/owners/#{owner_key}/users"
-    results = get(path)
-    return results
-  end
-
   # TODO: Could also fetch from /entitlements, a bit ambiguous:
   def list_entitlements(params={})
     uuid = params[:uuid] || @uuid

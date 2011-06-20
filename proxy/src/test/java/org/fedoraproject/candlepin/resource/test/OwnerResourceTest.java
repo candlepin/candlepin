@@ -21,14 +21,15 @@ import static org.junit.Assert.assertTrue;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventFactory;
+import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.config.CandlepinCommonTestConfig;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
@@ -38,10 +39,11 @@ import org.fedoraproject.candlepin.model.ActivationKey;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.OwnerPermission;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.Role;
 import org.fedoraproject.candlepin.model.Subscription;
-import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.resource.OwnerResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
@@ -49,10 +51,6 @@ import org.jboss.resteasy.plugins.providers.atom.Entry;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.ArrayList;
-import org.fedoraproject.candlepin.model.OwnerPermission;
-import org.fedoraproject.candlepin.model.Role;
 /**
  * OwnerResourceTest
  */
@@ -94,35 +92,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ownerResource.deleteOwner(owner.getKey(), true);
         owner = ownerCurator.find(id);
         assertNull(owner);
-    }
-
-    @Test
-    public void testGetUsers() {
-        String ownerName = owner.getKey();
-
-        User user = new User();
-        user.setUsername("someusername");
-        user.setPassword("somepassword");
-        userCurator.create(user);
-
-        Role role = new Role("dummyrole");
-        role.addUser(user);
-        role.addPermission(new OwnerPermission(owner, Access.ALL));
-        user.addRole(role);
-        roleCurator.create(role);
-
-        User user2 = new User();
-        user2.setUsername("someotherusername");
-        user2.setPassword("someotherpassword");
-
-        user2.addRole(role);
-        userCurator.create(user2);
-        roleCurator.merge(role);
-
-        List<User> users = ownerResource.getUsers(ownerName);
-
-        assertEquals(users.size(), 2);
-        assertTrue(users.contains(user2));
     }
 
     @Test
@@ -552,7 +521,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         e1.setCreated(dateFormat.parse(date));
         this.entitlementCurator.merge(e1);
-        
+
         return e1;
     }
 

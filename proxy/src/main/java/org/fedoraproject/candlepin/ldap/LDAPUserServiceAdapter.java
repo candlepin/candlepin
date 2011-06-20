@@ -14,6 +14,12 @@
  */
 package org.fedoraproject.candlepin.ldap;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.model.Owner;
@@ -27,13 +33,6 @@ import com.novell.ldap.LDAPConnection;
 import com.novell.ldap.LDAPEntry;
 import com.novell.ldap.LDAPException;
 
-import org.apache.log4j.Logger;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 /**
  * An LDAP based user service
  */
@@ -43,22 +42,22 @@ public class LDAPUserServiceAdapter implements UserServiceAdapter {
     private static Logger log = Logger.getLogger(LDAPUserServiceAdapter.class);
     protected String base = null;
     protected int ldapVersion = LDAPConnection.LDAP_V3;
-    protected int ldapPort = 0;    
+    protected int ldapPort = 0;
     protected String ldapServer = null;
-    
+
     @Inject
     public LDAPUserServiceAdapter(Config config) {
         base = config.getString("ldap.base", "dc=example,dc=com");
         ldapPort = config.getInt("ldap.port");
-        ldapServer = config.getString("ldap.host", "example.com");              
+        ldapServer = config.getString("ldap.host", "example.com");
     }
-    
+
     /**
      * {@inheritDoc}
      *
      * @param username
      * @param password
-     * @return <code>true</code> 
+     * @return <code>true</code>
      */
     @Override
     public boolean validateUser(String username, String password) {
@@ -68,7 +67,7 @@ public class LDAPUserServiceAdapter implements UserServiceAdapter {
             LDAPConnection lc = getConnection();
             lc.bind(ldapVersion, dn, password.getBytes());
             return true;
-        } 
+        }
         catch (LDAPException e) {
             log.debug(e.getMessage());
             return false;
@@ -117,25 +116,19 @@ public class LDAPUserServiceAdapter implements UserServiceAdapter {
     public void deleteUser(User user) {
         //throw new UnsupportedOperationException(
         //    "This implementation does not support deleting Users!");
-        
+
     }
 
     @Override
     public void deleteRole(String roleId) {
         throw new UnsupportedOperationException(
             "This implementation does not support deleting roles!");
-        
-    }
 
-    @Override
-    public List<User> listByOwner(Owner owner) {
-        throw new UnsupportedOperationException(
-            "This implementation does not support deleting Users!");
     }
 
     @Override
     public User findByLogin(String username) {
-        
+
         User user = null;
         try {
             String dn = getDN(username);
@@ -147,21 +140,21 @@ public class LDAPUserServiceAdapter implements UserServiceAdapter {
             for (Role role : getRoles(username)) {
                 role.addUser(user);
             }
-        } 
+        }
         catch (LDAPException e) {
             //eat it
             // TODO: don't eat it... this will bite someone eventually :)
-        }        
-        
+        }
+
         return user;
     }
-    
+
     protected LDAPConnection getConnection() throws LDAPException {
         LDAPConnection lc = new LDAPConnection();
         lc.connect(ldapServer, ldapPort);
         return lc;
     }
-    
+
     protected String getDN(String username) {
         return String.format("uid=%s,%s", username, base);
     }
