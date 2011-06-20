@@ -81,4 +81,16 @@ describe 'Consumer Facts' do
     events.should include("consumer")
     events.should include("updated")
   end
+
+  it 'updates consumer updated date when facts are updated' do
+    updated_facts = {
+      'uname.system' => 'x86_64',
+    }
+    initial_date = @consumer.updated
+    @consumer_api.update_facts(updated_facts)
+
+    updated_consumer = @consumer_api.get_consumer
+
+    initial_date.should < updated_consumer['updated']
+  end
 end

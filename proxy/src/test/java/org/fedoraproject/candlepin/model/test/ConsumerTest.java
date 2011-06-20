@@ -20,6 +20,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,6 +39,7 @@ import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
@@ -132,6 +134,23 @@ public class ConsumerTest extends DatabaseTestFixture {
         assertEquals("bar", lookedUp.getFacts().get("foo"));
         assertEquals("bar1", metadata.get("foo1"));
         assertEquals("bar1", lookedUp.getFacts().get("foo1"));
+    }
+
+    @Test
+    public void ensureUpdatedDateChangesOnUpdate() {
+        Date beforeUpdateDate = consumer.getUpdated();
+
+        ConsumerResource consumerResource = injector.getInstance(ConsumerResource.class);
+        consumer.setFact("FACT", "FACT_VALUE");
+        consumerResource.updateConsumer(consumer.getUuid(), consumer,
+            new ConsumerPrincipal(consumer));
+
+        Consumer lookedUp = consumerCurator.find(consumer.getId());
+        Date lookedUpDate = lookedUp.getUpdated();
+        assertEquals("FACT_VALUE", lookedUp.getFact("FACT"));
+
+        assertTrue("Last updated date was not changed.",
+            beforeUpdateDate.before(lookedUpDate));
     }
 
     @Test

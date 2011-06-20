@@ -14,8 +14,6 @@
  */
 package org.fedoraproject.candlepin.guice;
 
-import java.util.Properties;
-
 import org.fedoraproject.candlepin.audit.AMQPBusEventAdapter;
 import org.fedoraproject.candlepin.audit.AMQPBusPublisher;
 import org.fedoraproject.candlepin.audit.EventSink;
@@ -62,6 +60,7 @@ import org.fedoraproject.candlepin.resource.PoolResource;
 import org.fedoraproject.candlepin.resource.ProductResource;
 import org.fedoraproject.candlepin.resource.RootResource;
 import org.fedoraproject.candlepin.resource.RulesResource;
+import org.fedoraproject.candlepin.resource.StatisticResource;
 import org.fedoraproject.candlepin.resource.StatusResource;
 import org.fedoraproject.candlepin.resource.SubscriptionResource;
 import org.fedoraproject.candlepin.resource.UserResource;
@@ -80,9 +79,6 @@ import org.fedoraproject.candlepin.util.DateSource;
 import org.fedoraproject.candlepin.util.DateSourceImpl;
 import org.fedoraproject.candlepin.util.ExpiryDateFunction;
 import org.fedoraproject.candlepin.util.X509ExtensionUtil;
-import org.quartz.JobListener;
-import org.quartz.spi.JobFactory;
-import org.xnap.commons.i18n.I18n;
 
 import com.google.common.base.Function;
 import com.google.inject.AbstractModule;
@@ -91,6 +87,12 @@ import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
 import com.wideplay.warp.persist.jpa.JpaUnit;
+
+import org.quartz.JobListener;
+import org.quartz.spi.JobFactory;
+import org.xnap.commons.i18n.I18n;
+
+import java.util.Properties;
 
 /**
  * CandlepinProductionConfiguration
@@ -139,6 +141,7 @@ public class CandlepinModule extends AbstractModule {
         bind(RulesResource.class);
         bind(AdminResource.class);
         bind(StatusResource.class);
+        bind(StatisticResource.class);
         bind(CandlepinExceptionMapper.class);
         bind(Principal.class).toProvider(PrincipalProvider.class);
         bind(JsRulesProvider.class).asEagerSingleton();

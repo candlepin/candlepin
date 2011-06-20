@@ -673,10 +673,17 @@ public class OwnerResource {
     public List<Statistic> getStatistics(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @QueryParam("from") String from,
-        @QueryParam("to") String to) {
+        @QueryParam("to") String to,
+        @QueryParam("days") String days) {
         Owner o = findOwner(ownerKey);
-        return statisticCurator.getStatisticsByOwner(o, "", "", 
-                                  parseDateString(from), parseDateString(to));
+ 
+        if (o == null) {
+            throw new NotFoundException(i18n.tr(
+                "owner with key: {0} was not found.", ownerKey));
+        }
+        
+        return statisticCurator.getStatisticsByOwner(o, "", "", "", 
+                                getFromDate(from, to, days), parseDateString(to));
     }
 
     @GET
@@ -688,10 +695,70 @@ public class OwnerResource {
         @PathParam("type") String qType, 
         @QueryParam("reference") String reference,
         @QueryParam("from") String from,
-        @QueryParam("to") String to) {
+        @QueryParam("to") String to,
+        @QueryParam("days") String days) {
         Owner o = findOwner(ownerKey);
-        return statisticCurator.getStatisticsByOwner(o, qType, reference, 
-                                  parseDateString(from), parseDateString(to));
+        
+        if (o == null) {
+            throw new NotFoundException(i18n.tr(
+                "owner with key: {0} was not found.", ownerKey));
+        }
+
+        return statisticCurator.getStatisticsByOwner(o, qType, reference, "", 
+                                getFromDate(from, to, days), parseDateString(to));
+    }
+    
+    @GET
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{owner_key}/statistics/{qtype}/{vtype}")
+    @AllowRoles(roles = { Role.OWNER_ADMIN })
+    public List<Statistic> getStatistics(
+        @PathParam("owner_key") String ownerKey,
+        @PathParam("qtype") String qType, 
+        @PathParam("vtype") String vType,
+        @QueryParam("reference") String reference,
+        @QueryParam("from") String from,
+        @QueryParam("to") String to,
+        @QueryParam("days") String days) {
+        Owner o = findOwner(ownerKey);
+        
+        if (o == null) {
+            throw new NotFoundException(i18n.tr(
+                "owner with key: {0} was not found.", ownerKey));
+        }
+
+        return statisticCurator.getStatisticsByOwner(o, qType, reference, vType, 
+                                getFromDate(from, to, days), parseDateString(to));
+    }
+    
+    
+    private Date getFromDate(String from, String to, String days) {
+        if (days != null && !days.trim().equals("")) {
+            if (to != null && !to.trim().equals("") ||
+                from != null && !from.trim().equals("")) {
+                throw new BadRequestException("You can use either the to/from " +
+                                               "date parameters or the number of " +
+                                               "days parameter, but not both");
+            }
+        }
+
+        Date daysDate = null;
+        if (days != null && !days.trim().equals("")) {
+            long mills = 1000 * 60 * 60 * 24;  
+            int number = Integer.parseInt(days);
+            daysDate = new Date(new Date().getTime() - (number * mills));
+        }
+        
+        Date fromDate = null;
+        if (daysDate != null) {
+            fromDate = daysDate;
+        } 
+        else {
+            fromDate = parseDateString(from);
+        }
+        
+        return fromDate;
     }
     
     private void recordImportSuccess(Owner owner) {
