@@ -28,7 +28,6 @@ import javax.ws.rs.core.MediaType;
 
 import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.interceptor.SecurityHole;
 import org.fedoraproject.candlepin.exceptions.ConflictException;
 import org.fedoraproject.candlepin.exceptions.GoneException;
 import org.fedoraproject.candlepin.auth.interceptor.Verify;

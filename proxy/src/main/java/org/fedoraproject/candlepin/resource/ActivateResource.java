@@ -57,7 +57,6 @@ public class ActivateResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    //@AllowRoles(roles = { Role.NO_AUTH})
     public Consumer activate(Consumer consumer, @Context Principal principal,
         @QueryParam("activation_key") List<String> keyStrings)
         throws BadRequestException {

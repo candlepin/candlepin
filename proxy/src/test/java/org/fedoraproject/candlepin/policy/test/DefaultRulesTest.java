@@ -240,7 +240,7 @@ public class DefaultRulesTest {
     }
 
     @Test
-    public void EmptyUname() {
+    public void emptyUname() {
         Pool pool = setupArchTest("arch", "s390x,x86", "uname.machine", "");
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
             .getResult();
@@ -249,7 +249,7 @@ public class DefaultRulesTest {
     }
 
     @Test
-    public void EmptyArch() {
+    public void emptyArch() {
         Pool pool = setupArchTest("arch", "", "uname.machine", "x86_64");
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
             .getResult();
@@ -258,7 +258,7 @@ public class DefaultRulesTest {
     }
 
     @Test
-    public void DuplicateArchesMatches() {
+    public void duplicateArchesMatches() {
         Pool pool = setupArchTest("arch", "x86_64,x86_64", "uname.machine", "x86_64");
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
             .getResult();
@@ -267,7 +267,7 @@ public class DefaultRulesTest {
     }
 
     @Test
-    public void DuplicateArchesNoMatches() {
+    public void duplicateArchesNoMatches() {
         Pool pool = setupArchTest("arch", "x86_64,x86_64", "uname.machine", "z80");
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
             .getResult();
@@ -276,7 +276,7 @@ public class DefaultRulesTest {
     }
 
     @Test
-    public void CommaSplitArchesTrailingComma() {
+    public void commaSplitArchesTrailingComma() {
         Pool pool = setupArchTest("arch", "x86_64,x86_64,", "uname.machine", "x86_64");
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
             .getResult();
@@ -285,7 +285,7 @@ public class DefaultRulesTest {
     }
 
     @Test
-    public void CommaSplitArchesExtraSpaces() {
+    public void commaSplitArchesExtraSpaces() {
         Pool pool = setupArchTest("arch", "x86_64,  z80 ", "uname.machine", "x86_64");
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
             .getResult();
@@ -354,7 +354,7 @@ public class DefaultRulesTest {
     }
 
     @Test
-    public void ZeroConsumerSocketsShouldGenerateWarning() {
+    public void zeroConsumerSocketsShouldGenerateWarning() {
         Pool pool = setupArchTest("sockets", "0", "cpu.cpu_socket(s)", "2");
 
         // Get rid of the facts that setupTest set.

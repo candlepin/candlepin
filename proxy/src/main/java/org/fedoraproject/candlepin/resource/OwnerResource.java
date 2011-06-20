@@ -712,9 +712,8 @@ public class OwnerResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/statistics/{qtype}/{vtype}")
-    @AllowRoles(roles = { Role.OWNER_ADMIN })
     public List<Statistic> getStatistics(
-        @PathParam("owner_key") String ownerKey,
+        @Verify(Owner.class) @PathParam("owner_key") String ownerKey,
         @PathParam("qtype") String qType, 
         @PathParam("vtype") String vType,
         @QueryParam("reference") String reference,
