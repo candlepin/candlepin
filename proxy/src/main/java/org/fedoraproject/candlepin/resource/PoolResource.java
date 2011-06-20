@@ -189,7 +189,8 @@ public class PoolResource {
     @GET
     @Path("{pool_id}/statistics")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Statistic> getPoolStats(@PathParam("pool_id") String id,
+    public List<Statistic> getPoolStats(@PathParam("pool_id") 
+                            @Verify(Pool.class) String id,
                             @QueryParam("from") String from,
                             @QueryParam("to") String to,
                             @QueryParam("days") String days) {
@@ -202,7 +203,8 @@ public class PoolResource {
     @GET
     @Path("{pool_id}/statistics/{vtype}")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Statistic> getPoolStats(@PathParam("pool_id") String id,
+    public List<Statistic> getPoolStats(@PathParam("pool_id") 
+                            @Verify(Pool.class) String id,
                             @PathParam("vtype") String valueType,
                             @QueryParam("from") String from,
                             @QueryParam("to") String to,
