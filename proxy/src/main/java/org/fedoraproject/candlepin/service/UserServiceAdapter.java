@@ -48,6 +48,8 @@ public interface UserServiceAdapter {
 
     User findByLogin(String login);
 
+    List<User> listUsers();
+
     Role createRole(Role r);
 
     Role updateRole(Role r);

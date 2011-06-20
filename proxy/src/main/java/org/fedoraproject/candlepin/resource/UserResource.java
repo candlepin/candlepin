@@ -18,8 +18,10 @@ package org.fedoraproject.candlepin.resource;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -28,9 +30,9 @@ import javax.ws.rs.core.MediaType;
 
 import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.interceptor.Verify;
 import org.fedoraproject.candlepin.exceptions.ConflictException;
 import org.fedoraproject.candlepin.exceptions.GoneException;
-import org.fedoraproject.candlepin.auth.interceptor.Verify;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.User;
@@ -38,19 +40,17 @@ import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
 
 /**
  * UserResource
  */
 @Path("/users")
 public class UserResource {
-  
+
     private UserServiceAdapter userService;
     private I18n i18n;
     private OwnerCurator ownerCurator;
-    
+
     @Inject
     public UserResource(UserServiceAdapter userService, I18n i18n,
         OwnerCurator ownerCurator) {
@@ -58,7 +58,13 @@ public class UserResource {
         this.i18n = i18n;
         this.ownerCurator = ownerCurator;
     }
-    
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<User> list() {
+        return userService.listUsers();
+    }
+
     @GET
     @Path("/{username}")
     @Produces(MediaType.APPLICATION_JSON)

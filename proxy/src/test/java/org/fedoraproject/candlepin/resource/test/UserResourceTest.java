@@ -16,6 +16,7 @@ package org.fedoraproject.candlepin.resource.test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.HashSet;
 import java.util.List;
@@ -39,14 +40,14 @@ import org.junit.Test;
  * UserResourceTest
  */
 public class UserResourceTest extends DatabaseTestFixture {
-    
+
     private UserResource userResource;
 
     @Before
     public void setUp() {
         userResource = injector.getInstance(UserResource.class);
     }
-    
+
     @Test
     public void testLookupUser() {
 
@@ -102,5 +103,18 @@ public class UserResourceTest extends DatabaseTestFixture {
             userPrincipal);
         assertEquals(1, owners.size());
         assertEquals(owner1.getKey(), owners.get(0).getKey());
+    }
+
+    @Test
+    public void testListAllUsers() {
+
+        User user = new User();
+        user.setUsername("henri");
+        user.setPassword("password");
+
+        userResource.createUser(user);
+        List<User> users = userResource.list();
+
+        assertTrue("length should be 1", users.size() == 1);
     }
 }

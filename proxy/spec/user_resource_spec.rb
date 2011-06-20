@@ -25,6 +25,11 @@ describe 'User Resource' do
       create_user(@test_owner, @username, 'password')
     }.should raise_exception(RestClient::Conflict)
   end
+  
+  it "should return a non empty list of users" do
+  	user_list = @cp.list_users
+  	user_list.size.should > 0 
+  end
 
 #  it 'should allow a user to list their owners' do
 #    visible_owners = @user_cp.list_users_owners(@username)

@@ -89,6 +89,7 @@ class Candlepin
   def get_user_info(user)
     get("/users/#{user}")
   end
+  
 
   def list_owners(params = {})
     path = "/owners"
@@ -155,6 +156,10 @@ class Candlepin
 
     post("/users", user)
   end
+  
+  def list_users()
+    get("/users")
+  end  
 
   # TODO: drop perms here too?
   def create_role(name, perms=nil)

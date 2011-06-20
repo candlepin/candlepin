@@ -113,6 +113,12 @@ public class LDAPUserServiceAdapter implements UserServiceAdapter {
     }
 
     @Override
+    //FIXME: Combine with the base implementation
+    public List<User> listUsers() {
+        return new ArrayList<User>();
+    }
+
+    @Override
     public void deleteUser(User user) {
         //throw new UnsupportedOperationException(
         //    "This implementation does not support deleting Users!");

@@ -55,6 +55,12 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
     }
 
     @Override
+    public List<User> listUsers() {
+        return this.userCurator.listAll();
+    }
+
+
+    @Override
     public List<Role> getRoles(String username) {
         User user = this.userCurator.findByLogin(username);
 

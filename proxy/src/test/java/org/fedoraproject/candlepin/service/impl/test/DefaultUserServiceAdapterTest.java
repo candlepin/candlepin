@@ -16,11 +16,13 @@ package org.fedoraproject.candlepin.service.impl.test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.fedoraproject.candlepin.auth.Access;
@@ -62,6 +64,15 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
         this.service.createUser(user);
         Assert.assertTrue(this.service.validateUser("test_user",
                            "mypassword"));
+    }
+
+    @Test
+    public void testFindAllUsers() {
+        User user = new User("test_user", "mypassword");
+        this.service.createUser(user);
+        List<User> users = this.service.listUsers();
+        assertTrue("The size of the list should be 1", users.size() == 1);
+        assertEquals("test_user", users.get(0).getUsername());
     }
 
     @Test
