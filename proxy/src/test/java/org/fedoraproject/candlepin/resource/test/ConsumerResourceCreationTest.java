@@ -14,21 +14,28 @@
  */
 package org.fedoraproject.candlepin.resource.test;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Locale;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
 
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
+import org.fedoraproject.candlepin.auth.permissions.Permission;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.IdentityCertificate;
+import org.fedoraproject.candlepin.model.Role;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
+import org.fedoraproject.candlepin.model.OwnerPermission;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
@@ -64,6 +71,8 @@ public class ConsumerResourceCreationTest {
 
     private ConsumerResource resource;
     private ConsumerType system;
+    private Owner owner;
+    private Role role;
 
     @Before
     public void init() throws Exception {
@@ -76,8 +85,12 @@ public class ConsumerResourceCreationTest {
 
         this.system = new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
 
-        Owner owner = new Owner("test_owner");
-        User user = new User(owner, USER, "");
+        owner = new Owner("test_owner");
+        User user = new User(USER, "");
+        OwnerPermission p = new OwnerPermission(owner, Access.ALL);
+        role = new Role();
+        role.addPermission(p);
+        role.addUser(user);
 
         when(consumerCurator.create(any(Consumer.class))).thenAnswer(new Answer() {
             @Override
@@ -86,7 +99,7 @@ public class ConsumerResourceCreationTest {
             }
         });
         when(consumerTypeCurator.lookupByLabel(system.getLabel())).thenReturn(system);
-        when(userService.getOwner(USER)).thenReturn(owner);
+        when(userService.getRoles(USER)).thenReturn(Arrays.asList(new Role[] {role}));
         when(userService.findByLogin(USER)).thenReturn(user);
         when(idCertService.generateIdentityCert(any(Consumer.class)))
                 .thenReturn(new IdentityCertificate());
@@ -95,9 +108,11 @@ public class ConsumerResourceCreationTest {
 
     private Consumer createConsumer(String consumerName) {
         Consumer consumer = new Consumer(consumerName, null, null, system);
-        Principal principal = new UserPrincipal(USER, null, null);
+        Collection<Permission> perms = new HashSet<Permission>();
+        perms.addAll(role.getPermissions());
+        Principal principal = new UserPrincipal(USER, perms, false);
 
-        return this.resource.create(consumer, principal, USER);
+        return this.resource.create(consumer, principal, USER, owner.getKey());
     }
 
     @Test

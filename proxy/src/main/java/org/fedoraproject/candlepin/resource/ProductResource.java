@@ -25,8 +25,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-import org.fedoraproject.candlepin.auth.Role;
-import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
+import org.fedoraproject.candlepin.auth.interceptor.SecurityHole;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.Content;
@@ -89,7 +88,7 @@ public class ProductResource {
     @GET
     @Path("/{product_uuid}")    
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowRoles(roles = { Role.OWNER_ADMIN, Role.CONSUMER })
+    @SecurityHole
     public Product getProduct(@PathParam("product_uuid") String pid) {
         Product toReturn = prodAdapter.getProductById(pid);
 
@@ -104,6 +103,7 @@ public class ProductResource {
     @GET
     @Path("/{product_uuid}/certificate")
     @Produces(MediaType.APPLICATION_JSON)
+    @SecurityHole
     public ProductCertificate getProductCertificate(
         @PathParam("product_uuid") String productId) {
         
@@ -125,14 +125,12 @@ public class ProductResource {
      */
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowRoles(roles = {Role.SUPER_ADMIN})
     public Product createProduct(Product product) {
         return prodAdapter.createProduct(product);
     }   
     
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowRoles(roles = {Role.SUPER_ADMIN})
     @Path("/{product_uuid}/content/{content_id}")
     public Product addContent(@PathParam("product_uuid") String pid,
                               @PathParam("content_id") String contentId, 
@@ -147,7 +145,6 @@ public class ProductResource {
     
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowRoles(roles = {Role.SUPER_ADMIN})
     @Path("/{product_uuid}/content/{content_id}")
     public void removeContent(@PathParam("product_uuid") String pid,
                               @PathParam("content_id") String contentId) {
@@ -157,7 +154,6 @@ public class ProductResource {
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_uuid}")
-    @AllowRoles(roles = {Role.SUPER_ADMIN})
     public void deleteProduct(@PathParam("product_uuid") String pid) {
         Product product = prodAdapter.getProductById(pid);
         if (product == null) {

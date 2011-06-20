@@ -7,6 +7,7 @@ describe 'Candlepin Import' do
   include CandlepinScenarios
 
   before(:all) do
+    @users = []
     create_candlepin_export()
     @import_owner = @cp.create_owner(random_string("test_owner"))
     @import_owner_client = user_client(@import_owner, random_string('testuser'))
@@ -19,7 +20,7 @@ describe 'Candlepin Import' do
   end
 
   it 'creates pools' do
-    pools = @import_owner_client.list_pools
+    pools = @import_owner_client.list_pools({:owner => @import_owner['id']})
     pools.length.should == 2
   end
 

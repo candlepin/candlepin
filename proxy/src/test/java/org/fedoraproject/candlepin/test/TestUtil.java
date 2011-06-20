@@ -14,18 +14,18 @@
  */
 package org.fedoraproject.candlepin.test;
 
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
 import org.apache.commons.codec.binary.Base64;
-import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
+import org.fedoraproject.candlepin.auth.permissions.Permission;
 import org.fedoraproject.candlepin.model.ActivationKey;
 import org.fedoraproject.candlepin.model.CertificateSerial;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -34,11 +34,13 @@ import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.IdentityCertificate;
 import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.OwnerPermission;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductAttribute;
 import org.fedoraproject.candlepin.model.ProvidedProduct;
 import org.fedoraproject.candlepin.model.Subscription;
+import org.fedoraproject.candlepin.model.User;
 
 /**
  * TestUtil for creating various testing objects.
@@ -68,11 +70,8 @@ public class TestUtil {
      * @return Consumer
      */
     public static Consumer createConsumer(Owner owner) {
-        ConsumerType consumerType = new ConsumerType("test-consumer-type-" +
-                randomInt());
-
         Consumer consumer = new Consumer("testconsumer" + randomInt(),
-            "User", owner, consumerType);
+            "User", owner, createConsumerType());
         consumer.setFact("foo", "bar");
         consumer.setFact("foo1", "bar1");
 
@@ -178,7 +177,7 @@ public class TestUtil {
         Base64 encoder = new Base64();
         byte [] bytes = encoder.encode(xml.getBytes());
 
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         for (byte b : bytes) {
             buf.append((char) Integer.parseInt(Integer.toHexString(b), 16));
         }
@@ -187,16 +186,14 @@ public class TestUtil {
     }
 
 
-    public static Principal createPrincipal(Owner owner, Role role) {
-        List<Role> roles = new LinkedList<Role>();
-        roles.add(role);
-        Principal ownerAdmin = new UserPrincipal("someuser", owner, roles);
-        return ownerAdmin;
+    public static UserPrincipal createPrincipal(String username, Owner owner, Access role) {
+        return new UserPrincipal(username,  Arrays.asList(new Permission[] {
+            new OwnerPermission(owner, role)}), false);
     }
 
-    public static Principal createOwnerPrincipal() {
+    public static UserPrincipal createOwnerPrincipal() {
         Owner owner = new Owner("Test Owner " + randomInt());
-        return createPrincipal(owner, Role.OWNER_ADMIN);
+        return createPrincipal("someuser", owner, Access.ALL);
     }
 
 
@@ -241,6 +238,12 @@ public class TestUtil {
         return createEntitlement(owner, createConsumer(owner), createPool(
             owner, createProduct()), null);
     }
+    
+    public void addPermissionToUser(User u, Access role, Owner o) {
+        // Check if a permission already exists for this verb and owner:
+    }
+        
+        
 
     public static ActivationKey createActivationKey(Owner owner, List<Pool> pools) {
         ActivationKey key = new ActivationKey();

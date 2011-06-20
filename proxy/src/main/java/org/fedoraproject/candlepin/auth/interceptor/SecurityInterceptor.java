@@ -16,143 +16,272 @@ package org.fedoraproject.candlepin.auth.interceptor;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.util.HashSet;
-import java.util.Set;
 
-import javax.ws.rs.PathParam;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.Role;
-import org.fedoraproject.candlepin.auth.UserPrincipal;
+import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.exceptions.IseException;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.google.inject.Provider;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.ws.rs.DELETE;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerCurator;
+import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.EntitlementCurator;
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.OwnerCurator;
+import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.PoolCurator;
+import org.fedoraproject.candlepin.model.User;
+import org.fedoraproject.candlepin.service.UserServiceAdapter;
 
 /**
  * Interceptor for enforcing role based access to REST API methods.
  * 
- * This interceptor deals with coarse grained access, it only answers the question of
- * can a principal with these roles access this method. It does not support any paramaters
- * such as verifying the call is being made on a visible consumer/owner, this is handled
- * instead by the filtering mechanism.
+ * This interceptor deals with coarse grained access, it only answers the
+ * question of can a principal with these roles access this method. It does not
+ * support any paramaters such as verifying the call is being made on a visible
+ * consumer/owner, this is handled instead by the filtering mechanism.
  */
 public class SecurityInterceptor implements MethodInterceptor {
 
     @Inject private Provider<Principal> principalProvider;
     @Inject private Provider<I18n> i18nProvider;
-    
+    @Inject private Injector injector;
+
+    // TODO:  This would not really be needed if we were consistent about what
+    //        we use as IDs in our urls!
+    @SuppressWarnings("rawtypes")
+    private final Map<Class, EntityStore> storeMap;
+
     private static Logger log = Logger.getLogger(SecurityInterceptor.class);
+
+    @SuppressWarnings("rawtypes")
+    public SecurityInterceptor() {
+        this.storeMap = new HashMap<Class, EntityStore>();
+
+        storeMap.put(Owner.class, new OwnerStore());
+        storeMap.put(Consumer.class, new ConsumerStore());
+        storeMap.put(Entitlement.class, new EntitlementStore());
+        storeMap.put(Pool.class, new PoolStore());
+        storeMap.put(User.class, new UserStore());
+
+    }
 
     /**
      * {@inheritDoc}
      */
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
-        Principal currentUser = this.principalProvider.get();
-        log.debug("Invoked.");
-        
-        Set<Role> allowedRoles = new HashSet<Role>();
-        
-        // Super admins can access any URL:
-        allowedRoles.add(Role.SUPER_ADMIN);
-        log.debug(invocation.getClass().getName());
-        log.debug(invocation.getClass().getAnnotations().length);
-        
-        
-        AllowRoles annotation = invocation.getMethod().getAnnotation(AllowRoles.class);
-        log.debug("Method annotation: " + annotation);
-        if (annotation != null) {
-            for (Role allowed : annotation.roles()) {
-                log.debug("   allowing role: " + allowed);
-                allowedRoles.add(allowed);
-            }
-        }
-        
-        boolean foundRole = false;
-        for (Role allowed : allowedRoles) {
-            if (currentUser.hasRole(allowed)) {
-                foundRole = true;
-                if (log.isDebugEnabled()) {
-                    log.debug("Granting access for " + currentUser + " due to role: " + 
-                        allowed);
-                }
-                break;
-            }
-        }
-        
-        I18n i18n = this.i18nProvider.get();
-        if (!foundRole) {
-            log.warn("Refusing principal: " + currentUser + " access to: " + 
-                invocation.getMethod().getName());
 
-            String error = "Insufficient permission";
-            throw new ForbiddenException(i18n.tr(error));
+        log.debug("Invoked security interceptor " + invocation.getMethod());
+
+        SecurityHole securityHole = checkForSecurityHoleAnnotation(invocation);
+        // If method is annotated with SecurityHole and requires no authentication,
+        // allow to proceed:
+        if (securityHole != null && securityHole.noAuth()) {
+            log.warn("Allowing invocation to proceed with no authentication required.");
+            return invocation.proceed();
         }
-        
-        // Verify a username path param. If the current principal is a user principal, who
-        // does *not* have the super admin role, we need to make sure their username matches
-        // the username being requested:
-        if (annotation != null && !annotation.verifyUser().equals("")) {
-            verifyUser(invocation, currentUser, annotation, i18n);
+
+        Principal principal = this.principalProvider.get();
+
+        if (securityHole != null) {
+            return invocation.proceed();
         }
+
+        Access defaultAccess = getAssumedAccessType(invocation);
+
+        verifyParameters(invocation, principal, defaultAccess);
 
         return invocation.proceed();
     }
 
-    /*
-     * Verify a username PathParam matches the currently authenticated user. (if the
-     * current principal is a user principal who does not have the super admin role)
-     */
-    private void verifyUser(MethodInvocation invocation, Principal currentUser,
-        AllowRoles annotation, I18n i18n) {
-        String usernameAccessed = findParameterValue(invocation,
-            annotation.verifyUser(), i18n);
-        if (currentUser.getType().equals(Principal.USER_TYPE) &&
-            !currentUser.hasRole(Role.SUPER_ADMIN)) {
-            if (!usernameAccessed.equals(((UserPrincipal) currentUser).getUsername())) {
-                throw new ForbiddenException(i18n.tr("Access denied for user: " +
-                    usernameAccessed));
-            }
+    private void denyAccess(Principal principal, MethodInvocation invocation) {
+        I18n i18n = this.i18nProvider.get();
+        log.warn("Refusing principal: " + principal + " access to: " +
+                    invocation.getMethod().getName());
 
+        String error = "Insufficient permissions";
+        throw new ForbiddenException(i18n.tr(error));
+    }
+
+    private SecurityHole checkForSecurityHoleAnnotation(MethodInvocation invocation) {
+        for (Annotation annotation : invocation.getMethod().getAnnotations()) {
+            if (annotation instanceof SecurityHole) {
+                return (SecurityHole) annotation;
+            }
         }
+
+        return null;
     }
 
     /**
-     * Scans the parameters for the method being invoked. When we find one annotated with
-     * PathParam of the given name, we return the value of that parameter. (assumed to be
-     * a string)
-     *
-     * @param pathParamName
-     * @return
+     * Scans the method annotations for RESTEasy annotations, to determine
+     * the HTTP verbs used. We'll assume this is the required access type, but any
+     * Verify annotation which specifies an access type can override this later.
+     * 
+     * @param invocation method invocation object
+     * @return the required minimum access type
      */
-    private String findParameterValue(MethodInvocation invocation, String pathParamName,
-        I18n i18n) {
+    private Access getAssumedAccessType(MethodInvocation invocation) {
+        
+        // Assume the minimum level to start with, and bump up as we see
+        // stricter annotations
+        Access minimumLevel = Access.READ_ONLY;
+        
+        // If we had write or delete access types, that would go here,
+        // and we'd only break on the access.all type.
+        for (Annotation annotation : invocation.getMethod().getAnnotations()) {
+            if (annotation instanceof PUT ||
+                annotation instanceof POST ||
+                annotation instanceof DELETE) {
+                minimumLevel = Access.ALL;
+                break;
+            }
+            // Other annotations are GET, HEAD, and OPTIONS. assume read only for those.
+        }
+        return minimumLevel;
+    }
+    
+    /**
+     * Scans the parameters for the method being invoked looking for those annotated with
+     * Verify, and checks that the principal has access to them all.
+     */
+    private void verifyParameters(MethodInvocation invocation,
+        Principal principal, Access defaultAccess) {
+
+        I18n i18n = this.i18nProvider.get();
         Method m = invocation.getMethod();
+
+        // Need to check after examining all parameters to see if we found any:
+        boolean foundVerifiedParameters = false;
 
         for (int i = 0; i < m.getParameterAnnotations().length; i++) {
             for (Annotation a : m.getParameterAnnotations()[i]) {
-                if (a instanceof PathParam) {
+                if (a instanceof Verify) {
+                    foundVerifiedParameters = true;
+                    Access requiredAccess = defaultAccess;
 
-                    String pathParam = ((PathParam) a).value();
-                    if (pathParam.equals(pathParamName)) {
-                        return (String) invocation.getArguments()[i];
+                    @SuppressWarnings("rawtypes")
+                    Class verifyType = ((Verify) a).value();
+                    if (((Verify) a).require() != Access.NONE) {
+                        requiredAccess = ((Verify) a).require();
+                    }
+                    String verifyParam = (String) invocation.getArguments()[i];
+
+                    log.debug("Verifying " + requiredAccess + " access to " + verifyType +
+                        ": " + verifyParam);
+
+                    // Use the correct curator (in storeMap) to look up the actual
+                    // entity with the annotated argument
+                    if (!storeMap.containsKey(verifyType)) {
+                        log.error("No store configured to verify: " + verifyType);
+                        throw new IseException(i18n.tr("Unable to verify request."));
+                    }
+                    Object entity = storeMap.get(verifyType).lookup(verifyParam);
+                    if (entity == null) {
+                        // This is bad, we're verifying a parameter with an ID which
+                        // doesn't seem to exist in the DB. Error will be thrown in
+                        // invoke though.
+                        log.error("No such entity: " + verifyType + " id: " + verifyParam);
+                        denyAccess(principal, invocation);
+                    }
+
+                    // Deny access if the entity to be verified turns out to be null, or
+                    // the principal cannot access it:
+                    if (!principal.canAccess(entity, requiredAccess)) {
+                        denyAccess(principal, invocation);
                     }
                 }
             }
         }
 
-        // If we reach this point the code is probably incorrect (AcceptRoles annotation
-        // trying to verify a PathParam that couldn't be found in the method signature)
-        log.error("Unable to find PathParam: " + pathParamName);
+        // If we found no parameters, this method can only be called by super admins:
+        if (!foundVerifiedParameters && !principal.hasFullAccess()) {
+            denyAccess(principal, invocation);
+        }
+    }
 
-        // Intentionally being vague for message that end client will see:
-        throw new IseException(i18n.tr("Internal server error"));
+    private interface EntityStore {
+        Object lookup(String key);
+    }
+
+    private class OwnerStore implements EntityStore {
+        private OwnerCurator ownerCurator;
+
+        @Override
+        public Object lookup(String key) {
+            if (ownerCurator == null) {
+                ownerCurator = injector.getInstance(OwnerCurator.class);
+            }
+
+            return ownerCurator.lookupByKey(key);
+        }
+    }
+
+    private class ConsumerStore implements EntityStore {
+        private ConsumerCurator consumerCurator;
+
+        @Override
+        public Object lookup(String key) {
+            if (consumerCurator == null) {
+                consumerCurator = injector.getInstance(ConsumerCurator.class);
+            }
+
+            return consumerCurator.findByUuid(key);
+        }
+    }
+
+    private class EntitlementStore implements EntityStore {
+        private EntitlementCurator entitlementCurator;
+
+        @Override
+        public Object lookup(String key) {
+            if (entitlementCurator == null) {
+                entitlementCurator = injector.getInstance(EntitlementCurator.class);
+            }
+            return entitlementCurator.find(key);
+        }
+    }
+
+    private class PoolStore implements EntityStore {
+        private PoolCurator poolCurator;
+
+        @Override
+        public Object lookup(String key) {
+            if (poolCurator == null) {
+                poolCurator = injector.getInstance(PoolCurator.class);
+            }
+
+            return poolCurator.find(key);
+        }
     }
     
+    private class UserStore implements EntityStore {
+        private UserServiceAdapter userService;
+
+        @Override
+        public Object lookup(String username) {
+            if (userService == null) {
+                userService = injector.getInstance(UserServiceAdapter.class);
+            }
+
+            return userService.findByLogin(username);
+        }
+    }
+
 }

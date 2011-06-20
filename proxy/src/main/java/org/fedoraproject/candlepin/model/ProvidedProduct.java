@@ -26,7 +26,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
-import org.fedoraproject.candlepin.auth.interceptor.AccessControlValidator;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
@@ -39,8 +38,7 @@ import org.hibernate.annotations.Index;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_pool_products")
-public class ProvidedProduct extends AbstractHibernateObject
-        implements AccessControlEnforced {
+public class ProvidedProduct extends AbstractHibernateObject {
 
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -105,11 +103,6 @@ public class ProvidedProduct extends AbstractHibernateObject
         this.productName = productName;
     }
 
-    @Override
-    public boolean shouldGrantAccessTo(Owner owner) {
-        return AccessControlValidator.shouldGrantAccess(pool, owner);
-    }
-
     /**
      * @return the id
      */
@@ -137,11 +130,6 @@ public class ProvidedProduct extends AbstractHibernateObject
      */
     public void setPool(Pool pool) {
         this.pool = pool;
-    }
-
-    @Override
-    public boolean shouldGrantAccessTo(Consumer consumer) {
-        return AccessControlValidator.shouldGrantAccess(pool, consumer);
     }
 
 }

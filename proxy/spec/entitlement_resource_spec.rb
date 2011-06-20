@@ -6,7 +6,7 @@ describe 'Entitlement Resource' do
   include CandlepinScenarios
   
   before do
-    @owner = create_owner 'test_owner'
+    @owner = create_owner random_string 'test_owner'
     @monitoring_prod = create_product(name='monitoring')
     @virt_prod= create_product(name='virtualization')
 
@@ -60,7 +60,7 @@ describe 'Entitlement Resource' do
 
   it 'does not allow a consumer to view entitlements from a different consumer' do
     # Given
-    bad_owner = create_owner 'baddie'
+    bad_owner = create_owner random_string 'baddie'
     bad_user = user_client(bad_owner, 'bad_dude')
     system2 = consumer_client(bad_user, 'wrong_system')
 

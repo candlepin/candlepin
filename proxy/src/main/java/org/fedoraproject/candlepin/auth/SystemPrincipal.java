@@ -14,25 +14,24 @@
  */
 package org.fedoraproject.candlepin.auth;
 
-import java.util.Arrays;
-
 /**
  * SystemPrincipal
  */
-public class SystemPrincipal extends Principal{
-   
-    /**
-     * This principle will have super admin rights
-     */
-    public SystemPrincipal() {
-        super(null, Arrays.asList(new Role[]{Role.SUPER_ADMIN}));
-    }
-    
+public class SystemPrincipal extends Principal {
+
+    @Override
     public String getType() {
-        return Principal.SYSTEM_TYPE;
+        return "system";
     }
 
+    @Override
     public String getPrincipalName() {       
         return "System";
-    } 
+    }
+
+    @Override
+    public boolean hasFullAccess() {
+        return true;
+    }
+
 }

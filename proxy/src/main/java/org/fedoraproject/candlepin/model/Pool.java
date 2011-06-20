@@ -32,20 +32,14 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
-import org.fedoraproject.candlepin.auth.interceptor.AccessControlValidator;
 import org.fedoraproject.candlepin.util.DateSource;
 import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.FilterDefs;
-import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
-import org.hibernate.annotations.ParamDef;
 
 /**
  * Represents a pool of products eligible to be consumed (entitled).
@@ -54,30 +48,8 @@ import org.hibernate.annotations.ParamDef;
 @XmlRootElement(name = "pool")
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@FilterDefs({
-    @FilterDef(
-        name = "Pool_OWNER_FILTER",
-        parameters = @ParamDef(name = "owner_ids", type = "string")
-    ),
-    @FilterDef(
-        name = "Pool_CONSUMER_FILTER",
-        parameters = @ParamDef(name = "consumer_id", type = "string")
-    )
-})
-@Filters({
-    @Filter(name = "Pool_OWNER_FILTER",
-        condition = "id in (select p.id from cp_pool p where p.owner_id in (:owner_ids))"
-    ),
-    @Filter(name = "Pool_CONSUMER_FILTER",
-        condition = "id in (select p.id from cp_pool p " +
-            "inner join cp_owner o on p.owner_id = o.id " +
-            "inner join cp_consumer c on c.owner_id = o.id and c.id = :consumer_id " +
-            "and (p.restrictedToUsername is null or p.restrictedToUsername = c.username))"
-    )
-})
 @Table(name = "cp_pool")
-public class Pool extends AbstractHibernateObject
-    implements AccessControlEnforced, Linkable {
+public class Pool extends AbstractHibernateObject implements Linkable, Owned {
 
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -168,6 +140,7 @@ public class Pool extends AbstractHibernateObject
     }
 
     /** {@inheritDoc} */
+    @Override
     public String getId() {
         return id;
     }
@@ -240,6 +213,7 @@ public class Pool extends AbstractHibernateObject
     /**
      * @return owner of the pool.
      */
+    @Override
     public Owner getOwner() {
         return owner;
     }
@@ -439,16 +413,6 @@ public class Pool extends AbstractHibernateObject
             ", products = " + productId + " - " + getProvidedProducts() +
             ", sub = " + getSubscriptionId() +
             ", quantity = " + getQuantity() + ", expires = " + getEndDate() + "]";
-    }
-
-    @Override
-    public boolean shouldGrantAccessTo(Owner owner) {
-        return AccessControlValidator.shouldGrantAccess(this, owner);
-    }
-
-    @Override
-    public boolean shouldGrantAccessTo(Consumer consumer) {
-        return AccessControlValidator.shouldGrantAccess(this, consumer);
     }
 
     public Set<ProvidedProduct> getProvidedProducts() {

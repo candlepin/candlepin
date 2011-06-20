@@ -27,32 +27,51 @@ filenames.each do |filename|
   data['products'] = data.fetch('products',[]) + product_data['products']
   data['content'] = data.fetch('content',[]) + product_data['content']
   data['owners'] = data.fetch('owners', []) + product_data['owners']
+  data['users'] = data.fetch('users', []) + product_data['users']
+  data['roles'] = data.fetch('roles', []) + product_data['roles']
 end
 
 cp = Candlepin.new(username='admin', password='admin', cert=nil, key=nil, host='localhost', post=8443)
 
-# create some owners and users
+# create some owners
 data["owners"].each do |new_owner|
   owner_name = new_owner['name']
-  users = new_owner['users']
-
   puts "owner: #{owner_name}"
 
-  # Kind of a hack to allow users under
-  # the default 'admin' owner
-  if owner_name == 'admin'
-    owner = { 'key' => 'admin' }
-  else
-    owner = cp.create_owner(owner_name)
-  end
+  owner = cp.create_owner(owner_name)
+
+  # Create one dummy activation key for the owner
+  cp.create_activation_key({"name" => "Default Key"}, owner['key']) 
+end
+
+# create some users
+data["users"].each do |new_user|
+  user_name = new_user['username']
+  user_pass = new_user['password']
+  user_super = new_user['superadmin'] || false
+
+  puts "user: #{user_name}, #{user_pass}, #{user_super}"
+
+  owner = cp.create_user(user_name, user_pass, user_super)
+
+end
+
+
+# Create roles:
+data['roles'].each do |new_role|
+  role_name = new_role['name']
+  perms = new_role['permissions']
+  users = new_role['users']
+
+  puts " permissions: #{perms}"
+
+  role = cp.create_role(role_name, perms)
 
   users.each do |user|
     puts "   user: #{user['username']}"
-    cp.create_user(owner['key'], user['username'], user['password'])
+    cp.add_role_user(role['id'], user['username'])
   end
   
-  # Create one dummy activation key for the owner
-  cp.create_activation_key({"name" => "Default Key"}, owner['key']) 
 end
 
 owners = cp.list_owners({:fetch => true})

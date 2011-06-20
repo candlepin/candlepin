@@ -14,21 +14,15 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import org.fedoraproject.candlepin.auth.interceptor.AccessControlValidator;
 import org.fedoraproject.candlepin.util.Util;
 
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CollectionOfElements;
-import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.FilterDefs;
-import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
 import org.hibernate.annotations.MapKeyManyToMany;
-import org.hibernate.annotations.ParamDef;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -66,28 +60,9 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@FilterDefs({
-    @FilterDef(
-        name = "Consumer_OWNER_FILTER",
-        parameters = @ParamDef(name = "owner_ids", type = "string")
-    ),
-    @FilterDef(
-        name = "Consumer_CONSUMER_FILTER",
-        parameters = @ParamDef(name = "consumer_id", type = "string")
-    )
-})
-@Filters({
-    @Filter(name = "Consumer_OWNER_FILTER",
-        condition = "owner_id in (:owner_ids)"
-    ),
-    @Filter(name = "Consumer_CONSUMER_FILTER",
-        condition = "id = :consumer_id"
-    )
-})
 @Table(name = "cp_consumer")
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Consumer extends AbstractHibernateObject
-    implements AccessControlEnforced, Linkable {
+public class Consumer extends AbstractHibernateObject implements Linkable, Owned {
 
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -194,6 +169,7 @@ public class Consumer extends AbstractHibernateObject
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getId() {
         return id;
     }
@@ -295,6 +271,7 @@ public class Consumer extends AbstractHibernateObject
     /**
      * @return the owner of this Consumer.
      */
+    @Override
     public Owner getOwner() {
         return owner;
     }
@@ -444,15 +421,6 @@ public class Consumer extends AbstractHibernateObject
     }
 
     @Override
-    public boolean shouldGrantAccessTo(Owner owner) {
-        return AccessControlValidator.shouldGrantAccess(this, owner);
-    }
-
-    @Override
-    public boolean shouldGrantAccessTo(Consumer consumer) {
-        return AccessControlValidator.shouldGrantAccess(this, consumer);
-    }
-
     public String getHref() {
         return "/consumers/" + getUuid();
     }

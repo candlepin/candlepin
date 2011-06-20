@@ -16,6 +16,7 @@ package org.fedoraproject.candlepin.pinsetter.core;
 
 import com.google.inject.Inject;
 import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.SystemPrincipal;
 import org.fedoraproject.candlepin.model.JobCurator;
 import org.fedoraproject.candlepin.pinsetter.core.model.JobStatus;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
@@ -66,11 +67,15 @@ public class PinsetterJobListener implements JobListener {
     }
 
     private void updateJob(JobExecutionContext context) {
+        ResteasyProviderFactory.pushContext(Principal.class, new SystemPrincipal());
+
         JobStatus status = curator.find(context.getJobDetail().getName());
         if (status != null) {
             status.update(context);
             curator.merge(status);
         }
+
+        ResteasyProviderFactory.popContextData(Principal.class);
     }
 
 }

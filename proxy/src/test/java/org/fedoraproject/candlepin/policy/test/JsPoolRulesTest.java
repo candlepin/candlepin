@@ -14,12 +14,13 @@
  */
 package org.fedoraproject.candlepin.policy.test;
 
+import org.fedoraproject.candlepin.auth.UserPrincipal;
+import org.fedoraproject.candlepin.model.Owner;
 import java.io.InputStream;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 
-import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolAttribute;
@@ -60,7 +61,8 @@ public class JsPoolRulesTest {
     @Mock private ProductServiceAdapter productAdapterMock;
     @Mock private PoolManager poolManagerMock;
 
-    private Principal principal;
+    private UserPrincipal principal;
+    private Owner owner;
 
     @Before
     public void setUp() {
@@ -75,6 +77,7 @@ public class JsPoolRulesTest {
         JsRulesProvider provider = new JsRulesProvider(rulesCuratorMock);
         poolRules = new JsPoolRules(provider.get(), poolManagerMock, productAdapterMock);
         principal = TestUtil.createOwnerPrincipal();
+        owner = principal.getOwners().get(0);
     }
     
     private Pool copyFromSub(Subscription sub) {
@@ -89,8 +92,7 @@ public class JsPoolRulesTest {
     @Test
     public void providedProductsChanged() {
         // Subscription with two provided products:
-        Subscription s = TestUtil.createSubscription(principal.getOwner(),
-            TestUtil.createProduct());
+        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
         Product product1 = TestUtil.createProduct();
         Product product2 = TestUtil.createProduct();
         Product product3 = TestUtil.createProduct();
@@ -115,8 +117,7 @@ public class JsPoolRulesTest {
     
     @Test
     public void productNameChanged() {
-        Subscription s = TestUtil.createSubscription(principal.getOwner(),
-            TestUtil.createProduct());
+        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
 
         // Setup a pool with a single (different) provided product:
         Pool p = copyFromSub(s);
@@ -136,8 +137,7 @@ public class JsPoolRulesTest {
 
     @Test
     public void datesNameChanged() {
-        Subscription s = TestUtil.createSubscription(principal.getOwner(),
-            TestUtil.createProduct());
+        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
 
         // Setup a pool with a single (different) provided product:
         Pool p = copyFromSub(s);
@@ -157,8 +157,7 @@ public class JsPoolRulesTest {
 
     @Test
     public void quantityChanged() {
-        Subscription s = TestUtil.createSubscription(principal.getOwner(),
-            TestUtil.createProduct());
+        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
 
         // Setup a pool with a single (different) provided product:
         Pool p = copyFromSub(s);
@@ -178,8 +177,7 @@ public class JsPoolRulesTest {
     
     @Test
     public void virtOnlyQuantityChanged() {
-        Subscription s = TestUtil.createSubscription(principal.getOwner(),
-            TestUtil.createProduct());
+        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
         s.getProduct().addAttribute(new ProductAttribute("virt_limit", "5"));
         s.setQuantity(10L);
 

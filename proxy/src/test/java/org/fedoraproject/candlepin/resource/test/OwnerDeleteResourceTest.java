@@ -22,6 +22,8 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
+
 import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.controller.PoolManager;
@@ -31,6 +33,7 @@ import org.fedoraproject.candlepin.model.ExporterMetadataCurator;
 import org.fedoraproject.candlepin.model.ImportRecordCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
+import org.fedoraproject.candlepin.model.OwnerPermissionCurator;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.StatisticCurator;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
@@ -65,14 +68,16 @@ public class OwnerDeleteResourceTest {
     @Mock private EventFactory eventFactory;
     @Mock private EventSink eventSink;
     @Mock private SubscriptionServiceAdapter subAdapter;
+    @Mock private OwnerPermissionCurator permCurator;
+    @Mock private ConsumerTypeCurator consumerTypeCurator;
 
     @Before
     public void init() {
         this.ownerResource = new OwnerResource(ownerCurator, poolCurator,
-                null, subscriptionCurator, subscriptionTokenCurator,
-                consumerCurator, statisticCurator, null, userService, eventSink,
-                eventFactory, null, null, null, poolManager, exportCurator, null,
-                importRecordCurator, subAdapter);
+                subscriptionCurator, subscriptionTokenCurator, consumerCurator,
+                statisticCurator, null, userService, eventSink, eventFactory, null,
+                null, null, poolManager, exportCurator, null, importRecordCurator, subAdapter, 
+                permCurator, consumerTypeCurator);
     }
 
     @Test
@@ -84,7 +89,7 @@ public class OwnerDeleteResourceTest {
         when(userService.listByOwner(rackspace)).thenThrow(
                 new UnsupportedOperationException("This should never be called"));
 
-        this.ownerResource.deleteOwner("rackspace", true, null);
+        this.ownerResource.deleteOwner("rackspace", true);
 
         // Just asking for the users will throw an exception anyway, but this
         // just to be super duper sure
@@ -95,14 +100,18 @@ public class OwnerDeleteResourceTest {
     public void usersAreDeleted() {
         Owner compucorp = new Owner("compucorp");
         List<User> users = new ArrayList<User>();
-        users.add(new User(compucorp, "billy", "password"));
-        users.add(new User(compucorp, "sally", "password"));
+        User billy = new User("billy", "password");
+        User sally = new User("sally", "password");
+//        billy.addMembershipTo(compucorp);
+//        sally.addMembershipTo(compucorp);
+        users.add(billy);
+        users.add(sally);
 
         when(ownerCurator.lookupByKey("compucorp")).thenReturn(compucorp);
         when(userService.isReadyOnly()).thenReturn(false);
         when(userService.listByOwner(compucorp)).thenReturn(users);
 
-        this.ownerResource.deleteOwner("compucorp", true, null);
+        this.ownerResource.deleteOwner("compucorp", true);
 
         // Make sure they were deleted in the service
         verify(userService).deleteUser(users.get(0));

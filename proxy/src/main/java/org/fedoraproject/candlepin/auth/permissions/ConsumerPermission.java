@@ -12,11 +12,30 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.auth;
+package org.fedoraproject.candlepin.auth.permissions;
+
+import org.fedoraproject.candlepin.auth.Access;
+import org.fedoraproject.candlepin.model.Consumer;
 
 /**
  *
  */
-public enum Role {
-    CONSUMER, OWNER_ADMIN, SUPER_ADMIN, TRUSTED_SYSTEM, NO_AUTH;
+public class ConsumerPermission extends TypedPermission<Consumer> {
+
+    private Consumer consumer;
+
+    public ConsumerPermission(Consumer consumer) {
+        this.consumer = consumer;
+    }
+
+    @Override
+    public Class<Consumer> getTargetType() {
+        return Consumer.class;
+    }
+
+    @Override
+    public boolean canAccessTarget(Consumer target, Access action) {
+        return this.consumer.getUuid().equals(target.getUuid());
+    }
+
 }

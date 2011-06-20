@@ -27,6 +27,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import org.codehaus.jackson.JsonNode;
@@ -34,8 +35,7 @@ import org.codehaus.jackson.map.JsonMappingException;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.schema.JsonSchema;
-import org.fedoraproject.candlepin.auth.Role;
-import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
+import org.fedoraproject.candlepin.auth.interceptor.Verify;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.resource.RootResource;
 import org.fedoraproject.candlepin.resteasy.JsonProvider;
@@ -84,22 +84,10 @@ public class ApiCrawler {
     private RestApiCall processMethod(String rootPath, Method m) {
         RestApiCall apiCall = new RestApiCall();
 
-        Path subPath = m.getAnnotation(Path.class);
-        if (subPath != null) {
-            if (rootPath.endsWith("/") || subPath.value().startsWith("/")) {
-                apiCall.setUrl(rootPath + subPath.value());
-            }
-            else {
-                apiCall.setUrl(rootPath + "/" + subPath.value());
-            }
-        }
-        else {
-            apiCall.setUrl(rootPath);
-        }
-
+        processPath(rootPath, m, apiCall);
         processHttpVerb(m, apiCall);
-        processAllowedRoles(m, apiCall);
         processQueryParams(m, apiCall);
+        processVerifiedParams(m, apiCall);
 
         try {
             apiCall.setReturnType(getReturnType(m).getSchemaNode());
@@ -114,19 +102,25 @@ public class ApiCrawler {
         return apiCall;
     }
 
+    private void processPath(String rootPath, Method m, RestApiCall apiCall) {
+        Path subPath = m.getAnnotation(Path.class);
+        if (subPath != null) {
+            if (rootPath.endsWith("/") || subPath.value().startsWith("/")) {
+                apiCall.setUrl(rootPath + subPath.value());
+            }
+            else {
+                apiCall.setUrl(rootPath + "/" + subPath.value());
+            }
+        }
+        else {
+            apiCall.setUrl(rootPath);
+        }
+    }
+
     private void processHttpVerb(Method m, RestApiCall apiCall) {
         for (Class httpClass : httpClasses) {
             if (m.getAnnotation(httpClass) != null) {
                 apiCall.addHttpVerb(httpClass.getSimpleName());
-            }
-        }
-    }
-
-    private void processAllowedRoles(Method m, RestApiCall apiCall) {
-        AllowRoles allowRoles = m.getAnnotation(AllowRoles.class);
-        if (allowRoles != null) {
-            for (Role allow : allowRoles.roles()) {
-                apiCall.addRole(allow);
             }
         }
     }
@@ -139,6 +133,30 @@ public class ApiCrawler {
                     apiCall.addQueryParam(((QueryParam) a).value(), type);
                 }
 
+            }
+        }
+    }
+    
+    /* Find parameters that are run through the security interceptor.
+     * right now this expects them to only be path params (not query params),
+     * but you can have more than one per method.
+     */
+    private void processVerifiedParams(Method m, RestApiCall apiCall) {
+        for (int i = 0; i < m.getParameterAnnotations().length; i++) {
+            boolean hasVerify = false;
+            String pathName = null;
+            for (Annotation a : m.getParameterAnnotations()[i]) {
+                if (a instanceof Verify) {
+                    hasVerify = true;
+                }
+                else if (a instanceof PathParam) {
+                    PathParam p = (PathParam) a;
+                    pathName = p.value();
+                }
+            }
+            
+            if (hasVerify && pathName != null) {
+                apiCall.verifiedParams.add(pathName);
             }
         }
     }
@@ -157,16 +175,17 @@ public class ApiCrawler {
     static class RestApiCall {
         private String method;
         private String url;
-        private List<Role> allowedRoles;
+        private List<String> verifiedParams;
         private List<String> httpVerbs;
         private List<ApiParam> queryParams;
         private JsonNode returnType;
 
         public RestApiCall() {
-            allowedRoles = new LinkedList<Role>();
-            allowedRoles.add(Role.SUPER_ADMIN); // assumed to always have access
             httpVerbs = new LinkedList<String>();
             queryParams = new LinkedList<ApiParam>();
+            
+            // these are the names of the security enforced path params
+            verifiedParams = new LinkedList<String>();
         }
 
         public void setMethod(String method) {
@@ -181,10 +200,6 @@ public class ApiCrawler {
             this.httpVerbs.add(verb);
         }
 
-        public void addRole(Role role) {
-            allowedRoles.add(role);
-        }
-
         public void addQueryParam(String name, String type) {
             queryParams.add(new ApiParam(name, type));
         }
@@ -197,14 +212,14 @@ public class ApiCrawler {
             return returnType;
         }
 
-        public List<Role> getAllowedRoles() {
-            return allowedRoles;
-        }
-
         public List<String> getHttpVerbs() {
             return httpVerbs;
         }
 
+        public List<String> getVerifiedParams() {
+            return verifiedParams;
+        }
+        
         public List<ApiParam> getQueryParams() {
             return queryParams;
         }

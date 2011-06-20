@@ -17,5 +17,12 @@ describe 'Product Resource' do
     prod['productContent'].should be_empty
   end
 
+  it 'allows regular users to view products' do
+    owner = @cp.create_owner random_string('test')
+    user_cp = user_client(owner, random_string('testuser'), true)
+    prod = create_product
+    user_cp.get_product(prod['id'])
+  end
+
 end
 

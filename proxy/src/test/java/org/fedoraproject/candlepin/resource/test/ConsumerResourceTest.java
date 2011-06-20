@@ -28,7 +28,6 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -36,7 +35,8 @@ import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
-import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.controller.CandlepinPoolManager;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
@@ -49,11 +49,12 @@ import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.IdentityCertificate;
+import org.fedoraproject.candlepin.model.Role;
 import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.OwnerPermission;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.User;
-import org.fedoraproject.candlepin.model.UserCurator;
 import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.pki.PKIReader;
 import org.fedoraproject.candlepin.pki.impl.BouncyCastlePKIReader;
@@ -63,8 +64,6 @@ import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestDateUtil;
 import org.fedoraproject.candlepin.test.TestUtil;
-import org.jboss.resteasy.plugins.providers.atom.Entry;
-import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -74,7 +73,11 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
-import com.google.inject.internal.Lists;
+import java.util.ArrayList;
+
+import javax.servlet.http.HttpServletResponse;
+
+import org.fedoraproject.candlepin.auth.permissions.Permission;
 
 /**
  * ConsumerResourceTest
@@ -100,11 +103,11 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     private Pool pool;
 
     private ConsumerResource consumerResource;
-    private UserPrincipal principal;
+    private Principal principal;
     private Owner owner;
+    private Role ownerAdminRole;
     private EventFactory eventFactory;
 
-    private UserCurator userCurator;
     private User someuser;
 
     @Override
@@ -123,12 +126,17 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
             ConsumerTypeEnum.PERSON));
         owner = ownerCurator.create(new Owner("test-owner"));
         ownerCurator.create(owner);
+        
+        someuser = userCurator.create(new User(USER_NAME, "dontcare"));
+        
+        ownerAdminRole = createAdminRole(owner);
+        ownerAdminRole.addUser(someuser);
+        roleCurator.create(ownerAdminRole);
 
-        userCurator = injector.getInstance(UserCurator.class);
-        someuser = userCurator.create(new User(owner, USER_NAME, "dontcare"));
+        principal = new UserPrincipal(USER_NAME, 
+                new ArrayList<Permission>(ownerAdminRole.getPermissions()), false);
+        setupPrincipal(principal);
 
-        principal = new UserPrincipal(USER_NAME, owner,
-            Lists.newArrayList(Role.OWNER_ADMIN));
         consumer = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(consumer);
 
@@ -225,8 +233,10 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
         Consumer submitted = consumerResource.create(
             toSubmit,
-            new UserPrincipal(someuser.getUsername(), owner, Collections
-                .singletonList(Role.OWNER_ADMIN)), null);
+            new UserPrincipal(someuser.getUsername(), Arrays.asList(new Permission [] {
+                new OwnerPermission(owner, Access.ALL) }), false),
+            someuser.getUsername(),
+            owner.getKey());
 
         assertNotNull(submitted);
         assertNotNull(consumerCurator.find(submitted.getId()));
@@ -244,7 +254,8 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         toSubmit.setUuid(uuid);
         toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
 
-        Consumer submitted = consumerResource.create(toSubmit, principal, null);
+        Consumer submitted = consumerResource.create(toSubmit, principal, null,
+                owner.getKey());
         assertNotNull(submitted);
         assertNotNull(submitted.getId());
         assertNotNull(consumerCurator.find(submitted.getId()));
@@ -260,7 +271,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         anotherToSubmit.setUuid(uuid);
         anotherToSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
         anotherToSubmit.setId(null);
-        consumerResource.create(anotherToSubmit, principal, null);
+        consumerResource.create(anotherToSubmit, principal, null, owner.getKey());
     }
 
     public void testDeleteResource() {
@@ -279,9 +290,19 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         Consumer consumer = new Consumer("random-consumer", null, null,
             standardSystemType);
 
-        consumer = consumerResource.create(consumer, principal, null);
+        consumer = consumerResource.create(consumer, principal, null, null);
 
         assertEquals(USER_NAME, consumer.getUsername());
+    }
+
+    @Test(expected = ForbiddenException.class)
+    public void testReadOnlyUsersCantGenerateExports() {
+        consumer.setType(consumerTypeCurator.create(
+            new ConsumerType(ConsumerTypeEnum.CANDLEPIN)));
+        consumerCurator.update(consumer);
+        setupPrincipal(owner, Access.READ_ONLY);
+        securityInterceptor.enable();
+        consumerResource.exportData(mock(HttpServletResponse.class), consumer.getUuid());
     }
 
     @Test
@@ -322,8 +343,8 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         Consumer submitted = consumerResource.create(
             toSubmit,
-            new UserPrincipal(someuser.getUsername(), owner, Collections
-                .singletonList(Role.OWNER_ADMIN)), null);
+            TestUtil.createPrincipal(someuser.getUsername(), owner, Access.ALL),
+            null, null);
 
         assertNotNull(submitted);
         assertEquals(toSubmit.getUuid(), submitted.getUuid());
@@ -338,8 +359,8 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         Consumer nulltypeid = new Consumer(CONSUMER_NAME, USER_NAME, null, type);
         submitted = consumerResource.create(
             nulltypeid,
-            new UserPrincipal(someuser.getUsername(), owner, Collections
-                .singletonList(Role.OWNER_ADMIN)), null);
+            TestUtil.createPrincipal(someuser.getUsername(), owner, Access.ALL),
+            null, null);
         assertNotNull(submitted);
         assertEquals(nulltypeid.getUuid(), submitted.getUuid());
         assertNotNull(submitted.getType().getId());
@@ -386,7 +407,6 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         setupPrincipal(new ConsumerPrincipal(evilConsumer));
 
         securityInterceptor.enable();
-        crudInterceptor.enable();
 
         consumerResource.getEntitlementCertificates(consumer.getUuid(), null);
     }
@@ -416,7 +436,6 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         setupPrincipal(new ConsumerPrincipal(evilConsumer));
 
         securityInterceptor.enable();
-        crudInterceptor.enable();
 
         consumerResource.deleteConsumer(consumer.getUuid(), principal);
     }
@@ -439,13 +458,11 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testCanGetConsumersCerts() {
+    public void getConsumersCerts() {
+        setupAdminPrincipal("admin");
         securityInterceptor.enable();
-        crudInterceptor.enable();
-        setupPrincipal(owner, Role.OWNER_ADMIN);
 
-        assertEquals(
-            0,
+        assertEquals(0,
             consumerResource.getEntitlementCertificates(consumer.getUuid(),
                 null).size());
     }
@@ -459,18 +476,16 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         Owner evilOwner = ownerCurator.create(new Owner("another-owner"));
         ownerCurator.create(evilOwner);
 
+        setupPrincipal(evilOwner, Access.ALL);
         securityInterceptor.enable();
-        crudInterceptor.enable();
-        setupPrincipal(evilOwner, Role.OWNER_ADMIN);
 
         consumerResource.getEntitlementCertificates(consumer.getUuid(), null);
     }
 
     @Test(expected = ForbiddenException.class)
     public void testConsumerCannotListAllConsumers() {
-        securityInterceptor.enable();
-        crudInterceptor.enable();
         setupPrincipal(new ConsumerPrincipal(consumer));
+        securityInterceptor.enable();
 
         consumerResource.list(null, null, null);
     }
@@ -486,7 +501,6 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         setupPrincipal(new ConsumerPrincipal(consumer));
         securityInterceptor.enable();
-        crudInterceptor.enable();
 
         assertEquals(3,
             consumerResource.listEntitlements(consumer.getUuid(), null).size());
@@ -507,7 +521,6 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         setupPrincipal(new ConsumerPrincipal(evilConsumer));
         securityInterceptor.enable();
-        crudInterceptor.enable();
 
         consumerResource.listEntitlements(consumer.getUuid(), null);
     }
@@ -525,8 +538,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         ownerCurator.create(evilOwner);
 
         securityInterceptor.enable();
-        crudInterceptor.enable();
-        setupPrincipal(evilOwner, Role.OWNER_ADMIN);
+        setupPrincipal(evilOwner, Access.ALL);
 
         consumerResource.listEntitlements(consumer.getUuid(), null);
     }
@@ -541,8 +553,6 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
             null, 1, null, null);
 
         securityInterceptor.enable();
-        crudInterceptor.enable();
-        setupPrincipal(owner, Role.OWNER_ADMIN);
 
         assertEquals(3,
             consumerResource.listEntitlements(consumer.getUuid(), null).size());
@@ -552,7 +562,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     public void personalNameOverride() {
         Consumer personal = TestUtil.createConsumer(personType, owner);
 
-        personal = consumerResource.create(personal, principal, null);
+        personal = consumerResource.create(personal, principal, null, null);
 
         // Not sure if this should be hard-coded to default
         assertEquals(USER_NAME, personal.getName());
@@ -561,15 +571,17 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     @Test
     public void userwithEmail() {
         String username = "(foo)@{baz}.[com]&?";
-        userCurator.create(new User(owner, username, "dontcare"));
+        User u = userCurator.create(new User(username, "dontcare"));
+        ownerAdminRole.addUser(u);
+        roleCurator.merge(ownerAdminRole);
 
-        UserPrincipal emailuser = new UserPrincipal(username, owner,
-            Lists.newArrayList(Role.OWNER_ADMIN));
+        Principal emailuser = TestUtil.createPrincipal(username, owner, 
+            Access.ALL);
 
         Consumer personal = TestUtil.createConsumer(personType, owner);
-        personal.setName(emailuser.getUsername());
+        personal.setName(((UserPrincipal) emailuser).getUsername());
 
-        personal = consumerResource.create(personal, emailuser, username);
+        personal = consumerResource.create(personal, emailuser, username, null);
 
         // Not sure if this should be hard-coded to default
         assertEquals(username, personal.getName());
@@ -578,81 +590,22 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     @Test(expected = BadRequestException.class)
     public void onlyOnePersonalConsumer() {
         Consumer personal = TestUtil.createConsumer(personType, owner);
-        consumerResource.create(personal, principal, null);
+        consumerResource.create(personal, principal, null, null);
 
         personal = TestUtil.createConsumer(personType, owner);
-        consumerResource.create(personal, principal, null);
+        consumerResource.create(personal, principal, null, null);
     }
 
     private Event createConsumerCreatedEvent(Owner o) {
         // Rather than run through an entire call to ConsumerResource, we'll
         // fake the
         // events in the db:
-        setupPrincipal(o, Role.OWNER_ADMIN);
-        Consumer consumer = TestUtil.createConsumer(o);
-        consumerTypeCurator.create(consumer.getType());
+
+        Consumer consumer = TestUtil.createConsumer(this.consumer.getType(), o);
         consumerCurator.create(consumer);
         Event e1 = eventFactory.consumerCreated(consumer);
         eventCurator.create(e1);
         return e1;
-    }
-
-    @Test
-    public void testConsumersAtomFeed() {
-        Owner owner2 = new Owner("anotherOwner");
-        ownerCurator.create(owner2);
-
-        securityInterceptor.enable();
-        crudInterceptor.enable();
-
-        // Make a consumer, we'll look for this creation event:
-        Event e1 = createConsumerCreatedEvent(owner);
-        Consumer c = consumerCurator.find(e1.getEntityId());
-
-        // Make another consumer in this org, we do *not* want to see this in
-        // the results:
-        createConsumerCreatedEvent(owner);
-
-        // Create another consumer in a different org, again do not want to see
-        // this:
-        createConsumerCreatedEvent(owner2);
-
-        // Make sure we're acting as the correct owner admin:
-        setupPrincipal(owner, Role.OWNER_ADMIN);
-
-        Feed feed = consumerResource.getConsumerAtomFeed(c.getUuid());
-        assertEquals(1, feed.getEntries().size());
-        Entry entry = feed.getEntries().get(0);
-        assertEquals(e1.getTimestamp(), entry.getPublished());
-    }
-
-    @Test(expected = ForbiddenException.class)
-    public void testOwnerCannotAccessAnotherOwnersAtomFeed() {
-        Owner owner2 = new Owner("anotherOwner");
-        ownerCurator.create(owner2);
-
-        securityInterceptor.enable();
-        crudInterceptor.enable();
-
-        Event e1 = createConsumerCreatedEvent(owner);
-        Consumer c = consumerCurator.find(e1.getEntityId());
-
-        // Should see no results:
-        setupPrincipal(owner2, Role.OWNER_ADMIN);
-        consumerResource.getConsumerAtomFeed(c.getUuid());
-    }
-
-    @Test(expected = ForbiddenException.class)
-    public void testConsumerRoleCannotAccessAtomFeed() {
-        Consumer c = TestUtil.createConsumer(owner);
-        consumerTypeCurator.create(c.getType());
-        consumerCurator.create(c);
-        setupPrincipal(new ConsumerPrincipal(c));
-
-        securityInterceptor.enable();
-        crudInterceptor.enable();
-
-        consumerResource.getConsumerAtomFeed(c.getUuid());
     }
 
     /**

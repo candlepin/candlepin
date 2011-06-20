@@ -6,8 +6,8 @@ describe 'Consumer Facts' do
   include CandlepinScenarios
 
   before(:each) do
-    owner = create_owner random_string('test_owner')
-    user = user_client(owner, random_string("user"))
+    @owner = create_owner random_string('test_owner')
+    user = user_client(@owner, random_string("user"))
 
     facts = {
       'uname.machine' => 'i686',
@@ -61,7 +61,7 @@ describe 'Consumer Facts' do
     }
     @consumer_api.update_facts(updated_facts)
 
-    events = @cp.list_consumer_events(@consumer.uuid)
+    events = @cp.list_consumer_events(@owner['key'], @consumer.uuid)
 
     # Punting on this for now...
     events.should include("consumer")
@@ -75,7 +75,7 @@ describe 'Consumer Facts' do
     }
     @consumer_api.update_facts(updated_facts)
 
-    events = @cp.list_consumer_events(@consumer.uuid)
+    events = @cp.list_consumer_events(@owner['key'], @consumer.uuid)
 
     # Punting on this for now...
     events.should include("consumer")

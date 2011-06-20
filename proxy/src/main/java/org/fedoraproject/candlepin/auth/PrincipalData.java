@@ -14,16 +14,12 @@
  */
 package org.fedoraproject.candlepin.auth;
 
-import java.util.List;
-
 /**
  * PrincipalData is a DTO for principal information until we move to 
  * Jackson 1.7 where were can store real JSON in strings.
  */
 public class PrincipalData {
 
-    private String ownerId;
-    private List<Role> roles;
     private String type;
     private String name;
     
@@ -33,11 +29,7 @@ public class PrincipalData {
      * @param type
      * @param name
      */
-    public PrincipalData(String ownerId, List<Role> roles, String type,
-        String name) {
-        super();
-        this.ownerId = ownerId;
-        this.roles = roles;
+    public PrincipalData(String type, String name) {
         this.type = type;
         this.name = name;
     }
@@ -45,30 +37,6 @@ public class PrincipalData {
     public PrincipalData() {
     }
     
-    /**
-     * @return the ownerId
-     */
-    public String getOwnerId() {
-        return ownerId;
-    }
-    /**
-     * @param ownerId the ownerId to set
-     */
-    public void setOwnerId(String ownerId) {
-        this.ownerId = ownerId;
-    }
-    /**
-     * @return the roles
-     */
-    public List<Role> getRoles() {
-        return roles;
-    }
-    /**
-     * @param roles the roles to set
-     */
-    public void setRoles(List<Role> roles) {
-        this.roles = roles;
-    }
     /**
      * @return the type
      */
@@ -93,4 +61,5 @@ public class PrincipalData {
     public void setName(String name) {
         this.name = name;
     }
+
 }

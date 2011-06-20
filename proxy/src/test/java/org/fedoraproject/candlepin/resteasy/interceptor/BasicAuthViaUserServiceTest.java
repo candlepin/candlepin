@@ -18,11 +18,19 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.when;
 
-import org.apache.commons.codec.binary.Base64;
+import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
+import org.fedoraproject.candlepin.auth.permissions.Permission;
+import org.fedoraproject.candlepin.exceptions.UnauthorizedException;
 import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.OwnerCurator;
+import org.fedoraproject.candlepin.model.OwnerPermission;
+import org.fedoraproject.candlepin.model.Role;
+import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
+
+import com.google.inject.Injector;
+
+import org.apache.commons.codec.binary.Base64;
 import org.jboss.resteasy.specimpl.HttpHeadersImpl;
 import org.jboss.resteasy.specimpl.MultivaluedMapImpl;
 import org.jboss.resteasy.spi.HttpRequest;
@@ -30,15 +38,21 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
 
-import com.google.inject.Injector;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 public class BasicAuthViaUserServiceTest {
 
     @Mock private HttpRequest request;
     private HttpHeadersImpl headers;
     @Mock private UserServiceAdapter userService;
-    @Mock private OwnerCurator ownerCurator;
     @Mock private Injector injector;
     private BasicAuth auth;
 
@@ -48,7 +62,9 @@ public class BasicAuthViaUserServiceTest {
         headers = new HttpHeadersImpl();
         headers.setRequestHeaders(new MultivaluedMapImpl<String, String>());
         when(request.getHttpHeaders()).thenReturn(headers);
-        this.auth = new BasicAuth(userService, ownerCurator, injector);
+        I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
+        when(injector.getInstance(I18n.class)).thenReturn(i18n);
+        this.auth = new BasicAuth(userService, injector);
     }
 
     /**
@@ -77,7 +93,7 @@ public class BasicAuthViaUserServiceTest {
      *
      * @throws Exception
      */
-    @Test
+    @Test(expected = UnauthorizedException.class)
     public void invalidUserPassword() throws Exception {
         setUserAndPassword("billy", "madison");
         when(userService.validateUser("billy", "madison")).thenReturn(false);
@@ -95,9 +111,19 @@ public class BasicAuthViaUserServiceTest {
         
         setUserAndPassword("user", "redhat");
         when(userService.validateUser("user", "redhat")).thenReturn(true);
-        when(userService.getOwner("user")).thenReturn(owner);
-        when(ownerCurator.lookupByKey("user")).thenReturn(owner);
-        UserPrincipal expected = new UserPrincipal("user", owner, null);
+        // TODO: test will fail, need to mock the permissions setup
+
+        Set<OwnerPermission> permissions = new HashSet<OwnerPermission>();
+        permissions.add(new OwnerPermission(owner, Access.ALL));
+        
+        List<Role> roles = Arrays.asList(new Role [] {new Role("test_role",
+            new HashSet<User>(), permissions)});
+        when(userService.getRoles("user")).thenReturn(roles);
+        
+        when(userService.findByLogin("user")).thenReturn(new User());
+        
+        UserPrincipal expected = new UserPrincipal("user", 
+                new ArrayList<Permission>(permissions), false);
         assertEquals(expected, this.auth.getPrincipal(request));
     }
 

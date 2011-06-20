@@ -15,27 +15,21 @@
 package org.fedoraproject.candlepin.auth.interceptor;
 
 import java.lang.annotation.ElementType;
-import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.Access;
 
 /**
- * Annotation specifying which roles can access a given method. 
- * Can be applied to both the class, or a method within the class, where the latter takes
- * precedence. 
- *
- * Other attributes are available to request verification that the current principal is
- * accessing a user / owner / consumer they should have access to.
+ * Annotation for specifying RESTful parameters that represent some protected
+ * entity, such as a Consumer or Owner.
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.METHOD/*, ElementType.TYPE*/})
-@Inherited
-public @interface AllowRoles {
+@Target({ElementType.PARAMETER})
+public @interface Verify {
 
-    Role [] roles() default {};
+    Class value();
 
-    String verifyUser() default "";
+    Access require() default Access.NONE;
 }

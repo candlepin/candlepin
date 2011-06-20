@@ -5,14 +5,21 @@ describe 'Consumer Resource' do
   include CandlepinMethods
   include CandlepinScenarios
 
-  it 'allows super admins to see all consumers' do
-    owner1 = create_owner random_string('test_owner1')
-    user1 = user_client(owner1, random_string("user1"))
-    consumer1 = consumer_client(user1, random_string("consumer1"))
+  before(:each) do
+    @owner1 = create_owner random_string('test_owner1')
+    @username1 = random_string("user1")
+    @consumername1 = random_string("consumer1")
+    @user1 = user_client(@owner1, @username1)
+    @consumer1 = consumer_client(@user1, @consumername1)
 
-    owner2 = create_owner random_string('test_owner2')
-    user2 = user_client(owner2, random_string("user2"))
-    consumer2 = consumer_client(user2, random_string("consumer2"))
+    @owner2 = create_owner random_string('test_owner2')
+    @username2 = random_string("user2")
+    @user2 = user_client(@owner2, @username2)
+    @consumer2 = consumer_client(@user2, random_string("consumer2"))
+  end
+
+
+  it 'allows super admins to see all consumers' do
 
     uuids = []
     @cp.list_consumers.each do |c|
@@ -21,49 +28,28 @@ describe 'Consumer Resource' do
       # TODO: Find a better way once client is more HATEOASy.
       uuids << c['href'].split('/')[-1]
     end
-    uuids.include?(consumer1.uuid).should be_true
-    uuids.include?(consumer2.uuid).should be_true
+    uuids.include?(@consumer1.uuid).should be_true
+    uuids.include?(@consumer2.uuid).should be_true
   end
 
   it 'lets an owner admin see only their consumers' do
-    owner1 = create_owner random_string('test_owner1')
-    user1 = user_client(owner1, random_string("user1"))
-    consumer1 = consumer_client(user1, random_string("consumer1"))
-
-    owner2 = create_owner random_string('test_owner2')
-    user2 = user_client(owner2, random_string("user2"))
-    consumer2 = consumer_client(user2, random_string("consumer2"))
-
-    user2.list_consumers.length.should == 1
+    @user2.list_consumers({:owner => @owner2['key']}).length.should == 1
   end
 
   it 'lets a super admin filter consumers by owner' do
-    owner1 = create_owner random_string('test_owner1')
-    user1 = user_client(owner1, random_string("user1"))
-    consumer1 = consumer_client(user1, random_string("consumer1"))
-
-    owner2 = create_owner random_string('test_owner2')
-    user2 = user_client(owner2, random_string("user2"))
-    consumer2 = consumer_client(user2, random_string("consumer2"))
-
     @cp.list_consumers.size.should > 1
-    @cp.list_consumers({:owner => owner1.key}).size.should == 1
+    @cp.list_consumers({:owner => @owner1['key']}).size.should == 1
   end
 
 
   it 'lets an owner see only their system consumer types' do
-    owner1 = create_owner random_string('test_owner1')
-    user1 = user_client(owner1, random_string("user1"))
-    consumer1 = consumer_client(user1, random_string("consumer1"))
-    consumer2 = consumer_client(user1, random_string("consumer2"), 'candlepin')
-
-    user1.list_consumers({:type => 'system'}).length.should == 1
+    @user1.list_consumers({:type => 'system', :owner => @owner1['key']}).length.should == 1
   end
 
   it 'lets a super admin see a peson consumer with a given username' do
-    owner1 = create_owner random_string('test_owner1')
-    username = random_string "user1"
-    user1 = user_client(owner1, username)
+
+    username = random_string("user1")
+    user1 = user_client(@owner1, username)
     consumer1 = consumer_client(user1, random_string("consumer1"), 'person')
 
     @cp.list_consumers({:type => 'person',
@@ -75,10 +61,10 @@ describe 'Consumer Resource' do
     username = random_string "user1"
     user1 = user_client(owner1, username)
     consumer1 = consumer_client(@cp, random_string("consumer1"), 'person',
-                                username)
+                                username, {}, owner1['key'])
 
     @cp.list_consumers({:type => 'person',
-                       :username => username}).length.should == 1
+        :username => username, :owner => owner1['key']}).length.should == 1
   end
 
   it 'does not let an owner admin create person consumer for another owner' do
@@ -95,10 +81,10 @@ describe 'Consumer Resource' do
     end.should raise_exception(RestClient::Forbidden)
   end
 
-  it 'returns a 404 for a non-existant consumer' do
+  it 'returns a 403 for a non-existant consumer' do
     lambda do
       @cp.get_consumer('fake-uuid')
-    end.should raise_exception(RestClient::ResourceNotFound)
+    end.should raise_exception(RestClient::Forbidden)
   end
 
   it 'lets a consumer view their own information' do
@@ -158,7 +144,7 @@ describe 'Consumer Resource' do
                           :attribute => { :arch => 'i386, x86_64'})
     subs = @cp.create_subscription(owner.key, prod.id)
     @cp.refresh_pools(owner.key)
-    pool = cp_client.list_pools.first
+    pool = cp_client.list_pools({:owner => owner['id']}).first
 
     cp_client.consume_pool(pool.id).size.should == 1
   end

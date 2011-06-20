@@ -43,7 +43,7 @@ import org.hibernate.annotations.GenericGenerator;
 @Entity
 @Table(name = "cp_owner")
 public class Owner extends AbstractHibernateObject implements Serializable,
-    Linkable {
+    Linkable, Owned {
 
     @OneToOne
     @JoinColumn(name = "parent_owner", nullable = true)
@@ -302,6 +302,18 @@ public class Owner extends AbstractHibernateObject implements Serializable,
 
     public void setParentOwner(Owner parentOwner) {
         this.parentOwner = parentOwner;
+    }
+
+    /**
+     * Kind of crazy - an owner owns itself.  This is so that the OwnerPermissions
+     * will work properly when Owner is the target.
+     *
+     * @return this
+     */
+    @XmlTransient
+    @Override
+    public Owner getOwner() {
+        return this;
     }
 
     /**

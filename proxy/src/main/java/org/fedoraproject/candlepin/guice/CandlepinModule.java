@@ -19,16 +19,12 @@ import org.fedoraproject.candlepin.audit.AMQPBusPublisher;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.audit.EventSinkImpl;
 import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.interceptor.AccessControlInterceptor;
-import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
-import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
 import org.fedoraproject.candlepin.auth.interceptor.SecurityInterceptor;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.controller.CandlepinPoolManager;
 import org.fedoraproject.candlepin.controller.CrlGenerator;
 import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.exceptions.CandlepinExceptionMapper;
-import org.fedoraproject.candlepin.model.AbstractHibernateCurator;
 import org.fedoraproject.candlepin.pinsetter.core.GuiceJobFactory;
 import org.fedoraproject.candlepin.pinsetter.core.PinsetterJobListener;
 import org.fedoraproject.candlepin.pinsetter.core.PinsetterKernel;
@@ -49,6 +45,7 @@ import org.fedoraproject.candlepin.resource.ActivateResource;
 import org.fedoraproject.candlepin.resource.ActivationKeyResource;
 import org.fedoraproject.candlepin.resource.AdminResource;
 import org.fedoraproject.candlepin.resource.AtomFeedResource;
+import org.fedoraproject.candlepin.resource.RoleResource;
 import org.fedoraproject.candlepin.resource.CertificateSerialResource;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.resource.ConsumerTypeResource;
@@ -127,6 +124,7 @@ public class CandlepinModule extends AbstractModule {
         bind(PoolResource.class);
         bind(EntitlementResource.class);
         bind(OwnerResource.class);
+        bind(RoleResource.class);
         bind(RootResource.class);
         bind(ProductResource.class);
         bind(MigrationResource.class);
@@ -178,30 +176,17 @@ public class CandlepinModule extends AbstractModule {
             "org.fedoraproject.candlepin.resource"));
         SecurityInterceptor securityEnforcer = new SecurityInterceptor();
         requestInjection(securityEnforcer);
-        bindInterceptor(resourcePkgMatcher, Matchers.any(), securityEnforcer);
+        bindInterceptor(resourcePkgMatcher, 
+                Matchers.any(), securityEnforcer);
 
-        bindInterceptor(
-            Matchers.subclassesOf(AbstractHibernateCurator.class),
-            Matchers.annotatedWith(AllowRoles.class),
-            securityEnforcer);
-
-        AccessControlInterceptor accessControlInterceptor = new AccessControlInterceptor();
-        requestInjection(accessControlInterceptor);
-
-        bindInterceptor(
-            Matchers.subclassesOf(AbstractHibernateCurator.class),
-            Matchers.annotatedWith(EnforceAccessControl.class),
-            accessControlInterceptor);
-
-        //amqp stuff below...
-
+        // AMQP stuff:
         bind(Function.class).annotatedWith(Names.named("abc"))
                 .to(AMQPBusEventAdapter.class).in(Singleton.class);
-      //for lazy loading.
+      // for lazy loading:
         bind(AMQPBusPublisher.class).toProvider(AMQPBusPubProvider.class)
                 .in(Singleton.class);
 
-        //flexible end date for identity certificates
+        // flexible end date for identity certificates
         bind(Function.class).annotatedWith(Names.named("endDateGenerator"))
             .to(ExpiryDateFunction.class).in(Singleton.class);
     }

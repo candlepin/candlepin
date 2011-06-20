@@ -40,9 +40,8 @@ describe 'Products with "user-license" attributes' do
 
     sys1 = consumer_client(@user, 'sys1')
 
-    sys1.list_pools.find do |pool|
-      pool.productId == @editor.id
-    end.should_not be_empty
+    sys1.list_pools({:consumer => sys1.uuid,
+        :product => @editor.id}).should_not be_empty
   end
 
   it 'should create a sub-pool that is restricted to the user\'s consumers' do

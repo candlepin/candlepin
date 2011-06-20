@@ -14,22 +14,24 @@
  */
 package org.fedoraproject.candlepin.auth;
 
-import java.util.Arrays;
-
 /**
  *
  */
 public class NoAuthPrincipal extends Principal {
 
-    public NoAuthPrincipal() {
-        super(null, Arrays.asList(Role.values()));
+    @Override
+    public String getType() {
+        return "no_auth";
     }
 
-    public String getType() {
-        return Principal.NO_AUTH_TYPE;
-    }
-    
+    @Override
     public String getPrincipalName() {       
         return "Anonymous";
-    }     
+    }
+
+    @Override
+    public boolean hasFullAccess() {
+        return false;
+    }
+   
 }

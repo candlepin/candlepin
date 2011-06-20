@@ -17,7 +17,8 @@ describe 'Certificate Revocation List' do
     @cp.refresh_pools(@owner.key)
 
     #create consumer 
-    user = user_client(@owner, 'billy')
+    @user = create_user(@owner, 'billy', 'password')
+    user = Candlepin.new('billy', 'password')
     @system = consumer_client(user, 'system6')
   end 
 
@@ -60,6 +61,9 @@ describe 'Certificate Revocation List' do
 
     # Delete owner without revoking certs
     delete_owner(@owner, false)
+    # deleting the owner has already deleted this user, so remove it from
+    # the user list (to prevent later cleanup)
+    @users.delete @user
 
     revoked_serials.should_not include(serials)
   end

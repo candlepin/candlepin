@@ -14,9 +14,11 @@
  */
 package org.fedoraproject.candlepin.resource;
 
+
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -24,15 +26,20 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.Role;
-import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
+import org.fedoraproject.candlepin.exceptions.ConflictException;
+import org.fedoraproject.candlepin.exceptions.GoneException;
+import org.fedoraproject.candlepin.auth.interceptor.Verify;
 import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.POST;
 
 /**
  * UserResource
@@ -42,32 +49,62 @@ public class UserResource {
   
     private UserServiceAdapter userService;
     private I18n i18n;
+    private OwnerCurator ownerCurator;
     
     @Inject
-    public UserResource(UserServiceAdapter userService, I18n i18n) {
+    public UserResource(UserServiceAdapter userService, I18n i18n,
+        OwnerCurator ownerCurator) {
         this.userService = userService;
         this.i18n = i18n;
+        this.ownerCurator = ownerCurator;
     }
     
     @GET
-    @AllowRoles(roles = { Role.OWNER_ADMIN })
     @Path("/{username}")
     @Produces(MediaType.APPLICATION_JSON)
-    public User getUserInfo(@PathParam("username") String username) {        
+    public User getUserInfo(@PathParam("username")
+        @Verify(User.class) String username) {
         return userService.findByLogin(username);
     }
 
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public User createUser(User user) {
+        if (userService.findByLogin(user.getUsername()) != null) {
+            throw new ConflictException("user " + user.getUsername() + " already exists");
+        }
+        return userService.createUser(user);
+    }
+
+    @DELETE
+    @Path("/{username}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public void deleteUser(@PathParam("username") String username) {
+        User user = userService.findByLogin(username);
+        if (user == null) {
+            throw new GoneException("user " + username + " not found");
+        }
+        else {
+            userService.deleteUser(user);
+        }
+    }
+
     @GET
-    @AllowRoles(roles = { Role.SUPER_ADMIN, Role.OWNER_ADMIN }, verifyUser = "username")
     @Path("/{username}/owners")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Owner> listUsersOwners(@PathParam("username") String username,
+    public List<Owner> listUsersOwners(@PathParam("username") @Verify(User.class)
+        String username,
         @Context Principal principal) {
 
-        // TODO: update once multi-owner relationship is in place
-        User user = userService.findByLogin(username);
         List<Owner> owners = new LinkedList<Owner>();
-        owners.add(user.getOwner());
+        User user = userService.findByLogin(username);
+        if (user.isSuperAdmin()) {
+            owners.addAll(ownerCurator.listAll());
+        }
+        else {
+            owners.addAll(user.getOwners(Access.ALL));
+        }
         return owners;
     }
 

@@ -15,10 +15,13 @@
 package org.fedoraproject.candlepin.resource;
 
 import org.fedoraproject.candlepin.audit.EventSink;
-import org.fedoraproject.candlepin.auth.Role;
-import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
-import org.fedoraproject.candlepin.controller.PoolManager;
+import org.fedoraproject.candlepin.auth.Access;
+
+import org.fedoraproject.candlepin.auth.interceptor.Verify;
+import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.interceptor.SecurityHole;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
+import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
@@ -41,6 +44,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.xml.bind.DatatypeConverter;
 
@@ -52,7 +56,6 @@ import javax.xml.bind.DatatypeConverter;
 public class PoolResource {
 
     private PoolCurator poolCurator;
-    private PoolManager poolManager;
     private ConsumerCurator consumerCurator;
     private OwnerCurator ownerCurator;
     private I18n i18n;
@@ -60,12 +63,11 @@ public class PoolResource {
     @Inject
     public PoolResource(PoolCurator poolCurator,
         ConsumerCurator consumerCurator, OwnerCurator ownerCurator, I18n i18n,
-        EventSink eventSink, PoolManager poolManager) {
+        EventSink eventSink) {
         this.poolCurator = poolCurator;
         this.consumerCurator = consumerCurator;
         this.ownerCurator = ownerCurator;
         this.i18n = i18n;
-        this.poolManager = poolManager;
     }
 
     private Date parseActiveOnString(String activeOn) {
@@ -102,13 +104,13 @@ public class PoolResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "pools")
-    @AllowRoles(roles = { Role.OWNER_ADMIN, Role.CONSUMER })
     @Deprecated
+    @SecurityHole
     public List<Pool> list(@QueryParam("owner") String ownerId,
         @QueryParam("consumer") String consumerUuid,
         @QueryParam("product") String productId,
         @QueryParam("listall") @DefaultValue("false") boolean listAll,
-        @QueryParam("activeon") String activeOn) {
+        @QueryParam("activeon") String activeOn, @Context Principal principal) {
 
         // Make sure we were given sane query parameters:
         if (consumerUuid != null && ownerId != null) {
@@ -133,6 +135,13 @@ public class PoolResource {
                 throw new NotFoundException(i18n.tr("consumer: {0} not found",
                     consumerUuid));
             }
+            
+            // Now that we have a consumer, check that this principal can access it:
+            if (!principal.canAccess(c, Access.READ_ONLY)) {
+                throw new ForbiddenException(i18n.tr("User {0} cannot access consumer {1}", 
+                    principal.getPrincipalName(), consumerUuid));
+            }
+
             if (listAll) {
                 o = c.getOwner();
             }
@@ -142,7 +151,21 @@ public class PoolResource {
             if (o == null) {
                 throw new NotFoundException(i18n.tr("owner: {0}", ownerId));
             }
+            // Now that we have an owner, check that this principal can access it:
+            if (!principal.canAccess(o, Access.READ_POOLS)) {
+                throw new ForbiddenException(i18n.tr("User {0} cannot access owner {1}", 
+                    principal.getPrincipalName(), o.getKey()));
+            }
         }
+        
+        // If we have no consumer, and no owner specified, kick 'em out unless they
+        // have full system access (this is the same as requesting all pools in
+        // the system).
+        if (consumerUuid == null && ownerId == null && !principal.hasFullAccess()) {
+            throw new ForbiddenException(i18n.tr("User {0} cannot access all pools.",
+                    principal.getPrincipalName()));
+        }
+        
         return poolCurator.listAvailableEntitlementPools(c, o, productId,
             activeOnDate, true, listAll);
     }
@@ -158,8 +181,7 @@ public class PoolResource {
     @GET
     @Path("/{pool_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowRoles(roles = { Role.OWNER_ADMIN, Role.CONSUMER })
-    public Pool getPool(@PathParam("pool_id") String id) {
+    public Pool getPool(@PathParam("pool_id") @Verify(Pool.class) String id) {
         Pool toReturn = poolCurator.find(id);
 
         if (toReturn != null) {

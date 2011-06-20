@@ -23,8 +23,7 @@ import static org.mockito.Mockito.when;
 
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
-import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.OwnerCurator;
+import org.fedoraproject.candlepin.model.RoleCurator;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.resource.AdminResource;
@@ -40,16 +39,16 @@ import org.junit.Test;
 public class AdminResourceTest {
 
     private ConsumerTypeCurator ctc;
-    private OwnerCurator oc;
     private UserServiceAdapter usa;
     private AdminResource ar;
+    private RoleCurator roleCurator;
     
     @Before
     public void init() {
         ctc = mock(ConsumerTypeCurator.class);
-        oc = mock(OwnerCurator.class);
         usa = mock(UserServiceAdapter.class);
-        ar = new AdminResource(ctc, oc, usa);
+        roleCurator = mock(RoleCurator.class);
+        ar = new AdminResource(ctc, usa);
     }
     
     @Test
@@ -58,7 +57,6 @@ public class AdminResourceTest {
         assertEquals("Initialized!", ar.initialize());
         verify(ctc, times(ConsumerTypeEnum.values().length)).create(
             any(ConsumerType.class));
-        verify(oc).create(any(Owner.class));
         verify(usa).createUser(any(User.class));
     }
     

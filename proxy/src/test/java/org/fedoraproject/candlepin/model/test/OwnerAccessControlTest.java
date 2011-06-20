@@ -16,40 +16,56 @@ package org.fedoraproject.candlepin.model.test;
 
 import static org.junit.Assert.*;
 
-import org.fedoraproject.candlepin.auth.Role;
+import org.fedoraproject.candlepin.auth.Access;
+import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
+import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.resource.OwnerResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
+import org.junit.Before;
 import org.junit.Test;
 
 /**
- * OwnerCuratorTest
+ * OwnerAccessTest
  */
-public class OwnerCuratorAccessControlTest extends DatabaseTestFixture {
-    
+public class OwnerAccessControlTest extends DatabaseTestFixture {
+
+    private OwnerResource resource;
+    private Owner owner;
+
+    @Before
+    @Override
+    public void init() {
+        super.init();
+
+        this.resource = this.injector.getInstance(OwnerResource.class);
+        this.owner = createOwner();
+    }
+
     @Test
     public void superAdminCanCreateAnOwner() {
-        setupPrincipal(null, Role.SUPER_ADMIN);
+        setupAdminPrincipal("dude");
         securityInterceptor.enable();
-        
-        Owner owner = createOwner();
+
+        resource.createOwner(new Owner("Test Owner"));
         assertNotNull(ownerCurator.find(owner.getId()));
     }
     
     @Test(expected = ForbiddenException.class)
     public void ownerAdminCannotCreateAnOwner() {
-        Owner owner = createOwner();
-        setupPrincipal(owner, Role.OWNER_ADMIN);
+        setupPrincipal(owner, Access.ALL);
         securityInterceptor.enable();
-        
-        createOwner();
+
+        resource.createOwner(new Owner("Test Owner"));
     }
     
     @Test(expected = ForbiddenException.class)
     public void consumerCannotCreateAnOwner() {
-        Owner owner = createOwner();
-        setupPrincipal(owner, Role.CONSUMER);
+        Consumer consumer = createConsumer(owner);
+        setupPrincipal(new ConsumerPrincipal(consumer));
         securityInterceptor.enable();
-        createOwner();
+
+        resource.createOwner(new Owner("Test Owner"));
     }
 }

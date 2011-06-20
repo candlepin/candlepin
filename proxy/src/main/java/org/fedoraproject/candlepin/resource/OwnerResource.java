@@ -18,9 +18,6 @@ import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventAdapter;
 import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
-import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.Role;
-import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.CandlepinException;
@@ -28,6 +25,8 @@ import org.fedoraproject.candlepin.exceptions.IseException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.ActivationKey;
 import org.fedoraproject.candlepin.model.ActivationKeyCurator;
+import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
+import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -40,9 +39,10 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.OwnerInfo;
 import org.fedoraproject.candlepin.model.OwnerInfoCurator;
+import org.fedoraproject.candlepin.model.OwnerPermission;
+import org.fedoraproject.candlepin.model.OwnerPermissionCurator;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
-import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.model.Statistic;
 import org.fedoraproject.candlepin.model.StatisticCurator;
 import org.fedoraproject.candlepin.model.Subscription;
@@ -83,9 +83,11 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.xml.bind.DatatypeConverter;
+
+import org.fedoraproject.candlepin.auth.Access;
+import org.fedoraproject.candlepin.auth.interceptor.Verify;
 
 /**
  * Owner Resource
@@ -97,6 +99,7 @@ public class OwnerResource {
     private PoolCurator poolCurator;
     private SubscriptionCurator subscriptionCurator;
     private ActivationKeyCurator activationKeyCurator;
+    private StatisticCurator statisticCurator;
     private UserServiceAdapter userService;
     private SubscriptionServiceAdapter subService;
     private ConsumerCurator consumerCurator;
@@ -109,23 +112,26 @@ public class OwnerResource {
     private Importer importer;
     private ExporterMetadataCurator exportCurator;
     private ImportRecordCurator importRecordCurator;
-    private StatisticCurator statisticCurator;
+    private OwnerPermissionCurator permissionCurator;
     private PoolManager poolManager;
+    private ConsumerTypeCurator consumerTypeCurator;
     private static final int FEED_LIMIT = 1000;
 
     @Inject
     public OwnerResource(OwnerCurator ownerCurator, PoolCurator poolCurator,
-        ProductCurator productCurator, SubscriptionCurator subscriptionCurator,
+        SubscriptionCurator subscriptionCurator,
         ActivationKeyCurator activationKeyCurator,
         ConsumerCurator consumerCurator,
-        StatisticCurator statisticCurator, I18n i18n,
-        UserServiceAdapter userService, EventSink sink,
-        EventFactory eventFactory, EventCurator eventCurator,
-        EventAdapter eventAdapter, Importer importer, PoolManager poolManager,
-        ExporterMetadataCurator exportCurator,
+        StatisticCurator statisticCurator,
+        I18n i18n, UserServiceAdapter userService,
+        EventSink sink, EventFactory eventFactory,
+        EventCurator eventCurator, EventAdapter eventAdapter,
+        Importer importer, PoolManager poolManager, ExporterMetadataCurator exportCurator,
         OwnerInfoCurator ownerInfoCurator,
         ImportRecordCurator importRecordCurator,
-        SubscriptionServiceAdapter subService) {
+        SubscriptionServiceAdapter subService,
+        OwnerPermissionCurator permCurator,
+        ConsumerTypeCurator consumerTypeCurator) {
 
         this.ownerCurator = ownerCurator;
         this.ownerInfoCurator = ownerInfoCurator;
@@ -145,6 +151,8 @@ public class OwnerResource {
         this.poolManager = poolManager;
         this.eventAdapter = eventAdapter;
         this.subService = subService;
+        this.permissionCurator = permCurator;
+        this.consumerTypeCurator = consumerTypeCurator;
     }
 
     /**
@@ -179,7 +187,6 @@ public class OwnerResource {
     @GET
     @Path("/{owner_key}")
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowRoles(roles = { Role.OWNER_ADMIN })
     public Owner getOwner(@PathParam("owner_key") String ownerKey) {
         return findOwner(ownerKey);
     }
@@ -193,8 +200,8 @@ public class OwnerResource {
     @GET
     @Path("/{owner_key}/info")
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowRoles(roles = { Role.OWNER_ADMIN })
-    public OwnerInfo getOwnerInfo(@PathParam("owner_key") String ownerKey) {
+    public OwnerInfo getOwnerInfo(@PathParam("owner_key")
+        @Verify(Owner.class) String ownerKey) {
         Owner owner = findOwner(ownerKey);
         return ownerInfoCurator.lookupByOwner(owner);
     }
@@ -231,10 +238,8 @@ public class OwnerResource {
     @DELETE
     @Path("/{owner_key}")
     @Produces(MediaType.APPLICATION_JSON)
-    // FIXME No way this is as easy as this :)
     public void deleteOwner(@PathParam("owner_key") String ownerKey,
-        @QueryParam("revoke") @DefaultValue("true") boolean revoke,
-        @Context Principal principal) {
+        @QueryParam("revoke") @DefaultValue("true") boolean revoke) {
         Owner owner = findOwner(ownerKey);
         Event e = eventFactory.ownerDeleted(owner);
 
@@ -292,6 +297,12 @@ public class OwnerResource {
             log.info("Deleting import record:  " + record);
             importRecordCurator.delete(record);
         }
+        
+        for (OwnerPermission perm : permissionCurator.findByOwner(owner)) {
+            log.info("Deleting permission: " + perm.getAccess());
+            perm.getRole().getPermissions().remove(perm);
+            permissionCurator.delete(perm);
+        }
 
         log.info("Deleting owner: " + owner);
         ownerCurator.delete(owner);
@@ -306,9 +317,8 @@ public class OwnerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/entitlements")
-    @AllowRoles(roles = { Role.OWNER_ADMIN })
     public List<Entitlement> ownerEntitlements(
-        @PathParam("owner_key") String ownerKey) {
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
         Owner owner = findOwner(ownerKey);
 
         List<Entitlement> toReturn = new LinkedList<Entitlement>();
@@ -328,9 +338,8 @@ public class OwnerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/activation_keys")
-    @AllowRoles(roles = { Role.OWNER_ADMIN })
     public List<ActivationKey> ownerActivationKeys(
-        @PathParam("owner_key") String ownerKey) {
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
         Owner owner = findOwner(ownerKey);
 
         return this.activationKeyCurator.listByOwner(owner);
@@ -345,9 +354,9 @@ public class OwnerResource {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/activation_keys")
-    @AllowRoles(roles = { Role.OWNER_ADMIN })
     public ActivationKey createActivationKey(
-        @PathParam("owner_key") String ownerKey, ActivationKey activationKey) {
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
+        ActivationKey activationKey) {
         Owner owner = findOwner(ownerKey);
         activationKey.setOwner(owner);
 
@@ -367,12 +376,34 @@ public class OwnerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/consumers")
-    @AllowRoles(roles = { Role.OWNER_ADMIN })
-    public List<Consumer> ownerConsumers(@PathParam("owner_key") String ownerKey) {
+    public List<Consumer> ownerConsumers(
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
+        @QueryParam("username") String userName,
+        @QueryParam("type") String typeLabel) {
 
         Owner owner = findOwner(ownerKey);
-        return new LinkedList<Consumer>(owner.getConsumers());
+
+        ConsumerType type = null;
+
+        if (typeLabel != null) {
+            type = lookupConsumerType(typeLabel);
+        }
+
+        // We don't look up the user and warn if it doesn't exist here to not
+        // give away usernames
+        return consumerCurator.listByUsernameAndType(userName, type, owner);
     }
+
+    private ConsumerType lookupConsumerType(String label) {
+        ConsumerType type = consumerTypeCurator.lookupByLabel(label);
+
+        if (type == null) {
+            throw new BadRequestException(i18n.tr("No such consumer type: {0}",
+                label));
+        }
+        return type;
+    }
+
 
     /**
      * Return the entitlement pools for the owner of the given id.
@@ -383,9 +414,9 @@ public class OwnerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/pools")
-    @AllowRoles(roles = { Role.OWNER_ADMIN, Role.CONSUMER })
-    public List<Pool> ownerEntitlementPools(
-        @PathParam("owner_key") String ownerKey,
+    public List<Pool> getPools(
+        @PathParam("owner_key")
+            @Verify(value = Owner.class, require = Access.READ_POOLS) String ownerKey,
         @QueryParam("consumer") String consumerUuid,
         @QueryParam("product") String productId,
         @QueryParam("listall") @DefaultValue("false") boolean listAll,
@@ -405,7 +436,7 @@ public class OwnerResource {
                 throw new NotFoundException(i18n.tr("consumer: {0} not found",
                     consumerUuid));
             }
-            if (c.getOwner().getId() != owner.getId()) {
+            if (!c.getOwner().getId().equals(owner.getId())) {
                 throw new BadRequestException(
                     "Consumer specified does not belong to owner on path");
             }
@@ -414,24 +445,13 @@ public class OwnerResource {
             activeOnDate, true, listAll);
     }
 
-    // ----- User -----
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{owner_key}/users")
-    public User createUser(@PathParam("owner_key") String ownerKey, User user) {
-        Owner owner = findOwner(ownerKey);
-        user.setOwner(owner);
-
-        return userService.createUser(user);
-    }
-
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/subscriptions")
     public Subscription createSubscription(
-        @PathParam("owner_key") String ownerKey, Subscription subscription) {
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
+        Subscription subscription) {
         Owner o = findOwner(ownerKey);
         subscription.setOwner(o);
         return subService.createSubscription(subscription);
@@ -440,8 +460,8 @@ public class OwnerResource {
     @GET
     @Produces("application/atom+xml")
     @Path("{owner_key}/atom")
-    @AllowRoles(roles = { Role.OWNER_ADMIN })
-    public Feed getOwnerAtomFeed(@PathParam("owner_key") String ownerKey) {
+    public Feed getOwnerAtomFeed(@PathParam("owner_key")
+            @Verify(Owner.class) String ownerKey) {
         Owner o = findOwner(ownerKey);
         String path = String.format("/owners/%s/atom", ownerKey);
         Feed feed = this.eventAdapter.toFeed(
@@ -451,10 +471,24 @@ public class OwnerResource {
     }
 
     @GET
+    @Produces("application/atom+xml")
+    @Path("{owner_key}/consumers/{consumer_uuid}/atom")
+    public Feed getConsumerAtomFeed(
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
+        @PathParam("consumer_uuid") String consumerUuid) {
+        String path = String.format("/consumers/%s/atom", consumerUuid);
+        Consumer consumer = findConsumer(consumerUuid);
+        Feed feed = this.eventAdapter.toFeed(
+            this.eventCurator.listMostRecent(FEED_LIMIT, consumer), path);
+        feed.setTitle("Event feed for consumer " + consumer.getUuid());
+        return feed;
+    }
+
+    @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowRoles(roles = { Role.OWNER_ADMIN })
     @Path("{owner_key}/events")
-    public List<Event> getEvents(@PathParam("owner_key") String ownerKey) {
+    public List<Event> getEvents(
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
         Owner o = findOwner(ownerKey);
         List<Event> events = this.eventCurator.listMostRecent(FEED_LIMIT, o);
         if (events != null) {
@@ -467,9 +501,8 @@ public class OwnerResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/subscriptions")
-    @AllowRoles(roles = { Role.OWNER_ADMIN })
     public List<Subscription> getSubscriptions(
-        @PathParam("owner_key") String ownerKey) {
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
         Owner o = findOwner(ownerKey);
         return subService.getSubscriptions(o);
     }
@@ -482,8 +515,8 @@ public class OwnerResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/users")
-    @AllowRoles(roles = { Role.OWNER_ADMIN })
-    public List<User> getUsers(@PathParam("owner_key") String ownerKey) {
+    public List<User> getUsers(
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
         Owner o = findOwner(ownerKey);
         return userService.listByOwner(o);
     }
@@ -499,6 +532,27 @@ public class OwnerResource {
         return owner;
     }
 
+    private User findUser(String login) {
+        User user = userService.findByLogin(login);
+
+        if (user == null) {
+            throw new NotFoundException(i18n.tr(
+                "user with login: {0} was not found.", login));
+        }
+
+        return user;
+    }
+
+    private Consumer findConsumer(String consumerUuid) {
+        Consumer consumer = consumerCurator.findByUuid(consumerUuid);
+
+        if (consumer == null) {
+            throw new NotFoundException(i18n.tr("No such consumer: {0}",
+                consumerUuid));
+        }
+        return consumer;
+    }
+
     /**
      * expose updates for owners
      *
@@ -510,8 +564,8 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}")
     @Transactional
-    @AllowRoles(roles = { Role.OWNER_ADMIN })
-    public Owner updateOwner(@PathParam("owner_key") String key, Owner owner) {
+    public Owner updateOwner(@PathParam("owner_key") @Verify(Owner.class) String key,
+        Owner owner) {
         Owner toUpdate = findOwner(key);
         log.debug("Updating");
         toUpdate.setDisplayName(owner.getDisplayName());
@@ -533,7 +587,8 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/subscriptions")
     public JobDetail refreshPools(
-        @PathParam("owner_key") String ownerKey,
+        // TODO: Can we verify with autocreate?
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @QueryParam("auto_create_owner") @DefaultValue("false") Boolean autoCreateOwner) {
 
         Owner owner = ownerCurator.lookupByKey(ownerKey);
@@ -565,9 +620,8 @@ public class OwnerResource {
 
     @POST
     @Path("{owner_key}/imports")
-    @AllowRoles(roles = Role.SUPER_ADMIN)
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public void importData(@PathParam("owner_key") String ownerKey,
+    public void importData(@PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         MultipartInput input) {
         Owner owner = findOwner(ownerKey);
 
@@ -604,12 +658,20 @@ public class OwnerResource {
     }
 
     @GET
+    @Path("{owner_key}/imports")
+    public List<ImportRecord> getImports(
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
+        Owner owner = findOwner(ownerKey);
+        
+        return this.importRecordCurator.findRecords(owner);
+    }
+
+    @GET
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/statistics")
-    @AllowRoles(roles = { Role.OWNER_ADMIN })
     public List<Statistic> getStatistics(
-        @PathParam("owner_key") String ownerKey,
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @QueryParam("from") String from,
         @QueryParam("to") String to,
         @QueryParam("days") String days) {
@@ -628,9 +690,8 @@ public class OwnerResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/statistics/{type}")
-    @AllowRoles(roles = { Role.OWNER_ADMIN })
     public List<Statistic> getStatistics(
-        @PathParam("owner_key") String ownerKey,
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @PathParam("type") String qType, 
         @QueryParam("reference") String reference,
         @QueryParam("from") String from,
@@ -651,9 +712,8 @@ public class OwnerResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/statistics/{qtype}/{vtype}")
-    @AllowRoles(roles = { Role.OWNER_ADMIN })
     public List<Statistic> getStatistics(
-        @PathParam("owner_key") String ownerKey,
+        @Verify(Owner.class) @PathParam("owner_key") String ownerKey,
         @PathParam("qtype") String qType, 
         @PathParam("vtype") String vType,
         @QueryParam("reference") String reference,
@@ -715,14 +775,6 @@ public class OwnerResource {
         this.importRecordCurator.create(record);
     }
 
-    @GET
-    @Path("{owner_key}/imports")
-    @AllowRoles(roles = { Role.SUPER_ADMIN, Role.OWNER_ADMIN })
-    public List<ImportRecord> getImports(@PathParam("owner_key") String ownerKey) {
-        Owner owner = findOwner(ownerKey);
-
-        return this.importRecordCurator.findRecords(owner);
-    }
 
     private Date parseDateString(String activeOn) {
         Date d;

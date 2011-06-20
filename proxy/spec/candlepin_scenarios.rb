@@ -12,10 +12,14 @@ module CandlepinScenarios
         @cp = Candlepin.new('admin', 'admin')
         @owners = []
         @products = []
+        @users = []
+        @roles = []
       end
 
       after do
+        @roles.reverse_each { |r| @cp.delete_role r['id'] }
         @owners.reverse_each { |owner| @cp.delete_owner owner.key }
+        @users.reverse_each { |user| @cp.delete_user user['username'] }
 
         # TODO:  delete products?
       end
@@ -47,8 +51,7 @@ module CandlepinMethods
     # random strings.
     id ||= rand(100000).to_s #id has to be a number. OID encoding fails otherwise
     name ||= random_string('testproduct')
-    product = @cp.create_product(id, name, params)
-    return product
+    @cp.create_product(id, name, params)
   end
 
   def create_content(params={})
@@ -59,13 +62,43 @@ module CandlepinMethods
       random_str, params)
   end
 
-  def user_client(owner, user_name)
-    @cp.create_user(owner.key, user_name, 'password')
+  def user_client(owner, user_name, readonly=false)
+    create_user(owner, user_name, 'password', readonly)
     Candlepin.new(user_name, 'password')
   end
 
-  def consumer_client(cp_client, consumer_name, type=:system, username=nil, facts= {})
-    consumer = cp_client.register(consumer_name, type, nil, facts, username)
+  # Creates the given user, with access to a role giving them full permissions
+  # in the given owner:
+  def create_user(owner, username, password, readonly=false)
+    user = @cp.create_user(username, password)
+    # Only append to the list of things to clean up if the @roles exists.
+    # This is so the method can be used in before(:all) blocks.
+    @users << user if not @users.nil?
+    # Create a role for user to administer the given owner:
+    perm = readonly ? 'READ_ONLY' : 'ALL'
+    role = create_role(nil, owner['key'], perm)
+    @cp.add_role_user(role['id'], user['username'])
+    return user
+  end
+
+  # Create a role with a single permission. Additional permissions can be added
+  # with the appropriate API calls.
+  def create_role(name, owner_key, access_type)
+    name ||= random_string 'test_role'
+    perms = [{
+      :owner => {:key => owner_key},
+      :access => access_type,
+    }]
+    role = @cp.create_role(name, perms)
+
+    # Only append to the list of things to clean up if the @roles exists.
+    # This is so the method can be used in before(:all) blocks.
+    @roles << role if not @roles.nil?
+    return role
+  end
+
+  def consumer_client(cp_client, consumer_name, type=:system, username=nil, facts= {}, owner_key=nil)
+    consumer = cp_client.register(consumer_name, type, nil, facts, username, owner_key)
     Candlepin.new(nil, nil, consumer.idCert.cert, consumer.idCert.key)
   end
 
@@ -134,7 +167,13 @@ module ExportMethods
     @cp = Candlepin.new('admin', 'admin')
     @owner = @cp.create_owner(random_string('test_owner'))
 
-    owner_client = user_client(@owner, random_string('testuser'))
+    @user = @cp.create_user(random_string('testuser'), 'password')
+    Candlepin.new(@user['username'], 'password')
+    # Create a role for user to administer the given owner:
+    role = create_role(nil, @owner['key'], 'ALL')
+    @cp.add_role_user(role['id'], @user['username'])
+    owner_client = Candlepin.new(@user['username'], 'password')
+
     @flex_days = 30
     product1 = create_product(random_string(), random_string(),
         {:attributes => {"flex_expiry" => @flex_days.to_s}})
@@ -218,6 +257,7 @@ module ExportMethods
   def cleanup_candlepin_export
     Dir.chdir(@orig_working_dir)
     FileUtils.rm_rf(@tmp_dir)
+    #this will also delete the owner's users
     @cp.delete_owner(@owner.key)
   end
 

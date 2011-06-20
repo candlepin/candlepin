@@ -14,8 +14,6 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import org.fedoraproject.candlepin.auth.Role;
-import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.exceptions.ServiceUnavailableException;
 import org.fedoraproject.candlepin.model.StatisticCurator;
 
@@ -51,7 +49,6 @@ public class StatisticResource {
      * Uploads new Rules, returns a copy of the uploaded rules.
      * @return Success message.
      */
-    @AllowRoles(roles = Role.SUPER_ADMIN)
     @PUT
     public String execute() {
 

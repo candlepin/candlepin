@@ -16,9 +16,6 @@ package org.fedoraproject.candlepin;
 
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.interceptor.AccessControlInterceptor;
-import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
-import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
 import org.fedoraproject.candlepin.auth.interceptor.SecurityInterceptor;
 import org.fedoraproject.candlepin.config.CandlepinCommonTestConfig;
 import org.fedoraproject.candlepin.config.Config;
@@ -30,7 +27,6 @@ import org.fedoraproject.candlepin.guice.JPAInitializer;
 import org.fedoraproject.candlepin.guice.PrincipalProvider;
 import org.fedoraproject.candlepin.guice.ScriptEngineProvider;
 import org.fedoraproject.candlepin.guice.TestPrincipalProvider;
-import org.fedoraproject.candlepin.model.AbstractHibernateCurator;
 import org.fedoraproject.candlepin.pinsetter.core.GuiceJobFactory;
 import org.fedoraproject.candlepin.pinsetter.core.PinsetterJobListener;
 import org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask;
@@ -135,17 +131,9 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
         securityInterceptor = new TestingInterceptor(se);
 
         bindInterceptor(Matchers.inPackage(Package
-            .getPackage("org.fedoraproject.candlepin.resource")),
+            .getPackage("org.fedoraproject.candlepin.resource")), 
             Matchers.any(), securityInterceptor);
-        bindInterceptor(Matchers.subclassesOf(AbstractHibernateCurator.class),
-            Matchers.annotatedWith(AllowRoles.class), securityInterceptor);
 
-        AccessControlInterceptor crud = new AccessControlInterceptor();
-        requestInjection(crud);
-        crudInterceptor = new TestingInterceptor(crud);
-
-        bindInterceptor(Matchers.subclassesOf(AbstractHibernateCurator.class),
-            Matchers.annotatedWith(EnforceAccessControl.class), crudInterceptor);
         bind(CertificateRevocationListTask.class);
         // temporary
         bind(IdentityCertServiceAdapter.class).to(

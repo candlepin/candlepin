@@ -23,8 +23,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
-import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.guice.PrincipalProvider;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -52,6 +50,8 @@ import org.mockito.runners.MockitoJUnitRunner;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Random;
+import org.fedoraproject.candlepin.auth.UserPrincipal;
+import org.fedoraproject.candlepin.model.Owner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class AMQPConsumerEventsAdapterTest {
@@ -59,7 +59,8 @@ public class AMQPConsumerEventsAdapterTest {
     @Mock private PrincipalProvider mockPrincipalProvider;
     @Spy private ObjectMapper spiedMapper = new ObjectMapper();
     private ObjectMapper mapper = new ObjectMapper();
-    private Principal principal;
+    private UserPrincipal principal;
+    private Owner owner;
     private EventFactory factory;
     @Mock private PKIReader reader;
     @Mock private PKIUtility pkiutil;
@@ -68,7 +69,8 @@ public class AMQPConsumerEventsAdapterTest {
     public void init() {
         this.factory = new EventFactory(mockPrincipalProvider);
         this.principal = TestUtil.createOwnerPrincipal();
-        this.principal.getOwner().setId(String.valueOf(new Random().nextLong()));
+        this.owner = this.principal.getOwners().get(0);
+        this.owner.setId(String.valueOf(new Random().nextLong()));
         when(mockPrincipalProvider.get()).thenReturn(this.principal);
         this.adapter = new AMQPBusEventAdapter(spiedMapper, reader, pkiutil);
     }
@@ -76,7 +78,7 @@ public class AMQPConsumerEventsAdapterTest {
     @Test
     @Ignore("need to fix json mapping to ignore entitlemetnCount")
     public void consumerCreatedEventShouldSerializeSuccessfully() throws Exception {
-        Consumer consumer = TestUtil.createConsumer(this.principal.getOwner());
+        Consumer consumer = TestUtil.createConsumer(owner);
         storeFacts(consumer);
         IdentityCertificate idCert = TestUtil.createIdCert();
         consumer.setIdCert(idCert);
@@ -130,7 +132,7 @@ public class AMQPConsumerEventsAdapterTest {
     @Test
     @Ignore("need to fix json mapping to ignore entitlemetnCount")
     public void consumerModifiedEventShouldSerializeSuccessfully() throws Exception {
-        Consumer consumer = TestUtil.createConsumer(this.principal.getOwner());
+        Consumer consumer = TestUtil.createConsumer(owner);
         storeFacts(consumer);
         IdentityCertificate idCert = TestUtil.createIdCert();
         consumer.setIdCert(idCert);
@@ -142,7 +144,7 @@ public class AMQPConsumerEventsAdapterTest {
     @Test
     @Ignore("need to fix json mapping to ignore entitlemetnCount")
     public void consumerDeletedEventShouldSerializeSuccessfully() throws Exception {
-        Consumer consumer = TestUtil.createConsumer(this.principal.getOwner());
+        Consumer consumer = TestUtil.createConsumer(owner);
         Event event = factory.consumerDeleted(consumer);
         Map<String, Object> map = unmarshallEvent(event);
 
@@ -156,7 +158,7 @@ public class AMQPConsumerEventsAdapterTest {
     public void entitlementCreatedEventShouldSerializeSuccessfuly() throws Exception {
         Entitlement ent = TestUtil.createEntitlement();
         storeFacts(ent.getConsumer());
-        this.principal = new ConsumerPrincipal(ent.getConsumer());
+        //this.principal = new ConsumerPrincipal(ent.getConsumer());
         Event event = factory.entitlementCreated(ent);
         verifyMap(ent, event);
     }
@@ -183,13 +185,14 @@ public class AMQPConsumerEventsAdapterTest {
     public void entitlementDeletedEventShouldSerializeSuccessfully() throws Exception {
         Entitlement ent = TestUtil.createEntitlement();
         storeFacts(ent.getConsumer());
-        this.principal = new ConsumerPrincipal(ent.getConsumer());
+        //this.principal = new ConsumerPrincipal(ent.getConsumer());
         Event event = factory.entitlementDeleted(ent);
         verifyMap(ent, event);
     }
 
     private Matcher<Map<String, Object>> containsEntry(String key, final String value) {
         return hasEntry(equalTo(key), new BaseMatcher<Object>() {
+            @Override
             public boolean matches(Object arg0) {
                 if (arg0 == null) {
                     return arg0 == value;
@@ -197,6 +200,7 @@ public class AMQPConsumerEventsAdapterTest {
                 return Util.equals(arg0.toString(), value);
             }
 
+            @Override
             public void describeTo(Description arg0) {
                 arg0.appendText("does not match: " + value);
             }

@@ -14,8 +14,11 @@
  */
 package org.fedoraproject.candlepin.auth;
 
-import java.util.Arrays;
+import org.fedoraproject.candlepin.auth.permissions.ConsumerEntitlementPermission;
+import org.fedoraproject.candlepin.auth.permissions.ConsumerPermission;
+import org.fedoraproject.candlepin.auth.permissions.ConsumerPoolPermission;
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.OwnerPermission;
 
 /**
  *
@@ -25,12 +28,19 @@ public class ConsumerPrincipal extends Principal {
     private Consumer consumer;
 
     public ConsumerPrincipal(Consumer consumer) {
-        super(consumer.getOwner(), Arrays.asList(new Role[]{Role.CONSUMER}));
-
         this.consumer = consumer;
+
+        addPermission(new ConsumerPermission(consumer));
+        addPermission(new ConsumerEntitlementPermission(consumer));
+        addPermission(new ConsumerPoolPermission(consumer));
+
+        // Consumer principals should also get an implicit permission
+        // granting them read-only access to their owners pools.
+        addPermission(new OwnerPermission(consumer.getOwner(),
+                    Access.READ_POOLS));
     }
-    
-    public Consumer consumer() {
+
+    public Consumer getConsumer() {
         return consumer;
     }
 
@@ -58,16 +68,19 @@ public class ConsumerPrincipal extends Principal {
         hash = 83 * hash + (this.consumer != null ? this.consumer.hashCode() : 0);
         return hash;
     }
-    
-    public boolean isConsumer() {
-        return true;
-    }
 
+    @Override
     public String getPrincipalName() {       
         return consumer.getName();
     }     
 
+    @Override
     public String getType() {
-        return Principal.CONSUMER_TYPE;
+        return "consumer";
+    }
+
+    @Override
+    public boolean hasFullAccess() {
+        return false;
     }
 }

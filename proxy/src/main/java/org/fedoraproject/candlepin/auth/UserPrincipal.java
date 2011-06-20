@@ -14,20 +14,48 @@
  */
 package org.fedoraproject.candlepin.auth;
 
+import java.util.LinkedList;
 import java.util.List;
+import org.fedoraproject.candlepin.auth.permissions.Permission;
+import org.fedoraproject.candlepin.auth.permissions.UserUserPermission;
+import org.fedoraproject.candlepin.model.OwnerPermission;
 
+import java.util.Collection;
 import org.fedoraproject.candlepin.model.Owner;
+
 /**
  *
  */
 public class UserPrincipal extends Principal {
 
     private String username;
+    private boolean admin;
 
-    public UserPrincipal(String username, Owner owner, List<Role> roles) {
-        super(owner, roles);
+    /**
+     * Create a user principal
+     * 
+     * @param username
+     */
 
+    public UserPrincipal(String username, Collection<Permission> permissions,
+        Boolean admin) {
         this.username = username;
+        this.admin = admin;
+
+        if (permissions != null) {
+            this.permissions.addAll(permissions);
+        }
+        
+        addPermissionToManageSelf();
+    }
+
+
+    /*
+     * User principals should have an implicit permission to view their own
+     * data.
+     */
+    private void addPermissionToManageSelf() {
+        this.permissions.add(new UserUserPermission(username));
     }
 
     public String getUsername() {
@@ -59,12 +87,60 @@ public class UserPrincipal extends Principal {
         return hash;
     }
 
+    @Override
     public String getType() {
-        return Principal.USER_TYPE;
+        return "user";
     }
-    
-    public String getPrincipalName() {       
+
+    @Override
+    public String getPrincipalName() {
         return username;
+    }
+
+    @Override
+    public boolean hasFullAccess() {
+        return this.admin;
+    }
+
+    public List<String> getOwnerIds() {
+        List<String> ownerIds = new LinkedList<String>();
+
+        for (Owner owner : getOwners()) {
+            ownerIds.add(owner.getId());
+        }
+
+        return ownerIds;
+    }
+
+    public List<String> getOwnerKeys() {
+        List<String> ownerKeys = new LinkedList<String>();
+
+        for (Owner owner : getOwners()) {
+            ownerKeys.add(owner.getKey());
+        }
+
+        return ownerKeys;
+    }
+
+    public List<Owner> getOwners() {
+        List<Owner> owners = new LinkedList<Owner>();
+
+        for (Permission permission : permissions) {
+            if (permission instanceof OwnerPermission) {
+                owners.add(((OwnerPermission) permission).getOwner());
+            }
+        }
+
+        return owners;
+    }
+
+    @Override
+    public boolean canAccess(Object target, Access access) {
+        if (this.admin) {
+            return true;
+        }
+
+        return super.canAccess(target, access);
     }
 
 }

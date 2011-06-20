@@ -18,9 +18,6 @@ package org.fedoraproject.candlepin.resource;
  * RootResource
  */
 
-import org.fedoraproject.candlepin.auth.Role;
-import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
-
 import com.google.inject.Inject;
 
 import org.apache.log4j.Logger;
@@ -32,6 +29,9 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+
+
+import org.fedoraproject.candlepin.auth.interceptor.SecurityHole;
 
 /**
  * A root resource, responsible for returning client a struct of links to the
@@ -73,7 +73,7 @@ public class RootResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowRoles(roles = {Role.NO_AUTH})
+    @SecurityHole(noAuth = true)
     public List<Link> getRootResources() {
         List<Link> links = new LinkedList<Link>();
         for (Class c : RESOURCE_CLASSES) {

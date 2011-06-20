@@ -28,12 +28,53 @@ describe 'Owner Resource' do
   it "lets owners list users" do
     owner = create_owner random_string("test_owner1")
     
-    user1 = @cp.create_user(owner.key, random_string("test_user1"), "password")
-    user2 = @cp.create_user(owner.key, random_string("test_user2"), "password")
+    user1 = create_user(owner, random_string("test_user1"), "password")
+    user2 = create_user(owner, random_string("test_user2"), "password")
 
     users = @cp.list_users_by_owner owner.key
    
     users.length.should == 2
+  end
+
+  it "lets owners list pools" do
+    owner = create_owner random_string("test_owner1")
+    product = create_product
+    @cp.create_subscription(owner['key'], product.id, 10)
+    @cp.refresh_pools(owner['key'])
+    pools = @cp.list_owner_pools(owner['key'])
+    pools.length.should == 1
+  end
+
+  it "does not let read only users refresh pools" do
+    owner = create_owner random_string('test_owner')
+    ro_owner_client = user_client(owner, random_string('testuser'), true)
+    rw_owner_client = user_client(owner, random_string('testuser'), true)
+    product = create_product
+    @cp.create_subscription(owner.key, product.id, 10)
+
+
+    #these should both fail, only superadmin can refresh pools
+    lambda do
+      ro_owner_client.refresh_pools(owner.key)
+    end.should raise_exception(RestClient::Forbidden)
+
+    lambda do
+      rw_owner_client.refresh_pools(owner.key)
+    end.should raise_exception(RestClient::Forbidden)
+   
+  end
+
+  it "does not let read only users register systems" do
+    owner = create_owner random_string('test_owner')
+    ro_owner_client = user_client(owner, random_string('testuser'), true)
+    rw_owner_client = user_client(owner, random_string('testuser'), false)
+
+    #this will work
+    rw_owner_client.register('systemBar')
+    #and this will fail
+    lambda do
+      ro_owner_client.register('systemFoo')
+    end.should raise_exception(RestClient::Forbidden)
   end
 
   it "lets owners be updated" do

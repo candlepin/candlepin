@@ -15,7 +15,6 @@
 package org.fedoraproject.candlepin.resteasy.interceptor;
 
 import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.jboss.resteasy.spi.HttpRequest;
 
@@ -31,9 +30,8 @@ class TrustedUserAuth extends UserAuth {
     public static final String USER_HEADER = "cp-user";
 
     @Inject
-    TrustedUserAuth(UserServiceAdapter userServiceAdaper,
-        OwnerCurator ownerCurator, Injector injector) {
-        super(userServiceAdaper, ownerCurator, injector);
+    TrustedUserAuth(UserServiceAdapter userServiceAdaper, Injector injector) {
+        super(userServiceAdaper, injector);
     }
 
     public Principal getPrincipal(HttpRequest request) {

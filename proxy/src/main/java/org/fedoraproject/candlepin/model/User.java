@@ -14,24 +14,25 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import org.fedoraproject.candlepin.auth.Access;
+import org.fedoraproject.candlepin.util.Util;
+
+import org.hibernate.annotations.GenericGenerator;
+
 import java.util.Formatter;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
-
-import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
-
-import org.fedoraproject.candlepin.util.Util;
+import javax.xml.bind.annotation.XmlTransient;
 
 /**
  * Represents the user.
@@ -50,11 +51,8 @@ public class User extends AbstractHibernateObject {
     @Column(length = 32)
     private String id;
 
-    @ManyToOne
-    @ForeignKey(name = "fk_user_owner_id")
-    @JoinColumn(nullable = false)
-    @Index(name = "cp_user_owner_fk_idx")
-    private Owner owner;
+    @ManyToMany(targetEntity = Role.class, mappedBy = "users")
+    private Set<Role> roles = new HashSet<Role>();
 
     @Column(nullable = false, unique = true)
     private String username;
@@ -64,14 +62,16 @@ public class User extends AbstractHibernateObject {
     private boolean superAdmin;
 
     public User() {
+        this.roles = new HashSet<Role>();
     }
 
-    public User(Owner owner, String login, String password) {
-        this(owner, login, password, false);
+    public User(String login, String password) {
+        this(login, password, false);
     }
 
-    public User(Owner owner, String login, String password, boolean superAdmin) {
-        this.owner = owner;
+    public User(String login, String password, boolean superAdmin) {
+        this();
+
         this.username = login;
         this.hashedPassword = Util.hash(password);
         this.superAdmin = superAdmin;
@@ -116,17 +116,60 @@ public class User extends AbstractHibernateObject {
     public void setPassword(String password) {
         this.hashedPassword = Util.hash(password);
     }
+
     /**
-     * @return the owner
+     * Looks up permissions to find associated owners.
+     *
+     * WARNING: will return *any* owner this user has a permission for, regardless
+     * of what access level it is.
+     *
+     * @return associated owners
      */
-    public Owner getOwner() {
-        return owner;
+    @XmlTransient
+    public Set<Owner> getOwners(Access accessLevel) {
+        Set<Owner> owners = new HashSet<Owner>();
+        for (Role role : getRoles()) {
+            for (OwnerPermission p : role.getPermissions()) {
+                if (p.providesAccess(accessLevel)) {
+                    owners.add(p.getOwner());
+                }
+            }
+        }
+
+        return owners;
     }
+
     /**
-     * @param owner the owner to set
+     * @return the roles
      */
-    public void setOwner(Owner owner) {
-        this.owner = owner;
+    @XmlTransient
+    public Set<Role> getRoles() {
+        return roles;
+    }
+    
+    public void addRole(Role r) {
+        if (this.roles.add(r)) {
+            r.addUser(this);
+        }
+    }
+    
+    public void removeRole(Role r) {
+        if (this.roles.remove(r)) {
+            r.removeUser(this);
+        }
+    }
+
+    /**
+     * Iterates user's roles and returns all unique permissions.
+     * @return all of this user's unique permissions.
+     */
+    @XmlTransient
+    public Set<OwnerPermission> getPermissions() {
+        Set<OwnerPermission> perms = new HashSet<OwnerPermission>();
+        for (Role r : getRoles()) {
+            perms.addAll(r.getPermissions());
+        }
+        return perms;
     }
 
     /**

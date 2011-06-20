@@ -14,17 +14,24 @@
  */
 package org.fedoraproject.candlepin.service.impl;
 
-import java.util.LinkedList;
-import java.util.List;
-
-import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.OwnerPermission;
+import org.fedoraproject.candlepin.model.OwnerPermissionCurator;
+import org.fedoraproject.candlepin.model.Role;
+import org.fedoraproject.candlepin.model.RoleCurator;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.model.UserCurator;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.fedoraproject.candlepin.util.Util;
 
 import com.google.inject.Inject;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 /**
  * A {@link UserServiceAdapter} implementation backed by a {@link UserCurator}
@@ -33,47 +40,56 @@ import com.google.inject.Inject;
 public class DefaultUserServiceAdapter implements UserServiceAdapter {
 
     private UserCurator userCurator;
+    private RoleCurator roleCurator;
+    private OwnerPermissionCurator permCurator;
     
     @Inject
-    public DefaultUserServiceAdapter(UserCurator userCurator) {
+    public DefaultUserServiceAdapter(UserCurator userCurator, RoleCurator roleCurator,
+        OwnerPermissionCurator permCurator) {
         this.userCurator = userCurator;
+        this.roleCurator = roleCurator;
+        this.permCurator = permCurator;
     }
     
     @Override
     public User createUser(User user) {
         return this.userCurator.create(user);
     }
-    
-    @Override
-    public Owner getOwner(String username) {
-        User user = this.userCurator.findByLogin(username);
-        
-        if (user != null) {
-            return user.getOwner();
-        }
-        
-        return null;
-    }
 
     @Override
     public List<Role> getRoles(String username) {
-        List<Role> roles = new LinkedList<Role>();
         User user = this.userCurator.findByLogin(username);
-        
-        // this might not be the best way to do this
-        // should we have a list of roles stored rather than this flag?
+
         if (user != null) {
-            if (user.isSuperAdmin()) {
-                roles.add(Role.SUPER_ADMIN);
-            }
-            else {
-                roles.add(Role.OWNER_ADMIN);
-            }
+            return new ArrayList<Role>(user.getRoles());
         }
-        
-        return roles;
+
+        return Collections.emptyList();
+    }
+    
+    @Override
+    public List<Role> listRoles() {
+        return roleCurator.listAll();
     }
 
+    @Override
+    public Role createRole(Role role) {
+        Set<User> actualUsers = new HashSet<User>();
+
+        for (User user : role.getUsers()) {
+            User actualUser = findByLogin(user.getUsername());
+            actualUsers.add(actualUser);
+        }
+        role.setUsers(actualUsers);
+        
+        for (OwnerPermission permission : role.getPermissions()) {
+            permission.setRole(role);
+        }
+
+        this.roleCurator.create(role);
+        return role;
+    }
+    
     @Override
     public boolean validateUser(String username, String password) {
         User user = this.userCurator.findByLogin(username);
@@ -93,12 +109,20 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
 
     @Override
     public void deleteUser(User user) {
+        for (Role r : user.getRoles()) {
+            user.removeRole(r);
+        }
         userCurator.delete(user);
     }
 
     @Override
     public List<User> listByOwner(Owner owner) {
-        return userCurator.findByOwner(owner);
+        List<Role> roles = roleCurator.listForOwner(owner);
+        Set<User> users = new HashSet<User>();
+        for (Role r : roles) {
+            users.addAll(r.getUsers());
+        }
+        return new LinkedList<User>(users);
     }
 
     @Override
@@ -106,5 +130,38 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
         return userCurator.findByLogin(login);
     }
 
+    @Override
+    public void deleteRole(String roleId) {
+        Role r = roleCurator.find(roleId);
+        roleCurator.delete(r);
+    }
 
+    @Override
+    public Role updateRole(Role r) {
+//        Set<OwnerPermission> newPermissions = new HashSet<OwnerPermission>();
+//        for (OwnerPermission incomingPerm : r.getPermissions()) {
+//            newPermissions.add(this.permCurator.findOrCreate(
+//                incomingPerm.getOwner(), incomingPerm.getAccess()));
+//        }
+//        r.getPermissions().clear();
+//        r.getPermissions().addAll(newPermissions);
+        return roleCurator.merge(r);
+    }
+
+    @Override
+    public Role getRole(String roleId) {
+        return roleCurator.find(roleId);
+    }
+
+    @Override
+    public void addUserToRole(Role role, User user) {
+        role.addUser(user);
+        roleCurator.merge(role);
+    }
+
+    @Override
+    public void removeUserFromRole(Role role, User user) {
+        role.removeUser(user);
+        roleCurator.merge(role);
+    }
 }

@@ -18,11 +18,10 @@ import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventAdapter;
 import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
+import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.SystemPrincipal;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
-import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.CandlepinException;
@@ -62,7 +61,6 @@ import com.wideplay.warp.persist.Transactional;
 
 import org.apache.log4j.Logger;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
-import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.xnap.commons.i18n.I18n;
 
@@ -89,6 +87,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+
+import org.fedoraproject.candlepin.auth.interceptor.SecurityHole;
+import org.fedoraproject.candlepin.auth.interceptor.Verify;
 
 /**
  * API Gateway for Consumers
@@ -161,7 +162,6 @@ public class ConsumerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "consumers")
-    @AllowRoles(roles = { Role.OWNER_ADMIN })
     public List<Consumer> list(@QueryParam("username") String userName,
         @QueryParam("type") String typeLabel,
         @QueryParam("owner") String ownerKey) {
@@ -195,8 +195,8 @@ public class ConsumerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}")
-    @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
-    public Consumer getConsumer(@PathParam("consumer_uuid") String uuid) {
+    public Consumer getConsumer(
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid) {
         Consumer consumer = verifyAndLookupConsumer(uuid);
 
         if (consumer != null) {
@@ -209,7 +209,13 @@ public class ConsumerResource {
     }
 
     /**
-     * Create a Consumer
+     * Create a Consumer.
+     * 
+     * NOTE: Opening this method up to everyone, as we have nothing we can reliably verify
+     * in the method signature. Instead we have to figure out what owner this consumer is 
+     * destined for (due to backward compatability with existing clients which do not 
+     * specify an owner during registration), and then check the access to the specified 
+     * owner in the method itself.
      * 
      * @param consumer Consumer metadata
      * @return newly created Consumer
@@ -219,9 +225,10 @@ public class ConsumerResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
+    @SecurityHole
     public Consumer create(Consumer consumer, @Context Principal principal,
-        @QueryParam("username") String userName) throws BadRequestException {
+        @QueryParam("username") String userName, @QueryParam("owner") String ownerKey)
+        throws BadRequestException {
         // API:registerConsumer
 
         if (!isConsumerNameValid(consumer.getName())) {
@@ -235,6 +242,20 @@ public class ConsumerResource {
                 i18n.tr("System name cannot begin with # character"));
         }
 
+        // If no owner was specified, try to assume based on which owners the principal
+        // has admin rights for. If more than one, we have to error out.
+        if (ownerKey == null) {
+            // check for this cast?
+            List<String> ownerKeys = ((UserPrincipal) principal).getOwnerKeys();
+
+            if (ownerKeys.size() != 1) {
+                throw new BadRequestException(
+                    i18n.tr("Must specify owner for new consumer."));
+            }
+
+            ownerKey = ownerKeys.get(0);
+        }
+
         ConsumerType type = lookupConsumerType(consumer.getType().getLabel());
 
         User user = getCurrentUsername(principal);
@@ -242,7 +263,7 @@ public class ConsumerResource {
             user = userService.findByLogin(userName);
         }
 
-        setupOwner(user, principal);
+        setupOwners((UserPrincipal) principal);
 
         // TODO: Refactor out type specific checks?
         if (type.isType(ConsumerTypeEnum.PERSON) && user != null) {
@@ -258,8 +279,26 @@ public class ConsumerResource {
             consumer.setName(user.getUsername());
         }
 
+        Owner owner = ownerCurator.lookupByKey(ownerKey);
+        if (owner == null) {
+            throw new BadRequestException(i18n.tr("Owner {0} does not exist", ownerKey));
+        }
+        
+        if (!principal.canAccess(owner, Access.ALL)) {
+            throw new ForbiddenException(i18n.tr("User {0} cannot access owner {1}", 
+                principal.getPrincipalName(), owner.getKey()));
+        }
+
+        // When registering person consumers we need to be sure the username
+        // has some association with the owner the consumer is destined for:
+        if (!user.getOwners(Access.ALL).contains(owner) && !user.isSuperAdmin()) {
+            throw new ForbiddenException(i18n.tr("User {0} has no roles for owner {1}", 
+                user.getUsername(), owner.getKey()));
+        }
+
+
         consumer.setUsername(user.getUsername());
-        consumer.setOwner(user.getOwner());
+        consumer.setOwner(owner);
         consumer.setType(type);
         consumer.setCanActivate(subAdapter.canActivateSubscription(consumer));
 
@@ -302,39 +341,38 @@ public class ConsumerResource {
     }
 
     /*
-     * During registration of new consumers we support an edge case where the
-     * user service may have authenticated a username/password for an owner
-     * which we have not yet created in the Candlepin database. If we detect
-     * this during registration we need to create the new owner, and adjust the
-     * principal that was created during authentication to carry it.
+     * During registration of new consumers we support an edge case where the user
+     * service may have authenticated a username/password for an owner which we have
+     * not yet created in the Candlepin database. If we detect this during
+     * registration we need to create the new owners, and adjust
+     * the principal that was created during authentication to carry it.
      */
-    private void setupOwner(User user, Principal principal) {
-        Owner owner = userService.getOwner(user.getUsername());
-        Owner existingOwner = ownerCurator.lookupByKey(owner.getKey());
+    // TODO:  Reevaluate if this is still an issue with the new membership scheme!
+    private void setupOwners(UserPrincipal principal) {
 
-        if (existingOwner == null) {
-            log.info("Creating new owner: " + owner.getKey());
+        for (Owner owner : principal.getOwners()) {
+            Owner existingOwner = ownerCurator.lookupByKey(owner.getKey());
 
-            // Need elevated privileges to create a new owner:
-            Principal systemPrincipal = new SystemPrincipal();
-            ResteasyProviderFactory.pushContext(Principal.class,
-                systemPrincipal);
+            if (existingOwner == null) {
+                log.info("Principal carries permission for owner that does not exist.");
+                log.info("Creating new owner: " + owner.getKey());
 
-            existingOwner = ownerCurator.create(owner);
-            poolManager.refreshPools(existingOwner);
+                // Need elevated privileges to create a new owner:
+                Principal systemPrincipal = new SystemPrincipal();
+                ResteasyProviderFactory.pushContext(Principal.class,
+                    systemPrincipal);
 
-            ResteasyProviderFactory.popContextData(Principal.class);
+                existingOwner = ownerCurator.create(owner);
+                poolManager.refreshPools(existingOwner);
+                //p.setOwner(existingOwner);
 
-            // Set the new owner on the existing principal, which previously had
-            // a
-            // detached owner:
-            principal.setOwner(existingOwner);
+                ResteasyProviderFactory.popContextData(Principal.class);
 
-            // Restore the old principal having elevated privileges earlier:
-            ResteasyProviderFactory.pushContext(Principal.class, principal);
+                // Restore the old principal having elevated privileges earlier:
+                ResteasyProviderFactory.pushContext(Principal.class, principal);
+            }
+
         }
-
-        user.setOwner(existingOwner);
     }
 
     private ConsumerType lookupConsumerType(String label) {
@@ -360,8 +398,8 @@ public class ConsumerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}")
     @Transactional
-    @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
-    public void updateConsumer(@PathParam("consumer_uuid") String uuid,
+    public void updateConsumer(
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid,
         Consumer consumer, @Context Principal principal) {
         Consumer toUpdate = verifyAndLookupConsumer(uuid);
 
@@ -390,8 +428,8 @@ public class ConsumerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}")
     @Transactional
-    @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
-    public void deleteConsumer(@PathParam("consumer_uuid") String uuid,
+    public void deleteConsumer(
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid,
         @Context Principal principal) {
         log.debug("deleting  consumer_uuid" + uuid);
         Consumer toDelete = verifyAndLookupConsumer(uuid);
@@ -422,9 +460,8 @@ public class ConsumerResource {
     @GET
     @Path("{consumer_uuid}/certificates")
     @Produces(MediaType.APPLICATION_JSON)
-    @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
     public List<EntitlementCertificate> getEntitlementCertificates(
-        @PathParam("consumer_uuid") String consumerUuid,
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @QueryParam("serials") String serials) {
 
         log.debug("Getting client certificates for consumer: " + consumerUuid);
@@ -463,9 +500,8 @@ public class ConsumerResource {
     @Path("{consumer_uuid}/certificates/serials")
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "serials")
-    @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
     public List<CertificateSerialDto> getEntitlementCertificateSerials(
-        @PathParam("consumer_uuid") String consumerUuid) {
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
 
         log.debug("Getting client certificate serials for consumer: " +
             consumerUuid);
@@ -608,9 +644,8 @@ public class ConsumerResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{consumer_uuid}/entitlements")
-    @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
     public List<Entitlement> bind(
-        @PathParam("consumer_uuid") String consumerUuid,
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @QueryParam("pool") String poolIdString,
         @QueryParam("product") String[] productIds,
         @QueryParam("quantity") @DefaultValue("1") Integer quantity,
@@ -678,9 +713,8 @@ public class ConsumerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{consumer_uuid}/entitlements")
-    @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
     public List<Entitlement> listEntitlements(
-        @PathParam("consumer_uuid") String consumerUuid,
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @QueryParam("product") String productId) {
 
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
@@ -701,8 +735,8 @@ public class ConsumerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{consumer_uuid}/owner")
-    @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
-    public Owner getOwner(@PathParam("consumer_uuid") String consumerUuid) {
+    public Owner getOwner(
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
 
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
         return consumer.getOwner();
@@ -715,8 +749,8 @@ public class ConsumerResource {
      */
     @DELETE
     @Path("/{consumer_uuid}/entitlements")
-    @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
-    public void unbindAll(@PathParam("consumer_uuid") String consumerUuid) {
+    public void unbindAll(
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
 
         // FIXME: just a stub, needs CertifcateService (and/or a
         // CertificateCurator) to lookup by serialNumber
@@ -744,8 +778,8 @@ public class ConsumerResource {
      */
     @DELETE
     @Path("/{consumer_uuid}/entitlements/{dbid}")
-    @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
-    public void unbind(@PathParam("consumer_uuid") String consumerUuid,
+    public void unbind(
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @PathParam("dbid") String dbid, @Context Principal principal) {
 
         verifyAndLookupConsumer(consumerUuid);
@@ -762,8 +796,8 @@ public class ConsumerResource {
 
     @DELETE
     @Path("/{consumer_uuid}/certificates/{serial}")
-    @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
-    public void unbindBySerial(@PathParam("consumer_uuid") String consumerUuid,
+    public void unbindBySerial(
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @PathParam("serial") Long serial) {
 
         verifyAndLookupConsumer(consumerUuid);
@@ -781,25 +815,10 @@ public class ConsumerResource {
     }
 
     @GET
-    @Produces("application/atom+xml")
-    @Path("{consumer_uuid}/atom")
-    @AllowRoles(roles = { Role.OWNER_ADMIN })
-    public Feed getConsumerAtomFeed(
-        @PathParam("consumer_uuid") String consumerUuid) {
-        String path = String.format("/consumers/%s/atom", consumerUuid);
-        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
-        Feed feed = this.eventAdapter.toFeed(
-            this.eventCurator.listMostRecent(FEED_LIMIT, consumer), path);
-        feed.setTitle("Event feed for consumer " + consumer.getUuid());
-        return feed;
-    }
-
-    @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}/events")
-    @AllowRoles(roles = { Role.OWNER_ADMIN })
     public List<Event> getConsumerEvents(
-        @PathParam("consumer_uuid") String consumerUuid) {
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
         List<Event> events = this.eventCurator.listMostRecent(FEED_LIMIT,
             consumer);
@@ -810,10 +829,9 @@ public class ConsumerResource {
     }
 
     @PUT
-    @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
     @Path("/{consumer_uuid}/certificates")
     public void regenerateEntitlementCertificates(
-        @PathParam("consumer_uuid") String consumerUuid,
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @QueryParam("entitlement") String entitlementId) {
         if (entitlementId != null) {
             Entitlement e = verifyAndLookupEntitlement(entitlementId);
@@ -828,9 +846,9 @@ public class ConsumerResource {
     @GET
     @Produces("application/zip")
     @Path("{consumer_uuid}/export")
-    @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
     public File exportData(@Context HttpServletResponse response,
-        @PathParam("consumer_uuid") String consumerUuid) {
+        @PathParam("consumer_uuid")
+            @Verify(value = Consumer.class, require = Access.ALL) String consumerUuid) {
 
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
         if (!consumer.getType().isType(ConsumerTypeEnum.CANDLEPIN)) {
@@ -864,9 +882,8 @@ public class ConsumerResource {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}")
-    @AllowRoles(roles = { Role.CONSUMER, Role.OWNER_ADMIN })
     public Consumer regenerateIdentityCertificates(
-        @PathParam("consumer_uuid") String uuid) {
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid) {
 
         Consumer c = verifyAndLookupConsumer(uuid);
 

@@ -14,7 +14,7 @@
  */
 package org.fedoraproject.candlepin.auth;
 
-import static org.junit.Assert.*;
+import org.junit.Assert;
 
 import org.junit.Test;
 
@@ -22,11 +22,10 @@ import org.junit.Test;
  * NoAuthPrincipalTest
  */
 public class NoAuthPrincipalTest {
-    
+
     @Test
-    public void testIsConsumer() {
-        Principal prin = new NoAuthPrincipal();
-        assertTrue("No Auth should not be a consumer", !prin.isConsumer());
+    public void noFullAccess() {
+        Assert.assertFalse(new NoAuthPrincipal().hasFullAccess());
     }
 
 }

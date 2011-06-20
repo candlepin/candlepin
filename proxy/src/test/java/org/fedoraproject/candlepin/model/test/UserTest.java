@@ -16,7 +16,6 @@ package org.fedoraproject.candlepin.model.test;
 
 import static org.junit.Assert.*;
 
-import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.junit.Test;
@@ -25,16 +24,12 @@ public class UserTest extends DatabaseTestFixture {
 
     @Test
     public void testCreate() throws Exception {
-        String ownerName = "Example Corporation";
-        Owner o = new Owner(ownerName);
-
         String username = "TESTUSER";
         String password = "sekretpassword";
         String hashedPassword = "b58db974af4ea7b7b1b51a999f93ab5b67173799";
-        User user = new User(o, username, password);
+        User user = new User(username, password);
 
         beginTransaction();
-        entityManager().persist(o);
         entityManager().persist(user);
         commitTransaction();
 

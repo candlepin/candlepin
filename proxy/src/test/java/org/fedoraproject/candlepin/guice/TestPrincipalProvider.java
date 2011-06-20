@@ -20,6 +20,11 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 
 import com.google.inject.Inject;
+import java.util.ArrayList;
+import java.util.List;
+import org.fedoraproject.candlepin.auth.Access;
+import org.fedoraproject.candlepin.auth.permissions.Permission;
+import org.fedoraproject.candlepin.model.OwnerPermission;
 
 /**
  *
@@ -47,7 +52,11 @@ public class TestPrincipalProvider extends PrincipalProvider {
                 owner = new Owner(OWNER_NAME);
                 ownerCurator.create(owner);
             }
-            principal = new UserPrincipal("Default User", owner, null);
+
+            List<Permission> permissions = new ArrayList<Permission>();
+            permissions.add(new OwnerPermission(owner, Access.ALL));
+
+            principal = new UserPrincipal("Default User", permissions, false);
         }   
         return principal;
     }

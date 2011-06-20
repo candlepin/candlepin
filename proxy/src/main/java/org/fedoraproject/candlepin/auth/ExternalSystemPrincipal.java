@@ -14,28 +14,15 @@
  */
 package org.fedoraproject.candlepin.auth;
 
-import java.util.Arrays;
-
 /**
  * ExternalSystemPrincipal - A principal representing a trusted external system
  * (ie another candlepin instance, a proxy)
  */
-public class ExternalSystemPrincipal extends Principal {
+public class ExternalSystemPrincipal extends SystemPrincipal {
 
-    /**
-     * @param owner
-     * @param roles
-     */
-    public ExternalSystemPrincipal() {
-        super(null, Arrays.asList(new Role[]{Role.TRUSTED_SYSTEM}));
-    }
-    
-    public String getType() {
-        return "system";
-    }
-    
+    @Override
     public String getPrincipalName() {       
         return "External System";
-    }     
+    }
 
 }

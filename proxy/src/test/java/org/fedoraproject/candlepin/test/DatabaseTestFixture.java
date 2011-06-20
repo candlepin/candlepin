@@ -14,21 +14,21 @@
  */
 package org.fedoraproject.candlepin.test;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.servlet.http.HttpServletRequest;
 
+
 import org.fedoraproject.candlepin.CandlepinCommonTestingModule;
 import org.fedoraproject.candlepin.CandlepinNonServletEnvironmentTestingModule;
 import org.fedoraproject.candlepin.TestingInterceptor;
 import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
+import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.controller.CandlepinPoolManager;
 import org.fedoraproject.candlepin.guice.TestPrincipalProviderSetter;
 import org.fedoraproject.candlepin.model.ActivationKey;
@@ -45,8 +45,11 @@ import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.EntitlementCertificateCurator;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
 import org.fedoraproject.candlepin.model.EventCurator;
+import org.fedoraproject.candlepin.model.Role;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
+import org.fedoraproject.candlepin.model.OwnerPermission;
+import org.fedoraproject.candlepin.model.OwnerPermissionCurator;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
@@ -54,6 +57,7 @@ import org.fedoraproject.candlepin.model.ProductAttributeCurator;
 import org.fedoraproject.candlepin.model.ProductCertificateCurator;
 import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.model.ProvidedProduct;
+import org.fedoraproject.candlepin.model.RoleCurator;
 import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.model.StatisticCurator;
 import org.fedoraproject.candlepin.model.Subscription;
@@ -74,6 +78,7 @@ import com.google.inject.util.Modules;
 import com.wideplay.warp.persist.PersistenceService;
 import com.wideplay.warp.persist.UnitOfWork;
 import com.wideplay.warp.persist.WorkManager;
+import org.fedoraproject.candlepin.auth.permissions.Permission;
 
 /**
  * Test fixture for test classes requiring access to the database.
@@ -108,8 +113,9 @@ public class DatabaseTestFixture {
     protected HttpServletRequest httpServletRequest;
     protected EntitlementCertificateCurator entCertCurator;
     protected CertificateSerialCurator certSerialCurator;
+    protected OwnerPermissionCurator permissionCurator;
+    protected RoleCurator roleCurator;
     protected I18n i18n;
-    protected TestingInterceptor crudInterceptor;
     protected TestingInterceptor securityInterceptor;
     protected EntitlementCertServiceAdapter entitlementCertService;
     protected CandlepinPoolManager poolManager;
@@ -143,6 +149,8 @@ public class DatabaseTestFixture {
             .getInstance(ProductCertificateCurator.class);
         consumerCurator = injector.getInstance(ConsumerCurator.class);
         eventCurator = injector.getInstance(EventCurator.class);
+        permissionCurator = injector.getInstance(OwnerPermissionCurator.class);
+        roleCurator = injector.getInstance(RoleCurator.class);
 
         consumerTypeCurator = injector.getInstance(ConsumerTypeCurator.class);
         certificateCurator = injector
@@ -168,7 +176,6 @@ public class DatabaseTestFixture {
         statisticCurator = injector.getInstance(StatisticCurator.class);
         i18n = injector.getInstance(I18n.class);
 
-        crudInterceptor = testingModule.crudInterceptor();
         securityInterceptor = testingModule.securityInterceptor();
 
         dateSource = (DateSourceForTesting) injector
@@ -220,8 +227,7 @@ public class DatabaseTestFixture {
             TestUtil.createDate(2010, 2, 12));
         subCurator.create(sub);
         p.setSubscriptionId(sub.getId());
-        poolCurator.create(p);
-        return p;
+        return poolCurator.create(p);
     }
 
     protected Owner createOwner() {
@@ -272,19 +278,38 @@ public class DatabaseTestFixture {
         toReturn.setSerial(certSerial);
         return toReturn;
     }
+    
+    protected Principal setupPrincipal(Owner owner, Access role) {
+        return setupPrincipal("someuser", owner, role);
+    }
 
-    protected Principal setupPrincipal(Owner owner, Role role) {
-        List<Role> roles = new LinkedList<Role>();
-        roles.add(role);
-        Principal ownerAdmin = new UserPrincipal("someuser", owner, roles);
-
+    protected Principal setupPrincipal(String username, Owner owner, Access verb) {
+        OwnerPermission p = new OwnerPermission(owner, verb);
+        // Only need a detached owner permission here:
+        Principal ownerAdmin = new UserPrincipal(username, Arrays.asList(new Permission[] {
+            p}), false);
         setupPrincipal(ownerAdmin);
         return ownerAdmin;
     }
 
-    protected void setupPrincipal(Principal p) {
+    protected Principal setupAdminPrincipal(String username) {
+        UserPrincipal principal = new UserPrincipal(username, null, true);
+        setupPrincipal(principal);
+        
+        return principal;
+    }
+
+    protected Principal setupPrincipal(Principal p) {
         // TODO: might be good to get rid of this singleton
         TestPrincipalProviderSetter.get().setPrincipal(p);
+        return p;
+    }
+
+    public Role createAdminRole(Owner owner) {
+        OwnerPermission p = new OwnerPermission(owner, Access.ALL);
+        Role role = new Role("testrole" + TestUtil.randomInt());
+        role.addPermission(p);
+        return role;
     }
 
 }

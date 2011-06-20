@@ -15,8 +15,6 @@
 package org.fedoraproject.candlepin.model;
 
 
-import org.fedoraproject.candlepin.auth.Role;
-import org.fedoraproject.candlepin.auth.interceptor.AllowRoles;
 import org.fedoraproject.candlepin.util.Util;
 
 import com.wideplay.warp.persist.Transactional;
@@ -48,7 +46,7 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
     @Transactional
     public Rules update(Rules updatedRules) {
         List<Rules> existingRuleSet = listAll();
-        if (existingRuleSet.size() == 0) {
+        if (existingRuleSet.isEmpty()) {
             return create(updatedRules);
         }
         for (Rules rule : existingRuleSet) {
@@ -63,7 +61,7 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
      */
     public Rules getRules() {
         List<Rules> existingRuleSet = listAll();
-        if (existingRuleSet.size() == 0) {
+        if (existingRuleSet.isEmpty()) {
             return rulesFromFile(getDefaultRulesFile());
         }
         return existingRuleSet.get(0);
@@ -92,17 +90,17 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
         return new Date(rulesFile.lastModified());
     }
     
-    @AllowRoles(roles = Role.SUPER_ADMIN)
+    @Override
     public Rules create(Rules entity) {
         return super.create(entity);
     }
     
-    @AllowRoles(roles = Role.SUPER_ADMIN)
+    @Override
     public void delete(Rules entity) {
         super.delete(entity);
     }
     
-    @AllowRoles(roles = Role.SUPER_ADMIN)
+    @Override
     public Rules merge(Rules entity) {
         return super.merge(entity);
     }

@@ -16,16 +16,18 @@ package org.fedoraproject.candlepin.resteasy.interceptor;
 
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.Role;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
-import org.fedoraproject.candlepin.exceptions.BadRequestException;
-import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
-import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Injector;
+import java.util.ArrayList;
+import org.fedoraproject.candlepin.auth.permissions.Permission;
+import org.fedoraproject.candlepin.exceptions.BadRequestException;
+import org.fedoraproject.candlepin.model.Role;
+import org.fedoraproject.candlepin.model.User;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * UserAuth
@@ -33,33 +35,45 @@ import com.google.inject.Injector;
 public abstract class UserAuth implements AuthProvider {
 
     protected UserServiceAdapter userServiceAdapter;
-    protected OwnerCurator ownerCurator;
     protected Injector injector;
     protected I18n i18n;
 
-    public UserAuth(UserServiceAdapter userServiceAdapter,
-        OwnerCurator ownerCurator, Injector injector) {
+    private static Logger log = Logger.getLogger(UserAuth.class);
+
+    public UserAuth(UserServiceAdapter userServiceAdapter, Injector injector) {
         this.userServiceAdapter = userServiceAdapter;
-        this.ownerCurator = ownerCurator;
         this.injector = injector;
-        i18n = this.injector.getInstance(I18n.class);
+        this.i18n = this.injector.getInstance(I18n.class);
     }
 
     /**
      * Creates a user principal for a given username
      */
     protected Principal createPrincipal(String username) {
-        Owner owner = this.userServiceAdapter.getOwner(username);
-        UserPrincipal principal = null;
-        if (owner == null) {
-            String msg = i18n.tr("No owner found for user {0}", username);
-            throw new BadRequestException(msg);
+        User user = userServiceAdapter.findByLogin(username);
+        if (user == null) {
+            throw new BadRequestException("user " + username + " not found");
+        }
+
+        if (user.isSuperAdmin()) {
+            return new UserPrincipal(username, null, true);
         }
         else {
-            owner = AuthUtil.lookupOwner(owner, ownerCurator);
-            List<Role> roles = this.userServiceAdapter.getRoles(username);
-            principal = new UserPrincipal(username, owner, roles);
+            List<Permission> permissions = new ArrayList<Permission>();
+
+            // flatten out the permissions from the combined roles
+            for (Role role : this.userServiceAdapter.getRoles(username)) {
+                permissions.addAll(role.getPermissions());
+            }
+
+            Principal principal = new UserPrincipal(username, permissions, false);
+
+            // TODO:  Look up owner here?
+            // Old code was doing this:  fullOwners.add(AuthUtil.lookupOwner(owner,
+            // ownerCurator));
+
+            return principal;
         }
-        return principal;
     }
+
 }

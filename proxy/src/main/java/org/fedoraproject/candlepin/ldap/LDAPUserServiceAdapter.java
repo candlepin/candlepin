@@ -14,20 +14,25 @@
  */
 package org.fedoraproject.candlepin.ldap;
 
+import org.fedoraproject.candlepin.auth.Access;
+import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.OwnerPermission;
+import org.fedoraproject.candlepin.model.Role;
+import org.fedoraproject.candlepin.model.User;
+import org.fedoraproject.candlepin.service.UserServiceAdapter;
+
 import com.google.inject.Inject;
 import com.novell.ldap.LDAPConnection;
 import com.novell.ldap.LDAPEntry;
 import com.novell.ldap.LDAPException;
 
-import java.util.LinkedList;
-import java.util.List;
-
 import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.auth.Role;
-import org.fedoraproject.candlepin.config.Config;
-import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.User;
-import org.fedoraproject.candlepin.service.UserServiceAdapter;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * An LDAP based user service
@@ -71,28 +76,27 @@ public class LDAPUserServiceAdapter implements UserServiceAdapter {
     }
 
     @Override
-    //FIXME this seems hacky
-    public Owner getOwner(String username) {
-        Owner owner = null;
+    public List<Role> getRoles(String username) {
+        List<Role> roles = new ArrayList<Role>();
+        Set<User> users = new HashSet<User>();
+        users.add(new User(username, null));
+
         try {
             String dn = getDN(username);
             LDAPConnection lc = getConnection();
             LDAPEntry entry = lc.read(dn);
             String orgName = entry.getAttribute("ou").getStringValue();
-            owner = new Owner(orgName);
-        } 
+
+            Set<OwnerPermission> permissions = new HashSet<OwnerPermission>();
+            permissions.add(new OwnerPermission(new Owner(orgName), Access.ALL));
+
+            // not persisting this, so I think it is ok to give it a dummy name
+            roles.add(new Role("ldap", users, permissions));
+        }
         catch (LDAPException e) {
             //eat it
-        }        
-        
-        return owner;
-    }
+        }
 
-    @Override
-    // FIXME This is hacky
-    public List<Role> getRoles(String username) {
-        List<Role> roles = new LinkedList<Role>();
-        roles.add(Role.SUPER_ADMIN);
         return roles;
     }
 
@@ -117,6 +121,13 @@ public class LDAPUserServiceAdapter implements UserServiceAdapter {
     }
 
     @Override
+    public void deleteRole(String roleId) {
+        throw new UnsupportedOperationException(
+            "This implementation does not support deleting roles!");
+        
+    }
+
+    @Override
     public List<User> listByOwner(Owner owner) {
         throw new UnsupportedOperationException(
             "This implementation does not support deleting Users!");
@@ -131,10 +142,15 @@ public class LDAPUserServiceAdapter implements UserServiceAdapter {
             LDAPConnection lc = new LDAPConnection();
             lc.connect(ldapServer, ldapPort);
             lc.read(dn);
-            user = new User(getOwner(username), username, null);
+            user = new User(username, null);
+
+            for (Role role : getRoles(username)) {
+                role.addUser(user);
+            }
         } 
         catch (LDAPException e) {
             //eat it
+            // TODO: don't eat it... this will bite someone eventually :)
         }        
         
         return user;
@@ -148,6 +164,36 @@ public class LDAPUserServiceAdapter implements UserServiceAdapter {
     
     protected String getDN(String username) {
         return String.format("uid=%s,%s", username, base);
+    }
+
+    @Override
+    public Role createRole(Role r) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public List<Role> listRoles() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public Role updateRole(Role r) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public Role getRole(String roleId) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void addUserToRole(Role role, User user) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void removeUserFromRole(Role role, User user) {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
 }

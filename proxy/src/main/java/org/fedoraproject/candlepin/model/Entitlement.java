@@ -32,14 +32,9 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
-import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.FilterDefs;
-import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
-import org.hibernate.annotations.ParamDef;
 
 
 
@@ -62,27 +57,8 @@ import org.hibernate.annotations.ParamDef;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@FilterDefs({
-    @FilterDef(
-        name = "Entitlement_OWNER_FILTER",
-        parameters = @ParamDef(name = "owner_ids", type = "string")
-    ),
-    @FilterDef(
-        name = "Entitlement_CONSUMER_FILTER",
-        parameters = @ParamDef(name = "consumer_id", type = "string")
-    )
-})
-@Filters({
-    @Filter(name = "Entitlement_OWNER_FILTER",
-        condition = "owner_id in (:owner_ids)"
-    ),
-    @Filter(name = "Entitlement_CONSUMER_FILTER",
-        condition = "consumer_id = :consumer_id"
-    )
-})
 @Table(name = "cp_entitlement")
-public class Entitlement extends AbstractHibernateObject
-    implements AccessControlEnforced, Linkable {
+public class Entitlement extends AbstractHibernateObject implements Linkable, Owned {
 
     private static final long serialVersionUID = 1L;
 
@@ -135,6 +111,7 @@ public class Entitlement extends AbstractHibernateObject
     /**
      * @return the id
      */
+    @Override
     public String getId() {
         return id;
     }
@@ -271,16 +248,6 @@ public class Entitlement extends AbstractHibernateObject
     public String toString() {
         return "Entitlement[id=" + getId() + ", product=" + getProductId() +
             ", consumer= " + (consumer == null ? "null" : consumer.getUuid()) + "]";
-    }
-
-    @Override
-    public boolean shouldGrantAccessTo(Owner owner) {
-        return this.consumer.getOwner().equals(owner);
-    }
-
-    @Override
-    public boolean shouldGrantAccessTo(Consumer consumer) {
-        return this.consumer.equals(consumer);
     }
 
     public Integer getFlexExpiryDays() {

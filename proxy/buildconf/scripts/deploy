@@ -145,6 +145,11 @@ else
     buildr clean package test=no
 fi
 
+if [ "$?" -ne "0" ]; then
+  echo "ERROR: Compile failed."
+  exit 1
+fi
+
 if [ "$GENDB" == "1" ]; then
 	gendb	
 fi

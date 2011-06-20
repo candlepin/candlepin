@@ -30,10 +30,10 @@ import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.config.CandlepinCommonTestConfig;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
-import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.Role;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
@@ -296,36 +296,13 @@ public class ConsumerTest extends DatabaseTestFixture {
         assertNotNull(c);
     }
     
-    @Test(expected = ForbiddenException.class)
-    public void cannotDeleteConsumerOtherThanItself() {
-        Consumer consumer2 = new Consumer("consumer2", USER_NAME, owner, consumerType);
-        consumerCurator.create(consumer2);
-        
-        setupPrincipal(new ConsumerPrincipal(consumer2));
-        crudInterceptor.enable();
-        
-        consumerCurator.delete(consumer);
-    }
-
     @Test
     public void canDeleteSelf() {
         setupPrincipal(new ConsumerPrincipal(consumer));
-        crudInterceptor.enable();
 
         consumerCurator.delete(consumer);
         
         assertNull(consumerCurator.find(consumer.getId()));
-    }
-    
-    @Test(expected = ForbiddenException.class)
-    public void cannotUpdateOtherConsumer() {
-        Consumer consumer2 = new Consumer("consumer2", USER_NAME, owner, consumerType);
-        consumerCurator.create(consumer2);
-        
-        setupPrincipal(new ConsumerPrincipal(consumer2));
-        crudInterceptor.enable();
-
-        consumerCurator.update(consumer);
     }
     
     @Test
@@ -464,8 +441,14 @@ public class ConsumerTest extends DatabaseTestFixture {
         
         ConsumerType personType = new ConsumerType(ConsumerTypeEnum.PERSON);
         consumerTypeCurator.create(personType);
-        
-        User user = new User(owner, newUsername, "password");
+
+        User user = new User(newUsername, "password");
+        userCurator.create(user);
+
+        Role adminRole = createAdminRole(owner);
+        adminRole.addUser(user);
+        roleCurator.create(adminRole);
+
         assertNull(consumerCurator.findByUser(user));
 
         consumer = new Consumer(CONSUMER_NAME, newUsername, owner, personType);

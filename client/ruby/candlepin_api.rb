@@ -57,7 +57,8 @@ class Candlepin
     return @links[resource]
   end
 
-  def register(name, type=:system, uuid=nil, facts={}, username=nil)
+  def register(name, type=:system, uuid=nil, facts={}, username=nil,
+              owner_key=nil)
     consumer = {
       :type => {:label => type},
       :name => name,
@@ -66,8 +67,9 @@ class Candlepin
 
     consumer[:uuid] = uuid if not uuid.nil?
 
-    path = get_path("consumers")
-    path += "?username=#{username}" if username
+    path = get_path("consumers") + "?"
+    path = path + "owner=#{owner_key}&" if not owner_key.nil?
+    path += "username=#{username}&" if username
     @consumer = post(path, consumer)
     return @consumer
   end
@@ -144,13 +146,61 @@ class Candlepin
     end
   end
 
-  def create_user(owner_key, login, password)
+  def create_user(login, password, superadmin=false)
     user = {
       'username' => login,
-      'password' => password
+      'password' => password,
+      'superAdmin' => superadmin
     }
 
-    post("/owners/#{owner_key}/users", user)
+    post("/users", user)
+  end
+
+  # TODO: drop perms here too?
+  def create_role(name, perms=nil)
+    perms ||= []
+    role = {
+      :name => name,
+      :permissions => perms,
+    }
+    post("/roles", role)
+  end
+
+  def update_role(role)
+    put("/roles/#{role['id']}", role)
+  end
+
+  def delete_role(roleid)
+    delete("/roles/#{roleid}")
+  end
+
+  def add_role_user(role_id, username)
+    post("/roles/#{role_id}/users/#{username}")
+  end
+
+  def delete_role_user(role_id, username)
+    delete("/roles/#{role_id}/users/#{username}")
+  end
+
+  def add_role_permission(role_id, permission)
+    post("/roles/#{role_id}/permissions", permission)
+  end
+
+  def delete_role_permission(role_id, permission_id)
+    delete("/roles/#{role_id}/permissions/#{permission_id}")
+  end
+
+  def list_roles
+    get("/roles")
+  end
+
+  def get_role(role_id)
+    get("/roles/#{role_id}")
+  end
+
+  def delete_user(username)
+    uri = "/users/#{username}"
+    delete uri
   end
 
   def list_consumer_types
@@ -177,10 +227,21 @@ class Candlepin
     get("/pools/#{poolid}")
   end
 
+  # Deprecated, unless you're a super admin actually looking to list all pools:
   def list_pools(params = {})
     path = "/pools?"
     path << "consumer=#{params[:consumer]}&" if params[:consumer]
     path << "owner=#{params[:owner]}&" if params[:owner]
+    path << "product=#{params[:product]}&" if params[:product]
+    path << "listall=#{params[:listall]}&" if params[:listall]
+    results = get(path)
+
+    return results
+  end
+
+  def list_owner_pools(owner_key, params = {})
+    path = "/owners/#{owner_key}/pools?"
+    path << "consumer=#{params[:consumer]}&" if params[:consumer]
     path << "product=#{params[:product]}&" if params[:product]
     path << "listall=#{params[:listall]}&" if params[:listall]
     results = get(path)
@@ -343,9 +404,14 @@ class Candlepin
 
   def list_consumers(args={})
     query = "/consumers?"
+
+    # Ideally, call this method with an owner parameter. Only
+    # super admins will be able to call without and list all
+    # consumers.
+    query = "/owners/#{args[:owner]}/consumers?" if args[:owner]
+
     query << "username=#{args[:username]}&" if args[:username]
-    query << "type=#{args[:type]}" if args[:type]
-    query << "owner=#{args[:owner]}" if args[:owner]
+    query << "type=#{args[:type]}&" if args[:type]
     get(query)
   end
 
@@ -458,8 +524,9 @@ class Candlepin
     end
   end
 
-  def regenerate_entitlement_certificates_for_entitlement(entitlement_id)
-    return put("/consumers/#{uuid}/certificates?entitlement=#{entitlement_id}")
+  def regenerate_entitlement_certificates_for_entitlement(entitlement_id, consumer_uuid=nil)
+    consumer_uuid ||= @uuid
+    return put("/consumers/#{consumer_uuid}/certificates?entitlement=#{entitlement_id}")
   end
 
   def regenerate_identity_certificate(uuid=nil)
@@ -481,9 +548,8 @@ class Candlepin
     get("/serials/#{serial_id}")
   end
 
-  def list_consumer_events(consumer_id=nil)
-    consumer_id ||= @uuid
-    get_text("/consumers/#{consumer_id}/atom")
+  def list_consumer_events(owner_key, consumer_id)
+    get_text("/owners/#{owner_key}/consumers/#{consumer_id}/atom")
   end
 
   def list_events

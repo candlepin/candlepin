@@ -6,7 +6,7 @@ describe 'Entitlements' do
   include CandlepinScenarios
   
   before(:each) do
-    @owner = create_owner 'test_owner'
+    @owner = create_owner random_string 'test_owner'
     @monitoring = create_product(nil, random_string('monitoring'))
     @virt = create_product(nil, random_string('virtualization_host'))
     @super_awesome = create_product(nil, random_string('super_awesome'), 
@@ -20,7 +20,7 @@ describe 'Entitlements' do
     @cp.refresh_pools(@owner.key)
 
     #create consumer 
-    @user = user_client(@owner, 'billy')
+    @user = user_client(@owner, random_string('billy'))
     @system = consumer_client(@user, 'system6')
   end 
 

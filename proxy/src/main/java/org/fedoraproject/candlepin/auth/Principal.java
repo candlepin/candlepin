@@ -14,11 +14,12 @@
  */
 package org.fedoraproject.candlepin.auth;
 
-import org.fedoraproject.candlepin.model.Owner;
+import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.auth.permissions.Permission;
 import org.fedoraproject.candlepin.util.Util;
 
 import java.io.Serializable;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -26,41 +27,33 @@ import java.util.List;
  */
 public abstract class Principal implements Serializable {
 
-    public static final String USER_TYPE = "user";
-    public static final String CONSUMER_TYPE = "consumer";
-    public static final String NO_AUTH_TYPE = "no_auth";
-    public static final String SYSTEM_TYPE = "system";
-
-    private Owner owner;
-    private List<Role> roles;     
-
-    public Principal(Owner owner, List<Role> roles) {
-        this.owner = owner;
-        this.roles = roles;
-        if (roles == null) {
-            this.roles = new LinkedList<Role>();
-        }
-    }
+    private Logger log = Logger.getLogger(Principal.class);
+    protected List<Permission> permissions = new ArrayList<Permission>();
 
     public abstract String getType();
 
-    public Owner getOwner() {
-        return owner;
+    public abstract boolean hasFullAccess();
+
+    protected void addPermission(Permission permission) {
+        this.permissions.add(permission);
     }
 
-    public void setOwner(Owner owner) {
-        this.owner = owner;
-    }
+    public boolean canAccess(Object target, Access access) {
+        log.debug(this.getClass().getName() + " principal checking for access to: " + 
+            target);
+        for (Permission permission : permissions) {
+            log.debug(" perm class: " + permission.getClass().getName());
+            if (permission.canAccess(target, access)) {
+                log.debug("  permission granted");
+                // if any of the principal's permissions allows access, then
+                // we are good to go
+                return true;
+            }
+        }
 
-    public List<Role> getRoles() {
-        return roles;
-    }
-    
-    public Boolean hasRole(Role role) {
-        return roles.contains(role);
-    }
-
-    public boolean isConsumer() {
+        // none of the permissions grants access, so this target is not allowed
+        log.warn("Refused principal: '" + getPrincipalName() + "' access to: " + 
+            target.getClass().getName());
         return false;
     }
     
@@ -69,14 +62,12 @@ public abstract class Principal implements Serializable {
     }
     
     public PrincipalData getData() {
-        String ownerId = getOwner() != null ? getOwner().getId() : null;
-        PrincipalData data = new PrincipalData(ownerId, getRoles(),
-            this.getType(), this.getPrincipalName());
-        
-        return data;
+        return new PrincipalData(this.getType(), this.getPrincipalName());
     }
-    
+
+    @Override
     public String toString() {
         return Util.toJson(this.getData());
     }
+
 }
