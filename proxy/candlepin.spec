@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.4.3
+Version: 0.4.4
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -145,6 +145,33 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Mon Jun 20 2011 Devan Goodwin <dgoodwin@redhat.com> 0.4.4-1
+- New multi-owner permissions / roles infrastructure. (dgoodwin@redhat.com)
+- Take slashes out of the product names since it causes issues with the get
+  commnads (bkearney@redhat.com)
+- Addition of on-demand statistic generation. (wpoteat@redhat.com)
+- quit after first fail, unless you specify full_run=1 on command line
+  (cduryee@redhat.com)
+- 700821: Update Consumer Facts Updates Date (mstead@redhat.com)
+- Added number of days parameter and value type parameter (wpoteat@redhat.com)
+- List owners for user with access ALL. (dgoodwin@redhat.com)
+- Fix the location of the import file (bkearney@redhat.com)
+- Add a simple puppet script for candlepin. It will probably only work the
+  first time (bkearney@redhat.com)
+- using "uname.machine" instead of "cpu.architecture" (wpoteat@redhat.com)
+- Set up system principal for all pinsetter jobs (jbowes@redhat.com)
+- Expect 403 on non-existant consumer UUID, not 401. (dgoodwin@redhat.com)
+- return 410 for user deletion, and fix spec that deleted owner then user
+  (cduryee@redhat.com)
+- return 400 during principal creation for unknown usernames
+  (cduryee@redhat.com)
+- Remove the AccessControlInterceptor. (dgoodwin@redhat.com)
+- only use version 9 of the pgsql jar, since it still supports pgsql 8
+  (cduryee@redhat.com)
+- Moving consumer atom feeds under owner resource for security reasons.
+  (jharris@redhat.com)
+- Include Postgresql 9.0 JDBC driver for F15 deployments. (dgoodwin@redhat.com)
+
 * Tue Jun 14 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.3-1
 - require candlepin-deps 0.0.16 (jesusr@redhat.com)
 
