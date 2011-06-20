@@ -93,7 +93,7 @@ public class DefaultRulesTest {
         when(rules.getRules()).thenReturn(builder.toString());
         when(rulesCurator.getRules()).thenReturn(rules);
         when(rulesCurator.getUpdated()).thenReturn(TestDateUtil.date(2010, 1, 1));
-      
+
         JsRules jsRules = new JsRulesProvider(rulesCurator).get();
         enforcer = new EntitlementRules(new DateSourceImpl(),
             jsRules, prodAdapter,
@@ -240,7 +240,7 @@ public class DefaultRulesTest {
     }
 
     @Test
-    public void EmptyUname() {
+    public void testEmptyUname() {
         Pool pool = setupArchTest("arch", "s390x,x86", "uname.machine", "");
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
             .getResult();
@@ -249,7 +249,7 @@ public class DefaultRulesTest {
     }
 
     @Test
-    public void EmptyArch() {
+    public void testEmptyArch() {
         Pool pool = setupArchTest("arch", "", "uname.machine", "x86_64");
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
             .getResult();
@@ -258,7 +258,7 @@ public class DefaultRulesTest {
     }
 
     @Test
-    public void DuplicateArchesMatches() {
+    public void testDuplicateArchesMatches() {
         Pool pool = setupArchTest("arch", "x86_64,x86_64", "uname.machine", "x86_64");
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
             .getResult();
@@ -267,7 +267,7 @@ public class DefaultRulesTest {
     }
 
     @Test
-    public void DuplicateArchesNoMatches() {
+    public void testDuplicateArchesNoMatches() {
         Pool pool = setupArchTest("arch", "x86_64,x86_64", "uname.machine", "z80");
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
             .getResult();
@@ -276,7 +276,7 @@ public class DefaultRulesTest {
     }
 
     @Test
-    public void CommaSplitArchesTrailingComma() {
+    public void testCommaSplitArchesTrailingComma() {
         Pool pool = setupArchTest("arch", "x86_64,x86_64,", "uname.machine", "x86_64");
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
             .getResult();
@@ -285,7 +285,7 @@ public class DefaultRulesTest {
     }
 
     @Test
-    public void CommaSplitArchesExtraSpaces() {
+    public void testCommaSplitArchesExtraSpaces() {
         Pool pool = setupArchTest("arch", "x86_64,  z80 ", "uname.machine", "x86_64");
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
             .getResult();
@@ -354,7 +354,7 @@ public class DefaultRulesTest {
     }
 
     @Test
-    public void ZeroConsumerSocketsShouldGenerateWarning() {
+    public void testZeroConsumerSocketsShouldGenerateWarning() {
         Pool pool = setupArchTest("sockets", "0", "cpu.cpu_socket(s)", "2");
 
         // Get rid of the facts that setupTest set.
@@ -848,7 +848,7 @@ public class DefaultRulesTest {
         assertEquals(1, bestPools.size());
         assertEquals(pool2, bestPools.get(0));
     }
-    
+
     @Test
     public void testFindBestWithTwoPoolsBothVirtPrefersExpiry() {
         String productId1 = "A";
@@ -876,7 +876,7 @@ public class DefaultRulesTest {
         assertEquals(1, bestPools.size());
         assertEquals(pool1, bestPools.get(0));
     }
-    
+
     private Pool setupUserRestrictedPool() {
         Product product = new Product(productId, "A user restricted product");
         Pool pool = TestUtil.createPool(owner, product);
