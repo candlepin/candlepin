@@ -76,4 +76,51 @@ describe 'Owner Resource' do
     new_owner.key.should == owner.key
   end
 
+  it "updates consumed entitlement count" do
+    #TODO maybe move to a before(:each)
+    owner = create_owner random_string('test_owner')
+    user = user_client(owner, random_string('guy'))
+    product = create_product(nil, random_string('consume-me'))
+
+    @cp.create_subscription(owner.key, product.id, 4)
+    @cp.create_subscription(owner.key, product.id, 4)
+    @cp.refresh_pools owner.key
+
+    consumer = consumer_client(user, random_string('consumer'))
+    pool = consumer.list_pools(
+      :product => product.id,
+      :consumer => consumer.uuid).first
+    info = @cp.get_owner_info(owner.key)
+    info['consumedEntitlementCount'].should == 0
+    consumer.consume_pool(pool.id).first
+    info = @cp.get_owner_info(owner.key)
+    info['consumedEntitlementCount'].should == 1
+  end
+
+  it "finds nearest entitlement to expiration" do
+    #TODO maybe move to a before(:each)
+    owner = create_owner random_string('test_owner')
+    user = user_client(owner, random_string('guy'))
+    product = create_product(nil, random_string('consume-me'))
+    consumer = consumer_client(user, random_string('consumer'))
+
+    @cp.create_subscription(owner.key, product.id, 1, [], nil, '432', nil, end_date=Date.today + 10)
+    @cp.refresh_pools owner.key
+    info = @cp.get_owner_info(owner.key)
+    pool = consumer.list_pools(
+      :product => product.id,
+      :consumer => consumer.uuid)
+    pool1 = info['poolNearestToExpiry']
+
+    @cp.create_subscription(owner.key, product.id, 1, [], nil, '43', nil, end_date=Date.today + 5)
+    @cp.refresh_pools owner.key
+    info = @cp.get_owner_info(owner.key)
+    pool = consumer.list_pools(
+      :product => product.id,
+      :consumer => consumer.uuid)
+    pool2 = info['poolNearestToExpiry']
+
+    pool1.should_not == pool2
+  end
+
 end

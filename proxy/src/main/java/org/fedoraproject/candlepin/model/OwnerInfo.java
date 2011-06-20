@@ -18,6 +18,7 @@ package org.fedoraproject.candlepin.model;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * OwnerInfo NOTE: this class only contains dynamic values. it should *not* be
@@ -30,7 +31,8 @@ public class OwnerInfo {
     private Map<String, Integer> entitlementsConsumedByType;
     private Map<String, Integer> consumerTypeCountByPool;
     private Map<String, ConsumptionTypeCounts> entitlementsConsumedByFamily;
-
+    private Pool poolNearestToExpiry;
+    
     public static final String GUEST = "guest";
     public static final String PHYSICAL = "physical";
 
@@ -39,7 +41,7 @@ public class OwnerInfo {
         entitlementsConsumedByType = new HashMap<String, Integer>();
         consumerTypeCountByPool = new HashMap<String, Integer>();
         entitlementsConsumedByFamily = new HashMap<String, ConsumptionTypeCounts>();
-
+        
         consumerGuestCounts = new HashMap<String, Integer>();
         consumerGuestCounts.put(GUEST, 0);
         consumerGuestCounts.put(PHYSICAL, 0);
@@ -146,4 +148,28 @@ public class OwnerInfo {
     public void setPhysicalCount(Integer count) {
         consumerGuestCounts.put(PHYSICAL, count);
     }
+        
+    public Pool getPoolNearestToExpiry() {
+        return poolNearestToExpiry;
+    }
+
+    public void setPoolNearestToExpiry(Pool poolNearestToExpiry) {
+        this.poolNearestToExpiry = poolNearestToExpiry;
+    }
+
+    public Integer getConsumedEntitlementCount() {
+        Integer count = 0;
+        for (Entry<String,Integer> e: entitlementsConsumedByType.entrySet()) {
+            count += e.getValue(); 
+        }
+        return count;
+    }
+    public Integer getEntitlementCount() {
+        Integer count = 0;
+        for (Entry<String,Integer> e: consumerTypeCountByPool.entrySet()) {
+            count += e.getValue(); 
+        }
+        return count;
+    }
+     
 }
