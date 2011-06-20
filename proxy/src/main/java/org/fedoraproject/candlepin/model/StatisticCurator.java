@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.model;
 
 
+import org.fedoraproject.candlepin.model.OwnerInfo.ConsumptionTypeCounts;
 import org.fedoraproject.candlepin.model.Statistic.EntryType;
 import org.fedoraproject.candlepin.model.Statistic.ValueType;
 
@@ -38,11 +39,14 @@ import java.util.Map;
 public class StatisticCurator extends AbstractHibernateCurator<Statistic> {
 
     private OwnerCurator ownerCurator;
+    private OwnerInfoCurator ownerInfoCurator;
 
     @Inject
-    public StatisticCurator(OwnerCurator ownerCurator) {
+    public StatisticCurator(OwnerCurator ownerCurator,
+                            OwnerInfoCurator ownerInfoCurator) {
         super(Statistic.class);
         this.ownerCurator = ownerCurator;
+        this.ownerInfoCurator = ownerInfoCurator;
     }
 
     @Transactional
@@ -74,6 +78,9 @@ public class StatisticCurator extends AbstractHibernateCurator<Statistic> {
             else if (qType.equals("PERPOOL")) {
                 c.add(Restrictions.eq("entryType", EntryType.PERPOOL));
             } 
+            else if (qType.equals("SYSTEM")) {
+                c.add(Restrictions.eq("entryType", EntryType.SYSTEM));
+            }
             else {
                 // no match, no filter
             }
@@ -91,6 +98,12 @@ public class StatisticCurator extends AbstractHibernateCurator<Statistic> {
             else if (vType.equals("PERCENTAGECONSUMED")) {
                 c.add(Restrictions.eq("valueType", ValueType.PERCENTAGECONSUMED));
             } 
+            else if (vType.equals("PHYSICAL")) {
+                c.add(Restrictions.eq("valueType", ValueType.PHYSICAL));
+            }
+            else if (vType.equals("VIRTUAL")) {
+                c.add(Restrictions.eq("valueType", ValueType.VIRTUAL));
+            }
             else {
                 //no match, no filter
             }
@@ -108,11 +121,80 @@ public class StatisticCurator extends AbstractHibernateCurator<Statistic> {
 
     }
 
+    @SuppressWarnings("unchecked")
+    public List<Statistic> getStatisticsByPool(String poolId, String vType,
+                                                Date from, Date to) {
+        Criteria c = currentSession().createCriteria(Statistic.class);
+        c.add(Restrictions.eq("valueReference", poolId));
+        c.add(Restrictions.eq("entryType", EntryType.PERPOOL));
+
+        if (vType != null && !vType.trim().equals("")) {
+            if (vType.equals("RAW")) {
+                c.add(Restrictions.eq("valueType", ValueType.RAW));
+            }
+            else if (vType.equals("USED")) {
+                c.add(Restrictions.eq("valueType", ValueType.USED));
+            }
+            else if (vType.equals("CONSUMED")) {
+                c.add(Restrictions.eq("valueType", ValueType.CONSUMED));
+            }
+            else if (vType.equals("PERCENTAGECONSUMED")) {
+                c.add(Restrictions.eq("valueType", ValueType.PERCENTAGECONSUMED));
+            }
+            else {
+                //no match, no filter
+            }
+        }
+        if (from != null) {
+            c.add(Restrictions.ge("created", from));
+        }
+        if (to != null) {
+            c.add(Restrictions.le("created", to));
+        }
+        return (List<Statistic>) c.list();
+
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Statistic> getStatisticsByProduct(String prodId, String vType,
+                                                Date from, Date to) {
+        Criteria c = currentSession().createCriteria(Statistic.class);
+        c.add(Restrictions.eq("entryType", EntryType.PERPRODUCT));
+
+        c.add(Restrictions.eq("valueReference", prodId));
+        if (vType != null && !vType.trim().equals("")) {
+            if (vType.equals("RAW")) {
+                c.add(Restrictions.eq("valueType", ValueType.RAW));
+            }
+            else if (vType.equals("USED")) {
+                c.add(Restrictions.eq("valueType", ValueType.USED));
+            }
+            else if (vType.equals("CONSUMED")) {
+                c.add(Restrictions.eq("valueType", ValueType.CONSUMED));
+            }
+            else if (vType.equals("PERCENTAGECONSUMED")) {
+                c.add(Restrictions.eq("valueType", ValueType.PERCENTAGECONSUMED));
+            }
+            else {
+                //no match, no filter
+            }
+        }
+        if (from != null) {
+            c.add(Restrictions.ge("created", from));
+        }
+        if (to != null) {
+            c.add(Restrictions.le("created", to));
+        }
+        return (List<Statistic>) c.list();
+
+    }
+
     public void executeStatisticRun() {
         List<Owner> owners = ownerCurator.listAll();
         for (Owner owner : owners) {
             String ownerId = owner.getId();
 
+            systemCounts(owner);
             totalConsumers(owner);
             consumersPerSocketCount(owner);
             int tsc = totalSubscriptionCount(ownerId);
@@ -120,6 +202,25 @@ public class StatisticCurator extends AbstractHibernateCurator<Statistic> {
             perPool(ownerId);
             perProduct(ownerId);
         }
+    }
+
+    private void systemCounts(Owner owner){
+        OwnerInfo oi = ownerInfoCurator.lookupByOwner(owner);
+        Map<String, ConsumptionTypeCounts> ents = oi.getEntitlementsConsumedByFamily();
+        int guest = 0;
+        int physical = 0;
+        for(ConsumptionTypeCounts ctc : ents.values()){
+            guest += ctc.getGuest();
+            physical += ctc.getPhysical();
+            Statistic consumerCountStatistic = new Statistic(
+                EntryType.SYSTEM, ValueType.VIRTUAL, null, guest, owner.getId());
+            create(consumerCountStatistic);
+
+            consumerCountStatistic = new Statistic(
+                EntryType.SYSTEM, ValueType.PHYSICAL, null, physical, owner.getId());
+            create(consumerCountStatistic);
+        }
+
     }
 
     private void totalConsumers(Owner owner) {
@@ -239,7 +340,7 @@ public class StatisticCurator extends AbstractHibernateCurator<Statistic> {
     }
 
     private void perProduct(String ownerId) {
-        String productString = "select distinct p.productName from Pool p" +
+        String productString = "select distinct p.productName, p.productId from Pool p" +
             " where p.owner.id = :ownerId";
         Query productQuery = currentSession().createQuery(productString)
             .setString("ownerId", ownerId);
@@ -248,12 +349,12 @@ public class StatisticCurator extends AbstractHibernateCurator<Statistic> {
             "where e.target = 'ENTITLEMENT' and e.referenceType = 'POOL' " +
             "and e.type = :type and e.targetName = :productName";
         while (productIter.hasNext()) {
-            String productName = (String) productIter.next();
+            Object[] productName = (Object[])productIter.next();
 
             Query perProductQuery = currentSession().createQuery(
                 perProductString);
             perProductQuery.setString("type", "CREATED");
-            perProductQuery.setString("productName", productName);
+            perProductQuery.setString("productName", (String)productName[0]);
             Long ppUCount = (Long) perProductQuery.iterate().next();
             int perProductUsedCount = (ppUCount == null ? 0 : ppUCount
                 .intValue());
@@ -268,7 +369,7 @@ public class StatisticCurator extends AbstractHibernateCurator<Statistic> {
             String totalProductCountString = "select sum(quantity) from Pool p" +
                 " where p.productName = :productName";
             Query totalProductCountQuery = currentSession().createQuery(
-                totalProductCountString).setString("productName", productName);
+                totalProductCountString).setString("productName", (String)productName[0]);
             Long tpCount = (Long) totalProductCountQuery.iterate().next();
             int totalProductCountTotal = (tpCount == null ? 0 : tpCount
                 .intValue());
@@ -278,15 +379,15 @@ public class StatisticCurator extends AbstractHibernateCurator<Statistic> {
                                      totalProductCountTotal);
             }
             Statistic perPoolCountPercentageStatistic = new Statistic(
-                EntryType.PERPRODUCT, ValueType.PERCENTAGECONSUMED, productName,
+                EntryType.PERPRODUCT, ValueType.PERCENTAGECONSUMED, (String)productName[1],
                 productPercentage, ownerId);
             create(perPoolCountPercentageStatistic);
             Statistic perPoolCountUsedStatistic = new Statistic(
-                EntryType.PERPRODUCT, ValueType.USED, productName,
+                EntryType.PERPRODUCT, ValueType.USED, (String)productName[1],
                 perProductUsedCount, ownerId);
             create(perPoolCountUsedStatistic);
             Statistic perPoolCountConsumedStatistic = new Statistic(
-                EntryType.PERPRODUCT, ValueType.CONSUMED, productName,
+                EntryType.PERPRODUCT, ValueType.CONSUMED, (String)productName[1],
                 perProductConsumedCount, ownerId);
             create(perPoolCountConsumedStatistic);
         }

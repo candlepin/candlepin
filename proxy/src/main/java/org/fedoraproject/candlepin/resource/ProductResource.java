@@ -14,6 +14,24 @@
  */
 package org.fedoraproject.candlepin.resource;
 
+import org.fedoraproject.candlepin.auth.interceptor.SecurityHole;
+import org.fedoraproject.candlepin.exceptions.BadRequestException;
+import org.fedoraproject.candlepin.exceptions.NotFoundException;
+import org.fedoraproject.candlepin.model.Content;
+import org.fedoraproject.candlepin.model.ContentCurator;
+import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductCertificate;
+import org.fedoraproject.candlepin.model.ProductCertificateCurator;
+import org.fedoraproject.candlepin.model.ProductContent;
+import org.fedoraproject.candlepin.model.Statistic;
+import org.fedoraproject.candlepin.model.StatisticCurator;
+import org.fedoraproject.candlepin.resource.util.ResourceDateParser;
+import org.fedoraproject.candlepin.service.ProductServiceAdapter;
+
+import com.google.inject.Inject;
+
+import org.xnap.commons.i18n.I18n;
+
 import java.util.List;
 
 import javax.ws.rs.DELETE;
@@ -25,20 +43,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-import org.fedoraproject.candlepin.auth.interceptor.SecurityHole;
-import org.fedoraproject.candlepin.exceptions.BadRequestException;
-import org.fedoraproject.candlepin.exceptions.NotFoundException;
-import org.fedoraproject.candlepin.model.Content;
-import org.fedoraproject.candlepin.model.ContentCurator;
-import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.model.ProductCertificate;
-import org.fedoraproject.candlepin.model.ProductCertificateCurator;
-import org.fedoraproject.candlepin.model.ProductContent;
-import org.fedoraproject.candlepin.service.ProductServiceAdapter;
-import org.xnap.commons.i18n.I18n;
-
-import com.google.inject.Inject;
-
 /**
  * API Gateway into /product
  * 
@@ -49,6 +53,7 @@ public class ProductResource {
 
     private ProductServiceAdapter prodAdapter;
     private ContentCurator contentCurator;
+    private StatisticCurator statisticCurator;
     private I18n i18n;
 
     /**
@@ -60,10 +65,12 @@ public class ProductResource {
     @Inject
     public ProductResource(ProductServiceAdapter prodAdapter,
                            ProductCertificateCurator productCertCurator,
+                           StatisticCurator statisticCurator,
                            ContentCurator contentCurator,
                            I18n i18n) {
         this.prodAdapter = prodAdapter;
         this.contentCurator = contentCurator;
+        this.statisticCurator= statisticCurator;
         this.i18n = i18n;
     }
 
@@ -167,5 +174,32 @@ public class ProductResource {
         }
 
         prodAdapter.deleteProduct(product);
+    }
+
+    @GET
+    @Path("/{prod_id}/statistics")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Statistic> getProductStats(@PathParam("prod_id") String id,
+                            @QueryParam("from") String from,
+                            @QueryParam("to") String to,
+                            @QueryParam("days") String days) {
+
+        return statisticCurator.getStatisticsByProduct(id, null,
+                                ResourceDateParser.getFromDate(from, to, days),
+                                ResourceDateParser.parseDateString(to));
+    }
+
+    @GET
+    @Path("/{prod_id}/statistics/{vtype}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Statistic> getProductStats(@PathParam("prod_id") String id,
+                            @PathParam("vtype") String valueType,
+                            @QueryParam("from") String from,
+                            @QueryParam("to") String to,
+                            @QueryParam("days") String days) {
+
+        return statisticCurator.getStatisticsByProduct(id, valueType,
+                                ResourceDateParser.getFromDate(from, to, days),
+                                ResourceDateParser.parseDateString(to));
     }
 }

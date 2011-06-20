@@ -16,10 +16,9 @@ package org.fedoraproject.candlepin.resource;
 
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Access;
-
-import org.fedoraproject.candlepin.auth.interceptor.Verify;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.interceptor.SecurityHole;
+import org.fedoraproject.candlepin.auth.interceptor.Verify;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
@@ -29,6 +28,9 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
+import org.fedoraproject.candlepin.model.Statistic;
+import org.fedoraproject.candlepin.model.StatisticCurator;
+import org.fedoraproject.candlepin.resource.util.ResourceDateParser;
 
 import com.google.inject.Inject;
 
@@ -46,7 +48,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.xml.bind.DatatypeConverter;
 
 /**
  * API gateway for the EntitlementPool
@@ -58,28 +59,21 @@ public class PoolResource {
     private PoolCurator poolCurator;
     private ConsumerCurator consumerCurator;
     private OwnerCurator ownerCurator;
+    private StatisticCurator statisticCurator;
     private I18n i18n;
 
     @Inject
     public PoolResource(PoolCurator poolCurator,
-        ConsumerCurator consumerCurator, OwnerCurator ownerCurator, I18n i18n,
+
+        ConsumerCurator consumerCurator, OwnerCurator ownerCurator,
+        StatisticCurator statisticCurator, I18n i18n,
         EventSink eventSink) {
+
         this.poolCurator = poolCurator;
         this.consumerCurator = consumerCurator;
         this.ownerCurator = ownerCurator;
+        this.statisticCurator= statisticCurator;
         this.i18n = i18n;
-    }
-
-    private Date parseActiveOnString(String activeOn) {
-        Date d;
-        try {
-            d = DatatypeConverter.parseDateTime(activeOn).getTime();
-        }
-        catch (IllegalArgumentException e) {
-            throw new BadRequestException(
-                "Invalid date, must use ISO 8601 format");
-        }
-        return d;
     }
 
     /**
@@ -124,7 +118,7 @@ public class PoolResource {
 
         Date activeOnDate = new Date();
         if (activeOn != null) {
-            activeOnDate = parseActiveOnString(activeOn);
+            activeOnDate = ResourceDateParser.parseDateString(activeOn);
         }
 
         Consumer c = null;
@@ -190,6 +184,33 @@ public class PoolResource {
 
         throw new NotFoundException(i18n.tr(
             "Entitlement Pool with ID '{0}' could not be found", id));
+    }
+
+    @GET
+    @Path("{pool_id}/statistics")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Statistic> getPoolStats(@PathParam("pool_id") String id,
+                            @QueryParam("from") String from,
+                            @QueryParam("to") String to,
+                            @QueryParam("days") String days) {
+
+        return statisticCurator.getStatisticsByPool(id, null,
+                                ResourceDateParser.getFromDate(from, to, days),
+                                ResourceDateParser.parseDateString(to));
+    }
+
+    @GET
+    @Path("{pool_id}/statistics/{vtype}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Statistic> getPoolStats(@PathParam("pool_id") String id,
+                            @PathParam("vtype") String valueType,
+                            @QueryParam("from") String from,
+                            @QueryParam("to") String to,
+                            @QueryParam("days") String days) {
+
+        return statisticCurator.getStatisticsByPool(id, valueType,
+                                ResourceDateParser.getFromDate(from, to, days),
+                                ResourceDateParser.parseDateString(to));
     }
 
 }

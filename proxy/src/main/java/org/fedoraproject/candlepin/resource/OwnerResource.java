@@ -14,26 +14,6 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.xml.bind.DatatypeConverter;
-
-import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventAdapter;
 import org.fedoraproject.candlepin.audit.EventFactory;
@@ -71,11 +51,17 @@ import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.pinsetter.tasks.RefreshPoolsJob;
+import org.fedoraproject.candlepin.resource.util.ResourceDateParser;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.fedoraproject.candlepin.sync.Importer;
 import org.fedoraproject.candlepin.sync.ImporterException;
 import org.fedoraproject.candlepin.sync.SyncDataFormatException;
+
+import com.google.inject.Inject;
+import com.wideplay.warp.persist.Transactional;
+
+import org.apache.log4j.Logger;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
@@ -84,8 +70,24 @@ import org.jboss.resteasy.util.GenericType;
 import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
 
-import com.google.inject.Inject;
-import com.wideplay.warp.persist.Transactional;
+import java.io.File;
+import java.io.IOException;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
+
 
 /**
  * Owner Resource
@@ -419,7 +421,7 @@ public class OwnerResource {
 
         Date activeOnDate = new Date();
         if (activeOn != null) {
-            activeOnDate = parseDateString(activeOn);
+            activeOnDate = ResourceDateParser.parseDateString(activeOn);
         }
 
         Consumer c = null;
@@ -661,8 +663,10 @@ public class OwnerResource {
                 "owner with key: {0} was not found.", ownerKey));
         }
 
-        return statisticCurator.getStatisticsByOwner(o, "", "", "",
-                                getFromDate(from, to, days), parseDateString(to));
+        
+        return statisticCurator.getStatisticsByOwner(o, "", "", "", 
+                                ResourceDateParser.getFromDate(from, to, days),
+                                ResourceDateParser.parseDateString(to));
     }
 
     @GET
@@ -683,8 +687,9 @@ public class OwnerResource {
                 "owner with key: {0} was not found.", ownerKey));
         }
 
-        return statisticCurator.getStatisticsByOwner(o, qType, reference, "",
-                                getFromDate(from, to, days), parseDateString(to));
+        return statisticCurator.getStatisticsByOwner(o, qType, reference, "", 
+                                ResourceDateParser.getFromDate(from, to, days),
+                                ResourceDateParser.parseDateString(to));
     }
 
     @GET
@@ -706,38 +711,12 @@ public class OwnerResource {
                 "owner with key: {0} was not found.", ownerKey));
         }
 
-        return statisticCurator.getStatisticsByOwner(o, qType, reference, vType,
-                                getFromDate(from, to, days), parseDateString(to));
+
+        return statisticCurator.getStatisticsByOwner(o, qType, reference, vType, 
+                                ResourceDateParser.getFromDate(from, to, days),
+                                ResourceDateParser.parseDateString(to));
     }
-
-
-    private Date getFromDate(String from, String to, String days) {
-        if (days != null && !days.trim().equals("")) {
-            if (to != null && !to.trim().equals("") ||
-                from != null && !from.trim().equals("")) {
-                throw new BadRequestException("You can use either the to/from " +
-                                               "date parameters or the number of " +
-                                               "days parameter, but not both");
-            }
-        }
-
-        Date daysDate = null;
-        if (days != null && !days.trim().equals("")) {
-            long mills = 1000 * 60 * 60 * 24;
-            int number = Integer.parseInt(days);
-            daysDate = new Date(new Date().getTime() - (number * mills));
-        }
-
-        Date fromDate = null;
-        if (daysDate != null) {
-            fromDate = daysDate;
-        }
-        else {
-            fromDate = parseDateString(from);
-        }
-
-        return fromDate;
-    }
+        
 
     private void recordImportSuccess(Owner owner) {
         ImportRecord record = new ImportRecord(owner);
@@ -752,22 +731,6 @@ public class OwnerResource {
         record.recordStatus(ImportRecord.Status.FAILURE, error.getMessage());
 
         this.importRecordCurator.create(record);
-    }
-
-
-    private Date parseDateString(String activeOn) {
-        Date d;
-        if (activeOn == null || activeOn.trim().equals("")) {
-            return null;
-        }
-        try {
-            d = DatatypeConverter.parseDateTime(activeOn).getTime();
-        }
-        catch (IllegalArgumentException e) {
-            throw new BadRequestException(
-                "Invalid date, must use ISO 8601 format");
-        }
-        return d;
     }
 
 }
