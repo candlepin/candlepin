@@ -200,8 +200,7 @@
     "users": [
         {
             "password": "password",
-            "username": "testuser1",
-            "superadmin": "true"
+            "username": "testuser1"
         },
         {
             "password": "password",
@@ -297,18 +296,15 @@
 	{
             "name": "snowwhite-all",
             "permissions": [
-		{
-		    "owner": "snowwhite",
-		    "access": "ALL"
-		}
+                {
+                    "owner": "snowwhite",
+                    "access": "ALL"
+                }
              ],
             "users": [
-		{
-		    "username": "doc"
-                },
-                {
-		    "username": "grumpy"
-		}
+                {"username": "doc"},
+                {"username": "testuser1"},
+                {"username": "grumpy"}
              ]
 	},
 	{
