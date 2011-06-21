@@ -159,14 +159,14 @@ public class OwnerInfo {
 
     public Integer getConsumedEntitlementCount() {
         Integer count = 0;
-        for (Entry<String,Integer> e: entitlementsConsumedByType.entrySet()) {
+        for (Entry<String, Integer> e : entitlementsConsumedByType.entrySet()) {
             count += e.getValue(); 
         }
         return count;
     }
     public Integer getEntitlementCount() {
         Integer count = 0;
-        for (Entry<String,Integer> e: consumerTypeCountByPool.entrySet()) {
+        for (Entry<String, Integer> e : consumerTypeCountByPool.entrySet()) {
             count += e.getValue(); 
         }
         return count;

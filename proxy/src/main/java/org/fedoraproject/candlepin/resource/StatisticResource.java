@@ -46,11 +46,11 @@ public class StatisticResource {
     }
 
     /**
-     * Uploads new Rules, returns a copy of the uploaded rules.
-     * @return Success message.
+     * Gathers statistics in system and records them in stat history table.
+     * 
      */
     @PUT
-    public String execute() {
+    public void execute() {
 
         try {
             statisticCurator.executeStatisticRun();
@@ -59,7 +59,7 @@ public class StatisticResource {
             log.error("Cannot store: ", e);
             throw new ServiceUnavailableException(i18n.tr("couldn't generate statistics"));
         }
-        return "Successful statistic generation\n";
+        log.info("Successful statistic generation");
     }
 
 }

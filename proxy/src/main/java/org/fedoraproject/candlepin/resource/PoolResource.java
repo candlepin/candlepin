@@ -72,7 +72,7 @@ public class PoolResource {
         this.poolCurator = poolCurator;
         this.consumerCurator = consumerCurator;
         this.ownerCurator = ownerCurator;
-        this.statisticCurator= statisticCurator;
+        this.statisticCurator = statisticCurator;
         this.i18n = i18n;
     }
 

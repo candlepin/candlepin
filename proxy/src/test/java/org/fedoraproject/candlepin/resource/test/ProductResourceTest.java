@@ -19,10 +19,6 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.HashSet;
-import java.util.Locale;
-import java.util.Set;
-
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.model.Content;
 import org.fedoraproject.candlepin.model.ContentCurator;
@@ -31,10 +27,15 @@ import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.resource.ProductResource;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
+
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Set;
 
 
 /**
@@ -94,7 +95,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
     public void testDeleteProductWithSubscriptions() {
         ProductServiceAdapter pa = mock(ProductServiceAdapter.class);
         I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        ProductResource pr = new ProductResource(pa, null, null, i18n);
+        ProductResource pr = new ProductResource(pa, null, null, null, i18n);
         Product p = mock(Product.class);
         when(pa.getProductById(eq("10"))).thenReturn(p);
         Set<Subscription> subs = new HashSet<Subscription>();

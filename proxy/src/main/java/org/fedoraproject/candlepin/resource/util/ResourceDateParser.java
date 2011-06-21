@@ -24,6 +24,11 @@ import javax.xml.bind.DatatypeConverter;
  * ResourceDate
  */
 public class ResourceDateParser {
+    
+    private ResourceDateParser() {
+        
+    }
+    
     public static Date getFromDate(String from, String to, String days) {
         if (days != null && !days.trim().equals("")) {
             if (to != null && !to.trim().equals("") ||

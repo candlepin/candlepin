@@ -70,7 +70,7 @@ public class ProductResource {
                            I18n i18n) {
         this.prodAdapter = prodAdapter;
         this.contentCurator = contentCurator;
-        this.statisticCurator= statisticCurator;
+        this.statisticCurator = statisticCurator;
         this.i18n = i18n;
     }
 
