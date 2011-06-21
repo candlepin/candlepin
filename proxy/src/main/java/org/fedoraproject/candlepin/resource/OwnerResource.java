@@ -187,7 +187,8 @@ public class OwnerResource {
     @GET
     @Path("/{owner_key}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Owner getOwner(@PathParam("owner_key") String ownerKey) {
+    public Owner getOwner(@PathParam("owner_key") @Verify(value = Owner.class,
+        require = Access.ALL)String ownerKey) {
         return findOwner(ownerKey);
     }
 
