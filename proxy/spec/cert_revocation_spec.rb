@@ -61,9 +61,6 @@ describe 'Certificate Revocation List' do
 
     # Delete owner without revoking certs
     delete_owner(@owner, false)
-    # deleting the owner has already deleted this user, so remove it from
-    # the user list (to prevent later cleanup)
-    @users.delete @user
 
     revoked_serials.should_not include(serials)
   end
