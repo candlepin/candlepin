@@ -31,18 +31,18 @@ describe 'User Resource' do
   	user_list.size.should > 0 
   end
 
-#  it 'should allow a user to list their owners' do
-#    visible_owners = @user_cp.list_users_owners(@username)
-#    visible_owners.size.should == 1
-#  end
+  it 'should allow a user to list their owners' do
+    visible_owners = @user_cp.list_users_owners(@username)
+    visible_owners.size.should == 1
+  end
 
-#  it "should prevent a user from listing another user's owners" do
-#    user2_cp = user_client(@test_owner, random_string('user'))
-#    # Try listing for the test user:
-#    lambda {
-#      user2_cp.list_users_owners(@username)
-#    }.should raise_exception(RestClient::Forbidden)
-#  end
+  it "should prevent a user from listing another user's owners" do
+    user2_cp = user_client(@test_owner, random_string('user'))
+    # Try listing for the test user:
+    lambda {
+      user2_cp.list_users_owners(@username)
+    }.should raise_exception(RestClient::Forbidden)
+  end
 
 
 end
