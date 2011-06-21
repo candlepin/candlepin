@@ -561,6 +561,51 @@ class Candlepin
     post_file "/owners/#{owner_key}/imports", File.new(filename)
   end
 
+  def generate_statistics()
+    put "/statistics/generate"
+  end
+
+  def get_owner_perpool(owner_id, pool_id, val_type)
+    return get "/owners/#{owner_id}/statistics/PERPOOL/#{val_type}?reference=#{pool_id}"
+  end
+
+  def get_owner_perproduct(owner_id, prod_id, val_type)
+    return get "/owners/#{owner_id}/statistics/PERPRODUCT/#{val_type}?reference=#{prod_id}"
+  end
+
+  def get_consumer_count(owner_id)
+    return get "/owners/#{owner_id}/statistics/TOTALCONSUMERS"
+  end
+
+  def get_subscription_count_raw(owner_id)
+    return get "/owners/#{owner_id}/statistics/TOTALSUBSCRIPTIONCOUNT/RAW"
+  end
+
+  def get_subscription_consumed_count_raw(owner_id)
+    return get "/owners/#{owner_id}/statistics/TOTALSUBSCRIPTIONCONSUMED/RAW"
+  end
+
+  def get_subscription_consumed_count_percentage(owner_id)
+    return get "/owners/#{owner_id}/statistics/TOTALSUBSCRIPTIONCONSUMED/PERCENTAGECONSUMED"
+  end
+
+  def get_system_physical_count(owner_id)
+    return get "/owners/#{owner_id}/statistics/SYSTEM/PHYSICAL"
+  end
+
+  def get_system_virtual_count(owner_id)
+    return get "/owners/#{owner_id}/statistics/SYSTEM/VIRTUAL"
+  end
+
+  def get_perpool(pool_id, val_type)
+    return get "/pools/#{pool_id}/statistics/#{val_type}"
+  end
+
+  def get_perproduct(prod_id, val_type)
+    return get "/products/#{prod_id}/statistics/#{val_type}"
+  end
+
+
   def get_crl
     OpenSSL::X509::CRL.new(get_text('/crl'))
   end
