@@ -14,7 +14,6 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import org.fedoraproject.candlepin.model.OwnerInfo.ConsumptionTypeCounts;
 import org.fedoraproject.candlepin.model.Statistic.EntryType;
 import org.fedoraproject.candlepin.model.Statistic.ValueType;
 
@@ -211,21 +210,14 @@ public class StatisticCurator extends AbstractHibernateCurator<Statistic> {
 
     private void systemCounts(Owner owner) {
         OwnerInfo oi = ownerInfoCurator.lookupByOwner(owner);
-        Map<String, ConsumptionTypeCounts> ents = oi
-            .getEntitlementsConsumedByFamily();
-        int guest = 0;
-        int physical = 0;
-        for (ConsumptionTypeCounts ctc : ents.values()) {
-            guest += ctc.getGuest();
-            physical += ctc.getPhysical();
-            Statistic consumerCountStatistic = new Statistic(EntryType.SYSTEM,
-                ValueType.VIRTUAL, null, guest, owner.getId());
-            create(consumerCountStatistic);
 
-            consumerCountStatistic = new Statistic(EntryType.SYSTEM,
-                ValueType.PHYSICAL, null, physical, owner.getId());
-            create(consumerCountStatistic);
-        }
+        Statistic consumerCountStatistic = new Statistic(EntryType.SYSTEM,
+            ValueType.VIRTUAL, null, oi.getConsumerGuestCounts().get(OwnerInfo.GUEST), owner.getId());
+        create(consumerCountStatistic);
+
+        consumerCountStatistic = new Statistic(EntryType.SYSTEM,
+            ValueType.PHYSICAL, null, oi.getConsumerGuestCounts().get(OwnerInfo.PHYSICAL), owner.getId());
+        create(consumerCountStatistic);
 
     }
 
