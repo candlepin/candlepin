@@ -14,10 +14,13 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
 import org.hibernate.criterion.Restrictions;
 
+import com.wideplay.warp.persist.Transactional;
+
 /**
- * 
+ *
  * UserCurator
  */
 public class UserCurator extends AbstractHibernateCurator<User> {
@@ -25,11 +28,26 @@ public class UserCurator extends AbstractHibernateCurator<User> {
     protected UserCurator() {
         super(User.class);
     }
-    
+
     public User findByLogin(String login) {
         return (User) this.currentSession().createCriteria(User.class)
         .add(Restrictions.eq("username", login))
         .uniqueResult();
     }
-    
+
+    @Transactional
+    @EnforceAccessControl
+    public User update(User user) {
+        User existingUser = this.find(user.getId());
+        if (existingUser == null) {
+            return create(user);
+        }
+
+        existingUser.setHashedPassword(user.getHashedPassword());
+        existingUser.setSuperAdmin(user.isSuperAdmin());
+        existingUser.setUsername(user.getUsername());
+        this.save(existingUser);
+        return existingUser;
+    }
+
 }

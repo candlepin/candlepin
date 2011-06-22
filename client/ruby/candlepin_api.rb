@@ -157,6 +157,11 @@ class Candlepin
     post("/users", user)
   end
   
+  def update_user(user, username = nil)
+    username ||= user[:username]
+    put("/users/#{username}", user)
+  end
+  
   def list_users()
     get("/users")
   end  

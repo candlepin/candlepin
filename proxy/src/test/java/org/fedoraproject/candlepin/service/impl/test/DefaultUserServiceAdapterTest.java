@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.service.impl.test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyString;
@@ -34,6 +35,7 @@ import org.fedoraproject.candlepin.model.UserCurator;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.fedoraproject.candlepin.service.impl.DefaultUserServiceAdapter;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
+import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -186,5 +188,18 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
 
         adminRole = service.getRole(adminRole.getId());
         assertEquals(0, adminRole.getUsers().size());
+    }
+
+    @Test
+    public void testUpdating() {
+        User user = TestUtil.createUser(null, null, true);
+        user = this.userCurator.create(user);
+        user.setUsername("JarJar");
+        user.setHashedPassword("Binks");
+        user.setSuperAdmin(false);
+        User updated = service.updateUser(user);
+        assertEquals("JarJar", updated.getUsername());
+        assertEquals("Binks", updated.getHashedPassword());
+        assertFalse(updated.isSuperAdmin());
     }
 }

@@ -113,6 +113,13 @@ public class LDAPUserServiceAdapter implements UserServiceAdapter {
     }
 
     @Override
+    public User updateUser(User user) {
+        return user;
+        //throw new UnsupportedOperationException(
+        //    "This implementation does not support creating new Users!");
+    }
+
+    @Override
     //FIXME: Combine with the base implementation
     public List<User> listUsers() {
         return new ArrayList<User>();

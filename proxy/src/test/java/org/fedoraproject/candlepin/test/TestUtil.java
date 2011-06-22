@@ -185,6 +185,12 @@ public class TestUtil {
         return buf.toString();
     }
 
+    public static User createUser(String username, String password, boolean superAdmin) {
+        username = (username == null) ? "user-" + randomInt() : username;
+        password = (password == null) ? "pass-" + randomInt() : password;
+        return new User(username, password, superAdmin);
+    }
+
 
     public static UserPrincipal createPrincipal(String username, Owner owner, Access role) {
         return new UserPrincipal(username,  Arrays.asList(new Permission[] {
@@ -238,12 +244,12 @@ public class TestUtil {
         return createEntitlement(owner, createConsumer(owner), createPool(
             owner, createProduct()), null);
     }
-    
+
     public void addPermissionToUser(User u, Access role, Owner o) {
         // Check if a permission already exists for this verb and owner:
     }
-        
-        
+
+
 
     public static ActivationKey createActivationKey(Owner owner, List<Pool> pools) {
         ActivationKey key = new ActivationKey();

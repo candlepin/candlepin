@@ -55,6 +55,11 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
     }
 
     @Override
+    public User updateUser(User user) {
+        return userCurator.update(user);
+    }
+
+    @Override
     public List<User> listUsers() {
         return this.userCurator.listAll();
     }

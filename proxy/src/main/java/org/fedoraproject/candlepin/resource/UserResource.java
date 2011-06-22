@@ -22,6 +22,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -33,6 +34,7 @@ import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.interceptor.Verify;
 import org.fedoraproject.candlepin.exceptions.ConflictException;
 import org.fedoraproject.candlepin.exceptions.GoneException;
+import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.User;
@@ -82,6 +84,22 @@ public class UserResource {
         }
         return userService.createUser(user);
     }
+
+    @PUT
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/{username}")
+    public User updateUser(@PathParam("username")
+        @Verify(User.class) String username,
+        User user) {
+
+        // Note, to change the username, the old username needs to be provided.
+        if (userService.findByLogin(username) == null) {
+            throw new NotFoundException("user " + username + " does not exists");
+        }
+        return userService.updateUser(user);
+    }
+
 
     @DELETE
     @Path("/{username}")

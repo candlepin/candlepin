@@ -25,6 +25,16 @@ describe 'User Resource' do
       create_user(@test_owner, @username, 'password')
     }.should raise_exception(RestClient::Conflict)
   end
+
+  it "should allow users to update their info" do
+    # Try listing for the test user:
+    @username = random_string 'user'     
+    user = create_user(@test_owner, @username, 'password')
+    new_username = random_string 'username'     
+    user["username"]= new_username
+    newuser = @cp.update_user(user, @username)
+    newuser["username"].should == new_username
+  end
   
   it "should return a non empty list of users" do
   	user_list = @cp.list_users

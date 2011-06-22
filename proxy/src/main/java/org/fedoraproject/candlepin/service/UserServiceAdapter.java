@@ -42,7 +42,10 @@ public interface UserServiceAdapter {
      */
     boolean validateUser(String username, String password) throws Exception;
 
+    // User Lifecylce
     User createUser(User user);
+
+    User updateUser(User user);
 
     void deleteUser(User user);
 

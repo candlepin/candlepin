@@ -14,11 +14,6 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import org.fedoraproject.candlepin.auth.Access;
-import org.fedoraproject.candlepin.util.Util;
-
-import org.hibernate.annotations.GenericGenerator;
-
 import java.util.Formatter;
 import java.util.HashSet;
 import java.util.Set;
@@ -33,6 +28,10 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
+import org.fedoraproject.candlepin.auth.Access;
+import org.fedoraproject.candlepin.util.Util;
+import org.hibernate.annotations.GenericGenerator;
 
 /**
  * Represents the user.
@@ -110,6 +109,14 @@ public class User extends AbstractHibernateObject {
     public String getHashedPassword() {
         return hashedPassword;
     }
+
+    /**
+     * Sets the hashed password value.
+     */
+    public void setHashedPassword(String hashedPassword) {
+        this.hashedPassword = hashedPassword;
+    }
+
     /**
      * @param password the password to set
      */
@@ -146,13 +153,13 @@ public class User extends AbstractHibernateObject {
     public Set<Role> getRoles() {
         return roles;
     }
-    
+
     public void addRole(Role r) {
         if (this.roles.add(r)) {
             r.addUser(this);
         }
     }
-    
+
     public void removeRole(Role r) {
         if (this.roles.remove(r)) {
             r.removeUser(this);
