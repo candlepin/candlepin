@@ -57,6 +57,10 @@ public class RefreshPoolsJob implements Job {
     public void execute(JobExecutionContext context) throws JobExecutionException {
         String ownerKey = context.getMergedJobDataMap().getString(JobStatus.OWNER_KEY);
         Owner owner = ownerCurator.lookupByKey(ownerKey);
+        if (owner == null) {
+            context.setResult("Nothing to do. Owner no longer exists");
+            return;
+        }
 
         // Assume that we verified the request in the resource layer:
         Principal system = new SystemPrincipal();
