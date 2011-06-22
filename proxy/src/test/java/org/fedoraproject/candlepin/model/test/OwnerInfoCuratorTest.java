@@ -15,7 +15,6 @@
 package org.fedoraproject.candlepin.model.test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
@@ -91,8 +90,6 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         };
         
         assertEquals(expectedConsumers, info.getConsumerCounts());
-        assertTrue(info.getConsumedEntitlementCount() == 0);
-        assertTrue(info.getEntitlementCount() == 0);
         assertEquals(expectedEntitlementsConsumed, info.getEntitlementsConsumedByType());
     }
     
@@ -148,7 +145,6 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         };
         
         assertEquals(expectedConsumers, info.getConsumerCounts());
-        assertTrue(info.getConsumedEntitlementCount() == 1);
         assertEquals(expectedEntitlementsConsumed, info.getEntitlementsConsumedByType());
     }
     
@@ -179,7 +175,6 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         };
         
         assertEquals(expectedConsumers, info.getConsumerCounts());
-        assertTrue(info.getConsumedEntitlementCount() == 2);
         assertEquals(expectedEntitlementsConsumed, info.getEntitlementsConsumedByType());
     }
     
@@ -218,7 +213,6 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         };
         
         assertEquals(expectedConsumers, info.getConsumerCounts());
-        assertTrue(info.getConsumedEntitlementCount() == 2);
         assertEquals(expectedEntitlementsConsumed, info.getEntitlementsConsumedByType());
     }
 
@@ -238,7 +232,6 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         };
 
         assertEquals(expectedPoolCount, info.getConsumerTypeCountByPool());
-        assertTrue(info.getConsumedEntitlementCount() == 0); //nothing consumed yet
 
     }
 
@@ -319,7 +312,6 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         };
 
         assertEquals(expectedPoolCount, info.getConsumerTypeCountByPool());
-        assertTrue(info.getConsumedEntitlementCount() == 0);
 
     }
 
@@ -408,7 +400,6 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
             };
 
         assertEquals(expected, info.getEntitlementsConsumedByFamily());
-        assertTrue(info.getConsumedEntitlementCount() == 1);
 
     }
 
@@ -430,7 +421,6 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
         assertEquals((Integer) 2, info.getConsumerGuestCounts().get(OwnerInfo.GUEST));
         assertEquals((Integer) 1, info.getConsumerGuestCounts().get(OwnerInfo.PHYSICAL));
-        assertTrue(info.getConsumedEntitlementCount() == 0);
 
 
         // Create another owner to make sure we don't see another owners consumers:
@@ -439,7 +429,6 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         info = ownerInfoCurator.lookupByOwner(anotherOwner);
         assertEquals((Integer) 0, info.getConsumerGuestCounts().get(OwnerInfo.GUEST));
         assertEquals((Integer) 0, info.getConsumerGuestCounts().get(OwnerInfo.PHYSICAL));
-        assertTrue(info.getConsumedEntitlementCount() == 0);
 
     }
 }

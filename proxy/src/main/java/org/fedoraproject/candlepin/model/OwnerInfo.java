@@ -18,7 +18,6 @@ package org.fedoraproject.candlepin.model;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 /**
  * OwnerInfo NOTE: this class only contains dynamic values. it should *not* be
@@ -32,7 +31,9 @@ public class OwnerInfo {
     private Map<String, Integer> consumerTypeCountByPool;
     private Map<String, ConsumptionTypeCounts> entitlementsConsumedByFamily;
     private Pool poolNearestToExpiry;
-    
+    private List<Statistic> totalSubscriptionCount;
+    private List<Statistic> totalSubscriptionsConsumed;
+
     public static final String GUEST = "guest";
     public static final String PHYSICAL = "physical";
 
@@ -157,19 +158,35 @@ public class OwnerInfo {
         this.poolNearestToExpiry = poolNearestToExpiry;
     }
 
-    public Integer getConsumedEntitlementCount() {
-        Integer count = 0;
-        for (Entry<String, Integer> e : entitlementsConsumedByType.entrySet()) {
-            count += e.getValue(); 
-        }
-        return count;
+    /**
+     * @param totalSubscriptionCount the totalSubscriptionCount to set
+     */
+    public void setTotalSubscriptionCount(List<Statistic> totalSubscriptionCount) {
+        this.totalSubscriptionCount = totalSubscriptionCount;
     }
-    public Integer getEntitlementCount() {
-        Integer count = 0;
-        for (Entry<String, Integer> e : consumerTypeCountByPool.entrySet()) {
-            count += e.getValue(); 
-        }
-        return count;
+
+    /**
+     * @return the totalSubscriptionCount
+     */
+    public List<Statistic> getTotalSubscriptionCount() {
+        return totalSubscriptionCount;
     }
+
+    /**
+     * @param totalSubscriptionsConsumed the totalSubscriptionsConsumed to set
+     */
+    public void setTotalSubscriptionsConsumed(
+        List<Statistic> totalSubscriptionsConsumed) {
+        this.totalSubscriptionsConsumed = totalSubscriptionsConsumed;
+    }
+
+    /**
+     * @return the totalSubscriptionsConsumed
+     */
+    public List<Statistic> getTotalSubscriptionsConsumed() {
+        return totalSubscriptionsConsumed;
+    }
+    
+   
      
 }

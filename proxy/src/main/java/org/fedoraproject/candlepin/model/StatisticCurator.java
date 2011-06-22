@@ -20,10 +20,8 @@ import org.fedoraproject.candlepin.model.Statistic.ValueType;
 import com.google.inject.Inject;
 import com.wideplay.warp.persist.Transactional;
 
-import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.Session;
-import org.hibernate.criterion.Restrictions;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -38,13 +36,16 @@ public class StatisticCurator extends AbstractHibernateCurator<Statistic> {
 
     private OwnerCurator ownerCurator;
     private OwnerInfoCurator ownerInfoCurator;
+    private StatisticCuratorQueries statisticCuratorQueries;
 
     @Inject
     public StatisticCurator(OwnerCurator ownerCurator,
-        OwnerInfoCurator ownerInfoCurator) {
+        OwnerInfoCurator ownerInfoCurator,
+        StatisticCuratorQueries statisticCuratorQueries) {
         super(Statistic.class);
         this.ownerCurator = ownerCurator;
         this.ownerInfoCurator = ownerInfoCurator;
+        this.statisticCuratorQueries = statisticCuratorQueries;
     }
 
     @Transactional
@@ -55,142 +56,20 @@ public class StatisticCurator extends AbstractHibernateCurator<Statistic> {
     @SuppressWarnings("unchecked")
     public List<Statistic> getStatisticsByOwner(Owner owner, String qType,
         String reference, String vType, Date from, Date to) {
-        Criteria c = currentSession().createCriteria(Statistic.class);
-        c.add(Restrictions.eq("ownerId", owner.getId()));
-        if (qType != null && !qType.trim().equals("")) {
-            if (qType.equals("TOTALCONSUMERS")) {
-                c.add(Restrictions.eq("entryType", EntryType.TOTALCONSUMERS));
-            }
-            else if (qType.equals("CONSUMERSBYSOCKETCOUNT")) {
-                c.add(Restrictions.eq("entryType",
-                    EntryType.CONSUMERSBYSOCKETCOUNT));
-            }
-            else if (qType.equals("TOTALSUBSCRIPTIONCOUNT")) {
-                c.add(Restrictions.eq("entryType",
-                    EntryType.TOTALSUBSCRIPTIONCOUNT));
-            }
-            else if (qType.equals("TOTALSUBSCRIPTIONCONSUMED")) {
-                c.add(Restrictions.eq("entryType",
-                    EntryType.TOTALSUBSCRIPTIONCONSUMED));
-            }
-            else if (qType.equals("PERPRODUCT")) {
-                c.add(Restrictions.eq("entryType", EntryType.PERPRODUCT));
-            }
-            else if (qType.equals("PERPOOL")) {
-                c.add(Restrictions.eq("entryType", EntryType.PERPOOL));
-            }
-            else if (qType.equals("SYSTEM")) {
-                c.add(Restrictions.eq("entryType", EntryType.SYSTEM));
-            }
-            else {
-                // no match, no filter
-            }
-        }
-        if (vType != null && !vType.trim().equals("")) {
-            if (vType.equals("RAW")) {
-                c.add(Restrictions.eq("valueType", ValueType.RAW));
-            }
-            else if (vType.equals("USED")) {
-                c.add(Restrictions.eq("valueType", ValueType.USED));
-            }
-            else if (vType.equals("CONSUMED")) {
-                c.add(Restrictions.eq("valueType", ValueType.CONSUMED));
-            }
-            else if (vType.equals("PERCENTAGECONSUMED")) {
-                c.add(Restrictions
-                    .eq("valueType", ValueType.PERCENTAGECONSUMED));
-            }
-            else if (vType.equals("PHYSICAL")) {
-                c.add(Restrictions.eq("valueType", ValueType.PHYSICAL));
-            }
-            else if (vType.equals("VIRTUAL")) {
-                c.add(Restrictions.eq("valueType", ValueType.VIRTUAL));
-            }
-            else {
-                // no match, no filter
-            }
-        }
-        if (reference != null && !reference.trim().equals("")) {
-            c.add(Restrictions.eq("valueReference", reference));
-        }
-        if (from != null) {
-            c.add(Restrictions.ge("created", from));
-        }
-        if (to != null) {
-            c.add(Restrictions.le("created", to));
-        }
-        return (List<Statistic>) c.list();
-
+        return statisticCuratorQueries.getStatisticsByOwner(owner, qType,
+               reference, vType, from, to);
     }
 
     @SuppressWarnings("unchecked")
     public List<Statistic> getStatisticsByPool(String poolId, String vType,
         Date from, Date to) {
-        Criteria c = currentSession().createCriteria(Statistic.class);
-        c.add(Restrictions.eq("valueReference", poolId));
-        c.add(Restrictions.eq("entryType", EntryType.PERPOOL));
-
-        if (vType != null && !vType.trim().equals("")) {
-            if (vType.equals("RAW")) {
-                c.add(Restrictions.eq("valueType", ValueType.RAW));
-            }
-            else if (vType.equals("USED")) {
-                c.add(Restrictions.eq("valueType", ValueType.USED));
-            }
-            else if (vType.equals("CONSUMED")) {
-                c.add(Restrictions.eq("valueType", ValueType.CONSUMED));
-            }
-            else if (vType.equals("PERCENTAGECONSUMED")) {
-                c.add(Restrictions
-                    .eq("valueType", ValueType.PERCENTAGECONSUMED));
-            }
-            else {
-                // no match, no filter
-            }
-        }
-        if (from != null) {
-            c.add(Restrictions.ge("created", from));
-        }
-        if (to != null) {
-            c.add(Restrictions.le("created", to));
-        }
-        return (List<Statistic>) c.list();
-
+        return statisticCuratorQueries.getStatisticsByPool(poolId, vType, from, to);
     }
 
     @SuppressWarnings("unchecked")
     public List<Statistic> getStatisticsByProduct(String prodId, String vType,
         Date from, Date to) {
-        Criteria c = currentSession().createCriteria(Statistic.class);
-        c.add(Restrictions.eq("entryType", EntryType.PERPRODUCT));
-
-        c.add(Restrictions.eq("valueReference", prodId));
-        if (vType != null && !vType.trim().equals("")) {
-            if (vType.equals("RAW")) {
-                c.add(Restrictions.eq("valueType", ValueType.RAW));
-            }
-            else if (vType.equals("USED")) {
-                c.add(Restrictions.eq("valueType", ValueType.USED));
-            }
-            else if (vType.equals("CONSUMED")) {
-                c.add(Restrictions.eq("valueType", ValueType.CONSUMED));
-            }
-            else if (vType.equals("PERCENTAGECONSUMED")) {
-                c.add(Restrictions
-                    .eq("valueType", ValueType.PERCENTAGECONSUMED));
-            }
-            else {
-                // no match, no filter
-            }
-        }
-        if (from != null) {
-            c.add(Restrictions.ge("created", from));
-        }
-        if (to != null) {
-            c.add(Restrictions.le("created", to));
-        }
-        return (List<Statistic>) c.list();
-
+        return statisticCuratorQueries.getStatisticsByProduct(prodId, vType, from, to);
     }
 
     public void executeStatisticRun() {
