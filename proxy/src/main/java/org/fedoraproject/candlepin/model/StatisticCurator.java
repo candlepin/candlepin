@@ -212,11 +212,13 @@ public class StatisticCurator extends AbstractHibernateCurator<Statistic> {
         OwnerInfo oi = ownerInfoCurator.lookupByOwner(owner);
 
         Statistic consumerCountStatistic = new Statistic(EntryType.SYSTEM,
-            ValueType.VIRTUAL, null, oi.getConsumerGuestCounts().get(OwnerInfo.GUEST), owner.getId());
+            ValueType.VIRTUAL, null, oi.getConsumerGuestCounts().get(OwnerInfo.GUEST),
+            owner.getId());
         create(consumerCountStatistic);
 
         consumerCountStatistic = new Statistic(EntryType.SYSTEM,
-            ValueType.PHYSICAL, null, oi.getConsumerGuestCounts().get(OwnerInfo.PHYSICAL), owner.getId());
+            ValueType.PHYSICAL, null, oi.getConsumerGuestCounts().get(OwnerInfo.PHYSICAL), 
+            owner.getId());
         create(consumerCountStatistic);
 
     }
