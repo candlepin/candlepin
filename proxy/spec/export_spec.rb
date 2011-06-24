@@ -10,10 +10,12 @@ describe 'Candlepin Export' do
 
   before(:all) do
     create_candlepin_export()
+    create_certificate_export()
   end
 
   after(:all) do
-    cleanup_candlepin_export()
+    #cleanup_candlepin_export()
+    #cleanup_certificate_export()
   end
 
   it 'exports consumer types' do
@@ -103,6 +105,29 @@ describe 'Candlepin Export' do
       exported_cert = File.read(File.join(entitlement_certs_dir, file))
       exported_cert[0..26].should == "-----BEGIN CERTIFICATE-----"
     end
+  end
+
+  it 'should support only exporting certificates' do
+    entitlement_certs_dir = File.join(@export_dir_certs, 'entitlement_certificates')
+
+    exported_entitlement_certs = files_in_dir(entitlement_certs_dir)
+
+    available_certs ||= {}
+    @candlepin_client.list_certificates.each do |c|
+      available_certs[c['serial']] = c
+    end
+
+    # Only 2 of the 3 should be there, as one cert is for a virt product
+    exported_entitlement_certs.size.should == 2
+
+    exported_entitlement_certs.each do |file|
+      exported_cert = File.read(File.join(entitlement_certs_dir, file))
+      exported_cert[0..26].should == "-----BEGIN CERTIFICATE-----"
+    end
+  end
+
+  it 'exported certs should have nothing else but meta and entitlement_certificate' do
+    Dir.entries(@export_dir_certs).size.should == 4
   end
 
   it 'exports rules' do

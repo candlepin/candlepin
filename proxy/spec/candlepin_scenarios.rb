@@ -178,7 +178,7 @@ module ExportMethods
     product1 = create_product(random_string(), random_string(),
         {:attributes => {"flex_expiry" => @flex_days.to_s}})
     product2 = create_product()
-    virt_product = create_product(random_string('virt_product'), 
+    virt_product = create_product(random_string('virt_product'),
                                   random_string('virt_product'),
                                   {:attributes => {:virt_only => true}})
     content = create_content({:metadata_expire => 6000,
@@ -216,10 +216,26 @@ module ExportMethods
     unzip_export_file(File.join(@tmp_dir, "consumer_export.zip"), @tmp_dir)
   end
 
+  def create_certificate_export
+    ## Use the same consumer, and only grab the entitlements
+
+    # Make a temporary directory where we can safely extract our archive:
+    @tmp_dir_certs = File.join(Dir.tmpdir, random_string('candlepin-certs-rspec'))
+    @export_dir_certs = File.join(@tmp_dir_certs, "export")
+    Dir.mkdir(@tmp_dir_certs)
+
+    @certs_export_filename = @candlepin_client.export_certificates(@tmp_dir_certs)
+    @orig_working_dir = Dir.pwd()
+
+    File.exist?(@certs_export_filename).should == true
+    unzip_export_file(@certs_export_filename, @tmp_dir_certs)
+    unzip_export_file(File.join(@tmp_dir_certs, "consumer_export.zip"), @tmp_dir_certs)
+  end
+
   def create_candlepin_export_update
     ## to determine if the process of updating the entitlement import is successful
     ## use the process for creating the import above to make one that is an update
-    ## You must execute the create_candlepin_export method in the same test before 
+    ## You must execute the create_candlepin_export method in the same test before
     ## this one.
     product1 = create_product(random_string(), random_string(),
         {:attributes => {"flex_expiry" => @flex_days.to_s}})
@@ -259,6 +275,11 @@ module ExportMethods
     FileUtils.rm_rf(@tmp_dir)
     #this will also delete the owner's users
     @cp.delete_owner(@owner.key)
+  end
+
+  def cleanup_certificate_export
+    Dir.chdir(@orig_working_dir)
+    FileUtils.rm_rf(@tmp_dir_certs)
   end
 
   def cleanup_candlepin_export_update

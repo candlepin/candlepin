@@ -23,11 +23,11 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.auth.interceptor.SecurityHole;
 import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.model.Status;
 
 import com.google.inject.Inject;
-import org.fedoraproject.candlepin.auth.interceptor.SecurityHole;
 
 /**
  * Status Resource

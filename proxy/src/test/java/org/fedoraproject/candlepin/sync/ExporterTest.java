@@ -157,7 +157,7 @@ public class ExporterTest {
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules);
 
-        File export = e.getExport(consumer);
+        File export = e.getFullExport(consumer);
 
         // VERIFY
         assertNotNull(export);
@@ -184,7 +184,7 @@ public class ExporterTest {
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules);
-        File export = e.getExport(consumer);
+        File export = e.getFullExport(consumer);
 
         // VERIFY
         assertNotNull(export);

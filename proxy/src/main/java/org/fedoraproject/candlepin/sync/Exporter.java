@@ -14,6 +14,23 @@
  */
 package org.fedoraproject.candlepin.sync;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
@@ -25,35 +42,18 @@ import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductCertificate;
 import org.fedoraproject.candlepin.model.ProvidedProduct;
 import org.fedoraproject.candlepin.pki.PKIUtility;
+import org.fedoraproject.candlepin.policy.js.export.JsExportRules;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 
 import com.google.inject.Inject;
-
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
-import org.codehaus.jackson.map.ObjectMapper;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
-import org.fedoraproject.candlepin.policy.js.export.JsExportRules;
 
 /**
  * Exporter
  */
 public class Exporter {
     private static Logger log = Logger.getLogger(Exporter.class);
-    
+
     private ObjectMapper mapper;
 
     private MetaExporter meta;
@@ -64,7 +64,7 @@ public class Exporter {
     private RulesExporter rules;
     private EntitlementCertExporter entCert;
     private EntitlementExporter entExporter;
-    
+
     private ConsumerTypeCurator consumerTypeCurator;
     private EntitlementCertServiceAdapter entCertAdapter;
     private ProductServiceAdapter productAdapter;
@@ -72,19 +72,19 @@ public class Exporter {
     private PKIUtility pki;
     private Config config;
     private JsExportRules exportRules;
-    
+
     @Inject
     public Exporter(ConsumerTypeCurator consumerTypeCurator, MetaExporter meta,
-        ConsumerExporter consumerExporter, ConsumerTypeExporter consumerType, 
+        ConsumerExporter consumerExporter, ConsumerTypeExporter consumerType,
         RulesExporter rules, EntitlementCertExporter entCert,
         EntitlementCertServiceAdapter entCertAdapter, ProductExporter productExporter,
         ProductServiceAdapter productAdapter, ProductCertExporter productCertExporter,
-        EntitlementCurator entitlementCurator, EntitlementExporter entExporter, 
+        EntitlementCurator entitlementCurator, EntitlementExporter entExporter,
         PKIUtility pki, Config config, JsExportRules exportRules) {
-        
+
         mapper = SyncUtils.getObjectMapper();
         this.consumerTypeCurator = consumerTypeCurator;
-        
+
         this.meta = meta;
         this.consumerExporter = consumerExporter;
         this.consumerType = consumerType;
@@ -101,21 +101,39 @@ public class Exporter {
         this.exportRules = exportRules;
     }
 
-    public File getExport(Consumer consumer) throws ExportCreationException {
+    public File getFullExport(Consumer consumer) throws ExportCreationException {
         // TODO: need to delete tmpDir (which contains the archive,
         // which we need to return...)
         try {
             File tmpDir = new SyncUtils(config).makeTempDir("export");
             File baseDir = new File(tmpDir.getAbsolutePath(), "export");
             baseDir.mkdir();
-            
+
             exportMeta(baseDir);
             exportConsumer(baseDir, consumer);
             exportEntitlements(baseDir, consumer);
-            exportEntitlementsCerts(baseDir, consumer);
+            exportEntitlementsCerts(baseDir, consumer, null);
             exportProducts(baseDir, consumer);
             exportConsumerTypes(baseDir);
             exportRules(baseDir);
+            return makeArchive(consumer, tmpDir, baseDir);
+        }
+        catch (IOException e) {
+            throw new ExportCreationException("Unable to create export archive", e);
+        }
+    }
+
+    public File getEntitlementExport(Consumer consumer,
+                        Set<Long> serials) throws ExportCreationException {
+        // TODO: need to delete tmpDir (which contains the archive,
+        // which we need to return...)
+        try {
+            File tmpDir = new SyncUtils(config).makeTempDir("export");
+            File baseDir = new File(tmpDir.getAbsolutePath(), "export");
+            baseDir.mkdir();
+
+            exportMeta(baseDir);
+            exportEntitlementsCerts(baseDir, consumer, serials);
             return makeArchive(consumer, tmpDir, baseDir);
         }
         catch (IOException e) {
@@ -138,15 +156,15 @@ public class Exporter {
         File archive = createZipArchiveWithDir(
             tempDir, exportDir, "consumer_export.zip",
             "Candlepin export for " + consumer.getUuid());
-        
+
         InputStream archiveInputStream = null;
         try {
             archiveInputStream = new FileInputStream(archive);
             File signedArchive = createSignedZipArchive(
-                tempDir, archive, exportFileName, 
+                tempDir, archive, exportFileName,
                 pki.getSHA256WithRSAHash(archiveInputStream),
                 "signed Candlepin export for " + consumer.getUuid());
-                    
+
             log.debug("Returning file: " + archive.getAbsolutePath());
             return signedArchive;
         }
@@ -163,9 +181,9 @@ public class Exporter {
     }
 
     private File createZipArchiveWithDir(File tempDir, File exportDir,
-        String exportFileName, String comment) 
+        String exportFileName, String comment)
         throws FileNotFoundException, IOException {
-        
+
         File archive = new File(tempDir, exportFileName);
         ZipOutputStream out = null;
         try {
@@ -180,11 +198,11 @@ public class Exporter {
         }
         return archive;
     }
-    
+
     private File createSignedZipArchive(File tempDir, File toAdd,
-        String exportFileName, byte[] signature, String comment) 
+        String exportFileName, byte[] signature, String comment)
         throws FileNotFoundException, IOException {
-        
+
         File archive = new File(tempDir, exportFileName);
         ZipOutputStream out = null;
         try {
@@ -200,13 +218,13 @@ public class Exporter {
         }
         return archive;
     }
-    
-    
+
+
 
     /**
      * @param out
      * @param exportDir
-     * @throws IOException 
+     * @throws IOException
      */
     private void addFilesToArchive(ZipOutputStream out, int charsToDropFromName,
         File directory) throws IOException {
@@ -227,7 +245,7 @@ public class Exporter {
         out.putNextEntry(new ZipEntry(
             file.getAbsolutePath().substring(charsToDropFromName)));
         FileInputStream in = new FileInputStream(file);
-        
+
         byte [] buf = new byte[1024];
         int len;
         while ((len = in.read(buf)) > 0) {
@@ -236,10 +254,10 @@ public class Exporter {
         out.closeEntry();
         in.close();
     }
-    
+
     private void addSignatureToArchive(ZipOutputStream out, byte[] signature)
         throws IOException, FileNotFoundException {
-        
+
         log.debug("Adding signature to archive.");
         out.putNextEntry(new ZipEntry("signature"));
         out.write(signature, 0, signature.length);
@@ -262,9 +280,9 @@ public class Exporter {
         writer.close();
     }
 
-    private void exportEntitlementsCerts(File baseDir, Consumer consumer) 
+    private void exportEntitlementsCerts(File baseDir, Consumer consumer, Set<Long> serials)
         throws IOException {
-        
+
         File entCertDir = new File(baseDir.getCanonicalPath(), "entitlement_certificates");
         entCertDir.mkdir();
 
@@ -274,19 +292,21 @@ public class Exporter {
                     log.debug("Skipping export of entitlement cert with product:  " +
                             cert.getEntitlement().getProductId());
                 }
-                
+
                 continue;
             }
 
-            log.debug("Exporting entitlement certificate: " + cert.getSerial());
-            File file = new File(entCertDir.getCanonicalPath(), cert.getSerial().getId() +
-                ".pem");
-            FileWriter writer = new FileWriter(file);
-            entCert.export(writer, cert);
-            writer.close();
+            if ((serials == null) || (serials.contains(cert.getSerial()))) {
+                log.debug("Exporting entitlement certificate: " + cert.getSerial());
+                File file = new File(entCertDir.getCanonicalPath(),
+                    cert.getSerial().getId() + ".pem");
+                FileWriter writer = new FileWriter(file);
+                entCert.export(writer, cert);
+                writer.close();
+            }
         }
     }
-    
+
     private void exportEntitlements(File baseDir, Consumer consumer) throws IOException {
         File entCertDir = new File(baseDir.getCanonicalPath(), "entitlements");
         entCertDir.mkdir();
@@ -309,7 +329,7 @@ public class Exporter {
                 File file = new File(entCertDir.getCanonicalPath(), ent.getId() + ".json");
                 writer = new FileWriter(file);
                 entExporter.export(mapper, writer, ent);
-            } 
+            }
             finally {
                 if (writer != null) {
                     writer.close();
@@ -317,30 +337,30 @@ public class Exporter {
             }
         }
     }
-    
+
     private void exportProducts(File baseDir, Consumer consumer) throws IOException {
         File productDir = new File(baseDir.getCanonicalPath(), "products");
         productDir.mkdir();
-        
+
         Map<String, Product> products = new HashMap<String, Product>();
         for (Entitlement entitlement : consumer.getEntitlements()) {
-            
+
             for (ProvidedProduct providedProduct : entitlement.getPool().
                 getProvidedProducts()) {
                 // Don't want to call the adapter if not needed, it can be expensive.
                 if (!products.containsKey(providedProduct.getProductId())) {
-                    products.put(providedProduct.getProductId(), 
+                    products.put(providedProduct.getProductId(),
                         productAdapter.getProductById(providedProduct.getProductId()));
                 }
             }
-            
+
             // Don't forget the 'main' product!
             String productId = entitlement.getPool().getProductId();
             if (!products.containsKey(productId)) {
                 products.put(productId, productAdapter.getProductById(productId));
             }
         }
-        
+
         for (Product product : products.values()) {
             String path = productDir.getCanonicalPath();
             String productId = product.getId();
@@ -348,7 +368,7 @@ public class Exporter {
             FileWriter writer = new FileWriter(file);
             productExporter.export(mapper, writer, product);
             writer.close();
-            
+
             // Real products have a numeric id.
             if (StringUtils.isNumeric(product.getId())) {
                 ProductCertificate cert = productAdapter.getProductCertificate(product);
@@ -365,7 +385,7 @@ public class Exporter {
             }
         }
     }
-    
+
     private void exportConsumerTypes(File baseDir) throws IOException {
         File typeDir = new File(baseDir.getCanonicalPath(), "consumer_types");
         typeDir.mkdir();
@@ -381,7 +401,7 @@ public class Exporter {
     private void exportRules(File baseDir) throws IOException {
         File file = new File(baseDir.getCanonicalPath(), "rules");
         file.mkdir();
-        
+
         file = new File(file.getCanonicalPath(), "rules.js");
         FileWriter writer = new FileWriter(file);
         rules.export(writer);

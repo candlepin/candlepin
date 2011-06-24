@@ -14,6 +14,31 @@
  */
 package org.fedoraproject.candlepin.resource;
 
+import java.io.File;
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+
+import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventAdapter;
 import org.fedoraproject.candlepin.audit.EventFactory;
@@ -22,6 +47,8 @@ import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.SystemPrincipal;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
+import org.fedoraproject.candlepin.auth.interceptor.SecurityHole;
+import org.fedoraproject.candlepin.auth.interceptor.Verify;
 import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.CandlepinException;
@@ -55,41 +82,12 @@ import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.fedoraproject.candlepin.sync.ExportCreationException;
 import org.fedoraproject.candlepin.sync.Exporter;
 import org.fedoraproject.candlepin.util.Util;
-
-import com.google.inject.Inject;
-import com.wideplay.warp.persist.Transactional;
-
-import org.apache.log4j.Logger;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.xnap.commons.i18n.I18n;
 
-import java.io.File;
-import java.io.IOException;
-import java.security.GeneralSecurityException;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-
-import org.fedoraproject.candlepin.auth.interceptor.SecurityHole;
-import org.fedoraproject.candlepin.auth.interceptor.Verify;
+import com.google.inject.Inject;
+import com.wideplay.warp.persist.Transactional;
 
 /**
  * API Gateway for Consumers
@@ -156,7 +154,7 @@ public class ConsumerResource {
 
     /**
      * List available Consumers
-     * 
+     *
      * @return list of available consumers.
      */
     @GET
@@ -188,7 +186,7 @@ public class ConsumerResource {
 
     /**
      * Return the consumer identified by the given uuid.
-     * 
+     *
      * @param uuid uuid of the consumer sought.
      * @return the consumer identified by the given uuid.
      */
@@ -210,13 +208,13 @@ public class ConsumerResource {
 
     /**
      * Create a Consumer.
-     * 
+     *
      * NOTE: Opening this method up to everyone, as we have nothing we can reliably verify
-     * in the method signature. Instead we have to figure out what owner this consumer is 
-     * destined for (due to backward compatability with existing clients which do not 
-     * specify an owner during registration), and then check the access to the specified 
+     * in the method signature. Instead we have to figure out what owner this consumer is
+     * destined for (due to backward compatability with existing clients which do not
+     * specify an owner during registration), and then check the access to the specified
      * owner in the method itself.
-     * 
+     *
      * @param consumer Consumer metadata
      * @return newly created Consumer
      * @throws BadRequestException generic exception type for web services We
@@ -283,16 +281,16 @@ public class ConsumerResource {
         if (owner == null) {
             throw new BadRequestException(i18n.tr("Owner {0} does not exist", ownerKey));
         }
-        
+
         if (!principal.canAccess(owner, Access.ALL)) {
-            throw new ForbiddenException(i18n.tr("User {0} cannot access owner {1}", 
+            throw new ForbiddenException(i18n.tr("User {0} cannot access owner {1}",
                 principal.getPrincipalName(), owner.getKey()));
         }
 
         // When registering person consumers we need to be sure the username
         // has some association with the owner the consumer is destined for:
         if (!user.getOwners(Access.ALL).contains(owner) && !user.isSuperAdmin()) {
-            throw new ForbiddenException(i18n.tr("User {0} has no roles for owner {1}", 
+            throw new ForbiddenException(i18n.tr("User {0} has no roles for owner {1}",
                 user.getUsername(), owner.getKey()));
         }
 
@@ -421,7 +419,7 @@ public class ConsumerResource {
 
     /**
      * delete the consumer.
-     * 
+     *
      * @param uuid uuid of the consumer to delete.
      */
     @DELETE
@@ -453,7 +451,7 @@ public class ConsumerResource {
 
     /**
      * Return the entitlement certificate for the given consumer.
-     * 
+     *
      * @param consumerUuid UUID of the consumer
      * @return list of the client certificates for the given consumer.
      */
@@ -467,14 +465,7 @@ public class ConsumerResource {
         log.debug("Getting client certificates for consumer: " + consumerUuid);
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
 
-        Set<Long> serialSet = new HashSet<Long>();
-        if (serials != null) {
-            log.debug("Requested serials: " + serials);
-            for (String s : serials.split(",")) {
-                log.debug("   " + s);
-                serialSet.add(Long.valueOf(s));
-            }
-        }
+        Set<Long> serialSet = this.extractSerials(serials);
 
         List<EntitlementCertificate> returnCerts = new LinkedList<EntitlementCertificate>();
         List<EntitlementCertificate> allCerts = entCertService
@@ -488,11 +479,56 @@ public class ConsumerResource {
         return returnCerts;
     }
 
+    @GET
+    @Produces("application/zip")
+    @Path("/{consumer_uuid}/certificates")
+    public File exportCertificates(@Context HttpServletResponse response,
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
+        @QueryParam("serials") String serials) {
+
+        log.debug("Getting client certificate zip file for consumer: " + consumerUuid);
+        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+
+        Set<Long> serialSet = this.extractSerials(serials);
+        //filtering requires a null set, so make this null if it is
+        // empty
+        if (serialSet.isEmpty()) {
+            serialSet = null;
+        }
+
+        File archive;
+        try {
+            archive = exporter.getEntitlementExport(consumer, serialSet);
+            response.addHeader("Content-Disposition", "attachment; filename=" +
+                archive.getName());
+
+            return archive;
+        }
+        catch (ExportCreationException e) {
+            throw new IseException(i18n.tr("Unable to create entitlement archive"),
+                e);
+        }
+    }
+
+    @SecurityHole(noAuth = true)
+    protected Set<Long> extractSerials(String serials) {
+        Set<Long> serialSet = new HashSet<Long>();
+        if (serials != null) {
+            log.debug("Requested serials: " + serials);
+            for (String s : serials.split(",")) {
+                log.debug("   " + s);
+                serialSet.add(Long.valueOf(s));
+            }
+        }
+
+        return serialSet;
+    }
+
     /**
-     * Return the client certificate metadata for the given consumer. This is a
+     * Return the client certificate metadatthat a for the given consumer. This is a
      * small subset of data clients can use to determine which certificates they
      * need to update/fetch.
-     * 
+     *
      * @param consumerUuid UUID of the consumer
      * @return list of the client certificate metadata for the given consumer.
      */
@@ -520,7 +556,7 @@ public class ConsumerResource {
      * Entitles the given Consumer to the given Product. Will seek out pools
      * which provide access to this product, either directly or as a child, and
      * select the best one based on a call to the rules engine.
-     * 
+     *
      * @param productId Product ID.
      * @return Entitlement object.
      */
@@ -633,7 +669,7 @@ public class ConsumerResource {
 
     /**
      * Request an entitlement.
-     * 
+     *
      * @param consumerUuid Consumer identifier to be entitled
      * @param poolIdString Entitlement pool id.
      * @param email TODO
@@ -744,7 +780,7 @@ public class ConsumerResource {
 
     /**
      * Unbind all entitlements.
-     * 
+     *
      * @param consumerUuid Unique id for the Consumer.
      */
     @DELETE
@@ -773,7 +809,7 @@ public class ConsumerResource {
 
     /**
      * Remove an entitlement by ID.
-     * 
+     *
      * @param dbid the entitlement to delete.
      */
     @DELETE
@@ -860,7 +896,7 @@ public class ConsumerResource {
 
         File archive;
         try {
-            archive = exporter.getExport(consumer);
+            archive = exporter.getFullExport(consumer);
             response.addHeader("Content-Disposition", "attachment; filename=" +
                 archive.getName());
 

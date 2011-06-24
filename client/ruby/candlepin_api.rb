@@ -89,7 +89,7 @@ class Candlepin
   def get_user_info(user)
     get("/users/#{user}")
   end
-  
+
 
   def list_owners(params = {})
     path = "/owners"
@@ -156,15 +156,15 @@ class Candlepin
 
     post("/users", user)
   end
-  
+
   def update_user(user, username = nil)
     username ||= user[:username]
     put("/users/#{username}", user)
   end
-  
+
   def list_users()
     get("/users")
-  end  
+  end
 
   # TODO: drop perms here too?
   def create_role(name, perms=nil)
@@ -479,18 +479,18 @@ class Candlepin
     if ! owner_key.nil?
         return post("/owners/#{owner_key}/activation_keys", data)
     else
-        return post("/activation_keys", data)    
+        return post("/activation_keys", data)
     end
   end
 
   def get_activation_keys(owner_key)
     return get("owner/#{owner_key}/activation_keys")
   end
-  
+
   def get_activation_key(key_id)
     return get("/activation_keys/#{key_id}")
   end
-  
+
   def update_activation_key(key)
     return put("/activation_keys/#{key['id']}", key)
   end
@@ -515,6 +515,16 @@ class Candlepin
     path = "/consumers/#{@uuid}/certificates"
     path += "?serials=" + serials.join(",") if serials.length > 0
     return get(path)
+  end
+
+  def export_certificates(dest_dir, serials = [])
+    path = "/consumers/#{@uuid}/certificates"
+    path += "?serials=" + serials.join(",") if serials.length > 0
+    begin
+      get_file(path, dest_dir)
+    rescue Exception => e
+      puts e.response
+    end
   end
 
   def regenerate_entitlement_certificates
@@ -629,7 +639,7 @@ class Candlepin
   # Assumes a zip archive currently. Returns filename (random#.zip) of the
   # temp file created.
   def get_file(uri, dest_dir)
-    response = get_client(uri, Net::HTTP::Get, :get)[URI.escape(uri)].get
+    response = get_client(uri, Net::HTTP::Get, :get)[URI.escape(uri)].get :accept => "application/zip"
     filename = response.headers[:content_disposition] == nil ? "tmp_#{rand}.zip" : response.headers[:content_disposition].split("filename=")[1]
     filename = File.join(dest_dir, filename)
     File.open(filename, 'w') { |f| f.write(response.body) }
