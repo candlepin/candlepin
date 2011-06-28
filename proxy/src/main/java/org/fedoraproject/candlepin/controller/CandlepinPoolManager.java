@@ -121,10 +121,10 @@ public class CandlepinPoolManager implements PoolManager {
 
     /**
      * Check our underlying subscription service and update the pool data. Note
-     * that refreshing the pools doesn't actually take any action, should a subscription
-     * be reduced, expired, or revoked. Pre-existing entitlements will need to be dealt
-     * with separately from this event.
-     *
+     * that refreshing the pools doesn't actually take any action, should a
+     * subscription be reduced, expired, or revoked. Pre-existing entitlements
+     * will need to be dealt with separately from this event.
+     * 
      * @param owner Owner to be refreshed.
      */
     public void refreshPools(Owner owner) {
@@ -211,9 +211,9 @@ public class CandlepinPoolManager implements PoolManager {
         Subscription sub) {
 
         /*
-         * Rules need to determine which pools have changed, but the Java must send 
-         * out the events. Create an event for each pool that could change, even if 
-         * we won't use them all.
+         * Rules need to determine which pools have changed, but the Java must
+         * send out the events. Create an event for each pool that could change,
+         * even if we won't use them all.
          */
         Map<String, Event> poolEvents = new HashMap<String, Event>();
         for (Pool existing : existingPools) {
@@ -230,26 +230,27 @@ public class CandlepinPoolManager implements PoolManager {
     
             Pool existingPool = updatedPool.getPool();
             
-            //quantity has changed. delete any excess entitlements from pool
+            // quantity has changed. delete any excess entitlements from pool
             if (updatedPool.getQuantityChanged()) {
                 this.deleteExcessEntitlements(existingPool);
             }
     
-            //dates changed. regenerate all entitlement certificates
+            // dates changed. regenerate all entitlement certificates
             if (updatedPool.getDatesChanged() || updatedPool.getProductsChanged()) {
                 List<Entitlement> entitlements = poolCurator
                     .retrieveFreeEntitlementsOfPool(existingPool, true);
     
-                //when subscription dates change, entitlement dates should change as well
+                // when subscription dates change, entitlement dates should
+                // change as well
                 for (Entitlement entitlement : entitlements) {
                     entitlement.setStartDate(sub.getStartDate());
                     entitlement.setEndDate(sub.getEndDate());
-                  //TODO: perhaps optimize it to use hibernate query?
+                    // TODO: perhaps optimize it to use hibernate query?
                     this.entitlementCurator.merge(entitlement);
                 }
                 regenerateCertificatesOf(entitlements);
             }
-            //save changes for the pool
+            // save changes for the pool
             this.poolCurator.merge(existingPool);
             
             eventFactory.poolChangedTo(poolEvents.get(existingPool.getId()), existingPool);
