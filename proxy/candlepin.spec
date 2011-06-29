@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.3.14
+Version: 0.3.15
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -145,6 +145,20 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Wed Jun 29 2011 jesus m. rodriguez <jesusr@redhat.com> 0.3.15-1
+- Enhance the Status resource to return false if the DB is down (bkearney@redhat.com)
+- fix checkstyle (bkearney@redhat.com)
+- Add a test case for a product that expects "0" sockets (alikins@redhat.com)
+- add some test cases for multiple arches in arch strings and some other arch
+  variants (alikins@redhat.com)
+- Add a content for each arch specific awesomeos add some products with
+  conflicing sub products (alikins@redhat.com)
+- add x86 abd x86/x86_64 products (alikins@redhat.com)
+- Add some products that match more than one arch to test_data
+  (alikins@redhat.com)
+- add some awesomeos's for specific arches for testing (alikins@redhat.com)
+- changed use of 'cpu.architecture' to 'uname.machine' (wpoteat@redhat.com)
+
 * Fri Jun 03 2011 jesus m. rodriguez <jesusr@redhat.com> 0.3.14-1
 - checkstyle cleaning (jesusr@redhat.com)
 - 710141: only show active pools in ownerinfo (jbowes@redhat.com)
