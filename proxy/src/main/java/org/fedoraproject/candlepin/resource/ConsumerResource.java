@@ -175,7 +175,7 @@ public class ConsumerResource {
 
             if (owner == null) {
                 throw new NotFoundException(i18n.tr(
-                    "owner with key: {0} was not found.", ownerKey));
+                    "Organization/owner with key: {0} was not found.", ownerKey));
             }
         }
 
@@ -248,7 +248,7 @@ public class ConsumerResource {
 
             if (ownerKeys.size() != 1) {
                 throw new BadRequestException(
-                    i18n.tr("Must specify owner for new consumer."));
+                    i18n.tr("You must specify an organization/owner for new consumers."));
             }
 
             ownerKey = ownerKeys.get(0);
@@ -279,18 +279,18 @@ public class ConsumerResource {
 
         Owner owner = ownerCurator.lookupByKey(ownerKey);
         if (owner == null) {
-            throw new BadRequestException(i18n.tr("Owner {0} does not exist", ownerKey));
+            throw new BadRequestException(i18n.tr("Organization/Owner {0} does not exist.", ownerKey));
         }
 
         if (!principal.canAccess(owner, Access.ALL)) {
-            throw new ForbiddenException(i18n.tr("User {0} cannot access owner {1}",
+            throw new ForbiddenException(i18n.tr("User {0} cannot access organization/owner {1}",
                 principal.getPrincipalName(), owner.getKey()));
         }
 
         // When registering person consumers we need to be sure the username
         // has some association with the owner the consumer is destined for:
         if (!user.getOwners(Access.ALL).contains(owner) && !user.isSuperAdmin()) {
-            throw new ForbiddenException(i18n.tr("User {0} has no roles for owner {1}",
+            throw new ForbiddenException(i18n.tr("User {0} has no roles for organization/owner {1}",
                 user.getUsername(), owner.getKey()));
         }
 
