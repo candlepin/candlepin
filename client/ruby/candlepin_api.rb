@@ -121,10 +121,11 @@ class Candlepin
 
   def create_owner(key, params={})
     parent = params[:parent] || nil
-    name = params[:name] || key
+    name = params['name'] || key
+    displayName = params['displayName'] || name
     owner = {
       'key' => key,
-      'displayName' => name
+      'displayName' => displayName
     }
     owner['parentOwner'] = parent if !parent.nil?
     post('/owners', owner)
@@ -423,7 +424,6 @@ class Candlepin
     get(query)
   end
 
-
   def get_consumer(consumer_id=nil)
     consumer_id ||= @uuid
     get("/consumers/#{consumer_id}")
@@ -624,7 +624,6 @@ class Candlepin
   def get_perproduct(prod_id, val_type)
     return get "/products/#{prod_id}/statistics/#{val_type}"
   end
-
 
   def get_crl
     OpenSSL::X509::CRL.new(get_text('/crl'))
