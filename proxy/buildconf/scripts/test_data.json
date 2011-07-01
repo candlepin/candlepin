@@ -188,13 +188,16 @@
     ],
     "owners": [
         {
-            "name": "admin"
+            "name": "admin",
+            "displayName": "Admin Owner"
         },
         {
-            "name": "snowwhite"
+            "name": "snowwhite",
+            "displayName": "Snow White"
         },
         {
-            "name": "donaldduck"
+            "name": "donaldduck",
+            "displayName": "Donald Duck"
         }
     ],
     "users": [
