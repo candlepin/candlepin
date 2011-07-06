@@ -39,7 +39,7 @@ public abstract class Principal implements Serializable {
     }
 
     public boolean canAccess(Object target, Access access) {
-        log.debug(this.getClass().getName() + " principal checking for access to: " + 
+        log.debug(this.getClass().getName() + " principal checking for access to: " +
             target);
         for (Permission permission : permissions) {
             log.debug(" perm class: " + permission.getClass().getName());
@@ -52,15 +52,15 @@ public abstract class Principal implements Serializable {
         }
 
         // none of the permissions grants access, so this target is not allowed
-        log.warn("Refused principal: '" + getPrincipalName() + "' access to: " + 
+        log.warn("Refused principal: '" + getPrincipalName() + "' access to: " +
             target.getClass().getName());
         return false;
     }
-    
+
     public String getPrincipalName() {
         return "";
     }
-    
+
     public PrincipalData getData() {
         return new PrincipalData(this.getType(), this.getPrincipalName());
     }
