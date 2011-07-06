@@ -34,7 +34,7 @@ import org.apache.log4j.Logger;
  */
 public class AccessControlInterceptor implements MethodInterceptor {
     
-    private Logger log = Logger.getLogger(AccessControlInterceptor.class);
+    private static Logger log = Logger.getLogger(AccessControlInterceptor.class);
 
     @Inject private Provider<Principal> principalProvider;
     

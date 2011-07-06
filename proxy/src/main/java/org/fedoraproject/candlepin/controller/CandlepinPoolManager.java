@@ -67,7 +67,7 @@ import org.fedoraproject.candlepin.policy.PoolRules;
 public class CandlepinPoolManager implements PoolManager {
 
     private PoolCurator poolCurator;
-    private Logger log = Logger.getLogger(CandlepinPoolManager.class);
+    private static Logger log = Logger.getLogger(CandlepinPoolManager.class);
 
     private SubscriptionServiceAdapter subAdapter;
     private ProductServiceAdapter productAdapter;

@@ -32,7 +32,7 @@ import org.mozilla.javascript.Wrapper;
  * JsRules - javascript runner 
  */
 public class JsRules {
-    private Logger log = Logger.getLogger(JsRules.class);
+    private static Logger log = Logger.getLogger(JsRules.class);
 
     private Object rulesNameSpace;
     private String namespace;

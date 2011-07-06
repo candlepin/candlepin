@@ -55,7 +55,7 @@ public class OAuth implements AuthProvider {
     protected static final OAuthValidator VALIDATOR = new SimpleOAuthValidator();
     protected static final String SIGNATURE_TYPE = "HMAC-SHA1";
 
-    private Logger log = Logger.getLogger(OAuth.class);;
+    private static Logger log = Logger.getLogger(OAuth.class);;
     private Config config;
     private TrustedUserAuth userAuth;
     private TrustedConsumerAuth consumerAuth;

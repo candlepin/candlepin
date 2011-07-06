@@ -39,7 +39,7 @@ import com.google.inject.Provider;
  * lightweight execution scopes per thread/request.
  */
 public class JsRulesProvider implements Provider<JsRules> {
-    private Logger log = Logger.getLogger(JsRulesProvider.class);
+    private static Logger log = Logger.getLogger(JsRulesProvider.class);
 
     private RulesCurator rulesCurator;
     

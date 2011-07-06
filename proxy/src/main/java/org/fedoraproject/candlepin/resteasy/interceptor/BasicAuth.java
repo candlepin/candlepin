@@ -32,7 +32,7 @@ import org.fedoraproject.candlepin.exceptions.UnauthorizedException;
  */
 class BasicAuth extends UserAuth {
 
-    private Logger log = Logger.getLogger(BasicAuth.class);
+    private static Logger log = Logger.getLogger(BasicAuth.class);
 
     @Inject
     BasicAuth(UserServiceAdapter userServiceAdapter, Injector injector) {

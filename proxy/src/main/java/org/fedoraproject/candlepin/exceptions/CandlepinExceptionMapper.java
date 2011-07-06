@@ -48,7 +48,7 @@ import com.google.inject.Injector;
 @Provider
 public class CandlepinExceptionMapper implements
     ExceptionMapper<RuntimeException> {
-    private Logger logger = Logger.getLogger(CandlepinExceptionMapper.class);
+    private static Logger logger = Logger.getLogger(CandlepinExceptionMapper.class);
     private static final List<MediaType> DESIRED_RESPONSE_TYPES = 
         new LinkedList<MediaType>() {
             {

@@ -24,7 +24,7 @@ import net.oauth.OAuthException;
  */
 public class CustomSigner extends HMAC_SHA1 {
     
-    private Logger log = Logger.getLogger(CustomSigner.class);
+    private static Logger log = Logger.getLogger(CustomSigner.class);
     
     /**
      * Does nothing but make this method public 

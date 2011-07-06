@@ -31,7 +31,7 @@ import org.mozilla.javascript.RhinoException;
  *
  */
 public class JsExportRules {
-    private Logger log = Logger.getLogger(JsExportRules.class);
+    private static Logger log = Logger.getLogger(JsExportRules.class);
 
     private JsRules jsRules;
     private ProductServiceAdapter productAdapter;
