@@ -1241,13 +1241,6 @@
         },
 
 
-
-// add a "sku" os, that does not have arch
-// add a engineering product that does have any arch
-// need to verify that rules are checking the arch of the
-// engineering products, not the arch of the skus
-//
-
         {
             "name": "Awesome OS Bundle for A conflicting Arch (X86_64/ppc64)",
             "id": "awesomeos-bnd-X64-p64",
@@ -1364,7 +1357,7 @@
         },
 
 
-// a sku with no arch set, with eng products
+// a product with no arch set, with eng products
 // with arch's
      {
             "name": "Awesome OS Server No Arch Top",
@@ -1382,7 +1375,7 @@
             }
         },
 
-// a sku with no arch set, with eng products
+// a product with no arch set, with eng products
 // with arch's
      {
             "name": "Awesome OS Server s390 Child",
@@ -1391,7 +1384,7 @@
             "provided_products": [
                 "100000000000000"
             ],
-// NOTE: not arch set here
+// NOTE: no arch set here
             "attributes": {
                 "sockets": 2,
                 "warning_period": 30,
