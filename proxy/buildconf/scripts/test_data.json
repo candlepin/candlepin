@@ -546,6 +546,8 @@
                 "support_type" : "Level 3"
             }
         },
+
+
         {
             "name": "Awesome OS Server Basic",
             "id": "awesomeos-server-basic",
@@ -561,6 +563,9 @@
                 "support_type" : "Self-Support"
             }
         },
+
+
+
         {
             "name": "Awesome OS Workstation Basic",
             "id": "awesomeos-workstation-basic",
@@ -1234,6 +1239,15 @@
                 "warning_period": 30
             }
         },
+
+
+
+// add a "sku" os, that does not have arch
+// add a engineering product that does have any arch
+// need to verify that rules are checking the arch of the
+// engineering products, not the arch of the skus
+//
+
         {
             "name": "Awesome OS Bundle for A conflicting Arch (X86_64/ppc64)",
             "id": "awesomeos-bnd-X64-p64",
@@ -1348,6 +1362,45 @@
                 "warning_period": 30
             }
         },
+
+
+// a sku with no arch set, with eng products
+// with arch's
+     {
+            "name": "Awesome OS Server No Arch Top",
+            "id": "awesomeos-sr-sku",
+            "type": "MKT",
+            "provided_products": [
+               "100000000000002"
+            ],
+            "attributes": {
+                "sockets": 2,
+                "warning_period": 30,
+                "management_enabled" : 0,
+                "support_level" : "None",
+                "support_type" : "Self-Support"
+            }
+        },
+
+// a sku with no arch set, with eng products
+// with arch's
+     {
+            "name": "Awesome OS Server s390 Child",
+            "id": "awesomeos-390-skwd",
+            "type": "MKT",
+            "provided_products": [
+                "100000000000000"
+            ],
+// NOTE: not arch set here
+            "attributes": {
+                "sockets": 2,
+                "warning_period": 30,
+                "management_enabled" : 0,
+                "support_level" : "None",
+                "support_type" : "Self-Support"
+            }
+        },
+
         {
             "name": "Management Add-On",
             "id": "management-100",
