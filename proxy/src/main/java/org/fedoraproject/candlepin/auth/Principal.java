@@ -27,7 +27,7 @@ import java.util.List;
  */
 public abstract class Principal implements Serializable {
 
-    private Logger log = Logger.getLogger(Principal.class);
+    private static Logger log = Logger.getLogger(Principal.class);
     protected List<Permission> permissions = new ArrayList<Permission>();
 
     public abstract String getType();

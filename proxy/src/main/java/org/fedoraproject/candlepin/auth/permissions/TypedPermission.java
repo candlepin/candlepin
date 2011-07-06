@@ -16,12 +16,14 @@ package org.fedoraproject.candlepin.auth.permissions;
 
 import org.fedoraproject.candlepin.auth.Access;
 
+import java.io.Serializable;
+
 /**
  * A specific {@link Permission} that deals with a single target class.
  *
  * @param <T> The type of target that this permission addresses.
  */
-public abstract class TypedPermission<T> implements Permission {
+public abstract class TypedPermission<T> implements Permission, Serializable {
 
     public abstract Class<T> getTargetType();
 
