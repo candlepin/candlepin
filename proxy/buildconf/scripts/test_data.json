@@ -262,6 +262,10 @@
         {
             "password": "password",
             "username": "minnie"
+        },
+        {
+            "password": "password",
+            "username": "magoo"
         }
     ],
     "roles": [
@@ -375,6 +379,26 @@
             ],
             "users": [
                 {"username": "minnie"}
+            ]
+        },
+        {
+            "name": "donaldduck-ro-snowwhite-ro-admin-ro",
+            "permissions": [
+                {
+                    "owner": "donaldduck",
+                    "access": "READ_ONLY"
+                },
+                {
+                    "owner": "admin",
+                    "access": "READ_ONLY"
+                },
+                {
+                    "owner": "snowwhite",
+                    "access": "READ_ONLY"
+                }
+            ],
+            "users": [
+                {"username": "magoo"}
             ]
         }
     ],
