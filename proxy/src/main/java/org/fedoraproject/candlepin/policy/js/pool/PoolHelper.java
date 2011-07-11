@@ -21,10 +21,12 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.fedoraproject.candlepin.controller.PoolManager;
+import org.fedoraproject.candlepin.model.Attribute;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductProvidedPoolAttribute;
 import org.fedoraproject.candlepin.model.ProvidedProduct;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
@@ -82,7 +84,7 @@ public class PoolHelper {
     }
 
     public Pool createPool(Subscription sub, String productId,
-            String quantity, Map<String, String> attributes) {
+            String quantity, Map<String, String> newPoolAttributes) {
 
         Pool pool = createPool(productId, sub.getOwner(), quantity, sub.getStartDate(),
             sub.getEndDate(), sub.getContractNumber(), sub.getAccountNumber(),
@@ -91,12 +93,67 @@ public class PoolHelper {
 
         copyProvidedProducts(sub, pool);
 
-        // Add in the attributes
-        for (Entry<String, String> entry : attributes.entrySet()) {
+        // Add in the new attributes
+        for (Entry<String, String> entry : newPoolAttributes.entrySet()) {
             pool.setAttribute(entry.getKey(), entry.getValue());
         }
 
+        collapseAttributesOntoPool(sub, pool);
+
         return pool;
+    }
+
+    /**
+     * Collapses all attributes onto the pool.
+     *
+     * @param sub
+     * @param pool
+     *
+     * @return true if the pools attributes changed, false otherwise.
+     */
+    public boolean collapseAttributesOntoPool(Subscription sub, Pool pool) {
+        // Collapse the subscription's attributes onto the pool.
+        // NOTE: For now we only collapse the top level Product's attributes
+        // onto the pool.
+        Set<String> processed = new HashSet<String>();
+        
+        boolean hasChanged = false;
+        Product product = sub.getProduct();
+        for (Attribute attr : product.getAttributes()) {
+            String attributeName = attr.getName();
+            String attributeValue = attr.getValue();
+
+            // Add to the processed list so that we can determine which should
+            // be removed later.
+            processed.add(attributeName);
+            
+            if (pool.hasProductProvidedAttribute(attributeName)) {
+                ProductProvidedPoolAttribute provided =
+                    pool.getProductProvidedAttribute(attributeName);
+                boolean productsAreSame = product.getId().equals(provided.getProductId());
+                boolean attrValueSame = provided.getValue().equals(attributeValue);
+                if (productsAreSame && attrValueSame) {
+                    continue;
+                }
+            }
+
+            // Change detected - update the attribute
+            pool.setProductProvidedAttribute(attributeName, attributeValue,
+                product.getId());
+            hasChanged = true;
+        }
+        
+        // Determine if any should be removed.
+        Set<ProductProvidedPoolAttribute> toRemove =
+            new HashSet<ProductProvidedPoolAttribute>();
+        for (ProductProvidedPoolAttribute toCheck : pool.getProductProvidedAttributes()) {
+            if (!processed.contains(toCheck.getName())) {
+                toRemove.add(toCheck);
+                hasChanged = true;
+            }
+        }
+        pool.getProductProvidedAttributes().removeAll(toRemove);
+        return hasChanged;
     }
 
     private Pool createPool(String productId, Owner owner, String quantity, Date startDate,

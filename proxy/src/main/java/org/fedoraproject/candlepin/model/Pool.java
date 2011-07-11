@@ -105,6 +105,13 @@ public class Pool extends AbstractHibernateObject implements Linkable, Owned {
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     private Set<PoolAttribute> attributes = new HashSet<PoolAttribute>();
 
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "pool")
+    @Cascade({org.hibernate.annotations.CascadeType.ALL,
+        org.hibernate.annotations.CascadeType.MERGE,
+        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    private Set<ProductProvidedPoolAttribute> productProvidedAttributes =
+        new HashSet<ProductProvidedPoolAttribute>();
+
     @OneToMany(mappedBy = "pool", cascade = CascadeType.ALL)
     @LazyCollection(LazyCollectionOption.EXTRA)
     private Set<Entitlement> entitlements = new HashSet<Entitlement>();
@@ -272,7 +279,7 @@ public class Pool extends AbstractHibernateObject implements Linkable, Owned {
     }
     
     public boolean hasAttribute(String key) {
-        return getAttribute(key) != null;
+        return findAttribute(this.attributes, key) != null;
     }
 
     public Set<PoolAttribute> getAttributes() {
@@ -280,6 +287,10 @@ public class Pool extends AbstractHibernateObject implements Linkable, Owned {
             return new HashSet<PoolAttribute>();
         }
         return attributes;
+    }
+
+    public String getAttributeValue(String name) {
+        return findAttributeValue(this.attributes, name);
     }
 
     public void setAttributes(Set<PoolAttribute> attributes) {
@@ -295,7 +306,7 @@ public class Pool extends AbstractHibernateObject implements Linkable, Owned {
     }
 
     public void setAttribute(String key, String value) {
-        PoolAttribute existing = getAttribute(key);
+        PoolAttribute existing = findAttribute(this.attributes, key);
         if (existing != null) {
             existing.setValue(value);
         }
@@ -304,30 +315,6 @@ public class Pool extends AbstractHibernateObject implements Linkable, Owned {
             attr.setPool(this);
             addAttribute(attr);
         }
-    }
-
-    public PoolAttribute getAttribute(String key) {
-        if (attributes == null) {
-            return null;
-        }
-        for (PoolAttribute a : attributes) {
-            if (a.getName().equals(key)) {
-                return a;
-            }
-        }
-        return null;
-    }
-
-    public String getAttributeValue(String key) {
-        if (attributes == null) {
-            return null;
-        }
-        for (PoolAttribute a : attributes) {
-            if (a.getName().equals(key)) {
-                return a.getValue();
-            }
-        }
-        return null;
     }
 
     /**
@@ -512,4 +499,64 @@ public class Pool extends AbstractHibernateObject implements Linkable, Owned {
          */
     }
 
+    public void setProductProvidedAttributes(Set<ProductProvidedPoolAttribute> attrs) {
+        this.productProvidedAttributes = attrs;
+    }
+
+    public Set<ProductProvidedPoolAttribute> getProductProvidedAttributes() {
+        return productProvidedAttributes;
+    }
+
+    public void addProductProvidedAttribute(ProductProvidedPoolAttribute attrib) {
+        attrib.setPool(this);
+        this.productProvidedAttributes.add(attrib);
+    }
+
+    public void setProductProvidedAttribute(String key, String value, String productId) {
+        ProductProvidedPoolAttribute existing =
+            findAttribute(this.productProvidedAttributes, key);
+        if (existing != null) {
+            existing.setValue(value);
+            existing.setProductId(productId);
+        }
+        else {
+            ProductProvidedPoolAttribute attr = new ProductProvidedPoolAttribute(key,
+                value, productId);
+            addProductProvidedAttribute(attr);
+        }
+    }
+
+    public boolean hasProductProvidedAttribute(String name) {
+        return findAttribute(this.productProvidedAttributes, name) != null;
+    }
+
+    public ProductProvidedPoolAttribute getProductProvidedAttribute(String name) {
+        return findAttribute(this.productProvidedAttributes, name);
+    }
+    
+    private <A extends AbstractPoolAttribute> A findAttribute(Set<A> attributes,
+        String key) {
+        if (attributes == null) {
+            return null;
+        }
+        for (A a : attributes) {
+            if (a.getName().equals(key)) {
+                return a;
+            }
+        }
+        return null;
+    }
+
+    private <A extends AbstractPoolAttribute> String findAttributeValue(Set<A> toSearch,
+        String key) {
+        if (toSearch == null) {
+            return null;
+        }
+        for (A a : toSearch) {
+            if (a.getName().equals(key)) {
+                return a.getValue();
+            }
+        }
+        return null;
+    }
 }

@@ -12,30 +12,43 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-
 package org.fedoraproject.candlepin.model;
 
+import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 
 /**
- * See Attributes interface for documentation.
+ * ProductProvidedPoolAttribute
  */
 @Entity
-@Table(name = "cp_pool_attribute")
+@Table(name = "cp_product_provided_pool_attribute")
 @Embeddable
-public class PoolAttribute extends AbstractPoolAttribute {
-    
-    public PoolAttribute() {
+public class ProductProvidedPoolAttribute extends AbstractPoolAttribute {
+
+    @Column(nullable = false)
+    private String productId;
+
+    public ProductProvidedPoolAttribute() {
     }
 
-    public PoolAttribute(String name, String val) {
+    public ProductProvidedPoolAttribute(String name, String val, String productId) {
         super(name, val);
+        this.productId = productId;
     }
 
     public String toString() {
-        return "PoolAttribute [id=" + id + ", name=" + name + ", value=" + value + "]";
+        return "ProductProvidedPoolAttribute [id=" + id + ", name=" + name + ", value=" +
+            value + ", productId=" + productId + "]";
+    }
+
+    public void setProductId(String productId) {
+        this.productId = productId;
+    }
+
+    public String getProductId() {
+        return productId;
     }
 
 }

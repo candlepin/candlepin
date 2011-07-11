@@ -16,6 +16,8 @@ package org.fedoraproject.candlepin.policy.test;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+
 //import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -27,6 +29,7 @@ import org.fedoraproject.candlepin.model.ProvidedProduct;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.policy.js.pool.PoolHelper;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
+import org.fedoraproject.candlepin.test.TestUtil;
 
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
@@ -132,4 +135,55 @@ public class PoolHelperTest {
         PoolHelper ph = new PoolHelper(pm, psa, null);
         assertTrue(ph.checkForChangedProducts(pool, sub));
     }
+    
+    @Test
+    public void collapseAttributesOntoPoolAddsNewAttribute() {
+        Product targetProduct = TestUtil.createProduct();
+        targetProduct.getAttributes().clear();
+        targetProduct.setAttribute("A1", "V1");
+        targetProduct.setAttribute("A2", "V2");
+        Subscription sourceSub = TestUtil.createSubscription(targetProduct);
+        Pool targetPool = TestUtil.createPool(targetProduct);
+        
+        PoolHelper ph = new PoolHelper(pm, psa, null);
+        assertTrue("Update expected.", ph.collapseAttributesOntoPool(sourceSub,
+            targetPool));
+        assertEquals(2, targetPool.getProductProvidedAttributes().size());
+        assertTrue(targetPool.hasProductProvidedAttribute("A1"));
+        assertTrue(targetPool.hasProductProvidedAttribute("A2"));
+    }
+    
+    @Test
+    public void collapseAttributesOntoPoolUpdatesExistingAttribute() {
+        Product targetProduct = TestUtil.createProduct();
+        targetProduct.getAttributes().clear();
+        targetProduct.setAttribute("A1", "V-updated");
+        Subscription sourceSub = TestUtil.createSubscription(targetProduct);
+        
+        Pool targetPool = TestUtil.createPool(targetProduct);
+        targetPool.setProductProvidedAttribute("A1", "V1", targetProduct.getId());
+        
+        PoolHelper ph = new PoolHelper(pm, psa, null);
+        assertTrue("Update expected.", ph.collapseAttributesOntoPool(sourceSub,
+            targetPool));
+        assertEquals(1, targetPool.getProductProvidedAttributes().size());
+        assertTrue(targetPool.hasProductProvidedAttribute("A1"));
+        assertEquals("V-updated", targetPool.getProductProvidedAttribute("A1").getValue());
+    }
+    
+    @Test
+    public void collapseAttributesOntoPoolRemovesNonExistingAttribute() {
+        Product targetProduct = TestUtil.createProduct();
+        targetProduct.getAttributes().clear();
+        Subscription sourceSub = TestUtil.createSubscription(targetProduct);
+        Pool targetPool = TestUtil.createPool(targetProduct);
+        
+        targetPool.setProductProvidedAttribute("A1", "V1", targetProduct.getId());
+        
+        PoolHelper ph = new PoolHelper(pm, psa, null);
+        assertTrue("Update expected.", ph.collapseAttributesOntoPool(sourceSub,
+            targetPool));
+        assertTrue(targetPool.getProductProvidedAttributes().isEmpty());
+    }
+    
 }

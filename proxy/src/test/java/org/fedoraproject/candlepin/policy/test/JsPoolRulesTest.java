@@ -26,6 +26,7 @@ import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolAttribute;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductAttribute;
+import org.fedoraproject.candlepin.model.ProductProvidedPoolAttribute;
 import org.fedoraproject.candlepin.model.ProvidedProduct;
 import org.fedoraproject.candlepin.model.Rules;
 import org.fedoraproject.candlepin.model.RulesCurator;
@@ -197,4 +198,97 @@ public class JsPoolRulesTest {
         assertTrue(update.getQuantityChanged());
         assertEquals(new Long(50), update.getPool().getQuantity());
     }
+
+    @Test
+    public void attributesCollapseOntoPoolDuringUpdate() {
+        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
+        Pool p = copyFromSub(s);
+
+        // Update the subscription's product.
+        String testAttributeKey = "multi-entitlement";
+        s.getProduct().setAttribute(testAttributeKey, "yes");
+
+        List<Pool> existingPools = new java.util.LinkedList<Pool>();
+        existingPools.add(p);
+        List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools);
+
+        assertEquals(1, updates.size());
+        PoolUpdate update = updates.get(0);
+        Pool updatedPool = update.getPool();
+        assertTrue(updatedPool.hasProductProvidedAttribute(testAttributeKey));
+    }
+
+    @Test
+    public void attributesCollapseOntoPoolDuringUpdateAndOverwriteValue() {
+        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
+        Pool p = copyFromSub(s);
+
+        String testAttributeKey = "multi-entitlement";
+        String expectedAttributeValue = "yes";
+
+        // Simulate an attribute that was added via collapse.
+        p.setProductProvidedAttribute(testAttributeKey, "no", s.getProduct().getId());
+
+        // Update the subscription's product.
+        s.getProduct().setAttribute(testAttributeKey, expectedAttributeValue);
+
+        List<Pool> existingPools = new java.util.LinkedList<Pool>();
+        existingPools.add(p);
+        List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools);
+
+        assertEquals(1, updates.size());
+        PoolUpdate update = updates.get(0);
+        Pool updatedPool = update.getPool();
+        assertTrue(updatedPool.hasProductProvidedAttribute(testAttributeKey));
+        assertEquals(expectedAttributeValue,
+            updatedPool.getProductProvidedAttribute(testAttributeKey).getValue());
+    }
+
+    @Test
+    public void productIdChangeOnProvidedAttributeTriggersUpdate() {
+        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
+        String testAttributeKey = "multi-entitlement";
+        s.getProduct().setAttribute(testAttributeKey, "yes");
+
+        Pool p = copyFromSub(s);
+        p.setProductProvidedAttribute(testAttributeKey, "yes", s.getProduct().getId());
+
+        // Change the sub's product's ID
+        String expectedProductId = "NEW_TEST_ID";
+        s.getProduct().setId(expectedProductId);
+
+        List<Pool> existingPools = new java.util.LinkedList<Pool>();
+        existingPools.add(p);
+        List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools);
+
+        assertEquals(1, updates.size());
+        PoolUpdate update = updates.get(0);
+        Pool updatedPool = update.getPool();
+        assertTrue(updatedPool.hasProductProvidedAttribute(testAttributeKey));
+
+        ProductProvidedPoolAttribute provided =
+            updatedPool.getProductProvidedAttribute(testAttributeKey);
+        assertEquals("Wrong product id.", expectedProductId, provided.getProductId());
+    }
+
+    @Test
+    public void subscriptionAttributesCollapseOntoPoolWhenCreatingNewPool() {
+        Product product = TestUtil.createProduct();
+
+        Subscription sub = TestUtil.createSubscription(owner, product);
+        String testAttributeKey = "multi-entitlement";
+        String expectedAttributeValue = "yes";
+        sub.getProduct().setAttribute(testAttributeKey, expectedAttributeValue);
+
+        when(this.productAdapterMock.getProductById(anyString())).thenReturn(product);
+
+        List<Pool> pools = this.poolRules.createPools(sub);
+        assertEquals(1, pools.size());
+
+        Pool resultPool = pools.get(0);
+        assertTrue(resultPool.hasProductProvidedAttribute(testAttributeKey));
+        assertEquals(expectedAttributeValue,
+            resultPool.getProductProvidedAttribute(testAttributeKey).getValue());
+    }
+
 }

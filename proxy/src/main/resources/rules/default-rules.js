@@ -324,9 +324,9 @@ var Pool = {
 		var quantity = sub.getQuantity() * sub.getProduct().getMultiplier();
         var providedProducts = new java.util.HashSet();
         var newPool = new org.fedoraproject.candlepin.model.Pool(sub.getOwner(), sub.getProduct().getId(),
-            sub.getProduct().getName(), providedProducts,
-                quantity, sub.getStartDate(), sub.getEndDate(), sub.getContractNumber(),
-                sub.getAccountNumber());
+                sub.getProduct().getName(), providedProducts,
+                    quantity, sub.getStartDate(), sub.getEndDate(), sub.getContractNumber(),
+                    sub.getAccountNumber());
         if (sub.getProvidedProducts() != null) {
             for each (var p in sub.getProvidedProducts().toArray()) {
                 var providedProduct = new org.fedoraproject.candlepin.model.
@@ -335,6 +335,7 @@ var Pool = {
                 providedProducts.add(providedProduct);
             }
         }
+        helper.collapseAttributesOntoPool(sub, newPool);
         newPool.setSubscriptionId(sub.getId());
         pools.add(newPool);
 
@@ -349,7 +350,7 @@ var Pool = {
 
             if ('unlimited'.equals(virt_limit)) {
                 pools.add(helper.createPool(sub, sub.getProduct().getId(),
-				'unlimited', virt_attributes));
+			'unlimited', virt_attributes));
             } else {
                 var virt_limit_quantity = parseInt(virt_limit);
 
@@ -357,11 +358,10 @@ var Pool = {
                     var virt_quantity = sub.getQuantity() * virt_limit_quantity;
 
                     pools.add(helper.createPool(sub, sub.getProduct().getId(),
-				    virt_quantity.toString(), virt_attributes));
+			virt_quantity.toString(), virt_attributes));
                 }
             }
         }
-
         return pools;
     },
 
@@ -397,7 +397,14 @@ var Pool = {
             var quantityChanged = !(expectedQuantity == existingPool.getQuantity());
             var productsChanged = helper.checkForChangedProducts(existingPool, sub);
             
-            if (!(quantityChanged || datesChanged || productsChanged)) {
+            var poolAttributesChanged = helper.collapseAttributesOntoPool(sub,
+			existingPool);
+            if (poolAttributesChanged) {
+                log.info("Updated pool attributes from subscription.");
+            }
+
+            if (!(quantityChanged || datesChanged || productsChanged ||
+			poolAttributesChanged)) {
                 //TODO: Should we check whether pool is overflowing here?
             	log.info("   No updates required.");
             	continue;
@@ -427,7 +434,6 @@ var Pool = {
                     }
                 }
             }
-            
             poolsUpdated.add(new org.fedoraproject.candlepin.policy.js.pool.PoolUpdate(
             		existingPool, datesChanged, quantityChanged, productsChanged));
 		}
