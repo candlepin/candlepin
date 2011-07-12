@@ -14,22 +14,26 @@
  */
 package org.fedoraproject.candlepin.policy.js.pool;
 
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
 import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.model.Attribute;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductAttribute;
 import org.fedoraproject.candlepin.model.ProductProvidedPoolAttribute;
 import org.fedoraproject.candlepin.model.ProvidedProduct;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
+
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Map.Entry;
 
 /**
  * Post Entitlement Helper, this object is provided as a global variable to the
@@ -208,9 +212,59 @@ public class PoolHelper {
             subProducts.add(product.getId());
         }
         
-        // Also check if the product name has been changed:
-        return !poolProducts.equals(subProducts) || 
+        boolean changeFound = false;
+        // Check if the product name has been changed:
+        changeFound = !poolProducts.equals(subProducts) ||
             !existingPool.getProductName().equals(sub.getProduct().getName());
+
+        // Check the attributes only when no other change was detected.
+        if (!changeFound) {
+            changeFound = haveAttributesChanged(existingPool, sub);
+        }
+
+        return changeFound;
+    }
+
+    private boolean haveAttributesChanged(Pool existing, Subscription sub) {
+        Set<ProductProvidedPoolAttribute> attribs =
+            existing.getProductProvidedAttributes();
+
+        // should probably make this part of Pool.
+        Map<String, List<ProductProvidedPoolAttribute>> byProductId =
+            new HashMap<String, List<ProductProvidedPoolAttribute>>();
+
+        for (ProductProvidedPoolAttribute attrib : attribs) {
+            List<ProductProvidedPoolAttribute> attribList =
+                byProductId.get(attrib.getProductId());
+
+            if (attribList == null) {
+                attribList = new LinkedList<ProductProvidedPoolAttribute>();
+                attribList.add(attrib);
+                byProductId.put(attrib.getProductId(), attribList);
+            }
+            else {
+                attribList.add(attrib);
+            }
+        }
+
+        for (Product product : sub.getProvidedProducts()) {
+            List<ProductProvidedPoolAttribute> attribList =
+                byProductId.get(product.getId());
+
+            if (attribList == null) {
+                break;
+            }
+
+            for (ProductProvidedPoolAttribute attrib : attribList) {
+                ProductAttribute pa = product.getAttribute(attrib.getName());
+                if (pa.getValue() != attrib.getValue()) {
+                    // we found a change, no need to look any further
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
     
 }

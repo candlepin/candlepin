@@ -14,28 +14,23 @@
  */
 package org.fedoraproject.candlepin.policy.test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertEquals;
-
-//import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductProvidedPoolAttribute;
 import org.fedoraproject.candlepin.model.ProvidedProduct;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.policy.js.pool.PoolHelper;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.test.TestUtil;
 
-import com.google.common.collect.Sets;
-import com.google.common.collect.Sets.SetView;
-
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -90,7 +85,6 @@ public class PoolHelperTest {
         assertTrue(ph.checkForChangedProducts(pool, sub));
     }
 
-    @Ignore
     @Test
     public void productIdDifferent() {
         when(pool.getProductId()).thenReturn("prodid123");
@@ -103,35 +97,35 @@ public class PoolHelperTest {
         assertTrue(ph.checkForChangedProducts(pool, sub));
     }
 
-    @Ignore
     @Test
     public void attributeChanged() {
         when(pool.getProductId()).thenReturn("prodid123");
         when(pool.getProductName()).thenReturn("Awesome Product");
-        when(product.getId()).thenReturn("prodidnew");
+        when(product.getId()).thenReturn("prodid123");
         when(product.getName()).thenReturn("Awesome Product");
         when(sub.getProduct()).thenReturn(product);
 
         Set<ProvidedProduct> poolprods = new HashSet<ProvidedProduct>();
-       // ProvidedProduct pp = mock(ProvidedProduct.class);
         ProvidedProduct pp = new ProvidedProduct("productid", "Awesome Product");
         pp.setId(pp.getProductId());
-        //when(pp.getId()).thenReturn("productid");
-        System.out.println(pp.hashCode());
-        System.out.println(pp.getId());
         poolprods.add(pp);
         Set<Product> subprods = new HashSet<Product>();
-       // Product p = mock(Product.class);
         Product p = new Product("productid", "Awesome Product");
-        //when(p.getId()).thenReturn("productid");
-        System.out.println(p.hashCode());
-        System.out.println(p.getId());
+        p.setAttribute("hola", "mundo");
         subprods.add(p);
         when(pool.getProvidedProducts()).thenReturn(poolprods);
         when(sub.getProvidedProducts()).thenReturn(subprods);
 
-        SetView view = Sets.difference(poolprods, subprods);
-        System.out.println(view.toString());
+        ProductProvidedPoolAttribute pppa = mock(ProductProvidedPoolAttribute.class);
+        when(pppa.getName()).thenReturn("hola");
+        when(pppa.getValue()).thenReturn("mundo nuevo");
+        when(pppa.getProductId()).thenReturn("productid"); // matches sub prod
+        when(pppa.getId()).thenReturn("hoy");
+        Set<ProductProvidedPoolAttribute> attribs =
+            new HashSet<ProductProvidedPoolAttribute>();
+        attribs.add(pppa);
+        when(pool.getProductProvidedAttributes()).thenReturn(attribs);
+
         PoolHelper ph = new PoolHelper(pm, psa, null);
         assertTrue(ph.checkForChangedProducts(pool, sub));
     }
