@@ -723,9 +723,11 @@ public class ConsumerResource {
         }
 
         // Trigger events:
-        for (Entitlement e : entitlements) {
-            Event event = eventFactory.entitlementCreated(e);
-            sink.sendEvent(event);
+        if (entitlements != null) {
+            for (Entitlement e : entitlements) {
+                Event event = eventFactory.entitlementCreated(e);
+                sink.sendEvent(event);
+            }
         }
 
         return entitlements;
