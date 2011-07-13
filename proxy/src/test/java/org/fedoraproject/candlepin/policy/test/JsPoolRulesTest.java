@@ -196,7 +196,7 @@ public class JsPoolRulesTest {
         assertFalse(update.getProductsChanged());
         assertFalse(update.getDatesChanged());
         assertTrue(update.getQuantityChanged());
-        assertEquals(new Long(50), update.getPool().getQuantity());
+        assertEquals(Long.valueOf(50), update.getPool().getQuantity());
     }
 
     @Test
