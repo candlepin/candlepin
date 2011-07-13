@@ -140,14 +140,41 @@ describe 'Consumer Resource' do
     owner_client = user_client(owner, random_string('testowner'))
     cp_client = consumer_client(owner_client, random_string('consumer123'), :system,
                                 nil, 'uname.machine' => 'x86_64')
-    prod = create_product('product', random_string('product-multiple-arch'),
-                          :attribute => { :arch => 'i386, x86_64'})
+    prod = create_product(random_string('product'), random_string('product-multiple-arch'),
+                          :attributes => { :arch => 'i386, x86_64'})
     subs = @cp.create_subscription(owner.key, prod.id)
     @cp.refresh_pools(owner.key)
     pool = cp_client.list_pools({:owner => owner['id']}).first
 
     cp_client.consume_pool(pool.id).size.should == 1
   end
+
+
+  it 'should allow consumer to bind to products based on product quantity across pools' do
+    owner = create_owner random_string('owner')
+    owner_client = user_client(owner, random_string('testowner'))
+    cp_client = consumer_client(owner_client, random_string('consumer123'), :system,
+                                nil, 'cpu.cpu_socket(s)' => '4')
+    prod1 = create_product(random_string('product'), random_string('product-stackable'),
+                          :attributes => { :sockets => '2', :'multi-entitlement' => 'yes', :stacking_id => '8888'})
+    prod2 = create_product(random_string('product'), random_string('product-stackable'),
+                          :attributes => { :sockets => '2', :'multi-entitlement' => 'yes', :stacking_id => '8888'})
+    @cp.create_subscription(owner.key, prod1.id, 2)
+    @cp.create_subscription(owner.key, prod1.id, 3)
+    @cp.create_subscription(owner.key, prod2.id, 5)
+    
+ 
+    @cp.refresh_pools(owner.key)
+
+    total = 0
+    cp_client.consume_product(prod1.id).each {|ent|  total += ent.quantity}
+    total.should == 1
+
+    total = 0
+    cp_client.consume_product(prod1.id, {:quantity => 4}).each {|ent|  total += ent.quantity}
+    total.should == 4
+  end
+
 
   it 'should allow a consumer to specify their own UUID' do
     owner = create_owner random_string('owner')
