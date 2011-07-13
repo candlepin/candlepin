@@ -16,6 +16,8 @@ package org.fedoraproject.candlepin.policy.js;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Attribute;
 import org.fedoraproject.candlepin.model.Pool;
@@ -102,8 +104,8 @@ public class JsRules {
     @SuppressWarnings("unchecked")
     public <T> T invokeMethod(String method, Map<String, Object> args)
         throws NoSuchMethodException, RhinoException {
-        for (String key : args.keySet()) {
-            scope.put(key, scope, args.get(key));
+        for (Entry<String, Object> entry : args.entrySet()) {
+            scope.put(entry.getKey(), scope, entry.getValue());
         }
         return (T) invokeMethod(method);
     }
@@ -123,8 +125,9 @@ public class JsRules {
     }
     
     public void invokeRule(String ruleName, Map<String, Object> args) {
-        for (String key : args.keySet()) {
-            scope.put(key, scope, args.get(key));
+        for (Entry<String, Object> entry : args.entrySet()) {
+            scope.put(entry.getKey(), scope, entry.getValue());
+
         }
         invokeRule(ruleName);
     }

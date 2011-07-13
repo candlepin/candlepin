@@ -110,9 +110,9 @@ public class Config {
         Properties p = new Properties();
 
         if (defaults != null) {
-            for (String key : defaults.keySet()) {
-                if (key != null && key.startsWith(prefix)) {
-                    p.put(key, defaults.get(key));
+            for (Entry<String, String> entry : defaults.entrySet()) {
+                if (entry.getKey() != null && entry.getKey().startsWith(prefix)) {
+                    p.put(entry.getKey(), entry.getValue());
                 }
             }
         }

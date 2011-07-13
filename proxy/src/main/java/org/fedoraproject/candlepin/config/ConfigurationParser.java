@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.config;
 
 import java.util.Map;
 import java.util.Properties;
+import java.util.Map.Entry;
 
 /**
  * ConfigurationParser
@@ -46,15 +47,16 @@ abstract class ConfigurationParser {
         Map<String, String> inputConfiguration) {
         Properties toReturn = new Properties();
 
-        for (String key : inputConfiguration.keySet()) {
-            if (key.startsWith(getPrefix())) {
-                toReturn.put(key.substring(getPrefix().length() + 1),
-                    inputConfiguration.get(key));
+        for (Entry<String, String> entry : inputConfiguration.entrySet()) {
+            if (entry.getKey().startsWith(getPrefix())) {
+                toReturn.put(entry.getKey().substring(getPrefix().length() + 1),
+                    entry.getValue());
             }
             else {
-                toReturn.put(key, inputConfiguration.get(key));
+                toReturn.put(entry.getKey(), entry.getValue());
             }
         }
+
         return toReturn;
     }
 

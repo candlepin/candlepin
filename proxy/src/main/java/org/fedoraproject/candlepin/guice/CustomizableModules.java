@@ -21,6 +21,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.Map.Entry;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.config.Config;
@@ -54,11 +55,10 @@ public class CustomizableModules {
     public Set<Module> customizedConfiguration(Map<String, String> loadedConfiguration) {
         try {
             Set toReturn = new HashSet();
-            
-            for (String guiceModuleName : loadedConfiguration.keySet()) {
-                log.info("Found custom module " + guiceModuleName);
-                toReturn.add(Class.forName(
-                        loadedConfiguration.get(guiceModuleName)).newInstance());
+             
+            for (Entry<String, String> entry : loadedConfiguration.entrySet()) {
+                log.info("Found custom module " + entry.getKey());
+                toReturn.add(Class.forName(entry.getValue()).newInstance());
             }
             
             return toReturn; 

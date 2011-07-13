@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * StatisticCurator
@@ -120,10 +121,11 @@ public class StatisticCurator extends AbstractHibernateCurator<Statistic> {
             count++;
             map.put(sockets, count);
         }
-        for (String sockets : map.keySet()) {
+        
+        for (Entry<String, Integer> entry : map.entrySet()) {
             Statistic socketCountStatistic = new Statistic(
-                EntryType.CONSUMERSBYSOCKETCOUNT, ValueType.RAW, sockets,
-                map.get(sockets), owner.getId());
+                EntryType.CONSUMERSBYSOCKETCOUNT, ValueType.RAW, entry.getKey(),
+                entry.getValue(), owner.getId());
             create(socketCountStatistic);
         }
     }

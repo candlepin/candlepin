@@ -19,6 +19,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 
 import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
 import org.fedoraproject.candlepin.config.Config;
@@ -223,9 +224,11 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      */
     private Map<String, String> filterFacts(Map<String, String> factsIn) {
         Map<String, String> facts = new HashMap<String, String>();
-        for (String key : factsIn.keySet()) {
-            if (key.matches(config.getString(ConfigProperties.CONSUMER_FACTS_MATCHER))) {
-                facts.put(key, factsIn.get(key));
+        for (Entry<String, String> entry : factsIn.entrySet()) {
+            if (entry.getKey().matches(
+                config.getString(ConfigProperties.CONSUMER_FACTS_MATCHER))) {
+
+                facts.put(entry.getKey(), entry.getValue());
             }
         }
         return facts;

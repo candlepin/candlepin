@@ -404,8 +404,8 @@ public class CandlepinPoolManager implements PoolManager {
         }// loop here for quantity
 
         // now make the entitlements
-        for (Pool p : poolMap.keySet()) {
-            entitlements.add(addEntitlement(consumer, p, poolMap.get(p)));
+        for (Entry<Pool, Integer> entry : poolMap.entrySet()) {
+            entitlements.add(addEntitlement(consumer, entry.getKey(), entry.getValue()));
         }
 
         return entitlements;

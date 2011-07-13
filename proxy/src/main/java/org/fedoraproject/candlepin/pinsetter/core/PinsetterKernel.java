@@ -37,6 +37,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.Map.Entry;
+
 import org.fedoraproject.candlepin.model.JobCurator;
 import org.fedoraproject.candlepin.pinsetter.core.model.JobStatus;
 import org.quartz.JobListener;
@@ -210,11 +212,11 @@ public class PinsetterKernel {
             throw new RuntimeException("No tasks scheduled");
         }
         try {
-            for (String suffix : pendingJobs.keySet()) {
-                String[] data = pendingJobs.get(suffix);
+            for (Entry<String, String[]> entry : pendingJobs.entrySet()) {
+                String[] data = pendingJobs.get(entry.getKey());
                 String jobImpl = data[0];
                 String crontab = data[1];
-                String jobName = jobImpl + "-" + suffix;
+                String jobName = jobImpl + "-" + entry.getKey();
 
                 Trigger trigger = null;
                 trigger = new CronTrigger(jobImpl, CRON_GROUP, crontab);
