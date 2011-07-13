@@ -74,7 +74,7 @@ public class ActivateResource {
                 owner = key.getOwner();
             }
             else {
-                if (owner.getId() != key.getOwner().getId()) {
+                if (!owner.getId().equals(key.getOwner().getId())) {
                     throw new BadRequestException(
                         i18n.tr("The keys provided are for different owners"));
                 }

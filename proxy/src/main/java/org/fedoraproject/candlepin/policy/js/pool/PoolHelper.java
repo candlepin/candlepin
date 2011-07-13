@@ -259,7 +259,7 @@ public class PoolHelper {
 
             for (ProductPoolAttribute attrib : attribList) {
                 ProductAttribute pa = product.getAttribute(attrib.getName());
-                if (pa.getValue() != attrib.getValue()) {
+                if (!pa.getValue().equals(attrib.getValue())) {
                     // we found a change, no need to look any further
                     return true;
                 }
