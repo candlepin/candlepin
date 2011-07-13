@@ -23,23 +23,23 @@ import javax.persistence.Table;
  * ProductProvidedPoolAttribute
  */
 @Entity
-@Table(name = "cp_product_provided_pool_attribute")
+@Table(name = "cp_product_pool_attribute")
 @Embeddable
-public class ProductProvidedPoolAttribute extends AbstractPoolAttribute {
+public class ProductPoolAttribute extends AbstractPoolAttribute {
 
     @Column(nullable = false)
     private String productId;
 
-    public ProductProvidedPoolAttribute() {
+    public ProductPoolAttribute() {
     }
 
-    public ProductProvidedPoolAttribute(String name, String val, String productId) {
+    public ProductPoolAttribute(String name, String val, String productId) {
         super(name, val);
         this.productId = productId;
     }
 
     public String toString() {
-        return "ProductProvidedPoolAttribute [id=" + id + ", name=" + name + ", value=" +
+        return "ProductPoolAttribute [id=" + id + ", name=" + name + ", value=" +
             value + ", productId=" + productId + "]";
     }
 

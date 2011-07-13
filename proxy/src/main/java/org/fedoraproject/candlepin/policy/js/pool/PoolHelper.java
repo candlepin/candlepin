@@ -21,7 +21,7 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductAttribute;
-import org.fedoraproject.candlepin.model.ProductProvidedPoolAttribute;
+import org.fedoraproject.candlepin.model.ProductPoolAttribute;
 import org.fedoraproject.candlepin.model.ProvidedProduct;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
@@ -102,20 +102,22 @@ public class PoolHelper {
             pool.setAttribute(entry.getKey(), entry.getValue());
         }
 
-        collapseAttributesOntoPool(sub, pool);
+        copyProductAttributesOntoPool(sub, pool);
 
         return pool;
     }
 
     /**
-     * Collapses all attributes onto the pool.
+     * Copies all of a {@link Subscription}'s top-level product attributes onto the pool.
+     * If an attribute already exists, it will be updated. Any attributes that are
+     * on the {@link Pool} but not on the {@link Product} will be removed.
      *
      * @param sub
      * @param pool
      *
      * @return true if the pools attributes changed, false otherwise.
      */
-    public boolean collapseAttributesOntoPool(Subscription sub, Pool pool) {
+    public boolean copyProductAttributesOntoPool(Subscription sub, Pool pool) {
         // Collapse the subscription's attributes onto the pool.
         // NOTE: For now we only collapse the top level Product's attributes
         // onto the pool.
@@ -131,9 +133,9 @@ public class PoolHelper {
             // be removed later.
             processed.add(attributeName);
             
-            if (pool.hasProductProvidedAttribute(attributeName)) {
-                ProductProvidedPoolAttribute provided =
-                    pool.getProductProvidedAttribute(attributeName);
+            if (pool.hasProductAttribute(attributeName)) {
+                ProductPoolAttribute provided =
+                    pool.getProductAttribute(attributeName);
                 boolean productsAreSame = product.getId().equals(provided.getProductId());
                 boolean attrValueSame = provided.getValue().equals(attributeValue);
                 if (productsAreSame && attrValueSame) {
@@ -142,21 +144,21 @@ public class PoolHelper {
             }
 
             // Change detected - update the attribute
-            pool.setProductProvidedAttribute(attributeName, attributeValue,
+            pool.setProductAttribute(attributeName, attributeValue,
                 product.getId());
             hasChanged = true;
         }
         
         // Determine if any should be removed.
-        Set<ProductProvidedPoolAttribute> toRemove =
-            new HashSet<ProductProvidedPoolAttribute>();
-        for (ProductProvidedPoolAttribute toCheck : pool.getProductProvidedAttributes()) {
+        Set<ProductPoolAttribute> toRemove =
+            new HashSet<ProductPoolAttribute>();
+        for (ProductPoolAttribute toCheck : pool.getProductAttributes()) {
             if (!processed.contains(toCheck.getName())) {
                 toRemove.add(toCheck);
                 hasChanged = true;
             }
         }
-        pool.getProductProvidedAttributes().removeAll(toRemove);
+        pool.getProductAttributes().removeAll(toRemove);
         return hasChanged;
     }
 
@@ -226,19 +228,19 @@ public class PoolHelper {
     }
 
     private boolean haveAttributesChanged(Pool existing, Subscription sub) {
-        Set<ProductProvidedPoolAttribute> attribs =
-            existing.getProductProvidedAttributes();
+        Set<ProductPoolAttribute> attribs =
+            existing.getProductAttributes();
 
         // should probably make this part of Pool.
-        Map<String, List<ProductProvidedPoolAttribute>> byProductId =
-            new HashMap<String, List<ProductProvidedPoolAttribute>>();
+        Map<String, List<ProductPoolAttribute>> byProductId =
+            new HashMap<String, List<ProductPoolAttribute>>();
 
-        for (ProductProvidedPoolAttribute attrib : attribs) {
-            List<ProductProvidedPoolAttribute> attribList =
+        for (ProductPoolAttribute attrib : attribs) {
+            List<ProductPoolAttribute> attribList =
                 byProductId.get(attrib.getProductId());
 
             if (attribList == null) {
-                attribList = new LinkedList<ProductProvidedPoolAttribute>();
+                attribList = new LinkedList<ProductPoolAttribute>();
                 attribList.add(attrib);
                 byProductId.put(attrib.getProductId(), attribList);
             }
@@ -248,14 +250,14 @@ public class PoolHelper {
         }
 
         for (Product product : sub.getProvidedProducts()) {
-            List<ProductProvidedPoolAttribute> attribList =
+            List<ProductPoolAttribute> attribList =
                 byProductId.get(product.getId());
 
             if (attribList == null) {
                 break;
             }
 
-            for (ProductProvidedPoolAttribute attrib : attribList) {
+            for (ProductPoolAttribute attrib : attribList) {
                 ProductAttribute pa = product.getAttribute(attrib.getName());
                 if (pa.getValue() != attrib.getValue()) {
                     // we found a change, no need to look any further

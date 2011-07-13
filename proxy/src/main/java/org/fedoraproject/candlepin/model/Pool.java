@@ -109,8 +109,8 @@ public class Pool extends AbstractHibernateObject implements Linkable, Owned {
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.MERGE,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
-    private Set<ProductProvidedPoolAttribute> productProvidedAttributes =
-        new HashSet<ProductProvidedPoolAttribute>();
+    private Set<ProductPoolAttribute> productAttributes =
+        new HashSet<ProductPoolAttribute>();
 
     @OneToMany(mappedBy = "pool", cascade = CascadeType.ALL)
     @LazyCollection(LazyCollectionOption.EXTRA)
@@ -499,39 +499,39 @@ public class Pool extends AbstractHibernateObject implements Linkable, Owned {
          */
     }
 
-    public void setProductProvidedAttributes(Set<ProductProvidedPoolAttribute> attrs) {
-        this.productProvidedAttributes = attrs;
+    public void setProductAttributes(Set<ProductPoolAttribute> attrs) {
+        this.productAttributes = attrs;
     }
 
-    public Set<ProductProvidedPoolAttribute> getProductProvidedAttributes() {
-        return productProvidedAttributes;
+    public Set<ProductPoolAttribute> getProductAttributes() {
+        return productAttributes;
     }
 
-    public void addProductProvidedAttribute(ProductProvidedPoolAttribute attrib) {
+    public void addProductAttribute(ProductPoolAttribute attrib) {
         attrib.setPool(this);
-        this.productProvidedAttributes.add(attrib);
+        this.productAttributes.add(attrib);
     }
 
-    public void setProductProvidedAttribute(String key, String value, String productId) {
-        ProductProvidedPoolAttribute existing =
-            findAttribute(this.productProvidedAttributes, key);
+    public void setProductAttribute(String key, String value, String productId) {
+        ProductPoolAttribute existing =
+            findAttribute(this.productAttributes, key);
         if (existing != null) {
             existing.setValue(value);
             existing.setProductId(productId);
         }
         else {
-            ProductProvidedPoolAttribute attr = new ProductProvidedPoolAttribute(key,
+            ProductPoolAttribute attr = new ProductPoolAttribute(key,
                 value, productId);
-            addProductProvidedAttribute(attr);
+            addProductAttribute(attr);
         }
     }
 
-    public boolean hasProductProvidedAttribute(String name) {
-        return findAttribute(this.productProvidedAttributes, name) != null;
+    public boolean hasProductAttribute(String name) {
+        return findAttribute(this.productAttributes, name) != null;
     }
 
-    public ProductProvidedPoolAttribute getProductProvidedAttribute(String name) {
-        return findAttribute(this.productProvidedAttributes, name);
+    public ProductPoolAttribute getProductAttribute(String name) {
+        return findAttribute(this.productAttributes, name);
     }
     
     private <A extends AbstractPoolAttribute> A findAttribute(Set<A> attributes,

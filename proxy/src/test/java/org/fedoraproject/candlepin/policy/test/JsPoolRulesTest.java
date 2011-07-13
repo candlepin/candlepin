@@ -26,7 +26,7 @@ import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolAttribute;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductAttribute;
-import org.fedoraproject.candlepin.model.ProductProvidedPoolAttribute;
+import org.fedoraproject.candlepin.model.ProductPoolAttribute;
 import org.fedoraproject.candlepin.model.ProvidedProduct;
 import org.fedoraproject.candlepin.model.Rules;
 import org.fedoraproject.candlepin.model.RulesCurator;
@@ -200,7 +200,7 @@ public class JsPoolRulesTest {
     }
 
     @Test
-    public void attributesCollapseOntoPoolDuringUpdate() {
+    public void productAttributesCopiedOntoPoolDuringUpdate() {
         Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
         Pool p = copyFromSub(s);
 
@@ -215,11 +215,11 @@ public class JsPoolRulesTest {
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
         Pool updatedPool = update.getPool();
-        assertTrue(updatedPool.hasProductProvidedAttribute(testAttributeKey));
+        assertTrue(updatedPool.hasProductAttribute(testAttributeKey));
     }
 
     @Test
-    public void attributesCollapseOntoPoolDuringUpdateAndOverwriteValue() {
+    public void productAttributesCopiedOntoPoolDuringUpdateAndOverwriteValue() {
         Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
         Pool p = copyFromSub(s);
 
@@ -227,7 +227,7 @@ public class JsPoolRulesTest {
         String expectedAttributeValue = "yes";
 
         // Simulate an attribute that was added via collapse.
-        p.setProductProvidedAttribute(testAttributeKey, "no", s.getProduct().getId());
+        p.setProductAttribute(testAttributeKey, "no", s.getProduct().getId());
 
         // Update the subscription's product.
         s.getProduct().setAttribute(testAttributeKey, expectedAttributeValue);
@@ -239,19 +239,19 @@ public class JsPoolRulesTest {
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
         Pool updatedPool = update.getPool();
-        assertTrue(updatedPool.hasProductProvidedAttribute(testAttributeKey));
+        assertTrue(updatedPool.hasProductAttribute(testAttributeKey));
         assertEquals(expectedAttributeValue,
-            updatedPool.getProductProvidedAttribute(testAttributeKey).getValue());
+            updatedPool.getProductAttribute(testAttributeKey).getValue());
     }
 
     @Test
-    public void productIdChangeOnProvidedAttributeTriggersUpdate() {
+    public void productIdChangeOnProductPoolAttributeTriggersUpdate() {
         Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
         String testAttributeKey = "multi-entitlement";
         s.getProduct().setAttribute(testAttributeKey, "yes");
 
         Pool p = copyFromSub(s);
-        p.setProductProvidedAttribute(testAttributeKey, "yes", s.getProduct().getId());
+        p.setProductAttribute(testAttributeKey, "yes", s.getProduct().getId());
 
         // Change the sub's product's ID
         String expectedProductId = "NEW_TEST_ID";
@@ -264,15 +264,15 @@ public class JsPoolRulesTest {
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
         Pool updatedPool = update.getPool();
-        assertTrue(updatedPool.hasProductProvidedAttribute(testAttributeKey));
+        assertTrue(updatedPool.hasProductAttribute(testAttributeKey));
 
-        ProductProvidedPoolAttribute provided =
-            updatedPool.getProductProvidedAttribute(testAttributeKey);
+        ProductPoolAttribute provided =
+            updatedPool.getProductAttribute(testAttributeKey);
         assertEquals("Wrong product id.", expectedProductId, provided.getProductId());
     }
 
     @Test
-    public void subscriptionAttributesCollapseOntoPoolWhenCreatingNewPool() {
+    public void productAttributesCopiedOntoPoolWhenCreatingNewPool() {
         Product product = TestUtil.createProduct();
 
         Subscription sub = TestUtil.createSubscription(owner, product);
@@ -286,9 +286,9 @@ public class JsPoolRulesTest {
         assertEquals(1, pools.size());
 
         Pool resultPool = pools.get(0);
-        assertTrue(resultPool.hasProductProvidedAttribute(testAttributeKey));
+        assertTrue(resultPool.hasProductAttribute(testAttributeKey));
         assertEquals(expectedAttributeValue,
-            resultPool.getProductProvidedAttribute(testAttributeKey).getValue());
+            resultPool.getProductAttribute(testAttributeKey).getValue());
     }
 
 }

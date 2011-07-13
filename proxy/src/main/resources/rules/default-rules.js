@@ -335,7 +335,7 @@ var Pool = {
                 providedProducts.add(providedProduct);
             }
         }
-        helper.collapseAttributesOntoPool(sub, newPool);
+        helper.copyProductAttributesOntoPool(sub, newPool);
         newPool.setSubscriptionId(sub.getId());
         pools.add(newPool);
 
@@ -397,7 +397,7 @@ var Pool = {
             var quantityChanged = !(expectedQuantity == existingPool.getQuantity());
             var productsChanged = helper.checkForChangedProducts(existingPool, sub);
             
-            var poolAttributesChanged = helper.collapseAttributesOntoPool(sub,
+            var poolAttributesChanged = helper.copyProductAttributesOntoPool(sub,
 			existingPool);
             if (poolAttributesChanged) {
                 log.info("Updated pool attributes from subscription.");
