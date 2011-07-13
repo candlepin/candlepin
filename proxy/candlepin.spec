@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.4.4
+Version: 0.4.5
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -145,6 +145,43 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Wed Jul 13 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.5-1
+- extract strings for translation. (jesusr@redhat.com)
+- Rename of pool's product attributes field (mstead@redhat.com)
+- refresh the pools when product attribute changes are detected. (jesusr@redhat.com)
+- Added product provided attribute to pool (mstead@redhat.com)
+- adding unit test for PoolHelper (jesusr@redhat.com)
+- Add a magoo user, with RO access to all three test data owners. (dgoodwin@redhat.com)
+- Cleanup test data role JSON. (dgoodwin@redhat.com)
+- make Loggers static so they'll always be transient. (jesusr@redhat.com)
+- remove trailing whitespace (jesusr@redhat.com)
+- Make Principal object graph serializable for quartz clustering. (jesusr@redhat.com)
+- cleanup comments (alikins@redhat.com)
+- Add test products with no arch set, but arch set on child product (alikins@redhat.com)
+- Darn you checkstyle (bkearney@redhat.com)
+- 718052: More owner nuttiness (bkearney@redhat.com)
+- Populate displayname for owners (alikins@redhat.com)
+- Add displayName's for owners (alikins@redhat.com)
+- make comment readable in 80 cols (jesusr@redhat.com)
+- Add the ability to requst all the certificate ids as a zip file (bkearney@redhat.com)
+- more ownerinfo enhancements (cduryee@redhat.com)
+- Fix a race condition in refresh pools (jbowes@redhat.com)
+- Expose updating of users to the API (bkearney@redhat.com)
+- Checkstyle (wpoteat@redhat.com)
+- Let read-only users fetch owner info. (dgoodwin@redhat.com)
+- Fix duplicate user test failures. (dgoodwin@redhat.com)
+- Uncomment some tests that were forgotten. (dgoodwin@redhat.com)
+- Open GET /owners/key to users with ALL. (dgoodwin@redhat.com)
+- Correction to machine stats (wpoteat@redhat.com)
+- 703962: clean up the release field (bkearney@redhat.com)
+- Add the ability to get all users (bkearney@redhat.com)
+- Added spec tests for statistics (wpoteat@redhat.com)
+- Checkstyle issues and a change of constructor (wpoteat@redhat.com)
+- a few enhancements to ownerinfo (cduryee@redhat.com)
+- Added permission for Candlepin stats 2 (wpoteat@redhat.com)
+- Candlepin stats 2 (wpoteat@redhat.com)
+- Remove /owners/{oid}/users (bkearney@redhat.com)
+
 * Mon Jun 20 2011 Devan Goodwin <dgoodwin@redhat.com> 0.4.4-1
 - New multi-owner permissions / roles infrastructure. (dgoodwin@redhat.com)
 - Take slashes out of the product names since it causes issues with the get
