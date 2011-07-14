@@ -14,11 +14,11 @@
  */
 package org.fedoraproject.candlepin.service;
 
-import java.util.HashMap;
-import java.util.List;
-
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductCertificate;
+
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * Product data may originate from a separate service outside Candlepin in some
@@ -84,4 +84,6 @@ public interface ProductServiceAdapter {
      * @param contentId Content ID.
      */
     void removeContent(String productId, String contentId);
+
+    boolean productHasSubscriptions(Product prod);
 }

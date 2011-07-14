@@ -183,7 +183,7 @@ public class PoolResource {
         }
 
         throw new NotFoundException(i18n.tr(
-            "Entitlement Pool with ID '{0}' could not be found", id));
+            "Entitlement Pool with ID ''{0}'' could not be found", id));
     }
 
     @GET

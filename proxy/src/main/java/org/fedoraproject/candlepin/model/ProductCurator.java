@@ -15,9 +15,11 @@
 package org.fedoraproject.candlepin.model;
 
 import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
-import org.hibernate.criterion.Restrictions;
 
 import com.wideplay.warp.persist.Transactional;
+
+import org.hibernate.Query;
+import org.hibernate.criterion.Restrictions;
 
 /**
  * interact with Products.
@@ -38,8 +40,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     @Transactional
     public Product lookupByName(String name) {
         return (Product) currentSession().createCriteria(Product.class)
-            .add(Restrictions.eq("name", name))
-            .uniqueResult();
+            .add(Restrictions.eq("name", name)).uniqueResult();
     }
 
     /**
@@ -49,10 +50,9 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     @Transactional
     public Product lookupById(String id) {
         return (Product) currentSession().createCriteria(Product.class)
-            .add(Restrictions.eq("id", id))
-            .uniqueResult();
+            .add(Restrictions.eq("id", id)).uniqueResult();
     }
-    
+
     /**
      * Create the given product if it does not already exist, otherwise update
      * existing product.
@@ -77,9 +77,10 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     @EnforceAccessControl
     public Product create(Product entity) {
 
-        /* Ensure all referenced ProductAttributes are correctly pointing to
-         * this product. This is useful for products being created from
-         * incoming json.
+        /*
+         * Ensure all referenced ProductAttributes are correctly pointing to
+         * this product. This is useful for products being created from incoming
+         * json.
          */
         for (ProductAttribute attr : entity.getAttributes()) {
             attr.setProduct(entity);
@@ -87,7 +88,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
 
         return super.create(entity);
     }
-    
+
     @Transactional
     @EnforceAccessControl
     public void removeProductContent(Product prod, Content content) {
@@ -100,4 +101,11 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         merge(prod);
     }
 
+    public boolean productHasSubscriptions(Product prod) {
+        String poolString = "select id from Subscription s" +
+            " where s.product.id = :prodId";
+        Query poolQuery = currentSession().createQuery(poolString).setString(
+            "prodId", prod.getId());
+        return poolQuery.list().size() > 0;
+    }
 }

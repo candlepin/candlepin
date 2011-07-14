@@ -14,7 +14,30 @@
  */
 package org.fedoraproject.candlepin.policy.js.entitlement;
 
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.policy.Enforcer;
+import org.fedoraproject.candlepin.policy.ValidationError;
+import org.fedoraproject.candlepin.policy.ValidationWarning;
+import org.fedoraproject.candlepin.policy.js.JsRules;
+import org.fedoraproject.candlepin.policy.js.ReadOnlyConsumer;
+import org.fedoraproject.candlepin.policy.js.ReadOnlyPool;
+import org.fedoraproject.candlepin.policy.js.ReadOnlyProduct;
+import org.fedoraproject.candlepin.policy.js.ReadOnlyProductCache;
+import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
 import org.fedoraproject.candlepin.policy.js.pool.PoolHelper;
+import org.fedoraproject.candlepin.service.ProductServiceAdapter;
+import org.fedoraproject.candlepin.util.DateSource;
+
+import com.google.inject.Inject;
+
+import edu.emory.mathcs.backport.java.util.Arrays;
+
+import org.apache.log4j.Logger;
+import org.mozilla.javascript.RhinoException;
+import org.xnap.commons.i18n.I18n;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -24,29 +47,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.Entitlement;
-import org.fedoraproject.candlepin.model.Pool;
-import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.policy.Enforcer;
-import org.fedoraproject.candlepin.policy.ValidationError;
-import org.fedoraproject.candlepin.policy.ValidationWarning;
-import org.fedoraproject.candlepin.policy.js.ReadOnlyConsumer;
-import org.fedoraproject.candlepin.policy.js.ReadOnlyPool;
-import org.fedoraproject.candlepin.policy.js.ReadOnlyProduct;
-import org.fedoraproject.candlepin.policy.js.ReadOnlyProductCache;
-import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
-import org.fedoraproject.candlepin.service.ProductServiceAdapter;
-import org.fedoraproject.candlepin.util.DateSource;
-import org.xnap.commons.i18n.I18n;
-
-import com.google.inject.Inject;
-
-import edu.emory.mathcs.backport.java.util.Arrays;
-import org.fedoraproject.candlepin.policy.js.JsRules;
-import org.mozilla.javascript.RhinoException;
 
 /**
  * Enforces the Javascript Rules definition.
@@ -354,7 +354,7 @@ public class EntitlementRules implements Enforcer {
         if (tokens.length < 3) {
             throw new IllegalArgumentException(
                 i18n.tr(
-                    "'{0}' Should contain name, priority and at least one attribute",
+                    "''{0}'' Should contain name, priority and at least one attribute",
                     toParse)
             );
         }

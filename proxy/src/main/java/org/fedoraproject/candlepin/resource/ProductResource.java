@@ -104,7 +104,7 @@ public class ProductResource {
         }
 
         throw new NotFoundException(
-            i18n.tr("Product with UUID '{0}' could not be found", pid));
+            i18n.tr("Product with UUID ''{0}'' could not be found", pid));
     }
     
     @GET
@@ -118,7 +118,7 @@ public class ProductResource {
         
         if (product == null) {
             throw new NotFoundException(
-                i18n.tr("Product with UUID '{0}' could not be found", productId));
+                i18n.tr("Product with UUID ''{0}'' could not be found", productId));
         }
         
         return prodAdapter.getProductCertificate(product);
@@ -165,11 +165,11 @@ public class ProductResource {
         Product product = prodAdapter.getProductById(pid);
         if (product == null) {
             throw new NotFoundException(
-                i18n.tr("Product with UUID '{0}' could not be found", pid));
+                i18n.tr("Product with UUID ''{0}'' could not be found", pid));
         }
-        if (product.getSubscriptions() != null && product.getSubscriptions().size() > 0) {
+        if (prodAdapter.productHasSubscriptions(product)) {
             throw new BadRequestException(
-                i18n.tr("Product with UUID '{0}' cannot be deleted " + 
+                i18n.tr("Product with UUID ''{0}'' cannot be deleted " +
                     "while subscriptions exist.", pid));
         }
 

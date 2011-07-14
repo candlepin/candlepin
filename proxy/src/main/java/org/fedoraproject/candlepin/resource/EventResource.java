@@ -18,9 +18,10 @@ import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventAdapter;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.EventCurator;
-import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
+
+import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -72,6 +73,6 @@ public class EventResource {
         }
         
         throw new NotFoundException(i18n.tr(
-            "Event with ID '{0}' could not be found.", uuid));
+            "Event with ID ''{0}'' could not be found.", uuid));
     }
 }

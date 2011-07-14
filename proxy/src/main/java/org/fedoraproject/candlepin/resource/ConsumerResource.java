@@ -834,7 +834,7 @@ public class ConsumerResource {
         }
 
         throw new NotFoundException(i18n.tr(
-            "Entitlement with ID '{0}' could not be found.", dbid));
+            "Entitlement with ID ''{0}'' could not be found.", dbid));
     }
 
     @DELETE

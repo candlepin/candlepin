@@ -14,6 +14,24 @@
  */
 package org.fedoraproject.candlepin.resource;
 
+import org.fedoraproject.candlepin.auth.interceptor.Verify;
+import org.fedoraproject.candlepin.controller.PoolManager;
+import org.fedoraproject.candlepin.exceptions.BadRequestException;
+import org.fedoraproject.candlepin.exceptions.NotFoundException;
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerCurator;
+import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.EntitlementCurator;
+import org.fedoraproject.candlepin.pinsetter.tasks.RegenEntitlementCertsJob;
+import org.fedoraproject.candlepin.service.ProductServiceAdapter;
+import org.fedoraproject.candlepin.util.Util;
+
+import com.google.inject.Inject;
+
+import org.quartz.JobDataMap;
+import org.quartz.JobDetail;
+import org.xnap.commons.i18n.I18n;
+
 import java.util.List;
 
 import javax.ws.rs.DELETE;
@@ -24,24 +42,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-
-import org.fedoraproject.candlepin.auth.interceptor.Verify;
-
-import org.fedoraproject.candlepin.exceptions.BadRequestException;
-import org.fedoraproject.candlepin.exceptions.NotFoundException;
-import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.ConsumerCurator;
-import org.fedoraproject.candlepin.model.Entitlement;
-import org.fedoraproject.candlepin.model.EntitlementCurator;
-import org.fedoraproject.candlepin.pinsetter.tasks.RegenEntitlementCertsJob;
-import org.fedoraproject.candlepin.service.ProductServiceAdapter;
-import org.fedoraproject.candlepin.util.Util;
-import org.quartz.JobDataMap;
-import org.quartz.JobDetail;
-import org.xnap.commons.i18n.I18n;
-
-import com.google.inject.Inject;
-import org.fedoraproject.candlepin.controller.PoolManager;
 
 /**
  * REST api gateway for the User object.
@@ -134,7 +134,7 @@ public class EntitlementResource {
             return toReturn;
         }
         throw new NotFoundException(
-            i18n.tr("Entitlement with ID '{0}' could not be found", dbid));
+            i18n.tr("Entitlement with ID ''{0}'' could not be found", dbid));
     }
 
     /**
@@ -151,7 +151,7 @@ public class EntitlementResource {
             return;
         }
         throw new NotFoundException(
-            i18n.tr("Entitlement with ID '{0}' could not be found", dbid));
+            i18n.tr("Entitlement with ID ''{0}'' could not be found", dbid));
     }
     
     @PUT
