@@ -224,12 +224,18 @@ public class ConsumerResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @SecurityHole
+    @SecurityHole(noAuth = true)
     public Consumer create(Consumer consumer, @Context Principal principal,
         @QueryParam("username") String userName, @QueryParam("owner") String ownerKey)
         throws BadRequestException {
         // API:registerConsumer
 
+        // First, check that we have an authenticated principal if this is *not*
+        // an activation key registration:
+        if (!(principal instanceof UserPrincipal)) {
+            throw new ForbiddenException(i18n.tr("Insufficient permissions"));
+        }
+        
         if (!isConsumerNameValid(consumer.getName())) {
             throw new BadRequestException(
                 i18n.tr("System name cannot contain most special characters."));

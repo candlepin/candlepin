@@ -22,11 +22,13 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
 
 import org.fedoraproject.candlepin.audit.EventSink;
+import org.fedoraproject.candlepin.auth.NoAuthPrincipal;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.auth.permissions.Permission;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
+import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
@@ -107,11 +109,15 @@ public class ConsumerResourceCreationTest {
     }
 
     private Consumer createConsumer(String consumerName) {
-        Consumer consumer = new Consumer(consumerName, null, null, system);
         Collection<Permission> perms = new HashSet<Permission>();
         perms.addAll(role.getPermissions());
         Principal principal = new UserPrincipal(USER, perms, false);
 
+        return createConsumer(consumerName, principal);
+    }
+
+    private Consumer createConsumer(String consumerName, Principal principal) {
+        Consumer consumer = new Consumer(consumerName, null, null, system);
         return this.resource.create(consumer, principal, USER, owner.getKey());
     }
 
@@ -180,4 +186,30 @@ public class ConsumerResourceCreationTest {
         createConsumer("bar$%camp");
     }
 
+    @Test(expected = ForbiddenException.class)
+    public void authRequired() {
+        Principal p = new NoAuthPrincipal();
+        createConsumer("sys.example.com", p);
+    }
+    
+    @Test(expected = BadRequestException.class)
+    public void orgRequiredWithActivationKeys() {
+        Assert.fail();
+    }
+    
+    @Test(expected = BadRequestException.class)
+    public void cannotMixUsernameWithActivationKeys() {
+        Assert.fail();
+    }
+    
+    @Test(expected = BadRequestException.class)
+    public void authNotRequiredForActivationKeyReg() {
+        Assert.fail();
+    }
+    
+    @Test(expected = BadRequestException.class)
+    public void failIfAnyActivationKeyDoesNotExistForOrg() {
+        Assert.fail();
+    }
+    
 }
