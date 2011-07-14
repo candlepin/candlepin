@@ -145,6 +145,15 @@ public class User extends AbstractHibernateObject {
 
         return owners;
     }
+    
+    public boolean hasOwnerAccess(Owner canAccess, Access accessLevel) {
+        for (Owner o : getOwners(accessLevel)) {
+            if (o.getKey().equals(canAccess.getKey())) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     /**
      * @return the roles

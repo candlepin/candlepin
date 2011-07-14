@@ -292,7 +292,7 @@ public class ConsumerResource {
 
         // When registering person consumers we need to be sure the username
         // has some association with the owner the consumer is destined for:
-        if (!user.getOwners(Access.ALL).contains(owner) && !user.isSuperAdmin()) {
+        if (!user.hasOwnerAccess(owner, Access.ALL) && !user.isSuperAdmin()) {
             throw new ForbiddenException(
                 i18n.tr("User {0} has no roles for organization/owner {1}",
                     user.getUsername(), owner.getKey()));
