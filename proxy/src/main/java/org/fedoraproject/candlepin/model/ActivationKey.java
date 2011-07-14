@@ -61,6 +61,14 @@ public class ActivationKey extends AbstractHibernateObject {
         inverseJoinColumns = @JoinColumn(name = "pool_id")
     )
     private List<Pool> pools = new ArrayList<Pool>();
+    
+    public ActivationKey() {
+    }
+    
+    public ActivationKey(String name, Owner owner) {
+        this.name = name;
+        this.owner = owner;
+    }
 
     public String getId() {
         return this.id;

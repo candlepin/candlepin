@@ -17,6 +17,8 @@ package org.fedoraproject.candlepin.resource.test;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Locale;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
@@ -29,6 +31,8 @@ import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.auth.permissions.Permission;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
+import org.fedoraproject.candlepin.model.ActivationKey;
+import org.fedoraproject.candlepin.model.ActivationKeyCurator;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
@@ -69,6 +73,7 @@ public class ConsumerResourceCreationTest {
     @Mock private ConsumerTypeCurator consumerTypeCurator;
     @Mock private OwnerCurator ownerCurator;
     @Mock private EventSink sink;
+    @Mock private ActivationKeyCurator activationKeyCurator;
     private I18n i18n;
 
     private ConsumerResource resource;
@@ -83,7 +88,8 @@ public class ConsumerResourceCreationTest {
         this.resource = new ConsumerResource(this.consumerCurator, 
                 this.consumerTypeCurator, null, this.subscriptionService, null,
                 this.idCertService, null, this.i18n, this.sink, null, null, null,
-                this.userService, null, null, null, null, this.ownerCurator);
+                this.userService, null, null, null, null, this.ownerCurator, 
+                this.activationKeyCurator);
 
         this.system = new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
 
@@ -113,12 +119,14 @@ public class ConsumerResourceCreationTest {
         perms.addAll(role.getPermissions());
         Principal principal = new UserPrincipal(USER, perms, false);
 
-        return createConsumer(consumerName, principal);
+        return createConsumer(consumerName, principal, null);
     }
 
-    private Consumer createConsumer(String consumerName, Principal principal) {
+    private Consumer createConsumer(String consumerName, Principal principal, 
+        List<String> activationKeys) {
         Consumer consumer = new Consumer(consumerName, null, null, system);
-        return this.resource.create(consumer, principal, USER, owner.getKey());
+        return this.resource.create(consumer, principal, USER, owner.getKey(), 
+            activationKeys);
     }
 
     @Test
@@ -189,21 +197,37 @@ public class ConsumerResourceCreationTest {
     @Test(expected = ForbiddenException.class)
     public void authRequired() {
         Principal p = new NoAuthPrincipal();
-        createConsumer("sys.example.com", p);
+        createConsumer("sys.example.com", p, null);
+    }
+    
+    private List<String> mockActivationKeys() {
+        ActivationKey key1 = new ActivationKey("key1", owner);
+        ActivationKey key2 = new ActivationKey("key2", owner);
+        ActivationKey key3 = new ActivationKey("key2", owner);
+        List<String> keys = new LinkedList<String>();
+        keys.add(key1.getName());
+        keys.add(key2.getName());
+        keys.add(key3.getName());
+        return keys;
+    }
+    
+    public void registerWithKeys() {
+        // No auth should be required for registering with keys:
+        Principal p = new NoAuthPrincipal();
+        List<String> keys = mockActivationKeys();
+        createConsumer("sys.example.com", p, keys);
     }
     
     @Test(expected = BadRequestException.class)
     public void orgRequiredWithActivationKeys() {
-        Assert.fail();
+        Principal p = new NoAuthPrincipal();
+        List<String> keys = mockActivationKeys();
+        Consumer consumer = new Consumer("sys.example.com", null, null, system);
+        resource.create(consumer, p, USER, null, keys);
     }
     
     @Test(expected = BadRequestException.class)
     public void cannotMixUsernameWithActivationKeys() {
-        Assert.fail();
-    }
-    
-    @Test(expected = BadRequestException.class)
-    public void authNotRequiredForActivationKeyReg() {
         Assert.fail();
     }
     

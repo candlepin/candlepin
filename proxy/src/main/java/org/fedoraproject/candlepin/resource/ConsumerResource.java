@@ -35,6 +35,8 @@ import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.fedoraproject.candlepin.model.ActivationKey;
+import org.fedoraproject.candlepin.model.ActivationKeyCurator;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
@@ -118,6 +120,7 @@ public class ConsumerResource {
     private ConsumerRules consumerRules;
     private ConsumerDeleteHelper consumerDeleteHelper;
     private OwnerCurator ownerCurator;
+    private ActivationKeyCurator activationKeyCurator; 
 
     @Inject
     public ConsumerResource(ConsumerCurator consumerCurator,
@@ -131,7 +134,7 @@ public class ConsumerResource {
         EventAdapter eventAdapter, UserServiceAdapter userService,
         Exporter exporter, PoolManager poolManager,
         ConsumerRules consumerRules, ConsumerDeleteHelper consumerDeleteHelper,
-        OwnerCurator ownerCurator) {
+        OwnerCurator ownerCurator, ActivationKeyCurator activationKeyCurator) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -151,6 +154,7 @@ public class ConsumerResource {
         this.consumerDeleteHelper = consumerDeleteHelper;
         this.ownerCurator = ownerCurator;
         this.eventAdapter = eventAdapter;
+        this.activationKeyCurator = activationKeyCurator;
     }
 
     /**
@@ -226,16 +230,43 @@ public class ConsumerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @SecurityHole(noAuth = true)
     public Consumer create(Consumer consumer, @Context Principal principal,
-        @QueryParam("username") String userName, @QueryParam("owner") String ownerKey)
+        @QueryParam("username") String userName, @QueryParam("owner") String ownerKey,
+        @QueryParam("activation_keys") List<String> keyStrings)
         throws BadRequestException {
         // API:registerConsumer
 
         // First, check that we have an authenticated principal if this is *not*
         // an activation key registration:
-        if (!(principal instanceof UserPrincipal)) {
+        if (!(principal instanceof UserPrincipal) && (keyStrings == null)) {
             throw new ForbiddenException(i18n.tr("Insufficient permissions"));
         }
         
+        if (keyStrings != null && ownerKey == null) {
+            throw new BadRequestException(i18n.tr(
+                "Must specify an org to register with activation keys."));
+        }
+        
+//        // first, look for keys. If it is not found, throw an exception
+//        List<ActivationKey> keys = new ArrayList<ActivationKey>();
+//        Owner owner = null;
+//        if (keyStrings == null || keyStrings.size() == 0) {
+//            throw new BadRequestException(
+//                i18n.tr("No activation keys were provided"));
+//        }
+//        for (String keyString : keyStrings) {
+//            ActivationKey key = findKey(keyString);
+//            if (owner == null) {
+//                owner = key.getOwner();
+//            }
+//            else {
+//                if (!owner.getId().equals(key.getOwner().getId())) {
+//                    throw new BadRequestException(
+//                        i18n.tr("The keys provided are for different owners"));
+//                }
+//            }
+//            keys.add(key);
+//        }
+
         if (!isConsumerNameValid(consumer.getName())) {
             throw new BadRequestException(
                 i18n.tr("System name cannot contain most special characters."));
