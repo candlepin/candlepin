@@ -39,6 +39,7 @@ import org.apache.log4j.Logger;
 import org.mozilla.javascript.RhinoException;
 import org.xnap.commons.i18n.I18n;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -411,7 +412,7 @@ public class EntitlementRules implements Enforcer {
     /**
      * RuleOrderComparator
      */
-    public static class RuleOrderComparator implements Comparator<Rule> {
+    public static class RuleOrderComparator implements Comparator<Rule>, Serializable {
         @Override
         public int compare(Rule o1, Rule o2) {
             return Integer.valueOf(o2.getOrder()).compareTo(
