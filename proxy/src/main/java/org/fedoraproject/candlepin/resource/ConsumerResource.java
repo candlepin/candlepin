@@ -241,63 +241,16 @@ public class ConsumerResource {
                 i18n.tr("System name cannot begin with # character"));
         }
 
-        // If no owner was specified, try to assume based on which owners the principal
-        // has admin rights for. If more than one, we have to error out.
-        if (ownerKey == null) {
-            // check for this cast?
-            List<String> ownerKeys = ((UserPrincipal) principal).getOwnerKeys();
-
-            if (ownerKeys.size() != 1) {
-                throw new BadRequestException(
-                    i18n.tr("You must specify an organization/owner for new consumers."));
-            }
-
-            ownerKey = ownerKeys.get(0);
-        }
-
-        ConsumerType type = lookupConsumerType(consumer.getType().getLabel());
-
         User user = getCurrentUsername(principal);
         if (userName != null) {
             user = userService.findByLogin(userName);
         }
 
-        setupOwners((UserPrincipal) principal);
+        Owner owner = setupOwner(principal, user, ownerKey);
 
-        // TODO: Refactor out type specific checks?
-        if (type.isType(ConsumerTypeEnum.PERSON) && user != null) {
-            Consumer existing = consumerCurator.findByUser(user);
+        ConsumerType type = lookupConsumerType(consumer.getType().getLabel());
 
-            if (existing != null &&
-                existing.getType().isType(ConsumerTypeEnum.PERSON)) {
-                // TODO: This is not the correct error code for this situation!
-                throw new BadRequestException(i18n.tr(
-                    "User {0} has already registered a personal consumer",
-                    user.getUsername()));
-            }
-            consumer.setName(user.getUsername());
-        }
-
-        Owner owner = ownerCurator.lookupByKey(ownerKey);
-        if (owner == null) {
-            throw new BadRequestException(
-                i18n.tr("Organization/Owner {0} does not exist.", ownerKey));
-        }
-
-        if (!principal.canAccess(owner, Access.ALL)) {
-            throw new ForbiddenException(
-                i18n.tr("User {0} cannot access organization/owner {1}",
-                    principal.getPrincipalName(), owner.getKey()));
-        }
-
-        // When registering person consumers we need to be sure the username
-        // has some association with the owner the consumer is destined for:
-        if (!user.hasOwnerAccess(owner, Access.ALL) && !user.isSuperAdmin()) {
-            throw new ForbiddenException(
-                i18n.tr("User {0} has no roles for organization/owner {1}",
-                    user.getUsername(), owner.getKey()));
-        }
-
+        verifyPersonConsumer(consumer, type, user);
 
         consumer.setUsername(user.getUsername());
         consumer.setOwner(owner);
@@ -334,6 +287,64 @@ public class ConsumerResource {
         }
     }
 
+    private void verifyPersonConsumer(Consumer consumer, ConsumerType type,
+        User user) {
+        // TODO: Refactor out type specific checks?
+        if (type.isType(ConsumerTypeEnum.PERSON) && user != null) {
+            Consumer existing = consumerCurator.findByUser(user);
+
+            if (existing != null &&
+                existing.getType().isType(ConsumerTypeEnum.PERSON)) {
+                // TODO: This is not the correct error code for this situation!
+                throw new BadRequestException(i18n.tr(
+                    "User {0} has already registered a personal consumer",
+                    user.getUsername()));
+            }
+            consumer.setName(user.getUsername());
+        }
+    }
+
+    private Owner setupOwner(Principal principal, User user, String ownerKey) {
+        // If no owner was specified, try to assume based on which owners the principal
+        // has admin rights for. If more than one, we have to error out.
+        if (ownerKey == null) {
+            // check for this cast?
+            List<String> ownerKeys = ((UserPrincipal) principal).getOwnerKeys();
+
+            if (ownerKeys.size() != 1) {
+                throw new BadRequestException(
+                    i18n.tr("You must specify an organization/owner for new consumers."));
+            }
+
+            ownerKey = ownerKeys.get(0);
+        }
+        
+        createOwnerIfNecessary((UserPrincipal) principal);
+
+        Owner owner = ownerCurator.lookupByKey(ownerKey);
+        if (owner == null) {
+            throw new BadRequestException(
+                i18n.tr("Organization/Owner {0} does not exist.", ownerKey));
+        }
+
+        // Check permissions for current principal on the owner:
+        if (!principal.canAccess(owner, Access.ALL)) {
+            throw new ForbiddenException(
+                i18n.tr("User {0} cannot access organization/owner {1}",
+                    principal.getPrincipalName(), owner.getKey()));
+        }
+
+        // When registering person consumers we need to be sure the username
+        // has some association with the owner the consumer is destined for:
+        if (!user.hasOwnerAccess(owner, Access.ALL) && !user.isSuperAdmin()) {
+            throw new ForbiddenException(
+                i18n.tr("User {0} has no roles for organization/owner {1}",
+                    user.getUsername(), owner.getKey()));
+        }
+
+        return owner;
+    }
+
     private boolean isConsumerNameValid(String name) {
         if (name == null) {
             return false;
@@ -346,11 +357,11 @@ public class ConsumerResource {
      * During registration of new consumers we support an edge case where the user
      * service may have authenticated a username/password for an owner which we have
      * not yet created in the Candlepin database. If we detect this during
-     * registration we need to create the new owners, and adjust
+     * registration we need to create the new owner, and adjust
      * the principal that was created during authentication to carry it.
      */
     // TODO:  Reevaluate if this is still an issue with the new membership scheme!
-    private void setupOwners(UserPrincipal principal) {
+    private void createOwnerIfNecessary(UserPrincipal principal) {
 
         for (Owner owner : principal.getOwners()) {
             Owner existingOwner = ownerCurator.lookupByKey(owner.getKey());
