@@ -222,8 +222,10 @@ define "candlepin" do
 
     Java::Commands.javadoc(*sources) 
 
-    api = JSON.parse(File.read('target/candlepin_api.json'))
-    comments = JSON.parse(File.read('target/candlepin_comments.json'))
+    api_file = 'target/candlepin_api.json'
+    comments_file = 'target/candlepin_comments.json'
+    api = JSON.parse(File.read(api_file))
+    comments = JSON.parse(File.read(comments_file))
 
     combined = Hash[api.collect { |a| [a['method'], a] }]
     comments.each do |c|
@@ -235,11 +237,16 @@ define "candlepin" do
     end
 
     final = JSON.dump(combined.values.sort_by { |v| v['method'] })
-    File.open('target/candlepin_methods.json', 'w') { |f| f.write final }
+    final_file = 'target/candlepin_methods.json'
+    File.open(final_file, 'w') { |f| f.write final }
 
     # Cleanup
-    rm 'target/candlepin_api.json'
-    rm 'target/candlepin_comments.json'
+    rm api_file
+    rm comments_file
+    puts
+    puts "Wrote Candlepin API to: " << final_file
+    puts
+
   end
 
   #
