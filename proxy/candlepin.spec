@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.4.5
+Version: 0.4.6
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -145,6 +145,20 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Fri Jul 15 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.6-1
+- require candlepin-deps 0.0.17 (jesusr@redhat.com)
+- revert to real bouncycastle (jesusr@redhat.com)
+- Better method of checking if user has access to an owner. (dgoodwin@redhat.com)
+- Print where we were API JSON after APICrawl. (dgoodwin@redhat.com)
+- findbugs: RuleOrderComparator implements Comparator but not Serializable (jesusr@redhat.com)
+- Bug 684941 redux (wpoteat@redhat.com)
+- findbugs: Possible null pointer dereference (jesusr@redhat.com)
+- findbugs: unread field (jesusr@redhat.com)
+- findbugs: inefficient use of new Long (jesusr@redhat.com)
+- findbugs: makes inefficient use of keySet iterator instead of entrySet iterator (jesusr@redhat.com)
+- findbugs: Comparison of String objects using == or != (jesusr@redhat.com)
+- Product quantity from multiple pools (wpoteat@redhat.com)
+
 * Wed Jul 13 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.5-1
 - extract strings for translation. (jesusr@redhat.com)
 - Rename of pool's product attributes field (mstead@redhat.com)
