@@ -371,7 +371,7 @@ public class ConsumerResource {
             ownerKey = ownerKeys.get(0);
         }
         
-        createOwnerIfNecessary((UserPrincipal) principal);
+        createOwnerIfNeeded((UserPrincipal) principal);
 
         Owner owner = ownerCurator.lookupByKey(ownerKey);
         if (owner == null) {
@@ -413,30 +413,15 @@ public class ConsumerResource {
      * the principal that was created during authentication to carry it.
      */
     // TODO:  Reevaluate if this is still an issue with the new membership scheme!
-    private void createOwnerIfNecessary(UserPrincipal principal) {
-
+    private void createOwnerIfNeeded(UserPrincipal principal) {
         for (Owner owner : principal.getOwners()) {
             Owner existingOwner = ownerCurator.lookupByKey(owner.getKey());
-
             if (existingOwner == null) {
                 log.info("Principal carries permission for owner that does not exist.");
                 log.info("Creating new owner: " + owner.getKey());
-
-                // Need elevated privileges to create a new owner:
-                Principal systemPrincipal = new SystemPrincipal();
-                ResteasyProviderFactory.pushContext(Principal.class,
-                    systemPrincipal);
-
                 existingOwner = ownerCurator.create(owner);
                 poolManager.refreshPools(existingOwner);
-                //p.setOwner(existingOwner);
-
-                ResteasyProviderFactory.popContextData(Principal.class);
-
-                // Restore the old principal having elevated privileges earlier:
-                ResteasyProviderFactory.pushContext(Principal.class, principal);
             }
-
         }
     }
 
