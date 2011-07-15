@@ -238,11 +238,11 @@ public class ConsumerResource {
 
         // First, check that we have an authenticated principal if this is *not*
         // an activation key registration:
-        if (!(principal instanceof UserPrincipal) && (keyStrings == null)) {
+        if (!(principal instanceof UserPrincipal) && (keyStrings.size() == 0)) {
             throw new ForbiddenException(i18n.tr("Insufficient permissions"));
         }
         
-        if (keyStrings != null) {
+        if (keyStrings.size() > 0) {
             if (ownerKey == null) {
                 throw new BadRequestException(i18n.tr(
                     "Must specify an org to register with activation keys."));
@@ -274,7 +274,7 @@ public class ConsumerResource {
         
         // first, look for keys. If it is not found, throw an exception
         List<ActivationKey> keys = new ArrayList<ActivationKey>();
-        if (keyStrings != null) {
+        if (keyStrings.size() > 0) {
             for (String keyString : keyStrings) {
                 ActivationKey key = findKey(keyString, owner);
                 keys.add(key);

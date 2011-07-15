@@ -58,6 +58,8 @@ import org.mockito.stubbing.Answer;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
+import edu.emory.mathcs.backport.java.util.Collections;
+
 /**
  *
  */
@@ -119,7 +121,7 @@ public class ConsumerResourceCreationTest {
         perms.addAll(role.getPermissions());
         Principal principal = new UserPrincipal(USER, perms, false);
 
-        return createConsumer(consumerName, principal, null);
+        return createConsumer(consumerName, principal, Collections.emptyList());
     }
 
     private Consumer createConsumer(String consumerName, Principal principal, 
@@ -197,7 +199,7 @@ public class ConsumerResourceCreationTest {
     @Test(expected = ForbiddenException.class)
     public void authRequired() {
         Principal p = new NoAuthPrincipal();
-        createConsumer("sys.example.com", p, null);
+        createConsumer("sys.example.com", p, Collections.emptyList());
     }
     
     private List<String> mockActivationKeys() {
