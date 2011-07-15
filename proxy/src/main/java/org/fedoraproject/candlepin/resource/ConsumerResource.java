@@ -71,6 +71,7 @@ import org.xnap.commons.i18n.I18n;
 import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -241,31 +242,17 @@ public class ConsumerResource {
             throw new ForbiddenException(i18n.tr("Insufficient permissions"));
         }
         
-        if (keyStrings != null && ownerKey == null) {
-            throw new BadRequestException(i18n.tr(
-                "Must specify an org to register with activation keys."));
+        if (keyStrings != null) {
+            if (ownerKey == null) {
+                throw new BadRequestException(i18n.tr(
+                    "Must specify an org to register with activation keys."));
+            }
+            if (userName != null) {
+                throw new BadRequestException(i18n.tr(
+                    "Cannot specify username with activation keys."));
+            }
         }
         
-//        // first, look for keys. If it is not found, throw an exception
-//        List<ActivationKey> keys = new ArrayList<ActivationKey>();
-//        Owner owner = null;
-//        if (keyStrings == null || keyStrings.size() == 0) {
-//            throw new BadRequestException(
-//                i18n.tr("No activation keys were provided"));
-//        }
-//        for (String keyString : keyStrings) {
-//            ActivationKey key = findKey(keyString);
-//            if (owner == null) {
-//                owner = key.getOwner();
-//            }
-//            else {
-//                if (!owner.getId().equals(key.getOwner().getId())) {
-//                    throw new BadRequestException(
-//                        i18n.tr("The keys provided are for different owners"));
-//                }
-//            }
-//            keys.add(key);
-//        }
 
         if (!isConsumerNameValid(consumer.getName())) {
             throw new BadRequestException(
@@ -284,6 +271,15 @@ public class ConsumerResource {
         }
 
         Owner owner = setupOwner(principal, user, ownerKey);
+        
+        // first, look for keys. If it is not found, throw an exception
+        List<ActivationKey> keys = new ArrayList<ActivationKey>();
+        if (keyStrings != null) {
+            for (String keyString : keyStrings) {
+                ActivationKey key = findKey(keyString, owner);
+                keys.add(key);
+            }
+        }
 
         ConsumerType type = lookupConsumerType(consumer.getType().getLabel());
 
@@ -302,6 +298,10 @@ public class ConsumerResource {
             for (String key : consumer.getFacts().keySet()) {
                 log.debug("   " + key + " = " + consumer.getFact(key));
             }
+            log.debug("Activation keys:");
+            for (ActivationKey activationKey : keys) {
+                log.debug("   " + activationKey.getName());
+            }
         }
 
         try {
@@ -310,6 +310,9 @@ public class ConsumerResource {
             consumer.setIdCert(idCert);
 
             sink.emitConsumerCreated(consumer);
+            
+            // TODO: Process activation keys.
+            
             return consumer;
         }
         catch (CandlepinException ce) {
@@ -322,6 +325,18 @@ public class ConsumerResource {
             throw new BadRequestException(i18n.tr(
                 "Problem creating consumer {0}", consumer));
         }
+    }
+
+    protected ActivationKey findKey(String activationKeyId, Owner owner) {
+        ActivationKey key = activationKeyCurator
+            .lookupForOwner(activationKeyId, owner);
+
+        if (key == null) {
+            throw new NotFoundException(i18n.tr(
+                "ActivationKey with id {0} could not be found",
+                activationKeyId));
+        }
+        return key;
     }
 
     private void verifyPersonConsumer(Consumer consumer, ConsumerType type,

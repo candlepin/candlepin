@@ -31,6 +31,7 @@ import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.auth.permissions.Permission;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
+import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.ActivationKey;
 import org.fedoraproject.candlepin.model.ActivationKeyCurator;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -211,11 +212,13 @@ public class ConsumerResourceCreationTest {
         return keys;
     }
     
+    @Test
     public void registerWithKeys() {
         // No auth should be required for registering with keys:
         Principal p = new NoAuthPrincipal();
         List<String> keys = mockActivationKeys();
-        createConsumer("sys.example.com", p, keys);
+        Consumer consumer = new Consumer("sys.example.com", null, null, system);
+        resource.create(consumer, p, null, owner.getKey(), keys);
     }
     
     @Test(expected = BadRequestException.class)
@@ -223,17 +226,24 @@ public class ConsumerResourceCreationTest {
         Principal p = new NoAuthPrincipal();
         List<String> keys = mockActivationKeys();
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
-        resource.create(consumer, p, USER, null, keys);
+        resource.create(consumer, p, null, null, keys);
     }
     
     @Test(expected = BadRequestException.class)
     public void cannotMixUsernameWithActivationKeys() {
-        Assert.fail();
+        Principal p = new NoAuthPrincipal();
+        List<String> keys = mockActivationKeys();
+        Consumer consumer = new Consumer("sys.example.com", null, null, system);
+        resource.create(consumer, p, USER, owner.getKey(), keys);
     }
     
-    @Test(expected = BadRequestException.class)
+    @Test(expected = NotFoundException.class)
     public void failIfAnyActivationKeyDoesNotExistForOrg() {
-        Assert.fail();
+        Principal p = new NoAuthPrincipal();
+        List<String> keys = mockActivationKeys();
+        keys.add("NoSuchKey");
+        Consumer consumer = new Consumer("sys.example.com", null, null, system);
+        resource.create(consumer, p, USER, owner.getKey(), keys);
     }
     
 }
