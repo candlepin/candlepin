@@ -19,7 +19,7 @@ BuildArch: noarch
 BuildRequires: java >= 0:1.6.0
 BuildRequires: ant >= 0:1.7.0
 BuildRequires: gettext
-BuildRequires: candlepin-deps >= 0:0.0.16
+BuildRequires: candlepin-deps >= 0:0.0.17
 %define __jar_repack %{nil}
 
 %description
