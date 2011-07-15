@@ -20,8 +20,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.NoAuthPrincipal;
@@ -203,8 +202,11 @@ public class ConsumerResourceCreationTest {
     
     private List<String> mockActivationKeys() {
         ActivationKey key1 = new ActivationKey("key1", owner);
+        when(activationKeyCurator.lookupForOwner("key1", owner)).thenReturn(key1);
         ActivationKey key2 = new ActivationKey("key2", owner);
-        ActivationKey key3 = new ActivationKey("key2", owner);
+        when(activationKeyCurator.lookupForOwner("key2", owner)).thenReturn(key2);
+        ActivationKey key3 = new ActivationKey("key3", owner);
+        when(activationKeyCurator.lookupForOwner("key3", owner)).thenReturn(key3);
         List<String> keys = new LinkedList<String>();
         keys.add(key1.getName());
         keys.add(key2.getName());
@@ -219,6 +221,9 @@ public class ConsumerResourceCreationTest {
         List<String> keys = mockActivationKeys();
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
         resource.create(consumer, p, null, owner.getKey(), keys);
+        for (String keyName : keys) {
+            verify(activationKeyCurator).lookupForOwner(keyName, owner);
+        }
     }
     
     @Test(expected = BadRequestException.class)
@@ -243,7 +248,7 @@ public class ConsumerResourceCreationTest {
         List<String> keys = mockActivationKeys();
         keys.add("NoSuchKey");
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
-        resource.create(consumer, p, USER, owner.getKey(), keys);
+        resource.create(consumer, p, null, owner.getKey(), keys);
     }
     
 }

@@ -285,7 +285,9 @@ public class ConsumerResource {
 
         verifyPersonConsumer(consumer, type, user);
 
-        consumer.setUsername(user.getUsername());
+        if (user != null) {
+            consumer.setUsername(user.getUsername());
+        }
         consumer.setOwner(owner);
         consumer.setType(type);
         consumer.setCanActivate(subAdapter.canActivateSubscription(consumer));
@@ -327,14 +329,14 @@ public class ConsumerResource {
         }
     }
 
-    protected ActivationKey findKey(String activationKeyId, Owner owner) {
+    protected ActivationKey findKey(String keyName, Owner owner) {
         ActivationKey key = activationKeyCurator
-            .lookupForOwner(activationKeyId, owner);
+            .lookupForOwner(keyName, owner);
 
         if (key == null) {
             throw new NotFoundException(i18n.tr(
-                "ActivationKey with id {0} could not be found",
-                activationKeyId));
+                "Activation key ''{0}'' not found for owner ''{1}''.", 
+                keyName, owner.getKey()));
         }
         return key;
     }
@@ -359,7 +361,7 @@ public class ConsumerResource {
     private Owner setupOwner(Principal principal, User user, String ownerKey) {
         // If no owner was specified, try to assume based on which owners the principal
         // has admin rights for. If more than one, we have to error out.
-        if (ownerKey == null) {
+        if (ownerKey == null && (principal instanceof UserPrincipal)) {
             // check for this cast?
             List<String> ownerKeys = ((UserPrincipal) principal).getOwnerKeys();
 
@@ -371,7 +373,7 @@ public class ConsumerResource {
             ownerKey = ownerKeys.get(0);
         }
         
-        createOwnerIfNeeded((UserPrincipal) principal);
+        createOwnerIfNeeded(principal);
 
         Owner owner = ownerCurator.lookupByKey(ownerKey);
         if (owner == null) {
@@ -380,18 +382,19 @@ public class ConsumerResource {
         }
 
         // Check permissions for current principal on the owner:
-        if (!principal.canAccess(owner, Access.ALL)) {
-            throw new ForbiddenException(
-                i18n.tr("User {0} cannot access organization/owner {1}",
-                    principal.getPrincipalName(), owner.getKey()));
-        }
-
-        // When registering person consumers we need to be sure the username
-        // has some association with the owner the consumer is destined for:
-        if (!user.hasOwnerAccess(owner, Access.ALL) && !user.isSuperAdmin()) {
-            throw new ForbiddenException(
-                i18n.tr("User {0} has no roles for organization/owner {1}",
-                    user.getUsername(), owner.getKey()));
+        if ((principal instanceof UserPrincipal)) {
+            if (!principal.canAccess(owner, Access.ALL)) {
+                throw new ForbiddenException(
+                    i18n.tr("User {0} cannot access organization/owner {1}",
+                        principal.getPrincipalName(), owner.getKey()));
+            }
+            // When registering person consumers we need to be sure the username
+            // has some association with the owner the consumer is destined for:
+            if (!user.hasOwnerAccess(owner, Access.ALL) && !user.isSuperAdmin()) {
+                throw new ForbiddenException(
+                    i18n.tr("User {0} has no roles for organization/owner {1}",
+                        user.getUsername(), owner.getKey()));
+            }
         }
 
         return owner;
@@ -412,9 +415,14 @@ public class ConsumerResource {
      * registration we need to create the new owner, and adjust
      * the principal that was created during authentication to carry it.
      */
-    // TODO:  Reevaluate if this is still an issue with the new membership scheme!
-    private void createOwnerIfNeeded(UserPrincipal principal) {
-        for (Owner owner : principal.getOwners()) {
+    // TODO:  Re-evaluate if this is still an issue with the new membership scheme!
+    private void createOwnerIfNeeded(Principal principal) {
+        if (!(principal instanceof UserPrincipal)) {
+            // If this isn't a user principal we can't check for owners that may need to 
+            // be created.
+            return;
+        }
+        for (Owner owner : ((UserPrincipal) principal).getOwners()) {
             Owner existingOwner = ownerCurator.lookupByKey(owner.getKey());
             if (existingOwner == null) {
                 log.info("Principal carries permission for owner that does not exist.");
