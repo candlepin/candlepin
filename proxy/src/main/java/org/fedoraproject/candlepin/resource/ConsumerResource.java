@@ -230,9 +230,11 @@ public class ConsumerResource {
     @SecurityHole(noAuth = true)
     public Consumer create(Consumer consumer, @Context Principal principal,
         @QueryParam("username") String userName, @QueryParam("owner") String ownerKey,
-        @QueryParam("activation_keys") List<String> keyStrings)
+        @QueryParam("activation_keys") String activationKeys)
         throws BadRequestException {
         // API:registerConsumer
+        
+        Set<String> keyStrings = splitKeys(activationKeys);
 
         // First, check that we have an authenticated principal if this is *not*
         // an activation key registration:
@@ -328,7 +330,7 @@ public class ConsumerResource {
         }
     }
 
-    protected ActivationKey findKey(String keyName, Owner owner) {
+    private ActivationKey findKey(String keyName, Owner owner) {
         ActivationKey key = activationKeyCurator
             .lookupForOwner(keyName, owner);
 
@@ -569,8 +571,7 @@ public class ConsumerResource {
         }
     }
 
-    @SecurityHole(noAuth = true)
-    protected Set<Long> extractSerials(String serials) {
+    private Set<Long> extractSerials(String serials) {
         Set<Long> serialSet = new HashSet<Long>();
         if (serials != null) {
             log.debug("Requested serials: " + serials);
@@ -581,6 +582,16 @@ public class ConsumerResource {
         }
 
         return serialSet;
+    }
+
+    private Set<String> splitKeys(String activationKeyString) {
+        Set<String> keys = new HashSet<String>();
+        if (activationKeyString != null && !activationKeyString.equals("")) {
+            for (String s : activationKeyString.split(",")) {
+                keys.add(s);
+            }
+        }
+        return keys;
     }
 
     /**

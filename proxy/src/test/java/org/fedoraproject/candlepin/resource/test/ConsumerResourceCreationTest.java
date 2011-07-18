@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Locale;
 import static org.mockito.Mockito.*;
 
+import org.apache.commons.lang.StringUtils;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.NoAuthPrincipal;
 import org.fedoraproject.candlepin.auth.Principal;
@@ -128,7 +129,7 @@ public class ConsumerResourceCreationTest {
         List<String> activationKeys) {
         Consumer consumer = new Consumer(consumerName, null, null, system);
         return this.resource.create(consumer, principal, USER, owner.getKey(), 
-            activationKeys);
+            createKeysString(activationKeys));
     }
 
     @Test
@@ -216,13 +217,17 @@ public class ConsumerResourceCreationTest {
         return keys;
     }
     
+    private String createKeysString(List<String> activationKeys) {
+        return StringUtils.join(activationKeys, ',');
+    }
+    
     @Test
     public void registerWithKeys() {
         // No auth should be required for registering with keys:
         Principal p = new NoAuthPrincipal();
         List<String> keys = mockActivationKeys();
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
-        resource.create(consumer, p, null, owner.getKey(), keys);
+        resource.create(consumer, p, null, owner.getKey(), createKeysString(keys));
         for (String keyName : keys) {
             verify(activationKeyCurator).lookupForOwner(keyName, owner);
         }
@@ -233,7 +238,7 @@ public class ConsumerResourceCreationTest {
         Principal p = new NoAuthPrincipal();
         List<String> keys = mockActivationKeys();
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
-        resource.create(consumer, p, null, null, keys);
+        resource.create(consumer, p, null, null, createKeysString(keys));
     }
     
     @Test(expected = BadRequestException.class)
@@ -241,7 +246,7 @@ public class ConsumerResourceCreationTest {
         Principal p = new NoAuthPrincipal();
         List<String> keys = mockActivationKeys();
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
-        resource.create(consumer, p, USER, owner.getKey(), keys);
+        resource.create(consumer, p, USER, owner.getKey(), createKeysString(keys));
     }
     
     @Test(expected = NotFoundException.class)
@@ -250,7 +255,7 @@ public class ConsumerResourceCreationTest {
         List<String> keys = mockActivationKeys();
         keys.add("NoSuchKey");
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
-        resource.create(consumer, p, null, owner.getKey(), keys);
+        resource.create(consumer, p, null, owner.getKey(), createKeysString(keys));
     }
     
 }

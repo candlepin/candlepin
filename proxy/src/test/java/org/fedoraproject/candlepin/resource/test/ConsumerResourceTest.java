@@ -74,8 +74,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 
-import edu.emory.mathcs.backport.java.util.Collections;
-
 import java.util.ArrayList;
 
 import javax.servlet.http.HttpServletResponse;
@@ -239,7 +237,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
             new UserPrincipal(someuser.getUsername(), Arrays.asList(new Permission [] {
                 new OwnerPermission(owner, Access.ALL) }), false),
             someuser.getUsername(),
-            owner.getKey(), Collections.emptyList());
+            owner.getKey(), null);
 
         assertNotNull(submitted);
         assertNotNull(consumerCurator.find(submitted.getId()));
@@ -258,7 +256,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
 
         Consumer submitted = consumerResource.create(toSubmit, principal, null,
-                owner.getKey(), Collections.emptyList());
+                owner.getKey(), null);
         assertNotNull(submitted);
         assertNotNull(submitted.getId());
         assertNotNull(consumerCurator.find(submitted.getId()));
@@ -274,8 +272,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         anotherToSubmit.setUuid(uuid);
         anotherToSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
         anotherToSubmit.setId(null);
-        consumerResource.create(anotherToSubmit, principal, null, owner.getKey(), 
-            Collections.emptyList());
+        consumerResource.create(anotherToSubmit, principal, null, owner.getKey(), null);
     }
 
     public void testDeleteResource() {
@@ -295,7 +292,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
             standardSystemType);
 
         consumer = consumerResource.create(consumer, principal, null, null, 
-            Collections.emptyList());
+            null);
 
         assertEquals(USER_NAME, consumer.getUsername());
     }
@@ -349,7 +346,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         Consumer submitted = consumerResource.create(
             toSubmit,
             TestUtil.createPrincipal(someuser.getUsername(), owner, Access.ALL),
-            null, null, Collections.emptyList());
+            null, null, null);
 
         assertNotNull(submitted);
         assertEquals(toSubmit.getUuid(), submitted.getUuid());
@@ -365,7 +362,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         submitted = consumerResource.create(
             nulltypeid,
             TestUtil.createPrincipal(someuser.getUsername(), owner, Access.ALL),
-            null, null, Collections.emptyList());
+            null, null, null);
         assertNotNull(submitted);
         assertEquals(nulltypeid.getUuid(), submitted.getUuid());
         assertNotNull(submitted.getType().getId());
@@ -567,8 +564,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     public void personalNameOverride() {
         Consumer personal = TestUtil.createConsumer(personType, owner);
 
-        personal = consumerResource.create(personal, principal, null, null, 
-            Collections.emptyList());
+        personal = consumerResource.create(personal, principal, null, null, null);
 
         // Not sure if this should be hard-coded to default
         assertEquals(USER_NAME, personal.getName());
@@ -587,8 +583,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         Consumer personal = TestUtil.createConsumer(personType, owner);
         personal.setName(((UserPrincipal) emailuser).getUsername());
 
-        personal = consumerResource.create(personal, emailuser, username, null, 
-            Collections.emptyList());
+        personal = consumerResource.create(personal, emailuser, username, null, null);
 
         // Not sure if this should be hard-coded to default
         assertEquals(username, personal.getName());
@@ -597,10 +592,10 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     @Test(expected = BadRequestException.class)
     public void onlyOnePersonalConsumer() {
         Consumer personal = TestUtil.createConsumer(personType, owner);
-        consumerResource.create(personal, principal, null, null, Collections.emptyList());
+        consumerResource.create(personal, principal, null, null, null);
 
         personal = TestUtil.createConsumer(personType, owner);
-        consumerResource.create(personal, principal, null, null, Collections.emptyList());
+        consumerResource.create(personal, principal, null, null, null);
     }
 
     private Event createConsumerCreatedEvent(Owner o) {
