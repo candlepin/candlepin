@@ -45,7 +45,7 @@ data["owners"].each do |new_owner|
   owner = cp.create_owner(owner_name, new_owner)
 
   # Create one dummy activation key for the owner
-  cp.create_activation_key({"name" => "Default Key"}, owner['key'])
+  cp.create_activation_key(owner['key'], "Default Key")
 end
 
 puts

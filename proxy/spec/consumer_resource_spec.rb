@@ -184,6 +184,19 @@ describe 'Consumer Resource' do
     consumer.uuid.should == 'custom-uuid'
   end
 
+  it 'should allow a consumer register with activation keys' do
+    owner = create_owner random_string('owner')
+    user = user_client(owner, random_string('billy'))
+
+    @cp.create_activation_key(owner['key'], 'key1')
+    @cp.create_activation_key(owner['key'], 'key2')
+    consumer = user.register('machine1', :system, nil, {}, nil, 
+      owner['key'], ["key1", "key2"])
+    consumer.uuid.should_not be_nil
+
+    # TODO: Verify activation keys did what we expect once they are functional
+  end
+
   it 'should not allow the same UUID to be registered twice' do
     owner = create_owner random_string('owner')
     user = user_client(owner, random_string('willy'))
