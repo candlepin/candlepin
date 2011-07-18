@@ -49,11 +49,9 @@ import org.fedoraproject.candlepin.model.Statistic;
 import org.fedoraproject.candlepin.model.StatisticCurator;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
-import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.pinsetter.tasks.RefreshPoolsJob;
 import org.fedoraproject.candlepin.resource.util.ResourceDateParser;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
-import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.fedoraproject.candlepin.sync.Importer;
 import org.fedoraproject.candlepin.sync.ImporterException;
 import org.fedoraproject.candlepin.sync.SyncDataFormatException;
@@ -100,7 +98,6 @@ public class OwnerResource {
     private SubscriptionCurator subscriptionCurator;
     private ActivationKeyCurator activationKeyCurator;
     private StatisticCurator statisticCurator;
-    private UserServiceAdapter userService;
     private SubscriptionServiceAdapter subService;
     private ConsumerCurator consumerCurator;
     private I18n i18n;
@@ -123,10 +120,10 @@ public class OwnerResource {
         ActivationKeyCurator activationKeyCurator,
         ConsumerCurator consumerCurator,
         StatisticCurator statisticCurator,
-        I18n i18n, UserServiceAdapter userService,
-        EventSink sink, EventFactory eventFactory,
-        EventCurator eventCurator, EventAdapter eventAdapter,
-        Importer importer, PoolManager poolManager, ExporterMetadataCurator exportCurator,
+        I18n i18n, EventSink sink,
+        EventFactory eventFactory, EventCurator eventCurator,
+        EventAdapter eventAdapter, Importer importer,
+        PoolManager poolManager, ExporterMetadataCurator exportCurator, 
         OwnerInfoCurator ownerInfoCurator,
         ImportRecordCurator importRecordCurator,
         SubscriptionServiceAdapter subService,
@@ -140,7 +137,6 @@ public class OwnerResource {
         this.activationKeyCurator = activationKeyCurator;
         this.consumerCurator = consumerCurator;
         this.statisticCurator = statisticCurator;
-        this.userService = userService;
         this.i18n = i18n;
         this.sink = sink;
         this.eventFactory = eventFactory;
@@ -516,17 +512,6 @@ public class OwnerResource {
         }
 
         return owner;
-    }
-
-    private User findUser(String login) {
-        User user = userService.findByLogin(login);
-
-        if (user == null) {
-            throw new NotFoundException(i18n.tr(
-                "user with login: {0} was not found.", login));
-        }
-
-        return user;
     }
 
     private Consumer findConsumer(String consumerUuid) {
