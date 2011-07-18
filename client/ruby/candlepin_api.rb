@@ -57,8 +57,9 @@ class Candlepin
     return @links[resource]
   end
 
+  # TODO: need to switch to a params hash, getting to be too many arguments.
   def register(name, type=:system, uuid=nil, facts={}, username=nil,
-              owner_key=nil)
+              owner_key=nil, activation_keys=[])
     consumer = {
       :type => {:label => type},
       :name => name,
@@ -70,6 +71,7 @@ class Candlepin
     path = get_path("consumers") + "?"
     path = path + "owner=#{owner_key}&" if not owner_key.nil?
     path += "username=#{username}&" if username
+    path += "activation_keys=" + activation_keys.join(",") if activation_keys.length > 0
     @consumer = post(path, consumer)
     return @consumer
   end
@@ -471,20 +473,18 @@ class Candlepin
     return delete("/subscriptions/#{subscription_id}")
   end
 
-  def list_activation_keys
-    return get("/activation_keys")
-  end
-
-  def create_activation_key(data, owner_key=nil)
-    if ! owner_key.nil?
-        return post("/owners/#{owner_key}/activation_keys", data)
-    else
-        return post("/activation_keys", data)
+  def list_activation_keys(owner_key=nil)
+    if owner_key.nil?
+      return get("/activation_keys")
     end
+    return get("/owner/#{owner_key}/activation_keys")
   end
 
-  def get_activation_keys(owner_key)
-    return get("owner/#{owner_key}/activation_keys")
+  def create_activation_key(owner_key, name)
+    key = {
+      :name => name,
+    }
+    return post("/owners/#{owner_key}/activation_keys", key)
   end
 
   def get_activation_key(key_id)

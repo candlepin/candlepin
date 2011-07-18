@@ -125,18 +125,6 @@ public class ActivationKeyResource {
         return keyList;
     }
 
-    @POST
-    @Produces(MediaType.APPLICATION_JSON)
-    public ActivationKey createActivationKey(
-        ActivationKey activationKey) {
-        this.verifyName(activationKey);
-        ActivationKey newKey = activationKeyCurator
-            .create(activationKey);
-        eventSink.emitActivationKeyCreated(newKey);
-
-        return newKey;
-    }
-
     @DELETE
     @Path("{activation_key_id}")
     @Produces(MediaType.APPLICATION_JSON)

@@ -352,11 +352,16 @@ public class OwnerResource {
     public ActivationKey createActivationKey(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         ActivationKey activationKey) {
+        
         Owner owner = findOwner(ownerKey);
         activationKey.setOwner(owner);
+        
+        if (activationKey.getName() == null) {
+            throw new BadRequestException(
+                i18n.tr("Must provide a name for activation key."));
+        }
 
         ActivationKey newKey = activationKeyCurator.create(activationKey);
-        System.out.println(newKey);
         sink.emitActivationKeyCreated(newKey);
 
         return newKey;

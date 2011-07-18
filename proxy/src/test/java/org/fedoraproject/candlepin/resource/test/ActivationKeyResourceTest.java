@@ -51,7 +51,8 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         Owner owner = createOwner();
         key.setOwner(owner);
         key.setName("dd");
-        key = activationKeyResource.createActivationKey(key);
+        activationKeyCurator.create(key);
+        
         assertNotNull(key.getId());
         key = activationKeyResource.getActivationKey(key.getId());
         assertNotNull(key);
@@ -65,21 +66,6 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         }
         catch (BadRequestException e) {
             // expected, return
-            return;
-        }
-        fail("No exception was thrown");
-    }
-
-    @Test
-    public void testNoNameProvided() {
-        ActivationKey key = new ActivationKey();
-        Owner owner = createOwner();
-        key.setOwner(owner);
-        try {
-            key = activationKeyResource.createActivationKey(key);
-        }
-        catch (BadRequestException e) {
-            // expected
             return;
         }
         fail("No exception was thrown");
@@ -105,13 +91,13 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         Pool pool = createPoolAndSub(owner, product, 10L, new Date(), new Date());
         key.setOwner(owner);
         key.setName("dd");
-        key = activationKeyResource.createActivationKey(key);
+        key = activationKeyCurator.create(key);
         assertNotNull(key.getId());
         activationKeyResource.addPoolToKey(key.getId(), pool.getId());
-        key = activationKeyResource.createActivationKey(key);
+//        key = activationKeyResource.createActivationKey(key);
         assertTrue(key.getPools().size() == 1);
         activationKeyResource.removePoolFromKey(key.getId(), pool.getId());
-        key = activationKeyResource.createActivationKey(key);
+//        key = activationKeyResource.createActivationKey(key);
         assertTrue(key.getPools().size() == 0);
     }
 

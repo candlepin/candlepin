@@ -20,7 +20,6 @@ import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.SystemPrincipal;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.auth.interceptor.SecurityHole;
 import org.fedoraproject.candlepin.auth.interceptor.Verify;
@@ -35,6 +34,8 @@ import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.fedoraproject.candlepin.model.ActivationKey;
+import org.fedoraproject.candlepin.model.ActivationKeyCurator;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
@@ -63,12 +64,12 @@ import com.wideplay.warp.persist.Transactional;
 
 import org.apache.log4j.Logger;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -118,6 +119,7 @@ public class ConsumerResource {
     private ConsumerRules consumerRules;
     private ConsumerDeleteHelper consumerDeleteHelper;
     private OwnerCurator ownerCurator;
+    private ActivationKeyCurator activationKeyCurator; 
 
     @Inject
     public ConsumerResource(ConsumerCurator consumerCurator,
@@ -131,7 +133,7 @@ public class ConsumerResource {
         EventAdapter eventAdapter, UserServiceAdapter userService,
         Exporter exporter, PoolManager poolManager,
         ConsumerRules consumerRules, ConsumerDeleteHelper consumerDeleteHelper,
-        OwnerCurator ownerCurator) {
+        OwnerCurator ownerCurator, ActivationKeyCurator activationKeyCurator) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -151,6 +153,7 @@ public class ConsumerResource {
         this.consumerDeleteHelper = consumerDeleteHelper;
         this.ownerCurator = ownerCurator;
         this.eventAdapter = eventAdapter;
+        this.activationKeyCurator = activationKeyCurator;
     }
 
     /**
@@ -224,11 +227,32 @@ public class ConsumerResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    @SecurityHole
+    @SecurityHole(noAuth = true)
     public Consumer create(Consumer consumer, @Context Principal principal,
-        @QueryParam("username") String userName, @QueryParam("owner") String ownerKey)
+        @QueryParam("username") String userName, @QueryParam("owner") String ownerKey,
+        @QueryParam("activation_keys") String activationKeys)
         throws BadRequestException {
         // API:registerConsumer
+        
+        Set<String> keyStrings = splitKeys(activationKeys);
+
+        // First, check that we have an authenticated principal if this is *not*
+        // an activation key registration:
+        if (!(principal instanceof UserPrincipal) && (keyStrings.size() == 0)) {
+            throw new ForbiddenException(i18n.tr("Insufficient permissions"));
+        }
+        
+        if (keyStrings.size() > 0) {
+            if (ownerKey == null) {
+                throw new BadRequestException(i18n.tr(
+                    "Must specify an org to register with activation keys."));
+            }
+            if (userName != null) {
+                throw new BadRequestException(i18n.tr(
+                    "Cannot specify username with activation keys."));
+            }
+        }
+        
 
         if (!isConsumerNameValid(consumer.getName())) {
             throw new BadRequestException(
@@ -241,65 +265,30 @@ public class ConsumerResource {
                 i18n.tr("System name cannot begin with # character"));
         }
 
-        // If no owner was specified, try to assume based on which owners the principal
-        // has admin rights for. If more than one, we have to error out.
-        if (ownerKey == null) {
-            // check for this cast?
-            List<String> ownerKeys = ((UserPrincipal) principal).getOwnerKeys();
-
-            if (ownerKeys.size() != 1) {
-                throw new BadRequestException(
-                    i18n.tr("You must specify an organization/owner for new consumers."));
-            }
-
-            ownerKey = ownerKeys.get(0);
-        }
-
-        ConsumerType type = lookupConsumerType(consumer.getType().getLabel());
-
         User user = getCurrentUsername(principal);
         if (userName != null) {
             user = userService.findByLogin(userName);
         }
 
-        setupOwners((UserPrincipal) principal);
-
-        // TODO: Refactor out type specific checks?
-        if (type.isType(ConsumerTypeEnum.PERSON) && user != null) {
-            Consumer existing = consumerCurator.findByUser(user);
-
-            if (existing != null &&
-                existing.getType().isType(ConsumerTypeEnum.PERSON)) {
-                // TODO: This is not the correct error code for this situation!
-                throw new BadRequestException(i18n.tr(
-                    "User {0} has already registered a personal consumer",
-                    user.getUsername()));
+        Owner owner = setupOwner(principal, user, ownerKey);
+        
+        // Raise an exception if any keys were specified which do not exist
+        // for this owner.
+        List<ActivationKey> keys = new ArrayList<ActivationKey>();
+        if (keyStrings.size() > 0) {
+            for (String keyString : keyStrings) {
+                ActivationKey key = findKey(keyString, owner);
+                keys.add(key);
             }
-            consumer.setName(user.getUsername());
         }
 
-        Owner owner = ownerCurator.lookupByKey(ownerKey);
-        if (owner == null) {
-            throw new BadRequestException(
-                i18n.tr("Organization/Owner {0} does not exist.", ownerKey));
+        ConsumerType type = lookupConsumerType(consumer.getType().getLabel());
+
+        verifyPersonConsumer(consumer, type, user);
+
+        if (user != null) {
+            consumer.setUsername(user.getUsername());
         }
-
-        if (!principal.canAccess(owner, Access.ALL)) {
-            throw new ForbiddenException(
-                i18n.tr("User {0} cannot access organization/owner {1}",
-                    principal.getPrincipalName(), owner.getKey()));
-        }
-
-        // When registering person consumers we need to be sure the username
-        // has some association with the owner the consumer is destined for:
-        if (!user.hasOwnerAccess(owner, Access.ALL) && !user.isSuperAdmin()) {
-            throw new ForbiddenException(
-                i18n.tr("User {0} has no roles for organization/owner {1}",
-                    user.getUsername(), owner.getKey()));
-        }
-
-
-        consumer.setUsername(user.getUsername());
         consumer.setOwner(owner);
         consumer.setType(type);
         consumer.setCanActivate(subAdapter.canActivateSubscription(consumer));
@@ -312,6 +301,10 @@ public class ConsumerResource {
             for (String key : consumer.getFacts().keySet()) {
                 log.debug("   " + key + " = " + consumer.getFact(key));
             }
+            log.debug("Activation keys:");
+            for (ActivationKey activationKey : keys) {
+                log.debug("   " + activationKey.getName());
+            }
         }
 
         try {
@@ -320,6 +313,9 @@ public class ConsumerResource {
             consumer.setIdCert(idCert);
 
             sink.emitConsumerCreated(consumer);
+            
+            // TODO: Process activation keys.
+            
             return consumer;
         }
         catch (CandlepinException ce) {
@@ -334,6 +330,77 @@ public class ConsumerResource {
         }
     }
 
+    private ActivationKey findKey(String keyName, Owner owner) {
+        ActivationKey key = activationKeyCurator
+            .lookupForOwner(keyName, owner);
+
+        if (key == null) {
+            throw new NotFoundException(i18n.tr(
+                "Activation key ''{0}'' not found for organization ''{1}''.", 
+                keyName, owner.getKey()));
+        }
+        return key;
+    }
+
+    private void verifyPersonConsumer(Consumer consumer, ConsumerType type,
+        User user) {
+        // TODO: Refactor out type specific checks?
+        if (type.isType(ConsumerTypeEnum.PERSON) && user != null) {
+            Consumer existing = consumerCurator.findByUser(user);
+
+            if (existing != null &&
+                existing.getType().isType(ConsumerTypeEnum.PERSON)) {
+                // TODO: This is not the correct error code for this situation!
+                throw new BadRequestException(i18n.tr(
+                    "User {0} has already registered a personal consumer",
+                    user.getUsername()));
+            }
+            consumer.setName(user.getUsername());
+        }
+    }
+
+    private Owner setupOwner(Principal principal, User user, String ownerKey) {
+        // If no owner was specified, try to assume based on which owners the principal
+        // has admin rights for. If more than one, we have to error out.
+        if (ownerKey == null && (principal instanceof UserPrincipal)) {
+            // check for this cast?
+            List<String> ownerKeys = ((UserPrincipal) principal).getOwnerKeys();
+
+            if (ownerKeys.size() != 1) {
+                throw new BadRequestException(
+                    i18n.tr("You must specify an organization/owner for new consumers."));
+            }
+
+            ownerKey = ownerKeys.get(0);
+        }
+        
+        createOwnerIfNeeded(principal);
+
+        Owner owner = ownerCurator.lookupByKey(ownerKey);
+        if (owner == null) {
+            throw new BadRequestException(
+                i18n.tr("Organization/Owner {0} does not exist.", ownerKey));
+        }
+
+        // Check permissions for current principal on the owner:
+        if ((principal instanceof UserPrincipal)) {
+            if (!principal.canAccess(owner, Access.ALL)) {
+                throw new ForbiddenException(
+                    i18n.tr("User {0} cannot access organization/owner {1}",
+                        principal.getPrincipalName(), owner.getKey()));
+            }
+            // When registering person consumers we need to be sure the username
+            // has some association with the owner the consumer is destined for:
+            if (!user.hasOwnerAccess(owner, Access.ALL) && !user.isSuperAdmin()) {
+                throw new ForbiddenException(
+                    i18n.tr("User {0} has no roles for organization/owner {1}",
+                        user.getUsername(), owner.getKey()));
+            }
+        }
+
+        return owner;
+    }
+
     private boolean isConsumerNameValid(String name) {
         if (name == null) {
             return false;
@@ -346,34 +413,24 @@ public class ConsumerResource {
      * During registration of new consumers we support an edge case where the user
      * service may have authenticated a username/password for an owner which we have
      * not yet created in the Candlepin database. If we detect this during
-     * registration we need to create the new owners, and adjust
+     * registration we need to create the new owner, and adjust
      * the principal that was created during authentication to carry it.
      */
-    // TODO:  Reevaluate if this is still an issue with the new membership scheme!
-    private void setupOwners(UserPrincipal principal) {
-
-        for (Owner owner : principal.getOwners()) {
+    // TODO:  Re-evaluate if this is still an issue with the new membership scheme!
+    private void createOwnerIfNeeded(Principal principal) {
+        if (!(principal instanceof UserPrincipal)) {
+            // If this isn't a user principal we can't check for owners that may need to 
+            // be created.
+            return;
+        }
+        for (Owner owner : ((UserPrincipal) principal).getOwners()) {
             Owner existingOwner = ownerCurator.lookupByKey(owner.getKey());
-
             if (existingOwner == null) {
                 log.info("Principal carries permission for owner that does not exist.");
                 log.info("Creating new owner: " + owner.getKey());
-
-                // Need elevated privileges to create a new owner:
-                Principal systemPrincipal = new SystemPrincipal();
-                ResteasyProviderFactory.pushContext(Principal.class,
-                    systemPrincipal);
-
                 existingOwner = ownerCurator.create(owner);
                 poolManager.refreshPools(existingOwner);
-                //p.setOwner(existingOwner);
-
-                ResteasyProviderFactory.popContextData(Principal.class);
-
-                // Restore the old principal having elevated privileges earlier:
-                ResteasyProviderFactory.pushContext(Principal.class, principal);
             }
-
         }
     }
 
@@ -514,8 +571,7 @@ public class ConsumerResource {
         }
     }
 
-    @SecurityHole(noAuth = true)
-    protected Set<Long> extractSerials(String serials) {
+    private Set<Long> extractSerials(String serials) {
         Set<Long> serialSet = new HashSet<Long>();
         if (serials != null) {
             log.debug("Requested serials: " + serials);
@@ -526,6 +582,16 @@ public class ConsumerResource {
         }
 
         return serialSet;
+    }
+
+    private Set<String> splitKeys(String activationKeyString) {
+        Set<String> keys = new HashSet<String>();
+        if (activationKeyString != null && !activationKeyString.equals("")) {
+            for (String s : activationKeyString.split(",")) {
+                keys.add(s);
+            }
+        }
+        return keys;
     }
 
     /**
