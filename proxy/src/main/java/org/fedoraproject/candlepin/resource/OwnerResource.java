@@ -352,11 +352,11 @@ public class OwnerResource {
     public ActivationKey createActivationKey(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         ActivationKey activationKey) {
+        
         Owner owner = findOwner(ownerKey);
         activationKey.setOwner(owner);
 
         ActivationKey newKey = activationKeyCurator.create(activationKey);
-        System.out.println(newKey);
         sink.emitActivationKeyCreated(newKey);
 
         return newKey;

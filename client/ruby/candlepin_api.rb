@@ -471,8 +471,11 @@ class Candlepin
     return delete("/subscriptions/#{subscription_id}")
   end
 
-  def list_activation_keys
-    return get("/activation_keys")
+  def list_activation_keys(owner_key=nil)
+    if owner_key.nil?
+      return get("/activation_keys")
+    end
+    return get("/owner/#{owner_key}/activation_keys")
   end
 
   def create_activation_key(data, owner_key=nil)
@@ -481,10 +484,6 @@ class Candlepin
     else
         return post("/activation_keys", data)
     end
-  end
-
-  def get_activation_keys(owner_key)
-    return get("owner/#{owner_key}/activation_keys")
   end
 
   def get_activation_key(key_id)
