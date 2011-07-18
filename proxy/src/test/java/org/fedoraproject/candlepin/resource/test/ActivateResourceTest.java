@@ -46,32 +46,32 @@ public class ActivateResourceTest extends DatabaseTestFixture {
         .getInstance(ActivationKeyResource.class);
     }
 
-    @Test
-    public void testCustomerCreateWithNoStringFails() {
-        ActivationKey key = new ActivationKey();
-        Owner owner = createOwner();
-        key.setOwner(owner);
-        key.setName("dd");
-        key = activationKeyResource.createActivationKey(key);
-        Consumer con = new Consumer();
-        con.setName("test");
-        Principal principal = new NoAuthPrincipal();
-        ArrayList<String> keys = new ArrayList<String>();
-        try {
-            activateResource.activate(con, principal, keys);
-        }
-        catch (BadRequestException e) {
-            // expected, lets try null
-            try {
-                activateResource.activate(con, principal, null);
-            }
-            catch (BadRequestException ee) {
-                // expected, lets try null
-                return;
-            }
-        }
-        fail("No excpetion was thrown");
-    }
+//    @Test
+//    public void testCustomerCreateWithNoStringFails() {
+//        ActivationKey key = new ActivationKey();
+//        Owner owner = createOwner();
+//        key.setOwner(owner);
+//        key.setName("dd");
+//        key = activationKeyResource.createActivationKey(key);
+//        Consumer con = new Consumer();
+//        con.setName("test");
+//        Principal principal = new NoAuthPrincipal();
+//        ArrayList<String> keys = new ArrayList<String>();
+//        try {
+//            activateResource.activate(con, principal, keys);
+//        }
+//        catch (BadRequestException e) {
+//            // expected, lets try null
+//            try {
+//                activateResource.activate(con, principal, null);
+//            }
+//            catch (BadRequestException ee) {
+//                // expected, lets try null
+//                return;
+//            }
+//        }
+//        fail("No excpetion was thrown");
+//    }
 
     //FIXME wait for ownergeddon to work
     /*

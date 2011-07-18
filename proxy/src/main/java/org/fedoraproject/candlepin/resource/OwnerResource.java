@@ -355,6 +355,11 @@ public class OwnerResource {
         
         Owner owner = findOwner(ownerKey);
         activationKey.setOwner(owner);
+        
+        if (activationKey.getName() == null) {
+            throw new BadRequestException(
+                i18n.tr("Must provide a name for activation key."));
+        }
 
         ActivationKey newKey = activationKeyCurator.create(activationKey);
         sink.emitActivationKeyCreated(newKey);

@@ -29,7 +29,6 @@ import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
-import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.config.CandlepinCommonTestConfig;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
@@ -298,10 +297,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test(expected = ForbiddenException.class)
     public void testOwnerAdminCannotDelete() {
-        Principal principal = setupPrincipal(owner, Access.ALL);
-
+        setupPrincipal(owner, Access.ALL);
         securityInterceptor.enable();
-
         ownerResource.deleteOwner(owner.getKey(), true);
     }
 
@@ -474,6 +471,14 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals(key.getOwner().getId(), owner.getId());
         List<ActivationKey> keys = ownerResource.ownerActivationKeys(owner.getKey());
         assertEquals(1, keys.size());
+    }
+    
+    @Test(expected = BadRequestException.class)
+    public void testActivationKeyRequiresName() {
+        ActivationKey key = new ActivationKey();
+        Owner owner = createOwner();
+        key.setOwner(owner);
+        key = ownerResource.createActivationKey(owner.getKey(), key);
     }
 
     private Pool doTestEntitlementsRevocationCommon(long subQ, int e1, int e2,

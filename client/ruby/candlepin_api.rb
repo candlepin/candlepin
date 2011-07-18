@@ -478,12 +478,8 @@ class Candlepin
     return get("/owner/#{owner_key}/activation_keys")
   end
 
-  def create_activation_key(data, owner_key=nil)
-    if ! owner_key.nil?
-        return post("/owners/#{owner_key}/activation_keys", data)
-    else
-        return post("/activation_keys", data)
-    end
+  def create_activation_key(owner_key, data)
+    return post("/owners/#{owner_key}/activation_keys", data)
   end
 
   def get_activation_key(key_id)

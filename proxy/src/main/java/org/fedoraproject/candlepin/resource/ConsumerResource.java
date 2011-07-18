@@ -272,7 +272,8 @@ public class ConsumerResource {
 
         Owner owner = setupOwner(principal, user, ownerKey);
         
-        // first, look for keys. If it is not found, throw an exception
+        // Raise an exception if any keys were specified which do not exist
+        // for this owner.
         List<ActivationKey> keys = new ArrayList<ActivationKey>();
         if (keyStrings.size() > 0) {
             for (String keyString : keyStrings) {
@@ -335,7 +336,7 @@ public class ConsumerResource {
 
         if (key == null) {
             throw new NotFoundException(i18n.tr(
-                "Activation key ''{0}'' not found for owner ''{1}''.", 
+                "Activation key ''{0}'' not found for organization ''{1}''.", 
                 keyName, owner.getKey()));
         }
         return key;
