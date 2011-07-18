@@ -522,7 +522,10 @@
             "type": "MKT",
             "provided_products": [
                 "37090"
-            ]
+            ],
+            "attributes": {
+                "multi-entitlement" : "yes"
+            }
         },
         {
             "name": "Awesome OS Server Bundled",
@@ -558,7 +561,8 @@
                 "warning_period": 30,
                 "management_enabled" : 0,
                 "support_level" : "None",
-                "support_type" : "Self-Support"
+                "support_type" : "Self-Support",
+                "multi-entitlement" : "no"
             }
         },
 
