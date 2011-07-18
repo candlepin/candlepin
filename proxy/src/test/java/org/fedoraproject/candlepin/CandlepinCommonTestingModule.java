@@ -40,7 +40,6 @@ import org.fedoraproject.candlepin.policy.PoolRules;
 import org.fedoraproject.candlepin.policy.js.JsRules;
 import org.fedoraproject.candlepin.policy.js.JsRulesProvider;
 import org.fedoraproject.candlepin.policy.js.pool.JsPoolRules;
-import org.fedoraproject.candlepin.resource.ActivateResource;
 import org.fedoraproject.candlepin.resource.ActivationKeyResource;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.resource.EntitlementResource;
@@ -97,7 +96,6 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
         bind(OwnerResource.class);
         bind(SubscriptionResource.class);
         bind(ActivationKeyResource.class);
-        bind(ActivateResource.class);
         bind(ProductServiceAdapter.class)
             .to(DefaultProductServiceAdapter.class);
         bind(ProductResource.class);
