@@ -566,7 +566,22 @@
             }
         },
 
-
+        {
+            "name": "Awesome OS Server Basic (multi-entitlement)",
+            "id": "awesomeos-server-basic-me",
+            "type": "MKT",
+            "provided_products": [
+                "37060"
+            ],
+            "attributes": {
+                "sockets": 2,
+                "warning_period": 30,
+                "management_enabled" : 0,
+                "support_level" : "None",
+                "support_type" : "Self-Support",
+                "multi-entitlement" : "yes"
+            }
+        },
 
         {
             "name": "Awesome OS Workstation Basic",
