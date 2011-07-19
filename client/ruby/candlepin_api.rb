@@ -27,10 +27,6 @@ class Candlepin
       raise "Cannot connect with both username and identity cert"
     end
 
-    if username.nil? and cert.nil? and uuid.nil?
-      raise "Need username/password, cert/key, or uuid"
-    end
-
     @base_url = "https://#{host}:#{port}/candlepin"
     @lang = lang
 

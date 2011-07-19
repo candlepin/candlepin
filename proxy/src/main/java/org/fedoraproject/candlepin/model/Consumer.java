@@ -77,7 +77,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     private String name;
 
     // Represents the username used to register this consumer
-    @Column(nullable = false)
+    @Column
     private String username;
 
     /*

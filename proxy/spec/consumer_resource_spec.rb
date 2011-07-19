@@ -186,11 +186,13 @@ describe 'Consumer Resource' do
 
   it 'should allow a consumer register with activation keys' do
     owner = create_owner random_string('owner')
-    user = user_client(owner, random_string('billy'))
+
+    # Connect without any credentials:
+    client = Candlepin.new
 
     @cp.create_activation_key(owner['key'], 'key1')
     @cp.create_activation_key(owner['key'], 'key2')
-    consumer = user.register('machine1', :system, nil, {}, nil, 
+    consumer = client.register('machine1', :system, nil, {}, nil,
       owner['key'], ["key1", "key2"])
     consumer.uuid.should_not be_nil
 
