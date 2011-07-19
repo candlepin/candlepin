@@ -68,10 +68,6 @@ public abstract class UserAuth implements AuthProvider {
 
             Principal principal = new UserPrincipal(username, permissions, false);
 
-            // TODO:  Look up owner here?
-            // Old code was doing this:  fullOwners.add(AuthUtil.lookupOwner(owner,
-            // ownerCurator));
-
             return principal;
         }
     }

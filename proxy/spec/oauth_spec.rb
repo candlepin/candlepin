@@ -71,11 +71,12 @@ describe 'OAuth' do
     res.code.should == '200'
   end
 
-  it 'returns 400 if an unknown user is given' do
+  it 'trusts the provided username' do
+    username = "trustthisuser"
     res = make_request(oauth_consumer, oauth_secret,
-                       "/candlepin/entitlements",
-                       {'cp-user' => "some unknown user"})
-    res.code.should == '400'
+      "/candlepin/users/#{username}",
+      {'cp-user' => username})
+    res.code.should == '200'
   end
 
   it 'lets a caller act as a consumer' do
