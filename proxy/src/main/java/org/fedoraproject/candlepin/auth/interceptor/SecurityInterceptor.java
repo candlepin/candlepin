@@ -46,7 +46,6 @@ import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.User;
-import org.fedoraproject.candlepin.service.UserServiceAdapter;
 
 /**
  * Interceptor for enforcing role based access to REST API methods.
@@ -272,15 +271,14 @@ public class SecurityInterceptor implements MethodInterceptor {
     }
     
     private class UserStore implements EntityStore {
-        private UserServiceAdapter userService;
-
         @Override
         public Object lookup(String username) {
-            if (userService == null) {
-                userService = injector.getInstance(UserServiceAdapter.class);
-            }
-
-            return userService.findByLogin(username);
+            
+            /* WARNING: Semi-risky business here, we need a user object for the security
+             * code to validate, but in this area we seem to only need the username.
+             */
+            
+            return new User(username, null);
         }
     }
 

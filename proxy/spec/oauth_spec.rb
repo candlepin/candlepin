@@ -74,7 +74,7 @@ describe 'OAuth' do
   it 'trusts the provided username' do
     username = "trustthisuser"
     res = make_request(oauth_consumer, oauth_secret,
-      "/candlepin/users/#{username}",
+      "/candlepin/owners/#{@owner['key']}",
       {'cp-user' => username})
     res.code.should == '200'
   end
