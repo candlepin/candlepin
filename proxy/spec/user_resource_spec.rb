@@ -54,7 +54,49 @@ describe 'User Resource' do
     }.should raise_exception(RestClient::Forbidden)
   end
 
+  it "should be able to get user roles" do
+    alice = random_string 'user'
+    alice_cp = user_client(@test_owner, alice)
+    roles = alice_cp.get_user_roles(alice)
+    roles.size.should == 1 #users have access to their own roles by default
+
+    #make a new role, add a permission
+    new_perm = [{
+      :owner => {:key => @test_owner['key']},
+      :access => 'READ_ONLY',
+    }]
+
+    new_role = @cp.create_role(random_string('testrole'), new_perm)
+    @cp.add_role_user(new_role['id'], alice)
+
+    #make sure we see the extra role 
+    roles = alice_cp.get_user_roles(alice)
+    roles.size.should == 2
+    #bob should not see alice's user on his role obj
+    bob = random_string 'user'
+    bob_cp = user_client(@test_owner, bob)
+
+    @cp.add_role_user(new_role['id'], bob)
+    roles = bob_cp.get_user_roles(bob)
+    roles.size.should == 2
+    roles.each { |role|
+      role['users'].select { |u| u['username'] == alice }.should be_empty
+    }
+
+    #admin should see both users on the role obj (note the different API call)
+    userlist = @cp.get_role(new_role['id'])['users']
+    userlist.select { |u| u['username'] == alice }.should_not be_empty
+    userlist.select { |u| u['username'] == bob }.should_not be_empty
+    
+  end
+
+  it "should not be able to see role for another user" do
+    mallory = random_string 'user'
+    mallory_cp = user_client(@test_owner, mallory)
+    mallory_cp.get_user_roles(mallory)
+    lambda {
+      mallory_cp.get_user_roles(@username)
+    }.should raise_exception(RestClient::Forbidden)
+  end
 
 end
-
-

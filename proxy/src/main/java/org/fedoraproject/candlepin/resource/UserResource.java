@@ -15,8 +15,10 @@
 package org.fedoraproject.candlepin.resource;
 
 
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -37,6 +39,7 @@ import org.fedoraproject.candlepin.exceptions.GoneException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
+import org.fedoraproject.candlepin.model.Role;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.xnap.commons.i18n.I18n;
@@ -73,6 +76,24 @@ public class UserResource {
     public User getUserInfo(@PathParam("username")
         @Verify(User.class) String username) {
         return userService.findByLogin(username);
+    }
+    /*
+     * getUserRoles will only return roles for one user. If you want a
+     * full view of a role, use /roles/ instead.
+     */
+    @GET
+    @Path("/{username}/roles")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Role> getUserRoles(@PathParam("username")
+        @Verify(User.class) String username) {
+        List<Role> roles = userService.getRoles(username);
+        User myUser = userService.findByLogin(username);
+        Set<User> s = new HashSet<User>();
+        s.add(myUser);
+        for (Role r : roles) {
+            r.setUsers(s);
+        }
+        return roles;
     }
 
     @POST

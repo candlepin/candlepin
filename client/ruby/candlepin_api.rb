@@ -88,6 +88,9 @@ class Candlepin
     get("/users/#{user}")
   end
 
+  def get_user_roles(user)
+    get("/users/#{user}/roles")
+  end
 
   def list_owners(params = {})
     path = "/owners"
