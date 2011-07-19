@@ -23,12 +23,14 @@ import org.fedoraproject.candlepin.auth.interceptor.SecurityInterceptor;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.controller.CandlepinPoolManager;
 import org.fedoraproject.candlepin.controller.CrlGenerator;
+import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.exceptions.CandlepinExceptionMapper;
 import org.fedoraproject.candlepin.pinsetter.core.GuiceJobFactory;
 import org.fedoraproject.candlepin.pinsetter.core.PinsetterJobListener;
 import org.fedoraproject.candlepin.pinsetter.core.PinsetterKernel;
 import org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask;
+import org.fedoraproject.candlepin.pinsetter.tasks.EntitlerJob;
 import org.fedoraproject.candlepin.pinsetter.tasks.JobCleaner;
 import org.fedoraproject.candlepin.pinsetter.tasks.RefreshPoolsJob;
 import org.fedoraproject.candlepin.pki.PKIReader;
@@ -44,7 +46,6 @@ import org.fedoraproject.candlepin.policy.js.pool.JsPoolRules;
 import org.fedoraproject.candlepin.resource.ActivationKeyResource;
 import org.fedoraproject.candlepin.resource.AdminResource;
 import org.fedoraproject.candlepin.resource.AtomFeedResource;
-import org.fedoraproject.candlepin.resource.RoleResource;
 import org.fedoraproject.candlepin.resource.CertificateSerialResource;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.resource.ConsumerTypeResource;
@@ -57,6 +58,7 @@ import org.fedoraproject.candlepin.resource.MigrationResource;
 import org.fedoraproject.candlepin.resource.OwnerResource;
 import org.fedoraproject.candlepin.resource.PoolResource;
 import org.fedoraproject.candlepin.resource.ProductResource;
+import org.fedoraproject.candlepin.resource.RoleResource;
 import org.fedoraproject.candlepin.resource.RootResource;
 import org.fedoraproject.candlepin.resource.RulesResource;
 import org.fedoraproject.candlepin.resource.StatisticResource;
@@ -136,6 +138,7 @@ public class CandlepinModule extends AbstractModule {
         bind(Enforcer.class).to(EnforcerDispatcher.class);
         bind(PoolManager.class).to(CandlepinPoolManager.class);
         bind(PoolRules.class).to(JsPoolRules.class);
+        bind(Entitler.class);
         bind(RulesResource.class);
         bind(AdminResource.class);
         bind(StatusResource.class);
@@ -167,6 +170,7 @@ public class CandlepinModule extends AbstractModule {
 
         // Async Jobs
         bind(RefreshPoolsJob.class);
+        bind(EntitlerJob.class);
 
         // The order in which interceptors are bound is important!
         // We need role enforcement to be executed before access control
@@ -174,7 +178,7 @@ public class CandlepinModule extends AbstractModule {
             "org.fedoraproject.candlepin.resource"));
         SecurityInterceptor securityEnforcer = new SecurityInterceptor();
         requestInjection(securityEnforcer);
-        bindInterceptor(resourcePkgMatcher, 
+        bindInterceptor(resourcePkgMatcher,
                 Matchers.any(), securityEnforcer);
 
         // AMQP stuff:

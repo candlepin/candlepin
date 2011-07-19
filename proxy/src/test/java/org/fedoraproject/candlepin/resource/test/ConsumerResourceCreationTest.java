@@ -88,11 +88,11 @@ public class ConsumerResourceCreationTest {
     public void init() throws Exception {
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 
-        this.resource = new ConsumerResource(this.consumerCurator, 
-                this.consumerTypeCurator, null, this.subscriptionService, null,
-                this.idCertService, null, this.i18n, this.sink, null, null, null,
-                this.userService, null, null, null, null, this.ownerCurator, 
-                this.activationKeyCurator);
+        this.resource = new ConsumerResource(this.consumerCurator,
+            this.consumerTypeCurator, null, this.subscriptionService, null,
+            this.idCertService, null, this.i18n, this.sink, null, null, null,
+            this.userService, null, null, null, null, this.ownerCurator,
+            this.activationKeyCurator, null);
 
         this.system = new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
 
@@ -171,12 +171,12 @@ public class ConsumerResourceCreationTest {
     public void containsUserServiceChars() {
         Assert.assertNotNull(createConsumer("{bob}'s_b!g_#boi.`?uestlove!x"));
     }
-    
+
     @Test(expected = BadRequestException.class)
     public void startsWithPound() {
         createConsumer("#pound");
     }
-    
+
     @Test(expected = BadRequestException.class)
     public void emptyConsumerName() {
         createConsumer("");
@@ -202,7 +202,7 @@ public class ConsumerResourceCreationTest {
         Principal p = new NoAuthPrincipal();
         createConsumer("sys.example.com", p, Collections.emptyList());
     }
-    
+
     private List<String> mockActivationKeys() {
         ActivationKey key1 = new ActivationKey("key1", owner);
         when(activationKeyCurator.lookupForOwner("key1", owner)).thenReturn(key1);
@@ -216,11 +216,11 @@ public class ConsumerResourceCreationTest {
         keys.add(key3.getName());
         return keys;
     }
-    
+
     private String createKeysString(List<String> activationKeys) {
         return StringUtils.join(activationKeys, ',');
     }
-    
+
     @Test
     public void registerWithKeys() {
         // No auth should be required for registering with keys:
@@ -232,7 +232,7 @@ public class ConsumerResourceCreationTest {
             verify(activationKeyCurator).lookupForOwner(keyName, owner);
         }
     }
-    
+
     @Test(expected = BadRequestException.class)
     public void orgRequiredWithActivationKeys() {
         Principal p = new NoAuthPrincipal();
@@ -240,7 +240,7 @@ public class ConsumerResourceCreationTest {
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
         resource.create(consumer, p, null, null, createKeysString(keys));
     }
-    
+
     @Test(expected = BadRequestException.class)
     public void cannotMixUsernameWithActivationKeys() {
         Principal p = new NoAuthPrincipal();
@@ -248,7 +248,7 @@ public class ConsumerResourceCreationTest {
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
         resource.create(consumer, p, USER, owner.getKey(), createKeysString(keys));
     }
-    
+
     @Test(expected = NotFoundException.class)
     public void failIfAnyActivationKeyDoesNotExistForOrg() {
         Principal p = new NoAuthPrincipal();
@@ -257,5 +257,4 @@ public class ConsumerResourceCreationTest {
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
         resource.create(consumer, p, null, owner.getKey(), createKeysString(keys));
     }
-    
 }

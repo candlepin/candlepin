@@ -23,19 +23,20 @@ import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.auth.interceptor.SecurityHole;
 import org.fedoraproject.candlepin.auth.interceptor.Verify;
+import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.CandlepinException;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.exceptions.IseException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
+import org.fedoraproject.candlepin.model.ActivationKey;
+import org.fedoraproject.candlepin.model.ActivationKeyCurator;
 import org.fedoraproject.candlepin.model.CertificateSerialDto;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
-import org.fedoraproject.candlepin.model.ActivationKey;
-import org.fedoraproject.candlepin.model.ActivationKeyCurator;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
@@ -44,10 +45,9 @@ import org.fedoraproject.candlepin.model.EventCurator;
 import org.fedoraproject.candlepin.model.IdentityCertificate;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
-import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.User;
-import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
+import org.fedoraproject.candlepin.pinsetter.tasks.EntitlerJob;
 import org.fedoraproject.candlepin.policy.js.consumer.ConsumerDeleteHelper;
 import org.fedoraproject.candlepin.policy.js.consumer.ConsumerRules;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
@@ -64,6 +64,7 @@ import com.wideplay.warp.persist.Transactional;
 
 import org.apache.log4j.Logger;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
+import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
 
 import java.io.File;
@@ -90,6 +91,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 /**
  * API Gateway for Consumers
@@ -120,6 +122,7 @@ public class ConsumerResource {
     private ConsumerDeleteHelper consumerDeleteHelper;
     private OwnerCurator ownerCurator;
     private ActivationKeyCurator activationKeyCurator; 
+    private Entitler entitler;
 
     @Inject
     public ConsumerResource(ConsumerCurator consumerCurator,
@@ -133,7 +136,8 @@ public class ConsumerResource {
         EventAdapter eventAdapter, UserServiceAdapter userService,
         Exporter exporter, PoolManager poolManager,
         ConsumerRules consumerRules, ConsumerDeleteHelper consumerDeleteHelper,
-        OwnerCurator ownerCurator, ActivationKeyCurator activationKeyCurator) {
+        OwnerCurator ownerCurator, ActivationKeyCurator activationKeyCurator,
+        Entitler entitler) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -154,6 +158,7 @@ public class ConsumerResource {
         this.ownerCurator = ownerCurator;
         this.eventAdapter = eventAdapter;
         this.activationKeyCurator = activationKeyCurator;
+        this.entitler = entitler;
     }
 
     /**
@@ -233,7 +238,7 @@ public class ConsumerResource {
         @QueryParam("activation_keys") String activationKeys)
         throws BadRequestException {
         // API:registerConsumer
-        
+
         Set<String> keyStrings = splitKeys(activationKeys);
 
         // First, check that we have an authenticated principal if this is *not*
@@ -241,7 +246,7 @@ public class ConsumerResource {
         if (!(principal instanceof UserPrincipal) && (keyStrings.size() == 0)) {
             throw new ForbiddenException(i18n.tr("Insufficient permissions"));
         }
-        
+
         if (keyStrings.size() > 0) {
             if (ownerKey == null) {
                 throw new BadRequestException(i18n.tr(
@@ -252,7 +257,7 @@ public class ConsumerResource {
                     "Cannot specify username with activation keys."));
             }
         }
-        
+
 
         if (!isConsumerNameValid(consumer.getName())) {
             throw new BadRequestException(
@@ -271,7 +276,7 @@ public class ConsumerResource {
         }
 
         Owner owner = setupOwner(principal, user, ownerKey);
-        
+
         // Raise an exception if any keys were specified which do not exist
         // for this owner.
         List<ActivationKey> keys = new ArrayList<ActivationKey>();
@@ -313,9 +318,9 @@ public class ConsumerResource {
             consumer.setIdCert(idCert);
 
             sink.emitConsumerCreated(consumer);
-            
+
             // TODO: Process activation keys.
-            
+
             return consumer;
         }
         catch (CandlepinException ce) {
@@ -373,7 +378,7 @@ public class ConsumerResource {
 
             ownerKey = ownerKeys.get(0);
         }
-        
+
         createOwnerIfNeeded(principal);
 
         Owner owner = ownerCurator.lookupByKey(ownerKey);
@@ -623,141 +628,27 @@ public class ConsumerResource {
     }
 
     /**
-     * Entitles the given Consumer to the given Product. Will seek out pools
-     * which provide access to this product, either directly or as a child, and
-     * select the best one based on a call to the rules engine.
-     *
-     * @param productId Product ID.
-     * @return Entitlement object.
-     */
-    // TODO: Bleh, very duplicated methods here:
-    private List<Entitlement> bindByProducts(String[] productIds,
-        Consumer consumer, Integer quantity) {
-        // Attempt to create entitlements:
-        try {
-            List<Entitlement> entitlements = poolManager.entitleByProducts(
-                consumer, productIds, quantity);
-            log.debug("Created entitlements: " + entitlements);
-            return entitlements;
-        }
-        catch (EntitlementRefusedException e) {
-            // Could be multiple errors, but we'll just report the first one for
-            // now:
-            // TODO: Convert resource key to user friendly string?
-            // See below for more TODOS
-            String productId = productIds[0];
-            String msg;
-            String error = e.getResult().getErrors().get(0).getResourceKey();
-            if (error.equals("rulefailed.consumer.already.has.product")) {
-                msg = i18n
-                    .tr("This consumer is already subscribed to the product ''{0}''",
-                        productId);
-            }
-            else if (error.equals("rulefailed.no.entitlements.available")) {
-                msg = i18n
-                    .tr("There are not enough free entitlements available for " +
-                        "the product ''{0}''",
-                        productId);
-            }
-            else if (error.equals("rulefailed.consumer.type.mismatch")) {
-                msg = i18n
-                    .tr("Consumers of this type are not allowed to the product ''{0}''",
-                        productId);
-            }
-            else if (error.equals("rulefailed.virt.only")) {
-                msg = i18n.tr(
-                    "Only virtual systems can consume the product ''{0}''",
-                    productId);
-            }
-            else {
-                msg = i18n.tr(
-                    "Unable to entitle consumer to the product ''{0}'': {1}",
-                    productId, error);
-            }
-            throw new ForbiddenException(msg);
-        }
-    }
-
-    private Entitlement createEntitlementByPool(Consumer consumer, Pool pool,
-        Integer quantity) {
-        // Attempt to create an entitlement:
-        try {
-            Entitlement e = poolManager.entitleByPool(consumer, pool, quantity);
-            log.debug("Created entitlement: " + e);
-            return e;
-        }
-        catch (EntitlementRefusedException e) {
-            // Could be multiple errors, but we'll just report the first one for
-            // now:
-            // TODO: multiple checks here for the errors will get ugly, but the
-            // returned
-            // string is dependent on the caller (ie pool vs product)
-            String msg;
-            String error = e.getResult().getErrors().get(0).getResourceKey();
-            if (error.equals("rulefailed.consumer.already.has.product")) {
-                msg = i18n.tr(
-                    "This consumer is already subscribed to the product matching pool " +
-                        "with id ''{0}''", pool.getId().toString());
-            }
-            else if (error.equals("rulefailed.no.entitlements.available")) {
-                msg = i18n
-                    .tr("No free entitlements are available for the pool with id ''{0}''",
-                        pool.getId().toString());
-            }
-            else if (error.equals("rulefailed.consumer.type.mismatch")) {
-                msg = i18n.tr(
-                    "Consumers of this type are not allowed to subscribe to the pool " +
-                        "with id ''{0}''", pool.getId().toString());
-            }
-            else {
-                msg = i18n
-                    .tr("Unable to entitle consumer to the pool with id ''{0}'': {1}",
-                        pool.getId().toString(), error);
-            }
-            throw new ForbiddenException(msg);
-        }
-    }
-
-    private List<Entitlement> bindByPool(String poolId, Consumer consumer,
-        Integer quantity) {
-        Pool pool = poolManager.find(poolId);
-        List<Entitlement> entitlementList = new LinkedList<Entitlement>();
-
-        if (log.isDebugEnabled() && pool != null) {
-            log.debug("pool: id[" + pool.getId() + "], consumed[" +
-                pool.getConsumed() + "], qty [" + pool.getQuantity() + "]");
-        }
-
-        if (pool == null) {
-            throw new BadRequestException(i18n.tr(
-                "No such entitlement pool: {0}", poolId));
-        }
-
-        // Attempt to create an entitlement:
-        entitlementList.add(createEntitlementByPool(consumer, pool, quantity));
-        return entitlementList;
-    }
-
-    /**
      * Request an entitlement.
      *
      * @param consumerUuid Consumer identifier to be entitled
      * @param poolIdString Entitlement pool id.
-     * @param email TODO
-     * @param emailLocale TODO
-     * @return Entitlement.
+     * @param email email address.
+     * @param emailLocale locale for email address.
+     * @param async True if bind should be asynchronous, defaults to false.
+     * @return Response with a list of entitlements or if async is true, a JobDetail.
      */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{consumer_uuid}/entitlements")
-    public List<Entitlement> bind(
+    public Response bind(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @QueryParam("pool") String poolIdString,
         @QueryParam("product") String[] productIds,
         @QueryParam("quantity") @DefaultValue("1") Integer quantity,
         @QueryParam("email") String email,
-        @QueryParam("email_locale") String emailLocale) {
+        @QueryParam("email_locale") String emailLocale,
+        @QueryParam("async") @DefaultValue("false") boolean async) {
 
         // Check that only one query param was set:
         if (poolIdString != null && productIds != null && productIds.length > 0) {
@@ -767,36 +658,64 @@ public class ConsumerResource {
 
         // Verify consumer exists:
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
-        List<Entitlement> entitlements = null;
-        try {
-            if (!subAdapter.hasUnacceptedSubscriptionTerms(consumer.getOwner())) {
 
-                if (productIds != null && productIds.length > 0) {
-                    entitlements = bindByProducts(productIds, consumer,
-                        quantity);
-                }
-                else {
-                    String poolId = Util.assertNotNull(poolIdString,
-                        i18n.tr("Pool ID must be provided"));
-                    entitlements = bindByPool(poolId, consumer, quantity);
-                }
+        try {
+            // I hate double negatives, but if they have accepted all
+            // terms, we want comeToTerms to be true.
+            if (subAdapter.hasUnacceptedSubscriptionTerms(consumer.getOwner())) {
+                return Response.serverError().build();
             }
         }
-
         catch (CandlepinException e) {
             log.debug(e.getMessage());
             throw e;
         }
 
-        // Trigger events:
-        if (entitlements != null) {
-            for (Entitlement e : entitlements) {
-                Event event = eventFactory.entitlementCreated(e);
-                sink.sendEvent(event);
+        //
+        // HANDLE ASYNC
+        //
+        if (async) {
+            JobDetail detail = null;
+
+            if (productIds != null && productIds.length > 0) {
+                detail = EntitlerJob.bindByProducts(productIds, consumer,
+                    quantity, entitler);
             }
+            else {
+                String poolId = Util.assertNotNull(poolIdString,
+                    i18n.tr("Pool ID must be provided"));
+                detail = EntitlerJob.bindByPool(poolId, consumer, quantity,
+                    entitler);
+            }
+
+            // events will be triggered by the job
+            return Response.status(Response.Status.OK)
+                           .type(MediaType.APPLICATION_JSON)
+                           .entity(detail)
+                           .build();
         }
 
-        return entitlements;
+        //
+        // otherwise we do what we do today.
+        //
+        List<Entitlement> entitlements = null;
+        if (productIds != null && productIds.length > 0) {
+            entitlements = entitler.bindByProducts(productIds, consumer,
+                quantity);
+        }
+        else {
+            String poolId = Util.assertNotNull(poolIdString,
+                i18n.tr("Pool ID must be provided"));
+            entitlements = entitler.bindByPool(poolId, consumer, quantity);
+        }
+
+        // Trigger events:
+        entitler.sendEvents(entitlements);
+
+        return Response.status(Response.Status.OK)
+                       .type(MediaType.APPLICATION_JSON)
+                       .entity(entitlements)
+                       .build();
     }
 
     private Consumer verifyAndLookupConsumer(String consumerUuid) {
