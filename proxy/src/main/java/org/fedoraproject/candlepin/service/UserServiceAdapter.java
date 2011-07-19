@@ -63,8 +63,6 @@ public interface UserServiceAdapter {
 
     void deleteRole(String roleId);
 
-    List<Role> getRoles(String username);
-
     Role getRole(String roleId);
 
     List<Role> listRoles();

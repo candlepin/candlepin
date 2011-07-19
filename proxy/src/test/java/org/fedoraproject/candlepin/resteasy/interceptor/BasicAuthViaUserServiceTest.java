@@ -42,9 +42,7 @@ import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
@@ -116,10 +114,9 @@ public class BasicAuthViaUserServiceTest {
         Set<OwnerPermission> permissions = new HashSet<OwnerPermission>();
         permissions.add(new OwnerPermission(owner, Access.ALL));
         
-        List<Role> roles = Arrays.asList(new Role [] {new Role("test_role",
-            new HashSet<User>(), permissions)});
-        when(userService.getRoles("user")).thenReturn(roles);
-        
+        User user = new User();
+        user.addRole(new Role("test_role",
+            new HashSet<User>(), permissions));
         when(userService.findByLogin("user")).thenReturn(new User());
         
         UserPrincipal expected = new UserPrincipal("user", 

@@ -62,7 +62,7 @@ public abstract class UserAuth implements AuthProvider {
             List<Permission> permissions = new ArrayList<Permission>();
 
             // flatten out the permissions from the combined roles
-            for (Role role : this.userServiceAdapter.getRoles(username)) {
+            for (Role role : user.getRoles()) {
                 permissions.addAll(role.getPermissions());
             }
 

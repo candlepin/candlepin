@@ -14,7 +14,6 @@
  */
 package org.fedoraproject.candlepin.resource.test;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -110,7 +109,6 @@ public class ConsumerResourceCreationTest {
             }
         });
         when(consumerTypeCurator.lookupByLabel(system.getLabel())).thenReturn(system);
-        when(userService.getRoles(USER)).thenReturn(Arrays.asList(new Role[] {role}));
         when(userService.findByLogin(USER)).thenReturn(user);
         when(idCertService.generateIdentityCert(any(Consumer.class)))
                 .thenReturn(new IdentityCertificate());
