@@ -14,6 +14,10 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Index;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,18 +30,17 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import javax.xml.bind.annotation.XmlRootElement;
-
-import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
 
 /**
  * SubscriptionToken
  */
 @XmlRootElement
 @Entity
-@Table(name = "cp_activation_key")
+@Table(name = "cp_activation_key",
+    uniqueConstraints = {@UniqueConstraint(columnNames={"name", "owner_id"})}
+)
 public class ActivationKey extends AbstractHibernateObject {
 
     @Id
