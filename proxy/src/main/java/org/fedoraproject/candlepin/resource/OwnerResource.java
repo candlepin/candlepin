@@ -361,11 +361,13 @@ public class OwnerResource {
                 i18n.tr("Must provide a name for activation key."));
         }
         
-        String testName = activationKey.getName().replace("-", "0").replace("_", "0");
-        if(!testName.matches("[a-zA-z0-9]*")){
+        String testName = activationKey.getName().replace("-", "0")
+                          .replace("_", "0");
+        if (!testName.matches("[a-zA-z0-9]*")) {
             throw new BadRequestException(
                 i18n.tr("Activation key names must be alphanumeric or the " +
-                    "characters '-' or '_'. [" + activationKey.getName() + "]"));            
+                    "characters '-' or '_'. " +
+                    "[" + activationKey.getName() + "]"));            
         }
 
         ActivationKey newKey = activationKeyCurator.create(activationKey);
