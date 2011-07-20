@@ -65,6 +65,13 @@ public abstract class Principal implements Serializable {
         return new PrincipalData(this.getType(), this.getPrincipalName());
     }
 
+    /**
+     * @return Username for this principal, null if there is not one.
+     */
+    public String getUsername() {
+        return null;
+    }
+
     @Override
     public String toString() {
         return Util.toJson(this.getData());
