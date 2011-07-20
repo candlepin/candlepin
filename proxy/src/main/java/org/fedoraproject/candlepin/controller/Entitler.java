@@ -148,8 +148,8 @@ public class Entitler {
                     "available for the product ''{0}''", productId);
             }
             else if (error.equals("rulefailed.consumer.type.mismatch")) {
-                msg = i18n.tr("Consumers of this type are not allowed to the product ''{0}''",
-                        productId);
+                msg = i18n.tr("Consumers of this type are not allowed to the " +
+                    "product ''{0}''", productId);
             }
             else if (error.equals("rulefailed.virt.only")) {
                 msg = i18n.tr(

@@ -179,7 +179,9 @@ public class EntitlerTest {
 
         Event evt1 = mock(Event.class);
         Event evt2 = mock(Event.class);
-        when(ef.entitlementCreated(any(Entitlement.class))).thenReturn(evt1).thenReturn(evt2);
+        when(ef.entitlementCreated(any(Entitlement.class)))
+            .thenReturn(evt1)
+            .thenReturn(evt2);
         entitler.sendEvents(ents);
 
         verify(sink).sendEvent(eq(evt1));
