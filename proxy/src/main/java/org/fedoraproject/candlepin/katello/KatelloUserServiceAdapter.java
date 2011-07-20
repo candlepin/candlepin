@@ -31,11 +31,6 @@ import org.fedoraproject.candlepin.service.UserServiceAdapter;
 public class KatelloUserServiceAdapter implements UserServiceAdapter {
 
     @Override
-    public boolean isReadyOnly() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public boolean validateUser(String username, String password)
         throws Exception {
         throw new UnsupportedOperationException();

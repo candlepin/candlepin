@@ -25,15 +25,6 @@ import org.fedoraproject.candlepin.model.User;
 public interface UserServiceAdapter {
 
     /**
-     * Does this user service implementation support creation/deletion
-     * of {@link User}s?
-     *
-     * @return if this implementation prohibits user creation/deletion via
-     *          this API
-     */
-    boolean isReadyOnly();
-
-    /**
      * Validates the credentials of a given user
      * @param username
      * @param password

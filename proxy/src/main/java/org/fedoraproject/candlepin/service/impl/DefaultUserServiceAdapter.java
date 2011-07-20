@@ -99,11 +99,6 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
     }
 
     @Override
-    public boolean isReadyOnly() {
-        return false;
-    }
-
-    @Override
     public void deleteUser(User user) {
         for (Role r : user.getRoles()) {
             user.removeRole(r);
