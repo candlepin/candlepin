@@ -91,23 +91,22 @@ public class Entitler {
             String error = e.getResult().getErrors().get(0).getResourceKey();
             if (error.equals("rulefailed.consumer.already.has.product")) {
                 msg = i18n.tr(
-                    "This consumer is already subscribed to the product matching pool " +
-                        "with id ''{0}''", pool.getId().toString());
+                    "This consumer is already subscribed to the product " +
+                    "matching pool with id ''{0}''", pool.getId().toString());
             }
             else if (error.equals("rulefailed.no.entitlements.available")) {
-                msg = i18n
-                    .tr("No free entitlements are available for the pool with id ''{0}''",
-                        pool.getId().toString());
+                msg = i18n.tr(
+                    "No free entitlements are available for the pool with " +
+                    "id ''{0}''", pool.getId().toString());
             }
             else if (error.equals("rulefailed.consumer.type.mismatch")) {
                 msg = i18n.tr(
-                    "Consumers of this type are not allowed to subscribe to the pool " +
-                        "with id ''{0}''", pool.getId().toString());
+                    "Consumers of this type are not allowed to subscribe to " +
+                    "the pool with id ''{0}''", pool.getId().toString());
             }
             else {
-                msg = i18n
-                    .tr("Unable to entitle consumer to the pool with id ''{0}'': {1}",
-                        pool.getId().toString(), error);
+                msg = i18n.tr("Unable to entitle consumer to the pool with " +
+                    "id ''{0}'': {1}", pool.getId().toString(), error);
             }
             throw new ForbiddenException(msg);
         }
@@ -141,19 +140,15 @@ public class Entitler {
             String msg;
             String error = e.getResult().getErrors().get(0).getResourceKey();
             if (error.equals("rulefailed.consumer.already.has.product")) {
-                msg = i18n
-                    .tr("This consumer is already subscribed to the product ''{0}''",
-                        productId);
+                msg = i18n.tr("This consumer is already subscribed to the " +
+                    "product ''{0}''", productId);
             }
             else if (error.equals("rulefailed.no.entitlements.available")) {
-                msg = i18n
-                    .tr("There are not enough free entitlements available for " +
-                        "the product ''{0}''",
-                        productId);
+                msg = i18n.tr("There are not enough free entitlements " +
+                    "available for the product ''{0}''", productId);
             }
             else if (error.equals("rulefailed.consumer.type.mismatch")) {
-                msg = i18n
-                    .tr("Consumers of this type are not allowed to the product ''{0}''",
+                msg = i18n.tr("Consumers of this type are not allowed to the product ''{0}''",
                         productId);
             }
             else if (error.equals("rulefailed.virt.only")) {
