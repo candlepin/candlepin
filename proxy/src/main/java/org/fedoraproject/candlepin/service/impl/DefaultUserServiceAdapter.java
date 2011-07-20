@@ -14,8 +14,6 @@
  */
 package org.fedoraproject.candlepin.service.impl;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -64,17 +62,6 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
         return this.userCurator.listAll();
     }
 
-
-    @Override
-    public List<Role> getRoles(String username) {
-        User user = this.userCurator.findByLogin(username);
-
-        if (user != null) {
-            return new ArrayList<Role>(user.getRoles());
-        }
-
-        return Collections.emptyList();
-    }
 
     @Override
     public List<Role> listRoles() {

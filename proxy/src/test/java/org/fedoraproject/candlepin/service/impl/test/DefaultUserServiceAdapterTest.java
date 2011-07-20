@@ -123,7 +123,8 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
         User user = new User("regular_user", "password");
         this.service.createUser(user);
 
-        Assert.assertTrue(this.service.getRoles("regular_user").contains(Access.ALL));
+        Assert.assertTrue(
+            this.service.findByLogin("regular_user").getRoles().contains(Access.ALL));
     }
 
     @Test
@@ -134,13 +135,8 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
         User user = new User("super_admin", "password", true);
         this.service.createUser(user);
 
-        Assert.assertTrue(this.service.getRoles("super_admin").contains(Access.ALL));
-    }
-
-    @Test
-    public void emtpyRolesForNoLogin() {
-        Assert.assertArrayEquals(new Access[] {},
-            this.service.getRoles("made_up").toArray());
+        Assert.assertTrue(
+            this.service.findByLogin("super_admin").getRoles().contains(Access.ALL));
     }
 
     @Test
