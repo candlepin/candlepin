@@ -86,8 +86,8 @@ public class UserResource {
     @Produces(MediaType.APPLICATION_JSON)
     public List<Role> getUserRoles(@PathParam("username")
         @Verify(User.class) String username) {
-        List<Role> roles = userService.getRoles(username);
         User myUser = userService.findByLogin(username);
+        List<Role> roles = new LinkedList<Role>(myUser.getRoles());
         Set<User> s = new HashSet<User>();
         s.add(myUser);
         for (Role r : roles) {
