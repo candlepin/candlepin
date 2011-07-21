@@ -681,14 +681,13 @@ public class ConsumerResource {
             JobDetail detail = null;
 
             if (productIds != null && productIds.length > 0) {
-                detail = EntitlerJob.bindByProducts(productIds, consumer,
-                    quantity, entitler);
+                detail = EntitlerJob.bindByProducts(productIds, consumerUuid,
+                    quantity);
             }
             else {
                 String poolId = Util.assertNotNull(poolIdString,
                     i18n.tr("Pool ID must be provided"));
-                detail = EntitlerJob.bindByPool(poolId, consumer, quantity,
-                    entitler);
+                detail = EntitlerJob.bindByPool(poolId, consumerUuid, quantity);
             }
 
             // events will be triggered by the job

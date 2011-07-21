@@ -24,6 +24,7 @@ import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
@@ -34,22 +35,30 @@ import com.google.inject.Inject;
 /**
  * entitler
  */
-public class Entitler {
+public class Entitler implements Serializable {
     private static Logger log = Logger.getLogger(Entitler.class);
 
     private PoolManager poolManager;
     private I18n i18n;
     private EventFactory evtFactory;
     private EventSink sink;
+    private ConsumerCurator consumerCurator;
 
     @Inject
-    public Entitler(PoolManager pm, I18n i18n, EventFactory evtFactory,
-        EventSink sink) {
+    public Entitler(PoolManager pm, ConsumerCurator cc, I18n i18n,
+        EventFactory evtFactory, EventSink sink) {
 
         this.poolManager = pm;
         this.i18n = i18n;
         this.evtFactory = evtFactory;
         this.sink = sink;
+        this.consumerCurator = cc;
+    }
+
+    public List<Entitlement> bindByPool(String poolId, String consumeruuid,
+        Integer quantity) {
+        Consumer c = consumerCurator.findByUuid(consumeruuid);
+        return bindByPool(poolId, c, quantity);
     }
 
     public List<Entitlement> bindByPool(String poolId, Consumer consumer,
@@ -109,6 +118,12 @@ public class Entitler {
             }
             throw new ForbiddenException(msg);
         }
+    }
+
+    public List<Entitlement> bindByProducts(String[] productIds,
+        String consumeruuid, Integer quantity) {
+        Consumer c = consumerCurator.findByUuid(consumeruuid);
+        return bindByProducts(productIds, c, quantity);
     }
 
     /**

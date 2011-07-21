@@ -17,9 +17,12 @@ package org.fedoraproject.candlepin.pinsetter.tasks;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventFactory;
@@ -29,6 +32,7 @@ import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
@@ -53,6 +57,7 @@ public class EntitlerTest {
     private I18n i18n;
     private Entitler entitler;
     private Consumer consumer;
+    private ConsumerCurator cc;
 
     private ValidationResult fakeOutResult(String msg) {
         ValidationResult result = new ValidationResult();
@@ -66,13 +71,29 @@ public class EntitlerTest {
         pm = mock(PoolManager.class);
         ef = mock(EventFactory.class);
         sink = mock(EventSink.class);
+        cc = mock(ConsumerCurator.class);
         consumer = mock(Consumer.class);
         i18n = I18nFactory.getI18n(
             getClass(),
             Locale.US,
             I18nFactory.READ_PROPERTIES | I18nFactory.FALLBACK
         );
-        entitler = new Entitler(pm, i18n, ef, sink);
+        entitler = new Entitler(pm, cc, i18n, ef, sink);
+    }
+
+    @Test
+    public void bindByPoolString() throws EntitlementRefusedException {
+        String poolid = "pool10";
+        Pool pool = mock(Pool.class);
+        Entitlement ent = mock(Entitlement.class);
+
+        when(cc.findByUuid(eq("abcd1234"))).thenReturn(consumer);
+        when(pm.find(eq(poolid))).thenReturn(pool);
+        when(pm.entitleByPool(eq(consumer), eq(pool), eq(1))).thenReturn(ent);
+
+        List<Entitlement> ents = entitler.bindByPool(poolid, "abcd1234", 1);
+        assertNotNull(ents);
+        assertEquals(ent, ents.get(0));
     }
 
     @Test
@@ -89,11 +110,27 @@ public class EntitlerTest {
         assertEquals(ent, ents.get(0));
     }
 
+    @Test
+    public void bindByProductsString() throws EntitlementRefusedException {
+        String[] pids = {"prod1", "prod2", "prod3"};
+        when(cc.findByUuid(eq("abcd1234"))).thenReturn(consumer);
+        entitler.bindByProducts(pids, "abcd1234", 1);
+        verify(pm).entitleByProducts(eq(consumer), eq(pids), eq(1));
+    }
+
+    @Test
+    public void bindByProducts() throws EntitlementRefusedException {
+        String[] pids = {"prod1", "prod2", "prod3"};
+        entitler.bindByProducts(pids, consumer, 1);
+        verify(pm).entitleByProducts(eq(consumer), eq(pids), eq(1));
+    }
+
     @Test(expected = BadRequestException.class)
     public void nullPool() {
         String poolid = "foo";
+        Consumer c = null; // keeps me from casting null
         when(pm.find(eq(poolid))).thenReturn(null);
-        entitler.bindByPool(poolid, null, 10);
+        entitler.bindByPool(poolid, c, 10);
     }
 
     @Test(expected = ForbiddenException.class)
