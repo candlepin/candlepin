@@ -123,10 +123,10 @@ public class EventAdapterImpl implements EventAdapter {
     static {
         MESSAGES = new HashMap<String, String>();
         MESSAGES.put("CONSUMERCREATED", I18n.marktr("{0} created new consumer {1}"));
-        MESSAGES.put("CONSUMERMODIFED", I18n.marktr("{0} modifed the consumer {1}"));
+        MESSAGES.put("CONSUMERMODIFIED", I18n.marktr("{0} modifed the consumer {1}"));
         MESSAGES.put("CONSUMERDELETED", I18n.marktr("{0} deleted the consumer {1}"));
         MESSAGES.put("OWNERCREATED", I18n.marktr("{0} created new owner {1}"));
-        MESSAGES.put("OWNERMODIFED", I18n.marktr("{0} modifed the owner {1}"));
+        MESSAGES.put("OWNERMODIFIED", I18n.marktr("{0} modifed the owner {1}"));
         MESSAGES.put("OWNERDELETED", I18n.marktr("{0} deleted the owner {1}"));
         MESSAGES.put("ENTITLEMENTCREATED",
             I18n.marktr("{0} consumed a subscription for product {1}"));
@@ -135,20 +135,20 @@ public class EventAdapterImpl implements EventAdapter {
         MESSAGES.put("ENTITLEMENTDELETED",
             I18n.marktr("{0} returned the subscription for {1}"));
         MESSAGES.put("POOLCREATED", I18n.marktr("{0} created a pool for product {1}"));
-        MESSAGES.put("POOLMODIFED", I18n.marktr("{0} modified a pool for product {1}"));
+        MESSAGES.put("POOLMODIFIED", I18n.marktr("{0} modified a pool for product {1}"));
         MESSAGES.put("POOLDELETED", I18n.marktr("{0} deleted a pool for product {1}"));
         MESSAGES.put("EXPORTCREATED",
             I18n.marktr("{0} created an export for consumer {1}"));
         MESSAGES.put("IMPORTCREATED", I18n.marktr("{0} imported a manifest for owner {1}"));
         MESSAGES.put("USERCREATED", I18n.marktr("{0} created new user {1}"));
-        MESSAGES.put("USERMODIFED", I18n.marktr("{0} modifed the user {1}"));
+        MESSAGES.put("USERMODIFIED", I18n.marktr("{0} modifed the user {1}"));
         MESSAGES.put("USERDELETED", I18n.marktr("{0} deleted the user {1}"));
         MESSAGES.put("ROLECREATED", I18n.marktr("{0} created new role {1}"));
-        MESSAGES.put("ROLEMODIFED", I18n.marktr("{0} modifed the role {1}"));
+        MESSAGES.put("ROLEMODIFIED", I18n.marktr("{0} modifed the role {1}"));
         MESSAGES.put("ROLEDELETED", I18n.marktr("{0} deleted the role {1}"));
         MESSAGES.put("SUBSCRIPTIONCREATED",
             I18n.marktr("{0} created new subscription for product {1}"));
-        MESSAGES.put("SUBSCRIPTIONMODIFED",
+        MESSAGES.put("SUBSCRIPTIONMODIFIED",
             I18n.marktr("{0} modifed a subscription for product {1}"));
         MESSAGES.put("SUBSCRIPTIONDELETED",
             I18n.marktr("{0} deleted a subscription for product {1}"));
