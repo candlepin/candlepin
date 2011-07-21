@@ -21,8 +21,10 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 
+import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.hibernate.exception.ConstraintViolationException;
@@ -40,7 +42,7 @@ public class ConsumerTypeImporterTest {
         Reader reader = new StringReader(consumerTypeString);
         
         ConsumerType consumerType = new ConsumerTypeImporter(null).createObject(
-            SyncUtils.getObjectMapper(), reader);
+            SyncUtils.getObjectMapper(new Config(new HashMap<String, String>())), reader);
         
         assertEquals("prosumer", consumerType.getLabel());
     }
@@ -52,7 +54,7 @@ public class ConsumerTypeImporterTest {
         Reader reader = new StringReader(consumerTypeString);
         
         ConsumerType consumerType = new ConsumerTypeImporter(null).createObject(
-            SyncUtils.getObjectMapper(), reader);
+            SyncUtils.getObjectMapper(new Config(new HashMap<String, String>())), reader);
         
         assertEquals(null, consumerType.getId());      
     }

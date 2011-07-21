@@ -82,7 +82,6 @@ public class Exporter {
         EntitlementCurator entitlementCurator, EntitlementExporter entExporter,
         PKIUtility pki, Config config, JsExportRules exportRules) {
 
-        mapper = SyncUtils.getObjectMapper();
         this.consumerTypeCurator = consumerTypeCurator;
 
         this.meta = meta;
@@ -99,6 +98,8 @@ public class Exporter {
         this.pki = pki;
         this.config = config;
         this.exportRules = exportRules;
+
+        mapper = SyncUtils.getObjectMapper(this.config);
     }
 
     public File getFullExport(Consumer consumer) throws ExportCreationException {

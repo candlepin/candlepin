@@ -108,6 +108,8 @@ public class Importer {
         ContentCurator contentCurator, SubscriptionCurator subCurator, PoolManager pm,
         PKIUtility pki, Config config, ExporterMetadataCurator emc,
         CertificateSerialCurator csc, EventSink sink, I18n i18n) {
+
+        this.config = config;
         this.consumerTypeCurator = consumerTypeCurator;
         this.productCurator = productCurator;
         this.rulesCurator = rulesCurator;
@@ -115,9 +117,8 @@ public class Importer {
         this.contentCurator = contentCurator;
         this.subCurator = subCurator;
         this.poolManager = pm;
-        this.mapper = SyncUtils.getObjectMapper();
+        this.mapper = SyncUtils.getObjectMapper(this.config);
         this.pki = pki;
-        this.config = config;
         this.expMetaCurator = emc;
         this.csCurator = csc;
         this.sink = sink;

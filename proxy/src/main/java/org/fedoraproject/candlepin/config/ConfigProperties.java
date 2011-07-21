@@ -37,6 +37,8 @@ public class ConfigProperties {
 
     public static final String CA_KEY = "candlepin.ca_key";
     public static final String CA_CERT = "candlepin.ca_cert";
+    public static final String FAIL_ON_UNKNOWN_IMPORT_PROPERTIES =
+        "candlepin.importer.fail_on_unknown";
     public static final String CA_CERT_UPSTREAM = "candlepin.upstream_ca_cert";
     public static final String CA_KEY_PASSWORD = "candlepin.ca_key_password";
 
@@ -118,6 +120,8 @@ public class ConfigProperties {
                 this.put(SSL_AUTHENTICATION, "true");
                 this.put(OAUTH_AUTHENTICATION, "true");
                 this.put(BASIC_AUTHENTICATION, "true");
+
+                this.put(FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "true");
 
                 // Pinsetter
                 this.put("org.quartz.threadPool.class",

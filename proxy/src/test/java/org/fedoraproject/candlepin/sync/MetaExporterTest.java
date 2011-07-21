@@ -16,8 +16,10 @@ package org.fedoraproject.candlepin.sync;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.HashMap;
 
 import org.codehaus.jackson.map.ObjectMapper;
+import org.fedoraproject.candlepin.config.Config;
 import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;
@@ -29,7 +31,8 @@ public class MetaExporterTest {
     
     @Test
     public void testMetaExporter() throws IOException {
-        ObjectMapper mapper = SyncUtils.getObjectMapper();
+        ObjectMapper mapper = SyncUtils.getObjectMapper(
+            new Config(new HashMap<String, String>()));
         
         MetaExporter meta = new MetaExporter();
         

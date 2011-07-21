@@ -22,10 +22,12 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.codehaus.jackson.map.ObjectMapper;
+import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.controller.CandlepinPoolManager;
 import org.fedoraproject.candlepin.model.Content;
 import org.fedoraproject.candlepin.model.ContentCurator;
@@ -49,7 +51,7 @@ public class ProductImporterTest {
     private CandlepinPoolManager poolManagerMock;
     @Before
     public void setUp() throws IOException {
-        mapper = SyncUtils.getObjectMapper();
+        mapper = SyncUtils.getObjectMapper(new Config(new HashMap<String, String>()));
         productCuratorMock = mock(ProductCurator.class);
         contentCuratorMock = mock(ContentCurator.class);
         poolManagerMock = mock(CandlepinPoolManager.class);

@@ -20,6 +20,7 @@ import java.io.IOException;
 import org.codehaus.jackson.map.AnnotationIntrospector;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
+import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
 import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
 import org.fedoraproject.candlepin.config.Config;
@@ -42,7 +43,7 @@ class SyncUtils {
         }
     }
     
-    static ObjectMapper getObjectMapper() {
+    static ObjectMapper getObjectMapper(Config config) {
         ObjectMapper mapper = new ObjectMapper();
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
         AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
@@ -53,6 +54,11 @@ class SyncUtils {
         mapper.getSerializationConfig().set(
             SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS,
             false);
+
+        if (config != null) {
+            mapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES,
+                config.failOnUnknownImportProperties());
+        }
 
         return mapper;
     }

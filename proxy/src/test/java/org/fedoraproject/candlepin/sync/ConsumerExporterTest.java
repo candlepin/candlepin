@@ -18,8 +18,10 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.HashMap;
 
 import org.codehaus.jackson.map.ObjectMapper;
+import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.junit.Test;
 
@@ -29,7 +31,8 @@ import org.junit.Test;
 public class ConsumerExporterTest {
     @Test
     public void testConsumerExport() throws IOException {
-        ObjectMapper mapper = SyncUtils.getObjectMapper();
+        ObjectMapper mapper = SyncUtils.getObjectMapper(
+            new Config(new HashMap<String, String>()));
         
         ConsumerExporter exporter = new ConsumerExporter();
         

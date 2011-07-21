@@ -35,7 +35,10 @@ import org.xnap.commons.i18n.I18nFactory;
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
+
+import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.exceptions.ConflictException;
 
 
@@ -49,7 +52,7 @@ public class ImporterTest {
 
     @Before
     public void init() {
-        mapper = SyncUtils.getObjectMapper();
+        mapper = SyncUtils.getObjectMapper(new Config(new HashMap<String, String>()));
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
     }
 

@@ -160,7 +160,11 @@ public class Config {
     
     public boolean basicAuthEnabled() {
         return getBoolean(ConfigProperties.BASIC_AUTHENTICATION);
-    }        
+    }
+
+    public boolean failOnUnknownImportProperties() {
+        return getBoolean(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES);
+    }
 
     protected Map<String, String> loadProperties() {
         try {

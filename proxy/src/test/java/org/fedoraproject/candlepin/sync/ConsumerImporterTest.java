@@ -18,8 +18,13 @@ import static org.mockito.Mockito.*;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.HashMap;
+import java.util.Map;
 
+import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.junit.Before;
@@ -40,7 +45,7 @@ public class ConsumerImporterTest {
     public void setUp() {
         curator = mock(OwnerCurator.class);
         importer = new ConsumerImporter(curator);
-        mapper = SyncUtils.getObjectMapper();
+        mapper = SyncUtils.getObjectMapper(new Config(new HashMap<String, String>()));
     }
 
     @Test
@@ -51,6 +56,26 @@ public class ConsumerImporterTest {
         assertEquals("test-uuid", consumer.getUuid());
     }
     
+    @Test
+    public void importHandlesUnknownPropertiesGracefully() throws Exception {
+
+        // Override default config to error out on unknown properties:
+        Map<String, String> configProps = new HashMap<String, String>();
+        configProps.put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
+        mapper = SyncUtils.getObjectMapper(new Config(configProps));
+
+        ConsumerDto consumer =
+            importer.createObject(mapper, new StringReader(
+                "{\"uuid\":\"test-uuid\", \"unknown\":\"notreal\"}"));
+        assertEquals("test-uuid", consumer.getUuid());
+    }
+
+    @Test(expected = JsonMappingException.class)
+    public void importFailsOnUnknownPropertiesWithDefaultConfig() throws Exception {
+        importer.createObject(mapper, new StringReader(
+            "{\"uuid\":\"test-uuid\", \"unknown\":\"notreal\"}"));
+    }
+
     @Test
     public void importConsumerWithNullUuidOnOwnerShouldSetUuid() throws IOException, ImporterException {
         Owner owner = new Owner();

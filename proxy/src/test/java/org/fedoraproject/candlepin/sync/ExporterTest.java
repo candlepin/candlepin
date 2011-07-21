@@ -23,6 +23,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.fedoraproject.candlepin.config.CandlepinCommonTestConfig;
+import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
@@ -54,6 +55,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.zip.ZipEntry;
@@ -317,7 +319,8 @@ public class ExporterTest {
             }
             os.flush();
             os.close();
-            ObjectMapper om = SyncUtils.getObjectMapper();
+            ObjectMapper om = SyncUtils.getObjectMapper(
+                new Config(new HashMap<String, String>()));
             Meta m = om.readValue(
                 new FileInputStream("/tmp/meta.json"), Meta.class);
             assertNotNull(m);
