@@ -58,11 +58,4 @@ describe 'Authorization' do
     trusted_user_cp.list_consumers :owner => owner1.key
   end
 
-  it 'forbids invalid trused users' do
-    usernameBad = random_string("ANAKINSKYWALKER")
-
-    lambda do
-      trusted_user_client(usernameBad)
-    end.should raise_exception(RestClient::BadRequest)
-  end
 end

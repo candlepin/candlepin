@@ -62,15 +62,11 @@ public abstract class UserAuth implements AuthProvider {
             List<Permission> permissions = new ArrayList<Permission>();
 
             // flatten out the permissions from the combined roles
-            for (Role role : this.userServiceAdapter.getRoles(username)) {
+            for (Role role : user.getRoles()) {
                 permissions.addAll(role.getPermissions());
             }
 
             Principal principal = new UserPrincipal(username, permissions, false);
-
-            // TODO:  Look up owner here?
-            // Old code was doing this:  fullOwners.add(AuthUtil.lookupOwner(owner,
-            // ownerCurator));
 
             return principal;
         }

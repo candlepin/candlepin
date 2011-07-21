@@ -270,13 +270,12 @@ public class ConsumerResource {
                 i18n.tr("System name cannot begin with # character"));
         }
 
-        User user = getCurrentUsername(principal);
-        if (userName != null) {
-            user = userService.findByLogin(userName);
+        if (userName == null) {
+            userName = principal.getUsername();
         }
 
-        Owner owner = setupOwner(principal, user, ownerKey);
-
+        Owner owner = setupOwner(principal, ownerKey);
+        
         // Raise an exception if any keys were specified which do not exist
         // for this owner.
         List<ActivationKey> keys = new ArrayList<ActivationKey>();
@@ -289,10 +288,12 @@ public class ConsumerResource {
 
         ConsumerType type = lookupConsumerType(consumer.getType().getLabel());
 
-        verifyPersonConsumer(consumer, type, user);
+        if (type.isType(ConsumerTypeEnum.PERSON)) { 
+            verifyPersonConsumer(consumer, type, owner, userName);
+        }
 
-        if (user != null) {
-            consumer.setUsername(user.getUsername());
+        if (userName != null) {
+            consumer.setUsername(userName);
         }
         consumer.setOwner(owner);
         consumer.setType(type);
@@ -348,7 +349,25 @@ public class ConsumerResource {
     }
 
     private void verifyPersonConsumer(Consumer consumer, ConsumerType type,
-        User user) {
+        Owner owner, String username) {
+
+        User user = null;
+        try {
+            user = userService.findByLogin(username);
+        }
+        catch (UnsupportedOperationException e) {
+            log.warn("User service does not allow user lookups, " +
+                "cannot verify person consumer.");
+        }
+            
+        // When registering person consumers we need to be sure the username
+        // has some association with the owner the consumer is destined for:
+        if (!user.hasOwnerAccess(owner, Access.ALL) && !user.isSuperAdmin()) {
+            throw new ForbiddenException(
+                i18n.tr("User {0} has no roles for organization/owner {1}",
+                    user.getUsername(), owner.getKey()));
+        }
+
         // TODO: Refactor out type specific checks?
         if (type.isType(ConsumerTypeEnum.PERSON) && user != null) {
             Consumer existing = consumerCurator.findByUser(user);
@@ -364,7 +383,7 @@ public class ConsumerResource {
         }
     }
 
-    private Owner setupOwner(Principal principal, User user, String ownerKey) {
+    private Owner setupOwner(Principal principal, String ownerKey) {
         // If no owner was specified, try to assume based on which owners the principal
         // has admin rights for. If more than one, we have to error out.
         if (ownerKey == null && (principal instanceof UserPrincipal)) {
@@ -393,13 +412,6 @@ public class ConsumerResource {
                 throw new ForbiddenException(
                     i18n.tr("User {0} cannot access organization/owner {1}",
                         principal.getPrincipalName(), owner.getKey()));
-            }
-            // When registering person consumers we need to be sure the username
-            // has some association with the owner the consumer is destined for:
-            if (!user.hasOwnerAccess(owner, Access.ALL) && !user.isSuperAdmin()) {
-                throw new ForbiddenException(
-                    i18n.tr("User {0} has no roles for organization/owner {1}",
-                        user.getUsername(), owner.getKey()));
             }
         }
 
@@ -447,15 +459,6 @@ public class ConsumerResource {
                 label));
         }
         return type;
-    }
-
-    private User getCurrentUsername(Principal principal) {
-        if (principal instanceof UserPrincipal) {
-            UserPrincipal user = (UserPrincipal) principal;
-            return userService.findByLogin(user.getUsername());
-        }
-
-        return null;
     }
 
     @PUT

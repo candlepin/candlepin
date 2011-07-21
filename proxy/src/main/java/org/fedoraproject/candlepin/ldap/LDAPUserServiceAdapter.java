@@ -74,8 +74,7 @@ public class LDAPUserServiceAdapter implements UserServiceAdapter {
         }
     }
 
-    @Override
-    public List<Role> getRoles(String username) {
+    private List<Role> getRoles(String username) {
         List<Role> roles = new ArrayList<Role>();
         Set<User> users = new HashSet<User>();
         users.add(new User(username, null));
@@ -97,12 +96,6 @@ public class LDAPUserServiceAdapter implements UserServiceAdapter {
         }
 
         return roles;
-    }
-
-    @Override
-    public boolean isReadyOnly() {
-        // We only read from LDAP
-        return true;
     }
 
     @Override

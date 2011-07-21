@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.resteasy.interceptor;
 
 import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.TrustedUserPrincipal;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.jboss.resteasy.spi.HttpRequest;
 
@@ -40,7 +41,7 @@ class TrustedUserAuth extends UserAuth {
         String username = AuthUtil.getHeader(request, USER_HEADER);
 
         if (username != null && username.length() > 0) {
-            principal = this.createPrincipal(username);
+            principal = new TrustedUserPrincipal(username);
         }
 
         return principal;
