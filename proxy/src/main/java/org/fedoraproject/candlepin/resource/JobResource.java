@@ -42,9 +42,7 @@ public class JobResource {
 
     private JobCurator curator;
     private PinsetterKernel pk;
-    private static String PAUSED_STATUS = "paused";
-    private static String UNPAUSED_STATUS = "unpaused";
-    
+        
 
     @Inject
     public JobResource(JobCurator curator, PinsetterKernel pk) {
@@ -84,9 +82,12 @@ public class JobResource {
         try {
             if (running) {
                 pk.unpauseScheduler();
-            } else
-                pk.pauseScheduler();             
-        } catch (PinsetterException pe) {
+            }
+            else {
+                pk.pauseScheduler();
+            }
+        }
+        catch (PinsetterException pe) {
             throw new IseException("Error setting scheduler status");
         }
         return getSchedulerStatus();

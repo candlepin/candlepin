@@ -56,7 +56,8 @@ public class JobResourceTest {
         try {
             jobResource.getStatuses(null);
             fail("Should have thrown a BadRequestException");
-        } catch (BadRequestException e) {
+        }
+        catch (BadRequestException e) {
             //expected, return
             return;
         }

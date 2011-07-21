@@ -67,7 +67,7 @@ public class CancelJobJobTest {
         jl.add(js);
         when(j.findCanceledJobs()).thenReturn(jl);
         cancelJobJob.execute(ctx);
-        verify(pk, atLeastOnce()).cancelJob((Serializable)"Kayfabe", "Deluxe");
+        verify(pk, atLeastOnce()).cancelJob((Serializable) "Kayfabe", "Deluxe");
     }
 
 }

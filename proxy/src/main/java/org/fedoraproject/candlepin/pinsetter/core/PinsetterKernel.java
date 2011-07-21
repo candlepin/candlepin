@@ -324,7 +324,7 @@ public class PinsetterKernel {
         }
         catch (SchedulerException e) {
             throw new PinsetterException("There was a problem gathering" +
-            		"scheduler status ", e);
+                        "scheduler status ", e);
         }
     }
     
