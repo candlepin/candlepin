@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.model;
 import java.util.Date;
 import java.util.List;
 
+import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.pinsetter.core.model.JobStatus;
 import org.fedoraproject.candlepin.pinsetter.core.model.JobStatus.JobState;
 import org.hibernate.criterion.Restrictions;
@@ -29,17 +30,34 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
     public JobCurator() {
         super(JobStatus.class);
     }
+    
+    public JobStatus cancel(String jobId) {
+        JobStatus j = this.find(jobId);
+        if (j == null) {
+            throw new NotFoundException("job not found");
+        }
+        j.setState(JobState.CANCELLED);
+        merge(j);
+        return j;
+    }
 
     public int cleanUpOldJobs(Date deadLineDt) {
         return this.currentSession().createQuery(
-            "delete from JobStatus where finishTime <= :date and state = :completed")
+            "delete from JobStatus where finishTime <= :date and" +
+            "(state = :completed or state = :cancelled)")
                .setDate("date", deadLineDt)
                .setInteger("completed", JobState.FINISHED.ordinal())
+               .setInteger("cancelled", JobState.CANCELLED.ordinal())
                .executeUpdate();
     }
 
     public List<JobStatus> findByOwnerKey(String ownerKey) {
         return this.currentSession().createCriteria(JobStatus.class)
         .add(Restrictions.eq("ownerKey", ownerKey)).list();
+    }
+    
+    public List<JobStatus> findCanceledJobs() {
+        return this.currentSession().createCriteria(JobStatus.class)
+        .add(Restrictions.eq("state", JobState.CANCELLED)).list();
     }
 }

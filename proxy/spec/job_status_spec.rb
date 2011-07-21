@@ -44,5 +44,24 @@ describe 'Job Status' do
     end.should raise_exception(RestClient::BadRequest)
   end
 
+  it 'should cancel a job' do
+    @cp.set_scheduler_status(false)
+    job = @cp.refresh_pools (@owner.key, true)
+    #make sure we see a job waiting to go
+    joblist = @cp.list_jobs(@owner.key)
+    joblist.find { |j| j['id'] == job['id'] }['state'].should == 'CREATED'
+
+    @cp.cancel_job(job['id'])
+    #make sure we see a job cancelled
+    joblist = @cp.list_jobs(@owner.key)
+    joblist.find { |j| j['id'] == job['id'] }['state'].should == 'CANCELLED'
+
+    @cp.set_scheduler_status(true)
+    sleep 1 #let the job queue drain..
+    #make sure job didn't flip to FINISHED
+    joblist = @cp.list_jobs(@owner.key)
+    joblist.find { |j| j['id'] == job['id'] }['state'].should == 'CANCELLED'
+  end
+
 end
 

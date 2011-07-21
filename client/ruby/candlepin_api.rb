@@ -223,6 +223,14 @@ class Candlepin
     get("/consumertypes/#{type_id}")
   end
 
+  def get_scheduler_status()
+    get("/jobs/scheduler")
+  end
+
+  def set_scheduler_status(status)
+    post("/jobs/scheduler", status)
+  end
+
   def create_consumer_type(type_label)
     consumer_type =  {
       'label' => type_label
@@ -574,6 +582,10 @@ class Candlepin
 
   def list_jobs(owner_key)
     get "/jobs?owner=#{owner_key}"
+  end
+
+  def cancel_job(job_id)
+    delete "/jobs/#{job_id}"
   end
 
   def import(owner_key, filename)

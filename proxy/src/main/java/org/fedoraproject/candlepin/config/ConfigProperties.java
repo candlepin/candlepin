@@ -15,6 +15,7 @@
 
 package org.fedoraproject.candlepin.config;
 
+import org.fedoraproject.candlepin.pinsetter.tasks.CancelJobJob;
 import org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask;
 import org.fedoraproject.candlepin.pinsetter.tasks.ImportRecordJob;
 import org.fedoraproject.candlepin.pinsetter.tasks.JobCleaner;
@@ -77,7 +78,8 @@ public class ConfigProperties {
     private static final String[] DEFAULT_TASK_LIST = new String[]{
         CertificateRevocationListTask.class.getName(),
         JobCleaner.class.getName(), ImportRecordJob.class.getName(),
-        StatisticHistoryTask.class.getName() };
+        StatisticHistoryTask.class.getName(),
+        CancelJobJob.class.getName()};
 
     public static final String SYNC_WORK_DIR = "candlepin.sync.work_dir";
     public static final String CONSUMER_FACTS_MATCHER =

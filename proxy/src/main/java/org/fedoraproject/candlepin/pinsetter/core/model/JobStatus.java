@@ -44,11 +44,13 @@ public class JobStatus extends AbstractHibernateObject {
         CREATED,
         PENDING,
         RUNNING,
-        FINISHED;
+        FINISHED,
+        CANCELLED;
     }
 
     @Id
     private String id;
+    private String jobGroup;
     private JobState state;
     private Date startTime;
     private Date finishTime;
@@ -59,6 +61,7 @@ public class JobStatus extends AbstractHibernateObject {
 
     public JobStatus(JobDetail jobDetail) {
         this.id = jobDetail.getName();
+        this.jobGroup = jobDetail.getGroup();      
         this.state = JobState.CREATED;
         this.ownerKey = getOwnerKey(jobDetail);
     }
@@ -92,6 +95,10 @@ public class JobStatus extends AbstractHibernateObject {
     @Override
     public Serializable getId() {
         return id;
+    }
+    
+    public String getGroup() {
+        return jobGroup;
     }
 
     public Date getFinishTime() {

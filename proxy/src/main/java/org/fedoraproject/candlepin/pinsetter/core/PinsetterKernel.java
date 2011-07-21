@@ -20,16 +20,19 @@ import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.util.PropertyUtil;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import org.apache.log4j.Logger;
 import org.quartz.CronTrigger;
 import org.quartz.JobDetail;
+import org.quartz.JobExecutionException;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.SchedulerFactory;
 import org.quartz.Trigger;
 import org.quartz.impl.StdSchedulerFactory;
 
+import java.io.Serializable;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -41,6 +44,7 @@ import java.util.Map.Entry;
 
 import org.fedoraproject.candlepin.model.JobCurator;
 import org.fedoraproject.candlepin.pinsetter.core.model.JobStatus;
+import org.fedoraproject.candlepin.pinsetter.tasks.CancelJobJob;
 import org.quartz.JobListener;
 import org.quartz.SimpleTrigger;
 import org.quartz.spi.JobFactory;
@@ -49,6 +53,7 @@ import org.quartz.spi.JobFactory;
  * Pinsetter Kernel.
  * @version $Rev$
  */
+@Singleton
 public class PinsetterKernel {
 
     private static final String CRON_GROUP = "Pinsetter Batch Engine Group";
@@ -262,6 +267,28 @@ public class PinsetterKernel {
             throw new PinsetterException("problem scheduling " + jobName, se);
         }       
     }
+    
+    public void cancelJob(Serializable id, String group)
+        throws PinsetterException {
+        try {
+            //this deletes from the scheduler, it's already marked as
+            //canceled in the JobStatus table
+            String[] jobs = scheduler.getJobNames(SINGLE_JOB_GROUP);
+            for (String j : jobs) {
+                log.debug(j);
+            }
+            if (scheduler.deleteJob((String) id, group)) {
+                log.info("cancelled job " + group + ":" + id + " in scheduler");
+            }
+            else {
+                log.debug("did not find job " + group + ":" + id + " to cancel");
+            }
+        }
+        catch (SchedulerException e) {
+            throw new PinsetterException("problem cancelling " + group + ":" + id, e);
+        }
+    
+    }
 
     /**
      * Schedule a long-running job for a single execution.
@@ -289,6 +316,46 @@ public class PinsetterKernel {
                     jobDetail.getName(), e);
         }
     }
+    
+    public boolean getSchedulerStatus() throws PinsetterException {
+        try {
+            //return true when scheduler is running (double negative)
+            return !scheduler.isInStandbyMode();
+        }
+        catch (SchedulerException e) {
+            throw new PinsetterException("There was a problem gathering" +
+            		"scheduler status ", e);
+        }
+    }
+    
+    public void pauseScheduler() throws PinsetterException {
+        //go into standby mode
+        try {
+            scheduler.standby();
+        }
+        catch (SchedulerException e) {
+            throw new PinsetterException("There was a problem pausing the scheduler", e);
+        }
+    }
+    
+    public void unpauseScheduler() throws PinsetterException {
+        log.debug("looking for cancelled jobs since scheduler was paused");
+        CancelJobJob cjj = new CancelJobJob(jobCurator, this);
+        try {
+            cjj.execute(null);
+        }
+        catch (JobExecutionException e1) {
+            throw new PinsetterException("Could not clear cancelled jobs before starting");
+        }
+        log.debug("restarting scheduler");
+        try {
+            scheduler.start();
+        }
+        catch (SchedulerException e) {
+            throw new PinsetterException("There was a problem unpausing the scheduler", e);
+        }
+    }
+    
     
     // TODO: GET RID OF ME!!
     Scheduler getScheduler() {
