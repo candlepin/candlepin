@@ -18,15 +18,17 @@ import static junit.framework.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.Date;
-
 import org.fedoraproject.candlepin.pinsetter.core.model.JobStatus;
+import org.fedoraproject.candlepin.pinsetter.core.model.JobStatus.JobState;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.util.Util;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
+
+import java.util.Date;
 
 /**
  * JobCuratorTest
@@ -88,6 +90,15 @@ public class JobCuratorTest extends DatabaseTestFixture{
         assertEquals(1, this.curator.listAll().size());
     }
     
+    @Test
+    public void failedJobs() {
+        newJobStatus().startTime(Util.yesterday()).finishTime(null)
+            .result("wrong pool").state(JobState.FAILED).create();
+        this.curator.cleanupFailedJobs(new Date());
+        assertEquals(0, this.curator.listAll().size());
+        System.out.println(this.curator.listAll().size());
+    }
+
     private JobStatusBuilder newJobStatus() {
         return new JobStatusBuilder();
     }
@@ -97,6 +108,7 @@ public class JobCuratorTest extends DatabaseTestFixture{
         private Date startDt;
         private Date endDt;
         private String result;
+        private JobState state;
         
         public JobStatusBuilder() {
             id("id" + Math.random());
@@ -122,6 +134,11 @@ public class JobCuratorTest extends DatabaseTestFixture{
             return this;
         }
         
+        public JobStatusBuilder state(JobState state) {
+            this.state = state;
+            return this;
+        }
+
         @SuppressWarnings("serial")
         public JobStatusBuilder create() {
             //sigh - all of this pain to construct a JobDetail
@@ -140,6 +157,9 @@ public class JobCuratorTest extends DatabaseTestFixture{
             when(context.getJobRunTime()).thenReturn(time);
             when(context.getResult()).thenReturn(result);
             status.update(context);
+            if (state != null) {
+                status.setState(state);
+            }
             curator.create(status);
             return this;
         }

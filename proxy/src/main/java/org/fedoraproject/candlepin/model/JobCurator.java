@@ -41,9 +41,18 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
         return j;
     }
 
+    public int cleanupFailedJobs(Date deadline) {
+        return this.currentSession().createQuery(
+            "delete from JobStatus where startTime <= :date and " +
+            "state = :failed")
+               .setDate("date", deadline)
+               .setInteger("failed", JobState.FAILED.ordinal())
+               .executeUpdate();
+    }
+
     public int cleanUpOldJobs(Date deadLineDt) {
         return this.currentSession().createQuery(
-            "delete from JobStatus where finishTime <= :date and" +
+            "delete from JobStatus where finishTime <= :date and " +
             "(state = :completed or state = :cancelled)")
                .setDate("date", deadLineDt)
                .setInteger("completed", JobState.FINISHED.ordinal())
