@@ -98,7 +98,7 @@ describe 'Entitlement Certificate' do
   end
 
   it 'those in excess will be deleted when existing subscription quantity is decreased' do
-      prod = create_product()
+      prod = create_product(nil, nil, {:attributes => {"multi-entitlement" => "yes"}})
       sub = @cp.create_subscription(@owner.key, prod.id, 10)
       @cp.refresh_pools(@owner.key)
 

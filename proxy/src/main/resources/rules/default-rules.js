@@ -204,6 +204,10 @@ var Entitlement = {
 			pre.addError("rulefailed.consumer.already.has.product");
 		}
 
+		if (pre.getQuantity() > 1 && product.getAttribute("multi-entitlement") != "yes") {
+			pre.addError("rulefailed.pool.does.not.support.multi-entitlement");
+		}
+
 		// If the product has no required consumer type, assume it is restricted to "system":
 		if (!product.hasAttribute("requires_consumer_type")) {
 			if (!consumer.getType().equals("system")) {

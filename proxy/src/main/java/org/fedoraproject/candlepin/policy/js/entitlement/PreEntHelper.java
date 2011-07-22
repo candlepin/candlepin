@@ -57,6 +57,10 @@ public class PreEntHelper {
         return result;
     }
 
+    public Integer getQuantity() {
+        return quantityToConsume;
+    }
+
     /**
      * Verify entitlements are available in the given pool.
      * 

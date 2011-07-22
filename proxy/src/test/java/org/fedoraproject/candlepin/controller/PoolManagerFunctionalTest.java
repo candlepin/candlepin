@@ -93,6 +93,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         monitoring.addAttribute(new ProductAttribute("multi-entitlement", "yes"));
 
         provisioning = new Product(PRODUCT_PROVISIONING, PRODUCT_PROVISIONING);
+        provisioning.addAttribute(new ProductAttribute("multi-entitlement", "yes"));
 
         virtHost.addAttribute(new ProductAttribute(PRODUCT_VIRT_HOST, ""));
         virtHostPlatform.addAttribute(new ProductAttribute(PRODUCT_VIRT_HOST_PLATFORM,
@@ -225,7 +226,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     public void testRegenerateEntitlementCertificatesWithSingleEntitlement()
         throws Exception {
         this.entitlementCurator.refresh(poolManager.entitleByProduct(this.childVirtSystem,
-            provisioning.getId(), 3));
+            provisioning.getId(), 1));
         regenerateECAndAssertNotSameCertificates();
     }
 

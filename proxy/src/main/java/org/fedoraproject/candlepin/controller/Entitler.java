@@ -100,17 +100,21 @@ public class Entitler {
             if (error.equals("rulefailed.consumer.already.has.product")) {
                 msg = i18n.tr(
                     "This consumer is already subscribed to the product " +
-                    "matching pool with id ''{0}''.", pool.getId().toString());
+                    "matching pool with id ''{0}''.", pool.getId());
             }
             else if (error.equals("rulefailed.no.entitlements.available")) {
                 msg = i18n.tr(
                     "No free entitlements are available for the pool with " +
-                    "id ''{0}''.", pool.getId().toString());
+                    "id ''{0}''.", pool.getId());
             }
             else if (error.equals("rulefailed.consumer.type.mismatch")) {
                 msg = i18n.tr(
                     "Consumers of this type are not allowed to subscribe to " +
-                    "the pool with id ''{0}''.", pool.getId().toString());
+                    "the pool with id ''{0}''.", pool.getId());
+            }
+            else if (error.equals("rulefailed.pool.does.not.support.multi-entitlement")) {
+                msg = i18n.tr("Multi-entitlement not supported for pool with id ''{0}''.",
+                    pool.getId());
             }
             else {
                 msg = i18n.tr("Unable to entitle consumer to the pool with " +

@@ -128,6 +128,23 @@ public class DefaultRulesTest {
         assertFalse(result.isSuccessful());
     }
 
+    @Test public void bindWithQuantityNoMultiEntitle() {
+        Product product = new Product(productId, "A product for testing");
+        Pool pool = createPool(owner, product);
+        pool.setQuantity(new Long(100));
+
+        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 10)
+            .getResult();
+
+        assertFalse(result.isSuccessful());
+        assertTrue(result.hasErrors());
+        assertEquals(1, result.getErrors().size());
+        assertTrue(result.getErrors().get(0).getResourceKey().contains(
+            "multi-entitlement"));
+    }
+
     @Test
     public void testBindFromSameProductAllowedWithMultiEntitlementAttribute() {
         Product product = new Product(productId, "A product for testing");

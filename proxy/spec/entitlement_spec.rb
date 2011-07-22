@@ -8,7 +8,8 @@ describe 'Entitlements' do
   before(:each) do
     @owner = create_owner random_string 'test_owner'
     @monitoring = create_product(nil, random_string('monitoring'))
-    @virt = create_product(nil, random_string('virtualization_host'))
+    @virt = create_product(nil, random_string('virtualization_host'),
+      {:attributes => {"multi-entitlement" => "yes"}})
     @super_awesome = create_product(nil, random_string('super_awesome'), 
                                     :attributes => { 'cpu.cpu_socket(s)' => 4 })
 
@@ -49,7 +50,7 @@ describe 'Entitlements' do
     @system.list_entitlements.should have(1).things
   end
 
-  it 'should allow consumption of quatity 10' do
+  it 'should allow consumption of quantity 10' do
     pool = find_pool @virt
     @system.consume_pool(pool.id, {:quantity => 10})
 
