@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.pinsetter.tasks;
 
 import org.fedoraproject.candlepin.controller.Entitler;
+import org.fedoraproject.candlepin.exceptions.CandlepinException;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.util.Util;
 
@@ -42,23 +43,28 @@ public class EntitlerJob implements Job {
 
     @Override
     public void execute(JobExecutionContext ctx) throws JobExecutionException {
-        JobDataMap map = ctx.getMergedJobDataMap();
-        Integer qty = map.getInt("quantity");
-        String uuid = (String) map.get("consumer_uuid");
+        try {
+            JobDataMap map = ctx.getMergedJobDataMap();
+            Integer qty = map.getInt("quantity");
+            String uuid = (String) map.get("consumer_uuid");
 
-        if (map.containsKey("pool_id")) {
-            // bindByPool
-            String poolId = map.getString("pool_id");
-            List<Entitlement> ents = entitler.bindByPool(poolId, uuid, qty);
-            entitler.sendEvents(ents);
-        }
-        else if (map.containsKey("product_ids")) {
-            String[] prodIds = (String[]) map.get("product_ids");
-            List<Entitlement> ents = entitler.bindByProducts(prodIds, uuid, qty);
-            entitler.sendEvents(ents);
-        }
+            if (map.containsKey("pool_id")) {
+                // bindByPool
+                String poolId = map.getString("pool_id");
+                List<Entitlement> ents = entitler.bindByPool(poolId, uuid, qty);
+                entitler.sendEvents(ents);
+            }
+            else if (map.containsKey("product_ids")) {
+                String[] prodIds = (String[]) map.get("product_ids");
+                List<Entitlement> ents = entitler.bindByProducts(prodIds, uuid, qty);
+                entitler.sendEvents(ents);
+            }
 
-        ctx.setResult("Entitlements created for owner");
+            ctx.setResult("Entitlements created for owner");
+        }
+        catch (CandlepinException ce) {
+            throw new JobExecutionException(ce.getMessage(), ce, false);
+        }
     }
 
     public static JobDetail bindByPool(String poolId, String uuid, Integer qty) {
