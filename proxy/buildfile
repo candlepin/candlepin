@@ -153,12 +153,15 @@ define "candlepin" do
         'release'=>RELEASE_NUMBER
 
   # Hook in gettext bundle generation to compile
+  nopo = ENV['nopo']
   sources = FileList[_("po/*.po")]
   generate = file(_("target/generated-source") => sources) do |dir|
     mkdir_p dir.to_s
     sources.each do |source|
       locale = source.match("\/([^/]*)?\.po$")[1]
-      sh "msgfmt --java -r org.fedoraproject.candlepin.i18n.Messages -d #{dir} -l #{locale} #{source}"
+      if nopo.nil? #we do this inside the loop, in order to still create a stub "generate" var
+        sh "msgfmt --java -r org.fedoraproject.candlepin.i18n.Messages -d #{dir} -l #{locale} #{source}"
+      end
     end
   end
   compile.from generate
