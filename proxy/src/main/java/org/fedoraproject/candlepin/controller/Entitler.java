@@ -35,7 +35,7 @@ import com.google.inject.Inject;
 /**
  * entitler
  */
-public class Entitler implements Serializable {
+public class Entitler {
     private static Logger log = Logger.getLogger(Entitler.class);
 
     private PoolManager poolManager;
