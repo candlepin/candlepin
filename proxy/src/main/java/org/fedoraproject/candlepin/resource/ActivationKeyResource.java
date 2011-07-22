@@ -14,27 +14,32 @@
  */
 package org.fedoraproject.candlepin.resource;
 
+import org.fedoraproject.candlepin.audit.EventSink;
+import org.fedoraproject.candlepin.exceptions.BadRequestException;
+import org.fedoraproject.candlepin.model.ActivationKey;
+import org.fedoraproject.candlepin.model.ActivationKeyCurator;
+import org.fedoraproject.candlepin.model.ActivationKeyPool;
+import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.PoolCurator;
+
+import com.google.inject.Inject;
+
+import org.apache.log4j.Logger;
+import org.xnap.commons.i18n.I18n;
+
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-
-import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.audit.EventSink;
-import org.fedoraproject.candlepin.exceptions.BadRequestException;
-import org.fedoraproject.candlepin.model.ActivationKey;
-import org.fedoraproject.candlepin.model.ActivationKeyCurator;
-import org.fedoraproject.candlepin.model.Pool;
-import org.fedoraproject.candlepin.model.PoolCurator;
-import org.xnap.commons.i18n.I18n;
-
-import com.google.inject.Inject;
 
 /**
  * SubscriptionTokenResource
@@ -76,7 +81,12 @@ public class ActivationKeyResource {
     public List<Pool> getActivationKeyPools(
         @PathParam("activation_key_id") String activationKeyId) {
         ActivationKey key = findKey(activationKeyId);
-        return key.getPools();
+        List<Pool> pools = new ArrayList<Pool>();
+        for(ActivationKeyPool akp : key.getPools())
+        {
+            pools.add(akp.getPool());   
+        }
+        return pools;
     }
 
     @PUT
@@ -96,10 +106,11 @@ public class ActivationKeyResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Pool addPoolToKey(
         @PathParam("activation_key_id") String activationKeyId,
-        @PathParam("pool_id") String poolId) {
+        @PathParam("pool_id") String poolId, 
+        @QueryParam("quantity") @DefaultValue("1") long quantity) {
         ActivationKey key = findKey(activationKeyId);
         Pool pool = findPool(poolId);
-        key.getPools().add(pool);
+        key.addPool(pool, quantity);
         activationKeyCurator.update(key);
         return pool;
     }
@@ -112,7 +123,7 @@ public class ActivationKeyResource {
         @PathParam("pool_id") String poolId) {
         ActivationKey key = findKey(activationKeyId);
         Pool pool = findPool(poolId);
-        key.getPools().remove(pool);
+        key.removePool(pool);
         activationKeyCurator.update(key);
         return pool;
     }

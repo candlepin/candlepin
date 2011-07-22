@@ -18,15 +18,16 @@ import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -38,9 +39,8 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement
 @Entity
-@Table(name = "cp_activation_key",
-    uniqueConstraints = {@UniqueConstraint(columnNames = {"name", "owner_id"})}
-)
+@Table(name = "cp_activation_key", uniqueConstraints = { @UniqueConstraint(columnNames = {
+    "name", "owner_id" }) })
 public class ActivationKey extends AbstractHibernateObject {
 
     @Id
@@ -58,16 +58,12 @@ public class ActivationKey extends AbstractHibernateObject {
     @Index(name = "cp_activation_key_owner_fk_idx")
     private Owner owner;
 
-    @OneToMany
-    @JoinTable(name = "cp_activationkey_pool",
-        joinColumns = @JoinColumn(name = "key_id"),
-        inverseJoinColumns = @JoinColumn(name = "pool_id")
-    )
-    private List<Pool> pools = new ArrayList<Pool>();
-    
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "key", fetch = FetchType.LAZY)
+    private Set<ActivationKeyPool> pools;
+
     public ActivationKey() {
     }
-    
+
     public ActivationKey(String name, Owner owner) {
         this.name = name;
         this.owner = owner;
@@ -98,14 +94,14 @@ public class ActivationKey extends AbstractHibernateObject {
     /**
      * @return the pool
      */
-    public List<Pool> getPools() {
+    public Set<ActivationKeyPool> getPools() {
         return pools;
     }
 
     /**
      * @param pools the pool to set
      */
-    public void setPools(List<Pool> pools) {
+    public void setPools(Set<ActivationKeyPool> pools) {
         this.pools = pools;
     }
 
@@ -121,5 +117,21 @@ public class ActivationKey extends AbstractHibernateObject {
      */
     public void setOwner(Owner owner) {
         this.owner = owner;
+    }
+
+    public void addPool(Pool pool, long quantity) {
+        ActivationKeyPool akp = new ActivationKeyPool(this, pool,
+            quantity);
+        this.getPools().add(akp);
+    }
+
+    public void removePool(Pool pool) {
+        Set<ActivationKeyPool> result = new HashSet<ActivationKeyPool>();
+        for (ActivationKeyPool akp : this.getPools()) {
+            if(!akp.getPool().getId().equals(pool.getId())) {
+                result.add(akp);
+            }
+        }
+        this.setPools(result);
     }
 }
