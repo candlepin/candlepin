@@ -14,6 +14,10 @@
  */
 package org.fedoraproject.candlepin.controller;
 
+import java.util.LinkedList;
+import java.util.List;
+
+import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
@@ -23,14 +27,9 @@ import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
-
-import com.google.inject.Inject;
-
-import org.apache.log4j.Logger;
 import org.xnap.commons.i18n.I18n;
 
-import java.util.LinkedList;
-import java.util.List;
+import com.google.inject.Inject;
 
 /**
  * entitler
@@ -92,21 +91,21 @@ public class Entitler {
             if (error.equals("rulefailed.consumer.already.has.product")) {
                 msg = i18n.tr(
                     "This consumer is already subscribed to the product " +
-                    "matching pool with id ''{0}''", pool.getId().toString());
+                    "matching pool with id ''{0}''.", pool.getId().toString());
             }
             else if (error.equals("rulefailed.no.entitlements.available")) {
                 msg = i18n.tr(
                     "No free entitlements are available for the pool with " +
-                    "id ''{0}''", pool.getId().toString());
+                    "id ''{0}''.", pool.getId().toString());
             }
             else if (error.equals("rulefailed.consumer.type.mismatch")) {
                 msg = i18n.tr(
                     "Consumers of this type are not allowed to subscribe to " +
-                    "the pool with id ''{0}''", pool.getId().toString());
+                    "the pool with id ''{0}''.", pool.getId().toString());
             }
             else {
                 msg = i18n.tr("Unable to entitle consumer to the pool with " +
-                    "id ''{0}'': {1}", pool.getId().toString(), error);
+                    "id ''{0}''.: {1}", pool.getId().toString(), error);
             }
             throw new ForbiddenException(msg);
         }
