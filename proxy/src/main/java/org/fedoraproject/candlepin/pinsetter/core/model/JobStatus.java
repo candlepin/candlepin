@@ -45,7 +45,8 @@ public class JobStatus extends AbstractHibernateObject {
         PENDING,
         RUNNING,
         FINISHED,
-        CANCELLED;
+        CANCELLED,
+        FAILED;
     }
 
     @Id
@@ -105,7 +106,7 @@ public class JobStatus extends AbstractHibernateObject {
         return finishTime;
     }
 
-    public Object getResult() {
+    public String getResult() {
         return result;
     }
 
@@ -129,4 +130,7 @@ public class JobStatus extends AbstractHibernateObject {
         return "/jobs/" + this.id;
     }
 
+    public void setResult(String result) {
+        this.result = result;
+    }
 }

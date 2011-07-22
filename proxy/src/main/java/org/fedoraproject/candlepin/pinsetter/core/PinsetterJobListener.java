@@ -19,6 +19,8 @@ import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.SystemPrincipal;
 import org.fedoraproject.candlepin.model.JobCurator;
 import org.fedoraproject.candlepin.pinsetter.core.model.JobStatus;
+import org.fedoraproject.candlepin.pinsetter.core.model.JobStatus.JobState;
+
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -63,19 +65,28 @@ public class PinsetterJobListener implements JobListener {
         JobExecutionException exception) {
 
         ResteasyProviderFactory.popContextData(Principal.class);
-        updateJob(context);
+        updateJob(context, exception);
     }
 
-    private void updateJob(JobExecutionContext context) {
+    private void updateJob(JobExecutionContext ctx) {
+        updateJob(ctx, null);
+    }
+
+    private void updateJob(JobExecutionContext ctx, JobExecutionException exc) {
         ResteasyProviderFactory.pushContext(Principal.class, new SystemPrincipal());
 
-        JobStatus status = curator.find(context.getJobDetail().getName());
+        JobStatus status = curator.find(ctx.getJobDetail().getName());
         if (status != null) {
-            status.update(context);
+            if (exc != null) {
+                status.setState(JobState.FAILED);
+                status.setResult(exc.getMessage());
+            }
+            else {
+                status.update(ctx);
+            }
             curator.merge(status);
         }
 
         ResteasyProviderFactory.popContextData(Principal.class);
     }
-
 }

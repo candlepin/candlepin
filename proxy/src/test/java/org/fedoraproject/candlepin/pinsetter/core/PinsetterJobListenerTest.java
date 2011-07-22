@@ -25,6 +25,8 @@ import static org.mockito.Mockito.when;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.model.JobCurator;
 import org.fedoraproject.candlepin.pinsetter.core.model.JobStatus;
+import org.fedoraproject.candlepin.pinsetter.core.model.JobStatus.JobState;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.quartz.JobDataMap;
@@ -82,7 +84,6 @@ public class PinsetterJobListenerTest {
     
     @Test
     public void executed() {
-        JobExecutionException e = mock(JobExecutionException.class);
         JobDetail detail = mock(JobDetail.class);
         JobStatus status = mock(JobStatus.class);
 
@@ -90,11 +91,10 @@ public class PinsetterJobListenerTest {
         when(ctx.getJobDetail()).thenReturn(detail);
         when(jcurator.find(eq("foo"))).thenReturn(status);
         
-        listener.jobWasExecuted(ctx, e);
+        listener.jobWasExecuted(ctx, null);
         
         verify(status).update(eq(ctx));
         verify(jcurator).merge(eq(status));
-        verifyZeroInteractions(e);
     }
     
     @Test
@@ -132,5 +132,39 @@ public class PinsetterJobListenerTest {
         
         verifyZeroInteractions(status);
         verify(jcurator, never()).merge(eq(status));
+    }
+
+    @Test
+    public void handleNullException() {
+        JobStatus status = mock(JobStatus.class);
+        JobDetail detail = mock(JobDetail.class);
+
+        when(detail.getName()).thenReturn("foo");
+        when(ctx.getJobDetail()).thenReturn(detail);
+        when(jcurator.find(eq("foo"))).thenReturn(status);
+
+        listener.jobWasExecuted(ctx, null);
+
+        verify(status).update(eq(ctx));
+        verify(jcurator).merge(eq(status));
+    }
+
+    @Test
+    public void handleException() {
+        JobExecutionException e = mock(JobExecutionException.class);
+        JobDetail detail = mock(JobDetail.class);
+        JobStatus status = mock(JobStatus.class);
+
+        when(detail.getName()).thenReturn("foo");
+        when(ctx.getJobDetail()).thenReturn(detail);
+        when(jcurator.find(eq("foo"))).thenReturn(status);
+        when(e.getMessage()).thenReturn("job errored");
+
+        listener.jobWasExecuted(ctx, e);
+
+        verify(status).setState(eq(JobState.FAILED));
+        verify(status).setResult(eq("job errored"));
+        verify(status, never()).update(eq(ctx));
+        verify(jcurator).merge(eq(status));
     }
 }
