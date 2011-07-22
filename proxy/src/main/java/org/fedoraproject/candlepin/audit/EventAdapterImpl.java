@@ -71,7 +71,7 @@ public class EventAdapterImpl implements EventAdapter {
 
         for (Event e : events) {
             Entry entry = new Entry();
-            entry.setTitle(e.getMessageText());
+            entry.setTitle(e.getTarget().toString() + " " + e.getType().toString());
             entry.setPublished(e.getTimestamp());
             entry.setUpdated(e.getTimestamp());
             entry.getAuthors().add(new Person("Red Hat, Inc."));

@@ -19,6 +19,10 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+
 import org.fedoraproject.candlepin.CandlepinCommonTestingModule;
 import org.fedoraproject.candlepin.CandlepinNonServletEnvironmentTestingModule;
 import org.fedoraproject.candlepin.auth.PrincipalData;
@@ -35,10 +39,6 @@ import com.google.inject.Injector;
 import com.wideplay.warp.persist.PersistenceService;
 import com.wideplay.warp.persist.UnitOfWork;
 
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-
 
 /**
  * EventAdapterTest
@@ -47,7 +47,7 @@ public class EventAdapterTest {
 
     private Injector injector;
     private I18n i18n;
-    
+
     @Before
     public void init() {
         injector = Guice.createInjector(
@@ -59,7 +59,7 @@ public class EventAdapterTest {
         );
         i18n = injector.getInstance(I18n.class);
     }
-    
+
     @Test
     public void toFeed() {
         EventAdapter ea = new EventAdapterImpl(new ConfigForTesting(), i18n);
@@ -74,8 +74,10 @@ public class EventAdapterTest {
         Entry e = f.getEntries().get(0);
         assertNotNull(e);
         assertNotNull(e.getTitle());
-        assertTrue(e.getTitle().contains("consumer"));
-        assertTrue(e.getTitle().contains("created"));        
+        assertTrue(e.getTitle().contains("CONSUMER"));
+        assertTrue(e.getTitle().contains("CREATED"));
+        assertTrue(e.getSummary().contains("consumer"));
+        assertTrue(e.getSummary().contains("created"));
         assertEquals(events.get(0).getTimestamp(), f.getUpdated());
     }
 
@@ -105,7 +107,7 @@ public class EventAdapterTest {
         assertNotNull(f.getEntries());
         assertTrue(f.getEntries().isEmpty());
     }
-    
+
     private static class ConfigForTesting extends Config {
         public ConfigForTesting() {
             super(ConfigProperties.DEFAULT_PROPERTIES);
