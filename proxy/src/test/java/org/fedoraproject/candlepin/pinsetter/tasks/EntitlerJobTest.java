@@ -23,6 +23,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.fedoraproject.candlepin.controller.Entitler;
+import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.model.Entitlement;
 
 import org.junit.After;
@@ -143,6 +144,19 @@ public class EntitlerJobTest {
         ObjectOutput out = new ObjectOutputStream(new FileOutputStream("obj.ser"));
         out.writeObject(obj);
         out.close();
+    }
+    
+    @Test(expected = JobExecutionException.class)
+    public void handleException() throws JobExecutionException {
+        String pool = "pool10";
+        JobDetail detail = EntitlerJob.bindByPool(pool, consumerUuid, 1);
+        JobExecutionContext ctx = mock(JobExecutionContext.class);
+        when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
+        when(e.bindByPool(eq(pool), eq(consumerUuid), eq(1))).thenThrow(
+            new ForbiddenException("job should fail"));
+
+        EntitlerJob job = new EntitlerJob(e);
+        job.execute(ctx);
     }
 
     @After
