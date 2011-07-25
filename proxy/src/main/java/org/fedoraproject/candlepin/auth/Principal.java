@@ -57,9 +57,7 @@ public abstract class Principal implements Serializable {
         return false;
     }
 
-    public String getPrincipalName() {
-        return "";
-    }
+    public abstract String getPrincipalName();
 
     public PrincipalData getData() {
         return new PrincipalData(this.getType(), this.getPrincipalName());
