@@ -30,7 +30,7 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
     public JobCurator() {
         super(JobStatus.class);
     }
-    
+
     public JobStatus cancel(String jobId) {
         JobStatus j = this.find(jobId);
         if (j == null) {
@@ -64,7 +64,7 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
         return this.currentSession().createCriteria(JobStatus.class)
         .add(Restrictions.eq("ownerKey", ownerKey)).list();
     }
-    
+
     public List<JobStatus> findByUsername(String username) {
         return this.currentSession().createCriteria(JobStatus.class)
         .add(Restrictions.eq("username", username)).list();

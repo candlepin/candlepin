@@ -40,15 +40,15 @@ import java.util.List;
 public class JobCuratorTest extends DatabaseTestFixture{
 
     private JobCurator curator;
-    
+
     @Before
     @Override
     public void init() {
         super.init();
-        this.curator = this.injector.getInstance(JobCurator.class); 
+        this.curator = this.injector.getInstance(JobCurator.class);
     }
-    
-    
+
+
     /**
      *All the job status objects which have executed successfully and
      *are clear for deletion should be swept away from the db.
@@ -60,7 +60,7 @@ public class JobCuratorTest extends DatabaseTestFixture{
         this.curator.cleanUpOldJobs(Util.addDaysToDt(2));
         assertEquals(0, this.curator.listAll().size());
     }
-    
+
     /**
      * Jobs which have not completed execution should stay in db
      */
@@ -70,9 +70,9 @@ public class JobCuratorTest extends DatabaseTestFixture{
         this.curator.cleanUpOldJobs(Util.tomorrow());
         assertEquals(1, this.curator.listAll().size());
     }
-    
+
     /**
-     * Jobs which are completed but don't pass the selection criteria 
+     * Jobs which are completed but don't pass the selection criteria
      * should stay in the db.
      */
     @Test
@@ -82,9 +82,9 @@ public class JobCuratorTest extends DatabaseTestFixture{
         this.curator.cleanUpOldJobs(new Date());
         assertEquals(1, this.curator.listAll().size());
     }
-    
+
     /**
-     * Jobs which neither completed nor pass selection criteria 
+     * Jobs which neither completed nor pass selection criteria
      * should stay in db.
      */
     @Test
@@ -93,7 +93,7 @@ public class JobCuratorTest extends DatabaseTestFixture{
         this.curator.cleanUpOldJobs(Util.tomorrow());
         assertEquals(1, this.curator.listAll().size());
     }
-    
+
     @Test
     public void failedJobs() {
         newJobStatus().startTime(Util.yesterday()).finishTime(null)
@@ -129,7 +129,7 @@ public class JobCuratorTest extends DatabaseTestFixture{
     private JobStatusBuilder newJobStatus() {
         return new JobStatusBuilder();
     }
-    
+
     private class JobStatusBuilder{
         private String id;
         private Date startDt;
@@ -139,32 +139,32 @@ public class JobCuratorTest extends DatabaseTestFixture{
         private String ownerkey;
         private String username;
         private JobDataMap map;
-        
+
         public JobStatusBuilder() {
             id("id" + Math.random());
             map = new JobDataMap();
         }
-        
+
         public JobStatusBuilder id(String id) {
             this.id = id;
             return this;
         }
-        
+
         public JobStatusBuilder startTime(Date dt) {
             this.startDt = dt;
             return this;
         }
-        
+
         public JobStatusBuilder finishTime(Date dt) {
             this.endDt = dt;
             return this;
         }
-        
+
         public JobStatusBuilder result(String result) {
             this.result = result;
             return this;
         }
-        
+
         public JobStatusBuilder state(JobState state) {
             this.state = state;
             return this;
@@ -183,7 +183,7 @@ public class JobCuratorTest extends DatabaseTestFixture{
         @SuppressWarnings("serial")
         public JobStatus create() {
             //sigh - all of this pain to construct a JobDetail
-            //which does not have setters! 
+            //which does not have setters!
             map.put(JobStatus.USERNAME, username);
             map.put(JobStatus.OWNER_KEY, ownerkey);
             JobStatus status = new JobStatus(new JobDetail() {
@@ -209,6 +209,6 @@ public class JobCuratorTest extends DatabaseTestFixture{
             }
             return curator.create(status);
         }
-        
+
     }
 }
