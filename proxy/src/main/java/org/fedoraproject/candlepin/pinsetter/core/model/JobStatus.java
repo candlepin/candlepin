@@ -62,7 +62,7 @@ public class JobStatus extends AbstractHibernateObject {
 
     public JobStatus(JobDetail jobDetail) {
         this.id = jobDetail.getName();
-        this.jobGroup = jobDetail.getGroup();      
+        this.jobGroup = jobDetail.getGroup();
         this.state = JobState.CREATED;
         this.ownerKey = getOwnerKey(jobDetail);
     }
@@ -74,10 +74,10 @@ public class JobStatus extends AbstractHibernateObject {
     public void update(JobExecutionContext context) {
         this.startTime = context.getFireTime();
         long runTime = context.getJobRunTime();
-        
+
         if (this.startTime != null) {
             this.state = JobState.RUNNING;
-            
+
             if (runTime > -1) {
                 this.finishTime = new Date(startTime.getTime() + runTime);
                 this.state = JobState.FINISHED;
@@ -97,7 +97,7 @@ public class JobStatus extends AbstractHibernateObject {
     public Serializable getId() {
         return id;
     }
-    
+
     public String getGroup() {
         return jobGroup;
     }
