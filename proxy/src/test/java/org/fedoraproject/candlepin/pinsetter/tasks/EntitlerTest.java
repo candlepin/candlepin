@@ -171,22 +171,22 @@ public class EntitlerTest {
     }
 
     @Test(expected = ForbiddenException.class)
-    public void alreadyHasProduct() throws EntitlementRefusedException {
+    public void alreadyHasProduct() {
         bindByProductErrorTest("rulefailed.consumer.already.has.product");
     }
 
     @Test(expected = ForbiddenException.class)
-    public void noEntitlementsForProduct() throws EntitlementRefusedException {
+    public void noEntitlementsForProduct() {
         bindByProductErrorTest("rulefailed.no.entitlements.available");
     }
 
     @Test(expected = ForbiddenException.class)
-    public void mismatchByProduct() throws EntitlementRefusedException {
+    public void mismatchByProduct() {
         bindByProductErrorTest("rulefailed.consumer.type.mismatch");
     }
 
     @Test(expected = ForbiddenException.class)
-    public void virtOnly() throws EntitlementRefusedException {
+    public void virtOnly() {
         bindByProductErrorTest("rulefailed.virt.only");
     }
 
