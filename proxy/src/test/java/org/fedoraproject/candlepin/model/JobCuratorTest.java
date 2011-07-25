@@ -15,9 +15,11 @@
 package org.fedoraproject.candlepin.model;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.pinsetter.core.model.JobStatus;
 import org.fedoraproject.candlepin.pinsetter.core.model.JobStatus.JobState;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
@@ -25,10 +27,12 @@ import org.fedoraproject.candlepin.util.Util;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * JobCuratorTest
@@ -96,7 +100,30 @@ public class JobCuratorTest extends DatabaseTestFixture{
             .result("wrong pool").state(JobState.FAILED).create();
         this.curator.cleanupFailedJobs(new Date());
         assertEquals(0, this.curator.listAll().size());
-        System.out.println(this.curator.listAll().size());
+    }
+
+    @Test
+    public void findByUsername() {
+        JobStatus job = newJobStatus().username("donald").owner("ducks").create();
+        List<JobStatus> jobs = this.curator.findByUsername("donald");
+        assertNotNull(jobs);
+        assertEquals("donald", job.getUsername());
+        assertEquals(job, jobs.get(0));
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void cancelNonExistentJob() {
+        curator.cancel("dont_exist");
+    }
+
+    @Test
+    public void cancel() {
+        String jobid = newJobStatus().owner("ducks")
+            .startTime(Util.yesterday()).create().getId();
+        JobStatus job = curator.cancel(jobid);
+        assertNotNull(job);
+        assertEquals(jobid, job.getId());
+        assertEquals(JobStatus.JobState.CANCELLED, job.getState());
     }
 
     private JobStatusBuilder newJobStatus() {
@@ -109,9 +136,13 @@ public class JobCuratorTest extends DatabaseTestFixture{
         private Date endDt;
         private String result;
         private JobState state;
+        private String ownerkey;
+        private String username;
+        private JobDataMap map;
         
         public JobStatusBuilder() {
             id("id" + Math.random());
+            map = new JobDataMap();
         }
         
         public JobStatusBuilder id(String id) {
@@ -139,14 +170,30 @@ public class JobCuratorTest extends DatabaseTestFixture{
             return this;
         }
 
+        public JobStatusBuilder owner(String key) {
+            this.ownerkey = key;
+            return this;
+        }
+
+        public JobStatusBuilder username(String name) {
+            this.username = name;
+            return this;
+        }
+
         @SuppressWarnings("serial")
-        public JobStatusBuilder create() {
+        public JobStatus create() {
             //sigh - all of this pain to construct a JobDetail
             //which does not have setters! 
+            map.put(JobStatus.USERNAME, username);
+            map.put(JobStatus.OWNER_KEY, ownerkey);
             JobStatus status = new JobStatus(new JobDetail() {
                 public String getName() {
                     return id;
-                }  
+                }
+
+                public JobDataMap getJobDataMap() {
+                    return map;
+                }
             });
             JobExecutionContext context = mock(JobExecutionContext.class);
             when(context.getFireTime()).thenReturn(startDt);
@@ -160,8 +207,7 @@ public class JobCuratorTest extends DatabaseTestFixture{
             if (state != null) {
                 status.setState(state);
             }
-            curator.create(status);
-            return this;
+            return curator.create(status);
         }
         
     }

@@ -14,7 +14,6 @@
  */
 package org.fedoraproject.candlepin.pinsetter.core.model;
 
-import java.io.Serializable;
 import java.util.Date;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -36,6 +35,7 @@ import org.quartz.JobExecutionContext;
 public class JobStatus extends AbstractHibernateObject {
 
     public static final String OWNER_KEY = "owner_key";
+    public static final String USERNAME = "username";
 
     /**
      * Indicates possible states for a particular job.
@@ -57,6 +57,7 @@ public class JobStatus extends AbstractHibernateObject {
     private Date finishTime;
     private String result;
     private String ownerKey;
+    private String username;
 
     public JobStatus() { }
 
@@ -65,6 +66,11 @@ public class JobStatus extends AbstractHibernateObject {
         this.jobGroup = jobDetail.getGroup();
         this.state = JobState.CREATED;
         this.ownerKey = getOwnerKey(jobDetail);
+        this.username = getUsername(jobDetail);
+    }
+
+    private String getUsername(JobDetail detail) {
+        return (String) detail.getJobDataMap().get(USERNAME);
     }
 
     private String getOwnerKey(JobDetail jobDetail) {
@@ -93,8 +99,7 @@ public class JobStatus extends AbstractHibernateObject {
         }
     }
 
-    @Override
-    public Serializable getId() {
+    public String getId() {
         return id;
     }
 
@@ -132,5 +137,9 @@ public class JobStatus extends AbstractHibernateObject {
 
     public void setResult(String result) {
         this.result = result;
+    }
+
+    public String getUsername() {
+        return this.username;
     }
 }
