@@ -29,14 +29,9 @@ public class PinsetterContextListener {
 
     public void contextDestroyed() {
         try {
-            System.out.println("shudtown");
             kernel.shutdown();
-            System.out.println("after");
-
         }
         catch (PinsetterException e) {
-            System.out.println("hello");
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
@@ -47,7 +42,6 @@ public class PinsetterContextListener {
             kernel.startup();
         }
         catch (PinsetterException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
