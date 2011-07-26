@@ -14,6 +14,10 @@
  */
 package org.fedoraproject.candlepin.controller;
 
+import java.util.LinkedList;
+import java.util.List;
+
+import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
@@ -24,14 +28,9 @@ import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
-
-import com.google.inject.Inject;
-
-import org.apache.log4j.Logger;
 import org.xnap.commons.i18n.I18n;
 
-import java.util.LinkedList;
-import java.util.List;
+import com.google.inject.Inject;
 
 /**
  * entitler
@@ -74,7 +73,7 @@ public class Entitler {
 
         if (pool == null) {
             throw new BadRequestException(i18n.tr(
-                "No such entitlement pool: {0}", poolId));
+                "Subscription pool {0} does not exist.", poolId));
         }
 
         // Attempt to create an entitlement:
