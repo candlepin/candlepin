@@ -83,5 +83,5 @@ exec {"CandlepinDB":
 
 exec {"cpsetup":
     command => "/usr/share/candlepin/cpsetup",
-    require => Exec["CandlepinDB"],
+    require => [Exec["CandlepinDB"],Package["candlepin-tomcat6"]]
 }
