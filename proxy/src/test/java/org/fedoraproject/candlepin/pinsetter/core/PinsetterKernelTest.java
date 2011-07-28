@@ -18,11 +18,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TreeMap;
-
 import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.model.JobCurator;
+
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.quartz.JobExecutionContext;
@@ -31,6 +29,10 @@ import org.quartz.JobListener;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.spi.JobFactory;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * PinsetterKernelTest
@@ -73,7 +75,8 @@ public class PinsetterKernelTest {
                 }
             });
 
-        pk = new PinsetterKernel(config, Mockito.mock(JobFactory.class), null, null);
+        pk = new PinsetterKernel(config, Mockito.mock(JobFactory.class), null,
+            Mockito.mock(JobCurator.class));
         assertNotNull(pk);
 
         try {
@@ -101,7 +104,8 @@ public class PinsetterKernelTest {
                 }
             });
 
-        pk = new PinsetterKernel(config, Mockito.mock(JobFactory.class), null, null);
+        pk = new PinsetterKernel(config, Mockito.mock(JobFactory.class), null,
+            Mockito.mock(JobCurator.class));
         assertNotNull(pk);
 
         pk.startup();

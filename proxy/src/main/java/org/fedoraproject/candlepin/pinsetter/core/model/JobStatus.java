@@ -21,7 +21,11 @@ import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.model.AbstractHibernateObject;
+import org.fedoraproject.candlepin.pinsetter.core.PinsetterJobListener;
+
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 
@@ -35,7 +39,6 @@ import org.quartz.JobExecutionContext;
 public class JobStatus extends AbstractHibernateObject {
 
     public static final String OWNER_KEY = "owner_key";
-    public static final String USERNAME = "username";
 
     /**
      * Indicates possible states for a particular job.
@@ -57,7 +60,7 @@ public class JobStatus extends AbstractHibernateObject {
     private Date finishTime;
     private String result;
     private String ownerKey;
-    private String username;
+    private String principalName;
 
     public JobStatus() { }
 
@@ -66,11 +69,13 @@ public class JobStatus extends AbstractHibernateObject {
         this.jobGroup = jobDetail.getGroup();
         this.state = JobState.CREATED;
         this.ownerKey = getOwnerKey(jobDetail);
-        this.username = getUsername(jobDetail);
+        this.principalName = getPrincipalName(jobDetail);
     }
 
-    private String getUsername(JobDetail detail) {
-        return (String) detail.getJobDataMap().get(USERNAME);
+    private String getPrincipalName(JobDetail detail) {
+        Principal p = (Principal) detail.getJobDataMap().get(
+            PinsetterJobListener.PRINCIPAL_KEY);
+        return p != null ? p.getPrincipalName() : "unknown";
     }
 
     private String getOwnerKey(JobDetail jobDetail) {
@@ -139,7 +144,7 @@ public class JobStatus extends AbstractHibernateObject {
         this.result = result;
     }
 
-    public String getUsername() {
-        return this.username;
+    public String getPrincipalName() {
+        return this.principalName;
     }
 }

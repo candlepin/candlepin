@@ -14,23 +14,31 @@
  */
 package org.fedoraproject.candlepin.pinsetter.core;
 
-import com.google.common.base.Nullable;
+import org.fedoraproject.candlepin.auth.SystemPrincipal;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
+import org.fedoraproject.candlepin.model.JobCurator;
+import org.fedoraproject.candlepin.pinsetter.core.model.JobStatus;
+import org.fedoraproject.candlepin.pinsetter.tasks.CancelJobJob;
 import org.fedoraproject.candlepin.util.PropertyUtil;
 
+import com.google.common.base.Nullable;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.apache.log4j.Logger;
 import org.quartz.CronTrigger;
+import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionException;
+import org.quartz.JobListener;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.SchedulerFactory;
+import org.quartz.SimpleTrigger;
 import org.quartz.Trigger;
 import org.quartz.impl.StdSchedulerFactory;
+import org.quartz.spi.JobFactory;
 
 import java.io.Serializable;
 import java.text.ParseException;
@@ -41,13 +49,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Map.Entry;
-
-import org.fedoraproject.candlepin.model.JobCurator;
-import org.fedoraproject.candlepin.pinsetter.core.model.JobStatus;
-import org.fedoraproject.candlepin.pinsetter.tasks.CancelJobJob;
-import org.quartz.JobListener;
-import org.quartz.SimpleTrigger;
-import org.quartz.spi.JobFactory;
 
 /**
  * Pinsetter Kernel.
@@ -255,24 +256,39 @@ public class PinsetterKernel {
 
     public void scheduleJob(Class job, String jobName, Trigger trigger)
         throws PinsetterException {
+        JobDetail detail = new JobDetail(jobName, CRON_GROUP, job);
+        JobDataMap map = detail.getJobDataMap();
+        map.put(PinsetterJobListener.PRINCIPAL_KEY, new SystemPrincipal());
+        scheduleJob(detail, CRON_GROUP, trigger);
+    }
+
+    private JobStatus scheduleJob(JobDetail detail, String grpName, Trigger trigger)
+        throws PinsetterException {
+
+        detail.setGroup(grpName);
+        detail.addJobListener(PinsetterJobListener.LISTENER_NAME);
+
         try {
-            JobDetail detail = new JobDetail(jobName, CRON_GROUP, job);
+            JobStatus status = this.jobCurator.create(new JobStatus(detail));
 
             this.scheduler.scheduleJob(detail, trigger);
             if (log.isDebugEnabled()) {
                 log.debug("Scheduled " + detail.getFullName());
             }
+
+            return status;
         }
-        catch (SchedulerException se) {
-            throw new PinsetterException("problem scheduling " + jobName, se);
-        }       
+        catch (SchedulerException e) {
+            throw new PinsetterException("There was a problem scheduling " +
+                detail.getName(), e);
+        }
     }
-    
+
     public void cancelJob(Serializable id, String group)
         throws PinsetterException {
         try {
-            //this deletes from the scheduler, it's already marked as
-            //canceled in the JobStatus table
+            // this deletes from the scheduler, it's already marked as
+            // canceled in the JobStatus table
             String[] jobs = scheduler.getJobNames(SINGLE_JOB_GROUP);
             for (String j : jobs) {
                 log.debug(j);
@@ -287,34 +303,19 @@ public class PinsetterKernel {
         catch (SchedulerException e) {
             throw new PinsetterException("problem cancelling " + group + ":" + id, e);
         }
-    
     }
 
     /**
      * Schedule a long-running job for a single execution.
      *
-     * @param jobDetail the long-running job to perform - assumed to be prepopulated
-     *                  with a valid job task and name
+     * @param jobDetail the long-running job to perform - assumed to be
+     *     prepopulated with a valid job task and name
      * @return the initial status of the submitted job
      * @throws PinsetterException if there is an error scheduling the job
      */
     public JobStatus scheduleSingleJob(JobDetail jobDetail) throws PinsetterException {
-
-        jobDetail.setGroup(SINGLE_JOB_GROUP);
-        jobDetail.addJobListener(PinsetterJobListener.LISTENER_NAME);
-
-        try {
-            JobStatus status = this.jobCurator.create(new JobStatus(jobDetail));
-
-            this.scheduler.scheduleJob(jobDetail, new SimpleTrigger(
-                    jobDetail.getName() + " trigger", SINGLE_JOB_GROUP));
-
-            return status;
-        }
-        catch (SchedulerException e) {
-            throw new PinsetterException("There was a problem scheduling " +
-                    jobDetail.getName(), e);
-        }
+        return scheduleJob(jobDetail, SINGLE_JOB_GROUP, new SimpleTrigger(
+            jobDetail.getName() + " trigger", SINGLE_JOB_GROUP));
     }
     
     public boolean getSchedulerStatus() throws PinsetterException {

@@ -14,12 +14,12 @@
  */
 package org.fedoraproject.candlepin.pinsetter.core;
 
-import com.google.inject.Inject;
 import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.SystemPrincipal;
 import org.fedoraproject.candlepin.model.JobCurator;
 import org.fedoraproject.candlepin.pinsetter.core.model.JobStatus;
 import org.fedoraproject.candlepin.pinsetter.core.model.JobStatus.JobState;
+
+import com.google.inject.Inject;
 
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.quartz.JobExecutionContext;
@@ -63,9 +63,8 @@ public class PinsetterJobListener implements JobListener {
     @Override
     public void jobWasExecuted(JobExecutionContext context,
         JobExecutionException exception) {
-
-        ResteasyProviderFactory.popContextData(Principal.class);
         updateJob(context, exception);
+        ResteasyProviderFactory.popContextData(Principal.class);
     }
 
     private void updateJob(JobExecutionContext ctx) {
@@ -73,8 +72,6 @@ public class PinsetterJobListener implements JobListener {
     }
 
     private void updateJob(JobExecutionContext ctx, JobExecutionException exc) {
-        ResteasyProviderFactory.pushContext(Principal.class, new SystemPrincipal());
-
         JobStatus status = curator.find(ctx.getJobDetail().getName());
         if (status != null) {
             if (exc != null) {
@@ -86,7 +83,5 @@ public class PinsetterJobListener implements JobListener {
             }
             curator.merge(status);
         }
-
-        ResteasyProviderFactory.popContextData(Principal.class);
     }
 }

@@ -19,7 +19,9 @@ import static junit.framework.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
+import org.fedoraproject.candlepin.pinsetter.core.PinsetterJobListener;
 import org.fedoraproject.candlepin.pinsetter.core.model.JobStatus;
 import org.fedoraproject.candlepin.pinsetter.core.model.JobStatus.JobState;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
@@ -103,11 +105,11 @@ public class JobCuratorTest extends DatabaseTestFixture{
     }
 
     @Test
-    public void findByUsername() {
-        JobStatus job = newJobStatus().username("donald").owner("ducks").create();
-        List<JobStatus> jobs = this.curator.findByUsername("donald");
+    public void findByPrincipalName() {
+        JobStatus job = newJobStatus().principalName("donald").owner("ducks").create();
+        List<JobStatus> jobs = this.curator.findByPrincipalName("donald");
         assertNotNull(jobs);
-        assertEquals("donald", job.getUsername());
+        assertEquals("donald", job.getPrincipalName());
         assertEquals(job, jobs.get(0));
     }
 
@@ -137,7 +139,7 @@ public class JobCuratorTest extends DatabaseTestFixture{
         private String result;
         private JobState state;
         private String ownerkey;
-        private String username;
+        private String principalName;
         private JobDataMap map;
 
         public JobStatusBuilder() {
@@ -175,8 +177,8 @@ public class JobCuratorTest extends DatabaseTestFixture{
             return this;
         }
 
-        public JobStatusBuilder username(String name) {
-            this.username = name;
+        public JobStatusBuilder principalName(String name) {
+            this.principalName = name;
             return this;
         }
 
@@ -184,7 +186,10 @@ public class JobCuratorTest extends DatabaseTestFixture{
         public JobStatus create() {
             //sigh - all of this pain to construct a JobDetail
             //which does not have setters!
-            map.put(JobStatus.USERNAME, username);
+            Principal p = mock(Principal.class);
+            when(p.getPrincipalName()).thenReturn(principalName);
+
+            map.put(PinsetterJobListener.PRINCIPAL_KEY, p);
             map.put(JobStatus.OWNER_KEY, ownerkey);
             JobStatus status = new JobStatus(new JobDetail() {
                 public String getName() {
