@@ -162,8 +162,17 @@ public class X509ExtensionUtil {
             OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_NAME_KEY), false, product
             .getName()));
 
-        // XXX include version, arch, and provides here (after defined in
-        // attributes)
+        String arch = product.hasAttribute("arch") ?
+            product.getAttributeValue("arch") : "";
+        toReturn.add(new X509ExtensionWrapper(productOid + "." +
+            OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_ARCH_KEY), false, arch));
+        
+        String version = product.hasAttribute("version") ?
+            product.getAttributeValue("version") : "";
+        toReturn.add(new X509ExtensionWrapper(productOid + "." +
+            OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_VERSION_KEY), false, version));
+        
+        // XXX include provides here (after defined in attributes)
 
         // dummy provides i used for testing
         // toReturn.add(new X509ExtensionWrapper(productOid + "." +
