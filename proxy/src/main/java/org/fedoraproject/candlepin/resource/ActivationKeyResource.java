@@ -27,6 +27,8 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.audit.EventSink;
+import org.fedoraproject.candlepin.auth.Access;
+import org.fedoraproject.candlepin.auth.interceptor.Verify;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.model.ActivationKey;
 import org.fedoraproject.candlepin.model.ActivationKeyCurator;
@@ -64,7 +66,8 @@ public class ActivationKeyResource {
     @Path("{activation_key_id}")
     @Produces(MediaType.APPLICATION_JSON)
     public ActivationKey getActivationKey(
-        @PathParam("activation_key_id") String activationKeyId) {
+        @PathParam("activation_key_id")
+        @Verify(ActivationKey.class) String activationKeyId) {
         ActivationKey key = findKey(activationKeyId);
 
         return key;
@@ -83,7 +86,8 @@ public class ActivationKeyResource {
     @Path("{activation_key_id}")
     @Produces(MediaType.APPLICATION_JSON)
     public ActivationKey updateActivationKey(
-        @PathParam("activation_key_id") String activationKeyId, ActivationKey key) {
+        @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
+        ActivationKey key) {
         ActivationKey toUpdate = findKey(activationKeyId);
         toUpdate.setName(key.getName());
         activationKeyCurator.merge(toUpdate);
@@ -95,8 +99,9 @@ public class ActivationKeyResource {
     @Path("{activation_key_id}/pools/{pool_id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Pool addPoolToKey(
-        @PathParam("activation_key_id") String activationKeyId,
-        @PathParam("pool_id") String poolId) {
+        @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
+        @PathParam("pool_id")
+        @Verify(value = Pool.class, require = Access.READ_POOLS) String poolId) {
         ActivationKey key = findKey(activationKeyId);
         Pool pool = findPool(poolId);
         key.getPools().add(pool);
@@ -108,8 +113,9 @@ public class ActivationKeyResource {
     @Path("{activation_key_id}/pools/{pool_id}")
     @Produces(MediaType.APPLICATION_JSON)
     public Pool removePoolFromKey(
-        @PathParam("activation_key_id") String activationKeyId,
-        @PathParam("pool_id") String poolId) {
+        @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
+        @PathParam("pool_id")
+        @Verify(value = Pool.class, require = Access.READ_POOLS) String poolId) {
         ActivationKey key = findKey(activationKeyId);
         Pool pool = findPool(poolId);
         key.getPools().remove(pool);
@@ -129,7 +135,8 @@ public class ActivationKeyResource {
     @Path("{activation_key_id}")
     @Produces(MediaType.APPLICATION_JSON)
     public void deleteActivationKey(
-        @PathParam("activation_key_id") String activationKeyId) {
+        @PathParam("activation_key_id")
+        @Verify(ActivationKey.class) String activationKeyId) {
         ActivationKey key = findKey(activationKeyId);
 
         log.debug("Deleting info " + activationKeyId);
@@ -137,14 +144,8 @@ public class ActivationKeyResource {
         activationKeyCurator.delete(key);
     }
 
-    protected void verifyName(ActivationKey key) {
-        if (key.getName() == null) {
-            throw new BadRequestException(
-                i18n.tr("Names are required for Activation keys"));
-        }
-    }
-
-    protected ActivationKey findKey(String activationKeyId) {
+    
+    private ActivationKey findKey(String activationKeyId) {
         ActivationKey key = activationKeyCurator
         .find(activationKeyId);
 
@@ -156,7 +157,7 @@ public class ActivationKeyResource {
         return key;
     }
 
-    protected Pool findPool(String poolId) {
+    private Pool findPool(String poolId) {
         Pool pool = poolCurator
         .find(poolId);
 

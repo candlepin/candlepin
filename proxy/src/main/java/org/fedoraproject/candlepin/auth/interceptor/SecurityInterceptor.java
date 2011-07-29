@@ -37,6 +37,8 @@ import javax.ws.rs.DELETE;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 
+import org.fedoraproject.candlepin.model.ActivationKey;
+import org.fedoraproject.candlepin.model.ActivationKeyCurator;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -77,6 +79,7 @@ public class SecurityInterceptor implements MethodInterceptor {
         storeMap.put(Entitlement.class, new EntitlementStore());
         storeMap.put(Pool.class, new PoolStore());
         storeMap.put(User.class, new UserStore());
+        storeMap.put(ActivationKey.class, new ActivationKeyStore());
 
     }
 
@@ -269,6 +272,20 @@ public class SecurityInterceptor implements MethodInterceptor {
             return poolCurator.find(key);
         }
     }
+    
+    private class ActivationKeyStore implements EntityStore {
+        private ActivationKeyCurator activationKeyCurator;
+
+        @Override
+        public Object lookup(String key) {
+            if (activationKeyCurator == null) {
+                activationKeyCurator = injector.getInstance(ActivationKeyCurator.class);
+            }
+
+            return activationKeyCurator.find(key);
+        }
+    }
+    
     
     private class UserStore implements EntityStore {
         @Override

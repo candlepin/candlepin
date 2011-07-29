@@ -10,9 +10,16 @@ describe 'Activation Keys' do
     @owner = create_owner random_string('test_owner')
     @some_product = create_product(name='some_product')
 
+    #this owner is used to test restrictions
+    mallory = create_owner random_string('test_owner')
+    @mallory_client = user_client(mallory, random_string('testuser'))
+
     @sub = @cp.create_subscription(@owner['key'], @some_product['id'], 37)
     @cp.refresh_pools(@owner.key)
-    @pool = @cp.list_pools[0]
+
+    pools = @cp.list_pools
+    @pool = pools.select { |p| p['owner']['key'] == @owner['key'] }.first
+
     @activation_key = @cp.create_activation_key(@owner['key'], random_string('test_token'))
     @activation_key['id'].should_not be_nil
   end
@@ -26,10 +33,34 @@ describe 'Activation Keys' do
     @activation_key['name'] = "ObiWan"
     @activation_key = @cp.update_activation_key(@activation_key)
     @activation_key['name'].should == "ObiWan"
+
+    owner_client = user_client(@owner, random_string('testuser'))
+
+    @activation_key['name'] = "another_name"
+    @activation_key = owner_client.update_activation_key(@activation_key)
+    @activation_key['name'].should == "another_name"
+
+    @activation_key['name'] = "not-gonna-happen"
+
+    lambda {
+      @mallory_client.update_activation_key(@activation_key)
+    }.should raise_exception(RestClient::Forbidden)
+
   end  
 
-  it 'should allow owners to delete their activation keys' do
+  it 'should allow superadmin to delete their activation keys' do
     @cp.delete_activation_key(@activation_key['id'])
+  end
+
+  it 'should allow owner to delete their activation keys' do
+    owner_client = user_client(@owner, random_string('testuser'))
+    owner_client.delete_activation_key(@activation_key['id'])
+  end
+
+  it 'should not allow wrong owner to delete activation keys' do
+    lambda {
+      @mallory_client.delete_activation_key(@activation_key['id'])
+    }.should raise_exception(RestClient::Forbidden)
   end
 
   it 'should allow pools to be added and removed to activation keys' do
@@ -39,6 +70,19 @@ describe 'Activation Keys' do
     @cp.remove_pool_from_key(@activation_key['id'], @pool['id'])
 	key = @cp.get_activation_key(@activation_key['id'])
 	key['pools'].length.should == 0
+
+    owner_client = user_client(@owner, random_string('testuser'))
+    owner_client.add_pool_to_key(@activation_key['id'], @pool['id'])
+	key = owner_client.get_activation_key(@activation_key['id'])
+	key['pools'].length.should == 1
+    owner_client.remove_pool_from_key(@activation_key['id'], @pool['id'])
+	key = owner_client.get_activation_key(@activation_key['id'])
+	key['pools'].length.should == 0
+
+    lambda {
+      @mallory_client.add_pool_to_key(@activation_key['id'], @pool['id'])
+    }.should raise_exception(RestClient::Forbidden)
+
   end
 
 end

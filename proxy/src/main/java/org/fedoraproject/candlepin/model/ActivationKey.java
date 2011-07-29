@@ -41,7 +41,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Table(name = "cp_activation_key",
     uniqueConstraints = {@UniqueConstraint(columnNames = {"name", "owner_id"})}
 )
-public class ActivationKey extends AbstractHibernateObject {
+public class ActivationKey extends AbstractHibernateObject implements Owned {
 
     @Id
     @GeneratedValue(generator = "system-uuid")
