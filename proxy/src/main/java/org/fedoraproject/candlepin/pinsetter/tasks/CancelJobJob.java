@@ -48,7 +48,6 @@ public class CancelJobJob implements Job {
     
     @Override
     public void execute(JobExecutionContext ctx) throws JobExecutionException {
-        log.debug("looking for cancelled jobs in cp_job");
         List<JobStatus> cancelledJobs;
 
         try {
@@ -58,7 +57,6 @@ public class CancelJobJob implements Job {
             log.error("Cannot execute query: ", e);
             throw new JobExecutionException(e);
         }
-        log.debug("Found " + cancelledJobs.size() + " jobs to cancel");
         for (JobStatus j : cancelledJobs) {
             try {
                 pinsetterKernel.cancelJob(j.getId(), j.getGroup());

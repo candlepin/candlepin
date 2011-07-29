@@ -289,15 +289,8 @@ public class PinsetterKernel {
         try {
             // this deletes from the scheduler, it's already marked as
             // canceled in the JobStatus table
-            String[] jobs = scheduler.getJobNames(SINGLE_JOB_GROUP);
-            for (String j : jobs) {
-                log.debug(j);
-            }
             if (scheduler.deleteJob((String) id, group)) {
                 log.info("cancelled job " + group + ":" + id + " in scheduler");
-            }
-            else {
-                log.debug("did not find job " + group + ":" + id + " to cancel");
             }
         }
         catch (SchedulerException e) {
