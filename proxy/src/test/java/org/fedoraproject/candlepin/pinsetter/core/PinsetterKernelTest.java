@@ -14,166 +14,237 @@
  */
 package org.fedoraproject.candlepin.pinsetter.core;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.atMost;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.model.JobCurator;
+import org.fedoraproject.candlepin.pinsetter.core.model.JobStatus;
+import org.fedoraproject.candlepin.pinsetter.tasks.JobCleaner;
+import org.fedoraproject.candlepin.pinsetter.tasks.StatisticHistoryTask;
 
+import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
-import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
+import org.mockito.ArgumentCaptor;
+import org.quartz.CronTrigger;
+import org.quartz.JobDataMap;
+import org.quartz.JobDetail;
 import org.quartz.JobListener;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
+import org.quartz.Trigger;
+import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.spi.JobFactory;
 
 import java.util.HashMap;
-import java.util.Map;
-import java.util.TreeMap;
 
 /**
  * PinsetterKernelTest
- * 
+ *
  * @version $Rev$
  */
 public class PinsetterKernelTest {
     private PinsetterKernel pk = null;
+    private JobFactory jfactory;
+    private JobCurator jcurator;
+    private JobListener jlistener;
+    private StdSchedulerFactory sfactory;
+    private Config config;
+    private Scheduler sched;
 
-    @SuppressWarnings("serial")
-    @Test
-    public void configure() throws InstantiationException {
-        Config config = new Config(
+    @Before
+    public void init() throws SchedulerException {
+        sched = mock(Scheduler.class);
+        jfactory = mock(JobFactory.class);
+        jcurator = mock(JobCurator.class);
+        jlistener = mock(JobListener.class);
+        sfactory = mock(StdSchedulerFactory.class);
+        config = new Config(
             new HashMap<String, String>() {
-
                 {
                     put("org.quartz.threadPool.class",
                         "org.quartz.simpl.SimpleThreadPool");
                     put("org.quartz.threadPool.threadCount", "25");
                     put("org.quartz.threadPool.threadPriority", "5");
-
-                    // clustering
-                    // put("org.quartz.scheduler.instanceName",
-                    // "MyClusteredScheduler");
-                    // put("org.quartz.scheduler.instanceId", "AUTO");
-                    // put("org.quartz.jobStore.class",
-                    // "org.quartz.impl.jdbcjobstore.JobStoreTX");
-                    // put("org.quartz.jobStore.driverDelegateClass",
-                    // "org.quartz.impl.jdbcjobstore.HSQLDBDelegate");
-                    // put("org.quartz.jobStore.tablePrefix", "QRTZ_");
-                    // put("org.quartz.jobStore.isClustered", "true");
-                    //
-                    // put("org.quartz.dataSource.myDS.driver",
-                    // "org.hsqldb.jdbcDriver");
-                    // put("org.quartz.dataSource.myDS.URL",
-                    // "jdbc:hsqldb:mem:unit-testing-jpa");
-                    // put("org.quartz.dataSource.myDS.user", "sa");
-                    // put("org.quartz.dataSource.myDS.password", "");
-                    // put("org.quartz.jobStore.dataSource", "myDS");
+                    put(ConfigProperties.DEFAULT_TASKS, JobCleaner.class.getName());
+                    put(ConfigProperties.TASKS, StatisticHistoryTask.class.getName());
                 }
             });
+        when(sfactory.getScheduler()).thenReturn(sched);
+    }
 
-        pk = new PinsetterKernel(config, Mockito.mock(JobFactory.class), null,
-            Mockito.mock(JobCurator.class));
-        assertNotNull(pk);
+    @Test(expected = InstantiationException.class)
+    public void blowup() throws Exception {
+        when(sfactory.getScheduler()).thenThrow(new SchedulerException());
+        pk = new PinsetterKernel(config, jfactory, null, jcurator, sfactory);
+    }
 
-        try {
-            pk.startup();
-            pk.shutdown();
-        }
-        catch (Throwable t) {
-            fail(t.getMessage());
-        }
+    @Test
+    public void skipListener() throws Exception {
+        pk = new PinsetterKernel(config, jfactory, null, jcurator, sfactory);
+        verify(sched).setJobFactory(eq(jfactory));
+        verify(sched, never()).addJobListener(eq(jlistener));
+    }
+    @Test
+    public void ctor() throws Exception {
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        verify(sched).setJobFactory(eq(jfactory));
+        verify(sched).addJobListener(eq(jlistener));
     }
 
     @SuppressWarnings("serial")
     @Test
-    public void testScheduleJobString() throws InstantiationException,
-        PinsetterException, SchedulerException {
-        Config config = new Config(
-            new HashMap<String, String>() {
-
-                {
-                    put("org.quartz.threadPool.class",
-                        "org.quartz.simpl.SimpleThreadPool");
-                    put("org.quartz.threadPool.threadCount", "25");
-                    put("org.quartz.threadPool.threadPriority", "5");
-
-                }
-            });
-
-        pk = new PinsetterKernel(config, Mockito.mock(JobFactory.class), null,
-            Mockito.mock(JobCurator.class));
-        assertNotNull(pk);
-
+    public void configure() throws Exception {
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
         pk.startup();
+        verify(sched).start();
+        verify(sched).addTriggerListener(any(ChainedListener.class));
+        verify(jcurator, atMost(2)).create(any(JobStatus.class));
+        verify(sched, atMost(2)).scheduleJob(any(JobDetail.class), any(Trigger.class));
+    }
 
-        Scheduler s = pk.getScheduler();
-        String[] groups = s.getJobGroupNames();
-        for (String grp : groups) {
-            String[] jobs = s.getJobNames(grp);
-            for (String job : jobs) {
-                System.out.println(job);
-                // JobDetail d =
-                s.getJobDetail(job, grp);
-                s.addJobListener(new ListenerJob());
-            }
-        }
-
-        // TODO: test needs to be fixed big time
-        // every second
-        pk.scheduleJob(TestJob.class, "testjob", "*/1 * * * * ?");
-        Thread.yield();
+    @Test
+    public void shutdown() throws Exception {
+        String crongrp = "Pinsetter Batch Engine Group";
+        String singlegrp = "Pinsetter Long Running Job Group";
+        String[] jobs = {"fakejob1", "fakejob2"};
+        when(sched.getJobNames(eq(crongrp))).thenReturn(jobs);
+        when(sched.getJobNames(eq(singlegrp))).thenReturn(jobs);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
         pk.shutdown();
 
+        verify(sched, atMost(1)).standby();
+        verify(sched).deleteJob(eq(jobs[0]), eq(crongrp));
+        verify(sched).deleteJob(eq(jobs[1]), eq(crongrp));
+        verify(sched).deleteJob(eq(jobs[0]), eq(singlegrp));
+        verify(sched).deleteJob(eq(jobs[1]), eq(singlegrp));
+        verify(sched, atMost(1)).shutdown();
     }
 
-    public static class ListenerJob implements JobListener {
+    @Test
+    public void noJobsDuringShutdown() throws Exception {
+        String[] jobs = new String[0];
+        when(sched.getJobNames(anyString())).thenReturn(jobs);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        pk.shutdown();
 
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String getName() {
-            return "listener";
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void jobExecutionVetoed(JobExecutionContext contextIn) {
-            // TODO Auto-generated method stub
-
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void jobToBeExecuted(JobExecutionContext contextIn) {
-            // TODO Auto-generated method stub
-
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void jobWasExecuted(JobExecutionContext ctx,
-            JobExecutionException jobException) {
-            System.out.println("JOB RAN! " + ctx.getJobDetail().getName());
-            assertTrue(ctx.getJobDetail().getJobClass().equals(TestJob.class));
-        }
-
+        verify(sched, atMost(1)).standby();
+        verify(sched, never()).deleteJob(anyString(), anyString());
+        verify(sched, atMost(1)).shutdown();
     }
 
-    public static class TestConfig extends Config {
+    @Test(expected = PinsetterException.class)
+    public void handleFailedShutdown() throws Exception {
+        doThrow(new SchedulerException()).when(sched).standby();
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        pk.shutdown();
+        verify(sched, never()).shutdown();
+    }
 
-        public TestConfig(Map<String, String> inConfig) {
-            configuration = new TreeMap<String, String>(inConfig);
-        }
+    @Test
+    public void scheduleByString() throws Exception {
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        pk.scheduleJob(TestJob.class, "testjob", "*/1 * * * * ?");
+        ArgumentCaptor<Trigger> arg = ArgumentCaptor.forClass(Trigger.class);
+        verify(jcurator, atMost(1)).create(any(JobStatus.class));
+        verify(sched).scheduleJob(any(JobDetail.class), arg.capture());
+        CronTrigger trigger = (CronTrigger) arg.getValue();
+        assertEquals("*/1 * * * * ?", trigger.getCronExpression());
+    }
+
+    @Test(expected = PinsetterException.class)
+    public void handleParseException() throws Exception {
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        pk.scheduleJob(TestJob.class, "testjob", "how bout them apples");
+    }
+
+    @Test
+    public void scheduleByTrigger() throws Exception {
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        CronTrigger trigger = new CronTrigger("job", "grp", "*/1 * * * * ?");
+        pk.scheduleJob(TestJob.class, "testjob", trigger);
+        ArgumentCaptor<Trigger> arg = ArgumentCaptor.forClass(Trigger.class);
+        verify(jcurator, atMost(1)).create(any(JobStatus.class));
+        verify(sched).scheduleJob(any(JobDetail.class), arg.capture());
+        assertEquals(trigger, arg.getValue());
+    }
+
+    @Test(expected = PinsetterException.class)
+    public void scheduleException() throws Exception {
+        CronTrigger trigger = new CronTrigger("job", "grp", "*/1 * * * * ?");
+        doThrow(new SchedulerException()).when(sched).scheduleJob(
+            any(JobDetail.class), eq(trigger));
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        pk.scheduleJob(TestJob.class, "testjob", trigger);
+        verify(jcurator, atMost(1)).create(any(JobStatus.class));
+    }
+
+    @Test
+    public void cancelJob() throws Exception {
+        String singlegrp = "Pinsetter Long Running Job Group";
+        String[] jobs = {"fakejob1", "fakejob2"};
+        when(sched.getJobNames(eq(singlegrp))).thenReturn(jobs);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        pk.cancelJob("fakejob1", singlegrp);
+        verify(sched, atMost(1)).deleteJob(eq(jobs[0]), eq(singlegrp));
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void cancelOnlySingleJobGroup() throws Exception {
+        String crongrp = "Pinsetter Batch Engine Group";
+        String[] jobs = {"fakejob1", "fakejob2"};
+        when(sched.getJobNames(eq(crongrp))).thenReturn(jobs);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        pk.cancelJob("testid", crongrp);
+    }
+
+    @Test
+    public void singleJob() throws Exception {
+        String singlegrp = "Pinsetter Long Running Job Group";
+        JobDataMap map = new JobDataMap();
+        map.put(PinsetterJobListener.PRINCIPAL_KEY, mock(Principal.class));
+        map.put(JobStatus.OWNER_KEY, "admin");
+        JobDetail detail = mock(JobDetail.class);
+        when(detail.getName()).thenReturn("name");
+        when(detail.getGroup()).thenReturn("group");
+        when(detail.getJobDataMap()).thenReturn(map);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        pk.scheduleSingleJob(detail);
+        verify(detail).setGroup(eq(singlegrp));
+        verify(detail).addJobListener(eq(PinsetterJobListener.LISTENER_NAME));
+        verify(sched).scheduleJob(eq(detail), any(Trigger.class));
+    }
+
+    @Test
+    public void schedulerStatus() throws Exception {
+        when(sched.isInStandbyMode()).thenReturn(false);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        assertTrue(pk.getSchedulerStatus());
+    }
+
+    @Test
+    public void pauseScheduler() throws Exception {
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        pk.pauseScheduler();
+        verify(sched, atMost(1)).standby();
+    }
+
+    @Test
+    public void unpauseScheduler() throws Exception {
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        pk.unpauseScheduler();
+        verify(jcurator).findCanceledJobs();
+        verify(sched).start();
     }
 }

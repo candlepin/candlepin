@@ -34,7 +34,6 @@ import org.quartz.JobExecutionException;
 import org.quartz.JobListener;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
-import org.quartz.SchedulerFactory;
 import org.quartz.SimpleTrigger;
 import org.quartz.Trigger;
 import org.quartz.impl.StdSchedulerFactory;
@@ -75,8 +74,8 @@ public class PinsetterKernel {
      */
     @Inject
     public PinsetterKernel(Config conf, JobFactory jobFactory, 
-        @Nullable JobListener listener, JobCurator jobCurator)
-        throws InstantiationException {
+        @Nullable JobListener listener, JobCurator jobCurator,
+        StdSchedulerFactory fact) throws InstantiationException {
 
         this.config = conf;
         this.jobCurator = jobCurator;
@@ -85,8 +84,7 @@ public class PinsetterKernel {
 
         // create a schedulerFactory
         try {
-            SchedulerFactory fact = new StdSchedulerFactory(props);
-
+            fact.initialize(props);
             scheduler = fact.getScheduler();
             scheduler.setJobFactory(jobFactory);
 
@@ -224,10 +222,9 @@ public class PinsetterKernel {
                 String crontab = data[1];
                 String jobName = jobImpl + "-" + entry.getKey();
 
-                Trigger trigger = null;
-                trigger = new CronTrigger(jobImpl, CRON_GROUP, crontab);
-                trigger
-                    .setMisfireInstruction(CronTrigger.MISFIRE_INSTRUCTION_DO_NOTHING);
+                Trigger trigger = new CronTrigger(jobImpl, CRON_GROUP, crontab);
+                trigger.setMisfireInstruction(
+                    CronTrigger.MISFIRE_INSTRUCTION_DO_NOTHING);
                 
                 scheduleJob(
                     this.getClass().getClassLoader().loadClass(jobImpl),
@@ -348,12 +345,6 @@ public class PinsetterKernel {
         catch (SchedulerException e) {
             throw new PinsetterException("There was a problem unpausing the scheduler", e);
         }
-    }
-    
-    
-    // TODO: GET RID OF ME!!
-    Scheduler getScheduler() {
-        return scheduler;
     }
 
     private void deleteJobs(String groupName) {
