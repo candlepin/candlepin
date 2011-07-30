@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GLPv2
-Version: 0.4.6
+Version: 0.4.7
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -146,6 +146,80 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Fri Jul 29 2011 jesus m rodriguez <jmrodri@gmail.com> 0.4.7-1
+- remove obsolete testcase. (jmrodri@gmail.com)
+- fully test PinsetterKernel (jmrodri@gmail.com)
+- disable some canceljob logging (cduryee@redhat.com)
+- allow owners to manage their own activation keys (cduryee@redhat.com)
+- 726711: Added arch/version to product cert extensions. (mstead@redhat.com)
+- Enable principal for all pinsetter jobs. (jesusr@redhat.com)
+- remove stupid System.out printlns with typos and useless todos
+  (jesusr@redhat.com)
+- made getPrincipalName abstract since everyone overrides it and the class is
+  abstract. (jesusr@redhat.com)
+- remove whitespace from end of lines (jesusr@redhat.com)
+- add username to JobStatus (increase test coverage of JobCurator)
+  (jesusr@redhat.com)
+- remove useless whitespace (jesusr@redhat.com)
+- Improve the candlepin puppet script (bkearney@redhat.com)
+- 725242: Change the error messages for pools to be consistent with
+  subscription manager (bkearney@redhat.com)
+- test for exception handling (jesusr@redhat.com)
+- remove useless throws statements (jesusr@redhat.com)
+- reorg imports (jesusr@redhat.com)
+- allow cleanup of failed jobs (jesusr@redhat.com)
+- update cp_job with error information. (jesusr@redhat.com)
+- throw job exception if an error occurs. (jesusr@redhat.com)
+- doesn't have to be Serializable. (jesusr@redhat.com)
+- remove unserializable items from datamap. (jesusr@redhat.com)
+- Add nopo flag. (cduryee@redhat.com)
+- Add some periods to the end of error messages (bkearney@redhat.com)
+- 721136: Make hte title a summary of the even, and the text be in the event
+  description (bkearney@redhat.com)
+- checkstyle (cduryee@redhat.com)
+- Cancel jobs and pause/unpause scheduler (cduryee@redhat.com)
+- Add config option to gracefully handle unknown properties during import.
+  (dgoodwin@redhat.com)
+- more typos (bkearney@redhat.com)
+- 721141: Typos caused issues in the event text (bkearney@redhat.com)
+- Add the java depdency based on the install issues from the katello list
+  (bkearney@redhat.com)
+- unit test entitler (jmrodri@gmail.com)
+- unit test the Entitler class (jmrodri@gmail.com)
+- Checkstyle (wpoteat@redhat.com)
+- User Stories 6983 and 6977 (wpoteat@redhat.com)
+- Remove UserService.isReadyOnly (not used anymore) (jbowes@redhat.com)
+- Add katello user service adapter (does nothing) (jbowes@redhat.com)
+- Refactor registration to not require a user service lookup normally.
+  (dgoodwin@redhat.com)
+- async bind (jmrodri@gmail.com)
+- Allow users to get a list of their roles. (cduryee@redhat.com)
+- Remove UserServiceAdapter.getRoles; call it on a user directly
+  (jbowes@redhat.com)
+- Remove now invalid (and duplicated) spec auth test. (dgoodwin@redhat.com)
+- Return only partial user objects in security interceptor.
+  (dgoodwin@redhat.com)
+- Add a trusted user principal implementation. (dgoodwin@redhat.com)
+- Fix DB null column error when registering with auth keys.
+  (dgoodwin@redhat.com)
+- Added multi-entitlement product for QA testing. (mstead@redhat.com)
+- Cleanup unused user service adapter call. (dgoodwin@redhat.com)
+- Spec tests and some Ruby lib touchups. (dgoodwin@redhat.com)
+- Fix activation key API to use key1,key2,key3 syntax. (dgoodwin@redhat.com)
+- Added products with multi-entitlement attributes (mstead@redhat.com)
+- Remove the Activate resource. (dgoodwin@redhat.com)
+- Remove duplicated activation key creation path. (dgoodwin@redhat.com)
+- Fix a Ruby client lib discrepancy with listing keys. (dgoodwin@redhat.com)
+- No keys should be empty list, not null. (dgoodwin@redhat.com)
+- Complete happy-path activation key registration. (dgoodwin@redhat.com)
+- Remove perm elevation to create owner during registration.
+  (dgoodwin@redhat.com)
+- Re-enable activation key lookup in consumer registration.
+  (dgoodwin@redhat.com)
+- Add query param for registration with activation keys. (dgoodwin@redhat.com)
+- Stop requiring auth for registration call. (dgoodwin@redhat.com)
+- Refactor registration API. (dgoodwin@redhat.com)
+
 * Fri Jul 15 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.6-1
 - require candlepin-deps 0.0.17 (jesusr@redhat.com)
 - revert to real bouncycastle (jesusr@redhat.com)
