@@ -200,15 +200,6 @@ public class PinsetterKernelTest {
         verify(sched, atMost(1)).deleteJob(eq(jobs[0]), eq(singlegrp));
     }
 
-    @Test(expected = NullPointerException.class)
-    public void cancelOnlySingleJobGroup() throws Exception {
-        String crongrp = "Pinsetter Batch Engine Group";
-        String[] jobs = {"fakejob1", "fakejob2"};
-        when(sched.getJobNames(eq(crongrp))).thenReturn(jobs);
-        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
-        pk.cancelJob("testid", crongrp);
-    }
-
     @Test
     public void singleJob() throws Exception {
         String singlegrp = "Pinsetter Long Running Job Group";
