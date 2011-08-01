@@ -115,6 +115,18 @@ public class PinsetterKernelTest {
     }
 
     @Test
+    public void handleExistingJobStatus() throws Exception {
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        JobStatus status = mock(JobStatus.class);
+        when(jcurator.find(eq(JobCleaner.class.getName() + "-1"))).thenReturn(status);
+        pk.startup();
+        verify(sched).start();
+        verify(sched).addTriggerListener(any(ChainedListener.class));
+        verify(jcurator, atMost(1)).create(any(JobStatus.class));
+        verify(sched, atMost(2)).scheduleJob(any(JobDetail.class), any(Trigger.class));
+    }
+
+    @Test
     public void shutdown() throws Exception {
         String crongrp = "Pinsetter Batch Engine Group";
         String singlegrp = "Pinsetter Long Running Job Group";

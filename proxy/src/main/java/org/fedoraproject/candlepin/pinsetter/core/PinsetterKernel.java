@@ -266,9 +266,12 @@ public class PinsetterKernel {
         detail.addJobListener(PinsetterJobListener.LISTENER_NAME);
 
         try {
-            JobStatus status = this.jobCurator.create(new JobStatus(detail));
+            JobStatus status = jobCurator.find(detail.getName());
+            if (status == null) {
+                status = jobCurator.create(new JobStatus(detail));
+            }
 
-            this.scheduler.scheduleJob(detail, trigger);
+            scheduler.scheduleJob(detail, trigger);
             if (log.isDebugEnabled()) {
                 log.debug("Scheduled " + detail.getFullName());
             }
