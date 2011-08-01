@@ -24,6 +24,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.auth.interceptor.Verify;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.xnap.commons.i18n.I18n;
@@ -76,7 +77,7 @@ public class SubscriptionResource {
     }
 
     @POST
-    public void activateSubscription(@QueryParam("consumer_uuid") String consumerUuid,
+    public void activateSubscription(@QueryParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @QueryParam("email") String email,
         @QueryParam("email_locale") String emailLocale,
         @Context HttpServletResponse response) {
