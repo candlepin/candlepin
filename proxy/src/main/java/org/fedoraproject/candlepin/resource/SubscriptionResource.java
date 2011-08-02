@@ -16,27 +16,27 @@ package org.fedoraproject.candlepin.resource;
 
 import java.util.List;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.auth.interceptor.Verify;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Subscription;
+import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.POST;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.ConsumerCurator;
-import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 
 /**
  * SubscriptionResource
@@ -52,7 +52,7 @@ public class SubscriptionResource {
     private I18n i18n;
 
     @Inject
-    public SubscriptionResource(SubscriptionServiceAdapter subService, 
+    public SubscriptionResource(SubscriptionServiceAdapter subService,
         ConsumerCurator consumerCurator,
         I18n i18n) {
         this.subService = subService;
@@ -71,7 +71,7 @@ public class SubscriptionResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Subscription getSubscription(
         @PathParam("subscription_id") String subscriptionId) {
-        
+
         Subscription subscription = verifyAndFind(subscriptionId);
         return subscription;
     }
@@ -83,9 +83,14 @@ public class SubscriptionResource {
         @QueryParam("email_locale") String emailLocale,
         @Context HttpServletResponse response) {
 
-        if (email == null || emailLocale == null) {
+        if (email == null) {
             throw new BadRequestException(i18n.tr(
-                    "email and email_locale are required for notification"));
+                    "email is required for notification"));
+        }
+
+        if (emailLocale == null) {
+            throw new BadRequestException(i18n.tr(
+                    "email locale is required for notification"));
         }
 
         Consumer consumer = consumerCurator.findByUuid(consumerUuid);
@@ -107,7 +112,7 @@ public class SubscriptionResource {
     @Produces(MediaType.APPLICATION_JSON)
     public void deleteSubscription(
         @PathParam("subscription_id") String subscriptionIdString) {
-        
+
         Subscription subscription = verifyAndFind(subscriptionIdString);
         subService.deleteSubscription(subscription);
     }
