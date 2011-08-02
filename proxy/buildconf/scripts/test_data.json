@@ -855,8 +855,10 @@
             "version": "3.11",
             "arch": "x86_64",
             "attributes": {
-                "sockets": 128,
-                "warning_period": 30
+                "sockets": 1,
+                "warning_period": 30,
+                "stacking_id": 1,
+                "multi-entitlement": "yes"
             },
             "content": [
                 [11113, true],
@@ -875,8 +877,10 @@
                 "100000000000002"
             ],
             "attributes": {
-                "sockets": 16,
-                "warning_period": 30
+                "sockets": 1,
+                "warning_period": 30,
+                "stacking_id": 1,
+                "multi-entitlement": "yes"
             }
         },
         {
@@ -886,7 +890,9 @@
             "arch": "ia64",
             "attributes": {
                 "sockets": 128,
-                "warning_period": 30
+                "warning_period": 30,
+                "stacking_id": 2,
+                "multi-entitlement": "yes"
             },
             "content": [
                 [11113, true],
@@ -906,7 +912,9 @@
             ],
             "attributes": {
                 "sockets": 16,
-                "warning_period": 30
+                "warning_period": 30,
+                "stacking_id": 2,
+                "multi-entitlement": "yes"
             }
         },
         {
@@ -1370,44 +1378,6 @@
                 "requires_consumer_type": "domain",
                 "multi-entitlement": "yes",
                 "warning_period": 30
-            }
-        },
-
-
-// a product with no arch set, with eng products
-// with arch's
-     {
-            "name": "Awesome OS Server No Arch Top",
-            "id": "awesomeos-sr-sku",
-            "type": "MKT",
-            "provided_products": [
-               "100000000000002"
-            ],
-            "attributes": {
-                "sockets": 2,
-                "warning_period": 30,
-                "management_enabled" : 0,
-                "support_level" : "None",
-                "support_type" : "Self-Support"
-            }
-        },
-
-// a product with no arch set, with eng products
-// with arch's
-     {
-            "name": "Awesome OS Server s390 Child",
-            "id": "awesomeos-390-skwd",
-            "type": "MKT",
-            "provided_products": [
-                "100000000000000"
-            ],
-// NOTE: no arch set here
-            "attributes": {
-                "sockets": 2,
-                "warning_period": 30,
-                "management_enabled" : 0,
-                "support_level" : "None",
-                "support_type" : "Self-Support"
             }
         },
 
