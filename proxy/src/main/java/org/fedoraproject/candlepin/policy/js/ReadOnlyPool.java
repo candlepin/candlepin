@@ -17,11 +17,15 @@ package org.fedoraproject.candlepin.policy.js;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import org.fedoraproject.candlepin.model.Attribute;
 import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.PoolAttribute;
 import org.fedoraproject.candlepin.model.ProvidedProduct;
 
 /**
@@ -31,19 +35,20 @@ public class ReadOnlyPool {
 
     private Pool entPool;
     private ReadOnlyProductCache productCache;
+    private Map<String, String> attributes = null;
 
     /**
-     * @param entPool
-     *            the read-write version of the EntitlementPool to copy.
+     * @param entPool the read-write version of the EntitlementPool to copy.
      */
     public ReadOnlyPool(Pool entPool, ReadOnlyProductCache productCache) {
         this.entPool = entPool;
         this.productCache = productCache;
+        initializeReadOnlyAttributes();
     }
 
     /**
      * Returns true if there are available entitlements remaining.
-     *
+     * 
      * @return true if there are available entitlements remaining.
      */
     public Boolean entitlementsAvailable(Integer quantityToConsume) {
@@ -74,10 +79,14 @@ public class ReadOnlyPool {
         return entPool.getAttributeValue(name);
     }
 
+    public Map<String, String> getAttributes() {
+        return attributes;
+    }
+
     public Set<ProvidedProduct> getProvidedProducts() {
         return entPool.getProvidedProducts();
     }
-    
+
     public String getProductId() {
         return entPool.getProductId();
     }
@@ -92,33 +101,44 @@ public class ReadOnlyPool {
 
     public static List<ReadOnlyPool> fromCollection(Collection<Pool> pools,
         ReadOnlyProductCache productCache) {
-        List<ReadOnlyPool> toReturn
-            = new ArrayList<ReadOnlyPool>(pools.size());
+        List<ReadOnlyPool> toReturn = new ArrayList<ReadOnlyPool>(pools.size());
         for (Pool pool : pools) {
             toReturn.add(new ReadOnlyPool(pool, productCache));
         }
         return toReturn;
     }
-    
+
     /**
-     * Check if either the 'main' product id matches the provided id, or if any of the
-     * 'supplementary' product ids match
+     * Check if either the 'main' product id matches the provided id, or if any
+     * of the 'supplementary' product ids match
+     * 
      * @param productId the product id to search for
      * @return true if found, false if not
      */
     public boolean provides(String productId) {
         return entPool.provides(productId);
     }
-    
+
+    private void initializeReadOnlyAttributes() {
+        attributes = new HashMap<String, String>();
+        Set<PoolAttribute> attributeList = entPool.getAttributes();
+        if (attributeList != null) {
+            for (Attribute current : attributeList) {
+                attributes.put(current.getName(), current.getValue());
+            }
+        }
+    }
+
     public ReadOnlyProduct[] getProducts() {
         Set<ReadOnlyProduct> products = new HashSet<ReadOnlyProduct>();
-        
+
         products.add(productCache.getProductById(entPool.getProductId()));
-        
+
         for (ProvidedProduct providedProduct : entPool.getProvidedProducts()) {
-            products.add(productCache.getProductById(providedProduct.getProductId()));
+            products.add(productCache.getProductById(providedProduct
+                .getProductId()));
         }
-        
+
         return products.toArray(new ReadOnlyProduct[products.size()]);
     }
 
