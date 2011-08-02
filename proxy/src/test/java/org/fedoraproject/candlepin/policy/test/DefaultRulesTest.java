@@ -585,7 +585,7 @@ public class DefaultRulesTest {
     }
 
     @Test
-    public void testFindBestWithConsumerSocketsAndStackingAndMulitplePoolsAndMultipleProducts() {
+    public void testFindBestConsumerSocketsAndStackingAndMulitplePoolsMultipleProducts() {
         consumer.setFact("cpu.cpu_socket(s)", "4");
 
         Product product = new Product(productId, "A test product");
