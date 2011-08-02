@@ -160,7 +160,7 @@ describe 'Consumer Resource' do
     prod2 = create_product(random_string('product'), random_string('product-stackable'),
                           :attributes => { :sockets => '2', :'multi-entitlement' => 'yes', :stacking_id => '8888'})
     @cp.create_subscription(owner.key, prod1.id, 2)
-    @cp.create_subscription(owner.key, prod1.id, 3)
+    @cp.create_subscription(owner.key, prod1.id, 8)
     @cp.create_subscription(owner.key, prod2.id, 5)
     
  
@@ -168,11 +168,11 @@ describe 'Consumer Resource' do
 
     total = 0
     cp_client.consume_product(prod1.id).each {|ent|  total += ent.quantity}
-    total.should == 1
+    total.should == 2
 
     total = 0
     cp_client.consume_product(prod1.id, {:quantity => 4}).each {|ent|  total += ent.quantity}
-    total.should == 4
+    total.should == 8
   end
 
 
