@@ -277,7 +277,6 @@ public class EntitlementRules implements Enforcer {
                 if (p.getId().equals(rp.getId())) {
                     log.debug("Best pool: " + p);
                     bestPools.add(p);
-                    break;
                 }
             }
         }
