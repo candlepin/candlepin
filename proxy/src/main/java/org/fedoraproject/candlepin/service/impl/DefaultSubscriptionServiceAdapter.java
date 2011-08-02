@@ -138,7 +138,7 @@ public class DefaultSubscriptionServiceAdapter implements
         String emailLocale) {
         
         throw new ServiceUnavailableException(
-                i18n.tr("Standalone candlepin does not support activation."));
+                i18n.tr("Standalone candlepin does not support redeeming a subscription."));
     }
     
     @Override
