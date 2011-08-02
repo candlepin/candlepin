@@ -143,7 +143,6 @@ public class EntitlementRules implements Enforcer {
         List<Rule> matchingRules 
             = rulesForAttributes(allAttributes.keySet(), attributesToRules);
         
-        invokeGlobalPreEntitlementRule(args);
         callPreEntitlementRules(matchingRules, args);
 
         if (log.isDebugEnabled()) {
@@ -385,12 +384,6 @@ public class EntitlementRules implements Enforcer {
         for (Rule rule : matchingRules) {
             jsRules.invokeRule(POST_PREFIX + rule.getRuleName());
         }
-    }
-
-    private void invokeGlobalPreEntitlementRule(Map<String, Object> args) {
-        // No method for this product, try to find a global function, if
-        // neither exists this is ok and we'll just carry on.
-        jsRules.invokeRule(GLOBAL_PRE_FUNCTION, args);
     }
 
     private void invokeGlobalPostEntitlementRule(Map<String, Object> args) {

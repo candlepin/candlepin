@@ -93,15 +93,15 @@ describe 'Entitlements' do
     @system.list_entitlements.should be_empty
   end
 
-  it 'should not allow to consuming two entitlements for the same product' do
-    @system.consume_product @virt.id
+  it 'should not allow consuming two entitlements for the same product' do
+    @system.consume_product @super_awesome.id
     lambda do
-      @system.consume_product @virt.id
+      @system.consume_product @super_awesome.id
     end.should raise_exception(RestClient::Forbidden)
   end
 
-  it 'should not allow to consuming two entitlements for the same product' do
-    pool = find_pool @virt
+  it 'should not allow consuming two entitlements in same pool' do
+    pool = find_pool @super_awesome
     @system.consume_pool pool.id
     lambda do
       @system.consume_pool pool.id
