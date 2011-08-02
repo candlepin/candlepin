@@ -14,7 +14,6 @@
  */
 package org.fedoraproject.candlepin.model;
 
-
 import org.fedoraproject.candlepin.util.Util;
 
 import com.wideplay.warp.persist.Transactional;
@@ -37,9 +36,10 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
     protected RulesCurator() {
         super(Rules.class);
     }
-    
+
     /**
      * updates the rules to the given values.
+     * 
      * @param updatedRules latest rules
      * @return a copy of the latest rules
      */
@@ -50,12 +50,12 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
             return create(updatedRules);
         }
         for (Rules rule : existingRuleSet) {
-            delete(rule);
+            super.delete(rule);
         }
         create(updatedRules);
         return updatedRules;
     }
-    
+
     /**
      * @return the rules
      */
@@ -66,7 +66,7 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
         }
         return existingRuleSet.get(0);
     }
-    
+
     /**
      * Get the last updated timestamp for the rules (either from disk or db),
      * without reading in the full rules file.
@@ -78,7 +78,7 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
         if (dbRules.size() > 0) {
             return dbRules.get(0).getUpdated();
         }
-        
+
         URL rulesUrl = this.getClass().getResource(getDefaultRulesFile());
         File rulesFile;
         try {
@@ -89,17 +89,24 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
         }
         return new Date(rulesFile.lastModified());
     }
-    
+
     @Override
     public Rules create(Rules entity) {
         return super.create(entity);
     }
-    
-    @Override
+
+    // @Override
+    @Transactional
     public void delete(Rules entity) {
-        super.delete(entity);
+        List<Rules> existingRuleSet = listAll();
+
+        for (Rules rule : existingRuleSet) {
+            super.delete(rule);
+        }
+        create(rulesFromFile(getDefaultRulesFile()));
+
     }
-    
+
     @Override
     public Rules merge(Rules entity) {
         return super.merge(entity);
@@ -109,7 +116,7 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
         InputStream is = this.getClass().getResourceAsStream(path);
         return new Rules(Util.readFile(is));
     }
-    
+
     protected String getDefaultRulesFile() {
         return "/rules/default-rules.js";
     }

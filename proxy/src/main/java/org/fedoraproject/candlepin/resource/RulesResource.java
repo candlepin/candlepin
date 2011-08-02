@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.resource;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -99,5 +100,15 @@ public class RulesResource {
             log.error("couldn't read rules file", e);
             throw new ServiceUnavailableException(i18n.tr("couldn't read rules file"));
         }
+    }
+
+    /**
+     * deletes any uploaded rules, use bundled rules instead
+     *
+     */
+    @DELETE
+    @Produces(MediaType.APPLICATION_JSON)
+    public void delete() {
+        rulesCurator.delete(rulesCurator.getRules());
     }
 }

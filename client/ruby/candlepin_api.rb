@@ -415,6 +415,10 @@ class Candlepin
     post_text("/rules/", rule_set)
   end
 
+  def delete_rules()
+    delete("/rules")
+  end
+
   def list_consumers(args={})
     query = "/consumers?"
 

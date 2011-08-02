@@ -77,10 +77,12 @@ public class X509ExtensionUtil {
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
             OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SKU_KEY), false, sub
             .getProduct().getId().toString()));
-        // TODO: regnum? virtlimit/socketlimit?
-        toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-            OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_QUANTITY_KEY), false, sub
-            .getQuantity().toString()));
+        String socketLimit = sub.getProduct().getAttributeValue("sockets");
+        if (socketLimit != null) {
+            toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
+                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SOCKETLIMIT_KEY), false,
+                socketLimit));
+        }
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
             OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_STARTDATE_KEY), false,
             iso8601DateFormat.format(sub.getStartDate())));
@@ -225,9 +227,10 @@ public class X509ExtensionUtil {
             // Include metadata expiry if specified on the content:
             if (pc.getContent().getMetadataExpire() != null) {
                 toReturn.add(new X509ExtensionWrapper(
-                    contentOid + "." +
-                    OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_METADATA_EXPIRE),
-                    false, pc.getContent().getMetadataExpire().toString()));
+                    contentOid +
+                        "." +
+                        OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_METADATA_EXPIRE),
+                        false, pc.getContent().getMetadataExpire().toString()));
             }
 
             // Include required tags if specified on the content set:

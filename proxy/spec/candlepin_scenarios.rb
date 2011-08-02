@@ -2,6 +2,7 @@ require 'candlepin_api'
 
 require 'pp'
 require 'zip/zip'
+require 'base64'
 
 # Provides initialization and cleanup of data that was used in the scenario
 module CandlepinScenarios
@@ -14,6 +15,7 @@ module CandlepinScenarios
         @products = []
         @users = []
         @roles = []
+        @rules = Base64.encode64("")
       end
 
       after do
@@ -21,6 +23,10 @@ module CandlepinScenarios
         @owners.reverse_each { |owner| @cp.delete_owner owner.key }
         @users.reverse_each { |user| @cp.delete_user user['username'] }
 
+        # restore the original rules
+        if (@rules)
+          @cp.delete_rules
+        end
         # TODO:  delete products?
       end
     end
@@ -95,6 +101,11 @@ module CandlepinMethods
     # This is so the method can be used in before(:all) blocks.
     @roles << role if not @roles.nil?
     return role
+  end
+
+  def upload_rules(rules)
+    @rules = rules
+    @cp.upload_rules(rules)
   end
 
   def consumer_client(cp_client, consumer_name, type=:system, username=nil, facts= {}, owner_key=nil)
