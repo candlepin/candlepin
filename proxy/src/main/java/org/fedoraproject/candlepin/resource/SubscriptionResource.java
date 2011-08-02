@@ -77,7 +77,8 @@ public class SubscriptionResource {
     }
 
     @POST
-    public void activateSubscription(@QueryParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
+    public void activateSubscription(
+        @QueryParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @QueryParam("email") String email,
         @QueryParam("email_locale") String emailLocale,
         @Context HttpServletResponse response) {
