@@ -8,7 +8,7 @@ describe 'Owner Resource' do
   include CandlepinScenarios
 
   it 'should allow a client to create an owner with parent' do
-    owner = create_owner random_string('test_owner')   
+    owner = create_owner random_string('test_owner')
     child_owner = create_owner(random_string('test_owner'), owner)
     child_owner.parentOwner.id.should == owner.id
   end
@@ -19,7 +19,7 @@ describe 'Owner Resource' do
       'displayName' => 'something something',
       'id' => 'doesNotExist'
     }
-    
+
     lambda do
       @cp.create_owner(random_string('child owner'), {:parent => fake_parent_owner})
     end.should raise_exception(RestClient::BadRequest)
@@ -32,6 +32,15 @@ describe 'Owner Resource' do
     @cp.refresh_pools(owner['key'])
     pools = @cp.list_owner_pools(owner['key'])
     pools.length.should == 1
+  end
+
+  it "lets owners be created and refreshed at the same time" do
+    owner_key = random_string("new_owner1")
+    @cp.refresh_pools(owner_key, false, true)
+    new_owner = @cp.get_owner(owner_key)
+    new_owner.key.should == owner_key
+    pools = @cp.list_owner_pools(owner_key)
+    pools.length.should == 0
   end
 
   it "does not let read only users refresh pools" do
@@ -50,7 +59,7 @@ describe 'Owner Resource' do
     lambda do
       rw_owner_client.refresh_pools(owner.key)
     end.should raise_exception(RestClient::Forbidden)
-   
+
   end
 
   it "does not let read only users register systems" do
@@ -70,7 +79,7 @@ describe 'Owner Resource' do
     owner = create_owner random_string("test_owner2")
     original_key = owner.key
     owner.key= random_string("test_owner4")
-    
+
     @cp.update_owner(original_key, owner)
     new_owner = @cp.get_owner(owner.key)
     new_owner.key.should == owner.key
@@ -78,7 +87,7 @@ describe 'Owner Resource' do
 
   it "updates consumed entitlement count" do
     #TODO put this into candlepin_api.rb if others want to use it
-    def stats_helper(owner, expected_available, expected_consumed) 
+    def stats_helper(owner, expected_available, expected_consumed)
         @cp.refresh_pools owner.key
         @cp.generate_statistics
 

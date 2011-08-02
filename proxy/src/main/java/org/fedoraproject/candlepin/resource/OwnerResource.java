@@ -14,6 +14,25 @@
  */
 package org.fedoraproject.candlepin.resource;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
+
+import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventAdapter;
 import org.fedoraproject.candlepin.audit.EventFactory;
@@ -55,11 +74,6 @@ import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.sync.Importer;
 import org.fedoraproject.candlepin.sync.ImporterException;
 import org.fedoraproject.candlepin.sync.SyncDataFormatException;
-
-import com.google.inject.Inject;
-import com.wideplay.warp.persist.Transactional;
-
-import org.apache.log4j.Logger;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
@@ -68,23 +82,8 @@ import org.jboss.resteasy.util.GenericType;
 import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
+import com.google.inject.Inject;
+import com.wideplay.warp.persist.Transactional;
 
 
 /**
@@ -123,7 +122,7 @@ public class OwnerResource {
         I18n i18n, EventSink sink,
         EventFactory eventFactory, EventCurator eventCurator,
         EventAdapter eventAdapter, Importer importer,
-        PoolManager poolManager, ExporterMetadataCurator exportCurator, 
+        PoolManager poolManager, ExporterMetadataCurator exportCurator,
         OwnerInfoCurator ownerInfoCurator,
         ImportRecordCurator importRecordCurator,
         SubscriptionServiceAdapter subService,
@@ -348,22 +347,22 @@ public class OwnerResource {
     public ActivationKey createActivationKey(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         ActivationKey activationKey) {
-        
+
         Owner owner = findOwner(ownerKey);
         activationKey.setOwner(owner);
-        
+
         if (activationKey.getName() == null) {
             throw new BadRequestException(
                 i18n.tr("Must provide a name for activation key."));
         }
-        
+
         String testName = activationKey.getName().replace("-", "0")
                           .replace("_", "0");
         if (!testName.matches("[a-zA-z0-9]*")) {
             throw new BadRequestException(
                 i18n.tr("Activation key names must be alphanumeric or the " +
                     "characters '-' or '_'. " +
-                    "[" + activationKey.getName() + "]"));            
+                    "[" + activationKey.getName() + "]"));
         }
 
         ActivationKey newKey = activationKeyCurator.create(activationKey);
@@ -568,7 +567,7 @@ public class OwnerResource {
     @Path("{owner_key}/subscriptions")
     public JobDetail refreshPools(
         // TODO: Can we verify with autocreate?
-        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
+        @PathParam("owner_key") String ownerKey,
         @QueryParam("auto_create_owner") @DefaultValue("false") Boolean autoCreateOwner) {
 
         Owner owner = ownerCurator.lookupByKey(ownerKey);
@@ -662,8 +661,8 @@ public class OwnerResource {
                 "owner with key: {0} was not found.", ownerKey));
         }
 
-        
-        return statisticCurator.getStatisticsByOwner(o, "", "", "", 
+
+        return statisticCurator.getStatisticsByOwner(o, "", "", "",
                                 ResourceDateParser.getFromDate(from, to, days),
                                 ResourceDateParser.parseDateString(to));
     }
@@ -686,7 +685,7 @@ public class OwnerResource {
                 "owner with key: {0} was not found.", ownerKey));
         }
 
-        return statisticCurator.getStatisticsByOwner(o, qType, reference, "", 
+        return statisticCurator.getStatisticsByOwner(o, qType, reference, "",
                                 ResourceDateParser.getFromDate(from, to, days),
                                 ResourceDateParser.parseDateString(to));
     }
@@ -711,11 +710,11 @@ public class OwnerResource {
         }
 
 
-        return statisticCurator.getStatisticsByOwner(o, qType, reference, vType, 
+        return statisticCurator.getStatisticsByOwner(o, qType, reference, vType,
                                 ResourceDateParser.getFromDate(from, to, days),
                                 ResourceDateParser.parseDateString(to));
     }
-        
+
 
     private void recordImportSuccess(Owner owner) {
         ImportRecord record = new ImportRecord(owner);
