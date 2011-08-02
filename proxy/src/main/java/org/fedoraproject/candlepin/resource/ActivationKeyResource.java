@@ -46,8 +46,7 @@ import javax.ws.rs.core.MediaType;
  */
 @Path("/activation_keys")
 public class ActivationKeyResource {
-    private static Logger log = Logger
-        .getLogger(ActivationKeyResource.class);
+    private static Logger log = Logger.getLogger(ActivationKeyResource.class);
     private ActivationKeyCurator activationKeyCurator;
     private PoolCurator poolCurator;
     private I18n i18n;
@@ -55,9 +54,7 @@ public class ActivationKeyResource {
 
     @Inject
     public ActivationKeyResource(ActivationKeyCurator activationKeyCurator,
-        I18n i18n,
-        PoolCurator poolCurator,
-        ConsumerResource consumerResource,
+        I18n i18n, PoolCurator poolCurator, ConsumerResource consumerResource,
         EventSink eventSink) {
         this.activationKeyCurator = activationKeyCurator;
         this.i18n = i18n;
@@ -82,9 +79,8 @@ public class ActivationKeyResource {
         @PathParam("activation_key_id") String activationKeyId) {
         ActivationKey key = findKey(activationKeyId);
         List<Pool> pools = new ArrayList<Pool>();
-        for(ActivationKeyPool akp : key.getPools())
-        {
-            pools.add(akp.getPool());   
+        for (ActivationKeyPool akp : key.getPools()) {
+            pools.add(akp.getPool());
         }
         return pools;
     }
@@ -93,7 +89,8 @@ public class ActivationKeyResource {
     @Path("{activation_key_id}")
     @Produces(MediaType.APPLICATION_JSON)
     public ActivationKey updateActivationKey(
-        @PathParam("activation_key_id") String activationKeyId, ActivationKey key) {
+        @PathParam("activation_key_id") String activationKeyId,
+        ActivationKey key) {
         ActivationKey toUpdate = findKey(activationKeyId);
         toUpdate.setName(key.getName());
         activationKeyCurator.merge(toUpdate);
@@ -106,7 +103,7 @@ public class ActivationKeyResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Pool addPoolToKey(
         @PathParam("activation_key_id") String activationKeyId,
-        @PathParam("pool_id") String poolId, 
+        @PathParam("pool_id") String poolId,
         @QueryParam("quantity") @DefaultValue("1") long quantity) {
         ActivationKey key = findKey(activationKeyId);
         Pool pool = findPool(poolId);
@@ -127,7 +124,6 @@ public class ActivationKeyResource {
         activationKeyCurator.update(key);
         return pool;
     }
-
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -156,25 +152,22 @@ public class ActivationKeyResource {
     }
 
     protected ActivationKey findKey(String activationKeyId) {
-        ActivationKey key = activationKeyCurator
-        .find(activationKeyId);
+        ActivationKey key = activationKeyCurator.find(activationKeyId);
 
         if (key == null) {
-            throw new BadRequestException(i18n.tr(
-                "ActivationKey with id {0} could not be found",
-                activationKeyId));
+            throw new BadRequestException(
+                i18n.tr("ActivationKey with id {0} could not be found",
+                    activationKeyId));
         }
         return key;
     }
 
     protected Pool findPool(String poolId) {
-        Pool pool = poolCurator
-        .find(poolId);
+        Pool pool = poolCurator.find(poolId);
 
         if (pool == null) {
             throw new BadRequestException(i18n.tr(
-                "Pool with id {0} could not be found",
-                poolId));
+                "Pool with id {0} could not be found", poolId));
         }
         return pool;
     }

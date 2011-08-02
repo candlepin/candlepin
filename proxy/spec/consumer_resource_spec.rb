@@ -187,16 +187,26 @@ describe 'Consumer Resource' do
   it 'should allow a consumer register with activation keys' do
     owner = create_owner random_string('owner')
 
+    user1 = user_client(owner, random_string("user1"))
+    consumer1 = consumer_client(user1, random_string("consumer1"))
+    prod1 = create_product(random_string('product1'), random_string('product1'))
+    subs1 = @cp.create_subscription(owner.key, prod1.id, 10)
+    @cp.refresh_pools(owner.key)
+    pool1 = consumer1.list_pools({:owner => owner['id']}).first    
+
     # Connect without any credentials:
     client = Candlepin.new
 
-    @cp.create_activation_key(owner['key'], 'key1')
+    key1 = @cp.create_activation_key(owner['key'], 'key1')
+    @cp.add_pool_to_key(key1['id'], pool1['id'], 3)
     @cp.create_activation_key(owner['key'], 'key2')
     consumer = client.register('machine1', :system, nil, {}, nil,
       owner['key'], ["key1", "key2"])
     consumer.uuid.should_not be_nil
 
     # TODO: Verify activation keys did what we expect once they are functional
+    @cp.refresh_pools(owner.key)
+    @cp.get_pool(pool1.id).consumed.should == 3
   end
 
   it 'should not allow the same UUID to be registered twice' do

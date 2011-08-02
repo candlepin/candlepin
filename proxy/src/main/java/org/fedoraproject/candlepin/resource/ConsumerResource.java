@@ -326,8 +326,9 @@ public class ConsumerResource {
                     List<Entitlement> entitlements = null;
 
                     String poolId = Util.assertNotNull(akp.getPool().getId(),
-                         i18n.tr("Pool ID must be provided"));
-                    entitlements = entitler.bindByPool(poolId, consumer, akp.getQuantity().intValue());
+                        i18n.tr("Pool ID must be provided"));
+                    entitlements = entitler.bindByPool(poolId, consumer, akp
+                        .getQuantity().intValue());
 
                     // Trigger events:
                     entitler.sendEvents(entitlements);
@@ -891,7 +892,8 @@ public class ConsumerResource {
     @Path("{consumer_uuid}/export")
     public File exportData(
         @Context HttpServletResponse response,
-        @PathParam("consumer_uuid") @Verify(value = Consumer.class, require = Access.ALL) String consumerUuid) {
+        @PathParam("consumer_uuid") 
+        @Verify(value = Consumer.class, require = Access.ALL) String consumerUuid) {
 
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
         if (!consumer.getType().isType(ConsumerTypeEnum.CANDLEPIN)) {

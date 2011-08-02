@@ -40,7 +40,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @Entity
 @Table(name = "cp_activation_key", uniqueConstraints = { @UniqueConstraint(columnNames = {
-    "name", "owner_id" }) })
+        "name", "owner_id" }) })
 public class ActivationKey extends AbstractHibernateObject {
 
     @Id
@@ -59,7 +59,7 @@ public class ActivationKey extends AbstractHibernateObject {
     private Owner owner;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "key", fetch = FetchType.LAZY)
-    private Set<ActivationKeyPool> pools;
+    private Set<ActivationKeyPool> pools = new HashSet<ActivationKeyPool>();
 
     public ActivationKey() {
     }
@@ -120,15 +120,14 @@ public class ActivationKey extends AbstractHibernateObject {
     }
 
     public void addPool(Pool pool, long quantity) {
-        ActivationKeyPool akp = new ActivationKeyPool(this, pool,
-            quantity);
+        ActivationKeyPool akp = new ActivationKeyPool(this, pool, quantity);
         this.getPools().add(akp);
     }
 
     public void removePool(Pool pool) {
         Set<ActivationKeyPool> result = new HashSet<ActivationKeyPool>();
         for (ActivationKeyPool akp : this.getPools()) {
-            if(!akp.getPool().getId().equals(pool.getId())) {
+            if (!akp.getPool().getId().equals(pool.getId())) {
                 result.add(akp);
             }
         }
