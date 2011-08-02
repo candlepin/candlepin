@@ -200,13 +200,9 @@ public class DatabaseTestFixture {
     }
 
     /**
-<<<<<<< HEAD
      * Helper to commit the current db transaction. Pretty simple for now, but
      * may require additional logic and error handling down the road.
-=======
-     * Helper to commit the current db transaction. Pretty simple for now, but may
-     * require additional logic and error handling down the road.
->>>>>>> Remove autosubscribe, since we really do not need it
+
      */
     protected void commitTransaction() {
         entityManager().getTransaction().commit();
