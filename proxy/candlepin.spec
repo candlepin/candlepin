@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.4.7
+Version: 0.4.8
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -146,6 +146,43 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Wed Aug 03 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.8-1
+- Update a test for stacking (wpoteat@redhat.com)
+- Updates to ensure removal of children actkeypools and non-circular json
+  object reference. (wpoteat@redhat.com)
+- 720487: Allow super admins to call refrehs pools with new orgs to be created.
+  Added new spec tests as well (bkearney@redhat.com)
+- 727600: Fix the order in which the parameters are checked to fake on the cli
+  (bkearney@redhat.com)
+- 724916: Fix the license for the rpm (bkearney@redhat.com)
+- Add utility script for updating rules for testing (alikins@redhat.com)
+- Test cases for RulesResource (alikins@redhat.com)
+- Test cases for RulesCurator (alikins@redhat.com)
+- spec for rules import/update/delete (alikins@redhat.com)
+- cleanup unresolved merge conflict in comment in DatabaseTestFixture
+  (alikins@redhat.com)
+- checksytle cleanup (alikins@redhat.com)
+- file from last commit not added. (wpoteat@redhat.com)
+- whitespace cleanup for default-rules.js (alikins@redhat.com)
+- Add stacking support to default-rules.js (alikins@redhat.com)
+- Expose attribtues to ReadOnlyPool for rules to use (alikins@redhat.com)
+- we need to be able to select more than one best pool now so don't break on
+  first matching pool (alikins@redhat.com)
+- RulesCurator was not deleting rules, change to use super.delete (alikins@redhat.com)
+- Include socket info oid in entitlement certificate (alikins@redhat.com)
+- Add DELETE handler for deleting and reseting rules (alikins@redhat.com)
+- Delete any rules we have modified on destroy of @cp wrapper class (alikins@redhat.com)
+- add some test products with multi-entitle and socket attributes (alikins@redhat.com)
+- alter an error msg (cduryee@redhat.com)
+- Fix global pre-entitlement rule run twice per bind. (dgoodwin@redhat.com)
+- As a user, I would like to register to an activation key, and
+  have it subscribe the machine to a set of pools. (wpoteat@redhat.com)
+- 722975: Check multi-entitle attribute if binding with quantity.  (dgoodwin@redhat.com)
+- add a @verify to activateSubscription (aka redemption) (cduryee@redhat.com)
+- check for existing status (jmrodri@gmail.com)
+- As a user, I would like to register to an activation key, and have it
+  subscribe the machine to a set of pools. (wpoteat@redhat.com)
+
 * Fri Jul 29 2011 jesus m rodriguez <jmrodri@gmail.com> 0.4.7-1
 - remove obsolete testcase. (jmrodri@gmail.com)
 - fully test PinsetterKernel (jmrodri@gmail.com)
