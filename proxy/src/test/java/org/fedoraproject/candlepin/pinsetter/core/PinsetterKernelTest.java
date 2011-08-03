@@ -128,8 +128,8 @@ public class PinsetterKernelTest {
 
     @Test
     public void shutdown() throws Exception {
-        String crongrp = "Pinsetter Batch Engine Group";
-        String singlegrp = "Pinsetter Long Running Job Group";
+        String crongrp = "cron group";
+        String singlegrp = "async group";
         String[] jobs = {"fakejob1", "fakejob2"};
         when(sched.getJobNames(eq(crongrp))).thenReturn(jobs);
         when(sched.getJobNames(eq(singlegrp))).thenReturn(jobs);
@@ -204,7 +204,7 @@ public class PinsetterKernelTest {
 
     @Test
     public void cancelJob() throws Exception {
-        String singlegrp = "Pinsetter Long Running Job Group";
+        String singlegrp = "async group";
         String[] jobs = {"fakejob1", "fakejob2"};
         when(sched.getJobNames(eq(singlegrp))).thenReturn(jobs);
         pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
@@ -214,7 +214,7 @@ public class PinsetterKernelTest {
 
     @Test
     public void singleJob() throws Exception {
-        String singlegrp = "Pinsetter Long Running Job Group";
+        String singlegrp = "async group";
         JobDataMap map = new JobDataMap();
         map.put(PinsetterJobListener.PRINCIPAL_KEY, mock(Principal.class));
         map.put(JobStatus.OWNER_KEY, "admin");

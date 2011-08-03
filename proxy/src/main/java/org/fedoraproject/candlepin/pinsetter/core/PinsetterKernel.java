@@ -56,9 +56,9 @@ import java.util.Map.Entry;
 @Singleton
 public class PinsetterKernel {
 
-    private static final String CRON_GROUP = "Pinsetter Batch Engine Group";
-    private static final String SINGLE_JOB_GROUP = "Pinsetter Long Running Job Group";
-    
+    private static final String CRON_GROUP = "cron group";
+    private static final String SINGLE_JOB_GROUP = "async group";
+
     private static Logger log = Logger.getLogger(PinsetterKernel.class);
 
     private Scheduler scheduler;
@@ -152,8 +152,8 @@ public class PinsetterKernel {
             if (log.isDebugEnabled()) {
                 log.debug("Scheduling " + jobImpl);
             }
-            
-            // get the default schedule from the job class in case one 
+
+            // get the default schedule from the job class in case one
             // is not found in the configuration.
             String defvalue = "";
             try {
@@ -225,7 +225,7 @@ public class PinsetterKernel {
                 Trigger trigger = new CronTrigger(jobImpl, CRON_GROUP, crontab);
                 trigger.setMisfireInstruction(
                     CronTrigger.MISFIRE_INSTRUCTION_DO_NOTHING);
-                
+
                 scheduleJob(
                     this.getClass().getClassLoader().loadClass(jobImpl),
                     jobName, trigger);
@@ -239,11 +239,11 @@ public class PinsetterKernel {
 
     public void scheduleJob(Class job, String jobName, String crontab)
         throws PinsetterException {
-        
+
         try {
             Trigger trigger = new CronTrigger(job.getName(), CRON_GROUP, crontab);
             trigger.setMisfireInstruction(CronTrigger.MISFIRE_INSTRUCTION_DO_NOTHING);
-            
+
             scheduleJob(job, jobName, trigger);
         }
         catch (ParseException pe) {
@@ -310,7 +310,7 @@ public class PinsetterKernel {
         return scheduleJob(jobDetail, SINGLE_JOB_GROUP, new SimpleTrigger(
             jobDetail.getName() + " trigger", SINGLE_JOB_GROUP));
     }
-    
+
     public boolean getSchedulerStatus() throws PinsetterException {
         try {
             //return true when scheduler is running (double negative)
@@ -321,7 +321,7 @@ public class PinsetterKernel {
                         "scheduler status ", e);
         }
     }
-    
+
     public void pauseScheduler() throws PinsetterException {
         //go into standby mode
         try {
@@ -331,7 +331,7 @@ public class PinsetterKernel {
             throw new PinsetterException("There was a problem pausing the scheduler", e);
         }
     }
-    
+
     public void unpauseScheduler() throws PinsetterException {
         log.debug("looking for cancelled jobs since scheduler was paused");
         CancelJobJob cjj = new CancelJobJob(jobCurator, this);
@@ -362,7 +362,7 @@ public class PinsetterKernel {
             // TODO:  Something better than nothing
         }
     }
-    
+
     private void deleteAllJobs() {
         deleteJobs(CRON_GROUP);
         deleteJobs(SINGLE_JOB_GROUP);
