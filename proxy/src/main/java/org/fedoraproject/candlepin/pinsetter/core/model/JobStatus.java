@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.pinsetter.core.model;
 
 import java.util.Date;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -54,6 +55,7 @@ public class JobStatus extends AbstractHibernateObject {
 
     @Id
     private String id;
+    @Column(length = 15)
     private String jobGroup;
     private JobState state;
     private Date startTime;
