@@ -39,7 +39,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @Entity
 @Table(name = "cp_activation_key", uniqueConstraints = { @UniqueConstraint(columnNames = {
-    "name", "owner_id" }) })
+        "name", "owner_id" }) })
 public class ActivationKey extends AbstractHibernateObject {
 
     @Id
