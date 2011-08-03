@@ -189,7 +189,8 @@ describe 'Consumer Resource' do
 
     user1 = user_client(owner, random_string("user1"))
     consumer1 = consumer_client(user1, random_string("consumer1"))
-    prod1 = create_product(random_string('product1'), random_string('product1'))
+    prod1 = create_product(random_string('product1'), random_string('product1'),
+                           :attributes => { :'multi-entitlement' => 'yes'})
     subs1 = @cp.create_subscription(owner.key, prod1.id, 10)
     @cp.refresh_pools(owner.key)
     pool1 = consumer1.list_pools({:owner => owner['id']}).first    
