@@ -32,6 +32,7 @@ import org.fedoraproject.candlepin.exceptions.IseException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.ActivationKey;
 import org.fedoraproject.candlepin.model.ActivationKeyCurator;
+import org.fedoraproject.candlepin.model.ActivationKeyPool;
 import org.fedoraproject.candlepin.model.CertificateSerialDto;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
@@ -121,7 +122,7 @@ public class ConsumerResource {
     private ConsumerRules consumerRules;
     private ConsumerDeleteHelper consumerDeleteHelper;
     private OwnerCurator ownerCurator;
-    private ActivationKeyCurator activationKeyCurator; 
+    private ActivationKeyCurator activationKeyCurator;
     private Entitler entitler;
 
     @Inject
@@ -163,7 +164,7 @@ public class ConsumerResource {
 
     /**
      * List available Consumers
-     *
+     * 
      * @return list of available consumers.
      */
     @GET
@@ -183,8 +184,9 @@ public class ConsumerResource {
             owner = ownerCurator.lookupByKey(ownerKey);
 
             if (owner == null) {
-                throw new NotFoundException(i18n.tr(
-                    "Organization/owner with key: {0} was not found.", ownerKey));
+                throw new NotFoundException(
+                    i18n.tr("Organization/owner with key: {0} was not found.",
+                        ownerKey));
             }
         }
 
@@ -195,7 +197,7 @@ public class ConsumerResource {
 
     /**
      * Return the consumer identified by the given uuid.
-     *
+     * 
      * @param uuid uuid of the consumer sought.
      * @return the consumer identified by the given uuid.
      */
@@ -216,14 +218,13 @@ public class ConsumerResource {
     }
 
     /**
-     * Create a Consumer.
-     *
-     * NOTE: Opening this method up to everyone, as we have nothing we can reliably verify
-     * in the method signature. Instead we have to figure out what owner this consumer is
-     * destined for (due to backward compatability with existing clients which do not
-     * specify an owner during registration), and then check the access to the specified
-     * owner in the method itself.
-     *
+     * Create a Consumer. NOTE: Opening this method up to everyone, as we have
+     * nothing we can reliably verify in the method signature. Instead we have
+     * to figure out what owner this consumer is destined for (due to backward
+     * compatability with existing clients which do not specify an owner during
+     * registration), and then check the access to the specified owner in the
+     * method itself.
+     * 
      * @param consumer Consumer metadata
      * @return newly created Consumer
      * @throws BadRequestException generic exception type for web services We
@@ -234,7 +235,8 @@ public class ConsumerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @SecurityHole(noAuth = true)
     public Consumer create(Consumer consumer, @Context Principal principal,
-        @QueryParam("username") String userName, @QueryParam("owner") String ownerKey,
+        @QueryParam("username") String userName,
+        @QueryParam("owner") String ownerKey,
         @QueryParam("activation_keys") String activationKeys)
         throws BadRequestException {
         // API:registerConsumer
@@ -249,15 +251,14 @@ public class ConsumerResource {
 
         if (keyStrings.size() > 0) {
             if (ownerKey == null) {
-                throw new BadRequestException(i18n.tr(
-                    "Must specify an org to register with activation keys."));
+                throw new BadRequestException(
+                    i18n.tr("Must specify an org to register with activation keys."));
             }
             if (userName != null) {
-                throw new BadRequestException(i18n.tr(
-                    "Cannot specify username with activation keys."));
+                throw new BadRequestException(
+                    i18n.tr("Cannot specify username with activation keys."));
             }
         }
-
 
         if (!isConsumerNameValid(consumer.getName())) {
             throw new BadRequestException(
@@ -321,6 +322,20 @@ public class ConsumerResource {
             sink.emitConsumerCreated(consumer);
 
             // TODO: Process activation keys.
+            for (ActivationKey ak : keys) {
+                for (ActivationKeyPool akp : ak.getPools()) {
+                    List<Entitlement> entitlements = null;
+
+                    String poolId = Util.assertNotNull(akp.getPool().getId(),
+                        i18n.tr("Pool ID must be provided"));
+                    entitlements = entitler.bindByPool(poolId, consumer, akp
+                        .getQuantity().intValue());
+
+                    // Trigger events:
+                    entitler.sendEvents(entitlements);
+
+                }
+            }
 
             return consumer;
         }
@@ -337,12 +352,11 @@ public class ConsumerResource {
     }
 
     private ActivationKey findKey(String keyName, Owner owner) {
-        ActivationKey key = activationKeyCurator
-            .lookupForOwner(keyName, owner);
+        ActivationKey key = activationKeyCurator.lookupForOwner(keyName, owner);
 
         if (key == null) {
             throw new NotFoundException(i18n.tr(
-                "Activation key ''{0}'' not found for organization ''{1}''.", 
+                "Activation key ''{0}'' not found for organization ''{1}''.",
                 keyName, owner.getKey()));
         }
         return key;
@@ -402,16 +416,16 @@ public class ConsumerResource {
 
         Owner owner = ownerCurator.lookupByKey(ownerKey);
         if (owner == null) {
-            throw new BadRequestException(
-                i18n.tr("Organization/Owner {0} does not exist.", ownerKey));
+            throw new BadRequestException(i18n.tr(
+                "Organization/Owner {0} does not exist.", ownerKey));
         }
 
         // Check permissions for current principal on the owner:
         if ((principal instanceof UserPrincipal)) {
             if (!principal.canAccess(owner, Access.ALL)) {
-                throw new ForbiddenException(
-                    i18n.tr("User {0} cannot access organization/owner {1}",
-                        principal.getPrincipalName(), owner.getKey()));
+                throw new ForbiddenException(i18n.tr(
+                    "User {0} cannot access organization/owner {1}",
+                    principal.getPrincipalName(), owner.getKey()));
             }
         }
 
@@ -427,16 +441,18 @@ public class ConsumerResource {
     }
 
     /*
-     * During registration of new consumers we support an edge case where the user
-     * service may have authenticated a username/password for an owner which we have
-     * not yet created in the Candlepin database. If we detect this during
-     * registration we need to create the new owner, and adjust
-     * the principal that was created during authentication to carry it.
+     * During registration of new consumers we support an edge case where the
+     * user service may have authenticated a username/password for an owner
+     * which we have not yet created in the Candlepin database. If we detect
+     * this during registration we need to create the new owner, and adjust the
+     * principal that was created during authentication to carry it.
      */
-    // TODO:  Re-evaluate if this is still an issue with the new membership scheme!
+    // TODO: Re-evaluate if this is still an issue with the new membership
+    // scheme!
     private void createOwnerIfNeeded(Principal principal) {
         if (!(principal instanceof UserPrincipal)) {
-            // If this isn't a user principal we can't check for owners that may need to 
+            // If this isn't a user principal we can't check for owners that may
+            // need to
             // be created.
             return;
         }
@@ -488,7 +504,7 @@ public class ConsumerResource {
 
     /**
      * delete the consumer.
-     *
+     * 
      * @param uuid uuid of the consumer to delete.
      */
     @DELETE
@@ -520,7 +536,7 @@ public class ConsumerResource {
 
     /**
      * Return the entitlement certificate for the given consumer.
-     *
+     * 
      * @param consumerUuid UUID of the consumer
      * @return list of the client certificates for the given consumer.
      */
@@ -551,15 +567,17 @@ public class ConsumerResource {
     @GET
     @Produces("application/zip")
     @Path("/{consumer_uuid}/certificates")
-    public File exportCertificates(@Context HttpServletResponse response,
+    public File exportCertificates(
+        @Context HttpServletResponse response,
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
         @QueryParam("serials") String serials) {
 
-        log.debug("Getting client certificate zip file for consumer: " + consumerUuid);
+        log.debug("Getting client certificate zip file for consumer: " +
+            consumerUuid);
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
 
         Set<Long> serialSet = this.extractSerials(serials);
-        //filtering requires a null set, so make this null if it is
+        // filtering requires a null set, so make this null if it is
         // empty
         if (serialSet.isEmpty()) {
             serialSet = null;
@@ -574,8 +592,8 @@ public class ConsumerResource {
             return archive;
         }
         catch (ExportCreationException e) {
-            throw new IseException(i18n.tr("Unable to create entitlement archive"),
-                e);
+            throw new IseException(
+                i18n.tr("Unable to create entitlement archive"), e);
         }
     }
 
@@ -603,10 +621,10 @@ public class ConsumerResource {
     }
 
     /**
-     * Return the client certificate metadatthat a for the given consumer. This is a
-     * small subset of data clients can use to determine which certificates they
-     * need to update/fetch.
-     *
+     * Return the client certificate metadatthat a for the given consumer. This
+     * is a small subset of data clients can use to determine which certificates
+     * they need to update/fetch.
+     * 
      * @param consumerUuid UUID of the consumer
      * @return list of the client certificate metadata for the given consumer.
      */
@@ -632,13 +650,14 @@ public class ConsumerResource {
 
     /**
      * Request an entitlement.
-     *
+     * 
      * @param consumerUuid Consumer identifier to be entitled
      * @param poolIdString Entitlement pool id.
      * @param email email address.
      * @param emailLocale locale for email address.
      * @param async True if bind should be asynchronous, defaults to false.
-     * @return Response with a list of entitlements or if async is true, a JobDetail.
+     * @return Response with a list of entitlements or if async is true, a
+     *         JobDetail.
      */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -692,9 +711,7 @@ public class ConsumerResource {
 
             // events will be triggered by the job
             return Response.status(Response.Status.OK)
-                           .type(MediaType.APPLICATION_JSON)
-                           .entity(detail)
-                           .build();
+                .type(MediaType.APPLICATION_JSON).entity(detail).build();
         }
 
         //
@@ -715,9 +732,7 @@ public class ConsumerResource {
         entitler.sendEvents(entitlements);
 
         return Response.status(Response.Status.OK)
-                       .type(MediaType.APPLICATION_JSON)
-                       .entity(entitlements)
-                       .build();
+            .type(MediaType.APPLICATION_JSON).entity(entitlements).build();
     }
 
     private Consumer verifyAndLookupConsumer(String consumerUuid) {
@@ -774,7 +789,7 @@ public class ConsumerResource {
 
     /**
      * Unbind all entitlements.
-     *
+     * 
      * @param consumerUuid Unique id for the Consumer.
      */
     @DELETE
@@ -803,7 +818,7 @@ public class ConsumerResource {
 
     /**
      * Remove an entitlement by ID.
-     *
+     * 
      * @param dbid the entitlement to delete.
      */
     @DELETE
@@ -876,9 +891,10 @@ public class ConsumerResource {
     @GET
     @Produces("application/zip")
     @Path("{consumer_uuid}/export")
-    public File exportData(@Context HttpServletResponse response,
-        @PathParam("consumer_uuid")
-            @Verify(value = Consumer.class, require = Access.ALL) String consumerUuid) {
+    public File exportData(
+        @Context HttpServletResponse response,
+        @PathParam("consumer_uuid") 
+        @Verify(value = Consumer.class, require = Access.ALL) String consumerUuid) {
 
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
         if (!consumer.getType().isType(ConsumerTypeEnum.CANDLEPIN)) {
@@ -905,7 +921,7 @@ public class ConsumerResource {
 
     /**
      * Return the consumer identified by the given uuid.
-     *
+     * 
      * @param uuid uuid of the consumer sought.
      * @return the consumer identified by the given uuid.
      */
@@ -936,7 +952,7 @@ public class ConsumerResource {
      * Generates the identity certificate for the given consumer and user.
      * Throws RuntimeException if there is a problem with generating the
      * certificate.
-     *
+     * 
      * @param c Consumer whose certificate needs to be generated.
      * @param regen if true, forces a regen of the certificate.
      * @return The identity certificate for the given consumer.

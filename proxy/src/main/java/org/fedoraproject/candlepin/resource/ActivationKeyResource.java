@@ -14,37 +14,41 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import java.util.List;
-
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-
-import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.auth.interceptor.Verify;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.model.ActivationKey;
 import org.fedoraproject.candlepin.model.ActivationKeyCurator;
+import org.fedoraproject.candlepin.model.ActivationKeyPool;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
-import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
+
+import org.apache.log4j.Logger;
+import org.xnap.commons.i18n.I18n;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
 
 /**
  * SubscriptionTokenResource
  */
 @Path("/activation_keys")
 public class ActivationKeyResource {
-    private static Logger log = Logger
-        .getLogger(ActivationKeyResource.class);
+    private static Logger log = Logger.getLogger(ActivationKeyResource.class);
     private ActivationKeyCurator activationKeyCurator;
     private PoolCurator poolCurator;
     private I18n i18n;
@@ -52,9 +56,7 @@ public class ActivationKeyResource {
 
     @Inject
     public ActivationKeyResource(ActivationKeyCurator activationKeyCurator,
-        I18n i18n,
-        PoolCurator poolCurator,
-        ConsumerResource consumerResource,
+        I18n i18n, PoolCurator poolCurator, ConsumerResource consumerResource,
         EventSink eventSink) {
         this.activationKeyCurator = activationKeyCurator;
         this.i18n = i18n;
@@ -79,7 +81,11 @@ public class ActivationKeyResource {
     public List<Pool> getActivationKeyPools(
         @PathParam("activation_key_id") String activationKeyId) {
         ActivationKey key = findKey(activationKeyId);
-        return key.getPools();
+        List<Pool> pools = new ArrayList<Pool>();
+        for (ActivationKeyPool akp : key.getPools()) {
+            pools.add(akp.getPool());
+        }
+        return pools;
     }
 
     @PUT
@@ -101,10 +107,12 @@ public class ActivationKeyResource {
     public Pool addPoolToKey(
         @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
         @PathParam("pool_id")
-        @Verify(value = Pool.class, require = Access.READ_POOLS) String poolId) {
+        @Verify(value = Pool.class, require = Access.READ_POOLS) String poolId,
+        @QueryParam("quantity") @DefaultValue("1") long quantity) {
+
         ActivationKey key = findKey(activationKeyId);
         Pool pool = findPool(poolId);
-        key.getPools().add(pool);
+        key.addPool(pool, quantity);
         activationKeyCurator.update(key);
         return pool;
     }
@@ -118,11 +126,10 @@ public class ActivationKeyResource {
         @Verify(value = Pool.class, require = Access.READ_POOLS) String poolId) {
         ActivationKey key = findKey(activationKeyId);
         Pool pool = findPool(poolId);
-        key.getPools().remove(pool);
+        key.removePool(pool);
         activationKeyCurator.update(key);
         return pool;
     }
-
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -143,28 +150,25 @@ public class ActivationKeyResource {
 
         activationKeyCurator.delete(key);
     }
-
     
     private ActivationKey findKey(String activationKeyId) {
         ActivationKey key = activationKeyCurator
         .find(activationKeyId);
 
         if (key == null) {
-            throw new BadRequestException(i18n.tr(
-                "ActivationKey with id {0} could not be found",
-                activationKeyId));
+            throw new BadRequestException(
+                i18n.tr("ActivationKey with id {0} could not be found",
+                    activationKeyId));
         }
         return key;
     }
 
     private Pool findPool(String poolId) {
-        Pool pool = poolCurator
-        .find(poolId);
+        Pool pool = poolCurator.find(poolId);
 
         if (pool == null) {
             throw new BadRequestException(i18n.tr(
-                "Pool with id {0} could not be found",
-                poolId));
+                "Pool with id {0} could not be found", poolId));
         }
         return pool;
     }

@@ -516,8 +516,12 @@ class Candlepin
     return get("/activation_keys/#{key_id}/pools")
   end
 
-  def add_pool_to_key(key_id, pool_id)
-    return post("/activation_keys/#{key_id}/pools/#{pool_id}")
+  def add_pool_to_key(key_id, pool_id, quantity=nil)
+    if(quantity)
+      return post("/activation_keys/#{key_id}/pools/#{pool_id}?quantity=#{quantity}")
+    else
+      return post("/activation_keys/#{key_id}/pools/#{pool_id}")
+    end
   end
 
   def remove_pool_from_key(key_id, pool_id)

@@ -19,8 +19,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.util.Date;
-
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.model.ActivationKey;
 import org.fedoraproject.candlepin.model.Owner;
@@ -29,8 +27,11 @@ import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.resource.ActivationKeyResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
+
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.Date;
 
 /**
  * SubscriptionTokenResourceTest
@@ -93,7 +94,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         key.setName("dd");
         key = activationKeyCurator.create(key);
         assertNotNull(key.getId());
-        activationKeyResource.addPoolToKey(key.getId(), pool.getId());
+        activationKeyResource.addPoolToKey(key.getId(), pool.getId(), 1);
 //        key = activationKeyResource.createActivationKey(key);
         assertTrue(key.getPools().size() == 1);
         activationKeyResource.removePoolFromKey(key.getId(), pool.getId());

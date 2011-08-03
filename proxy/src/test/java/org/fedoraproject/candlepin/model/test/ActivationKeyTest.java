@@ -18,16 +18,17 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Date;
-
 import org.fedoraproject.candlepin.model.ActivationKey;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
+
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.Date;
 
 /**
  * ActivationKeyTest
@@ -67,7 +68,7 @@ public class ActivationKeyTest extends DatabaseTestFixture {
         productCurator.create(prod);
         Pool pool = createPoolAndSub(owner, prod, 12L,
             new Date(), new Date(System.currentTimeMillis() + (365 * 24 * 60 * 60 * 1000)));
-        key.getPools().add(pool);
+        key.addPool(pool, 5);
         activationKeyCurator.create(key);
         activationKeyCurator.refresh(key);
         assertNotNull(key.getPools());
