@@ -24,7 +24,6 @@ import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -40,7 +39,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @Entity
 @Table(name = "cp_activation_key", uniqueConstraints = { @UniqueConstraint(columnNames = {
-        "name", "owner_id" }) })
+    "name", "owner_id" }) })
 public class ActivationKey extends AbstractHibernateObject {
 
     @Id
@@ -58,7 +57,8 @@ public class ActivationKey extends AbstractHibernateObject {
     @Index(name = "cp_activation_key_owner_fk_idx")
     private Owner owner;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "key", fetch = FetchType.LAZY)
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "key")
+    @org.hibernate.annotations.Cascade(org.hibernate.annotations.CascadeType.DELETE_ORPHAN)
     private Set<ActivationKeyPool> pools = new HashSet<ActivationKeyPool>();
 
     public ActivationKey() {
@@ -125,12 +125,14 @@ public class ActivationKey extends AbstractHibernateObject {
     }
 
     public void removePool(Pool pool) {
-        Set<ActivationKeyPool> result = new HashSet<ActivationKeyPool>();
+        ActivationKeyPool toRemove = null;
+
         for (ActivationKeyPool akp : this.getPools()) {
-            if (!akp.getPool().getId().equals(pool.getId())) {
-                result.add(akp);
+            if (akp.getPool().getId().equals(pool.getId())) {
+                toRemove = akp;
+                break;
             }
         }
-        this.setPools(result);
+        this.getPools().remove(toRemove);
     }
 }

@@ -14,7 +14,9 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Index;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -25,6 +27,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 /**
  * SubscriptionToken
@@ -43,11 +46,15 @@ public class ActivationKeyPool extends AbstractHibernateObject {
     private String id;
 
     @ManyToOne
-    @JoinColumn(nullable = false, name = "key_id", referencedColumnName = "id")
+    @ForeignKey(name = "fk_activation_key_pool_k")
+    @JoinColumn(nullable = false)
+    @Index(name = "cp_activation_key_pool_k_fk_idx")
     private ActivationKey key;
 
     @ManyToOne
-    @JoinColumn(nullable = false, name = "pool_id", referencedColumnName = "id")  
+    @ForeignKey(name = "fk_activation_key_pool_p")
+    @JoinColumn(nullable = false)
+    @Index(name = "cp_activation_key_pool_p_fk_idx")
     private Pool pool;
 
     @Column(nullable = false, name = "quantity")
@@ -71,8 +78,9 @@ public class ActivationKeyPool extends AbstractHibernateObject {
     }
 
     /**
-     * @return the key_id
+     * @return the key
      */
+    @XmlTransient
     public ActivationKey getKey() {
         return key;
     }
