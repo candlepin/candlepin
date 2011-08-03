@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.4.8
+Version: 0.4.9
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -146,6 +146,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Wed Aug 03 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.9-1
+- extract strings. (jesusr@redhat.com)
+
 * Wed Aug 03 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.8-1
 - Update a test for stacking (wpoteat@redhat.com)
 - Updates to ensure removal of children actkeypools and non-circular json
