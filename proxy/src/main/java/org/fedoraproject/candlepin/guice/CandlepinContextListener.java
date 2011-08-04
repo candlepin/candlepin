@@ -47,20 +47,22 @@ import org.fedoraproject.candlepin.pinsetter.core.PinsetterContextListener;
 import org.fedoraproject.candlepin.util.Util;
 
 /**
- * Customized Candlepin version of {@link GuiceResteasyBootstrapServletContextListener}.
+ * Customized Candlepin version of
+ * {@link GuiceResteasyBootstrapServletContextListener}.
  *
- * The base version pulls in Guice modules by class name from web.xml and instanciates
- * them - however we have a need to add in modules programmatically for, e.g., servlet
- * filters and the wideplay JPA module.  This context listener overrides some of the
- * module initialization code to allow for module specification beyond simply listing
- * class names.
+ * The base version pulls in Guice modules by class name from web.xml and
+ * instanciates them - however we have a need to add in modules
+ * programmatically for, e.g., servlet filters and the wideplay JPA module.
+ * This context listener overrides some of the module initialization code to
+ * allow for module specification beyond simply listing class names.
  */
 public class CandlepinContextListener extends
         GuiceResteasyBootstrapServletContextListener {
     private HornetqContextListener hornetqListener;
     private PinsetterContextListener pinsetterListener;
     private Injector injector;
-    // a bit of application-initialization code. Not sure if this is the best spot for it.
+    // a bit of application-initialization code. Not sure if this is the
+    // best spot for it.
     static {
         I18nManager.getInstance().setDefaultLocale(Locale.US);
     }
@@ -122,7 +124,8 @@ public class CandlepinContextListener extends
     }
  
     /**
-     * This is what RESTEasy's ModuleProcessor does, but we need the injector afterwards.
+     * This is what RESTEasy's ModuleProcessor does, but we need the injector
+     * afterwards.
      * @param injector - guice injector
      */
     private void processInjector(Registry registry,
