@@ -17,7 +17,8 @@ package org.fedoraproject.candlepin.pinsetter.core;
 import com.google.inject.Inject;
 
 /**
- * PinsetterContextListener
+ * PinsetterContextListener initializes the Pinsetter batch engine when
+ * the Candlepin context listener is started by the servlet engine.
  */
 public class PinsetterContextListener {
     private PinsetterKernel kernel;
