@@ -112,7 +112,7 @@ public class CandlepinModule extends AbstractModule {
         // will override:
         bindConstant().annotatedWith(JpaUnit.class).to("default");
 
-        bind(Config.class);
+        bind(Config.class).asEagerSingleton();
         bind(PKIUtility.class).to(BouncyCastlePKIUtility.class).asEagerSingleton();
         bind(PKIReader.class).to(BouncyCastlePKIReader.class).asEagerSingleton();
         bind(X509ExtensionUtil.class);
