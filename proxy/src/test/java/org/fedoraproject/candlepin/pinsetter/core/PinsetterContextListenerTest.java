@@ -22,6 +22,7 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 
 import org.junit.Before;
 import org.junit.Test;
+
 /**
  * PinsetterConextListenerTest
  */
@@ -29,7 +30,7 @@ public class PinsetterContextListenerTest {
     private PinsetterContextListener listener;
     private PinsetterKernel kernel;
     private PinsetterException pe;
-    
+
     @Before
     public void init() {
         pe = mock(PinsetterException.class);
@@ -50,19 +51,18 @@ public class PinsetterContextListenerTest {
         verify(kernel, atLeastOnce()).startup();
         verifyZeroInteractions(pe);
     }
-    
+
     @Test
     public void destroyedError() throws PinsetterException {
         doThrow(pe).when(kernel).shutdown();
         listener.contextDestroyed();
         verify(pe, atLeastOnce()).printStackTrace();
     }
-    
+
     @Test
     public void initError() throws PinsetterException {
         doThrow(pe).when(kernel).startup();
         listener.contextInitialized();
         verify(pe, atLeastOnce()).printStackTrace();
     }
-
 }
