@@ -27,15 +27,6 @@ public class PinsetterContextListener {
         this.kernel = kernel;
     }
 
-    public void contextDestroyed() {
-        try {
-            kernel.shutdown();
-        }
-        catch (PinsetterException e) {
-            e.printStackTrace();
-        }
-    }
-
     public void contextInitialized() {
 
         try {
@@ -46,4 +37,12 @@ public class PinsetterContextListener {
         }
     }
 
+    public void contextDestroyed() {
+        try {
+            kernel.shutdown();
+        }
+        catch (PinsetterException e) {
+            e.printStackTrace();
+        }
+    }
 }
