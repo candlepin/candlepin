@@ -51,7 +51,7 @@ import org.fedoraproject.candlepin.util.Util;
  * {@link GuiceResteasyBootstrapServletContextListener}.
  *
  * The base version pulls in Guice modules by class name from web.xml and
- * instanciates them - however we have a need to add in modules
+ * instantiates them - however we have a need to add in modules
  * programmatically for, e.g., servlet filters and the wideplay JPA module.
  * This context listener overrides some of the module initialization code to
  * allow for module specification beyond simply listing class names.
