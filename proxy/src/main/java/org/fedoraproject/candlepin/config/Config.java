@@ -27,7 +27,6 @@ import java.util.TreeMap;
  */
 public class Config {
     private static final String CONFIG_FILE_NAME = "/etc/candlepin/candlepin.conf";
-    
     protected File configFile;
     protected TreeMap<String, String> configuration = null;
 
@@ -38,7 +37,7 @@ public class Config {
     public Config() {
         this(CONFIG_FILE_NAME);
     }
-    
+
     /**
      * Creates a new <code>Config</code> instance using the
      * file name to override values defined in {@link ConfigProperties}.
@@ -47,7 +46,7 @@ public class Config {
      */
     public Config(String configFileName) {
         this.configFile = new File(configFileName);
-        
+
         // start with the default values
         this.configuration =
             new TreeMap<String, String>(ConfigProperties.DEFAULT_PROPERTIES);
@@ -56,7 +55,7 @@ public class Config {
         this.configuration.putAll(loadProperties());
         this.configuration = this.trimSpaces(configuration);
     }
-    
+
     public Config(Map<String, String> properties) {
         this.configuration =
             new TreeMap<String, String>(ConfigProperties.DEFAULT_PROPERTIES);
@@ -75,7 +74,7 @@ public class Config {
         }
         return configs;
     }
-    
+
     /**
      * Return configuration entry for the given prefix.
      * @param prefix prefix for the entry sought.
@@ -135,12 +134,12 @@ public class Config {
     public Properties dbBasicAuthConfiguration() {
         return new DbBasicAuthConfigParser().parseConfig(configuration);
     }
-    
+
     /**
-     *  to disable SSLAuthFilter add to candlepin.conf:
-     *  candlepin.auth.ssl.enabled=no
-     *  
-     *  @return if ssl authentication should be enabled
+     * to disable SSLAuthFilter add to candlepin.conf:
+     * candlepin.auth.ssl.enabled=no
+     *
+     * @return if ssl authentication should be enabled
      */
     public boolean sslAuthEnabled() {
         return getBoolean(ConfigProperties.SSL_AUTHENTICATION);
@@ -153,11 +152,11 @@ public class Config {
     public boolean trustedAuthEnabled() {
         return getBoolean(ConfigProperties.TRUSTED_AUTHENTICATION);
     }
-    
+
     public boolean oAuthEnabled() {
         return getBoolean(ConfigProperties.OAUTH_AUTHENTICATION);
     }
-    
+
     public boolean basicAuthEnabled() {
         return getBoolean(ConfigProperties.BASIC_AUTHENTICATION);
     }
@@ -197,7 +196,7 @@ public class Config {
         }
         return ret;
     }
-    
+
     /**
      * get the config entry for string s
      *
@@ -216,19 +215,19 @@ public class Config {
 
         return value.split(",");
     }
-    
+
     public boolean getBoolean(String s) {
         if (s == null) {
             return false;
         }
         String value = getString(s).toLowerCase();
-        
+
         return value.equals("true") || 
             value.equals("on") || 
             value.equals("1") || 
             value.equals("yes");
     }
-    
+
     public int getInt(String s) {
         return new Integer(getString(s));
     }
