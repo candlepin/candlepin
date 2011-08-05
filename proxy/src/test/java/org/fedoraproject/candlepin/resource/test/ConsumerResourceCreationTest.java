@@ -23,9 +23,11 @@ import static org.mockito.Mockito.*;
 
 import org.apache.commons.lang.StringUtils;
 import org.fedoraproject.candlepin.audit.EventSink;
+import org.fedoraproject.candlepin.auth.ExternalSystemPrincipal;
 import org.fedoraproject.candlepin.auth.NoAuthPrincipal;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Access;
+import org.fedoraproject.candlepin.auth.TrustedUserPrincipal;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.auth.permissions.Permission;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
@@ -217,6 +219,14 @@ public class ConsumerResourceCreationTest {
 
     private String createKeysString(List<String> activationKeys) {
         return StringUtils.join(activationKeys, ',');
+    }
+
+    @Test
+    public void oauthRegistrationSupported() {
+        // Should be able to register successfully with as a trusted user principal:
+        Principal p = new TrustedUserPrincipal("anyuser");
+        Consumer consumer = new Consumer("sys.example.com", null, null, system);
+        resource.create(consumer, p, null, owner.getKey(), "");
     }
 
     @Test

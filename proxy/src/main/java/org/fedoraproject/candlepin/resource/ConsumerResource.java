@@ -19,6 +19,7 @@ import org.fedoraproject.candlepin.audit.EventAdapter;
 import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Access;
+import org.fedoraproject.candlepin.auth.NoAuthPrincipal;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.auth.interceptor.SecurityHole;
@@ -243,9 +244,8 @@ public class ConsumerResource {
 
         Set<String> keyStrings = splitKeys(activationKeys);
 
-        // First, check that we have an authenticated principal if this is *not*
-        // an activation key registration:
-        if (!(principal instanceof UserPrincipal) && (keyStrings.size() == 0)) {
+        // Only let NoAuth principals through if there are activation keys to consider:
+        if ((principal instanceof NoAuthPrincipal) && (keyStrings.size() == 0)) {
             throw new ForbiddenException(i18n.tr("Insufficient permissions"));
         }
 
