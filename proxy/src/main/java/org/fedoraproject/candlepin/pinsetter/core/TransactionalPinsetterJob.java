@@ -14,13 +14,8 @@
  */
 package org.fedoraproject.candlepin.pinsetter.core;
 
-import org.fedoraproject.candlepin.auth.Principal;
-//import org.fedoraproject.candlepin.auth.SystemPrincipal;
-
 import com.wideplay.warp.persist.WorkManager;
 
-import org.apache.log4j.Logger;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -36,7 +31,6 @@ class TransactionalPinsetterJob implements Job {
 
     private WorkManager workManager;
     private Job wrappedJob;
-    private static Logger log = Logger.getLogger(TransactionalPinsetterJob.class);
 
     TransactionalPinsetterJob(Job wrappedJob, WorkManager workManager) {
         this.wrappedJob = wrappedJob;
@@ -51,11 +45,6 @@ class TransactionalPinsetterJob implements Job {
          */
         workManager.beginWork();
         try {
-            if (log.isDebugEnabled()) {
-                Principal p = ResteasyProviderFactory.getContextData(Principal.class);
-                log.debug("XXXXX: current principal is named " +
-                    p != null ? p.getPrincipalName() : "null");
-            }
             wrappedJob.execute(context);
         }
         finally {
