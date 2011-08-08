@@ -100,9 +100,10 @@ describe 'Entitlement Certificate' do
   it 'those in excess will be deleted when existing subscription quantity is decreased' do
       prod = create_product(nil, nil, {:attributes => {"multi-entitlement" => "yes"}})
       sub = @cp.create_subscription(@owner.key, prod.id, 10)
-      @cp.refresh_pools(@owner.key)
+      @cp.refresh_pools(@owner['key'])
+      pool = @cp.list_pools({:owner => @owner['id'], :product => prod['id']})[0]
 
-      @system.consume_product(prod.id, {:quantity => 6})
+      @system.consume_pool(pool['id'], {:quantity => 6})
       sub.quantity = sub.quantity.to_i - 5
       @cp.update_subscription(sub)
 

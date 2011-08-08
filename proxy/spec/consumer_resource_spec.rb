@@ -170,9 +170,6 @@ describe 'Consumer Resource' do
     cp_client.consume_product(prod1.id).each {|ent|  total += ent.quantity}
     total.should == 2
 
-    total = 0
-    cp_client.consume_product(prod1.id, {:quantity => 4}).each {|ent|  total += ent.quantity}
-    total.should == 8
   end
 
 

@@ -678,6 +678,11 @@ public class ConsumerResource {
                 i18n.tr("Cannot bind by multiple parameters."));
         }
 
+        if ((productIds != null && productIds.length > 0) && quantity > 1) {
+            throw new BadRequestException(
+                i18n.tr("Cannot specify a quantity when auto-binding."));
+        }
+
         // Verify consumer exists:
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
 
