@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.4.9
+Version: 0.4.10
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -146,6 +146,14 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Mon Aug 08 2011 Devan Goodwin <dgoodwin@rm-rf.ca> 0.4.10-1
+- 727611: Allow trusted user principals to register consumers.
+  (dgoodwin@redhat.com)
+- Only create one Config. Reduce from 1146 to 6 on typical deploy.
+  (jesusr@redhat.com)
+- change jobgroup column to 15 vs 255 characters. (jesusr@redhat.com)
+- change the jobgroup name (jesusr@redhat.com)
+
 * Wed Aug 03 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.9-1
 - extract strings. (jesusr@redhat.com)
 
