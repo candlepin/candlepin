@@ -117,6 +117,13 @@ public class PinsetterKernel {
         }
     }
 
+    private void addToList(Set<String> impls, String confkey) {
+        String[] jobs = this.config.getStringArray(confkey);
+        if (jobs != null && jobs.length > 0) {
+            impls.addAll(Arrays.asList(jobs));
+        }
+    }
+
     /**
      * Configures the system.
      * @param conf Configuration object containing config values.
@@ -125,21 +132,15 @@ public class PinsetterKernel {
         if (log.isDebugEnabled()) {
             log.debug("Scheduling tasks");
         }
-        Map<String, String[]> pendingJobs = new HashMap<String, String[]>();
+        Map<String, JobEntry> pendingJobs = new HashMap<String, JobEntry>();
         // use a set to remove potential duplicate jobs from config
         Set<String> jobImpls = new HashSet<String>();
 
         // get the default tasks first
-        String[] jobs = this.config.getStringArray(ConfigProperties.DEFAULT_TASKS);
-        if (jobs != null && jobs.length > 0) {
-            jobImpls.addAll(Arrays.asList(jobs));
-        }
+        addToList(jobImpls, ConfigProperties.DEFAULT_TASKS);
 
         // get other tasks
-        String[] addlJobs = this.config.getStringArray(ConfigProperties.TASKS);
-        if (addlJobs != null && addlJobs.length > 0) {
-            jobImpls.addAll(Arrays.asList(addlJobs));
-        }
+        addToList(jobImpls, ConfigProperties.TASKS);
 
         // Bail if there is nothing to configure
         if (jobImpls.size() == 0) {
@@ -148,44 +149,39 @@ public class PinsetterKernel {
         }
 
         int count = 0;
-        for (String jobImpl : jobImpls) {
-            if (log.isDebugEnabled()) {
-                log.debug("Scheduling " + jobImpl);
-            }
-
-            // get the default schedule from the job class in case one
-            // is not found in the configuration.
-            String defvalue = "";
-            try {
-                defvalue = PropertyUtil.getStaticPropertyAsString(jobImpl,
-                    "DEFAULT_SCHEDULE");
-            }
-            catch (Exception e) {
-                throw new RuntimeException(e.getLocalizedMessage(), e);
-            }
-
-            String schedulerEntry = this.config.getString("pinsetter." + jobImpl +
-                ".schedule", defvalue);
-
-            if (schedulerEntry != null && schedulerEntry.length() > 0) {
-                if (log.isDebugEnabled()) {
-                    log.debug("Scheduler entry for " + jobImpl + ": " +
-                        schedulerEntry);
-                }
-                String[] data = new String[2];
-                data[0] = jobImpl;
-                data[1] = schedulerEntry;
-                pendingJobs.put(String.valueOf(count), data);
-            }
-            else {
-                log.warn("No schedule found for " + jobImpl + ". Skipping...");
-            }
-            count++;
-        }
         try {
+            for (String jobImpl : jobImpls) {
+                if (log.isDebugEnabled()) {
+                    log.debug("Scheduling " + jobImpl);
+                }
+
+                // get the default schedule from the job class in case one
+                // is not found in the configuration.
+                String defvalue = PropertyUtil.getStaticPropertyAsString(jobImpl,
+                    "DEFAULT_SCHEDULE");
+
+                String schedule = this.config.getString("pinsetter." +
+                    jobImpl + ".schedule", defvalue);
+
+                if (schedule != null && schedule.length() > 0) {
+                    if (log.isDebugEnabled()) {
+                        log.debug("Scheduler entry for " + jobImpl + ": " +
+                            schedule);
+                    }
+                    pendingJobs.put(String.valueOf(count),
+                        new JobEntry(jobImpl, schedule));
+                }
+                else {
+                    log.warn("No schedule found for " + jobImpl + ". Skipping...");
+                }
+                count++;
+            }
             scheduler.addTriggerListener(chainedJobListener);
         }
         catch (SchedulerException e) {
+            throw new RuntimeException(e.getLocalizedMessage(), e);
+        }
+        catch (Exception e) {
             throw new RuntimeException(e.getLocalizedMessage(), e);
         }
 
@@ -208,7 +204,7 @@ public class PinsetterKernel {
         }
     }
 
-    private void scheduleJobs(Map<String, String[]> pendingJobs) {
+    private void scheduleJobs(Map<String, JobEntry> pendingJobs) {
        // No jobs to schedule
        // This would be quite odd, but it could happen
         if (pendingJobs == null || pendingJobs.size() == 0) {
@@ -216,19 +212,18 @@ public class PinsetterKernel {
             throw new RuntimeException("No tasks scheduled");
         }
         try {
-            for (Entry<String, String[]> entry : pendingJobs.entrySet()) {
-                String[] data = pendingJobs.get(entry.getKey());
-                String jobImpl = data[0];
-                String crontab = data[1];
-                String jobName = jobImpl + "-" + entry.getKey();
+            for (Entry<String, JobEntry> entry : pendingJobs.entrySet()) {
+                JobEntry jobentry = entry.getValue();
+                String jobName = jobentry.getClassName() + "-" + entry.getKey();
 
-                Trigger trigger = new CronTrigger(jobImpl, CRON_GROUP, crontab);
+                Trigger trigger = new CronTrigger(jobentry.getClassName(),
+                    CRON_GROUP, jobentry.getSchedule());
                 trigger.setMisfireInstruction(
                     CronTrigger.MISFIRE_INSTRUCTION_DO_NOTHING);
 
                 scheduleJob(
-                    this.getClass().getClassLoader().loadClass(jobImpl),
-                    jobName, trigger);
+                    this.getClass().getClassLoader().loadClass(
+                        jobentry.getClassName()), jobName, trigger);
             }
         }
         catch (Throwable t) {
@@ -366,6 +361,24 @@ public class PinsetterKernel {
     private void deleteAllJobs() {
         deleteJobs(CRON_GROUP);
         deleteJobs(SINGLE_JOB_GROUP);
+    }
+
+    private static class JobEntry {
+        private String classname;
+        private String schedule;
+
+        public JobEntry(String cname, String sched) {
+            classname = cname;
+            schedule = sched;
+        }
+
+        public String getClassName() {
+            return classname;
+        }
+
+        public String getSchedule() {
+            return schedule;
+        }
     }
 
 }
