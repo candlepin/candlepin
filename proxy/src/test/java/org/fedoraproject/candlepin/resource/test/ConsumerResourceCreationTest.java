@@ -23,7 +23,6 @@ import static org.mockito.Mockito.*;
 
 import org.apache.commons.lang.StringUtils;
 import org.fedoraproject.candlepin.audit.EventSink;
-import org.fedoraproject.candlepin.auth.ExternalSystemPrincipal;
 import org.fedoraproject.candlepin.auth.NoAuthPrincipal;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.Access;
