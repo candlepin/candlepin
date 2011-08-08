@@ -15,14 +15,16 @@
 package org.fedoraproject.candlepin.pinsetter.core;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-
-import java.util.HashMap;
-import java.util.Map;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.quartz.CronTrigger;
 import org.quartz.JobExecutionContext;
 import org.quartz.Trigger;
 import org.quartz.TriggerListener;
@@ -33,129 +35,84 @@ import org.quartz.TriggerListener;
  */
 public class ChainedListenerTest {
     private ChainedListener cl;
-    private TestTriggerListener ttl;
-    private Trigger cron;
+    private Trigger trigger;
+    private TriggerListener listener;
+    private JobExecutionContext ctx;
+
 
     @Before
     public void setUp() {
         cl = new ChainedListener();
-        assertNotNull(cl);
-        assertEquals(ChainedListener.LISTENER_NAME, cl.getName());
+        trigger = mock(Trigger.class);
+        listener = mock(TriggerListener.class);
+        ctx = mock(JobExecutionContext.class);
+        cl.addListener(listener);
+    }
 
-        ttl = new TestTriggerListener();
-        assertNotNull(ttl);
-        cl.addListener(ttl);
-
-        cron = new CronTrigger();
-        assertNotNull(cron);
+    @Test
+    public void ctor() {
+        ChainedListener clist = new ChainedListener();
+        assertNotNull(clist);
+        assertEquals(ChainedListener.LISTENER_NAME, clist.getName());
     }
 
     @Test
     public void testTriggerComplete() {
-        ttl.addExpectation("triggerComplete", null);
-        cl.triggerComplete(cron, null, 0);
-        ttl.verify();
+        cl.triggerComplete(trigger, ctx, 0);
+        verify(listener).triggerComplete(eq(trigger), eq(ctx), eq(0));
     }
 
     @Test
     public void testTriggerFired() {
-        ttl.addExpectation("triggerFired", null);
-        cl.triggerFired(cron, null);
-        ttl.verify();
+        cl.triggerFired(trigger, ctx);
+        verify(listener).triggerFired(eq(trigger), eq(ctx));
     }
 
     @Test
     public void testTriggerMisfired() {
-        ttl.addExpectation("triggerMisfired", null);
-        cl.triggerMisfired(cron);
-        ttl.verify();
+        cl.triggerMisfired(trigger);
+        verify(listener).triggerMisfired(eq(trigger));
     }
 
     @Test
-    public void testVeto() {
-        ttl.addExpectation("vetoJobExecution", null);
-        cl.vetoJobExecution(cron, null);
-        ttl.verify();
+    public void vetoFalse() {
+        Trigger trigger = mock(Trigger.class);
+        TriggerListener listener = mock(TriggerListener.class);
+        when(listener.vetoJobExecution(eq(trigger), eq(ctx))).thenReturn(false);
+        cl.addListener(listener);
+
+        boolean rc = cl.vetoJobExecution(trigger, ctx);
+        assertFalse(rc);
+        verify(listener).vetoJobExecution(eq(trigger), eq(ctx));
     }
 
-    public static class TestTriggerListener implements TriggerListener {
-        private Map<String, String> actual;
-        private Map<String, String> expected;
+    @Test
+    public void vetoTrue() {
+        JobExecutionContext ctx = mock(JobExecutionContext.class);
+        Trigger trigger = mock(Trigger.class);
+        TriggerListener listener = mock(TriggerListener.class);
+        when(listener.vetoJobExecution(eq(trigger), eq(ctx))).thenReturn(true);
+        cl.addListener(listener);
 
-        public TestTriggerListener() {
-            actual = new HashMap<String, String>();
-            expected = new HashMap<String, String>();
-        }
+        boolean rc = cl.vetoJobExecution(trigger, ctx);
+        assertTrue(rc);
+        verify(listener).vetoJobExecution(eq(trigger), eq(ctx));
+    }
 
-        public void verify() {
-            for (String key : expected.keySet()) {
-                String erez = expected.get(key);
-                if (!actual.containsKey(key)) {
-                    throw new RuntimeException("key not found");
-                }
-                String rez = actual.get(key);
+    @Test
+    public void addListener() {
+        ChainedListener clist = new ChainedListener();
+        TriggerListener list1 = mock(TriggerListener.class);
+        TriggerListener list2 = mock(TriggerListener.class);
+        clist.addListener(list1);
+        clist.addListener(list2);
 
-                if (erez != null) {
-                    if (!erez.equals(rez)) {
-                        throw new RuntimeException("results do not match");
-                    }
-                }
+        // now call one of the methods that loops through the listener list
+        // to make sure we call it for all the ones given.
 
-                // if erez is null, we don't care about the actual result
-            }
+        clist.triggerMisfired(trigger);
 
-        }
-
-        public void addExpectation(String methodName, String result) {
-            if (methodName == null) {
-                throw new IllegalArgumentException("methodname is null");
-            }
-
-            expected.put(methodName, result);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String getName() {
-            return "TestTriggerListener";
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void triggerComplete(Trigger trigger, JobExecutionContext ctx,
-            int instructionCode) {
-            actual.put("triggerComplete", trigger.getName());
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void triggerFired(Trigger trigger, JobExecutionContext ctx) {
-            actual.put("triggerFired", trigger.getName());
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void triggerMisfired(Trigger trigger) {
-            actual.put("triggerMisfired", trigger.getName());
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public boolean vetoJobExecution(Trigger trigger,
-            JobExecutionContext ctx) {
-
-            actual.put("vetoJobExecution", trigger.getName());
-            return false;
-        }
+        verify(list1).triggerMisfired(eq(trigger));
+        verify(list2).triggerMisfired(eq(trigger));
     }
 }
