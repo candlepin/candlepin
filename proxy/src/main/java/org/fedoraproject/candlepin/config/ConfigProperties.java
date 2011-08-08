@@ -74,6 +74,7 @@ public class ConfigProperties {
     // Pinsetter
     public static final String TASKS = "pinsetter.tasks";
     public static final String DEFAULT_TASKS = "pinsetter.default_tasks";
+    public static final String ENABLE_PINSETTER = "candlepin.pinsetter.enable";
 
     private static final String[] DEFAULT_TASK_LIST = new String[]{
         CertificateRevocationListTask.class.getName(),
@@ -141,6 +142,7 @@ public class ConfigProperties {
                 this.put(AMQP_TRUSTSTORE_PASSWORD, "password");
                 this.put(IDENTITY_CERT_YEAR_ADDENDUM, "1");
                 this.put(SHARD_WEBAPP, "candlepin");
+                this.put(ENABLE_PINSETTER, "true");
 
                 // defaults
                 this.put(SHARD_USERNAME, "admin");

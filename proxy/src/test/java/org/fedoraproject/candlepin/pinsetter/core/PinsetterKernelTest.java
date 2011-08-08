@@ -31,6 +31,7 @@ import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.model.JobCurator;
 import org.fedoraproject.candlepin.pinsetter.core.model.JobStatus;
+import org.fedoraproject.candlepin.pinsetter.tasks.CancelJobJob;
 import org.fedoraproject.candlepin.pinsetter.tasks.JobCleaner;
 import org.fedoraproject.candlepin.pinsetter.tasks.StatisticHistoryTask;
 
@@ -112,6 +113,27 @@ public class PinsetterKernelTest {
         verify(sched).addTriggerListener(any(ChainedListener.class));
         verify(jcurator, atMost(2)).create(any(JobStatus.class));
         verify(sched, atMost(2)).scheduleJob(any(JobDetail.class), any(Trigger.class));
+    }
+
+    @Test
+    public void disablePinsetter() throws Exception {
+        config = new Config(
+            new HashMap<String, String>() {
+                {
+                    put(ConfigProperties.DEFAULT_TASKS, JobCleaner.class.getName());
+                    put(ConfigProperties.TASKS, StatisticHistoryTask.class.getName());
+                    put(ConfigProperties.ENABLE_PINSETTER, "false");
+                }
+            });
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        pk.startup();
+        verify(sched).start();
+        verify(sched).addTriggerListener(any(ChainedListener.class));
+        ArgumentCaptor<JobStatus> arg = ArgumentCaptor.forClass(JobStatus.class);
+        verify(jcurator, atMost(1)).create(arg.capture());
+        JobStatus stat = (JobStatus) arg.getValue();
+        assertTrue(stat.getId().startsWith(CancelJobJob.class.getName()));
+        verify(sched, atMost(1)).scheduleJob(any(JobDetail.class), any(Trigger.class));
     }
 
     @Test

@@ -45,9 +45,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
-import java.util.Map.Entry;
 
 /**
  * Pinsetter Kernel.
@@ -136,11 +136,18 @@ public class PinsetterKernel {
         // use a set to remove potential duplicate jobs from config
         Set<String> jobImpls = new HashSet<String>();
 
-        // get the default tasks first
-        addToList(jobImpls, ConfigProperties.DEFAULT_TASKS);
+        if (config.getBoolean(ConfigProperties.ENABLE_PINSETTER)) {
+            // get the default tasks first
+            addToList(jobImpls, ConfigProperties.DEFAULT_TASKS);
 
-        // get other tasks
-        addToList(jobImpls, ConfigProperties.TASKS);
+            // get other tasks
+            addToList(jobImpls, ConfigProperties.TASKS);
+        }
+        else {
+            // Since pinsetter is disabled, we only want to allow
+            // CancelJob and async jobs on this node.
+            jobImpls.add(CancelJobJob.class.getName());
+        }
 
         // Bail if there is nothing to configure
         if (jobImpls.size() == 0) {
