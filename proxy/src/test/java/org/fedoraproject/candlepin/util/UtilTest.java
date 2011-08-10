@@ -24,16 +24,6 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import edu.emory.mathcs.backport.java.util.Arrays;
-
-import org.apache.commons.codec.binary.Base64;
-import org.apache.log4j.Appender;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.spi.LoggingEvent;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -49,7 +39,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
+
+import org.apache.commons.codec.binary.Base64;
+import org.apache.log4j.Appender;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.apache.log4j.spi.LoggingEvent;
+import org.junit.Before;
 import org.junit.Ignore;
+import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+
+import edu.emory.mathcs.backport.java.util.Arrays;
 
 /**
  * Test Class for the Util class
@@ -196,7 +197,7 @@ public class UtilTest {
         c.setTime(new Date());
         c.add(Calendar.DAY_OF_MONTH, -10);
         int past = c.get(Calendar.DAY_OF_MONTH);
-        
+
         c.setTime(Util.addDaysToDt(-10));
         assertEquals(past, c.get(Calendar.DAY_OF_MONTH));
     }
@@ -417,6 +418,11 @@ public class UtilTest {
         String json = Util.toJson(test);
         String result = (String) Util.fromJson(json, String.class);
         assertEquals(result, test);
+    }
+
+    @Test
+    public void className() {
+        assertEquals("UtilTest", Util.getClassName(this.getClass()));
     }
 
     private interface TestClosable {

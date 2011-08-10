@@ -81,10 +81,10 @@ describe 'Consumer Resource' do
     end.should raise_exception(RestClient::Forbidden)
   end
 
-  it 'returns a 403 for a non-existant consumer' do
+  it 'returns a 404 for a non-existant consumer' do
     lambda do
       @cp.get_consumer('fake-uuid')
-    end.should raise_exception(RestClient::Forbidden)
+    end.should raise_exception(RestClient::ResourceNotFound)
   end
 
   it 'lets a consumer view their own information' do
@@ -101,7 +101,7 @@ describe 'Consumer Resource' do
     user1 = user_client(owner1, random_string("user1"))
     consumer1 = consumer_client(user1, random_string("consumer1"))
     consumer2 = consumer_client(user1, random_string("consumer2"))
-    
+
     lambda do
       consumer1.get_consumer(consumer2.uuid)
     end.should raise_exception(RestClient::Forbidden)
@@ -113,9 +113,9 @@ describe 'Consumer Resource' do
 
     linux_bill = user_client(linux_net, 'bill')
     green_ralph = user_client(greenfield, 'ralph')
-    
+
     system1 = linux_bill.register('system1')
-    
+
     lambda do
       green_ralph.register('system2', :system, system1.uuid)
     end.should raise_exception(RestClient::BadRequest)
@@ -127,9 +127,9 @@ describe 'Consumer Resource' do
 
     linux_bill = user_client(linux_net, 'bill')
     green_ralph = user_client(greenfield, 'ralph')
-    
+
     system1 = linux_bill.register('system1')
-    
+
     lambda do
       green_ralph.regenerate_identity_certificate(system1.uuid)
     end.should raise_exception(RestClient::Forbidden)
@@ -162,8 +162,8 @@ describe 'Consumer Resource' do
     @cp.create_subscription(owner.key, prod1.id, 2)
     @cp.create_subscription(owner.key, prod1.id, 8)
     @cp.create_subscription(owner.key, prod2.id, 5)
-    
- 
+
+
     @cp.refresh_pools(owner.key)
 
     total = 0
@@ -190,7 +190,7 @@ describe 'Consumer Resource' do
                            :attributes => { :'multi-entitlement' => 'yes'})
     subs1 = @cp.create_subscription(owner.key, prod1.id, 10)
     @cp.refresh_pools(owner.key)
-    pool1 = consumer1.list_pools({:owner => owner['id']}).first    
+    pool1 = consumer1.list_pools({:owner => owner['id']}).first
 
     # Connect without any credentials:
     client = Candlepin.new

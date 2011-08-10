@@ -145,4 +145,10 @@ describe 'Owner Resource' do
     pool1.should_not == pool2
   end
 
+  it 'returns a 404 for a non-existant owner' do
+    lambda do
+      @cp.get_owner('fake-uuid')
+    end.should raise_exception(RestClient::ResourceNotFound)
+  end
+
 end

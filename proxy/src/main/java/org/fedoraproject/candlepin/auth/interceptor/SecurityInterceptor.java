@@ -16,20 +16,6 @@ package org.fedoraproject.candlepin.auth.interceptor;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-
-
-import org.aopalliance.intercept.MethodInterceptor;
-import org.aopalliance.intercept.MethodInvocation;
-import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.auth.Principal;
-import org.fedoraproject.candlepin.auth.Access;
-import org.fedoraproject.candlepin.exceptions.ForbiddenException;
-import org.fedoraproject.candlepin.exceptions.IseException;
-import org.xnap.commons.i18n.I18n;
-
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.Provider;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,6 +23,14 @@ import javax.ws.rs.DELETE;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 
+import org.aopalliance.intercept.MethodInterceptor;
+import org.aopalliance.intercept.MethodInvocation;
+import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.auth.Access;
+import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.exceptions.ForbiddenException;
+import org.fedoraproject.candlepin.exceptions.IseException;
+import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.model.ActivationKey;
 import org.fedoraproject.candlepin.model.ActivationKeyCurator;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -48,10 +42,16 @@ import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.User;
+import org.fedoraproject.candlepin.util.Util;
+import org.xnap.commons.i18n.I18n;
+
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Provider;
 
 /**
  * Interceptor for enforcing role based access to REST API methods.
- * 
+ *
  * This interceptor deals with coarse grained access, it only answers the
  * question of can a principal with these roles access this method. It does not
  * support any paramaters such as verifying the call is being made on a visible
@@ -135,16 +135,16 @@ public class SecurityInterceptor implements MethodInterceptor {
      * Scans the method annotations for RESTEasy annotations, to determine
      * the HTTP verbs used. We'll assume this is the required access type, but any
      * Verify annotation which specifies an access type can override this later.
-     * 
+     *
      * @param invocation method invocation object
      * @return the required minimum access type
      */
     private Access getAssumedAccessType(MethodInvocation invocation) {
-        
+
         // Assume the minimum level to start with, and bump up as we see
         // stricter annotations
         Access minimumLevel = Access.READ_ONLY;
-        
+
         // If we had write or delete access types, that would go here,
         // and we'd only break on the access.all type.
         for (Annotation annotation : invocation.getMethod().getAnnotations()) {
@@ -158,7 +158,7 @@ public class SecurityInterceptor implements MethodInterceptor {
         }
         return minimumLevel;
     }
-    
+
     /**
      * Scans the parameters for the method being invoked looking for those annotated with
      * Verify, and checks that the principal has access to them all.
@@ -200,7 +200,9 @@ public class SecurityInterceptor implements MethodInterceptor {
                         // doesn't seem to exist in the DB. Error will be thrown in
                         // invoke though.
                         log.error("No such entity: " + verifyType + " id: " + verifyParam);
-                        denyAccess(principal, invocation);
+                        throw new NotFoundException(
+                            i18n.tr("{0} with id {1} could not be found",
+                                Util.getClassName(verifyType), verifyParam));
                     }
 
                     // Deny access if the entity to be verified turns out to be null, or
@@ -272,7 +274,7 @@ public class SecurityInterceptor implements MethodInterceptor {
             return poolCurator.find(key);
         }
     }
-    
+
     private class ActivationKeyStore implements EntityStore {
         private ActivationKeyCurator activationKeyCurator;
 
@@ -285,16 +287,16 @@ public class SecurityInterceptor implements MethodInterceptor {
             return activationKeyCurator.find(key);
         }
     }
-    
-    
+
+
     private class UserStore implements EntityStore {
         @Override
         public Object lookup(String username) {
-            
+
             /* WARNING: Semi-risky business here, we need a user object for the security
              * code to validate, but in this area we seem to only need the username.
              */
-            
+
             return new User(username, null);
         }
     }

@@ -14,14 +14,6 @@
  */
 package org.fedoraproject.candlepin.util;
 
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.collections.Closure;
-import org.apache.commons.collections.ClosureUtils;
-import org.apache.log4j.Logger;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.fedoraproject.candlepin.model.CuratorException;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,17 +36,25 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
 
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.collections.Closure;
+import org.apache.commons.collections.ClosureUtils;
+import org.apache.log4j.Logger;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.fedoraproject.candlepin.model.CuratorException;
+
 /**
  * Genuinely random utilities.
  */
 public class Util {
-    
+
     /**
-     * 
+     *
      */
     public static final String UTC_STR = "UTC";
     private static Logger log = Logger.getLogger(Util.class);
-    private static ObjectMapper mapper = new ObjectMapper();    
+    private static ObjectMapper mapper = new ObjectMapper();
 
     private Util() {
         // default ctor
@@ -62,7 +62,7 @@ public class Util {
 
     /**
      * Generates a random UUID.
-     * 
+     *
      * @return a random UUID.
      */
     public static String generateUUID() {
@@ -87,11 +87,11 @@ public class Util {
     public static <K, V> Map<K, V> newMap() {
         return new HashMap<K, V>();
     }
-    
+
     public static <T> Set<T> newSet() {
         return new HashSet<T>();
     }
-    
+
 
     public static Date getFutureDate(int years) {
         Calendar future = Calendar.getInstance();
@@ -99,7 +99,7 @@ public class Util {
         future.set(Calendar.YEAR, future.get(Calendar.YEAR) + years);
         return future.getTime();
     }
-    
+
     public static Date tomorrow() {
         return addDaysToDt(1);
     }
@@ -107,13 +107,13 @@ public class Util {
     public static Date yesterday() {
         return addDaysToDt(-1);
     }
-    
+
     public static Date addDaysToDt(int dayField) {
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.DAY_OF_MONTH, dayField);
         return calendar.getTime();
     }
-    
+
     public static Date addToFields(int day, int month, int yr) {
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.DAY_OF_MONTH, day);
@@ -121,7 +121,7 @@ public class Util {
         calendar.add(Calendar.YEAR, yr);
         return calendar.getTime();
     }
-    
+
     public static Date roundToMidnight(Date dt) {
         Calendar cal = Calendar.getInstance();
         cal.setTime(dt);
@@ -134,7 +134,7 @@ public class Util {
     public static BigInteger toBigInt(long l) {
         return new BigInteger(String.valueOf(l));
     }
-    
+
     public static Date toDate(String dt) {
         SimpleDateFormat fmt = new SimpleDateFormat("MM/dd/yyyy");
         try {
@@ -144,7 +144,7 @@ public class Util {
             throw new RuntimeException(e);
         }
     }
-    
+
     public static <T> T assertNotNull(T value, String message) {
         if (value == null) {
             throw new IllegalArgumentException(message);
@@ -171,7 +171,7 @@ public class Util {
         return str.equals(str1);
     }
 
-    private static Closure closeInvoker = 
+    private static Closure closeInvoker =
         ClosureUtils.invokerClosure("close");
 
     public static void closeSafely(Object closable, String msg) {
@@ -189,10 +189,10 @@ public class Util {
 
     public static String capitalize(String str) {
         char [] chars = str.toCharArray();
-        chars[0] = Character.toUpperCase(chars[0]); 
+        chars[0] = Character.toUpperCase(chars[0]);
         return new String(chars);
     }
-    
+
     public static long generateUniqueLong() {
         /*
           This deserves explanation.
@@ -234,7 +234,7 @@ public class Util {
 
         return Math.abs(new SecureRandom().nextLong());
     }
-    
+
     public static String toBase64(byte [] data) {
         try {
             return new String(Base64.encodeBase64(data), "ASCII");
@@ -251,7 +251,7 @@ public class Util {
         iso8601DateFormat.setTimeZone(TimeZone.getTimeZone(UTC_STR));
         return iso8601DateFormat;
     }
-    
+
     public static String readFile(InputStream is) {
         InputStreamReader isr = new InputStreamReader(is);
         BufferedReader reader = new BufferedReader(isr);
@@ -275,12 +275,12 @@ public class Util {
         }
         return builder.toString();
     }
-    
+
     public static String hash(String password) {
         //This is secure because even if the salt is known, a cracker
         //would still need to generate their own rainbow table, which
         //is the same as brute-forcing the password in the first place.
-        
+
         String salt = "b669e3274a43f20769d3dedf03e9ac180e160f92";
         String combined = salt + password;
 
@@ -302,7 +302,7 @@ public class Util {
         sha1hash = md.digest();
         return new String(Hex.encodeHex(sha1hash));
     }
-    
+
     public static String toJson(Object anObject) {
         String output = "";
         try {
@@ -311,9 +311,9 @@ public class Util {
         catch (Exception e) {
             log.error("Could no serialize the object to json " + anObject, e);
         }
-        return output;        
+        return output;
     }
-    
+
     public static Object fromJson(String json, Class clazz) {
         Object output = null;
         try {
@@ -322,8 +322,17 @@ public class Util {
         catch (Exception e) {
             log.error("Could no de-serialize the following json " + json, e);
         }
-        return output;        
-    }    
+        return output;
+    }
 
-    
+    public static String getClassName(Class c) {
+        String fullClassName = c.getName();
+        int firstChar = fullClassName.lastIndexOf('.') + 1;
+        if (firstChar > 0) {
+            fullClassName = fullClassName.substring(firstChar);
+        }
+        return fullClassName;
+    }
+
+
 }

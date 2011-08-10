@@ -10,7 +10,7 @@ describe 'Authorization' do
   before(:each) do
     @owner = create_owner random_string('test_owner')
     @user = user_client(@owner, 'guy')
-  end 
+  end
 
   it 'returns a 401 if user credentials are invalid' do
     lambda { Candlepin.new('random', 'not valid').list_consumer_types() }.should \
@@ -46,7 +46,7 @@ describe 'Authorization' do
     trusted_cp = trusted_consumer_client("JarJarBinksIsMyCoPilot")
     lambda do
       trusted_cp.list_entitlements
-    end.should raise_exception(RestClient::Forbidden)
+    end.should raise_exception(RestClient::ResourceNotFound)
   end
 
   it 'allows in trused users' do
