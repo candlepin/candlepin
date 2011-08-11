@@ -18,11 +18,16 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.model.ActivationKey;
+import org.fedoraproject.candlepin.model.ActivationKeyCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.resource.ActivationKeyResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
@@ -100,6 +105,21 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         activationKeyResource.removePoolFromKey(key.getId(), pool.getId());
 //        key = activationKeyResource.createActivationKey(key);
         assertTrue(key.getPools().size() == 0);
+    }
+    
+    @Test(expected = BadRequestException.class)
+    public void testActivationKeyWithNonMultiPool() {
+        ActivationKey ak = mock(ActivationKey.class);
+        ActivationKeyCurator akc = mock(ActivationKeyCurator.class);
+        Pool p = mock(Pool.class);
+        PoolCurator pc = mock(PoolCurator.class);
+        
+        when(akc.find(eq("testKey"))).thenReturn(ak);
+        when(pc.find(eq("testPool"))).thenReturn(p);
+        
+        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n,
+            pc, null, null);
+        akr.addPoolToKey("testKey", "testPool", 2);
     }
 
 }

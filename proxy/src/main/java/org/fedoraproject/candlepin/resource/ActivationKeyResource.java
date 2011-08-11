@@ -23,6 +23,7 @@ import org.fedoraproject.candlepin.model.ActivationKeyCurator;
 import org.fedoraproject.candlepin.model.ActivationKeyPool;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
+import org.fedoraproject.candlepin.model.ProductPoolAttribute;
 
 import com.google.inject.Inject;
 
@@ -112,6 +113,15 @@ public class ActivationKeyResource {
 
         ActivationKey key = findKey(activationKeyId);
         Pool pool = findPool(poolId);
+        if (quantity > 1) {
+            ProductPoolAttribute ppa = pool.getProductAttribute("multi-entitlement");
+            if (ppa == null || !ppa.getValue().equalsIgnoreCase("yes")) {
+                throw new BadRequestException(
+                    i18n.tr("Error: Only pools with multi-entitlement product" +
+                        " subscriptions can be added to the activation key with" +
+                        " a quantity greater than one."));
+            }
+        }
         key.addPool(pool, quantity);
         activationKeyCurator.update(key);
         return pool;
