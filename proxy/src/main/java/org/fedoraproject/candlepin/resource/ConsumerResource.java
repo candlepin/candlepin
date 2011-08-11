@@ -290,6 +290,11 @@ public class ConsumerResource {
         ConsumerType type = lookupConsumerType(consumer.getType().getLabel());
 
         if (type.isType(ConsumerTypeEnum.PERSON)) { 
+            if (keys.size() > 0) {
+                throw new BadRequestException(
+                    i18n.tr("A consumer type of 'person' cannot be" + 
+                        " used with activation keys"));
+            }
             verifyPersonConsumer(consumer, type, owner, userName);
         }
 

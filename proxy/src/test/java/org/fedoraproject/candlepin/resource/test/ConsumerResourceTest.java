@@ -29,6 +29,7 @@ import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
+import org.fedoraproject.candlepin.auth.NoAuthPrincipal;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.auth.permissions.Permission;
@@ -36,15 +37,19 @@ import org.fedoraproject.candlepin.controller.CandlepinPoolManager;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
+import org.fedoraproject.candlepin.model.ActivationKey;
+import org.fedoraproject.candlepin.model.ActivationKeyCurator;
 import org.fedoraproject.candlepin.model.CertificateSerialDto;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.IdentityCertificate;
 import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.OwnerPermission;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
@@ -52,6 +57,7 @@ import org.fedoraproject.candlepin.model.Role;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.pki.PKIReader;
 import org.fedoraproject.candlepin.pki.impl.BouncyCastlePKIReader;
+import org.fedoraproject.candlepin.resource.ActivationKeyResource;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
@@ -103,6 +109,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     private Pool pool;
 
     private ConsumerResource consumerResource;
+    private ActivationKeyResource activationKeyResource;
     private Principal principal;
     private Owner owner;
     private Role ownerAdminRole;
@@ -117,6 +124,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     @Before
     public void setUp() {
         consumerResource = injector.getInstance(ConsumerResource.class);
+        activationKeyResource = injector.getInstance(ActivationKeyResource.class);
 
         standardSystemType = consumerTypeCurator.create(new ConsumerType(
             "standard-system"));
@@ -701,5 +709,30 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
             bind(PKIReader.class).to(BouncyCastlePKIReader.class)
                 .asEagerSingleton();
         }
+    }
+    
+    @Test(expected = BadRequestException.class)
+    public void testCreatePersonConsumerWithActivationKey() {
+        Consumer c = mock(Consumer.class);
+        Owner o = mock(Owner.class);
+        ActivationKey ak = mock(ActivationKey.class);
+        NoAuthPrincipal nap = mock(NoAuthPrincipal.class);
+        ActivationKeyCurator akc = mock(ActivationKeyCurator.class);
+        OwnerCurator oc = mock(OwnerCurator.class);
+        ConsumerTypeCurator ctc = mock(ConsumerTypeCurator.class);
+        
+        ConsumerType cType = new ConsumerType(ConsumerTypeEnum.PERSON);
+        when(ak.getId()).thenReturn("testKey");
+        when(o.getKey()).thenReturn("testOwner");
+        when(akc.lookupForOwner(eq("testKey"), eq(o))).thenReturn(ak);
+        when(oc.lookupByKey(eq("testOwner"))).thenReturn(o);
+        when(c.getType()).thenReturn(cType);
+        when(c.getName()).thenReturn("testConsumer");
+        when(ctc.lookupByLabel(eq("person"))).thenReturn(cType);
+        
+        ConsumerResource cr = new ConsumerResource(null, ctc,
+            null, null, null, null, null, i18n, null, null, null,
+            null, null, null, null, null, null, oc, akc, null);
+        cr.create(c, nap, null, "testOwner", "testKey");
     }
 }
