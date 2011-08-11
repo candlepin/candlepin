@@ -62,7 +62,8 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
 
     public List<JobStatus> findByOwnerKey(String ownerKey) {
         return this.currentSession().createCriteria(JobStatus.class)
-        .add(Restrictions.eq("ownerKey", ownerKey)).list();
+        .add(Restrictions.eq("targetId", ownerKey))
+        .add(Restrictions.eq("targetType", JobStatus.TargetType.OWNER)).list();
     }
 
     public List<JobStatus> findByPrincipalName(String principalName) {

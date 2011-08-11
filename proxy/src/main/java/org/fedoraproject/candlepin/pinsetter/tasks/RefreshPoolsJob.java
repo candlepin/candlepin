@@ -53,7 +53,7 @@ public class RefreshPoolsJob implements Job {
      */
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
-        String ownerKey = context.getMergedJobDataMap().getString(JobStatus.OWNER_KEY);
+        String ownerKey = context.getMergedJobDataMap().getString(JobStatus.TARGET_ID);
         Owner owner = ownerCurator.lookupByKey(ownerKey);
         if (owner == null) {
             context.setResult("Nothing to do. Owner no longer exists");
@@ -78,7 +78,8 @@ public class RefreshPoolsJob implements Job {
         JobDetail detail = new JobDetail("refresh_pools_" + Util.generateUUID(),
                 RefreshPoolsJob.class);
         JobDataMap map = new JobDataMap();
-        map.put(JobStatus.OWNER_KEY, owner.getKey());
+        map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.OWNER);
+        map.put(JobStatus.TARGET_ID, owner.getKey());
 
         detail.setJobDataMap(map);
 

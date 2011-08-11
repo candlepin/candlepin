@@ -23,6 +23,7 @@ import static org.mockito.Mockito.when;
 import org.fedoraproject.candlepin.controller.CandlepinPoolManager;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
+import org.fedoraproject.candlepin.pinsetter.core.model.JobStatus;
 
 import org.junit.Test;
 import org.quartz.JobDataMap;
@@ -44,7 +45,7 @@ public class RefreshPoolsJobTest {
         JobDataMap jdm = mock(JobDataMap.class);
         
         when(ctx.getMergedJobDataMap()).thenReturn(jdm);
-        when(jdm.getString(eq("owner_key"))).thenReturn("someownerkey");
+        when(jdm.getString(eq(JobStatus.TARGET_ID))).thenReturn("someownerkey");
         when(oc.lookupByKey(eq("someownerkey"))).thenReturn(owner);
         when(owner.getDisplayName()).thenReturn("test owner");
         
@@ -65,6 +66,6 @@ public class RefreshPoolsJobTest {
         JobDetail detail = RefreshPoolsJob.forOwner(owner);
         assertNotNull(detail);
         assertNotNull(detail.getJobDataMap());
-        assertEquals("owner key", detail.getJobDataMap().get("owner_key"));
+        assertEquals("owner key", detail.getJobDataMap().get(JobStatus.TARGET_ID));
     }
 }

@@ -14,7 +14,7 @@ describe 'Job Status' do
 
   it 'should contain the owner key' do
     status = @cp.refresh_pools(@owner.key, true)
-    status['ownerKey'].should == @owner.key
+    status['targetId'].should == @owner.key
   end
 
   it 'should be findable by owner key' do

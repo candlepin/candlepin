@@ -239,7 +239,8 @@ public class PinsetterKernelTest {
         String singlegrp = "async group";
         JobDataMap map = new JobDataMap();
         map.put(PinsetterJobListener.PRINCIPAL_KEY, mock(Principal.class));
-        map.put(JobStatus.OWNER_KEY, "admin");
+        map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.OWNER);
+        map.put(JobStatus.TARGET_ID, "admin");
         JobDetail detail = mock(JobDetail.class);
         when(detail.getName()).thenReturn("name");
         when(detail.getGroup()).thenReturn("group");

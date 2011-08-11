@@ -39,7 +39,8 @@ import org.quartz.JobExecutionContext;
 @Table(name = "cp_job")
 public class JobStatus extends AbstractHibernateObject {
 
-    public static final String OWNER_KEY = "owner_key";
+    public static final String TARGET_TYPE = "target_type";
+    public static final String TARGET_ID = "target_id";
 
     /**
      * Indicates possible states for a particular job.
@@ -53,6 +54,14 @@ public class JobStatus extends AbstractHibernateObject {
         FAILED;
     }
 
+    /**
+     * Types that a job can operate on
+     */
+    public enum TargetType {
+        OWNER,
+        CONSUMER;
+    }
+    
     @Id
     private String id;
     @Column(length = 15)
@@ -61,8 +70,10 @@ public class JobStatus extends AbstractHibernateObject {
     private Date startTime;
     private Date finishTime;
     private String result;
-    private String ownerKey;
     private String principalName;
+    
+    private TargetType targetType;
+    private String targetId;
 
     public JobStatus() { }
 
@@ -70,7 +81,8 @@ public class JobStatus extends AbstractHibernateObject {
         this.id = jobDetail.getName();
         this.jobGroup = jobDetail.getGroup();
         this.state = JobState.CREATED;
-        this.ownerKey = getOwnerKey(jobDetail);
+        this.targetType = getTargetType(jobDetail);
+        this.targetId = getTargetId(jobDetail);
         this.principalName = getPrincipalName(jobDetail);
     }
 
@@ -80,10 +92,14 @@ public class JobStatus extends AbstractHibernateObject {
         return p != null ? p.getPrincipalName() : "unknown";
     }
 
-    private String getOwnerKey(JobDetail jobDetail) {
-        return (String) jobDetail.getJobDataMap().get(OWNER_KEY);
+    private TargetType getTargetType(JobDetail jobDetail) {
+        return (TargetType) jobDetail.getJobDataMap().get(TARGET_TYPE);
     }
 
+    private String getTargetId(JobDetail jobDetail) {
+        return (String) jobDetail.getJobDataMap().get(TARGET_ID);
+    }
+    
     public void update(JobExecutionContext context) {
         this.startTime = context.getFireTime();
         long runTime = context.getJobRunTime();
@@ -134,10 +150,15 @@ public class JobStatus extends AbstractHibernateObject {
         this.state = state;
     }
 
-    public String getOwnerKey() {
-        return ownerKey;
+    public String getTargetType() {
+        return targetType.name();
+    }
+    
+    public String getTargetId() {
+        return targetId;
     }
 
+    
     public String getStatusPath() {
         return "/jobs/" + this.id;
     }

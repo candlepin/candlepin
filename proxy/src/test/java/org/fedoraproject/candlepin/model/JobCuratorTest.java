@@ -190,7 +190,8 @@ public class JobCuratorTest extends DatabaseTestFixture{
             when(p.getPrincipalName()).thenReturn(principalName);
 
             map.put(PinsetterJobListener.PRINCIPAL_KEY, p);
-            map.put(JobStatus.OWNER_KEY, ownerkey);
+            map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.OWNER);
+            map.put(JobStatus.TARGET_ID, ownerkey);
             JobStatus status = new JobStatus(new JobDetail() {
                 public String getName() {
                     return id;
