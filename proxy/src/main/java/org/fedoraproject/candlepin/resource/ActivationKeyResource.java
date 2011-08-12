@@ -115,7 +115,6 @@ public class ActivationKeyResource {
             throw new BadRequestException(
                 i18n.tr("The quantity must be greater than 0"));
         }
-
         ActivationKey key = findKey(activationKeyId);
         Pool pool = findPool(poolId);
         
@@ -128,9 +127,10 @@ public class ActivationKeyResource {
                         " a quantity greater than one."));
             }
         }
-        if (quantity > pool.getQuantity()){
+        if (quantity > pool.getQuantity()) {
             throw new BadRequestException(
-                i18n.tr("The quantity must not be greater than the total allowed for the pool"));                        
+                i18n.tr("The quantity must not be greater than the total " +
+                    "allowed for the pool"));                        
         }        
         key.addPool(pool, quantity);
         activationKeyCurator.update(key);
