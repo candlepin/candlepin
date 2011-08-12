@@ -125,6 +125,13 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     private Date lastCheckin;
 
+    @OneToMany(mappedBy = "consumer", targetEntity = ConsumerInstalledProduct.class)
+    @Cascade({org.hibernate.annotations.CascadeType.ALL,
+        org.hibernate.annotations.CascadeType.MERGE,
+        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    private Set<ConsumerInstalledProduct> installedProducts =
+        new HashSet<ConsumerInstalledProduct>();
+
     @Transient
     private boolean canActivate;
 
@@ -447,6 +454,19 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     public void setCanActivate(boolean canActivate) {
         this.canActivate = canActivate;
+    }
+
+    public Set<ConsumerInstalledProduct> getInstalledProducts() {
+        return installedProducts;
+    }
+
+    public void setInstalledProducts(Set<ConsumerInstalledProduct> installedProducts) {
+        this.installedProducts = installedProducts;
+    }
+
+    public void addInstalledProduct(ConsumerInstalledProduct installed) {
+        installed.setConsumer(this);
+        installedProducts.add(installed);
     }
 
 }

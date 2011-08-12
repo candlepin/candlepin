@@ -31,6 +31,7 @@ import org.fedoraproject.candlepin.config.CandlepinCommonTestConfig;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerInstalledProduct;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Role;
@@ -190,7 +191,6 @@ public class ConsumerTest extends DatabaseTestFixture {
 
     @Test
     public void testLookupByUuidNonExistent() {
-        //Consumer lookedUp = 
         consumerCurator.findByUuid("this is not a uuid!");
     }
 
@@ -484,4 +484,23 @@ public class ConsumerTest extends DatabaseTestFixture {
         
         config.setProperty(ConfigProperties.CONSUMER_FACTS_MATCHER, oldValue);
     }
+
+    @Test
+    public void testInstalledProducts() throws Exception {
+        Consumer lookedUp = consumerCurator.find(consumer.getId());
+        lookedUp.addInstalledProduct(new ConsumerInstalledProduct("someproduct",
+            "someproductname"));
+        lookedUp.addInstalledProduct(new ConsumerInstalledProduct("someproduct2",
+            "someproductname2"));
+        consumerCurator.update(lookedUp);
+        lookedUp = consumerCurator.find(consumer.getId());
+        assertEquals(2, lookedUp.getInstalledProducts().size());
+        ConsumerInstalledProduct installed = lookedUp.getInstalledProducts().
+            iterator().next();
+        lookedUp.getInstalledProducts().remove(installed);
+        consumerCurator.update(lookedUp);
+        lookedUp = consumerCurator.find(consumer.getId());
+        assertEquals(1, lookedUp.getInstalledProducts().size());
+    }
+
 }
