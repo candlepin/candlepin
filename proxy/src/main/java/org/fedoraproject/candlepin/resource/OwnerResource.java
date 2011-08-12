@@ -14,25 +14,6 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-
-import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventAdapter;
 import org.fedoraproject.candlepin.audit.EventFactory;
@@ -74,6 +55,11 @@ import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.sync.Importer;
 import org.fedoraproject.candlepin.sync.ImporterException;
 import org.fedoraproject.candlepin.sync.SyncDataFormatException;
+
+import com.google.inject.Inject;
+import com.wideplay.warp.persist.Transactional;
+
+import org.apache.log4j.Logger;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
@@ -82,8 +68,23 @@ import org.jboss.resteasy.util.GenericType;
 import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
 
-import com.google.inject.Inject;
-import com.wideplay.warp.persist.Transactional;
+import java.io.File;
+import java.io.IOException;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
 
 
 /**
@@ -350,7 +351,7 @@ public class OwnerResource {
 
         Owner owner = findOwner(ownerKey);
         activationKey.setOwner(owner);
-
+        
         if (activationKey.getName() == null) {
             throw new BadRequestException(
                 i18n.tr("Must provide a name for activation key."));
@@ -364,6 +365,13 @@ public class OwnerResource {
                     "characters '-' or '_'. " +
                     "[" + activationKey.getName() + "]"));
         }
+
+        if (activationKeyCurator.lookupForOwner(activationKey.getName(), owner) != null) {
+            throw new BadRequestException(
+                i18n.tr("Activation key name [" + activationKey.getName() +
+                    "] is already in use for owner [" + ownerKey + "]"));
+        }
+
 
         ActivationKey newKey = activationKeyCurator.create(activationKey);
         sink.emitActivationKeyCreated(newKey);

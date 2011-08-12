@@ -18,12 +18,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventFactory;
@@ -35,9 +32,11 @@ import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.model.ActivationKey;
+import org.fedoraproject.candlepin.model.ActivationKeyCurator;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.OwnerPermission;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
@@ -46,10 +45,17 @@ import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.resource.OwnerResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
+
 import org.jboss.resteasy.plugins.providers.atom.Entry;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 /**
  * OwnerResourceTest
  */
@@ -568,5 +574,24 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         r.addPermission(p);
         roleCurator.create(r);
         ownerResource.deleteOwner(owner.getKey(), false);
+    }
+    
+    @Test(expected = BadRequestException.class)
+    public void testActivationKeyNameUnique() {
+        ActivationKey ak = mock(ActivationKey.class);
+        ActivationKey akOld = mock(ActivationKey.class);
+        ActivationKeyCurator akc = mock(ActivationKeyCurator.class);
+        Owner o = mock(Owner.class);
+        OwnerCurator oc = mock(OwnerCurator.class);
+        
+        when(ak.getName()).thenReturn("testKey");
+        when(akc.lookupForOwner(eq("testKey"), eq(o))).thenReturn(akOld);
+        when(oc.lookupByKey(eq("testOwner"))).thenReturn(o);
+        
+        OwnerResource or = new OwnerResource(oc, null,
+            null, akc, null, null, i18n, null, null, null,
+            null, null, null, null, null, null, null,
+            null, null);
+        or.createActivationKey("testOwner", ak);
     }
 }

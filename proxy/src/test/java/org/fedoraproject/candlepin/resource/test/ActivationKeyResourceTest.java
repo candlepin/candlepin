@@ -124,7 +124,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
     }
     
     @Test(expected = BadRequestException.class)
-    public void testActivationKeyWithNegPoolQUantity() {
+    public void testActivationKeyWithNegPoolQuantity() {
         ActivationKey ak = mock(ActivationKey.class);
         ActivationKeyCurator akc = mock(ActivationKeyCurator.class);
         Pool p = mock(Pool.class);
@@ -143,7 +143,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
     }
 
     @Test(expected = BadRequestException.class)
-    public void testActivationKeyWithLargePoolQUantity() {
+    public void testActivationKeyWithLargePoolQuantity() {
         ActivationKey ak = mock(ActivationKey.class);
         ActivationKeyCurator akc = mock(ActivationKeyCurator.class);
         Pool p = mock(Pool.class);
