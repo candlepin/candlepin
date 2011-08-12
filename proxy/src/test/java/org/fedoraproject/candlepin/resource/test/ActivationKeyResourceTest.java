@@ -29,6 +29,7 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolCurator;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductPoolAttribute;
 import org.fedoraproject.candlepin.resource.ActivationKeyResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
@@ -120,6 +121,44 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         ActivationKeyResource akr = new ActivationKeyResource(akc, i18n,
             pc, null, null);
         akr.addPoolToKey("testKey", "testPool", 2);
+    }
+    
+    @Test(expected = BadRequestException.class)
+    public void testActivationKeyWithNegPoolQUantity() {
+        ActivationKey ak = mock(ActivationKey.class);
+        ActivationKeyCurator akc = mock(ActivationKeyCurator.class);
+        Pool p = mock(Pool.class);
+        PoolCurator pc = mock(PoolCurator.class);
+        ProductPoolAttribute ppa = mock(ProductPoolAttribute.class);
+        
+        when(akc.find(eq("testKey"))).thenReturn(ak);
+        when(pc.find(eq("testPool"))).thenReturn(p);
+        when(p.getProductAttribute(eq("multi-entitlement"))).thenReturn(ppa);
+        when(ppa.getValue()).thenReturn("yes");
+        when(p.getQuantity()).thenReturn(10L);
+        
+        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n,
+            pc, null, null);
+        akr.addPoolToKey("testKey", "testPool", -3);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testActivationKeyWithLargePoolQUantity() {
+        ActivationKey ak = mock(ActivationKey.class);
+        ActivationKeyCurator akc = mock(ActivationKeyCurator.class);
+        Pool p = mock(Pool.class);
+        PoolCurator pc = mock(PoolCurator.class);
+        ProductPoolAttribute ppa = mock(ProductPoolAttribute.class);
+        
+        when(akc.find(eq("testKey"))).thenReturn(ak);
+        when(pc.find(eq("testPool"))).thenReturn(p);
+        when(p.getProductAttribute(eq("multi-entitlement"))).thenReturn(ppa);
+        when(ppa.getValue()).thenReturn("yes");
+        when(p.getQuantity()).thenReturn(10L);
+        
+        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n,
+            pc, null, null);
+        akr.addPoolToKey("testKey", "testPool", 15);
     }
 
 }

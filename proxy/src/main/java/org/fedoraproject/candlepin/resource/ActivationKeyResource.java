@@ -111,8 +111,14 @@ public class ActivationKeyResource {
         @Verify(value = Pool.class, require = Access.READ_POOLS) String poolId,
         @QueryParam("quantity") @DefaultValue("1") long quantity) {
 
+        if (quantity < 1) {
+            throw new BadRequestException(
+                i18n.tr("The quantity must be greater than 0"));
+        }
+
         ActivationKey key = findKey(activationKeyId);
         Pool pool = findPool(poolId);
+        
         if (quantity > 1) {
             ProductPoolAttribute ppa = pool.getProductAttribute("multi-entitlement");
             if (ppa == null || !ppa.getValue().equalsIgnoreCase("yes")) {
@@ -122,6 +128,10 @@ public class ActivationKeyResource {
                         " a quantity greater than one."));
             }
         }
+        if (quantity > pool.getQuantity()){
+            throw new BadRequestException(
+                i18n.tr("The quantity must not be greater than the total allowed for the pool"));                        
+        }        
         key.addPool(pool, quantity);
         activationKeyCurator.update(key);
         return pool;
