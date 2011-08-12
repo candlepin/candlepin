@@ -352,14 +352,14 @@ public class OwnerResource {
         Owner owner = findOwner(ownerKey);
         activationKey.setOwner(owner);
         
-        if (activationKey.getName() == null) {
+        if (activationKey.getName() == null || activationKey.getName().trim().equals("")) {
             throw new BadRequestException(
                 i18n.tr("Must provide a name for activation key."));
         }
 
         String testName = activationKey.getName().replace("-", "0")
                           .replace("_", "0");
-        if (!testName.matches("[a-zA-z0-9]*")) {
+        if (!testName.matches("[a-zA-Z0-9]*")) {
             throw new BadRequestException(
                 i18n.tr("Activation key names must be alphanumeric or the " +
                     "characters '-' or '_'. " +
