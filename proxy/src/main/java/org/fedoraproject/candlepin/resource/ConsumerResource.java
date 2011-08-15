@@ -37,6 +37,7 @@ import org.fedoraproject.candlepin.model.ActivationKeyPool;
 import org.fedoraproject.candlepin.model.CertificateSerialDto;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
+import org.fedoraproject.candlepin.model.ConsumerInstalledProduct;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
@@ -319,6 +320,10 @@ public class ConsumerResource {
             }
         }
 
+        for (ConsumerInstalledProduct p : consumer.getInstalledProducts()) {
+            p.setConsumer(consumer);
+        }
+
         try {
             consumer = consumerCurator.create(consumer);
             IdentityCertificate idCert = generateIdCert(consumer, false);
@@ -482,29 +487,84 @@ public class ConsumerResource {
         return type;
     }
 
+    // While this is a PUT, we are treating it as a PATCH until this operation
+    // becomes more prevalent. We only update the portions of the consumer that appear
+    // to be set.
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}")
     @Transactional
     public void updateConsumer(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid,
-        Consumer consumer, @Context Principal principal) {
+        Consumer consumer) {
+
         Consumer toUpdate = verifyAndLookupConsumer(uuid);
 
-        log.debug("Updating consumer.");
+        log.debug("Updating consumer: " + uuid);
 
-        if (!toUpdate.factsAreEqual(consumer)) {
-            log.debug("Facts are not equal, updating them");
-            Event event = eventFactory.consumerModified(toUpdate, consumer);
+        // We need a representation of the consumer before making any modifications.
+        // If nothing changes we won't send.
+        Event event = eventFactory.consumerModified(toUpdate, consumer);
 
-            // TODO: Just updating the facts for now
-            toUpdate.setFacts(consumer.getFacts());
+        boolean changesMade = checkForFactsUpdate(toUpdate, consumer);
+        changesMade = changesMade || checkForInstalledProductsUpdate(toUpdate,
+            consumer);
 
+        if (changesMade) {
+            log.info("Consumer updated.");
             // Set the updated date here b/c @PreUpdate will not get fired
             // since only the facts table will receive the update.
             toUpdate.setUpdated(new Date());
             sink.sendEvent(event);
         }
+    }
+
+    /**
+     * Check if the consumers facts have changed. If they do not appear to have been
+     * specified in this PUT, skip updating facts entirely.
+     *
+     * @param existing existing consumer
+     * @param incoming incoming consumer
+     * @return True if facts were included in request and have changed.
+     */
+    private boolean checkForFactsUpdate(Consumer existing, Consumer incoming) {
+        if (incoming.getFacts() == null) {
+            log.debug("Facts not included in this consumer update, skipping update.");
+            return false;
+        }
+        else if (!existing.factsAreEqual(incoming)) {
+            log.debug("Updating consumer facts.");
+            existing.setFacts(incoming.getFacts());
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Check if the consumers installed products have changed. If they do not appear to
+     * have been specified in this PUT, skip updating installed products entirely.
+     *
+     * @param existing existing consumer
+     * @param incoming incoming consumer
+     * @return True if installed products were included in request and have changed.
+     */
+    private boolean checkForInstalledProductsUpdate(Consumer existing, Consumer incoming) {
+
+        if (incoming.getInstalledProducts() == null) {
+            log.debug("Installed packages not included in this consumer update, " +
+                "skipping update.");
+            return false;
+        }
+        else if (!existing.getInstalledProducts().equals(incoming.getInstalledProducts())) {
+            log.debug("Updating installed products.");
+            existing.getInstalledProducts().clear();
+            for (ConsumerInstalledProduct cip : incoming.getInstalledProducts()) {
+                existing.addInstalledProduct(cip);
+            }
+            return true;
+        }
+        log.debug("No changed to installed products.");
+        return false;
     }
 
     /**

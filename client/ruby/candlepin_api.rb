@@ -55,11 +55,12 @@ class Candlepin
 
   # TODO: need to switch to a params hash, getting to be too many arguments.
   def register(name, type=:system, uuid=nil, facts={}, username=nil,
-              owner_key=nil, activation_keys=[])
+              owner_key=nil, activation_keys=[], installedProducts=[])
     consumer = {
       :type => {:label => type},
       :name => name,
-      :facts => facts
+      :facts => facts,
+      :installedProducts => installedProducts
     }
 
     consumer[:uuid] = uuid if not uuid.nil?
@@ -72,13 +73,15 @@ class Candlepin
     return @consumer
   end
 
-  def update_facts(facts, uuid=nil)
-    uuid = @uuid if uuid.nil?
+  def update_consumer(params)
+    uuid = params[:uuid] || @uuid
 
     consumer = {
-      :uuid => uuid,
-      :facts => facts
+      :uuid => uuid
     }
+    consumer[:facts] = params[:facts] if params[:facts]
+    consumer[:installedProducts] = \
+        params[:installedProducts] if params[:installedProducts]
 
     path = get_path("consumers")
     put("#{path}/#{uuid}", consumer)

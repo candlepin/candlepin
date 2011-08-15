@@ -129,8 +129,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.MERGE,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
-    private Set<ConsumerInstalledProduct> installedProducts =
-        new HashSet<ConsumerInstalledProduct>();
+    private Set<ConsumerInstalledProduct> installedProducts;
 
     @Transient
     private boolean canActivate;
@@ -142,13 +141,14 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         this.username = userName;
         this.owner = owner;
         this.type = type;
+        this.facts = new HashMap<String, String>();
+        this.installedProducts = new HashSet<ConsumerInstalledProduct>();
     }
 
     public Consumer() {
         // This constructor is for creating a new Consumer in the DB, so we'll
         // generate a UUID at this point.
         this.ensureUUID();
-        this.facts = new HashMap<String, String>();
         this.childConsumers = new HashSet<Consumer>();
         this.entitlements = new HashSet<Entitlement>();
     }
@@ -311,7 +311,10 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
      * @return the value of the fact with the given key.
      */
     public String getFact(String factKey) {
-        return facts.get(factKey);
+        if (facts != null) {
+            return facts.get(factKey);
+        }
+        return null;
     }
 
     /**
@@ -331,6 +334,10 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     public boolean factsAreEqual(Consumer other) {
         Map<String, String> myFacts = getFacts();
         Map<String, String> otherFacts = other.getFacts();
+
+        if (myFacts == null && otherFacts == null) {
+            return true;
+        }
 
         if (myFacts.size() != otherFacts.size()) {
             return false;
@@ -359,6 +366,9 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
      * @param value to set
      */
     public void setFact(String name, String value) {
+        if (facts == null) {
+            facts = new HashMap<String, String>();
+        }
         this.facts.put(name, value);
     }
 
@@ -465,6 +475,9 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     }
 
     public void addInstalledProduct(ConsumerInstalledProduct installed) {
+        if (installedProducts == null) {
+            installedProducts = new HashSet<ConsumerInstalledProduct>();
+        }
         installed.setConsumer(this);
         installedProducts.add(installed);
     }

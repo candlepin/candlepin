@@ -26,6 +26,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
@@ -108,4 +109,22 @@ public class ConsumerInstalledProduct extends AbstractHibernateObject {
         this.consumer = consumer;
     }
 
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof ConsumerInstalledProduct)) {
+            return false;
+        }
+        ConsumerInstalledProduct that = (ConsumerInstalledProduct) other;
+        if (this.getProductId().equals(that.getProductId()) &&
+            this.getProductName().equals(that.getProductName())) {
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(7, 23).append(getProductId())
+            .append(getProductName()).toHashCode();
+    }
 }

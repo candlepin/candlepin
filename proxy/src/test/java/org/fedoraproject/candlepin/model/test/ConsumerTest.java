@@ -127,6 +127,15 @@ public class ConsumerTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testSetInitialization() throws Exception {
+        Consumer noFacts = new Consumer(CONSUMER_NAME, USER_NAME, owner, consumerType);
+        consumerCurator.create(noFacts);
+        noFacts = consumerCurator.find(noFacts.getId());
+        assertNotNull(noFacts.getFacts());
+        assertNotNull(noFacts.getInstalledProducts());
+    }
+
+    @Test
     public void testInfo() {
         Consumer lookedUp = consumerCurator.find(consumer.getId());
         Map<String, String> metadata = lookedUp.getFacts();
@@ -143,8 +152,7 @@ public class ConsumerTest extends DatabaseTestFixture {
 
         ConsumerResource consumerResource = injector.getInstance(ConsumerResource.class);
         consumer.setFact("FACT", "FACT_VALUE");
-        consumerResource.updateConsumer(consumer.getUuid(), consumer,
-            new ConsumerPrincipal(consumer));
+        consumerResource.updateConsumer(consumer.getUuid(), consumer);
 
         Consumer lookedUp = consumerCurator.find(consumer.getId());
         Date lookedUpDate = lookedUp.getUpdated();
@@ -308,18 +316,16 @@ public class ConsumerTest extends DatabaseTestFixture {
     @Test
     public void factsEqual() {
         Consumer first = new Consumer();
-        Map<String, String> firstFacts = first.getFacts();
         
-        firstFacts.put("key1", "1");
-        firstFacts.put("key2", "two");
-        firstFacts.put("key3", "3");
+        first.setFact("key1", "1");
+        first.setFact("key2", "two");
+        first.setFact("key3", "3");
         
         Consumer second = new Consumer();
-        Map<String, String> secondFacts = second.getFacts();
         
-        secondFacts.put("key1", "1");
-        secondFacts.put("key2", "two");
-        secondFacts.put("key3", "3");
+        second.setFact("key1", "1");
+        second.setFact("key2", "two");
+        second.setFact("key3", "3");
         
         assertTrue(first.factsAreEqual(second));
     }
@@ -332,18 +338,16 @@ public class ConsumerTest extends DatabaseTestFixture {
     @Test
     public void factsDifferentValues() {
         Consumer first = new Consumer();
-        Map<String, String> firstFacts = first.getFacts();
         
-        firstFacts.put("key1", "1");
-        firstFacts.put("key2", "two");
-        firstFacts.put("key3", "3");
+        first.setFact("key1", "1");
+        first.setFact("key2", "two");
+        first.setFact("key3", "3");
         
         Consumer second = new Consumer();
-        Map<String, String> secondFacts = second.getFacts();
         
-        secondFacts.put("key1", "1");
-        secondFacts.put("key2", "2");
-        secondFacts.put("key3", "3");
+        second.setFact("key1", "1");
+        second.setFact("key2", "2");
+        second.setFact("key3", "3");
         
         assertFalse(first.factsAreEqual(second));
     }
@@ -351,16 +355,14 @@ public class ConsumerTest extends DatabaseTestFixture {
     @Test
     public void factsSecondMissing() {
         Consumer first = new Consumer();
-        Map<String, String> firstFacts = first.getFacts();
         
-        firstFacts.put("key1", "1");
-        firstFacts.put("key2", "two");
-        firstFacts.put("key3", "3");
+        first.setFact("key1", "1");
+        first.setFact("key2", "two");
+        first.setFact("key3", "3");
         
         Consumer second = new Consumer();
-        Map<String, String> secondFacts = second.getFacts();
         
-        secondFacts.put("key1", "1");
+        second.setFact("key1", "1");
         
         assertFalse(first.factsAreEqual(second));
     }
@@ -368,17 +370,15 @@ public class ConsumerTest extends DatabaseTestFixture {
     @Test
     public void factsFirstMissing() {
         Consumer first = new Consumer();
-        Map<String, String> firstFacts = first.getFacts();
         
-        firstFacts.put("key1", "1");
-        firstFacts.put("key3", "3");
+        first.setFact("key1", "1");
+        first.setFact("key3", "3");
         
         Consumer second = new Consumer();
-        Map<String, String> secondFacts = second.getFacts();
         
-        secondFacts.put("key1", "1");
-        secondFacts.put("key2", "2");
-        secondFacts.put("key3", "3");
+        second.setFact("key1", "1");
+        second.setFact("key2", "2");
+        second.setFact("key3", "3");
         
         assertFalse(first.factsAreEqual(second));
     }
@@ -386,16 +386,14 @@ public class ConsumerTest extends DatabaseTestFixture {
     @Test 
     public void factsEqualNull() {
         Consumer first = new Consumer();
-        Map<String, String> firstFacts = first.getFacts();
         
-        firstFacts.put("key1", "1");
-        firstFacts.put("key2", null);
+        first.setFact("key1", "1");
+        first.setFact("key2", null);
         
         Consumer second = new Consumer();
-        Map<String, String> secondFacts = second.getFacts();
         
-        secondFacts.put("key1", "1");
-        secondFacts.put("key2", null);
+        second.setFact("key1", "1");
+        second.setFact("key2", null);
         
         assertTrue(first.factsAreEqual(second));
     }
@@ -403,16 +401,14 @@ public class ConsumerTest extends DatabaseTestFixture {
     @Test
     public void factsFirstNull() {
         Consumer first = new Consumer();
-        Map<String, String> firstFacts = first.getFacts();
         
-        firstFacts.put("key1", "1");
-        firstFacts.put("key2", null);
+        first.setFact("key1", "1");
+        first.setFact("key2", null);
         
         Consumer second = new Consumer();
-        Map<String, String> secondFacts = second.getFacts();
         
-        secondFacts.put("key1", "1");
-        secondFacts.put("key2", "two");
+        second.setFact("key1", "1");
+        second.setFact("key2", "two");
         
         assertFalse(first.factsAreEqual(second));
     }
@@ -420,12 +416,10 @@ public class ConsumerTest extends DatabaseTestFixture {
     @Test
     public void factsSecondNull() {
         Consumer first = new Consumer();
-        Map<String, String> firstFacts = first.getFacts();
-        firstFacts.put("key1", "1");
+        first.setFact("key1", "1");
         
         Consumer second = new Consumer();
-        Map<String, String> secondFacts = second.getFacts();
-        secondFacts.put("key1", null);
+        second.setFact("key1", null);
         
         assertFalse(first.factsAreEqual(second));
     }

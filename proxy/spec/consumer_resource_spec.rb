@@ -181,7 +181,7 @@ describe 'Consumer Resource' do
     consumer.uuid.should == 'custom-uuid'
   end
 
-  it 'should allow a consumer register with activation keys' do
+  it 'should allow a consumer to register with activation keys' do
     owner = create_owner random_string('owner')
 
     user1 = user_client(owner, random_string("user1"))
@@ -205,6 +205,46 @@ describe 'Consumer Resource' do
     # TODO: Verify activation keys did what we expect once they are functional
     @cp.refresh_pools(owner.key)
     @cp.get_pool(pool1.id).consumed.should == 3
+  end
+
+  def verify_installed_pids(consumer, product_ids)
+    installed_ids = consumer['installedProducts'].collect { |p| p['productId'] }
+    installed_ids.length.should == product_ids.length
+    product_ids.each do |pid|
+      installed_ids.should include(pid)
+    end
+  end
+
+  it 'should allow a consumer to register with and update installed products' do
+    user = user_client(@owner1, random_string('billy'))
+    pid1 = '918237'
+    pid2 = '871234'
+    pid3 = '712717'
+    installed = [
+        {'productId' => pid1, 'productName' => 'My Installed Product'},
+        {'productId' => pid2, 'productName' => 'Another Installed Product'}]
+
+    # Set a single fact, so we can make sure it doesn't get clobbered:
+    facts = {
+      'system.machine' => 'x86_64',
+    }
+    consumer = user.register('machine1', :system, nil, facts, nil, nil, [], installed)
+    verify_installed_pids(consumer, [pid1, pid2])
+
+    # Now update the installed packages:
+    installed = [
+        {'productId' => pid1, 'productName' => 'My Installed Product'},
+        {'productId' => pid3, 'productName' => 'Third Installed Product'}]
+
+    consumer_client = Candlepin.new(username=nil, password=nil,
+        cert=consumer['idCert']['cert'],
+        key=consumer['idCert']['key'])
+    consumer_client.update_consumer({:installedProducts => installed})
+    consumer = @cp.get_consumer(consumer['uuid'])
+    verify_installed_pids(consumer, [pid1, pid3])
+
+    # Make sure facts weren't clobbered:
+    consumer['facts'].length.should == 1
   end
 
   it 'should not allow the same UUID to be registered twice' do

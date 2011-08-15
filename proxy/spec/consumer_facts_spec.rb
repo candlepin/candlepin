@@ -14,7 +14,9 @@ describe 'Consumer Facts' do
       'uname.system'     => 'Linux',
     }
 
-    @consumer = user.register(random_string("consumer"), :system, nil, facts)
+    @consumer = user.register(random_string("consumer"), :system, nil, facts,
+        nil, nil, [], [{:productId => 'installedprod',
+           :productName => "Installed"}])
 
     @consumer_api = Candlepin.new(username=nil, password=nil,
                                   cert=@consumer['idCert']['cert'],
@@ -27,10 +29,13 @@ describe 'Consumer Facts' do
       'uname.system'     => 'Linux',
       'memory.memtotal'  => '100',
     }
-    @consumer_api.update_facts(updated_facts)
+    @consumer_api.update_consumer({:facts => updated_facts})
 
     consumer = @consumer_api.get_consumer
     consumer['facts']['memory.memtotal'].should == '100'
+
+    # Make sure we didn't clobber installed products when updating:
+    consumer['installedProducts'].length.should == 1
   end
 
   it 'allows a fact to be updated' do
@@ -38,7 +43,7 @@ describe 'Consumer Facts' do
       'uname.machine' => 'x86_64',
       'uname.system'     => 'BSD',
     }
-    @consumer_api.update_facts(updated_facts)
+    @consumer_api.update_consumer({:facts => updated_facts})
 
     consumer = @consumer_api.get_consumer
     consumer['facts']['uname.system'].should == 'BSD'
@@ -48,7 +53,7 @@ describe 'Consumer Facts' do
     updated_facts = {
       'uname.machine' => 'x86_64',
     }
-    @consumer_api.update_facts(updated_facts)
+    @consumer_api.update_consumer({:facts => updated_facts})
 
     consumer = @consumer_api.get_consumer
     consumer['facts']['memory.memtotal'].should be_nil
@@ -59,7 +64,7 @@ describe 'Consumer Facts' do
       'uname.machine' => 'x86_64',
       'uname.system'     => 'Linux',
     }
-    @consumer_api.update_facts(updated_facts)
+    @consumer_api.update_consumer({:facts => updated_facts})
 
     events = @cp.list_consumer_events(@owner['key'], @consumer.uuid)
 
@@ -73,7 +78,7 @@ describe 'Consumer Facts' do
       'uname.machine' => 'i686',
       'uname.system'     => 'Linux',
     }
-    @consumer_api.update_facts(updated_facts)
+    @consumer_api.update_consumer({:facts => updated_facts})
 
     events = @cp.list_consumer_events(@owner['key'], @consumer.uuid)
 
@@ -87,10 +92,18 @@ describe 'Consumer Facts' do
       'uname.system' => 'x86_64',
     }
     initial_date = @consumer.updated
-    @consumer_api.update_facts(updated_facts)
+    @consumer_api.update_consumer({:facts => updated_facts})
 
     updated_consumer = @consumer_api.get_consumer
 
     initial_date.should < updated_consumer['updated']
   end
+
+  it 'can clear all facts' do
+    updated_facts = {}
+    @consumer_api.update_consumer({:facts => updated_facts})
+    consumer = @consumer_api.get_consumer
+    consumer['facts'].length.should == 0
+  end
+
 end

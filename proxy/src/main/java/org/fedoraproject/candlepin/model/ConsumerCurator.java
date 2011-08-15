@@ -54,7 +54,9 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Override
     public Consumer create(Consumer entity) {
         entity.ensureUUID();
-        entity.setFacts(filterFacts(entity.getFacts()));
+        if (entity.getFacts() != null) {
+            entity.setFacts(filterFacts(entity.getFacts()));
+        }
         validate(entity);
         return super.create(entity);
     }
