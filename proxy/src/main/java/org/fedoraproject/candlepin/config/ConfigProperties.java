@@ -57,10 +57,10 @@ public class ConfigProperties {
                                       "candlepin.subscription.activation.debug_prefix";
 
     // Authentication
-    public static final String TRUSTED_AUTHENTICATION = "candlepin.auth.trusted.enabled";
-    public static final String SSL_AUTHENTICATION = "candlepin.auth.ssl.enabled";
-    public static final String OAUTH_AUTHENTICATION = "candlepin.auth.oauth.enabled";
-    public static final String BASIC_AUTHENTICATION = "candlepin.auth.basic.enabled";
+    public static final String TRUSTED_AUTHENTICATION = "candlepin.auth.trusted.enable";
+    public static final String SSL_AUTHENTICATION = "candlepin.auth.ssl.enable";
+    public static final String OAUTH_AUTHENTICATION = "candlepin.auth.oauth.enable";
+    public static final String BASIC_AUTHENTICATION = "candlepin.auth.basic.enable";
 
     // AMQP stuff
     public static final String AMQP_INTEGRATION_ENABLED = "candlepin.amqp.enable";
