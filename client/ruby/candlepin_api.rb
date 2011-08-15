@@ -388,8 +388,10 @@ class Candlepin
   def consume_pool(pool, params={})
     quantity = params[:quantity] || nil
     uuid = params[:uuid] || @uuid
+    async = params[:async] || nil
     path = "/consumers/#{uuid}/entitlements?pool=#{pool}"
     path << "&quantity=#{quantity}" if quantity
+    path << "&async=#{async}" if async
 
     post(path)
   end
@@ -397,8 +399,11 @@ class Candlepin
   def consume_product(product, params={})
     quantity = params[:quantity] || nil
     uuid = params[:uuid] || @uuid
+    async = params[:async] || nil
     path = "/consumers/#{uuid}/entitlements?product=#{product}"
     path << "&quantity=#{quantity}" if quantity
+    path << "&async=#{async}" if async
+
     post(path)
   end
 

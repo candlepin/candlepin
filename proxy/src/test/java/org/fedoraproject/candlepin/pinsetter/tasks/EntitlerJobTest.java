@@ -25,6 +25,7 @@ import static org.mockito.Mockito.when;
 import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.pinsetter.core.model.JobStatus;
 
 import org.junit.After;
 import org.junit.Before;
@@ -63,7 +64,7 @@ public class EntitlerJobTest {
         assertNotNull(detail);
         String[] resultpids = (String[]) detail.getJobDataMap().get("product_ids");
         assertEquals("pid2", resultpids[1]);
-        assertEquals(consumerUuid, detail.getJobDataMap().get("consumer_uuid"));
+        assertEquals(consumerUuid, detail.getJobDataMap().get(JobStatus.TARGET_ID));
         assertTrue(detail.getName().startsWith("bind_by_products_"));
     }
 
@@ -75,7 +76,7 @@ public class EntitlerJobTest {
         assertNotNull(detail);
         String resultpool = (String) detail.getJobDataMap().get("pool_id");
         assertEquals("pool10", resultpool);
-        assertEquals(consumerUuid, detail.getJobDataMap().get("consumer_uuid"));
+        assertEquals(consumerUuid, detail.getJobDataMap().get(JobStatus.TARGET_ID));
         assertTrue(detail.getName().startsWith("bind_by_pool_"));
     }
 

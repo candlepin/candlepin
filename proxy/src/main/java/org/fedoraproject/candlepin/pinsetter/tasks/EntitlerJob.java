@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.pinsetter.tasks;
 import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.exceptions.CandlepinException;
 import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.pinsetter.core.model.JobStatus;
 import org.fedoraproject.candlepin.util.Util;
 
 import com.google.inject.Inject;
@@ -46,7 +47,7 @@ public class EntitlerJob implements Job {
         try {
             JobDataMap map = ctx.getMergedJobDataMap();
             Integer qty = map.getInt("quantity");
-            String uuid = (String) map.get("consumer_uuid");
+            String uuid = (String) map.get(JobStatus.TARGET_ID);
 
             if (map.containsKey("pool_id")) {
                 // bindByPool
@@ -74,7 +75,8 @@ public class EntitlerJob implements Job {
 
         JobDataMap map = new JobDataMap();
         map.put("pool_id", poolId);
-        map.put("consumer_uuid", uuid);
+        map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.CONSUMER);
+        map.put(JobStatus.TARGET_ID, uuid);
         map.put("quantity", qty);
 
         detail.setJobDataMap(map);
@@ -90,7 +92,8 @@ public class EntitlerJob implements Job {
 
         JobDataMap map = new JobDataMap();
         map.put("product_ids", prodIds);
-        map.put("consumer_uuid", uuid);
+        map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.CONSUMER);
+        map.put(JobStatus.TARGET_ID, uuid);
         map.put("quantity", qty);
 
         detail.setJobDataMap(map);

@@ -151,7 +151,11 @@ public class JobStatus extends AbstractHibernateObject {
     }
 
     public String getTargetType() {
-        return targetType.name();
+        if (targetType == null) {
+            return null;
+        }
+
+        return targetType.name().toLowerCase();
     }
     
     public String getTargetId() {

@@ -17,6 +17,12 @@ describe 'Job Status' do
     status['targetId'].should == @owner.key
   end
 
+  it 'should contain the target type' do
+    status = @cp.refresh_pools(@owner.key, true)
+    status['targetType'].should == "owner"
+  end
+
+
   it 'should be findable by owner key' do
     3.times { @cp.refresh_pools(@owner.key, true) }
 
@@ -62,6 +68,24 @@ describe 'Job Status' do
     joblist = @cp.list_jobs(@owner.key)
     joblist.find { |j| j['id'] == job['id'] }['state'].should == 'CANCELLED'
   end
+
+  it 'should contain the system target type and id for async binds' do
+    @cp.refresh_pools(@owner.key)
+    system = consumer_client(@user, 'system6')
+
+    status = system.consume_product(@monitoring.id, { :async => true })
+   
+    status['targetType'].should == "consumer"
+    status['targetId'].should == system.uuid
+
+    #let it finish
+    while status != nil && status['state'].downcase != 'finished'
+      sleep 1
+      # POSTing here will delete the job once it has finished
+      status = @owner.post(status['statusPath'])
+    end
+  end
+
 
 end
 
