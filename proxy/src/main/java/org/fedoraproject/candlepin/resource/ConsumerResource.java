@@ -308,20 +308,25 @@ public class ConsumerResource {
 
         if (log.isDebugEnabled()) {
             log.debug("Got consumerTypeLabel of: " + type.getLabel());
-            log.debug("got metadata: ");
+            log.debug("got facts: ");
             log.debug(consumer.getFacts());
 
-            for (String key : consumer.getFacts().keySet()) {
-                log.debug("   " + key + " = " + consumer.getFact(key));
+            if (consumer.getFacts() != null) {
+                for (String key : consumer.getFacts().keySet()) {
+                    log.debug("   " + key + " = " + consumer.getFact(key));
+                }
             }
+            
             log.debug("Activation keys:");
             for (ActivationKey activationKey : keys) {
                 log.debug("   " + activationKey.getName());
             }
         }
 
-        for (ConsumerInstalledProduct p : consumer.getInstalledProducts()) {
-            p.setConsumer(consumer);
+        if (consumer.getInstalledProducts() != null) {
+            for (ConsumerInstalledProduct p : consumer.getInstalledProducts()) {
+                p.setConsumer(consumer);
+            }
         }
 
         try {

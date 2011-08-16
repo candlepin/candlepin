@@ -264,4 +264,14 @@ public class ConsumerResourceCreationTest {
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
         resource.create(consumer, p, null, owner.getKey(), createKeysString(keys));
     }
+    
+    @Test
+    public void registerWithNoInstalledProducts() {
+        Principal p = new TrustedUserPrincipal("anyuser");
+        Consumer consumer = new Consumer();
+        consumer.setType(system);
+        consumer.setName("consumername");
+        resource.create(consumer, p, USER, owner.getKey(), "");
+
+    }
 }
