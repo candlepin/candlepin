@@ -34,6 +34,7 @@ import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.auth.permissions.Permission;
 import org.fedoraproject.candlepin.controller.CandlepinPoolManager;
+import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
@@ -61,6 +62,7 @@ import org.fedoraproject.candlepin.resource.ActivationKeyResource;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
+import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestDateUtil;
 import org.fedoraproject.candlepin.test.TestUtil;
@@ -734,5 +736,31 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
             null, null, null, null, null, i18n, null, null, null,
             null, null, null, null, null, null, oc, akc, null);
         cr.create(c, nap, null, "testOwner", "testKey");
+    }
+
+    @Test
+    public void testProductNoPool() {
+        try {
+            Consumer c = mock(Consumer.class);
+            Owner o = mock(Owner.class);
+            SubscriptionServiceAdapter sa = mock(SubscriptionServiceAdapter.class);
+            Entitler e = mock(Entitler.class);
+            ConsumerCurator cc = mock(ConsumerCurator.class);
+            String[] prodIds = {"notthere"};
+
+            when(c.getOwner()).thenReturn(o);
+            when(sa.hasUnacceptedSubscriptionTerms(eq(o))).thenReturn(false);
+            when(cc.findByUuid(eq("fakeConsumer"))).thenReturn(c);
+            when(e.bindByProducts(eq(prodIds), eq(c), eq(1)))
+                .thenThrow(new RuntimeException());
+
+            ConsumerResource cr = new ConsumerResource(cc, null,
+                null, sa, null, null, null, i18n, null, null, null,
+                null, null, null, null, null, null, null, null, e);
+            cr.bind("fakeConsumer", null, prodIds, 1, null, null, false);
+        }
+        catch (Throwable t) {
+            fail("Runtime exception should be caught in ConsumerResource.bind");
+        }
     }
 }

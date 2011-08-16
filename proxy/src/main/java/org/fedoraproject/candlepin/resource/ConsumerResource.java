@@ -245,7 +245,8 @@ public class ConsumerResource {
 
         Set<String> keyStrings = splitKeys(activationKeys);
 
-        // Only let NoAuth principals through if there are activation keys to consider:
+        // Only let NoAuth principals through if there are activation keys to
+        // consider:
         if ((principal instanceof NoAuthPrincipal) && (keyStrings.size() == 0)) {
             throw new ForbiddenException(i18n.tr("Insufficient permissions"));
         }
@@ -277,7 +278,7 @@ public class ConsumerResource {
         }
 
         Owner owner = setupOwner(principal, ownerKey);
-        
+
         // Raise an exception if any keys were specified which do not exist
         // for this owner.
         List<ActivationKey> keys = new ArrayList<ActivationKey>();
@@ -290,10 +291,10 @@ public class ConsumerResource {
 
         ConsumerType type = lookupConsumerType(consumer.getType().getLabel());
 
-        if (type.isType(ConsumerTypeEnum.PERSON)) { 
+        if (type.isType(ConsumerTypeEnum.PERSON)) {
             if (keys.size() > 0) {
                 throw new BadRequestException(
-                    i18n.tr("A consumer type of 'person' cannot be" + 
+                    i18n.tr("A consumer type of 'person' cannot be" +
                         " used with activation keys"));
             }
             verifyPersonConsumer(consumer, type, owner, userName);
@@ -388,13 +389,13 @@ public class ConsumerResource {
             log.warn("User service does not allow user lookups, " +
                 "cannot verify person consumer.");
         }
-            
+
         // When registering person consumers we need to be sure the username
         // has some association with the owner the consumer is destined for:
         if (!user.hasOwnerAccess(owner, Access.ALL) && !user.isSuperAdmin()) {
-            throw new ForbiddenException(
-                i18n.tr("User {0} has no roles for organization/owner {1}",
-                    user.getUsername(), owner.getKey()));
+            throw new ForbiddenException(i18n.tr(
+                "User {0} has no roles for organization/owner {1}",
+                user.getUsername(), owner.getKey()));
         }
 
         // TODO: Refactor out type specific checks?
@@ -413,7 +414,8 @@ public class ConsumerResource {
     }
 
     private Owner setupOwner(Principal principal, String ownerKey) {
-        // If no owner was specified, try to assume based on which owners the principal
+        // If no owner was specified, try to assume based on which owners the
+        // principal
         // has admin rights for. If more than one, we have to error out.
         if (ownerKey == null && (principal instanceof UserPrincipal)) {
             // check for this cast?
@@ -775,8 +777,8 @@ public class ConsumerResource {
             JobDetail detail = null;
 
             if (productIds != null && productIds.length > 0) {
-                detail = EntitlerJob.bindByProducts(productIds, consumerUuid,
-                    quantity);
+                detail = EntitlerJob.bindByProducts(productIds,
+                        consumerUuid, quantity);
             }
             else {
                 String poolId = Util.assertNotNull(poolIdString,
@@ -794,8 +796,17 @@ public class ConsumerResource {
         //
         List<Entitlement> entitlements = null;
         if (productIds != null && productIds.length > 0) {
-            entitlements = entitler.bindByProducts(productIds, consumer,
-                quantity);
+            try {
+                entitlements = entitler.bindByProducts(productIds, consumer,
+                    quantity);
+            }
+            catch (ForbiddenException fe) {
+                throw fe;
+            }
+            catch (RuntimeException re) {
+                log.warn(i18n.tr("Asked to be subscribed to a product that " +
+                    "has no pool: {0} ", re.getMessage()));
+            }
         }
         else {
             String poolId = Util.assertNotNull(poolIdString,
