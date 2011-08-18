@@ -884,6 +884,38 @@
             }
         },
         {
+            "name": "Stackable with Awesome OS for x86_64 Bits",
+            "id": "1000000000000023",
+            "version": "3.11",
+            "arch": "x86_64",
+            "attributes": {
+                "sockets": 1,
+                "warning_period": 30,
+                "stacking_id": 1
+            },
+            "content": [
+                [11113, true],
+                [0, false],
+                [1, true],
+                [11124, false]
+            ]
+        },
+        {
+            "name": "Stackable with Awesome OS for x86_64",
+            "id": "stackable-with-awesomeos-x86_64",
+            "version": "3.11",
+            "arch": "x86_64",
+            "type": "MKT",
+            "provided_products": [
+                "1000000000000023"
+            ],
+            "attributes": {
+                "sockets": 1,
+                "warning_period": 30,
+                "stacking_id": 1
+            }
+        },
+        {
             "name": "Awesome OS for ia64 Bits",
             "id": "100000000000006",
             "version": "3.11",
