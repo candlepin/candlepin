@@ -61,26 +61,26 @@ import com.google.inject.Inject;
  * This class implements methods to create X509 Certificates, X509 CRLs, encode
  * objects in PEM format (for saving to the db or sending to the client), and
  * decode raw ASN.1 DER values (as read from a Certificate/CRL).
- * 
+ *
  * All code that imports bouncycastle should live either in this module,
  * or in {@link BouncyCastlePKIReader}
- * 
+ *
  * (March 24, 2011) Notes on implementing a PKIUtility with NSS/JSS:
- * 
+ *
  * JSS provides classes and functions to generate X509Certificates (see CertificateInfo,
  * for example).
- * 
+ *
  * PEM encoding requires us to determine the object type (which we know), add the correct
  * header and footer to the output, base64 encode the DER for the object, and line wrap
  * the base64 encoding.
- * 
+ *
  * decodeDERValue should be simple, as JSS provides code to parse ASN.1, but I wasn't
  * able to get it to work.
- * 
+ *
  * The big one is CRL generation. JSS has no code to generate CRLs in any format. We'll
  * have to use the raw ASN.1 libraries to build up our own properly formatted CRL DER
- * representation, then PEM encode it. 
- * 
+ * representation, then PEM encode it.
+ *
  * See also {@link BouncyCastlePKIReader} for more notes on using NSS/JSS, and a note
  * about not using bouncycastle as the JSSE provider.
  */
@@ -142,8 +142,11 @@ public class BouncyCastlePKIUtility extends PKIUtility {
 
         if (extensions != null) {
             for (X509ExtensionWrapper wrapper : extensions) {
+                // Bounceycastle hates null values. So, set them to blank
+                // if they are null
+                String value = wrapper.getValue() == null ? "" :  wrapper.getValue();
                 certGen.addExtension(wrapper.getOid(), wrapper.isCritical(),
-                    new DERUTF8String(wrapper.getValue()));
+                    new DERUTF8String(value));
             }
         }
 
@@ -153,7 +156,7 @@ public class BouncyCastlePKIUtility extends PKIUtility {
 
     @Override
     public X509CRL createX509CRL(List<X509CRLEntryWrapper> entries, BigInteger crlNumber) {
-        
+
         try {
             X509Certificate caCert = reader.getCACert();
             X509V2CRLGenerator generator = new X509V2CRLGenerator();
@@ -177,7 +180,7 @@ public class BouncyCastlePKIUtility extends PKIUtility {
             throw new RuntimeException(e);
         }
     }
-    
+
     private byte[] getPemEncoded(Object obj) throws IOException {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         OutputStreamWriter oswriter = new OutputStreamWriter(byteArrayOutputStream);
@@ -186,22 +189,22 @@ public class BouncyCastlePKIUtility extends PKIUtility {
         writer.close();
         return byteArrayOutputStream.toByteArray();
     }
-    
+
     @Override
     public byte[] getPemEncoded(X509Certificate cert) throws IOException {
         return getPemEncoded((Object) cert);
     }
-    
-    @Override    
+
+    @Override
     public byte[] getPemEncoded(Key key) throws IOException {
         return getPemEncoded((Object) key);
     }
-    
+
     @Override
     public byte[] getPemEncoded(X509CRL crl) throws IOException {
         return getPemEncoded((Object) crl);
     }
-    
+
     @Override
     public String decodeDERValue(byte[] value) {
         ASN1InputStream vis = null;
@@ -210,7 +213,7 @@ public class BouncyCastlePKIUtility extends PKIUtility {
             vis = new ASN1InputStream(value);
             decoded = new ASN1InputStream(
                 ((DEROctetString) vis.readObject()).getOctets());
-    
+
             return decoded.readObject().toString();
         }
         catch (IOException e) {
@@ -225,7 +228,7 @@ public class BouncyCastlePKIUtility extends PKIUtility {
                     log.warn("failed to close ASN1 stream", e);
                 }
             }
-    
+
             if (decoded != null) {
                 try {
                     decoded.close();

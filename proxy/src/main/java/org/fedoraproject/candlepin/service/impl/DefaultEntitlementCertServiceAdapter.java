@@ -52,28 +52,28 @@ import com.google.inject.Inject;
 /**
  * DefaultEntitlementCertServiceAdapter
  */
-public class DefaultEntitlementCertServiceAdapter extends 
+public class DefaultEntitlementCertServiceAdapter extends
     BaseEntitlementCertServiceAdapter {
-    
+
     private PKIUtility pki;
     private X509ExtensionUtil extensionUtil;
     private KeyPairCurator keyPairCurator;
     private CertificateSerialCurator serialCurator;
     private ProductServiceAdapter productAdapter;
     private EntitlementCurator entCurator;
-    
-    private static Logger log = 
+
+    private static Logger log =
         LoggerFactory.getLogger(DefaultEntitlementCertServiceAdapter.class);
-    
+
     @Inject
     public DefaultEntitlementCertServiceAdapter(PKIUtility pki,
         X509ExtensionUtil extensionUtil,
-        EntitlementCertificateCurator entCertCurator, 
+        EntitlementCertificateCurator entCertCurator,
         KeyPairCurator keyPairCurator,
         CertificateSerialCurator serialCurator,
         ProductServiceAdapter productAdapter,
         EntitlementCurator entCurator) {
-        
+
         this.pki = pki;
         this.extensionUtil = extensionUtil;
         this.entCertCurator = entCertCurator;
@@ -83,18 +83,18 @@ public class DefaultEntitlementCertServiceAdapter extends
         this.entCurator = entCurator;
     }
 
-    
+
     // NOTE: we use entitlement here, but it version does not...
     // NOTE: we can get consumer from entitlement.getConsumer()
     @Override
-    public EntitlementCertificate generateEntitlementCert(Entitlement entitlement, 
+    public EntitlementCertificate generateEntitlementCert(Entitlement entitlement,
         Subscription sub, Product product)
         throws GeneralSecurityException, IOException {
-        
+
         log.debug("Generating entitlement cert for:");
         log.debug("   consumer: {}", entitlement.getConsumer().getUuid());
         log.debug("   product: {}" , product.getId());
-        log.debug("entitlement's endDt == subs endDt? {} == {} ?", 
+        log.debug("entitlement's endDt == subs endDt? {} == {} ?",
             entitlement.getEndDate(), sub.getEndDate());
         Preconditions
             .checkArgument(
@@ -108,31 +108,31 @@ public class DefaultEntitlementCertServiceAdapter extends
         // We need the sequence generated id before we create the EntitlementCertificate,
         // otherwise we could have used cascading create
         serialCurator.create(serial);
-        
+
         X509Certificate x509Cert = createX509Certificate(entitlement, sub,
             product, BigInteger.valueOf(serial.getId()), keyPair);
-        
+
         EntitlementCertificate cert = new EntitlementCertificate();
         cert.setSerial(serial);
         cert.setKeyAsBytes(pki.getPemEncoded(keyPair.getPrivate()));
         cert.setCertAsBytes(this.pki.getPemEncoded(x509Cert));
         cert.setEntitlement(entitlement);
-        
+
         log.debug("Generated cert serial number: " + serial.getId());
         log.debug("Key: " + cert.getKey());
         log.debug("Cert: " + cert.getCert());
-        
+
         entitlement.getCertificates().add(cert);
         entCertCurator.create(cert);
         return cert;
     }
-    
+
     @Override
     public void revokeEntitlementCertificates(Entitlement e) {
         for (EntitlementCertificate cert : e.getCertificates()) {
             CertificateSerial serial = cert.getSerial();
             serial.setRevoked(true);
-            
+
             this.serialCurator.merge(serial);
         }
     }
@@ -152,12 +152,12 @@ public class DefaultEntitlementCertServiceAdapter extends
         }
         return providedProducts;
     }
-    
+
     /**
      * Scan the product content looking for any which modify some other product. If found
      * we must check that this consumer has another entitlement granting them access
      * to that modified product. If they do not, we should filter out this content.
-     * 
+     *
      * @param prod
      * @param ent
      * @return ProductContent to include in the certificate.
@@ -180,7 +180,7 @@ public class DefaultEntitlementCertServiceAdapter extends
                     }
                 }
             }
-            
+
             if (include) {
                 filtered.add(pc);
             }
@@ -211,17 +211,23 @@ public class DefaultEntitlementCertServiceAdapter extends
         if (sub != null) {
             extensions.addAll(extensionUtil.subscriptionExtensions(sub, ent));
         }
-        
+
         extensions.addAll(extensionUtil.entitlementExtensions(ent));
         extensions.addAll(extensionUtil.consumerExtensions(ent.getConsumer()));
 
+        if (log.isDebugEnabled()) {
+            for (X509ExtensionWrapper eWrapper : extensions) {
+                log.debug(String.format("Extension %s with value %s",
+                    eWrapper.getOid(), eWrapper.getValue()));
+            }
+        }
         X509Certificate x509Cert = this.pki.createX509Certificate(
             createDN(ent), extensions, sub.getStartDate(), ent.getEndDate(),
             keyPair, serialNumber, null);
 
         return x509Cert;
     }
-    
+
     private String createDN(Entitlement ent) {
         StringBuilder sb = new StringBuilder("CN=");
         sb.append(ent.getId());
