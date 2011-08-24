@@ -9,10 +9,10 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ko-KR\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-08-18 08:44-0400\n"
+"POT-Creation-Date: 2011-08-23 21:21-0400\n"
 "PO-Revision-Date: 2011-02-24 16:11+1000\n"
 "Last-Translator: Eun-Ju Kim <eukim@redhat.com>\n"
-"Language-Team:  <ko@li.org>\n"
+"Language-Team: <ko@li.org>\n"
 "Language: ko-KR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -724,83 +724,3 @@ msgstr "oauth 사용자 키를 가져오는 중 오류 발생  "
 #: src/main/java/org/fedoraproject/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java:141
 msgid "Standalone candlepin does not support redeeming a subscription."
 msgstr ""
-
-#~ msgid "'{0}' Should contain name, priority and at least one attribute"
-#~ msgstr "'{0}'에는 이름, 우선 순위, 최소 1 개의 속성을 포함시켜야 함 "
-
-#~ msgid "Event with ID '{0}' could not be found."
-#~ msgstr "ID '{0}'의 이벤트를 찾을 수 없음 "
-
-#~ msgid "Product with UUID '{0}' could not be found"
-#~ msgstr "UUID '{0}'의 제품을 찾을 수 없음 "
-
-#~ msgid "Entitlement with ID '{0}' could not be found"
-#~ msgstr "ID '{0}'의 인타이틀먼트를 찾을 수 없음 "
-
-#~ msgid "Entitlement Pool with ID '{0}' could not be found"
-#~ msgstr "ID '{0}'의 인타이틀먼트 풀을 찾을 수 없음  "
-
-#~ msgid "No free entitlements are available for the product ''{0}''"
-#~ msgstr "제품 ''{0}''에 대해 사용할 수 있는 무료 인타이틀먼트가 없음  "
-
-#~ msgid ""
-#~ "This consumer is already subscribed to the product matching pool with id "
-#~ "''{0}''"
-#~ msgstr ""
-#~ "이 사용자는 이미 id ''{0}''를 갖는 풀과 일치하는 제품에 등록되어 있음 "
-
-#~ msgid "No free entitlements are available for the pool with id ''{0}''"
-#~ msgstr "id ''{0}''를 갖는 풀에 사용할 수 있는 무료 인타이틀먼트가 없음 "
-
-#~ msgid ""
-#~ "Consumers of this type are not allowed to subscribe to the pool with id "
-#~ "''{0}''"
-#~ msgstr "이 유형의 사용자는 id ''{0}''를 갖는 풀에 등록할 수 없음 "
-
-#~ msgid "Unable to entitle consumer to the pool with id ''{0}'': {1}"
-#~ msgstr "사용자에게 id ''{0}''를 갖는 풀의 권한을 부여할 수 없음: {1}  "
-
-#~ msgid "No such entitlement pool: {0}"
-#~ msgstr "이러한 인타이틀먼트 풀이 없음: {0} "
-
-#~ msgid "Entitlement with ID '{0}' could not be found."
-#~ msgstr "ID '{0}의 인타이틀먼트를 찾을 수 없음. "
-
-#~ msgid "email and email_locale are required for notification"
-#~ msgstr "통지를 위한 이메일 및 email_locale이 필요함 "
-
-#~ msgid "Standalone candlepin does not support activation."
-#~ msgstr "독립형 candlepin은 활성화를 지원하지 않음. "
-
-#~ msgid "SubscriptionToken with id {0} could not be found"
-#~ msgstr "id {0}의 서브스크립션 토큰을 찾을 수 없음 "
-
-#~ msgid "No such token: {0}"
-#~ msgstr "이러한 토큰이 없음: {0} "
-
-#~ msgid "No owner found for user {0}"
-#~ msgstr "사용자 {0}에 대한 소유자를 찾을 수 없음 "
-
-#~ msgid "consumer: {0}"
-#~ msgstr "사용자: {0}"
-
-#~ msgid "Owner with UUID '{0}' could not be found"
-#~ msgstr "UUID '{0}'의 소유자를 찾을 수 없음 "
-
-#~ msgid "Cound not create the Pool: {0}"
-#~ msgstr "풀을 생성할 수 없음: {0} "
-
-#~ msgid "Cannot directly delete a pool backed by a subscription"
-#~ msgstr "서브스크립션에 의해 지원되는 풀을 직접 삭제할 수 없음 "
-
-#~ msgid "Test"
-#~ msgstr "테스트 "
-
-#~ msgid "No username provided for oauth request"
-#~ msgstr "oauth 요청에 사용자 이름을 제공하지 않음 "
-
-#~ msgid "No oauth consumer found for key {0}"
-#~ msgstr "키 {0}에 대한 oauth 사용자를 찾을 수 없음 "
-
-#~ msgid "An owner does not exist for a null org id"
-#~ msgstr "null org id에 대한 소유자가 존재하지 않음 "

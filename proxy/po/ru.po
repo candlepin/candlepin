@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ru-RU\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-08-18 08:44-0400\n"
+"POT-Creation-Date: 2011-08-23 21:21-0400\n"
 "PO-Revision-Date: 2011-02-25 12:25\n"
 "Last-Translator: Yulia <ypoyarko@redhat.com>\n"
 "Language-Team: Russian\n"
@@ -16,9 +16,9 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: KBabel 1.11.4\n"
-"Plural-Forms:  nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"X-Generator: KBabel 1.11.4\n"
 
 #: src/main/java/org/fedoraproject/candlepin/auth/interceptor/SecurityInterceptor.java:195
 msgid "Unable to verify request."
@@ -726,86 +726,3 @@ msgstr "Ошибка получения ключа пользователя oaut
 #: src/main/java/org/fedoraproject/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java:141
 msgid "Standalone candlepin does not support redeeming a subscription."
 msgstr ""
-
-#~ msgid "'{0}' Should contain name, priority and at least one attribute"
-#~ msgstr "«{0}» должен содержать имя, приоритет и как минимум один атрибут"
-
-#~ msgid "Event with ID '{0}' could not be found."
-#~ msgstr "Не найдено событие с ID «{0}»"
-
-#~ msgid "Product with UUID '{0}' could not be found"
-#~ msgstr "Не найден продукт с UUID «{0}»"
-
-#~ msgid "Entitlement with ID '{0}' could not be found"
-#~ msgstr "Не найдено полномочие с идентификатором «{0}»"
-
-#~ msgid "Entitlement Pool with ID '{0}' could not be found"
-#~ msgstr "Не найден комплект полномочий с ID «{0}»"
-
-#~ msgid "No free entitlements are available for the product ''{0}''"
-#~ msgstr "Нет свободных полномочий для продукта «{0}»"
-
-#~ msgid ""
-#~ "This consumer is already subscribed to the product matching pool with id "
-#~ "''{0}''"
-#~ msgstr "Пользователь уже подписан на комплект продуктов с ID «{0}»"
-
-#~ msgid "No free entitlements are available for the pool with id ''{0}''"
-#~ msgstr "Нет свободных полномочий для комплекта с ID «{0}»"
-
-#~ msgid ""
-#~ "Consumers of this type are not allowed to subscribe to the pool with id "
-#~ "''{0}''"
-#~ msgstr ""
-#~ "Пользователям этого типа не разрешается подписываться к комплекту с ID "
-#~ "«{0}»"
-
-#~ msgid "Unable to entitle consumer to the pool with id ''{0}'': {1}"
-#~ msgstr ""
-#~ "Не удалось предоставить пользователю полномочия для работы с комплектом c "
-#~ "ID «{0}»: {1}"
-
-#~ msgid "No such entitlement pool: {0}"
-#~ msgstr "Нет пула полномочий: {0}"
-
-#~ msgid "Entitlement with ID '{0}' could not be found."
-#~ msgstr "Не найдено полномочие с ID «{0}»."
-
-#~ msgid "email and email_locale are required for notification"
-#~ msgstr "Для уведомления необходимо указать адрес и язык"
-
-#~ msgid "Standalone candlepin does not support activation."
-#~ msgstr "Независимая версия candlepin не поддерживает активацию."
-
-#~ msgid "SubscriptionToken with id {0} could not be found"
-#~ msgstr "Не найден ключ подписки с ID {0}"
-
-#~ msgid "No such token: {0}"
-#~ msgstr "Нет такого ключа: {0}"
-
-#~ msgid "No owner found for user {0}"
-#~ msgstr "Не найден владелец для пользователя {0}"
-
-#~ msgid "consumer: {0}"
-#~ msgstr "пользователь: {0}"
-
-#~ msgid "Owner with UUID '{0}' could not be found"
-#~ msgstr "Не найден владелец с UUID «{0}»"
-
-#~ msgid "Cound not create the Pool: {0}"
-#~ msgstr "Не удалось создать комплект: {0}"
-
-#~ msgid "Cannot directly delete a pool backed by a subscription"
-#~ msgstr "Не удалось напрямую удалить комплект, подтверждённый подпиской"
-
-#~ msgid "Test"
-#~ msgstr "Тест"
-
-#~ msgid "No username provided for oauth request"
-#~ msgstr "Запросу oauth не предоставлено имя пользователя"
-
-#~ msgid "No oauth consumer found for key {0}"
-#~ msgstr "Не найден пользователь oauth для ключа {0}"
-
-#~ msgid "An owner does not exist for a null org id"
-#~ msgstr "Нет владельца для организации с нулевым идентификатором"

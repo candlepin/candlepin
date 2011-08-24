@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: l 10n\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-08-18 08:44-0400\n"
+"POT-Creation-Date: 2011-08-23 21:21-0400\n"
 "PO-Revision-Date: 2011-02-24 12:30+1000\n"
 "Last-Translator: Hedda Peters <hpeters@redhat.com>\n"
 "Language-Team: de_DE <kde-i18n-doc@kde.org>\n"
@@ -16,8 +16,8 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Lokalize 1.1\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Lokalize 1.1\n"
 
 #: src/main/java/org/fedoraproject/candlepin/auth/interceptor/SecurityInterceptor.java:195
 msgid "Unable to verify request."
@@ -731,91 +731,3 @@ msgstr "Fehler beim Abrufen des oauth-Verbraucherschlüssels"
 #: src/main/java/org/fedoraproject/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java:141
 msgid "Standalone candlepin does not support redeeming a subscription."
 msgstr ""
-
-#~ msgid "'{0}' Should contain name, priority and at least one attribute"
-#~ msgstr ""
-#~ "'{0}' Sollte Namen, Priorität und mindestens einen Parameter enthalten"
-
-#~ msgid "Event with ID '{0}' could not be found."
-#~ msgstr "Ereignis mit ID '{0}' konnte nicht gefunden werden."
-
-#~ msgid "Product with UUID '{0}' could not be found"
-#~ msgstr "Produkt mit UUID '{0}' konnte nicht gefunden werden"
-
-#~ msgid "Entitlement with ID '{0}' could not be found"
-#~ msgstr "Berechtigung mit ID '{0}' konnte nicht gefunden werden"
-
-#~ msgid "Entitlement Pool with ID '{0}' could not be found"
-#~ msgstr "Berechtigungs-Pool mit der ID '{0}' konnte nicht gefunden werden"
-
-#~ msgid "No free entitlements are available for the product ''{0}''"
-#~ msgstr "Keine kostenlosen Berechtigungen verfügbar für das Produkt ''{0}''"
-
-#~ msgid ""
-#~ "This consumer is already subscribed to the product matching pool with id "
-#~ "''{0}''"
-#~ msgstr ""
-#~ "Dieser Verbraucher subskribiert bereits den diesem Produkt entsprechenden "
-#~ "Pool mit der ID ''{0}''"
-
-#~ msgid "No free entitlements are available for the pool with id ''{0}''"
-#~ msgstr ""
-#~ "Keine freien Berechtigungen verfügbar für den Pool mit der ID ''{0}''"
-
-#~ msgid ""
-#~ "Consumers of this type are not allowed to subscribe to the pool with id "
-#~ "''{0}''"
-#~ msgstr ""
-#~ "Verbraucher von diesem Typ dürfen den Pool mit der ID ''{0}'' nicht "
-#~ "subskribieren "
-
-#~ msgid "Unable to entitle consumer to the pool with id ''{0}'': {1}"
-#~ msgstr ""
-#~ "Verbraucher konnte nicht für den Pool mit der ID ''{0}'' berechtigt "
-#~ "werden: {1}"
-
-#~ msgid "No such entitlement pool: {0}"
-#~ msgstr "Kein solcher Berechtigungs-Pool: {0}"
-
-#~ msgid "Entitlement with ID '{0}' could not be found."
-#~ msgstr "Berechtigung mit ID '{0}' konnte nicht gefunden werden."
-
-#~ msgid "email and email_locale are required for notification"
-#~ msgstr "email und email_locale sind zur Benachrichtigung notwendig"
-
-#~ msgid "Standalone candlepin does not support activation."
-#~ msgstr "Standalone-Candlepin unterstützt keine Aktivierung."
-
-#~ msgid "SubscriptionToken with id {0} could not be found"
-#~ msgstr "Subskriptions-Token mit ID {0} konnte nicht gefunden werden"
-
-#~ msgid "No such token: {0}"
-#~ msgstr "Kein solcher Token: {0}"
-
-#~ msgid "No owner found for user {0}"
-#~ msgstr "Kein Besitzer gefunden für Benutzer {0}"
-
-#~ msgid "consumer: {0}"
-#~ msgstr "Verbraucher: {0}"
-
-#~ msgid "Owner with UUID '{0}' could not be found"
-#~ msgstr "Besitzer mit UUID '{0}' konnte nicht gefunden werden"
-
-#~ msgid "Cound not create the Pool: {0}"
-#~ msgstr "Der Pool konnte nicht erstellt werden: {0}"
-
-#~ msgid "Cannot directly delete a pool backed by a subscription"
-#~ msgstr ""
-#~ "Ein Pool mit zugehöriger Subskription kann nicht direkt gelöscht werden"
-
-#~ msgid "Test"
-#~ msgstr "Test"
-
-#~ msgid "No username provided for oauth request"
-#~ msgstr "Kein Benutzername für oauth-Anfrage angegeben"
-
-#~ msgid "No oauth consumer found for key {0}"
-#~ msgstr "Kein oauth-Verbraucher für Schlüssel {0} gefunden"
-
-#~ msgid "An owner does not exist for a null org id"
-#~ msgstr "Für eine Null-Organisations-ID existiert kein Besitzer"

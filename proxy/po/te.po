@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: l 10n\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-08-18 08:44-0400\n"
+"POT-Creation-Date: 2011-08-23 21:21-0400\n"
 "PO-Revision-Date: 2011-02-28 15:11+0530\n"
 "Last-Translator: Krishnababu Krothapalli <kkrothap@redhat.com>\n"
 "Language-Team: American English <kde-i18n-doc@kde.org>\n"
@@ -16,8 +16,8 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Lokalize 1.1\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Lokalize 1.1\n"
 
 #: src/main/java/org/fedoraproject/candlepin/auth/interceptor/SecurityInterceptor.java:195
 msgid "Unable to verify request."
@@ -724,82 +724,3 @@ msgstr "ఓత్ వినియోగదారి కీను పొందు
 #: src/main/java/org/fedoraproject/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java:141
 msgid "Standalone candlepin does not support redeeming a subscription."
 msgstr ""
-
-#~ msgid "'{0}' Should contain name, priority and at least one attribute"
-#~ msgstr "'{0}' పేరును, ప్రాముఖ్యతను మరియు కనీసం వొక యాట్రిబ్యూట్‌ను కలిగివుండాలి"
-
-#~ msgid "Event with ID '{0}' could not be found."
-#~ msgstr "ఐడి '{0}'తో ఘటన కనుగొనబడలేదు."
-
-#~ msgid "Product with UUID '{0}' could not be found"
-#~ msgstr "UUID '{0}' తో వుత్పత్తి కనుగొనబడ లేకపోయెను"
-
-#~ msgid "Entitlement with ID '{0}' could not be found"
-#~ msgstr "ID '{0}' తో యెన్‌టైటిల్‌మెంట్ కనుగొనబడలేదు"
-
-#~ msgid "Entitlement Pool with ID '{0}' could not be found"
-#~ msgstr "ఐడి '{0}' తో యెన్‌టైటిల్‌మెంట్ పూల్ కనుగొనలేక పోయింది"
-
-#~ msgid "No free entitlements are available for the product ''{0}''"
-#~ msgstr "ఉత్పత్తి ''{0}'' కొరకు యెటువంటి వుచిత యెన్‌టైటిల్‌మెంట్స్ అందుబాటులో లేవు"
-
-#~ msgid ""
-#~ "This consumer is already subscribed to the product matching pool with id "
-#~ "''{0}''"
-#~ msgstr "ఈ వినియోగదారి యిప్పటికే ప్రోడక్ట్ మాచింగ్ పూల్‌కు ఐడి ''{0}''తో సబ్‌స్క్రైబ్ అయినారు"
-
-#~ msgid "No free entitlements are available for the pool with id ''{0}''"
-#~ msgstr "ఐడి ''{0}''తో పూల్ కొరకు యెటువంటి వుచిత యెంటైటిల్‌మెంట్స్ అందుబాటులో లేవు"
-
-#~ msgid ""
-#~ "Consumers of this type are not allowed to subscribe to the pool with id "
-#~ "''{0}''"
-#~ msgstr "ఈ రకమైన వినియోగదారులు పూల్‌కు ఐడి ''{0}''తో సబ్‌స్క్రైబ్ అవుటకు అనుమతించబడరు"
-
-#~ msgid "Unable to entitle consumer to the pool with id ''{0}'': {1}"
-#~ msgstr "వినియోగదారిని పూల్‌కు ఐడి ''{0}'' తో యెన్‌టైటిల్ చేయలేదు: {1}"
-
-#~ msgid "No such entitlement pool: {0}"
-#~ msgstr "అటువంటి యెన్‌టైటిల్‌మెంట్ పూల్ లేదు: {0}"
-
-#~ msgid "Entitlement with ID '{0}' could not be found."
-#~ msgstr "ఐడి '{0}'తో యెన్‌టైటిల్‌మెంట్ కనుగొలబడలేక పోయింది."
-
-#~ msgid "email and email_locale are required for notification"
-#~ msgstr "ప్రకటన కొరకు ఈమెయిల్ మరియు ఈమెయిల్_లోకేల్ అవసరము"
-
-#~ msgid "Standalone candlepin does not support activation."
-#~ msgstr "స్టాండెలోన్ కాండిల్‌పిన్ క్రియాశీలతకు తోడ్పాటునీయదు."
-
-#~ msgid "SubscriptionToken with id {0} could not be found"
-#~ msgstr "సబ్‌స్క్రిప్షన్ టోకెన్ ఐడి {0}తో కనుగొనబడలేక పోయింది"
-
-#~ msgid "No such token: {0}"
-#~ msgstr "అటువంటి టోకెన్ లేదు: {0}"
-
-#~ msgid "No owner found for user {0}"
-#~ msgstr "వాడుకరి {0} కొరకు యే వినియోగదారి కనబడలేదు"
-
-#~ msgid "consumer: {0}"
-#~ msgstr "వినియోగదారి: {0}"
-
-#~ msgid "Owner with UUID '{0}' could not be found"
-#~ msgstr "UUID '{0}' తో యజమాని కనుగొనబడలేదు"
-
-#~ msgid "Cound not create the Pool: {0}"
-#~ msgstr "పూల్ సృష్టించలేక పోయింది: {0}"
-
-#~ msgid "Cannot directly delete a pool backed by a subscription"
-#~ msgstr "సబ్‌స్క్రిప్షన్ ద్వారా వెనుకకు పంపిన పూల్‌ను నేరుగా తొలగించలేము"
-
-#~ msgid "Test"
-#~ msgstr "పరీక్ష"
-
-#~ msgid "No username provided for oauth request"
-#~ msgstr "ఓత్ అభ్యర్ధన కొరకు యెటువంటి వాడుకరిపేరు అందివ్వబడలేదు"
-
-#~ msgid "No oauth consumer found for key {0}"
-#~ msgstr "కీ {0} కొరకు యెటువంటి ఓత్ వినియోగదారి కనబడలేదు"
-
-#~ msgid "An owner does not exist for a null org id"
-#~ msgstr "నల్ ఆర్గ్ ఐడి కొరకు వొక యజమాని లేరు"

@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gu-IN\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-08-18 08:44-0400\n"
+"POT-Creation-Date: 2011-08-23 21:21-0400\n"
 "PO-Revision-Date: 2011-02-23 15:42+0530\n"
 "Last-Translator: Sweta Kothari <swkothar@redhat.com>\n"
 "Language-Team: Gujarati\n"
@@ -17,8 +17,8 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: KBabel 1.11.4\n"
 "Plural-Forms: nplurals=2; plural=(n!=1);\n"
+"X-Generator: KBabel 1.11.4\n"
 
 #: src/main/java/org/fedoraproject/candlepin/auth/interceptor/SecurityInterceptor.java:195
 msgid "Unable to verify request."
@@ -725,83 +725,3 @@ msgstr "oauth ગ્રાહક કીને મેળવી રહ્યા �
 #: src/main/java/org/fedoraproject/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java:141
 msgid "Standalone candlepin does not support redeeming a subscription."
 msgstr ""
-
-#~ msgid "'{0}' Should contain name, priority and at least one attribute"
-#~ msgstr "'{0}' એ નામ, પ્રાધાન્ય અને ઓછામાં ઓછા એક ગુણધર્મને સમાવવા જોઇએ"
-
-#~ msgid "Event with ID '{0}' could not be found."
-#~ msgstr "ID '{0}' સાથે ઘટના શોધી શક્યા નહિં."
-
-#~ msgid "Product with UUID '{0}' could not be found"
-#~ msgstr "UUID '{0}' સાથે પ્રોડક્ટને શોધી શક્યા નહિં"
-
-#~ msgid "Entitlement with ID '{0}' could not be found"
-#~ msgstr "ID '{0}' સાથે અધિકારને શોધી શક્યા નહિં"
-
-#~ msgid "Entitlement Pool with ID '{0}' could not be found"
-#~ msgstr "ID '{0}' સાથે અધિકાર પુલ શોધી શક્યા નહિં"
-
-#~ msgid "No free entitlements are available for the product ''{0}''"
-#~ msgstr "પ્રોડક્ટ ''{0}'' માટે મુક્ત અધિકારો ઉપલબ્ધ નથી"
-
-#~ msgid ""
-#~ "This consumer is already subscribed to the product matching pool with id "
-#~ "''{0}''"
-#~ msgstr "id ''{0}'' સાથે આ ગ્રાહક પહેલેથી જ પ્રોડક્ટ બંધબેસતા પુલ માટે ઉમેદવારી થયેલ છે"
-
-#~ msgid "No free entitlements are available for the pool with id ''{0}''"
-#~ msgstr "id ''{0}'' સાથે પુલ માટે મુક્ત અધિકારો ઉપલબ્ધ નથી"
-
-#~ msgid ""
-#~ "Consumers of this type are not allowed to subscribe to the pool with id "
-#~ "''{0}''"
-#~ msgstr ""
-#~ "આ પ્રકારનાં ગ્રાહકઓ id ''{0}'' સાથે પુલ માટે ઉમેદવારી કરવા માટે પરવાનગી આપેલ નથી"
-
-#~ msgid "Unable to entitle consumer to the pool with id ''{0}'': {1}"
-#~ msgstr "id ''{0}'' સાથે પુલ માટે ગ્રાહકને અધિકાર આપવાનું અસમર્થ: {1}"
-
-#~ msgid "No such entitlement pool: {0}"
-#~ msgstr "આવો અધિકાર પુલ નથી: {0}"
-
-#~ msgid "Entitlement with ID '{0}' could not be found."
-#~ msgstr "ID '{0}' સાથે અધિકારને શોધી શક્યા નહિં."
-
-#~ msgid "email and email_locale are required for notification"
-#~ msgstr "ઇમેલ અને ઇમેલ સ્થાનિક સૂચના માટે જરૂરી છે (_l)"
-
-#~ msgid "Standalone candlepin does not support activation."
-#~ msgstr "એકલું candlepin સક્રિયકરણને આધાર આપતુ નથી."
-
-#~ msgid "SubscriptionToken with id {0} could not be found"
-#~ msgstr "id {0} સાથે ઉમેદવારી ટોકન શોધી શક્યા નહિ"
-
-#~ msgid "No such token: {0}"
-#~ msgstr "આવુ ટોકન નથી: {0}"
-
-#~ msgid "No owner found for user {0}"
-#~ msgstr "વપરાશકર્તા {0} માટે માલિક મળ્યો નથી"
-
-#~ msgid "consumer: {0}"
-#~ msgstr "ગ્રાહક: {0}"
-
-#~ msgid "Owner with UUID '{0}' could not be found"
-#~ msgstr "UUID '{0}' સાથે માલિકને શોધી શક્યા નહિં"
-
-#~ msgid "Cound not create the Pool: {0}"
-#~ msgstr "પુલને બનાવી શક્યા નહિં: {0}"
-
-#~ msgid "Cannot directly delete a pool backed by a subscription"
-#~ msgstr "ઉમેદવારી દ્દારા લીધેલ પુલને સીધુ જ કાઢી શકાતુ નથી"
-
-#~ msgid "Test"
-#~ msgstr "ચકાસો"
-
-#~ msgid "No username provided for oauth request"
-#~ msgstr "oauth માંગણી માટે વપરાશકર્તાનામ પૂરુ પાડેલ નથી"
-
-#~ msgid "No oauth consumer found for key {0}"
-#~ msgstr "કી {0} માટે oauth ગ્રાહક મળ્યો નથી"
-
-#~ msgid "An owner does not exist for a null org id"
-#~ msgstr "નલ org id માટે માલિક અસ્તિત્વ ધરાવતો નથી"

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: l 10n\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-08-18 08:44-0400\n"
+"POT-Creation-Date: 2011-08-23 21:21-0400\n"
 "PO-Revision-Date: 2011-02-24 17:50+0530\n"
 "Last-Translator: \n"
 "Language-Team: Bengali (India) <anubad@lists.ankur.org.in>\n"
@@ -15,8 +15,8 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Lokalize 1.1\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Lokalize 1.1\n"
 
 #: src/main/java/org/fedoraproject/candlepin/auth/interceptor/SecurityInterceptor.java:195
 msgid "Unable to verify request."
@@ -723,84 +723,3 @@ msgstr "oauth গ্রাহক কি প্রাপ্ত করতে ত�
 #: src/main/java/org/fedoraproject/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java:141
 msgid "Standalone candlepin does not support redeeming a subscription."
 msgstr ""
-
-#~ msgid "'{0}' Should contain name, priority and at least one attribute"
-#~ msgstr ""
-#~ "'{0}'-র মধ্যে নাম, গুরুত্বের মাত্রা ও অন্ততর একটি অ্যাট্রিবিউট উপস্থিত থাকা আবশ্যক"
-
-#~ msgid "Event with ID '{0}' could not be found."
-#~ msgstr "'{0}' ID বিশিষ্ট ইভেন্ট পাওয়া যায়নি।"
-
-#~ msgid "Product with UUID '{0}' could not be found"
-#~ msgstr "UUID '{0}' বিশিষ্ট উৎপাদন পাওয়া যায়নি"
-
-#~ msgid "Entitlement with ID '{0}' could not be found"
-#~ msgstr "ID '{0}'  বিশিষ্ট এনটাইটেলমেন্ট পাওয়া যায়নি"
-
-#~ msgid "Entitlement Pool with ID '{0}' could not be found"
-#~ msgstr "'{0}' ID বিশিষ্ট এনটাইটেলমেন্ট পুল পাওয়া যায়নি"
-
-#~ msgid "No free entitlements are available for the product ''{0}''"
-#~ msgstr "''{0}'' উৎপাদনের সাথে বিনামূল্যের কোনো এনটাইটেলমেন্ট উপস্থিত নেই"
-
-#~ msgid ""
-#~ "This consumer is already subscribed to the product matching pool with id "
-#~ "''{0}''"
-#~ msgstr ""
-#~ "এই গ্রাহকের ক্ষেত্রে ''{0}'' id সহ পুলের উৎপাদনের জন্য সাবস্ক্রিপশন উপলব্ধ রয়েছে"
-
-#~ msgid "No free entitlements are available for the pool with id ''{0}''"
-#~ msgstr "''{0}'' id বিশিষ্ট পুলের জন্য বিনামূল্যের কোনো এনটাইটেলমেন্ট উপলব্ধ নেই"
-
-#~ msgid ""
-#~ "Consumers of this type are not allowed to subscribe to the pool with id "
-#~ "''{0}''"
-#~ msgstr "''{0}'' id বিশিষ্ট পুলে এই ধরনের গ্রাহকরা সাবস্ক্রাইব করতে পারবেন না।"
-
-#~ msgid "Unable to entitle consumer to the pool with id ''{0}'': {1}"
-#~ msgstr "''{0}'' id বিশিষ্ট পুলে গ্রাহককে এনটাইটেল করা যায়নি: {1}"
-
-#~ msgid "No such entitlement pool: {0}"
-#~ msgstr "এই ধরনের কোনো এনটাইটেলমেন্ট পুল উপলব্ধ নেই: {0}"
-
-#~ msgid "Entitlement with ID '{0}' could not be found."
-#~ msgstr "'{0}' ID বিশিষ্ট এনটাইটেলমেন্ট পাওয়া যায়নি।"
-
-#~ msgid "email and email_locale are required for notification"
-#~ msgstr "সূচনা প্রদানের জন্য email ও email_locale আবশ্যক"
-
-#~ msgid "Standalone candlepin does not support activation."
-#~ msgstr "স্বতন্ত্র candlepin দ্বারা সক্রিয়করণ সমর্থন করা হয় না।"
-
-#~ msgid "SubscriptionToken with id {0} could not be found"
-#~ msgstr "{0} id বিশিষ্ট সাবস্ক্রিপশন টোকেন পাওয়া যায়নি"
-
-#~ msgid "No such token: {0}"
-#~ msgstr "এই ধরনের কোনো টোকেন উপলব্ধ নেই: {0}"
-
-#~ msgid "No owner found for user {0}"
-#~ msgstr "{0} ব্যবহারকারীর ক্ষেত্রে কোনো মালিক পাওয়া যায়নি"
-
-#~ msgid "consumer: {0}"
-#~ msgstr "গ্রাহক: {0}"
-
-#~ msgid "Owner with UUID '{0}' could not be found"
-#~ msgstr "'{0}' UUID বিশিষ্ট মালিক পাওয়া যায়নি"
-
-#~ msgid "Cound not create the Pool: {0}"
-#~ msgstr "পুল প্রস্তুত করা যায়নি: {0}"
-
-#~ msgid "Cannot directly delete a pool backed by a subscription"
-#~ msgstr "সাবস্ক্রিপশন সহ পুল সরাসরি মুছে ফেলা সম্ভব নয়"
-
-#~ msgid "Test"
-#~ msgstr "পরীক্ষা"
-
-#~ msgid "No username provided for oauth request"
-#~ msgstr "oauth অনুরোধের জন্য কোনো ব্যবহারকারীর নাম উল্লেখ করা হয়নি"
-
-#~ msgid "No oauth consumer found for key {0}"
-#~ msgstr "{0} কি-র জন্য oauth গ্রাহক পাওয়া যায়নি"
-
-#~ msgid "An owner does not exist for a null org id"
-#~ msgstr "ফাঁকা org id-র ক্ষেত্রে কোনো মালিক উপস্থিত নেই"

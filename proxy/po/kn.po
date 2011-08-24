@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: l 10n\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-08-18 08:44-0400\n"
+"POT-Creation-Date: 2011-08-23 21:21-0400\n"
 "PO-Revision-Date: 2011-02-24 16:48+0530\n"
 "Last-Translator: Shankar Prasad <svenkate@redhat.com>\n"
 "Language-Team: kn_IN <kde-i18n-doc@kde.org>\n"
@@ -16,8 +16,8 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Lokalize 1.1\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Generator: Lokalize 1.1\n"
 
 #: src/main/java/org/fedoraproject/candlepin/auth/interceptor/SecurityInterceptor.java:195
 msgid "Unable to verify request."
@@ -725,91 +725,3 @@ msgstr "oauth ಗ್ರಾಹಕ ಕೀಲಿಯನ್ನು ಪಡೆಯುವ�
 #: src/main/java/org/fedoraproject/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java:141
 msgid "Standalone candlepin does not support redeeming a subscription."
 msgstr ""
-
-#~ msgid "'{0}' Should contain name, priority and at least one attribute"
-#~ msgstr ""
-#~ "'{0}' ಎನ್ನುವುದು ಹೆಸರು, ಆದ್ಯತೆ ಹಾಗು ಕನಿಷ್ಟ ಒಂದಾದರೂ ಗುಣವಿಶೇಷವನ್ನು ಹೊಂದಿರಬೇಕು"
-
-#~ msgid "Event with ID '{0}' could not be found."
-#~ msgstr "'{0}' ಎಂಬ ಐಡಿಯ ಯಾವುದೆ ಕಾರ್ಯಕ್ರಮ (ಇವೆಂಟ್) ಕಂಡುಬಂದಿಲ್ಲ."
-
-#~ msgid "Product with UUID '{0}' could not be found"
-#~ msgstr "'{0}' ಎಂಬ UUID ಅನ್ನು ಹೊಂದಿದ ಉತ್ಪನ್ನವು ಕಂಡು ಬಂದಿಲ್ಲ"
-
-#~ msgid "Entitlement with ID '{0}' could not be found"
-#~ msgstr "'{0}' ಎಂಬ ಐಡಿಯ ಯಾವುದೆ ಎಂಟೈಟಲ್ಮೆಂಟ್ ಕಂಡುಬಂದಿಲ್ಲ"
-
-#~ msgid "Entitlement Pool with ID '{0}' could not be found"
-#~ msgstr "'{0}' ಎಂಬ ಐಡಿಯನ್ನು ಹೊಂದಿದ ಯಾವುದೆ ಎಂಟೈಟಲ್ಮೆಂಟ್ ಪೂಲ್‌ ಕಂಡುಬಂದಿಲ್ಲ"
-
-#~ msgid "No free entitlements are available for the product ''{0}''"
-#~ msgstr "''{0}'' ಎಂಬ ಉತ್ಪನ್ನಕ್ಕೆ ಯಾವುದೆ ಉಚಿತ ಎಂಟೈಟಲ್ಮೆಂಟ್‌ಗಳು ಲಭ್ಯವಿಲ್ಲ"
-
-#~ msgid ""
-#~ "This consumer is already subscribed to the product matching pool with id "
-#~ "''{0}''"
-#~ msgstr ""
-#~ "ಗ್ರಾಹಕರು ಈಗಾಗಲೆ ''{0}'' ಎಂಬ ಐಡಿಯನ್ನು ಹೊಂದಿರುವ ಉತ್ಪನ್ನಕ್ಕೆ ತಾಳೆಯಾಗುವ ಪೂಲ್‌ಗೆ "
-#~ "ಚಂದಾದಾರರಾಗಿದ್ದಾರೆ"
-
-#~ msgid "No free entitlements are available for the pool with id ''{0}''"
-#~ msgstr ""
-#~ "''{0}'' ಎಂಬ ಐಡಿಯನ್ನು ಹೊಂದಿರುವ ಪೂಲ್‌ಗಾಗಿ ಯಾವುದೆ ಉಚಿತ ಎಂಟೈಟಲ್ಮೆಂಟ್‌ಗಳು ಲಭ್ಯವಿಲ್ಲ"
-
-#~ msgid ""
-#~ "Consumers of this type are not allowed to subscribe to the pool with id "
-#~ "''{0}''"
-#~ msgstr ""
-#~ "ಈ ಬಗೆಯ ಗ್ರಾಹಕರಿಗೆ ''{0}'' ಎಂಬ ಐಡಿಯನ್ನು ಹೊಂದಿರುವ ಪೂಲ್‌ಗೆ ಚಂದಾದಾರರಾಗಲು ಅನುಮತಿ "
-#~ "ಇರುವುದಿಲ್ಲ"
-
-#~ msgid "Unable to entitle consumer to the pool with id ''{0}'': {1}"
-#~ msgstr ""
-#~ "ಗ್ರಾಹಕನನ್ನು ''{0}'' ಎಂಬ ಐಡಿಯನ್ನು ಹೊಂದಿರುವ ಪೂಲ್‌ಗೆ ಅರ್ಹತೆ ನೀಡಲು ಸಾಧ್ಯವಾಗಿಲ್ಲ: {1}"
-
-#~ msgid "No such entitlement pool: {0}"
-#~ msgstr "ಅಂತಹ ಯಾವುದೆ  ಎಂಟೈಟಲ್ಮೆಂಟ್ ಪೂಲ್ ಇಲ್ಲ: {0}"
-
-#~ msgid "Entitlement with ID '{0}' could not be found."
-#~ msgstr "'{0}' ಎಂಬ ಐಡಿಯ ಯಾವುದೆ ಎಂಟೈಟಲ್ಮೆಂಟ್ ಕಂಡುಬಂದಿಲ್ಲ."
-
-#~ msgid "email and email_locale are required for notification"
-#~ msgstr "ಸೂಚನೆಗಾಗಿ ಇಮೈಲ್ ಹಾಗು email_locale ನ ಅಗತ್ಯವಿರುತ್ತದೆ"
-
-#~ msgid "Standalone candlepin does not support activation."
-#~ msgstr "ಸಕ್ರಿಯಗೊಳಿಕೆಯನ್ನು ಒಂಟಿಯಾಗಿ candlepin ಬೆಂಬಲಿಸುವುದಿಲ್ಲ."
-
-#~ msgid "SubscriptionToken with id {0} could not be found"
-#~ msgstr "{0} ಎಂಬ ಐಡಿಯನ್ನು ಹೊಂದಿರುವ ಚಂದಾದಾರಿಕೆ ಟೋಕನ್ ಕಂಡುಬಂದಿಲ್ಲ"
-
-#~ msgid "No such token: {0}"
-#~ msgstr "ಅಂತಹ ಯಾವುದೆ ಟೋಕನ್‌ ಇಲ್ಲ: {0}"
-
-#~ msgid "No owner found for user {0}"
-#~ msgstr "{0} ಎಂಬ ಬಳಕೆದಾರನಿಗಾಗಿ ಯಾವುದೆ ಮಾಲಿಕ ಕಂಡುಬಂದಿಲ್ಲ"
-
-#~ msgid "consumer: {0}"
-#~ msgstr "ಗ್ರಾಹಕ: {0}"
-
-#~ msgid "Owner with UUID '{0}' could not be found"
-#~ msgstr "'{0}' ಎಂಬ UUID ಅನ್ನು ಹೊಂದಿದ ಮಾಲಿಕನು ಕಂಡು ಬಂದಿಲ್ಲ"
-
-#~ msgid "Cound not create the Pool: {0}"
-#~ msgstr "ಪೂಲ್ ಅನ್ನಯ ರಚಿಸಲು ಸಾಧ್ಯವಾಗಿಲ್ಲ: {0}"
-
-#~ msgid "Cannot directly delete a pool backed by a subscription"
-#~ msgstr ""
-#~ "ಒಂದು ಚಂದಾದಾರಿಕೆಯ ಹಿನ್ನಲೆಯಲ್ಲಿ ಹೊಂದಿರುವ ಒಂದು ಪೂಲ್ ಅನ್ನು ನೇರವಾಗಿ ಅಳಿಸಲು "
-#~ "ಸಾಧ್ಯವಿರುವುದಿಲ್ಲ"
-
-#~ msgid "Test"
-#~ msgstr "ಪರೀಕ್ಷೆ"
-
-#~ msgid "No username provided for oauth request"
-#~ msgstr "oauth ಮನವಿಗಾಗಿ ಯಾವುದೆ ಬಳಕೆದಾರನನ್ನು ಒದಗಿಸಲಾಗಿಲ್ಲ"
-
-#~ msgid "No oauth consumer found for key {0}"
-#~ msgstr "{0} ಎಂಬ ಕೀಲಿಗೆ ಯಾವುದೆ oauth ಗ್ರಾಹಕ ಕಂಡು ಬಂದಿಲ್ಲ"
-
-#~ msgid "An owner does not exist for a null org id"
-#~ msgstr "ಶೂನ್ಯ org id ಗಾಗಿ ಒಬ್ಬ ಮಾಲಿಕ ಅಸ್ತಿತ್ವದಲ್ಲಿಲ್ಲ"

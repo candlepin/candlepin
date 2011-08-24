@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: fr-FR\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-08-18 08:44-0400\n"
+"POT-Creation-Date: 2011-08-23 21:21-0400\n"
 "PO-Revision-Date: 2011-02-23 16:26+1000\n"
 "Last-Translator: Sam Friedmann <sfriedma@hotmail.com>\n"
 "Language-Team: French <fr@li.org>\n"
@@ -737,90 +737,3 @@ msgstr "Erreur lors de l'obtention de la clé du consommateur oauth"
 #: src/main/java/org/fedoraproject/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java:141
 msgid "Standalone candlepin does not support redeeming a subscription."
 msgstr ""
-
-#~ msgid "'{0}' Should contain name, priority and at least one attribute"
-#~ msgstr "'{0}' devrait contenir le nom, la priorité et au moins un attribut"
-
-#~ msgid "Event with ID '{0}' could not be found."
-#~ msgstr "Impossible de trouver l'événement avec l'ID '{0}'."
-
-#~ msgid "Product with UUID '{0}' could not be found"
-#~ msgstr "Impossible de trouver le produit avec l'UUID '{0}'"
-
-#~ msgid "Entitlement with ID '{0}' could not be found"
-#~ msgstr "Le droit d'accès avec l'ID '{0}' n'a pas pu être trouvé"
-
-#~ msgid "Entitlement Pool with ID '{0}' could not be found"
-#~ msgstr "Impossible de trouver le Pool de droits d'accès avec l'ID '{0}'"
-
-#~ msgid "No free entitlements are available for the product ''{0}''"
-#~ msgstr "Aucun droit d'accès n'est disponible pour le produit ''{0}''"
-
-#~ msgid ""
-#~ "This consumer is already subscribed to the product matching pool with id "
-#~ "''{0}''"
-#~ msgstr ""
-#~ "Ce consommateur est déjà abonné au produit correspondant au pool avec "
-#~ "l'id ''{0}''"
-
-#~ msgid "No free entitlements are available for the pool with id ''{0}''"
-#~ msgstr ""
-#~ "Aucun droit d'accès gratuit disponible pour le pool avec l'id ''{0}''"
-
-#~ msgid ""
-#~ "Consumers of this type are not allowed to subscribe to the pool with id "
-#~ "''{0}''"
-#~ msgstr ""
-#~ "Les consommateurs de ce type n'ont pas le droit de s'abonner au pool avec "
-#~ "l'id ''{0}''"
-
-#~ msgid "Unable to entitle consumer to the pool with id ''{0}'': {1}"
-#~ msgstr ""
-#~ "Impossible de donner les droits d'accès au consommateur pour le pool avec "
-#~ "l'id ''{0}'' : {1}"
-
-#~ msgid "No such entitlement pool: {0}"
-#~ msgstr "Aucun tel pool de droit d'accès : {0}"
-
-#~ msgid "Entitlement with ID '{0}' could not be found."
-#~ msgstr "Le droit d'accès avec l'ID '{0}' n'a pas pu être trouvé."
-
-#~ msgid "email and email_locale are required for notification"
-#~ msgstr "email et email_locale sont requis pour la notification"
-
-#~ msgid "Standalone candlepin does not support activation."
-#~ msgstr ""
-#~ "Candlepine standalone (autonome) ne prend pas l'activation en charge."
-
-#~ msgid "SubscriptionToken with id {0} could not be found"
-#~ msgstr "Impossible de trouver le SubscriptionToken avec l'id {0}"
-
-#~ msgid "No such token: {0}"
-#~ msgstr "Aucun tel token : {0}"
-
-#~ msgid "No owner found for user {0}"
-#~ msgstr "Aucun propriétaire trouvé pour l'utilisateur {0}"
-
-#~ msgid "consumer: {0}"
-#~ msgstr "consommateur : {0}"
-
-#~ msgid "Owner with UUID '{0}' could not be found"
-#~ msgstr "Impossible de trouver le propriétaire avec l'UUID '{0}'"
-
-#~ msgid "Cound not create the Pool: {0}"
-#~ msgstr "Impossible de créer le Pool : {0}"
-
-#~ msgid "Cannot directly delete a pool backed by a subscription"
-#~ msgstr "Impossible de supprimer directement un pool associé à un abonnement"
-
-#~ msgid "Test"
-#~ msgstr "Test"
-
-#~ msgid "No username provided for oauth request"
-#~ msgstr "Aucun nom d'utilisateur fournit pour la requête oauth"
-
-#~ msgid "No oauth consumer found for key {0}"
-#~ msgstr "Aucun consommateur oauth trouvé pour la clé {0}"
-
-#~ msgid "An owner does not exist for a null org id"
-#~ msgstr "Un propriétaire n'existe pas pour un id org null"
