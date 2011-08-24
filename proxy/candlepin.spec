@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.4.10
+Version: 0.4.11
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -146,6 +146,43 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Wed Aug 24 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.11-1
+- Move the translations to fedora.zanata.org (bkearney@redhat.com)
+- Handle null values correctly before invoking the certgen (bkearney@redhat.com)
+- Added another stackable product (mstead@redhat.com)
+- Extracted the strings to updtae the zanata server (bkearney@redhat.com)
+- 729780: Requesting a secure object which does not exist should throw a 404,
+  not a 403. (bkearney@redhat.com)
+- 708058: Server 500 error thrown when user autosubscribes and has no
+  entitlements (wpoteat@redhat.com)
+- Add consumer/uuid for EntitlerJob jobstatus (jbowes@redhat.com)
+- Convert JobStatus ownerKey to a generic targetId/targetType
+  (jbowes@redhat.com)
+- Fix registration issue with null facts/installed products.
+  (dgoodwin@redhat.com)
+- Update supported products when updating consumer. (dgoodwin@redhat.com)
+- Store a set of installed products for a consumer. (dgoodwin@redhat.com)
+- 728622: Inconsistent enable config entries (wpoteat@redhat.com)
+- 728624: Activation keys are successfully being created with invalid chars
+  (wpoteat@redhat.com)
+- 728636: Duplicate activation key error is hard to decipher
+  (wpoteat@redhat.com)
+- Checkstyle (wpoteat@redhat.com)
+- 729125: Adding pools to an activation key should fail when quantity < 1 and
+  quantity > totalQuantity for a multi-entitlement pool (wpoteat@redhat.com)
+- 729070: Adding pools to an activation key should be blocked when specifying a
+  quantity>1 for a non-multi-entitlement pool (wpoteat@redhat.com)
+- 728721: NullPointerException thrown when registering with an activation key
+  bound to a pool that requires_consumer_type person. (wpoteat@redhat.com)
+- Added test case for CandlepinContextListener (jesusr@redhat.com)
+- remove unused import (checkstyle please) :D (jmrodri@gmail.com)
+- Disable quantity for bind by product. (dgoodwin@redhat.com)
+- Replace hand-coded mock object with Mockito. (jmrodri@gmail.com)
+- 729066: remove logging statement to avoid filling up logs.
+  (jmrodri@gmail.com)
+- Allow disabling pinsetter on a particular node. (jmrodri@gmail.com)
+- refactor scheduleJob. (jmrodri@gmail.com)
+
 * Mon Aug 08 2011 Devan Goodwin <dgoodwin@rm-rf.ca> 0.4.10-1
 - 727611: Allow trusted user principals to register consumers.
   (dgoodwin@redhat.com)
