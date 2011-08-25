@@ -150,15 +150,14 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         parentSystem.getFacts().put("total_guests", "10");
         consumerCurator.update(parentSystem);
-        poolManager.entitleByProduct(parentSystem, virtHost.getId(), new Integer("1"));
+        poolManager.entitleByProduct(parentSystem, virtHost.getId());
     }
 
     @Ignore // Support for virtualized systems has been changed
     @Test
     public void testVirtSystemPhysicalEntitlement() throws Exception {
         // Give parent virt host ent:
-        Entitlement e = poolManager.entitleByProduct(parentSystem, virtHost.getId(),
-            new Integer("1"));
+        Entitlement e = poolManager.entitleByProduct(parentSystem, virtHost.getId());
         assertNotNull(e);
 
         Pool provisioningPool = poolCurator.listByOwnerAndProduct(o,
@@ -167,8 +166,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         Long provisioningCount = Long.valueOf(provisioningPool.getConsumed());
         assertEquals(Long.valueOf(0), provisioningCount);
 
-        e = poolManager.entitleByProduct(childVirtSystem, provisioning.getId(),
-            new Integer("1"));
+        e = poolManager.entitleByProduct(childVirtSystem, provisioning.getId());
         assertNotNull(e);
         // Should have resorted to consuming a physical entitlement, because the guest's
         // parent does not have this.
@@ -181,15 +179,13 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
                 monitoring.getId()).get(0);
         assertEquals(Long.valueOf(5), monitoringPool.getQuantity());
         for (int i = 0; i < 5; i++) {
-            Entitlement e = poolManager.entitleByProduct(parentSystem, monitoring.getId(),
-                new Integer("1"));
+            Entitlement e = poolManager.entitleByProduct(parentSystem, monitoring.getId());
             assertNotNull(e);
         }
 
         // The cert should specify 5 monitoring entitlements, taking a 6th should fail:
         try {
-            poolManager.entitleByProduct(parentSystem, monitoring.getId(),
-                new Integer("1"));
+            poolManager.entitleByProduct(parentSystem, monitoring.getId());
             fail();
         }
         catch (EntitlementRefusedException e) {
@@ -200,8 +196,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
     @Test
     public void testRevocation() throws Exception {
-        Entitlement e = poolManager.entitleByProduct(parentSystem, monitoring.getId(),
-            new Integer("1"));
+        Entitlement e = poolManager.entitleByProduct(parentSystem, monitoring.getId());
         poolManager.revokeEntitlement(e);
 
         List<Entitlement> entitlements = entitlementCurator.listByConsumer(parentSystem);
@@ -214,7 +209,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
             monitoring.getId()).get(0);
         assertEquals(Long.valueOf(5), monitoringPool.getQuantity());
 
-        Entitlement e = poolManager.entitleByProduct(parentSystem, monitoring.getId(), 3);
+        Entitlement e = poolManager.entitleByPool(parentSystem, monitoringPool, 3);
         assertNotNull(e);
         assertEquals(Long.valueOf(3), monitoringPool.getConsumed());
 
@@ -226,7 +221,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     public void testRegenerateEntitlementCertificatesWithSingleEntitlement()
         throws Exception {
         this.entitlementCurator.refresh(poolManager.entitleByProduct(this.childVirtSystem,
-            provisioning.getId(), 1));
+            provisioning.getId()));
         regenerateECAndAssertNotSameCertificates();
     }
 
@@ -234,9 +229,9 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     public void testRegenerateEntitlementCertificatesWithMultipleEntitlements()
         throws EntitlementRefusedException {
         this.entitlementCurator.refresh(poolManager.entitleByProduct(
-            this.childVirtSystem, provisioning.getId(), 3));
+            this.childVirtSystem, provisioning.getId()));
         this.entitlementCurator.refresh(poolManager.entitleByProduct(this.childVirtSystem,
-            monitoring.getId(), 4));
+            monitoring.getId()));
         regenerateECAndAssertNotSameCertificates();
     }
 
@@ -275,12 +270,10 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         // this ends up causing a hibernate failure (the old cert is asked to be deleted,
         // but it hasn't been saved yet). Since getting the pool ordering right is tricky
         // inside an entitleByProducts call, we do it in two singular calls here.  
-        poolManager.entitleByProduct(this.parentSystem,
-            "modifier", 1);
+        poolManager.entitleByProduct(this.parentSystem, "modifier");
         
         try {
-            poolManager.entitleByProduct(this.parentSystem,
-                PRODUCT_VIRT_HOST, 1);
+            poolManager.entitleByProduct(this.parentSystem, PRODUCT_VIRT_HOST);
         }
         catch (EntityNotFoundException e) {
             throw e;

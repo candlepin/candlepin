@@ -60,7 +60,7 @@ public interface PoolManager {
     Entitlement entitleByPool(Consumer consumer, Pool pool, Integer quantity)
         throws EntitlementRefusedException;
 
-    Entitlement entitleByProduct(Consumer consumer, String productId, Integer quantity)
+    Entitlement entitleByProduct(Consumer consumer, String productId)
         throws EntitlementRefusedException;
 
     /**
@@ -77,8 +77,8 @@ public interface PoolManager {
      * @return Entitlement
      * @throws EntitlementRefusedException if entitlement is refused
      */
-    List<Entitlement> entitleByProducts(Consumer consumer, String[] productIds,
-            Integer quantity) throws EntitlementRefusedException;
+    List<Entitlement> entitleByProducts(Consumer consumer, String[] productIds)
+        throws EntitlementRefusedException;
 
 
     Pool find(String poolId);

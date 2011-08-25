@@ -57,7 +57,7 @@ public class EntitlerJob implements Job {
             }
             else if (map.containsKey("product_ids")) {
                 String[] prodIds = (String[]) map.get("product_ids");
-                List<Entitlement> ents = entitler.bindByProducts(prodIds, uuid, qty);
+                List<Entitlement> ents = entitler.bindByProducts(prodIds, uuid);
                 entitler.sendEvents(ents);
             }
 

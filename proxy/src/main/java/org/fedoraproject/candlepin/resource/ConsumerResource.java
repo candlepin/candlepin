@@ -797,8 +797,7 @@ public class ConsumerResource {
         List<Entitlement> entitlements = null;
         if (productIds != null && productIds.length > 0) {
             try {
-                entitlements = entitler.bindByProducts(productIds, consumer,
-                    quantity);
+                entitlements = entitler.bindByProducts(productIds, consumer);
             }
             catch (ForbiddenException fe) {
                 throw fe;

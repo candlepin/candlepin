@@ -328,80 +328,77 @@ public class CandlepinPoolManager implements PoolManager {
     //
     @Transactional
     public List<Entitlement> entitleByProducts(Consumer consumer,
-        String[] productIds, Integer quantity)
+        String[] productIds)
         throws EntitlementRefusedException {
         Owner owner = consumer.getOwner();
         List<Entitlement> entitlements = new LinkedList<Entitlement>();
         Map<Pool, Integer> poolMap = new HashMap<Pool, Integer>();
 
-        // loop here for quantity - ignore non-quantity for now
-        for (int i = 0; i < quantity; i++) {
 
-            ValidationResult failedResult = null;
-            List<Pool> candidatePools = poolCurator.listByOwner(owner);
-            List<Pool> filteredPools = new LinkedList<Pool>();
+        ValidationResult failedResult = null;
+        List<Pool> candidatePools = poolCurator.listByOwner(owner);
+        List<Pool> filteredPools = new LinkedList<Pool>();
 
-            for (Pool pool : candidatePools) {
-                // if we already are planning to pull all available from this
-                // pool, skip
-                if (poolMap.get(pool) != null &&
-                    (pool.getQuantity() - pool.getConsumed()) == poolMap.get(
-                        pool).longValue()) {
-                    continue;
+        for (Pool pool : candidatePools) {
+            // if we already are planning to pull all available from this
+            // pool, skip
+            if (poolMap.get(pool) != null &&
+                (pool.getQuantity() - pool.getConsumed()) == poolMap.get(
+                    pool).longValue()) {
+                continue;
+            }
+
+            boolean providesProduct = false;
+            for (String productId : productIds) {
+                if (pool.provides(productId)) {
+                    providesProduct = true;
+                    break;
                 }
+            }
+            if (providesProduct) {
+                PreEntHelper preHelper = enforcer.preEntitlement(consumer,
+                    pool, 1);
+                ValidationResult result = preHelper.getResult();
 
-                boolean providesProduct = false;
-                for (String productId : productIds) {
-                    if (pool.provides(productId)) {
-                        providesProduct = true;
-                        break;
+                if (!result.isSuccessful()) {
+                    // Just keep the last one around, if we need it
+                    failedResult = result;
+                    if (log.isDebugEnabled()) {
+                        log.debug("Pool filtered from candidates due to rules " +
+                            "failure: " +
+                            pool.getId());
                     }
                 }
-                if (providesProduct) {
-                    PreEntHelper preHelper = enforcer.preEntitlement(consumer,
-                        pool, 1);
-                    ValidationResult result = preHelper.getResult();
-
-                    if (!result.isSuccessful()) {
-                        // Just keep the last one around, if we need it
-                        failedResult = result;
-                        if (log.isDebugEnabled()) {
-                            log.debug("Pool filtered from candidates due to rules " +
-                                "failure: " +
-                                pool.getId());
-                        }
-                    }
-                    else {
-                        filteredPools.add(pool);
-                    }
+                else {
+                    filteredPools.add(pool);
                 }
             }
+        }
 
-            if (filteredPools.size() == 0) {
-                // Only throw refused exception if we actually hit the rules:
-                if (failedResult != null) {
-                    throw new EntitlementRefusedException(failedResult);
-                }
-                throw new RuntimeException("No entitlements for products: " +
-                    Arrays.toString(productIds));
+        if (filteredPools.size() == 0) {
+            // Only throw refused exception if we actually hit the rules:
+            if (failedResult != null) {
+                throw new EntitlementRefusedException(failedResult);
             }
+            throw new RuntimeException("No entitlements for products: " +
+                Arrays.toString(productIds));
+        }
 
-            List<Pool> bestPools = enforcer.selectBestPools(consumer,
-                productIds, filteredPools);
-            if (bestPools == null) {
-                throw new RuntimeException("No entitlements for products: " +
-                    Arrays.toString(productIds));
+        List<Pool> bestPools = enforcer.selectBestPools(consumer,
+            productIds, filteredPools);
+        if (bestPools == null) {
+            throw new RuntimeException("No entitlements for products: " +
+                Arrays.toString(productIds));
+        }
+
+        for (Pool pool : bestPools) {
+            Integer count = poolMap.get(pool);
+            if (count == null) {
+                count = new Integer(0);
             }
+            poolMap.put(pool, ++count);
+        }
 
-            for (Pool pool : bestPools) {
-                Integer count = poolMap.get(pool);
-                if (count == null) {
-                    count = new Integer(0);
-                }
-                poolMap.put(pool, ++count);
-            }
-
-        }// loop here for quantity
 
         // now make the entitlements
         for (Entry<Pool, Integer> entry : poolMap.entrySet()) {
@@ -411,10 +408,10 @@ public class CandlepinPoolManager implements PoolManager {
         return entitlements;
     }
 
-    public Entitlement entitleByProduct(Consumer consumer, String productId,
-        Integer quantity) throws EntitlementRefusedException {
+    public Entitlement entitleByProduct(Consumer consumer, String productId) 
+        throws EntitlementRefusedException {
         // There will only be one returned entitlement, anyways
-        return entitleByProducts(consumer, new String[]{ productId }, quantity)
+        return entitleByProducts(consumer, new String[]{ productId })
             .get(0);
     }
 

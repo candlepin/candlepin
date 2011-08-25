@@ -125,9 +125,9 @@ public class Entitler {
     }
 
     public List<Entitlement> bindByProducts(String[] productIds,
-        String consumeruuid, Integer quantity) {
+        String consumeruuid) {
         Consumer c = consumerCurator.findByUuid(consumeruuid);
-        return bindByProducts(productIds, c, quantity);
+        return bindByProducts(productIds, c);
     }
 
     /**
@@ -137,15 +137,14 @@ public class Entitler {
      *
      * @param productIds List of product ids.
      * @param consumer The consumer being entitled.
-     * @param quantity number of entitlements requested.
      * @return List of Entitlements
      */
     public List<Entitlement> bindByProducts(String[] productIds,
-        Consumer consumer, Integer quantity) {
+        Consumer consumer) {
         // Attempt to create entitlements:
         try {
             List<Entitlement> entitlements = poolManager.entitleByProducts(
-                consumer, productIds, quantity);
+                consumer, productIds);
             log.debug("Created entitlements: " + entitlements);
             return entitlements;
         }

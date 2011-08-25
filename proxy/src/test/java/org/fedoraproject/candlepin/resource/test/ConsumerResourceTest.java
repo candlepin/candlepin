@@ -751,7 +751,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
             when(c.getOwner()).thenReturn(o);
             when(sa.hasUnacceptedSubscriptionTerms(eq(o))).thenReturn(false);
             when(cc.findByUuid(eq("fakeConsumer"))).thenReturn(c);
-            when(e.bindByProducts(eq(prodIds), eq(c), eq(1)))
+            when(e.bindByProducts(eq(prodIds), eq(c)))
                 .thenThrow(new RuntimeException());
 
             ConsumerResource cr = new ConsumerResource(cc, null,

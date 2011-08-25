@@ -114,15 +114,15 @@ public class EntitlerTest {
     public void bindByProductsString() throws EntitlementRefusedException {
         String[] pids = {"prod1", "prod2", "prod3"};
         when(cc.findByUuid(eq("abcd1234"))).thenReturn(consumer);
-        entitler.bindByProducts(pids, "abcd1234", 1);
-        verify(pm).entitleByProducts(eq(consumer), eq(pids), eq(1));
+        entitler.bindByProducts(pids, "abcd1234");
+        verify(pm).entitleByProducts(eq(consumer), eq(pids));
     }
 
     @Test
     public void bindByProducts() throws EntitlementRefusedException {
         String[] pids = {"prod1", "prod2", "prod3"};
-        entitler.bindByProducts(pids, consumer, 1);
-        verify(pm).entitleByProducts(eq(consumer), eq(pids), eq(1));
+        entitler.bindByProducts(pids, consumer);
+        verify(pm).entitleByProducts(eq(consumer), eq(pids));
     }
 
     @Test(expected = BadRequestException.class)
@@ -200,8 +200,8 @@ public class EntitlerTest {
             String[] pids = {"prod1", "prod2", "prod3"};
             EntitlementRefusedException ere = new EntitlementRefusedException(
                 fakeOutResult(msg));
-            when(pm.entitleByProducts(eq(consumer), eq(pids), eq(1))).thenThrow(ere);
-            entitler.bindByProducts(pids, consumer, 1);
+            when(pm.entitleByProducts(eq(consumer), eq(pids))).thenThrow(ere);
+            entitler.bindByProducts(pids, consumer);
         }
         catch (EntitlementRefusedException e) {
             fail(msg + ": threw unexpected error");

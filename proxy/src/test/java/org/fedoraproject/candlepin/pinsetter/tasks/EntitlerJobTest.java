@@ -104,11 +104,11 @@ public class EntitlerJobTest {
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
         List<Entitlement> ents = new ArrayList<Entitlement>();
-        when(e.bindByProducts(eq(pids), eq(consumerUuid), eq(1))).thenReturn(ents);
+        when(e.bindByProducts(eq(pids), eq(consumerUuid))).thenReturn(ents);
 
         EntitlerJob job = new EntitlerJob(e);
         job.execute(ctx);
-        verify(e).bindByProducts(eq(pids), eq(consumerUuid), eq(1));
+        verify(e).bindByProducts(eq(pids), eq(consumerUuid));
         verify(e).sendEvents(eq(ents));
     }
 

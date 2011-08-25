@@ -416,7 +416,7 @@ public class PoolManagerTest {
             any(List.class))).thenReturn(bestPools);
         
         Entitlement e = manager.entitleByProduct(TestUtil.createConsumer(o),
-            product.getId(), 1);
+            product.getId());
         
         assertNotNull(e);
 
