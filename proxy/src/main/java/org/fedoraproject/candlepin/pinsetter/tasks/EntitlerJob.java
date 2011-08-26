@@ -84,8 +84,7 @@ public class EntitlerJob implements Job {
         return detail;
     }
 
-    public static JobDetail bindByProducts(String[] prodIds, String uuid,
-        Integer qty) {
+    public static JobDetail bindByProducts(String[] prodIds, String uuid) {
 
         JobDetail detail = new JobDetail("bind_by_products_" +
             Util.generateUUID(), EntitlerJob.class);
@@ -94,7 +93,7 @@ public class EntitlerJob implements Job {
         map.put("product_ids", prodIds);
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.CONSUMER);
         map.put(JobStatus.TARGET_ID, uuid);
-        map.put("quantity", qty);
+        map.put("quantity", 1);
 
         detail.setJobDataMap(map);
 

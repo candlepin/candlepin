@@ -778,7 +778,7 @@ public class ConsumerResource {
 
             if (productIds != null && productIds.length > 0) {
                 detail = EntitlerJob.bindByProducts(productIds,
-                        consumerUuid, quantity);
+                        consumerUuid);
             }
             else {
                 String poolId = Util.assertNotNull(poolIdString,

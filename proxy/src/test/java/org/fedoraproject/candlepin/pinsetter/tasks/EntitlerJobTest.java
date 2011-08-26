@@ -60,7 +60,7 @@ public class EntitlerJobTest {
     public void bindByProductsSetup() {
         String[] pids = {"pid1", "pid2", "pid3"};
 
-        JobDetail detail = EntitlerJob.bindByProducts(pids, consumerUuid, 1);
+        JobDetail detail = EntitlerJob.bindByProducts(pids, consumerUuid);
         assertNotNull(detail);
         String[] resultpids = (String[]) detail.getJobDataMap().get("product_ids");
         assertEquals("pid2", resultpids[1]);
@@ -100,7 +100,7 @@ public class EntitlerJobTest {
     public void bindByProductsExec() throws JobExecutionException {
         String[] pids = {"pid1", "pid2", "pid3"};
 
-        JobDetail detail = EntitlerJob.bindByProducts(pids, consumerUuid, 1);
+        JobDetail detail = EntitlerJob.bindByProducts(pids, consumerUuid);
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
         List<Entitlement> ents = new ArrayList<Entitlement>();
@@ -123,7 +123,7 @@ public class EntitlerJobTest {
     @Test
     public void serializeJobDataMapForProducts() throws IOException {
         String[] pids = {"pid1", "pid2", "pid3"};
-        JobDetail detail = EntitlerJob.bindByProducts(pids, consumerUuid, 1);
+        JobDetail detail = EntitlerJob.bindByProducts(pids, consumerUuid);
         serialize(detail.getJobDataMap());
     }
 
