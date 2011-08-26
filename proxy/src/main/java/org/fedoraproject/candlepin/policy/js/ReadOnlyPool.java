@@ -26,6 +26,7 @@ import java.util.Set;
 import org.fedoraproject.candlepin.model.Attribute;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolAttribute;
+import org.fedoraproject.candlepin.model.ProductPoolAttribute;
 import org.fedoraproject.candlepin.model.ProvidedProduct;
 
 /**
@@ -36,6 +37,7 @@ public class ReadOnlyPool {
     private Pool entPool;
     private ReadOnlyProductCache productCache;
     private Map<String, String> attributes = null;
+    private Map<String, String> productAttributes = null;
 
     /**
      * @param entPool the read-write version of the EntitlementPool to copy.
@@ -83,6 +85,14 @@ public class ReadOnlyPool {
         return attributes;
     }
 
+    public String getProductAttribute(String name) {
+        return productAttributes.get(name);
+    }
+
+    public Map<String, String> getProductAttributes() {
+        return productAttributes;
+    }
+
     public Set<ProvidedProduct> getProvidedProducts() {
         return entPool.getProvidedProducts();
     }
@@ -127,6 +137,14 @@ public class ReadOnlyPool {
                 attributes.put(current.getName(), current.getValue());
             }
         }
+        
+        productAttributes = new HashMap<String, String>();
+        Set<ProductPoolAttribute> productAttrList = entPool.getProductAttributes();
+        if (productAttrList != null) {
+            for (Attribute current : productAttrList) {
+                productAttributes.put(current.getName(), current.getValue());
+            }
+        }
     }
 
     public ReadOnlyProduct[] getProducts() {
@@ -145,4 +163,5 @@ public class ReadOnlyPool {
     public ReadOnlyProduct getTopLevelProduct() {
         return productCache.getProductById(entPool.getProductId());
     }
+    
 }
