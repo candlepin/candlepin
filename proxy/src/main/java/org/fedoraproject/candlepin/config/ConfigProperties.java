@@ -21,7 +21,7 @@ import org.fedoraproject.candlepin.pinsetter.tasks.ImportRecordJob;
 import org.fedoraproject.candlepin.pinsetter.tasks.JobCleaner;
 import org.fedoraproject.candlepin.pinsetter.tasks.StatisticHistoryTask;
 
-import org.hibernate.tool.hbm2x.StringUtils;
+import org.apache.commons.lang.StringUtils;
 
 import java.util.HashMap;
 import java.util.Map;
