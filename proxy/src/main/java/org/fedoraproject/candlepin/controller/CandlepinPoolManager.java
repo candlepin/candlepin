@@ -336,10 +336,10 @@ public class CandlepinPoolManager implements PoolManager {
 
 
         ValidationResult failedResult = null;
-        List<Pool> candidatePools = poolCurator.listByOwner(owner);
+        List<Pool> allOwnerPools = poolCurator.listByOwner(owner);
         List<Pool> filteredPools = new LinkedList<Pool>();
 
-        for (Pool pool : candidatePools) {
+        for (Pool pool : allOwnerPools) {
             // if we already are planning to pull all available from this
             // pool, skip
             if (poolMap.get(pool) != null &&

@@ -271,8 +271,6 @@ public class EntitlementRules implements Enforcer {
         List<Pool> bestPools = new LinkedList<Pool>();
         for (Pool p : pools) {
             for (ReadOnlyPool rp : result) {
-                rp.getId();
-                p.getId().equals("foo");
                 if (p.getId().equals(rp.getId())) {
                     log.debug("Best pool: " + p);
                     bestPools.add(p);

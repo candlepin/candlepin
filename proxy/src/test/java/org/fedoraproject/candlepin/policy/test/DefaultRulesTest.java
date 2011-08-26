@@ -48,6 +48,8 @@ import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationResult;
 import org.fedoraproject.candlepin.policy.js.JsRules;
 import org.fedoraproject.candlepin.policy.js.JsRulesProvider;
+import org.fedoraproject.candlepin.policy.js.ReadOnlyPool;
+import org.fedoraproject.candlepin.policy.js.ReadOnlyProductCache;
 import org.fedoraproject.candlepin.policy.js.entitlement.EntitlementRules;
 import org.fedoraproject.candlepin.policy.js.pool.PoolHelper;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
@@ -69,6 +71,7 @@ public class DefaultRulesTest {
     private RulesCurator rulesCurator;
     @Mock
     private ProductServiceAdapter prodAdapter;
+    private ReadOnlyProductCache productCache;
     private Owner owner;
     private Consumer consumer;
     private String productId = "a-product";
@@ -104,6 +107,8 @@ public class DefaultRulesTest {
         owner = new Owner();
         consumer = new Consumer("test consumer", "test user", owner,
             new ConsumerType(ConsumerTypeEnum.SYSTEM));
+        
+        productCache = new ReadOnlyProductCache(prodAdapter);
     }
 
     private Pool createPool(Owner owner, Product product) {
@@ -555,23 +560,41 @@ public class DefaultRulesTest {
         assertEquals(1, bestPools.size());
         assertEquals(pool, bestPools.get(0));
     }
+    
+    private Product mockStackingProduct(String pid, String productName, 
+        String stackId, String sockets) {
+        Product product = new Product(pid, productName);
+        product.setAttribute("sockets", sockets);
+        product.setAttribute("stacking_id", stackId);
+        product.setAttribute("multi-entitlement", "yes");
+        when(this.prodAdapter.getProductById(pid)).thenReturn(product);
+        return product;
+    }
+
+    private Product mockProduct(String pid, String productName) {
+        Product product = new Product(pid, productName);
+        when(this.prodAdapter.getProductById(pid)).thenReturn(product);
+        return product;
+    }
+    
+    private Pool mockPool(Product product) {
+        Pool p = TestUtil.createPool(owner, product);
+        p.setId(TestUtil.randomInt() + "");
+        // Copy all the product attributes onto the pool:
+        for (ProductAttribute prodAttr : product.getAttributes()) {
+            p.setProductAttribute(prodAttr.getName(), prodAttr.getValue(), product.getId());
+        }
+        return p;
+    }
 
     @Test
     public void testFindBestWithConsumerSocketsAndStackingAndMulitplePools() {
         consumer.setFact("cpu.cpu_socket(s)", "4");
+        
+        Product product = mockStackingProduct(productId, "A test product", "13", "1");
 
-        Product product = new Product(productId, "A test product");
-        product.setAttribute("sockets", "1");
-        product.setAttribute("stacking_id", "13");
-        product.setAttribute("multi-entitlement", "yes");
-
-        Pool pool = TestUtil.createPool(owner, product);
-        pool.setId("DEAD-BEEF");
-        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
-
-        Pool pool2 = TestUtil.createPool(owner, product);
-        pool2.setId("DEAD-BEEF2");
-        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+        Pool pool = mockPool(product);
+        Pool pool2 = mockPool(product);
 
         List<Pool> pools = new LinkedList<Pool>();
         pools.add(pool);
@@ -588,25 +611,19 @@ public class DefaultRulesTest {
     public void testFindBestConsumerSocketsAndStackingAndMulitplePoolsMultipleProducts() {
         consumer.setFact("cpu.cpu_socket(s)", "4");
 
-        Product product = new Product(productId, "A test product");
-        product.setAttribute("sockets", "1");
-        product.setAttribute("stacking_id", "13");
-        product.setAttribute("multi-entitlement", "yes");
+        Product product = mockStackingProduct(productId, "A test product", "13", "1");
 
+        // Make a non-stacked product:
         String productId2 = "b product";
         Product product2 = new Product(productId2, "B test product");
-
-        Pool pool = TestUtil.createPool(owner, product);
-        pool.setId("DEAD-BEEF");
-        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
-
-        Pool pool2 = TestUtil.createPool(owner, product);
-        pool2.setId("DEAD-BEEF2");
-        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
-
-        Pool pool3 = TestUtil.createPool(owner, product2);
-        pool3.setId("DEAD-BEEF3");
         when(this.prodAdapter.getProductById(productId2)).thenReturn(product2);
+
+        Pool pool = mockPool(product);
+
+        Pool pool2 = mockPool(product);
+
+        Pool pool3 = mockPool(product2);
+        pool3.setId("DEAD-BEEF3");
 
         List<Pool> pools = new LinkedList<Pool>();
         pools.add(pool);
@@ -621,17 +638,89 @@ public class DefaultRulesTest {
     }
 
     @Test
+    public void selectBestPoolsRegularAndStackingRequested() {
+        consumer.setFact("cpu.cpu_socket(s)", "4");
+
+        Product product = mockStackingProduct(productId, "A test product", "13", "1");
+
+        // Make a non-stacked product:
+        String productId2 = "b product";
+        Product product2 = new Product(productId2, "B test product");
+        when(this.prodAdapter.getProductById(productId2)).thenReturn(product2);
+
+        Pool stackedPool = TestUtil.createPool(owner, product);
+        stackedPool.setId("DEAD-BEEF");
+
+        Pool nonStackedPool = TestUtil.createPool(owner, product2);
+        nonStackedPool.setId("DEAD-BEEF3");
+
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(stackedPool);
+        pools.add(nonStackedPool);
+
+        // System has both the stacked product, as well as another non-stacked product,
+        // we should be able to auto-subscribe to both:
+        List<Pool> bestPools = enforcer.selectBestPools(consumer,
+            new String[]{ productId2, productId }, pools);
+
+        assertEquals(1, containsPoolCount(bestPools, nonStackedPool.getId()));
+        assertEquals(5, bestPools.size());
+        assertEquals(stackedPool, bestPools.get(0));
+    }
+    
+    // Test a system requesting a *provided* product, when pools provide it, each
+    // with a different stack ID.
+    @Test
+    public void selectBestPoolsTwoStacksProvideRequestedProduct() {
+        consumer.setFact("cpu.cpu_socket(s)", "4");
+
+        Product product = mockStackingProduct(productId, "Test Product 1", "13", "1");
+
+        // In this case the system will request a provided product, when two pools
+        String providedProductId = "providedProductId";
+        mockProduct(providedProductId, "Provided Name");
+            
+        Pool pool = TestUtil.createPool(owner, product);
+        pool.addProvidedProduct(new ProvidedProduct(providedProductId, "Irrelevant Name"));
+        pool.setId("DEAD-BEEF");
+
+        Pool pool2 = TestUtil.createPool(owner, product);
+        pool2.setId("DEAD-BEEF3");
+        pool2.addProvidedProduct(new ProvidedProduct(providedProductId, "Irrelevant Name"));
+
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool);
+        pools.add(pool2);
+
+        // System has both the stacked product, as well as another non-stacked product,
+        // we should be able to auto-subscribe to both:
+        List<Pool> bestPools = enforcer.selectBestPools(consumer,
+            new String[]{ providedProductId }, pools);
+
+        assertEquals(4, bestPools.size());
+        assertEquals(pool, bestPools.get(0));
+    }
+    
+    /*
+     * Returns the number of times pool with ID appears in the list of best pools.
+     */
+    public int containsPoolCount(List<Pool> bestPools, String desiredPoolId) {
+        int foundCount = 0;
+        for (Pool p : bestPools) {
+            if (p.getId().equals(desiredPoolId)) {
+                foundCount++;
+            }
+        }
+        return foundCount;
+    }
+
+    @Test
     public void testFindBestWithConsumerSocketsAndStacking() {
         consumer.setFact("cpu.cpu_socket(s)", "4");
 
-        Product product = new Product(productId, "A test product");
-        product.setAttribute("sockets", "1");
-        product.setAttribute("stacking_id", "13");
-        product.setAttribute("multi-entitlement", "yes");
-
-        Pool pool = TestUtil.createPool(owner, product);
-        pool.setId("DEAD-BEEF");
-        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+        Product product = mockStackingProduct(productId, "A test product", "13", "1");
+        
+        Pool pool = mockPool(product);
 
         List<Pool> pools = new LinkedList<Pool>();
         pools.add(pool);
@@ -641,23 +730,17 @@ public class DefaultRulesTest {
 
         assertEquals(4, bestPools.size());
         assertEquals(pool, bestPools.get(0));
-        // assertEquals(Long.valueOf(4), bestPools.get(0).getQuantity());
     }
 
     @Test
     public void testFindBestWithConsumerSocketsAndStackingNotEnoughSockets() {
         consumer.setFact("cpu.cpu_socket(s)", "32");
 
-        Product product = new Product(productId, "A test product");
-        product.setAttribute("sockets", "1");
-        product.setAttribute("stacking_id", "13");
-        product.setAttribute("multi-entitlement", "yes");
+        Product product = mockStackingProduct(productId, "A test product", "13", "1");
 
         // createPool creates quanity of 5 by default, so
         // we don't have enough here
-        Pool pool = TestUtil.createPool(owner, product);
-        pool.setId("DEAD-BEEF");
-        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+        Pool pool = mockPool(product);
 
         List<Pool> pools = new LinkedList<Pool>();
         pools.add(pool);

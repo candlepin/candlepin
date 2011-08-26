@@ -136,35 +136,31 @@ function architectureMatches(product, consumer) {
    return true;
 }
 
-function findStackingPools(pool, consumer, products){
-    log.debug("\nFindStackingPools " + pool + " " + consumer + " \n");
+// Returns an array of the given pool, added to the array once for each entitlement
+// we would need to satisfy the consumers socket requirements.
+// TODO: rename this
+function findStackingPools(pool, consumer, products) {
     var consumer_sockets = 1;
     if (consumer.hasFact(SOCKET_FACT)) {
         consumer_sockets = consumer.getFact(SOCKET_FACT);
     }
+    
+    log.debug("findStackingPools:");
+    log.debug("  pool: " + pool.getId());
+    log.debug("  stacking: " + pool.getProductAttribute("multi-entitlement"));
 
     var new_pools = [];
-    for each (provided_product in getRelevantProvidedProducts(pool, products)) {
-        log.debug("provided_product-- " + provided_product + " " + provided_product.getName());
-        if (!( (provided_product.getAttribute("multi-entitlement") &&
-                (provided_product.getAttribute("stacking_id"))))) {
-            continue;
-        }
-
+    if (pool.getProductAttribute("multi-entitlement") && pool.getProductAttribute("stacking_id")) {
         var product_sockets = 0;
-        if (provided_product.getAttribute("multi-entitlement") && provided_product.getAttribute("stacking_id")) {
-            log.debug("product: " +  provided_product + "is stackable and multi-entitled");
-            log.debug("consumer_sockets " + consumer_sockets);
-            log.debug("product_sockets " + product_sockets);
-            log.debug("provided_product.getAttribute(sockets) " + provided_product.getAttribute("sockets"));
-            while (product_sockets < consumer_sockets) {
-                new_pools.push(pool);
-                product_sockets += parseInt(provided_product.getAttribute("sockets"));
-                log.debug("product_sockets2 " + product_sockets);
-                //break;
-            }
+        log.debug("  product: " +  pool.getProductId() + "is stackable and multi-entitled");
+        log.debug("  each entitlement provides X sockets: " + pool.getProductAttribute("sockets"));
+        log.debug("  consumer sockets: " + consumer_sockets);
+        while (product_sockets < consumer_sockets) {
+            new_pools.push(pool);
+            product_sockets += parseInt(pool.getProductAttribute("sockets"));
         }
     }
+    
     return new_pools;
 
 }
@@ -182,10 +178,10 @@ function hasAllMultiEntitlement(combination) {
     return true;
 }
 
+// Splits the best pools array into two arrays, stacked pools and regular.
 function splitStackingPools(combination) {
     var stackable_pools = [];
     var other_pools = [];
-//    var stackable = false;
     for each (pool in combination) {
         log.debug("pool " + pool.getId());
         var products = pool.products;
@@ -198,7 +194,7 @@ function splitStackingPools(combination) {
             if ((product.getAttribute("multi-entitlement") == "yes") && (product.getAttribute("stacking_id"))){
                 log.debug("this product is stackable");
                 stackable = true;
-                }
+            }
         }
         if (stackable) {
             stackable_pools.push(pool);
@@ -206,7 +202,7 @@ function splitStackingPools(combination) {
             other_pools.push(pool);
         }
     }
-    return {'stackable':stackable_pools, 'other':other_pools };
+    return {'stackable': stackable_pools, 'other': other_pools };
 }
 
 var Entitlement = {
@@ -306,13 +302,15 @@ var Entitlement = {
 
     select_pool_global: function() {
         // Greedy selection for now, in order
-        // XXX need to watch out for multientitle products
+        // XXX need to watch out for multientitle products - how so?
 
+        // An array of the preferred pool for each unique combination of provided products:
         var best_in_class_pools = [];
-        var product_sockets = 0;
-        log.debug("pool length " + pools.length);
+
+        // "pools" is a list of all the owner's pools which are compatible for the system:
+        log.debug("Selecting best pools from: " + pools.length);
         for each (pool in pools) {
-            log.debug("start pool: " + pool.getId());
+            log.debug("   " + pool.getId());
         }
 
         var consumer_sockets = 1;
@@ -320,46 +318,57 @@ var Entitlement = {
             consumer_sockets = consumer.getFact(SOCKET_FACT);
         }
 
+        // Builds out the best_in_class_pools by iterating each pool, checking which products it provides (that 
+        // are relevant to this request), then filtering out other pools which provide the *exact* same products
+        // by selecting the preferred pool based on other criteria.
         for (var i = 0 ; i < pools.length ; i++) {
             var pool = pools[i];
-            log.debug("pool.getTopLevelProduct " + (pool.getTopLevelProduct()));
+        	log.debug("Checking pool for best unique provides combination: " + 
+        			pool.getId());
+            log.debug("  top level product: " + (pool.getTopLevelProduct().getId()));
             if (architectureMatches(pool.getTopLevelProduct(), consumer)) {
-                log.debug("pool.id " + pool.getId());
                 var provided_products = getRelevantProvidedProducts(pool, products);
-                for each (pp in provided_products){
-                    log.debug("provided_products " + pp.getName());
-                    }
+                log.debug("  relevant provided products: ");
+                for each (pp in provided_products) {
+                    log.debug("    " + pp.getId());
+                }
                 // XXX wasteful, should be a hash or something.
+                // Tracks if we found another pool previously looked at which had the exact same provided products:
                 var duplicate_found = false;
 
+                // Check current pool against previous best to see if it's better:
                 for each (best_pool in best_in_class_pools) {
                     var best_provided_products = getRelevantProvidedProducts(best_pool, products);
 
                     if (providesSameProducts(provided_products, best_provided_products)) {
                         duplicate_found = true;
-                        log.debug("provides same product" + pool.getId());
+                        log.debug("  provides same product combo as: " + pool.getId());
 
                         // Prefer a virt_only pool over a regular pool, else fall through to the next rules.
                         // At this point virt_only pools will have already been filtered out by the pre rules
                         // for non virt machines.
                         if (pool.getAttribute("virt_only") == "true" && best_pool.getAttribute("virt_only") != "true") {
-                            log.debug("selecting virt-only pool " + pool.getId());
                             best_in_class_pools[best_in_class_pools.indexOf(best_pool)] = pool;
-                            log.debug("virt-only");
+                            log.debug("  replacing previous best due to virt-only");
                             break;
                         }
                         else if (best_pool.getAttribute("virt_only") == "true" && pool.getAttribute("virt_only") != "true") {
-                            log.debug("not a virt-only pool");
+                            log.debug("  sticking with previous best due to virt-only");
                             break;
                         }
 
                         // If two pools are equal, select the pool that expires first
                         if (best_pool.getEndDate().after(pool.getEndDate())) {
-                            log.debug("selecting expiring pool " + pool.getId());
                             best_in_class_pools[best_in_class_pools.indexOf(best_pool)] = pool;
+                            log.debug("  replacing previous best due to earlier expiry date");
                             break;
                         }
+
                         // only if pool is new? aka, not in best pools yet
+                        // TODO: this is inside a "providesSameProducts" check, how could this be new?
+                        // <alikins_> guess the first duped pool that is not virt and the same pool
+                        // TODO: this does not look right here, we're in a block that has already detected we provide the same products
+                        // as something already in best pools, and yet we go and add this pool a bunch of times to the end of the array?
                         var new_pools = findStackingPools(pool, consumer, products);
                         best_in_class_pools.concat(new_pools);
                         for each (new_pool in new_pools){
@@ -369,15 +378,21 @@ var Entitlement = {
                         log.debug("other");
                     }
                 }
+
+                // If we did not find a duplicate pool providing the same products, 
                 if (!duplicate_found) {
                     log.debug("no duplicate");
-                    //var new_pools = [];
                     var new_pools = findStackingPools(pool, consumer, products);
                     if (new_pools.length > 0){
                         log.debug("selecting new pools, no dups " + new_pools);
+                        // TODO: what is happening here? we're completely overwriting the array of best_in_class_pools?
+                        // should this be a concat?
+                        // Suspect that if the early pools in the list are non-stackable, and a later pool providing 
+                        // a different combo of products *is* stackable, we'll trigger this and blow away the previous 
+                        // array of best in class. Needs testing.
                         best_in_class_pools = new_pools;
                         break;
-                        }
+                    }
                     else {
                         log.debug("selecting new pools, no new_pools length");
                         best_in_class_pools.push(pool);
@@ -429,6 +444,7 @@ var Entitlement = {
                 log.debug("unique_provided " + product.getId() + " " + product.getName());
             }
             // number of pools is less than the MIN pools
+            // TODO: min pools?
             if (unique_provided.length < best_provided_count) {
                 continue;
             } else if (unique_provided.length > best_provided_count || pool_combo.length < selected_pools.length) {
