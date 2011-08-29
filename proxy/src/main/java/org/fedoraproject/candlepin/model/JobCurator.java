@@ -14,13 +14,15 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import java.util.Date;
-import java.util.List;
-
 import org.fedoraproject.candlepin.exceptions.NotFoundException;
 import org.fedoraproject.candlepin.pinsetter.core.model.JobStatus;
 import org.fedoraproject.candlepin.pinsetter.core.model.JobStatus.JobState;
+import org.fedoraproject.candlepin.pinsetter.core.model.JobStatus.TargetType;
+
 import org.hibernate.criterion.Restrictions;
+
+import java.util.Date;
+import java.util.List;
 
 /**
  *
@@ -61,16 +63,27 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
     }
 
     public List<JobStatus> findByOwnerKey(String ownerKey) {
-        return this.currentSession().createCriteria(JobStatus.class)
-        .add(Restrictions.eq("targetId", ownerKey))
-        .add(Restrictions.eq("targetType", JobStatus.TargetType.OWNER)).list();
+        return findByTarget(JobStatus.TargetType.OWNER, ownerKey);
     }
 
+    public List<JobStatus> findByConsumerUuid(String uuid) {
+        return findByTarget(JobStatus.TargetType.CONSUMER, uuid);
+    }
+
+    @SuppressWarnings("unchecked")
     public List<JobStatus> findByPrincipalName(String principalName) {
         return this.currentSession().createCriteria(JobStatus.class)
         .add(Restrictions.eq("principalName", principalName)).list();
     }
 
+    @SuppressWarnings("unchecked")
+    private List<JobStatus> findByTarget(TargetType type, String tgtid) {
+        return currentSession().createCriteria(JobStatus.class)
+            .add(Restrictions.eq("targetId", tgtid))
+            .add(Restrictions.eq("targetType", type)).list();
+    }
+
+    @SuppressWarnings("unchecked")
     public List<JobStatus> findCanceledJobs() {
         return this.currentSession().createCriteria(JobStatus.class)
         .add(Restrictions.eq("state", JobState.CANCELLED)).list();
