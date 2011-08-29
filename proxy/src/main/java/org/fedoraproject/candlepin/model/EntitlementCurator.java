@@ -73,6 +73,30 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             .add(Restrictions.eq("consumer", consumer));
         return listByCriteria(query);
     }
+    
+    /**
+     * List entitlements for a consumer which are valid for a specific date.
+     * 
+     * @param consumer Consumer to list entitlements for.
+     * @param activeOn The date we want to see entitlements which are active on.
+     * @return List of entitlements.
+     */
+    public List<Entitlement> listByConsumerAndDate(Consumer consumer, Date activeOn) {
+
+        /*
+         * Essentially the opposite of the above query which searches for entitlement
+         * overlap with a "modifying" entitlement being granted. This query is used to
+         * search for modifying entitlements which overlap with a regular entitlement
+         * being granted. As such the logic is basically reversed.
+         *
+         */
+        Criteria criteria = currentSession().createCriteria(Entitlement.class)
+            .add(Restrictions.eq("consumer", consumer))
+            .add(Restrictions.le("startDate", activeOn))
+            .add(Restrictions.ge("endDate", activeOn));
+        List<Entitlement> entitlements = criteria.list();
+        return entitlements;
+    }
 
     public List<Entitlement> listByOwner(Owner owner) {
         DetachedCriteria query = DetachedCriteria.forClass(Entitlement.class)

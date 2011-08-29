@@ -76,7 +76,7 @@ public class Entitlement extends AbstractHibernateObject implements Linkable, Ow
 
     @ManyToOne
     @ForeignKey(name = "fk_entitlement_consumer")
-    @JoinColumn(nullable = true)
+    @JoinColumn(nullable = false)
     @Index(name = "cp_entitlement_consumer_fk_idx")
     private Consumer consumer;
 
