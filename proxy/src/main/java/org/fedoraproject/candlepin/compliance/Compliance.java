@@ -17,6 +17,9 @@ package org.fedoraproject.candlepin.compliance;
 import java.util.Date;
 
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.EntitlementCurator;
+
+import com.google.inject.Inject;
 
 /**
  * Compliance
@@ -24,6 +27,13 @@ import org.fedoraproject.candlepin.model.Consumer;
  * A class used to check consumer compliance status.
  */
 public class Compliance {
+    
+    private EntitlementCurator entCurator;
+    
+    @Inject
+    public Compliance(EntitlementCurator entCurator) {
+        this.entCurator = entCurator;
+    }
 
     /**
      * Check compliance status for a consumer on a specific date.

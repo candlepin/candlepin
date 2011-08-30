@@ -103,8 +103,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     }
     
     private Date createDate(int year, int month, int day) {
-        cal.set(year, month + 1, day);
-        return cal.getTime();
+        return TestUtil.createDate(year, month, day);
     }
     
     private Entitlement setupListProvidingEntitlement() {

@@ -15,8 +15,8 @@
 package org.fedoraproject.candlepin.compliance;
 
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.fedoraproject.candlepin.model.Entitlement;
 
@@ -29,9 +29,9 @@ import org.fedoraproject.candlepin.model.Entitlement;
 public class ComplianceStatus {
     
     private Date date;
-    private List<String> nonCompliantProducts;
-    private Map<String, List<Entitlement>> compliantProducts;
-    private Map<String, List<Entitlement>> partiallyCompliantProducts; // stacked
+    private Set<String> nonCompliantProducts;
+    private Map<String, Set<Entitlement>> compliantProducts;
+    private Map<String, Set<Entitlement>> partiallyCompliantProducts; // stacked
 
     public ComplianceStatus(Date date) {
         this.date = date;
@@ -40,7 +40,7 @@ public class ComplianceStatus {
     /**
      * @return Map of compliant product IDs and the entitlements that provide them.
      */
-    public Map<String, List<Entitlement>> getCompliantProducts() {
+    public Map<String, Set<Entitlement>> getCompliantProducts() {
         return compliantProducts;
     }
 
@@ -56,7 +56,7 @@ public class ComplianceStatus {
      * @return List of product IDs installed on the consumer, but not provided by any 
      * entitlement. (not even partially) 
      */
-    public List<String> getNonCompliantProducts() {
+    public Set<String> getNonCompliantProducts() {
         return nonCompliantProducts;
     }
 
@@ -64,12 +64,12 @@ public class ComplianceStatus {
      * @return Map of compliant product IDs and the entitlements that partially 
      * provide them. (i.e. partially stacked)
      */
-    public Map<String, List<Entitlement>> getPartiallyCompliantProducts() {
+    public Map<String, Set<Entitlement>> getPartiallyCompliantProducts() {
         return partiallyCompliantProducts;
     }
 
     public void setCompliantProducts(
-        Map<String, List<Entitlement>> compliantProducts) {
+        Map<String, Set<Entitlement>> compliantProducts) {
         this.compliantProducts = compliantProducts;
     }
 }
