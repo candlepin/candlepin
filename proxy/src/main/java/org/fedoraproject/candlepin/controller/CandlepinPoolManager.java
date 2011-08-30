@@ -332,22 +332,12 @@ public class CandlepinPoolManager implements PoolManager {
         throws EntitlementRefusedException {
         Owner owner = consumer.getOwner();
         List<Entitlement> entitlements = new LinkedList<Entitlement>();
-        Map<Pool, Integer> poolMap = new HashMap<Pool, Integer>();
-
 
         ValidationResult failedResult = null;
         List<Pool> allOwnerPools = poolCurator.listByOwner(owner);
         List<Pool> filteredPools = new LinkedList<Pool>();
 
         for (Pool pool : allOwnerPools) {
-            // if we already are planning to pull all available from this
-            // pool, skip
-            if (poolMap.get(pool) != null &&
-                (pool.getQuantity() - pool.getConsumed()) == poolMap.get(
-                    pool).longValue()) {
-                continue;
-            }
-
             boolean providesProduct = false;
             for (String productId : productIds) {
                 if (pool.provides(productId)) {
@@ -384,24 +374,15 @@ public class CandlepinPoolManager implements PoolManager {
                 Arrays.toString(productIds));
         }
 
-        List<Pool> bestPools = enforcer.selectBestPools(consumer,
+        Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer,
             productIds, filteredPools);
         if (bestPools == null) {
             throw new RuntimeException("No entitlements for products: " +
                 Arrays.toString(productIds));
         }
 
-        for (Pool pool : bestPools) {
-            Integer count = poolMap.get(pool);
-            if (count == null) {
-                count = new Integer(0);
-            }
-            poolMap.put(pool, ++count);
-        }
-
-
         // now make the entitlements
-        for (Entry<Pool, Integer> entry : poolMap.entrySet()) {
+        for (Entry<Pool, Integer> entry : bestPools.entrySet()) {
             entitlements.add(addEntitlement(consumer, entry.getKey(), entry.getValue()));
         }
 

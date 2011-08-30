@@ -30,8 +30,10 @@ import org.fedoraproject.candlepin.policy.js.pool.PoolHelper;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * CandlepinConsumerTypeEnforcerTest
@@ -76,9 +78,11 @@ public class CandlepinConsumerTypeEnforcerTest {
     
     @Test
     public void bestPool() {
-        List<Pool> pools = new ArrayList<Pool>();
-        pools.add(mock(Pool.class));
-        assertEquals(pools, ccte.selectBestPools(null, null, pools));
+        Map<Pool, Integer> pools = new HashMap<Pool, Integer>();
+        List<Pool> allPools = new ArrayList<Pool>();
+        allPools.add(mock(Pool.class));
+        pools.put(allPools.get(0), 1);
+        assertEquals(pools, ccte.selectBestPools(null, null, allPools));
     }
     
 }

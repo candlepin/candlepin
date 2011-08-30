@@ -302,9 +302,9 @@ public class EnforcerTest extends DatabaseTestFixture {
         List<Pool> availablePools 
             = Arrays.asList(new Pool[] {pool1, pool2, desired, pool3});
 
-        List<Pool> result = enforcer.selectBestPools(consumer, new String[] {"a-product"},
-            availablePools);
-        assertEquals(desired.getId(), result.get(0).getId());
+        Map<Pool, Integer> result = enforcer.selectBestPools(consumer,
+            new String[] {"a-product"}, availablePools);
+        assertEquals(1, result.get(desired).intValue());
     }
 
     @Test
@@ -329,9 +329,9 @@ public class EnforcerTest extends DatabaseTestFixture {
         List<Pool> availablePools 
             = Arrays.asList(new Pool[] {pool1, pool2, desired});
 
-        List<Pool> result = enforcer.selectBestPools(consumer,
+        Map<Pool, Integer> result = enforcer.selectBestPools(consumer,
             new String[] {"a-product"}, availablePools);
-        assertEquals(desired.getId(), result.get(0).getId());
+        assertEquals(1, result.get(desired).intValue());
     }
     
     @Test
@@ -351,10 +351,10 @@ public class EnforcerTest extends DatabaseTestFixture {
         when(this.productAdapter.getProductById("a-product")).thenReturn(product);
 
         List<Pool> availablePools = Arrays.asList(new Pool[] {pool1, pool2, desired});
-        List<Pool> result = enforcer.selectBestPools(consumer, new String[] {"a-product"},
-            availablePools);
-
-        assertEquals(desired.getId(), result.get(0).getId());
+        
+        Map<Pool, Integer> result = enforcer.selectBestPools(consumer,
+            new String[] {"a-product"}, availablePools);
+        assertEquals(1, result.get(desired).intValue());
     }
 
     @Test
@@ -363,7 +363,7 @@ public class EnforcerTest extends DatabaseTestFixture {
             .thenReturn(new Product(HIGHEST_QUANTITY_PRODUCT, HIGHEST_QUANTITY_PRODUCT));
         
         // There are no pools for the product in this case:
-        List<Pool> result = enforcer.selectBestPools(consumer,
+        Map<Pool, Integer> result = enforcer.selectBestPools(consumer,
             new String[] {HIGHEST_QUANTITY_PRODUCT}, new LinkedList<Pool>());
         assertNull(result);
     }
@@ -401,9 +401,9 @@ public class EnforcerTest extends DatabaseTestFixture {
         List<Pool> availablePools 
             = Arrays.asList(new Pool[] {pool1, pool2});
 
-        List<Pool> result = enforcer.selectBestPools(consumer,
+        Map<Pool, Integer> result = enforcer.selectBestPools(consumer,
             new String[] {product.getId()}, availablePools);
-        assertEquals(pool1.getId(), result.get(0).getId());
+        assertEquals(1, result.get(pool1).intValue());
     }
     
     private EntitlementRules.Rule rule(String name, int priority, String... attrs) {

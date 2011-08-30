@@ -32,9 +32,11 @@ import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.fedoraproject.candlepin.audit.Event;
@@ -410,8 +412,8 @@ public class PoolManagerTest {
         when(badResult.isSuccessful()).thenReturn(false);
         when(goodResult.isSuccessful()).thenReturn(true);
         
-        List<Pool> bestPools = new LinkedList<Pool>();
-        bestPools.add(pool1);
+        Map<Pool, Integer> bestPools = new HashMap<Pool, Integer>();
+        bestPools.put(pool1, 1);
         when(enforcerMock.selectBestPools(any(Consumer.class), any(String[].class),
             any(List.class))).thenReturn(bestPools);
         

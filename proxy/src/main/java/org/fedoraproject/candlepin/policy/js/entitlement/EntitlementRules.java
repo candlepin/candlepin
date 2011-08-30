@@ -191,7 +191,7 @@ public class EntitlementRules implements Enforcer {
         callPostEntitlementRules(matchingRules);
     }
 
-    public List<Pool> selectBestPools(Consumer consumer, String[] productIds,
+    public Map<Pool, Integer> selectBestPools(Consumer consumer, String[] productIds,
         List<Pool> pools) {
         ReadOnlyProductCache productCache = new ReadOnlyProductCache(prodAdapter);
         
@@ -268,12 +268,17 @@ public class EntitlementRules implements Enforcer {
                 "Rule did not select a pool for products: " + Arrays.toString(productIds));
         }
 
-        List<Pool> bestPools = new LinkedList<Pool>();
+        Map<Pool, Integer> bestPools = new HashMap<Pool, Integer>();
         for (Pool p : pools) {
             for (ReadOnlyPool rp : result) {
                 if (p.getId().equals(rp.getId())) {
                     log.debug("Best pool: " + p);
-                    bestPools.add(p);
+                    
+                    int quantity = 0;
+                    if (bestPools.containsKey(p)) {
+                        quantity = bestPools.get(p);
+                    }
+                    bestPools.put(p, ++quantity);
                 }
             }
         }
@@ -294,10 +299,15 @@ public class EntitlementRules implements Enforcer {
      *            Pools to choose from.
      * @return First pool in the list. (default behavior)
      */
-    private List<Pool> selectBestPoolDefault(List<Pool> pools) {
+    private Map<Pool, Integer> selectBestPoolDefault(List<Pool> pools) {
         if (pools.size() > 0) {
-            return pools;
+            Map<Pool, Integer> toReturn = new HashMap<Pool, Integer>();
+            for (Pool pool : pools) {
+                toReturn.put(pool, 1);
+            }
+            return toReturn;
         }
+        
         return null;
     }
 

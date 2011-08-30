@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.policy;
 
 import java.util.List;
+import java.util.Map;
 
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -67,7 +68,7 @@ public class EnforcerDispatcher implements Enforcer {
     }
 
     @Override
-    public List<Pool> selectBestPools(Consumer consumer, String[] productIds,
+    public Map<Pool, Integer> selectBestPools(Consumer consumer, String[] productIds,
         List<Pool> pools)
         throws RuleExecutionException {
         if (isCandlepinConsumer(consumer)) {
