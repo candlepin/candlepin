@@ -15,8 +15,11 @@
 package org.fedoraproject.candlepin.compliance;
 
 import java.util.Date;
+import java.util.List;
 
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerInstalledProduct;
+import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
 
 import com.google.inject.Inject;
@@ -43,7 +46,25 @@ public class Compliance {
      * @return Compliance status.
      */
     public ComplianceStatus getStatus(Consumer c, Date date) {
-        return null;
+        List<Entitlement> ents = entCurator.listByConsumerAndDate(c, date);
+        
+        ComplianceStatus status = new ComplianceStatus(date);
+        
+        for (ConsumerInstalledProduct installedProd : c.getInstalledProducts()) {
+            String installedPid = installedProd.getProductId();
+            for (Entitlement e : ents) {
+                if (e.getPool().provides(installedPid)) {
+                    // TODO: check stacking validity here
+                    status.addCompliantProduct(installedPid, e);
+                }
+            }
+            // Not compliant if we didn't find any entitlements for this product:
+            if (!status.getCompliantProducts().containsKey(installedPid)) {
+                status.addNonCompliantProduct(installedPid);
+            }
+        }
+        
+        return status;
     }
     
 }

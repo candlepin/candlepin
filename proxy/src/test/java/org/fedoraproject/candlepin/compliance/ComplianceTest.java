@@ -92,7 +92,7 @@ public class ComplianceTest {
         Consumer c = mockConsumer(new String [] {"product1", "product2"});
         List<Entitlement> ents = new LinkedList<Entitlement>();
         ents.add(mockEntitlement(c, "Awesome Product", "product1"));
-        when(entCurator.listByConsumerAndDate(c, any(Date.class))).thenReturn(ents);
+        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(ents);
         
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
         
@@ -110,14 +110,14 @@ public class ComplianceTest {
         Consumer c = mockConsumer(new String [] {"product1", "product2"});
         List<Entitlement> ents = new LinkedList<Entitlement>();
         ents.add(mockEntitlement(c, "Awesome Product", "product1", "product2"));
-        when(entCurator.listByConsumerAndDate(c, any(Date.class))).thenReturn(ents);
+        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(ents);
         
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
         
         assertEquals(0, status.getNonCompliantProducts().size());
         
         // Our one entitlement should cover both of these:
-        assertEquals(1, status.getCompliantProducts().size());
+        assertEquals(2, status.getCompliantProducts().size());
         assertTrue(status.getCompliantProducts().keySet().contains("product1"));
         assertTrue(status.getCompliantProducts().keySet().contains("product2"));
         
@@ -135,5 +135,6 @@ public class ComplianceTest {
     public void partiallyStackedAndFullyEntitled() {
         // TODO: test a weird scenario where consumer has both a regular entitlement
         // providing a product, as well as a partially stacked. (regular should cover them)
+        fail();
     }
 }

@@ -15,6 +15,8 @@
 package org.fedoraproject.candlepin.compliance;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -35,6 +37,10 @@ public class ComplianceStatus {
 
     public ComplianceStatus(Date date) {
         this.date = date;
+        
+        this.nonCompliantProducts = new HashSet<String>();
+        this.compliantProducts = new HashMap<String, Set<Entitlement>>();
+        this.partiallyCompliantProducts = new HashMap<String, Set<Entitlement>>();
     }
     
     /**
@@ -51,13 +57,17 @@ public class ComplianceStatus {
     public Date getDate() {
         return date;
     }
-
+    
     /**
      * @return List of product IDs installed on the consumer, but not provided by any 
      * entitlement. (not even partially) 
      */
     public Set<String> getNonCompliantProducts() {
         return nonCompliantProducts;
+    }
+    
+    protected void addNonCompliantProduct(String productId) {
+        this.nonCompliantProducts.add(productId);
     }
 
     /**
@@ -68,8 +78,22 @@ public class ComplianceStatus {
         return partiallyCompliantProducts;
     }
 
+    protected void addPartiallyCompliantProduct(String productId, Entitlement entitlement) {
+        if (!partiallyCompliantProducts.containsKey(productId)) {
+            partiallyCompliantProducts.put(productId, new HashSet<Entitlement>());
+        }
+        partiallyCompliantProducts.get(productId).add(entitlement);
+    }
+    
     public void setCompliantProducts(
         Map<String, Set<Entitlement>> compliantProducts) {
         this.compliantProducts = compliantProducts;
+    }
+    
+    protected void addCompliantProduct(String productId, Entitlement entitlement) {
+        if (!compliantProducts.containsKey(productId)) {
+            compliantProducts.put(productId, new HashSet<Entitlement>());
+        }
+        compliantProducts.get(productId).add(entitlement);
     }
 }
