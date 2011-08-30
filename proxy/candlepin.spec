@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.4.11
+Version: 0.4.12
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -146,6 +146,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Tue Aug 30 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.12-1
+- 731577: API to query jobs by owner, principal, consumer uuid. (jmrodri@gmail.com)
+- use commons.lang.StringUtils not hibernate.hbm2x.StringUtils (jmrodri@gmail.com)
+
 * Wed Aug 24 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.11-1
 - Move the translations to fedora.zanata.org (bkearney@redhat.com)
 - Handle null values correctly before invoking the certgen (bkearney@redhat.com)
