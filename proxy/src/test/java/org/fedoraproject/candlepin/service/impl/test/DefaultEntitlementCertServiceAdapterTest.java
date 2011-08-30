@@ -30,6 +30,7 @@ import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.PoolAttribute;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductAttribute;
 import org.fedoraproject.candlepin.model.Subscription;
@@ -335,7 +336,22 @@ public class DefaultEntitlementCertServiceAdapterTest {
             any(Date.class), any(KeyPair.class), any(BigInteger.class),
             any(String.class));
     }
+    @Test
+    public void virtOnlyByAttribute() throws Exception {
+        //note that "true" gets recoded to "1" to match other bools in the cert
+        PoolAttribute attr = new PoolAttribute("virt_only", "true");
+        entitlement.getPool().addAttribute(attr);
+        certServiceAdapter.createX509Certificate(entitlement, subscription,
+            product, new BigInteger("1234"), keyPair());
 
+        verify(mockedPKI).createX509Certificate(any(String.class),
+            argThat(new ListContainsVirtOnlyKey("1")), any(Date.class),
+            any(Date.class), any(KeyPair.class), any(BigInteger.class),
+            any(String.class));
+    }
+    
+    
+    
     @Test
     public void supportValuesPresentOnCertIfAttributePresent() throws Exception {
 
@@ -520,7 +536,13 @@ public class DefaultEntitlementCertServiceAdapterTest {
             super(value, "1.3.6.1.4.1.2312.9.4.17");
         }
     }
+    static class ListContainsVirtOnlyKey extends OidMatcher {
 
+        public ListContainsVirtOnlyKey(String value) {
+            super(value, "1.3.6.1.4.1.2312.9.4.18");
+        }
+    }
+    
     static class ListContainsContentUrl extends OidMatcher {
 
         public ListContainsContentUrl(String value, String contentID) {
