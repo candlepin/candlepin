@@ -14,18 +14,21 @@
  */
 package org.fedoraproject.candlepin.policy.js.export;
 
-import com.google.inject.Inject;
-
-import java.util.HashMap;
-import java.util.Map;
-import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.policy.js.JsRules;
 import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
+
+import com.google.inject.Inject;
+
+import org.apache.log4j.Logger;
 import org.mozilla.javascript.RhinoException;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
@@ -45,13 +48,13 @@ public class JsExportRules {
 
     public boolean canExport(Entitlement entitlement) {
         Pool pool = entitlement.getPool();
+        Consumer consumer = entitlement.getConsumer();
         Product product = this.productAdapter.getProductById(pool.getProductId());
         Map<String, String> allAttributes = jsRules.getFlattenedAttributes(product, pool);
 
         Map<String, Object> args = new HashMap<String, Object>();
-        args.put("entitlement", entitlement);
-        args.put("product", product);
         args.put("attributes", allAttributes);
+        args.put("consumer", consumer);
 
         // just default to true if there are any errors
         Boolean canExport = true;
