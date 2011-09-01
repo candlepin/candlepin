@@ -75,7 +75,7 @@ public class JsExportRulesTest {
     }
 
     @Test
-    public void cannotExportProduct() throws NoSuchMethodException{
+    public void cannotExportProduct() throws NoSuchMethodException {
         Entitlement entitlement = mock(Entitlement.class);
         Consumer consumer = mock(Consumer.class);
         ConsumerType consumerType = mock(ConsumerType.class);
@@ -98,7 +98,7 @@ public class JsExportRulesTest {
     }
 
     @Test
-    public void canExportProductConsumer() throws NoSuchMethodException{
+    public void canExportProductConsumer() throws NoSuchMethodException {
         Entitlement entitlement = mock(Entitlement.class);
         Consumer consumer = mock(Consumer.class);
         ConsumerType consumerType = mock(ConsumerType.class);
@@ -121,7 +121,7 @@ public class JsExportRulesTest {
     }
 
     @Test
-    public void canExportProductVirt() throws NoSuchMethodException{
+    public void canExportProductVirt() throws NoSuchMethodException {
         Entitlement entitlement = mock(Entitlement.class);
         Consumer consumer = mock(Consumer.class);
         ConsumerType consumerType = mock(ConsumerType.class);
