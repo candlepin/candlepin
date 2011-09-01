@@ -134,6 +134,11 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @Transient
     private boolean canActivate;
 
+    // An instruction for the client to initiate an autoheal request.
+    // WARNING: can't initialize to a default value here, we need to be able to see
+    // if it was specified on an incoming update, so it must be null if no value came in.
+    private Boolean autoheal;
+
     public Consumer(String name, String userName, Owner owner, ConsumerType type) {
         this();
 
@@ -143,6 +148,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         this.type = type;
         this.facts = new HashMap<String, String>();
         this.installedProducts = new HashSet<ConsumerInstalledProduct>();
+        this.autoheal = true;
     }
 
     public Consumer() {
@@ -187,7 +193,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     public void setId(String id) {
         this.id = id;
     }
-    
+
     public IdentityCertificate getIdCert() {
         return idCert;
     }
@@ -480,6 +486,14 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         }
         installed.setConsumer(this);
         installedProducts.add(installed);
+    }
+
+    public Boolean isAutoheal() {
+        return autoheal;
+    }
+
+    public void setAutoheal(Boolean autoheal) {
+        this.autoheal = autoheal;
     }
 
 }

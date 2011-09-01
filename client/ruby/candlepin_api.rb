@@ -82,6 +82,7 @@ class Candlepin
     consumer[:facts] = params[:facts] if params[:facts]
     consumer[:installedProducts] = \
         params[:installedProducts] if params[:installedProducts]
+    consumer[:autoheal] = params[:autoheal] if params.has_key?(:autoheal)
 
     path = get_path("consumers")
     put("#{path}/#{uuid}", consumer)
