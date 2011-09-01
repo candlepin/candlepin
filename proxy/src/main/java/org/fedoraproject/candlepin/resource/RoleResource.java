@@ -66,6 +66,7 @@ public class RoleResource {
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     public Role createRole(Role role) {
 
         // Attach actual owner objects to each incoming permission:
@@ -83,8 +84,9 @@ public class RoleResource {
     }
 
     @PUT
-    @Consumes(MediaType.APPLICATION_JSON)
     @Path("{role_id}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     public Role updateRole(@PathParam("role_id") String roleId, Role role) {
 
         if (!roleId.equals(role.getId())) {
@@ -98,8 +100,9 @@ public class RoleResource {
     }
 
     @POST
-    @Consumes(MediaType.APPLICATION_JSON)
     @Path("{role_id}/permissions")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     public Role addRolePermission(@PathParam("role_id") String roleId,
         OwnerPermission permission) {
 
@@ -124,6 +127,7 @@ public class RoleResource {
 
     @DELETE
     @Path("{role_id}/permissions/{perm_id}")
+    @Produces(MediaType.APPLICATION_JSON)
     public Role removeRolePermission(@PathParam("role_id") String roleId,
                                       @PathParam("perm_id") String permissionId) {
 
@@ -184,6 +188,7 @@ public class RoleResource {
 
     @POST
     @Path("/{role_id}/users/{username}")
+    @Produces(MediaType.APPLICATION_JSON)
     public Role addUser(@PathParam("role_id") String roleId,
         @PathParam("username") String username) {
         Role role = lookupRole(roleId);
@@ -194,6 +199,7 @@ public class RoleResource {
 
     @DELETE
     @Path("/{role_id}/users/{username}")
+    @Produces(MediaType.APPLICATION_JSON)
     public Role deleteUser(@PathParam("role_id") String roleId,
         @PathParam("username") String username) {
         Role role = lookupRole(roleId);

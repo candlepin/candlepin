@@ -247,6 +247,27 @@ describe 'Consumer Resource' do
     consumer['facts'].length.should == 1
   end
 
+  it 'should allow a consumer to update their autoheal flag' do
+    user_cp = user_client(@owner1, random_string('billy'))
+    consumer = user_cp.register(random_string('system'), :system, nil,
+      {}, nil, nil, [], [])
+    consumer_client = Candlepin.new(username=nil, password=nil,
+        cert=consumer['idCert']['cert'],
+        key=consumer['idCert']['key'])
+
+    consumer = @cp.get_consumer(consumer['uuid'])
+    consumer['autoheal'].should == true
+
+    consumer_client.update_consumer({:autoheal => false})
+    consumer = @cp.get_consumer(consumer['uuid'])
+    consumer['autoheal'].should == false
+
+    # Empty update shouldn't modify the setting:
+    consumer_client.update_consumer({})
+    consumer = @cp.get_consumer(consumer['uuid'])
+    consumer['autoheal'].should == false
+  end
+
   it 'should not allow the same UUID to be registered twice' do
     owner = create_owner random_string('owner')
     user = user_client(owner, random_string('willy'))

@@ -166,7 +166,7 @@ public class ConsumerResource {
 
     /**
      * List available Consumers
-     * 
+     *
      * @return list of available consumers.
      */
     @GET
@@ -199,7 +199,7 @@ public class ConsumerResource {
 
     /**
      * Return the consumer identified by the given uuid.
-     * 
+     *
      * @param uuid uuid of the consumer sought.
      * @return the consumer identified by the given uuid.
      */
@@ -226,7 +226,7 @@ public class ConsumerResource {
      * compatability with existing clients which do not specify an owner during
      * registration), and then check the access to the specified owner in the
      * method itself.
-     * 
+     *
      * @param consumer Consumer metadata
      * @return newly created Consumer
      * @throws BadRequestException generic exception type for web services We
@@ -306,6 +306,7 @@ public class ConsumerResource {
         consumer.setOwner(owner);
         consumer.setType(type);
         consumer.setCanActivate(subAdapter.canActivateSubscription(consumer));
+        consumer.setAutoheal(true); // this is the default
 
         if (log.isDebugEnabled()) {
             log.debug("Got consumerTypeLabel of: " + type.getLabel());
@@ -317,7 +318,7 @@ public class ConsumerResource {
                     log.debug("   " + key + " = " + consumer.getFact(key));
                 }
             }
-            
+
             log.debug("Activation keys:");
             for (ActivationKey activationKey : keys) {
                 log.debug("   " + activationKey.getName());
@@ -517,6 +518,14 @@ public class ConsumerResource {
         changesMade = changesMade || checkForInstalledProductsUpdate(toUpdate,
             consumer);
 
+        // Allow optional setting of the autoheal attribute:
+        if (consumer.isAutoheal() != null &&
+            toUpdate.isAutoheal() != consumer.isAutoheal()) {
+            log.debug("   Updating consumer autoheal setting.");
+            toUpdate.setAutoheal(consumer.isAutoheal());
+            changesMade = true;
+        }
+
         if (changesMade) {
             log.info("Consumer updated.");
             // Set the updated date here b/c @PreUpdate will not get fired
@@ -576,7 +585,7 @@ public class ConsumerResource {
 
     /**
      * delete the consumer.
-     * 
+     *
      * @param uuid uuid of the consumer to delete.
      */
     @DELETE
@@ -608,7 +617,7 @@ public class ConsumerResource {
 
     /**
      * Return the entitlement certificate for the given consumer.
-     * 
+     *
      * @param consumerUuid UUID of the consumer
      * @return list of the client certificates for the given consumer.
      */
@@ -696,7 +705,7 @@ public class ConsumerResource {
      * Return the client certificate metadatthat a for the given consumer. This
      * is a small subset of data clients can use to determine which certificates
      * they need to update/fetch.
-     * 
+     *
      * @param consumerUuid UUID of the consumer
      * @return list of the client certificate metadata for the given consumer.
      */
@@ -722,7 +731,7 @@ public class ConsumerResource {
 
     /**
      * Request an entitlement.
-     * 
+     *
      * @param consumerUuid Consumer identifier to be entitled
      * @param poolIdString Entitlement pool id.
      * @param email email address.
@@ -776,14 +785,12 @@ public class ConsumerResource {
         if (async) {
             JobDetail detail = null;
 
-            if (productIds != null && productIds.length > 0) {
+            if (poolIdString != null) {
+                detail = EntitlerJob.bindByPool(poolIdString, consumerUuid, quantity);
+            }
+            else if (productIds != null && productIds.length > 0) {
                 detail = EntitlerJob.bindByProducts(productIds,
                         consumerUuid);
-            }
-            else {
-                String poolId = Util.assertNotNull(poolIdString,
-                    i18n.tr("Pool ID must be provided"));
-                detail = EntitlerJob.bindByPool(poolId, consumerUuid, quantity);
             }
 
             // events will be triggered by the job
@@ -795,7 +802,10 @@ public class ConsumerResource {
         // otherwise we do what we do today.
         //
         List<Entitlement> entitlements = null;
-        if (productIds != null && productIds.length > 0) {
+        if (poolIdString != null) {
+            entitlements = entitler.bindByPool(poolIdString, consumer, quantity);
+        }
+        else if (productIds != null && productIds.length > 0) {
             try {
                 entitlements = entitler.bindByProducts(productIds, consumer);
             }
@@ -806,11 +816,6 @@ public class ConsumerResource {
                 log.warn(i18n.tr("Asked to be subscribed to a product that " +
                     "has no pool: {0} ", re.getMessage()));
             }
-        }
-        else {
-            String poolId = Util.assertNotNull(poolIdString,
-                i18n.tr("Pool ID must be provided"));
-            entitlements = entitler.bindByPool(poolId, consumer, quantity);
         }
 
         // Trigger events:
@@ -874,7 +879,7 @@ public class ConsumerResource {
 
     /**
      * Unbind all entitlements.
-     * 
+     *
      * @param consumerUuid Unique id for the Consumer.
      */
     @DELETE
@@ -903,7 +908,7 @@ public class ConsumerResource {
 
     /**
      * Remove an entitlement by ID.
-     * 
+     *
      * @param dbid the entitlement to delete.
      */
     @DELETE
@@ -978,7 +983,7 @@ public class ConsumerResource {
     @Path("{consumer_uuid}/export")
     public File exportData(
         @Context HttpServletResponse response,
-        @PathParam("consumer_uuid") 
+        @PathParam("consumer_uuid")
         @Verify(value = Consumer.class, require = Access.ALL) String consumerUuid) {
 
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
@@ -1006,7 +1011,7 @@ public class ConsumerResource {
 
     /**
      * Return the consumer identified by the given uuid.
-     * 
+     *
      * @param uuid uuid of the consumer sought.
      * @return the consumer identified by the given uuid.
      */
@@ -1037,7 +1042,7 @@ public class ConsumerResource {
      * Generates the identity certificate for the given consumer and user.
      * Throws RuntimeException if there is a problem with generating the
      * certificate.
-     * 
+     *
      * @param c Consumer whose certificate needs to be generated.
      * @param regen if true, forces a regen of the certificate.
      * @return The identity certificate for the given consumer.

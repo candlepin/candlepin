@@ -36,6 +36,7 @@ import org.fedoraproject.candlepin.model.ProvidedProduct;
 import org.fedoraproject.candlepin.model.Rules;
 import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.pki.PKIUtility;
+import org.fedoraproject.candlepin.policy.js.export.JsExportRules;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 
@@ -60,7 +61,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-import org.fedoraproject.candlepin.policy.js.export.JsExportRules;
 
 
 /**

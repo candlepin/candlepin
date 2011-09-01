@@ -513,6 +513,7 @@ var Pool = {
             var virt_limit = attributes.get("virt_limit");
             var virt_attributes = new java.util.HashMap();
             virt_attributes.put("virt_only", "true");
+            virt_attributes.put("no_export", "true");
             // Make sure the virt pool does not have a virt_limit,
             // otherwise this will recurse infinitely
             virt_attributes.put("virt_limit", "0");
@@ -611,8 +612,10 @@ var Pool = {
 
 var Export = {
     can_export_entitlement: function() {
-        return !attributes.containsKey('virt_only') ||
-            !'true'.equals(attributes.get('virt_only'));
+        no_export = attributes.containsKey('no_export') &&
+                    'true'.equals(attributes.get('no_export'));
+
+        return !consumer.getType().getLabel().equals("candlepin") || !no_export;
     }
 }
 

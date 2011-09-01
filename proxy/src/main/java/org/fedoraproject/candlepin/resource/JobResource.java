@@ -14,8 +14,23 @@
  */
 package org.fedoraproject.candlepin.resource;
 
+import org.fedoraproject.candlepin.exceptions.BadRequestException;
+import org.fedoraproject.candlepin.exceptions.IseException;
+import org.fedoraproject.candlepin.exceptions.NotFoundException;
+import org.fedoraproject.candlepin.model.JobCurator;
+import org.fedoraproject.candlepin.model.SchedulerStatus;
+import org.fedoraproject.candlepin.pinsetter.core.PinsetterException;
+import org.fedoraproject.candlepin.pinsetter.core.PinsetterKernel;
+import org.fedoraproject.candlepin.pinsetter.core.model.JobStatus;
+import org.fedoraproject.candlepin.pinsetter.core.model.JobStatus.JobState;
+
 import com.google.inject.Inject;
+
+import org.apache.commons.lang.StringUtils;
+import org.xnap.commons.i18n.I18n;
+
 import java.util.Collection;
+import java.util.List;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -25,14 +40,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-import org.fedoraproject.candlepin.exceptions.BadRequestException;
-import org.fedoraproject.candlepin.exceptions.IseException;
-import org.fedoraproject.candlepin.model.JobCurator;
-import org.fedoraproject.candlepin.model.SchedulerStatus;
-import org.fedoraproject.candlepin.pinsetter.core.PinsetterException;
-import org.fedoraproject.candlepin.pinsetter.core.PinsetterKernel;
-import org.fedoraproject.candlepin.pinsetter.core.model.JobStatus;
-import org.fedoraproject.candlepin.pinsetter.core.model.JobStatus.JobState;
 
 /**
  * JobResource
@@ -42,24 +49,84 @@ public class JobResource {
 
     private JobCurator curator;
     private PinsetterKernel pk;
-        
+    private I18n i18n;
 
     @Inject
-    public JobResource(JobCurator curator, PinsetterKernel pk) {
+    public JobResource(JobCurator curator, PinsetterKernel pk, I18n i18n) {
         this.curator = curator;
         this.pk = pk;
+        this.i18n = i18n;
+    }
+
+
+    /**
+     * Returns false if only one of the strings is not empty, otherwise
+     * returns true.
+     * @param owner param1
+     * @param uuid param2
+     * @param pname param3
+     * @return false if only one of the strings is not empty, otherwise
+     * returns true.
+     */
+    private boolean ensureOnlyOne(String owner, String uuid, String pname) {
+        String[] params = new String[3];
+        params[0] = owner;
+        params[1] = uuid;
+        params[2] = pname;
+
+        boolean found = false;
+
+        for (String s : params) {
+            if (found && !StringUtils.isEmpty(s)) {
+                return false;
+            }
+            else if (!StringUtils.isEmpty(s)) {
+                found = true;
+            }
+        }
+
+        return true;
     }
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Collection<JobStatus> getStatuses(@QueryParam("owner") String ownerKey) {
-        if (ownerKey == null || ownerKey.isEmpty()) {
-            throw new BadRequestException("You must specify an owner key.");
+    public Collection<JobStatus> getStatuses(
+        @QueryParam("owner") String ownerKey,
+        @QueryParam("consumer") String uuid,
+        @QueryParam("principal") String principalName) {
+
+        if (StringUtils.isEmpty(ownerKey) &&
+            StringUtils.isEmpty(uuid) &&
+            StringUtils.isEmpty(principalName)) {
+
+            throw new BadRequestException(i18n.tr("You must specify an owner " +
+                "key, consumer uuid, or principal name."));
         }
 
-        return this.curator.findByOwnerKey(ownerKey);
+        // make sure we didn't specify them all
+        if (!ensureOnlyOne(ownerKey, uuid, principalName)) {
+            throw new BadRequestException(i18n.tr("You must specify one of " +
+                "owner key, consumer uuid, or principal name, but not all."));
+        }
+
+        List<JobStatus> statuses = null;
+        if (!StringUtils.isEmpty(ownerKey)) {
+            statuses = curator.findByOwnerKey(ownerKey);
+        }
+        else if (!StringUtils.isEmpty(uuid)) {
+            statuses = curator.findByConsumerUuid(uuid);
+        }
+        else if (!StringUtils.isEmpty(principalName)) {
+            statuses = curator.findByPrincipalName(principalName);
+        }
+
+        if (statuses == null) {
+            throw new NotFoundException("");
+        }
+
+        return statuses;
     }
-    
+
     @GET
     @Path("scheduler")
     @Produces(MediaType.APPLICATION_JSON)
@@ -74,7 +141,7 @@ public class JobResource {
         }
         return ss;
     }
-    
+
     @POST
     @Path("scheduler")
     @Produces(MediaType.APPLICATION_JSON)
@@ -88,7 +155,7 @@ public class JobResource {
             }
         }
         catch (PinsetterException pe) {
-            throw new IseException("Error setting scheduler status");
+            throw new IseException(i18n.tr("Error setting scheduler status"));
         }
         return getSchedulerStatus();
     }
@@ -99,22 +166,21 @@ public class JobResource {
     public JobStatus getStatus(@PathParam("job_id") String jobId) {
         return curator.find(jobId);
     }
-    
+
     @DELETE
     @Path("/{job_id}")
     @Produces(MediaType.APPLICATION_JSON)
     public JobStatus cancel(@PathParam("job_id") String jobId) {
         JobStatus j = curator.find(jobId);
         if (j.getState().equals(JobState.CANCELLED)) {
-            throw new BadRequestException("job already cancelled");
+            throw new BadRequestException(i18n.tr("job already cancelled"));
         }
         if (j.getState() != JobState.CREATED) {
-            throw new BadRequestException("cannot cancel a job that is not in" +
-                   "CREATED state");
+            throw new BadRequestException(i18n.tr("cannot cancel a job that " +
+                "is not in CREATED state"));
         }
         return curator.cancel(jobId);
     }
-    
 
     @POST
     @Path("/{job_id}")
@@ -128,5 +194,4 @@ public class JobResource {
 
         return status;
     }
-
 }

@@ -79,6 +79,46 @@
       <div class='grid_24'>
         <h1>News</h1>
         <div class='grid_24'>
+          <h2 id='201108' style='color: black'>July 2011</h2>
+          <div class='section-grouping'>
+            <h2 id='20110826'>
+              26 August 2011: Candlepin 0.4.11 released
+            </h2>
+            <p> Candlepin 0.4.11 has been released. You can get the bits at
+            <a href="http://repos.fedorapeople.org/repos/candlepin/candlepin/">http://repos.fedorapeople.org/repos/candlepin/candlepin</a></p>
+            <p>Make sure you read over the Setup Guide, which is located at
+            <a href="https://fedorahosted.org/candlepin/wiki/Setup">https://fedorahosted.org/candlepin/wiki/Setup</a></p>
+            <p>For more information on Candlepin, please visit <a href="http://candlepinproject.org/"/>http://candlepinproject.org/</a></p>
+
+            <h3>Features & Enhancements</h3>
+            <h4>client</h4>
+            <ul>
+                <li>group subscriptions based on stacking attribute in the following
+    screens: subscriptions page, compliance assistant, view available subscriptions</li>
+                <li>the cli and gui now denote the state of the subscription: Subscribed,
+    Partially Subscribed, Expired or Not Subscribed.</li>
+                <li>Nag messages now denote the 'Partially Subscribed' state.</li>
+                <li>registration with multiple activation keys now supported</li>
+                <li>list --available now shows if a subscription is multi-entitle capable</li>
+                <li>GUI shows an asterisk to denote a subscription is multi-entitle
+    capable</li>
+                <li>config command added to cli enabling editing of the configuration
+    values</li>
+    <li>client tries to optionally heal the system to keep it properly
+    subscribed.</li>
+            </ul>
+            <h4>server</h4>
+            <ul>
+                <li>the list of consumer's installed product IDs are now stored</li>
+                <li>the candlepin job status stable now stores the consumer uuid for
+   async bind.
+</li>
+                <li>configuration added to disable batch jobs on a particular node</li>
+                <li>Moved the translations to fedora.zanata.org</li>
+            </ul>
+          </div>
+ 	<br/><br/>        
+        <div class='grid_24'>
           <h2 id='201107' style='color: black'>July 2011</h2>
           <div class='section-grouping'>
             <h2 id='20110713'>

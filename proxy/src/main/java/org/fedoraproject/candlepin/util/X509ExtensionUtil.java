@@ -135,7 +135,14 @@ public class X509ExtensionUtil {
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_STACKING_ID), false,
                 stackingId));
         }
-
+        //code "true" as "1" so it matches other bools in the cert
+        String virtOnly = ent.getPool().getAttributeValue("virt_only");
+        if (virtOnly != null && virtOnly.equals("true")) {
+            toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
+                OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_VIRT_ONLY_KEY), false,
+                "1"));
+            
+        }
         return toReturn;
     }
 

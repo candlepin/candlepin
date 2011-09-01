@@ -36,8 +36,8 @@ import com.google.inject.Inject;
 
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.hibernate.tool.hbm2x.StringUtils;
 import org.jboss.resteasy.client.ClientResponse;
 import org.quartz.Job;
 import org.quartz.JobDataMap;

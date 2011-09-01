@@ -191,7 +191,8 @@ module ExportMethods
     product2 = create_product()
     virt_product = create_product(random_string('virt_product'),
                                   random_string('virt_product'),
-                                  {:attributes => {:virt_only => true}})
+                                  {:attributes => {:virt_only => true,
+                                                   :no_export => true}})
     content = create_content({:metadata_expire => 6000,
       :required_tags => "TAG1,TAG2"})
     @cp.add_content_to_product(product1.id, content.id)
