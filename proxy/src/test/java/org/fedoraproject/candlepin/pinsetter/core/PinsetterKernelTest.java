@@ -19,6 +19,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.startsWith;
 import static org.mockito.Mockito.atMost;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -34,6 +35,7 @@ import org.fedoraproject.candlepin.pinsetter.core.model.JobStatus;
 import org.fedoraproject.candlepin.pinsetter.tasks.CancelJobJob;
 import org.fedoraproject.candlepin.pinsetter.tasks.JobCleaner;
 import org.fedoraproject.candlepin.pinsetter.tasks.StatisticHistoryTask;
+import org.fedoraproject.candlepin.util.Util;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -132,7 +134,7 @@ public class PinsetterKernelTest {
         ArgumentCaptor<JobStatus> arg = ArgumentCaptor.forClass(JobStatus.class);
         verify(jcurator, atMost(1)).create(arg.capture());
         JobStatus stat = (JobStatus) arg.getValue();
-        assertTrue(stat.getId().startsWith(CancelJobJob.class.getName()));
+        assertTrue(stat.getId().startsWith(Util.getClassName(CancelJobJob.class)));
         verify(sched, atMost(1)).scheduleJob(any(JobDetail.class), any(Trigger.class));
     }
 
@@ -140,7 +142,8 @@ public class PinsetterKernelTest {
     public void handleExistingJobStatus() throws Exception {
         pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
         JobStatus status = mock(JobStatus.class);
-        when(jcurator.find(eq(JobCleaner.class.getName() + "-1"))).thenReturn(status);
+        when(jcurator.find(startsWith(
+            Util.getClassName(JobCleaner.class)))).thenReturn(status);
         pk.startup();
         verify(sched).start();
         verify(sched).addTriggerListener(any(ChainedListener.class));
@@ -272,5 +275,74 @@ public class PinsetterKernelTest {
         pk.unpauseScheduler();
         verify(jcurator).findCanceledJobs();
         verify(sched).start();
+    }
+
+    @Test
+    public void clusteredShutdown() throws Exception {
+
+        config = new Config(
+            new HashMap<String, String>() {
+                {
+                    put(ConfigProperties.DEFAULT_TASKS, JobCleaner.class.getName());
+                    put(ConfigProperties.TASKS, StatisticHistoryTask.class.getName());
+                    put("org.quartz.jobStore.isClustered", "true");
+                }
+            });
+        String crongrp = "cron group";
+        String singlegrp = "async group";
+        String[] jobs = {"fakejob1", "fakejob2"};
+        when(sched.getJobNames(eq(crongrp))).thenReturn(jobs);
+        when(sched.getJobNames(eq(singlegrp))).thenReturn(jobs);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        pk.shutdown();
+
+        verify(sched, atMost(1)).standby();
+        verify(sched, never()).deleteJob(eq(jobs[0]), eq(crongrp));
+        verify(sched, never()).deleteJob(eq(jobs[1]), eq(crongrp));
+        verify(sched, never()).deleteJob(eq(jobs[0]), eq(singlegrp));
+        verify(sched, never()).deleteJob(eq(jobs[1]), eq(singlegrp));
+        verify(sched, atMost(1)).shutdown();
+    }
+
+    @Test
+    public void clusteredStartupWithJobs() throws Exception {
+        config = new Config(
+            new HashMap<String, String>() {
+                {
+                    put(ConfigProperties.DEFAULT_TASKS, JobCleaner.class.getName());
+                    put(ConfigProperties.TASKS, StatisticHistoryTask.class.getName());
+                    put("org.quartz.jobStore.isClustered", "true");
+                }
+            });
+        String[] jobs = new String[2];
+        jobs[0] = JobCleaner.class.getName();
+        jobs[1] = StatisticHistoryTask.class.getName();
+        when(sched.getJobNames(eq("cron group"))).thenReturn(jobs);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        pk.startup();
+        verify(sched).start();
+        verify(sched, never()).addTriggerListener(any(ChainedListener.class));
+        verify(jcurator, never()).create(any(JobStatus.class));
+        verify(sched, never()).scheduleJob(any(JobDetail.class), any(Trigger.class));
+    }
+
+    @Test
+    public void clusteredStartupWithoutJobs() throws Exception {
+        config = new Config(
+            new HashMap<String, String>() {
+                {
+                    put(ConfigProperties.DEFAULT_TASKS, JobCleaner.class.getName());
+                    put(ConfigProperties.TASKS, StatisticHistoryTask.class.getName());
+                    put("org.quartz.jobStore.isClustered", "true");
+                }
+            });
+        String[] jobs = new String[0];
+        when(sched.getJobNames(eq("cron group"))).thenReturn(jobs);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        pk.startup();
+        verify(sched).start();
+        verify(sched).addTriggerListener(any(ChainedListener.class));
+        verify(jcurator, atMost(2)).create(any(JobStatus.class));
+        verify(sched, atMost(2)).scheduleJob(any(JobDetail.class), any(Trigger.class));
     }
 }

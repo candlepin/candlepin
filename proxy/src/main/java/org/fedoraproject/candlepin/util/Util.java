@@ -326,13 +326,14 @@ public class Util {
     }
 
     public static String getClassName(Class c) {
-        String fullClassName = c.getName();
+        return getClassName(c.getName());
+    }
+
+    public static String getClassName(String fullClassName) {
         int firstChar = fullClassName.lastIndexOf('.') + 1;
         if (firstChar > 0) {
             fullClassName = fullClassName.substring(firstChar);
         }
         return fullClassName;
     }
-
-
 }
