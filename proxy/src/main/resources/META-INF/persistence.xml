@@ -17,31 +17,4 @@
 
         </properties>
     </persistence-unit>
-
-    <persistence-unit name="production" transaction-type="RESOURCE_LOCAL">
-        <provider>org.hibernate.ejb.HibernatePersistence</provider>
-        <properties>
-            <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
-            <property name="hibernate.connection.driver_class" value="org.postgresql.Driver"/>
-            <property name="hibernate.connection.url" value="jdbc:postgresql:candlepin"/>
-
-             <!-- Note this line wipes the DB every restart, only used for testing. -->
-             <!-- property name="hibernate.hbm2ddl.auto" value="create-drop"-->
-
-            <property name="hibernate.connection.username" value="candlepin"/>
-            <property name="hibernate.connection.password" value=""/>
-            <property name="hibernate.show_sql" value="false" />
-
-            <!-- c3p0 connection manager settings -->
-            <property name="hibernate.c3p0.min_size" value="5" />
-            <property name="hibernate.c3p0.max_size" value="20" />
-            <property name="hibernate.c3p0.timeout" value="300" />
-            <!-- test period in seconds -->
-            <property name="hibernate.c3p0.idle_test_period" value="300" />
-            <!-- max_statements should always be 0 -->
-            <property name="hibernate.c3p0.max_statements" value="0" />
-
-        </properties>
-    </persistence-unit>
-
 </persistence>
