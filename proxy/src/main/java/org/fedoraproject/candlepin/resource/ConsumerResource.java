@@ -776,14 +776,12 @@ public class ConsumerResource {
         if (async) {
             JobDetail detail = null;
 
-            if (productIds != null && productIds.length > 0) {
+            if (poolIdString != null) {
+                detail = EntitlerJob.bindByPool(poolIdString, consumerUuid, quantity);
+            }
+            else if (productIds != null && productIds.length > 0) {
                 detail = EntitlerJob.bindByProducts(productIds,
                         consumerUuid, quantity);
-            }
-            else {
-                String poolId = Util.assertNotNull(poolIdString,
-                    i18n.tr("Pool ID must be provided"));
-                detail = EntitlerJob.bindByPool(poolId, consumerUuid, quantity);
             }
 
             // events will be triggered by the job
@@ -795,7 +793,10 @@ public class ConsumerResource {
         // otherwise we do what we do today.
         //
         List<Entitlement> entitlements = null;
-        if (productIds != null && productIds.length > 0) {
+        if (poolIdString != null) {
+            entitlements = entitler.bindByPool(poolIdString, consumer, quantity);
+        }
+        else if (productIds != null && productIds.length > 0) {
             try {
                 entitlements = entitler.bindByProducts(productIds, consumer,
                     quantity);
@@ -807,11 +808,6 @@ public class ConsumerResource {
                 log.warn(i18n.tr("Asked to be subscribed to a product that " +
                     "has no pool: {0} ", re.getMessage()));
             }
-        }
-        else {
-            String poolId = Util.assertNotNull(poolIdString,
-                i18n.tr("Pool ID must be provided"));
-            entitlements = entitler.bindByPool(poolId, consumer, quantity);
         }
 
         // Trigger events:
