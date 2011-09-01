@@ -20,6 +20,10 @@ function export_name_space() {
     return Export;
 }
 
+function compliance_name_space() {
+	return Compliance;
+}
+
 /* Utility functions */
 function contains(a, obj) {
     for (var i = 0; i < a.length; i++) {
@@ -609,5 +613,31 @@ var Export = {
     can_export_entitlement: function() {
         return !attributes.containsKey('virt_only') ||
             !'true'.equals(attributes.get('virt_only'));
+    }
+}
+
+var Compliance = {
+	/**
+	 * Checks compliance status for a consumer on a given date.
+	 */
+    get_status: function() {
+        var status = new org.fedoraproject.candlepin.policy.js.compliance.ComplianceStatus(ondate);
+        for each (var installedProd in consumer.getInstalledProducts().toArray()) {
+            var installedPid = installedProd.getProductId();
+        	log.debug("Checking compliance for installed product:" + installedPid);
+            for each (var e in entitlements.toArray()) {
+                if (e.getPool().provides(installedPid) == true) {
+                	log.debug("  " + e.getPool().getId() + " provides");
+                    // TODO: check stacking validity here
+                    status.addCompliantProduct(installedPid, e);
+                }
+            }
+            // Not compliant if we didn't find any entitlements for this product:
+            if (!status.getCompliantProducts().containsKey(installedPid)) {
+            	log.debug("  nothing provides.")
+                status.addNonCompliantProduct(installedPid);
+            }
+        }
+        return status;
     }
 }

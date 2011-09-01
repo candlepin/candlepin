@@ -12,19 +12,21 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.compliance;
+package org.fedoraproject.candlepin.policy.js.compliance;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 
+import java.io.InputStream;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import org.fedoraproject.candlepin.compliance.Compliance;
+import org.fedoraproject.candlepin.policy.js.JsRulesProvider;
+import org.fedoraproject.candlepin.policy.js.compliance.ComplianceRules;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerInstalledProduct;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -33,7 +35,10 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.ProductPoolAttribute;
 import org.fedoraproject.candlepin.model.ProvidedProduct;
+import org.fedoraproject.candlepin.model.Rules;
+import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.test.TestUtil;
+import org.fedoraproject.candlepin.util.Util;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -44,20 +49,31 @@ import org.mockito.MockitoAnnotations;
 /**
  * ComplianceTest
  */
-public class ComplianceTest {
+public class ComplianceRulesTest {
     private Owner owner;
-    private Compliance compliance;
+    private ComplianceRules compliance;
+    
+    private static final String RULES_FILE = "/rules/default-rules.js";
     
     private final static String PRODUCT_1 = "product1";
     private final static String PRODUCT_2 = "product2";
     private final static String STACK_ID_1 = "my-stack-1";
     
     @Mock EntitlementCurator entCurator;
+    @Mock private RulesCurator rulesCuratorMock;
+    private JsRulesProvider provider;
     
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        compliance = new Compliance(entCurator);
+        
+        // Load the default production rules:
+        InputStream is = this.getClass().getResourceAsStream(RULES_FILE);
+        Rules rules = new Rules(Util.readFile(is));
+        when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
+        when(rulesCuratorMock.getRules()).thenReturn(rules);
+        provider = new JsRulesProvider(rulesCuratorMock);
+        compliance = new ComplianceRules(provider.get(), entCurator);
         owner = new Owner("test");
     }
     
@@ -118,7 +134,7 @@ public class ComplianceTest {
         
         assertEquals(1, status.getNonCompliantProducts().size());
         assertTrue(status.getNonCompliantProducts().contains(PRODUCT_2));
-        
+
         assertEquals(1, status.getCompliantProducts().size());
         assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_1));
         

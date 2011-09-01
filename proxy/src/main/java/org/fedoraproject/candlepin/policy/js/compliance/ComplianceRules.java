@@ -12,15 +12,20 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.compliance;
+package org.fedoraproject.candlepin.policy.js.compliance;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.ConsumerInstalledProduct;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
+import org.fedoraproject.candlepin.policy.js.JsRules;
+import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
+import org.mozilla.javascript.RhinoException;
 
 import com.google.inject.Inject;
 
@@ -29,13 +34,17 @@ import com.google.inject.Inject;
  * 
  * A class used to check consumer compliance status.
  */
-public class Compliance {
+public class ComplianceRules {
     
     private EntitlementCurator entCurator;
-    
+    private JsRules jsRules;
+    private static Logger log = Logger.getLogger(ComplianceRules.class);
+        
     @Inject
-    public Compliance(EntitlementCurator entCurator) {
+    public ComplianceRules(JsRules jsRules, EntitlementCurator entCurator) {
         this.entCurator = entCurator;
+        this.jsRules = jsRules;
+        jsRules.init("compliance_name_space");
     }
 
     /**
@@ -46,24 +55,25 @@ public class Compliance {
      * @return Compliance status.
      */
     public ComplianceStatus getStatus(Consumer c, Date date) {
+        
         List<Entitlement> ents = entCurator.listByConsumerAndDate(c, date);
         
-        ComplianceStatus status = new ComplianceStatus(date);
-        
-        for (ConsumerInstalledProduct installedProd : c.getInstalledProducts()) {
-            String installedPid = installedProd.getProductId();
-            for (Entitlement e : ents) {
-                if (e.getPool().provides(installedPid)) {
-                    // TODO: check stacking validity here
-                    status.addCompliantProduct(installedPid, e);
-                }
-            }
-            // Not compliant if we didn't find any entitlements for this product:
-            if (!status.getCompliantProducts().containsKey(installedPid)) {
-                status.addNonCompliantProduct(installedPid);
-            }
+        Map<String, Object> args = new HashMap<String, Object>();
+        args.put("consumer", c);
+        args.put("entitlements", ents);
+        args.put("ondate", date);
+        args.put("log", log);
+
+        ComplianceStatus status = null;
+        try {
+            status = jsRules.invokeMethod("get_status", args);
         }
-        
+        catch (NoSuchMethodException e) {
+            log.warn("No compliance javascript method found: get_status");
+        }
+        catch (RhinoException e) {
+            throw new RuleExecutionException(e);
+        }
         return status;
     }
     

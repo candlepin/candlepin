@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.compliance;
+package org.fedoraproject.candlepin.policy.js.compliance;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -66,7 +66,7 @@ public class ComplianceStatus {
         return nonCompliantProducts;
     }
     
-    protected void addNonCompliantProduct(String productId) {
+    public void addNonCompliantProduct(String productId) {
         this.nonCompliantProducts.add(productId);
     }
 
@@ -78,7 +78,7 @@ public class ComplianceStatus {
         return partiallyCompliantProducts;
     }
 
-    protected void addPartiallyCompliantProduct(String productId, Entitlement entitlement) {
+    public void addPartiallyCompliantProduct(String productId, Entitlement entitlement) {
         if (!partiallyCompliantProducts.containsKey(productId)) {
             partiallyCompliantProducts.put(productId, new HashSet<Entitlement>());
         }
@@ -90,7 +90,7 @@ public class ComplianceStatus {
         this.compliantProducts = compliantProducts;
     }
     
-    protected void addCompliantProduct(String productId, Entitlement entitlement) {
+    public void addCompliantProduct(String productId, Entitlement entitlement) {
         if (!compliantProducts.containsKey(productId)) {
             compliantProducts.put(productId, new HashSet<Entitlement>());
         }
