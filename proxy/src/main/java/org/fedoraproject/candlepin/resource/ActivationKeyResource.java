@@ -118,7 +118,7 @@ public class ActivationKeyResource {
         ActivationKey key = findKey(activationKeyId);
         Pool pool = findPool(poolId);
         
-        if(pool.getAttributeValue("requires_consumer_type") != null &&
+        if (pool.getAttributeValue("requires_consumer_type") != null &&
             pool.getAttributeValue("requires_consumer_type").equals("person") || 
             pool.getProductAttribute("requires_consumer_type") != null &&
             pool.getProductAttribute("requires_consumer_type").getValue()
