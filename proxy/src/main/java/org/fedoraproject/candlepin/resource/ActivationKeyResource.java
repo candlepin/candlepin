@@ -118,6 +118,16 @@ public class ActivationKeyResource {
         ActivationKey key = findKey(activationKeyId);
         Pool pool = findPool(poolId);
         
+        if(pool.getAttributeValue("requires_consumer_type") != null &&
+            pool.getAttributeValue("requires_consumer_type").equals("person") || 
+            pool.getProductAttribute("requires_consumer_type") != null &&
+            pool.getProductAttribute("requires_consumer_type").getValue()
+                  .equals("person")) {
+            throw new BadRequestException(i18n.tr("Pools requiring a 'person' " +
+                "consumer should not be added to an activation key since a " +
+                "consumer type of 'person' cannot be used with activation " +
+                "keys"));
+        }
         if (quantity > 1) {
             ProductPoolAttribute ppa = pool.getProductAttribute("multi-entitlement");
             if (ppa == null || !ppa.getValue().equalsIgnoreCase("yes")) {

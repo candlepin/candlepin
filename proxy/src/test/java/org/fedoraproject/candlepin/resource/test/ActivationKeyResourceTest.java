@@ -160,5 +160,43 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
             pc, null, null);
         akr.addPoolToKey("testKey", "testPool", 15);
     }
+    
+    @Test(expected = BadRequestException.class)
+    public void testActivationKeyWithPersonConsumerType() {
+        ActivationKey ak = mock(ActivationKey.class);
+        ActivationKeyCurator akc = mock(ActivationKeyCurator.class);
+        Pool p = mock(Pool.class);
+        PoolCurator pc = mock(PoolCurator.class);
+        ProductPoolAttribute ppa = mock(ProductPoolAttribute.class);
+        
+        when(akc.find(eq("testKey"))).thenReturn(ak);
+        when(pc.find(eq("testPool"))).thenReturn(p);
+        when(p.getProductAttribute(eq("requires_consumer_type"))).thenReturn(ppa);
+        when(ppa.getValue()).thenReturn("person");
+        when(p.getQuantity()).thenReturn(1L);
+        
+        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n,
+            pc, null, null);
+        akr.addPoolToKey("testKey", "testPool", 1);
+    }
+
+    @Test
+    public void testActivationKeyWithNonPersonConsumerType() {
+        ActivationKey ak = mock(ActivationKey.class);
+        ActivationKeyCurator akc = mock(ActivationKeyCurator.class);
+        Pool p = mock(Pool.class);
+        PoolCurator pc = mock(PoolCurator.class);
+        ProductPoolAttribute ppa = mock(ProductPoolAttribute.class);
+        
+        when(akc.find(eq("testKey"))).thenReturn(ak);
+        when(pc.find(eq("testPool"))).thenReturn(p);
+        when(p.getProductAttribute(eq("requires_consumer_type"))).thenReturn(ppa);
+        when(ppa.getValue()).thenReturn("candlepin");
+        when(p.getQuantity()).thenReturn(1L);
+        
+        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n,
+            pc, null, null);
+        assertNotNull(akr.addPoolToKey("testKey", "testPool", 1));
+    }
 
 }
