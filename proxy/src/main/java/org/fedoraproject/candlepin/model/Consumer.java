@@ -311,6 +311,10 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         return facts;
     }
 
+    public boolean hasFact(String fact) {
+        return facts.containsKey(fact);
+    }
+
     /**
      * Returns the value of the fact with the given key.
      * @param factKey specific fact to retrieve.
