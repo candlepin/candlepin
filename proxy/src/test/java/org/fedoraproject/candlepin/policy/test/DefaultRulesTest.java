@@ -633,6 +633,7 @@ public class DefaultRulesTest {
         Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer,
             new String[]{ productId }, pools);
 
+        assertTrue(bestPools.containsKey(pool));
         assertEquals(4, bestPools.get(pool).intValue());
     }
 
@@ -1022,7 +1023,7 @@ public class DefaultRulesTest {
             productId1, productId2, productId3 }, pools);
 
         assertEquals(1, bestPools.size());
-        assertEquals(1, bestPools.get(pool1).intValue());
+        assertEquals(1, bestPools.get(pool2).intValue());
     }
 
     @Test

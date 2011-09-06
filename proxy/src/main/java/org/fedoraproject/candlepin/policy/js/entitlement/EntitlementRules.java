@@ -225,13 +225,13 @@ public class EntitlementRules implements Enforcer {
         args.put("prodAttrSeparator", PROD_ARCHITECTURE_SEPARATOR);
         args.put("log", rulesLogger);
 
-        ReadOnlyPool[] result = null;
+        Map<ReadOnlyPool, Integer> result = null;
         boolean foundMatchingRule = false;
         for (Rule rule : matchingRules) {
             try {
                 Object output =
                     jsRules.invokeMethod(SELECT_POOL_PREFIX + rule.getRuleName(), args);
-                result = jsRules.convertArray(output);
+                result = jsRules.convertMap(output);
                 foundMatchingRule = true;
                 log.info("Excuted javascript rule: " + SELECT_POOL_PREFIX +
                     rule.getRuleName());
@@ -248,7 +248,7 @@ public class EntitlementRules implements Enforcer {
         if (!foundMatchingRule) {
             try {
                 Object output = jsRules.invokeMethod(GLOBAL_SELECT_POOL_FUNCTION, args);
-                result = jsRules.convertArray(output);
+                result = jsRules.convertMap(output);
                 log.info("Excuted javascript rule: " +
                     GLOBAL_SELECT_POOL_FUNCTION);
             }
@@ -270,15 +270,12 @@ public class EntitlementRules implements Enforcer {
 
         Map<Pool, Integer> bestPools = new HashMap<Pool, Integer>();
         for (Pool p : pools) {
-            for (ReadOnlyPool rp : result) {
+            for (ReadOnlyPool rp : result.keySet()) {
                 if (p.getId().equals(rp.getId())) {
                     log.debug("Best pool: " + p);
                     
-                    int quantity = 0;
-                    if (bestPools.containsKey(p)) {
-                        quantity = bestPools.get(p);
-                    }
-                    bestPools.put(p, ++quantity);
+                    int quantity = result.get(rp);
+                    bestPools.put(p, quantity);
                 }
             }
         }

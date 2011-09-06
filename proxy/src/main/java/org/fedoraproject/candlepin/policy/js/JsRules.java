@@ -158,4 +158,30 @@ public class JsRules {
     public ReadOnlyPool[] convertArray(Object output) {
         return (ReadOnlyPool[]) Context.jsToJava(output, ReadOnlyPool[].class);
     }
+    
+    public Map<ReadOnlyPool, Integer> convertMap(Object output) {
+        Map<ReadOnlyPool, Integer> toReturn = new HashMap<ReadOnlyPool, Integer>();
+        
+        Map<ReadOnlyPool, Double> result =
+            (Map<ReadOnlyPool, Double>) Context.jsToJava(output, Map.class);
+        
+        for (ReadOnlyPool pool : result.keySet()) {
+            try {
+                Integer count = (Integer) result.get(pool).intValue();
+                toReturn.put(pool, count);
+            }
+            catch (ClassCastException e) {
+                // this is safe, as we'll have javascript specific ids in here
+                // that we can ignore
+                log.debug("CONVERT id is not readonly pool, ignoring: " + e);
+            }
+        }
+        
+        if (toReturn.isEmpty()) {
+            return null;
+        }
+        
+        log.debug("CONVERT returning hashmap");
+        return toReturn;
+    }
 }

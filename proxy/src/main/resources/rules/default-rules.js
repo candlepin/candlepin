@@ -317,11 +317,6 @@ var Entitlement = {
             log.debug("   " + pool.getId());
         }
 
-        var consumer_sockets = 1;
-        if (consumer.hasFact(SOCKET_FACT)) {
-            consumer_sockets = consumer.getFact(SOCKET_FACT);
-        }
-
         // Builds out the best_in_class_pools by iterating each pool, checking which products it provides (that 
         // are relevant to this request), then filtering out other pools which provide the *exact* same products
         // by selecting the preferred pool based on other criteria.
@@ -367,50 +362,23 @@ var Entitlement = {
                             log.debug("  replacing previous best due to earlier expiry date");
                             break;
                         }
-
-                        // only if pool is new? aka, not in best pools yet
-                        // TODO: this is inside a "providesSameProducts" check, how could this be new?
-                        // <alikins_> guess the first duped pool that is not virt and the same pool
-                        // TODO: this does not look right here, we're in a block that has already detected we provide the same products
-                        // as something already in best pools, and yet we go and add this pool a bunch of times to the end of the array?
-                        var new_pools = findStackingPools(pool, consumer, products);
-                        best_in_class_pools.concat(new_pools);
-                        for each (new_pool in new_pools){
-                            log.debug("selecting new_pool: " + new_pool.getId());
-                        }
-
-                        log.debug("other");
                     }
                 }
 
                 // If we did not find a duplicate pool providing the same products, 
                 if (!duplicate_found) {
-                    log.debug("no duplicate");
-                    var new_pools = findStackingPools(pool, consumer, products);
-                    if (new_pools.length > 0){
-                        log.debug("selecting new pools, no dups " + new_pools);
-                        // TODO: what is happening here? we're completely overwriting the array of best_in_class_pools?
-                        // should this be a concat?
-                        // Suspect that if the early pools in the list are non-stackable, and a later pool providing 
-                        // a different combo of products *is* stackable, we'll trigger this and blow away the previous 
-                        // array of best in class. Needs testing.
-                        best_in_class_pools = new_pools;
-                        break;
-                    }
-                    else {
-                        log.debug("selecting new pools, no new_pools length");
-                        best_in_class_pools.push(pool);
-                    }
+                	best_in_class_pools.push(pool);
                 }
             }
         }
 
 
-        var pools_info = splitStackingPools(best_in_class_pools);
-        log.debug("pools_info stackable " + pools_info['stackable']);
-        log.debug("pools_info other " + pools_info['other']);
+     //   var pools_info = splitStackingPools(best_in_class_pools);
+      //  log.debug("pools_info stackable " + pools_info['stackable']);
+      //  log.debug("pools_info other " + pools_info['other']);
 
-        var candidate_combos = recursiveCombination(pools_info['other'], products.length)
+        // var candidate_combos = recursiveCombination(pools_info['other'], products.length);
+        var candidate_combos = recursiveCombination(best_in_class_pools, products.length);
 
         log.debug("Selecting " + products.length + " products from " + best_in_class_pools.length +
                   " pools in " + candidate_combos.length + " possible combinations");
@@ -419,9 +387,10 @@ var Entitlement = {
         // -The combo that provides the most products
         // -The combo that uses the fewest entitlements
 
-        var selected_pools = [];
-        selected_pools = best_in_class_pools;
+        
+        var selected_pools = new java.util.HashMap();
         var best_provided_count = 0;
+        var best_entitlements_count = 0;
 
         for each (pool_combo in candidate_combos) {
             var provided_count = 0;
@@ -432,13 +401,7 @@ var Entitlement = {
                 var provided_products = getRelevantProvidedProducts(pool, products);
                 for each (provided_product in provided_products) {
                     log.debug("\t\tprovided_product " + provided_product.getId());
-                   if (provided_product.getAttribute("multi-entitlement")) {
-                       log.debug("pool_combo select multi-entitlement");
-                       unique_provided.push(provided_product);
-                   }
-                    // find all the pools that provide a product nothing else does
                     if (!contains(unique_provided, provided_product)) {
-                        log.debug("pool_combo unique pools " + provided_product);
                         unique_provided.push(provided_product);
                     }
                 }
@@ -447,31 +410,32 @@ var Entitlement = {
             for each (product in unique_provided){
                 log.debug("unique_provided " + product.getId() + " " + product.getName());
             }
-            // number of pools is less than the MIN pools
-            // TODO: min pools?
+            
+            // number of provided products is less than our best selection. keep our current selection. 
             if (unique_provided.length < best_provided_count) {
                 continue;
-            } else if (unique_provided.length > best_provided_count || pool_combo.length < selected_pools.length) {
+            } else if (unique_provided.length > best_provided_count || pool_combo.length < best_entitlements_count) {
                 if (hasNoProductOverlap(pool_combo)) {
-                    selected_pools = pool_combo;
-                    best_provided_count = unique_provided.length;
+	                var new_selection = new java.util.HashMap();
+	                var total_entitlements = 0;
+	                for each (pool in pool_combo) {
+	                	new_selection.put(pool, 1);
+	                	total_entitlements++;
+	                }
+	                selected_pools = new_selection;
+	                best_provided_count = unique_provided.length;
+	                best_entitlements_count = total_entitlements;
                 }
-                selected_pools = pool_combo;
             }
         }
 
-        selected_pools.concat(pools_info['stackable']);
-
-        for each (pool in selected_pools){
-            log.debug("selected_pool2 " + pool + "  " + pool.getId());
+        for (pool in selected_pools.keySet()){
+//            log.debug("selected_pool2 " + pool + "  " + pool.getId());
+            log.debug("selected_pool2 " + pool);
         }
 
         // We may not have selected pools for all products; that's ok.
-        if (selected_pools.length > 0) {
-            return selected_pools;
-        }
-
-        return null;
+        return selected_pools;
     }
 }
 
