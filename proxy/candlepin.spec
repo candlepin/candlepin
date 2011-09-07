@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.4.13
+Version: 0.4.14
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -146,6 +146,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Wed Sep 07 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.14-1
+- add a containsKey method to Config (jmrodri@gmail.com)
+- 735087: If quartz is in clustered mode, we shouldn't schedule any jobs. (jesusr@redhat.com)
+
 * Tue Sep 06 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.13-1
 - Revert "731996: SQL Error when using REST query for events" (wpoteat@redhat.com)
 - 732538: Disallow the relationship between a 'person' pool and an activation key (wpoteat@redhat.com)
