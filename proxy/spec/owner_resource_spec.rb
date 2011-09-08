@@ -151,4 +151,8 @@ describe 'Owner Resource' do
     end.should raise_exception(RestClient::ResourceNotFound)
   end
 
+  it 'should allow unicode owner creation' do
+    owner = create_owner random_string('☠pirate org yarr☠')
+  end
+
 end

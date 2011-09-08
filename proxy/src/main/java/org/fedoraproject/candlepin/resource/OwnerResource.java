@@ -699,7 +699,6 @@ public class OwnerResource {
     }
 
     @GET
-    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/statistics/{qtype}/{vtype}")
     public List<Statistic> getStatistics(

@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.guice;
 
+import org.fedoraproject.candlepin.servlet.filter.ContentTypeHackFilter;
 import org.fedoraproject.candlepin.servlet.filter.VersionFilter;
 import org.fedoraproject.candlepin.servlet.filter.logging.LoggingFilter;
 
@@ -32,6 +33,7 @@ public class CandlepinFilterModule extends ServletModule {
         filter("/*").through(PersistenceFilter.class);
         filter("/*").through(LoggingFilter.class);
         filter("/*").through(VersionFilter.class);
+        filter("/*").through(ContentTypeHackFilter.class);
 
         serve("/*").with(HttpServletDispatcher.class);
     }
