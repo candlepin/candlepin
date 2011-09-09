@@ -2,10 +2,9 @@
 # Language zh-CN translations for l package.
 # Copyright (C) 2011 THE l'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the l package.
-#
+# 
 # Automatically generated, 2011.
 # Leah Liu <lliu@redhat.com>, 2011.
-# Leah Liu <lliu@redhat.com>, 2011. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: zh-CN\n"
@@ -14,10 +13,10 @@ msgstr ""
 "PO-Revision-Date: 2011-02-24 12:17+1000\n"
 "Last-Translator: Leah Liu <lliu@redhat.com>\n"
 "Language-Team: Wei Liu\n"
-"Language: zh-CN\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: zh-CN\n"
 "X-Generator: KBabel 1.11.4\n"
 
 #: src/main/java/org/fedoraproject/candlepin/auth/interceptor/SecurityInterceptor.java:195
@@ -246,20 +245,22 @@ msgid "Cound not create the Owner: {0}"
 msgstr "无法创建拥有者：{0}"
 
 #: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:357
+#, 
 msgid "Must provide a name for activation key."
 msgstr ""
 
 #: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:364
-msgid ""
-"Activation key names must be alphanumeric or the characters '-' or '_'. ["
+#, 
+msgid "Activation key names must be alphanumeric or the characters '-' or '_'. ["
 msgstr ""
 
 #: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:371
+#, 
 msgid "Activation key name ["
 msgstr ""
 
 #: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:413
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:491
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:492
 #, java-format
 msgid "No such consumer type: {0}"
 msgstr "没有这种客户类型：{0} "
@@ -274,7 +275,7 @@ msgid "owner with key: {0} was not found."
 msgstr "无法找到密钥 {0} 的拥有者。"
 
 #: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:537
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:828
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:833
 #: src/main/java/org/fedoraproject/candlepin/resource/EntitlementResource.java:113
 #: src/main/java/org/fedoraproject/candlepin/resource/SubscriptionResource.java:99
 #, java-format
@@ -304,25 +305,31 @@ msgid "Bad entity value."
 msgstr "坏的条目值。"
 
 #: src/main/java/org/fedoraproject/candlepin/resource/ActivationKeyResource.java:116
+#, 
 msgid "The quantity must be greater than 0"
 msgstr ""
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ActivationKeyResource.java:125
-msgid ""
-"Error: Only pools with multi-entitlement product subscriptions can be added "
-"to the activation key with a quantity greater than one."
+#: src/main/java/org/fedoraproject/candlepin/resource/ActivationKeyResource.java:126
+#, 
+msgid "Pools requiring a 'person' consumer should not be added to an activation key since a consumer type of 'person' cannot be used with activation keys"
 msgstr ""
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ActivationKeyResource.java:132
+#: src/main/java/org/fedoraproject/candlepin/resource/ActivationKeyResource.java:135
+#, 
+msgid "Error: Only pools with multi-entitlement product subscriptions can be added to the activation key with a quantity greater than one."
+msgstr ""
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ActivationKeyResource.java:142
+#, 
 msgid "The quantity must not be greater than the total allowed for the pool"
 msgstr ""
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ActivationKeyResource.java:180
+#: src/main/java/org/fedoraproject/candlepin/resource/ActivationKeyResource.java:190
 #, java-format
 msgid "ActivationKey with id {0} could not be found"
 msgstr "没有找到 id 为 {0} 的激活码"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ActivationKeyResource.java:191
+#: src/main/java/org/fedoraproject/candlepin/resource/ActivationKeyResource.java:201
 #, java-format
 msgid "Pool with id {0} could not be found"
 msgstr "没有找到 id 为 {0} 的池"
@@ -330,6 +337,31 @@ msgstr "没有找到 id 为 {0} 的池"
 #: src/main/java/org/fedoraproject/candlepin/resource/EventResource.java:76
 #, java-format
 msgid "Event with ID ''{0}'' could not be found."
+msgstr ""
+
+#: src/main/java/org/fedoraproject/candlepin/resource/JobResource.java:102
+#, 
+msgid "You must specify an owner key, consumer uuid, or principal name."
+msgstr ""
+
+#: src/main/java/org/fedoraproject/candlepin/resource/JobResource.java:108
+#, 
+msgid "You must specify one of owner key, consumer uuid, or principal name, but not all."
+msgstr ""
+
+#: src/main/java/org/fedoraproject/candlepin/resource/JobResource.java:158
+#, 
+msgid "Error setting scheduler status"
+msgstr ""
+
+#: src/main/java/org/fedoraproject/candlepin/resource/JobResource.java:176
+#, 
+msgid "job already cancelled"
+msgstr ""
+
+#: src/main/java/org/fedoraproject/candlepin/resource/JobResource.java:179
+#, 
+msgid "cannot cancel a job that is not in CREATED state"
 msgstr ""
 
 #: src/main/java/org/fedoraproject/candlepin/resource/ContentResource.java:67
@@ -355,14 +387,17 @@ msgid "Organization/owner with key: {0} was not found."
 msgstr "没有找到有密钥的机构/拥有者： {0}。"
 
 #: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:251
+#, 
 msgid "Insufficient permissions"
 msgstr ""
 
 #: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:257
+#, 
 msgid "Must specify an org to register with activation keys."
 msgstr ""
 
 #: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:261
+#, 
 msgid "Cannot specify username with activation keys."
 msgstr ""
 
@@ -375,105 +410,105 @@ msgid "System name cannot begin with # character"
 msgstr "系统名称不能以 # 字符开头"
 
 #: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:297
+#, 
 msgid "A consumer type of 'person' cannot be used with activation keys"
 msgstr ""
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:346
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:785
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:813
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:347
 msgid "Pool ID must be provided"
 msgstr "必须提供池 ID"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:366
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:367
 #, java-format
 msgid "Problem creating consumer {0}"
 msgstr "创建客户 {0} 时的问题"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:375
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:376
 #, java-format
 msgid "Activation key ''{0}'' not found for organization ''{1}''."
 msgstr ""
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:397
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:398
 #, java-format
 msgid "User {0} has no roles for organization/owner {1}"
 msgstr "用户 {0} 在机构/拥有者 {1} 中没有角色"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:409
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:410
 #, java-format
 msgid "User {0} has already registered a personal consumer"
 msgstr "用户 {0} 已经注册为个人客户"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:426
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:427
 msgid "You must specify an organization/owner for new consumers."
 msgstr "您必须为新客户指定机构/拥有者。"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:437
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:438
 #, java-format
 msgid "Organization/Owner {0} does not exist."
 msgstr "机构/拥有者 {0} 不存在。"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:444
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:445
 #, java-format
 msgid "User {0} cannot access organization/owner {1}"
 msgstr "用户 {0} 无法访问机构/拥有者 {1}"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:597
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:606
 #, java-format
 msgid "Cannot unregister {0} consumer {1} because: {2}"
 msgstr "无法取消 {0} 客户在 {1} 中的注册，因为：{2}"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:668
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:677
 msgid "Unable to create entitlement archive"
 msgstr "无法创建授权归档"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:750
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:759
 msgid "Cannot bind by multiple parameters."
 msgstr "无法绑定多个参数。"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:755
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:764
+#, 
 msgid "Cannot specify a quantity when auto-binding."
 msgstr ""
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:807
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:817
 #, java-format
 msgid "Asked to be subscribed to a product that has no pool: {0} "
 msgstr ""
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:838
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:843
 #, java-format
 msgid "No such entitlement: {0}"
 msgstr "没有这个权利：{0}"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:855
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:860
 #, java-format
 msgid "No such product: {0}"
 msgstr "没有这个产品：{0}"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:891
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:896
 msgid "Consumer with ID "
 msgstr "客户 ID"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:925
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:930
 #, java-format
 msgid "Entitlement with ID ''{0}'' could not be found."
 msgstr ""
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:944
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:949
 #, java-format
 msgid "Entitlement Certificate with serial number {0} could not be found."
 msgstr "无法找到序列号为 {0} 的权利证书。"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:989
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:994
 #, java-format
 msgid "Consumer {0} cannot be exported, as it's of wrong consumer type."
 msgstr "无法导出客户 {0}，因为他使用错误的客户类型。"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:1003
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:1008
 msgid "Unable to create export archive"
 msgstr "无法创建导出归档"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:1033
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:1038
 #, java-format
 msgid "Problem regenerating id cert for consumer {0}"
 msgstr "为客户 {0} 重新生成 id 证书时的问题"
@@ -490,10 +525,12 @@ msgid "Entitlement with ID ''{0}'' could not be found"
 msgstr ""
 
 #: src/main/java/org/fedoraproject/candlepin/resource/SubscriptionResource.java:88
+#, 
 msgid "email is required for notification"
 msgstr ""
 
 #: src/main/java/org/fedoraproject/candlepin/resource/SubscriptionResource.java:93
+#, 
 msgid "email locale is required for notification"
 msgstr ""
 
@@ -502,30 +539,30 @@ msgstr ""
 msgid "Subscription with id {0} could not be found"
 msgstr "无法找到 id 为 {0} 的订阅"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/RoleResource.java:76
+#: src/main/java/org/fedoraproject/candlepin/resource/RoleResource.java:77
 #, java-format
 msgid "No such owner: {0}"
 msgstr "没有这个拥有者：{0}"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/RoleResource.java:91
+#: src/main/java/org/fedoraproject/candlepin/resource/RoleResource.java:93
 msgid "Role ID does not match path."
 msgstr "角色 ID 与路径不匹配。"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/RoleResource.java:112
+#: src/main/java/org/fedoraproject/candlepin/resource/RoleResource.java:115
 msgid "Access type NONE not supported."
 msgstr "不支持访问类型 NONE。"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/RoleResource.java:145
+#: src/main/java/org/fedoraproject/candlepin/resource/RoleResource.java:149
 #, java-format
 msgid "No such permission: {0} in role: {1}"
 msgstr "角色 {1} 没有这个授权 {0}"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/RoleResource.java:159
+#: src/main/java/org/fedoraproject/candlepin/resource/RoleResource.java:163
 #, java-format
 msgid "No such role: {0}"
 msgstr "没有这个角色：{0}"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/RoleResource.java:167
+#: src/main/java/org/fedoraproject/candlepin/resource/RoleResource.java:171
 #, java-format
 msgid "No such user: {0}"
 msgstr "没有这个用户：{0}"
@@ -642,9 +679,7 @@ msgstr ""
 
 #: src/main/java/org/fedoraproject/candlepin/controller/Entitler.java:102
 #, java-format
-msgid ""
-"This consumer is already subscribed to the product matching pool with id "
-"''{0}''."
+msgid "This consumer is already subscribed to the product matching pool with id ''{0}''."
 msgstr ""
 
 #: src/main/java/org/fedoraproject/candlepin/controller/Entitler.java:107
@@ -654,9 +689,7 @@ msgstr ""
 
 #: src/main/java/org/fedoraproject/candlepin/controller/Entitler.java:112
 #, java-format
-msgid ""
-"Consumers of this type are not allowed to subscribe to the pool with id "
-"''{0}''."
+msgid "Consumers of this type are not allowed to subscribe to the pool with id ''{0}''."
 msgstr ""
 
 #: src/main/java/org/fedoraproject/candlepin/controller/Entitler.java:116
@@ -676,8 +709,7 @@ msgstr "这个客户已经订阅产品 ''{0}''"
 
 #: src/main/java/org/fedoraproject/candlepin/controller/Entitler.java:165
 #, java-format
-msgid ""
-"There are not enough free entitlements available for the product ''{0}''"
+msgid "There are not enough free entitlements available for the product ''{0}''"
 msgstr ""
 
 #: src/main/java/org/fedoraproject/candlepin/controller/Entitler.java:169
@@ -723,5 +755,6 @@ msgid "Error getting oauth consumer Key"
 msgstr "获取 oauth 客户密钥出错"
 
 #: src/main/java/org/fedoraproject/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java:141
+#, 
 msgid "Standalone candlepin does not support redeeming a subscription."
 msgstr ""
