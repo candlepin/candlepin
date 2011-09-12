@@ -374,10 +374,6 @@ var Entitlement = {
 
 
      //   var pools_info = splitStackingPools(best_in_class_pools);
-      //  log.debug("pools_info stackable " + pools_info['stackable']);
-      //  log.debug("pools_info other " + pools_info['other']);
-
-        // var candidate_combos = recursiveCombination(pools_info['other'], products.length);
         var candidate_combos = recursiveCombination(best_in_class_pools, products.length);
 
         log.debug("Selecting " + products.length + " products from " + best_in_class_pools.length +
@@ -414,7 +410,13 @@ var Entitlement = {
             // number of provided products is less than our best selection. keep our current selection. 
             if (unique_provided.length < best_provided_count) {
                 continue;
-            } else if (unique_provided.length > best_provided_count || pool_combo.length < best_entitlements_count) {
+            }
+
+            // we do it after the unique provided.length check because that value is the best we can do
+            // create 'best' stacking combo here
+            // use that best combo for the following comparison
+            
+            if (unique_provided.length > best_provided_count || pool_combo.length < best_entitlements_count) {
                 if (hasNoProductOverlap(pool_combo)) {
 	                var new_selection = new java.util.HashMap();
 	                var total_entitlements = 0;
@@ -430,7 +432,6 @@ var Entitlement = {
         }
 
         for (pool in selected_pools.keySet()){
-//            log.debug("selected_pool2 " + pool + "  " + pool.getId());
             log.debug("selected_pool2 " + pool);
         }
 
