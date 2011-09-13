@@ -141,6 +141,39 @@ function architectureMatches(product, consumer) {
    return true;
 }
 
+// Returns an array of the given pool, added to the array once for each entitlement
+// we would need to satisfy the consumers socket requirements.
+// TODO: rename this
+function findStackingPools(pool, consumer) {
+    var consumer_sockets = 1;
+    if (consumer.hasFact(SOCKET_FACT)) {
+        consumer_sockets = consumer.getFact(SOCKET_FACT);
+     }
+    
+    log.debug("findStackingPools:");
+    log.debug("  pool: " + pool.getId());
+    log.debug("  stacking: " + pool.getProductAttribute("multi-entitlement"));
+
+    var quantity = 0;
+    if (pool.getProductAttribute("multi-entitlement") && pool.getProductAttribute("stacking_id")) {
+        var product_sockets = 0;
+        log.debug("  product: " +  pool.getProductId() + "is stackable and multi-entitled");
+        log.debug("  each entitlement provides X sockets: " + pool.getProductAttribute("sockets"));
+        log.debug("  consumer sockets: " + consumer_sockets);
+        while (product_sockets < consumer_sockets) {
+            product_sockets += parseInt(pool.getProductAttribute("sockets"));
+            quantity++;
+        }
+    } else {
+    	// not stackable, just take one.
+    	// XXX this might not cover all your sockets!
+    	quantity = 1;
+    }
+    
+    return quantity;
+}
+
+
 // given 2 pools, select the best one. It is a assumed that the pools offer the
 // same selection of products.
 // returns true if pool1 is a better choice than pool2, else false 
@@ -374,8 +407,10 @@ var Entitlement = {
 	                var total_entitlements = 0;
 	                for each (pool_class in pool_combo) {
 	                	var pool = pool_class[0];
-	                	new_selection.put(pool, 1);
-	                	total_entitlements++;
+	                	var quantity = findStackingPools(pool, consumer);
+	                	new_selection.put(pool, quantity);
+	                	log.debug("quantity " + pool.id + " " + quantity);
+	                	total_entitlements += quantity;
 	                }
 	                selected_pools = new_selection;
 	                best_provided_count = unique_provided.length;

@@ -641,17 +641,17 @@ public class DefaultRulesTest {
     public void selectBestPoolsRegularAndStackingRequested() {
         consumer.setFact("cpu.cpu_socket(s)", "4");
 
-        Product product = mockStackingProduct(productId, "A test product", "13", "1");
+        Product product = mockStackingProduct(productId, "A test product zippy", "13", "1");
 
         // Make a non-stacked product:
         String productId2 = "b product";
         Product product2 = new Product(productId2, "B test product");
         when(this.prodAdapter.getProductById(productId2)).thenReturn(product2);
 
-        Pool stackedPool = TestUtil.createPool(owner, product);
+        Pool stackedPool = mockPool(product);
         stackedPool.setId("DEAD-BEEF");
 
-        Pool nonStackedPool = TestUtil.createPool(owner, product2);
+        Pool nonStackedPool = mockPool(product2);
         nonStackedPool.setId("DEAD-BEEF3");
 
         List<Pool> pools = new LinkedList<Pool>();
@@ -665,8 +665,7 @@ public class DefaultRulesTest {
 
         assertEquals(1, bestPools.get(nonStackedPool).intValue());
         
-        // right now it's not containing this pool,
-        // and erroring instead of failing. so check first to avoid NPE
+        // check first to avoid NPE
         assertTrue(bestPools.containsKey(stackedPool));
         assertEquals(4, bestPools.get(stackedPool).intValue());
     }
@@ -683,11 +682,11 @@ public class DefaultRulesTest {
         String providedProductId = "providedProductId";
         mockProduct(providedProductId, "Provided Name");
             
-        Pool pool = TestUtil.createPool(owner, product);
+        Pool pool = mockPool(product);
         pool.addProvidedProduct(new ProvidedProduct(providedProductId, "Irrelevant Name"));
         pool.setId("DEAD-BEEF");
 
-        Pool pool2 = TestUtil.createPool(owner, product);
+        Pool pool2 = mockPool(product);
         pool2.setId("DEAD-BEEF3");
         pool2.addProvidedProduct(new ProvidedProduct(providedProductId, "Irrelevant Name"));
 
@@ -700,20 +699,7 @@ public class DefaultRulesTest {
         Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer,
             new String[]{ providedProductId }, pools);
 
-        assertEquals(1, bestPools.get(pool).intValue());
-    }
-    
-    /*
-     * Returns the number of times pool with ID appears in the list of best pools.
-     */
-    public int containsPoolCount(List<Pool> bestPools, String desiredPoolId) {
-        int foundCount = 0;
-        for (Pool p : bestPools) {
-            if (p.getId().equals(desiredPoolId)) {
-                foundCount++;
-            }
-        }
-        return foundCount;
+        assertEquals(4, bestPools.get(pool).intValue());
     }
 
     @Test
