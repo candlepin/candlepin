@@ -21,13 +21,21 @@ class Candlepin
   # TODO probably want to convert this to rails style kv
   def initialize(username=nil, password=nil, cert=nil, key=nil,
                  host='localhost', port=8443, lang=nil, uuid=nil,
-                 trusted_user=false)
+                 trusted_user=false, context='candlepin',
+                 use_ssl = true)
 
     if not username.nil? and not cert.nil?
       raise "Cannot connect with both username and identity cert"
     end
 
-    @base_url = "https://#{host}:#{port}/candlepin"
+    @verbose = false
+
+    if use_ssl
+        @base_url = "https://#{host}:#{port}/#{context}"
+    else
+        @base_url = "http://#{host}:#{port}/#{context}"
+    end
+
     @lang = lang
 
     if not uuid.nil?
@@ -47,6 +55,10 @@ class Candlepin
       @links[link['rel']] = link['href']
     end
 
+  end
+
+  def verbose=(verbose)
+    @verbose = verbose
   end
 
   def get_path(resource)
@@ -660,6 +672,7 @@ class Candlepin
   end
 
   def get(uri, accept_header = :json)
+    puts ("GET #{uri}") if @verbose
     response = get_client(uri, Net::HTTP::Get, :get)[URI.escape(uri)].get \
       :accept => accept_header
     return JSON.parse(response.body)
@@ -681,6 +694,7 @@ class Candlepin
   end
 
   def post(uri, data=nil)
+    puts ("POST #{uri} #{data}") if @verbose
     data = data.to_json if not data.nil?
     response = get_client(uri, Net::HTTP::Post, :post)[URI.escape(uri)].post(
       data, :content_type => :json, :accept => :json)
@@ -698,6 +712,7 @@ class Candlepin
   end
 
   def put(uri, data=nil)
+    puts ("PUT #{uri} #{data}") if @verbose
     data = data.to_json if not data.nil?
     response = get_client(uri, Net::HTTP::Put, :put)[uri].put(
       data, :content_type => :json, :accept => :json)
