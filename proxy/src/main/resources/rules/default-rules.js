@@ -98,7 +98,8 @@ function recursiveCombination(a, n) {
 // as you can use as many of those as you want.
 function hasNoProductOverlap(combination) {
     var seen_product_ids = [];
-    for each (pool in combination) {
+    for each (pool_class in combination) {
+    	var pool = pool_class[0];
         var products = pool.products;
         for (var i = 0 ; i < products.length ; i++) {
             var product = products[i];
@@ -140,73 +141,26 @@ function architectureMatches(product, consumer) {
    return true;
 }
 
-// Returns an array of the given pool, added to the array once for each entitlement
-// we would need to satisfy the consumers socket requirements.
-// TODO: rename this
-function findStackingPools(pool, consumer, products) {
-    var consumer_sockets = 1;
-    if (consumer.hasFact(SOCKET_FACT)) {
-        consumer_sockets = consumer.getFact(SOCKET_FACT);
+// given 2 pools, select the best one. It is a assumed that the pools offer the
+// same selection of products.
+// returns true if pool1 is a better choice than pool2, else false 
+function comparePools(pool1, pool2) {
+	
+    // Prefer a virt_only pool over a regular pool, else fall through to the next rules.
+    // At this point virt_only pools will have already been filtered out by the pre rules
+    // for non virt machines.
+    if (pool1.getAttribute("virt_only") == "true" && pool2.getAttribute("virt_only") != "true") {
+    	return true;
     }
-    
-    log.debug("findStackingPools:");
-    log.debug("  pool: " + pool.getId());
-    log.debug("  stacking: " + pool.getProductAttribute("multi-entitlement"));
-
-    var new_pools = [];
-    if (pool.getProductAttribute("multi-entitlement") && pool.getProductAttribute("stacking_id")) {
-        var product_sockets = 0;
-        log.debug("  product: " +  pool.getProductId() + "is stackable and multi-entitled");
-        log.debug("  each entitlement provides X sockets: " + pool.getProductAttribute("sockets"));
-        log.debug("  consumer sockets: " + consumer_sockets);
-        while (product_sockets < consumer_sockets) {
-            new_pools.push(pool);
-            product_sockets += parseInt(pool.getProductAttribute("sockets"));
-        }
+    else if (pool2.getAttribute("virt_only") == "true" && pool1.getAttribute("virt_only") != "true") {
+    	return false;
     }
-    
-    return new_pools;
 
-}
-
-function hasAllMultiEntitlement(combination) {
-    for each (pool in combination) {
-        var products = pool.products;
-        for (var i = 0 ; i < products.length ; i++) {
-            var product = products[i];
-            if (product.getAttribute("multi-entitlement") != "yes") {
-                return false;
-            }
-        }
+    // If two pools are equal, select the pool that expires first
+    if (pool2.getEndDate().after(pool1.getEndDate())) {
+    	return true;
     }
-    return true;
-}
 
-// Splits the best pools array into two arrays, stacked pools and regular.
-function splitStackingPools(combination) {
-    var stackable_pools = [];
-    var other_pools = [];
-    for each (pool in combination) {
-        log.debug("pool " + pool.getId());
-        var products = pool.products;
-        var stackable = false;
-        for (var i = 0 ; i < products.length ; i++) {
-            var product = products[i];
-            log.debug("\nproduct " + product.getName());
-            log.debug("multi-entitlement " + product.getAttribute("multi-entitlement") );
-            log.debug("stacking_id " + product.getAttribute("stacking_id") );
-            if ((product.getAttribute("multi-entitlement") == "yes") && (product.getAttribute("stacking_id"))){
-                log.debug("this product is stackable");
-                stackable = true;
-            }
-        }
-        if (stackable) {
-            stackable_pools.push(pool);
-        } else {
-            other_pools.push(pool);
-        }
-    }
-    return {'stackable': stackable_pools, 'other': other_pools };
 }
 
 var Entitlement = {
@@ -308,8 +262,11 @@ var Entitlement = {
         // Greedy selection for now, in order
         // XXX need to watch out for multientitle products - how so?
 
-        // An array of the preferred pool for each unique combination of provided products:
-        var best_in_class_pools = [];
+        // An array of arrays of pools. each array is a grouping of pools that provide the
+    	// same subset of products which are applicable to the requested products.
+    	// further, each array is sorted, from best to worst. (pool fitness is determined
+    	// arbitrarily by rules herein.
+        var pools_by_class = [];
 
         // "pools" is a list of all the owner's pools which are compatible for the system:
         log.debug("Selecting best pools from: " + pools.length);
@@ -317,7 +274,7 @@ var Entitlement = {
             log.debug("   " + pool.getId());
         }
 
-        // Builds out the best_in_class_pools by iterating each pool, checking which products it provides (that 
+        // Builds out the pools_by_class by iterating each pool, checking which products it provides (that 
         // are relevant to this request), then filtering out other pools which provide the *exact* same products
         // by selecting the preferred pool based on other criteria.
         for (var i = 0 ; i < pools.length ; i++) {
@@ -336,47 +293,40 @@ var Entitlement = {
                 var duplicate_found = false;
 
                 // Check current pool against previous best to see if it's better:
-                for each (best_pool in best_in_class_pools) {
+                for each (pool_class in pools_by_class) {
+                	var best_pool = pool_class[0];
                     var best_provided_products = getRelevantProvidedProducts(best_pool, products);
 
                     if (providesSameProducts(provided_products, best_provided_products)) {
                         duplicate_found = true;
                         log.debug("  provides same product combo as: " + pool.getId());
-
-                        // Prefer a virt_only pool over a regular pool, else fall through to the next rules.
-                        // At this point virt_only pools will have already been filtered out by the pre rules
-                        // for non virt machines.
-                        if (pool.getAttribute("virt_only") == "true" && best_pool.getAttribute("virt_only") != "true") {
-                            best_in_class_pools[best_in_class_pools.indexOf(best_pool)] = pool;
-                            log.debug("  replacing previous best due to virt-only");
-                            break;
-                        }
-                        else if (best_pool.getAttribute("virt_only") == "true" && pool.getAttribute("virt_only") != "true") {
-                            log.debug("  sticking with previous best due to virt-only");
-                            break;
+                        
+                        // figure out where to insert this pool in its sorted class
+                        var i = 0;
+                        for (; i < pool_class.length; i++) {
+                        	if (comparePools(pool, best_pool)) {
+                        		break;
+                        	}
                         }
 
-                        // If two pools are equal, select the pool that expires first
-                        if (best_pool.getEndDate().after(pool.getEndDate())) {
-                            best_in_class_pools[best_in_class_pools.indexOf(best_pool)] = pool;
-                            log.debug("  replacing previous best due to earlier expiry date");
-                            break;
-                        }
+                        // now insert the pool into the middle of the array
+                        pool_class.splice(i, 0, pool);
+                        break;
                     }
                 }
 
                 // If we did not find a duplicate pool providing the same products, 
                 if (!duplicate_found) {
-                	best_in_class_pools.push(pool);
+                	var pool_class = [];
+                	pool_class.push(pool);
+                	pools_by_class.push(pool_class);
                 }
             }
         }
 
+        var candidate_combos = recursiveCombination(pools_by_class, products.length);
 
-     //   var pools_info = splitStackingPools(best_in_class_pools);
-        var candidate_combos = recursiveCombination(best_in_class_pools, products.length);
-
-        log.debug("Selecting " + products.length + " products from " + best_in_class_pools.length +
+        log.debug("Selecting " + products.length + " products from " + pools_by_class.length +
                   " pools in " + candidate_combos.length + " possible combinations");
 
         // Select the best pool combo. We prefer:
@@ -392,7 +342,8 @@ var Entitlement = {
             var provided_count = 0;
             var unique_provided = [];
             log.debug("checking pool_combo " + pool_combo);
-            for each (pool in pool_combo) {
+            for each (pool_class in pool_combo) {
+            	var pool = pool_class[0];
                 log.debug("\tpool_combo " + pool.getId());
                 var provided_products = getRelevantProvidedProducts(pool, products);
                 for each (provided_product in provided_products) {
@@ -417,10 +368,12 @@ var Entitlement = {
             // use that best combo for the following comparison
             
             if (unique_provided.length > best_provided_count || pool_combo.length < best_entitlements_count) {
+            	// XXX we'll have to do something here to ensure no product overlap after selecting the actual pool/pools from the combo
                 if (hasNoProductOverlap(pool_combo)) {
 	                var new_selection = new java.util.HashMap();
 	                var total_entitlements = 0;
-	                for each (pool in pool_combo) {
+	                for each (pool_class in pool_combo) {
+	                	var pool = pool_class[0];
 	                	new_selection.put(pool, 1);
 	                	total_entitlements++;
 	                }
