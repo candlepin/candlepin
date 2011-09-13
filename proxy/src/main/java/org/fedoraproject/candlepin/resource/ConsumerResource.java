@@ -14,6 +14,33 @@
  */
 package org.fedoraproject.candlepin.resource;
 
+import java.io.File;
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
+import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventAdapter;
 import org.fedoraproject.candlepin.audit.EventFactory;
@@ -61,40 +88,12 @@ import org.fedoraproject.candlepin.service.UserServiceAdapter;
 import org.fedoraproject.candlepin.sync.ExportCreationException;
 import org.fedoraproject.candlepin.sync.Exporter;
 import org.fedoraproject.candlepin.util.Util;
-
-import com.google.inject.Inject;
-import com.wideplay.warp.persist.Transactional;
-
-import org.apache.log4j.Logger;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
 
-import java.io.File;
-import java.io.IOException;
-import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import com.google.inject.Inject;
+import com.wideplay.warp.persist.Transactional;
 
 /**
  * API Gateway for Consumers
@@ -187,7 +186,7 @@ public class ConsumerResource {
 
             if (owner == null) {
                 throw new NotFoundException(
-                    i18n.tr("Organization/owner with key: {0} was not found.",
+                    i18n.tr("Organization with key: {0} was not found.",
                         ownerKey));
             }
         }
@@ -395,7 +394,7 @@ public class ConsumerResource {
         // has some association with the owner the consumer is destined for:
         if (!user.hasOwnerAccess(owner, Access.ALL) && !user.isSuperAdmin()) {
             throw new ForbiddenException(i18n.tr(
-                "User {0} has no roles for organization/owner {1}",
+                "User {0} has no roles for organization {1}",
                 user.getUsername(), owner.getKey()));
         }
 
@@ -424,7 +423,7 @@ public class ConsumerResource {
 
             if (ownerKeys.size() != 1) {
                 throw new BadRequestException(
-                    i18n.tr("You must specify an organization/owner for new consumers."));
+                    i18n.tr("You must specify an organization for new consumers."));
             }
 
             ownerKey = ownerKeys.get(0);
@@ -435,14 +434,14 @@ public class ConsumerResource {
         Owner owner = ownerCurator.lookupByKey(ownerKey);
         if (owner == null) {
             throw new BadRequestException(i18n.tr(
-                "Organization/Owner {0} does not exist.", ownerKey));
+                "Organization {0} does not exist.", ownerKey));
         }
 
         // Check permissions for current principal on the owner:
         if ((principal instanceof UserPrincipal)) {
             if (!principal.canAccess(owner, Access.ALL)) {
                 throw new ForbiddenException(i18n.tr(
-                    "User {0} cannot access organization/owner {1}",
+                    "User {0} cannot access organization {1}",
                     principal.getPrincipalName(), owner.getKey()));
             }
         }
