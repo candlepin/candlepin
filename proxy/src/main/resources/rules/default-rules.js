@@ -647,6 +647,25 @@ function stack_is_compliant(consumer, stack_id, ents, log) {
     return covered_sockets >= consumer_sockets;
 }
 
+/**
+ * Returns an array of product IDs the entitlement provides which are relevant 
+ * (installed) on the given consumer.
+ */
+function find_relevant_pids(entitlement, consumer) {
+	provided_pids = [];
+	if (consumer.getInstalledProducts() == null) {
+		return provided_pids;
+	}
+	for each (var installed_prod in consumer.getInstalledProducts().toArray()) {
+		var installed_pid = installed_prod.getProductId();
+		if (entitlement.getPool().provides(installed_pid) == true) {
+			log.debug("pool provides: " + installed_pid);
+			provided_pids.push(installed_pid);
+		}
+	}
+	return provided_pids;
+}
+
 var Compliance = {
 
     /**
@@ -658,62 +677,66 @@ var Compliance = {
         // Track the stack IDs we've already checked to save some time:
         var compliant_stack_ids = new java.util.HashSet();
         var non_compliant_stack_ids = new java.util.HashSet();
+        
+        log.debug("Checking compliance status for consumer: " + consumer.getUuid());
+        for each (var e in entitlements.toArray()) {
+        	log.debug("  checking entitlement: " + e.getId());
+        	relevant_pids = find_relevant_pids(e, consumer);
+        	log.debug("    relevant products: " + relevant_pids);
 
-        // Loop through the consumers installed products and check compliance for each.
-        for each (var installedProd in consumer.getInstalledProducts().toArray()) {
-            var installedPid = installedProd.getProductId();
-            log.debug("Checking compliance for installed product:" + installedPid);
-            for each (var e in entitlements.toArray()) {
-                if (e.getPool().provides(installedPid) == true) {
-                    log.debug("  " + e.getPool().getId() + " provides");
+        	partially_stacked = false;
+            // If the pool is stacked, check that the stack requirements are met:
+            if (is_stacked(e)) {
+                var stack_id = e.getPool().getProductAttribute("stacking_id").getValue();
+                log.debug("    pool has stack ID: " + stack_id);
 
-                    // If the pool is stacked we need to now check if the stack
-                    // requirements are met to be considered compliant:
-                    if (is_stacked(e)) {
-                        var stackId = e.getPool().getProductAttribute("stacking_id").getValue();
-                        log.debug("  pool has stack ID: " + stackId);
-
-                        // Shortcuts for stacks we've already checked:
-                        if (non_compliant_stack_ids.contains(stackId) > 0) {
-                            log.debug("  stack already found to be non-compliant");
-                            status.addPartiallyCompliantProduct(installedPid, e);
-                        }
-                        else if (compliant_stack_ids.contains(stackId) > 0) {
-                            log.debug("  stack already found to be non-compliant");
-                            status.addCompliantProduct(installedPid, e);
-                        }
-                        // Otherwise check the stack and add appropriately:
-                        else if(stack_is_compliant(consumer, stackId, entitlements, log)) {
-                            log.debug("  stack is compliant");
-                            status.addCompliantProduct(installedPid, e);
-                            compliant_stack_ids.add(stackId);
-                        }
-                        else {
-                            log.debug("  stack is non-compliant");
-                            status.addPartiallyCompliantProduct(installedPid, e);
-                            non_compliant_stack_ids.add(stackId);
-                        }
-                    }
-                    // Not stacked, just a regular entitlement means we're compliant:
-                    else {
-                        status.addCompliantProduct(installedPid, e);
-                    }
+                // Shortcuts for stacks we've already checked:
+                if (non_compliant_stack_ids.contains(stack_id) > 0) {
+                	log.debug("    stack already found to be non-compliant");
+                	partially_stacked = true;
+                    status.addPartialStack(stack_id, e);
+                }
+                else if (compliant_stack_ids.contains(stack_id) > 0) {
+                    log.debug("    stack already found to be compliant");
+                }
+                // Otherwise check the stack and add appropriately:
+                else if(!stack_is_compliant(consumer, stack_id, entitlements, log)) {
+                    log.debug("    stack is non-compliant");
+                    partially_stacked = true;
+                    status.addPartialStack(stack_id, e);
+                    non_compliant_stack_ids.add(stack_id);
+                }
+                else {
+                    log.debug("    stack is compliant");
+                    compliant_stack_ids.add(stack_id);
                 }
             }
-
-            // Not compliant if we didn't find any entitlements for this product:
-            if (!status.getCompliantProducts().containsKey(installedPid) &&
-                !status.getPartiallyCompliantProducts().containsKey(installedPid)) {
-                log.debug("  nothing provides.");
-                status.addNonCompliantProduct(installedPid);
+            
+            for each (relevant_pid in relevant_pids) {
+            	if (partially_stacked) {
+            		log.debug("   partially compliant: " + relevant_pid);
+            		status.addPartiallyCompliantProduct(relevant_pid, e);
+            	}
+            	else {
+            		log.debug("    fully compliant: " + relevant_pid);
+            		status.addCompliantProduct(relevant_pid, e);
+            	}
             }
         }
 
-        // TODO: We've checked installed products, but the consumer may have manually
-        // subscribed to a stacked product without consuming sufficient entitlments
-        // to meet the stacking requirements. Even though the product is not installed,
-        // this should still be considered non-compliance and need to be fixed by grabbing
-        // more entitlements for the stack.
+        // Run through the consumer's installed products and see if there are any we
+        // didn't find an entitlement for along the way:
+        if (consumer.getInstalledProducts() != null) {
+        	for each (var installed_prod in consumer.getInstalledProducts().toArray()) {
+	        	var installed_pid = installed_prod.getProductId();
+	            // Not compliant if we didn't find any entitlements for this product:
+	            if (!status.getCompliantProducts().containsKey(installed_pid) &&
+	                !status.getPartiallyCompliantProducts().containsKey(installed_pid)) {
+	                log.debug("  nothing provides.");
+	                status.addNonCompliantProduct(installed_pid);
+	            }
+	        }
+    	}
 
         return status;
     }
