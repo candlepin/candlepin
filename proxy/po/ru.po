@@ -664,8 +664,7 @@ msgstr "Пул подписок {0} не существует."
 #, java-format
 msgid "This consumer is already subscribed to the product matching pool with id ''{0}''."
 msgstr ""
-"Этот пользователь уже подписан на продукт из пула с ID ''{0}''.\n"
-"\t\n"
+"Этот пользователь уже подписан на продукт из пула с ID ''{0}''."
 
 #: src/main/java/org/fedoraproject/candlepin/controller/Entitler.java:107
 #, java-format
