@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.4.14
+Version: 0.4.15
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -146,6 +146,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Wed Sep 14 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.15-1
+- Fix the russian string (bkearney@redhat.com)
+- Updated string files (bkearney@redhat.com)
+- 718052: Remove owner from consumer resource return codes. Only use the term org. (bkearney@redhat.com)
+- 736791: Upgrade to RESTEasy 2.2.1GA (jbowes@redhat.com)
+
 * Wed Sep 07 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.14-1
 - add a containsKey method to Config (jmrodri@gmail.com)
 - 735087: If quartz is in clustered mode, we shouldn't schedule any jobs. (jesusr@redhat.com)
