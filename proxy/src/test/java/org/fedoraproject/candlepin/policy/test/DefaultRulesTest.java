@@ -726,9 +726,28 @@ public class DefaultRulesTest {
 
         Product product = mockStackingProduct(productId, "A test product", "13", "1");
 
-        // createPool creates quanity of 5 by default, so
-        // we don't have enough here
         Pool pool = mockPool(product);
+        pool.setQuantity(5L);
+
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool);
+
+        Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer,
+            new String[]{ productId }, pools);
+
+        // we should consume as many as possible, even if this doesnt fully entitle
+        assertEquals(1, bestPools.size());
+        assertEquals(5, bestPools.get(pool).intValue());
+    }
+
+    @Test
+    public void testFindBestWithStackingOverEntitlesToFullyCover() {
+        consumer.setFact("cpu.cpu_socket(s)", "32");
+
+        Product product = mockStackingProduct(productId, "A test product", "13", "3");
+
+        Pool pool = mockPool(product);
+        pool.setQuantity(15L);
 
         List<Pool> pools = new LinkedList<Pool>();
         pools.add(pool);
@@ -737,9 +756,9 @@ public class DefaultRulesTest {
             new String[]{ productId }, pools);
 
         assertEquals(1, bestPools.size());
-        assertEquals(32, bestPools.get(pool).intValue());
+        assertEquals(11, bestPools.get(pool).intValue());
     }
-
+    
     @Test
     public void testFindBestRespectsArchitecture() {
         Product product = new Product(productId, "A test product");

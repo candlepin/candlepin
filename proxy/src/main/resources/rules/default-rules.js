@@ -164,6 +164,11 @@ function findStackingPools(pool, consumer) {
             product_sockets += parseInt(pool.getProductAttribute("sockets"));
             quantity++;
         }
+        
+        // don't take more entitlements than are available!
+        if (quantity > pool.getMaxMembers() - pool.getCurrentMembers()) {
+        	quantity = pool.getMaxMembers() - pool.getCurrentMembers();
+        }
     } else {
     	// not stackable, just take one.
     	// XXX this might not cover all your sockets!
