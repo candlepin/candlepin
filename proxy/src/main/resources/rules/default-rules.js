@@ -595,10 +595,12 @@ function stack_is_compliant(consumer, stack_id, ents, log) {
 
     var covered_sockets = 0;
     for each (var ent in ents.toArray()) {
-        var currentStackId = ent.getPool().getProductAttribute("stacking_id").getValue();
-        if (is_stacked(ent) && currentStackId.equals(stack_id)) {
-            covered_sockets += parseInt(ent.getPool().getProductAttribute("sockets").getValue()) * ent.getQuantity();
-            log.debug("Ent " + ent.getId() + " took covered sockets to: " + covered_sockets);
+        if (is_stacked(ent)) {
+            var currentStackId = ent.getPool().getProductAttribute("stacking_id").getValue();
+            if (currentStackId.equals(stack_id)) {
+                covered_sockets += parseInt(ent.getPool().getProductAttribute("sockets").getValue()) * ent.getQuantity();
+                log.debug("Ent " + ent.getId() + " took covered sockets to: " + covered_sockets);
+            }
         }
     }
 
@@ -614,12 +616,12 @@ function find_relevant_pids(entitlement, consumer) {
 	if (consumer.getInstalledProducts() == null) {
 		return provided_pids;
 	}
-	for each (var installed_prod in consumer.getInstalledProducts().toArray()) {
-		var installed_pid = installed_prod.getProductId();
-		if (entitlement.getPool().provides(installed_pid) == true) {
-			log.debug("pool provides: " + installed_pid);
-			provided_pids.push(installed_pid);
-		}
+    for each (var installed_prod in consumer.getInstalledProducts().toArray()) {
+        var installed_pid = installed_prod.getProductId();
+        if (entitlement.getPool().provides(installed_pid) == true) {
+            log.debug("pool provides: " + installed_pid);
+            provided_pids.push(installed_pid);
+        }
 	}
 	return provided_pids;
 }
@@ -682,6 +684,17 @@ var Compliance = {
             }
         }
 
+        // Run through each partially compliant product, if we also found a 
+        // regular entitlement which provides that product, then it should not be
+        // considered partially compliant as well. We do however still leave the *stack*
+        // in partial stacks list, as this should be repaired. (it could offer other 
+        // products)
+        for each (var partial_prod in status.getPartiallyCompliantProducts().keySet().toArray()) {
+            if (status.getCompliantProducts().keySet().contains(partial_prod)) {
+                status.getPartiallyCompliantProducts().remove(partial_prod);
+            }
+        }
+
         // Run through the consumer's installed products and see if there are any we
         // didn't find an entitlement for along the way:
         if (consumer.getInstalledProducts() != null) {
@@ -689,7 +702,7 @@ var Compliance = {
 	        	var installed_pid = installed_prod.getProductId();
 	            // Not compliant if we didn't find any entitlements for this product:
 	            if (!status.getCompliantProducts().containsKey(installed_pid) &&
-	                !status.getPartiallyCompliantProducts().containsKey(installed_pid)) {
+	                    !status.getPartiallyCompliantProducts().containsKey(installed_pid)) {
 	                log.debug("  nothing provides.");
 	                status.addNonCompliantProduct(installed_pid);
 	            }

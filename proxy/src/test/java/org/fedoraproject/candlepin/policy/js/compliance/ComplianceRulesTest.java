@@ -160,6 +160,31 @@ public class ComplianceRulesTest {
         assertEquals(0, status.getPartiallyCompliantProducts().size());
     }
 
+    /*
+     * Test an installed product which is fully covered by a normal entitlement, but also
+     * by a partial stack. In this case it should show up as a compliant product,
+     * a partial stack, but not a partially compliant product.
+     */
+    @Test
+    public void regularEntPlusPartialStack() {
+        Consumer c = mockConsumer(new String [] {PRODUCT_1});
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+        ents.add(mockEntitlement(c, "Awesome Product", PRODUCT_1));
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
+            PRODUCT_1));
+        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(ents);
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(0, status.getPartiallyCompliantProducts().size());
+        assertEquals(1, status.getCompliantProducts().size());
+        assertEquals(1, status.getPartialStacks().size());
+
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_1));
+        assertTrue(status.getPartialStacks().keySet().contains(STACK_ID_1));
+    }
+
     // Test a fully stacked scenario:
     @Test
     public void compliantStack() {
@@ -274,10 +299,4 @@ public class ComplianceRulesTest {
         assertTrue(status.getPartialStacks().keySet().contains(STACK_ID_1));
     }
 
-    @Test
-    public void partiallyStackedAndFullyEntitled() {
-        // TODO: test a weird scenario where consumer has both a regular entitlement
-        // providing a product, as well as a partially stacked. (regular should cover them)
-        fail();
-    }
 }
