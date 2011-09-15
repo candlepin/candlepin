@@ -702,6 +702,39 @@ public class DefaultRulesTest {
         assertEquals(4, bestPools.get(pool).intValue());
     }
 
+    /*
+     * ensure that if a system requests a stacking product, it will get entitlements from
+     * more than one pool, if neither pool provides enough entitlements alone.
+     */
+    @Test
+    public void selectBestPoolsWithStackingWillUseMultiplePools() {
+        consumer.setFact("cpu.cpu_socket(s)", "4");
+
+        Product product = mockStackingProduct(productId, "Test Product 1", "13", "1");
+
+        Pool pool = mockPool(product);
+        pool.setId("DEAD-BEEF");
+        pool.setQuantity(3L);
+
+        Pool pool2 = mockPool(product);
+        pool2.setId("DEAD-BEEF3");
+        pool2.setQuantity(1L);
+
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool);
+        pools.add(pool2);
+
+        // System has both the stacked product, as well as another non-stacked product,
+        // we should be able to auto-subscribe to both:
+        Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer,
+            new String[]{ productId }, pools);
+
+        assertEquals(2, bestPools.size());
+        assertEquals(1, bestPools.get(pool2).intValue());
+        assertEquals(3, bestPools.get(pool).intValue());
+    }
+
+    
     @Test
     public void testFindBestWithConsumerSocketsAndStacking() {
         consumer.setFact("cpu.cpu_socket(s)", "4");
