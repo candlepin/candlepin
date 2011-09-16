@@ -82,7 +82,7 @@ public class JsExportRulesTest {
         Pool pool = mock(Pool.class);
         Product product = mock(Product.class);
         Set<PoolAttribute> attributes = new HashSet<PoolAttribute>();
-        attributes.add(new PoolAttribute("no_export", "true"));
+        attributes.add(new PoolAttribute("pool_derived", "true"));
 
 
         when(entitlement.getPool()).thenReturn(pool);
@@ -92,7 +92,7 @@ public class JsExportRulesTest {
         when(product.getAttributes()).thenReturn(new HashSet<ProductAttribute>());
         when(pool.getAttributes()).thenReturn(attributes);
         when(consumer.getType()).thenReturn(consumerType);
-        when(consumerType.getLabel()).thenReturn("candlepin");
+        when(consumerType.isManifest()).thenReturn(true);
 
         assertFalse(exportRules.canExport(entitlement));
     }
@@ -105,7 +105,7 @@ public class JsExportRulesTest {
         Pool pool = mock(Pool.class);
         Product product = mock(Product.class);
         Set<PoolAttribute> attributes = new HashSet<PoolAttribute>();
-        attributes.add(new PoolAttribute("no_export", "true"));
+        attributes.add(new PoolAttribute("pool_derived", "true"));
 
 
         when(entitlement.getPool()).thenReturn(pool);
@@ -128,7 +128,7 @@ public class JsExportRulesTest {
         Pool pool = mock(Pool.class);
         Product product = mock(Product.class);
         Set<PoolAttribute> attributes = new HashSet<PoolAttribute>();
-        attributes.add(new PoolAttribute("no_export", "false"));
+        attributes.add(new PoolAttribute("pool_derived", "false"));
 
 
         when(entitlement.getPool()).thenReturn(pool);

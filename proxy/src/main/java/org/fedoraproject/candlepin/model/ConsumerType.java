@@ -26,15 +26,13 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
- * Represents the type of consumer.
- * 
- * See ProductFactory for some examples.
+ * Represents the type of consumer. See ProductFactory for some examples.
  */
 @XmlRootElement(name = "consumertype")
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_consumer_type")
-public class ConsumerType extends AbstractHibernateObject{
+public class ConsumerType extends AbstractHibernateObject {
 
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -44,31 +42,36 @@ public class ConsumerType extends AbstractHibernateObject{
 
     @Column(nullable = false, unique = true)
     private String label;
-    
+
+    @Column(nullable = false)
+    private boolean manifest = false;
+
     /**
-     * Initial DB values that are part of a "basic" install
-     * 
-     * ConsumerTypeEnum
+     * Initial DB values that are part of a "basic" install ConsumerTypeEnum
      */
     public enum ConsumerTypeEnum {
-        SYSTEM    ("system"), 
-        PERSON    ("person"),
-        DOMAIN    ("domain"),
-        CANDLEPIN ("candlepin");
-        
+        SYSTEM("system", false), PERSON("person", false), DOMAIN("domain",
+            false), CANDLEPIN("candlepin", true);
+
         private final String label;
-        
-        ConsumerTypeEnum(String label) {
+        private final boolean manifest;
+
+        ConsumerTypeEnum(String label, boolean manifest) {
             this.label = label;
+            this.manifest = manifest;
         }
-        
+
         /**
          * @return the label
          */
         public String getLabel() {
             return this.label;
         }
-        
+
+        public boolean isManifest() {
+            return this.manifest;
+        }
+
         @Override
         public String toString() {
             return getLabel();
@@ -82,17 +85,23 @@ public class ConsumerType extends AbstractHibernateObject{
     }
 
     public ConsumerType(ConsumerTypeEnum type) {
-        this(type.getLabel());
+        this.label = type.getLabel();
+        this.manifest = type.isManifest();
     }
-    
+
     /**
      * ConsumerType constructor with label
      * 
-     * @param labelIn
-     *            to set
+     * @param labelIn to set
      */
     public ConsumerType(String labelIn) {
         this.label = labelIn;
+        for (ConsumerTypeEnum cte : ConsumerTypeEnum.values()) {
+            if (cte.getLabel().equals(labelIn)) {
+                this.manifest = cte.isManifest();
+                break;
+            }
+        }
     }
 
     /** {@inheritDoc} */
@@ -101,8 +110,7 @@ public class ConsumerType extends AbstractHibernateObject{
     }
 
     /**
-     * @param id
-     *            type id
+     * @param id type id
      */
     public void setId(String id) {
         this.id = id;
@@ -116,13 +124,12 @@ public class ConsumerType extends AbstractHibernateObject{
     }
 
     /**
-     * @param labelIn
-     *            The label to set.
+     * @param labelIn The label to set.
      */
     public void setLabel(String labelIn) {
         label = labelIn;
     }
-    
+
     public boolean isType(ConsumerTypeEnum type) {
         return this.label.equals(type.getLabel());
     }
@@ -153,5 +160,13 @@ public class ConsumerType extends AbstractHibernateObject{
     public int hashCode() {
         return label.hashCode();
     }
-    
+
+    public boolean isManifest() {
+        return this.manifest;
+    }
+
+    public void setManifest(boolean manifest) {
+        this.manifest = manifest;
+    }
+
 }
