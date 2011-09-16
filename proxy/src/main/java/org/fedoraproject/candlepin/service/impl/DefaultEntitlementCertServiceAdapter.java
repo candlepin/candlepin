@@ -90,43 +90,17 @@ public class DefaultEntitlementCertServiceAdapter extends
     public EntitlementCertificate generateEntitlementCert(Entitlement entitlement,
         Subscription sub, Product product)
         throws GeneralSecurityException, IOException {
-
-        log.debug("Generating entitlement cert for:");
-        log.debug("   consumer: {}", entitlement.getConsumer().getUuid());
-        log.debug("   product: {}" , product.getId());
-        log.debug("entitlement's endDt == subs endDt? {} == {} ?",
-            entitlement.getEndDate(), sub.getEndDate());
-        Preconditions
-            .checkArgument(
-                entitlement.getEndDate().getTime() == sub.getEndDate().getTime(),
-                "Entitlement #%s 's endDt[%s] must equal Subscription #%s 's endDt[%s]",
-                entitlement.getId(), entitlement.getEndDate(), sub.getId(),
-                sub.getEndDate());
-
-        KeyPair keyPair = keyPairCurator.getConsumerKeyPair(entitlement.getConsumer());
-        CertificateSerial serial = new CertificateSerial(entitlement.getEndDate());
-        // We need the sequence generated id before we create the EntitlementCertificate,
-        // otherwise we could have used cascading create
-        serialCurator.create(serial);
-
-        X509Certificate x509Cert = createX509Certificate(entitlement, sub,
-            product, BigInteger.valueOf(serial.getId()), keyPair);
-
-        EntitlementCertificate cert = new EntitlementCertificate();
-        cert.setSerial(serial);
-        cert.setKeyAsBytes(pki.getPemEncoded(keyPair.getPrivate()));
-        cert.setCertAsBytes(this.pki.getPemEncoded(x509Cert));
-        cert.setEntitlement(entitlement);
-
-        log.debug("Generated cert serial number: " + serial.getId());
-        log.debug("Key: " + cert.getKey());
-        log.debug("Cert: " + cert.getCert());
-
-        entitlement.getCertificates().add(cert);
-        entCertCurator.create(cert);
-        return cert;
+        return generateEntitlementCert(entitlement, sub, product, false);
     }
-
+    
+    @Override
+    public EntitlementCertificate generateUeberCert(Entitlement entitlement,
+        Subscription sub, Product product)
+        throws GeneralSecurityException, IOException {
+        return generateEntitlementCert(entitlement, sub, product, true);
+    }
+    
+    
     @Override
     public void revokeEntitlementCertificates(Entitlement e) {
         for (EntitlementCertificate cert : e.getCertificates()) {
@@ -194,7 +168,9 @@ public class DefaultEntitlementCertServiceAdapter extends
 
     public X509Certificate createX509Certificate(Entitlement ent,
         Subscription sub, Product product, BigInteger serialNumber,
-        KeyPair keyPair) throws GeneralSecurityException, IOException {
+        KeyPair keyPair, boolean useContentPrefix) 
+        throws GeneralSecurityException, IOException {
+        
         // oiduitl is busted at the moment, so do this manually
         Set<X509ExtensionWrapper> extensions = new LinkedHashSet<X509ExtensionWrapper>();
         Set<Product> products = new HashSet<Product>(getProvidedProducts(ent
@@ -205,7 +181,8 @@ public class DefaultEntitlementCertServiceAdapter extends
             .filter(products, PROD_FILTER_PREDICATE)) {
             extensions.addAll(extensionUtil.productExtensions(prod));
             extensions.addAll(extensionUtil.contentExtensions(
-                filterProductContent(prod, ent), ent.getOwner().getContentPrefix()));
+                filterProductContent(prod, ent), 
+                useContentPrefix ? ent.getOwner().getContentPrefix() : null));
         }
 
         if (sub != null) {
@@ -226,6 +203,46 @@ public class DefaultEntitlementCertServiceAdapter extends
             keyPair, serialNumber, null);
 
         return x509Cert;
+    }
+    
+    private EntitlementCertificate generateEntitlementCert(Entitlement entitlement,
+        Subscription sub, Product product, boolean thisIsUeberCert)
+        throws GeneralSecurityException, IOException {
+
+        log.debug("Generating entitlement cert for:");
+        log.debug("   consumer: {}", entitlement.getConsumer().getUuid());
+        log.debug("   product: {}" , product.getId());
+        log.debug("entitlement's endDt == subs endDt? {} == {} ?",
+            entitlement.getEndDate(), sub.getEndDate());
+        Preconditions
+            .checkArgument(
+                entitlement.getEndDate().getTime() == sub.getEndDate().getTime(),
+                "Entitlement #%s 's endDt[%s] must equal Subscription #%s 's endDt[%s]",
+                entitlement.getId(), entitlement.getEndDate(), sub.getId(),
+                sub.getEndDate());
+
+        KeyPair keyPair = keyPairCurator.getConsumerKeyPair(entitlement.getConsumer());
+        CertificateSerial serial = new CertificateSerial(entitlement.getEndDate());
+        // We need the sequence generated id before we create the EntitlementCertificate,
+        // otherwise we could have used cascading create
+        serialCurator.create(serial);
+
+        X509Certificate x509Cert = createX509Certificate(entitlement, sub,
+            product, BigInteger.valueOf(serial.getId()), keyPair, !thisIsUeberCert);
+
+        EntitlementCertificate cert = new EntitlementCertificate();
+        cert.setSerial(serial);
+        cert.setKeyAsBytes(pki.getPemEncoded(keyPair.getPrivate()));
+        cert.setCertAsBytes(this.pki.getPemEncoded(x509Cert));
+        cert.setEntitlement(entitlement);
+
+        log.debug("Generated cert serial number: " + serial.getId());
+        log.debug("Key: " + cert.getKey());
+        log.debug("Cert: " + cert.getCert());
+
+        entitlement.getCertificates().add(cert);
+        entCertCurator.create(cert);
+        return cert;
     }
 
     private String createDN(Entitlement ent) {

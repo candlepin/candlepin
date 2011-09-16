@@ -81,7 +81,13 @@ public class StubEntitlementCertServiceAdapter extends BaseEntitlementCertServic
     @Override
     public void revokeEntitlementCertificates(Entitlement e) {
         // TODO Auto-generated method stub
-        
+    }
+
+    @Override
+    public EntitlementCertificate generateUeberCert(Entitlement entitlement,
+        Subscription sub, Product product) throws GeneralSecurityException,
+        IOException {
+        return generateEntitlementCert(entitlement, sub, product);
     }
 
 }

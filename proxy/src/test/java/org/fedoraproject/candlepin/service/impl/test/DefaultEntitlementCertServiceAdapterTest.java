@@ -182,16 +182,31 @@ public class DefaultEntitlementCertServiceAdapterTest {
         assertTrue(isEncodedContentValid(encodedContent));
         assertFalse(encodedContent.containsKey(REQUIRED_TAGS.toString()));
     }
+    
     @Test
     public void testPrefixesShouldBeUsed() throws Exception {
         owner.setContentPrefix("/somePrefix/");
 
         certServiceAdapter.createX509Certificate(entitlement, subscription,
-            product, new BigInteger("1234"), keyPair());
+            product, new BigInteger("1234"), keyPair(), true);
 
         verify(mockedPKI).createX509Certificate(
             any(String.class),
             argThat(new ListContainsContentUrl("/somePrefix/" + CONTENT_URL,
+                CONTENT_ID)), any(Date.class), any(Date.class),
+            any(KeyPair.class), any(BigInteger.class), any(String.class));
+    }
+    
+    @Test
+    public void testPrefixesAreNotUsedForUeberCertificate() throws Exception {
+        owner.setContentPrefix("/somePrefix/");
+
+        certServiceAdapter.createX509Certificate(entitlement, subscription,
+            product, new BigInteger("1234"), keyPair(), false);
+
+        verify(mockedPKI).createX509Certificate(
+            any(String.class),
+            argThat(new ListContainsContentUrl(CONTENT_URL,
                 CONTENT_ID)), any(Date.class), any(Date.class),
             any(KeyPair.class), any(BigInteger.class), any(String.class));
     }
@@ -201,7 +216,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         owner.setContentPrefix("");
 
         certServiceAdapter.createX509Certificate(entitlement, subscription,
-            product, new BigInteger("1234"), keyPair());
+            product, new BigInteger("1234"), keyPair(), true);
 
         verify(mockedPKI).createX509Certificate(any(String.class),
             argThat(new ListContainsContentUrl(CONTENT_URL, CONTENT_ID)),
@@ -214,7 +229,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         owner.setContentPrefix(null);
 
         certServiceAdapter.createX509Certificate(entitlement, subscription,
-            product, new BigInteger("1234"), keyPair());
+            product, new BigInteger("1234"), keyPair(), true);
 
         verify(mockedPKI).createX509Certificate(any(String.class),
             argThat(new ListContainsContentUrl(CONTENT_URL, CONTENT_ID)),
@@ -276,7 +291,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         throws Exception {
 
         certServiceAdapter.createX509Certificate(entitlement, subscription,
-            product, new BigInteger("1234"), keyPair());
+            product, new BigInteger("1234"), keyPair(), true);
 
         verify(mockedPKI).createX509Certificate(any(String.class),
             argThat(new ListContainsContentExtensions()), any(Date.class),
@@ -289,7 +304,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         throws Exception {
 
         certServiceAdapter.createX509Certificate(entitlement, subscription,
-            product, new BigInteger("1234"), keyPair());
+            product, new BigInteger("1234"), keyPair(), true);
 
         verify(mockedPKI).createX509Certificate(any(String.class),
             argThat(new ListContainsEntitlementExtensions()), any(Date.class),
@@ -301,7 +316,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void managementDisabledByDefault() throws Exception {
 
         certServiceAdapter.createX509Certificate(entitlement, subscription,
-            product, new BigInteger("1234"), keyPair());
+            product, new BigInteger("1234"), keyPair(), true);
 
         verify(mockedPKI).createX509Certificate(any(String.class),
             argThat(new ListContainsProvidesManagement("0")), any(Date.class),
@@ -315,7 +330,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         ProductAttribute attr = new ProductAttribute("management_enabled", "1");
         subscription.getProduct().addAttribute(attr);
         certServiceAdapter.createX509Certificate(entitlement, subscription,
-            product, new BigInteger("1234"), keyPair());
+            product, new BigInteger("1234"), keyPair(), true);
 
         verify(mockedPKI).createX509Certificate(any(String.class),
             argThat(new ListContainsProvidesManagement("1")), any(Date.class),
@@ -329,7 +344,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         ProductAttribute attr = new ProductAttribute("stacking_id", "3456");
         subscription.getProduct().addAttribute(attr);
         certServiceAdapter.createX509Certificate(entitlement, subscription,
-            product, new BigInteger("1234"), keyPair());
+            product, new BigInteger("1234"), keyPair(), true);
 
         verify(mockedPKI).createX509Certificate(any(String.class),
             argThat(new ListContainsStackingId("3456")), any(Date.class),
@@ -342,7 +357,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         PoolAttribute attr = new PoolAttribute("virt_only", "true");
         entitlement.getPool().addAttribute(attr);
         certServiceAdapter.createX509Certificate(entitlement, subscription,
-            product, new BigInteger("1234"), keyPair());
+            product, new BigInteger("1234"), keyPair(), true);
 
         verify(mockedPKI).createX509Certificate(any(String.class),
             argThat(new ListContainsVirtOnlyKey("1")), any(Date.class),
@@ -361,7 +376,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         subscription.getProduct().addAttribute(attr);
 
         certServiceAdapter.createX509Certificate(entitlement, subscription,
-            product, new BigInteger("1234"), keyPair());
+            product, new BigInteger("1234"), keyPair(), true);
 
         verify(mockedPKI).createX509Certificate(any(String.class),
             argThat(new ListContainsSupportLevel("Premium")), any(Date.class),
@@ -378,7 +393,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         throws Exception {
 
         certServiceAdapter.createX509Certificate(entitlement, subscription,
-            product, new BigInteger("1234"), keyPair());
+            product, new BigInteger("1234"), keyPair(), true);
 
         verify(mockedPKI).createX509Certificate(any(String.class),
             argThat(new ListDoesNotContainSupportLevel()), any(Date.class),

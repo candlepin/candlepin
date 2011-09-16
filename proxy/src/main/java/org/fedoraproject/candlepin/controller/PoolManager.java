@@ -60,6 +60,9 @@ public interface PoolManager {
     Entitlement entitleByPool(Consumer consumer, Pool pool, Integer quantity)
         throws EntitlementRefusedException;
 
+    Entitlement ueberCertEntitlement(Consumer consumer, Pool pool,
+        Integer quantity) throws EntitlementRefusedException;
+
     Entitlement entitleByProduct(Consumer consumer, String productId, Integer quantity)
         throws EntitlementRefusedException;
 
@@ -101,8 +104,9 @@ public interface PoolManager {
 
     /**
      * @param e
+     * @param ueberCertificate TODO
      */
-    void regenerateCertificatesOf(Entitlement e);
+    void regenerateCertificatesOf(Entitlement e, boolean ueberCertificate);
 
     void regenerateCertificatesOf(String productId);
 

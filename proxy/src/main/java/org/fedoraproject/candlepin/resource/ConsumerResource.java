@@ -970,7 +970,7 @@ public class ConsumerResource {
         @QueryParam("entitlement") String entitlementId) {
         if (entitlementId != null) {
             Entitlement e = verifyAndLookupEntitlement(entitlementId);
-            poolManager.regenerateCertificatesOf(e);
+            poolManager.regenerateCertificatesOf(e, false);
         }
         else {
             Consumer c = verifyAndLookupConsumer(consumerUuid);
