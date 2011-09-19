@@ -57,7 +57,9 @@ public class ComplianceRulesTest {
 
     private final static String PRODUCT_1 = "product1";
     private final static String PRODUCT_2 = "product2";
+    private final static String PRODUCT_3 = "product3";
     private final static String STACK_ID_1 = "my-stack-1";
+    private final static String STACK_ID_2 = "my-stack-2";
 
     @Mock EntitlementCurator entCurator;
     @Mock private RulesCurator rulesCuratorMock;
@@ -298,5 +300,99 @@ public class ComplianceRulesTest {
 
         assertTrue(status.getPartialStacks().keySet().contains(STACK_ID_1));
     }
+
+    @Test
+    public void partialStackProvidingDiffProducts() {
+        Consumer c = mockConsumer(new String [] {PRODUCT_1, PRODUCT_2, PRODUCT_3});
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
+            PRODUCT_1, PRODUCT_3));
+        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(ents);
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(0, status.getCompliantProducts().size());
+
+        assertEquals(3, status.getPartiallyCompliantProducts().size());
+        assertTrue(status.getPartiallyCompliantProducts().keySet().contains(PRODUCT_1));
+        assertTrue(status.getPartiallyCompliantProducts().keySet().contains(PRODUCT_2));
+
+        assertEquals(2, status.getPartiallyCompliantProducts().get(PRODUCT_1).size());
+        assertEquals(1, status.getPartiallyCompliantProducts().get(PRODUCT_2).size());
+        assertEquals(1, status.getPartiallyCompliantProducts().get(PRODUCT_3).size());
+
+        assertEquals(1, status.getPartialStacks().size());
+    }
+
+    @Test
+    public void fullStackProvidingDiffProducts() {
+        Consumer c = mockConsumer(new String [] {PRODUCT_1, PRODUCT_2, PRODUCT_3});
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
+            PRODUCT_1, PRODUCT_3));
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
+            PRODUCT_2));
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
+            PRODUCT_2));
+        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(ents);
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(0, status.getPartiallyCompliantProducts().size());
+        assertEquals(3, status.getCompliantProducts().size());
+
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_1));
+        assertEquals(2, status.getCompliantProducts().get(PRODUCT_1).size());
+
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_2));
+        assertEquals(3, status.getCompliantProducts().get(PRODUCT_2).size());
+
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_3));
+        assertEquals(1, status.getCompliantProducts().get(PRODUCT_3).size());
+
+        assertEquals(0, status.getPartialStacks().size());
+    }
+
+    @Test
+    public void partialStackAndFullStack() {
+        Consumer c = mockConsumer(new String [] {PRODUCT_1, PRODUCT_2});
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+
+        // Partial stack:
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        // Full stack providing only product 1:
+        ents.add(mockStackedEntitlement(c, STACK_ID_2, "Awesome Product 2",
+            PRODUCT_1));
+        ents.add(mockStackedEntitlement(c, STACK_ID_2, "Awesome Product 2",
+            PRODUCT_1));
+        ents.add(mockStackedEntitlement(c, STACK_ID_2, "Awesome Product 2",
+            PRODUCT_1));
+        ents.add(mockStackedEntitlement(c, STACK_ID_2, "Awesome Product 2",
+            PRODUCT_1));
+        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(ents);
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(1, status.getCompliantProducts().size());
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_1));
+
+        assertEquals(1, status.getPartiallyCompliantProducts().size());
+        assertTrue(status.getPartiallyCompliantProducts().keySet().contains(PRODUCT_2));
+
+        assertEquals(1, status.getPartialStacks().size());
+    }
+
 
 }
