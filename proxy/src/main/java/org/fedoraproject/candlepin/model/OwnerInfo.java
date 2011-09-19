@@ -29,6 +29,7 @@ public class OwnerInfo {
     private Map<String, Integer> consumerGuestCounts;
     private Map<String, Integer> entitlementsConsumedByType;
     private Map<String, Integer> consumerTypeCountByPool;
+    private Map<String, Integer> enabledConsumerTypeCountByPool;
     private Map<String, ConsumptionTypeCounts> entitlementsConsumedByFamily;
     private Pool poolNearestToExpiry;
     private List<Statistic> totalSubscriptionCount;
@@ -41,6 +42,7 @@ public class OwnerInfo {
         consumerCounts = new HashMap<String, Integer>();
         entitlementsConsumedByType = new HashMap<String, Integer>();
         consumerTypeCountByPool = new HashMap<String, Integer>();
+        enabledConsumerTypeCountByPool = new HashMap<String, Integer>();
         entitlementsConsumedByFamily = new HashMap<String, ConsumptionTypeCounts>();
         
         consumerGuestCounts = new HashMap<String, Integer>();
@@ -59,7 +61,11 @@ public class OwnerInfo {
     public Map<String, Integer> getConsumerTypeCountByPool() {
         return consumerTypeCountByPool;
     }
-    
+
+    public Map<String, Integer> getEnabledConsumerTypeCountByPool() {
+        return enabledConsumerTypeCountByPool;
+    }
+
     public Map<String, ConsumptionTypeCounts> getEntitlementsConsumedByFamily() {
         return entitlementsConsumedByFamily;
     }
@@ -75,6 +81,14 @@ public class OwnerInfo {
             count = 0;
         }
         consumerTypeCountByPool.put(type.getLabel(), ++count);
+    }
+
+    public void addToEnabledConsumerTypeCountByPool(ConsumerType type) {
+        Integer count = enabledConsumerTypeCountByPool.get(type.getLabel());
+        if (count == null) {
+            count = 0;
+        }
+        enabledConsumerTypeCountByPool.put(type.getLabel(), ++count);
     }
 
     public void setConsumerTypesByPool(List<ConsumerType> consumerTypes) {
@@ -186,7 +200,4 @@ public class OwnerInfo {
     public List<Statistic> getTotalSubscriptionsConsumed() {
         return totalSubscriptionsConsumed;
     }
-    
-   
-     
 }

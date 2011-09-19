@@ -107,6 +107,16 @@ public class OwnerInfoCurator {
             ConsumerType ct = consumerTypeCurator.lookupByLabel(consumerType);
             info.addToConsumerTypeCountByPool(ct);
 
+            consumerType = getAccumulatedAttribute(pool, "enabled_consumer_types");
+            if (consumerType != null && !consumerType.trim().equals("")) {
+                for (String type : consumerType.split(",")) {
+                    ct = consumerTypeCurator.lookupByLabel(type);
+                    if (ct != null) {
+                        info.addToEnabledConsumerTypeCountByPool(ct);
+                    }
+                }
+            }
+
             // now do entitlementsConsumedByFamily
             String productFamily = getAttribute(pool, "product_family");
             // default bucket for familyless entitlements
@@ -148,6 +158,25 @@ public class OwnerInfoCurator {
         }
         return productFamily;
     }
+
+    /**
+     * @param pool
+     * @return
+     */
+    private String getAccumulatedAttribute(Pool pool, String aType) {
+        // XXX dealing with attributes in java. that's bad!
+        String consumerTypes = pool.getAttributeValue(aType);
+        String productId = pool.getProductId();
+        Product product = productAdapter.getProductById(productId);
+        if (product != null) {
+            if (consumerTypes == null || consumerTypes.length() > 0) {
+                consumerTypes += ",";
+            }
+            consumerTypes += product.getAttributeValue(aType);
+        }
+        return consumerTypes;
+    }
+
 
     private void setConsumerGuestCounts(Owner owner, OwnerInfo info) {
 

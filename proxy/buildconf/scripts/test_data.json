@@ -620,6 +620,7 @@
             "type": "MKT",
             "attributes": {
                 "requires_consumer_type": "person",
+                "enabled_consumer_types": "person",
                 "user_license": "unlimited",
                 "user_license_product": "1144"
             }
@@ -1408,6 +1409,7 @@
             ],
             "attributes": {
                 "requires_consumer_type": "domain",
+                "enabled_consumer_types": "domain",
                 "multi-entitlement": "yes",
                 "warning_period": 30
             }
