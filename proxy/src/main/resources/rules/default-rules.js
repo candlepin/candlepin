@@ -141,32 +141,43 @@ function architectureMatches(product, consumer) {
    return true;
 }
 
-// Returns an array of the given pool, added to the array once for each entitlement
-// we would need to satisfy the consumers socket requirements.
-// TODO: rename this
+// assumptions: number of pools consumed from is not considered, so we might not be taking from the smallest amount.
+// we only stack within the same pool_class. if you have stacks that provide different sets of products,
+// you won't be able to stack from them
+//
+// iterate over a pool class, and determine the quantity of entitlements needed
+// to satisfy any stacking on the pools in the class, for the given consumer
+//
+// If we find a pool that has no stacking requirements, just use that one
+// (as we'll only need a quantity of one)
+// otherwise, group the pools by stack id, then select the pools we wish to use
+// based on which grouping will come closest to fully stacking.
 function findStackingPools(pool_class, consumer) {
     var consumer_sockets = 1;
     if (consumer.hasFact(SOCKET_FACT)) {
         consumer_sockets = consumer.getFact(SOCKET_FACT);
      }
     
-    var poolMap = new java.util.HashMap();
-    var entitledSockets = 0;
+    var stackToEntitledSockets = {};
+    var stackToPoolMap = {};
+    var notStackable = [];
     
     for each (pool in pool_class) {
     	var quantity = 0;
     	
-	    log.debug("findStackingPools:");
-	    log.debug("  pool: " + pool.getId());
-	    log.debug("  stacking: " + pool.getProductAttribute("multi-entitlement"));
-	    
 	    if (pool.getProductAttribute("multi-entitlement") && pool.getProductAttribute("stacking_id")) {
+	    	var stack_id = pool.getProductAttribute("stacking_id");
+
+	    	if (!stackToPoolMap.hasOwnProperty(stack_id)) {
+	    		stackToPoolMap[stack_id] = new java.util.HashMap();
+	    		stackToEntitledSockets[stack_id] = 0;
+	    	}
+	    	
 	        var product_sockets = 0;
-	        log.debug("  product: " +  pool.getProductId() + "is stackable and multi-entitled");
-	        log.debug("  each entitlement provides X sockets: " + pool.getProductAttribute("sockets"));
-	        log.debug("  consumer sockets: " + consumer_sockets);
+	        var pool_sockets = parseInt(pool.getProductAttribute("sockets"));
+	        
 	        while (product_sockets < consumer_sockets) {
-	            product_sockets += parseInt(pool.getProductAttribute("sockets"));
+	            product_sockets += pool_sockets;
 	            quantity++;
 	        }
 	        
@@ -174,23 +185,34 @@ function findStackingPools(pool_class, consumer) {
 	        if (quantity > pool.getMaxMembers() - pool.getCurrentMembers()) {
 	        	quantity = pool.getMaxMembers() - pool.getCurrentMembers();
 	        }
+
+	        stackToEntitledSockets[stack_id] += quantity * pool_sockets;
+	        
+	        stackToPoolMap[stack_id].put(pool, quantity);
+	        
+	        if (stackToEntitledSockets[stack_id] >= consumer_sockets) {
+	        	// we've just found a stack that will satisfy. no need to keep looping
+	        	break;
+	        }
 	    } else {
 	    	// not stackable, just take one.
-	    	// XXX this might not cover all your sockets!
-	    	quantity = 1;
-	    	poolMap.put(pool, quantity);
-	    	break;
+	    	notStackable.push(pool);
 	    }
 	    
-	    entitledSockets += quantity * parseInt(pool.getProductAttribute("sockets"));
-	    
-	    poolMap.put(pool, quantity);
-	    
-	    if (entitledSockets >= consumer_sockets) {
-	    	break;
-	    }
 	}
-    return poolMap;
+    
+    // We have a not stackable pool.
+	// XXX this might not cover all your sockets!
+    if (notStackable.length > 0) {
+    	poolMap = new java.util.HashMap();
+    	poolMap.put(notStackable[0], 1);
+    	return poolMap;
+    }
+    
+    for (stack_id in stackToPoolMap) {
+    	return stackToPoolMap[stack_id];
+    }
+    
 }
 
 

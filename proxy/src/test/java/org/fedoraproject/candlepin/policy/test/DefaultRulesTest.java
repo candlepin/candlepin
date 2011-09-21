@@ -793,6 +793,32 @@ public class DefaultRulesTest {
     }
     
     @Test
+    public void testFindBestWithStackingWontCrossStackIds() {
+        consumer.setFact("cpu.cpu_socket(s)", "32");
+
+        Product product = mockStackingProduct(productId, "A test product", "13", "3");
+
+        Pool pool = mockPool(product);
+        pool.setQuantity(10L);
+
+        Product product2 = mockStackingProduct(productId, "A test product 2", "14", "3");
+
+        Pool pool2 = mockPool(product2);
+        pool2.setQuantity(10L);
+
+        
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool);
+        pools.add(pool2);
+
+        Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer,
+            new String[]{ productId }, pools);
+
+        assertEquals(1, bestPools.size());
+        assertEquals(10, bestPools.get(pool).intValue());
+    }
+    
+    @Test
     public void testFindBestRespectsArchitecture() {
         Product product = new Product(productId, "A test product");
         ProductAttribute pa = new ProductAttribute("arch", "x86");
