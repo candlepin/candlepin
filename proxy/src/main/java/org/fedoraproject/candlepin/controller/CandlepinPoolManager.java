@@ -578,7 +578,7 @@ public class CandlepinPoolManager implements PoolManager {
         e.getCertificates().clear();
         // below call creates new certificates and saves it to the backend.
         EntitlementCertificate generated = this.generateEntitlementCertificate(
-            e.getConsumer(), e.getPool(), e, false);
+            e.getConsumer(), e.getPool(), e, ueberCertificate);
         this.entitlementCurator.refresh(e);
 
         // send entitlement changed event.
