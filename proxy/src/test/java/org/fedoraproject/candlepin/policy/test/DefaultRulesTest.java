@@ -817,6 +817,33 @@ public class DefaultRulesTest {
         assertEquals(1, bestPools.size());
         assertEquals(10, bestPools.get(pool).intValue());
     }
+
+    @Test
+    public void testFindBestWithStackingSelectsStackThatBestCoversSockets() {
+        consumer.setFact("cpu.cpu_socket(s)", "3");
+
+        Product product = mockStackingProduct(productId, "A test product", "13", "1");
+
+        Pool pool = mockPool(product);
+        pool.setQuantity(2L);
+
+        Product product2 = mockStackingProduct(productId, "A test product 2", "14", "1");
+
+        Pool pool2 = mockPool(product2);
+        pool2.setQuantity(4L);
+
+        
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool);
+        pools.add(pool2);
+
+        Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer,
+            new String[]{ productId }, pools);
+
+        assertEquals(1, bestPools.size());
+        assertTrue(bestPools.containsKey(pool2));
+        assertEquals(3, bestPools.get(pool2).intValue());
+    }
     
     @Test
     public void testFindBestRespectsArchitecture() {

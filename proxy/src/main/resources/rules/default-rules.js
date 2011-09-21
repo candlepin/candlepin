@@ -209,10 +209,21 @@ function findStackingPools(pool_class, consumer) {
     	return poolMap;
     }
     
+    // loop over our potential stacks, and just take the first stack that covers all sockets.
+    // else take the stack that covers the most sockets.
+    var best_sockets = 0;
+    var best_stack;
     for (stack_id in stackToPoolMap) {
-    	return stackToPoolMap[stack_id];
+    	if (stackToEntitledSockets[stack_id] >= consumer_sockets) {
+    		return stackToPoolMap[stack_id];
+    	}
+    	else if (stackToEntitledSockets[stack_id] > best_sockets) {
+    		best_stack = stack_id;
+    		best_sockets = stackToEntitledSockets[stack_id];
+    	}
     }
     
+    return stackToPoolMap[best_stack];
 }
 
 
