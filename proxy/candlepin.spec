@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.4.12
+Version: 0.4.17
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -19,7 +19,7 @@ BuildArch: noarch
 BuildRequires: java >= 0:1.6.0
 BuildRequires: ant >= 0:1.7.0
 BuildRequires: gettext
-BuildRequires: candlepin-deps >= 0:0.0.17
+BuildRequires: candlepin-deps >= 0:0.0.18
 Requires: java >= 0:1.6.0
 %define __jar_repack %{nil}
 
@@ -146,6 +146,41 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Thu Sep 22 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.17-1
+- Add missing resources to apicrawler output. (dgoodwin@redhat.com)
+- Revert "Updated the strings from zanata" (bkearney@redhat.com)
+- Owner info lists all the enabled consumer types (wpoteat@redhat.com)
+- Updated the strings from zanata (bkearney@redhat.com)
+- Make cpc more command line driven to work against non local machines
+  (bkearney@redhat.com)
+- Allow multiple consumer types to generate manifests. (wpoteat@redhat.com)
+- added support for generation of ueber certs  - and increased checkstyle
+  parameter list size to 24 (ddolguik@redhat.com)
+
+* Wed Sep 14 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.16-1
+- bumping candlepin-deps version to 0.0.18 (jesusr@redhat.com)
+
+* Wed Sep 14 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.15-1
+- Fix the russian string (bkearney@redhat.com)
+- Updated string files (bkearney@redhat.com)
+- 718052: Remove owner from consumer resource return codes. Only use the term org. (bkearney@redhat.com)
+- 736791: Upgrade to RESTEasy 2.2.1GA (jbowes@redhat.com)
+
+* Wed Sep 07 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.14-1
+- add a containsKey method to Config (jmrodri@gmail.com)
+- 735087: If quartz is in clustered mode, we shouldn't schedule any jobs. (jesusr@redhat.com)
+
+* Tue Sep 06 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.13-1
+- Revert "731996: SQL Error when using REST query for events" (wpoteat@redhat.com)
+- 732538: Disallow the relationship between a 'person' pool and an activation key (wpoteat@redhat.com)
+- 731996: SQL Error when using REST query for events (wpoteat@redhat.com)
+- Add an autoheal attribute for consumers. (dgoodwin@redhat.com)
+- Stop erroring out on the healing bind request. (dgoodwin@redhat.com)
+- Corrections for checkstyle (wpoteat@redhat.com)
+- Fix export of virt entitlements for non-candlepin consumers.  (wpoteat@redhat.com)
+- 734174: Add missing produces annotations for role resource.  (dgoodwin@redhat.com)
+- add an OID for virt entitlements (cduryee@redhat.com)
+
 * Tue Aug 30 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.12-1
 - 731577: API to query jobs by owner, principal, consumer uuid. (jmrodri@gmail.com)
 - use commons.lang.StringUtils not hibernate.hbm2x.StringUtils (jmrodri@gmail.com)

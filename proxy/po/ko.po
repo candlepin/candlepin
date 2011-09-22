@@ -2,7 +2,7 @@
 # Language ko-KR translations for l package.
 # Copyright (C) 2011 THE l'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the l package.
-#
+# 
 # Automatically generated, 2011.
 # Eun-Ju Kim <eukim@redhat.com>, 2011.
 msgid ""
@@ -13,13 +13,14 @@ msgstr ""
 "PO-Revision-Date: 2011-02-24 16:11+1000\n"
 "Last-Translator: Eun-Ju Kim <eukim@redhat.com>\n"
 "Language-Team: <ko@li.org>\n"
-"Language: ko-KR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: ko-KR\n"
 "X-Generator: KBabel 1.11.4\n"
 
 #: src/main/java/org/fedoraproject/candlepin/auth/interceptor/SecurityInterceptor.java:195
+#, 
 msgid "Unable to verify request."
 msgstr ""
 
@@ -231,6 +232,7 @@ msgid "Consumer Type with id {0} could not be found"
 msgstr "id {0}의 사용자 유형을 찾을 수 없음 "
 
 #: src/main/java/org/fedoraproject/candlepin/resource/StatisticResource.java:60
+#, 
 msgid "couldn't generate statistics"
 msgstr ""
 
@@ -245,15 +247,17 @@ msgid "Cound not create the Owner: {0}"
 msgstr "소유자를 생성할 수 없음: {0} "
 
 #: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:357
+#, 
 msgid "Must provide a name for activation key."
 msgstr ""
 
 #: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:364
-msgid ""
-"Activation key names must be alphanumeric or the characters '-' or '_'. ["
+#, 
+msgid "Activation key names must be alphanumeric or the characters '-' or '_'. ["
 msgstr ""
 
 #: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:371
+#, 
 msgid "Activation key name ["
 msgstr ""
 
@@ -267,15 +271,15 @@ msgstr "이러한 소비자 유형이 없음: {0}  "
 #: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:588
 #: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:669
 #: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:693
-#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:717
+#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:716
 #, java-format
 msgid "owner with key: {0} was not found."
 msgstr "키: {0}의 소유자를 찾을 수 없음  "
 
 #: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:537
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:828
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:832
 #: src/main/java/org/fedoraproject/candlepin/resource/EntitlementResource.java:113
-#: src/main/java/org/fedoraproject/candlepin/resource/SubscriptionResource.java:99
+#: src/main/java/org/fedoraproject/candlepin/resource/SubscriptionResource.java:101
 #, java-format
 msgid "No such consumer: {0}"
 msgstr "이러한 사용자가 없음: {0} "
@@ -293,35 +297,42 @@ msgstr "내보내기 아카이브를 읽는 도중 오류 발생 "
 msgid "Bad data in export archive"
 msgstr "내보내기 아카이브에 있는 잘못된 데이터 "
 
-#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:730
+#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:729
 #, java-format
 msgid "{0} file imported successfully."
 msgstr ""
 
 #: src/main/java/org/fedoraproject/candlepin/resource/MigrationResource.java:59
+#, 
 msgid "Bad entity value."
 msgstr ""
 
 #: src/main/java/org/fedoraproject/candlepin/resource/ActivationKeyResource.java:116
+#, 
 msgid "The quantity must be greater than 0"
 msgstr ""
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ActivationKeyResource.java:125
-msgid ""
-"Error: Only pools with multi-entitlement product subscriptions can be added "
-"to the activation key with a quantity greater than one."
+#: src/main/java/org/fedoraproject/candlepin/resource/ActivationKeyResource.java:126
+#, 
+msgid "Pools requiring a 'person' consumer should not be added to an activation key since a consumer type of 'person' cannot be used with activation keys"
 msgstr ""
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ActivationKeyResource.java:132
+#: src/main/java/org/fedoraproject/candlepin/resource/ActivationKeyResource.java:135
+#, 
+msgid "Error: Only pools with multi-entitlement product subscriptions can be added to the activation key with a quantity greater than one."
+msgstr ""
+
+#: src/main/java/org/fedoraproject/candlepin/resource/ActivationKeyResource.java:142
+#, 
 msgid "The quantity must not be greater than the total allowed for the pool"
 msgstr ""
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ActivationKeyResource.java:180
+#: src/main/java/org/fedoraproject/candlepin/resource/ActivationKeyResource.java:190
 #, java-format
 msgid "ActivationKey with id {0} could not be found"
 msgstr ""
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ActivationKeyResource.java:191
+#: src/main/java/org/fedoraproject/candlepin/resource/ActivationKeyResource.java:201
 #, java-format
 msgid "Pool with id {0} could not be found"
 msgstr ""
@@ -329,6 +340,31 @@ msgstr ""
 #: src/main/java/org/fedoraproject/candlepin/resource/EventResource.java:76
 #, java-format
 msgid "Event with ID ''{0}'' could not be found."
+msgstr ""
+
+#: src/main/java/org/fedoraproject/candlepin/resource/JobResource.java:102
+#, 
+msgid "You must specify an owner key, consumer uuid, or principal name."
+msgstr ""
+
+#: src/main/java/org/fedoraproject/candlepin/resource/JobResource.java:108
+#, 
+msgid "You must specify one of owner key, consumer uuid, or principal name, but not all."
+msgstr ""
+
+#: src/main/java/org/fedoraproject/candlepin/resource/JobResource.java:158
+#, 
+msgid "Error setting scheduler status"
+msgstr ""
+
+#: src/main/java/org/fedoraproject/candlepin/resource/JobResource.java:176
+#, 
+msgid "job already cancelled"
+msgstr ""
+
+#: src/main/java/org/fedoraproject/candlepin/resource/JobResource.java:179
+#, 
+msgid "cannot cancel a job that is not in CREATED state"
 msgstr ""
 
 #: src/main/java/org/fedoraproject/candlepin/resource/ContentResource.java:67
@@ -348,38 +384,41 @@ msgstr ""
 msgid "Product with UUID ''{0}'' cannot be deleted while subscriptions exist."
 msgstr ""
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:190
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:189
 #, java-format
-msgid "Organization/owner with key: {0} was not found."
+msgid "Organization with key: {0} was not found."
 msgstr ""
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:251
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:250
+#, 
 msgid "Insufficient permissions"
 msgstr ""
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:257
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:256
+#, 
 msgid "Must specify an org to register with activation keys."
 msgstr ""
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:261
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:260
+#, 
 msgid "Cannot specify username with activation keys."
 msgstr ""
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:267
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:266
 msgid "System name cannot contain most special characters."
 msgstr "시스템 이름에 대부분의 특수 문자를 포함시킬 수 없음. "
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:273
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:272
+#, 
 msgid "System name cannot begin with # character"
 msgstr ""
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:297
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:296
+#, 
 msgid "A consumer type of 'person' cannot be used with activation keys"
 msgstr ""
 
 #: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:346
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:785
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:813
 msgid "Pool ID must be provided"
 msgstr "풀 ID가 필요함 "
 
@@ -395,7 +434,7 @@ msgstr ""
 
 #: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:397
 #, java-format
-msgid "User {0} has no roles for organization/owner {1}"
+msgid "User {0} has no roles for organization {1}"
 msgstr ""
 
 #: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:409
@@ -404,75 +443,78 @@ msgid "User {0} has already registered a personal consumer"
 msgstr "사용자 {0}은 이미 개인 사용자를 등록하고 있음  "
 
 #: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:426
-msgid "You must specify an organization/owner for new consumers."
+#, 
+msgid "You must specify an organization for new consumers."
 msgstr ""
 
 #: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:437
 #, java-format
-msgid "Organization/Owner {0} does not exist."
+msgid "Organization {0} does not exist."
 msgstr ""
 
 #: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:444
 #, java-format
-msgid "User {0} cannot access organization/owner {1}"
+msgid "User {0} cannot access organization {1}"
 msgstr ""
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:597
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:605
 #, java-format
 msgid "Cannot unregister {0} consumer {1} because: {2}"
 msgstr "다음과 같은 이유로 {0} 사용자 {1}을 등록 취소할 수 없음: {2} "
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:668
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:676
+#, 
 msgid "Unable to create entitlement archive"
 msgstr ""
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:750
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:758
 msgid "Cannot bind by multiple parameters."
 msgstr "여러 매개 변수로 바인딩할 수 없음 "
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:755
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:763
+#, 
 msgid "Cannot specify a quantity when auto-binding."
 msgstr ""
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:807
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:816
 #, java-format
 msgid "Asked to be subscribed to a product that has no pool: {0} "
 msgstr ""
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:838
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:842
 #, java-format
 msgid "No such entitlement: {0}"
 msgstr "이러한 인타이틀먼트가 없음: {0} "
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:855
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:859
 #, java-format
 msgid "No such product: {0}"
 msgstr "이러한 제품이 없음: {0} "
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:891
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:895
 msgid "Consumer with ID "
 msgstr "ID가 있는 사용자   "
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:925
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:929
 #, java-format
 msgid "Entitlement with ID ''{0}'' could not be found."
 msgstr ""
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:944
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:948
 #, java-format
 msgid "Entitlement Certificate with serial number {0} could not be found."
 msgstr "시리얼 번호 {0}의 인타이틀먼트 인증서를 찾을 수 없음. "
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:989
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:993
 #, java-format
 msgid "Consumer {0} cannot be exported, as it's of wrong consumer type."
 msgstr "잘못된 사용자 유형으로 인해 사용자 {0}을 내보내기할 수 없음. "
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:1003
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:1007
 msgid "Unable to create export archive"
 msgstr "내보내기 아카이브를 생성할 수 없음 "
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:1033
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:1037
 #, java-format
 msgid "Problem regenerating id cert for consumer {0}"
 msgstr "사용자 {0}의 id 인증서를 다시 생성하는 도중 문제 발생 "
@@ -488,43 +530,47 @@ msgstr "사용자: {0}은 제품 {1}에 대한 인타이틀먼트가 없음 "
 msgid "Entitlement with ID ''{0}'' could not be found"
 msgstr ""
 
-#: src/main/java/org/fedoraproject/candlepin/resource/SubscriptionResource.java:88
+#: src/main/java/org/fedoraproject/candlepin/resource/SubscriptionResource.java:90
+#, 
 msgid "email is required for notification"
 msgstr ""
 
-#: src/main/java/org/fedoraproject/candlepin/resource/SubscriptionResource.java:93
+#: src/main/java/org/fedoraproject/candlepin/resource/SubscriptionResource.java:95
+#, 
 msgid "email locale is required for notification"
 msgstr ""
 
-#: src/main/java/org/fedoraproject/candlepin/resource/SubscriptionResource.java:125
+#: src/main/java/org/fedoraproject/candlepin/resource/SubscriptionResource.java:127
 #, java-format
 msgid "Subscription with id {0} could not be found"
 msgstr "id {0}의 서브스크립션을 찾을 수 없음 "
 
-#: src/main/java/org/fedoraproject/candlepin/resource/RoleResource.java:76
+#: src/main/java/org/fedoraproject/candlepin/resource/RoleResource.java:77
 #, java-format
 msgid "No such owner: {0}"
 msgstr ""
 
-#: src/main/java/org/fedoraproject/candlepin/resource/RoleResource.java:91
+#: src/main/java/org/fedoraproject/candlepin/resource/RoleResource.java:93
+#, 
 msgid "Role ID does not match path."
 msgstr ""
 
-#: src/main/java/org/fedoraproject/candlepin/resource/RoleResource.java:112
+#: src/main/java/org/fedoraproject/candlepin/resource/RoleResource.java:115
+#, 
 msgid "Access type NONE not supported."
 msgstr ""
 
-#: src/main/java/org/fedoraproject/candlepin/resource/RoleResource.java:145
+#: src/main/java/org/fedoraproject/candlepin/resource/RoleResource.java:149
 #, java-format
 msgid "No such permission: {0} in role: {1}"
 msgstr ""
 
-#: src/main/java/org/fedoraproject/candlepin/resource/RoleResource.java:159
+#: src/main/java/org/fedoraproject/candlepin/resource/RoleResource.java:163
 #, java-format
 msgid "No such role: {0}"
 msgstr ""
 
-#: src/main/java/org/fedoraproject/candlepin/resource/RoleResource.java:167
+#: src/main/java/org/fedoraproject/candlepin/resource/RoleResource.java:171
 #, java-format
 msgid "No such user: {0}"
 msgstr ""
@@ -641,9 +687,7 @@ msgstr ""
 
 #: src/main/java/org/fedoraproject/candlepin/controller/Entitler.java:102
 #, java-format
-msgid ""
-"This consumer is already subscribed to the product matching pool with id "
-"''{0}''."
+msgid "This consumer is already subscribed to the product matching pool with id ''{0}''."
 msgstr ""
 
 #: src/main/java/org/fedoraproject/candlepin/controller/Entitler.java:107
@@ -653,9 +697,7 @@ msgstr ""
 
 #: src/main/java/org/fedoraproject/candlepin/controller/Entitler.java:112
 #, java-format
-msgid ""
-"Consumers of this type are not allowed to subscribe to the pool with id "
-"''{0}''."
+msgid "Consumers of this type are not allowed to subscribe to the pool with id ''{0}''."
 msgstr ""
 
 #: src/main/java/org/fedoraproject/candlepin/controller/Entitler.java:116
@@ -675,8 +717,7 @@ msgstr "이 사용자는 이미 제품 ''{0}''에 등록되어 있음  "
 
 #: src/main/java/org/fedoraproject/candlepin/controller/Entitler.java:165
 #, java-format
-msgid ""
-"There are not enough free entitlements available for the product ''{0}''"
+msgid "There are not enough free entitlements available for the product ''{0}''"
 msgstr ""
 
 #: src/main/java/org/fedoraproject/candlepin/controller/Entitler.java:169
@@ -704,6 +745,7 @@ msgstr "사용자 서비스 문의 중 오류 발생 "
 
 #: src/main/java/org/fedoraproject/candlepin/resteasy/interceptor/OAuth.java:119
 #: src/main/java/org/fedoraproject/candlepin/resteasy/interceptor/OAuth.java:155
+#, 
 msgid "Invalid oauth consumer or secret"
 msgstr ""
 
@@ -722,5 +764,6 @@ msgid "Error getting oauth consumer Key"
 msgstr "oauth 사용자 키를 가져오는 중 오류 발생  "
 
 #: src/main/java/org/fedoraproject/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java:141
+#, 
 msgid "Standalone candlepin does not support redeeming a subscription."
 msgstr ""

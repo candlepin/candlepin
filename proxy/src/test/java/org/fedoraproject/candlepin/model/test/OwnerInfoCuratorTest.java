@@ -316,6 +316,123 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testOwnerPoolEnabledCountPoolOnly() {
+        ConsumerType type = consumerTypeCurator.lookupByLabel("domain");
+        pool1.setAttribute("enabled_consumer_types", type.getLabel());
+        owner.addEntitlementPool(pool1);
+
+        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+
+        Map<String, Integer> expectedPoolCount = new HashMap<String, Integer>() {
+            {
+                put("domain", 1);
+            }
+        };
+
+        assertEquals(expectedPoolCount, info.getEnabledConsumerTypeCountByPool());
+    }
+
+    @Test
+    public void testOwnerPoolEnabledCountProductOnly() {
+        ConsumerType type = consumerTypeCurator.lookupByLabel("system");
+        pool1.setAttribute("enabled_consumer_types", "");
+        Product prod = productCurator.lookupById(pool1.getProductId());
+        prod.setAttribute("enabled_consumer_types", type.getLabel());
+        owner.addEntitlementPool(pool1);
+
+        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+
+        Map<String, Integer> expectedPoolCount = new HashMap<String, Integer>() {
+            {
+                put("system", 1);
+            }
+        };
+
+        assertEquals(expectedPoolCount, info.getEnabledConsumerTypeCountByPool());
+    }
+
+    @Test
+    public void testOwnerPoolEnabledCountBoth() {
+        ConsumerType type = consumerTypeCurator.lookupByLabel("domain");
+        ConsumerType type2 = consumerTypeCurator.lookupByLabel("system");
+        pool1.setAttribute("enabled_consumer_types", type.getLabel());
+        Product prod = productCurator.lookupById(pool1.getProductId());
+        prod.setAttribute("enabled_consumer_types", type2.getLabel());
+        owner.addEntitlementPool(pool1);
+
+        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+
+        Map<String, Integer> expectedPoolCount = new HashMap<String, Integer>() {
+            {
+                put("domain", 1);
+                put("system", 1);
+            }
+        };
+
+        assertEquals(expectedPoolCount, info.getEnabledConsumerTypeCountByPool());
+    }
+
+    @Test
+    public void testEnabledConsumerTypeCountByPoolExcludesFuturePools() {
+        ConsumerType type = consumerTypeCurator.lookupByLabel("system");
+        pool1.setAttribute("enabled_consumer_types", type.getLabel());
+        pool1.setStartDate(Util.tomorrow());
+        owner.addEntitlementPool(pool1);
+
+        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+
+        Map<String, Integer> expectedPoolCount = new HashMap<String, Integer>();
+
+        assertEquals(expectedPoolCount, info.getEnabledConsumerTypeCountByPool());
+    }
+
+    @Test
+    public void testEnabledConsumerTypeCountByPoolExcludesExpiredPools() {
+        ConsumerType type = consumerTypeCurator.lookupByLabel("system");
+        pool1.setAttribute("enabled_consumer_types", type.getLabel());
+        pool1.setEndDate(Util.yesterday());
+        owner.addEntitlementPool(pool1);
+
+        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+
+        Map<String, Integer> expectedPoolCount = new HashMap<String, Integer>();
+
+        assertEquals(expectedPoolCount, info.getEnabledConsumerTypeCountByPool());
+    }
+
+    @Test
+    public void testOwnerPoolMultiEnabledCount() {
+        ConsumerType type1 = consumerTypeCurator.lookupByLabel("domain");
+        ConsumerType type2 = consumerTypeCurator.lookupByLabel("system");
+        pool1.setAttribute("enabled_consumer_types", type1.getLabel() +
+                           "," + type2.getLabel());
+        owner.addEntitlementPool(pool1);
+
+        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+
+        Map<String, Integer> expectedPoolCount = new HashMap<String, Integer>() {
+            {
+                put("domain", 1);
+                put("system", 1);
+            }
+        };
+
+        assertEquals(expectedPoolCount, info.getEnabledConsumerTypeCountByPool());
+    }
+
+    @Test
+    public void testOwnerPoolEnabledZeroCount() {
+        pool1.setAttribute("enabled_consumer_types", "non-type");
+        owner.addEntitlementPool(pool1);
+
+        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+
+        Map<String, Integer> expectedPoolCount = new HashMap<String, Integer>();
+
+        assertEquals(expectedPoolCount, info.getEnabledConsumerTypeCountByPool());
+    }
+
+    @Test
     public void testOwnerInfoEntitlementsConsumedByFamilyPutsFamilylessInNone() {
         owner.addEntitlementPool(pool1);
 

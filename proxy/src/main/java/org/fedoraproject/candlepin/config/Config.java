@@ -175,6 +175,15 @@ public class Config {
     }
 
     /**
+     * Returns true if the configuration has an entry for the given key.
+     * @param key sought after key
+     * @return true if the configuration has an entry for the given key.
+     */
+    public boolean containsKey(String key) {
+        return configuration.containsKey(key);
+    }
+
+    /**
      * @param s configuration key
      * @return value associated with the given configuration key.
      */
@@ -220,7 +229,12 @@ public class Config {
         if (s == null) {
             return false;
         }
-        String value = getString(s).toLowerCase();
+        String value = getString(s);
+        if (value == null) {
+            throw new IllegalArgumentException("value of " + s + " is null");
+        }
+
+        value = value.toLowerCase();
 
         return value.equals("true") || 
             value.equals("on") || 

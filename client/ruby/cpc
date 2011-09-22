@@ -3,6 +3,7 @@ $VERBOSE = nil
 
 require 'pp'
 require 'candlepin_api'
+require 'optparse'
 
 # Wrapper class for the base Candlepin lib that
 # will introspect an instance for currently defined
@@ -12,35 +13,106 @@ require 'candlepin_api'
 # Also adds a little functionality to the base
 # Candlepin lib that are specific to the cli.
 class CandlepinCLI < Candlepin
-  
-  def commands
+
+  def self.commands
     Candlepin.public_instance_methods(false).sort.each do |method|
       yield method if callable_name? method
     end
   end
 
   def is_method?(method_name)
-    respond_to? method_name.intern and callable_name? method_name
+    respond_to? method_name.intern and CandlepinCLI.callable_name? method_name
   end
 
   private
 
-  def callable_name?(method_name)
+  def self.callable_name?(method_name)
     method_name[-1] != ?=
   end
-  
+
 end
 
-cli = CandlepinCLI.new('admin', 'admin')
+def print_commands
+end
 
-if ARGV.empty? or ARGV[0] == '--help'
-  puts '=========== Commands ============'
-  puts
 
-  cli.commands do |command|
-    puts command
-  end
+# Set up the options
+options = {}
+
+optparse = OptionParser.new do|opts|
+    opts.banner = "Usage: cpc [options] command"
+
+    options[:user] = 'admin'
+    opts.on( '--username [USER]', 'Username to connect as.  Defaults to admin.' ) do |opt|
+        options[:user] = opt
+    end
+
+    options[:password] = 'admin'
+    opts.on( '--password [PASSWORD]', 'Password to authenticate the user as. Defaults to admin.' ) do |opt|
+        options[:password] = opt
+    end
+
+    options[:server] = 'localhost'
+    opts.on( '--server [SERVERNAME]', String, 'Server name FQDN. Defults to localhost' ) do |opt|
+        options[:server] = opt
+    end
+
+    options[:port] = 8443
+    opts.on( '--port [PORTNUM]', 'Port Number. Defults to 8443' ) do |opt|
+        options[:port] = opt.to_i
+    end
+
+    options[:context] = 'candlepin'
+    opts.on( '--context [CONTEXT]', 'Context to use. Defults to candlepin' ) do |opt|
+        options[:context] = opt
+    end
+
+    options[:ssl] = true
+    opts.on( '--nossl', 'Do not use SSL.' ) do |opt|
+        options[:ssl] = false
+    end
+
+    options[:verbose] = false
+    opts.on( '--verbose', 'Enable Verbose Logging' ) do |opt|
+        options[:verbose] = true
+    end
+
+    options[:trusted_user] = false
+    opts.on( '--trusted', 'User should be trusted. Defaults to false' ) do
+        options[:trusted_user] = true
+    end
+
+    opts.on( '--help', 'Display help and exit' ) do
+        puts opts
+        exit
+    end
+
+    opts.on( '-c', '--commands', 'List out the commands' ) do
+        puts "=========== Commands ============"
+        puts
+
+        CandlepinCLI.commands do |command|
+          puts "\t" + command
+        end
+        exit
+    end
+
+end
+
+optparse.parse!
+
+if ARGV.empty?
+    puts optparse
+    exit
 else
+
+  cli = CandlepinCLI.new(options[:user], options[:password], nil,nil,
+                        options[:server], options[:port], nil, nil,
+                        options[:trused_user], options[:context],
+                        options[:ssl])
+
+  cli.verbose= options[:verbose]
+
   method_name = ARGV[0]
 
   if cli.is_method? method_name

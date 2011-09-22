@@ -383,7 +383,8 @@ public class CandlepinPoolManager implements PoolManager {
 
         // now make the entitlements
         for (Entry<Pool, Integer> entry : bestPools.entrySet()) {
-            entitlements.add(addEntitlement(consumer, entry.getKey(), entry.getValue()));
+            entitlements.add(addEntitlement(consumer, entry.getKey(),
+                entry.getValue(), false));
         }
 
         return entitlements;
@@ -395,7 +396,7 @@ public class CandlepinPoolManager implements PoolManager {
         return entitleByProducts(consumer, new String[]{ productId })
             .get(0);
     }
-
+    
     /**
      * Request an entitlement by pool.. If the entitlement cannot be granted,
      * null will be returned. TODO: Throw exception if entitlement not granted.
@@ -409,11 +410,17 @@ public class CandlepinPoolManager implements PoolManager {
     @Transactional
     public Entitlement entitleByPool(Consumer consumer, Pool pool,
         Integer quantity) throws EntitlementRefusedException {
-        return addEntitlement(consumer, pool, quantity);
+        return addEntitlement(consumer, pool, quantity, false);
+    }
+    
+    @Transactional
+    public Entitlement ueberCertEntitlement(Consumer consumer, Pool pool,
+        Integer quantity) throws EntitlementRefusedException {
+        return addEntitlement(consumer, pool, 1, true);
     }
 
     private Entitlement addEntitlement(Consumer consumer, Pool pool,
-        Integer quantity) throws EntitlementRefusedException {
+        Integer quantity, boolean generateUeberCert) throws EntitlementRefusedException {
 
         // Because there are several paths to this one place where entitlements
         // are granted, we cannot be positive the caller obtained a lock on the
@@ -444,9 +451,9 @@ public class CandlepinPoolManager implements PoolManager {
         entitlementCurator.create(e);
         consumerCurator.update(consumer);
 
-        generateEntitlementCertificate(consumer, pool, e);
+        generateEntitlementCertificate(consumer, pool, e, generateUeberCert);
         for (Entitlement regenEnt : entitlementCurator.listModifying(e)) {
-            this.regenerateCertificatesOf(regenEnt);
+            this.regenerateCertificatesOf(regenEnt, generateUeberCert);
         }
 
         // The quantity is calculated at fetch time. We update it here
@@ -463,7 +470,7 @@ public class CandlepinPoolManager implements PoolManager {
      * @return
      */
     private EntitlementCertificate generateEntitlementCertificate(
-        Consumer consumer, Pool pool, Entitlement e) {
+        Consumer consumer, Pool pool, Entitlement e, boolean generateUeberCert) {
         Subscription sub = null;
         if (pool.getSubscriptionId() != null) {
             sub = subAdapter.getSubscription(pool.getSubscriptionId());
@@ -488,7 +495,9 @@ public class CandlepinPoolManager implements PoolManager {
         // want
         // to know if this product entails granting a cert someday.
         try {
-            return entCertAdapter.generateEntitlementCert(e, sub, product);
+            return generateUeberCert ? 
+                entCertAdapter.generateUeberCert(e, sub, product) :
+                entCertAdapter.generateEntitlementCert(e, sub, product);
         }
         catch (Exception ex) {
             throw new RuntimeException(ex);
@@ -525,7 +534,7 @@ public class CandlepinPoolManager implements PoolManager {
     @Transactional
     public void regenerateCertificatesOf(Iterable<Entitlement> iterable) {
         for (Entitlement e : iterable) {
-            regenerateCertificatesOf(e);
+            regenerateCertificatesOf(e, false);
         }
     }
 
@@ -533,7 +542,7 @@ public class CandlepinPoolManager implements PoolManager {
      * @param e
      */
     @Transactional
-    public void regenerateCertificatesOf(Entitlement e) {
+    public void regenerateCertificatesOf(Entitlement e, boolean ueberCertificate) {
         if (log.isDebugEnabled()) {
             log.debug("Revoking entitlementCertificates of : " + e);
         }
@@ -547,7 +556,7 @@ public class CandlepinPoolManager implements PoolManager {
         e.getCertificates().clear();
         // below call creates new certificates and saves it to the backend.
         EntitlementCertificate generated = this.generateEntitlementCertificate(
-            e.getConsumer(), e.getPool(), e);
+            e.getConsumer(), e.getPool(), e, false);
         this.entitlementCurator.refresh(e);
 
         // send entitlement changed event.

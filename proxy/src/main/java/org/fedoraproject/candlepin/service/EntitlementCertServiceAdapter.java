@@ -45,6 +45,23 @@ public interface EntitlementCertServiceAdapter {
         Subscription sub, Product product)
         throws GeneralSecurityException, IOException;
     
+    
+    /**
+     * Generate an ueber certificate, used to grant access to all content for the owner.
+     *
+     * End date specified explicitly to allow for flexible termination policies.
+     *
+     * @param entitlement entitlement which granted this cert.
+     * @param sub Subscription being used.
+     * @param product Product being consumed.
+     * @return Client entitlement certificate.
+     * @throws IOException thrown if there's a problem reading the cert.
+     * @throws GeneralSecurityException thrown security problem
+     */
+    EntitlementCertificate generateUeberCert(Entitlement entitlement,
+        Subscription sub, Product product)
+        throws GeneralSecurityException, IOException;    
+    
     /**
      * Revoke certificates for the given entitlement
      * 

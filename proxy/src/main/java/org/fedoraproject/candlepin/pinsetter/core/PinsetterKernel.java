@@ -21,6 +21,7 @@ import org.fedoraproject.candlepin.model.JobCurator;
 import org.fedoraproject.candlepin.pinsetter.core.model.JobStatus;
 import org.fedoraproject.candlepin.pinsetter.tasks.CancelJobJob;
 import org.fedoraproject.candlepin.util.PropertyUtil;
+import org.fedoraproject.candlepin.util.Util;
 
 import com.google.common.base.Nullable;
 import com.google.inject.Inject;
@@ -41,11 +42,10 @@ import org.quartz.spi.JobFactory;
 
 import java.io.Serializable;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
-import java.util.Map.Entry;
+import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
@@ -73,7 +73,7 @@ public class PinsetterKernel {
      * initialized.
      */
     @Inject
-    public PinsetterKernel(Config conf, JobFactory jobFactory, 
+    public PinsetterKernel(Config conf, JobFactory jobFactory,
         @Nullable JobListener listener, JobCurator jobCurator,
         StdSchedulerFactory fact) throws InstantiationException {
 
@@ -132,31 +132,43 @@ public class PinsetterKernel {
         if (log.isDebugEnabled()) {
             log.debug("Scheduling tasks");
         }
-        Map<String, JobEntry> pendingJobs = new HashMap<String, JobEntry>();
+
+        List<JobEntry> pendingJobs = new ArrayList<JobEntry>();
         // use a set to remove potential duplicate jobs from config
         Set<String> jobImpls = new HashSet<String>();
 
-        if (config.getBoolean(ConfigProperties.ENABLE_PINSETTER)) {
-            // get the default tasks first
-            addToList(jobImpls, ConfigProperties.DEFAULT_TASKS);
-
-            // get other tasks
-            addToList(jobImpls, ConfigProperties.TASKS);
-        }
-        else {
-            // Since pinsetter is disabled, we only want to allow
-            // CancelJob and async jobs on this node.
-            jobImpls.add(CancelJobJob.class.getName());
-        }
-
-        // Bail if there is nothing to configure
-        if (jobImpls.size() == 0) {
-            log.warn("No tasks to schedule");
-            return;
-        }
-
-        int count = 0;
         try {
+
+            if (config.getBoolean(ConfigProperties.ENABLE_PINSETTER)) {
+                /*
+                 * if it's clustered we want to see if there are any jobs already
+                 * in the cluster. We don't want to reschedule any of them.
+                 */
+                String[] jobs = scheduler.getJobNames(CRON_GROUP);
+                if (isClustered() && jobs.length > 0) {
+                    log.info("There are [" + jobs.length +
+                        "] jobs defined in the cluster.");
+                }
+                else {
+                    // get the default tasks first
+                    addToList(jobImpls, ConfigProperties.DEFAULT_TASKS);
+
+                    // get other tasks
+                    addToList(jobImpls, ConfigProperties.TASKS);
+                }
+            }
+            else if (!isClustered()) {
+                // Since pinsetter is disabled, we only want to allow
+                // CancelJob and async jobs on this node.
+                jobImpls.add(CancelJobJob.class.getName());
+            }
+
+            // Bail if there is nothing to configure
+            if (jobImpls.size() == 0) {
+                log.warn("No tasks to schedule");
+                return;
+            }
+
             for (String jobImpl : jobImpls) {
                 if (log.isDebugEnabled()) {
                     log.debug("Scheduling " + jobImpl);
@@ -175,13 +187,11 @@ public class PinsetterKernel {
                         log.debug("Scheduler entry for " + jobImpl + ": " +
                             schedule);
                     }
-                    pendingJobs.put(String.valueOf(count),
-                        new JobEntry(jobImpl, schedule));
+                    pendingJobs.add(new JobEntry(jobImpl, schedule));
                 }
                 else {
                     log.warn("No schedule found for " + jobImpl + ". Skipping...");
                 }
-                count++;
             }
             scheduler.addTriggerListener(chainedJobListener);
         }
@@ -211,7 +221,7 @@ public class PinsetterKernel {
         }
     }
 
-    private void scheduleJobs(Map<String, JobEntry> pendingJobs) {
+    private void scheduleJobs(List<JobEntry> pendingJobs) {
        // No jobs to schedule
        // This would be quite odd, but it could happen
         if (pendingJobs == null || pendingJobs.size() == 0) {
@@ -219,18 +229,15 @@ public class PinsetterKernel {
             throw new RuntimeException("No tasks scheduled");
         }
         try {
-            for (Entry<String, JobEntry> entry : pendingJobs.entrySet()) {
-                JobEntry jobentry = entry.getValue();
-                String jobName = jobentry.getClassName() + "-" + entry.getKey();
-
-                Trigger trigger = new CronTrigger(jobentry.getClassName(),
+            for (JobEntry jobentry : pendingJobs) {
+                Trigger trigger = new CronTrigger(jobentry.getJobName(),
                     CRON_GROUP, jobentry.getSchedule());
                 trigger.setMisfireInstruction(
                     CronTrigger.MISFIRE_INSTRUCTION_DO_NOTHING);
 
                 scheduleJob(
                     this.getClass().getClassLoader().loadClass(
-                        jobentry.getClassName()), jobName, trigger);
+                        jobentry.getClassName()), jobentry.getJobName(), trigger);
             }
         }
         catch (Throwable t) {
@@ -315,7 +322,7 @@ public class PinsetterKernel {
 
     public boolean getSchedulerStatus() throws PinsetterException {
         try {
-            //return true when scheduler is running (double negative)
+            // return true when scheduler is running (double negative)
             return !scheduler.isInStandbyMode();
         }
         catch (SchedulerException e) {
@@ -325,7 +332,7 @@ public class PinsetterKernel {
     }
 
     public void pauseScheduler() throws PinsetterException {
-        //go into standby mode
+        // go into standby mode
         try {
             scheduler.standby();
         }
@@ -366,17 +373,33 @@ public class PinsetterKernel {
     }
 
     private void deleteAllJobs() {
-        deleteJobs(CRON_GROUP);
-        deleteJobs(SINGLE_JOB_GROUP);
+        if (!isClustered()) {
+            deleteJobs(CRON_GROUP);
+            deleteJobs(SINGLE_JOB_GROUP);
+        }
+    }
+
+    private boolean isClustered() {
+        boolean clustered = false;
+        if (config.containsKey("org.quartz.jobStore.isClustered")) {
+            clustered = config.getBoolean("org.quartz.jobStore.isClustered");
+        }
+        return clustered;
     }
 
     private static class JobEntry {
         private String classname;
         private String schedule;
+        private String jobname;
 
         public JobEntry(String cname, String sched) {
             classname = cname;
             schedule = sched;
+            jobname = genName(classname);
+        }
+
+        private String genName(String cname) {
+            return Util.getClassName(cname) + "-" + Util.generateUUID();
         }
 
         public String getClassName() {
@@ -385,6 +408,10 @@ public class PinsetterKernel {
 
         public String getSchedule() {
             return schedule;
+        }
+
+        public String getJobName() {
+            return jobname;
         }
     }
 

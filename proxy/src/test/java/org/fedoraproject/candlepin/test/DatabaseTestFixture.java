@@ -22,13 +22,13 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.servlet.http.HttpServletRequest;
 
-
 import org.fedoraproject.candlepin.CandlepinCommonTestingModule;
 import org.fedoraproject.candlepin.CandlepinNonServletEnvironmentTestingModule;
 import org.fedoraproject.candlepin.TestingInterceptor;
+import org.fedoraproject.candlepin.auth.Access;
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
-import org.fedoraproject.candlepin.auth.Access;
+import org.fedoraproject.candlepin.auth.permissions.Permission;
 import org.fedoraproject.candlepin.controller.CandlepinPoolManager;
 import org.fedoraproject.candlepin.guice.TestPrincipalProviderSetter;
 import org.fedoraproject.candlepin.model.ActivationKey;
@@ -45,7 +45,6 @@ import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.EntitlementCertificateCurator;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
 import org.fedoraproject.candlepin.model.EventCurator;
-import org.fedoraproject.candlepin.model.Role;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.OwnerPermission;
@@ -57,6 +56,7 @@ import org.fedoraproject.candlepin.model.ProductAttributeCurator;
 import org.fedoraproject.candlepin.model.ProductCertificateCurator;
 import org.fedoraproject.candlepin.model.ProductCurator;
 import org.fedoraproject.candlepin.model.ProvidedProduct;
+import org.fedoraproject.candlepin.model.Role;
 import org.fedoraproject.candlepin.model.RoleCurator;
 import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.model.StatisticCurator;
@@ -67,6 +67,7 @@ import org.fedoraproject.candlepin.model.UserCurator;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
+import org.fedoraproject.candlepin.service.UniqueIdGenerator;
 import org.fedoraproject.candlepin.util.DateSource;
 import org.junit.Before;
 import org.xnap.commons.i18n.I18n;
@@ -78,7 +79,6 @@ import com.google.inject.util.Modules;
 import com.wideplay.warp.persist.PersistenceService;
 import com.wideplay.warp.persist.UnitOfWork;
 import com.wideplay.warp.persist.WorkManager;
-import org.fedoraproject.candlepin.auth.permissions.Permission;
 
 /**
  * Test fixture for test classes requiring access to the database.
@@ -120,6 +120,7 @@ public class DatabaseTestFixture {
     protected EntitlementCertServiceAdapter entitlementCertService;
     protected CandlepinPoolManager poolManager;
     protected StatisticCurator statisticCurator;
+    protected UniqueIdGenerator uniqueIdGenerator;
 
     @Before
     public void init() {
@@ -175,6 +176,7 @@ public class DatabaseTestFixture {
         poolManager = injector.getInstance(CandlepinPoolManager.class);
         statisticCurator = injector.getInstance(StatisticCurator.class);
         i18n = injector.getInstance(I18n.class);
+        uniqueIdGenerator = injector.getInstance(UniqueIdGenerator.class);
 
         securityInterceptor = testingModule.securityInterceptor();
 

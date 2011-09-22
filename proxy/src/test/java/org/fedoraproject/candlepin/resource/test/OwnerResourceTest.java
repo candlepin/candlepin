@@ -14,13 +14,15 @@
  */
 package org.fedoraproject.candlepin.resource.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventFactory;
@@ -45,17 +47,10 @@ import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.resource.OwnerResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
-
 import org.jboss.resteasy.plugins.providers.atom.Entry;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
 /**
  * OwnerResourceTest
  */
@@ -81,7 +76,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         productCurator.create(product);
         eventFactory = injector.getInstance(EventFactory.class);
         this.config = (CandlepinCommonTestConfig) injector
-            .getInstance(Config.class);
+            .getInstance(Config.class);        
     }
 
     @Test
@@ -591,7 +586,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource or = new OwnerResource(oc, null,
             null, akc, null, null, i18n, null, null, null,
             null, null, null, null, null, null, null,
-            null, null);
+            null, null, null, null, null, null, null);
         or.createActivationKey("testOwner", ak);
-    }
+    }    
 }

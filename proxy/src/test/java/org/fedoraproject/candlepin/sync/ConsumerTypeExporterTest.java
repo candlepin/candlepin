@@ -16,14 +16,15 @@ package org.fedoraproject.candlepin.sync;
 
 import static org.junit.Assert.assertEquals;
 
+import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.model.ConsumerType;
+
+import org.codehaus.jackson.map.ObjectMapper;
+import org.junit.Test;
+
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.HashMap;
-
-import org.codehaus.jackson.map.ObjectMapper;
-import org.fedoraproject.candlepin.config.Config;
-import org.fedoraproject.candlepin.model.ConsumerType;
-import org.junit.Test;
 
 /**
  * ConsumerTypeExporterTest
@@ -43,7 +44,8 @@ public class ConsumerTypeExporterTest {
         
         consumerType.export(mapper, writer, type);
         
-        assertEquals("{\"id\":null,\"label\":\"TESTTYPE\"}", writer.toString());
+        assertEquals("{\"id\":null,\"label\":\"TESTTYPE\",\"manifest\":false}",
+                     writer.toString());
     }
 
 }

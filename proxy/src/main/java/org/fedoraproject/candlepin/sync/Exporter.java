@@ -14,23 +14,6 @@
  */
 package org.fedoraproject.candlepin.sync;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
-
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
@@ -47,6 +30,24 @@ import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 
 import com.google.inject.Inject;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+import org.codehaus.jackson.map.ObjectMapper;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /**
  * Exporter
@@ -113,7 +114,7 @@ public class Exporter {
             exportMeta(baseDir);
             exportConsumer(baseDir, consumer);
             exportEntitlements(baseDir, consumer);
-            exportEntitlementsCerts(baseDir, consumer, null);
+            exportEntitlementsCerts(baseDir, consumer, null, true);
             exportProducts(baseDir, consumer);
             exportConsumerTypes(baseDir);
             exportRules(baseDir);
@@ -134,7 +135,7 @@ public class Exporter {
             baseDir.mkdir();
 
             exportMeta(baseDir);
-            exportEntitlementsCerts(baseDir, consumer, serials);
+            exportEntitlementsCerts(baseDir, consumer, serials, false);
             return makeArchive(consumer, tmpDir, baseDir);
         }
         catch (IOException e) {
@@ -281,19 +282,21 @@ public class Exporter {
         writer.close();
     }
 
-    private void exportEntitlementsCerts(File baseDir, Consumer consumer, Set<Long> serials)
+    private void exportEntitlementsCerts(File baseDir,
+                                         Consumer consumer,
+                                         Set<Long> serials,
+                                         boolean manifest)
         throws IOException {
 
         File entCertDir = new File(baseDir.getCanonicalPath(), "entitlement_certificates");
         entCertDir.mkdir();
 
         for (EntitlementCertificate cert : entCertAdapter.listForConsumer(consumer)) {
-            if (!this.exportRules.canExport(cert.getEntitlement())) {
+            if (manifest && !this.exportRules.canExport(cert.getEntitlement())) {
                 if (log.isDebugEnabled()) {
                     log.debug("Skipping export of entitlement cert with product:  " +
                             cert.getEntitlement().getProductId());
                 }
-
                 continue;
             }
 

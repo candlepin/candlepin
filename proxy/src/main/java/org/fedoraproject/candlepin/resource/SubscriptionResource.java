@@ -17,6 +17,7 @@ package org.fedoraproject.candlepin.resource;
 import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -43,6 +44,7 @@ import com.google.inject.Inject;
  */
 
 @Path("/subscriptions")
+@Consumes(MediaType.APPLICATION_JSON)
 public class SubscriptionResource {
     private static Logger log = Logger.getLogger(SubscriptionResource.class);
 

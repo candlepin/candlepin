@@ -73,6 +73,11 @@ public class ConfigTest {
         assertFalse(config.getBoolean("no"));
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void getBooleanWithNonExistentEntryThrowsError() {
+        config.getBoolean("notthere");
+    }
+
     @Test
     public void returnAllKeysWithAPrefixFromHead() {
         Config config = new Config(
@@ -279,5 +284,14 @@ public class ConfigTest {
         assertEquals("v1 ", array[0]);
         assertEquals("v2", array[1]);
         assertEquals(" v3", array[2]);
+    }
+    
+    @Test
+    public void containsKey() {
+        TreeMap<String, String> testdata = new TreeMap<String, String>();
+        testdata.put("there", "true");
+        Config config = new Config(testdata);
+        assertFalse(config.containsKey("notthere"));
+        assertTrue(config.containsKey("there"));
     }
 }

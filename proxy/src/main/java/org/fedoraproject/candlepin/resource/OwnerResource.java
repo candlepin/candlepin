@@ -14,63 +14,11 @@
  */
 package org.fedoraproject.candlepin.resource;
 
-import org.fedoraproject.candlepin.audit.Event;
-import org.fedoraproject.candlepin.audit.EventAdapter;
-import org.fedoraproject.candlepin.audit.EventFactory;
-import org.fedoraproject.candlepin.audit.EventSink;
-import org.fedoraproject.candlepin.auth.Access;
-import org.fedoraproject.candlepin.auth.interceptor.Verify;
-import org.fedoraproject.candlepin.controller.PoolManager;
-import org.fedoraproject.candlepin.exceptions.BadRequestException;
-import org.fedoraproject.candlepin.exceptions.CandlepinException;
-import org.fedoraproject.candlepin.exceptions.IseException;
-import org.fedoraproject.candlepin.exceptions.NotFoundException;
-import org.fedoraproject.candlepin.model.ActivationKey;
-import org.fedoraproject.candlepin.model.ActivationKeyCurator;
-import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.ConsumerCurator;
-import org.fedoraproject.candlepin.model.ConsumerType;
-import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
-import org.fedoraproject.candlepin.model.Entitlement;
-import org.fedoraproject.candlepin.model.EventCurator;
-import org.fedoraproject.candlepin.model.ExporterMetadata;
-import org.fedoraproject.candlepin.model.ExporterMetadataCurator;
-import org.fedoraproject.candlepin.model.ImportRecord;
-import org.fedoraproject.candlepin.model.ImportRecordCurator;
-import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.OwnerCurator;
-import org.fedoraproject.candlepin.model.OwnerInfo;
-import org.fedoraproject.candlepin.model.OwnerInfoCurator;
-import org.fedoraproject.candlepin.model.OwnerPermission;
-import org.fedoraproject.candlepin.model.OwnerPermissionCurator;
-import org.fedoraproject.candlepin.model.Pool;
-import org.fedoraproject.candlepin.model.PoolCurator;
-import org.fedoraproject.candlepin.model.Statistic;
-import org.fedoraproject.candlepin.model.StatisticCurator;
-import org.fedoraproject.candlepin.model.Subscription;
-import org.fedoraproject.candlepin.model.SubscriptionCurator;
-import org.fedoraproject.candlepin.pinsetter.tasks.RefreshPoolsJob;
-import org.fedoraproject.candlepin.resource.util.ResourceDateParser;
-import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
-import org.fedoraproject.candlepin.sync.Importer;
-import org.fedoraproject.candlepin.sync.ImporterException;
-import org.fedoraproject.candlepin.sync.SyncDataFormatException;
-
-import com.google.inject.Inject;
-import com.wideplay.warp.persist.Transactional;
-
-import org.apache.log4j.Logger;
-import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
-import org.jboss.resteasy.plugins.providers.atom.Feed;
-import org.jboss.resteasy.plugins.providers.multipart.InputPart;
-import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
-import org.jboss.resteasy.util.GenericType;
-import org.quartz.JobDetail;
-import org.xnap.commons.i18n.I18n;
-
 import java.io.File;
 import java.io.IOException;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -84,7 +32,73 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+
+import org.apache.log4j.Logger;
+import org.fedoraproject.candlepin.audit.Event;
+import org.fedoraproject.candlepin.audit.EventAdapter;
+import org.fedoraproject.candlepin.audit.EventFactory;
+import org.fedoraproject.candlepin.audit.EventSink;
+import org.fedoraproject.candlepin.auth.Access;
+import org.fedoraproject.candlepin.auth.Principal;
+import org.fedoraproject.candlepin.auth.interceptor.Verify;
+import org.fedoraproject.candlepin.controller.PoolManager;
+import org.fedoraproject.candlepin.exceptions.BadRequestException;
+import org.fedoraproject.candlepin.exceptions.CandlepinException;
+import org.fedoraproject.candlepin.exceptions.IseException;
+import org.fedoraproject.candlepin.exceptions.NotFoundException;
+import org.fedoraproject.candlepin.model.ActivationKey;
+import org.fedoraproject.candlepin.model.ActivationKeyCurator;
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerCurator;
+import org.fedoraproject.candlepin.model.ConsumerType;
+import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
+import org.fedoraproject.candlepin.model.Content;
+import org.fedoraproject.candlepin.model.ContentCurator;
+import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.EntitlementCertificate;
+import org.fedoraproject.candlepin.model.EntitlementCertificateCurator;
+import org.fedoraproject.candlepin.model.EntitlementCurator;
+import org.fedoraproject.candlepin.model.EventCurator;
+import org.fedoraproject.candlepin.model.ExporterMetadata;
+import org.fedoraproject.candlepin.model.ExporterMetadataCurator;
+import org.fedoraproject.candlepin.model.ImportRecord;
+import org.fedoraproject.candlepin.model.ImportRecordCurator;
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.OwnerCurator;
+import org.fedoraproject.candlepin.model.OwnerInfo;
+import org.fedoraproject.candlepin.model.OwnerInfoCurator;
+import org.fedoraproject.candlepin.model.OwnerPermission;
+import org.fedoraproject.candlepin.model.OwnerPermissionCurator;
+import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.PoolCurator;
+import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductContent;
+import org.fedoraproject.candlepin.model.Statistic;
+import org.fedoraproject.candlepin.model.StatisticCurator;
+import org.fedoraproject.candlepin.model.Subscription;
+import org.fedoraproject.candlepin.model.SubscriptionCurator;
+import org.fedoraproject.candlepin.pinsetter.tasks.RefreshPoolsJob;
+import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
+import org.fedoraproject.candlepin.resource.util.ResourceDateParser;
+import org.fedoraproject.candlepin.service.ProductServiceAdapter;
+import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
+import org.fedoraproject.candlepin.service.UniqueIdGenerator;
+import org.fedoraproject.candlepin.sync.Importer;
+import org.fedoraproject.candlepin.sync.ImporterException;
+import org.fedoraproject.candlepin.sync.SyncDataFormatException;
+import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
+import org.jboss.resteasy.plugins.providers.atom.Feed;
+import org.jboss.resteasy.plugins.providers.multipart.InputPart;
+import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
+import org.jboss.resteasy.util.GenericType;
+import org.quartz.JobDetail;
+import org.xnap.commons.i18n.I18n;
+
+import com.google.inject.Inject;
+import com.wideplay.warp.persist.Transactional;
 
 
 /**
@@ -92,6 +106,10 @@ import javax.ws.rs.core.MediaType;
  */
 @Path("/owners")
 public class OwnerResource {
+    /**
+     * 
+     */
+    public static final String UEBER_CERT_CONSUMER = "ueber_cert_consumer";
     private OwnerCurator ownerCurator;
     private OwnerInfoCurator ownerInfoCurator;
     private PoolCurator poolCurator;
@@ -112,6 +130,11 @@ public class OwnerResource {
     private OwnerPermissionCurator permissionCurator;
     private PoolManager poolManager;
     private ConsumerTypeCurator consumerTypeCurator;
+    private ProductServiceAdapter prodAdapter;
+    private UniqueIdGenerator idGenerator;
+    private ContentCurator contentCurator;
+    private EntitlementCertificateCurator entitlementCertCurator;
+    private EntitlementCurator entitlementCurator;
     private static final int FEED_LIMIT = 1000;
 
     @Inject
@@ -128,7 +151,11 @@ public class OwnerResource {
         ImportRecordCurator importRecordCurator,
         SubscriptionServiceAdapter subService,
         OwnerPermissionCurator permCurator,
-        ConsumerTypeCurator consumerTypeCurator) {
+        ConsumerTypeCurator consumerTypeCurator,
+        ProductServiceAdapter prodAdapter,
+        ContentCurator contentCurator,
+        EntitlementCertificateCurator entitlementCertCurator,
+        EntitlementCurator entitlementCurator, UniqueIdGenerator idGenerator) {
 
         this.ownerCurator = ownerCurator;
         this.ownerInfoCurator = ownerInfoCurator;
@@ -149,6 +176,11 @@ public class OwnerResource {
         this.subService = subService;
         this.permissionCurator = permCurator;
         this.consumerTypeCurator = consumerTypeCurator;
+        this.prodAdapter = prodAdapter;
+        this.contentCurator = contentCurator;
+        this.idGenerator = idGenerator;
+        this.entitlementCertCurator = entitlementCertCurator;
+        this.entitlementCurator = entitlementCurator;
     }
 
     /**
@@ -699,7 +731,6 @@ public class OwnerResource {
     }
 
     @GET
-    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/statistics/{qtype}/{vtype}")
     public List<Statistic> getStatistics(
@@ -722,8 +753,124 @@ public class OwnerResource {
                                 ResourceDateParser.getFromDate(from, to, days),
                                 ResourceDateParser.parseDateString(to));
     }
+    
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{owner_key}/uebercert")
+    public EntitlementCertificate createUeberCertificate(@Context Principal principal, 
+        @Verify(Owner.class) @PathParam("owner_key") String ownerKey) {                
+        
+        Owner o = findOwner(ownerKey);
+        
+        if (o == null) {
+            throw new NotFoundException(i18n.tr(
+                "owner with key: {0} was not found.", ownerKey));
+        }
+        
+        Consumer ueberConsumer = consumerCurator.findByName(UEBER_CERT_CONSUMER);
+        // ueber cert has already been generated - re-generate it now
+        if (ueberConsumer != null) {
+            List<Entitlement> ueberEntitlement 
+                = entitlementCurator.listByConsumer(ueberConsumer);
+            poolManager.regenerateCertificatesOf(ueberEntitlement.get(0), true);            
+            return entitlementCertCurator.listForConsumer(ueberConsumer).get(0); 
+        }
+        
+        try {            
+            Product ueberProduct = createUeberProduct(o);            
+            createUeberSubscription(o, ueberProduct);            
+            poolManager.refreshPools(o);            
+            Consumer consumer = createUeberConsumer(principal, o);
+            
+            List<Pool> ueberPool = poolCurator.listAvailableEntitlementPools(
+                null, o, ueberProduct.getId(), null, false, false);
+            
+            return generateUeberCertificate(consumer, ueberPool);
+        } 
+        catch (Exception e) {
+            log.error("Problem generating ueber cert for owner: " + o.getKey(), e);
+            throw new BadRequestException(i18n.tr(
+                "Problem generating ueber cert for owner {0}", e));            
+        }        
+    }
+    
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{owner_key}/uebercert")
+    public EntitlementCertificate getUeberCertificate(@Context Principal principal, 
+        @Verify(Owner.class) @PathParam("owner_key") String ownerKey) {
+        
+        Owner o = findOwner(ownerKey);        
+        if (o == null) {
+            throw new NotFoundException(i18n.tr(
+                "owner with key: {0} was not found.", ownerKey));
+        }
+        
+        Consumer ueberConsumer = consumerCurator.findByName(UEBER_CERT_CONSUMER);
+        if (ueberConsumer == null) {
+            throw new NotFoundException(i18n.tr(
+                "ueber certificate for owner {0} was not found. Please generate one.", 
+                o.getKey()));
+        }
 
+        // ueber consumer has only one entitlement associated with it
+        List<EntitlementCertificate> ueberCertificate 
+            = entitlementCertCurator.listForConsumer(ueberConsumer);
+        
+        return ueberCertificate.get(0);
+    }
 
+    private EntitlementCertificate generateUeberCertificate(Consumer consumer,
+        List<Pool> ueberPool) throws EntitlementRefusedException {
+        Entitlement e = poolManager.ueberCertEntitlement(consumer, ueberPool.get(0), 1);
+        return (EntitlementCertificate) e.getCertificates().toArray()[0];
+    }
+
+    private Consumer createUeberConsumer(Principal principal, Owner o) {        
+        ConsumerType type = lookupConsumerType(ConsumerTypeEnum.SYSTEM.toString());
+        Consumer consumer = consumerCurator.create(new Consumer(
+            UEBER_CERT_CONSUMER, 
+            principal.getUsername(), 
+            o, 
+            type));
+        return consumer;
+    }
+
+    private void createUeberSubscription(Owner o, Product ueberProduct) {
+        Subscription subscription = new Subscription(o, ueberProduct, 
+            new HashSet<Product>(), 1L, now(), hundredYearsFromNow(), now());
+        subService.createSubscription(subscription);
+    }
+
+    private Product createUeberProduct(Owner o) {
+        Product ueberProduct = prodAdapter.createProduct(
+            new Product(null, o.getKey() + "_ueber_product", 1L));
+        
+        Content ueberContent = contentCurator.create(new Content(
+            "ueber_content", idGenerator.generateId(), 
+            ueberProduct.getId() + "_ueber_content", "yum", "Custom", 
+            "/" + o.getKey(), ""));
+        
+        ProductContent productContent =
+            new ProductContent(ueberProduct, ueberContent, true);
+        ueberProduct.getProductContent().add(productContent);
+        return ueberProduct;
+    }
+
+    private Date now() {
+        Calendar now = Calendar.getInstance();
+        Date currentTime = now.getTime();
+        return currentTime;
+    }
+
+    private Date hundredYearsFromNow() {
+        Calendar now = Calendar.getInstance();
+        now.add(Calendar.YEAR, 100);
+        Date hunderedYearsFromNow = now.getTime();
+        return hunderedYearsFromNow;
+    }
+        
     private void recordImportSuccess(Owner owner) {
         ImportRecord record = new ImportRecord(owner);
         record.recordStatus(ImportRecord.Status.SUCCESS,

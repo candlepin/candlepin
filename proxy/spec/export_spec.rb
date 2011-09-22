@@ -117,8 +117,8 @@ describe 'Candlepin Export' do
       available_certs[c['serial']] = c
     end
 
-    # Only 2 of the 3 should be there, as one cert is for a virt product
-    exported_entitlement_certs.size.should == 2
+    # All 3 should be there, despite one cert is for a virt product
+    exported_entitlement_certs.size.should == 3
 
     exported_entitlement_certs.each do |file|
       exported_cert = File.read(File.join(entitlement_certs_dir, file))

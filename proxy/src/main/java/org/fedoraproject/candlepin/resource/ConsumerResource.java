@@ -187,7 +187,7 @@ public class ConsumerResource {
 
             if (owner == null) {
                 throw new NotFoundException(
-                    i18n.tr("Organization/owner with key: {0} was not found.",
+                    i18n.tr("Organization with key: {0} was not found.",
                         ownerKey));
             }
         }
@@ -395,7 +395,7 @@ public class ConsumerResource {
         // has some association with the owner the consumer is destined for:
         if (!user.hasOwnerAccess(owner, Access.ALL) && !user.isSuperAdmin()) {
             throw new ForbiddenException(i18n.tr(
-                "User {0} has no roles for organization/owner {1}",
+                "User {0} has no roles for organization {1}",
                 user.getUsername(), owner.getKey()));
         }
 
@@ -424,7 +424,7 @@ public class ConsumerResource {
 
             if (ownerKeys.size() != 1) {
                 throw new BadRequestException(
-                    i18n.tr("You must specify an organization/owner for new consumers."));
+                    i18n.tr("You must specify an organization for new consumers."));
             }
 
             ownerKey = ownerKeys.get(0);
@@ -435,14 +435,14 @@ public class ConsumerResource {
         Owner owner = ownerCurator.lookupByKey(ownerKey);
         if (owner == null) {
             throw new BadRequestException(i18n.tr(
-                "Organization/Owner {0} does not exist.", ownerKey));
+                "Organization {0} does not exist.", ownerKey));
         }
 
         // Check permissions for current principal on the owner:
         if ((principal instanceof UserPrincipal)) {
             if (!principal.canAccess(owner, Access.ALL)) {
                 throw new ForbiddenException(i18n.tr(
-                    "User {0} cannot access organization/owner {1}",
+                    "User {0} cannot access organization {1}",
                     principal.getPrincipalName(), owner.getKey()));
             }
         }
@@ -970,7 +970,7 @@ public class ConsumerResource {
         @QueryParam("entitlement") String entitlementId) {
         if (entitlementId != null) {
             Entitlement e = verifyAndLookupEntitlement(entitlementId);
-            poolManager.regenerateCertificatesOf(e);
+            poolManager.regenerateCertificatesOf(e, false);
         }
         else {
             Consumer c = verifyAndLookupConsumer(consumerUuid);
@@ -987,11 +987,12 @@ public class ConsumerResource {
         @Verify(value = Consumer.class, require = Access.ALL) String consumerUuid) {
 
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
-        if (!consumer.getType().isType(ConsumerTypeEnum.CANDLEPIN)) {
+        if (!consumer.getType().isManifest()) {
             throw new ForbiddenException(
                 i18n.tr(
-                    "Consumer {0} cannot be exported, as it's of wrong consumer type.",
-                    consumerUuid));
+                    "Consumer {0} cannot be exported. " +
+                    "A manifest cannot be made for consumer of type ''{1}''.",
+                    consumerUuid, consumer.getType().getLabel()));
         }
 
         File archive;
