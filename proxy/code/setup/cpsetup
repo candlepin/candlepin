@@ -177,22 +177,21 @@ def main(argv):
     parser.add_option("-s", "--skipdbcfg",
                   action="store_true", dest="skipdbcfg", default=False,
                   help="don't configure the /etc/candlepin/candlepin.conf file")
-                  
+
     (options, args) = parser.parse_args()
-   
+
     # Stop tomcat before we wipe the DB otherwise you get errors from pg
     tsetup = TomcatSetup('/etc/tomcat6')
     tsetup.fix_perms()
     tsetup.stop()
-    
+
     dbsetup = DbSetup("candlepin", "candlepin")
     dbsetup.initdb()
-    
+
     if not options.skipdbcfg:
         dbsetup.configurecp()
     else:
         print "** Skipping configuration file setup"
-        
 
     certsetup = CertSetup()
     certsetup.generate()
