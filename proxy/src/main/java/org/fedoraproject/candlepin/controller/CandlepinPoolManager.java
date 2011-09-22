@@ -318,6 +318,7 @@ public class CandlepinPoolManager implements PoolManager {
      * 
      * @param consumer consumer requesting to be entitled
      * @param productIds products to be entitled.
+     * @param entitleDate specific date to entitle by.
      * @return Entitlement
      * @throws EntitlementRefusedException if entitlement is refused
      */
@@ -328,7 +329,7 @@ public class CandlepinPoolManager implements PoolManager {
     //
     @Transactional
     public List<Entitlement> entitleByProducts(Consumer consumer,
-        String[] productIds)
+        String[] productIds, Date entitleDate)
         throws EntitlementRefusedException {
         Owner owner = consumer.getOwner();
         List<Entitlement> entitlements = new LinkedList<Entitlement>();
@@ -393,8 +394,7 @@ public class CandlepinPoolManager implements PoolManager {
     public Entitlement entitleByProduct(Consumer consumer, String productId) 
         throws EntitlementRefusedException {
         // There will only be one returned entitlement, anyways
-        return entitleByProducts(consumer, new String[]{ productId })
-            .get(0);
+        return entitleByProducts(consumer, new String[]{ productId }, null).get(0);
     }
     
     /**
@@ -631,7 +631,6 @@ public class CandlepinPoolManager implements PoolManager {
      * consumer, where other consumers are using those sub-pool entitlements.
      * 
      * @param e Entitlement to check.
-     * @return True if there are outstanding sub-pool entitlements.
      */
     private void checkForOutstandingSubPoolEntitlements(Entitlement entitlement) {
         String entitlementId = entitlement.getId();

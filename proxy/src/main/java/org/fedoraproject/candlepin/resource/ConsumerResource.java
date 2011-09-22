@@ -737,6 +737,7 @@ public class ConsumerResource {
      * @param email email address.
      * @param emailLocale locale for email address.
      * @param async True if bind should be asynchronous, defaults to false.
+     * @param entitleDate specific date to entitle by.
      * @return Response with a list of entitlements or if async is true, a
      *         JobDetail.
      */
@@ -751,7 +752,8 @@ public class ConsumerResource {
         @QueryParam("quantity") @DefaultValue("1") Integer quantity,
         @QueryParam("email") String email,
         @QueryParam("email_locale") String emailLocale,
-        @QueryParam("async") @DefaultValue("false") boolean async) {
+        @QueryParam("async") @DefaultValue("false") boolean async,
+        @QueryParam("entitle_date") Date entitleDate) {
 
         // Check that only one query param was set:
         if (poolIdString != null && productIds != null && productIds.length > 0) {
@@ -764,8 +766,25 @@ public class ConsumerResource {
                 i18n.tr("Cannot specify a quantity when auto-binding."));
         }
 
+        // doesn't make sense to bind by pool and a date.
+        if (poolIdString != null && entitleDate != null) {
+            throw new BadRequestException(
+                i18n.tr("Cannot bind by multiple parameters."));
+        }
+
         // Verify consumer exists:
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+
+        if (productIds == null) {
+            Set<ConsumerInstalledProduct> installed = consumer.getInstalledProducts();
+            int len = installed.size();
+            productIds = new String[len];
+            int i = 0;
+            for (ConsumerInstalledProduct prod : installed) {
+                productIds[i] = prod.getProductId();
+                i++;
+            }
+        }
 
         try {
             // I hate double negatives, but if they have accepted all
@@ -790,13 +809,14 @@ public class ConsumerResource {
             }
             else if (productIds != null && productIds.length > 0) {
                 detail = EntitlerJob.bindByProducts(productIds,
-                        consumerUuid);
+                        consumerUuid, entitleDate);
             }
 
             // events will be triggered by the job
             return Response.status(Response.Status.OK)
                 .type(MediaType.APPLICATION_JSON).entity(detail).build();
         }
+
 
         //
         // otherwise we do what we do today.
@@ -807,7 +827,7 @@ public class ConsumerResource {
         }
         else if (productIds != null && productIds.length > 0) {
             try {
-                entitlements = entitler.bindByProducts(productIds, consumer);
+                entitlements = entitler.bindByProducts(productIds, consumer, entitleDate);
             }
             catch (ForbiddenException fe) {
                 throw fe;

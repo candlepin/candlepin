@@ -28,6 +28,7 @@ import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -48,6 +49,7 @@ public class EntitlerJob implements Job {
             JobDataMap map = ctx.getMergedJobDataMap();
             Integer qty = map.getInt("quantity");
             String uuid = (String) map.get(JobStatus.TARGET_ID);
+            Date entitleDate = (Date) map.get("entitle_date");
 
             if (map.containsKey("pool_id")) {
                 // bindByPool
@@ -57,7 +59,8 @@ public class EntitlerJob implements Job {
             }
             else if (map.containsKey("product_ids")) {
                 String[] prodIds = (String[]) map.get("product_ids");
-                List<Entitlement> ents = entitler.bindByProducts(prodIds, uuid);
+                List<Entitlement> ents = entitler.bindByProducts(prodIds, uuid,
+                    entitleDate);
                 entitler.sendEvents(ents);
             }
 
@@ -84,7 +87,8 @@ public class EntitlerJob implements Job {
         return detail;
     }
 
-    public static JobDetail bindByProducts(String[] prodIds, String uuid) {
+    public static JobDetail bindByProducts(String[] prodIds, String uuid,
+        Date entitleDate) {
 
         JobDetail detail = new JobDetail("bind_by_products_" +
             Util.generateUUID(), EntitlerJob.class);
@@ -94,6 +98,7 @@ public class EntitlerJob implements Job {
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.CONSUMER);
         map.put(JobStatus.TARGET_ID, uuid);
         map.put("quantity", 1);
+        map.put("entitle_date", entitleDate);
 
         detail.setJobDataMap(map);
 

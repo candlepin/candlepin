@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.controller;
 
+import java.util.Date;
 import java.util.List;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -61,7 +62,7 @@ public interface PoolManager {
         throws EntitlementRefusedException;
 
     Entitlement entitleByProduct(Consumer consumer, String productId)
-        throws EntitlementRefusedException;
+    throws EntitlementRefusedException;
 
     Entitlement ueberCertEntitlement(Consumer consumer, Pool pool,
         Integer quantity) throws EntitlementRefusedException;
@@ -77,10 +78,12 @@ public interface PoolManager {
      * consumer requesting to be entitled
      * @param productIds
      * products to be entitled.
+     * @param entitleDate specific date to entitle by.
      * @return Entitlement
      * @throws EntitlementRefusedException if entitlement is refused
      */
-    List<Entitlement> entitleByProducts(Consumer consumer, String[] productIds)
+    List<Entitlement> entitleByProducts(Consumer consumer, String[] productIds,
+        Date entitleDate)
         throws EntitlementRefusedException;
 
 
