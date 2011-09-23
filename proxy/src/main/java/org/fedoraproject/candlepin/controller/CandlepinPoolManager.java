@@ -340,9 +340,9 @@ public class CandlepinPoolManager implements PoolManager {
         List<Pool> filteredPools = new LinkedList<Pool>();
 
 
-        // TODO: We have to check compliance status here so we can replace an empty
-        // array of product IDs with the array the consumer actually needs. (i.e. during
-        // a healing request)
+        // TODO: We have to check compliance status here so we can replace an
+        // empty array of product IDs with the array the consumer actually
+        // needs. (i.e. during a healing request)
         ComplianceStatus compliance = new ComplianceStatus(entitleDate);
 
         for (Pool pool : allOwnerPools) {
