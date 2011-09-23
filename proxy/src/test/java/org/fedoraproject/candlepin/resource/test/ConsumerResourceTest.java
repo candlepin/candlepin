@@ -145,7 +145,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         ownerAdminRole.addUser(someuser);
         roleCurator.create(ownerAdminRole);
 
-        principal = new UserPrincipal(USER_NAME, 
+        principal = new UserPrincipal(USER_NAME,
                 new ArrayList<Permission>(ownerAdminRole.getPermissions()), false);
         setupPrincipal(principal);
 
@@ -300,7 +300,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         Consumer consumer = new Consumer("random-consumer", null, null,
             standardSystemType);
 
-        consumer = consumerResource.create(consumer, principal, null, null, 
+        consumer = consumerResource.create(consumer, principal, null, null,
             null);
 
         assertEquals(USER_NAME, consumer.getUsername());
@@ -590,7 +590,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         ownerAdminRole.addUser(u);
         roleCurator.merge(ownerAdminRole);
 
-        Principal emailuser = TestUtil.createPrincipal(username, owner, 
+        Principal emailuser = TestUtil.createPrincipal(username, owner,
             Access.ALL);
 
         Consumer personal = TestUtil.createConsumer(personType, owner);
@@ -715,7 +715,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
                 .asEagerSingleton();
         }
     }
-    
+
     @Test(expected = BadRequestException.class)
     public void testCreatePersonConsumerWithActivationKey() {
         Consumer c = mock(Consumer.class);
@@ -725,7 +725,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         ActivationKeyCurator akc = mock(ActivationKeyCurator.class);
         OwnerCurator oc = mock(OwnerCurator.class);
         ConsumerTypeCurator ctc = mock(ConsumerTypeCurator.class);
-        
+
         ConsumerType cType = new ConsumerType(ConsumerTypeEnum.PERSON);
         when(ak.getId()).thenReturn("testKey");
         when(o.getKey()).thenReturn("testOwner");
@@ -734,7 +734,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         when(c.getType()).thenReturn(cType);
         when(c.getName()).thenReturn("testConsumer");
         when(ctc.lookupByLabel(eq("person"))).thenReturn(cType);
-        
+
         ConsumerResource cr = new ConsumerResource(null, ctc,
             null, null, null, null, null, i18n, null, null, null,
             null, null, null, null, null, null, oc, akc, null);
@@ -754,7 +754,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
             when(c.getOwner()).thenReturn(o);
             when(sa.hasUnacceptedSubscriptionTerms(eq(o))).thenReturn(false);
             when(cc.findByUuid(eq("fakeConsumer"))).thenReturn(c);
-            when(e.bindByProducts(eq(prodIds), eq(c), eq((Date)null)))
+            when(e.bindByProducts(eq(prodIds), eq(c), eq((Date) null)))
                 .thenThrow(new RuntimeException());
 
             ConsumerResource cr = new ConsumerResource(cc, null,

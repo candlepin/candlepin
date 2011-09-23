@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.fedoraproject.candlepin.policy.js.JsRulesProvider;
-import org.fedoraproject.candlepin.policy.js.compliance.ComplianceRules;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerInstalledProduct;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -55,13 +54,13 @@ public class ComplianceRulesTest {
 
     private static final String RULES_FILE = "/rules/default-rules.js";
 
-    private final static String PRODUCT_1 = "product1";
-    private final static String PRODUCT_2 = "product2";
-    private final static String PRODUCT_3 = "product3";
-    private final static String STACK_ID_1 = "my-stack-1";
-    private final static String STACK_ID_2 = "my-stack-2";
+    private static final String PRODUCT_1 = "product1";
+    private static final String PRODUCT_2 = "product2";
+    private static final String PRODUCT_3 = "product3";
+    private static final String STACK_ID_1 = "my-stack-1";
+    private static final String STACK_ID_2 = "my-stack-2";
 
-    @Mock EntitlementCurator entCurator;
+    @Mock private EntitlementCurator entCurator;
     @Mock private RulesCurator rulesCuratorMock;
     private JsRulesProvider provider;
 
@@ -96,8 +95,8 @@ public class ComplianceRulesTest {
             provided.add(new ProvidedProduct(pid, pid));
         }
         Pool p = new Pool(owner, productId, productId, provided,
-            new Long(1000), TestUtil.createDate(2000, 1, 1), TestUtil.createDate(2050, 1, 1),
-            "1000", "1000");
+            new Long(1000), TestUtil.createDate(2000, 1, 1),
+            TestUtil.createDate(2050, 1, 1), "1000", "1000");
         Entitlement e = new Entitlement(p, consumer, p.getStartDate(), p.getEndDate(), 1);
         return e;
     }

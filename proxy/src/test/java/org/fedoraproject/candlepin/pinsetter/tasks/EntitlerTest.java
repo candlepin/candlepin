@@ -201,7 +201,8 @@ public class EntitlerTest {
             String[] pids = {"prod1", "prod2", "prod3"};
             EntitlementRefusedException ere = new EntitlementRefusedException(
                 fakeOutResult(msg));
-            when(pm.entitleByProducts(eq(consumer), eq(pids), eq((Date) null))).thenThrow(ere);
+            when(pm.entitleByProducts(eq(consumer), eq(pids),
+                eq((Date) null))).thenThrow(ere);
             entitler.bindByProducts(pids, consumer, null);
         }
         catch (EntitlementRefusedException e) {
