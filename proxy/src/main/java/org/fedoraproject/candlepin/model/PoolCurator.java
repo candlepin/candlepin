@@ -75,9 +75,21 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     @Transactional
     @EnforceAccessControl
     public List<Pool> listByOwner(Owner o) {
-        return listAvailableEntitlementPools(null, o, (String) null, null, true, false);
+        return listByOwner(o, null);
     }
-    
+
+    /**
+     * Returns list of pools owned by the given Owner.
+     * @param o Owner to filter
+     * @param activeOn only include pools active on the given date.
+     * @return pools owned by the given Owner.
+     */
+    @Transactional
+    @EnforceAccessControl
+    public List<Pool> listByOwner(Owner o, Date activeOn) {
+        return listAvailableEntitlementPools(null, o, (String) null, activeOn, true, false);
+    }
+
     /**
      * Return all pools referencing the given entitlement as their source entitlement.
      *

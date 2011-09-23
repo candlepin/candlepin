@@ -402,7 +402,7 @@ public class PoolManagerTest {
         ValidationResult badResult = mock(ValidationResult.class);
         ValidationResult goodResult = mock(ValidationResult.class);
 
-        when(mockPoolCurator.listByOwner(any(Owner.class))).thenReturn(pools);
+        when(mockPoolCurator.listByOwner(any(Owner.class), any(Date.class))).thenReturn(pools);
         when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(pool1);
         when(enforcerMock.preEntitlement(any(Consumer.class), any(Pool.class),
             anyInt())).thenReturn(badHelper).thenReturn(goodHelper);

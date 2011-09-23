@@ -336,7 +336,7 @@ public class CandlepinPoolManager implements PoolManager {
         List<Entitlement> entitlements = new LinkedList<Entitlement>();
 
         ValidationResult failedResult = null;
-        List<Pool> allOwnerPools = poolCurator.listByOwner(owner);
+        List<Pool> allOwnerPools = poolCurator.listByOwner(owner, entitleDate);
         List<Pool> filteredPools = new LinkedList<Pool>();
 
 
