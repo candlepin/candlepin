@@ -22,21 +22,22 @@ import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
 import org.fedoraproject.candlepin.policy.js.pool.PoolHelper;
+import org.fedoraproject.candlepin.policy.js.compliance.ComplianceStatus;
 import org.fedoraproject.candlepin.policy.js.entitlement.PreEntHelper;
 
 /**
  * Enforces the entitlement rules definitions.
  */
 public interface Enforcer {
-    
-    
+
+
     /**
      * Run pre-entitlement checks.
-     * 
-     * Ensures sufficient entitlements remain, but also verifies all attributes 
-     * on the product and relevant entitlement pool pass using the current 
+     *
+     * Ensures sufficient entitlements remain, but also verifies all attributes
+     * on the product and relevant entitlement pool pass using the current
      * policy.
-     * 
+     *
      * This is run prior to granting an entitlement.
      *
      * @param consumer Consumer who wishes to consume an entitlement.
@@ -54,7 +55,7 @@ public interface Enforcer {
      * @return post-entitlement processor
      */
     PoolHelper postEntitlement(Consumer c, PoolHelper postEntHelper, Entitlement ent);
-    
+
     /**
      * Select the best entitlement pools available for the given product IDs.
      *
@@ -70,6 +71,6 @@ public interface Enforcer {
      * pool is returned.
      */
     Map<Pool, Integer> selectBestPools(Consumer consumer, String[] productIds,
-        List<Pool> pools) throws RuleExecutionException;
+        List<Pool> pools, ComplianceStatus compliance) throws RuleExecutionException;
 
 }

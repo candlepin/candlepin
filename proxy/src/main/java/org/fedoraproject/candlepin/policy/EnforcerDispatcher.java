@@ -22,6 +22,7 @@ import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
+import org.fedoraproject.candlepin.policy.js.compliance.ComplianceStatus;
 import org.fedoraproject.candlepin.policy.js.entitlement.EntitlementRules;
 import org.fedoraproject.candlepin.policy.js.pool.PoolHelper;
 import org.fedoraproject.candlepin.policy.js.entitlement.PreEntHelper;
@@ -32,12 +33,12 @@ import com.google.inject.Inject;
  * EnforcerDispatcher
  */
 public class EnforcerDispatcher implements Enforcer {
-    
+
     private CandlepinConsumerTypeEnforcer candlepinEnforcer;
     private EntitlementRules jsEnforcer;
 
     @Inject
-    public EnforcerDispatcher(EntitlementRules jsEnforcer, 
+    public EnforcerDispatcher(EntitlementRules jsEnforcer,
         CandlepinConsumerTypeEnforcer candlepinEnforcer) {
         this.jsEnforcer = jsEnforcer;
         this.candlepinEnforcer = candlepinEnforcer;
@@ -55,11 +56,11 @@ public class EnforcerDispatcher implements Enforcer {
     @Override
     public PreEntHelper preEntitlement(
         Consumer consumer, Pool entitlementPool, Integer quantity) {
-        
+
         if (isCandlepinConsumer(consumer)) {
             return candlepinEnforcer.preEntitlement(consumer, entitlementPool, quantity);
         }
-        
+
         return jsEnforcer.preEntitlement(consumer, entitlementPool, quantity);
     }
 
@@ -69,12 +70,13 @@ public class EnforcerDispatcher implements Enforcer {
 
     @Override
     public Map<Pool, Integer> selectBestPools(Consumer consumer, String[] productIds,
-        List<Pool> pools)
+        List<Pool> pools, ComplianceStatus compliance)
         throws RuleExecutionException {
         if (isCandlepinConsumer(consumer)) {
-            return candlepinEnforcer.selectBestPools(consumer, productIds, pools);
+            return candlepinEnforcer.selectBestPools(consumer, productIds, pools,
+                compliance);
         }
-        return jsEnforcer.selectBestPools(consumer, productIds, pools);
+        return jsEnforcer.selectBestPools(consumer, productIds, pools, compliance);
     }
 
 }

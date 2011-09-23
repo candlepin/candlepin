@@ -732,6 +732,19 @@ public class ConsumerResource {
     /**
      * Request an entitlement.
      *
+     * If a pool ID is specified, we know we're binding to that exact pool. Specifying
+     * an entitle date in this case makes no sense and will throw an error.
+     *
+     * If a list of product IDs are specified, we attempt to auto-bind to subscriptions
+     * which will provide those products. An optional date can be specified allowing
+     * the consumer to get compliant for some date in the future. If no date is specified
+     * we assume the current date.
+     *
+     * If neither a pool nor an ID is specified, this is a healing request. The path
+     * is similar to the bind by products, but in this case we use the installed products
+     * on the consumer, and their current compliant status, to determine which product IDs
+     * should be requested. The entitle date is used the same as with bind by products.
+     *
      * @param consumerUuid Consumer identifier to be entitled
      * @param poolIdString Entitlement pool id.
      * @param email email address.

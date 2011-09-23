@@ -37,6 +37,7 @@ import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
 import org.fedoraproject.candlepin.policy.PoolRules;
 import org.fedoraproject.candlepin.policy.ValidationResult;
+import org.fedoraproject.candlepin.policy.js.compliance.ComplianceStatus;
 import org.fedoraproject.candlepin.policy.js.entitlement.PreEntHelper;
 import org.fedoraproject.candlepin.policy.js.pool.PoolHelper;
 import org.fedoraproject.candlepin.policy.js.pool.PoolUpdate;
@@ -122,7 +123,7 @@ public class CandlepinPoolManager implements PoolManager {
      * that refreshing the pools doesn't actually take any action, should a
      * subscription be reduced, expired, or revoked. Pre-existing entitlements
      * will need to be dealt with separately from this event.
-     * 
+     *
      * @param owner Owner to be refreshed.
      */
     public void refreshPools(Owner owner) {
@@ -203,7 +204,7 @@ public class CandlepinPoolManager implements PoolManager {
      * Update pool for subscription. - This method only checks for change in
      * quantity and dates of a subscription. Currently any quantity changes in
      * pool are not handled.
-     * 
+     *
      * @param existingPools the existing pools
      * @param sub the sub
      */
@@ -315,7 +316,7 @@ public class CandlepinPoolManager implements PoolManager {
      * Request an entitlement by product. If the entitlement cannot be granted,
      * null will be returned. TODO: Throw exception if entitlement not granted.
      * Report why.
-     * 
+     *
      * @param consumer consumer requesting to be entitled
      * @param productIds products to be entitled.
      * @param entitleDate specific date to entitle by.
@@ -337,6 +338,12 @@ public class CandlepinPoolManager implements PoolManager {
         ValidationResult failedResult = null;
         List<Pool> allOwnerPools = poolCurator.listByOwner(owner);
         List<Pool> filteredPools = new LinkedList<Pool>();
+
+
+        // TODO: We have to check compliance status here so we can replace an empty
+        // array of product IDs with the array the consumer actually needs. (i.e. during
+        // a healing request)
+        ComplianceStatus compliance = new ComplianceStatus(entitleDate);
 
         for (Pool pool : allOwnerPools) {
             boolean providesProduct = false;
@@ -376,7 +383,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer,
-            productIds, filteredPools);
+            productIds, filteredPools, compliance);
         if (bestPools == null) {
             throw new RuntimeException("No entitlements for products: " +
                 Arrays.toString(productIds));
@@ -391,17 +398,17 @@ public class CandlepinPoolManager implements PoolManager {
         return entitlements;
     }
 
-    public Entitlement entitleByProduct(Consumer consumer, String productId) 
+    public Entitlement entitleByProduct(Consumer consumer, String productId)
         throws EntitlementRefusedException {
         // There will only be one returned entitlement, anyways
         return entitleByProducts(consumer, new String[]{ productId }, null).get(0);
     }
-    
+
     /**
      * Request an entitlement by pool.. If the entitlement cannot be granted,
      * null will be returned. TODO: Throw exception if entitlement not granted.
      * Report why.
-     * 
+     *
      * @param consumer consumer requesting to be entitled
      * @param pool entitlement pool to consume from
      * @return Entitlement
@@ -412,7 +419,7 @@ public class CandlepinPoolManager implements PoolManager {
         Integer quantity) throws EntitlementRefusedException {
         return addEntitlement(consumer, pool, quantity, false);
     }
-    
+
     @Transactional
     public Entitlement ueberCertEntitlement(Consumer consumer, Pool pool,
         Integer quantity) throws EntitlementRefusedException {
@@ -495,7 +502,7 @@ public class CandlepinPoolManager implements PoolManager {
         // want
         // to know if this product entails granting a cert someday.
         try {
-            return generateUeberCert ? 
+            return generateUeberCert ?
                 entCertAdapter.generateUeberCert(e, sub, product) :
                 entCertAdapter.generateEntitlementCert(e, sub, product);
         }
@@ -629,7 +636,7 @@ public class CandlepinPoolManager implements PoolManager {
      * source entitlement, and those pools have outstanding entitlements. This
      * method is used to prevent security violations when unbinding as a
      * consumer, where other consumers are using those sub-pool entitlements.
-     * 
+     *
      * @param e Entitlement to check.
      */
     private void checkForOutstandingSubPoolEntitlements(Entitlement entitlement) {
@@ -710,7 +717,7 @@ public class CandlepinPoolManager implements PoolManager {
 
     /**
      * Cleanup entitlements and safely delete the given pool.
-     * 
+     *
      * @param pool
      */
     @Transactional
