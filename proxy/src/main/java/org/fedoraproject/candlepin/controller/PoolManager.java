@@ -62,7 +62,7 @@ public interface PoolManager {
         throws EntitlementRefusedException;
 
     Entitlement entitleByProduct(Consumer consumer, String productId)
-    throws EntitlementRefusedException;
+        throws EntitlementRefusedException;
 
     Entitlement ueberCertEntitlement(Consumer consumer, Pool pool,
         Integer quantity) throws EntitlementRefusedException;
@@ -125,20 +125,20 @@ public interface PoolManager {
 
 
     /**
-     * Update the given list of pools for a subscription. 
-     * 
-     * This method checks for change in quantity, dates, and products. 
-     * 
+     * Update the given list of pools for a subscription.
+     *
+     * This method checks for change in quantity, dates, and products.
+     *
      * @param existingPools the existing pools referencing this subscription
      * @param sub the subscription
      */
     void updatePoolsForSubscription(List<Pool> existingPools, Subscription sub);
 
     /**
-     * Update the given pool for a subscription. 
-     * 
-     * This method checks for change in quantity, dates, and products. 
-     * 
+     * Update the given pool for a subscription.
+     *
+     * This method checks for change in quantity, dates, and products.
+     *
      * @param existingPool an existing pool referencing this subscription
      * @param sub the subscription
      */

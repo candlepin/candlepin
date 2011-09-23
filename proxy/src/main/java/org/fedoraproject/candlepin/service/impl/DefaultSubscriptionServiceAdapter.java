@@ -32,7 +32,6 @@ import com.google.inject.Inject;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.exceptions.AcceptedRequestException;
-import org.fedoraproject.candlepin.exceptions.ServiceUnavailableException;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.xnap.commons.i18n.I18n;
 
@@ -41,7 +40,7 @@ import org.xnap.commons.i18n.I18n;
  */
 public class DefaultSubscriptionServiceAdapter implements
         SubscriptionServiceAdapter {
-    
+
     private static Logger log = Logger.getLogger(DefaultSubscriptionServiceAdapter.class);
     private SubscriptionCurator subCurator;
     private String activationPrefix;
@@ -63,10 +62,10 @@ public class DefaultSubscriptionServiceAdapter implements
 
     @Override
     public List<Subscription> getSubscriptions(Owner owner, String productId) {
-        
+
         log.debug("Searching for subscriptions providing: " + productId);
         List<Subscription> subs = new LinkedList<Subscription>();
-        
+
         // We need "fuzzy" product matching, so we need to list all subs for this owner
         // and then filter out products that do not match:
         for (Subscription sub : getSubscriptions(owner)) {
@@ -107,7 +106,7 @@ public class DefaultSubscriptionServiceAdapter implements
     public List<Subscription> getSubscriptions(Owner owner) {
         return subCurator.listByOwner(owner);
     }
-    
+
     @Override
     public List<Subscription> getSubscriptions() {
         List<Subscription> toReturn = subCurator.listAll();
@@ -135,14 +134,12 @@ public class DefaultSubscriptionServiceAdapter implements
     }
 
     @Override
-    public void activateSubscription(Consumer consumer, String email, 
+    public void activateSubscription(Consumer consumer, String email,
         String emailLocale) {
-        
-//        throw new ServiceUnavailableException(
-//                i18n.tr("Standalone candlepin does not support redeeming a subscription."));
+
         throw new AcceptedRequestException("bling bling");
     }
-    
+
     @Override
     public Subscription createSubscription(Subscription subscription) {
         subscription.setProduct(prodCurator.find(subscription.getProduct()
@@ -155,7 +152,7 @@ public class DefaultSubscriptionServiceAdapter implements
         Subscription s = subCurator.create(subscription);
         return s;
     }
-    
+
     @Override
     public void deleteSubscription(Subscription s) {
         subCurator.delete(s);
