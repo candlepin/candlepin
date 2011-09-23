@@ -425,6 +425,41 @@ public class PoolManagerTest {
 
     }
 
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testEntitleWithADate() throws Exception {
+        Product product = TestUtil.createProduct();
+        List<Pool> pools = Util.newList();
+        Pool pool1 = TestUtil.createPool(product);
+        pools.add(pool1);
+        Pool pool2 = TestUtil.createPool(product);
+        pools.add(pool2);
+        Date now = new Date();
+
+        PreEntHelper helper = mock(PreEntHelper.class);
+
+        ValidationResult result = mock(ValidationResult.class);
+
+        when(mockPoolCurator.listByOwner(any(Owner.class), eq(now))).thenReturn(pools);
+        when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(pool1);
+        when(enforcerMock.preEntitlement(any(Consumer.class), any(Pool.class),
+            anyInt())).thenReturn(helper);
+
+        when(helper.getResult()).thenReturn(result);
+        when(result.isSuccessful()).thenReturn(true);
+
+        Map<Pool, Integer> bestPools = new HashMap<Pool, Integer>();
+        bestPools.put(pool1, 1);
+        when(enforcerMock.selectBestPools(any(Consumer.class), any(String[].class),
+            any(List.class), any(ComplianceStatus.class))).thenReturn(bestPools);
+
+        List<Entitlement> e = manager.entitleByProducts(TestUtil.createConsumer(o),
+            new String[] { product.getId() }, now);
+
+        assertNotNull(e);
+        assertEquals(e.size(), 1);
+    }
+
     private List<Pool> createPoolsWithSourceEntitlement(Entitlement e, Product p) {
         List<Pool> pools = new LinkedList<Pool>();
         Pool pool1 = TestUtil.createPool(e.getOwner(), p);
