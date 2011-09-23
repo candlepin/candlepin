@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.*;
 
@@ -777,19 +778,17 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         ConsumerInstalledProduct cip = mock(ConsumerInstalledProduct.class);
         Set<ConsumerInstalledProduct> products = new HashSet<ConsumerInstalledProduct>();
         products.add(cip);
-        String[] prodids = {"product-foo"};
 
         when(c.getOwner()).thenReturn(o);
         when(cip.getProductId()).thenReturn("product-foo");
         when(sa.hasUnacceptedSubscriptionTerms(eq(o))).thenReturn(false);
         when(cc.findByUuid(eq("fakeConsumer"))).thenReturn(c);
-        when(c.getInstalledProducts()).thenReturn(products);
 
         ConsumerResource cr = new ConsumerResource(cc, null,
             null, sa, null, null, null, i18n, null, null, null,
             null, null, null, null, null, null, null, null, e);
         Date now = new Date();
         cr.bind("fakeConsumer", null, null, 1, null, null, false, now);
-        verify(e).bindByProducts(eq(prodids), eq(c), eq(now));
+        verify(e).bindByProducts(eq((String []) null), eq(c), eq(now));
     }
 }

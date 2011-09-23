@@ -60,12 +60,14 @@ import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.PoolRules;
 import org.fedoraproject.candlepin.policy.ValidationResult;
+import org.fedoraproject.candlepin.policy.js.compliance.ComplianceRules;
 import org.fedoraproject.candlepin.policy.js.compliance.ComplianceStatus;
 import org.fedoraproject.candlepin.policy.js.entitlement.PreEntHelper;
 import org.fedoraproject.candlepin.policy.js.pool.PoolUpdate;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
+import org.fedoraproject.candlepin.test.DateSourceForTesting;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.fedoraproject.candlepin.util.Util;
 import org.junit.Before;
@@ -111,6 +113,9 @@ public class PoolManagerTest {
     @Mock
     private EventFactory eventFactory;
 
+    @Mock
+    private ComplianceRules complianceRules;
+
     private CandlepinPoolManager manager;
     private UserPrincipal principal;
 
@@ -129,7 +134,7 @@ public class PoolManagerTest {
             mockProductAdapter, entCertAdapterMock, mockEventSink,
             eventFactory, mockConfig, enforcerMock, poolRulesMock, entitlementCurator,
             consumerCuratorMock, certCuratorMock, mockProvider,
-            i18nMock));
+            i18nMock, complianceRules));
         when(this.mockProvider.get()).thenReturn(this.principal);
         when(entCertAdapterMock.generateEntitlementCert(any(Entitlement.class),
             any(Subscription.class), any(Product.class))).thenReturn(
@@ -497,4 +502,46 @@ public class PoolManagerTest {
         return newPool;
     }
 
+    @Test
+    public void testEntitleByProductsEmptyArray() throws Exception {
+        Product product = TestUtil.createProduct();
+        List<Pool> pools = Util.newList();
+        Pool pool1 = TestUtil.createPool(product);
+        pools.add(pool1);
+        Date now = new Date();
+
+        PreEntHelper helper = mock(PreEntHelper.class);
+
+        ValidationResult result = mock(ValidationResult.class);
+
+        // Setup an installed product for the consumer, we'll make the bind request
+        // with no products specified, so this should get used instead:
+        String [] installedPids = new String [] { product.getId() };
+        ComplianceStatus mockCompliance = new ComplianceStatus(now);
+        mockCompliance.addNonCompliantProduct(installedPids[0]);
+        when(complianceRules.getStatus(any(Consumer.class), any(Date.class))).
+        thenReturn(mockCompliance);
+
+        when(mockPoolCurator.listByOwner(any(Owner.class), eq(now))).thenReturn(pools);
+        when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(pool1);
+        when(enforcerMock.preEntitlement(any(Consumer.class), any(Pool.class),
+            anyInt())).thenReturn(helper);
+
+        when(helper.getResult()).thenReturn(result);
+        when(result.isSuccessful()).thenReturn(true);
+
+        Map<Pool, Integer> bestPools = new HashMap<Pool, Integer>();
+        bestPools.put(pool1, 1);
+        when(enforcerMock.selectBestPools(any(Consumer.class), any(String[].class),
+            any(List.class), any(ComplianceStatus.class))).thenReturn(bestPools);
+
+        // Make the call but provide a null array of product IDs (simulates healing):
+        manager.entitleByProducts(TestUtil.createConsumer(o),
+            null, now);
+
+        verify(enforcerMock).selectBestPools(any(Consumer.class), eq(installedPids),
+            any(List.class), eq(mockCompliance));
+
+
+    }
 }

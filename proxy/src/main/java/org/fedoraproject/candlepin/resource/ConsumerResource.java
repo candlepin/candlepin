@@ -774,7 +774,7 @@ public class ConsumerResource {
                 i18n.tr("Cannot bind by multiple parameters."));
         }
 
-        if ((productIds != null && productIds.length > 0) && quantity > 1) {
+        if (poolIdString == null && quantity > 1) {
             throw new BadRequestException(
                 i18n.tr("Cannot specify a quantity when auto-binding."));
         }
@@ -787,17 +787,6 @@ public class ConsumerResource {
 
         // Verify consumer exists:
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
-
-        if (productIds == null) {
-            Set<ConsumerInstalledProduct> installed = consumer.getInstalledProducts();
-            int len = installed.size();
-            productIds = new String[len];
-            int i = 0;
-            for (ConsumerInstalledProduct prod : installed) {
-                productIds[i] = prod.getProductId();
-                i++;
-            }
-        }
 
         try {
             // I hate double negatives, but if they have accepted all
@@ -838,7 +827,7 @@ public class ConsumerResource {
         if (poolIdString != null) {
             entitlements = entitler.bindByPool(poolIdString, consumer, quantity);
         }
-        else if (productIds != null && productIds.length > 0) {
+        else {
             try {
                 entitlements = entitler.bindByProducts(productIds, consumer, entitleDate);
             }

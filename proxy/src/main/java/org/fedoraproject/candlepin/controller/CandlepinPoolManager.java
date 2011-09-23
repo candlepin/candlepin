@@ -37,6 +37,7 @@ import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
 import org.fedoraproject.candlepin.policy.PoolRules;
 import org.fedoraproject.candlepin.policy.ValidationResult;
+import org.fedoraproject.candlepin.policy.js.compliance.ComplianceRules;
 import org.fedoraproject.candlepin.policy.js.compliance.ComplianceStatus;
 import org.fedoraproject.candlepin.policy.js.entitlement.PreEntHelper;
 import org.fedoraproject.candlepin.policy.js.pool.PoolHelper;
@@ -84,6 +85,7 @@ public class CandlepinPoolManager implements PoolManager {
     private EntitlementCertificateCurator entitlementCertificateCurator;
     private PrincipalProvider principalProvider;
     private I18n i18n;
+    private ComplianceRules complianceRules;
 
     /**
      * @param poolCurator
@@ -100,7 +102,7 @@ public class CandlepinPoolManager implements PoolManager {
         EventFactory eventFactory, Config config, Enforcer enforcer,
         PoolRules poolRules, EntitlementCurator curator1,
         ConsumerCurator consumerCurator, EntitlementCertificateCurator ecC,
-        PrincipalProvider principalProvider, I18n i18n) {
+        PrincipalProvider principalProvider, I18n i18n, ComplianceRules complianceRules) {
 
         this.poolCurator = poolCurator;
         this.subAdapter = subAdapter;
@@ -116,6 +118,7 @@ public class CandlepinPoolManager implements PoolManager {
         this.entitlementCertificateCurator = ecC;
         this.principalProvider = principalProvider;
         this.i18n = i18n;
+        this.complianceRules = complianceRules;
     }
 
     /**
@@ -340,10 +343,20 @@ public class CandlepinPoolManager implements PoolManager {
         List<Pool> filteredPools = new LinkedList<Pool>();
 
 
-        // TODO: We have to check compliance status here so we can replace an
-        // empty array of product IDs with the array the consumer actually
-        // needs. (i.e. during a healing request)
-        ComplianceStatus compliance = new ComplianceStatus(entitleDate);
+        // We have to check compliance status here so we can replace an empty
+        // array of product IDs with the array the consumer actually needs. (i.e. during
+        // a healing request)
+        ComplianceStatus compliance = complianceRules.getStatus(consumer, entitleDate);
+        if (productIds == null || productIds.length == 0) {
+            log.debug("No products specified for bind, checking compliance to see what " +
+                "is needed.");
+            productIds = compliance.getNonCompliantProducts().toArray(new String [] {});
+        }
+
+        log.info("Attempting auto-bind for products:");
+        for (String productId : productIds) {
+            log.info("  " + productId);
+        }
 
         for (Pool pool : allOwnerPools) {
             boolean providesProduct = false;
