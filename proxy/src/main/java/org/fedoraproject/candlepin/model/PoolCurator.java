@@ -126,17 +126,17 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * 
      * Pools will be refreshed from the underlying subscription service.
      * 
-     * If a consumer is specified, a pass through the rules will be done for each
-     * potentially usable pool.
+     * If a consumer is specified, a pass through the rules will be done for
+     * each potentially usable pool.
      * 
-     * @param c
-     * @param o
-     * @param productId
+     * @param c Consumer being entitled.
+     * @param o Owner whose subscriptions should be inspected.
+     * @param productId only entitlements which provide this product are included.
      * @param activeOn Indicates to return only pools valid on this date.
      *        Set to null for no date filtering.
-     * @param activeOnly
-     * @param includeWarnings When filtering by consumer, include pools that triggered
-     *        a rule warning. (errors will still be excluded)
+     * @param activeOnly if true, only active entitlements are included.
+     * @param includeWarnings When filtering by consumer, include pools that
+     *        triggered a rule warning. (errors will still be excluded)
      * @return List of entitlement pools.
      */
     @SuppressWarnings("unchecked")
