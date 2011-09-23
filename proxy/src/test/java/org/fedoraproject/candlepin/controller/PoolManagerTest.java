@@ -67,7 +67,6 @@ import org.fedoraproject.candlepin.policy.js.pool.PoolUpdate;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
-import org.fedoraproject.candlepin.test.DateSourceForTesting;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.fedoraproject.candlepin.util.Util;
 import org.junit.Before;
@@ -407,7 +406,8 @@ public class PoolManagerTest {
         ValidationResult badResult = mock(ValidationResult.class);
         ValidationResult goodResult = mock(ValidationResult.class);
 
-        when(mockPoolCurator.listByOwner(any(Owner.class), any(Date.class))).thenReturn(pools);
+        when(mockPoolCurator.listByOwner(any(Owner.class),
+            any(Date.class))).thenReturn(pools);
         when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(pool1);
         when(enforcerMock.preEntitlement(any(Consumer.class), any(Pool.class),
             anyInt())).thenReturn(badHelper).thenReturn(goodHelper);
@@ -519,8 +519,8 @@ public class PoolManagerTest {
         String [] installedPids = new String [] { product.getId() };
         ComplianceStatus mockCompliance = new ComplianceStatus(now);
         mockCompliance.addNonCompliantProduct(installedPids[0]);
-        when(complianceRules.getStatus(any(Consumer.class), any(Date.class))).
-        thenReturn(mockCompliance);
+        when(complianceRules.getStatus(any(Consumer.class),
+            any(Date.class))).thenReturn(mockCompliance);
 
         when(mockPoolCurator.listByOwner(any(Owner.class), eq(now))).thenReturn(pools);
         when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(pool1);
