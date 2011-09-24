@@ -671,6 +671,18 @@ class Candlepin
     OpenSSL::X509::CRL.new(get_text('/crl'))
   end
 
+  def get_guests(consumer_id)
+    get("/consumers/#{consumer_id}/guests")
+  end
+
+  def add_guest_to_consumer(consumer_id, guest_id)
+    put("/consumers/#{consumer_id}/guests/#{guest_id}")
+  end
+
+  def remove_guest_from_consumer(consumer_id, guest_id)
+    delete("/consumers/#{consumer_id}/guests/#{guest_id}")
+  end
+
   def get(uri, accept_header = :json)
     puts ("GET #{uri}") if @verbose
     response = get_client(uri, Net::HTTP::Get, :get)[URI.escape(uri)].get \
@@ -810,5 +822,4 @@ class OauthCandlepinApi < Candlepin
       :headers => headers)
     return client
   end
-
 end
