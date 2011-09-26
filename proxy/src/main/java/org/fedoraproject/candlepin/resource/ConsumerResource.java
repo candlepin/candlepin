@@ -39,7 +39,6 @@ import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerInstalledProduct;
 import org.fedoraproject.candlepin.model.ConsumerType;
-import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
@@ -50,9 +49,11 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.User;
+import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.pinsetter.tasks.EntitlerJob;
 import org.fedoraproject.candlepin.policy.js.consumer.ConsumerDeleteHelper;
 import org.fedoraproject.candlepin.policy.js.consumer.ConsumerRules;
+import org.fedoraproject.candlepin.resource.util.ResourceDateParser;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
@@ -750,7 +751,7 @@ public class ConsumerResource {
      * @param email email address.
      * @param emailLocale locale for email address.
      * @param async True if bind should be asynchronous, defaults to false.
-     * @param entitleDate specific date to entitle by.
+     * @param entitleDateStr specific date to entitle by.
      * @return Response with a list of entitlements or if async is true, a
      *         JobDetail.
      */
@@ -766,7 +767,7 @@ public class ConsumerResource {
         @QueryParam("email") String email,
         @QueryParam("email_locale") String emailLocale,
         @QueryParam("async") @DefaultValue("false") boolean async,
-        @QueryParam("entitle_date") Date entitleDate) {
+        @QueryParam("entitle_date") String entitleDateStr) {
 
         // Check that only one query param was set:
         if (poolIdString != null && productIds != null && productIds.length > 0) {
@@ -780,9 +781,16 @@ public class ConsumerResource {
         }
 
         // doesn't make sense to bind by pool and a date.
-        if (poolIdString != null && entitleDate != null) {
+        if (poolIdString != null && entitleDateStr != null) {
             throw new BadRequestException(
                 i18n.tr("Cannot bind by multiple parameters."));
+        }
+
+        // TODO: really should do this in a before we get to this call
+        // so the method takes in a real Date object and not just a String.
+        Date entitleDate = null;
+        if (entitleDateStr != null) {
+            entitleDate = ResourceDateParser.parseDateString(entitleDateStr);
         }
 
         // Verify consumer exists:

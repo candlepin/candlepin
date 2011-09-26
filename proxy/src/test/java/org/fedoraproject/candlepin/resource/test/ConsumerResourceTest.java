@@ -61,6 +61,7 @@ import org.fedoraproject.candlepin.pki.PKIReader;
 import org.fedoraproject.candlepin.pki.impl.BouncyCastlePKIReader;
 import org.fedoraproject.candlepin.resource.ActivationKeyResource;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
+import org.fedoraproject.candlepin.resource.util.ResourceDateParser;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
@@ -786,8 +787,9 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         ConsumerResource cr = new ConsumerResource(cc, null,
             null, sa, null, null, null, i18n, null, null, null,
             null, null, null, null, null, null, null, null, e);
-        Date now = new Date();
-        cr.bind("fakeConsumer", null, null, 1, null, null, false, now);
-        verify(e).bindByProducts(eq((String []) null), eq(c), eq(now));
+        String dtStr = "2011-09-26T18:10:50.184081+00:00";
+        Date dt = ResourceDateParser.parseDateString(dtStr);
+        cr.bind("fakeConsumer", null, null, 1, null, null, false, dtStr);
+        verify(e).bindByProducts(eq((String []) null), eq(c), eq(dt));
     }
 }
