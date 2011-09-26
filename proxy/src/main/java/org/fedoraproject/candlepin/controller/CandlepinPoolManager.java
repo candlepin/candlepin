@@ -338,10 +338,14 @@ public class CandlepinPoolManager implements PoolManager {
         Owner owner = consumer.getOwner();
         List<Entitlement> entitlements = new LinkedList<Entitlement>();
 
+        // Use the current date if one wasn't provided:
+        if (entitleDate == null) {
+            entitleDate = new Date();
+        }
+
         ValidationResult failedResult = null;
         List<Pool> allOwnerPools = poolCurator.listByOwner(owner, entitleDate);
         List<Pool> filteredPools = new LinkedList<Pool>();
-
 
         // We have to check compliance status here so we can replace an empty
         // array of product IDs with the array the consumer actually needs. (i.e. during
