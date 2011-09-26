@@ -114,6 +114,21 @@ function hasNoProductOverlap(combination) {
     return true;
 }
 
+//Check to see if a pool provides any products that are already compliant
+function hasNoInstalledOverlap(pool, compliance) {
+	var products = pool.products;
+	for (var i = 0 ; i < products.length ; i++) {
+		var product = products[i];
+		log.debug("installed overlap: " + product.id);
+		if (product.getAttribute("multi-entitlement") != "yes" &&
+			compliance.getCompliantProducts().containsKey(product.id)) {
+			return false;
+		}
+ }
+
+ return true;
+}
+
 function architectureMatches(product, consumer) {
     var supportedArches = [];
     var archString = product.getAttribute('arch');
@@ -152,7 +167,7 @@ function architectureMatches(product, consumer) {
 // (as we'll only need a quantity of one)
 // otherwise, group the pools by stack id, then select the pools we wish to use
 // based on which grouping will come closest to fully stacking.
-function findStackingPools(pool_class, consumer) {
+function findStackingPools(pool_class, consumer, compliance) {
     var consumer_sockets = 1;
     if (consumer.hasFact(SOCKET_FACT)) {
         consumer_sockets = consumer.getFact(SOCKET_FACT);
@@ -164,6 +179,11 @@ function findStackingPools(pool_class, consumer) {
     
     for each (pool in pool_class) {
     	var quantity = 0;
+    	
+    	// ignore any pools that clash with installed compliant products
+    	if (!hasNoInstalledOverlap(pool, compliance)) {
+    		continue;
+    	}
     	
 	    if (pool.getProductAttribute("multi-entitlement") && pool.getProductAttribute("stacking_id")) {
 	    	var stack_id = pool.getProductAttribute("stacking_id");
@@ -459,7 +479,7 @@ var Entitlement = {
 	                var new_selection = new java.util.HashMap();
 	                var total_entitlements = 0;
 	                for each (pool_class in pool_combo) {
-	                	var poolMap = findStackingPools(pool_class, consumer);
+	                	var poolMap = findStackingPools(pool_class, consumer, compliance);
 	                	new_selection.putAll(poolMap);
 	                	
 	                	var quantity = 0;

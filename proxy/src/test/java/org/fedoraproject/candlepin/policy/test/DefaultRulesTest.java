@@ -50,6 +50,7 @@ import org.fedoraproject.candlepin.policy.ValidationResult;
 import org.fedoraproject.candlepin.policy.js.JsRules;
 import org.fedoraproject.candlepin.policy.js.JsRulesProvider;
 import org.fedoraproject.candlepin.policy.js.ReadOnlyProductCache;
+import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
 import org.fedoraproject.candlepin.policy.js.compliance.ComplianceStatus;
 import org.fedoraproject.candlepin.policy.js.entitlement.EntitlementRules;
 import org.fedoraproject.candlepin.policy.js.pool.PoolHelper;
@@ -1211,6 +1212,71 @@ public class DefaultRulesTest {
         assertEquals(1, bestPools.get(pool1).intValue());
     }
 
+    // Trying to select best pools for a product that we're already entitled to will
+    // just ignore that attempt
+    @Test(expected = RuleExecutionException.class)
+    public void testFindBestWillNotEntitleACompliantProduct() {
+        String productId1 = "A";
+
+        Product product1 = new Product(productId1, "A test product");
+
+        Pool pool1 = TestUtil.createPool(owner, product1);
+        pool1.setId("DEAD-BEEF");
+
+        when(this.prodAdapter.getProductById(productId1)).thenReturn(product1);
+
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool1);
+
+        Map<String, Set<Entitlement>> fakeCompliantProducts =
+            new HashMap<String, Set<Entitlement>>();
+        fakeCompliantProducts.put(productId1, null);
+        
+        when(compliance.getCompliantProducts()).thenReturn(fakeCompliantProducts);
+        
+        // will raise the RuleExecutionException, for 0 pools
+        enforcer.selectBestPools(consumer, new String[]{ productId1 }, pools, compliance);
+    }
+
+    // With two pools available, selectBestPools will give us the pool that doesn't
+    // provide an entitlement for an already entitled product
+    public void testFindBestWillChoosePoolThatDoesntIncludeCompliantProduct() {
+        String productId1 = "A";
+        String productId2 = "B";
+        String productId3 = "C";
+
+        Product product1 = new Product(productId1, "A test product");
+        Product product2 = new Product(productId2, "A test product");
+        Product product3 = new Product(productId3, "A test product");
+
+        Pool pool1 = TestUtil.createPool(owner, product2);
+        pool1.setId("DEAD-BEEF");
+        pool1.addProvidedProduct(new ProvidedProduct(product1.getId(), product1.getName()));
+        pool1.addProvidedProduct(new ProvidedProduct(product3.getId(), product3.getName()));
+
+        Pool pool2 = TestUtil.createPool(owner, product2);
+        pool2.setId("DEAD-BEEF2");
+        
+        when(this.prodAdapter.getProductById(productId1)).thenReturn(product1);
+
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool1);
+        pools.add(pool2);
+
+        Map<String, Set<Entitlement>> fakeCompliantProducts =
+            new HashMap<String, Set<Entitlement>>();
+        fakeCompliantProducts.put(productId1, null);
+        
+        when(compliance.getCompliantProducts()).thenReturn(fakeCompliantProducts);
+        
+        Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer,
+            new String[]{ productId2, productId3 }, pools, compliance);
+
+        assertEquals(1, bestPools.size());
+        assertEquals(1, bestPools.get(pool2).intValue());
+
+    }
+    
     private Pool setupUserRestrictedPool() {
         Product product = new Product(productId, "A user restricted product");
         Pool pool = TestUtil.createPool(owner, product);
