@@ -1240,14 +1240,15 @@ public class DefaultRulesTest {
 
     // With two pools available, selectBestPools will give us the pool that doesn't
     // provide an entitlement for an already entitled product
+    @Test
     public void testFindBestWillChoosePoolThatDoesntIncludeCompliantProduct() {
         String productId1 = "A";
         String productId2 = "B";
         String productId3 = "C";
 
         Product product1 = new Product(productId1, "A test product");
-        Product product2 = new Product(productId2, "A test product");
-        Product product3 = new Product(productId3, "A test product");
+        Product product2 = new Product(productId2, "A test product 2");
+        Product product3 = new Product(productId3, "A test product 3");
 
         Pool pool1 = TestUtil.createPool(owner, product2);
         pool1.setId("DEAD-BEEF");
@@ -1258,6 +1259,8 @@ public class DefaultRulesTest {
         pool2.setId("DEAD-BEEF2");
         
         when(this.prodAdapter.getProductById(productId1)).thenReturn(product1);
+        when(this.prodAdapter.getProductById(productId2)).thenReturn(product2);
+        when(this.prodAdapter.getProductById(productId3)).thenReturn(product3);
 
         List<Pool> pools = new LinkedList<Pool>();
         pools.add(pool1);

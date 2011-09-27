@@ -124,9 +124,9 @@ function hasNoInstalledOverlap(pool, compliance) {
 			compliance.getCompliantProducts().containsKey(product.id)) {
 			return false;
 		}
- }
+	}
 
- return true;
+	return true;
 }
 
 function architectureMatches(product, consumer) {
@@ -182,6 +182,7 @@ function findStackingPools(pool_class, consumer, compliance) {
     	
     	// ignore any pools that clash with installed compliant products
     	if (!hasNoInstalledOverlap(pool, compliance)) {
+    		log.debug("installed overlap found, skipping: " + pool.getId());
     		continue;
     	}
     	
@@ -229,11 +230,14 @@ function findStackingPools(pool_class, consumer, compliance) {
     	return poolMap;
     }
     
+    
     // loop over our potential stacks, and just take the first stack that covers all sockets.
     // else take the stack that covers the most sockets.
     var best_sockets = 0;
     var best_stack;
+    var found_stack = false;
     for (stack_id in stackToPoolMap) {
+    	found_stack = true;
     	if (stackToEntitledSockets[stack_id] >= consumer_sockets) {
     		return stackToPoolMap[stack_id];
     	}
@@ -241,6 +245,12 @@ function findStackingPools(pool_class, consumer, compliance) {
     		best_stack = stack_id;
     		best_sockets = stackToEntitledSockets[stack_id];
     	}
+    }
+
+    // All possible pools may have overlapped with existing products
+    // so return nothing!
+    if (!found_stack) {
+    	return new java.util.HashMap();
     }
     
     return stackToPoolMap[best_stack];
@@ -489,9 +499,14 @@ var Entitlement = {
 	                	
 	                	total_entitlements += quantity;
 	                }
-	                selected_pools = new_selection;
-	                best_provided_count = unique_provided.length;
-	                best_entitlements_count = total_entitlements;
+	                
+	                // now verify that after selecting our actual pools from the pool combo,
+	                // we still have a better choice here
+	                if (new_selection.size() > 0) {
+	                	selected_pools = new_selection;
+	                	best_provided_count = unique_provided.length;
+	                	best_entitlements_count = total_entitlements;
+	                }
                 }
             }
         }
