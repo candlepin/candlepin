@@ -30,6 +30,7 @@ public class OwnerInfo {
     private Map<String, Integer> entitlementsConsumedByType;
     private Map<String, Integer> consumerTypeCountByPool;
     private Map<String, Integer> enabledConsumerTypeCountByPool;
+    private Map<String, Integer> consumerCountsByComplianceStatus;
     private Map<String, ConsumptionTypeCounts> entitlementsConsumedByFamily;
     private Pool poolNearestToExpiry;
     private List<Statistic> totalSubscriptionCount;
@@ -43,8 +44,9 @@ public class OwnerInfo {
         entitlementsConsumedByType = new HashMap<String, Integer>();
         consumerTypeCountByPool = new HashMap<String, Integer>();
         enabledConsumerTypeCountByPool = new HashMap<String, Integer>();
+        consumerCountsByComplianceStatus = new HashMap<String, Integer>();
         entitlementsConsumedByFamily = new HashMap<String, ConsumptionTypeCounts>();
-        
+
         consumerGuestCounts = new HashMap<String, Integer>();
         consumerGuestCounts.put(GUEST, 0);
         consumerGuestCounts.put(PHYSICAL, 0);
@@ -64,6 +66,23 @@ public class OwnerInfo {
 
     public Map<String, Integer> getEnabledConsumerTypeCountByPool() {
         return enabledConsumerTypeCountByPool;
+    }
+
+    public Map<String, Integer> getConsumerCountsByComplianceStatus() {
+        return consumerCountsByComplianceStatus;
+    }
+
+    public Integer getConsumerCountByStatus(String status) {
+        // Consider the count as zero if the status was not found. This handles a
+        // case where there are no consumers of a particular status.
+        if (!consumerCountsByComplianceStatus.containsKey(status)) {
+            return 0;
+        }
+        return consumerCountsByComplianceStatus.get(status);
+    }
+
+    public void setConsumerCountByComplianceStatus(String status, Integer count) {
+        consumerCountsByComplianceStatus.put(status, count);
     }
 
     public Map<String, ConsumptionTypeCounts> getEntitlementsConsumedByFamily() {
@@ -96,7 +115,7 @@ public class OwnerInfo {
             consumerTypeCountByPool.put(c.getLabel(), 0);
         }
     }
-    
+
     public void addToEntitlementsConsumedByFamily(String family, int physical,
         int virtual) {
         ConsumptionTypeCounts typeCounts;
@@ -107,7 +126,7 @@ public class OwnerInfo {
         else {
             typeCounts = entitlementsConsumedByFamily.get(family);
         }
-        
+
         typeCounts.physical += physical;
         typeCounts.guest += virtual;
     }
@@ -118,35 +137,35 @@ public class OwnerInfo {
     public static class ConsumptionTypeCounts {
         private int physical;
         private int guest;
-        
+
         public ConsumptionTypeCounts(int physical, int guest) {
             this.physical = physical;
             this.guest = guest;
         }
-        
+
         public int getPhysical() {
             return physical;
         }
-        
+
         public int getGuest() {
             return guest;
         }
-        
+
         @Override
         public boolean equals(Object o) {
             if (!(o instanceof ConsumptionTypeCounts)) {
                 return false;
             }
-            
+
             ConsumptionTypeCounts other = (ConsumptionTypeCounts) o;
             return this.physical == other.physical && this.guest == other.guest;
         }
-        
+
         @Override
         public int hashCode() {
             return physical * guest;
         }
-        
+
         public String toString() {
             return String.format("Physical: %d, Virtual: %d", physical, guest);
         }
@@ -163,7 +182,7 @@ public class OwnerInfo {
     public void setPhysicalCount(Integer count) {
         consumerGuestCounts.put(PHYSICAL, count);
     }
-        
+
     public Pool getPoolNearestToExpiry() {
         return poolNearestToExpiry;
     }

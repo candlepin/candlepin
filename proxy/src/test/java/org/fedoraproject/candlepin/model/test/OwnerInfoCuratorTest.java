@@ -44,7 +44,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
     private Pool pool1;
     private Pool pool2;
     private OwnerInfoCurator ownerInfoCurator;
-    
+
     @Before
     public void setUp() {
         ownerInfoCurator = injector.getInstance(OwnerInfoCurator.class);
@@ -64,18 +64,18 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         pool2 = createPoolAndSub(owner, product2, 1L,
             Util.yesterday(), Util.tomorrow());
         poolCurator.create(pool2);
-        
+
         ConsumerType consumerType = new ConsumerType("system");
         consumerTypeCurator.create(consumerType);
-        
+
         consumerType = new ConsumerType("domain");
         consumerTypeCurator.create(consumerType);
     }
-    
+
     @Test
     public void testOwnerInfoNoConsumers() {
         OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
-        
+
         Map<String, Integer> expectedConsumers = new HashMap<String, Integer>() {
             {
                 put("system", 0);
@@ -88,19 +88,19 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
                 put("domain", 0);
             }
         };
-        
+
         assertEquals(expectedConsumers, info.getConsumerCounts());
         assertEquals(expectedEntitlementsConsumed, info.getEntitlementsConsumedByType());
     }
-    
+
     @Test
-    public void testOwnerInfoOneSystemNoEntitlements() {        
+    public void testOwnerInfoOneSystemNoEntitlements() {
         ConsumerType type = consumerTypeCurator.lookupByLabel("system");
         Consumer consumer = new Consumer("test-consumer", "test-user", owner, type);
         consumerCurator.create(consumer);
-        
+
         OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
-        
+
         Map<String, Integer> expectedConsumers = new HashMap<String, Integer>() {
             {
                 put("system", 1);
@@ -113,24 +113,24 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
                 put("domain", 0);
             }
         };
-        
+
         assertEquals(expectedConsumers, info.getConsumerCounts());
         assertEquals(expectedEntitlementsConsumed, info.getEntitlementsConsumedByType());
     }
-    
+
     @Test
-    public void testOwnerInfoOneSystemEntitlement() {        
+    public void testOwnerInfoOneSystemEntitlement() {
         ConsumerType type = consumerTypeCurator.lookupByLabel("system");
         Consumer consumer = new Consumer("test-consumer", "test-user", owner, type);
         consumerCurator.create(consumer);
-        
+
         EntitlementCertificate cert = createEntitlementCertificate("fake", "fake");
         Entitlement entitlement = createEntitlement(owner, consumer, pool1, cert);
         entitlement.setQuantity(1);
         entitlementCurator.create(entitlement);
-        
+
         OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
-        
+
         Map<String, Integer> expectedConsumers = new HashMap<String, Integer>() {
             {
                 put("system", 1);
@@ -143,24 +143,24 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
                 put("domain", 0);
             }
         };
-        
+
         assertEquals(expectedConsumers, info.getConsumerCounts());
         assertEquals(expectedEntitlementsConsumed, info.getEntitlementsConsumedByType());
     }
-    
+
     @Test
-    public void testOwnerInfoOneSystemEntitlementWithQuantityOfTwo() {        
+    public void testOwnerInfoOneSystemEntitlementWithQuantityOfTwo() {
         ConsumerType type = consumerTypeCurator.lookupByLabel("system");
         Consumer consumer = new Consumer("test-consumer", "test-user", owner, type);
         consumerCurator.create(consumer);
-        
+
         EntitlementCertificate cert = createEntitlementCertificate("fake", "fake");
         Entitlement entitlement = createEntitlement(owner, consumer, pool1, cert);
         entitlement.setQuantity(2);
         entitlementCurator.create(entitlement);
-        
+
         OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
-        
+
         Map<String, Integer> expectedConsumers = new HashMap<String, Integer>() {
             {
                 put("system", 1);
@@ -173,13 +173,13 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
                 put("domain", 0);
             }
         };
-        
+
         assertEquals(expectedConsumers, info.getConsumerCounts());
         assertEquals(expectedEntitlementsConsumed, info.getEntitlementsConsumedByType());
     }
-    
+
     @Test
-    public void testOwnerInfoOneOfEachEntitlement() {        
+    public void testOwnerInfoOneOfEachEntitlement() {
         ConsumerType type = consumerTypeCurator.lookupByLabel("system");
         Consumer consumer = new Consumer("test-consumer", "test-user", owner, type);
         consumerCurator.create(consumer);
@@ -191,14 +191,14 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         type = consumerTypeCurator.lookupByLabel("domain");
         consumer = new Consumer("test-consumer", "test-user", owner, type);
         consumerCurator.create(consumer);
-        
+
         cert = createEntitlementCertificate("fake", "fake");
         entitlement = createEntitlement(owner, consumer, pool1, cert);
         entitlement.setQuantity(1);
         entitlementCurator.create(entitlement);
 
         OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
-        
+
         Map<String, Integer> expectedConsumers = new HashMap<String, Integer>() {
             {
                 put("system", 1);
@@ -211,7 +211,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
                 put("domain", 1);
             }
         };
-        
+
         assertEquals(expectedConsumers, info.getConsumerCounts());
         assertEquals(expectedEntitlementsConsumed, info.getEntitlementsConsumedByType());
     }
@@ -439,7 +439,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         ConsumerType type = consumerTypeCurator.lookupByLabel("system");
         Consumer consumer = new Consumer("test-consumer", "test-user", owner, type);
         consumerCurator.create(consumer);
-        
+
         EntitlementCertificate cert = createEntitlementCertificate("fake", "fake");
         Entitlement entitlement = createEntitlement(owner, consumer, pool1, cert);
         entitlement.setQuantity(1);
@@ -448,7 +448,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
 
         OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
 
-        Map<String, OwnerInfo.ConsumptionTypeCounts> expected = 
+        Map<String, OwnerInfo.ConsumptionTypeCounts> expected =
             new HashMap<String, OwnerInfo.ConsumptionTypeCounts>() {
                 {
                     put("none", new OwnerInfo.ConsumptionTypeCounts(1, 0));
@@ -457,29 +457,29 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
 
         assertEquals(expected, info.getEntitlementsConsumedByFamily());
     }
-    
+
     @Test
     public void testOwnerInfoEntitlementsConsumedByFamilySortsByFamily() {
         owner.addEntitlementPool(pool1);
-        
+
         Product prod = productCurator.lookupById(pool1.getProductId());
         prod.setAttribute("product_family", "test family");
 
         ConsumerType type = consumerTypeCurator.lookupByLabel("system");
         Consumer consumer = new Consumer("test-consumer", "test-user", owner, type);
         consumerCurator.create(consumer);
-        
+
         EntitlementCertificate cert = createEntitlementCertificate("fake", "fake");
         Entitlement entitlement = createEntitlement(owner, consumer, pool1, cert);
         entitlement.setQuantity(1);
         entitlementCurator.create(entitlement);
         pool1.getEntitlements().add(entitlement);
-        
-        
+
+
 
         OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
 
-        Map<String, OwnerInfo.ConsumptionTypeCounts> expected = 
+        Map<String, OwnerInfo.ConsumptionTypeCounts> expected =
             new HashMap<String, OwnerInfo.ConsumptionTypeCounts>() {
                 {
                     put("test family", new OwnerInfo.ConsumptionTypeCounts(1, 0));
@@ -488,19 +488,19 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
 
         assertEquals(expected, info.getEntitlementsConsumedByFamily());
     }
-    
+
     @Test
     public void testOwnerInfoEntitlementsConsumedByFamilySeperatesVirtAndPhysical() {
         // other tests look at physical, so just do virtual
         owner.addEntitlementPool(pool1);
-        
+
         Product prod = productCurator.lookupById(pool1.getProductId());
         prod.setAttribute("virt_only", "true");
 
         ConsumerType type = consumerTypeCurator.lookupByLabel("system");
         Consumer consumer = new Consumer("test-consumer", "test-user", owner, type);
         consumerCurator.create(consumer);
-        
+
         EntitlementCertificate cert = createEntitlementCertificate("fake", "fake");
         Entitlement entitlement = createEntitlement(owner, consumer, pool1, cert);
         entitlement.setQuantity(1);
@@ -509,7 +509,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
 
         OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
 
-        Map<String, OwnerInfo.ConsumptionTypeCounts> expected = 
+        Map<String, OwnerInfo.ConsumptionTypeCounts> expected =
             new HashMap<String, OwnerInfo.ConsumptionTypeCounts>() {
                 {
                     put("none", new OwnerInfo.ConsumptionTypeCounts(0, 1));
@@ -547,5 +547,39 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         assertEquals((Integer) 0, info.getConsumerGuestCounts().get(OwnerInfo.GUEST));
         assertEquals((Integer) 0, info.getConsumerGuestCounts().get(OwnerInfo.PHYSICAL));
 
+    }
+
+    @Test
+    public void testConsumerCountsByEntitlementStatus() {
+        final String entitlementsValid = "True";
+        final String entitlementsInvalid = "False";
+
+        ConsumerType type = consumerTypeCurator.lookupByLabel("system");
+        Consumer consumer1 = new Consumer("test-consumer", "test-user", owner, type);
+        consumer1.setFact("system.entitlements_valid", entitlementsValid);
+        consumerCurator.create(consumer1);
+
+        Consumer consumer2 = new Consumer("test-consumer", "test-user", owner, type);
+        consumer2.setFact("system.entitlements_valid", entitlementsInvalid);
+        consumerCurator.create(consumer2);
+
+        Consumer consumer3 = new Consumer("test-consumer", "test-user", owner, type);
+        consumer3.setFact("system.entitlements_valid", entitlementsValid);
+        consumerCurator.create(consumer3);
+
+        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+        assertEquals((Integer) 2, info.getConsumerCountByStatus(entitlementsValid));
+        assertEquals((Integer) 1, info.getConsumerCountByStatus(entitlementsInvalid));
+    }
+
+    @Test
+    public void testConsumerCountsByEntitlementStatusReturnsZeroIfStatusWasNotDefined() {
+        ConsumerType type = consumerTypeCurator.lookupByLabel("system");
+        Consumer consumer1 = new Consumer("test-consumer", "test-user", owner, type);
+        consumer1.setFact("system.entitlements_valid", "Known Status");
+        consumerCurator.create(consumer1);
+
+        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+        assertEquals((Integer) 0, info.getConsumerCountByStatus("Unknown Status"));
     }
 }
