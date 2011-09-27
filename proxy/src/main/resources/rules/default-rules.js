@@ -775,7 +775,6 @@ var Compliance = {
 	            // Not compliant if we didn't find any entitlements for this product:
 	            if (!status.getCompliantProducts().containsKey(installed_pid) &&
 	                    !status.getPartiallyCompliantProducts().containsKey(installed_pid)) {
-	                log.debug("  nothing provides.");
 	                status.addNonCompliantProduct(installed_pid);
 	            }
 	        }

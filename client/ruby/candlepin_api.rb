@@ -270,6 +270,7 @@ class Candlepin
     path << "owner=#{params[:owner]}&" if params[:owner]
     path << "product=#{params[:product]}&" if params[:product]
     path << "listall=#{params[:listall]}&" if params[:listall]
+    path << "activeon=#{params[:activeon]}&" if params[:activeon]
     results = get(path)
 
     return results
@@ -409,13 +410,16 @@ class Candlepin
     post(path)
   end
 
-  def consume_product(product, params={})
+  def consume_product(product=nil, params={})
     quantity = params[:quantity] || nil
     uuid = params[:uuid] || @uuid
     async = params[:async] || nil
-    path = "/consumers/#{uuid}/entitlements?product=#{product}"
-    path << "&quantity=#{quantity}" if quantity
-    path << "&async=#{async}" if async
+    entitle_date = params[:entitle_date] || nil
+    path = "/consumers/#{uuid}/entitlements?"
+    path << "product=#{product}&" if product
+    path << "quantity=#{quantity}&" if quantity
+    path << "async=#{async}&" if async
+    path << "entitle_date=#{entitle_date}" if entitle_date
 
     post(path)
   end

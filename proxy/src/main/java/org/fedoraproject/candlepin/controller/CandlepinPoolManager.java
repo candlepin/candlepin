@@ -357,7 +357,7 @@ public class CandlepinPoolManager implements PoolManager {
             productIds = compliance.getNonCompliantProducts().toArray(new String [] {});
         }
 
-        log.info("Attempting auto-bind for products:");
+        log.info("Attempting auto-bind for products on date: " + entitleDate);
         for (String productId : productIds) {
             log.info("  " + productId);
         }
