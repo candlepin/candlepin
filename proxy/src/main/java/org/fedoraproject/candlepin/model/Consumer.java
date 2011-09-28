@@ -136,8 +136,8 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     private boolean canActivate;
 
     @CollectionOfElements(targetElement = String.class)
-    @JoinTable(name = "cp_guest_list", joinColumns=@JoinColumn(name="consumer_id"))
-    @Column(name="guest_id")
+    @JoinTable(name = "cp_guest_list", joinColumns = @JoinColumn(name = "consumer_id"))
+    @Column(name = "guest_id")
     private Set<String> guestIds = new HashSet<String>();
 
     // An instruction for the client to initiate an autoheal request.
