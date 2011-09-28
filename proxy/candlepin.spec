@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.4.17
+Version: 0.4.18
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -146,6 +146,17 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Wed Sep 28 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.18-1
+- Added consumerCountsByEntitlementStatus to OwnerInfo (mstead@redhat.com)
+- Checkstyle (wpoteat@redhat.com)
+- 737935: First part of making guest consumer machine UUID's into a
+  relationship in the CP database. (wpoteat@redhat.com)
+- Put JSON Annotations on the GET imports call for owners (bkearney@redhat.com)
+- remove trailing whitespace (jesusr@redhat.com)
+- Latest string files from zanata (bkearney@redhat.com)
+- uebercert's content url is now correct after re-generation (ddolguik@redhat.com)
+- remove unused variable while I'm in the code. (jesusr@redhat.com)
+
 * Thu Sep 22 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.17-1
 - Add missing resources to apicrawler output. (dgoodwin@redhat.com)
 - Revert "Updated the strings from zanata" (bkearney@redhat.com)
