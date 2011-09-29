@@ -58,11 +58,13 @@ import org.xnap.commons.i18n.I18n;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 /**
  * PoolManager
@@ -354,7 +356,10 @@ public class CandlepinPoolManager implements PoolManager {
         if (productIds == null || productIds.length == 0) {
             log.debug("No products specified for bind, checking compliance to see what " +
                 "is needed.");
-            productIds = compliance.getNonCompliantProducts().toArray(new String [] {});
+            Set<String> tmpSet = new HashSet<String>();
+            tmpSet.addAll(compliance.getNonCompliantProducts());
+            tmpSet.addAll(compliance.getPartiallyCompliantProducts().keySet());
+            productIds = tmpSet.toArray(new String [] {});
         }
 
         log.info("Attempting auto-bind for products on date: " + entitleDate);

@@ -113,11 +113,15 @@ describe 'Healing' do
     # First a normal bind to get two entitlements covering 4 of our 8 sockets:
     @consumer_cp.consume_pool(pool['id'], {:quantity => 2})
 
+    installed = [
+        {'productId' => @product1['id'], 'productName' => @product1['name']},
+    ]
+
+    @consumer_cp.update_consumer({:installedProducts => installed})
     # Healing should now get us another entitlement also of quantity 2:
     ents = @consumer_cp.consume_product()
-    ents.size.should == 2
+    ents.size.should == 1
     ents[0]['quantity'].should == 2
-    ents[1]['quantity'].should == 2
   end
 
 
