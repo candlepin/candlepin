@@ -1104,4 +1104,38 @@ public class ConsumerResource {
         return idCert;
     }
 
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/{consumer_uuid}/guests")
+    public Set<String> getGuests(
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
+        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        return consumer.getGuestIds();
+    }
+
+    @PUT
+    @Path("/{consumer_uuid}/guests/{guest_uuid}")
+    public void addGuest(
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
+        @PathParam("guest_uuid") String guestId) {
+        if (guestId == null) {
+            throw new BadRequestException(i18n.tr("You must supply a guest UUID"));
+        }
+        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        consumer.addGuestId(guestId);
+        consumerCurator.merge(consumer);
+    }
+
+    @DELETE
+    @Path("/{consumer_uuid}/guests/{guest_uuid}")
+    public void removeGuest(
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
+        @PathParam("guest_uuid") String guestId) {
+        if (guestId == null) {
+            throw new BadRequestException(i18n.tr("You must supply a guest UUID"));
+        }
+        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        consumer.removeGuestId(guestId);
+        consumerCurator.merge(consumer);
+    }
 }

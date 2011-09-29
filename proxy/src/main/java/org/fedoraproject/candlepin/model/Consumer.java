@@ -38,6 +38,7 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
@@ -133,6 +134,11 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     @Transient
     private boolean canActivate;
+
+    @CollectionOfElements(targetElement = String.class)
+    @JoinTable(name = "cp_guest_list", joinColumns = @JoinColumn(name = "consumer_id"))
+    @Column(name = "guest_id")
+    private Set<String> guestIds = new HashSet<String>();
 
     // An instruction for the client to initiate an autoheal request.
     // WARNING: can't initialize to a default value here, we need to be able to see
@@ -500,4 +506,25 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         this.autoheal = autoheal;
     }
 
+    /**
+     * @param guestIds the guestIds to set
+     */
+    public void setGuestIds(Set<String> guestIds) {
+        this.guestIds = guestIds;
+    }
+
+    /**
+     * @return the guestIds
+     */
+    public Set<String> getGuestIds() {
+        return guestIds;
+    }
+
+    public void addGuestId(String guestId) {
+        guestIds.add(guestId);
+    }
+
+    public void removeGuestId(String guestId) {
+        guestIds.remove(guestId);
+    }
 }

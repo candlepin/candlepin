@@ -107,7 +107,7 @@ import com.wideplay.warp.persist.Transactional;
 @Path("/owners")
 public class OwnerResource {
     /**
-     * 
+     *
      */
     public static final String UEBER_CERT_CONSUMER = "ueber_cert_consumer";
     private OwnerCurator ownerCurator;
@@ -383,7 +383,7 @@ public class OwnerResource {
 
         Owner owner = findOwner(ownerKey);
         activationKey.setOwner(owner);
-        
+
         if (activationKey.getName() == null || activationKey.getName().trim().equals("")) {
             throw new BadRequestException(
                 i18n.tr("Must provide a name for activation key."));
@@ -677,6 +677,8 @@ public class OwnerResource {
     }
 
     @GET
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/imports")
     public List<ImportRecord> getImports(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
@@ -753,71 +755,71 @@ public class OwnerResource {
                                 ResourceDateParser.getFromDate(from, to, days),
                                 ResourceDateParser.parseDateString(to));
     }
-    
+
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/uebercert")
-    public EntitlementCertificate createUeberCertificate(@Context Principal principal, 
-        @Verify(Owner.class) @PathParam("owner_key") String ownerKey) {                
-        
+    public EntitlementCertificate createUeberCertificate(@Context Principal principal,
+        @Verify(Owner.class) @PathParam("owner_key") String ownerKey) {
+
         Owner o = findOwner(ownerKey);
-        
+
         if (o == null) {
             throw new NotFoundException(i18n.tr(
                 "owner with key: {0} was not found.", ownerKey));
         }
-        
+
         Consumer ueberConsumer = consumerCurator.findByName(UEBER_CERT_CONSUMER);
         // ueber cert has already been generated - re-generate it now
         if (ueberConsumer != null) {
-            List<Entitlement> ueberEntitlement 
+            List<Entitlement> ueberEntitlement
                 = entitlementCurator.listByConsumer(ueberConsumer);
-            poolManager.regenerateCertificatesOf(ueberEntitlement.get(0), true);            
-            return entitlementCertCurator.listForConsumer(ueberConsumer).get(0); 
+            poolManager.regenerateCertificatesOf(ueberEntitlement.get(0), true);
+            return entitlementCertCurator.listForConsumer(ueberConsumer).get(0);
         }
-        
-        try {            
-            Product ueberProduct = createUeberProduct(o);            
-            createUeberSubscription(o, ueberProduct);            
-            poolManager.refreshPools(o);            
+
+        try {
+            Product ueberProduct = createUeberProduct(o);
+            createUeberSubscription(o, ueberProduct);
+            poolManager.refreshPools(o);
             Consumer consumer = createUeberConsumer(principal, o);
-            
+
             List<Pool> ueberPool = poolCurator.listAvailableEntitlementPools(
                 null, o, ueberProduct.getId(), null, false, false);
-            
+
             return generateUeberCertificate(consumer, ueberPool);
-        } 
+        }
         catch (Exception e) {
             log.error("Problem generating ueber cert for owner: " + o.getKey(), e);
             throw new BadRequestException(i18n.tr(
-                "Problem generating ueber cert for owner {0}", e));            
-        }        
+                "Problem generating ueber cert for owner {0}", e));
+        }
     }
-    
+
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/uebercert")
-    public EntitlementCertificate getUeberCertificate(@Context Principal principal, 
+    public EntitlementCertificate getUeberCertificate(@Context Principal principal,
         @Verify(Owner.class) @PathParam("owner_key") String ownerKey) {
-        
-        Owner o = findOwner(ownerKey);        
+
+        Owner o = findOwner(ownerKey);
         if (o == null) {
             throw new NotFoundException(i18n.tr(
                 "owner with key: {0} was not found.", ownerKey));
         }
-        
+
         Consumer ueberConsumer = consumerCurator.findByName(UEBER_CERT_CONSUMER);
         if (ueberConsumer == null) {
             throw new NotFoundException(i18n.tr(
-                "ueber certificate for owner {0} was not found. Please generate one.", 
+                "ueber certificate for owner {0} was not found. Please generate one.",
                 o.getKey()));
         }
 
         // ueber consumer has only one entitlement associated with it
-        List<EntitlementCertificate> ueberCertificate 
+        List<EntitlementCertificate> ueberCertificate
             = entitlementCertCurator.listForConsumer(ueberConsumer);
-        
+
         return ueberCertificate.get(0);
     }
 
@@ -827,18 +829,18 @@ public class OwnerResource {
         return (EntitlementCertificate) e.getCertificates().toArray()[0];
     }
 
-    private Consumer createUeberConsumer(Principal principal, Owner o) {        
+    private Consumer createUeberConsumer(Principal principal, Owner o) {
         ConsumerType type = lookupConsumerType(ConsumerTypeEnum.SYSTEM.toString());
         Consumer consumer = consumerCurator.create(new Consumer(
-            UEBER_CERT_CONSUMER, 
-            principal.getUsername(), 
-            o, 
+            UEBER_CERT_CONSUMER,
+            principal.getUsername(),
+            o,
             type));
         return consumer;
     }
 
     private void createUeberSubscription(Owner o, Product ueberProduct) {
-        Subscription subscription = new Subscription(o, ueberProduct, 
+        Subscription subscription = new Subscription(o, ueberProduct,
             new HashSet<Product>(), 1L, now(), hundredYearsFromNow(), now());
         subService.createSubscription(subscription);
     }
@@ -846,12 +848,12 @@ public class OwnerResource {
     private Product createUeberProduct(Owner o) {
         Product ueberProduct = prodAdapter.createProduct(
             new Product(null, o.getKey() + "_ueber_product", 1L));
-        
+
         Content ueberContent = contentCurator.create(new Content(
-            "ueber_content", idGenerator.generateId(), 
-            ueberProduct.getId() + "_ueber_content", "yum", "Custom", 
+            "ueber_content", idGenerator.generateId(),
+            ueberProduct.getId() + "_ueber_content", "yum", "Custom",
             "/" + o.getKey(), ""));
-        
+
         ProductContent productContent =
             new ProductContent(ueberProduct, ueberContent, true);
         ueberProduct.getProductContent().add(productContent);
@@ -870,7 +872,7 @@ public class OwnerResource {
         Date hunderedYearsFromNow = now.getTime();
         return hunderedYearsFromNow;
     }
-        
+
     private void recordImportSuccess(Owner owner) {
         ImportRecord record = new ImportRecord(owner);
         record.recordStatus(ImportRecord.Status.SUCCESS,

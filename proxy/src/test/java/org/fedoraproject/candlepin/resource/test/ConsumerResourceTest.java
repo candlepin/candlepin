@@ -59,7 +59,6 @@ import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.pki.PKIReader;
 import org.fedoraproject.candlepin.pki.impl.BouncyCastlePKIReader;
-import org.fedoraproject.candlepin.resource.ActivationKeyResource;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.resource.util.ResourceDateParser;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
@@ -115,7 +114,6 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     private Pool pool;
 
     private ConsumerResource consumerResource;
-    private ActivationKeyResource activationKeyResource;
     private Principal principal;
     private Owner owner;
     private Role ownerAdminRole;
@@ -130,7 +128,6 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
     @Before
     public void setUp() {
         consumerResource = injector.getInstance(ConsumerResource.class);
-        activationKeyResource = injector.getInstance(ActivationKeyResource.class);
 
         standardSystemType = consumerTypeCurator.create(new ConsumerType(
             "standard-system"));

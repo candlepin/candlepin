@@ -26,6 +26,7 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -94,7 +95,7 @@ public class OwnerInfoCurator {
             }
             if (info.getPoolNearestToExpiry() == null) {
                 info.setPoolNearestToExpiry(pool);
-            } 
+            }
             else if (pool.getEndDate().before(info.getPoolNearestToExpiry()
                              .getEndDate())) {
                 info.setPoolNearestToExpiry(pool);
@@ -123,7 +124,7 @@ public class OwnerInfoCurator {
             if (productFamily == null || productFamily.trim().equals("")) {
                 productFamily = "none";
             }
-            
+
             int count = 0;
             for (Entitlement entitlement : pool.getEntitlements()) {
                 count += entitlement.getQuantity();
@@ -136,9 +137,10 @@ public class OwnerInfoCurator {
                 info.addToEntitlementsConsumedByFamily(productFamily, count, 0);
             }
         }
-        
+
         setConsumerGuestCounts(owner, info);
-        
+        setConsumerCountsByComplianceStatus(owner, info);
+
         return info;
     }
 
@@ -201,6 +203,21 @@ public class OwnerInfoCurator {
         Integer physicalCount = ((Long) physicalQuery.iterate().next()).intValue() -
             guestCount;
         info.setPhysicalCount(physicalCount);
+    }
+
+    private void setConsumerCountsByComplianceStatus(Owner owner, OwnerInfo info) {
+        String queryStr = "select fact, count(c) from Consumer c join c.facts as fact " +
+            "where c.owner = :owner and index(fact) = 'system.entitlements_valid' " +
+            "group by fact";
+        Query consumerQuery = currentSession().createQuery(queryStr)
+            .setEntity("owner", owner);
+        Iterator iter = consumerQuery.iterate();
+        while (iter.hasNext()) {
+            Object[] object = (Object[]) iter.next();
+            String status = (String) object[0];
+            Integer count = ((Long) object[1]).intValue();
+            info.setConsumerCountByComplianceStatus(status, count);
+        }
     }
 
     protected Session currentSession() {

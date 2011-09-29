@@ -3,6 +3,7 @@
 # This file is distributed under the same license as the l package.
 # 
 # Automatically generated, 2011.
+# runab <runab@redhat.com>, 2011. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: l 10n\n"
@@ -19,14 +20,13 @@ msgstr ""
 "X-Generator: Lokalize 1.1\n"
 
 #: src/main/java/org/fedoraproject/candlepin/auth/interceptor/SecurityInterceptor.java:195
-#, 
 msgid "Unable to verify request."
-msgstr ""
+msgstr "অনুরোধ যাচাই করতে ব্যর্থ।"
 
 #: src/main/java/org/fedoraproject/candlepin/auth/interceptor/SecurityInterceptor.java:204
 #, java-format
 msgid "{0} with id {1} could not be found"
-msgstr ""
+msgstr "id {1}সহ  {0} পাওয়া যায়নি"
 
 #: src/main/java/org/fedoraproject/candlepin/model/ConsumerCurator.java:68
 #, java-format
@@ -41,128 +41,128 @@ msgstr "উৎপাদন id {0} সহ কোনো উৎপাদন পা�
 #: src/main/java/org/fedoraproject/candlepin/audit/EventAdapterImpl.java:113
 #, java-format
 msgid "Unknown event for user {0} and target {1}"
-msgstr ""
+msgstr "{0} ব্যবহারকারী ও  and target {1} উদ্দিষ্ট ব্স্তুর জন্য অজানা ইভেন্ট।"
 
 #: src/main/java/org/fedoraproject/candlepin/audit/EventAdapterImpl.java:125
 #, java-format
 msgid "{0} created new consumer {1}"
-msgstr ""
+msgstr "{0} দ্বারা নতুন গ্রাহক {1} নির্মিত হয়েছে"
 
 #: src/main/java/org/fedoraproject/candlepin/audit/EventAdapterImpl.java:126
 #, java-format
 msgid "{0} modified the consumer {1}"
-msgstr ""
+msgstr "{0} দ্বারা {1} গ্রাহকের তথ্য পরিবর্তিত হয়েছে"
 
 #: src/main/java/org/fedoraproject/candlepin/audit/EventAdapterImpl.java:127
 #, java-format
 msgid "{0} deleted the consumer {1}"
-msgstr ""
+msgstr "{0} দ্বারা {1} গ্রাহক মুছে ফেলা হয়েছে"
 
 #: src/main/java/org/fedoraproject/candlepin/audit/EventAdapterImpl.java:128
 #, java-format
 msgid "{0} created new owner {1}"
-msgstr ""
+msgstr "{0} দ্বারা নতুন মালিক {1} তৈরি করা হয়েছে"
 
 #: src/main/java/org/fedoraproject/candlepin/audit/EventAdapterImpl.java:129
 #, java-format
 msgid "{0} modified the owner {1}"
-msgstr ""
+msgstr "{0} দ্বারা {1} মালিকের তথ্য পরিবর্তন করা হয়েছে"
 
 #: src/main/java/org/fedoraproject/candlepin/audit/EventAdapterImpl.java:130
 #, java-format
 msgid "{0} deleted the owner {1}"
-msgstr ""
+msgstr "{0} দ্বারা {1} মালিকের তথ্য মুছে ফেলা হয়েছে"
 
 #: src/main/java/org/fedoraproject/candlepin/audit/EventAdapterImpl.java:132
 #, java-format
 msgid "{0} consumed a subscription for product {1}"
-msgstr ""
+msgstr "{0} দ্বারা {1} উৎপাদনের জন্য একটি সাবস্ক্রিপশন ব্যবহার করা হয়েছে"
 
 #: src/main/java/org/fedoraproject/candlepin/audit/EventAdapterImpl.java:134
 #: src/main/java/org/fedoraproject/candlepin/audit/EventAdapterImpl.java:152
 #, java-format
 msgid "{0} modified a subscription for product {1}"
-msgstr ""
+msgstr "{0} দ্বারা {1} উৎপাদনের জন্য সাবস্ক্রিপশন পরিবর্তন করা হয়েছে"
 
 #: src/main/java/org/fedoraproject/candlepin/audit/EventAdapterImpl.java:136
 #, java-format
 msgid "{0} returned the subscription for {1}"
-msgstr ""
+msgstr "{0} দ্বারা {1}-র জন্য সাবস্ক্রিপশন ফেরৎ দেওয়া হয়েছে"
 
 #: src/main/java/org/fedoraproject/candlepin/audit/EventAdapterImpl.java:137
 #, java-format
 msgid "{0} created a pool for product {1}"
-msgstr ""
+msgstr "{0} দ্বারা {1} উৎপাদনের জন্য একটি পুল নির্মিত হয়েছে"
 
 #: src/main/java/org/fedoraproject/candlepin/audit/EventAdapterImpl.java:138
 #, java-format
 msgid "{0} modified a pool for product {1}"
-msgstr ""
+msgstr "{0} দ্বারা {1} উৎপাদনের জন্য একটি পুল পরিবর্তিত হয়েছে"
 
 #: src/main/java/org/fedoraproject/candlepin/audit/EventAdapterImpl.java:139
 #, java-format
 msgid "{0} deleted a pool for product {1}"
-msgstr ""
+msgstr "{0} দ্বারা {1} উৎপাদনের জন্য একটি পুল মুছে ফেলা হয়েছে"
 
 #: src/main/java/org/fedoraproject/candlepin/audit/EventAdapterImpl.java:141
 #, java-format
 msgid "{0} created an export for consumer {1}"
-msgstr ""
+msgstr "{0} দ্বারা {1} গ্রাহকের জন্য একটি এক্সপোর্ট প্রস্তুত করা হয়েছে"
 
 #: src/main/java/org/fedoraproject/candlepin/audit/EventAdapterImpl.java:142
 #, java-format
 msgid "{0} imported a manifest for owner {1}"
-msgstr ""
+msgstr "{0} দ্বারা {1} মালিকের জন্য একটি তালিকা অর্থাৎ ম্যানিফেস্ট ইম্পোর্ট করা হয়েছে"
 
 #: src/main/java/org/fedoraproject/candlepin/audit/EventAdapterImpl.java:143
 #, java-format
 msgid "{0} created new user {1}"
-msgstr ""
+msgstr "{0} দ্বারা নতুন ব্যবহারকারী {1} তৈরি করা হয়েছে"
 
 #: src/main/java/org/fedoraproject/candlepin/audit/EventAdapterImpl.java:144
 #, java-format
 msgid "{0} modified the user {1}"
-msgstr ""
+msgstr "{0} দ্বারা {1} ব্যবহারকারীর তথ্য পরিবর্তন করা হয়েছে"
 
 #: src/main/java/org/fedoraproject/candlepin/audit/EventAdapterImpl.java:145
 #, java-format
 msgid "{0} deleted the user {1}"
-msgstr ""
+msgstr "{0} দ্বারা {1} ব্যবহারকারীর তথ্য পরিবর্তন করা হয়েছে"
 
 #: src/main/java/org/fedoraproject/candlepin/audit/EventAdapterImpl.java:146
 #, java-format
 msgid "{0} created new role {1}"
-msgstr ""
+msgstr "{0} দ্বারা একটি নতুন ভূমিকা {1} তৈরি করা হয়েছে"
 
 #: src/main/java/org/fedoraproject/candlepin/audit/EventAdapterImpl.java:147
 #, java-format
 msgid "{0} modified the role {1}"
-msgstr ""
+msgstr "{0} দ্বারা {1} ভূমিকা পরিবর্তন করা হয়েছে"
 
 #: src/main/java/org/fedoraproject/candlepin/audit/EventAdapterImpl.java:148
 #, java-format
 msgid "{0} deleted the role {1}"
-msgstr ""
+msgstr "{0} দ্বারা {1} ভূমিকা মুছে ফেলা হয়েছে"
 
 #: src/main/java/org/fedoraproject/candlepin/audit/EventAdapterImpl.java:150
 #, java-format
 msgid "{0} created new subscription for product {1}"
-msgstr ""
+msgstr "{0} দ্বারা {1} উৎপাদনের জন্য নতুন সাবস্ক্রিপশন তৈরি করা হয়েছে"
 
 #: src/main/java/org/fedoraproject/candlepin/audit/EventAdapterImpl.java:154
 #, java-format
 msgid "{0} deleted a subscription for product {1}"
-msgstr ""
+msgstr "{0} দ্বারা {1} উৎপাদনের জন্য সাবস্ক্রিপশন মুছে ফেলা হয়েছে"
 
 #: src/main/java/org/fedoraproject/candlepin/audit/EventAdapterImpl.java:156
 #, java-format
 msgid "{0} created the activation key {1}"
-msgstr ""
+msgstr "{0} দ্বারা নতুন অ্যাক্টিভেশন-কি {1} প্রস্তুত করা হয়েছে"
 
 #: src/main/java/org/fedoraproject/candlepin/audit/EventAdapterImpl.java:158
 #, java-format
 msgid "{0} deleted the activation key {1}"
-msgstr ""
+msgstr "{0} দ্বারা অ্যাক্টিভেশন-কি {1} মুছে ফেলা হয়েছে"
 
 #: src/main/java/org/fedoraproject/candlepin/resource/RulesResource.java:79
 msgid "Error decoding the rules. The text should be base 64 encoded"
@@ -181,15 +181,15 @@ msgid "A consumer or owner is needed to filter on product"
 msgstr "উৎপাদনের উপর ফিল্টার প্রয়োগ করার জ্য গ্রাহক অথবা মালিক উল্লেখ করা আবশ্যক"
 
 #: src/main/java/org/fedoraproject/candlepin/resource/PoolResource.java:129
-#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:448
+#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:480
 #, java-format
 msgid "consumer: {0} not found"
-msgstr ""
+msgstr "গ্রাহক: {0}-কে পাওয়া যায়নি"
 
 #: src/main/java/org/fedoraproject/candlepin/resource/PoolResource.java:135
 #, java-format
 msgid "User {0} cannot access consumer {1}"
-msgstr ""
+msgstr "{0} ব্যবহারকারী দ্বারা {1} গ্রাহকের তথ্য দেখা সম্ভব নয়"
 
 #: src/main/java/org/fedoraproject/candlepin/resource/PoolResource.java:146
 #, java-format
@@ -199,17 +199,17 @@ msgstr "মালিক: {0}"
 #: src/main/java/org/fedoraproject/candlepin/resource/PoolResource.java:150
 #, java-format
 msgid "User {0} cannot access owner {1}"
-msgstr ""
+msgstr "{0} ব্যবহারকারী দ্বারা {1} মালিকের তথ্য দেখা সম্ভব নয়"
 
 #: src/main/java/org/fedoraproject/candlepin/resource/PoolResource.java:159
 #, java-format
 msgid "User {0} cannot access all pools."
-msgstr ""
+msgstr "{0} ব্যবহারকারী দ্বারা সর্বধরনের পুল ব্যবহার করা সম্ভব নয়।"
 
 #: src/main/java/org/fedoraproject/candlepin/resource/PoolResource.java:186
 #, java-format
 msgid "Entitlement Pool with ID ''{0}'' could not be found"
-msgstr ""
+msgstr "ID ''{0}'' সহ এনটাইটেলমেন্ট পুল পাওয়া যায়নি"
 
 #: src/main/java/org/fedoraproject/candlepin/resource/ConsumerTypeResource.java:82
 msgid "ConsumerType with id '"
@@ -231,140 +231,138 @@ msgid "Consumer Type with id {0} could not be found"
 msgstr "{0} id বিশিষ্ট গ্রাহকের ধরন পাওয়া যায়নি"
 
 #: src/main/java/org/fedoraproject/candlepin/resource/StatisticResource.java:60
-#, 
 msgid "couldn't generate statistics"
-msgstr ""
+msgstr "পরিসংখ্যান প্রস্তুত করতে ব্যর্থ"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:216
+#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:248
 #, java-format
 msgid "Cound not create the Owner: {0}. Parent {1} does not exist."
 msgstr "চিহ্নিত মালিক ধার্য করা যায়নি: {0}। উর্ধ্বতন স্বত্বা {1} উপস্থিত নেই।"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:228
+#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:260
 #, java-format
 msgid "Cound not create the Owner: {0}"
 msgstr "চিহ্নিত মালিক ধার্য করা যায়নি: {0}"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:357
-#, 
+#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:389
 msgid "Must provide a name for activation key."
-msgstr ""
+msgstr "অ্যাক্টিভেশন-কি-র জন্য নাম নির্ধারণ করা আবশ্যক।"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:364
-#, 
+#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:396
 msgid "Activation key names must be alphanumeric or the characters '-' or '_'. ["
-msgstr ""
+msgstr "অ্যাক্টিভেশন-কি-র নামের ক্ষেত্রে অক্ষর, সংখ্যা অথবা  '-' অথবা '_' চিহ্ন করা যাবে। ["
 
-#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:371
-#, 
+#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:403
 msgid "Activation key name ["
-msgstr ""
+msgstr "অ্যাক্টিভেশন-কি-র নাম ["
 
-#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:413
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:491
+#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:445
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:492
 #, java-format
 msgid "No such consumer type: {0}"
 msgstr "এই ধরনের কোনো গ্রাহক উপস্থিত নেই: {0}"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:527
-#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:588
-#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:669
-#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:693
-#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:716
+#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:559
+#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:620
+#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:701
+#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:725
+#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:748
+#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:768
+#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:807
 #, java-format
 msgid "owner with key: {0} was not found."
 msgstr "কি: {0} বিশিষ্ট মালিককে সনাক্ত করা যায়নি।"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:537
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:832
+#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:569
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:833
 #: src/main/java/org/fedoraproject/candlepin/resource/EntitlementResource.java:113
 #: src/main/java/org/fedoraproject/candlepin/resource/SubscriptionResource.java:101
 #, java-format
 msgid "No such consumer: {0}"
 msgstr "এই ধরনের কোনো গ্রাহক উপস্থিত নেই: {0}"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:603
+#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:635
 #, java-format
 msgid "subscription with id: {0} not found."
 msgstr "id: {0} বিশিষ্ট সাবস্ক্রিপশন সনাক্ত করা যায়নি।"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:627
+#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:659
 msgid "Error reading export archive"
 msgstr "এক্সপোর্ট আর্কাইভ পড়তে সমস্যা"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:632
+#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:664
 msgid "Bad data in export archive"
 msgstr "এক্সপোর্ট আর্কাইভের মধ্যে ত্রুটিপূর্ণ তথ্য উপস্থিত রয়েছে"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:729
+#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:794
+#, java-format
+msgid "Problem generating ueber cert for owner {0}"
+msgstr "{0} মালিকের জন্য ueber cert প্রস্তুত করতে সমস্যা"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:813
+#, java-format
+msgid "ueber certificate for owner {0} was not found. Please generate one."
+msgstr "{0} মালিকের ueber সার্টিফিকেট পাওয়া যায়নি। অনুগ্রহ করে একটি প্রস্তুত করুন।"
+
+#: src/main/java/org/fedoraproject/candlepin/resource/OwnerResource.java:877
 #, java-format
 msgid "{0} file imported successfully."
-msgstr ""
+msgstr "{0}-টি ফাইল সাফল্যের সাথে ইম্পোর্ট করা হয়েছে।"
 
 #: src/main/java/org/fedoraproject/candlepin/resource/MigrationResource.java:59
-#, 
 msgid "Bad entity value."
-msgstr ""
+msgstr "এনটিটি-র মান সঠিক নয়।"
 
 #: src/main/java/org/fedoraproject/candlepin/resource/ActivationKeyResource.java:116
-#, 
 msgid "The quantity must be greater than 0"
-msgstr ""
+msgstr "এই মান 0 থেকে বেশি হওয়া আবশ্যক"
 
 #: src/main/java/org/fedoraproject/candlepin/resource/ActivationKeyResource.java:126
-#, 
 msgid "Pools requiring a 'person' consumer should not be added to an activation key since a consumer type of 'person' cannot be used with activation keys"
-msgstr ""
+msgstr "যে সমস্ত পুলের ক্ষেত্রে 'person' গ্রাহক প্রয়োজন সেইগুলিকে কোনো অ্যাক্টিভেশন-কি-র সাথে যোগ করা অনুচিত কারণ 'person' ধরনের গ্রাহকের জন্য অ্যাক্টিভেশন-কি ব্যবহার করা যাবে না।"
 
 #: src/main/java/org/fedoraproject/candlepin/resource/ActivationKeyResource.java:135
-#, 
 msgid "Error: Only pools with multi-entitlement product subscriptions can be added to the activation key with a quantity greater than one."
-msgstr ""
+msgstr "ত্রুটি: একাধিক-এনটাইটেলমেন্ট সহ উৎপাদন সাবস্ক্রিপশন বিশিষ্ট পুল-গুলির ক্ষেত্রেই শুধুমাত্র এক থেকে বেশি সংখ্যা সহ চিহ্নিত অ্যাক্টিভেশন-কিগুলি ব্যবহার করা যাবে।"
 
 #: src/main/java/org/fedoraproject/candlepin/resource/ActivationKeyResource.java:142
-#, 
 msgid "The quantity must not be greater than the total allowed for the pool"
-msgstr ""
+msgstr "পুলের জন্য অনুমোদিত সম্পূর্ণ পরিমানের থেকে বেশি পরিমাণ ধার্য করা যাবে না"
 
 #: src/main/java/org/fedoraproject/candlepin/resource/ActivationKeyResource.java:190
 #, java-format
 msgid "ActivationKey with id {0} could not be found"
-msgstr ""
+msgstr "id {0} সহ অ্যাক্টিভেশন-কি পাওয়া যায়নি"
 
 #: src/main/java/org/fedoraproject/candlepin/resource/ActivationKeyResource.java:201
 #, java-format
 msgid "Pool with id {0} could not be found"
-msgstr ""
+msgstr "id {0} সহ পুল পাওয়া যায়নি"
 
 #: src/main/java/org/fedoraproject/candlepin/resource/EventResource.java:76
 #, java-format
 msgid "Event with ID ''{0}'' could not be found."
-msgstr ""
+msgstr "ID ''{0}'' সহ ইভেন্ট পাওয়া যায়নি।"
 
 #: src/main/java/org/fedoraproject/candlepin/resource/JobResource.java:102
-#, 
 msgid "You must specify an owner key, consumer uuid, or principal name."
-msgstr ""
+msgstr "মালিকের-কি, গ্রাহকের uuid অথবা প্রিন্সিপ্যাল নামের মধ্যে একটি উল্লেখ করা আবশ্যক।"
 
 #: src/main/java/org/fedoraproject/candlepin/resource/JobResource.java:108
-#, 
 msgid "You must specify one of owner key, consumer uuid, or principal name, but not all."
-msgstr ""
+msgstr "মালিকের-কি, গ্রাহকের uuid অথবা প্রিন্সিপ্যাল নামের মধ্যে একটি উল্লেখ করা আবশ্যক। সককটি উল্লেখ করা যাবে না।"
 
 #: src/main/java/org/fedoraproject/candlepin/resource/JobResource.java:158
-#, 
 msgid "Error setting scheduler status"
-msgstr ""
+msgstr "শিডিউলারের অবস্থা নির্ধারণ করতে ব্যর্থ"
 
 #: src/main/java/org/fedoraproject/candlepin/resource/JobResource.java:176
-#, 
 msgid "job already cancelled"
-msgstr ""
+msgstr "কাজ পূর্বেই বাতিল করা হয়েছে"
 
 #: src/main/java/org/fedoraproject/candlepin/resource/JobResource.java:179
-#, 
 msgid "cannot cancel a job that is not in CREATED state"
-msgstr ""
+msgstr "CREATED অবস্থায় না থাকা কোনো কাজ বাতিল করা যাবে না"
 
 #: src/main/java/org/fedoraproject/candlepin/resource/ContentResource.java:67
 #, java-format
@@ -376,144 +374,136 @@ msgstr "{0} id বিশিষ্ট তথ্য পাওয়া যায়ন�
 #: src/main/java/org/fedoraproject/candlepin/resource/ProductResource.java:168
 #, java-format
 msgid "Product with UUID ''{0}'' could not be found"
-msgstr ""
+msgstr "UUID ''{0}'' সহ উৎপাদন পাওয়া যায়নি"
 
 #: src/main/java/org/fedoraproject/candlepin/resource/ProductResource.java:172
 #, java-format
 msgid "Product with UUID ''{0}'' cannot be deleted while subscriptions exist."
-msgstr ""
+msgstr "সাবস্ক্রিপশন উপস্থিত থাকলে, UUID ''{0}'' সহ উৎপাদন মুছে ফেলা যাবে না"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:189
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:190
 #, java-format
 msgid "Organization with key: {0} was not found."
-msgstr ""
+msgstr "{0} কি বিশিষ্ট প্রতিষ্ঠান পাওয়া যায়নি।"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:250
-#, 
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:251
 msgid "Insufficient permissions"
-msgstr ""
+msgstr "অপর্যাপ্ত অনুমতি"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:256
-#, 
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:257
 msgid "Must specify an org to register with activation keys."
-msgstr ""
+msgstr "অ্যাক্টিভেশন-কি সহযোগে নিবন্ধনের জন্য একটি প্রতিষ্ঠা উল্লেখ করা আবশ্যক।"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:260
-#, 
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:261
 msgid "Cannot specify username with activation keys."
-msgstr ""
+msgstr "অ্যাক্টিভেশন-কি-র মাধ্যমে ব্যবহারকারীর নাম নির্ধারণ করা যাবে না।"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:266
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:267
 msgid "System name cannot contain most special characters."
 msgstr "সিস্টেমের নামের মধ্যে অধিকাংশ বিশেষ অক্ষরগুলি ব্যবহার করা যাবে না।"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:272
-#, 
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:273
 msgid "System name cannot begin with # character"
-msgstr ""
+msgstr "সিস্টেমের নামের প্রারম্ভে # চিহ্ন উপস্থিত থাকা চলবে না"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:296
-#, 
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:297
 msgid "A consumer type of 'person' cannot be used with activation keys"
-msgstr ""
+msgstr "'person' ধরনের কোনো গ্রাহকের জন্য অ্যাক্টিভেশন-কি ব্যবহার করা যাবে না"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:346
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:347
 msgid "Pool ID must be provided"
 msgstr "পুল ID উল্লেখ করা আবশ্যক"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:366
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:367
 #, java-format
 msgid "Problem creating consumer {0}"
 msgstr "গ্রাহক {0} নির্মাণ করতে সমস্যা"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:375
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:376
 #, java-format
 msgid "Activation key ''{0}'' not found for organization ''{1}''."
-msgstr ""
+msgstr "''{0}'' অ্যাক্টিভেশন-কি-টি ''{1}'' প্রতিষ্ঠানের জন্য পাওয়া যায়নি।"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:397
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:398
 #, java-format
 msgid "User {0} has no roles for organization {1}"
-msgstr ""
+msgstr "{1} প্রতিষ্ঠানের মধ্যে {0} ব্যবহারকারীর কোনো ভূমিকা উপস্থিত নেই"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:409
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:410
 #, java-format
 msgid "User {0} has already registered a personal consumer"
 msgstr "{0} ব্যবহারকারী ব্যক্তিগত গ্রাহক রূপে নিবন্ধন করিয়েছেন"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:426
-#, 
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:427
 msgid "You must specify an organization for new consumers."
-msgstr ""
+msgstr "নতুন গ্রাহকদের জন্য একটি প্রতিষ্ঠান উল্লেখ করা আবশ্যক।"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:437
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:438
 #, java-format
 msgid "Organization {0} does not exist."
-msgstr ""
+msgstr "{0} প্রতিষ্ঠান বর্তমানে উপস্থিত নেই।"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:444
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:445
 #, java-format
 msgid "User {0} cannot access organization {1}"
-msgstr ""
+msgstr "{0} ব্যবহারকারী দ্বারা {1} প্রতিষ্ঠান ব্যবহার করা সম্ভব নয়"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:605
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:606
 #, java-format
 msgid "Cannot unregister {0} consumer {1} because: {2}"
 msgstr "{0} নিবন্ধন {1} গ্রাহকের জন্য বাতিল করা যায়নি কারণ: {2}"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:676
-#, 
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:677
 msgid "Unable to create entitlement archive"
-msgstr ""
+msgstr "এনটাইটেলমেন্টের আর্কাইভ তৈরি করতে ব্যর্থ"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:758
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:759
 msgid "Cannot bind by multiple parameters."
 msgstr "একাধিক পরামিতি দ্বারা bind করা সম্ভব নয়।"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:763
-#, 
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:764
 msgid "Cannot specify a quantity when auto-binding."
-msgstr ""
+msgstr "অটো-বাইন্ডিং করার সময় পরিমান নির্ধারণ করা সম্ভব নয়।"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:816
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:817
 #, java-format
 msgid "Asked to be subscribed to a product that has no pool: {0} "
-msgstr ""
+msgstr "পুল বিহীন উৎপাদনের সাবস্ক্রাইব করার অনুরোধ জানানো হয়েছে: {0} "
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:842
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:843
 #, java-format
 msgid "No such entitlement: {0}"
 msgstr "এই ধরনের কোনো এনটাইটেলমেন্ট নেই: {0}"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:859
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:860
 #, java-format
 msgid "No such product: {0}"
 msgstr "এই ধরনের কোনো উৎপাদন নেই: {0}"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:895
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:896
 msgid "Consumer with ID "
 msgstr "চিহ্নিত ID সহ গ্রাহক "
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:929
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:930
 #, java-format
 msgid "Entitlement with ID ''{0}'' could not be found."
-msgstr ""
+msgstr "''{0}'' সহ এনটাইটেলমেন্ট পাওয়া যায়নি।"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:948
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:949
 #, java-format
 msgid "Entitlement Certificate with serial number {0} could not be found."
 msgstr "{0} ক্রমিক সংখ্যা বিশিষ্ট এনটাইটেলমেন্ট সার্টিফিকেট পাওয়া যায়নি।"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:993
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:994
 #, java-format
-msgid "Consumer {0} cannot be exported, as it's of wrong consumer type."
-msgstr "যথাযত ধরনের গ্রাহক না হওয়ার ফলে {0} গ্রাহককে এক্সপোর্ট করা যায়নি।"
+msgid "Consumer {0} cannot be exported. A manifest cannot be made for consumer of type ''{1}''."
+msgstr "{0} গ্রাহককে এক্সপোর্ট করা সম্ভব নয়। ''{1}'' ধরনের গ্রাহকের জন্য তালিকা অর্থাৎ ম্যানিফেস্ট প্রস্তুত করা সম্ভব নয়।"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:1007
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:1009
 msgid "Unable to create export archive"
 msgstr "এক্সপোর্ট আর্কাইভ নির্মাণ করতে ব্যর্থ"
 
-#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:1037
+#: src/main/java/org/fedoraproject/candlepin/resource/ConsumerResource.java:1039
 #, java-format
 msgid "Problem regenerating id cert for consumer {0}"
 msgstr "{0} গ্রাহকের জন্য id cert পুনরায় প্রস্তুত করতে সমস্যা"
@@ -527,17 +517,15 @@ msgstr "গ্রাহক: {0}-র ক্ষেত্রে {1} উৎপাদ
 #: src/main/java/org/fedoraproject/candlepin/resource/EntitlementResource.java:154
 #, java-format
 msgid "Entitlement with ID ''{0}'' could not be found"
-msgstr ""
+msgstr "''{0}'' ID সহ এনটাইটেলমেন্ট পাওয়া যায়নি।"
 
 #: src/main/java/org/fedoraproject/candlepin/resource/SubscriptionResource.java:90
-#, 
 msgid "email is required for notification"
-msgstr ""
+msgstr "সূচনাপ্রদানের জন্য ই-মেইল উল্লেখ করা আবশ্যক"
 
 #: src/main/java/org/fedoraproject/candlepin/resource/SubscriptionResource.java:95
-#, 
 msgid "email locale is required for notification"
-msgstr ""
+msgstr "সূচনাপ্রদানের জন্য ই-মেইলের লোকেইল উল্লেখ করা আবশ্যক"
 
 #: src/main/java/org/fedoraproject/candlepin/resource/SubscriptionResource.java:127
 #, java-format
@@ -547,32 +535,30 @@ msgstr "{0} id বিশিষ্ট সাবস্ক্রিপশন পা
 #: src/main/java/org/fedoraproject/candlepin/resource/RoleResource.java:77
 #, java-format
 msgid "No such owner: {0}"
-msgstr ""
+msgstr "এই ধরনের কোনো মালিক উপস্থিত নেই: {0}"
 
 #: src/main/java/org/fedoraproject/candlepin/resource/RoleResource.java:93
-#, 
 msgid "Role ID does not match path."
-msgstr ""
+msgstr "ভূমিকার ID-র সাথে পাথের গরমিল"
 
 #: src/main/java/org/fedoraproject/candlepin/resource/RoleResource.java:115
-#, 
 msgid "Access type NONE not supported."
-msgstr ""
+msgstr "NONE ব্যবহারের ধরন সমর্থিত নয়।"
 
 #: src/main/java/org/fedoraproject/candlepin/resource/RoleResource.java:149
 #, java-format
 msgid "No such permission: {0} in role: {1}"
-msgstr ""
+msgstr "এই ধরনের কোনো অনুমতি উপস্থিত নেই: {0} চিহ্নিত ভূমিকায়: {1}"
 
 #: src/main/java/org/fedoraproject/candlepin/resource/RoleResource.java:163
 #, java-format
 msgid "No such role: {0}"
-msgstr ""
+msgstr "এই ধরনের কোনো ভূমিকা উপস্থিত নেই: {0}"
 
 #: src/main/java/org/fedoraproject/candlepin/resource/RoleResource.java:171
 #, java-format
 msgid "No such user: {0}"
-msgstr ""
+msgstr "এই ধরনের কোনো ব্যবহারকারী উপস্থিত নেই: {0}"
 
 #: src/main/java/org/fedoraproject/candlepin/exceptions/CandlepinExceptionMapper.java:124
 #, java-format
@@ -609,13 +595,13 @@ msgstr "উল্লিখিত তারিখে {0}-র এনটাইট�
 #: src/main/java/org/fedoraproject/candlepin/policy/js/entitlement/EntitlementRules.java:356
 #, java-format
 msgid "''{0}'' Should contain name, priority and at least one attribute"
-msgstr ""
+msgstr "''{0}''-র মধ্যে নাম, গুরুত্বের মাত্রা ও অন্তত একটি বৈশিষ্ট্য উপস্থিত থাকা আবশ্যক"
 
 #: src/main/java/org/fedoraproject/candlepin/policy/js/entitlement/EntitlementRules.java:371
 msgid "second parameter should be the priority number."
 msgstr "দ্বিতীয় পরামিতি রূপে গুরুত্বের মাত্রা উল্লেখ করা আবশ্যক।"
 
-#: src/main/java/org/fedoraproject/candlepin/controller/CandlepinPoolManager.java:656
+#: src/main/java/org/fedoraproject/candlepin/controller/CandlepinPoolManager.java:665
 #, java-format
 msgid ""
 "\n"
@@ -624,7 +610,7 @@ msgstr ""
 "\n"
 "-এনটাইটেলমেন্ট  ''{0}'' থেকে আন-সাবস্ক্রাইব করা যায়নি কারণ:"
 
-#: src/main/java/org/fedoraproject/candlepin/controller/CandlepinPoolManager.java:682
+#: src/main/java/org/fedoraproject/candlepin/controller/CandlepinPoolManager.java:691
 #, java-format
 msgid ""
 "\n"
@@ -633,7 +619,7 @@ msgstr ""
 "\n"
 "  {0} গ্রাহকের ''{1}'', ''{2}'' id সহযোগে নিম্নলিখিত এনটাইটেলমেন্ট উপস্থিত রয়েছে:"
 
-#: src/main/java/org/fedoraproject/candlepin/controller/CandlepinPoolManager.java:690
+#: src/main/java/org/fedoraproject/candlepin/controller/CandlepinPoolManager.java:699
 #, java-format
 msgid ""
 "\n"
@@ -642,7 +628,7 @@ msgstr ""
 "\n"
 "    এনটাইটেলমেন্ট ''{0}'':"
 
-#: src/main/java/org/fedoraproject/candlepin/controller/CandlepinPoolManager.java:692
+#: src/main/java/org/fedoraproject/candlepin/controller/CandlepinPoolManager.java:701
 #, java-format
 msgid ""
 "\n"
@@ -651,7 +637,7 @@ msgstr ""
 "\n"
 "        অ্যাকাউন্ট সংখ্যা: ''{0}''"
 
-#: src/main/java/org/fedoraproject/candlepin/controller/CandlepinPoolManager.java:694
+#: src/main/java/org/fedoraproject/candlepin/controller/CandlepinPoolManager.java:703
 #, java-format
 msgid ""
 "\n"
@@ -660,7 +646,7 @@ msgstr ""
 "\n"
 "        ক্রমিক সংখ্যা: ''{0}''"
 
-#: src/main/java/org/fedoraproject/candlepin/controller/CandlepinPoolManager.java:699
+#: src/main/java/org/fedoraproject/candlepin/controller/CandlepinPoolManager.java:708
 #, java-format
 msgid ""
 "\n"
@@ -671,7 +657,7 @@ msgstr ""
 "\n"
 "ব্যবহার করা এই এনটাইটেলমেন্টগুলি চিহ্নিত সাবস্ক্রিপশন পুল থেকে নেওয়া হয়েছে: ''{0}''."
 
-#: src/main/java/org/fedoraproject/candlepin/controller/CandlepinPoolManager.java:703
+#: src/main/java/org/fedoraproject/candlepin/controller/CandlepinPoolManager.java:712
 msgid ""
 "\n"
 "You must first unsubscribe these consumers from these entitlements.\n"
@@ -682,32 +668,32 @@ msgstr ""
 #: src/main/java/org/fedoraproject/candlepin/controller/Entitler.java:76
 #, java-format
 msgid "Subscription pool {0} does not exist."
-msgstr ""
+msgstr "সাবস্ক্রিপশন পুল {0} বর্তমানে উপস্থিত নয়।"
 
 #: src/main/java/org/fedoraproject/candlepin/controller/Entitler.java:102
 #, java-format
 msgid "This consumer is already subscribed to the product matching pool with id ''{0}''."
-msgstr ""
+msgstr "এই গ্রাহক ''{0}'' id বিশিষ্ট পুলের জন্য প্রযোজ্য উৎপাদনে সাবস্ক্রাইব করেছেন"
 
 #: src/main/java/org/fedoraproject/candlepin/controller/Entitler.java:107
 #, java-format
 msgid "No free entitlements are available for the pool with id ''{0}''."
-msgstr ""
+msgstr "''{0}'' id সহ পুলের জন্য কোনো অব্যবহৃত এনটাইটেলমেন্ট উপলব্ধ নয়।"
 
 #: src/main/java/org/fedoraproject/candlepin/controller/Entitler.java:112
 #, java-format
 msgid "Consumers of this type are not allowed to subscribe to the pool with id ''{0}''."
-msgstr ""
+msgstr "''{0}'' id সহ পুলের জন্য এই ধরনের গ্রাহকেরা সাবস্ক্রাইব করতে পারবেন না।"
 
 #: src/main/java/org/fedoraproject/candlepin/controller/Entitler.java:116
 #, java-format
 msgid "Multi-entitlement not supported for pool with id ''{0}''."
-msgstr ""
+msgstr "''{0}'' id বিশিষ্ট পুলের জন্য একাধিক  এনটাইটেলমেন্ট সমর্থিত নয়।"
 
 #: src/main/java/org/fedoraproject/candlepin/controller/Entitler.java:120
 #, java-format
 msgid "Unable to entitle consumer to the pool with id ''{0}''.: {1}"
-msgstr ""
+msgstr "''{0}'' id সহ পুলের সাথে গ্রাহককে এনটাইটেল করতে ব্যর্থ.: {1}"
 
 #: src/main/java/org/fedoraproject/candlepin/controller/Entitler.java:161
 #, java-format
@@ -717,7 +703,7 @@ msgstr "''{0}'' উৎপাদনের সাথে এই গ্রাহক 
 #: src/main/java/org/fedoraproject/candlepin/controller/Entitler.java:165
 #, java-format
 msgid "There are not enough free entitlements available for the product ''{0}''"
-msgstr ""
+msgstr "''{0}'' উৎপাদনের জন্য পর্যাপ্ত অব্যবহৃত এনটাইটেলমেন্ট উপলব্ধ নেই।"
 
 #: src/main/java/org/fedoraproject/candlepin/controller/Entitler.java:169
 #, java-format
@@ -744,25 +730,23 @@ msgstr "ব্যবহারকারী পরিসেবার সাথে 
 
 #: src/main/java/org/fedoraproject/candlepin/resteasy/interceptor/OAuth.java:119
 #: src/main/java/org/fedoraproject/candlepin/resteasy/interceptor/OAuth.java:155
-#, 
 msgid "Invalid oauth consumer or secret"
-msgstr ""
+msgstr "অবৈদ oauth গ্রাহক অথবা গোপনীয় তথ্য"
 
 #: src/main/java/org/fedoraproject/candlepin/resteasy/interceptor/OAuth.java:123
 #, java-format
 msgid "OAuth problem encountered. Internal message is: {0}"
-msgstr ""
+msgstr "OAuth-র সমস্যা দেখা দিয়েছে। অভ্যন্তরীণ বার্তা হল: {0}"
 
 #: src/main/java/org/fedoraproject/candlepin/resteasy/interceptor/OAuth.java:129
 #, java-format
 msgid "OAuth error encountered. Internal message is: {0}"
-msgstr ""
+msgstr "OAuth-র ত্রুটি দেখা দিয়েছে। অভ্যন্তরীণ বার্তা হল: {0}"
 
 #: src/main/java/org/fedoraproject/candlepin/resteasy/interceptor/OAuth.java:160
 msgid "Error getting oauth consumer Key"
 msgstr "oauth গ্রাহক কি প্রাপ্ত করতে ত্রুটি"
 
 #: src/main/java/org/fedoraproject/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java:141
-#, 
 msgid "Standalone candlepin does not support redeeming a subscription."
-msgstr ""
+msgstr "স্বতন্ত্র candlepin দ্বারা সাবস্ক্রিপশনের ব্যবহার সমর্থিত হয় না।"
