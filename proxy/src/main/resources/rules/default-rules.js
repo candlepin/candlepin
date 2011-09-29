@@ -167,6 +167,8 @@ function architectureMatches(product, consumer) {
 // (as we'll only need a quantity of one)
 // otherwise, group the pools by stack id, then select the pools we wish to use
 // based on which grouping will come closest to fully stacking.
+//
+// 
 function findStackingPools(pool_class, consumer, compliance) {
     var consumer_sockets = 1;
     if (consumer.hasFact(SOCKET_FACT)) {
@@ -176,6 +178,27 @@ function findStackingPools(pool_class, consumer, compliance) {
     var stackToEntitledSockets = {};
     var stackToPoolMap = {};
     var notStackable = [];
+
+    // data for existing partial stacks
+    // we need a map of product id to stack id
+    // (to see if there is an existing stack for a product
+    // we can build upon, or a conflicting stack)
+    var productIdToStackId = {};
+    var partialStacks = compliance.getPartialStacks();
+
+    // going to assume one stack per product on the system
+    for each (stack_id in compliance.getPartialStacks().keySet().toArray()) {
+    	var covered_sockets = 0;
+    	for each (entitlement in partialStacks.get(stack_id).toArray()) {
+    		covered_sockets += entitlement.getQuantity() * parseInt(entitlement.getPool().getProductAttribute("sockets").getValue());
+    		productIdToStackId[entitlement.getPool().getProductId()] = stack_id;
+    		for each (product in entitlement.getPool().getProvidedProducts().toArray()) {
+    			productIdToStackId[product.getProductId()] = stack_id;
+    		}
+    	}
+    	// we can start entitling from the partial stack
+    	stackToEntitledSockets[stack_id] = covered_sockets;
+    }
     
     for each (pool in pool_class) {
     	var quantity = 0;
@@ -185,19 +208,54 @@ function findStackingPools(pool_class, consumer, compliance) {
     		log.debug("installed overlap found, skipping: " + pool.getId());
     		continue;
     	}
-    	
+    
 	    if (pool.getProductAttribute("multi-entitlement") && pool.getProductAttribute("stacking_id")) {
+	    	
+	    	// make sure there isn't a conflicting pool already on the system
+	    	var installed_stack_id;
+	    	var seen_stack_id = false;
+	    	var conflicting_stacks = false;
+	    	for each (product in pool.getProducts()) {
+	    		if (productIdToStackId.hasOwnProperty(product.id)) {
+	    			var new_installed_stack_id = productIdToStackId[product.id];
+	    			if (new_installed_stack_id != installed_stack_id) {
+	    				// the first id will be different
+	    				if (!seen_stack_id) {
+	    					installed_stack_id = new_installed_stack_id;
+	    					seen_stack_id = true;
+	    				} else {
+	    					conflicting_stacks = true;
+	    				}
+	    			}
+	    		}
+	    	}
+	    	
+	    	// this pool provides 2 or more products that already have entitlements on the system,
+	    	// with multiple stack ids
+	    	if (conflicting_stacks) {
+	    		continue;
+	    	}
+	    	
 	    	var stack_id = pool.getProductAttribute("stacking_id");
+	    	// check if this pool matches the stack id of an existing partial stack
+	    	if (seen_stack_id && installed_stack_id != stack_id) {
+	    		continue;
+	    	}
+	    	
 
 	    	if (!stackToPoolMap.hasOwnProperty(stack_id)) {
 	    		stackToPoolMap[stack_id] = new java.util.HashMap();
-	    		stackToEntitledSockets[stack_id] = 0;
+	    		
+	    		// we might already have the partial stack from compliance
+	    		if (!stackToEntitledSockets.hasOwnProperty(stack_id)) {
+	    			stackToEntitledSockets[stack_id] = 0;
+	    		}
 	    	}
 	    	
-	        var product_sockets = 0;
+	    	var product_sockets = 0;
 	        var pool_sockets = parseInt(pool.getProductAttribute("sockets"));
 	        
-	        while (product_sockets < consumer_sockets) {
+	        while (stackToEntitledSockets[stack_id] + product_sockets < consumer_sockets) {
 	            product_sockets += pool_sockets;
 	            quantity++;
 	        }

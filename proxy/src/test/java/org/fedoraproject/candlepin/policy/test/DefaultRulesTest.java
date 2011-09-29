@@ -1279,6 +1279,138 @@ public class DefaultRulesTest {
         assertEquals(1, bestPools.get(pool2).intValue());
 
     }
+
+    @Test
+    public void testFindBestWillCompleteAPartialStackFromTheSameId() {
+        consumer.setFact("cpu.cpu_socket(s)", "8");
+        
+        String productId1 = "A";
+        String productId3 = "C";
+
+        Product product1 = mockStackingProduct(productId1, "Test Stack product", "1", "2");
+        Product product3 = mockProduct(productId3, "Test Provided product");
+
+        Pool pool1 = mockPool(product1);
+        pool1.setId("DEAD-BEEF");
+        pool1.addProvidedProduct(new ProvidedProduct(product3.getId(), product3.getName()));
+
+        when(this.prodAdapter.getProductById(productId1)).thenReturn(product1);
+        when(this.prodAdapter.getProductById(productId3)).thenReturn(product3);
+
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool1);
+
+        Entitlement fakeEntitlement = mock(Entitlement.class);
+        when(fakeEntitlement.getPool()).thenReturn(pool1);
+        when(fakeEntitlement.getQuantity()).thenReturn(2);
+
+        Map<String, Set<Entitlement>> fakePartial =
+            new HashMap<String, Set<Entitlement>>();
+        Set<Entitlement> entitlementSet = new HashSet<Entitlement>();
+        entitlementSet.add(fakeEntitlement);
+        fakePartial.put("1", entitlementSet);
+        
+        when(compliance.getPartialStacks()).thenReturn(fakePartial);
+        
+        Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer,
+            new String[]{ productId3 }, pools, compliance);
+        assertEquals(1, bestPools.size());
+        assertTrue(bestPools.containsKey(pool1));
+        assertEquals(2, bestPools.get(pool1).intValue());
+    }
+    
+    @Test
+    public void testFindBestWillCompleteAPartialStackFromTheSameIdOtherStackAvailable() {
+        consumer.setFact("cpu.cpu_socket(s)", "8");
+        
+        String productId1 = "A";
+        String productId2 = "B";
+        String productId3 = "C";
+
+        Product product1 = mockStackingProduct(productId1, "Test Stack product", "1", "2");
+        Product product2 = mockStackingProduct(productId2, "Test Stack product 2", "2",
+            "2");
+        Product product3 = mockProduct(productId3, "Test Provided product");
+
+        Pool pool1 = mockPool(product1);
+        pool1.setId("DEAD-BEEF");
+        pool1.addProvidedProduct(new ProvidedProduct(product3.getId(), product3.getName()));
+
+        Pool pool2 = mockPool(product2);
+        pool2.setId("DEAD-BEEF2");
+        pool2.addProvidedProduct(new ProvidedProduct(product3.getId(), product3.getName()));
+        
+        when(this.prodAdapter.getProductById(productId1)).thenReturn(product1);
+        when(this.prodAdapter.getProductById(productId2)).thenReturn(product2);
+        when(this.prodAdapter.getProductById(productId3)).thenReturn(product3);
+
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool1);
+        pools.add(pool2);
+
+        Entitlement fakeEntitlement = mock(Entitlement.class);
+        when(fakeEntitlement.getPool()).thenReturn(pool1);
+        when(fakeEntitlement.getQuantity()).thenReturn(2);
+
+        Map<String, Set<Entitlement>> fakePartial =
+            new HashMap<String, Set<Entitlement>>();
+        Set<Entitlement> entitlementSet = new HashSet<Entitlement>();
+        entitlementSet.add(fakeEntitlement);
+        fakePartial.put("1", entitlementSet);
+        
+        when(compliance.getPartialStacks()).thenReturn(fakePartial);
+        
+        Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer,
+            new String[]{ productId2, productId3 }, pools, compliance);
+        assertEquals(1, bestPools.size());
+        assertTrue(bestPools.containsKey(pool1));
+        assertEquals(2, bestPools.get(pool1).intValue());
+    }
+
+    // we shouldn't be able to get any new entitlements
+    @Test(expected = RuleExecutionException.class)
+    public void testFindBestWillNotCompleteAPartialStackFromAnotherId() {
+        consumer.setFact("cpu.cpu_socket(s)", "8");
+        String productId1 = "A";
+        String productId2 = "B";
+        String productId3 = "C";
+
+        Product product1 = mockStackingProduct(productId1, "Test Stack product", "1", "2");
+        Product product2 = mockStackingProduct(productId2, "Test Stack product 2", "2",
+            "2");
+        Product product3 = mockProduct(productId3, "Test Provided product");
+
+        Pool pool1 = mockPool(product1);
+        pool1.setId("DEAD-BEEF");
+        pool1.addProvidedProduct(new ProvidedProduct(product3.getId(), product3.getName()));
+
+        Pool pool2 = mockPool(product2);
+        pool2.setId("DEAD-BEEF2");
+        pool2.addProvidedProduct(new ProvidedProduct(product3.getId(), product3.getName()));
+        
+        when(this.prodAdapter.getProductById(productId1)).thenReturn(product1);
+        when(this.prodAdapter.getProductById(productId2)).thenReturn(product2);
+        when(this.prodAdapter.getProductById(productId3)).thenReturn(product3);
+
+        List<Pool> pools = new LinkedList<Pool>();
+        //pools.add(pool1);
+        pools.add(pool2);
+
+        Entitlement fakeEntitlement = mock(Entitlement.class);
+        when(fakeEntitlement.getPool()).thenReturn(pool1);
+        when(fakeEntitlement.getQuantity()).thenReturn(2);
+
+        Map<String, Set<Entitlement>> fakePartial =
+            new HashMap<String, Set<Entitlement>>();
+        Set<Entitlement> entitlementSet = new HashSet<Entitlement>();
+        entitlementSet.add(fakeEntitlement);
+        fakePartial.put("1", entitlementSet);
+        
+        when(compliance.getPartialStacks()).thenReturn(fakePartial);
+        
+        enforcer.selectBestPools(consumer, new String[]{ productId2, productId3 },
+            pools, compliance);
+    }
     
     private Pool setupUserRestrictedPool() {
         Product product = new Product(productId, "A user restricted product");
