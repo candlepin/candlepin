@@ -20,32 +20,34 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
+import org.fedoraproject.candlepin.config.CandlepinCommonTestConfig;
+import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.config.ConfigProperties;
+import org.fedoraproject.candlepin.exceptions.BadRequestException;
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerGuest;
+import org.fedoraproject.candlepin.model.ConsumerInstalledProduct;
+import org.fedoraproject.candlepin.model.ConsumerType;
+import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.Role;
+import org.fedoraproject.candlepin.model.User;
+import org.fedoraproject.candlepin.resource.ConsumerResource;
+import org.fedoraproject.candlepin.test.DatabaseTestFixture;
+import org.fedoraproject.candlepin.test.TestUtil;
+
+import org.junit.Before;
+import org.junit.Test;
+
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.persistence.PersistenceException;
-
-import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
-import org.fedoraproject.candlepin.config.CandlepinCommonTestConfig;
-import org.fedoraproject.candlepin.config.Config;
-import org.fedoraproject.candlepin.config.ConfigProperties;
-import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.ConsumerInstalledProduct;
-import org.fedoraproject.candlepin.model.ConsumerType;
-import org.fedoraproject.candlepin.model.Entitlement;
-import org.fedoraproject.candlepin.model.Role;
-import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.Pool;
-import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.model.User;
-import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
-import org.fedoraproject.candlepin.resource.ConsumerResource;
-import org.fedoraproject.candlepin.test.DatabaseTestFixture;
-import org.fedoraproject.candlepin.test.TestUtil;
-import org.fedoraproject.candlepin.exceptions.BadRequestException;
-import org.junit.Before;
-import org.junit.Test;
 
 public class ConsumerTest extends DatabaseTestFixture {
 
@@ -133,6 +135,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         noFacts = consumerCurator.find(noFacts.getId());
         assertNotNull(noFacts.getFacts());
         assertNotNull(noFacts.getInstalledProducts());
+        assertNotNull(noFacts.getGuests());
     }
 
     @Test
@@ -495,6 +498,22 @@ public class ConsumerTest extends DatabaseTestFixture {
         consumerCurator.update(lookedUp);
         lookedUp = consumerCurator.find(consumer.getId());
         assertEquals(1, lookedUp.getInstalledProducts().size());
+    }
+    
+    @Test
+    public void testGuests() throws Exception {
+        Consumer lookedUp = consumerCurator.find(consumer.getId());
+        lookedUp.addGuest(new ConsumerGuest("guest1"));
+        lookedUp.addGuest(new ConsumerGuest("guest2"));
+        consumerCurator.update(lookedUp);
+        lookedUp = consumerCurator.find(consumer.getId());
+        assertEquals(2, lookedUp.getGuests().size());
+        ConsumerGuest installed = lookedUp.getGuests().
+            iterator().next();
+        lookedUp.getGuests().remove(installed);
+        consumerCurator.update(lookedUp);
+        lookedUp = consumerCurator.find(consumer.getId());
+        assertEquals(1, lookedUp.getGuests().size());
     }
 
 }

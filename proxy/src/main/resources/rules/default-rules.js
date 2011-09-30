@@ -219,7 +219,8 @@ var Entitlement = {
             "sockets:1:sockets," +
             "requires_consumer_type:1:requires_consumer_type," +
             "user_license:1:user_license," +
-            "virt_only:1:virt_only";
+            "virt_only:1:virt_only," +
+            "virt_limit:1:virt_limit";
     },
 
     pre_virt_only: function() {
@@ -252,6 +253,33 @@ var Entitlement = {
         if (!attributes.get("requires_consumer_type").equals(consumer.getType())) {
             pre.addError("rulefailed.consumer.type.mismatch");
         }
+    },
+
+    pre_virt_limit: function() {
+    },
+
+    post_virt_limit: function() {
+        if (attributes.containsKey("virt_limit") && standalone) {
+            var productId = pool.getProductId();
+	        var virt_limit = attributes.get("virt_limit");
+	        var virt_attributes = new java.util.HashMap();
+	        virt_attributes.put("virt_only", "true");
+	        virt_attributes.put("pool_derived", "true");
+	        // Make sure the virt pool does not have a virt_limit,
+	        // otherwise this will recurse infinitely
+	        virt_attributes.put("virt_limit", "0");
+
+	        if ('unlimited'.equals(virt_limit)) {
+	            post.createParentConsumerRestrictedPool(productId, pool,
+	                                        'unlimited', virt_attributes);
+	        } else {
+	            var virt_quantity = parseInt(virt_limit);
+	            if (virt_quantity > 0) {
+	                post.createParentConsumerRestrictedPool(productId, pool,
+	                                            virt_quantity.toString(), virt_attributes);
+	            }
+	        }
+	    }
     },
 
     pre_architecture: function() {
@@ -293,6 +321,11 @@ var Entitlement = {
 
         if (pool.getRestrictedToUsername() != null && !pool.getRestrictedToUsername().equals(consumer.getUsername())) {
             pre.addError("pool.not.available.to.user, pool= '" + pool.getRestrictedToUsername() + "', actual username='" + consumer.getUsername() + "'" );
+        }
+
+        if (pool.getRestrictedToParentConsumer() != null && (consumer.getParent() == null || !pool.getRestrictedToParentConsumer().equals(consumer.getParent().getUuid()))) {
+            pre.addError("pool.not.available.to.consumer, pool= '" + pool.getRestrictedToParentConsumer() +
+                         "',actual parent consumer='" + (consumer.getParent() == null?"null":consumer.getParent().getUuid()) + "'" );
         }
 
         // FIXME
@@ -489,7 +522,7 @@ var Pool = {
         pools.add(newPool);
 
         // Check if we need to create a virt-only pool for this subscription:
-        if (attributes.containsKey("virt_limit")) {
+        if (attributes.containsKey("virt_limit") && !standalone) {
             var virt_limit = attributes.get("virt_limit");
             var virt_attributes = new java.util.HashMap();
             virt_attributes.put("virt_only", "true");

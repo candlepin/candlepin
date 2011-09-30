@@ -37,6 +37,7 @@ import org.fedoraproject.candlepin.model.ActivationKeyPool;
 import org.fedoraproject.candlepin.model.CertificateSerialDto;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
+import org.fedoraproject.candlepin.model.ConsumerGuest;
 import org.fedoraproject.candlepin.model.ConsumerInstalledProduct;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
@@ -242,7 +243,6 @@ public class ConsumerResource {
         @QueryParam("activation_keys") String activationKeys)
         throws BadRequestException {
         // API:registerConsumer
-
         Set<String> keyStrings = splitKeys(activationKeys);
 
         // Only let NoAuth principals through if there are activation keys to
@@ -278,7 +278,6 @@ public class ConsumerResource {
         }
 
         Owner owner = setupOwner(principal, ownerKey);
-
         // Raise an exception if any keys were specified which do not exist
         // for this owner.
         List<ActivationKey> keys = new ArrayList<ActivationKey>();
@@ -290,7 +289,6 @@ public class ConsumerResource {
         }
 
         ConsumerType type = lookupConsumerType(consumer.getType().getLabel());
-
         if (type.isType(ConsumerTypeEnum.PERSON)) {
             if (keys.size() > 0) {
                 throw new BadRequestException(
@@ -310,8 +308,7 @@ public class ConsumerResource {
 
         if (log.isDebugEnabled()) {
             log.debug("Got consumerTypeLabel of: " + type.getLabel());
-            log.debug("got facts: ");
-            log.debug(consumer.getFacts());
+            log.debug("got facts: \n" + consumer.getFacts());
 
             if (consumer.getFacts() != null) {
                 for (String key : consumer.getFacts().keySet()) {
@@ -328,6 +325,11 @@ public class ConsumerResource {
         if (consumer.getInstalledProducts() != null) {
             for (ConsumerInstalledProduct p : consumer.getInstalledProducts()) {
                 p.setConsumer(consumer);
+            }
+        }
+        if (consumer.getGuests() != null) {
+            for (ConsumerGuest g : consumer.getGuests()) {
+                g.setConsumer(consumer);
             }
         }
 
@@ -516,7 +518,7 @@ public class ConsumerResource {
 
         boolean changesMade = checkForFactsUpdate(toUpdate, consumer);
         changesMade = changesMade || checkForInstalledProductsUpdate(toUpdate,
-            consumer);
+            consumer) || checkForGuestsUpdate(toUpdate, consumer);
 
         // Allow optional setting of the autoheal attribute:
         if (consumer.isAutoheal() != null &&
@@ -579,8 +581,31 @@ public class ConsumerResource {
             }
             return true;
         }
-        log.debug("No changed to installed products.");
+        log.debug("No change to installed products.");
         return false;
+    }
+    
+    /**
+     * Check if the consumers installed products have changed. If they do not appear to
+     * have been specified in this PUT, skip updating installed products entirely.
+     *
+     * @param existing existing consumer
+     * @param incoming incoming consumer
+     * @return True if installed products were included in request and have changed.
+     */
+    private boolean checkForGuestsUpdate(Consumer existing, Consumer incoming) {
+
+        if (incoming.getGuests() == null) {
+            log.debug("Guests not included in this consumer update, " +
+                "skipping update.");
+            return false;
+        }
+        log.debug("Updating guests.");
+        existing.getGuests().clear();
+        for (ConsumerGuest cg : incoming.getGuests()) {
+            existing.addGuest(cg);
+        }
+        return true;
     }
 
     /**
@@ -1078,35 +1103,18 @@ public class ConsumerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{consumer_uuid}/guests")
-    public Set<String> getGuests(
+    public List<Consumer> getGuests(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
-        return consumer.getGuestIds();
+        return consumerCurator.getGuests(consumer);
     }
-
-    @PUT
-    @Path("/{consumer_uuid}/guests/{guest_uuid}")
-    public void addGuest(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-        @PathParam("guest_uuid") String guestId) {
-        if (guestId == null) {
-            throw new BadRequestException(i18n.tr("You must supply a guest UUID"));
-        }
+    
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/{consumer_uuid}/host")
+    public Consumer getHost(
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
-        consumer.addGuestId(guestId);
-        consumerCurator.merge(consumer);
-    }
-
-    @DELETE
-    @Path("/{consumer_uuid}/guests/{guest_uuid}")
-    public void removeGuest(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-        @PathParam("guest_uuid") String guestId) {
-        if (guestId == null) {
-            throw new BadRequestException(i18n.tr("You must supply a guest UUID"));
-        }
-        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
-        consumer.removeGuestId(guestId);
-        consumerCurator.merge(consumer);
+        return consumerCurator.getHost(consumer);
     }
 }

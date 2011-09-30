@@ -14,21 +14,14 @@
  */
 package org.fedoraproject.candlepin.policy.test;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
+import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
@@ -47,15 +40,29 @@ import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.DateSourceForTesting;
 import org.fedoraproject.candlepin.test.TestDateUtil;
 import org.fedoraproject.candlepin.test.TestUtil;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 public class EnforcerTest extends DatabaseTestFixture {
 
     @Mock private ProductServiceAdapter productAdapter;
     @Mock private RulesCurator rulesCurator;
+    @Mock private Config config;
     private Enforcer enforcer;
     private Owner owner;
     private Consumer consumer;
@@ -93,7 +100,7 @@ public class EnforcerTest extends DatabaseTestFixture {
         JsRules jsRules = new JsRulesProvider(rulesCurator).get();
         
         enforcer = new EntitlementRules(new DateSourceForTesting(2010, 1, 1),
-            jsRules, productAdapter, i18n);
+            jsRules, productAdapter, i18n, config);
     }
     
     @Test

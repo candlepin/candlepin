@@ -24,9 +24,11 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
 import org.hibernate.annotations.MapKeyManyToMany;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -38,7 +40,6 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
@@ -135,10 +136,11 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @Transient
     private boolean canActivate;
 
-    @CollectionOfElements(targetElement = String.class)
-    @JoinTable(name = "cp_guest_list", joinColumns = @JoinColumn(name = "consumer_id"))
-    @Column(name = "guest_id")
-    private Set<String> guestIds = new HashSet<String>();
+    @OneToMany(mappedBy = "consumer", targetEntity = ConsumerGuest.class)
+    @Cascade({org.hibernate.annotations.CascadeType.ALL,
+        org.hibernate.annotations.CascadeType.MERGE,
+        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    private List<ConsumerGuest> guests;
 
     // An instruction for the client to initiate an autoheal request.
     // WARNING: can't initialize to a default value here, we need to be able to see
@@ -503,24 +505,25 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     }
 
     /**
-     * @param guestIds the guestIds to set
+     * @param guests the ConsumerGuests to set
      */
-    public void setGuestIds(Set<String> guestIds) {
-        this.guestIds = guestIds;
+    public void setGuests(List<ConsumerGuest> guests) {
+        this.guests = guests;
     }
 
     /**
      * @return the guestIds
      */
-    public Set<String> getGuestIds() {
-        return guestIds;
+    public List<ConsumerGuest> getGuests() {
+        return guests;
+    }
+    
+    public void addGuest(ConsumerGuest installed) {
+        if (guests == null) {
+            guests = new ArrayList<ConsumerGuest>();
+        }
+        installed.setConsumer(this);
+        guests.add(installed);
     }
 
-    public void addGuestId(String guestId) {
-        guestIds.add(guestId);
-    }
-
-    public void removeGuestId(String guestId) {
-        guestIds.remove(guestId);
-    }
 }

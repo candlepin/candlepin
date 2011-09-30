@@ -14,11 +14,12 @@
  */
 package org.fedoraproject.candlepin.resource.test;
 
-import java.util.Locale;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.mockito.Mockito.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventFactory;
@@ -26,12 +27,14 @@ import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.model.ActivationKeyCurator;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
+import org.fedoraproject.candlepin.model.ConsumerGuest;
 import org.fedoraproject.candlepin.model.ConsumerInstalledProduct;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,6 +42,8 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
+
+import java.util.Locale;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ConsumerResourceUpdateTest {
@@ -123,5 +128,31 @@ public class ConsumerResourceUpdateTest {
         assertEquals(a.getInstalledProducts(), b.getInstalledProducts());
         assertFalse(a.getInstalledProducts().equals(c.getInstalledProducts()));
         assertFalse(a.getInstalledProducts().equals(d.getInstalledProducts()));
+    }
+    
+    @Test
+    public void testGuestListEquality() throws Exception {
+        Consumer a = new Consumer();
+        a.addGuest(new ConsumerGuest("Guest A"));
+        a.addGuest(new ConsumerGuest("Guest B"));
+        a.addGuest(new ConsumerGuest("Guest C"));
+
+        Consumer b = new Consumer();
+        b.addGuest(new ConsumerGuest("Guest A"));
+        b.addGuest(new ConsumerGuest("Guest B"));
+        b.addGuest(new ConsumerGuest("Guest C"));
+
+        Consumer c = new Consumer();
+        c.addGuest(new ConsumerGuest("Guest A"));
+        c.addGuest(new ConsumerGuest("Guest C"));
+
+        Consumer d = new Consumer();
+        d.addGuest(new ConsumerGuest("Guest A"));
+        d.addGuest(new ConsumerGuest("Guest B"));
+        d.addGuest(new ConsumerGuest("Guest D"));
+
+        assertEquals(a.getGuests(), b.getGuests());
+        assertFalse(a.getGuests().equals(c.getGuests()));
+        assertFalse(a.getGuests().equals(d.getGuests()));
     }
 }

@@ -14,16 +14,14 @@
  */
 package org.fedoraproject.candlepin.model;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-
-import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.js.entitlement.PreEntHelper;
+
+import com.google.inject.Inject;
+import com.wideplay.warp.persist.Transactional;
+
+import org.apache.log4j.Logger;
 import org.hibernate.Criteria;
 import org.hibernate.Filter;
 import org.hibernate.LockMode;
@@ -34,8 +32,11 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.impl.FilterImpl;
 
-import com.google.inject.Inject;
-import com.wideplay.warp.persist.Transactional;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * EntitlementPoolCurator
@@ -235,7 +236,15 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             DetachedCriteria.forClass(Pool.class)
                 .add(Restrictions.eq("restrictedToUsername", username)));
     }
-    
+
+    @Transactional
+    @EnforceAccessControl
+    public List<Pool> listPoolsRestrictedToParentConsumer(String uuid) {
+        return listByCriteria(
+            DetachedCriteria.forClass(Pool.class)
+                .add(Restrictions.eq("restrictedToParentConsumer", uuid)));
+    }
+
     @SuppressWarnings("unchecked")
     public List<Entitlement> retrieveFreeEntitlementsOfPool(Pool existingPool,
         boolean lifo) {

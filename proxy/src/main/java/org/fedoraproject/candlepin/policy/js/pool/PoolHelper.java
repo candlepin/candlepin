@@ -19,6 +19,7 @@ import org.fedoraproject.candlepin.model.Attribute;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.PoolAttribute;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductAttribute;
 import org.fedoraproject.candlepin.model.ProductPoolAttribute;
@@ -32,8 +33,8 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 /**
  * Post Entitlement Helper, this object is provided as a global variable to the
@@ -72,6 +73,31 @@ public class PoolHelper {
         
         poolManager.createPool(consumerSpecificPool);
     }
+
+    /**
+     * Create a pool for a product and limit it to consumers a particular user has
+     * registered.
+     *
+     * @param productId Label of the product the pool is for.
+     * @param quantity Number of entitlements for this pool, also accepts "unlimited".
+     */
+    public void createParentConsumerRestrictedPool(String productId, Pool pool,
+        String quantity, Map<String, String> newPoolAttributes) {
+
+        Pool consumerSpecificPool = createPool(productId, pool.getOwner(), quantity,
+            pool.getStartDate(), pool.getEndDate(), pool.getContractNumber(),
+            pool.getAccountNumber(), pool.getProvidedProducts());
+
+        consumerSpecificPool.setRestrictedToParentConsumer(
+                this.sourceEntitlement.getConsumer().getUuid());
+        consumerSpecificPool.setSubscriptionId(pool.getSubscriptionId());
+        for (String key : newPoolAttributes.keySet()) {
+            PoolAttribute pa = new PoolAttribute(key, newPoolAttributes.get(key));
+            consumerSpecificPool.addAttribute(pa);
+        }
+        poolManager.createPool(consumerSpecificPool);
+    }
+
 
     /**
      * Copies the provided products from a subscription to a pool.

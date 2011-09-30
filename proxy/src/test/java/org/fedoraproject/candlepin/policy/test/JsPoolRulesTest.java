@@ -14,14 +14,16 @@
  */
 package org.fedoraproject.candlepin.policy.test;
 
-import org.fedoraproject.candlepin.auth.UserPrincipal;
-import org.fedoraproject.candlepin.model.Owner;
-import java.io.InputStream;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.when;
 
+import org.fedoraproject.candlepin.auth.UserPrincipal;
+import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.controller.PoolManager;
+import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolAttribute;
 import org.fedoraproject.candlepin.model.Product;
@@ -38,14 +40,17 @@ import org.fedoraproject.candlepin.policy.js.pool.PoolUpdate;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.fedoraproject.candlepin.util.Util;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import static org.mockito.Mockito.*;
-import static org.junit.Assert.*;
+import java.io.InputStream;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
 
 
 /**
@@ -61,6 +66,7 @@ public class JsPoolRulesTest {
     @Mock private RulesCurator rulesCuratorMock;
     @Mock private ProductServiceAdapter productAdapterMock;
     @Mock private PoolManager poolManagerMock;
+    @Mock private Config configMock;
 
     private UserPrincipal principal;
     private Owner owner;
@@ -76,7 +82,8 @@ public class JsPoolRulesTest {
         when(rulesCuratorMock.getRules()).thenReturn(rules);
         
         JsRulesProvider provider = new JsRulesProvider(rulesCuratorMock);
-        poolRules = new JsPoolRules(provider.get(), poolManagerMock, productAdapterMock);
+        poolRules = new JsPoolRules(provider.get(), poolManagerMock, 
+                                    productAdapterMock, configMock);
         principal = TestUtil.createOwnerPrincipal();
         owner = principal.getOwners().get(0);
     }

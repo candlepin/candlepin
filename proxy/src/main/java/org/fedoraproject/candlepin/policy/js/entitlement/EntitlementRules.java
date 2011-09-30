@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.policy.js.entitlement;
 
+import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
@@ -63,6 +64,7 @@ public class EntitlementRules implements Enforcer {
     private I18n i18n;
     private Map<String, Set<Rule>> attributesToRules;
     private JsRules jsRules;
+    private Config config;
     
     private static final String PROD_ARCHITECTURE_SEPARATOR = ",";
     private static final String PRE_PREFIX = "pre_";
@@ -78,13 +80,14 @@ public class EntitlementRules implements Enforcer {
     public EntitlementRules(DateSource dateSource,
         JsRules jsRules,
         ProductServiceAdapter prodAdapter,
-        I18n i18n) {
+        I18n i18n, Config config) {
 
         this.jsRules = jsRules;
         this.dateSource = dateSource;
         this.prodAdapter = prodAdapter;
         this.i18n = i18n;
         this.attributesToRules = null;
+        this.config = config;
 
         jsRules.init("entitlement_name_space");
         rulesInit();
@@ -180,6 +183,8 @@ public class EntitlementRules implements Enforcer {
         args.put("pool", pool);
         args.put("attributes", allAttributes);
         args.put("log", rulesLogger);
+        args.put("standalone", config.standalone());
+        args.put("entitlement", ent);
 
         log.debug("Running post-entitlement rules for: " + c.getUuid() +
             " product: " + topLevelProductId);

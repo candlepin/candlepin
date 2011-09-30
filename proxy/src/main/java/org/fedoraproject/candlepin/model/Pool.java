@@ -14,6 +14,16 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import org.fedoraproject.candlepin.util.DateSource;
+
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.Formula;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Index;
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
+
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -31,15 +41,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
-import org.fedoraproject.candlepin.util.DateSource;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.Formula;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
 
 /**
  * Represents a pool of products eligible to be consumed (entitled).
@@ -117,6 +118,8 @@ public class Pool extends AbstractHibernateObject implements Linkable, Owned {
     private Set<Entitlement> entitlements = new HashSet<Entitlement>();
 
     private String restrictedToUsername;
+
+    private String restrictedToParentConsumer;
 
     private String contractNumber;
     private String accountNumber;
@@ -475,6 +478,14 @@ public class Pool extends AbstractHibernateObject implements Linkable, Owned {
 
     public void setRestrictedToUsername(String restrictedToUsername) {
         this.restrictedToUsername = restrictedToUsername;
+    }
+
+    public String getRestrictedToParentConsumer() {
+        return restrictedToParentConsumer;
+    }
+
+    public void setRestrictedToParentConsumer(String restrictedToParentConsumer) {
+        this.restrictedToParentConsumer = restrictedToParentConsumer;
     }
 
     /**
