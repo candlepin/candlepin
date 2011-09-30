@@ -278,16 +278,10 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      */
     @Transactional
     @EnforceAccessControl
-    public Consumer getHost(Consumer consumer) {
-        if (consumer.getFact("virt.uuid") == null ||
-            consumer.getFact("virt.uuid").trim().equals("")) {
-            throw new BadRequestException(i18n.tr(
-                "The consumer with UUID {0} is not a virtual guest.",
-                consumer.getUuid()));
-        }
+    public Consumer getHost(String uuid) {
         List<GuestId> consumers = (List<GuestId>) currentSession()
             .createCriteria(GuestId.class)
-            .add(Restrictions.eq("guestId", consumer.getFact("virt.uuid")))
+            .add(Restrictions.eq("guestId", uuid))
             .uniqueResult();
         Consumer newest = null;
         if (consumers != null) {
@@ -327,7 +321,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
                 Consumer guest = null;
                 guest = findByUuid(cg.getGuestId());
                 if (guest != null) {
-                    if (getHost(guest).equals(consumer)) {
+                    if (getHost(cg.getGuestId()).equals(consumer)) {
                         guests.add(guest);
                     }
                 }

@@ -37,7 +37,6 @@ import org.fedoraproject.candlepin.model.ActivationKeyPool;
 import org.fedoraproject.candlepin.model.CertificateSerialDto;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
-import org.fedoraproject.candlepin.model.GuestId;
 import org.fedoraproject.candlepin.model.ConsumerInstalledProduct;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
@@ -46,6 +45,7 @@ import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
 import org.fedoraproject.candlepin.model.EntitlementCurator;
 import org.fedoraproject.candlepin.model.EventCurator;
+import org.fedoraproject.candlepin.model.GuestId;
 import org.fedoraproject.candlepin.model.IdentityCertificate;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
@@ -1115,6 +1115,12 @@ public class ConsumerResource {
     public Consumer getHost(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
-        return consumerCurator.getHost(consumer);
+        if (consumer.getFact("virt.uuid") == null ||
+            consumer.getFact("virt.uuid").trim().equals("")) {
+            throw new BadRequestException(i18n.tr(
+                "The consumer with UUID {0} is not a virtual guest.",
+                consumer.getUuid()));
+        }
+        return consumerCurator.getHost(consumer.getFact("virt.uuid"));
     }
 }
