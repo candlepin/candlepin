@@ -37,7 +37,7 @@ import org.fedoraproject.candlepin.model.ActivationKeyPool;
 import org.fedoraproject.candlepin.model.CertificateSerialDto;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
-import org.fedoraproject.candlepin.model.ConsumerGuest;
+import org.fedoraproject.candlepin.model.GuestId;
 import org.fedoraproject.candlepin.model.ConsumerInstalledProduct;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
@@ -327,8 +327,8 @@ public class ConsumerResource {
                 p.setConsumer(consumer);
             }
         }
-        if (consumer.getGuests() != null) {
-            for (ConsumerGuest g : consumer.getGuests()) {
+        if (consumer.getGuestsIds() != null) {
+            for (GuestId g : consumer.getGuestsIds()) {
                 g.setConsumer(consumer);
             }
         }
@@ -595,15 +595,15 @@ public class ConsumerResource {
      */
     private boolean checkForGuestsUpdate(Consumer existing, Consumer incoming) {
 
-        if (incoming.getGuests() == null) {
+        if (incoming.getGuestsIds() == null) {
             log.debug("Guests not included in this consumer update, " +
                 "skipping update.");
             return false;
         }
         log.debug("Updating guests.");
-        existing.getGuests().clear();
-        for (ConsumerGuest cg : incoming.getGuests()) {
-            existing.addGuest(cg);
+        existing.getGuestsIds().clear();
+        for (GuestId cg : incoming.getGuestsIds()) {
+            existing.addGuestId(cg);
         }
         return true;
     }

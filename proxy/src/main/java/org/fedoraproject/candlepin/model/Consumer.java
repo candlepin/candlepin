@@ -136,11 +136,11 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @Transient
     private boolean canActivate;
 
-    @OneToMany(mappedBy = "consumer", targetEntity = ConsumerGuest.class)
+    @OneToMany(mappedBy = "consumer", targetEntity = GuestId.class)
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.MERGE,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
-    private List<ConsumerGuest> guests;
+    private List<GuestId> guestsIds;
 
     // An instruction for the client to initiate an autoheal request.
     // WARNING: can't initialize to a default value here, we need to be able to see
@@ -505,25 +505,25 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     }
 
     /**
-     * @param guests the ConsumerGuests to set
+     * @param guests the GuestIds to set
      */
-    public void setGuests(List<ConsumerGuest> guests) {
-        this.guests = guests;
+    public void setGuestsId(List<GuestId> guests) {
+        this.guestsIds = guests;
     }
 
     /**
      * @return the guestIds
      */
-    public List<ConsumerGuest> getGuests() {
-        return guests;
+    public List<GuestId> getGuestsIds() {
+        return guestsIds;
     }
-    
-    public void addGuest(ConsumerGuest installed) {
-        if (guests == null) {
-            guests = new ArrayList<ConsumerGuest>();
+
+    public void addGuestId(GuestId guestId) {
+        if (guestsIds == null) {
+            guestsIds = new ArrayList<GuestId>();
         }
-        installed.setConsumer(this);
-        guests.add(installed);
+        guestId.setConsumer(this);
+        guestsIds.add(guestId);
     }
 
 }

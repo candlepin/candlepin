@@ -27,7 +27,7 @@ import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.model.ActivationKeyCurator;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
-import org.fedoraproject.candlepin.model.ConsumerGuest;
+import org.fedoraproject.candlepin.model.GuestId;
 import org.fedoraproject.candlepin.model.ConsumerInstalledProduct;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
@@ -133,26 +133,26 @@ public class ConsumerResourceUpdateTest {
     @Test
     public void testGuestListEquality() throws Exception {
         Consumer a = new Consumer();
-        a.addGuest(new ConsumerGuest("Guest A"));
-        a.addGuest(new ConsumerGuest("Guest B"));
-        a.addGuest(new ConsumerGuest("Guest C"));
+        a.addGuestId(new GuestId("Guest A"));
+        a.addGuestId(new GuestId("Guest B"));
+        a.addGuestId(new GuestId("Guest C"));
 
         Consumer b = new Consumer();
-        b.addGuest(new ConsumerGuest("Guest A"));
-        b.addGuest(new ConsumerGuest("Guest B"));
-        b.addGuest(new ConsumerGuest("Guest C"));
+        b.addGuestId(new GuestId("Guest A"));
+        b.addGuestId(new GuestId("Guest B"));
+        b.addGuestId(new GuestId("Guest C"));
 
         Consumer c = new Consumer();
-        c.addGuest(new ConsumerGuest("Guest A"));
-        c.addGuest(new ConsumerGuest("Guest C"));
+        c.addGuestId(new GuestId("Guest A"));
+        c.addGuestId(new GuestId("Guest C"));
 
         Consumer d = new Consumer();
-        d.addGuest(new ConsumerGuest("Guest A"));
-        d.addGuest(new ConsumerGuest("Guest B"));
-        d.addGuest(new ConsumerGuest("Guest D"));
+        d.addGuestId(new GuestId("Guest A"));
+        d.addGuestId(new GuestId("Guest B"));
+        d.addGuestId(new GuestId("Guest D"));
 
-        assertEquals(a.getGuests(), b.getGuests());
-        assertFalse(a.getGuests().equals(c.getGuests()));
-        assertFalse(a.getGuests().equals(d.getGuests()));
+        assertEquals(a.getGuestsIds(), b.getGuestsIds());
+        assertFalse(a.getGuestsIds().equals(c.getGuestsIds()));
+        assertFalse(a.getGuestsIds().equals(d.getGuestsIds()));
     }
 }

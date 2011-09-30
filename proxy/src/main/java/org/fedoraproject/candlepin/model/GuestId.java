@@ -32,15 +32,16 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 /**
- * Represents a product installed (not necessarily entitled) on a consumer.
+ * Represents a guest ID running on a virt host consumer.
  *
- * Used for compliance checking and healing to find appropriate subscriptions.
+ * NOTE: this is a guest ID, not a Candlepin consumer UUID. The guest may not be
+ * registered.
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_consumer_guests")
-public class ConsumerGuest extends AbstractHibernateObject {
+public class GuestId extends AbstractHibernateObject {
 
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -58,14 +59,14 @@ public class ConsumerGuest extends AbstractHibernateObject {
     @Index(name = "cp_consumerguest_consumer_fk_idx")
     private Consumer consumer;
 
-    public ConsumerGuest() {
+    public GuestId() {
     }
 
-    public ConsumerGuest(String guestId) {
+    public GuestId(String guestId) {
         this.guestId = guestId;
     }
 
-    public ConsumerGuest(String guestId, Consumer consumer) {
+    public GuestId(String guestId, Consumer consumer) {
         this.guestId = guestId;
         this.consumer = consumer;
     }
@@ -97,10 +98,10 @@ public class ConsumerGuest extends AbstractHibernateObject {
 
     @Override
     public boolean equals(Object other) {
-        if (!(other instanceof ConsumerGuest)) {
+        if (!(other instanceof GuestId)) {
             return false;
         }
-        ConsumerGuest that = (ConsumerGuest) other;
+        GuestId that = (GuestId) other;
         if (this.getGuestId().equals(that.getGuestId())) {
             return true;
         }

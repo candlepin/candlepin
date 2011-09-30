@@ -285,13 +285,13 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
                 "The consumer with UUID {0} is not a virtual guest.",
                 consumer.getUuid()));
         }
-        List<ConsumerGuest> consumers = (List<ConsumerGuest>) currentSession()
-            .createCriteria(ConsumerGuest.class)
+        List<GuestId> consumers = (List<GuestId>) currentSession()
+            .createCriteria(GuestId.class)
             .add(Restrictions.eq("guestId", consumer.getFact("virt.uuid")))
             .uniqueResult();
         Consumer newest = null;
         if (consumers != null) {
-            for (ConsumerGuest cg : consumers) {
+            for (GuestId cg : consumers) {
                 if (newest == null ||
                     cg.getUpdated().getTime() > newest.getUpdated().getTime()) {
                     newest = cg.getConsumer();
@@ -318,12 +318,12 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
                 consumer.getUuid()));
         }
         List<Consumer> guests = new ArrayList<Consumer>();
-        List<ConsumerGuest> consumerGuests = (List<ConsumerGuest>) currentSession()
-            .createCriteria(ConsumerGuest.class)
+        List<GuestId> consumerGuests = (List<GuestId>) currentSession()
+            .createCriteria(GuestId.class)
             .add(Restrictions.eq("consumer", consumer))
             .uniqueResult();
         if(consumerGuests != null){
-            for (ConsumerGuest cg : consumerGuests) {
+            for (GuestId cg : consumerGuests) {
                 Consumer guest = null;
                 guest = findByUuid(cg.getGuestId());
                 if (guest != null) {

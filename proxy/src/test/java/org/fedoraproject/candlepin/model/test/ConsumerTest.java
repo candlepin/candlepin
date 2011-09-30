@@ -26,7 +26,7 @@ import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.ConsumerGuest;
+import org.fedoraproject.candlepin.model.GuestId;
 import org.fedoraproject.candlepin.model.ConsumerInstalledProduct;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
@@ -135,7 +135,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         noFacts = consumerCurator.find(noFacts.getId());
         assertNotNull(noFacts.getFacts());
         assertNotNull(noFacts.getInstalledProducts());
-        assertNotNull(noFacts.getGuests());
+        assertNotNull(noFacts.getGuestsIds());
     }
 
     @Test
@@ -503,17 +503,17 @@ public class ConsumerTest extends DatabaseTestFixture {
     @Test
     public void testGuests() throws Exception {
         Consumer lookedUp = consumerCurator.find(consumer.getId());
-        lookedUp.addGuest(new ConsumerGuest("guest1"));
-        lookedUp.addGuest(new ConsumerGuest("guest2"));
+        lookedUp.addGuestId(new GuestId("guest1"));
+        lookedUp.addGuestId(new GuestId("guest2"));
         consumerCurator.update(lookedUp);
         lookedUp = consumerCurator.find(consumer.getId());
-        assertEquals(2, lookedUp.getGuests().size());
-        ConsumerGuest installed = lookedUp.getGuests().
+        assertEquals(2, lookedUp.getGuestsIds().size());
+        GuestId installed = lookedUp.getGuestsIds().
             iterator().next();
-        lookedUp.getGuests().remove(installed);
+        lookedUp.getGuestsIds().remove(installed);
         consumerCurator.update(lookedUp);
         lookedUp = consumerCurator.find(consumer.getId());
-        assertEquals(1, lookedUp.getGuests().size());
+        assertEquals(1, lookedUp.getGuestsIds().size());
     }
 
 }
