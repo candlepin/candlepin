@@ -39,14 +39,14 @@ public class CandlepinConsumerTypeEnforcer implements Enforcer {
     @Override
     public PreEntHelper preEntitlement(
             Consumer consumer, Pool entitlementPool, Integer quantity) {
-        return new PreEntHelper(1);
+        return new PreEntHelper(1, null);
     }
 
     @Override
     public List<Pool> selectBestPools(Consumer consumer, String[] productIds,
-        List<Pool> pools) 
+        List<Pool> pools)
         throws RuleExecutionException {
-        
+
         if (pools.isEmpty()) {
             return null;
         }

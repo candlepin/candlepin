@@ -23,6 +23,7 @@ import static org.mockito.Mockito.when;
 
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
@@ -63,6 +64,7 @@ public class EnforcerTest extends DatabaseTestFixture {
     @Mock private ProductServiceAdapter productAdapter;
     @Mock private RulesCurator rulesCurator;
     @Mock private Config config;
+
     private Enforcer enforcer;
     private Owner owner;
     private Consumer consumer;
@@ -74,7 +76,7 @@ public class EnforcerTest extends DatabaseTestFixture {
     @Before
     public void createEnforcer() throws Exception {
         MockitoAnnotations.initMocks(this);
-        
+
         owner = createOwner();
         ownerCurator.create(owner);
 
@@ -82,7 +84,7 @@ public class EnforcerTest extends DatabaseTestFixture {
         consumerTypeCurator.create(consumer.getType());
         consumerCurator.create(consumer);
 
-        BufferedReader reader 
+        BufferedReader reader
             = new BufferedReader(new InputStreamReader(
                 getClass().getResourceAsStream("/rules/test-rules.js")));
         StringBuilder builder = new StringBuilder();
@@ -96,48 +98,48 @@ public class EnforcerTest extends DatabaseTestFixture {
         when(rules.getRules()).thenReturn(builder.toString());
         when(rulesCurator.getRules()).thenReturn(rules);
         when(rulesCurator.getUpdated()).thenReturn(TestDateUtil.date(2010, 1, 1));
-        
+
         JsRules jsRules = new JsRulesProvider(rulesCurator).get();
-        
+
         enforcer = new EntitlementRules(new DateSourceForTesting(2010, 1, 1),
-            jsRules, productAdapter, i18n, config);
+            jsRules, productAdapter, i18n, config, consumerCurator);
     }
-    
+
     @Test
     public void shouldParseValidMapping() {
         assertEquals(
             new EntitlementRules.Rule(
-                "func1", 1, 
+                "func1", 1,
                 new HashSet<String>() { { add("attr1"); add("attr2"); add("attr3"); } }
             ),
             ((EntitlementRules) enforcer).parseRule("func1:1:attr1:attr2:attr3"));
-        
+
         assertEquals(
             new EntitlementRules.Rule(
-                "func3", 3, 
+                "func3", 3,
                 new HashSet<String>() { { add("attr4"); } }
             ),
             ((EntitlementRules) enforcer).parseRule("func3:3:attr4"));
     }
-    
+
     @Test(expected = IllegalArgumentException.class)
     public void shouldFailParsingIfNoOderIsPresent() {
         ((EntitlementRules) enforcer).parseRule("func3:attr4");
     }
-    
+
     @Test(expected = IllegalArgumentException.class)
     public void shouldFailParsingIfNotAllParametersArePresent() {
         ((EntitlementRules) enforcer).parseRule("func3:3");
     }
-    
+
     @Test
     public void shouldCreateMappingBetweenAttributesAndFunctions() {
-        String attributesAndRules = 
+        String attributesAndRules =
             "func1:1:attr1:attr2:attr3, func2:2:attr1, func3:3:attr4, func5:5:attr1:attr4";
-        
+
         Map<String, Set<EntitlementRules.Rule>> parsed =
             ((EntitlementRules) enforcer).parseAttributeMappings(attributesAndRules);
-        
+
         assertTrue(parsed.get("attr1").contains(
             rule("func1", 1, "attr1", "attr2", "attr3")));
         assertTrue(parsed.get("attr1").contains(rule("func2", 2, "attr1")));
@@ -145,7 +147,7 @@ public class EnforcerTest extends DatabaseTestFixture {
         assertTrue(parsed.get("attr4").contains(rule("func5", 5, "attr1", "attr4")));
         assertTrue(parsed.get("attr1").contains(rule("func5", 5, "attr1", "attr4")));
     }
-    
+
     @Test
     public void shouldSelectAllRulesMappedToSingleAttribute() {
         Map<String, Set<EntitlementRules.Rule>> rules =
@@ -156,13 +158,13 @@ public class EnforcerTest extends DatabaseTestFixture {
                     put("attr3", rules(rule("func3", 2, "attr3")));
                 }
             };
-        
-        List<EntitlementRules.Rule> orderedAndFilteredRules = 
+
+        List<EntitlementRules.Rule> orderedAndFilteredRules =
             ((EntitlementRules) enforcer).rulesForAttributes(
                 new HashSet<String>() { { add("attr1"); } }, rules);
-        
+
         assertEquals(
-            new LinkedList<EntitlementRules.Rule>() { 
+            new LinkedList<EntitlementRules.Rule>() {
                 {
                     add(rule("func5", 5, "attr1"));
                     add(rule("func1", 2, "attr1"));
@@ -172,10 +174,10 @@ public class EnforcerTest extends DatabaseTestFixture {
             orderedAndFilteredRules
         );
     }
-    
+
     @Test
     public void shouldSelectAllRulesMappedToMultipleAttributes() {
-        Map<String, Set<EntitlementRules.Rule>> rules 
+        Map<String, Set<EntitlementRules.Rule>> rules
             = new HashMap<String, Set<EntitlementRules.Rule>>() {
                 {
                     put("attr1",
@@ -185,25 +187,25 @@ public class EnforcerTest extends DatabaseTestFixture {
                             rule("func6", 4, "attr1", "attr2", "attr3", "attr4"))
                     );
                     put("attr3", rules(rule("func3", 3, "attr3")));
-                } 
+                }
             };
-        
-        List<EntitlementRules.Rule> orderedAndFilteredRules = 
+
+        List<EntitlementRules.Rule> orderedAndFilteredRules =
             ((EntitlementRules) enforcer).rulesForAttributes(
-                new HashSet<String>() { 
-                    { 
-                        add("attr1"); add("attr2"); add("attr3"); 
-                    } 
+                new HashSet<String>() {
+                    {
+                        add("attr1"); add("attr2"); add("attr3");
+                    }
                 }, rules);
-        
+
         assertEquals(
-            new LinkedList<EntitlementRules.Rule>() { 
+            new LinkedList<EntitlementRules.Rule>() {
                 {
                     add(rule("func5", 5, "attr1", "attr2", "attr3"));
                     add(rule("func3", 3, "attr3"));
                     add(rule("func1", 2, "attr1", "attr2"));
                     add(rule("global", 0, new String[0]));
-                } 
+                }
             },
             orderedAndFilteredRules
         );
@@ -217,12 +219,12 @@ public class EnforcerTest extends DatabaseTestFixture {
     public void passValidationEnoughNumberOfEntitlementsIsAvailableAndNotExpired() {
         Product product = new Product("a-product", "A product for testing");
         productCurator.create(product);
-        
+
         when(this.productAdapter.getProductById("a-product")).thenReturn(product);
-        
+
         ValidationResult result = enforcer.preEntitlement(
             createConsumer(owner),
-            entitlementPoolWithMembersAndExpiration(owner, product, 1, 2, 
+            entitlementPoolWithMembersAndExpiration(owner, product, 1, 2,
                 expiryDate(2010, 10, 10)),
             1).getResult();
         assertTrue(result.isSuccessful());
@@ -234,15 +236,15 @@ public class EnforcerTest extends DatabaseTestFixture {
     public void shouldFailValidationWhenNoEntitlementsAreAvailable() {
         Product product = new Product("a-product", "A product for testing");
         productCurator.create(product);
-        
+
         when(this.productAdapter.getProductById("a-product")).thenReturn(product);
 
         ValidationResult result = enforcer.preEntitlement(
             createConsumer(owner),
-            entitlementPoolWithMembersAndExpiration(owner, product, 1, 1, 
+            entitlementPoolWithMembersAndExpiration(owner, product, 1, 1,
                 expiryDate(2010, 10, 10)),
             1).getResult();
-        
+
         assertFalse(result.isSuccessful());
         assertTrue(result.hasErrors());
         assertFalse(result.hasWarnings());
@@ -252,7 +254,7 @@ public class EnforcerTest extends DatabaseTestFixture {
     public void shouldFailWhenEntitlementsAreExpired() {
         Product product = new Product("a-product", "A product for testing");
         productCurator.create(product);
-        
+
         when(this.productAdapter.getProductById("a-product")).thenReturn(product);
 
         ValidationResult result = enforcer.preEntitlement(
@@ -270,15 +272,15 @@ public class EnforcerTest extends DatabaseTestFixture {
         Product product = new Product("a-product", "A product for testing");
         product.setAttribute(PRODUCT_CPULIMITED, "2");
         productCurator.create(product);
-        
+
         when(this.productAdapter.getProductById("a-product")).thenReturn(product);
-        
+
         ValidationResult result = enforcer.preEntitlement(
-            TestUtil.createConsumer(), 
-            entitlementPoolWithMembersAndExpiration(owner, product, 1, 2, 
+            TestUtil.createConsumer(),
+            entitlementPoolWithMembersAndExpiration(owner, product, 1, 2,
                 expiryDate(2000, 1, 1)),
             1).getResult();
-        
+
         assertFalse(result.isSuccessful());
         assertTrue(result.hasErrors());
         assertFalse(result.hasWarnings());
@@ -302,11 +304,11 @@ public class EnforcerTest extends DatabaseTestFixture {
         Pool pool3 = createPoolAndSub(owner, product, 5L,
             TestUtil.createDate(2000, 02, 26), TestUtil
                 .createDate(2055, 02, 26));
-        
+
         when(this.productAdapter.getProductById("a-product"))
             .thenReturn(product);
-        
-        List<Pool> availablePools 
+
+        List<Pool> availablePools
             = Arrays.asList(new Pool[] {pool1, pool2, desired, pool3});
 
         List<Pool> result = enforcer.selectBestPools(consumer, new String[] {"a-product"},
@@ -329,32 +331,32 @@ public class EnforcerTest extends DatabaseTestFixture {
         Pool pool2 = createPoolAndSub(owner, product, 5L,
             TestUtil.createDate(2000, 02, 26), TestUtil
                 .createDate(2060, 02, 26));
-        
+
         when(this.productAdapter.getProductById("a-product"))
             .thenReturn(product);
-        
-        List<Pool> availablePools 
+
+        List<Pool> availablePools
             = Arrays.asList(new Pool[] {pool1, pool2, desired});
 
         List<Pool> result = enforcer.selectBestPools(consumer,
             new String[] {"a-product"}, availablePools);
         assertEquals(desired.getId(), result.get(0).getId());
     }
-    
+
     @Test
     public void shouldUseHighestPriorityRule() {
         Product product = new Product("a-product", "A product for testing");
         product.setAttribute(HIGHEST_QUANTITY_PRODUCT, "");
         product.setAttribute(LONGEST_EXPIRY_PRODUCT, "");
         productCurator.create(product);
-        
+
         Pool pool1 = createPoolAndSub(owner, product, 5L,
             TestUtil.createDate(2000, 02, 26), TestUtil.createDate(2050, 02, 26));
         Pool desired = createPoolAndSub(owner, product, 5L,
             TestUtil.createDate(2000, 02, 26), TestUtil.createDate(2051, 02, 26));
         Pool pool2 = createPoolAndSub(owner, product, 500L,
             TestUtil.createDate(2000, 02, 26), TestUtil.createDate(2020, 02, 26));
-        
+
         when(this.productAdapter.getProductById("a-product")).thenReturn(product);
 
         List<Pool> availablePools = Arrays.asList(new Pool[] {pool1, pool2, desired});
@@ -368,7 +370,7 @@ public class EnforcerTest extends DatabaseTestFixture {
     public void testSelectBestPoolNoPools() {
         when(this.productAdapter.getProductById(HIGHEST_QUANTITY_PRODUCT))
             .thenReturn(new Product(HIGHEST_QUANTITY_PRODUCT, HIGHEST_QUANTITY_PRODUCT));
-        
+
         // There are no pools for the product in this case:
         List<Pool> result = enforcer.selectBestPools(consumer,
             new String[] {HIGHEST_QUANTITY_PRODUCT}, new LinkedList<Pool>());
@@ -381,14 +383,14 @@ public class EnforcerTest extends DatabaseTestFixture {
         product.setAttribute(BAD_RULE_PRODUCT, "");
         productCurator.create(product);
 
-        
+
         Pool pool1 = createPoolAndSub(owner, product, 5L, TestUtil
             .createDate(2000, 02, 26), TestUtil.createDate(2050, 02, 26));
 
         when(this.productAdapter.getProductById("a-product"))
             .thenReturn(product);
 
-        enforcer.selectBestPools(consumer, new String[] {"a-product"}, 
+        enforcer.selectBestPools(consumer, new String[] {"a-product"},
             Collections.singletonList(pool1));
     }
 
@@ -401,18 +403,18 @@ public class EnforcerTest extends DatabaseTestFixture {
             .createDate(2000, 02, 26), TestUtil.createDate(2050, 02, 26));
         Pool pool2 = createPoolAndSub(owner, product, 5L, TestUtil
             .createDate(2000, 02, 26), TestUtil.createDate(2060, 02, 26));
-        
+
         when(this.productAdapter.getProductById("a-product"))
             .thenReturn(product);
-    
-        List<Pool> availablePools 
+
+        List<Pool> availablePools
             = Arrays.asList(new Pool[] {pool1, pool2});
 
         List<Pool> result = enforcer.selectBestPools(consumer,
             new String[] {product.getId()}, availablePools);
         assertEquals(pool1.getId(), result.get(0).getId());
     }
-    
+
     private EntitlementRules.Rule rule(String name, int priority, String... attrs) {
         Set<String> attributes = new HashSet<String>();
         for (String attr : attrs) {
@@ -420,18 +422,18 @@ public class EnforcerTest extends DatabaseTestFixture {
         }
         return new EntitlementRules.Rule(name, priority, attributes);
     }
-    
+
     private Set<EntitlementRules.Rule> rules(EntitlementRules.Rule... rules) {
         return new HashSet<EntitlementRules.Rule>(Arrays.asList(rules));
     }
-    
+
     private Date expiryDate(int year, int month, int day) {
         return TestDateUtil.date(year, month, day);
     }
 
     private Pool entitlementPoolWithMembersAndExpiration(Owner theOwner, Product product,
         final int currentMembers, final int maxMembers, Date expiry) {
-        Pool p = createPoolAndSub(theOwner, product, 
+        Pool p = createPoolAndSub(theOwner, product,
             Long.valueOf(maxMembers), new Date(), expiry);
 
         for (int i = 0; i < currentMembers; i++) {

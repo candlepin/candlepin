@@ -26,6 +26,7 @@ import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
@@ -76,6 +77,8 @@ public class DefaultRulesTest {
     private ProductServiceAdapter prodAdapter;
     @Mock
     private Config config;
+    @Mock
+    private ConsumerCurator consumerCurator;
     private Owner owner;
     private Consumer consumer;
     private String productId = "a-product";
@@ -106,7 +109,7 @@ public class DefaultRulesTest {
         JsRules jsRules = new JsRulesProvider(rulesCurator).get();
         enforcer = new EntitlementRules(new DateSourceImpl(), jsRules,
             prodAdapter, I18nFactory.getI18n(getClass(), Locale.US,
-                I18nFactory.FALLBACK), config);
+                I18nFactory.FALLBACK), config, consumerCurator);
 
         owner = new Owner();
         consumer = new Consumer("test consumer", "test user", owner,
@@ -493,7 +496,7 @@ public class DefaultRulesTest {
         verify(postHelper).createUserRestrictedPool(subProductId, pool,
             "unlimited");
     }
-    
+
     private Pool setupUserLicensedPool() {
         Product product = new Product(productId, "A user licensed product");
         product.setAttribute("requires_consumer_type",
@@ -524,7 +527,7 @@ public class DefaultRulesTest {
         assertTrue(result.hasErrors());
         assertFalse(result.hasWarnings());
     }
-    
+
     @Test
     public void parentConsumerRestrictedPoolPassesPre() {
         Consumer parent = new Consumer("test parent consumer", "test user", owner,
@@ -559,7 +562,7 @@ public class DefaultRulesTest {
         PoolHelper postHelper = mock(PoolHelper.class);
         when(config.standalone()).thenReturn(true);
         enforcer.postEntitlement(consumer, postHelper, e);
-        
+
         Map<String, String> atts = new HashMap<String, String>();
         atts.put("pool_derived", "true");
         atts.put("virt_only", "true");
@@ -577,12 +580,12 @@ public class DefaultRulesTest {
         PoolHelper postHelper = mock(PoolHelper.class);
         when(config.standalone()).thenReturn(false);
         enforcer.postEntitlement(consumer, postHelper, e);
-        
+
         Map<String, String> atts = new HashMap<String, String>();
         atts.put("pool_derived", "true");
         atts.put("virt_only", "true");
         atts.put("virt_limit", "0");
-        verify(postHelper, never()).createParentConsumerRestrictedPool(pool.getProductId(), 
+        verify(postHelper, never()).createParentConsumerRestrictedPool(pool.getProductId(),
             pool, pool.getAttributeValue("virt_limit"), atts);
     }
 
@@ -1108,7 +1111,7 @@ public class DefaultRulesTest {
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
         return pool;
     }
-    
+
     private Pool setupParentConsumerRestrictedPool(Consumer parent) {
         Product product = new Product(productId, "A user restricted product");
         Pool pool = TestUtil.createPool(owner, product);
@@ -1117,7 +1120,7 @@ public class DefaultRulesTest {
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
         return pool;
     }
-    
+
     private Pool setupVirtLimitPool() {
         Product product = new Product(productId, "A virt_limit product");
         Pool pool = TestUtil.createPool(owner, product);

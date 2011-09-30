@@ -16,6 +16,7 @@ package org.fedoraproject.candlepin.policy.js.entitlement;
 
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
@@ -65,7 +66,8 @@ public class EntitlementRules implements Enforcer {
     private Map<String, Set<Rule>> attributesToRules;
     private JsRules jsRules;
     private Config config;
-    
+    private ConsumerCurator consumerCurator;
+
     private static final String PROD_ARCHITECTURE_SEPARATOR = ",";
     private static final String PRE_PREFIX = "pre_";
     private static final String POST_PREFIX = "post_";
@@ -74,13 +76,13 @@ public class EntitlementRules implements Enforcer {
         "global";
     private static final String GLOBAL_PRE_FUNCTION = PRE_PREFIX + "global";
     private static final String GLOBAL_POST_FUNCTION = POST_PREFIX + "global";
-    
+
 
     @Inject
     public EntitlementRules(DateSource dateSource,
         JsRules jsRules,
         ProductServiceAdapter prodAdapter,
-        I18n i18n, Config config) {
+        I18n i18n, Config config, ConsumerCurator consumerCurator) {
 
         this.jsRules = jsRules;
         this.dateSource = dateSource;
@@ -88,6 +90,7 @@ public class EntitlementRules implements Enforcer {
         this.i18n = i18n;
         this.attributesToRules = null;
         this.config = config;
+        this.consumerCurator = consumerCurator;
 
         jsRules.init("entitlement_name_space");
         rulesInit();
@@ -125,13 +128,13 @@ public class EntitlementRules implements Enforcer {
     }
 
     private PreEntHelper runPreEntitlement(Consumer consumer, Pool pool, Integer quantity) {
-        PreEntHelper preHelper = new PreEntHelper(quantity);
+        PreEntHelper preHelper = new PreEntHelper(quantity, consumerCurator);
 
         // Provide objects for the script:
         String topLevelProductId = pool.getProductId();
         Product product = prodAdapter.getProductById(topLevelProductId);
         Map<String, String> allAttributes = jsRules.getFlattenedAttributes(product, pool);
-        
+
         Map<String, Object> args = new HashMap<String, Object>();
         args.put("consumer", new ReadOnlyConsumer(consumer));
         args.put("product", new ReadOnlyProduct(product));
@@ -143,9 +146,9 @@ public class EntitlementRules implements Enforcer {
 
         log.debug("Running pre-entitlement rules for: " + consumer.getUuid() +
             " product: " + topLevelProductId);
-        List<Rule> matchingRules 
+        List<Rule> matchingRules
             = rulesForAttributes(allAttributes.keySet(), attributesToRules);
-        
+
         callPreEntitlementRules(matchingRules, args);
 
         if (log.isDebugEnabled()) {
@@ -175,7 +178,7 @@ public class EntitlementRules implements Enforcer {
         String topLevelProductId = pool.getProductId();
         Product product = prodAdapter.getProductById(topLevelProductId);
         Map<String, String> allAttributes = jsRules.getFlattenedAttributes(product, pool);
-        
+
         Map<String, Object> args = new HashMap<String, Object>();
         args.put("consumer", new ReadOnlyConsumer(c));
         args.put("product", new ReadOnlyProduct(product));
@@ -189,7 +192,7 @@ public class EntitlementRules implements Enforcer {
         log.debug("Running post-entitlement rules for: " + c.getUuid() +
             " product: " + topLevelProductId);
 
-        List<Rule> matchingRules 
+        List<Rule> matchingRules
             = rulesForAttributes(allAttributes.keySet(), attributesToRules);
 
         invokeGlobalPostEntitlementRule(args);
@@ -199,11 +202,11 @@ public class EntitlementRules implements Enforcer {
     public List<Pool> selectBestPools(Consumer consumer, String[] productIds,
         List<Pool> pools) {
         ReadOnlyProductCache productCache = new ReadOnlyProductCache(prodAdapter);
-        
+
         log.info("Selecting best entitlement pool for product: " +
             Arrays.toString(productIds));
         List<ReadOnlyPool> readOnlyPools = ReadOnlyPool.fromCollection(pools, productCache);
-        
+
         List<Product> products = new LinkedList<Product>();
         Set<Rule> matchingRules = new HashSet<Rule>();
         for (String productId : productIds) {
@@ -211,7 +214,7 @@ public class EntitlementRules implements Enforcer {
 
             if (product != null) {
                 products.add(product);
-            
+
                 Map<String, String> allAttributes = jsRules.getFlattenedAttributes(product,
                     null);
                 matchingRules.addAll(rulesForAttributes(allAttributes.keySet(),
@@ -221,7 +224,7 @@ public class EntitlementRules implements Enforcer {
 
         Set<ReadOnlyProduct> readOnlyProducts = ReadOnlyProduct.fromProducts(products);
         productCache.addProducts(readOnlyProducts);
-        
+
         // Provide objects for the script:
         Map<String, Object> args = new HashMap<String, Object>();
         args.put("consumer", new ReadOnlyConsumer(consumer));
@@ -249,7 +252,7 @@ public class EntitlementRules implements Enforcer {
                 throw new RuleExecutionException(e);
             }
         }
-        
+
         if (!foundMatchingRule) {
             try {
                 Object output = jsRules.invokeMethod(GLOBAL_SELECT_POOL_FUNCTION, args);
@@ -267,7 +270,7 @@ public class EntitlementRules implements Enforcer {
                 throw new RuleExecutionException(ex);
             }
         }
-        
+
         if (pools.size() > 0 && result == null) {
             throw new RuleExecutionException(
                 "Rule did not select a pool for products: " + Arrays.toString(productIds));
@@ -284,7 +287,7 @@ public class EntitlementRules implements Enforcer {
                 }
             }
         }
-        
+
         if (bestPools.size() > 0) {
             return bestPools;
         }
@@ -296,7 +299,7 @@ public class EntitlementRules implements Enforcer {
     /**
      * Default behavior if no product specific and no global pool select rules
      * exist.
-     * 
+     *
      * @param pools
      *            Pools to choose from.
      * @return First pool in the list. (default behavior)
@@ -308,7 +311,7 @@ public class EntitlementRules implements Enforcer {
         return null;
     }
 
-    public List<Rule> rulesForAttributes(Set<String> attributes, 
+    public List<Rule> rulesForAttributes(Set<String> attributes,
             Map<String, Set<Rule>> rules) {
         Set<Rule> possibleMatches = new HashSet<Rule>();
         for (String attribute : attributes) {
@@ -316,34 +319,34 @@ public class EntitlementRules implements Enforcer {
                 possibleMatches.addAll(rules.get(attribute));
             }
         }
-        
+
         List<Rule> matches = new LinkedList<Rule>();
         for (Rule rule : possibleMatches) {
             if (attributes.containsAll(rule.getAttributes())) {
                 matches.add(rule);
             }
         }
-        
+
         // Always run the global rule, and run it first
         matches.add(new Rule("global", 0, new HashSet<String>()));
 
         Collections.sort(matches, new RuleOrderComparator());
         return matches;
     }
-    
+
     public Map<String, Set<Rule>> parseAttributeMappings(String mappings) {
         Map<String, Set<Rule>> toReturn = new HashMap<String, Set<Rule>>();
         if (mappings.trim().isEmpty()) {
             return toReturn;
         }
-        
+
         String[] separatedMappings = mappings.split(",");
 
         for (String mapping : separatedMappings) {
             Rule rule = parseRule(mapping);
             for (String attribute : rule.getAttributes()) {
                 if (!toReturn.containsKey(attribute)) {
-                    toReturn.put(attribute, 
+                    toReturn.put(attribute,
                         new HashSet<Rule>(Collections.singletonList(rule)));
                 }
                 toReturn.get(attribute).add(rule);
@@ -351,10 +354,10 @@ public class EntitlementRules implements Enforcer {
         }
         return toReturn;
     }
-    
+
     public Rule parseRule(String toParse) {
         String[] tokens = toParse.split(":");
-        
+
         if (tokens.length < 3) {
             throw new IllegalArgumentException(
                 i18n.tr(
@@ -362,21 +365,21 @@ public class EntitlementRules implements Enforcer {
                     toParse)
             );
         }
-        
+
         Set<String> attributes = new HashSet<String>();
         for (int i = 2; i < tokens.length; i++) {
             attributes.add(tokens[i].trim());
         }
-        
+
         try {
             return new Rule(tokens[0].trim(), Integer.parseInt(tokens[1]), attributes);
-        } 
+        }
         catch (NumberFormatException e) {
             throw new IllegalArgumentException(
                 i18n.tr("second parameter should be the priority number.", e));
         }
     }
-    
+
     private void callPreEntitlementRules(List<Rule> matchingRules,
         Map<String, Object> args) {
         for (Rule rule : matchingRules) {
@@ -405,7 +408,7 @@ public class EntitlementRules implements Enforcer {
             throw new RuleExecutionException(ex);
         }
     }
-    
+
     /**
      * RuleOrderComparator
      */
@@ -416,7 +419,7 @@ public class EntitlementRules implements Enforcer {
                 Integer.valueOf(o1.getOrder()));
         }
     }
-    
+
     /**
      * Rule
      */
@@ -424,7 +427,7 @@ public class EntitlementRules implements Enforcer {
         private final String ruleName;
         private final int order;
         private final Set<String> attributes;
-        
+
         public Rule(String ruleName, int order, Set<String> attributes) {
             this.ruleName = ruleName;
             this.order = order;
@@ -442,7 +445,7 @@ public class EntitlementRules implements Enforcer {
         public Set<String> getAttributes() {
             return attributes;
         }
-        
+
         @Override
         public int hashCode() {
             final int prime = 31;
@@ -466,7 +469,7 @@ public class EntitlementRules implements Enforcer {
             if (getClass() != obj.getClass()) {
                 return false;
             }
-            
+
             Rule other = (Rule) obj;
             if (attributes == null) {
                 if (other.attributes != null) {
@@ -489,7 +492,7 @@ public class EntitlementRules implements Enforcer {
             }
             return true;
         }
-        
+
         public String toString() {
             return "'" + ruleName + "':" + order + ":" + attributes.toString();
         }
