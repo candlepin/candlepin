@@ -34,6 +34,12 @@
 
 <module name="Checker">
 
+  <module name="RegexpSingleline">
+     <property name="format" value="\s+$"/>
+     <property name="minimum" value="0"/>
+     <property name="maximum" value="0"/>
+     <property name="message" value="Line has trailing spaces."/>
+  </module>
   <!--
      Checks whether files end with a new line.
      See http://checkstyle.sourceforge.net/config_misc.html#NewlineAtEndOfFile
@@ -46,7 +52,7 @@
    -->
   <module name="Translation"/>
 
-  <!-- 
+  <!--
      ##########################################################################
      HEADERS
      http://checkstyle.sourceforge.net/config_header.html
@@ -84,7 +90,7 @@
     <property name="cacheFile" value="${checkstyle.cache.file}"/>
     <property name="tabWidth" value="4"/>
 
-    <!-- 
+    <!--
        #######################################################################
        ANNOTATION CHECKS
        #######################################################################
@@ -100,7 +106,7 @@
 
     <!--
        #######################################################################
-       BLOCK CHECKS 
+       BLOCK CHECKS
        See http://checkstyle.sourceforge.net/config_blocks.html
        #######################################################################
      -->
@@ -115,10 +121,10 @@
       <property name="option" value="alone"/>
     </module>
     <module name="AvoidNestedBlocks"/>
-    
+
     <!--
        #######################################################################
-       CLASS DESIGN 
+       CLASS DESIGN
        See http://checkstyle.sourceforge.net/config_design.html
        #######################################################################
      -->
@@ -284,6 +290,7 @@
        #######################################################################
      -->
     <!-- <module name="RegexpSingleline"/> -->
+
     <!-- <module name="RegexpMultiline"/> -->
     <!-- <module name="RegexpSinglelineJava"/> -->
 
@@ -325,7 +332,7 @@
     <module name="NoWhitespaceAfter">
       <property name="tokens" value="BNOT, DEC, DOT, INC, LNOT, UNARY_MINUS,
         UNARY_PLUS"/>
-    </module> 
+    </module>
     <module name="NoWhitespaceBefore">
       <property name="tokens" value="SEMI, POST_DEC, POST_INC"/>
     </module>
