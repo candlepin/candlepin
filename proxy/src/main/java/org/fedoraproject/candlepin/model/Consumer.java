@@ -490,6 +490,9 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     }
 
     public void addInstalledProduct(ConsumerInstalledProduct installed) {
+        if (installedProducts == null) {
+            installedProducts = new HashSet<ConsumerInstalledProduct>();
+        }
         installed.setConsumer(this);
         installedProducts.add(installed);
     }
@@ -517,6 +520,9 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     }
 
     public void addGuestId(GuestId guestId) {
+        if (guestsIds == null) {
+            guestsIds = new ArrayList<GuestId>();
+        }
         guestId.setConsumer(this);
         guestsIds.add(guestId);
     }
