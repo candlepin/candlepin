@@ -33,6 +33,7 @@ import org.fedoraproject.candlepin.guice.PrincipalProvider;
 import org.fedoraproject.candlepin.model.ActivationKey;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.GuestId;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Subscription;
@@ -69,7 +70,7 @@ public class EventFactory {
     public Event consumerCreated(Consumer newConsumer) {
         String newEntityJson = entityToJson(newConsumer);
         Principal principal = principalProvider.get();
-        Event e = new Event(Event.Type.CREATED, Event.Target.CONSUMER, 
+        Event e = new Event(Event.Type.CREATED, Event.Target.CONSUMER,
             newConsumer.getName(), principal, newConsumer.getOwner().getId(),
             newConsumer.getId(), newConsumer.getId(), null, newEntityJson,
             null, null);
@@ -90,8 +91,8 @@ public class EventFactory {
     public Event consumerModified(Consumer newConsumer) {
         String newEntityJson = entityToJson(newConsumer);
         Principal principal = principalProvider.get();
-        
-        return new Event(Event.Type.MODIFIED, Event.Target.CONSUMER, 
+
+        return new Event(Event.Type.MODIFIED, Event.Target.CONSUMER,
             newConsumer.getName(), principal, newConsumer.getOwner().getId(),
             newConsumer.getId(), newConsumer.getId(), null, newEntityJson,
             null, null);
@@ -101,8 +102,8 @@ public class EventFactory {
         String oldEntityJson = entityToJson(oldConsumer);
         String newEntityJson = entityToJson(newConsumer);
         Principal principal = principalProvider.get();
-        
-        return new Event(Event.Type.MODIFIED, Event.Target.CONSUMER, 
+
+        return new Event(Event.Type.MODIFIED, Event.Target.CONSUMER,
             oldConsumer.getName(), principal, oldConsumer.getOwner().getId(),
             oldConsumer.getId(), oldConsumer.getId(), oldEntityJson, newEntityJson,
             null, null);
@@ -218,7 +219,7 @@ public class EventFactory {
 
     public Event exportCreated(Consumer consumer) {
         Principal principal = principalProvider.get();
-        Event e = new Event(Event.Type.CREATED, Event.Target.EXPORT, consumer.getName(), 
+        Event e = new Event(Event.Type.CREATED, Event.Target.EXPORT, consumer.getName(),
             principal, consumer.getOwner().getId(), consumer.getId(),
             consumer.getId(), null, entityToJson(consumer),
             null, null);
@@ -237,7 +238,7 @@ public class EventFactory {
         Principal principal = principalProvider.get();
 
         Event e = new Event(Event.Type.CREATED, Event.Target.SUBSCRIPTION,
-            subscription.getProduct().getName(), principal, 
+            subscription.getProduct().getName(), principal,
             subscription.getOwner().getId(), null, subscription.getId(), null,
             entityToJson(subscription), null, null);
         return e;
@@ -259,6 +260,23 @@ public class EventFactory {
             todelete.getProduct().getName(), principalProvider.get(),
             o.getId(), null, todelete.getId(), oldJson, null, null, null);
         return e;
+    }
+
+    public Event guestIdCreated(Consumer consumer, GuestId guestId) {
+        return this.createGuestIdEvent(consumer, guestId, Event.Type.CREATED);
+    }
+
+    public Event guestIdDeleted(Consumer consumer, GuestId guestId) {
+        return this.createGuestIdEvent(consumer, guestId, Event.Type.DELETED);
+    }
+
+    private Event createGuestIdEvent(Consumer affectedConsumer, GuestId affectedGuestId,
+        Event.Type eventType) {
+        Event event = new Event(eventType, Event.Target.GUESTID,
+            affectedGuestId.getGuestId(), principalProvider.get(),
+            affectedConsumer.getOwner().getId(), affectedConsumer.getId(),
+            affectedGuestId.getId(), null, entityToJson(affectedGuestId), null, null);
+        return event;
     }
 
     private String entityToJson(Object entity) {

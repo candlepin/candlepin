@@ -76,11 +76,13 @@ import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletResponse;
@@ -517,6 +519,11 @@ public class ConsumerResource {
         // If nothing changes we won't send.
         Event event = eventFactory.consumerModified(toUpdate, consumer);
 
+        // Hold onto a list of the initial GuestId objects so that we can determine
+        // which were added and removed when sending events.
+        List<GuestId> initialGuestIds = toUpdate.getGuestIds() == null ?
+            new ArrayList<GuestId>() : new ArrayList<GuestId>(toUpdate.getGuestIds());
+
         boolean changesMade = checkForFactsUpdate(toUpdate, consumer);
         changesMade = changesMade || checkForInstalledProductsUpdate(toUpdate,
             consumer) || checkForGuestsUpdate(toUpdate, consumer);
@@ -534,7 +541,29 @@ public class ConsumerResource {
             // Set the updated date here b/c @PreUpdate will not get fired
             // since only the facts table will receive the update.
             toUpdate.setUpdated(new Date());
+
+            sendGuestIdEvents(toUpdate, initialGuestIds);
             sink.sendEvent(event);
+        }
+    }
+
+    private void sendGuestIdEvents(Consumer updated, List<GuestId> initialGuestIds) {
+        // GuestId list may be null. We want to make sure that we clone the list
+        // as we are removing from it.
+        List<GuestId> createdIds = updated.getGuestIds() == null ?
+            new ArrayList<GuestId>() : new ArrayList<GuestId>(updated.getGuestIds());
+
+        // Determine which guest ids were new and send events.
+        createdIds.removeAll(initialGuestIds);
+        for (GuestId id : createdIds) {
+            sink.sendEvent(eventFactory.guestIdCreated(updated, id));
+        }
+
+        // Determine which guest ids were deleted and send events.
+        List<GuestId> deletedIds = new ArrayList<GuestId>(initialGuestIds);
+        deletedIds.removeAll(updated.getGuestIds());
+        for (GuestId id : deletedIds) {
+            sink.sendEvent(eventFactory.guestIdDeleted(updated, id));
         }
     }
 
@@ -585,7 +614,7 @@ public class ConsumerResource {
         log.debug("No change to installed products.");
         return false;
     }
-    
+
     /**
      * Check if the consumers installed products have changed. If they do not appear to
      * have been specified in this PUT, skip updating installed products entirely.
@@ -601,8 +630,14 @@ public class ConsumerResource {
                 "skipping update.");
             return false;
         }
+
         log.debug("Updating guests.");
-        existing.getGuestIds().clear();
+
+        // Ensure that existing actually has guest ids initialized.
+        if (existing.getGuestIds() != null) {
+            existing.getGuestIds().clear();
+        }
+
         for (GuestId cg : incoming.getGuestIds()) {
             existing.addGuestId(cg);
         }
@@ -1137,7 +1172,7 @@ public class ConsumerResource {
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
         return consumerCurator.getGuests(consumer);
     }
-    
+
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{consumer_uuid}/host")

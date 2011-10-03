@@ -18,9 +18,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import java.util.ArrayList;
+import java.util.Locale;
 
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventFactory;
@@ -28,14 +32,13 @@ import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.model.ActivationKeyCurator;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
-import org.fedoraproject.candlepin.model.GuestId;
 import org.fedoraproject.candlepin.model.ConsumerInstalledProduct;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
+import org.fedoraproject.candlepin.model.GuestId;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,9 +46,6 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
-
-import java.util.ArrayList;
-import java.util.Locale;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ConsumerResourceUpdateTest {
@@ -202,6 +202,62 @@ public class ConsumerResourceUpdateTest {
         updated.setGuestIds(new ArrayList<GuestId>());
         this.resource.updateConsumer(existing.getUuid(), updated);
         assertTrue(existing.getGuestIds().isEmpty());
+    }
+
+    @Test
+    public void ensureCreateEventIsSentWhenGuestIdIsAddedToConsumer() {
+        String uuid = "TEST_CONSUMER";
+        Consumer existing = createConsumerWithGuests(new String[0]);
+        existing.setUuid(uuid);
+
+        when(this.consumerCurator.findByUuid(uuid)).thenReturn(existing);
+
+        // Create a consumer with 1 new guest.
+        Consumer updated = createConsumerWithGuests("Guest 1");
+
+        Event expectedEvent = new Event();
+        when(this.eventFactory.guestIdCreated(existing, updated.getGuestIds().get(0)))
+            .thenReturn(expectedEvent);
+
+        this.resource.updateConsumer(existing.getUuid(), updated);
+        verify(sink).sendEvent(eq(expectedEvent));
+    }
+
+    @Test
+    public void ensureEventIsSentWhenGuestIdIsremovedFromConsumer() {
+        String uuid = "TEST_CONSUMER";
+        Consumer existing = createConsumerWithGuests("Guest 1", "Guest 2");
+        existing.setUuid(uuid);
+
+        when(this.consumerCurator.findByUuid(uuid)).thenReturn(existing);
+
+        // Create a consumer with one less guest id.
+        Consumer updated = createConsumerWithGuests("Guest 2");
+
+        Event expectedEvent = new Event();
+        when(this.eventFactory.guestIdDeleted(existing, existing.getGuestIds().get(0)))
+            .thenReturn(expectedEvent);
+
+        this.resource.updateConsumer(existing.getUuid(), updated);
+        verify(sink).sendEvent(eq(expectedEvent));
+    }
+
+    @Test
+    public void ensureEventIsNotFiredWhenNoChangeWasMadeToConsumerGuestIds() {
+        String uuid = "TEST_CONSUMER";
+        Consumer existing = createConsumerWithGuests("Guest 1", "Guest 2");
+        existing.setUuid(uuid);
+
+        when(this.consumerCurator.findByUuid(uuid)).thenReturn(existing);
+
+        Consumer updated = createConsumerWithGuests("Guest 1", "Guest 2");
+        updated.setUuid(uuid);
+
+        Event event = new Event();
+        when(this.eventFactory.consumerModified(existing, updated)).thenReturn(event);
+
+        this.resource.updateConsumer(existing.getUuid(), updated);
+        verify(sink).sendEvent(eq(event));
     }
 
     private Consumer createConsumerWithGuests(String ... guestIds) {
