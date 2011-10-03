@@ -279,15 +279,12 @@ var Entitlement = {
 	        var virt_attributes = new java.util.HashMap();
 	        virt_attributes.put("virt_only", "true");
 	        virt_attributes.put("pool_derived", "true");
-	        // Make sure the virt pool does not have a virt_limit,
-	        // otherwise this will recurse infinitely
-	        virt_attributes.put("virt_limit", "0");
 
 	        if ('unlimited'.equals(virt_limit)) {
 	            post.createParentConsumerRestrictedPool(productId, pool,
 	                                        'unlimited', virt_attributes);
 	        } else {
-	            var virt_quantity = parseInt(virt_limit);
+	            var virt_quantity = parseInt(virt_limit) * entitlement.getQuantity();
 	            if (virt_quantity > 0) {
 	                post.createParentConsumerRestrictedPool(productId, pool,
 	                                            virt_quantity.toString(), virt_attributes);

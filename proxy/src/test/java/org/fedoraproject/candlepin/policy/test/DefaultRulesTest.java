@@ -20,6 +20,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.when;
 
 import org.fedoraproject.candlepin.config.Config;
@@ -590,7 +591,27 @@ public class DefaultRulesTest {
     public void standaloneParentConsumerPostCreatesSubPool() {
         Pool pool = setupVirtLimitPool();
         Entitlement e = new Entitlement(pool, consumer, new Date(), new Date(),
-            1);
+            5);
+
+        PoolHelper postHelper = mock(PoolHelper.class);
+        when(config.standalone()).thenReturn(true);
+        enforcer.postEntitlement(consumer, postHelper, e);
+
+        Map<String, String> expectedAttrs = new HashMap<String, String>();
+        expectedAttrs.put("pool_derived", "true");
+        expectedAttrs.put("virt_only", "true");
+
+        // Pool quantity should be virt_limit * entitlement quantity:
+        verify(postHelper).createParentConsumerRestrictedPool(eq(pool.getProductId()),
+            eq(pool), eq("50"), eq(expectedAttrs));
+    }
+
+    @Test
+    public void standaloneParentConsumerPostCreatesUnlimitedSubPool() {
+        Pool pool = setupVirtLimitPool();
+        pool.setAttribute("virt_limit", "unlimited");
+        Entitlement e = new Entitlement(pool, consumer, new Date(), new Date(),
+            5);
 
         PoolHelper postHelper = mock(PoolHelper.class);
         when(config.standalone()).thenReturn(true);
@@ -599,9 +620,10 @@ public class DefaultRulesTest {
         Map<String, String> atts = new HashMap<String, String>();
         atts.put("pool_derived", "true");
         atts.put("virt_only", "true");
-        atts.put("virt_limit", "0");
-        verify(postHelper).createParentConsumerRestrictedPool(pool.getProductId(), pool,
-            pool.getAttributeValue("virt_limit"), atts);
+
+        // Pool quantity should be virt_limit * entitlement quantity:
+        verify(postHelper).createParentConsumerRestrictedPool(eq(pool.getProductId()),
+            eq(pool), eq("unlimited"), eq(atts));
     }
 
     @Test
