@@ -31,7 +31,7 @@ import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import com.google.inject.Inject;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
-import org.fedoraproject.candlepin.exceptions.AcceptedRequestException;
+import org.fedoraproject.candlepin.exceptions.ServiceUnavailableException;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.xnap.commons.i18n.I18n;
 
@@ -136,8 +136,8 @@ public class DefaultSubscriptionServiceAdapter implements
     @Override
     public void activateSubscription(Consumer consumer, String email,
         String emailLocale) {
-
-        throw new AcceptedRequestException("bling bling");
+        throw new ServiceUnavailableException(
+            i18n.tr("Standalone candlepin does not support redeeming a subscription."));
     }
 
     @Override
