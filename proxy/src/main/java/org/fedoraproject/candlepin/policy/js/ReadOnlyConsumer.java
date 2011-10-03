@@ -14,9 +14,6 @@
  */
 package org.fedoraproject.candlepin.policy.js;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.policy.MissingFactException;
@@ -59,30 +56,7 @@ public class ReadOnlyConsumer {
     public String getUuid() {
         return consumer.getUuid();
     }
-   
-    /**
-     * Return the Consumer's parent
-     * @return the Consumer's parent
-     */
-    public ReadOnlyConsumer getParent() {
-        if (consumer.getParent() == null) {
-            return null;
-        }
-        return new ReadOnlyConsumer(consumer.getParent());
-    }
-   
-    /**
-     * Return read-only versions of the child consumers.
-     * @return read-only versions of the child consumers.
-     */
-    public Set<ReadOnlyConsumer> getChildConsumers() {
-        Set<ReadOnlyConsumer> toReturn = new HashSet<ReadOnlyConsumer>();
-        for (Consumer toProxy : consumer.getChildConsumers()) {
-            toReturn.add(new ReadOnlyConsumer(toProxy));
-        }
-        return toReturn;
-    }
-   
+      
     /**
      * Return the value of the fact assigned to the given key.
      * @param factKey Fact key

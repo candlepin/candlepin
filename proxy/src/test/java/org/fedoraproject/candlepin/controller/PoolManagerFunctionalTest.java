@@ -24,10 +24,6 @@ import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.reset;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Module;
-
-import org.apache.commons.collections.Transformer;
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.model.Consumer;
@@ -47,6 +43,11 @@ import org.fedoraproject.candlepin.policy.js.entitlement.EntitlementRules;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.fedoraproject.candlepin.util.Util;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Module;
+
+import org.apache.commons.collections.Transformer;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -128,7 +129,6 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         consumerCurator.create(parentSystem);
 
         childVirtSystem = new Consumer("virt system", "user", o, systemType);
-        parentSystem.addChildConsumer(childVirtSystem);
 
         consumerCurator.create(childVirtSystem);
     }

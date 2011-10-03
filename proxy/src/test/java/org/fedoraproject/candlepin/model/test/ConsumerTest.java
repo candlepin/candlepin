@@ -26,11 +26,11 @@ import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.GuestId;
 import org.fedoraproject.candlepin.model.ConsumerInstalledProduct;
 import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.GuestId;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
@@ -212,62 +212,6 @@ public class ConsumerTest extends DatabaseTestFixture {
 
         Consumer lookedUp = consumerCurator.findByUuid(consumer2.getUuid());
         assertEquals(lookedUp.getUuid(), consumer2.getUuid());
-    }
-
-    @Test
-    public void testConsumerHierarchy() {
-        Consumer child1 = new Consumer("child1", USER_NAME, owner, consumerType);
-        child1.setFact("foo", "bar");
-        consumerCurator.create(child1);
-
-        Consumer child2 = new Consumer("child2", USER_NAME, owner, consumerType);
-        child2.setFact("foo", "bar");
-        consumerCurator.create(child2);
-
-        consumer.addChildConsumer(child1);
-        consumer.addChildConsumer(child2);
-        consumerCurator.merge(consumer);
-
-        Consumer lookedUp = consumerCurator.find(consumer.getId());
-        assertEquals(2, lookedUp.getChildConsumers().size());
-    }
-
-    @Test
-    public void testChildDeleteNoCascade() {
-        unitOfWork.beginWork();
-
-        Consumer child1 = new Consumer("child1", USER_NAME, owner, consumerType);
-        child1.setFact("foo", "bar");
-        consumer.addChildConsumer(child1);
-        consumerCurator.create(child1);
-        consumerCurator.merge(consumer);
-
-        unitOfWork.endWork();
-        unitOfWork.beginWork();
-
-        child1 = consumerCurator.find(child1.getId());
-        assertNotNull(child1);
-        consumerCurator.delete(child1);
-
-        assertNull(consumerCurator.find(child1.getId()));
-
-        Consumer lookedUp = consumerCurator.find(consumer.getId());
-        assertEquals(0, lookedUp.getChildConsumers().size());
-        unitOfWork.endWork();
-    }
-
-    @Test
-    public void testParentDeleteCascadesToChildren() {
-        Consumer child1 = new Consumer("child1", USER_NAME, owner, consumerType);
-        child1.setFact("foo", "bar");
-        consumer.addChildConsumer(child1);
-        consumerCurator.create(child1);
-        consumerCurator.merge(consumer);
-
-        consumerCurator.delete(consumer);
-
-        assertNull(consumerCurator.find(consumer.getId()));
-        assertNull(consumerCurator.find(child1.getId()));
     }
 
     @Test

@@ -104,16 +104,6 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @Index(name = "cp_consumer_owner_fk_idx")
     private Owner owner;
 
-    // Consumers *can* be organized into a hierarchy, could be useful in cases
-    // such as host/guests.
-    @ManyToOne(targetEntity = Consumer.class)
-    @JoinColumn(name = "parent_consumer_id")
-    @Index(name = "cp_consumer_parent_fk_idx")
-    private Consumer parent;
-
-    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
-    private Set<Consumer> childConsumers;
-
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "consumer", fetch = FetchType.LAZY)
     private Set<Entitlement> entitlements;
 
@@ -164,7 +154,6 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         // This constructor is for creating a new Consumer in the DB, so we'll
         // generate a UUID at this point.
         this.ensureUUID();
-        this.childConsumers = new HashSet<Consumer>();
         this.entitlements = new HashSet<Entitlement>();
     }
 
@@ -251,43 +240,6 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
      */
     public void setType(ConsumerType typeIn) {
         type = typeIn;
-    }
-
-    /**
-     * @return child consumers.
-     */
-    @XmlTransient
-    public Set<Consumer> getChildConsumers() {
-        return childConsumers;
-    }
-
-    /**
-     * @param childConsumers children consumers.
-     */
-    public void setChildConsumers(Set<Consumer> childConsumers) {
-        this.childConsumers = childConsumers;
-    }
-
-    /**
-     * @param child child consumer.
-     */
-    public void addChildConsumer(Consumer child) {
-        child.setParent(this);
-        this.childConsumers.add(child);
-    }
-
-    /**
-     * @return this Consumer's parent.
-     */
-    public Consumer getParent() {
-        return parent;
-    }
-
-    /**
-     * @param parent parant consumer
-     */
-    public void setParent(Consumer parent) {
-        this.parent = parent;
     }
 
     /**

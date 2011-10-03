@@ -84,7 +84,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             entitlement.setConsumer(consumer);
         }
 
-        consumer.setParent(consumer.getParent());
         ConsumerType consumerType = consumerTypeCurator.lookupByLabel(consumer
             .getType().getLabel());
         consumer.setType(consumerType);
@@ -217,8 +216,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
         validate(updatedConsumer);
         // TODO: Are any of these read-only?
-        existingConsumer.setChildConsumers(bulkUpdate(updatedConsumer
-            .getChildConsumers()));
         existingConsumer.setEntitlements(entitlementCurator
             .bulkUpdate(updatedConsumer.getEntitlements()));
         Map<String, String> newFacts = filterFacts(updatedConsumer.getFacts());
@@ -227,7 +224,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         }
         existingConsumer.setName(updatedConsumer.getName());
         existingConsumer.setOwner(updatedConsumer.getOwner());
-        existingConsumer.setParent(updatedConsumer.getParent());
         existingConsumer.setType(updatedConsumer.getType());
         existingConsumer.setUuid(updatedConsumer.getUuid());
 
