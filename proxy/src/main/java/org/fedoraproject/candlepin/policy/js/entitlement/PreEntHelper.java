@@ -89,6 +89,8 @@ public class PreEntHelper {
      * be registered to Candlepin.
      *
      * @param guestId Virt guest ID to search for a host for.
+     * 
+     * @return Consumer
      */
     public Consumer getHostConsumer(String guestId) {
         // TODO: proxy to consumer curator

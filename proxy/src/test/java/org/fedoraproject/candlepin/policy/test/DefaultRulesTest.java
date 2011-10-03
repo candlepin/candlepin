@@ -539,7 +539,8 @@ public class DefaultRulesTest {
             .getResult();
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
-*/    }
+*/
+    }
 
     @Test
     public void parentConsumerRestrictedPoolFailsPre() {
@@ -551,7 +552,8 @@ public class DefaultRulesTest {
             .getResult();
         assertTrue(result.hasErrors());
         assertFalse(result.hasWarnings());
-*/    }
+*/
+    }
 
     @Test
     public void standaloneParentConsumerPostCreatesSubPool() {

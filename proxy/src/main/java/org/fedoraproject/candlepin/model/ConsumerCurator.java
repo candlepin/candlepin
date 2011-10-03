@@ -125,7 +125,9 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @EnforceAccessControl
     public Consumer findByVirtUuid(String uuid) {
         return (Consumer) currentSession().createCriteria(Consumer.class)
-            .add(Restrictions.eq("virt.uuid", uuid)).uniqueResult();
+            .add(Restrictions.sqlRestriction("{alias}.id in (select cp_consumer_id " +
+                "from cp_consumer_facts where mapkey = 'virt.uuid' and element = '" +
+                uuid + "')")).uniqueResult();
     }
 
     /**
@@ -164,7 +166,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         return (Consumer) currentSession().createCriteria(Consumer.class)
             .add(Restrictions.eq("uuid", uuid)).uniqueResult();
     }
-
+    
     @SuppressWarnings("unchecked")
     @Transactional
     @EnforceAccessControl
@@ -267,9 +269,9 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     /**
-     * Get host consumer for current consumer
+     * Get host consumer for the guest system id
      * 
-     * @param consumer consumer to find to host of
+     * @param uuid of the guest system id
      * @return Consumer whose name matches the given name, null otherwise.
      */
     @Transactional
@@ -278,7 +280,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         List<GuestId> consumers = (List<GuestId>) currentSession()
             .createCriteria(GuestId.class)
             .add(Restrictions.eq("guestId", uuid))
-            .uniqueResult();
+            .list();
         Consumer newest = null;
         if (consumers != null) {
             for (GuestId cg : consumers) {
@@ -311,13 +313,13 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         List<GuestId> consumerGuests = (List<GuestId>) currentSession()
             .createCriteria(GuestId.class)
             .add(Restrictions.eq("consumer", consumer))
-            .uniqueResult();
-        if(consumerGuests != null){
+            .list();
+        if (consumerGuests != null) {
             for (GuestId cg : consumerGuests) {
                 Consumer guest = null;
-                guest = findByUuid(cg.getGuestId());
-                if (guest != null) {
-                    if (getHost(cg.getGuestId()).equals(consumer)) {
+                if (consumer.equals(getHost(cg.getGuestId()))) {
+                    guest = findByVirtUuid(cg.getGuestId());
+                    if (guest != null) {
                         guests.add(guest);
                     }
                 }

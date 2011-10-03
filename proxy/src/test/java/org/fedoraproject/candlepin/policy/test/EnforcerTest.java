@@ -23,7 +23,6 @@ import static org.mockito.Mockito.when;
 
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
