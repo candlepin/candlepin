@@ -199,7 +199,7 @@ public class ConsumerResourceUpdateTest {
         when(this.consumerCurator.findByUuid(uuid)).thenReturn(existing);
 
         Consumer updated = new Consumer();
-        updated.setGuestsId(new ArrayList<GuestId>());
+        updated.setGuestsIds(new ArrayList<GuestId>());
         this.resource.updateConsumer(existing.getUuid(), updated);
         assertTrue(existing.getGuestsIds().isEmpty());
     }
