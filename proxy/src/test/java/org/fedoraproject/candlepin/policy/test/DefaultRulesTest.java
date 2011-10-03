@@ -529,30 +529,61 @@ public class DefaultRulesTest {
     }
 
     @Test
-    public void parentConsumerRestrictedPoolPassesPre() {
-/**        Consumer parent = new Consumer("test parent consumer", "test user", owner,
+    public void virtOnlyPoolGuestHostMatches() {
+        Consumer parent = new Consumer("test parent consumer", "test user", owner,
             new ConsumerType(ConsumerTypeEnum.SYSTEM));
-        Pool pool = setupParentConsumerRestrictedPool(parent);
-        consumer.setParent(parent);
+        Pool pool = setupHostRestrictedPool(parent);
+
+        consumer.setFact("virt.is_guest", "true");
+
+        when(consumerCurator.getHost(consumer.getUuid())).thenReturn(parent);
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
             .getResult();
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
-*/
     }
 
     @Test
-    public void parentConsumerRestrictedPoolFailsPre() {
-/**        Consumer parent = new Consumer("test parent consumer", "test user", owner,
+    public void virtOnlyPoolGuestHostDoesNotMatch() {
+        // Parent consumer of our guest:
+        Consumer parent = new Consumer("test parent consumer", "test user", owner,
             new ConsumerType(ConsumerTypeEnum.SYSTEM));
-        Pool pool = setupParentConsumerRestrictedPool(parent);
+
+        // Another parent we'll make a virt only pool for:
+        Consumer otherParent = new Consumer("test parent consumer", "test user", owner,
+            new ConsumerType(ConsumerTypeEnum.SYSTEM));
+        Pool pool = setupHostRestrictedPool(otherParent);
+
+        consumer.setFact("virt.is_guest", "true");
+
+        when(consumerCurator.getHost(consumer.getUuid())).thenReturn(parent);
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
             .getResult();
-        assertTrue(result.hasErrors());
         assertFalse(result.hasWarnings());
-*/
+        assertEquals(1, result.getErrors().size());
+        assertEquals("virt.guest.host.does.not.match.pool.owner",
+            result.getErrors().get(0).getResourceKey());
+    }
+
+    @Test
+    public void virtOnlyPoolGuestNoHost() {
+        // Another parent we'll make a virt only pool for:
+        Consumer otherParent = new Consumer("test parent consumer", "test user", owner,
+            new ConsumerType(ConsumerTypeEnum.SYSTEM));
+        Pool pool = setupHostRestrictedPool(otherParent);
+
+        consumer.setFact("virt.is_guest", "true");
+
+        when(consumerCurator.getHost(consumer.getUuid())).thenReturn(null);
+
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
+            .getResult();
+        assertFalse(result.hasWarnings());
+        assertEquals(1, result.getErrors().size());
+        assertEquals("virt.guest.host.does.not.match.pool.owner",
+            result.getErrors().get(0).getResourceKey());
     }
 
     @Test
@@ -1114,11 +1145,16 @@ public class DefaultRulesTest {
         return pool;
     }
 
-    private Pool setupParentConsumerRestrictedPool(Consumer parent) {
-        Product product = new Product(productId, "A user restricted product");
+    private Pool setupHostRestrictedPool(Consumer parent) {
+        Product product = new Product(productId, "A host restricted product");
         Pool pool = TestUtil.createPool(owner, product);
+        pool.addAttribute(new PoolAttribute("virt_only", "true"));
         pool.setRestrictedToParentConsumer(parent.getUuid());
         pool.setId("fakeid" + TestUtil.randomInt());
+        Entitlement e = new Entitlement(pool, parent, new Date(), new Date(),
+            1);
+
+        pool.setSourceEntitlement(e);
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
         return pool;
     }

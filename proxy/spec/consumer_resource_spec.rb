@@ -297,20 +297,87 @@ describe 'Consumer Resource' do
     @cp.get_pool(pool.id).consumed.should == 0
   end
 
-  it 'should allow guest system ids to be added and removed from host consumer' do
-    owner = create_owner random_string('owner')
-    user1 = user_client(owner, random_string("user1"))
-    consumer1 = consumer_client(user1, random_string("consumer1"))
+  it 'should allow adding guest ids to host consumer on update' do
+    guests = [{'guestId' => 'guest1'}]
 
-    @cp.get_guests(consumer1.uuid).size.should == 0
-    guest1 = random_string('guest')
-    guest2 = random_string('guest')
-    @cp.add_guest_to_consumer(consumer1.uuid, guest1)
-    @cp.add_guest_to_consumer(consumer1.uuid, guest2)
-    @cp.get_guests(consumer1.uuid).size.should == 2
-    @cp.remove_guest_from_consumer(consumer1.uuid, guest1)
-    @cp.get_guests(consumer1.uuid).size.should == 1
-    @cp.get_guests(consumer1.uuid)[0].should == guest2
+    user_cp = user_client(@owner1, random_string('test-user'))
+    consumer = user_cp.register(random_string('host'), :system, nil,
+      {}, nil, nil, [], [])
+    consumer.should_not be_nil
+    consumer['guestsIds'].should be_nil
+
+    consumer_client = Candlepin.new(username=nil, password=nil,
+        cert=consumer['idCert']['cert'],
+        key=consumer['idCert']['key'])
+    consumer_client.update_consumer({:guestsIds => guests})
+
+    consumer = @cp.get_consumer(consumer['uuid'])
+    consumer['guestsIds'].length.should == 1
+    consumer['guestsIds'][0]['guestId'].should == 'guest1'
+  end
+
+  it 'should allow updating guest ids from host consumer on update' do
+    guests = [{'guestId' => 'guest1'},
+              {'guestId' => 'guest2'}]
+
+    user_cp = user_client(@owner1, random_string('test-user'))
+    consumer = user_cp.register(random_string('host'), :system, nil,
+      {}, nil, nil, [], [])
+
+    consumer_client = Candlepin.new(username=nil, password=nil,
+        cert=consumer['idCert']['cert'],
+        key=consumer['idCert']['key'])
+    consumer_client.update_consumer({:guestsIds => guests})
+
+    consumer = @cp.get_consumer(consumer['uuid'])
+    consumer['guestsIds'].length.should == 2
+
+    consumer_client.update_consumer({:guestsIds => [guests[1]]})
+    consumer = @cp.get_consumer(consumer['uuid'])
+    consumer['guestsIds'].length.should == 1
+    consumer['guestsIds'][0]['guestId'].should == 'guest2'
+  end
+
+  it 'should not modify guest id list if guestsIds list is null on update' do
+    guests = [{'guestId' => 'guest1'}]
+
+    user_cp = user_client(@owner1, random_string('test-user'))
+    consumer = user_cp.register(random_string('host'), :system, nil,
+      {}, nil, nil, [], [])
+
+    consumer_client = Candlepin.new(username=nil, password=nil,
+        cert=consumer['idCert']['cert'],
+        key=consumer['idCert']['key'])
+    consumer_client.update_consumer({:guestsIds => guests})
+
+    consumer = @cp.get_consumer(consumer['uuid'])
+    consumer['guestsIds'].length.should == 1
+
+    consumer_client.update_consumer({:guestsIds => nil})
+    consumer_client.update_consumer({})
+    consumer = @cp.get_consumer(consumer['uuid'])
+    consumer['guestsIds'].length.should == 1
+    consumer['guestsIds'][0]['guestId'].should == 'guest1'
+  end
+
+  it 'should clear guest ids when empty list is provided on update' do
+    guests = [{'guestId' => 'guest1'}]
+
+    user_cp = user_client(@owner1, random_string('test-user'))
+    consumer = user_cp.register(random_string('host'), :system, nil,
+      {}, nil, nil, [], [])
+
+    consumer_client = Candlepin.new(username=nil, password=nil,
+        cert=consumer['idCert']['cert'],
+        key=consumer['idCert']['key'])
+    consumer_client.update_consumer({:guestsIds => guests})
+
+    consumer = @cp.get_consumer(consumer['uuid'])
+    consumer['guestsIds'].length.should == 1
+
+    consumer_client.update_consumer({:guestsIds => []})
+    consumer = @cp.get_consumer(consumer['uuid'])
+    consumer['guestsIds'].length.should == 0
   end
 
 end
