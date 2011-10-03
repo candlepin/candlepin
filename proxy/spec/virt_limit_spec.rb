@@ -64,7 +64,7 @@ describe 'Virt Limit Products' do
   end
 
   it 'should create unlimited virtual pool when virt_limit is unlimited and muliplier is set' do
-    unlimited = create_product(nil, nil, 
+    unlimited = create_product(nil, nil,
                                :attributes => {:virt_limit => 'unlimited'},
                                :multiplier => 10)
     sub = @cp.create_subscription(@owner.key, unlimited.id, 10)
@@ -78,7 +78,7 @@ describe 'Virt Limit Products' do
     virt_pool.quantity.should == -1
   end
 
-  it 'should allow a consumer with no "virt.is_guest attribute to list pools' do
+  it 'should allow a consumer with no "virt.is_guest" attribute to list pools' do
     person = consumer_client(@user, 'dude', :person)
 
     person.list_pools(:consumer => person.uuid, :product => @product.id).should be_empty
