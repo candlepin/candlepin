@@ -297,20 +297,4 @@ describe 'Consumer Resource' do
     @cp.get_pool(pool.id).consumed.should == 0
   end
 
-  it 'should allow guest system ids to be added and removed from host consumer' do
-    owner = create_owner random_string('owner')
-    user1 = user_client(owner, random_string("user1"))
-    consumer1 = consumer_client(user1, random_string("consumer1"))
-
-    @cp.get_guests(consumer1.uuid).size.should == 0
-    guest1 = random_string('guest')
-    guest2 = random_string('guest')
-    @cp.add_guest_to_consumer(consumer1.uuid, guest1)
-    @cp.add_guest_to_consumer(consumer1.uuid, guest2)
-    @cp.get_guests(consumer1.uuid).size.should == 2
-    @cp.remove_guest_from_consumer(consumer1.uuid, guest1)
-    @cp.get_guests(consumer1.uuid).size.should == 1
-    @cp.get_guests(consumer1.uuid)[0].should == guest2
-  end
-
 end
