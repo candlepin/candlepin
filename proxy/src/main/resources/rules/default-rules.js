@@ -230,8 +230,22 @@ var Entitlement = {
             guest = 'true'.equals(consumer.getFact('virt.is_guest'));
         }
 
-        if (virt_pool && !guest) {
-           pre.addError("rulefailed.virt.only");
+
+        if (virt_pool) {
+            if (!guest) {
+                pre.addError("rulefailed.virt.only");
+            }
+            else {
+                // At this point we know this is a virt only pool and the requesting
+                // consumer is a guest, check if there are host restrictions on the pool:
+                if (pool.getSourceEntitlement() != null) {
+                    var hostConsumer = pre.getHostConsumer(consumer.getUuid());
+
+                    if (hostConsumer == null || !hostConsumer.getUuid().equals(pool.getSourceEntitlement().getConsumer().getUuid())) {
+                            pre.addError("virt.guest.host.does.not.match.pool.owner");
+                    }
+                }
+            }
         }
     },
 
@@ -321,11 +335,6 @@ var Entitlement = {
 
         if (pool.getRestrictedToUsername() != null && !pool.getRestrictedToUsername().equals(consumer.getUsername())) {
             pre.addError("pool.not.available.to.user, pool= '" + pool.getRestrictedToUsername() + "', actual username='" + consumer.getUsername() + "'" );
-        }
-
-        if (pool.getRestrictedToParentConsumer() != null && (consumer.getParent() == null || !pool.getRestrictedToParentConsumer().equals(consumer.getParent().getUuid()))) {
-            pre.addError("pool.not.available.to.consumer, pool= '" + pool.getRestrictedToParentConsumer() +
-                         "',actual parent consumer='" + (consumer.getParent() == null?"null":consumer.getParent().getUuid()) + "'" );
         }
 
         // FIXME

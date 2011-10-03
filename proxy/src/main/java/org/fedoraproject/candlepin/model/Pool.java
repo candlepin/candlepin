@@ -280,7 +280,7 @@ public class Pool extends AbstractHibernateObject implements Linkable, Owned {
     public void setAccountNumber(String accountNumber) {
         this.accountNumber = accountNumber;
     }
-    
+
     public boolean hasAttribute(String key) {
         return findAttribute(this.attributes, key) != null;
     }
@@ -480,6 +480,17 @@ public class Pool extends AbstractHibernateObject implements Linkable, Owned {
         this.restrictedToUsername = restrictedToUsername;
     }
 
+    /**
+     * If this pool is restricted to guests of a particular host consumer, this method
+     * returns the UUID of that host consumer.
+     *
+     * TODO: really only useful in connection with a virt_only pool which has a
+     * sourceEntitlement defined. Probably should be moved to an attribute, or just
+     * assume virt_only + sourceEntitlement = restricted to the host who owns that
+     * sourceEntitlement.
+     *
+     * @return UUID of host consumer whose guests can use this pool.
+     */
     public String getRestrictedToParentConsumer() {
         return restrictedToParentConsumer;
     }
@@ -544,7 +555,7 @@ public class Pool extends AbstractHibernateObject implements Linkable, Owned {
     public ProductPoolAttribute getProductAttribute(String name) {
         return findAttribute(this.productAttributes, name);
     }
-    
+
     private <A extends AbstractPoolAttribute> A findAttribute(Set<A> attributes,
         String key) {
         if (attributes == null) {
