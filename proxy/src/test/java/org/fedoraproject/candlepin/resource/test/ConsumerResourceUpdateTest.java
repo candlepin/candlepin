@@ -16,6 +16,7 @@ package org.fedoraproject.candlepin.resource.test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -43,6 +44,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
+import java.util.ArrayList;
 import java.util.Locale;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -129,7 +131,7 @@ public class ConsumerResourceUpdateTest {
         assertFalse(a.getInstalledProducts().equals(c.getInstalledProducts()));
         assertFalse(a.getInstalledProducts().equals(d.getInstalledProducts()));
     }
-    
+
     @Test
     public void testGuestListEquality() throws Exception {
         Consumer a = new Consumer();
@@ -154,5 +156,59 @@ public class ConsumerResourceUpdateTest {
         assertEquals(a.getGuestsIds(), b.getGuestsIds());
         assertFalse(a.getGuestsIds().equals(c.getGuestsIds()));
         assertFalse(a.getGuestsIds().equals(d.getGuestsIds()));
+    }
+
+    @Test
+    public void testUpdateConsumerUpdatesGuestIds() {
+        String uuid = "TEST_CONSUMER";
+        String[] existingGuests = new String[]{"Guest 1", "Guest 2", "Guest 3"};
+        Consumer existing = createConsumerWithGuests(existingGuests);
+        existing.setUuid(uuid);
+
+        when(this.consumerCurator.findByUuid(uuid)).thenReturn(existing);
+
+        // Create a consumer with 1 new guest.
+        Consumer updated = createConsumerWithGuests("Guest 2");
+
+        this.resource.updateConsumer(existing.getUuid(), updated);
+        assertEquals(1, existing.getGuestsIds().size());
+        assertEquals("Guest 2", existing.getGuestsIds().get(0).getGuestId());
+    }
+
+    @Test
+    public void testUpdateConsumerDoesNotChangeWhenGuestIdsNotIncludedInRequest() {
+        String uuid = "TEST_CONSUMER";
+        String[] guests = new String[]{ "Guest 1", "Guest 2" };
+        Consumer existing = createConsumerWithGuests(guests);
+        existing.setUuid(uuid);
+
+        when(this.consumerCurator.findByUuid(uuid)).thenReturn(existing);
+
+        Consumer updated = new Consumer();
+        this.resource.updateConsumer(existing.getUuid(), updated);
+        assertEquals(guests.length, existing.getGuestsIds().size());
+    }
+
+    @Test
+    public void testUpdateConsumerClearsGuestListWhenRequestGuestListIsEmptyButNotNull() {
+        String uuid = "TEST_CONSUMER";
+        String[] guests = new String[]{ "Guest 1", "Guest 2" };
+        Consumer existing = createConsumerWithGuests(guests);
+        existing.setUuid(uuid);
+
+        when(this.consumerCurator.findByUuid(uuid)).thenReturn(existing);
+
+        Consumer updated = new Consumer();
+        updated.setGuestsId(new ArrayList<GuestId>());
+        this.resource.updateConsumer(existing.getUuid(), updated);
+        assertTrue(existing.getGuestsIds().isEmpty());
+    }
+
+    private Consumer createConsumerWithGuests(String ... guestIds) {
+        Consumer a = new Consumer();
+        for (String guestId: guestIds) {
+            a.addGuestId(new GuestId(guestId));
+        }
+        return a;
     }
 }
