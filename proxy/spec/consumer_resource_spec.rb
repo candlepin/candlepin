@@ -380,4 +380,86 @@ describe 'Consumer Resource' do
     consumer['guestIds'].length.should == 0
   end
 
+  it 'should allow host to list guests' do
+    uuid1 = random_string('system.uuid')
+    uuid2 = random_string('system.uuid')
+    guests = [{'guestId' => uuid1}, {'guestId' => uuid2}]
+
+    user_cp = user_client(@owner1, random_string('test-user'))
+    host_consumer = user_cp.register(random_string('host'), :system, nil,
+      {}, nil, nil, [], [])
+    guest_consumer1 = user_cp.register(random_string('guest'), :system, nil,
+      {'virt.uuid' => uuid1}, nil, nil, [], [])
+    guest_consumer2 = user_cp.register(random_string('guest'), :system, nil,
+      {'virt.uuid' => uuid2}, nil, nil, [], [])
+
+    consumer_client = Candlepin.new(username=nil, password=nil,
+        cert=host_consumer['idCert']['cert'],
+        key=host_consumer['idCert']['key'])
+    consumer_client.update_consumer({:guestIds => guests})
+
+    @cp.get_consumer_guests(host_consumer['uuid']).length.should == 2
+  end
+
+  it 'should not allow host to list guests that another host has claimed' do
+    uuid1 = random_string('system.uuid')
+    uuid2 = random_string('system.uuid')
+    guests1 = [{'guestId' => uuid1}, {'guestId' => uuid2}]
+    guests2 = [{'guestId' => uuid2}]
+
+    user_cp = user_client(@owner1, random_string('test-user'))
+    host_consumer1 = user_cp.register(random_string('host'), :system, nil,
+      {}, nil, nil, [], [])
+    host_consumer2 = user_cp.register(random_string('host'), :system, nil,
+      {}, nil, nil, [], [])
+    guest_consumer1 = user_cp.register(random_string('guest'), :system, nil,
+      {'virt.uuid' => uuid1}, nil, nil, [], [])
+    guest_consumer2 = user_cp.register(random_string('guest'), :system, nil,
+      {'virt.uuid' => uuid2}, nil, nil, [], [])
+
+    consumer_client1 = Candlepin.new(username=nil, password=nil,
+        cert=host_consumer1['idCert']['cert'],
+        key=host_consumer1['idCert']['key'])
+    consumer_client1.update_consumer({:guestIds => guests1})
+    consumer_client2 = Candlepin.new(username=nil, password=nil,
+        cert=host_consumer2['idCert']['cert'],
+        key=host_consumer2['idCert']['key'])
+    consumer_client2.update_consumer({:guestIds => guests2})
+
+    guestList = @cp.get_consumer_guests(host_consumer1['uuid'])
+    guestList.length.should == 1
+    guestList[0]['uuid'].should == guest_consumer1['uuid']
+  end
+
+  it 'guest should list most current host' do
+    uuid1 = random_string('system.uuid')
+    uuid2 = random_string('system.uuid')
+    guests1 = [{'guestId' => uuid1}, {'guestId' => uuid2}]
+    guests2 = [{'guestId' => uuid2}]
+
+    user_cp = user_client(@owner1, random_string('test-user'))
+    host_consumer1 = user_cp.register(random_string('host'), :system, nil,
+      {}, nil, nil, [], [])
+    host_consumer2 = user_cp.register(random_string('host'), :system, nil,
+      {}, nil, nil, [], [])
+    guest_consumer1 = user_cp.register(random_string('guest'), :system, nil,
+      {'virt.uuid' => uuid1}, nil, nil, [], [])
+    guest_consumer2 = user_cp.register(random_string('guest'), :system, nil,
+      {'virt.uuid' => uuid2}, nil, nil, [], [])
+
+    consumer_client1 = Candlepin.new(username=nil, password=nil,
+        cert=host_consumer1['idCert']['cert'],
+        key=host_consumer1['idCert']['key'])
+    consumer_client1.update_consumer({:guestIds => guests1})
+    consumer_client2 = Candlepin.new(username=nil, password=nil,
+        cert=host_consumer2['idCert']['cert'],
+        key=host_consumer2['idCert']['key'])
+    consumer_client2.update_consumer({:guestIds => guests2})
+
+    host1 = @cp.get_consumer_host(guest_consumer1['uuid'])
+    host1['uuid'].should == host_consumer1['uuid']
+    host2 = @cp.get_consumer_host(guest_consumer2['uuid'])
+    host2['uuid'].should == host_consumer2['uuid']
+  end
+
 end

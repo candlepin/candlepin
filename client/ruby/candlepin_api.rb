@@ -471,6 +471,16 @@ class Candlepin
     get("/consumers/#{consumer_id}")
   end
 
+  def get_consumer_host(consumer_id=nil)
+    consumer_id ||= @uuid
+    get("/consumers/#{consumer_id}/host")
+  end
+
+  def get_consumer_guests(consumer_id=nil)
+    consumer_id ||= @uuid
+    get("/consumers/#{consumer_id}/guests")
+  end
+
   def unbind_entitlement(eid, params={})
     uuid = params[:uuid] || @uuid
     delete("/consumers/#{uuid}/entitlements/#{eid}")

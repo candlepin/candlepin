@@ -317,9 +317,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             .list();
         if (consumerGuests != null) {
             for (GuestId cg : consumerGuests) {
-                Consumer guest = null;
                 if (consumer.equals(getHost(cg.getGuestId()))) {
-                    guest = findByVirtUuid(cg.getGuestId());
+                    Consumer guest = findByVirtUuid(cg.getGuestId());
                     if (guest != null) {
                         guests.add(guest);
                     }
