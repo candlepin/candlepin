@@ -23,6 +23,7 @@ import com.google.inject.Inject;
 import com.wideplay.warp.persist.Transactional;
 
 import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.Restrictions;
 import org.xnap.commons.i18n.I18n;
@@ -126,8 +127,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     public Consumer findByVirtUuid(String uuid) {
         return (Consumer) currentSession().createCriteria(Consumer.class)
             .add(Restrictions.sqlRestriction("{alias}.id in (select cp_consumer_id " +
-                "from cp_consumer_facts where mapkey = 'virt.uuid' and element = '" +
-                uuid + "')")).uniqueResult();
+                "from cp_consumer_facts where mapkey = 'virt.uuid' and element = ?)",
+                uuid, Hibernate.STRING)).uniqueResult();
     }
 
     /**
