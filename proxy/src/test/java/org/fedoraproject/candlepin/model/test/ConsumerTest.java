@@ -135,7 +135,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         noFacts = consumerCurator.find(noFacts.getId());
         assertNotNull(noFacts.getFacts());
         assertNotNull(noFacts.getInstalledProducts());
-        assertNotNull(noFacts.getGuestsIds());
+        assertNotNull(noFacts.getGuestIds());
     }
 
     @Test
@@ -451,13 +451,13 @@ public class ConsumerTest extends DatabaseTestFixture {
         lookedUp.addGuestId(new GuestId("guest2"));
         consumerCurator.update(lookedUp);
         lookedUp = consumerCurator.find(consumer.getId());
-        assertEquals(2, lookedUp.getGuestsIds().size());
-        GuestId installed = lookedUp.getGuestsIds().
+        assertEquals(2, lookedUp.getGuestIds().size());
+        GuestId installed = lookedUp.getGuestIds().
             iterator().next();
-        lookedUp.getGuestsIds().remove(installed);
+        lookedUp.getGuestIds().remove(installed);
         consumerCurator.update(lookedUp);
         lookedUp = consumerCurator.find(consumer.getId());
-        assertEquals(1, lookedUp.getGuestsIds().size());
+        assertEquals(1, lookedUp.getGuestIds().size());
     }
 
 }

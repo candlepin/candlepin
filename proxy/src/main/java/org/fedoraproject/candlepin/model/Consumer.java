@@ -130,7 +130,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.MERGE,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
-    private List<GuestId> guestsIds;
+    private List<GuestId> guestIds;
 
     // An instruction for the client to initiate an autoheal request.
     // WARNING: can't initialize to a default value here, we need to be able to see
@@ -146,7 +146,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         this.type = type;
         this.facts = new HashMap<String, String>();
         this.installedProducts = new HashSet<ConsumerInstalledProduct>();
-        this.guestsIds = new ArrayList<GuestId>();
+        this.guestIds = new ArrayList<GuestId>();
         this.autoheal = true;
     }
 
@@ -461,21 +461,21 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
      * @param guests the GuestIds to set
      */
     public void setGuestIds(List<GuestId> guests) {
-        this.guestsIds = guests;
+        this.guestIds = guests;
     }
 
     /**
      * @return the guestIds
      */
-    public List<GuestId> getGuestsIds() {
-        return guestsIds;
+    public List<GuestId> getGuestIds() {
+        return guestIds;
     }
 
     public void addGuestId(GuestId guestId) {
-        if (guestsIds == null) {
-            guestsIds = new ArrayList<GuestId>();
+        if (guestIds == null) {
+            guestIds = new ArrayList<GuestId>();
         }
         guestId.setConsumer(this);
-        guestsIds.add(guestId);
+        guestIds.add(guestId);
     }
 }

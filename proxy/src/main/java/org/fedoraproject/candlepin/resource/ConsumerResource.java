@@ -327,8 +327,8 @@ public class ConsumerResource {
                 p.setConsumer(consumer);
             }
         }
-        if (consumer.getGuestsIds() != null) {
-            for (GuestId g : consumer.getGuestsIds()) {
+        if (consumer.getGuestIds() != null) {
+            for (GuestId g : consumer.getGuestIds()) {
                 g.setConsumer(consumer);
             }
         }
@@ -595,14 +595,14 @@ public class ConsumerResource {
      */
     private boolean checkForGuestsUpdate(Consumer existing, Consumer incoming) {
 
-        if (incoming.getGuestsIds() == null) {
+        if (incoming.getGuestIds() == null) {
             log.debug("Guests not included in this consumer update, " +
                 "skipping update.");
             return false;
         }
         log.debug("Updating guests.");
-        existing.getGuestsIds().clear();
-        for (GuestId cg : incoming.getGuestsIds()) {
+        existing.getGuestIds().clear();
+        for (GuestId cg : incoming.getGuestIds()) {
             existing.addGuestId(cg);
         }
         return true;

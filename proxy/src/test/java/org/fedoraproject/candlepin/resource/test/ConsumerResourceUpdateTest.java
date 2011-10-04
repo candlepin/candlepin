@@ -153,9 +153,9 @@ public class ConsumerResourceUpdateTest {
         d.addGuestId(new GuestId("Guest B"));
         d.addGuestId(new GuestId("Guest D"));
 
-        assertEquals(a.getGuestsIds(), b.getGuestsIds());
-        assertFalse(a.getGuestsIds().equals(c.getGuestsIds()));
-        assertFalse(a.getGuestsIds().equals(d.getGuestsIds()));
+        assertEquals(a.getGuestIds(), b.getGuestIds());
+        assertFalse(a.getGuestIds().equals(c.getGuestIds()));
+        assertFalse(a.getGuestIds().equals(d.getGuestIds()));
     }
 
     @Test
@@ -171,8 +171,8 @@ public class ConsumerResourceUpdateTest {
         Consumer updated = createConsumerWithGuests("Guest 2");
 
         this.resource.updateConsumer(existing.getUuid(), updated);
-        assertEquals(1, existing.getGuestsIds().size());
-        assertEquals("Guest 2", existing.getGuestsIds().get(0).getGuestId());
+        assertEquals(1, existing.getGuestIds().size());
+        assertEquals("Guest 2", existing.getGuestIds().get(0).getGuestId());
     }
 
     @Test
@@ -186,7 +186,7 @@ public class ConsumerResourceUpdateTest {
 
         Consumer updated = new Consumer();
         this.resource.updateConsumer(existing.getUuid(), updated);
-        assertEquals(guests.length, existing.getGuestsIds().size());
+        assertEquals(guests.length, existing.getGuestIds().size());
     }
 
     @Test
@@ -201,7 +201,7 @@ public class ConsumerResourceUpdateTest {
         Consumer updated = new Consumer();
         updated.setGuestIds(new ArrayList<GuestId>());
         this.resource.updateConsumer(existing.getUuid(), updated);
-        assertTrue(existing.getGuestsIds().isEmpty());
+        assertTrue(existing.getGuestIds().isEmpty());
     }
 
     private Consumer createConsumerWithGuests(String ... guestIds) {
