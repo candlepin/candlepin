@@ -460,7 +460,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     /**
      * @param guests the GuestIds to set
      */
-    public void setGuestsIds(List<GuestId> guests) {
+    public void setGuestIds(List<GuestId> guests) {
         this.guestsIds = guests;
     }
 
