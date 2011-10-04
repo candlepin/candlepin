@@ -28,9 +28,9 @@ import static org.junit.Assert.assertEquals;
  * RulesExporterTest
  */
 public class RulesExporterTest {
-    
+
     private String FAKE_RULES = "HELLO WORLD";
-    
+
     @Test
     public void testMetaExporter() throws IOException {
         RulesCurator rulesCurator = mock(RulesCurator.class);

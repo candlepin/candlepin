@@ -83,7 +83,7 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
 
     // @Ignore
     // public void testHasEntitlement() {
-    //        
+    //
     // eapi.entitleByProduct(consumer.getUuid(), product.getLabel());
     //
     // // TODO: Disabling this test, boils into ObjectFactory things that need
@@ -110,7 +110,7 @@ public class EntitlementResourceTest extends DatabaseTestFixture {
 //        WebResource postresource =
 //            c.resource("http://localhost:8080/candlepin/entitlement/foo/");
 //        postresource.accept("application/json").type("application/json").post(consumer);
-        
+
 
         // System.out.println(jto.getName());
         // jto =

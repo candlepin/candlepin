@@ -92,7 +92,7 @@ public class SSLCertTest {
                     add(selfSignedCertificate);
                 }
             });
-        //PKIXCertPathValidatorResult result = (PKIXCertPathValidatorResult) 
+        //PKIXCertPathValidatorResult result = (PKIXCertPathValidatorResult)
         cpv.validate(cp, PKIXparams);
     }
 }

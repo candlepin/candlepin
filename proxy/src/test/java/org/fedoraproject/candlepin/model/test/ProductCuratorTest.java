@@ -183,13 +183,13 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         dependentProductIds.add("ProductX");
         prod.setDependentProductIds(dependentProductIds);
         productCurator.create(prod);
-        
-        Product lookedUp = productCurator.find(prod.getId());
-        assertThat(lookedUp.getDependentProductIds(), hasItem("ProductX"));        
 
-    }    
-    
-    
+        Product lookedUp = productCurator.find(prod.getId());
+        assertThat(lookedUp.getDependentProductIds(), hasItem("ProductX"));
+
+    }
+
+
     /**
      * Test whether the product updation date is updated when merging.
      */
@@ -299,20 +299,20 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         // Old attributes should get cleaned up:
         assertEquals(3, all.size());
     }
-    
+
     public void testRemoveProductContent() {
         Product p = createTestProduct();
         Content content = new Content("test-content", "test-content",
             "test-content", "yum", "us", "here", "here");
         p.addContent(content);
         productCurator.create(p);
-        
+
         p = productCurator.find(p.getId());
         assertEquals(1, p.getProductContent().size());
-        
+
         productCurator.removeProductContent(p, content);
         p = productCurator.find(p.getId());
         assertEquals(0, p.getProductContent().size());
     }
-    
+
 }

@@ -107,9 +107,9 @@ public class RoleResource {
         OwnerPermission permission) {
 
         Role existingRole = lookupRole(roleId);
-        
 
-        // Don't allow NONE permissions to be created, this is currently just for 
+
+        // Don't allow NONE permissions to be created, this is currently just for
         // internal use:
         if (permission.getAccess().equals(Access.NONE)) {
             throw new BadRequestException(i18n.tr("Access type NONE not supported."));

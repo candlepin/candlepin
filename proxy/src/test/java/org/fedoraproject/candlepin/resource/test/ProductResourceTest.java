@@ -42,16 +42,16 @@ import java.util.Set;
  * ProductResourceTest
  */
 public class ProductResourceTest extends DatabaseTestFixture {
-    
+
     private ProductResource productResource;
-    
+
     @Before
     public void setUp() {
-        
+
         productResource = injector.getInstance(ProductResource.class);
         contentCurator = injector.getInstance(ContentCurator.class);
     }
-    
+
     private Product createProduct() {
         String label = "test_product";
         String name = "Test Product";
@@ -62,35 +62,35 @@ public class ProductResourceTest extends DatabaseTestFixture {
         Product prod = new Product(label, name, variant,
                 version, arch, type);
         return prod;
-        
+
     }
 
-   
+
     @Test
     public void testCreateProductResource() {
-        
+
         Product toSubmit = createProduct();
         productResource.createProduct(toSubmit);
-        
+
     }
-    
+
     @Test
     public void testCreateProductWithContent() {
         Product toSubmit = createProduct();
         String  contentHash = String.valueOf(
             Math.abs(Long.valueOf("test-content".hashCode())));
-        Content testContent = new Content("test-content", contentHash, 
+        Content testContent = new Content("test-content", contentHash,
                             "test-content-label", "yum", "test-vendor",
                              "test-content-url", "test-gpg-url");
-        
+
         HashSet<Content> contentSet = new HashSet<Content>();
         testContent = contentCurator.create(testContent);
         contentSet.add(testContent);
         toSubmit.setContent(contentSet);
-        
+
         productResource.createProduct(toSubmit);
     }
-    
+
     @Test(expected = BadRequestException.class)
     public void testDeleteProductWithSubscriptions() {
         ProductServiceAdapter pa = mock(ProductServiceAdapter.class);
@@ -105,6 +105,6 @@ public class ProductResourceTest extends DatabaseTestFixture {
 
         pr.deleteProduct("10");
     }
-    
-    
+
+
 }

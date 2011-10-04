@@ -28,7 +28,7 @@ import java.util.List;
 public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> {
 
     private static Logger log = Logger.getLogger(SubscriptionCurator.class);
-    
+
     protected SubscriptionCurator() {
         super(Subscription.class);
     }
@@ -59,7 +59,7 @@ public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> 
         log.debug("Found subs: " + subs.size());
         return subs;
     }
-    
+
     /**
      * Return a list of subscriptions for the given product.
      *
@@ -101,7 +101,7 @@ public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> 
         return subs;
     }
 
-    
+
     /**
      * Return list of subscriptions from added since the given date.
      * @param sinceDate Date used in searches.

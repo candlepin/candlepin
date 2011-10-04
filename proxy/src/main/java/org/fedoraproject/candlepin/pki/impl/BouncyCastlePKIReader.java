@@ -40,25 +40,25 @@ import com.google.inject.Inject;
  * The default {@link PKIReader} for Candlepin.  This reads the file paths for
  * the CA certificate and CA private key, as well as an optional password, from
  * the config system.  These values are customizable via /etc/candlepin/candlepin.conf.
- * 
+ *
  * All code that imports bouncycastle should live either in this module,
  * or in {@link BouncyCastlePKIUtility}
- * 
+ *
  * (March 24, 2011) Notes on implementing a PKIReader with NSS/JSS:
- * 
+ *
  * The only code here that's bouncycastle specific is the PEMReader.
  * JSS doesn't provide any code for reading/writing PEM, so we'd need to read the input
  * file, parse the headers related to private key storage (to make sure we have the right
  * file type and determine if we have to decrypt with a password), base64 decode the input
  * into DER, optionally decrypt, then build an RSAKeySpec and pass it on to java's
  * keyfactory to get a key.
- * 
+ *
  * As of March 24, 2011, we're only using bouncycastle to read and write encodings, not
  * perform any "real" crypto work. if we tell the PEMReader to use a different JSSE
  * provider (say, SunJSSE), and don't load the bouncycastle provider, we're not technically
  * using bouncycastle for crypto. We could also take only the subset of classes we require
- * (none of the crypto ones) and use those. 
- * 
+ * (none of the crypto ones) and use those.
+ *
  * See also {@link BouncyCastlePKIUtility} for more notes.
  */
 public class BouncyCastlePKIReader implements PKIReader, PasswordFinder {
@@ -71,11 +71,11 @@ public class BouncyCastlePKIReader implements PKIReader, PasswordFinder {
     private final X509Certificate x509Certificate;
     private final X509Certificate upstreamX509Certificate;
     private final PrivateKey privateKey;
-    
+
     static {
         Security.addProvider(new BouncyCastleProvider());
     }
-    
+
     @Inject
     public BouncyCastlePKIReader(Config config) throws CertificateException {
         certFactory = CertificateFactory.getInstance("X.509");
@@ -158,7 +158,7 @@ public class BouncyCastlePKIReader implements PKIReader, PasswordFinder {
     public X509Certificate getCACert() throws IOException, CertificateException {
         return this.x509Certificate;
     }
-    
+
     @Override
     public X509Certificate getUpstreamCACert() throws IOException, CertificateException {
         return this.upstreamX509Certificate;

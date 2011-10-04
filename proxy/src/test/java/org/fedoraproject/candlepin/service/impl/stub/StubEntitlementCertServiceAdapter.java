@@ -31,17 +31,17 @@ import com.google.inject.Inject;
 
 /**
  * StubEntitlementCertServiceAdapter
- * 
+ *
  * Generating an entitlement cert is expensive, this class stubs the process out.
  */
 public class StubEntitlementCertServiceAdapter extends BaseEntitlementCertServiceAdapter {
 
     private static Logger log = Logger.getLogger(StubEntitlementCertServiceAdapter.class);
     private CertificateSerialCurator serialCurator;
-    
+
     @Inject
     public StubEntitlementCertServiceAdapter(
-        EntitlementCertificateCurator entCertCurator, 
+        EntitlementCertificateCurator entCertCurator,
         CertificateSerialCurator serialCurator) {
 
         this.entCertCurator = entCertCurator;
@@ -49,19 +49,19 @@ public class StubEntitlementCertServiceAdapter extends BaseEntitlementCertServic
     }
 
     @Override
-    public EntitlementCertificate generateEntitlementCert(Entitlement entitlement, 
+    public EntitlementCertificate generateEntitlementCert(Entitlement entitlement,
         Subscription sub, Product product)
         throws GeneralSecurityException, IOException {
-        
+
         log.debug("Generating entitlement cert for:");
         log.debug("   consumer: " + entitlement.getConsumer().getUuid());
         log.debug("   product: " + product.getId());
         log.debug("   end date: " + entitlement.getEndDate());
-        
+
         EntitlementCertificate cert = new EntitlementCertificate();
         CertificateSerial serial = new CertificateSerial(entitlement.getEndDate());
         serialCurator.create(serial);
-       
+
         cert.setSerial(serial);
         cert.setKeyAsBytes(("---- STUB KEY -----" + Math.random())
             .getBytes());
@@ -69,12 +69,12 @@ public class StubEntitlementCertServiceAdapter extends BaseEntitlementCertServic
             .getBytes());
         cert.setEntitlement(entitlement);
         entitlement.getCertificates().add(cert);
-        
+
         log.debug("Generated cert: " + serial.getId());
         log.debug("Key: " + cert.getKey());
         log.debug("Cert: " + cert.getCert());
         entCertCurator.create(cert);
-        
+
         return cert;
     }
 

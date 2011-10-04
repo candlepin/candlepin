@@ -28,7 +28,7 @@ describe 'Activation Keys' do
     keys = @cp.list_activation_keys()
     keys.length.should >= 1
   end
-  
+
   it 'should allow updating of names' do
     @activation_key['name'] = "ObiWan"
     @activation_key = @cp.update_activation_key(@activation_key)
@@ -46,7 +46,7 @@ describe 'Activation Keys' do
       @mallory_client.update_activation_key(@activation_key)
     }.should raise_exception(RestClient::Forbidden)
 
-  end  
+  end
 
   it 'should allow superadmin to delete their activation keys' do
     @cp.delete_activation_key(@activation_key['id'])

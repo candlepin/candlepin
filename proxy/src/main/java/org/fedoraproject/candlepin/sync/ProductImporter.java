@@ -63,10 +63,10 @@ public class ProductImporter {
     }
 
     public void store(Set<Product> products) {
-        //have to maintain a map because entitlements don't 
-        //override equals/hashcode and only way to maintain unique 
+        //have to maintain a map because entitlements don't
+        //override equals/hashcode and only way to maintain unique
         //entitlements is to have a key -> value right now.
-        Map<String, Entitlement> toRegenEntitlements = Util.newMap(); 
+        Map<String, Entitlement> toRegenEntitlements = Util.newMap();
         for (Product importedProduct : products) {
             final Product existingProduct = this.curator.find(importedProduct
                 .getId());
@@ -91,23 +91,23 @@ public class ProductImporter {
             for (ProductContent content : importedProduct.getProductContent()) {
                 contentCurator.createOrUpdate(content.getContent());
             }
-            
-            
+
+
             curator.createOrUpdate(importedProduct);
         }
-        
+
       //regenerate entitlement certificates.
-        this.poolManager.regenerateCertificatesOf(toRegenEntitlements.values()); 
+        this.poolManager.regenerateCertificatesOf(toRegenEntitlements.values());
     }
-    
+
     protected final boolean hasProductChanged(Product existingProd, Product importedProd) {
 
         if (existingProd == null) {
             return true;
         }
-        return Sets.difference(existingProd.getProductContent(), 
-                    importedProd.getProductContent()).size() > 0 || 
-                Sets.difference(existingProd.getAttributes(), 
+        return Sets.difference(existingProd.getProductContent(),
+                    importedProd.getProductContent()).size() > 0 ||
+                Sets.difference(existingProd.getAttributes(),
                         importedProd.getAttributes()).size() > 0 ||
                 !new EqualsBuilder()
                         .append(existingProd.getName(), importedProd.getName())

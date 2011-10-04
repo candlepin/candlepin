@@ -25,7 +25,7 @@ public class SystemPrincipal extends Principal {
     }
 
     @Override
-    public String getPrincipalName() {       
+    public String getPrincipalName() {
         return "System";
     }
 

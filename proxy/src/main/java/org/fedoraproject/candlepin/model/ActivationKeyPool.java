@@ -59,10 +59,10 @@ public class ActivationKeyPool extends AbstractHibernateObject {
 
     @Column(nullable = false, name = "quantity")
     private Long quantity;
-    
+
     public ActivationKeyPool() {
     }
-    
+
     public ActivationKeyPool(ActivationKey key, Pool pool, Long quantity) {
         this.key = key;
         this.pool = pool;
@@ -105,7 +105,7 @@ public class ActivationKeyPool extends AbstractHibernateObject {
     public void setPool(Pool pool) {
         this.pool = pool;
     }
-    
+
     /**
      * @return the quantity
      */

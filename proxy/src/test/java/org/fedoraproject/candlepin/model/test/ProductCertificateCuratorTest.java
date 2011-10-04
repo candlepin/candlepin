@@ -26,36 +26,36 @@ import org.junit.Test;
  * ProductCertificateCuratorTest
  */
 public class ProductCertificateCuratorTest extends DatabaseTestFixture {
-    
+
     private Product product;
-    
+
     @Before
     public void init() {
         super.init();
-        
+
         Product product = new Product("dummy", "Dummy Product");
         this.product = productCurator.create(product);
     }
-    
+
     @Test
-    public void emptyFindForProduct() {        
+    public void emptyFindForProduct() {
         Assert.assertNull(productCertificateCurator.findForProduct(product));
     }
-    
+
     @Test
     public void nullForNull() {
         Assert.assertNull(productCertificateCurator.findForProduct(null));
     }
-    
+
     @Test
     public void validFindForProduct() {
         ProductCertificate cert = new ProductCertificate();
         cert.setProduct(product);
         cert.setKey("key");
         cert.setCert("cert");
-        
+
         productCertificateCurator.create(cert);
-        
+
         Assert.assertEquals(cert, productCertificateCurator.findForProduct(product));
     }
 }

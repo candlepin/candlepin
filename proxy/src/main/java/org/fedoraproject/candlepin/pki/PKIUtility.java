@@ -48,32 +48,32 @@ import org.apache.log4j.Logger;
  */
 public abstract class PKIUtility {
     private static Logger log = Logger.getLogger(PKIUtility.class);
-    
+
     // TODO : configurable?
     private static final int RSA_KEY_SIZE = 2048;
     protected static final String SIGNATURE_ALGO = "SHA1WITHRSA";
     protected PKIReader reader;
     protected SubjectKeyIdentifierWriter subjectKeyWriter;
-    
+
     public PKIUtility(PKIReader reader, SubjectKeyIdentifierWriter subjectKeyWriter) {
         this.reader = reader;
         this.subjectKeyWriter = subjectKeyWriter;
     }
- 
+
     public abstract X509Certificate createX509Certificate(String dn,
         Set<X509ExtensionWrapper> extensions, Date startDate, Date endDate,
         KeyPair clientKeyPair, BigInteger serialNumber, String alternateName)
         throws GeneralSecurityException, IOException;
-    
+
     /**
      * Generate crl.
-     * 
+     *
      * @param entries the entries
      * @return the x509 crl
      */
     public abstract X509CRL createX509CRL(List<X509CRLEntryWrapper> entries,
-        BigInteger crlNumber); 
-    
+        BigInteger crlNumber);
+
     public KeyPair decodeKeys(byte[] privKeyBits, byte[] pubKeyBits)
         throws InvalidKeySpecException, NoSuchAlgorithmException {
 
@@ -93,7 +93,7 @@ public abstract class PKIUtility {
         generator.initialize(RSA_KEY_SIZE);
         return generator.generateKeyPair();
     }
-    
+
     /**
      * Take an X509Certificate object and return a byte[] of the certificate,
      * PEM encoded
@@ -102,7 +102,7 @@ public abstract class PKIUtility {
      * @throws IOException if there is i/o problem
      */
     public abstract byte[] getPemEncoded(X509Certificate cert) throws IOException;
-        
+
     public abstract byte[] getPemEncoded(Key key) throws IOException;
 
     public abstract byte[] getPemEncoded(X509CRL crl) throws IOException;
@@ -118,12 +118,12 @@ public abstract class PKIUtility {
             throw new RuntimeException(e);
         }
     }
-    
+
     public byte[] getSHA256WithRSAHash(InputStream input) {
         try {
             Signature signature = Signature.getInstance("SHA256withRSA");
             signature.initSign(reader.getCaKey());
-            
+
             updateSignature(input, signature);
             return signature.sign();
         }
@@ -131,12 +131,12 @@ public abstract class PKIUtility {
             throw new RuntimeException(e);
         }
     }
-    
+
     public boolean verifySHA256WithRSAHashWithUpstreamCACert(
         InputStream input, byte[] signedHash) throws CertificateException, IOException {
         return verifySHA256WithRSAHash(input, signedHash, reader.getUpstreamCACert());
     }
-    
+
     public boolean verifySHA256WithRSAHash(
             InputStream input, byte[] signedHash, Certificate certificate) {
         try {
@@ -154,12 +154,12 @@ public abstract class PKIUtility {
     private void updateSignature(InputStream input, Signature signature)
         throws IOException, SignatureException {
         byte[] dataBytes = new byte[4096];
-        int nread = 0; 
+        int nread = 0;
         while ((nread = input.read(dataBytes)) != -1) {
             signature.update(dataBytes, 0, nread);
         }
     }
 
-    
+
     public abstract String decodeDERValue(byte[] value);
 }

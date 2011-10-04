@@ -38,113 +38,113 @@ public class ConsumerTypeImporterTest {
     @Test
     public void testDeserialize() throws IOException {
         String consumerTypeString = "{\"id\":15, \"label\":\"prosumer\"}";
-        
+
         Reader reader = new StringReader(consumerTypeString);
-        
+
         ConsumerType consumerType = new ConsumerTypeImporter(null).createObject(
             SyncUtils.getObjectMapper(new Config(new HashMap<String, String>())), reader);
-        
+
         assertEquals("prosumer", consumerType.getLabel());
     }
-    
+
     @Test
     public void testDeserializeIdIsNull() throws IOException {
         String consumerTypeString = "{\"id\":15, \"label\":\"prosumer\"}";
-        
+
         Reader reader = new StringReader(consumerTypeString);
-        
+
         ConsumerType consumerType = new ConsumerTypeImporter(null).createObject(
             SyncUtils.getObjectMapper(new Config(new HashMap<String, String>())), reader);
-        
-        assertEquals(null, consumerType.getId());      
+
+        assertEquals(null, consumerType.getId());
     }
-    
+
     @Test
     public void testSingleConsumerTypeInDbAndListCausesNoChange() {
         final ConsumerType testType = new ConsumerType();
         testType.setLabel("prosumer");
-        
+
         ConsumerTypeCurator curator = mock(ConsumerTypeCurator.class);
-        
+
         when(curator.lookupByLabel("prosumer")).thenReturn(testType);
-        
+
         ConsumerTypeImporter importer = new ConsumerTypeImporter(curator);
         importer.store(new HashSet<ConsumerType>() {
             {
                 add(testType);
             }
         });
-        
+
         verify(curator, never()).create(testType);
         verify(curator, never()).merge(testType);
     }
-    
+
     @Test
     public void testSingleConsumerTypeInListEmptyDbCausesInsert() {
         final ConsumerType testType = new ConsumerType();
         testType.setLabel("prosumer");
-        
+
         ConsumerTypeCurator curator = mock(ConsumerTypeCurator.class);
-        
+
         when(curator.lookupByLabel("prosumer")).thenReturn(null);
-        
+
         ConsumerTypeImporter importer = new ConsumerTypeImporter(curator);
         importer.store(new HashSet<ConsumerType>() {
             {
                 add(testType);
             }
         });
-        
+
         verify(curator).create(testType);
-        verify(curator, never()).merge(testType);        
+        verify(curator, never()).merge(testType);
     }
-    
+
     @Test
     public void testEmptyListCausesDbRemove() {
         final ConsumerType typeInDb1 = new ConsumerType();
         typeInDb1.setLabel("oldconsumer");
         final ConsumerType typeInDb2 = new ConsumerType();
         typeInDb2.setLabel("otheroldconsumer");
-        
+
         ConsumerTypeCurator curator = mock(ConsumerTypeCurator.class);
-        
+
         when(curator.listAll()).thenReturn(new ArrayList<ConsumerType>() {
             {
                 add(typeInDb1);
                 add(typeInDb2);
             }
         });
-        
+
         ConsumerTypeImporter importer = new ConsumerTypeImporter(curator);
         importer.store(new HashSet<ConsumerType>());
-        
+
         verify(curator).delete(typeInDb1);
         verify(curator).delete(typeInDb2);
     }
-    
+
     @Test
     public void testEmptyListWithRefToDbLeavesTypeInDb() {
         final ConsumerType typeInDb1 = new ConsumerType();
         typeInDb1.setLabel("oldconsumer");
         final ConsumerType typeInDb2 = new ConsumerType();
         typeInDb2.setLabel("otheroldconsumer");
-        
+
         ConsumerTypeCurator curator = mock(ConsumerTypeCurator.class);
-        
+
         when(curator.listAll()).thenReturn(new ArrayList<ConsumerType>() {
             {
                 add(typeInDb1);
                 add(typeInDb2);
             }
         });
-        
+
         doThrow(new ConstraintViolationException(null, null,
             null)).when(curator).delete(typeInDb1);
-        
+
         ConsumerTypeImporter importer = new ConsumerTypeImporter(curator);
         importer.store(new HashSet<ConsumerType>());
-        
+
         verify(curator).delete(typeInDb1);
-        verify(curator).delete(typeInDb2);        
+        verify(curator).delete(typeInDb2);
     }
 }

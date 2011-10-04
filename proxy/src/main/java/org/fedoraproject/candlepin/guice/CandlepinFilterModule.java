@@ -37,6 +37,6 @@ public class CandlepinFilterModule extends ServletModule {
 
         serve("/*").with(HttpServletDispatcher.class);
     }
-    
+
 }
 

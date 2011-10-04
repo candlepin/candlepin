@@ -50,7 +50,7 @@ public class ReadOnlyPool {
 
     /**
      * Returns true if there are available entitlements remaining.
-     * 
+     *
      * @return true if there are available entitlements remaining.
      */
     public Boolean entitlementsAvailable(Integer quantityToConsume) {
@@ -121,7 +121,7 @@ public class ReadOnlyPool {
     /**
      * Check if either the 'main' product id matches the provided id, or if any
      * of the 'supplementary' product ids match
-     * 
+     *
      * @param productId the product id to search for
      * @return true if found, false if not
      */
@@ -137,7 +137,7 @@ public class ReadOnlyPool {
                 attributes.put(current.getName(), current.getValue());
             }
         }
-        
+
         productAttributes = new HashMap<String, String>();
         Set<ProductPoolAttribute> productAttrList = entPool.getProductAttributes();
         if (productAttrList != null) {
@@ -163,5 +163,5 @@ public class ReadOnlyPool {
     public ReadOnlyProduct getTopLevelProduct() {
         return productCache.getProductById(entPool.getProductId());
     }
-    
+
 }

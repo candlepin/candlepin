@@ -53,19 +53,19 @@ public class ConsumerTypeResource {
 
     /**
      * List available ConsumerTypes
-     * 
+     *
      * @return all the consumer types
      */
     @GET
     @Produces({MediaType.APPLICATION_JSON })
-    @Wrapped(element = "consumertypes")    
+    @Wrapped(element = "consumertypes")
     public List<ConsumerType> list() {
         return consumerTypeCurator.listAll();
     }
 
     /**
      * Return the consumer type identified by the given label.
-     * 
+     *
      * @return a consumer type
      */
     @GET
@@ -84,7 +84,7 @@ public class ConsumerTypeResource {
 
     /**
      * Create a ConsumerType
-     * 
+     *
      * @return newly created ConsumerType
      * @throws BadRequestException When the type is not found
      */
@@ -105,10 +105,10 @@ public class ConsumerTypeResource {
 
     /**
      * Update a ConsumerType
-     * 
+     *
      * @return newly created ConsumerType
      * @throws BadRequestException When the type is not found
-     *            
+     *
      */
     @PUT
     @Path("/{id}")

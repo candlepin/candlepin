@@ -50,7 +50,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         super(Pool.class);
         this.enforcer = enforcer;
     }
-    
+
     @Override
     @Transactional
     @EnforceAccessControl
@@ -58,7 +58,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         Pool pool = super.find(id);
         return pool;
     }
-    
+
     @Override
     @Transactional
     @EnforceAccessControl
@@ -105,7 +105,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return results;
     }
 
-    
+
     /**
      * Returns list of pools available to the consumer.
      *
@@ -118,10 +118,10 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return listAvailableEntitlementPools(c, c.getOwner(), (String) null, null,
             true, false);
     }
-    
+
     /**
      * List all entitlement pools for the given owner and product.
-     * 
+     *
      * @param owner owner of the entitlement pool
      * @param productId product filter.
      * @return list of EntitlementPools
@@ -129,18 +129,18 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     @Transactional
     @EnforceAccessControl
     public List<Pool> listByOwnerAndProduct(Owner owner,
-            String productId) {  
+            String productId) {
         return listAvailableEntitlementPools(null, owner, productId, null, false, false);
     }
 
     /**
      * List entitlement pools.
-     * 
+     *
      * Pools will be refreshed from the underlying subscription service.
-     * 
+     *
      * If a consumer is specified, a pass through the rules will be done for
      * each potentially usable pool.
-     * 
+     *
      * @param c Consumer being entitled.
      * @param o Owner whose subscriptions should be inspected.
      * @param productId only entitlements which provide this product are included.
@@ -160,23 +160,23 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         if (o == null && c != null) {
             o = c.getOwner();
         }
-        
+
         if (log.isDebugEnabled()) {
             log.debug("Listing available pools for:");
             log.debug("   consumer: " + c);
             log.debug("   owner: " + o);
             log.debug("   product: " + productId);
         }
-        
+
         Criteria crit = currentSession().createCriteria(Pool.class);
         if (activeOnly) {
             crit.add(Restrictions.eq("activeSubscription", Boolean.TRUE));
         }
         if (c != null) {
             crit.add(Restrictions.eq("owner", c.getOwner()));
-        }  
+        }
         if (o != null) {
-            crit.add(Restrictions.eq("owner", o));            
+            crit.add(Restrictions.eq("owner", o));
         }
 
         if (activeOn != null) {
@@ -186,7 +186,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
         // FIXME: sort by enddate?
         List<Pool> results = crit.list();
-        
+
         if (results == null) {
             log.debug("no results");
             return new ArrayList<Pool>();
@@ -213,7 +213,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             }
             results = newResults;
         }
-        
+
         // If querying for pools available to a specific consumer, we need
         // to do a rules pass to verify the entitlement will be granted.
         // Note that something could change between the time we list a pool as
@@ -224,7 +224,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             log.debug("Filtering pools for consumer");
             for (Pool p : results) {
                 PreEntHelper helper = enforcer.preEntitlement(c, p, 1);
-                if (helper.getResult().isSuccessful() && 
+                if (helper.getResult().isSuccessful() &&
                         (!helper.getResult().hasWarnings() || includeWarnings)) {
                     newResults.add(p);
                 }
@@ -239,7 +239,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
         return results;
     }
-    
+
     @Transactional
     @EnforceAccessControl
     public List<Pool> listPoolsRestrictedToUser(String username) {
@@ -247,7 +247,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             DetachedCriteria.forClass(Pool.class)
                 .add(Restrictions.eq("restrictedToUsername", username)));
     }
-    
+
     @SuppressWarnings("unchecked")
     public List<Entitlement> retrieveFreeEntitlementsOfPool(Pool existingPool,
         boolean lifo) {
@@ -263,7 +263,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         pool.setActiveSubscription(Boolean.FALSE);
         merge(pool);
     }
-    
+
     private Criteria criteriaToSelectEntitlementForPool(Pool entitlementPool) {
         return currentSession().createCriteria(Entitlement.class)
         .add(Restrictions.eq("pool", entitlementPool));
@@ -278,7 +278,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     public List<Entitlement> entitlementsIn(Pool entitlementPool) {
         return criteriaToSelectEntitlementForPool(entitlementPool).list();
     }
-    
+
     public Pool lookupBySubscriptionId(String subId) {
         return (Pool) currentSession().createCriteria(Pool.class)
         .add(Restrictions.eq("subscriptionId", subId)).uniqueResult();
@@ -312,12 +312,12 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         for (PoolAttribute attr : entity.getAttributes()) {
             attr.setPool(entity);
         }
-        
+
         return super.create(entity);
     }
-    
+
     private static final String CONSUMER_FILTER = "Entitlement_CONSUMER_FILTER";
-    
+
     public int getNoOfDependentEntitlements(String entitlementId) {
         Filter consumerFilter = disableConsumerFilter();
         Integer result = (Integer)
@@ -343,7 +343,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                     .createCriteria("sourceEntitlement").add(Restrictions.idEq(entId))
             .list();
     }
-    
+
 
     /**
      * @param session

@@ -22,18 +22,18 @@ import org.fedoraproject.candlepin.auth.Principal;
 public class TestPrincipalProviderSetter {
     private static TestPrincipalProviderSetter instance;
     private Principal principal;
-    
+
     public static TestPrincipalProviderSetter get() {
         if (instance == null) {
             instance = new TestPrincipalProviderSetter();
         }
         return instance;
     }
-    
+
     public Principal getPrincipal() {
         return principal;
     }
-    
+
     public void setPrincipal(Principal setMe) {
         this.principal = setMe;
     }

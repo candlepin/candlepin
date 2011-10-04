@@ -44,16 +44,16 @@ public class ProductCertificate extends AbstractCertificate {
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
     private String id;
-    
+
     @XmlTransient
     public String getId() {
         return id;
     }
-    
+
     @ManyToOne
     @ForeignKey(name = "fk_cert_product")
     @JoinColumn(nullable = false)
-    @Index(name = "cp_prodcert_prod_fk_idx")    
+    @Index(name = "cp_prodcert_prod_fk_idx")
     private Product product;
 
     /**

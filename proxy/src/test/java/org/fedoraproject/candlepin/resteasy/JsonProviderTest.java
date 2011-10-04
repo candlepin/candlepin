@@ -31,11 +31,11 @@ import org.mockito.runners.MockitoJUnitRunner;
 public class JsonProviderTest {
 
     @Mock private Config config;
-    
+
     @Test
     public void noIndentation() {
         when(config.indentJson()).thenReturn(false);
-        
+
         JsonProvider provider = new JsonProvider(config);
         boolean indentEnabled = isEnabled(provider,
                 SerializationConfig.Feature.INDENT_OUTPUT);

@@ -19,9 +19,9 @@ describe 'OAuth' do
   include CandlepinScenarios
 
   @@site = "https://localhost:8443"
-  @@oauth_params = { 
+  @@oauth_params = {
    :site => @@site,
-   :http_method => :post, 
+   :http_method => :post,
    :request_token_path => "",
    :authorize_path => "",
    :access_token_path => "",
@@ -48,7 +48,7 @@ describe 'OAuth' do
     headers.each_pair do |k, v|
       request[k] = v
     end
-    
+
     req = Net::HTTP.new(url.host, url.port)
     req.use_ssl = true
     req.request(request)
@@ -96,7 +96,7 @@ describe 'OAuth' do
   it 'falls back to trusted system auth if no headers are set' do
     res = make_request(oauth_consumer, oauth_secret,
                        "/candlepin/consumers/#{@consumer.uuid}")
-    # a trusted system can't access consumer info 
+    # a trusted system can't access consumer info
     res.code.should == '403'
 
     prod = create_product('product', random_string('product-multiple-arch'),

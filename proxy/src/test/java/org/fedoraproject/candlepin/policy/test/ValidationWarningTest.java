@@ -30,7 +30,7 @@ public class ValidationWarningTest {
         ValidationWarning vw = new ValidationWarning("foobarbaz");
         assertEquals("foobarbaz", vw.getResourceKey());
     }
-    
+
     @Test
     public void testToString() {
         ValidationWarning vw = new ValidationWarning("foobarbaz");

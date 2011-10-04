@@ -5,10 +5,10 @@ describe 'Role Resource' do
   include CandlepinMethods
   include CandlepinScenarios
 
-  before(:each) do 
+  before(:each) do
     test_owner_key = random_string('testowner')
     @test_owner = create_owner(test_owner_key)
-    @username = random_string 'user' 
+    @username = random_string 'user'
     @user_cp = user_client(@test_owner, @username)
 
   end
@@ -89,7 +89,7 @@ describe 'Role Resource' do
 
     @cp.delete_role(new_role['id'])
   end
- 
+
 end
 
 

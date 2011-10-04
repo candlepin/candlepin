@@ -22,10 +22,10 @@ import org.fedoraproject.candlepin.service.UserServiceAdapter;
 
 /**
  * KatelloUserServiceAdapter
- * 
+ *
  * Katello handles everything about users before any calls get to candlepin.
  * It will take care of authn/authz, and respond to any calls for roles/permissions etc.
- * 
+ *
  * Thus, we don't implement anything here.
  */
 public class KatelloUserServiceAdapter implements UserServiceAdapter {

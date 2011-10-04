@@ -20,7 +20,7 @@ import java.util.Map;
 /**
  * implements the oid structure found here
  * https://docspace.corp.redhat.com/clearspace/docs/DOC-30244
- * 
+ *
  * @author jomara
  */
 public final class OIDUtil {
@@ -81,21 +81,21 @@ public final class OIDUtil {
 
     public static final Map<String, String> SYSTEM_OIDS = new HashMap<String, String>();
     public static final Map<String, String> ORDER_OIDS = new HashMap<String, String>();
-    public static final Map<String, String> ORDER_PRODUCT_OIDS = 
+    public static final Map<String, String> ORDER_PRODUCT_OIDS =
         new HashMap<String, String>();
-    public static final Map<String, String> TOPLEVEL_NAMESPACES = 
+    public static final Map<String, String> TOPLEVEL_NAMESPACES =
         new HashMap<String, String>();
-    public static final Map<String, String> CONTENT_ENTITLEMENT_OIDS = 
+    public static final Map<String, String> CONTENT_ENTITLEMENT_OIDS =
         new HashMap<String, String>();
-    public static final Map<String, String> ROLE_ENTITLEMENT_OIDS = 
+    public static final Map<String, String> ROLE_ENTITLEMENT_OIDS =
         new HashMap<String, String>();
-    public static final Map<String, String> CONTENT_ENTITLEMENT_NAMESPACES = 
+    public static final Map<String, String> CONTENT_ENTITLEMENT_NAMESPACES =
         new HashMap<String, String>();
-    public static final Map<String, String> SERVER_ENTITLEMENT_NAMESPACES = 
+    public static final Map<String, String> SERVER_ENTITLEMENT_NAMESPACES =
         new HashMap<String, String>();
-    public static final Map<String, String> CONTENT_ARCHITECTURES = 
+    public static final Map<String, String> CONTENT_ARCHITECTURES =
         new HashMap<String, String>();
-    public static final Map<String, String> CHANNEL_FAMILY_OIDS = 
+    public static final Map<String, String> CHANNEL_FAMILY_OIDS =
         new HashMap<String, String>();
     public static final Map<String, String> CHANNEL_OIDS = new HashMap<String, String>();
     public static final Map<String, String> CF_REPO_TYPE = new HashMap<String, String>();
@@ -168,7 +168,7 @@ public final class OIDUtil {
         CF_REPO_TYPE.put(CF_REPO_TYPE_YUM_KEY, "1");
         CF_REPO_TYPE.put(CF_REPO_TYPE_FILE_KEY, "2");
     }
-    
+
     // Maybe not the best place for this, but better than relying on bouncycastle for it.
     public static final String CRL_NUMBER = "2.5.29.20";
 }

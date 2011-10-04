@@ -43,26 +43,26 @@ public class RefreshPoolsJobTest {
         Owner owner = mock(Owner.class);
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         JobDataMap jdm = mock(JobDataMap.class);
-        
+
         when(ctx.getMergedJobDataMap()).thenReturn(jdm);
         when(jdm.getString(eq(JobStatus.TARGET_ID))).thenReturn("someownerkey");
         when(oc.lookupByKey(eq("someownerkey"))).thenReturn(owner);
         when(owner.getDisplayName()).thenReturn("test owner");
-        
+
         // test
         RefreshPoolsJob rpj = new RefreshPoolsJob(oc, pm);
         rpj.execute(ctx);
-        
+
         // verification
         verify(pm).refreshPools(owner);
         verify(ctx).setResult(eq("Pools refreshed for owner test owner"));
     }
-    
+
     @Test
     public void forOwner() {
         Owner owner = mock(Owner.class);
         when(owner.getKey()).thenReturn("owner key");
-        
+
         JobDetail detail = RefreshPoolsJob.forOwner(owner);
         assertNotNull(detail);
         assertNotNull(detail.getJobDataMap());

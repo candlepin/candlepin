@@ -22,7 +22,7 @@ import javax.ws.rs.core.Response.Status;
  */
 public class BadRequestException extends CandlepinException {
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = 6927030276240437718L;
 

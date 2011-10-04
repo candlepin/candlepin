@@ -33,36 +33,36 @@ import org.xnap.commons.i18n.I18nFactory;
  */
 public class ContentResourceTest {
 
-    private ContentCurator cc; 
+    private ContentCurator cc;
     private ContentResource cr;
-    private I18n i18n; 
-    
+    private I18n i18n;
+
     @Before
     public void init() {
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         cc = mock(ContentCurator.class);
         cr = new ContentResource(cc, i18n, new DefaultUniqueIdGenerator());
     }
-    
+
     @Test
     public void listContent() {
         cr.list();
         verify(cc, atLeastOnce()).listAll();
     }
-    
+
     @Test(expected = BadRequestException.class)
     public void getContentNull() {
         when(cc.find(anyLong())).thenReturn(null);
         cr.getContent("10");
     }
-    
+
     @Test
     public void getContent() {
         Content content = mock(Content.class);
         when(cc.find(eq("10"))).thenReturn(content);
         assertEquals(content, cr.getContent("10"));
     }
-    
+
     @Test
     public void createContent() {
         Content content = mock(Content.class);
@@ -70,7 +70,7 @@ public class ContentResourceTest {
         when(cc.find(eq("10"))).thenReturn(content);
         assertEquals(content, cr.createContent(content));
     }
-    
+
     @Test
     public void createContentNull()  {
         Content content = mock(Content.class);

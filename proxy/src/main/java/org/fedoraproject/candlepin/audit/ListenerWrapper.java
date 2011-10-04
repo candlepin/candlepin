@@ -32,7 +32,7 @@ public class ListenerWrapper implements MessageHandler {
         this.listener = listener;
         this.mapper = mapper;
     }
-    
+
     @Override
     public void onMessage(ClientMessage msg) {
         String body = msg.getBodyBuffer().readString();
@@ -47,7 +47,7 @@ public class ListenerWrapper implements MessageHandler {
         catch (Exception e1) {
             log.fatal("Unable to deserialize event object from msg: " + body, e1);
         }
-       
+
         try {
             msg.acknowledge();
         }

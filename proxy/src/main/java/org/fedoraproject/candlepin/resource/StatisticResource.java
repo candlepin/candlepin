@@ -47,7 +47,7 @@ public class StatisticResource {
 
     /**
      * Gathers statistics in system and records them in stat history table.
-     * 
+     *
      */
     @PUT
     public void execute() {

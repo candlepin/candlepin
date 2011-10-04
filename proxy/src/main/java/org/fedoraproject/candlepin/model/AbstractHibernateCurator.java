@@ -35,7 +35,7 @@ import com.wideplay.warp.persist.Transactional;
  */
 public abstract class AbstractHibernateCurator<E extends Persisted> {
     @Inject protected Provider<EntityManager> entityManager;
-    private static Logger log = Logger.getLogger(AbstractHibernateCurator.class);    
+    private static Logger log = Logger.getLogger(AbstractHibernateCurator.class);
     private final Class<E> entityType;
     private int batchSize = 30;
 
@@ -44,11 +44,11 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         //getClass().getGenericSuperclass()).getActualTypeArguments()[0];
         this.entityType = entityType;
     }
-    
+
     public Class<E> entityType() {
         return entityType;
     }
-    
+
     public void enableFilter(String filterName, String parameterName, Object value) {
         currentSession().enableFilter(filterName).setParameter(parameterName, value);
     }
@@ -78,21 +78,21 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         save(entity);
         return entity;
     }
-    
+
     /**
      * @return all entities for a particular type.
      */
     public List<E> listAll() {
         return listByCriteria(DetachedCriteria.forClass(entityType));
     }
-    
+
     @SuppressWarnings("unchecked")
     @Transactional
     @EnforceAccessControl
     public List<E> listByCriteria(DetachedCriteria query) {
         return query.getExecutableCriteria(currentSession()).list();
     }
-    
+
     @SuppressWarnings("unchecked")
     @Transactional
     @EnforceAccessControl
@@ -109,13 +109,13 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         E toDelete = find(entity.getId());
         currentSession().delete(toDelete);
     }
-    
+
     public void bulkDelete(List<E> entities) {
         for (E entity : entities) {
             delete(entity);
         }
     }
-    
+
     /**
      * @param entity entity to be merged.
      * @return merged entity.
@@ -149,7 +149,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     protected EntityManager getEntityManager() {
         return entityManager.get();
     }
-    
+
     public void saveOrUpdateAll(List<E> entries) {
         Session session = currentSession();
         for (int i = 0; i < entries.size(); i++) {

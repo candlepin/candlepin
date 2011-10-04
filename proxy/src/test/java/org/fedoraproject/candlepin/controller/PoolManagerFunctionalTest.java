@@ -242,7 +242,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         assertEquals(0, collectEntitlementCertIds(this.childVirtSystem).size());
         Mockito.verifyZeroInteractions(this.eventSink);
     }
-    
+
     @Test
     public void testEntitleByProductsWithModifierAndModifiee()
         throws EntitlementRefusedException {
@@ -254,24 +254,24 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
             "modifer-content", "yum", "us", "here", "here");
         content.setModifiedProductIds(modified);
         modifier.addContent(content);
-        
+
         contentCurator.create(content);
         productAdapter.createProduct(modifier);
-        
+
         subCurator.create(new Subscription(o, modifier, new HashSet<Product>(),
             5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date()));
-        
+
         poolManager.refreshPools(o);
-        
-        
+
+
         // This test simulates https://bugzilla.redhat.com/show_bug.cgi?id=676870
         // where entitling first to the modifier then to the modifiee causes the modifier's
         // entitlement cert to get regenerated, but since it's all in the same http call,
         // this ends up causing a hibernate failure (the old cert is asked to be deleted,
         // but it hasn't been saved yet). Since getting the pool ordering right is tricky
-        // inside an entitleByProducts call, we do it in two singular calls here.  
+        // inside an entitleByProducts call, we do it in two singular calls here.
         poolManager.entitleByProduct(this.parentSystem, "modifier");
-        
+
         try {
             poolManager.entitleByProduct(this.parentSystem, PRODUCT_VIRT_HOST);
         }
@@ -279,7 +279,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
             throw e;
 //            fail("Hibernate failed to properly save entitlement certs!");
         }
-                
+
         // If we get here, no exception was raised, so we're happy!
     }
 

@@ -31,7 +31,7 @@ public class ConsumerTypeExporter {
     ConsumerTypeExporter() {
     }
 
-    void export(ObjectMapper mapper, Writer writer, ConsumerType consumerType) 
+    void export(ObjectMapper mapper, Writer writer, ConsumerType consumerType)
         throws IOException {
         mapper.writeValue(writer, consumerType);
     }

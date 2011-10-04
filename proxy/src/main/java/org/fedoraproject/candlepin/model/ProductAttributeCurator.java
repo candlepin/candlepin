@@ -18,7 +18,7 @@ package org.fedoraproject.candlepin.model;
  * AttributeCurator
  */
 public class ProductAttributeCurator extends AbstractHibernateCurator<ProductAttribute> {
-    
+
     protected ProductAttributeCurator() {
         super(ProductAttribute.class);
     }

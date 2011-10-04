@@ -35,16 +35,16 @@ public class CertificateSerial extends AbstractHibernateObject {
 
     @Id
     @GeneratedValue(generator = "serial-number")
-    @GenericGenerator(name = "serial-number", 
+    @GenericGenerator(name = "serial-number",
         strategy = "org.fedoraproject.candlepin.util.SerialNumberGenerator")
     private Long id;
-    
+
     /**Flag which indicates whether the certificate is revoked */
     private boolean revoked;
-    
+
     /** Set to true if this serial is already a part of the crl*/
     private boolean collected;
-    
+
     /** The expiration. */
     private Date expiration;
 
@@ -54,7 +54,7 @@ public class CertificateSerial extends AbstractHibernateObject {
     public CertificateSerial() {
         super();
     }
-    
+
     public CertificateSerial(Date expiration) {
         this.expiration = expiration;
     }
@@ -62,11 +62,11 @@ public class CertificateSerial extends AbstractHibernateObject {
     public CertificateSerial(Long id) {
         this.id = id;
     }
-    
+
     public CertificateSerial(Long id, Date expiration) {
         this(id);
         this.expiration = expiration;
-    }    
+    }
 
     public Long getId() {
         return id;
@@ -75,7 +75,7 @@ public class CertificateSerial extends AbstractHibernateObject {
     public void setId(Long id) {
         this.id = id;
     }
-    
+
     /**
      * @return the revoked
      */
@@ -126,7 +126,7 @@ public class CertificateSerial extends AbstractHibernateObject {
     public BigInteger getSerial() {
         return Util.toBigInt(this.getId());
     }
-    
+
     public void setSerial(Long serial) {
         this.id = serial;
     }

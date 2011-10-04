@@ -292,7 +292,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         Consumer lookedUp = consumerCurator.find(consumer.getId());
         assertEquals(3, lookedUp.getEntitlements().size());
     }
-    
+
     private Entitlement createEntitlement(Pool pool, Consumer c) {
         Entitlement e = new Entitlement(pool, c, pool.getStartDate(), pool.getEndDate(), 1);
         return e;
@@ -303,136 +303,136 @@ public class ConsumerTest extends DatabaseTestFixture {
         Consumer c = new Consumer("name", USER_NAME, owner, null);
         assertNotNull(c);
     }
-    
+
     @Test
     public void canDeleteSelf() {
         setupPrincipal(new ConsumerPrincipal(consumer));
 
         consumerCurator.delete(consumer);
-        
+
         assertNull(consumerCurator.find(consumer.getId()));
     }
-    
+
     @Test
     public void factsEqual() {
         Consumer first = new Consumer();
-        
+
         first.setFact("key1", "1");
         first.setFact("key2", "two");
         first.setFact("key3", "3");
-        
+
         Consumer second = new Consumer();
-        
+
         second.setFact("key1", "1");
         second.setFact("key2", "two");
         second.setFact("key3", "3");
-        
+
         assertTrue(first.factsAreEqual(second));
     }
-    
+
     @Test
     public void defaultFactsEqual() {
         assertTrue(new Consumer().factsAreEqual(new Consumer()));
     }
-    
+
     @Test
     public void factsDifferentValues() {
         Consumer first = new Consumer();
-        
+
         first.setFact("key1", "1");
         first.setFact("key2", "two");
         first.setFact("key3", "3");
-        
+
         Consumer second = new Consumer();
-        
+
         second.setFact("key1", "1");
         second.setFact("key2", "2");
         second.setFact("key3", "3");
-        
+
         assertFalse(first.factsAreEqual(second));
     }
-    
+
     @Test
     public void factsSecondMissing() {
         Consumer first = new Consumer();
-        
+
         first.setFact("key1", "1");
         first.setFact("key2", "two");
         first.setFact("key3", "3");
-        
+
         Consumer second = new Consumer();
-        
+
         second.setFact("key1", "1");
-        
+
         assertFalse(first.factsAreEqual(second));
     }
-    
+
     @Test
     public void factsFirstMissing() {
         Consumer first = new Consumer();
-        
+
         first.setFact("key1", "1");
         first.setFact("key3", "3");
-        
+
         Consumer second = new Consumer();
-        
+
         second.setFact("key1", "1");
         second.setFact("key2", "2");
         second.setFact("key3", "3");
-        
+
         assertFalse(first.factsAreEqual(second));
     }
-    
-    @Test 
+
+    @Test
     public void factsEqualNull() {
         Consumer first = new Consumer();
-        
+
         first.setFact("key1", "1");
         first.setFact("key2", null);
-        
+
         Consumer second = new Consumer();
-        
+
         second.setFact("key1", "1");
         second.setFact("key2", null);
-        
+
         assertTrue(first.factsAreEqual(second));
     }
-    
+
     @Test
     public void factsFirstNull() {
         Consumer first = new Consumer();
-        
+
         first.setFact("key1", "1");
         first.setFact("key2", null);
-        
+
         Consumer second = new Consumer();
-        
+
         second.setFact("key1", "1");
         second.setFact("key2", "two");
-        
+
         assertFalse(first.factsAreEqual(second));
     }
-    
+
     @Test
     public void factsSecondNull() {
         Consumer first = new Consumer();
         first.setFact("key1", "1");
-        
+
         Consumer second = new Consumer();
         second.setFact("key1", null);
-        
+
         assertFalse(first.factsAreEqual(second));
     }
 
     @Test
     public void testLookupUsersConsumer() {
         String newUsername = "newusername";
-        
+
         // Need to make sure another consumer already exists, different type:
-        Consumer existing = new Consumer("existing consumer", newUsername, owner, 
+        Consumer existing = new Consumer("existing consumer", newUsername, owner,
             consumerType);
         consumerCurator.create(existing);
-        
+
         ConsumerType personType = new ConsumerType(ConsumerTypeEnum.PERSON);
         consumerTypeCurator.create(personType);
 
@@ -449,33 +449,33 @@ public class ConsumerTest extends DatabaseTestFixture {
         consumerCurator.create(consumer);
         assertEquals(consumer, consumerCurator.findByUser(user));
     }
-    
+
     @Test
     public void testConsumerFactsFilter() {
         CandlepinCommonTestConfig config =
             (CandlepinCommonTestConfig) injector.getInstance(Config.class);
         String oldValue = config.getString(ConfigProperties.CONSUMER_FACTS_MATCHER);
         config.setProperty(ConfigProperties.CONSUMER_FACTS_MATCHER, "^goodkey.*");
-        
+
         Consumer consumer = new Consumer("a consumer", "username", owner, consumerType);
-        
+
         Map<String, String> facts = new HashMap<String, String>();
         facts.put("badkey.something", "zaz");
         facts.put("goodkey.something", "foobar");
-        
+
         consumer.setFacts(facts);
-        
+
         consumer = consumerCurator.create(consumer);
-        
+
         assertNull(consumer.getFact("badkey.something"));
         assertEquals("foobar", consumer.getFact("goodkey.something"));
-        
+
         consumer.setFact("anotherbadkey", "zippy");
-        
+
         consumer = consumerCurator.update(consumer);
-        
+
         assertNull(consumer.getFact("anotherbadkey"));
-        
+
         config.setProperty(ConfigProperties.CONSUMER_FACTS_MATCHER, oldValue);
     }
 

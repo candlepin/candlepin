@@ -89,7 +89,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         secondEntitlement = createEntitlement(owner, consumer, secondPool,
             secondCertificate);
         entitlementCurator.create(secondEntitlement);
-        
+
         overlappingDate = createDate(2010, 2, 1);
         futureDate = createDate(2050, 1, 1);
         pastDate = createDate(1998, 1, 1);
@@ -101,65 +101,65 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         productCurator.create(providedProduct1);
         productCurator.create(providedProduct2);
     }
-    
+
     private Date createDate(int year, int month, int day) {
         return TestUtil.createDate(year, month, day);
     }
-    
+
     private Entitlement setupListProvidingEntitlement() {
-        Date startDate = createDate(2010, 1, 1); 
+        Date startDate = createDate(2010, 1, 1);
         Date endDate = createDate(2011, 1, 1);
         Pool testPool = createPoolAndSub(owner, parentProduct, 1L,
             startDate, endDate);
-        
+
         // Add some provided products to this pool:
-        ProvidedProduct p1 = new ProvidedProduct(providedProduct1.getId(), 
+        ProvidedProduct p1 = new ProvidedProduct(providedProduct1.getId(),
             providedProduct1.getName());
-        ProvidedProduct p2 = new ProvidedProduct(providedProduct2.getId(), 
+        ProvidedProduct p2 = new ProvidedProduct(providedProduct2.getId(),
             providedProduct2.getName());
         testPool.addProvidedProduct(p1);
         testPool.addProvidedProduct(p2);
         poolCurator.create(testPool);
-        
+
         EntitlementCertificate cert = createEntitlementCertificate("key", "certificate");
-        
+
         Entitlement ent = createEntitlement(owner, consumer, testPool, cert);
         entitlementCurator.create(ent);
-        
+
         return ent;
     }
-    
+
     @Test
     public void listProviding() {
         Entitlement ent = setupListProvidingEntitlement();
         // Test a successful query:
-        Set<Entitlement> results = entitlementCurator.listProviding(consumer, 
+        Set<Entitlement> results = entitlementCurator.listProviding(consumer,
                 ent.getPool().getProductId(), ent.getStartDate(), ent.getEndDate());
         assertEquals(1, results.size());
     }
-    
+
     @Test
     public void listProvidingProvidedProduct() {
         Entitlement ent = setupListProvidingEntitlement();
         // Test a successful query:
-        Set<Entitlement> results = entitlementCurator.listProviding(consumer, 
+        Set<Entitlement> results = entitlementCurator.listProviding(consumer,
                 providedProduct1.getId(), ent.getStartDate(), ent.getEndDate());
         assertEquals(1, results.size());
     }
-    
-  
+
+
     @Test
     public void listProvidingNoResults() {
         Entitlement ent = setupListProvidingEntitlement();
-        Set<Entitlement> results = entitlementCurator.listProviding(consumer, 
+        Set<Entitlement> results = entitlementCurator.listProviding(consumer,
             "nosuchproductid", ent.getStartDate(), ent.getEndDate());
         assertEquals(0, results.size());
     }
-    
+
     @Test
     public void listProvidingStartDateOverlap() {
         Entitlement ent = setupListProvidingEntitlement();
-        Set<Entitlement> results = entitlementCurator.listProviding(consumer, 
+        Set<Entitlement> results = entitlementCurator.listProviding(consumer,
             ent.getPool().getProductId(), overlappingDate, futureDate);
         assertEquals(1, results.size());
 
@@ -168,15 +168,15 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     @Test
     public void listProvidingEndDateOverlap() {
         Entitlement ent = setupListProvidingEntitlement();
-        Set<Entitlement> results = entitlementCurator.listProviding(consumer, 
+        Set<Entitlement> results = entitlementCurator.listProviding(consumer,
             ent.getPool().getProductId(), pastDate, overlappingDate);
         assertEquals(1, results.size());
     }
-    
+
     @Test
     public void listProvidingTotalOverlap() {
         Entitlement ent = setupListProvidingEntitlement();
-        Set<Entitlement> results = entitlementCurator.listProviding(consumer, 
+        Set<Entitlement> results = entitlementCurator.listProviding(consumer,
             ent.getPool().getProductId(), pastDate, futureDate);
         assertEquals(1, results.size());
     }
@@ -184,7 +184,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     @Test
     public void listProvidingNoOverlap() {
         Entitlement ent = setupListProvidingEntitlement();
-        Set<Entitlement> results = entitlementCurator.listProviding(consumer, 
+        Set<Entitlement> results = entitlementCurator.listProviding(consumer,
             ent.getPool().getProductId(), pastDate, pastDate);
         assertEquals(0, results.size());
     }
@@ -289,7 +289,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
             .findByCertificateSerial(firstCertificate.getSerial().getId());
         assertNotSame(secondEntitlement, e);
     }
-    
+
     @Test
     public void listForConsumerOnDate() {
         List<Entitlement> ents = entitlementCurator.listByConsumerAndDate(

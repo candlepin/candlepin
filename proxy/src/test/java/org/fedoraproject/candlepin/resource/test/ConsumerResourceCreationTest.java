@@ -124,10 +124,10 @@ public class ConsumerResourceCreationTest {
         return createConsumer(consumerName, principal, Collections.emptyList());
     }
 
-    private Consumer createConsumer(String consumerName, Principal principal, 
+    private Consumer createConsumer(String consumerName, Principal principal,
         List<String> activationKeys) {
         Consumer consumer = new Consumer(consumerName, null, null, system);
-        return this.resource.create(consumer, principal, USER, owner.getKey(), 
+        return this.resource.create(consumer, principal, USER, owner.getKey(),
             createKeysString(activationKeys));
     }
 
@@ -264,7 +264,7 @@ public class ConsumerResourceCreationTest {
         Consumer consumer = new Consumer("sys.example.com", null, null, system);
         resource.create(consumer, p, null, owner.getKey(), createKeysString(keys));
     }
-    
+
     @Test
     public void registerWithNoInstalledProducts() {
         Principal p = new TrustedUserPrincipal("anyuser");

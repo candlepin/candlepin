@@ -19,15 +19,15 @@ import org.apache.log4j.Logger;
 import net.oauth.OAuthException;
 
 /**
- * CustomerSigner class overrides the default signature verification 
+ * CustomerSigner class overrides the default signature verification
  * class so that we can enhance the debug output.
  */
 public class CustomSigner extends HMAC_SHA1 {
-    
+
     private static Logger log = Logger.getLogger(CustomSigner.class);
-    
+
     /**
-     * Does nothing but make this method public 
+     * Does nothing but make this method public
      * @throws OAuthException with the reason why it is invalid.
      * @return the actual signature
      */
@@ -39,13 +39,13 @@ public class CustomSigner extends HMAC_SHA1 {
     /**
      * Call the superclass and log out the response.
      * @throws OAuthException with the reason why it is invalid.
-     * @return true if the signature if valid 
+     * @return true if the signature if valid
      * @throws OAuthException when a signature is not valid.
      */
     public boolean isValid(String signature, String baseString)
         throws OAuthException {
-        log.debug(String.format("Signature for %s is %s", baseString, 
-            this.getSignature(baseString)));        
+        log.debug(String.format("Signature for %s is %s", baseString,
+            this.getSignature(baseString)));
         return super.isValid(signature, baseString);
     }
 

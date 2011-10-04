@@ -13,7 +13,7 @@ describe 'Status Resource' do
     json['version'].should_not == "${version}"
 
     # Try a cast on the release to be sure, it should be an integer I think:
-    release = json['release'].to_i() 
+    release = json['release'].to_i()
   end
 
 end

@@ -5,10 +5,10 @@ describe 'User Resource' do
   include CandlepinMethods
   include CandlepinScenarios
 
-  before(:each) do 
+  before(:each) do
     test_owner_key = random_string('testowner')
     @test_owner = create_owner(test_owner_key)
-    @username = random_string 'user' 
+    @username = random_string 'user'
     @user_cp = user_client(@test_owner, @username)
   end
 
@@ -28,17 +28,17 @@ describe 'User Resource' do
 
   it "should allow users to update their info" do
     # Try listing for the test user:
-    @username = random_string 'user'     
+    @username = random_string 'user'
     user = create_user(@test_owner, @username, 'password')
-    new_username = random_string 'username'     
+    new_username = random_string 'username'
     user["username"]= new_username
     newuser = @cp.update_user(user, @username)
     newuser["username"].should == new_username
   end
-  
+
   it "should return a non empty list of users" do
   	user_list = @cp.list_users
-  	user_list.size.should > 0 
+	user_list.size.should > 0
   end
 
   it 'should allow a user to list their owners' do
@@ -69,7 +69,7 @@ describe 'User Resource' do
     new_role = @cp.create_role(random_string('testrole'), new_perm)
     @cp.add_role_user(new_role['id'], alice)
 
-    #make sure we see the extra role 
+    #make sure we see the extra role
     roles = alice_cp.get_user_roles(alice)
     roles.size.should == 2
     #bob should not see alice's user on his role obj
@@ -87,7 +87,7 @@ describe 'User Resource' do
     userlist = @cp.get_role(new_role['id'])['users']
     userlist.select { |u| u['username'] == alice }.should_not be_empty
     userlist.select { |u| u['username'] == bob }.should_not be_empty
-    
+
   end
 
   it "should not be able to see role for another user" do

@@ -122,7 +122,7 @@ public class CandlepinContextListener extends
 
         return modules;
     }
- 
+
     /**
      * This is what RESTEasy's ModuleProcessor does, but we need the injector
      * afterwards.

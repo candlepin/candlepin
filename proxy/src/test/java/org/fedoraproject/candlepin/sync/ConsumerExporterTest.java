@@ -33,16 +33,16 @@ public class ConsumerExporterTest {
     public void testConsumerExport() throws IOException {
         ObjectMapper mapper = SyncUtils.getObjectMapper(
             new Config(new HashMap<String, String>()));
-        
+
         ConsumerExporter exporter = new ConsumerExporter();
-        
+
         StringWriter writer = new StringWriter();
-        
+
         Consumer consumer = new Consumer();
         consumer.setUuid("test-uuid");
-        
+
         exporter.export(mapper, writer, consumer);
-        
+
         assertEquals("{\"uuid\":\"test-uuid\"}", writer.toString());
     }
 }

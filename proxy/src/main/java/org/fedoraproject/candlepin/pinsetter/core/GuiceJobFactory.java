@@ -30,12 +30,12 @@ import com.wideplay.warp.persist.WorkManager;
  */
 public class GuiceJobFactory implements JobFactory {
     private Injector injector;
-    
+
     @Inject
     public GuiceJobFactory(Injector injector) {
         this.injector = injector;
     }
-    
+
     /**
      * {@inheritDoc}
      */

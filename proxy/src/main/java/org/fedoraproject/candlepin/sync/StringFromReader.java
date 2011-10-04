@@ -24,7 +24,7 @@ import java.io.Reader;
 public class StringFromReader {
     private StringFromReader() {
     }
-    
+
     public static String asString(Reader reader) throws IOException {
         StringBuilder sb = new StringBuilder();
         String line;
@@ -32,6 +32,6 @@ public class StringFromReader {
         while ((line = br.readLine()) != null) {
             sb.append(line + "\n");
         }
-        return sb.toString();    
+        return sb.toString();
     }
 }

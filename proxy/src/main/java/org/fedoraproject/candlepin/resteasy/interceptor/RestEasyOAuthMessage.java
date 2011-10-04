@@ -36,14 +36,14 @@ import net.oauth.OAuth;
 public class RestEasyOAuthMessage extends OAuthMessage{
 
     private static Logger log = Logger.getLogger(RestEasyOAuthMessage.class);
-   
+
     public RestEasyOAuthMessage(HttpRequest request) {
-        super(request.getHttpMethod(), 
+        super(request.getHttpMethod(),
             request.getUri().getRequestUri().toString(), getParameters(request));
         copyHeaders(request, getHeaders());
     }
 
-    private static void copyHeaders(HttpRequest request, 
+    private static void copyHeaders(HttpRequest request,
                                     Collection<Map.Entry<String, String>> into) {
         Iterator<String> names = request.getHttpHeaders()
                                     .getRequestHeaders().keySet().iterator();
@@ -61,7 +61,7 @@ public class RestEasyOAuthMessage extends OAuthMessage{
 
     public static List<OAuth.Parameter> getParameters(HttpRequest request) {
         List<OAuth.Parameter> list = new ArrayList<OAuth.Parameter>();
-        java.util.List<java.lang.String> headers = 
+        java.util.List<java.lang.String> headers =
             request.getHttpHeaders().getRequestHeader("Authorization");
         if (headers != null) {
             Iterator<String> itor = headers.iterator();
@@ -73,7 +73,7 @@ public class RestEasyOAuthMessage extends OAuthMessage{
                     if (!"realm".equalsIgnoreCase(parameter.getKey())) {
                         list.add(parameter);
                     }
-                }                
+                }
             }
         }
 
@@ -84,7 +84,7 @@ public class RestEasyOAuthMessage extends OAuthMessage{
             return list;
         }
 
-        for (Map.Entry<String, List<String>> entry : 
+        for (Map.Entry<String, List<String>> entry :
                 request.getFormParameters().entrySet()) {
             String name = entry.getKey();
             for (String value : entry.getValue()) {

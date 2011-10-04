@@ -41,7 +41,7 @@ public class LoggingResponseWrapper extends HttpServletResponseWrapper
     public ServletOutputStream getOutputStream() throws java.io.IOException {
         if (outputStream == null) {
             outputStream = new ServletOutputStream() {
-    
+
                 @Override
                 public void write(int b) throws IOException {
                     buffer.append((char) b);
@@ -63,21 +63,21 @@ public class LoggingResponseWrapper extends HttpServletResponseWrapper
     public String getResponseBody() {
         return buffer.toString();
     }
-    
+
     public void setStatus(int status) {
         super.setStatus(status);
         this.status = status;
     }
-    
+
     public void setStatus(int status, String sm) {
         super.setStatus(status, sm);
         this.status = status;
     }
-    
+
     public int getStatus() {
         return status;
     }
-    
+
     public String getBody() {
         return getResponseBody();
     }

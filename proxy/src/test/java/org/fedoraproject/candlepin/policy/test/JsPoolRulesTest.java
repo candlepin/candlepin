@@ -53,11 +53,11 @@ import static org.junit.Assert.*;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class JsPoolRulesTest {
-    
+
     private PoolRules poolRules;
-    
+
     private static final String RULES_FILE = "/rules/default-rules.js";
-    
+
     @Mock private RulesCurator rulesCuratorMock;
     @Mock private ProductServiceAdapter productAdapterMock;
     @Mock private PoolManager poolManagerMock;
@@ -74,22 +74,22 @@ public class JsPoolRulesTest {
 
         when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
         when(rulesCuratorMock.getRules()).thenReturn(rules);
-        
+
         JsRulesProvider provider = new JsRulesProvider(rulesCuratorMock);
         poolRules = new JsPoolRules(provider.get(), poolManagerMock, productAdapterMock);
         principal = TestUtil.createOwnerPrincipal();
         owner = principal.getOwners().get(0);
     }
-    
+
     private Pool copyFromSub(Subscription sub) {
-        Pool p = new Pool(sub.getOwner(), sub.getProduct().getId(), 
-            sub.getProduct().getName(), new HashSet<ProvidedProduct>(), 
+        Pool p = new Pool(sub.getOwner(), sub.getProduct().getId(),
+            sub.getProduct().getName(), new HashSet<ProvidedProduct>(),
             sub.getQuantity(), sub.getStartDate(),
             sub.getEndDate(), sub.getContractNumber(), sub.getAccountNumber());
         p.setSubscriptionId(sub.getId());
         return p;
     }
-    
+
     @Test
     public void providedProductsChanged() {
         // Subscription with two provided products:
@@ -105,7 +105,7 @@ public class JsPoolRulesTest {
         p.getProvidedProducts().clear();
         p.getProvidedProducts().add(
             new ProvidedProduct(product3.getId(), product3.getName(), p));
-        
+
         List<Pool> existingPools = new java.util.LinkedList<Pool>();
         existingPools.add(p);
         List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools);
@@ -115,7 +115,7 @@ public class JsPoolRulesTest {
         assertFalse(update.getDatesChanged());
         assertFalse(update.getQuantityChanged());
     }
-    
+
     @Test
     public void productNameChanged() {
         Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
@@ -123,11 +123,11 @@ public class JsPoolRulesTest {
         // Setup a pool with a single (different) provided product:
         Pool p = copyFromSub(s);
         p.setProductName("somethingelse");
-        
+
         List<Pool> existingPools = new java.util.LinkedList<Pool>();
         existingPools.add(p);
         List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools);
-        
+
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
         assertTrue(update.getProductsChanged());
@@ -143,11 +143,11 @@ public class JsPoolRulesTest {
         // Setup a pool with a single (different) provided product:
         Pool p = copyFromSub(s);
         p.setEndDate(new Date());
-        
+
         List<Pool> existingPools = new java.util.LinkedList<Pool>();
         existingPools.add(p);
         List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools);
-        
+
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
         assertFalse(update.getProductsChanged());
@@ -163,11 +163,11 @@ public class JsPoolRulesTest {
         // Setup a pool with a single (different) provided product:
         Pool p = copyFromSub(s);
         p.setQuantity(2000L);
-        
+
         List<Pool> existingPools = new java.util.LinkedList<Pool>();
         existingPools.add(p);
         List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools);
-        
+
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
         assertFalse(update.getProductsChanged());
@@ -175,7 +175,7 @@ public class JsPoolRulesTest {
         assertTrue(update.getQuantityChanged());
         assertEquals(s.getQuantity(), update.getPool().getQuantity());
     }
-    
+
     @Test
     public void virtOnlyQuantityChanged() {
         Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
@@ -186,11 +186,11 @@ public class JsPoolRulesTest {
         Pool p = copyFromSub(s);
         p.addAttribute(new PoolAttribute("virt_only", "true"));
         p.setQuantity(40L);
-        
+
         List<Pool> existingPools = new java.util.LinkedList<Pool>();
         existingPools.add(p);
         List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools);
-        
+
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
         assertFalse(update.getProductsChanged());

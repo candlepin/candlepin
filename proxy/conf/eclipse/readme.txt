@@ -1,5 +1,5 @@
 This directory contains the files to configure eclipse's
-style. 
+style.
 
 
 candlepin.importorder - specifies the order imports should be specified

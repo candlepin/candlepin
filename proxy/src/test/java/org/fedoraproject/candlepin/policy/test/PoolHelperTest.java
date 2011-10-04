@@ -129,7 +129,7 @@ public class PoolHelperTest {
         PoolHelper ph = new PoolHelper(pm, psa, null);
         assertTrue(ph.checkForChangedProducts(pool, sub));
     }
-    
+
     @Test
     public void copyProductAttributesOntoPoolAddsNewAttribute() {
         Product targetProduct = TestUtil.createProduct();
@@ -138,7 +138,7 @@ public class PoolHelperTest {
         targetProduct.setAttribute("A2", "V2");
         Subscription sourceSub = TestUtil.createSubscription(targetProduct);
         Pool targetPool = TestUtil.createPool(targetProduct);
-        
+
         PoolHelper ph = new PoolHelper(pm, psa, null);
         assertTrue("Update expected.", ph.copyProductAttributesOntoPool(sourceSub,
             targetPool));
@@ -146,17 +146,17 @@ public class PoolHelperTest {
         assertTrue(targetPool.hasProductAttribute("A1"));
         assertTrue(targetPool.hasProductAttribute("A2"));
     }
-    
+
     @Test
     public void copyProductAttributesOntoPoolUpdatesExistingAttribute() {
         Product targetProduct = TestUtil.createProduct();
         targetProduct.getAttributes().clear();
         targetProduct.setAttribute("A1", "V-updated");
         Subscription sourceSub = TestUtil.createSubscription(targetProduct);
-        
+
         Pool targetPool = TestUtil.createPool(targetProduct);
         targetPool.setProductAttribute("A1", "V1", targetProduct.getId());
-        
+
         PoolHelper ph = new PoolHelper(pm, psa, null);
         assertTrue("Update expected.", ph.copyProductAttributesOntoPool(sourceSub,
             targetPool));
@@ -164,20 +164,20 @@ public class PoolHelperTest {
         assertTrue(targetPool.hasProductAttribute("A1"));
         assertEquals("V-updated", targetPool.getProductAttribute("A1").getValue());
     }
-    
+
     @Test
     public void copyProductAttributesOntoPoolRemovesNonExistingAttribute() {
         Product targetProduct = TestUtil.createProduct();
         targetProduct.getAttributes().clear();
         Subscription sourceSub = TestUtil.createSubscription(targetProduct);
         Pool targetPool = TestUtil.createPool(targetProduct);
-        
+
         targetPool.setProductAttribute("A1", "V1", targetProduct.getId());
-        
+
         PoolHelper ph = new PoolHelper(pm, psa, null);
         assertTrue("Update expected.", ph.copyProductAttributesOntoPool(sourceSub,
             targetPool));
         assertTrue(targetPool.getProductAttributes().isEmpty());
     }
-    
+
 }

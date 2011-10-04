@@ -51,7 +51,7 @@ public class OwnerAccessControlTest extends DatabaseTestFixture {
         resource.createOwner(new Owner("Test Owner"));
         assertNotNull(ownerCurator.find(owner.getId()));
     }
-    
+
     @Test(expected = ForbiddenException.class)
     public void ownerAdminCannotCreateAnOwner() {
         setupPrincipal(owner, Access.ALL);
@@ -59,7 +59,7 @@ public class OwnerAccessControlTest extends DatabaseTestFixture {
 
         resource.createOwner(new Owner("Test Owner"));
     }
-    
+
     @Test(expected = ForbiddenException.class)
     public void consumerCannotCreateAnOwner() {
         Consumer consumer = createConsumer(owner);

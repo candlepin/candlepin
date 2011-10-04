@@ -24,7 +24,7 @@ import org.hibernate.criterion.Restrictions;
  * CertificateSerialCurator - Interface to request a unique certificate serial number.
  */
 public class CertificateSerialCurator extends AbstractHibernateCurator<CertificateSerial> {
-    
+
     protected CertificateSerialCurator() {
         super(CertificateSerial.class);
     }
@@ -39,7 +39,7 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
             .add(Restrictions.eq("revoked", true))
             .add(Restrictions.eq("collected", false)).list();
     }
-    
+
     @SuppressWarnings("unchecked")
     public List<CertificateSerial> getExpiredSerials() {
         //TODO - Should date fields be truncated when checking expiration?
@@ -51,7 +51,7 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
 
     /**
      * Delete expired serials.
-     * 
+     *
      * @return the number of rows deleted.
      */
     public int deleteExpiredSerials() {

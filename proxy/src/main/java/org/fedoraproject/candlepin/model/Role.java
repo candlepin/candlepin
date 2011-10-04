@@ -32,7 +32,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 /**
- * Roles represent the relationship between users and the permissions they have. 
+ * Roles represent the relationship between users and the permissions they have.
  */
 @Entity
 @Table(name = "cp_role")
@@ -53,7 +53,7 @@ public class Role extends AbstractHibernateObject implements Linkable {
         joinColumns = @JoinColumn(name = "role_id"),
         inverseJoinColumns = @JoinColumn(name = "user_id"))
     private Set<User> users = new HashSet<User>();
-    
+
     @OneToMany(mappedBy = "role", cascade = CascadeType.ALL)
     private Set<OwnerPermission> permissions = new HashSet<OwnerPermission>();
 
@@ -63,7 +63,7 @@ public class Role extends AbstractHibernateObject implements Linkable {
     public Role(String name) {
         this.name = name;
     }
-    
+
     public Role(String name, Set<User> users, Set<OwnerPermission> memberships) {
         this.name = name;
         this.users = users;
@@ -110,7 +110,7 @@ public class Role extends AbstractHibernateObject implements Linkable {
     public void setUsers(Set<User> users) {
         this.users = users;
     }
-    
+
     public void addUser(User u) {
         if (this.users.add(u)) {
             u.addRole(this);
@@ -130,7 +130,7 @@ public class Role extends AbstractHibernateObject implements Linkable {
     public void setPermissions(Set<OwnerPermission> permissions) {
         this.permissions = permissions;
     }
-    
+
     public void addPermission(OwnerPermission p) {
         this.permissions.add(p);
         p.setRole(this);

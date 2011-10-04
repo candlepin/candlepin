@@ -74,7 +74,7 @@ describe 'Job Status' do
     system = consumer_client(@user, 'system6')
 
     status = system.consume_product(@monitoring.id, { :async => true })
-   
+
     status['targetType'].should == "consumer"
     status['targetId'].should == system.uuid
 

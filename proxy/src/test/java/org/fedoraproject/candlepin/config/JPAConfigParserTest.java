@@ -45,5 +45,5 @@ public class JPAConfigParserTest {
         assertEquals(2, stripped.size());
         assertTrue(stripped.containsKey(key1));
         assertTrue(stripped.containsKey(key2));
-    }    
+    }
 }

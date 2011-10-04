@@ -43,12 +43,12 @@ import com.google.inject.Injector;
  * doesn't actually implement ServletContextListener.
  */
 public class HornetqContextListener {
-    
+
     private static  Logger log = Logger.getLogger(HornetqContextListener.class);
-    
+
     private HornetQServer hornetqServer;
     private EventSource eventSource;
-    
+
     public void contextDestroyed() {
         if (hornetqServer != null) {
             eventSource.shutDown();
@@ -58,17 +58,17 @@ public class HornetqContextListener {
             catch (Exception e) {
                 e.printStackTrace();
             }
-            
+
         }
     }
 
     public void contextInitialized(Injector injector) {
-        
+
         Config candlepinConfig = new Config();
 
-        
+
         if (hornetqServer == null) {
-            
+
             Configuration config = new ConfigurationImpl();
 
             HashSet<TransportConfiguration> transports =
@@ -80,7 +80,7 @@ public class HornetqContextListener {
             // alter the default pass to silence log output
             config.setClustered(false);
             config.setClusterPassword(null);
-            
+
             // in vm, who needs security?
             config.setSecurityEnabled(false);
 
@@ -95,7 +95,7 @@ public class HornetqContextListener {
             config.setCreateJournalDir(true);
 
             String baseDir = candlepinConfig.getString(ConfigProperties.HORNETQ_BASE_DIR);
-            
+
             config.setBindingsDirectory(new File(baseDir, "bindings").toString());
             config.setJournalDirectory(new File(baseDir, "journal").toString());
             config.setLargeMessagesDirectory(new File(baseDir, "largemsgs").toString());
@@ -111,8 +111,8 @@ public class HornetqContextListener {
         }
 
         cleanupOldQueues();
-        
-        //AMQP integration here - If it is disabled, don't add it to listeners. 
+
+        //AMQP integration here - If it is disabled, don't add it to listeners.
         List<String> listeners = Lists.newArrayList(candlepinConfig
             .getStringArray(ConfigProperties.AUDIT_LISTENERS));
         if (candlepinConfig
@@ -140,7 +140,7 @@ public class HornetqContextListener {
     private void cleanupOldQueues() {
         log.debug("Cleaning old message queues");
         String [] queues = hornetqServer.getHornetQServerControl().getQueueNames();
-        
+
         ClientSessionFactory factory =  HornetQClient.createClientSessionFactory(
             new TransportConfiguration(InVMConnectorFactory.class.getName()));
 

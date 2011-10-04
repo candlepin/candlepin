@@ -24,7 +24,7 @@ import org.fedoraproject.candlepin.model.Product;
  * ProductExporter
  */
 public class ProductExporter {
-    
+
     public void export(ObjectMapper mapper, Writer writer, Product product)
         throws IOException {
         mapper.writeValue(writer, product);

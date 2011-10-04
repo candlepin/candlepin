@@ -28,7 +28,7 @@ import org.fedoraproject.candlepin.policy.js.ReadOnlyConsumer;
 public class ConsumerRules {
 
     private JsRules jsRules;
-    
+
     @Inject
     public ConsumerRules(JsRules jsRules) {
         this.jsRules = jsRules;
@@ -42,7 +42,7 @@ public class ConsumerRules {
         args.put("helper", consumerDeleteHelper);
 
         jsRules.invokeRule("global", args);
-        
+
         return consumerDeleteHelper;
     }
 }

@@ -32,10 +32,10 @@ import com.google.inject.Module;
  * CustomizableModules
  */
 public class CustomizableModules {
-    
+
     public static final String MODULE_CONFIG_PREFIX = "module.config";
     private static Logger log = Logger.getLogger(CustomizableModules.class);
-    
+
     /**
      * @return returns the set of modules to use.
      */
@@ -45,7 +45,7 @@ public class CustomizableModules {
 
         return customizedConfiguration(loaded);
     }
-    
+
     /**
      * Reads the given configuration and returns the set of modules.
      * @param loadedConfiguration configuration to parse.
@@ -55,13 +55,13 @@ public class CustomizableModules {
     public Set<Module> customizedConfiguration(Map<String, String> loadedConfiguration) {
         try {
             Set toReturn = new HashSet();
-             
+
             for (Entry<String, String> entry : loadedConfiguration.entrySet()) {
                 log.info("Found custom module " + entry.getKey());
                 toReturn.add(Class.forName(entry.getValue()).newInstance());
             }
-            
-            return toReturn; 
+
+            return toReturn;
         }
         catch (Exception e) {
             throw new RuntimeException("Exception when instantiation guice module.", e);
@@ -82,7 +82,7 @@ public class CustomizableModules {
         loaded.load(input);
         return new HashMap(loaded);
     }
-    
+
     protected Config configuration() {
         return new Config();
     }

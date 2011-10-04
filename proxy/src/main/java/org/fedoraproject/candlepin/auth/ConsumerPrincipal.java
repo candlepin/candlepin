@@ -70,9 +70,9 @@ public class ConsumerPrincipal extends Principal {
     }
 
     @Override
-    public String getPrincipalName() {       
+    public String getPrincipalName() {
         return consumer.getName();
-    }     
+    }
 
     @Override
     public String getType() {

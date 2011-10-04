@@ -37,7 +37,7 @@ public abstract class AbstractHibernateObject implements Persisted, Serializable
     @PrePersist
     protected void onCreate() {
         Date now = new Date();
-        
+
         setCreated(now);
         setUpdated(now);
     }
@@ -52,7 +52,7 @@ public abstract class AbstractHibernateObject implements Persisted, Serializable
     public Date getCreated() {
         return created;
     }
-    
+
     public void setCreated(Date created) {
         this.created = created;
     }
@@ -62,7 +62,7 @@ public abstract class AbstractHibernateObject implements Persisted, Serializable
     public Date getUpdated() {
         return updated;
     }
-    
+
     public void setUpdated(Date updated) {
         this.updated = updated;
     }

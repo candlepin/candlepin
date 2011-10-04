@@ -52,7 +52,7 @@ describe 'Unsubscribe' do
 
     # All the serials should be revoked
     serials.each { |serial| @cp.get_serial(serial).revoked.should be_true }
-  end 
+  end
 
   it 'should leave other entitlements in tact' do
     virt_host = create_product(nil, random_string('virt_host'))

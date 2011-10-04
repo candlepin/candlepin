@@ -141,7 +141,7 @@ public class X509ExtensionUtil {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_VIRT_ONLY_KEY), false,
                 "1"));
-            
+
         }
         return toReturn;
     }
@@ -175,12 +175,12 @@ public class X509ExtensionUtil {
             product.getAttributeValue("arch") : "";
         toReturn.add(new X509ExtensionWrapper(productOid + "." +
             OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_ARCH_KEY), false, arch));
-        
+
         String version = product.hasAttribute("version") ?
             product.getAttributeValue("version") : "";
         toReturn.add(new X509ExtensionWrapper(productOid + "." +
             OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_VERSION_KEY), false, version));
-        
+
         // XXX include provides here (after defined in attributes)
 
         // dummy provides i used for testing

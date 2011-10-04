@@ -23,7 +23,7 @@ import org.hibernate.ReplicationMode;
  * OwnerCurator
  */
 public class OwnerCurator extends AbstractHibernateCurator<Owner> {
-    
+
     protected OwnerCurator() {
         super(Owner.class);
     }
@@ -34,7 +34,7 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
 
         return owner;
     }
-    
+
     @Transactional
     @Override
     public Owner create(Owner entity) {

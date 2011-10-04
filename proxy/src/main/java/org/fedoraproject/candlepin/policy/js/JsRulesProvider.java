@@ -42,7 +42,7 @@ public class JsRulesProvider implements Provider<JsRules> {
     private static Logger log = Logger.getLogger(JsRulesProvider.class);
 
     private RulesCurator rulesCurator;
-    
+
     private Script script;
     private Scriptable scope;
     private Date updated;
@@ -68,7 +68,7 @@ public class JsRulesProvider implements Provider<JsRules> {
     static {
         ContextFactory.initGlobal(new DynamicScopeContextFactory());
     }
-    
+
     @Inject
     public JsRulesProvider(RulesCurator rulesCurator) {
         this.rulesCurator = rulesCurator;
@@ -82,12 +82,12 @@ public class JsRulesProvider implements Provider<JsRules> {
      * These are the expensive operations (initStandardObjects and compileReader/exec).
      *  We do them once here, and define this provider as a singleton, so it's only
      *  done at provider creation or whenever rules are refreshed.
-     *  
+     *
      * @param rulesCurator
      */
     private void compileRules(RulesCurator rulesCurator) {
         scriptLock.writeLock().lock();
-        
+
         // XXX: we need a principal to access the rules,
         // but pushing and popping system principal could be a bad idea
         Principal systemPrincipal = new SystemPrincipal();
@@ -100,9 +100,9 @@ public class JsRulesProvider implements Provider<JsRules> {
             ResteasyProviderFactory.popContextData(Principal.class);
             return;
         }
-        
+
         log.debug("Recompiling rules with timestamp: " + newUpdated);
-        
+
         Context context = Context.enter();
         context.setOptimizationLevel(9);
         scope = context.initStandardObjects(null, true);
@@ -119,7 +119,7 @@ public class JsRulesProvider implements Provider<JsRules> {
             scriptLock.writeLock().unlock();
         }
     }
-    
+
     public JsRules get() {
         /*
          * Create a new thread/request local javascript scope for the JsRules,
@@ -139,8 +139,8 @@ public class JsRulesProvider implements Provider<JsRules> {
         finally {
             scriptLock.readLock().unlock();
         }
-        
+
         return new JsRules(rulesScope);
     }
-    
+
 }

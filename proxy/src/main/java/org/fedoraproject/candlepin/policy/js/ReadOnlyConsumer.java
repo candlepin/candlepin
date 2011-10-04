@@ -35,7 +35,7 @@ public class ReadOnlyConsumer {
     public ReadOnlyConsumer(Consumer consumer) {
         this.consumer = consumer;
     }
-   
+
     /**
      * Return the consumer type
      * @return the consumer type
@@ -43,7 +43,7 @@ public class ReadOnlyConsumer {
     public String getType() {
         return consumer.getType().getLabel();
     }
-   
+
     /**
      * Return the consumer name
      * @return the consumer name
@@ -51,7 +51,7 @@ public class ReadOnlyConsumer {
     public String getName() {
         return consumer.getName();
     }
-   
+
     /**
      * Return the consumer uuid
      * @return the consumer uuid
@@ -59,7 +59,7 @@ public class ReadOnlyConsumer {
     public String getUuid() {
         return consumer.getUuid();
     }
-   
+
     /**
      * Return the Consumer's parent
      * @return the Consumer's parent
@@ -70,7 +70,7 @@ public class ReadOnlyConsumer {
         }
         return new ReadOnlyConsumer(consumer.getParent());
     }
-   
+
     /**
      * Return read-only versions of the child consumers.
      * @return read-only versions of the child consumers.
@@ -82,7 +82,7 @@ public class ReadOnlyConsumer {
         }
         return toReturn;
     }
-   
+
     /**
      * Return the value of the fact assigned to the given key.
      * @param factKey Fact key
@@ -95,7 +95,7 @@ public class ReadOnlyConsumer {
         }
         return result;
     }
-    
+
     /**
      * Check if the consumer has the given fact specified.
      * @param factKey Fact to look up.
@@ -116,7 +116,7 @@ public class ReadOnlyConsumer {
      * @return true if this Consumer has any entitlements for the given product
      * label
      */
-    //TODO Is this correct? Do we need to check if the entitlement product provides 
+    //TODO Is this correct? Do we need to check if the entitlement product provides
     // the requested product?
     public boolean hasEntitlement(String poolId) {
         for (Entitlement e : consumer.getEntitlements()) {
@@ -130,7 +130,7 @@ public class ReadOnlyConsumer {
     public boolean hasEntitlement(ReadOnlyProduct product) {
         return hasEntitlement(product.getId());
     }
-    
+
     public String getUsername() {
         return consumer.getUsername();
     }

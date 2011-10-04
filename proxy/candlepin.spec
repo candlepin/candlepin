@@ -56,7 +56,7 @@ Group: Development/Libraries
 Development libraries for candlepin integration
 
 %prep
-%setup -q 
+%setup -q
 
 %build
 ant -Dlibdir=/usr/share/candlepin/lib/ clean package genschema
@@ -2064,7 +2064,7 @@ rm -rf $RPM_BUILD_ROOT
 - use the default user/pass we create in the deploy (alikins@redhat.com)
 - stop importing sat cert, instead import product data from product certs.  (alikins@redhat.com)
 - Fix a NPE when a subscription.product_id points to a non existing product (alikins@redhat.com)
-- make deploy import product certs to populate user data (alikins@redhat.com) 
+- make deploy import product certs to populate user data (alikins@redhat.com)
 * Fri May 07 2010 jesus m. rodriguez <jesusr@redhat.com> 0.0.9-1
 - pulled in fixes
 - unit tests still fail

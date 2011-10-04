@@ -21,22 +21,22 @@ import org.fedoraproject.candlepin.model.Consumer;
  */
 public class ConsumerDto {
     private String uuid;
-    
+
     public ConsumerDto() {
     }
-    
+
     ConsumerDto(String uuid) {
         this.uuid = uuid;
     }
-    
+
     public String getUuid() {
         return uuid;
     }
-    
+
     public void setUuid(String uuid) {
         this.uuid = uuid;
     }
-    
+
     public Consumer consumer() {
         Consumer toReturn = new Consumer();
         toReturn.setUuid(uuid);

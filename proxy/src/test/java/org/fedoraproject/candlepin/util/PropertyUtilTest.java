@@ -30,7 +30,7 @@ public class PropertyUtilTest {
     public static final String FOO = "foobar";
     public static final int TRYME = 10;
     public static final String NULL = null;
-    
+
     @Test
     public void testStaticPropertyClassName() {
         try {
@@ -58,7 +58,7 @@ public class PropertyUtilTest {
             fail(e.getMessage());
         }
     }
-    
+
     @Test
     public void testStaticPropertyNonExistent() {
         try {
@@ -69,7 +69,7 @@ public class PropertyUtilTest {
             assertTrue(true);
         }
     }
-    
+
     @Test
     public void testStaticPropertyNull() {
         try {
@@ -82,7 +82,7 @@ public class PropertyUtilTest {
         catch (NoSuchFieldException e) {
             fail("should've thrown NPE");
         }
-        
+
         try {
             PropertyUtil.getStaticPropertyAsString(getClass(), null);
             fail("Should've thrown NPE");
@@ -94,14 +94,14 @@ public class PropertyUtilTest {
             fail("should've thrown NPE");
         }
     }
-    
+
     @Test
     public void testStaticPropertyConversion() {
         try {
             String v = PropertyUtil.getStaticPropertyAsString(getClass(), "TRYME");
             assertNotNull(v);
             assertEquals("10", v);
-            
+
             v = PropertyUtil.getStaticPropertyAsString(getClass(), "NULL");
             assertNull(v);
         }

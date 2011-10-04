@@ -22,11 +22,11 @@ import org.hibernate.criterion.Restrictions;
  * PermissionCurator
  */
 public class RoleCurator extends AbstractHibernateCurator<Role> {
-    
+
     protected RoleCurator() {
         super(Role.class);
     }
-    
+
     public List<Role> listForOwner(Owner o) {
         return this.currentSession().createCriteria(Role.class)
             .createCriteria("permissions")

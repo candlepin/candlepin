@@ -268,7 +268,7 @@ function findStackingPools(pool_class, consumer, compliance) {
             stackToEntitledSockets[stack_id] += quantity * pool_sockets;
 
             stackToPoolMap[stack_id].put(pool, quantity);
-    
+
             if (stackToEntitledSockets[stack_id] >= consumer_sockets) {
                 // we've just found a stack that will satisfy. no need to keep looping
                 break;
@@ -277,7 +277,7 @@ function findStackingPools(pool_class, consumer, compliance) {
             // not stackable, just take one.
             notStackable.push(pool);
         }
-    
+
     }
 
     // We have a not stackable pool.

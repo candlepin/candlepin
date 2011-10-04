@@ -15,10 +15,10 @@ require 'json'
 # DEPENDENCIES
 #############################################################################
 
-RESTEASY = [group('jaxrs-api', 
+RESTEASY = [group('jaxrs-api',
                   'resteasy-jaxrs',
-                  'resteasy-jaxb-provider', 
-                  'resteasy-guice', 
+                  'resteasy-jaxb-provider',
+                  'resteasy-guice',
                   'resteasy-atom-provider',
                   'resteasy-multipart-provider',
                   :under => 'org.jboss.resteasy',
@@ -34,8 +34,8 @@ MIME4J = [group('apache-mime4j',
                 :under => 'org.apache.james',
                 :version => '0.6')]
 
-JACKSON = [group('jackson-core-lgpl', 
-                 'jackson-mapper-lgpl', 
+JACKSON = [group('jackson-core-lgpl',
+                 'jackson-mapper-lgpl',
                  'jackson-jaxrs',
                  'jackson-xc',
                  :under => 'org.codehaus.jackson',
@@ -177,7 +177,7 @@ define "candlepin" do
     GUICE, DOM4J, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ, SUN_JAXB, MIME4J, AMQP, LDAP, OAUTH, RHINO]
   compile.with compile_classpath
   compile.with LOGDRIVER if Buildr.environment == 'logdriver'
- 
+
   #
   # testing
   #
@@ -196,9 +196,9 @@ define "candlepin" do
   #
   doc
 
-  package(:jar, :id=>'candlepin-api').clean.include 'target/classes/org/fedoraproject/candlepin/auth','target/classes/org/fedoraproject/candlepin/config','target/classes/org/fedoraproject/candlepin/service','target/classes/org/fedoraproject/candlepin/model','target/classes/org/fedoraproject/candlepin/pki', 'target/classes/org/fedoraproject/candlepin/exceptions', 'target/classes/org/fedoraproject/candlepin/util', :path=>"org/fedoraproject/candlepin/"  
+  package(:jar, :id=>'candlepin-api').clean.include 'target/classes/org/fedoraproject/candlepin/auth','target/classes/org/fedoraproject/candlepin/config','target/classes/org/fedoraproject/candlepin/service','target/classes/org/fedoraproject/candlepin/model','target/classes/org/fedoraproject/candlepin/pki', 'target/classes/org/fedoraproject/candlepin/exceptions', 'target/classes/org/fedoraproject/candlepin/util', :path=>"org/fedoraproject/candlepin/"
   package(:war, :id=>"candlepin").libs += artifacts(HSQLDB)
-  package(:war, :id=>"candlepin").classes << generate  
+  package(:war, :id=>"candlepin").classes << generate
 
   desc 'Crawl the REST API and print a summary.'
   task :apicrawl  do
@@ -225,7 +225,7 @@ define "candlepin" do
                 :docletpath => ['target/classes', classes].flatten.join(File::PATH_SEPARATOR),
                 :output => 'target'}
 
-    Java::Commands.javadoc(*sources) 
+    Java::Commands.javadoc(*sources)
 
     api_file = 'target/candlepin_api.json'
     comments_file = 'target/candlepin_comments.json'
@@ -256,7 +256,7 @@ define "candlepin" do
 
   #
   # coverity report generation
-  # 
+  #
   desc 'Generate coverity reports (coverity must be installed)'
   task :coverity => [:compile] do
     mkdir_p compile.target.to_s
@@ -278,15 +278,15 @@ define "candlepin" do
         rm_rf 'target/schema'
         mkdir_p 'target/schema'
         filter('src/main/resources/META-INF').into('target/classes/META-INF').run
-  
+
         ant.taskdef :name=>'schema',
           :classname=>'org.hibernate.tool.ant.HibernateToolTask',
           :classpath=>Buildr.artifacts([HIBERNATE, HSQLDB, DB, COMMONS, LOG4J, JDOM, DOM4J, RESTEASY, JACKSON, QUARTZ]).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR)
-      
+
         ant.schema :destdir=>'target/schema' do
           ant.classpath :path=>_('target/classes')
           ant.jpaconfiguration :persistenceunit=>'production'
-          ant.hbm2ddl :export=>'false', :update=>'false', :drop=>'false', :create=>'true', 
+          ant.hbm2ddl :export=>'false', :update=>'false', :drop=>'false', :create=>'true',
             :outputfilename=>'candlepin-proxy.sql', :delimiter=>';', :format=>'false', :haltonerror=>'true'
         end
       end

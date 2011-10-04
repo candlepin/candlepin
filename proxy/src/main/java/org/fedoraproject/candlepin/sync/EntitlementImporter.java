@@ -42,43 +42,43 @@ import java.util.Set;
  */
 public class EntitlementImporter {
     private static Logger log = Logger.getLogger(EntitlementImporter.class);
-    
+
     private SubscriptionCurator subscriptionCurator;
     private CertificateSerialCurator csCurator;
     private EventSink sink;
-    
-    public EntitlementImporter(SubscriptionCurator subscriptionCurator, 
+
+    public EntitlementImporter(SubscriptionCurator subscriptionCurator,
         CertificateSerialCurator csCurator, EventSink sink) {
-        
+
         this.subscriptionCurator = subscriptionCurator;
         this.csCurator = csCurator;
         this.sink = sink;
     }
-    
+
     public Subscription importObject(ObjectMapper mapper, Reader reader, Owner owner,
         Map<String, Product> productsById) throws IOException, SyncDataFormatException {
-        
+
         Entitlement entitlement = mapper.readValue(reader, Entitlement.class);
         Subscription subscription = new Subscription();
-        
+
         subscription.setUpstreamPoolId(entitlement.getPool().getId());
-        
+
         subscription.setOwner(owner);
-        
+
         subscription.setStartDate(entitlement.getStartDate());
         subscription.setEndDate(entitlement.getEndDate());
-        
+
         subscription.setAccountNumber(entitlement.getAccountNumber());
         subscription.setContractNumber(entitlement.getContractNumber());
-        
+
         subscription.setQuantity(entitlement.getQuantity().longValue());
-        
+
         subscription.setProduct(findProduct(productsById, entitlement.getProductId()));
-        
+
         Set<Product> products = new HashSet<Product>();
         for (ProvidedProduct providedProduct : entitlement.getPool().
             getProvidedProducts()) {
-            
+
             products.add(findProduct(productsById, providedProduct.getProductId()));
         }
         subscription.setProvidedProducts(products);
@@ -105,7 +105,7 @@ public class EntitlementImporter {
         if (entcnt > 1) {
             log.error("More than one entitlement cert found for subscription");
         }
-        
+
         return subscription;
     }
 
@@ -133,13 +133,13 @@ public class EntitlementImporter {
                     subscription);
             }
         }
-        
+
         for (Subscription subscription : subscriptionsToImport) {
             log.debug("Saving subscription for upstream pool id: " +
                 subscription.getUpstreamPoolId());
             Subscription local =
                 existingSubByEntitlement.get(subscription.getUpstreamPoolId());
-            
+
             if (local == null) {
                 subscriptionCurator.create(subscription);
 
@@ -150,14 +150,14 @@ public class EntitlementImporter {
             else {
                 subscription.setId(local.getId());
                 subscriptionCurator.merge(subscription);
-                
+
                 existingSubByEntitlement.remove(subscription.getUpstreamPoolId());
 
                 // send updated event
                 sink.emitSubscriptionModified(local, subscription);
             }
         }
-        
+
         for (Subscription subscription : existingSubByEntitlement.values()) {
             Event e = sink.createSubscriptionDeleted(subscription);
             subscriptionCurator.delete(subscription);

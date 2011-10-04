@@ -21,23 +21,23 @@ import org.codehaus.jackson.map.ser.SerializerCache;
 import org.codehaus.jackson.map.ser.StdSerializerProvider;
 
 /**
- * CandlepinSerializerProvider - Custom serializer implementation to expose our 
+ * CandlepinSerializerProvider - Custom serializer implementation to expose our
  * custom CandlkepinSerializerFactory method.
  */
 public class CandlepinSerializerProvider extends StdSerializerProvider {
-    
+
     private SerializerCache cachedSerializers = new SerializerCache();
 
     public CandlepinSerializerProvider() {
         super();
     }
 
-    protected CandlepinSerializerProvider(SerializationConfig config, 
+    protected CandlepinSerializerProvider(SerializationConfig config,
         StdSerializerProvider src, SerializerFactory f) {
         super(config, src, f);
     }
-    
-    protected CandlepinSerializerProvider createInstance(SerializationConfig config, 
+
+    protected CandlepinSerializerProvider createInstance(SerializationConfig config,
         SerializerFactory jsf) {
         return new CandlepinSerializerProvider(config, (StdSerializerProvider) this, jsf);
     }

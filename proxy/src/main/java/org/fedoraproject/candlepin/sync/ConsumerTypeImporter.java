@@ -32,11 +32,11 @@ public class ConsumerTypeImporter {
     private static Logger log = Logger.getLogger(ConsumerTypeImporter.class);
 
     private ConsumerTypeCurator curator;
-    
+
     public ConsumerTypeImporter(ConsumerTypeCurator curator) {
         this.curator = curator;
     }
-    
+
     public ConsumerType createObject(ObjectMapper mapper, Reader reader)
         throws IOException {
         ConsumerType consumerType = mapper.readValue(reader, ConsumerType.class);
@@ -49,7 +49,7 @@ public class ConsumerTypeImporter {
      */
     public void store(Set<ConsumerType> consumerTypes) {
         Set<String> resolved = new HashSet<String>();
-        
+
         log.debug("Creating/updating consumer types");
         for (ConsumerType consumerType : consumerTypes) {
             if (curator.lookupByLabel(consumerType.getLabel()) == null) {

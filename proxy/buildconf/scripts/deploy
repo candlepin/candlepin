@@ -1,4 +1,4 @@
-#!/bin/sh 
+#!/bin/sh
 function evalrc ()
 {
     if [ "$1" -ne "0" ] ; then

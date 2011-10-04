@@ -63,11 +63,11 @@ public class CrlGeneratorTest {
 
     private static final KeyPair KP = generateKP();
     private static final X509Certificate CERT = generateCertificate();
-    
+
     @Mock private PKIReader pkiReader;
     @Mock private CertificateSerialCurator curator;
     private PKIUtility pkiUtility;
-    
+
     private CrlGenerator generator;
 
     public static KeyPair generateKP() {
@@ -81,7 +81,7 @@ public class CrlGeneratorTest {
             throw new RuntimeException(e);
         }
     }
-    
+
     private static X509Certificate generateCertificate() {
         X500Principal principal = new X500Principal(generateFakePrincipal());
         X509V3CertificateGenerator gen = new X509V3CertificateGenerator();
@@ -99,26 +99,26 @@ public class CrlGeneratorTest {
             throw new RuntimeException(e);
         }
     }
-    
+
     public static String generateFakePrincipal() {
-        return "CN=test, UID=" + UUID.randomUUID(); 
+        return "CN=test, UID=" + UUID.randomUUID();
     }
-    
+
     @Before
     public void init() throws Exception {
         this.pkiUtility = new BouncyCastlePKIUtility(pkiReader,
             new DefaultSubjectKeyIdentifierWriter());
         this.generator = new CrlGenerator(curator, pkiUtility);
-        
+
         when(pkiReader.getCaKey()).thenReturn(KP.getPrivate());
         when(pkiReader.getCACert()).thenReturn(CERT);
     }
-    
+
     @Test
     public void crlNumberWithNull() {
         assertEquals(BigInteger.ZERO, generator.getCRLNumber(null));
     }
-    
+
     @Test
     public void crlNumberWithCert() throws Exception {
         X509V2CRLGenerator g = new X509V2CRLGenerator();
@@ -128,15 +128,15 @@ public class CrlGeneratorTest {
         g.setSignatureAlgorithm("SHA1withRSA");
         g.addExtension(X509Extensions.CRLNumber, false,
             new CRLNumber(BigInteger.TEN));
-        
+
         X509CRL x509crl = g.generate(KP.getPrivate());
         assertEquals(BigInteger.TEN, this.generator.getCRLNumber(x509crl));
     }
-    
+
     @Test
     public void serialsTransfered() {
         List<CertificateSerial> serials = getStubCSList();
-        
+
         when(this.curator.retrieveTobeCollectedSerials())
             .thenReturn(serials);
         List<X509CRLEntryWrapper> entries = this.generator
@@ -148,7 +148,7 @@ public class CrlGeneratorTest {
             assertEquals(cs.getSerial(), entries.get(i).getSerialNumber());
         }
     }
-    
+
     @Test
     public void serialsEmptyList() {
         when(this.curator.retrieveTobeCollectedSerials())
@@ -157,12 +157,12 @@ public class CrlGeneratorTest {
             .getNewSerialsToAppendAndSetThemConsumed();
         assertEquals(0, entries.size());
     }
-    
+
     @Test
     @SuppressWarnings("serial")
     public void emptyExpiredSerials() {
         Set<? extends X509CRLEntry> set = stubX509CRLEntries();
-        
+
         when(this.curator.getExpiredSerials())
             .thenReturn(new ArrayList<CertificateSerial>() {
                 {
@@ -172,16 +172,16 @@ public class CrlGeneratorTest {
             });
         Set<? extends X509CRLEntry> result = this.generator.removeExpiredSerials(set);
         assertEquals(1, result.size());
-        
+
         X509CRLEntry entry = result.iterator().next();
         assertEquals(BigInteger.ZERO, entry.getSerialNumber());
     }
-    
+
     @Test
     @SuppressWarnings("serial")
     public void expiredSerials() {
         Set<? extends X509CRLEntry> set = stubX509CRLEntries();
-        
+
         when(this.curator.getExpiredSerials())
             .thenReturn(new ArrayList<CertificateSerial>() {
                 {
@@ -192,7 +192,7 @@ public class CrlGeneratorTest {
         Set<? extends X509CRLEntry> result = this.generator.removeExpiredSerials(set);
         assertEquals(set.size(), result.size());
     }
-    
+
     @Test
     public void updateCRLWithNullInput() {
         List<CertificateSerial> serials = getStubCSList();
@@ -210,16 +210,16 @@ public class CrlGeneratorTest {
         assertTrue(nos.contains(new BigInteger("100")));
         assertTrue(nos.contains(new BigInteger("1235465")));
     }
-    
+
     @Test
     @SuppressWarnings({ "unchecked", "serial", "rawtypes" })
     public void testUpdateCRLWithMockedCRL() {
         X509CRL oldCert = mock(X509CRL.class);
         Set<? extends X509CRLEntry> crls = stubX509CRLEntries(); //0, 1, 10,
-        
-        // byte array captured from previous runs - represents 1 
+
+        // byte array captured from previous runs - represents 1
         when(oldCert.getExtensionValue("2.5.29.20"))
-            .thenReturn(new byte[] {4, 3, 2, 1, 1}); 
+            .thenReturn(new byte[] {4, 3, 2, 1, 1});
         when(oldCert.getRevokedCertificates())
             .thenReturn((Set) crls);
         when(this.curator.getExpiredSerials())
@@ -232,13 +232,13 @@ public class CrlGeneratorTest {
                 }
             });
         X509CRL newCRL = this.generator.updateCRL(oldCert);
-        
+
         verify(this.curator, times(1)).retrieveTobeCollectedSerials();
         verify(this.curator, times(1)).deleteExpiredSerials();
         verify(this.curator, times(1)).getExpiredSerials();
-        
+
         assertEquals(new BigInteger("2"), this.generator.getCRLNumber(newCRL));
-        
+
         Set<? extends X509CRLEntry> entries = newCRL.getRevokedCertificates();
         Set<BigInteger> nos = Util.newSet();
         for (X509CRLEntry entry : entries) {
@@ -250,7 +250,7 @@ public class CrlGeneratorTest {
             nos.contains(Util.toBigInt(expectedSerials[i]));
         }
     }
-        
+
     @Test
     public void decodeValue() throws Exception {
         // there's gotta be a way to reduce to a set of mocks
@@ -287,7 +287,7 @@ public class CrlGeneratorTest {
         assertEquals("10", pkiUtility.decodeDERValue(x509crl.getExtensionValue(
             X509Extensions.CRLNumber.getId())));
     }
-    
+
     @SuppressWarnings("serial")
     private List<CertificateSerial> getStubCSList() {
         return new ArrayList<CertificateSerial>() {
@@ -298,13 +298,13 @@ public class CrlGeneratorTest {
             }
         };
     }
-    
+
     private CertificateSerial stubCS(Long id, Date expiration) {
         CertificateSerial cs = new CertificateSerial(id, expiration);
         cs.setCollected(false);
         return cs;
     }
-    
+
     private Set<? extends X509CRLEntry> stubX509CRLEntries() {
         Set<X509CRLEntry> set = new LinkedHashSet<X509CRLEntry>();
         set.add(mockCRL(BigInteger.ONE, new Date()));
@@ -312,7 +312,7 @@ public class CrlGeneratorTest {
         set.add(mockCRL(BigInteger.ZERO, new Date()));
         return set;
     }
-    
+
     private X509CRLEntry mockCRL(BigInteger serial, Date dt) {
         X509CRLEntry entry = mock(X509CRLEntry.class);
         when(entry.getSerialNumber()).thenReturn(serial);

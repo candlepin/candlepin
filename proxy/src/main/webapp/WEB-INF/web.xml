@@ -23,6 +23,4 @@
     <auth-method>CLIENT-CERT</auth-method>
     <realm-name>candlepin</realm-name>
   </login-config>
-  
-  
 </web-app>

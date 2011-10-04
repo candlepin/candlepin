@@ -37,14 +37,14 @@ import javax.ws.rs.core.MediaType;
 public class MigrationResource {
     private static Logger log = Logger.getLogger(MigrationResource.class);
     public static final String OWNER = "owner";
-    
+
     private I18n i18n;
-    
+
     @Inject
     public MigrationResource(I18n i18n) {
         this.i18n = i18n;
     }
-    
+
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     public JobDetail createMigration(@QueryParam("entity") String entity,
@@ -55,15 +55,15 @@ public class MigrationResource {
         if (OWNER.equals(entity)) {
             return migrateOwner(entity, key, url, delete);
         }
-        
+
         throw new BadRequestException(i18n.tr("Bad entity value."));
     }
-    
+
     private JobDetail migrateOwner(@QueryParam("entity") String entity,
         @QueryParam("id") String ownerKey,
         @QueryParam("uri") String url,
         @QueryParam("delete") @DefaultValue("true") boolean delete) {
-        
+
         if (log.isDebugEnabled()) {
             log.debug("launch migrate owner - owner [" + ownerKey +
                 "], uri [" + url + "]");

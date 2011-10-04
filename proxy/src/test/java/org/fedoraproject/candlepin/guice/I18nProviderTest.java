@@ -33,24 +33,24 @@ import static org.mockito.Mockito.when;
 public class I18nProviderTest {
     @Mock private HttpServletRequest request;
     @Mock private Injector injector;
-    
+
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
         when(injector.getInstance(HttpServletRequest.class)).thenReturn(request);
-    }    
+    }
 
-    @Test 
+    @Test
     public void verifyEnglishTestString() {
         when(request.getLocale()).thenReturn(Locale.US);
         I18nProvider provider = new I18nProvider(injector);
         assertEquals("Bad Request", provider.getTestString());
     }
-    
-    @Test 
+
+    @Test
     public void verifyGermanTestString() {
         when(request.getLocale()).thenReturn(new Locale("de", "DE"));
         I18nProvider provider = new I18nProvider(injector);
         assertEquals("Fehlerhafte Anfrage", provider.getTestString());
-    }    
+    }
 }

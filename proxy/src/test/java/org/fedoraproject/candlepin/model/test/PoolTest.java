@@ -53,12 +53,12 @@ public class PoolTest extends DatabaseTestFixture {
         productCurator.create(prod2);
         owner = new Owner("testowner");
         ownerCurator.create(owner);
-        
+
         Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
         ProvidedProduct providedProduct = new ProvidedProduct(
             prod2.getId(), prod2.getName());
         providedProducts.add(providedProduct);
-        
+
         pool = TestUtil.createPool(owner, prod1, providedProducts, 1000);
         providedProduct.setPool(pool);
         poolCurator.create(pool);
@@ -82,7 +82,7 @@ public class PoolTest extends DatabaseTestFixture {
         assertEquals(owner.getId(), lookedUp.getOwner().getId());
         assertEquals(prod1.getId(), lookedUp.getProductId());
         assertTrue(lookedUp.provides(prod1.getId()));
-        
+
     }
 
     public void testMultiplePoolsForOwnerProductAllowed() {
@@ -110,8 +110,8 @@ public class PoolTest extends DatabaseTestFixture {
         Product newProduct = TestUtil.createProduct();
 
         productCurator.create(newProduct);
-        Pool consumerPool = createPoolAndSub(owner, newProduct, 
-                numAvailEntitlements, TestUtil.createDate(2009, 11, 30), 
+        Pool consumerPool = createPoolAndSub(owner, newProduct,
+                numAvailEntitlements, TestUtil.createDate(2009, 11, 30),
                 TestUtil.createDate(2050, 11, 30));
         consumerPool = poolCurator.create(consumerPool);
 
@@ -129,7 +129,7 @@ public class PoolTest extends DatabaseTestFixture {
         Product newProduct = TestUtil.createProduct();
         productCurator.create(newProduct);
 
-        Pool consumerPool = createPoolAndSub(owner, newProduct, numAvailEntitlements, 
+        Pool consumerPool = createPoolAndSub(owner, newProduct, numAvailEntitlements,
                 TestUtil.createDate(2009, 11, 30), TestUtil.createDate(2050, 11, 30));
         poolCurator.create(consumerPool);
 
@@ -148,18 +148,18 @@ public class PoolTest extends DatabaseTestFixture {
         Product childProduct = TestUtil.createProduct("2", "product-2");
         productCurator.create(childProduct);
         productCurator.create(parentProduct);
-        
+
         Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
-        ProvidedProduct providedProduct = new ProvidedProduct(childProduct.getId(), 
+        ProvidedProduct providedProduct = new ProvidedProduct(childProduct.getId(),
             childProduct.getName());
         providedProducts.add(providedProduct);
 
         Pool pool = TestUtil.createPool(owner, parentProduct, providedProducts, 5);
         providedProduct.setPool(pool);
         poolCurator.create(pool);
-        
-        
-        List<Pool> results = poolCurator.listAvailableEntitlementPools(null, owner, 
+
+
+        List<Pool> results = poolCurator.listAvailableEntitlementPools(null, owner,
             childProduct.getId(), null, false, false);
         assertEquals(1, results.size());
         assertEquals(pool.getId(), results.get(0).getId());
@@ -177,10 +177,10 @@ public class PoolTest extends DatabaseTestFixture {
             TestUtil.createDate(2011, 3, 30),
             TestUtil.createDate(2022, 11, 29));
         poolCurator.create(pool);
-        
+
         assertNotNull(pool.getCreated());
     }
-    
+
     @Test
     public void testInitialUpdateTimestamp() {
         Product newProduct = TestUtil.createProduct();
@@ -189,7 +189,7 @@ public class PoolTest extends DatabaseTestFixture {
             TestUtil.createDate(2011, 3, 30),
             TestUtil.createDate(2022, 11, 29));
         pool = poolCurator.create(pool);
-        
+
         assertNotNull(pool.getUpdated());
     }
 
@@ -204,21 +204,21 @@ public class PoolTest extends DatabaseTestFixture {
         Pool pool = createPoolAndSub(owner, newProduct, 1L,
             TestUtil.createDate(2011, 3, 30),
             TestUtil.createDate(2022, 11, 29));
-        
+
         pool = poolCurator.create(pool);
-        
+
         // set updated to 10 minutes ago
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.MINUTE, -10);
         pool.setUpdated(calendar.getTime());
-        
+
         Date updated = (Date) pool.getUpdated().clone();
         pool.setQuantity(23L);
         pool = poolCurator.merge(pool);
-        
+
         assertFalse(updated.getTime() == pool.getUpdated().getTime());
     }
-    
+
     @Test
     public void providedProductCleanup() {
         Product parentProduct = TestUtil.createProduct("1", "product-1");

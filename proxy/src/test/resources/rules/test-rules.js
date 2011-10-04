@@ -35,7 +35,7 @@ var Entitlement = {
 		}
 	
 		// Host must not have any guests currently (could be changed but for simplicities sake):
-		if (consumer.hasFact("total_guests") && 
+		if (consumer.hasFact("total_guests") &&
 				parseInt(consumer.getFact("total_guests")) > 0) {
 			pre.addError("rulefailed.host.already.has.guests");
 		}

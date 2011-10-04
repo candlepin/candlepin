@@ -27,26 +27,26 @@ import org.fedoraproject.candlepin.model.OwnerCurator;
 public class ConsumerImporter {
 
     private OwnerCurator curator;
-    
+
     public ConsumerImporter(OwnerCurator curator) {
         this.curator = curator;
     }
-    
+
     public ConsumerDto createObject(ObjectMapper mapper, Reader reader) throws IOException {
         return mapper.readValue(reader, ConsumerDto.class);
     }
 
     public void store(Owner owner, ConsumerDto consumer) throws SyncDataFormatException {
-        
+
         if (consumer.getUuid() == null) {
             throw new SyncDataFormatException("null uuid on consumer info");
         }
-        
+
         if (owner.getUpstreamUuid() != null &&
             !owner.getUpstreamUuid().equals(consumer.getUuid())) {
             throw new SyncDataFormatException("mismatched consumer uuid for this owner");
         }
-        
+
         owner.setUpstreamUuid(consumer.getUuid());
         curator.merge(owner);
     }

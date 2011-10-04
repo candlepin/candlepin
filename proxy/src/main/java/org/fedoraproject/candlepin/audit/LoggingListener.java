@@ -28,20 +28,20 @@ import org.fedoraproject.candlepin.config.ConfigProperties;
 public class LoggingListener implements EventListener {
     private static Logger auditLog =
         Logger.getLogger(LoggingListener.class.getCanonicalName() + ".AuditLog");
-    
+
     private boolean verbose;
-    
+
     public LoggingListener() throws IOException {
         Config config = new Config();
-        
+
         auditLog.addAppender(new FileAppender(new PatternLayout("%m"),
             config.getString(ConfigProperties.AUDIT_LOG_FILE)));
         // Keep these messages in audit.log only
         auditLog.setAdditivity(false);
-        
+
         verbose = config.getBoolean(ConfigProperties.AUDIT_LOG_VERBOSE);
     }
-    
+
     @Override
     public void onEvent(Event e) {
         auditLog.info(String.format(

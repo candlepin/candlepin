@@ -23,7 +23,7 @@ import org.apache.log4j.Logger;
 import com.google.inject.Inject;
 
 /**
- * Sets the log4j logging levels dynamically based on values from the candlepin.conf file. 
+ * Sets the log4j logging levels dynamically based on values from the candlepin.conf file.
  * This removes the need to crack the log4j.properties file.
  */
 public class LoggingConfig {
@@ -34,7 +34,7 @@ public class LoggingConfig {
     public LoggingConfig(Config config) {
         configure(config);
     }
-    
+
     public void configure(Config config) {
         Map<String, String> logLevels = config.configurationWithPrefix(PREFIX);
         for (Entry<String, String> entry : logLevels.entrySet()) {

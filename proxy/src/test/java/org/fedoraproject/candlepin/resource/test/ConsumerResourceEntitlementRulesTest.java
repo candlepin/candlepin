@@ -41,30 +41,30 @@ public class ConsumerResourceEntitlementRulesTest extends DatabaseTestFixture {
     private Consumer consumer;
     private Product product;
     private Pool pool;
-    
+
     private ConsumerResource consumerResource;
     private Owner owner;
 
     @Before
     public void setUp() {
         consumerResource = injector.getInstance(ConsumerResource.class);
-        
+
         standardSystemType = consumerTypeCurator.create(
                 new ConsumerType("standard-system"));
         owner = ownerCurator.create(new Owner("test-owner"));
         ownerCurator.create(owner);
-        
+
         consumer = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(consumer);
-        
+
         product = TestUtil.createProduct();
         productCurator.create(product);
-        
+
         pool = createPoolAndSub(owner, product, 10L,
             TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
         poolCurator.create(pool);
     }
-    
+
     @Test(expected = ForbiddenException.class)
     public void testMaxMembership() {
         // 10 entitlements available, lets try to entitle 11 consumers.
@@ -74,25 +74,25 @@ public class ConsumerResourceEntitlementRulesTest extends DatabaseTestFixture {
             consumerResource.bind(c.getUuid(), pool.getId(),
                 null, 1, null, null, false, null);
         }
-        
+
         // Now for the 11th:
         Consumer c = TestUtil.createConsumer(consumer.getType(), owner);
         consumerCurator.create(c);
         consumerResource.bind(c.getUuid(), pool.getId(), null, null, null, null,
             false, null);
     }
-    
+
     @Test(expected = RuntimeException.class)
     public void testEntitlementsHaveExpired() {
         dateSource.currentDate(TestDateUtil.date(2030, 1, 13));
         consumerResource.bind(consumer.getUuid(), pool.getId(), null,
             null, null, null, false, null);
     }
-    
+
     @Override
     protected Module getGuiceOverrideModule() {
         return new AbstractModule() {
-            
+
             @Override
             protected void configure() {
                 bind(Enforcer.class).to(EntitlementRules.class);

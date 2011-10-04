@@ -32,54 +32,54 @@ public class ProductCertCreationTest extends DatabaseTestFixture {
 
     @Override
     protected Module getGuiceOverrideModule() {
-        return new ProductCertCreationModule(); 
+        return new ProductCertCreationModule();
     }
 
     @Test
     public void hasCert() {
         ProductCertificate cert = createDummyCert();
-        
+
         Assert.assertTrue(cert.getCert().length() > 0);
     }
-    
+
     @Test
     public void hasKey() {
         ProductCertificate cert = createDummyCert();
-        
+
         Assert.assertTrue(cert.getKey().length() > 0);
     }
-    
+
     @Test
     public void validProduct() {
-        Product product = new Product("50", "Test Product", 
+        Product product = new Product("50", "Test Product",
             "Standard", "1", "x86_64", "Base");
         ProductCertificate cert = createCert(product);
-        
+
         Assert.assertEquals(product, cert.getProduct());
     }
-    
+
     @Test(expected = IllegalArgumentException.class)
     public void noHashCreation() {
         createCert(new Product("thin", "Not Much Here"));
     }
-    
+
     private ProductCertificate createDummyCert() {
-        Product product = new Product("50", "Test Product", 
+        Product product = new Product("50", "Test Product",
             "Standard", "1", "x86_64", "Base");
 
         return createCert(product);
     }
-    
+
     private ProductCertificate createCert(Product product) {
         this.productAdapter.createProduct(product);
         return this.productAdapter.getProductCertificate(product);
     }
-    
+
     private static class ProductCertCreationModule extends AbstractModule {
         @Override
         protected void configure() {
             bind(PKIReader.class).to(BouncyCastlePKIReader.class).asEagerSingleton();
         }
     }
-    
+
 }

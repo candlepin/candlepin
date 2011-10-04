@@ -34,18 +34,18 @@ import com.google.inject.Inject;
 public class CertificateSerialResource {
 
     private CertificateSerialCurator certificateSerialCurator;
-    
+
     @Inject
     public CertificateSerialResource(CertificateSerialCurator certificateSerialCurator) {
         this.certificateSerialCurator = certificateSerialCurator;
     }
-    
+
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<CertificateSerial> getCertificateSerials() {
         return this.certificateSerialCurator.listAll();
     }
-    
+
     @GET
     @Path("/{serial_id}")
     @Produces(MediaType.APPLICATION_JSON)

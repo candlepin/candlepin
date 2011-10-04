@@ -41,18 +41,18 @@ import java.util.Map.Entry;
  * of operations we support.
  */
 public class PoolHelper {
-    
+
     private PoolManager poolManager;
     private ProductServiceAdapter prodAdapter;
     private Entitlement sourceEntitlement;
-    
+
     public PoolHelper(PoolManager poolManager, ProductServiceAdapter prodAdapter,
         Entitlement sourceEntitlement) {
         this.poolManager = poolManager;
         this.prodAdapter = prodAdapter;
         this.sourceEntitlement = sourceEntitlement;
     }
-    
+
     /**
     * Create a pool for a product and limit it to consumers a particular user has
     * registered.
@@ -69,7 +69,7 @@ public class PoolHelper {
 
         consumerSpecificPool.setRestrictedToUsername(
                 this.sourceEntitlement.getConsumer().getUsername());
-        
+
         poolManager.createPool(consumerSpecificPool);
     }
 
@@ -122,7 +122,7 @@ public class PoolHelper {
         // NOTE: For now we only collapse the top level Product's attributes
         // onto the pool.
         Set<String> processed = new HashSet<String>();
-        
+
         boolean hasChanged = false;
         Product product = sub.getProduct();
         for (Attribute attr : product.getAttributes()) {
@@ -132,7 +132,7 @@ public class PoolHelper {
             // Add to the processed list so that we can determine which should
             // be removed later.
             processed.add(attributeName);
-            
+
             if (pool.hasProductAttribute(attributeName)) {
                 ProductPoolAttribute provided =
                     pool.getProductAttribute(attributeName);
@@ -148,7 +148,7 @@ public class PoolHelper {
                 product.getId());
             hasChanged = true;
         }
-        
+
         // Determine if any should be removed.
         Set<ProductPoolAttribute> toRemove =
             new HashSet<ProductPoolAttribute>();
@@ -199,21 +199,21 @@ public class PoolHelper {
 
         return pool;
     }
-    
+
     public boolean checkForChangedProducts(Pool existingPool, Subscription sub) {
         Set<String> poolProducts = new HashSet<String>();
         Set<String> subProducts = new HashSet<String>();
         poolProducts.add(existingPool.getProductId());
-        
+
         for (ProvidedProduct pp : existingPool.getProvidedProducts()) {
             poolProducts.add(pp.getProductId());
         }
-        
+
         subProducts.add(sub.getProduct().getId());
         for (Product product : sub.getProvidedProducts()) {
             subProducts.add(product.getId());
         }
-        
+
         boolean changeFound = false;
         // Check if the product name has been changed:
         changeFound = !poolProducts.equals(subProducts) ||
@@ -268,5 +268,5 @@ public class PoolHelper {
 
         return false;
     }
-    
+
 }

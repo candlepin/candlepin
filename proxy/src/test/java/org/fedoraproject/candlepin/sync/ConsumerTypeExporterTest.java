@@ -30,20 +30,20 @@ import java.util.HashMap;
  * ConsumerTypeExporterTest
  */
 public class ConsumerTypeExporterTest {
-    
+
     @Test
     public void testConsumerTypeExport() throws IOException {
         ObjectMapper mapper = SyncUtils.getObjectMapper(
             new Config(new HashMap<String, String>()));
-        
+
         ConsumerTypeExporter consumerType = new ConsumerTypeExporter();
-        
+
         StringWriter writer = new StringWriter();
-        
+
         ConsumerType type = new ConsumerType("TESTTYPE");
-        
+
         consumerType.export(mapper, writer, type);
-        
+
         assertEquals("{\"id\":null,\"label\":\"TESTTYPE\",\"manifest\":false}",
                      writer.toString());
     }

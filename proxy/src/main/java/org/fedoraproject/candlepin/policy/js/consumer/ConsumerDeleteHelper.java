@@ -37,11 +37,11 @@ public class ConsumerDeleteHelper {
         this.poolManager = poolManager;
         this.poolCurator = poolCurator;
     }
-    
+
     public void deleteUserRestrictedPools(String username) {
-        List<Pool> userRestrictedPools 
+        List<Pool> userRestrictedPools
             = poolCurator.listPoolsRestrictedToUser(username);
-        
+
         for (Pool pool : userRestrictedPools) {
             poolManager.deletePool(pool);
         }
@@ -54,15 +54,15 @@ public class ConsumerDeleteHelper {
     public void addError(String resourceKey) {
         result.addError(resourceKey);
     }
-   
+
     /**
      * Add a warning message to the validation.
-     * @param resourceKey key 
+     * @param resourceKey key
      */
     public void addWarning(String resourceKey) {
         result.addWarning(resourceKey);
     }
-    
+
     /**
      * Return the result of the validation
      * @return the result of the validation

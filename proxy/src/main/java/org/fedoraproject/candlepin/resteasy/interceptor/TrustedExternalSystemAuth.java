@@ -23,7 +23,7 @@ import org.jboss.resteasy.spi.HttpRequest;
  *
  * This auth form allows and external system to authenticate via
  * the shared secret, and act as itself.
- * 
+ *
  * This is different from the User or Consumer auth versions, in that the
  * External System will not be acting on behalf of another
  * (and has different permission levels).

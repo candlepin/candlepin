@@ -48,20 +48,20 @@ public class CertTest {
     private RSAPrivateCrtKeySpec privKeySpec;
     private RSAPublicKeySpec caPubKeySpec;
     private RSAPrivateCrtKeySpec caPrivKeySpec;
-    
+
     @Before
     public void setupKeys() {
         //
         // personal keys
         //
         pubKeySpec = new RSAPublicKeySpec(
-            new BigInteger("b4a7e46170574f16a97082b22be58b6a2a629798419" + 
+            new BigInteger("b4a7e46170574f16a97082b22be58b6a2a629798419" +
                            "be12872a4bdba626cfae9900f76abfb12139dce5de5" +
-                           "6564fab2b6543165a040c606887420e33d91ed7ed7", 16), 
+                           "6564fab2b6543165a040c606887420e33d91ed7ed7", 16),
             new BigInteger("11", 16));
 
         privKeySpec = new RSAPrivateCrtKeySpec(
-            new BigInteger("b4a7e46170574f16a97082b22be58b6a2a629798419" + 
+            new BigInteger("b4a7e46170574f16a97082b22be58b6a2a629798419" +
                            "be12872a4bdba626cfae9900f76abfb12139dce5de5" +
                            "6564fab2b6543165a040c606887420e33d91ed7ed7", 16),
             new BigInteger("11", 16),
@@ -111,13 +111,13 @@ public class CertTest {
             new BigInteger("b892d9ebdbfc37e397256dd8a5d3123534d1f037262" +
                            "84743ddc6be3a709edb696fc40c7d902ed804c6eee7" +
                            "30eee3d5b20bf6bd8d87a296813c87d3b3cc9d7947", 16),
-            new BigInteger("1d1a2d3ca8e52068b3094d501c9a842fec37f54db16" + 
+            new BigInteger("1d1a2d3ca8e52068b3094d501c9a842fec37f54db16" +
                            "e9a67070a8b3f53cc03d4257ad252a1a640eadd6037" +
                            "24d7bf3737914b544ae332eedf4f34436cac25ceb5", 16),
             new BigInteger("6c929e4e81672fef49d9c825163fec97c4b7ba7acb2" +
                            "6c0824638ac22605d7201c94625770984f78a56e6e2" +
                            "5904fe7db407099cad9b14588841b94f5ab498dded", 16),
-            new BigInteger("dae7651ee69ad1d081ec5e7188ae126f6004ff39556" + 
+            new BigInteger("dae7651ee69ad1d081ec5e7188ae126f6004ff39556" +
                            "bde90e0b870962fa7b926d070686d8244fe5a9aa709" +
                            "a95686a104614834b0ada4b10f53197a5cb4c97339", 16));
     }
@@ -127,7 +127,7 @@ public class CertTest {
  //       String cert = CertGenerator.getCertString();
 //        System.out.println("Cert: " + cert);
  //   }
-    
+
     @Test
     public void testCertExample() throws Exception {
 
@@ -139,7 +139,7 @@ public class CertTest {
         KeyFactory fact = KeyFactory.getInstance("RSA", "BC");
         PrivateKey caPrivKey = fact.generatePrivate(caPrivKeySpec);
         PublicKey caPubKey = fact.generatePublic(caPubKeySpec);
-        //PrivateKey privKey = 
+        //PrivateKey privKey =
         fact.generatePrivate(privKeySpec);
         PublicKey pubKey = fact.generatePublic(pubKeySpec);
 
@@ -203,19 +203,19 @@ public class CertTest {
         X509V2AttributeCertificate att = (X509V2AttributeCertificate) acGen
                 .generate(caPrivKey, "BC");
 
-        
+
 
         //String encoded = new String(att.getEncoded());
         //System.out.println("CERT CERT: " + encoded);
         //KeyStore store = KeyStore.getInstance("PKCS12");
         //String pass = "redhat";
-        
-        
+
+
         /*FileOutputStream fout = new FileOutputStream("/tmp/foo.file");
         store.load(null, null);
         store.store(fout, pass.toCharArray());
-        X509CertificateObject ccert = new 
-            X509CertificateObject(new X509CertificateStructure(new DERSequence(att)));*/ 
+        X509CertificateObject ccert = new
+            X509CertificateObject(new X509CertificateStructure(new DERSequence(att)));*/
         //
         // starting here, we parse the newly generated AC
         //

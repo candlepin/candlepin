@@ -26,9 +26,9 @@ import org.mockito.runners.MockitoJUnitRunner;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class ConsumerPrincipalTest {
-    
+
     @Mock private Consumer consumer;
-    
+
     @Test
     public void noFullAccess() {
         Assert.assertFalse(new ConsumerPrincipal(consumer).hasFullAccess());

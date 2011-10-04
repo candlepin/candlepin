@@ -66,7 +66,7 @@ public class EventResourceTest {
     public void getevent() {
         Event e = getEvent();
         when(ec.find(eq("8aba"))).thenReturn(e);
-        EventResource er = new EventResource(ec, null, 
+        EventResource er = new EventResource(ec, null,
             injector.getInstance(EventAdapter.class));
         assertEquals(e, er.getEvent("8aba"));
     }
@@ -74,7 +74,7 @@ public class EventResourceTest {
     @Test(expected = NotFoundException.class)
     public void notfound() {
         when(ec.find(anyString())).thenReturn(null);
-        EventResource er = new EventResource(ec, 
+        EventResource er = new EventResource(ec,
             injector.getInstance(I18n.class),
             injector.getInstance(EventAdapter.class));
         er.getEvent("foo");
@@ -83,7 +83,7 @@ public class EventResourceTest {
     @Test
     public void listevents() {
         when(ec.listAll()).thenReturn(null);
-        EventResource er = new EventResource(ec, null, 
+        EventResource er = new EventResource(ec, null,
             injector.getInstance(EventAdapter.class));
         assertNull(er.listEvents());
 
@@ -92,12 +92,12 @@ public class EventResourceTest {
         when(ec.listAll()).thenReturn(events);
         assertEquals(events, er.listEvents());
     }
-    
+
     protected Event getEvent() {
         Event e = new Event();
         e.setTarget(Event.Target.CONSUMER);
         e.setType(Event.Type.CREATED);
         e.setPrincipal(new PrincipalData());
-        return e; 
+        return e;
     }
 }

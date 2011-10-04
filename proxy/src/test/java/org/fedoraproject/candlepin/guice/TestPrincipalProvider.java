@@ -45,7 +45,7 @@ public class TestPrincipalProvider extends PrincipalProvider {
         TestPrincipalProviderSetter principalSingleton = TestPrincipalProviderSetter.get();
         Principal principal = principalSingleton.getPrincipal();
         if (principal == null) {
-            
+
             Owner owner = ownerCurator.lookupByKey(OWNER_NAME);
 
             if (owner == null) {
@@ -57,7 +57,7 @@ public class TestPrincipalProvider extends PrincipalProvider {
             permissions.add(new OwnerPermission(owner, Access.ALL));
 
             principal = new UserPrincipal("Default User", permissions, false);
-        }   
+        }
         return principal;
     }
 

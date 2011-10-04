@@ -72,7 +72,7 @@ public class MigrateOwnerJobTest {
     private PoolCurator poolCurator;
     private EntitlementCurator entCurator;
     private EventSink sink;
-    
+
     @Before
     public void init() {
         config = new ConfigForTesting();
@@ -85,7 +85,7 @@ public class MigrateOwnerJobTest {
         moj = new MigrateOwnerJob(conn, config, ownerCurator, poolCurator,
             entCurator, consumerCurator, sink);
     }
-    
+
     @Test
     public void testMigrateOwner() {
         JobDetail jd = MigrateOwnerJob.migrateOwner("admin",
@@ -97,23 +97,23 @@ public class MigrateOwnerJobTest {
             jd.getJobDataMap().get("uri"));
         assertEquals(false, jd.getJobDataMap().get("delete"));
     }
-    
+
     @Test(expected = Exception.class)
     public void nullOwner() {
         MigrateOwnerJob.migrateOwner(null, "http://foo.example.com/candlepin",
             false);
     }
-    
+
     @Test(expected = BadRequestException.class)
     public void nullUrl() {
         MigrateOwnerJob.migrateOwner("admin", null, false);
     }
-    
+
     @Test(expected = BadRequestException.class)
     public void invalidUrlFormat() {
         MigrateOwnerJob.migrateOwner("admin", "", false);
     }
-    
+
     // used by execute tests
     private JobExecutionContext buildContext(JobDataMap map) {
         Scheduler s = mock(Scheduler.class);
@@ -124,7 +124,7 @@ public class MigrateOwnerJobTest {
         when(bundle.getJobDetail()).thenReturn(detail);
         when(bundle.getTrigger()).thenReturn(trig);
         when(trig.getJobDataMap()).thenReturn(new JobDataMap());
-        
+
         return new JobExecutionContext(s, bundle, null);
     }
 
@@ -137,12 +137,12 @@ public class MigrateOwnerJobTest {
             any(String.class))).thenReturn(oclient);
         when(conn.connect(eq(ConsumerClient.class), any(Credentials.class),
             any(String.class))).thenReturn(conclient);
-        
+
         ClientResponse<Owner> resp = mock(ClientResponse.class);
-        
+
         List<Pool> pools = new ArrayList<Pool>();
         pools.add(mock(Pool.class));
-        
+
         List<Consumer> consumers = new ArrayList<Consumer>();
         Consumer consumer = mock(Consumer.class);
         when(consumer.getUuid()).thenReturn("357ec012");
@@ -152,9 +152,9 @@ public class MigrateOwnerJobTest {
         Entitlement ent = mock(Entitlement.class);
         when(ent.getId()).thenReturn("ff8080812e9");
         ents.add(ent);
- 
+
         ClientResponse<List<Pool>> prsp = mock(ClientResponse.class);
-        ClientResponse<List<Consumer>> crsp = mock(ClientResponse.class); 
+        ClientResponse<List<Consumer>> crsp = mock(ClientResponse.class);
         ClientResponse<List<Entitlement>> ersp = mock(ClientResponse.class);
         Response drsp = mock(Response.class);
 
@@ -170,7 +170,7 @@ public class MigrateOwnerJobTest {
         when(crsp.getStatus()).thenReturn(200);
         when(ersp.getStatus()).thenReturn(200);
         when(drsp.getStatus()).thenReturn(204); // typical response from delete
-        
+
         when(prsp.getEntity()).thenReturn(pools);
         when(crsp.getEntity()).thenReturn(consumers);
         when(ersp.getEntity()).thenReturn(ents).thenReturn(ents);
@@ -183,7 +183,7 @@ public class MigrateOwnerJobTest {
         when(ownerCurator.lookupByKey(eq("admin"))).thenReturn(owner);
         when(consumerCurator.listByOwner(any(Owner.class))).thenReturn(consumers);
         when(entCurator.find(eq("ff8080812e9"))).thenReturn(ent);
-        
+
         // test it :)
         moj.execute(buildContext(map));
 
@@ -198,7 +198,7 @@ public class MigrateOwnerJobTest {
         verify(oclient, atLeastOnce()).deleteOwner(eq("admin"), eq(false));
         verify(sink, atLeastOnce()).emitOwnerMigrated(any(Owner.class));
     }
-    
+
     @Test(expected = Exception.class)
     public void executeInvalidKey() throws JobExecutionException {
         JobDataMap map = new JobDataMap();
@@ -207,7 +207,7 @@ public class MigrateOwnerJobTest {
 
         moj.execute(buildContext(map));
     }
-    
+
     @Test(expected = BadRequestException.class)
     public void executeBadValues() throws JobExecutionException {
         JobDataMap map = new JobDataMap();
@@ -216,7 +216,7 @@ public class MigrateOwnerJobTest {
 
         moj.execute(buildContext(map));
     }
-    
+
     @Test(expected = NotFoundException.class)
     @SuppressWarnings("unchecked")
     public void executeNonExistentOwner() throws JobExecutionException {
@@ -233,7 +233,7 @@ public class MigrateOwnerJobTest {
 
         moj.execute(buildContext(map));
     }
-    
+
     private static class ConfigForTesting extends Config {
         public ConfigForTesting() {
             super(new HashMap<String, String>() {

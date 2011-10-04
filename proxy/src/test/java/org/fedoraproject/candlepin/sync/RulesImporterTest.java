@@ -34,29 +34,29 @@ import org.mockito.runners.MockitoJUnitRunner;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class RulesImporterTest {
-    
+
     @Mock private RulesCurator curator;
     private RulesImporter importer;
     private String RULE = "good bye, cruel world!";
-    
+
     @Before
     public void setUp() {
         importer = new RulesImporter(curator);
     }
-    
+
     @Test
     public void importRules() throws IOException {
         importer.importObject(new StringReader(RULE));
         verify(curator).update(any(Rules.class)); // TODO: can't get custom matcher to work?
     }
-    
+
     static class RulesMatcher extends ArgumentMatcher<Rules> {
         private String rule;
 
         public RulesMatcher(String rule) {
             this.rule = rule;
         }
-        
+
         public boolean matches(Object rules) {
             return ((Rules) rules).getRules().equals(rule);
         }

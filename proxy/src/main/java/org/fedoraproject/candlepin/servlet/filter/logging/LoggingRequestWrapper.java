@@ -33,7 +33,7 @@ import org.fedoraproject.candlepin.util.Util;
 public class LoggingRequestWrapper extends HttpServletRequestWrapper implements BodyLogger {
 
     private final byte [] body;
-    
+
     public LoggingRequestWrapper(HttpServletRequest request) throws IOException {
         super(request);
         InputStream inputStream = request.getInputStream();

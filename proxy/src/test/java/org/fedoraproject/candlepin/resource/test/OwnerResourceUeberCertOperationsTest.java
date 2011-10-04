@@ -40,14 +40,14 @@ import org.junit.Test;
  * OwnerResourceUeberCertOperationsTest
  */
 public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
-    
+
     /**
-     * 
+     *
      */
     private static final String UEBER_PRODUCT = "_ueber_product";
 
     private static final String OWNER_NAME = "Jar_Jar_Binks";
-    
+
     private Owner owner;
     private OwnerResource or;
 
@@ -56,80 +56,80 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
     @Before
     public void setUp() {
         owner = ownerCurator.create(new Owner(OWNER_NAME));
-        
+
         Role ownerAdminRole = createAdminRole(owner);
         roleCurator.create(ownerAdminRole);
-        
-        principal = new UserPrincipal("testing user", 
+
+        principal = new UserPrincipal("testing user",
             new ArrayList<Permission>(ownerAdminRole.getPermissions()), false);
         setupPrincipal(principal);
-        
+
         ConsumerType systemType = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         consumerTypeCurator.create(systemType);
 
         or = new OwnerResource(ownerCurator, poolCurator,
             null, null, consumerCurator, null, i18n, null, null, null,
             null, null, poolManager, null, null, null, subAdapter,
-            null, consumerTypeCurator, productAdapter, contentCurator, 
-            entCertCurator, entitlementCurator, uniqueIdGenerator);        
+            null, consumerTypeCurator, productAdapter, contentCurator,
+            entCertCurator, entitlementCurator, uniqueIdGenerator);
     }
 
     @Test
     public void testUeberProductIsCreated() throws Exception {
-        or.createUeberCertificate(principal, owner.getKey());        
+        or.createUeberCertificate(principal, owner.getKey());
         assertNotNull(productCurator.lookupByName(owner.getKey() + UEBER_PRODUCT));
     }
-    
+
     @Test
     public void testUeberSubscriptionIsCreated() throws Exception {
-        or.createUeberCertificate(principal, owner.getKey());        
+        or.createUeberCertificate(principal, owner.getKey());
         List<Subscription> ueberSubscription = subAdapter.getSubscriptions(owner);
-        
+
         assertTrue(ueberSubscription.size() == 1);
         assertTrue(ueberSubscription.get(0).getProduct() ==
             productCurator.lookupByName(owner.getKey() + UEBER_PRODUCT));
     }
-    
+
     @Test
     public void testUeberConsumerIsCreated() throws Exception {
-        or.createUeberCertificate(principal, owner.getKey());        
-        assertNotNull(consumerCurator.findByName("ueber_cert_consumer"));        
+        or.createUeberCertificate(principal, owner.getKey());
+        assertNotNull(consumerCurator.findByName("ueber_cert_consumer"));
     }
-    
+
     @Test
     public void testUeberEntitlementIsGenerated() throws Exception {
         or.createUeberCertificate(principal, owner.getKey());
         Consumer c = consumerCurator.findByName("ueber_cert_consumer");
-        
+
         assertTrue(poolCurator.listByConsumer(c).size() == 1);
     }
-    
+
     @Test
     public void testUeberCertIsRegeneratedOnNextInvocation() throws Exception {
-        EntitlementCertificate firstCert 
+        EntitlementCertificate firstCert
             = or.createUeberCertificate(principal, owner.getKey());
         Product firstProduct = productCurator.lookupByName(owner.getKey() + UEBER_PRODUCT);
-        
-        EntitlementCertificate secondCert 
+
+        EntitlementCertificate secondCert
             = or.createUeberCertificate(principal, owner.getKey());
         Product secondProduct = productCurator.lookupByName(owner.getKey() + UEBER_PRODUCT);
 
         //make sure we didn't regenerate the whole thing
         assertTrue(firstProduct.getId() == secondProduct.getId());
         // only the ueber cert
-        assertFalse(firstCert.getId() == secondCert.getId()); 
+        assertFalse(firstCert.getId() == secondCert.getId());
     }
-    
+
     @Test(expected = NotFoundException.class)
     public void certificateGenerationRaisesExceptionIfOwnerNotFound() throws Exception {
-        or.createUeberCertificate(principal, "non-existant");        
+        or.createUeberCertificate(principal, "non-existant");
     }
-    
+
     @Test(expected = NotFoundException.class)
     public void certificateRetrievalRaisesExceptionIfOwnerNotFound() throws Exception {
         or.getUeberCertificate(principal, "non-existant");
     }
-    
+
     @Test(expected = NotFoundException.class)
     public void certificateRetrievalRaisesExceptionIfNoCertificateWasGenerated()
         throws Exception {

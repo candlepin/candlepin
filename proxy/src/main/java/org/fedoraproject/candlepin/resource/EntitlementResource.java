@@ -53,14 +53,14 @@ public class EntitlementResource {
     private final EntitlementCurator entitlementCurator;
     private I18n i18n;
     private ProductServiceAdapter prodAdapter;
-    
+
     @Inject
     public EntitlementResource(ProductServiceAdapter prodAdapter,
             EntitlementCurator entitlementCurator,
             ConsumerCurator consumerCurator,
             PoolManager poolManager,
             I18n i18n) {
-        
+
         this.entitlementCurator = entitlementCurator;
         this.consumerCurator = consumerCurator;
         this.i18n = i18n;
@@ -83,23 +83,23 @@ public class EntitlementResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("consumer/{consumer_uuid}/product/{product_id}")
-    public Entitlement hasEntitlement(@PathParam("consumer_uuid") String consumerUuid, 
+    public Entitlement hasEntitlement(@PathParam("consumer_uuid") String consumerUuid,
             @PathParam("product_id") String productId) {
-        
+
         Consumer consumer = consumerCurator.findByUuid(consumerUuid);
         verifyExistence(consumer, consumerUuid);
-        
+
         for (Entitlement e : consumer.getEntitlements()) {
             if (e.getProductId().equals(productId)) {
                 return e;
             }
         }
-        
+
         throw new NotFoundException(
             i18n.tr("Consumer: {0} has no entitlement for product {1}",
                 consumerUuid, productId));
     }
-    
+
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<Entitlement> listAllForConsumer(
@@ -153,7 +153,7 @@ public class EntitlementResource {
         throw new NotFoundException(
             i18n.tr("Entitlement with ID ''{0}'' could not be found", dbid));
     }
-    
+
     @PUT
     @Path("product/{product_id}")
     public JobDetail regenerateEntitlementCertificatesForProduct(
@@ -166,5 +166,5 @@ public class EntitlementResource {
         detail.setJobDataMap(map);
         return detail;
     }
-    
+
 }

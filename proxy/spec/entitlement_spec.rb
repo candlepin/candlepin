@@ -4,13 +4,13 @@ describe 'Entitlements' do
 
   include CandlepinMethods
   include CandlepinScenarios
-  
+
   before(:each) do
     @owner = create_owner random_string 'test_owner'
     @monitoring = create_product(nil, random_string('monitoring'))
     @virt = create_product(nil, random_string('virtualization_host'),
       {:attributes => {"multi-entitlement" => "yes"}})
-    @super_awesome = create_product(nil, random_string('super_awesome'), 
+    @super_awesome = create_product(nil, random_string('super_awesome'),
                                     :attributes => { 'cpu.cpu_socket(s)' => 4 })
 
     #entitle owner for the virt and monitoring products.
@@ -20,10 +20,10 @@ describe 'Entitlements' do
 
     @cp.refresh_pools(@owner.key)
 
-    #create consumer 
+    #create consumer
     @user = user_client(@owner, random_string('billy'))
     @system = consumer_client(@user, 'system6')
-  end 
+  end
 
   it 'should bypasses rules for "candlepin" consumers' do
     box = consumer_client(@user, 'random_box', :candlepin, nil, 'cpu.cpu_socket(s)' => 8)
@@ -31,7 +31,7 @@ describe 'Entitlements' do
     box.consume_product(@super_awesome.id)
     box.list_entitlements.should have(1).things
   end
-  
+
   it 'should throw an error when filtering by a non-existant product ID' do
     lambda do
       @system.list_entitlements(:product_id => 'non_existant')
@@ -114,6 +114,6 @@ describe 'Entitlements' do
     consumer ||= @system
     consumer.list_pools(:product => product.id, :consumer => consumer.uuid).first
   end
-  
+
 end
 

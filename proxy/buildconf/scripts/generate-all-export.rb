@@ -32,7 +32,7 @@ consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCe
 pools = cp.list_pools(:owner => owner['id'])
 for p in pools
   puts "consuming pool: " + p['productName']
-  consumer_cp.consume_pool(p['id'], {:quantity => p['quantity']}) 
+  consumer_cp.consume_pool(p['id'], {:quantity => p['quantity']})
 end
 
 # Make a temporary directory where we can safely extract our archive:

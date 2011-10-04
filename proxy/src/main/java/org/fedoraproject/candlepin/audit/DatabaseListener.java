@@ -37,7 +37,7 @@ public class DatabaseListener implements EventListener {
 
     @Override
     public void onEvent(Event event) {
-        // We're outside of a web request here, need to create this event and satisfy the 
+        // We're outside of a web request here, need to create this event and satisfy the
         // access control interceptor.
         Principal systemPrincipal = new SystemPrincipal();
         ResteasyProviderFactory.pushContext(Principal.class, systemPrincipal);

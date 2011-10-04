@@ -45,7 +45,7 @@ describe 'Virt Only Pools' do
   def new_product(virt_only)
     product = create_product(nil, nil, {
       :attributes => {
-        :virt_only => virt_only 
+        :virt_only => virt_only
       }
     })
 

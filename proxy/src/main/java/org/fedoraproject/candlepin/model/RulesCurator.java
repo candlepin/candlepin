@@ -39,7 +39,7 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
 
     /**
      * updates the rules to the given values.
-     * 
+     *
      * @param updatedRules latest rules
      * @return a copy of the latest rules
      */
@@ -70,7 +70,7 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
     /**
      * Get the last updated timestamp for the rules (either from disk or db),
      * without reading in the full rules file.
-     * 
+     *
      * @return the last updated timestamp for the rules
      */
     public Date getUpdated() {

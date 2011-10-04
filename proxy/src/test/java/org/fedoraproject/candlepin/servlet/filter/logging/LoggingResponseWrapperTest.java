@@ -36,29 +36,29 @@ import javax.servlet.http.HttpServletResponse;
 public class LoggingResponseWrapperTest {
 
     @Mock private HttpServletResponse resp;
-    
+
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
     }
-    
+
     @Test
     public void testLoggin() throws IOException {
-        
+
         final StringWriter sw = new StringWriter();
-        
+
         doReturn(new ServletOutputStream() {
             public void write(int b) throws IOException {
                 sw.write(b);
             }
         }).when(resp).getOutputStream();
-            
+
         LoggingResponseWrapper lrw = new LoggingResponseWrapper(resp);
         assertNotNull(lrw);
 
         assertNotNull(lrw.getOutputStream());
         lrw.getOutputStream().write("this is my body".getBytes());
-        
+
         assertEquals("this is my body", lrw.getResponseBody());
         assertEquals("this is my body", sw.getBuffer().toString());
 

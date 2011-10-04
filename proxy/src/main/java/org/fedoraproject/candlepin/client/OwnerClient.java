@@ -62,9 +62,9 @@ public interface OwnerClient {
     @Produces(MediaType.APPLICATION_JSON)
     ClientResponse<List<Consumer>> replicateConsumers(
         @PathParam("owner_key") String ownerKey);
-    
+
     @DELETE
-    @Path("/{owner_key}")    
+    @Path("/{owner_key}")
     @Produces(MediaType.APPLICATION_JSON)
     Response deleteOwner(@PathParam("owner_key") String ownerKey,
         @QueryParam("revoke") @DefaultValue("true") boolean revoke);

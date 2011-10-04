@@ -27,7 +27,7 @@ public class ValidationWarning {
     public ValidationWarning(String resourceKey) {
         this.resourceKey = resourceKey;
     }
-   
+
     /**
      * Return the resource key
      * @return the resource key
@@ -35,7 +35,7 @@ public class ValidationWarning {
     public String getResourceKey() {
         return resourceKey;
     }
-  
+
     /**
      * String representation.
      * @return String representation.

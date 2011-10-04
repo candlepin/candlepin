@@ -15,14 +15,14 @@
 package org.fedoraproject.candlepin.auth;
 
 /**
- * PrincipalData is a DTO for principal information until we move to 
+ * PrincipalData is a DTO for principal information until we move to
  * Jackson 1.7 where were can store real JSON in strings.
  */
 public class PrincipalData {
 
     private String type;
     private String name;
-    
+
     /**
      * @param ownerId
      * @param roles
@@ -33,10 +33,10 @@ public class PrincipalData {
         this.type = type;
         this.name = name;
     }
-    
+
     public PrincipalData() {
     }
-    
+
     /**
      * @return the type
      */

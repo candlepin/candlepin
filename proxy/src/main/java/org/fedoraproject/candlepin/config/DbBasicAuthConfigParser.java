@@ -22,7 +22,7 @@ package org.fedoraproject.candlepin.config;
 class DbBasicAuthConfigParser extends ConfigurationParser {
     /** Basic auth configuration prefix */
     public static final String BASIC_AUTH_CONFIG_PREFIX = "basic.auth.config";
-    
+
     /** database connection url */
     public static final String DB_URL_CONFIG = "database.connection.url";
     /** Comment for <code>DB_USERNAME_CONFIG</code> */
@@ -35,8 +35,8 @@ class DbBasicAuthConfigParser extends ConfigurationParser {
     public static final String USER_QUERY_CONFIG = "database.query";
     /** Comment for <code>PASSWORD_COLUMN_CONFIG</code> */
     public static final String PASSWORD_COLUMN_CONFIG = "database.password.column";
-    
+
     public String getPrefix() {
         return BASIC_AUTH_CONFIG_PREFIX;
-    }    
+    }
 }

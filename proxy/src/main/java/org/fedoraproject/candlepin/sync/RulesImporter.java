@@ -29,7 +29,7 @@ import com.google.inject.Inject;
  */
 public class RulesImporter {
     private static Logger log = Logger.getLogger(RulesImporter.class);
-    
+
     private RulesCurator curator;
 
     @Inject
@@ -40,7 +40,7 @@ public class RulesImporter {
     public Rules importObject(Reader reader) throws IOException {
         log.debug("Importing rules file");
         new BufferedReader(reader);
-        
+
         return curator.update(new Rules(StringFromReader.asString(reader)));
     }
 }

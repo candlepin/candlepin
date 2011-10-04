@@ -27,14 +27,14 @@ import com.google.inject.Inject;
  * ExpiryDateFunction
  */
 public class ExpiryDateFunction implements Function<Date, Date> {
-    
+
     private int yrAddendum;
 
     //for now, its just years
     public ExpiryDateFunction(int years) {
         this.yrAddendum = years;
     }
-    
+
     @Inject
     public ExpiryDateFunction(Config config) {
         this(config.getInt(ConfigProperties.IDENTITY_CERT_YEAR_ADDENDUM));

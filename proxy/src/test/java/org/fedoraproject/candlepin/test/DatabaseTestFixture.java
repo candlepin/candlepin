@@ -276,7 +276,7 @@ public class DatabaseTestFixture {
         toReturn.setSerial(certSerial);
         return toReturn;
     }
-    
+
     protected Principal setupPrincipal(Owner owner, Access role) {
         return setupPrincipal("someuser", owner, role);
     }
@@ -293,7 +293,7 @@ public class DatabaseTestFixture {
     protected Principal setupAdminPrincipal(String username) {
         UserPrincipal principal = new UserPrincipal(username, null, true);
         setupPrincipal(principal);
-        
+
         return principal;
     }
 

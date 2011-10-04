@@ -60,7 +60,7 @@ public class TestUtil {
 
     /**
      * Create a consumer with a new owner
-     * 
+     *
      * @return Consumer
      */
     public static Consumer createConsumer() {
@@ -70,7 +70,7 @@ public class TestUtil {
 
     /**
      * Create a consumer with a new owner
-     * 
+     *
      * @return Consumer
      */
     public static Consumer createConsumer(Owner owner) {

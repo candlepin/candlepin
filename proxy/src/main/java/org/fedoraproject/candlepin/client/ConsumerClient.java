@@ -33,7 +33,7 @@ import javax.ws.rs.core.MediaType;
  */
 @Path("/consumers")
 public interface ConsumerClient {
-    
+
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{consumer_uuid}/entitlements")

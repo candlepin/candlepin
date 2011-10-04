@@ -52,5 +52,5 @@ public class AtomFeedResource {
         Feed feed = this.adapter.toFeed(events, "/atom");
         feed.setTitle("Event Feed");
         return feed;
-    }    
+    }
 }

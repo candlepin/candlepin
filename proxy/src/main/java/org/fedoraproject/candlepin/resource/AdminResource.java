@@ -40,7 +40,7 @@ import org.jboss.resteasy.spi.ResteasyProviderFactory;
 public class AdminResource {
 
     private static Logger log = Logger.getLogger(AdminResource.class);
-    
+
     private ConsumerTypeCurator consumerTypeCurator;
     private UserServiceAdapter userService;
 
@@ -53,11 +53,11 @@ public class AdminResource {
 
     /**
      * Initialize the Candlepin database.
-     * 
+     *
      * Currently this just creates static'ish database entries for things like
      * consumer types. This call needs to happen once after a database is created.
      * Repeated calls are not required, but will be harmless.
-     * 
+     *
      * @return Description if db was or already is initialized.
      */
     @GET
@@ -80,7 +80,7 @@ public class AdminResource {
         ResteasyProviderFactory.pushContext(Principal.class, new SystemPrincipal());
 
         for (ConsumerTypeEnum type : ConsumerTypeEnum.values()) {
-            ConsumerType created = new ConsumerType(type); 
+            ConsumerType created = new ConsumerType(type);
             consumerTypeCurator.create(created);
             log.debug("Created: " + created);
         }
@@ -89,7 +89,7 @@ public class AdminResource {
         try {
             User defaultAdmin = new User("admin", "admin", true);
             userService.createUser(defaultAdmin);
-        } 
+        }
         catch (UnsupportedOperationException e) {
             log.info("Admin creation is not supported!");
         }

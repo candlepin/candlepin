@@ -15,12 +15,12 @@
 package org.fedoraproject.candlepin.auth;
 
 /**
- * A simple principal implementation for OAuth connections with a user header. 
+ * A simple principal implementation for OAuth connections with a user header.
  * In this scenario we have an authenticated principal with a username, and we
  * can assume the calling application has validated the request, so whatever
- * it is we can allow full access. 
- * 
- * Most commonly used for Katello deployments, which manage their own 
+ * it is we can allow full access.
+ *
+ * Most commonly used for Katello deployments, which manage their own
  * users/roles/perms.
  */
 public class TrustedUserPrincipal extends Principal {

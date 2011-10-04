@@ -25,8 +25,8 @@ public class JPAInitializer {
      * Initializes the JPA service.
      * @param service to be initialized.
      */
-    @Inject 
+    @Inject
     protected JPAInitializer(PersistenceService service) {
-        service.start(); 
+        service.start();
     }
 }

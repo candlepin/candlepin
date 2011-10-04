@@ -277,7 +277,7 @@ public class Pool extends AbstractHibernateObject implements Linkable, Owned {
     public void setAccountNumber(String accountNumber) {
         this.accountNumber = accountNumber;
     }
-    
+
     public boolean hasAttribute(String key) {
         return findAttribute(this.attributes, key) != null;
     }
@@ -533,7 +533,7 @@ public class Pool extends AbstractHibernateObject implements Linkable, Owned {
     public ProductPoolAttribute getProductAttribute(String name) {
         return findAttribute(this.productAttributes, name);
     }
-    
+
     private <A extends AbstractPoolAttribute> A findAttribute(Set<A> attributes,
         String key) {
         if (attributes == null) {

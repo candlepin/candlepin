@@ -148,7 +148,7 @@ public class EntitlerJobTest {
         out.writeObject(obj);
         out.close();
     }
-    
+
     @Test(expected = JobExecutionException.class)
     public void handleException() throws JobExecutionException {
         String pool = "pool10";

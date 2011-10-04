@@ -21,13 +21,13 @@ import org.fedoraproject.candlepin.model.Pool;
  * on a pool from the javascript back up to the application.
  */
 public class PoolUpdate {
-    
+
     private Pool pool;
     private Boolean datesChanged;
     private Boolean quantityChanged;
     private Boolean productsChanged;
 
-    public PoolUpdate(Pool pool, Boolean datesChanged, Boolean quantityChanged, 
+    public PoolUpdate(Pool pool, Boolean datesChanged, Boolean quantityChanged,
         Boolean productsChanged) {
         this.pool = pool;
         this.datesChanged = datesChanged;

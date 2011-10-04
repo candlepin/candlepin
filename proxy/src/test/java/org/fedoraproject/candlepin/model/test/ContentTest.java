@@ -32,7 +32,7 @@ public class ContentTest extends DatabaseTestFixture {
     public void testContent() {
         String  contentHash = String.valueOf(
             Math.abs(Long.valueOf("test-content".hashCode())));
-        Content content = new Content("test-content", contentHash, 
+        Content content = new Content("test-content", contentHash,
                             "test-content-label", "yum", "test-vendor",
                              "test-content-url", "test-gpg-url");
         HashSet<String> modifiedProductIds = new HashSet<String>();
@@ -42,9 +42,9 @@ public class ContentTest extends DatabaseTestFixture {
         content.setModifiedProductIds(modifiedProductIds);
         Long metadataExpire = new Long(60 * 60 * 24);
         content.setMetadataExpire(metadataExpire);
-        
+
         contentCurator.create(content);
-        
+
         Content lookedUp = contentCurator.find(content.getId());
         assertEquals(content.getContentUrl(), lookedUp.getContentUrl());
         assertThat(lookedUp.getModifiedProductIds(), hasItem("ProductB"));

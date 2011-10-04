@@ -64,7 +64,7 @@ describe 'Virt Limit Products' do
   end
 
   it 'should create unlimited virtual pool when virt_limit is unlimited and muliplier is set' do
-    unlimited = create_product(nil, nil, 
+    unlimited = create_product(nil, nil,
                                :attributes => {:virt_limit => 'unlimited'},
                                :multiplier => 10)
     sub = @cp.create_subscription(@owner.key, unlimited.id, 10)

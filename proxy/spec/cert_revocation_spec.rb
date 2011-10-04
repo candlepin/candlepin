@@ -4,7 +4,7 @@ describe 'Certificate Revocation List' do
 
   include CandlepinMethods
   include CandlepinScenarios
-  
+
   before do
     @owner = create_owner random_string('test_owner')
     @virt_prod = create_product random_string('virt')
@@ -13,33 +13,33 @@ describe 'Certificate Revocation List' do
     #entitle owner for the virt and monitoring products.
     @cp.create_subscription(@owner.key, @monitoring_prod.id, 6)
     @cp.create_subscription(@owner.key, @virt_prod.id, 3)
-    
+
     @cp.refresh_pools(@owner.key)
 
-    #create consumer 
+    #create consumer
     @user = create_user(@owner, 'billy', 'password')
     user = Candlepin.new('billy', 'password')
     @system = consumer_client(user, 'system6')
-  end 
+  end
 
   it 'contains the serial of entitlement(s) revoked' do
       #consume an entitlement, revoke it and check that CRL contains the new serial.
       @system.consume_product(@monitoring_prod.id)
       serial = filter_serial(@monitoring_prod)
-      
+
       @system.revoke_all_entitlements()
       revoked_serials.should include(serial)
   end
-  
+
   it 'does not contain the serial of a valid entitlement(s)' do
       @system.consume_product(@virt_prod.id)
       revoked_serials.should be_empty
-  end 
-  
+  end
+
   it 'contains the serials of revoked entitlement(s) and not the unrevoked ones' do
       virt_entitlement = @system.consume_product(@virt_prod.id)
       @system.consume_product(@monitoring_prod.id)
-      serial = filter_serial(@virt_prod)      
+      serial = filter_serial(@virt_prod)
       @system.unbind_entitlement(virt_entitlement[0].id)
       revoked_serials.should include(serial)
   end
@@ -64,7 +64,7 @@ describe 'Certificate Revocation List' do
 
     revoked_serials.should_not include(serials)
   end
-  
+
   def filter_serial(product, consumer=@system)
     entitlement = consumer.list_entitlements.find do |ent|
       @cp.get_pool(ent.pool.id).productId == product.id
@@ -72,7 +72,7 @@ describe 'Certificate Revocation List' do
 
     return entitlement.certificates[0].serial.id unless entitlement.certificates.empty?
   end
-  
+
   def revoked_serials
     return @cp.get_crl.revoked.map {|entry| entry.serial.to_i }
   end

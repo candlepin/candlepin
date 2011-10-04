@@ -45,7 +45,7 @@ public class SubscriptionsCertificate extends AbstractCertificate {
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
     @Column(length = 32)
     private String id;
-    
+
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "serial_id")
     private CertificateSerial serial;
@@ -57,7 +57,7 @@ public class SubscriptionsCertificate extends AbstractCertificate {
     public void setSerial(CertificateSerial serialNumber) {
         this.serial = serialNumber;
     }
-    
+
     /**
      * @return the id
      */

@@ -29,21 +29,21 @@ public class Status {
     private Boolean result;
     private String version;
     private String release;
-   
+
     /**
      * default ctor
      */
     public Status() {
-      
+
     }
-    
+
     public Status(Boolean result, String version, String release) {
         this.result = result;
         this.version = version;
         this.release = release;
-        
+
     }
-    
+
     public Boolean getResult() {
         return result;
     }

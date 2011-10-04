@@ -71,10 +71,10 @@ public class PinsetterAsyncInterceptorTest {
 
         JobDetail detail = new JobDetail();
         when(response.getEntity()).thenReturn(detail);
-        
+
         this.interceptor.postProcess(response);
 
-        Assert.assertEquals(principal, 
+        Assert.assertEquals(principal,
                 detail.getJobDataMap().get(PinsetterJobListener.PRINCIPAL_KEY));
     }
 

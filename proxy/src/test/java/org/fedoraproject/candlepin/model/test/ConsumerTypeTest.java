@@ -40,24 +40,24 @@ public class ConsumerTypeTest extends DatabaseTestFixture {
                 "select ct from ConsumerType as ct").getResultList();
         assertEquals(1, results.size());
     }
-    
+
     @Test
     public void testIsType() {
         ConsumerType ct = new ConsumerType("system");
-        
+
         assertTrue(ct.isType(ConsumerType.ConsumerTypeEnum.SYSTEM));
     }
-    
+
     @Test
     public void testEquals() {
         ConsumerType ct = new ConsumerType("system");
         ConsumerType ct1 = new ConsumerType("system");
         ConsumerType ct2 = new ConsumerType("fake");
-        
+
         assertTrue(ct.equals(ct1));
         assertFalse(ct.equals(ct2));
         assertFalse(ct.equals(1));
-        
+
         ct.setId("10");
         ct1.setId("11");
         assertTrue(ct.equals(ct1));

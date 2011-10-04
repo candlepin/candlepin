@@ -78,7 +78,7 @@ public class PoolResource {
 
     /**
      * Returns the list of available entitlement pools.
-     * 
+     *
      * @deprecated Use the method on /owners
      * @param ownerId optional parameter to limit the search by owner
      * @param productId optional parameter to limit the search by product
@@ -129,10 +129,10 @@ public class PoolResource {
                 throw new NotFoundException(i18n.tr("consumer: {0} not found",
                     consumerUuid));
             }
-            
+
             // Now that we have a consumer, check that this principal can access it:
             if (!principal.canAccess(c, Access.READ_ONLY)) {
-                throw new ForbiddenException(i18n.tr("User {0} cannot access consumer {1}", 
+                throw new ForbiddenException(i18n.tr("User {0} cannot access consumer {1}",
                     principal.getPrincipalName(), consumerUuid));
             }
 
@@ -147,11 +147,11 @@ public class PoolResource {
             }
             // Now that we have an owner, check that this principal can access it:
             if (!principal.canAccess(o, Access.READ_POOLS)) {
-                throw new ForbiddenException(i18n.tr("User {0} cannot access owner {1}", 
+                throw new ForbiddenException(i18n.tr("User {0} cannot access owner {1}",
                     principal.getPrincipalName(), o.getKey()));
             }
         }
-        
+
         // If we have no consumer, and no owner specified, kick 'em out unless they
         // have full system access (this is the same as requesting all pools in
         // the system).
@@ -159,14 +159,14 @@ public class PoolResource {
             throw new ForbiddenException(i18n.tr("User {0} cannot access all pools.",
                     principal.getPrincipalName()));
         }
-        
+
         return poolCurator.listAvailableEntitlementPools(c, o, productId,
             activeOnDate, true, listAll);
     }
 
     /**
      * Return the Entitlement Pool for the given id
-     * 
+     *
      * @param id the id of the pool
      * @return the pool identified by the id
      * @httpcode 200 if the request succeeded
@@ -189,7 +189,7 @@ public class PoolResource {
     @GET
     @Path("{pool_id}/statistics")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Statistic> getPoolStats(@PathParam("pool_id") 
+    public List<Statistic> getPoolStats(@PathParam("pool_id")
                             @Verify(Pool.class) String id,
                             @QueryParam("from") String from,
                             @QueryParam("to") String to,
@@ -203,7 +203,7 @@ public class PoolResource {
     @GET
     @Path("{pool_id}/statistics/{vtype}")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Statistic> getPoolStats(@PathParam("pool_id") 
+    public List<Statistic> getPoolStats(@PathParam("pool_id")
                             @Verify(Pool.class) String id,
                             @PathParam("vtype") String valueType,
                             @QueryParam("from") String from,

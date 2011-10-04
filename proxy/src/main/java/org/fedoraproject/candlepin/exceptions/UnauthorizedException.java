@@ -27,11 +27,11 @@ public class UnauthorizedException extends CandlepinException {
     public UnauthorizedException(String message) {
         super(Status.UNAUTHORIZED, message);
     }
-    
+
     public Map<String, String> headers() {
         HashMap<String, String> negHeaders = new HashMap<String, String>();
         negHeaders.put("WWW-Authenticate", "Negotiate");
-        negHeaders.put("WWW-Authenticate", "Basic Realm=candlepin");        
+        negHeaders.put("WWW-Authenticate", "Basic Realm=candlepin");
         return  negHeaders;
-    }    
+    }
 }

@@ -25,13 +25,13 @@ import org.jboss.resteasy.spi.HttpRequest;
  * AuthUtil
  */
 public class AuthUtil {
-    
-    private AuthUtil() {        
+
+    private AuthUtil() {
     }
-    
+
     /**
      * Retrieve a header, or the empty string if it is not there.
-     * 
+     *
      * @return the header or a blank string (no nils)
      */
     public static String getHeader(HttpRequest request, String name) {
@@ -48,7 +48,7 @@ public class AuthUtil {
         }
         return headerValue;
     }
-    
+
     /**
      * Look up an owner. Throw an NotFoundException if not found.
      * @param owner object not retrieved from the DB.
@@ -67,5 +67,5 @@ public class AuthUtil {
         }
 
         return o;
-    }    
+    }
 }

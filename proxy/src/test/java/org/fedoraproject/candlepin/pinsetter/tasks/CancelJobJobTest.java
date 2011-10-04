@@ -46,19 +46,19 @@ public class CancelJobJobTest {
     @Mock private PinsetterKernel pk;
     @Mock private JobExecutionContext ctx;
 
-    
+
     @Before
     public void init() {
         MockitoAnnotations.initMocks(this);
         cancelJobJob = new CancelJobJob(j, pk);
     }
-    
+
     @Test
     public void noCancellationsTest() throws JobExecutionException {
         when(j.findCanceledJobs()).thenReturn(new ArrayList<JobStatus>());
-        cancelJobJob.execute(ctx);        
+        cancelJobJob.execute(ctx);
     }
-    
+
     @Test
     public void cancelTest() throws JobExecutionException, PinsetterException {
         JobDetail jd = new JobDetail("Kayfabe", "Deluxe", Job.class);
