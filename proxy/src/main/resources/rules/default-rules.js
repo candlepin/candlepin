@@ -21,7 +21,7 @@ function export_name_space() {
 }
 
 function compliance_name_space() {
-	return Compliance;
+    return Compliance;
 }
 
 /* Utility functions */
@@ -99,7 +99,7 @@ function recursiveCombination(a, n) {
 function hasNoProductOverlap(combination) {
     var seen_product_ids = [];
     for each (pool_class in combination) {
-    	var pool = pool_class[0];
+        var pool = pool_class[0];
         var products = pool.products;
         for (var i = 0 ; i < products.length ; i++) {
             var product = products[i];
@@ -116,17 +116,17 @@ function hasNoProductOverlap(combination) {
 
 //Check to see if a pool provides any products that are already compliant
 function hasNoInstalledOverlap(pool, compliance) {
-	var products = pool.products;
-	for (var i = 0 ; i < products.length ; i++) {
-		var product = products[i];
-		log.debug("installed overlap: " + product.id);
-		if (product.getAttribute("multi-entitlement") != "yes" &&
-			compliance.getCompliantProducts().containsKey(product.id)) {
-			return false;
-		}
-	}
+    var products = pool.products;
+    for (var i = 0 ; i < products.length ; i++) {
+        var product = products[i];
+        log.debug("installed overlap: " + product.id);
+        if (product.getAttribute("multi-entitlement") != "yes" &&
+            compliance.getCompliantProducts().containsKey(product.id)) {
+            return false;
+        }
+    }
 
-	return true;
+    return true;
 }
 
 function architectureMatches(product, consumer) {
@@ -168,13 +168,13 @@ function architectureMatches(product, consumer) {
 // otherwise, group the pools by stack id, then select the pools we wish to use
 // based on which grouping will come closest to fully stacking.
 //
-// 
+//
 function findStackingPools(pool_class, consumer, compliance) {
     var consumer_sockets = 1;
     if (consumer.hasFact(SOCKET_FACT)) {
         consumer_sockets = consumer.getFact(SOCKET_FACT);
      }
-    
+
     var stackToEntitledSockets = {};
     var stackToPoolMap = {};
     var notStackable = [];
@@ -188,151 +188,151 @@ function findStackingPools(pool_class, consumer, compliance) {
 
     // going to assume one stack per product on the system
     for each (stack_id in compliance.getPartialStacks().keySet().toArray()) {
-    	var covered_sockets = 0;
-    	for each (entitlement in partialStacks.get(stack_id).toArray()) {
-    		covered_sockets += entitlement.getQuantity() * parseInt(entitlement.getPool().getProductAttribute("sockets").getValue());
-    		productIdToStackId[entitlement.getPool().getProductId()] = stack_id;
-    		for each (product in entitlement.getPool().getProvidedProducts().toArray()) {
-    			productIdToStackId[product.getProductId()] = stack_id;
-    		}
-    	}
-    	// we can start entitling from the partial stack
-    	stackToEntitledSockets[stack_id] = covered_sockets;
+        var covered_sockets = 0;
+        for each (entitlement in partialStacks.get(stack_id).toArray()) {
+            covered_sockets += entitlement.getQuantity() * parseInt(entitlement.getPool().getProductAttribute("sockets").getValue());
+            productIdToStackId[entitlement.getPool().getProductId()] = stack_id;
+            for each (product in entitlement.getPool().getProvidedProducts().toArray()) {
+                productIdToStackId[product.getProductId()] = stack_id;
+            }
+        }
+        // we can start entitling from the partial stack
+        stackToEntitledSockets[stack_id] = covered_sockets;
     }
-    
+
     for each (pool in pool_class) {
-    	var quantity = 0;
-    	
-    	// ignore any pools that clash with installed compliant products
-    	if (!hasNoInstalledOverlap(pool, compliance)) {
-    		log.debug("installed overlap found, skipping: " + pool.getId());
-    		continue;
-    	}
-    
-	    if (pool.getProductAttribute("multi-entitlement") && pool.getProductAttribute("stacking_id")) {
-	    	
-	    	// make sure there isn't a conflicting pool already on the system
-	    	var installed_stack_id;
-	    	var seen_stack_id = false;
-	    	var conflicting_stacks = false;
-	    	for each (product in pool.getProducts()) {
-	    		if (productIdToStackId.hasOwnProperty(product.id)) {
-	    			var new_installed_stack_id = productIdToStackId[product.id];
-	    			if (new_installed_stack_id != installed_stack_id) {
-	    				// the first id will be different
-	    				if (!seen_stack_id) {
-	    					installed_stack_id = new_installed_stack_id;
-	    					seen_stack_id = true;
-	    				} else {
-	    					conflicting_stacks = true;
-	    				}
-	    			}
-	    		}
-	    	}
-	    	
-	    	// this pool provides 2 or more products that already have entitlements on the system,
-	    	// with multiple stack ids
-	    	if (conflicting_stacks) {
-	    		continue;
-	    	}
-	    	
-	    	var stack_id = pool.getProductAttribute("stacking_id");
-	    	// check if this pool matches the stack id of an existing partial stack
-	    	if (seen_stack_id && installed_stack_id != stack_id) {
-	    		continue;
-	    	}
-	    	
+        var quantity = 0;
 
-	    	if (!stackToPoolMap.hasOwnProperty(stack_id)) {
-	    		stackToPoolMap[stack_id] = new java.util.HashMap();
-	    		
-	    		// we might already have the partial stack from compliance
-	    		if (!stackToEntitledSockets.hasOwnProperty(stack_id)) {
-	    			stackToEntitledSockets[stack_id] = 0;
-	    		}
-	    	}
-	    	
-	    	var product_sockets = 0;
-	        var pool_sockets = parseInt(pool.getProductAttribute("sockets"));
-	        
-	        while (stackToEntitledSockets[stack_id] + product_sockets < consumer_sockets) {
-	            product_sockets += pool_sockets;
-	            quantity++;
-	        }
-	        
-	        // don't take more entitlements than are available!
-	        if (quantity > pool.getMaxMembers() - pool.getCurrentMembers()) {
-	        	quantity = pool.getMaxMembers() - pool.getCurrentMembers();
-	        }
+        // ignore any pools that clash with installed compliant products
+        if (!hasNoInstalledOverlap(pool, compliance)) {
+            log.debug("installed overlap found, skipping: " + pool.getId());
+            continue;
+        }
 
-	        stackToEntitledSockets[stack_id] += quantity * pool_sockets;
-	        
-	        stackToPoolMap[stack_id].put(pool, quantity);
-	        
-	        if (stackToEntitledSockets[stack_id] >= consumer_sockets) {
-	        	// we've just found a stack that will satisfy. no need to keep looping
-	        	break;
-	        }
-	    } else {
-	    	// not stackable, just take one.
-	    	notStackable.push(pool);
-	    }
-	    
-	}
+        if (pool.getProductAttribute("multi-entitlement") && pool.getProductAttribute("stacking_id")) {
+
+            // make sure there isn't a conflicting pool already on the system
+            var installed_stack_id;
+            var seen_stack_id = false;
+            var conflicting_stacks = false;
+            for each (product in pool.getProducts()) {
+                if (productIdToStackId.hasOwnProperty(product.id)) {
+                    var new_installed_stack_id = productIdToStackId[product.id];
+                    if (new_installed_stack_id != installed_stack_id) {
+                        // the first id will be different
+                        if (!seen_stack_id) {
+                            installed_stack_id = new_installed_stack_id;
+                            seen_stack_id = true;
+                        } else {
+                            conflicting_stacks = true;
+                        }
+                    }
+                }
+            }
+
+            // this pool provides 2 or more products that already have entitlements on the system,
+            // with multiple stack ids
+            if (conflicting_stacks) {
+                continue;
+            }
+
+            var stack_id = pool.getProductAttribute("stacking_id");
+            // check if this pool matches the stack id of an existing partial stack
+            if (seen_stack_id && installed_stack_id != stack_id) {
+                continue;
+            }
+
+
+            if (!stackToPoolMap.hasOwnProperty(stack_id)) {
+                stackToPoolMap[stack_id] = new java.util.HashMap();
+
+                // we might already have the partial stack from compliance
+                if (!stackToEntitledSockets.hasOwnProperty(stack_id)) {
+                    stackToEntitledSockets[stack_id] = 0;
+                }
+            }
+
+            var product_sockets = 0;
+            var pool_sockets = parseInt(pool.getProductAttribute("sockets"));
+
+            while (stackToEntitledSockets[stack_id] + product_sockets < consumer_sockets) {
+                product_sockets += pool_sockets;
+                quantity++;
+            }
+
+            // don't take more entitlements than are available!
+            if (quantity > pool.getMaxMembers() - pool.getCurrentMembers()) {
+                quantity = pool.getMaxMembers() - pool.getCurrentMembers();
+            }
+
+            stackToEntitledSockets[stack_id] += quantity * pool_sockets;
+
+            stackToPoolMap[stack_id].put(pool, quantity);
     
-    // We have a not stackable pool.
-	// XXX this might not cover all your sockets!
-    if (notStackable.length > 0) {
-    	poolMap = new java.util.HashMap();
-    	poolMap.put(notStackable[0], 1);
-    	return poolMap;
+            if (stackToEntitledSockets[stack_id] >= consumer_sockets) {
+                // we've just found a stack that will satisfy. no need to keep looping
+                break;
+            }
+        } else {
+            // not stackable, just take one.
+            notStackable.push(pool);
+        }
+    
     }
-    
-    
+
+    // We have a not stackable pool.
+    // XXX this might not cover all your sockets!
+    if (notStackable.length > 0) {
+        poolMap = new java.util.HashMap();
+        poolMap.put(notStackable[0], 1);
+        return poolMap;
+    }
+
+
     // loop over our potential stacks, and just take the first stack that covers all sockets.
     // else take the stack that covers the most sockets.
     var best_sockets = 0;
     var best_stack;
     var found_stack = false;
     for (stack_id in stackToPoolMap) {
-    	found_stack = true;
-    	if (stackToEntitledSockets[stack_id] >= consumer_sockets) {
-    		return stackToPoolMap[stack_id];
-    	}
-    	else if (stackToEntitledSockets[stack_id] > best_sockets) {
-    		best_stack = stack_id;
-    		best_sockets = stackToEntitledSockets[stack_id];
-    	}
+        found_stack = true;
+        if (stackToEntitledSockets[stack_id] >= consumer_sockets) {
+            return stackToPoolMap[stack_id];
+        }
+        else if (stackToEntitledSockets[stack_id] > best_sockets) {
+            best_stack = stack_id;
+            best_sockets = stackToEntitledSockets[stack_id];
+        }
     }
 
     // All possible pools may have overlapped with existing products
     // so return nothing!
     if (!found_stack) {
-    	return new java.util.HashMap();
+        return new java.util.HashMap();
     }
-    
+
     return stackToPoolMap[best_stack];
 }
 
 
 // given 2 pools, select the best one. It is a assumed that the pools offer the
 // same selection of products.
-// returns true if pool1 is a better choice than pool2, else false 
+// returns true if pool1 is a better choice than pool2, else false
 function comparePools(pool1, pool2) {
-	
+
     // Prefer a virt_only pool over a regular pool, else fall through to the next rules.
     // At this point virt_only pools will have already been filtered out by the pre rules
     // for non virt machines.
     if (pool1.getAttribute("virt_only") == "true" && pool2.getAttribute("virt_only") != "true") {
-    	return true;
+        return true;
     }
     else if (pool2.getAttribute("virt_only") == "true" && pool1.getAttribute("virt_only") != "true") {
-    	return false;
+        return false;
     }
 
     // If two pools are equal, select the pool that expires first
     if (pool2.getEndDate().after(pool1.getEndDate())) {
-    	return true;
+        return true;
     }
 
 }
@@ -410,15 +410,15 @@ var Entitlement = {
             pre.addError("rulefailed.consumer.already.has.product");
         }
 
-		if (pre.getQuantity() > 1 && product.getAttribute("multi-entitlement") != "yes") {
-			pre.addError("rulefailed.pool.does.not.support.multi-entitlement");
-		}
+        if (pre.getQuantity() > 1 && product.getAttribute("multi-entitlement") != "yes") {
+            pre.addError("rulefailed.pool.does.not.support.multi-entitlement");
+        }
 
-		// If the product has no required consumer type, assume it is restricted to "system":
-		if (!product.hasAttribute("requires_consumer_type")) {
-			if (!consumer.getType().equals("system")) {
-				pre.addError("rulefailed.consumer.type.mismatch");
-			}
+        // If the product has no required consumer type, assume it is restricted to "system":
+        if (!product.hasAttribute("requires_consumer_type")) {
+            if (!consumer.getType().equals("system")) {
+                pre.addError("rulefailed.consumer.type.mismatch");
+            }
 
         }
 
@@ -440,9 +440,9 @@ var Entitlement = {
         // XXX need to watch out for multientitle products - how so?
 
         // An array of arrays of pools. each array is a grouping of pools that provide the
-    	// same subset of products which are applicable to the requested products.
-    	// further, each array is sorted, from best to worst. (pool fitness is determined
-    	// arbitrarily by rules herein.
+        // same subset of products which are applicable to the requested products.
+        // further, each array is sorted, from best to worst. (pool fitness is determined
+        // arbitrarily by rules herein.
         var pools_by_class = [];
 
         // "pools" is a list of all the owner's pools which are compatible for the system:
@@ -451,13 +451,13 @@ var Entitlement = {
             log.debug("   " + pool.getId());
         }
 
-        // Builds out the pools_by_class by iterating each pool, checking which products it provides (that 
+        // Builds out the pools_by_class by iterating each pool, checking which products it provides (that
         // are relevant to this request), then filtering out other pools which provide the *exact* same products
         // by selecting the preferred pool based on other criteria.
         for (var i = 0 ; i < pools.length ; i++) {
             var pool = pools[i];
-        	log.debug("Checking pool for best unique provides combination: " + 
-        			pool.getId());
+            log.debug("Checking pool for best unique provides combination: " +
+                    pool.getId());
             log.debug("  top level product: " + (pool.getTopLevelProduct().getId()));
             if (architectureMatches(pool.getTopLevelProduct(), consumer)) {
                 var provided_products = getRelevantProvidedProducts(pool, products);
@@ -471,19 +471,19 @@ var Entitlement = {
 
                 // Check current pool against previous best to see if it's better:
                 for each (pool_class in pools_by_class) {
-                	var best_pool = pool_class[0];
+                    var best_pool = pool_class[0];
                     var best_provided_products = getRelevantProvidedProducts(best_pool, products);
 
                     if (providesSameProducts(provided_products, best_provided_products)) {
                         duplicate_found = true;
                         log.debug("  provides same product combo as: " + pool.getId());
-                        
+
                         // figure out where to insert this pool in its sorted class
                         var i = 0;
                         for (; i < pool_class.length; i++) {
-                        	if (comparePools(pool, best_pool)) {
-                        		break;
-                        	}
+                            if (comparePools(pool, best_pool)) {
+                                break;
+                            }
                         }
 
                         // now insert the pool into the middle of the array
@@ -492,11 +492,11 @@ var Entitlement = {
                     }
                 }
 
-                // If we did not find a duplicate pool providing the same products, 
+                // If we did not find a duplicate pool providing the same products,
                 if (!duplicate_found) {
-                	var pool_class = [];
-                	pool_class.push(pool);
-                	pools_by_class.push(pool_class);
+                    var pool_class = [];
+                    pool_class.push(pool);
+                    pools_by_class.push(pool_class);
                 }
             }
         }
@@ -510,7 +510,7 @@ var Entitlement = {
         // -The combo that provides the most products
         // -The combo that uses the fewest entitlements
 
-        
+
         var selected_pools = new java.util.HashMap();
         var best_provided_count = 0;
         var best_entitlements_count = 0;
@@ -520,7 +520,7 @@ var Entitlement = {
             var unique_provided = [];
             log.debug("checking pool_combo " + pool_combo);
             for each (pool_class in pool_combo) {
-            	var pool = pool_class[0];
+                var pool = pool_class[0];
                 log.debug("\tpool_combo " + pool.getId());
                 var provided_products = getRelevantProvidedProducts(pool, products);
                 for each (provided_product in provided_products) {
@@ -534,8 +534,8 @@ var Entitlement = {
             for each (product in unique_provided){
                 log.debug("unique_provided " + product.getId() + " " + product.getName());
             }
-            
-            // number of provided products is less than our best selection. keep our current selection. 
+
+            // number of provided products is less than our best selection. keep our current selection.
             if (unique_provided.length < best_provided_count) {
                 continue;
             }
@@ -543,31 +543,31 @@ var Entitlement = {
             // we do it after the unique provided.length check because that value is the best we can do
             // create 'best' stacking combo here
             // use that best combo for the following comparison
-            
+
             if (unique_provided.length > best_provided_count || pool_combo.length < best_entitlements_count) {
-            	// XXX we'll have to do something here to ensure no product overlap after selecting the actual pool/pools from the combo
+                // XXX we'll have to do something here to ensure no product overlap after selecting the actual pool/pools from the combo
                 if (hasNoProductOverlap(pool_combo)) {
-	                var new_selection = new java.util.HashMap();
-	                var total_entitlements = 0;
-	                for each (pool_class in pool_combo) {
-	                	var poolMap = findStackingPools(pool_class, consumer, compliance);
-	                	new_selection.putAll(poolMap);
-	                	
-	                	var quantity = 0;
-	                	for (value in poolMap.values()) {
-	                		quantity += value;
-	                	}
-	                	
-	                	total_entitlements += quantity;
-	                }
-	                
-	                // now verify that after selecting our actual pools from the pool combo,
-	                // we still have a better choice here
-	                if (new_selection.size() > 0) {
-	                	selected_pools = new_selection;
-	                	best_provided_count = unique_provided.length;
-	                	best_entitlements_count = total_entitlements;
-	                }
+                    var new_selection = new java.util.HashMap();
+                    var total_entitlements = 0;
+                    for each (pool_class in pool_combo) {
+                        var poolMap = findStackingPools(pool_class, consumer, compliance);
+                        new_selection.putAll(poolMap);
+
+                        var quantity = 0;
+                        for (value in poolMap.values()) {
+                            quantity += value;
+                        }
+
+                        total_entitlements += quantity;
+                    }
+
+                    // now verify that after selecting our actual pools from the pool combo,
+                    // we still have a better choice here
+                    if (new_selection.size() > 0) {
+                        selected_pools = new_selection;
+                        best_provided_count = unique_provided.length;
+                        best_entitlements_count = total_entitlements;
+                    }
                 }
             }
         }
@@ -756,22 +756,22 @@ function stack_is_compliant(consumer, stack_id, ents, log) {
 }
 
 /**
- * Returns an array of product IDs the entitlement provides which are relevant 
+ * Returns an array of product IDs the entitlement provides which are relevant
  * (installed) on the given consumer.
  */
 function find_relevant_pids(entitlement, consumer) {
-	provided_pids = [];
-	if (consumer.getInstalledProducts() == null) {
-		return provided_pids;
-	}
+    provided_pids = [];
+    if (consumer.getInstalledProducts() == null) {
+        return provided_pids;
+    }
     for each (var installed_prod in consumer.getInstalledProducts().toArray()) {
         var installed_pid = installed_prod.getProductId();
         if (entitlement.getPool().provides(installed_pid) == true) {
             log.debug("pool provides: " + installed_pid);
             provided_pids.push(installed_pid);
         }
-	}
-	return provided_pids;
+    }
+    return provided_pids;
 }
 
 var Compliance = {
@@ -785,14 +785,14 @@ var Compliance = {
         // Track the stack IDs we've already checked to save some time:
         var compliant_stack_ids = new java.util.HashSet();
         var non_compliant_stack_ids = new java.util.HashSet();
-        
+
         log.debug("Checking compliance status for consumer: " + consumer.getUuid());
         for each (var e in entitlements.toArray()) {
-        	log.debug("  checking entitlement: " + e.getId());
-        	relevant_pids = find_relevant_pids(e, consumer);
-        	log.debug("    relevant products: " + relevant_pids);
+            log.debug("  checking entitlement: " + e.getId());
+            relevant_pids = find_relevant_pids(e, consumer);
+            log.debug("    relevant products: " + relevant_pids);
 
-        	partially_stacked = false;
+            partially_stacked = false;
             // If the pool is stacked, check that the stack requirements are met:
             if (is_stacked(e)) {
                 var stack_id = e.getPool().getProductAttribute("stacking_id").getValue();
@@ -800,8 +800,8 @@ var Compliance = {
 
                 // Shortcuts for stacks we've already checked:
                 if (non_compliant_stack_ids.contains(stack_id) > 0) {
-                	log.debug("    stack already found to be non-compliant");
-                	partially_stacked = true;
+                    log.debug("    stack already found to be non-compliant");
+                    partially_stacked = true;
                     status.addPartialStack(stack_id, e);
                 }
                 else if (compliant_stack_ids.contains(stack_id) > 0) {
@@ -819,23 +819,23 @@ var Compliance = {
                     compliant_stack_ids.add(stack_id);
                 }
             }
-            
+
             for each (relevant_pid in relevant_pids) {
-            	if (partially_stacked) {
-            		log.debug("   partially compliant: " + relevant_pid);
-            		status.addPartiallyCompliantProduct(relevant_pid, e);
-            	}
-            	else {
-            		log.debug("    fully compliant: " + relevant_pid);
-            		status.addCompliantProduct(relevant_pid, e);
-            	}
+                if (partially_stacked) {
+                    log.debug("   partially compliant: " + relevant_pid);
+                    status.addPartiallyCompliantProduct(relevant_pid, e);
+                }
+                else {
+                    log.debug("    fully compliant: " + relevant_pid);
+                    status.addCompliantProduct(relevant_pid, e);
+                }
             }
         }
 
-        // Run through each partially compliant product, if we also found a 
+        // Run through each partially compliant product, if we also found a
         // regular entitlement which provides that product, then it should not be
         // considered partially compliant as well. We do however still leave the *stack*
-        // in partial stacks list, as this should be repaired. (it could offer other 
+        // in partial stacks list, as this should be repaired. (it could offer other
         // products)
         for each (var partial_prod in status.getPartiallyCompliantProducts().keySet().toArray()) {
             if (status.getCompliantProducts().keySet().contains(partial_prod)) {
@@ -846,15 +846,15 @@ var Compliance = {
         // Run through the consumer's installed products and see if there are any we
         // didn't find an entitlement for along the way:
         if (consumer.getInstalledProducts() != null) {
-        	for each (var installed_prod in consumer.getInstalledProducts().toArray()) {
-	        	var installed_pid = installed_prod.getProductId();
-	            // Not compliant if we didn't find any entitlements for this product:
-	            if (!status.getCompliantProducts().containsKey(installed_pid) &&
-	                    !status.getPartiallyCompliantProducts().containsKey(installed_pid)) {
-	                status.addNonCompliantProduct(installed_pid);
-	            }
-	        }
-    	}
+            for each (var installed_prod in consumer.getInstalledProducts().toArray()) {
+                var installed_pid = installed_prod.getProductId();
+                // Not compliant if we didn't find any entitlements for this product:
+                if (!status.getCompliantProducts().containsKey(installed_pid) &&
+                        !status.getPartiallyCompliantProducts().containsKey(installed_pid)) {
+                    status.addNonCompliantProduct(installed_pid);
+                }
+            }
+        }
 
         return status;
     }
