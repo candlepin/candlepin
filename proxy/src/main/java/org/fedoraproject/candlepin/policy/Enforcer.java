@@ -15,27 +15,29 @@
 package org.fedoraproject.candlepin.policy;
 
 import java.util.List;
+import java.util.Map;
 
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
 import org.fedoraproject.candlepin.policy.js.pool.PoolHelper;
+import org.fedoraproject.candlepin.policy.js.compliance.ComplianceStatus;
 import org.fedoraproject.candlepin.policy.js.entitlement.PreEntHelper;
 
 /**
  * Enforces the entitlement rules definitions.
  */
 public interface Enforcer {
-    
-    
+
+
     /**
      * Run pre-entitlement checks.
-     * 
-     * Ensures sufficient entitlements remain, but also verifies all attributes 
-     * on the product and relevant entitlement pool pass using the current 
+     *
+     * Ensures sufficient entitlements remain, but also verifies all attributes
+     * on the product and relevant entitlement pool pass using the current
      * policy.
-     * 
+     *
      * This is run prior to granting an entitlement.
      *
      * @param consumer Consumer who wishes to consume an entitlement.
@@ -53,7 +55,7 @@ public interface Enforcer {
      * @return post-entitlement processor
      */
     PoolHelper postEntitlement(Consumer c, PoolHelper postEntHelper, Entitlement ent);
-    
+
     /**
      * Select the best entitlement pools available for the given product IDs.
      *
@@ -64,11 +66,11 @@ public interface Enforcer {
      *
      * @param productIds Product IDs
      * @param pools List of pools to select from.
-     * @return best pools as determined by the rules.
+     * @return best pools as determined by the rules, and the quantity to take from each
      * @throws RuleExecutionException Thrown if both pools and a rule exist, but no
      * pool is returned.
      */
-    List<Pool> selectBestPools(Consumer consumer, String[] productIds, List<Pool> pools)
-        throws RuleExecutionException;
+    Map<Pool, Integer> selectBestPools(Consumer consumer, String[] productIds,
+        List<Pool> pools, ComplianceStatus compliance) throws RuleExecutionException;
 
 }

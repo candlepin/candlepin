@@ -130,8 +130,8 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
         CandlepinPoolManager anotherEntitler =
             injector.getInstance(CandlepinPoolManager.class);
 
-        anotherEntitler.entitleByProduct(consumer, newProduct.getId(), new Integer("1"));
-        anotherEntitler.entitleByProduct(consumer, newProduct.getId(), new Integer("1"));
+        anotherEntitler.entitleByProduct(consumer, newProduct.getId());
+        anotherEntitler.entitleByProduct(consumer, newProduct.getId());
 
         assertFalse(poolCurator.find(consumerPool.getId())
                 .entitlementsAvailable(1));
@@ -152,12 +152,10 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
         CandlepinPoolManager anotherEntitler =
             injector.getInstance(CandlepinPoolManager.class);
 
-        Entitlement e1 = poolManager.entitleByProduct(consumer, newProduct.getId(),
-            new Integer("1"));
+        Entitlement e1 = poolManager.entitleByProduct(consumer, newProduct.getId());
         assertNotNull(e1);
 
-        anotherEntitler.entitleByProduct(consumer, newProduct.getId(),
-            new Integer("1"));
+        anotherEntitler.entitleByProduct(consumer, newProduct.getId());
     }
 
     @Override

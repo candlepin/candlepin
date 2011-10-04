@@ -20,6 +20,7 @@ import os.path, os
 import socket
 import re
 import time
+import httplib
 from optparse import OptionParser
 
 
@@ -96,6 +97,18 @@ class TomcatSetup(object):
 
     def restart(self):
         run_command("/sbin/service tomcat6 restart")
+
+    def wait_for_startup(self):
+        print("Waiting for tomcat to restart...")
+        conn = httplib.HTTPConnection('localhost:8080')
+        for x in range(1,5):
+            time.sleep(5)
+            try:
+                conn.request('GET', "/candlepin/")
+                if conn.getresponse().status == 200:
+                    break
+            except:
+                print("Waiting for tomcat to restart...")
 
 class CertSetup(object):
     def __init__(self):
@@ -199,9 +212,7 @@ def main(argv):
     tsetup = TomcatSetup('/etc/tomcat6')
     tsetup.update_config()
     tsetup.restart()
-
-    print("Waiting for tomcat to restart...")
-    time.sleep(5)
+    tsetup.wait_for_startup()
 
     run_command("wget -qO- http://localhost:8080/candlepin/admin/init")
 

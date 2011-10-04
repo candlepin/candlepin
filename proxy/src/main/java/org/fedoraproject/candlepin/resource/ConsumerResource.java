@@ -39,7 +39,6 @@ import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerInstalledProduct;
 import org.fedoraproject.candlepin.model.ConsumerType;
-import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.EntitlementCertificate;
@@ -51,9 +50,11 @@ import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.User;
+import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.pinsetter.tasks.EntitlerJob;
 import org.fedoraproject.candlepin.policy.js.consumer.ConsumerDeleteHelper;
 import org.fedoraproject.candlepin.policy.js.consumer.ConsumerRules;
+import org.fedoraproject.candlepin.resource.util.ResourceDateParser;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
@@ -757,11 +758,25 @@ public class ConsumerResource {
     /**
      * Request an entitlement.
      *
+     * If a pool ID is specified, we know we're binding to that exact pool. Specifying
+     * an entitle date in this case makes no sense and will throw an error.
+     *
+     * If a list of product IDs are specified, we attempt to auto-bind to subscriptions
+     * which will provide those products. An optional date can be specified allowing
+     * the consumer to get compliant for some date in the future. If no date is specified
+     * we assume the current date.
+     *
+     * If neither a pool nor an ID is specified, this is a healing request. The path
+     * is similar to the bind by products, but in this case we use the installed products
+     * on the consumer, and their current compliant status, to determine which product IDs
+     * should be requested. The entitle date is used the same as with bind by products.
+     *
      * @param consumerUuid Consumer identifier to be entitled
      * @param poolIdString Entitlement pool id.
      * @param email email address.
      * @param emailLocale locale for email address.
      * @param async True if bind should be asynchronous, defaults to false.
+     * @param entitleDateStr specific date to entitle by.
      * @return Response with a list of entitlements or if async is true, a
      *         JobDetail.
      */
@@ -776,7 +791,8 @@ public class ConsumerResource {
         @QueryParam("quantity") @DefaultValue("1") Integer quantity,
         @QueryParam("email") String email,
         @QueryParam("email_locale") String emailLocale,
-        @QueryParam("async") @DefaultValue("false") boolean async) {
+        @QueryParam("async") @DefaultValue("false") boolean async,
+        @QueryParam("entitle_date") String entitleDateStr) {
 
         // Check that only one query param was set:
         if (poolIdString != null && productIds != null && productIds.length > 0) {
@@ -784,9 +800,22 @@ public class ConsumerResource {
                 i18n.tr("Cannot bind by multiple parameters."));
         }
 
-        if ((productIds != null && productIds.length > 0) && quantity > 1) {
+        if (poolIdString == null && quantity > 1) {
             throw new BadRequestException(
                 i18n.tr("Cannot specify a quantity when auto-binding."));
+        }
+
+        // doesn't make sense to bind by pool and a date.
+        if (poolIdString != null && entitleDateStr != null) {
+            throw new BadRequestException(
+                i18n.tr("Cannot bind by multiple parameters."));
+        }
+
+        // TODO: really should do this in a before we get to this call
+        // so the method takes in a real Date object and not just a String.
+        Date entitleDate = null;
+        if (entitleDateStr != null) {
+            entitleDate = ResourceDateParser.parseDateString(entitleDateStr);
         }
 
         // Verify consumer exists:
@@ -815,13 +844,14 @@ public class ConsumerResource {
             }
             else if (productIds != null && productIds.length > 0) {
                 detail = EntitlerJob.bindByProducts(productIds,
-                        consumerUuid, quantity);
+                        consumerUuid, entitleDate);
             }
 
             // events will be triggered by the job
             return Response.status(Response.Status.OK)
                 .type(MediaType.APPLICATION_JSON).entity(detail).build();
         }
+
 
         //
         // otherwise we do what we do today.
@@ -830,10 +860,9 @@ public class ConsumerResource {
         if (poolIdString != null) {
             entitlements = entitler.bindByPool(poolIdString, consumer, quantity);
         }
-        else if (productIds != null && productIds.length > 0) {
+        else {
             try {
-                entitlements = entitler.bindByProducts(productIds, consumer,
-                    quantity);
+                entitlements = entitler.bindByProducts(productIds, consumer, entitleDate);
             }
             catch (ForbiddenException fe) {
                 throw fe;

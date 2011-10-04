@@ -34,6 +34,7 @@ import org.fedoraproject.candlepin.policy.ValidationResult;
 import org.fedoraproject.candlepin.policy.js.JsRules;
 import org.fedoraproject.candlepin.policy.js.JsRulesProvider;
 import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
+import org.fedoraproject.candlepin.policy.js.compliance.ComplianceStatus;
 import org.fedoraproject.candlepin.policy.js.entitlement.EntitlementRules;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
@@ -63,6 +64,7 @@ public class EnforcerTest extends DatabaseTestFixture {
     @Mock private ProductServiceAdapter productAdapter;
     @Mock private RulesCurator rulesCurator;
     @Mock private Config config;
+    @Mock private ComplianceStatus compliance;
 
     private Enforcer enforcer;
     private Owner owner;
@@ -310,9 +312,9 @@ public class EnforcerTest extends DatabaseTestFixture {
         List<Pool> availablePools
             = Arrays.asList(new Pool[] {pool1, pool2, desired, pool3});
 
-        List<Pool> result = enforcer.selectBestPools(consumer, new String[] {"a-product"},
-            availablePools);
-        assertEquals(desired.getId(), result.get(0).getId());
+        Map<Pool, Integer> result = enforcer.selectBestPools(consumer,
+            new String[] {"a-product"}, availablePools, compliance);
+        assertEquals(1, result.get(desired).intValue());
     }
 
     @Test
@@ -337,9 +339,9 @@ public class EnforcerTest extends DatabaseTestFixture {
         List<Pool> availablePools
             = Arrays.asList(new Pool[] {pool1, pool2, desired});
 
-        List<Pool> result = enforcer.selectBestPools(consumer,
-            new String[] {"a-product"}, availablePools);
-        assertEquals(desired.getId(), result.get(0).getId());
+        Map<Pool, Integer> result = enforcer.selectBestPools(consumer,
+            new String[] {"a-product"}, availablePools, compliance);
+        assertEquals(1, result.get(desired).intValue());
     }
 
     @Test
@@ -359,10 +361,10 @@ public class EnforcerTest extends DatabaseTestFixture {
         when(this.productAdapter.getProductById("a-product")).thenReturn(product);
 
         List<Pool> availablePools = Arrays.asList(new Pool[] {pool1, pool2, desired});
-        List<Pool> result = enforcer.selectBestPools(consumer, new String[] {"a-product"},
-            availablePools);
 
-        assertEquals(desired.getId(), result.get(0).getId());
+        Map<Pool, Integer> result = enforcer.selectBestPools(consumer,
+            new String[] {"a-product"}, availablePools, compliance);
+        assertEquals(1, result.get(desired).intValue());
     }
 
     @Test
@@ -371,8 +373,8 @@ public class EnforcerTest extends DatabaseTestFixture {
             .thenReturn(new Product(HIGHEST_QUANTITY_PRODUCT, HIGHEST_QUANTITY_PRODUCT));
 
         // There are no pools for the product in this case:
-        List<Pool> result = enforcer.selectBestPools(consumer,
-            new String[] {HIGHEST_QUANTITY_PRODUCT}, new LinkedList<Pool>());
+        Map<Pool, Integer> result = enforcer.selectBestPools(consumer,
+            new String[] {HIGHEST_QUANTITY_PRODUCT}, new LinkedList<Pool>(), compliance);
         assertNull(result);
     }
 
@@ -390,7 +392,7 @@ public class EnforcerTest extends DatabaseTestFixture {
             .thenReturn(product);
 
         enforcer.selectBestPools(consumer, new String[] {"a-product"},
-            Collections.singletonList(pool1));
+            Collections.singletonList(pool1), compliance);
     }
 
     @Test
@@ -409,9 +411,9 @@ public class EnforcerTest extends DatabaseTestFixture {
         List<Pool> availablePools
             = Arrays.asList(new Pool[] {pool1, pool2});
 
-        List<Pool> result = enforcer.selectBestPools(consumer,
-            new String[] {product.getId()}, availablePools);
-        assertEquals(pool1.getId(), result.get(0).getId());
+        Map<Pool, Integer> result = enforcer.selectBestPools(consumer,
+            new String[] {product.getId()}, availablePools, compliance);
+        assertEquals(1, result.get(pool1).intValue());
     }
 
     private EntitlementRules.Rule rule(String name, int priority, String... attrs) {

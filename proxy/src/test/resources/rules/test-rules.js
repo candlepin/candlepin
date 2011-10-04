@@ -74,7 +74,10 @@ var Entitlement = {
 				furthest = p;
 			}
 		}
-		return new Array(furthest);
+		
+		var toReturn = new java.util.HashMap();
+		toReturn.put(furthest, 1);
+		return toReturn;
 	},
 	
 	select_pool_QUANTITY001: function() {
@@ -84,12 +87,15 @@ var Entitlement = {
 				highestMax = p;
 			}
 		}
-		return new Array(highestMax);
+		
+		var toReturn = new java.util.HashMap();
+		toReturn.put(highestMax, 1);
+		return toReturn;
 	},
 	
-	// Bad rule! Just return null instead of picking a pool like it should:
+	// Bad rule! Just return an empty object instead of picking a pool like it should:
 	select_pool_BADRULE001: function() {
-		return null;
+		return new java.util.HashMap();
 	},
 	
 	pre_global: function() {

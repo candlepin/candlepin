@@ -45,6 +45,7 @@ import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 /**
@@ -114,15 +115,15 @@ public class EntitlerTest {
     public void bindByProductsString() throws EntitlementRefusedException {
         String[] pids = {"prod1", "prod2", "prod3"};
         when(cc.findByUuid(eq("abcd1234"))).thenReturn(consumer);
-        entitler.bindByProducts(pids, "abcd1234", 1);
-        verify(pm).entitleByProducts(eq(consumer), eq(pids), eq(1));
+        entitler.bindByProducts(pids, "abcd1234", null);
+        verify(pm).entitleByProducts(eq(consumer), eq(pids), eq((Date) null));
     }
 
     @Test
     public void bindByProducts() throws EntitlementRefusedException {
         String[] pids = {"prod1", "prod2", "prod3"};
-        entitler.bindByProducts(pids, consumer, 1);
-        verify(pm).entitleByProducts(eq(consumer), eq(pids), eq(1));
+        entitler.bindByProducts(pids, consumer, null);
+        verify(pm).entitleByProducts(eq(consumer), eq(pids), eq((Date) null));
     }
 
     @Test(expected = BadRequestException.class)
@@ -200,8 +201,9 @@ public class EntitlerTest {
             String[] pids = {"prod1", "prod2", "prod3"};
             EntitlementRefusedException ere = new EntitlementRefusedException(
                 fakeOutResult(msg));
-            when(pm.entitleByProducts(eq(consumer), eq(pids), eq(1))).thenThrow(ere);
-            entitler.bindByProducts(pids, consumer, 1);
+            when(pm.entitleByProducts(eq(consumer), eq(pids),
+                eq((Date) null))).thenThrow(ere);
+            entitler.bindByProducts(pids, consumer, null);
         }
         catch (EntitlementRefusedException e) {
             fail(msg + ": threw unexpected error");

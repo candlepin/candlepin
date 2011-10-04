@@ -37,6 +37,8 @@ import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
 import org.fedoraproject.candlepin.policy.PoolRules;
 import org.fedoraproject.candlepin.policy.ValidationResult;
+import org.fedoraproject.candlepin.policy.js.compliance.ComplianceRules;
+import org.fedoraproject.candlepin.policy.js.compliance.ComplianceStatus;
 import org.fedoraproject.candlepin.policy.js.entitlement.PreEntHelper;
 import org.fedoraproject.candlepin.policy.js.pool.PoolHelper;
 import org.fedoraproject.candlepin.policy.js.pool.PoolUpdate;
@@ -56,11 +58,13 @@ import org.xnap.commons.i18n.I18n;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 /**
  * PoolManager
@@ -83,6 +87,7 @@ public class CandlepinPoolManager implements PoolManager {
     private EntitlementCertificateCurator entitlementCertificateCurator;
     private PrincipalProvider principalProvider;
     private I18n i18n;
+    private ComplianceRules complianceRules;
 
     /**
      * @param poolCurator
@@ -99,7 +104,7 @@ public class CandlepinPoolManager implements PoolManager {
         EventFactory eventFactory, Config config, Enforcer enforcer,
         PoolRules poolRules, EntitlementCurator curator1,
         ConsumerCurator consumerCurator, EntitlementCertificateCurator ecC,
-        PrincipalProvider principalProvider, I18n i18n) {
+        PrincipalProvider principalProvider, I18n i18n, ComplianceRules complianceRules) {
 
         this.poolCurator = poolCurator;
         this.subAdapter = subAdapter;
@@ -115,6 +120,7 @@ public class CandlepinPoolManager implements PoolManager {
         this.entitlementCertificateCurator = ecC;
         this.principalProvider = principalProvider;
         this.i18n = i18n;
+        this.complianceRules = complianceRules;
     }
 
     /**
@@ -122,7 +128,7 @@ public class CandlepinPoolManager implements PoolManager {
      * that refreshing the pools doesn't actually take any action, should a
      * subscription be reduced, expired, or revoked. Pre-existing entitlements
      * will need to be dealt with separately from this event.
-     * 
+     *
      * @param owner Owner to be refreshed.
      */
     public void refreshPools(Owner owner) {
@@ -203,7 +209,7 @@ public class CandlepinPoolManager implements PoolManager {
      * Update pool for subscription. - This method only checks for change in
      * quantity and dates of a subscription. Currently any quantity changes in
      * pool are not handled.
-     * 
+     *
      * @param existingPools the existing pools
      * @param sub the sub
      */
@@ -315,9 +321,10 @@ public class CandlepinPoolManager implements PoolManager {
      * Request an entitlement by product. If the entitlement cannot be granted,
      * null will be returned. TODO: Throw exception if entitlement not granted.
      * Report why.
-     * 
+     *
      * @param consumer consumer requesting to be entitled
      * @param productIds products to be entitled.
+     * @param entitleDate specific date to entitle by.
      * @return Entitlement
      * @throws EntitlementRefusedException if entitlement is refused
      */
@@ -328,102 +335,102 @@ public class CandlepinPoolManager implements PoolManager {
     //
     @Transactional
     public List<Entitlement> entitleByProducts(Consumer consumer,
-        String[] productIds, Integer quantity)
+        String[] productIds, Date entitleDate)
         throws EntitlementRefusedException {
         Owner owner = consumer.getOwner();
         List<Entitlement> entitlements = new LinkedList<Entitlement>();
-        Map<Pool, Integer> poolMap = new HashMap<Pool, Integer>();
 
-        // loop here for quantity - ignore non-quantity for now
-        for (int i = 0; i < quantity; i++) {
+        // Use the current date if one wasn't provided:
+        if (entitleDate == null) {
+            entitleDate = new Date();
+        }
 
-            ValidationResult failedResult = null;
-            List<Pool> candidatePools = poolCurator.listByOwner(owner);
-            List<Pool> filteredPools = new LinkedList<Pool>();
+        ValidationResult failedResult = null;
+        List<Pool> allOwnerPools = poolCurator.listByOwner(owner, entitleDate);
+        List<Pool> filteredPools = new LinkedList<Pool>();
 
-            for (Pool pool : candidatePools) {
-                // if we already are planning to pull all available from this
-                // pool, skip
-                if (poolMap.get(pool) != null &&
-                    (pool.getQuantity() - pool.getConsumed()) == poolMap.get(
-                        pool).longValue()) {
-                    continue;
+        // We have to check compliance status here so we can replace an empty
+        // array of product IDs with the array the consumer actually needs. (i.e. during
+        // a healing request)
+        ComplianceStatus compliance = complianceRules.getStatus(consumer, entitleDate);
+        if (productIds == null || productIds.length == 0) {
+            log.debug("No products specified for bind, checking compliance to see what " +
+                "is needed.");
+            Set<String> tmpSet = new HashSet<String>();
+            tmpSet.addAll(compliance.getNonCompliantProducts());
+            tmpSet.addAll(compliance.getPartiallyCompliantProducts().keySet());
+            productIds = tmpSet.toArray(new String [] {});
+        }
+
+        log.info("Attempting auto-bind for products on date: " + entitleDate);
+        for (String productId : productIds) {
+            log.info("  " + productId);
+        }
+
+        for (Pool pool : allOwnerPools) {
+            boolean providesProduct = false;
+            for (String productId : productIds) {
+                if (pool.provides(productId)) {
+                    providesProduct = true;
+                    break;
                 }
+            }
+            if (providesProduct) {
+                PreEntHelper preHelper = enforcer.preEntitlement(consumer,
+                    pool, 1);
+                ValidationResult result = preHelper.getResult();
 
-                boolean providesProduct = false;
-                for (String productId : productIds) {
-                    if (pool.provides(productId)) {
-                        providesProduct = true;
-                        break;
+                if (!result.isSuccessful()) {
+                    // Just keep the last one around, if we need it
+                    failedResult = result;
+                    if (log.isDebugEnabled()) {
+                        log.debug("Pool filtered from candidates due to rules " +
+                            "failure: " +
+                            pool.getId());
                     }
                 }
-                if (providesProduct) {
-                    PreEntHelper preHelper = enforcer.preEntitlement(consumer,
-                        pool, 1);
-                    ValidationResult result = preHelper.getResult();
-
-                    if (!result.isSuccessful()) {
-                        // Just keep the last one around, if we need it
-                        failedResult = result;
-                        if (log.isDebugEnabled()) {
-                            log.debug("Pool filtered from candidates due to rules " +
-                                "failure: " +
-                                pool.getId());
-                        }
-                    }
-                    else {
-                        filteredPools.add(pool);
-                    }
+                else {
+                    filteredPools.add(pool);
                 }
             }
+        }
 
-            if (filteredPools.size() == 0) {
-                // Only throw refused exception if we actually hit the rules:
-                if (failedResult != null) {
-                    throw new EntitlementRefusedException(failedResult);
-                }
-                throw new RuntimeException("No entitlements for products: " +
-                    Arrays.toString(productIds));
+        if (filteredPools.size() == 0) {
+            // Only throw refused exception if we actually hit the rules:
+            if (failedResult != null) {
+                throw new EntitlementRefusedException(failedResult);
             }
+            throw new RuntimeException("No entitlements for products: " +
+                Arrays.toString(productIds));
+        }
 
-            List<Pool> bestPools = enforcer.selectBestPools(consumer,
-                productIds, filteredPools);
-            if (bestPools == null) {
-                throw new RuntimeException("No entitlements for products: " +
-                    Arrays.toString(productIds));
-            }
-
-            for (Pool pool : bestPools) {
-                Integer count = poolMap.get(pool);
-                if (count == null) {
-                    count = new Integer(0);
-                }
-                poolMap.put(pool, ++count);
-            }
-
-        }// loop here for quantity
+        Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer,
+            productIds, filteredPools, compliance);
+        if (bestPools == null) {
+            throw new RuntimeException("No entitlements for products: " +
+                Arrays.toString(productIds));
+        }
 
         // now make the entitlements
-        for (Entry<Pool, Integer> entry : poolMap.entrySet()) {
-            entitlements.add(
-                addEntitlement(consumer, entry.getKey(), entry.getValue(), false));
+        for (Entry<Pool, Integer> entry : bestPools.entrySet()) {
+            entitlements.add(addEntitlement(consumer, entry.getKey(),
+                entry.getValue(), false));
         }
 
         return entitlements;
     }
 
-    public Entitlement entitleByProduct(Consumer consumer, String productId,
-        Integer quantity) throws EntitlementRefusedException {
+    public Entitlement entitleByProduct(Consumer consumer, String productId)
+        throws EntitlementRefusedException {
         // There will only be one returned entitlement, anyways
-        return entitleByProducts(consumer, new String[]{ productId }, quantity)
-            .get(0);
+        return entitleByProducts(consumer, new String[]{ productId }, null).get(0);
     }
-    
+
     /**
      * Request an entitlement by pool.. If the entitlement cannot be granted,
      * null will be returned. TODO: Throw exception if entitlement not granted.
      * Report why.
-     * 
+     *
      * @param consumer consumer requesting to be entitled
      * @param pool entitlement pool to consume from
      * @return Entitlement
@@ -434,7 +441,7 @@ public class CandlepinPoolManager implements PoolManager {
         Integer quantity) throws EntitlementRefusedException {
         return addEntitlement(consumer, pool, quantity, false);
     }
-    
+
     @Transactional
     public Entitlement ueberCertEntitlement(Consumer consumer, Pool pool,
         Integer quantity) throws EntitlementRefusedException {
@@ -517,7 +524,7 @@ public class CandlepinPoolManager implements PoolManager {
         // want
         // to know if this product entails granting a cert someday.
         try {
-            return generateUeberCert ? 
+            return generateUeberCert ?
                 entCertAdapter.generateUeberCert(e, sub, product) :
                 entCertAdapter.generateEntitlementCert(e, sub, product);
         }
@@ -651,9 +658,8 @@ public class CandlepinPoolManager implements PoolManager {
      * source entitlement, and those pools have outstanding entitlements. This
      * method is used to prevent security violations when unbinding as a
      * consumer, where other consumers are using those sub-pool entitlements.
-     * 
+     *
      * @param e Entitlement to check.
-     * @return True if there are outstanding sub-pool entitlements.
      */
     private void checkForOutstandingSubPoolEntitlements(Entitlement entitlement) {
         String entitlementId = entitlement.getId();
@@ -733,7 +739,7 @@ public class CandlepinPoolManager implements PoolManager {
 
     /**
      * Cleanup entitlements and safely delete the given pool.
-     * 
+     *
      * @param pool
      */
     @Transactional

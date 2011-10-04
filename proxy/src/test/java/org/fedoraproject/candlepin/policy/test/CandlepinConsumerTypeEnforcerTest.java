@@ -25,13 +25,16 @@ import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.policy.CandlepinConsumerTypeEnforcer;
 import org.fedoraproject.candlepin.policy.js.ReadOnlyPool;
+import org.fedoraproject.candlepin.policy.js.compliance.ComplianceStatus;
 import org.fedoraproject.candlepin.policy.js.entitlement.PreEntHelper;
 import org.fedoraproject.candlepin.policy.js.pool.PoolHelper;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * CandlepinConsumerTypeEnforcerTest
@@ -39,10 +42,12 @@ import java.util.List;
 public class CandlepinConsumerTypeEnforcerTest {
 
     private CandlepinConsumerTypeEnforcer ccte;
-    
+    private ComplianceStatus compliance;
+
     @Before
     public void init() {
         ccte = new CandlepinConsumerTypeEnforcer();
+        compliance = mock(ComplianceStatus.class);
 
     }
 
@@ -51,7 +56,7 @@ public class CandlepinConsumerTypeEnforcerTest {
         PoolHelper ph = mock(PoolHelper.class);
         assertEquals(ph, ccte.postEntitlement(null, ph, null));
     }
-    
+
     @Test
     public void preEntitlement() {
         Consumer c = mock(Consumer.class);
@@ -62,23 +67,25 @@ public class CandlepinConsumerTypeEnforcerTest {
         peh.checkQuantity(roPool);
         verify(roPool).entitlementsAvailable(eq(1));
     }
-    
+
     @Test(expected = NullPointerException.class)
     public void bestPoolsNull() {
-        ccte.selectBestPools(null, null, null);
+        ccte.selectBestPools(null, null, null, compliance);
     }
-    
+
     @Test
     public void bestPoolEmpty() {
         assertEquals(null,
-            ccte.selectBestPools(null, null, new ArrayList<Pool>()));
+            ccte.selectBestPools(null, null, new ArrayList<Pool>(), compliance));
     }
-    
+
     @Test
     public void bestPool() {
-        List<Pool> pools = new ArrayList<Pool>();
-        pools.add(mock(Pool.class));
-        assertEquals(pools, ccte.selectBestPools(null, null, pools));
+        Map<Pool, Integer> pools = new HashMap<Pool, Integer>();
+        List<Pool> allPools = new ArrayList<Pool>();
+        allPools.add(mock(Pool.class));
+        pools.put(allPools.get(0), 1);
+        assertEquals(pools, ccte.selectBestPools(null, null, allPools, compliance));
     }
-    
+
 }

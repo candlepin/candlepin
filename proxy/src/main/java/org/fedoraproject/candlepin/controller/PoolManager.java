@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.controller;
 
+import java.util.Date;
 import java.util.List;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -60,11 +61,11 @@ public interface PoolManager {
     Entitlement entitleByPool(Consumer consumer, Pool pool, Integer quantity)
         throws EntitlementRefusedException;
 
+    Entitlement entitleByProduct(Consumer consumer, String productId)
+        throws EntitlementRefusedException;
+
     Entitlement ueberCertEntitlement(Consumer consumer, Pool pool,
         Integer quantity) throws EntitlementRefusedException;
-
-    Entitlement entitleByProduct(Consumer consumer, String productId, Integer quantity)
-        throws EntitlementRefusedException;
 
     /**
      * Request an entitlement by product.
@@ -77,11 +78,13 @@ public interface PoolManager {
      * consumer requesting to be entitled
      * @param productIds
      * products to be entitled.
+     * @param entitleDate specific date to entitle by.
      * @return Entitlement
      * @throws EntitlementRefusedException if entitlement is refused
      */
     List<Entitlement> entitleByProducts(Consumer consumer, String[] productIds,
-            Integer quantity) throws EntitlementRefusedException;
+        Date entitleDate)
+        throws EntitlementRefusedException;
 
 
     Pool find(String poolId);
@@ -122,20 +125,20 @@ public interface PoolManager {
 
 
     /**
-     * Update the given list of pools for a subscription. 
-     * 
-     * This method checks for change in quantity, dates, and products. 
-     * 
+     * Update the given list of pools for a subscription.
+     *
+     * This method checks for change in quantity, dates, and products.
+     *
      * @param existingPools the existing pools referencing this subscription
      * @param sub the subscription
      */
     void updatePoolsForSubscription(List<Pool> existingPools, Subscription sub);
 
     /**
-     * Update the given pool for a subscription. 
-     * 
-     * This method checks for change in quantity, dates, and products. 
-     * 
+     * Update the given pool for a subscription.
+     *
+     * This method checks for change in quantity, dates, and products.
+     *
      * @param existingPool an existing pool referencing this subscription
      * @param sub the subscription
      */

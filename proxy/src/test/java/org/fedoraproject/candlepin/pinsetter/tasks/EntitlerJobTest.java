@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -60,7 +61,7 @@ public class EntitlerJobTest {
     public void bindByProductsSetup() {
         String[] pids = {"pid1", "pid2", "pid3"};
 
-        JobDetail detail = EntitlerJob.bindByProducts(pids, consumerUuid, 1);
+        JobDetail detail = EntitlerJob.bindByProducts(pids, consumerUuid, null);
         assertNotNull(detail);
         String[] resultpids = (String[]) detail.getJobDataMap().get("product_ids");
         assertEquals("pid2", resultpids[1]);
@@ -100,15 +101,16 @@ public class EntitlerJobTest {
     public void bindByProductsExec() throws JobExecutionException {
         String[] pids = {"pid1", "pid2", "pid3"};
 
-        JobDetail detail = EntitlerJob.bindByProducts(pids, consumerUuid, 1);
+        JobDetail detail = EntitlerJob.bindByProducts(pids, consumerUuid, null);
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getMergedJobDataMap()).thenReturn(detail.getJobDataMap());
         List<Entitlement> ents = new ArrayList<Entitlement>();
-        when(e.bindByProducts(eq(pids), eq(consumerUuid), eq(1))).thenReturn(ents);
+        when(e.bindByProducts(eq(pids), eq(consumerUuid),
+            eq((Date) null))).thenReturn(ents);
 
         EntitlerJob job = new EntitlerJob(e);
         job.execute(ctx);
-        verify(e).bindByProducts(eq(pids), eq(consumerUuid), eq(1));
+        verify(e).bindByProducts(eq(pids), eq(consumerUuid), eq((Date) null));
         verify(e).sendEvents(eq(ents));
     }
 
@@ -123,7 +125,7 @@ public class EntitlerJobTest {
     @Test
     public void serializeJobDataMapForProducts() throws IOException {
         String[] pids = {"pid1", "pid2", "pid3"};
-        JobDetail detail = EntitlerJob.bindByProducts(pids, consumerUuid, 1);
+        JobDetail detail = EntitlerJob.bindByProducts(pids, consumerUuid, null);
         serialize(detail.getJobDataMap());
     }
 

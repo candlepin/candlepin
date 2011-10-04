@@ -68,12 +68,12 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         productCurator.create(product);
 
         Pool firstPool = createPoolAndSub(owner, product, 1L,
-            dateSource.currentDate(), dateSource.currentDate());
+            dateSource.currentDate(), createDate(2020, 1, 1));
         poolCurator.create(firstPool);
 
         firstCertificate = createEntitlementCertificate("key", "certificate");
 
-        firstEntitlement = createEntitlement(owner, null, firstPool,
+        firstEntitlement = createEntitlement(owner, consumer, firstPool,
             firstCertificate);
         entitlementCurator.create(firstEntitlement);
 
@@ -81,12 +81,12 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         productCurator.create(product1);
 
         Pool secondPool = createPoolAndSub(owner, product1, 1L,
-            dateSource.currentDate(), dateSource.currentDate());
+            dateSource.currentDate(), createDate(2020, 1, 1));
         poolCurator.create(secondPool);
 
         secondCertificate = createEntitlementCertificate("key", "certificate");
 
-        secondEntitlement = createEntitlement(owner, null, secondPool,
+        secondEntitlement = createEntitlement(owner, consumer, secondPool,
             secondCertificate);
         entitlementCurator.create(secondEntitlement);
         
@@ -103,8 +103,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     }
     
     private Date createDate(int year, int month, int day) {
-        cal.set(year, month + 1, day);
-        return cal.getTime();
+        return TestUtil.createDate(year, month, day);
     }
     
     private Entitlement setupListProvidingEntitlement() {
@@ -289,6 +288,13 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Entitlement e = entitlementCurator
             .findByCertificateSerial(firstCertificate.getSerial().getId());
         assertNotSame(secondEntitlement, e);
+    }
+    
+    @Test
+    public void listForConsumerOnDate() {
+        List<Entitlement> ents = entitlementCurator.listByConsumerAndDate(
+            consumer, createDate(2015, 1, 1));
+        assertEquals(2, ents.size());
     }
 
 }

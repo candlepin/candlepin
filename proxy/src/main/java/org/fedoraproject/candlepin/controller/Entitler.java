@@ -14,6 +14,7 @@
  */
 package org.fedoraproject.candlepin.controller;
 
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -125,9 +126,9 @@ public class Entitler {
     }
 
     public List<Entitlement> bindByProducts(String[] productIds,
-        String consumeruuid, Integer quantity) {
+        String consumeruuid, Date entitleDate) {
         Consumer c = consumerCurator.findByUuid(consumeruuid);
-        return bindByProducts(productIds, c, quantity);
+        return bindByProducts(productIds, c, entitleDate);
     }
 
     /**
@@ -137,15 +138,16 @@ public class Entitler {
      *
      * @param productIds List of product ids.
      * @param consumer The consumer being entitled.
-     * @param quantity number of entitlements requested.
+     * @param entitleDate specific date to entitle by.
      * @return List of Entitlements
      */
     public List<Entitlement> bindByProducts(String[] productIds,
-        Consumer consumer, Integer quantity) {
+        Consumer consumer, Date entitleDate) {
+
         // Attempt to create entitlements:
         try {
             List<Entitlement> entitlements = poolManager.entitleByProducts(
-                consumer, productIds, quantity);
+                consumer, productIds, entitleDate);
             log.debug("Created entitlements: " + entitlements);
             return entitlements;
         }

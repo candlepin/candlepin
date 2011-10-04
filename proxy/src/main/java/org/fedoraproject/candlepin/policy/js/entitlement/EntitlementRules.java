@@ -29,6 +29,7 @@ import org.fedoraproject.candlepin.policy.js.ReadOnlyPool;
 import org.fedoraproject.candlepin.policy.js.ReadOnlyProduct;
 import org.fedoraproject.candlepin.policy.js.ReadOnlyProductCache;
 import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
+import org.fedoraproject.candlepin.policy.js.compliance.ComplianceStatus;
 import org.fedoraproject.candlepin.policy.js.pool.PoolHelper;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.util.DateSource;
@@ -199,8 +200,8 @@ public class EntitlementRules implements Enforcer {
         callPostEntitlementRules(matchingRules);
     }
 
-    public List<Pool> selectBestPools(Consumer consumer, String[] productIds,
-        List<Pool> pools) {
+    public Map<Pool, Integer> selectBestPools(Consumer consumer, String[] productIds,
+        List<Pool> pools, ComplianceStatus compliance) {
         ReadOnlyProductCache productCache = new ReadOnlyProductCache(prodAdapter);
 
         log.info("Selecting best entitlement pool for product: " +
@@ -232,14 +233,15 @@ public class EntitlementRules implements Enforcer {
         args.put("products", readOnlyProducts.toArray());
         args.put("prodAttrSeparator", PROD_ARCHITECTURE_SEPARATOR);
         args.put("log", rulesLogger);
+        args.put("compliance", compliance);
 
-        ReadOnlyPool[] result = null;
+        Map<ReadOnlyPool, Integer> result = null;
         boolean foundMatchingRule = false;
         for (Rule rule : matchingRules) {
             try {
                 Object output =
                     jsRules.invokeMethod(SELECT_POOL_PREFIX + rule.getRuleName(), args);
-                result = jsRules.convertArray(output);
+                result = jsRules.convertMap(output);
                 foundMatchingRule = true;
                 log.info("Excuted javascript rule: " + SELECT_POOL_PREFIX +
                     rule.getRuleName());
@@ -256,7 +258,7 @@ public class EntitlementRules implements Enforcer {
         if (!foundMatchingRule) {
             try {
                 Object output = jsRules.invokeMethod(GLOBAL_SELECT_POOL_FUNCTION, args);
-                result = jsRules.convertArray(output);
+                result = jsRules.convertMap(output);
                 log.info("Excuted javascript rule: " +
                     GLOBAL_SELECT_POOL_FUNCTION);
             }
@@ -276,14 +278,14 @@ public class EntitlementRules implements Enforcer {
                 "Rule did not select a pool for products: " + Arrays.toString(productIds));
         }
 
-        List<Pool> bestPools = new LinkedList<Pool>();
+        Map<Pool, Integer> bestPools = new HashMap<Pool, Integer>();
         for (Pool p : pools) {
-            for (ReadOnlyPool rp : result) {
-                rp.getId();
-                p.getId().equals("foo");
+            for (ReadOnlyPool rp : result.keySet()) {
                 if (p.getId().equals(rp.getId())) {
                     log.debug("Best pool: " + p);
-                    bestPools.add(p);
+
+                    int quantity = result.get(rp);
+                    bestPools.put(p, quantity);
                 }
             }
         }
@@ -304,10 +306,15 @@ public class EntitlementRules implements Enforcer {
      *            Pools to choose from.
      * @return First pool in the list. (default behavior)
      */
-    private List<Pool> selectBestPoolDefault(List<Pool> pools) {
+    private Map<Pool, Integer> selectBestPoolDefault(List<Pool> pools) {
         if (pools.size() > 0) {
-            return pools;
+            Map<Pool, Integer> toReturn = new HashMap<Pool, Integer>();
+            for (Pool pool : pools) {
+                toReturn.put(pool, 1);
+            }
+            return toReturn;
         }
+
         return null;
     }
 

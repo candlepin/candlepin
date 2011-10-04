@@ -14,13 +14,16 @@
  */
 package org.fedoraproject.candlepin.policy;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
 import org.fedoraproject.candlepin.policy.js.pool.PoolHelper;
+import org.fedoraproject.candlepin.policy.js.compliance.ComplianceStatus;
 import org.fedoraproject.candlepin.policy.js.entitlement.PreEntHelper;
 
 /**
@@ -43,13 +46,18 @@ public class CandlepinConsumerTypeEnforcer implements Enforcer {
     }
 
     @Override
-    public List<Pool> selectBestPools(Consumer consumer, String[] productIds,
-        List<Pool> pools)
+    public Map<Pool, Integer> selectBestPools(Consumer consumer, String[] productIds,
+        List<Pool> pools, ComplianceStatus compliance)
         throws RuleExecutionException {
 
         if (pools.isEmpty()) {
             return null;
         }
-        return pools;
+
+        Map<Pool, Integer> best = new HashMap<Pool, Integer>();
+        for (Pool pool : pools) {
+            best.put(pool, 1);
+        }
+        return best;
     }
 }
