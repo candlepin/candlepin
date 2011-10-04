@@ -119,8 +119,6 @@ public class Pool extends AbstractHibernateObject implements Linkable, Owned {
 
     private String restrictedToUsername;
 
-    private String restrictedToParentConsumer;
-
     private String contractNumber;
     private String accountNumber;
 
@@ -478,25 +476,6 @@ public class Pool extends AbstractHibernateObject implements Linkable, Owned {
 
     public void setRestrictedToUsername(String restrictedToUsername) {
         this.restrictedToUsername = restrictedToUsername;
-    }
-
-    /**
-     * If this pool is restricted to guests of a particular host consumer, this method
-     * returns the UUID of that host consumer.
-     *
-     * TODO: really only useful in connection with a virt_only pool which has a
-     * sourceEntitlement defined. Probably should be moved to an attribute, or just
-     * assume virt_only + sourceEntitlement = restricted to the host who owns that
-     * sourceEntitlement.
-     *
-     * @return UUID of host consumer whose guests can use this pool.
-     */
-    public String getRestrictedToParentConsumer() {
-        return restrictedToParentConsumer;
-    }
-
-    public void setRestrictedToParentConsumer(String restrictedToParentConsumer) {
-        this.restrictedToParentConsumer = restrictedToParentConsumer;
     }
 
     /**

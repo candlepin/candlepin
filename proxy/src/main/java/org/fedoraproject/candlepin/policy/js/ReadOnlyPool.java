@@ -96,10 +96,6 @@ public class ReadOnlyPool {
         return entPool.getRestrictedToUsername();
     }
 
-    public String getRestrictedToParentConsumer() {
-        return entPool.getRestrictedToParentConsumer();
-    }
-
     public Long getQuantity() {
         return entPool.getQuantity();
     }

@@ -220,7 +220,8 @@ var Entitlement = {
             "requires_consumer_type:1:requires_consumer_type," +
             "user_license:1:user_license," +
             "virt_only:1:virt_only," +
-            "virt_limit:1:virt_limit";
+            "virt_limit:1:virt_limit," +
+            "requires_host:1:requires_host";
     },
 
     pre_virt_only: function() {
@@ -230,22 +231,16 @@ var Entitlement = {
             guest = 'true'.equals(consumer.getFact('virt.is_guest'));
         }
 
+        if (virt_pool && !guest) {
+            pre.addError("rulefailed.virt.only");
+        }
+    },
 
-        if (virt_pool) {
-            if (!guest) {
-                pre.addError("rulefailed.virt.only");
-            }
-            else {
-                // At this point we know this is a virt only pool and the requesting
-                // consumer is a guest, check if there are host restrictions on the pool:
-                if (pool.getSourceEntitlement() != null) {
-                    var hostConsumer = pre.getHostConsumer(consumer.getUuid());
+    pre_requires_host: function() {
+        var hostConsumer = pre.getHostConsumer(consumer.getUuid());
 
-                    if (hostConsumer == null || !hostConsumer.getUuid().equals(pool.getSourceEntitlement().getConsumer().getUuid())) {
-                            pre.addError("virt.guest.host.does.not.match.pool.owner");
-                    }
-                }
-            }
+        if (hostConsumer == null || !hostConsumer.getUuid().equals(attributes.get('requires_host'))) {
+            pre.addError("virt.guest.host.does.not.match.pool.owner");
         }
     },
 
@@ -276,18 +271,14 @@ var Entitlement = {
         if (attributes.containsKey("virt_limit") && standalone) {
             var productId = pool.getProductId();
 	        var virt_limit = attributes.get("virt_limit");
-	        var virt_attributes = new java.util.HashMap();
-	        virt_attributes.put("virt_only", "true");
-	        virt_attributes.put("pool_derived", "true");
 
 	        if ('unlimited'.equals(virt_limit)) {
-	            post.createParentConsumerRestrictedPool(productId, pool,
-	                                        'unlimited', virt_attributes);
+	            post.createHostRestrictedPool(productId, pool, 'unlimited');
 	        } else {
 	            var virt_quantity = parseInt(virt_limit) * entitlement.getQuantity();
 	            if (virt_quantity > 0) {
-	                post.createParentConsumerRestrictedPool(productId, pool,
-	                                            virt_quantity.toString(), virt_attributes);
+	                post.createHostRestrictedPool(productId, pool,
+	                        virt_quantity.toString());
 	            }
 	        }
 	    }

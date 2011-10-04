@@ -597,13 +597,9 @@ public class DefaultRulesTest {
         when(config.standalone()).thenReturn(true);
         enforcer.postEntitlement(consumer, postHelper, e);
 
-        Map<String, String> expectedAttrs = new HashMap<String, String>();
-        expectedAttrs.put("pool_derived", "true");
-        expectedAttrs.put("virt_only", "true");
-
         // Pool quantity should be virt_limit * entitlement quantity:
-        verify(postHelper).createParentConsumerRestrictedPool(eq(pool.getProductId()),
-            eq(pool), eq("50"), eq(expectedAttrs));
+        verify(postHelper).createHostRestrictedPool(eq(pool.getProductId()),
+            eq(pool), eq("50"));
     }
 
     @Test
@@ -617,13 +613,9 @@ public class DefaultRulesTest {
         when(config.standalone()).thenReturn(true);
         enforcer.postEntitlement(consumer, postHelper, e);
 
-        Map<String, String> atts = new HashMap<String, String>();
-        atts.put("pool_derived", "true");
-        atts.put("virt_only", "true");
-
         // Pool quantity should be virt_limit * entitlement quantity:
-        verify(postHelper).createParentConsumerRestrictedPool(eq(pool.getProductId()),
-            eq(pool), eq("unlimited"), eq(atts));
+        verify(postHelper).createHostRestrictedPool(eq(pool.getProductId()),
+            eq(pool), eq("unlimited"));
     }
 
     @Test
@@ -636,12 +628,8 @@ public class DefaultRulesTest {
         when(config.standalone()).thenReturn(false);
         enforcer.postEntitlement(consumer, postHelper, e);
 
-        Map<String, String> atts = new HashMap<String, String>();
-        atts.put("pool_derived", "true");
-        atts.put("virt_only", "true");
-        atts.put("virt_limit", "0");
-        verify(postHelper, never()).createParentConsumerRestrictedPool(pool.getProductId(),
-            pool, pool.getAttributeValue("virt_limit"), atts);
+        verify(postHelper, never()).createHostRestrictedPool(pool.getProductId(),
+            pool, pool.getAttributeValue("virt_limit"));
     }
 
     @Test
@@ -1171,7 +1159,7 @@ public class DefaultRulesTest {
         Product product = new Product(productId, "A host restricted product");
         Pool pool = TestUtil.createPool(owner, product);
         pool.addAttribute(new PoolAttribute("virt_only", "true"));
-        pool.setRestrictedToParentConsumer(parent.getUuid());
+        pool.addAttribute(new PoolAttribute("requires_host", parent.getUuid()));
         pool.setId("fakeid" + TestUtil.randomInt());
         Entitlement e = new Entitlement(pool, parent, new Date(), new Date(),
             1);

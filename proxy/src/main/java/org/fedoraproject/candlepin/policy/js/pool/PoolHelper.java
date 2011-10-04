@@ -75,28 +75,27 @@ public class PoolHelper {
     }
 
     /**
-     * Create a pool for a product and limit it to consumers a particular user has
-     * registered.
+     * Create a pool only for virt guests of a particular host consumer.
+     *
+     *
      *
      * @param productId Label of the product the pool is for.
+     * @param pool Pool this host restricted pool is being derived from.
      * @param quantity Number of entitlements for this pool, also accepts "unlimited".
      */
-    public void createParentConsumerRestrictedPool(String productId, Pool pool,
-        String quantity, Map<String, String> newPoolAttributes) {
+    public void createHostRestrictedPool(String productId, Pool pool,
+        String quantity) {
 
         Pool consumerSpecificPool = createPool(productId, pool.getOwner(), quantity,
             pool.getStartDate(), pool.getEndDate(), pool.getContractNumber(),
             pool.getAccountNumber(), pool.getProvidedProducts());
 
-        consumerSpecificPool.setRestrictedToParentConsumer(
-                this.sourceEntitlement.getConsumer().getUuid());
+        consumerSpecificPool.addAttribute(new PoolAttribute("requires_host",
+                sourceEntitlement.getConsumer().getUuid()));
         consumerSpecificPool.setAttribute("pool_derived", "true");
+        consumerSpecificPool.setAttribute("virt_only", "true");
 
         consumerSpecificPool.setSubscriptionId(pool.getSubscriptionId());
-        for (String key : newPoolAttributes.keySet()) {
-            PoolAttribute pa = new PoolAttribute(key, newPoolAttributes.get(key));
-            consumerSpecificPool.addAttribute(pa);
-        }
         poolManager.createPool(consumerSpecificPool);
     }
 
