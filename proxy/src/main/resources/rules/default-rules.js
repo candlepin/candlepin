@@ -392,10 +392,13 @@ var Entitlement = {
     },
 
     pre_sockets: function() {
-        if (!consumer.hasFact(SOCKET_FACT) ||
-            (parseInt(product.getAttribute("sockets")) < parseInt(consumer.getFact(SOCKET_FACT))) &&
-            (!product.hasAttribute("stacking_id"))) {
-            pre.addWarning("rulewarning.unsupported.number.of.sockets");
+        //usually, we assume socket count to be 1 if it is undef. However, we need to know if it's
+        //undef here in order to know to skip the socket comparison (per acarter/jomara)
+        if (consumer.hasFact(SOCKET_FACT) && !product.hasAttribute("stacking_id")) {
+            if ((parseInt(product.getAttribute("sockets")) > 0) &&
+                (parseInt(product.getAttribute("sockets")) < parseInt(consumer.getFact(SOCKET_FACT)))) {
+                pre.addWarning("rulewarning.unsupported.number.of.sockets");
+            }
         }
     },
 
