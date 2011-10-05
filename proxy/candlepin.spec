@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.4.18
+Version: 0.4.19
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -148,6 +148,64 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Wed Oct 05 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.19-1
+- Do not add rulewarning.unsupported.number.of.sockets if sockets is not
+  defined on the consumer or product, or if the product has zero sockets.
+  (cduryee@redhat.com)
+- Candlepin setup requires wget (bkearney@redhat.com)
+- Ensure that the Candlepin exceptions wrapping normal exceptions do not cause
+  a class cast exception. Chris Alfonso found this doing testing today.
+  (bkearney@redhat.com)
+- Return to throwing service unavailable exception. (dgoodwin@redhat.com)
+- 734214: Use a more intelligent loop to wait for tomcat to start up
+  (bkearney@redhat.com)
+- fix up partial stack healing with no specified products (jbowes@redhat.com)
+- teach select_best_pools to heal partial stacks (jbowes@redhat.com)
+- fix up the test and code for select_best_pools with installed products
+  (jbowes@redhat.com)
+- Rspec tests for healing. (dgoodwin@redhat.com)
+- Use current date in auto-subscribe if none provided. (dgoodwin@redhat.com)
+- Dates can't be used as params. (jesusr@redhat.com)
+- Teach select_best_pools about existing compliant products (jbowes@redhat.com)
+- checkstyle: long lines, unused imports (jesusr@redhat.com)
+- Use non-compliant products if none are provided. (dgoodwin@redhat.com)
+- add test for date (jesusr@redhat.com)
+- filter owner pools by entitle date (jesusr@redhat.com)
+- checkstyle: a number of checkstyle fixes, see below. (jesusr@redhat.com)
+- checkstyle: remove dead code and whitespaces (jesusr@redhat.com)
+- cleanup javadoc (jesusr@redhat.com)
+- reformat comment to fit 80 chars making it easier to read. (jesusr@redhat.com)
+- Pass compliance status down to select best pool rules. (dgoodwin@redhat.com)
+- initial changes for autobind with a date. (jesusr@redhat.com)
+- select the stack id that will cover the most sockets (jbowes@redhat.com)
+- Don't stack from different stack ids (jbowes@redhat.com)
+- Test stacks providing different products. (dgoodwin@redhat.com)
+- entitle from multiple pools from the same stack to fill an entitlement, if
+  required (jbowes@redhat.com)
+- Handle entitled and partially stacked edge case. (dgoodwin@redhat.com)
+- don't overdraw from a pool for stacking autobind (jbowes@redhat.com)
+- readd findStackingPools function and use it to get entitlement quantity
+  (jbowes@redhat.com)
+- use a list of lists of pools for select_best_pools (jbowes@redhat.com)
+- add and remove some comments from default-rules (jbowes@redhat.com)
+- Return hashmaps directly from the js rules (jbowes@redhat.com)
+- Refactor selectBestPools to return pool/quantity pairs (jbowes@redhat.com)
+- Detect uninstalled but partially stacked as out of compliance.
+  (dgoodwin@redhat.com)
+- Add stacking compliance checking. (dgoodwin@redhat.com)
+- Port compliance logic to javascript rules. (dgoodwin@redhat.com)
+- Add some tests for stacking. (dgoodwin@redhat.com)
+- Check compliance for non-stacked products. (dgoodwin@redhat.com)
+- Add tests for compliance checking. (dgoodwin@redhat.com)
+- Add method for listing a consumers entitlements for specific date.
+  (dgoodwin@redhat.com)
+- Sketch out interface for compliance checking. (dgoodwin@redhat.com)
+- Remove a remaining bind by product with quantity signature.
+  (dgoodwin@redhat.com)
+- Stacking javascript cleanup. (dgoodwin@redhat.com)
+- Expose product attributes on read-only pools. (dgoodwin@redhat.com)
+- Cleanup quantity in bind by product methods. (dgoodwin@redhat.com)
+
 * Wed Sep 28 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.18-1
 - Added consumerCountsByEntitlementStatus to OwnerInfo (mstead@redhat.com)
 - Checkstyle (wpoteat@redhat.com)
