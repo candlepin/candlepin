@@ -15,7 +15,6 @@
 package org.fedoraproject.candlepin.policy.js;
 
 import org.fedoraproject.candlepin.model.Attribute;
-import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolAttribute;
 import org.fedoraproject.candlepin.model.ProductPoolAttribute;
@@ -163,9 +162,5 @@ public class ReadOnlyPool {
 
     public ReadOnlyProduct getTopLevelProduct() {
         return productCache.getProductById(entPool.getProductId());
-    }
-
-    public Entitlement getSourceEntitlement() {
-        return entPool.getSourceEntitlement();
     }
 }
