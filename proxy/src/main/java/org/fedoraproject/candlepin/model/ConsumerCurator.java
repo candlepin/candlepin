@@ -270,21 +270,24 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     /**
-     * Get host consumer for the guest system id
+     * Get host consumer for a guest system id.
      *
-     * @param uuid of the guest system id
-     * @return Consumer whose name matches the given name, null otherwise.
+     * As multiple hosts could have reported the same guest ID, we find the newest
+     * and assume this is the authoritative host for the guest.
+     *
+     * @param guestId a virtual guest ID (not a consumer UUID)
+     * @return host consumer who most recently reported the given guestId (if any)
      */
     @Transactional
     @EnforceAccessControl
-    public Consumer getHost(String uuid) {
+    public Consumer getHost(String guestId) {
 
         // TODO: could the query do the work for us here? sort on updated time, limit to 1.
         // Avoids any potential (albeit unlikely) hibernate issues where we mistakenly
         // load a bunch of data.
         List<GuestId> consumers = currentSession()
             .createCriteria(GuestId.class)
-            .add(Restrictions.eq("guestId", uuid))
+            .add(Restrictions.eq("guestId", guestId))
             .list();
         Consumer newest = null;
         if (consumers != null) {
