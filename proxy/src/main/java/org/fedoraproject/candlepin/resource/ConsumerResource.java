@@ -76,13 +76,11 @@ import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletResponse;
@@ -525,8 +523,8 @@ public class ConsumerResource {
             new ArrayList<GuestId>() : new ArrayList<GuestId>(toUpdate.getGuestIds());
 
         boolean changesMade = checkForFactsUpdate(toUpdate, consumer);
-        changesMade = changesMade || checkForInstalledProductsUpdate(toUpdate,
-            consumer) || checkForGuestsUpdate(toUpdate, consumer);
+        changesMade = checkForInstalledProductsUpdate(toUpdate, consumer) || changesMade;
+        changesMade = checkForGuestsUpdate(toUpdate, consumer) || changesMade;
 
         // Allow optional setting of the autoheal attribute:
         if (consumer.isAutoheal() != null &&

@@ -24,6 +24,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Locale;
 
 import org.fedoraproject.candlepin.audit.Event;
@@ -260,9 +262,41 @@ public class ConsumerResourceUpdateTest {
         verify(sink).sendEvent(eq(event));
     }
 
+    @Test
+    public void multipleUpdatesCanOccur() {
+        String uuid = "A Consumer";
+        String expectedFactName = "FACT1";
+        String expectedFactValue = "F1";
+        ConsumerInstalledProduct expectedInstalledProduct =
+            new ConsumerInstalledProduct("P1", "Product One");
+        GuestId expectedGuestId = new GuestId("GUEST_ID_1");
+
+        Consumer updated = new Consumer();
+        updated.setUuid(uuid);
+        updated.setFact(expectedFactName, expectedFactValue);
+        updated.addInstalledProduct(expectedInstalledProduct);
+        updated.addGuestId(expectedGuestId);
+
+        Consumer existing = new Consumer();
+        existing.setUuid(updated.getUuid());
+        existing.setFacts(new HashMap<String, String>());
+        existing.setInstalledProducts(new HashSet<ConsumerInstalledProduct>());
+
+        when(this.consumerCurator.findByUuid(existing.getUuid())).thenReturn(existing);
+
+        this.resource.updateConsumer(existing.getUuid(), updated);
+        assertEquals(1, existing.getFacts().size());
+        assertEquals(expectedFactValue, existing.getFact(expectedFactName));
+        assertEquals(1, existing.getInstalledProducts().size());
+        assertTrue(existing.getInstalledProducts().contains(expectedInstalledProduct));
+        assertEquals(1, existing.getGuestIds().size());
+        assertTrue(existing.getGuestIds().contains(expectedGuestId));
+
+    }
+
     private Consumer createConsumerWithGuests(String ... guestIds) {
         Consumer a = new Consumer();
-        for (String guestId: guestIds) {
+        for (String guestId : guestIds) {
             a.addGuestId(new GuestId(guestId));
         }
         return a;
