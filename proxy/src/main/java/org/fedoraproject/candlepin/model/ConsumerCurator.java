@@ -105,7 +105,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
     /**
      * Lookup consumer by its name
-     * 
+     *
      * @param name consumer name to find
      * @return Consumer whose name matches the given name, null otherwise.
      */
@@ -115,10 +115,10 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         return (Consumer) currentSession().createCriteria(Consumer.class)
             .add(Restrictions.eq("name", name)).uniqueResult();
     }
-    
+
     /**
      * Lookup consumer by its virt.uuid
-     * 
+     *
      * @param uuid consumer virt.uuid to find
      * @return Consumer whose name matches the given virt.uuid, null otherwise.
      */
@@ -134,7 +134,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     /**
      * Candlepin supports the notion of a user being a consumer. When in effect
      * a consumer will exist in the system who is tied to a particular user.
-     * 
+     *
      * @param user User
      * @return Consumer for this user if one exists, null otherwise.
      */
@@ -150,7 +150,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
     /**
      * Lookup the Consumer by its uuid.
-     * 
+     *
      * @param uuid Consumer uuid sought.
      * @return Consumer whose uuid matches the given value, or null otherwise.
      */
@@ -167,18 +167,18 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         return (Consumer) currentSession().createCriteria(Consumer.class)
             .add(Restrictions.eq("uuid", uuid)).uniqueResult();
     }
-    
+
     @SuppressWarnings("unchecked")
     @Transactional
     @EnforceAccessControl
     public List<Consumer> listByOwner(Owner owner) {
-        return (List<Consumer>) currentSession().createCriteria(Consumer.class)
+        return currentSession().createCriteria(Consumer.class)
             .add(Restrictions.eq("owner", owner)).list();
     }
 
     /**
      * Search for Consumers with fields matching those provided.
-     * 
+     *
      * @param userName the username to match, or null to ignore
      * @param type the type to match, or null to ignore
      * @param owner Optional owner to filter on, pass null to skip.
@@ -202,7 +202,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             criteria.add(Restrictions.eq("owner", owner));
         }
 
-        return (List<Consumer>) criteria.list();
+        return criteria.list();
     }
 
     /**
@@ -271,14 +271,18 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
     /**
      * Get host consumer for the guest system id
-     * 
+     *
      * @param uuid of the guest system id
      * @return Consumer whose name matches the given name, null otherwise.
      */
     @Transactional
     @EnforceAccessControl
     public Consumer getHost(String uuid) {
-        List<GuestId> consumers = (List<GuestId>) currentSession()
+
+        // TODO: could the query do the work for us here? sort on updated time, limit to 1.
+        // Avoids any potential (albeit unlikely) hibernate issues where we mistakenly
+        // load a bunch of data.
+        List<GuestId> consumers = currentSession()
             .createCriteria(GuestId.class)
             .add(Restrictions.eq("guestId", uuid))
             .list();
@@ -293,10 +297,10 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         }
         return newest;
     }
-    
+
     /**
      * Get guest consumers for current consumer
-     * 
+     *
      * @param consumer consumer to find to host of
      * @return Consumer whose name matches the given name, null otherwise.
      */
@@ -311,7 +315,14 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
                 consumer.getUuid()));
         }
         List<Consumer> guests = new ArrayList<Consumer>();
-        List<GuestId> consumerGuests = (List<GuestId>) currentSession()
+        // TODO: Do you need another query for guest IDs? Should just be able to do
+        // consumer.getGuestIds()?
+
+        // TODO: Not taking into account possibility that while we report this guest ID,
+        // another host may have more recently reported it, making them the definitive
+        // host for that guest. (thus it probably shouldn't appear in this list)
+
+        List<GuestId> consumerGuests = currentSession()
             .createCriteria(GuestId.class)
             .add(Restrictions.eq("consumer", consumer))
             .list();
