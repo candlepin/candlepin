@@ -299,10 +299,10 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     /**
-     * Get guest consumers for current consumer
+     * Get guest consumers for a host consumer.
      *
-     * @param consumer consumer to find to host of
-     * @return Consumer whose name matches the given name, null otherwise.
+     * @param consumer host consumer to find the guests for
+     * @return list of registered guest consumers for this host
      */
     @Transactional
     @EnforceAccessControl
@@ -318,16 +318,15 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         // TODO: Do you need another query for guest IDs? Should just be able to do
         // consumer.getGuestIds()?
 
-        // TODO: Not taking into account possibility that while we report this guest ID,
-        // another host may have more recently reported it, making them the definitive
-        // host for that guest. (thus it probably shouldn't appear in this list)
-
         List<GuestId> consumerGuests = currentSession()
             .createCriteria(GuestId.class)
             .add(Restrictions.eq("consumer", consumer))
             .list();
         if (consumerGuests != null) {
             for (GuestId cg : consumerGuests) {
+
+                // Check if this is the most recent host to report the guest by asking
+                // for the consumer's current host and comparing it to ourselves.
                 if (consumer.equals(getHost(cg.getGuestId()))) {
                     Consumer guest = findByVirtUuid(cg.getGuestId());
                     if (guest != null) {
