@@ -25,6 +25,7 @@ import com.wideplay.warp.persist.Transactional;
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.ReplicationMode;
+import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 import org.xnap.commons.i18n.I18n;
 
@@ -125,10 +126,16 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Transactional
     @EnforceAccessControl
     public Consumer findByVirtUuid(String uuid) {
-        return (Consumer) currentSession().createCriteria(Consumer.class)
+        Consumer result = null;
+        List<Consumer> options = (List<Consumer>)currentSession().createCriteria(Consumer.class)
+            .addOrder(Order.desc("updated"))
             .add(Restrictions.sqlRestriction("{alias}.id in (select cp_consumer_id " +
                 "from cp_consumer_facts where mapkey = 'virt.uuid' and element = ?)",
-                uuid, Hibernate.STRING)).uniqueResult();
+                uuid, Hibernate.STRING)).list();
+        if(options != null && options.size() != 0) {
+            result = options.get(0);
+        }
+        return result;
     }
 
     /**
@@ -318,16 +325,9 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
                 consumer.getUuid()));
         }
         List<Consumer> guests = new ArrayList<Consumer>();
-        // TODO: Do you need another query for guest IDs? Should just be able to do
-        // consumer.getGuestIds()?
-
-        List<GuestId> consumerGuests = currentSession()
-            .createCriteria(GuestId.class)
-            .add(Restrictions.eq("consumer", consumer))
-            .list();
+        List<GuestId> consumerGuests = consumer.getGuestIds();
         if (consumerGuests != null) {
             for (GuestId cg : consumerGuests) {
-
                 // Check if this is the most recent host to report the guest by asking
                 // for the consumer's current host and comparing it to ourselves.
                 if (consumer.equals(getHost(cg.getGuestId()))) {
