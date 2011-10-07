@@ -107,7 +107,7 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
         poolCurator.create(pool);
 
-        consumer.setFact("cpu.sockets", "4");
+        consumer.setFact("cpu.cpu_socket(s)", "4");
         List<Pool> results =
             poolCurator.listByConsumer(consumer);
         assertEquals(0, results.size());
