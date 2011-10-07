@@ -30,15 +30,6 @@ Requires: bouncycastle
 %description
 Candlepin is an open source entitlement management system.
 
-%package tomcat5
-Summary: Candlepin web application for tomcat5
-Requires: tomcat5 >= 5.5
-Requires: candlepin = %{version}
-Group: Internet/Applications
-
-%description tomcat5
-Candlepin web application for tomcat5
-
 %package tomcat6
 Summary: Candlepin web application for tomcat6
 Requires: tomcat6
@@ -79,15 +70,6 @@ install -d -m 755 $RPM_BUILD_ROOT/%{_sysconfdir}/%{name}/
 install -d -m 755 $RPM_BUILD_ROOT/%{_datadir}/%{name}/
 install -m 755 code/setup/cpsetup $RPM_BUILD_ROOT/%{_datadir}/%{name}/cpsetup
 touch $RPM_BUILD_ROOT/%{_sysconfdir}/%{name}/%{name}.conf
-
-# tomcat5
-install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat5/webapps/
-install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat5/webapps/%{name}/
-install -d -m 755 $RPM_BUILD_ROOT/%{_sysconfdir}/tomcat5/
-unzip target/%{name}-%{version}.war -d $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat5/webapps/%{name}/
-ln -s /etc/candlepin/certs/keystore $RPM_BUILD_ROOT/%{_sysconfdir}/tomcat5/keystore
-rm -f $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat5/webapps/%{name}/WEB-INF/lib/bc*jdk16*.jar
-ln -s %{_datadir}/java/bcprov.jar $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat5/webapps/%{name}/WEB-INF/lib/bcproj.jar
 
 # tomcat6
 install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat6/webapps/
@@ -134,14 +116,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_localstatedir}/lib/%{name}
 %{_localstatedir}/log/%{name}
 %{_localstatedir}/cache/%{name}
-
-%files tomcat5
-%defattr(644,tomcat,tomcat,775)
-%{_localstatedir}/lib/tomcat5/webapps/%{name}*
-%{_localstatedir}/lib/%{name}
-%{_localstatedir}/log/%{name}
-%{_localstatedir}/cache/%{name}
-%{_sysconfdir}/tomcat5/keystore
 
 %files tomcat6
 %defattr(644,tomcat,tomcat,775)
