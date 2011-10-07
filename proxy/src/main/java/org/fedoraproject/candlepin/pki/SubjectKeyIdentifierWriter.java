@@ -14,12 +14,13 @@
  */
 package org.fedoraproject.candlepin.pki;
 
+import org.bouncycastle.asn1.DEREncodable;
+
 import java.io.IOException;
+import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.cert.CertificateParsingException;
 import java.util.Set;
-
-import org.bouncycastle.asn1.DEREncodable;
 
 /**
  * SubjectKeyIdentifierWriter
@@ -34,5 +35,5 @@ public interface SubjectKeyIdentifierWriter {
      */
     DEREncodable getSubjectKeyIdentifier(KeyPair clientKeyPair,
         Set<X509ExtensionWrapper> extensions)
-        throws CertificateParsingException, IOException;
+        throws CertificateParsingException, IOException, InvalidKeyException;
 }
