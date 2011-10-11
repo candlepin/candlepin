@@ -365,6 +365,11 @@ var Entitlement = {
     },
 
     pre_requires_host: function() {
+        // It shouldn't be possible to get a host restricted pool in hosted, but just in
+        // case, make sure it won't be enforced if we do.
+        if (!standalone) {
+            return;
+        }
         var hostConsumer = pre.getHostConsumer(consumer.getUuid());
 
         if (hostConsumer == null || !hostConsumer.getUuid().equals(attributes.get('requires_host'))) {

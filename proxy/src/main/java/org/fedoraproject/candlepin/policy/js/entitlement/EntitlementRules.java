@@ -143,6 +143,7 @@ public class EntitlementRules implements Enforcer {
         args.put("pre", preHelper);
         args.put("attributes", allAttributes);
         args.put("prodAttrSeparator", PROD_ARCHITECTURE_SEPARATOR);
+        args.put("standalone", config.standalone());
         args.put("log", rulesLogger);
 
         log.debug("Running pre-entitlement rules for: " + consumer.getUuid() +

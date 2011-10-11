@@ -552,8 +552,30 @@ public class DefaultRulesTest {
         assertFalse(result.hasWarnings());
     }
 
+    // There shouldn't be any way to get a host restricted pool in hosted, but make sure
+    // if it were to happen, it wouldn't be enforced.
+    @Test
+    public void hostedVirtOnlyPoolGuestHostDoesNotMatch() {
+        Consumer parent = new Consumer("test parent consumer", "test user", owner,
+            new ConsumerType(ConsumerTypeEnum.SYSTEM));
+        Pool pool = setupHostRestrictedPool(parent);
+        Consumer otherParent = new Consumer("test parent consumer", "test user", owner,
+            new ConsumerType(ConsumerTypeEnum.SYSTEM));
+
+        when(config.standalone()).thenReturn(false);
+        consumer.setFact("virt.is_guest", "true");
+
+        when(consumerCurator.getHost(consumer.getUuid())).thenReturn(otherParent);
+
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
+            .getResult();
+        assertFalse(result.hasErrors());
+        assertFalse(result.hasWarnings());
+    }
+
     @Test
     public void virtOnlyPoolGuestHostDoesNotMatch() {
+        when(config.standalone()).thenReturn(true);
         // Parent consumer of our guest:
         Consumer parent = new Consumer("test parent consumer", "test user", owner,
             new ConsumerType(ConsumerTypeEnum.SYSTEM));
@@ -577,6 +599,8 @@ public class DefaultRulesTest {
 
     @Test
     public void virtOnlyPoolGuestNoHost() {
+        when(config.standalone()).thenReturn(true);
+
         // Another parent we'll make a virt only pool for:
         Consumer otherParent = new Consumer("test parent consumer", "test user", owner,
             new ConsumerType(ConsumerTypeEnum.SYSTEM));
