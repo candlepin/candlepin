@@ -283,6 +283,20 @@ public class Pool extends AbstractHibernateObject implements Linkable, Owned {
         return findAttribute(this.attributes, key) != null;
     }
 
+    /**
+     * @param key Desired attribute.
+     * @param expectedValue Expected value.
+     * @return true if the pool has the given attribute and it is equal to the value,
+     * false otherwise.
+     */
+    public boolean attributeEquals(String key, String expectedValue) {
+        String val = getAttributeValue(key);
+        if (val != null && val.equals(expectedValue))  {
+            return true;
+        }
+        return false;
+    }
+
     public Set<PoolAttribute> getAttributes() {
         if (attributes == null) {
             return new HashSet<PoolAttribute>();

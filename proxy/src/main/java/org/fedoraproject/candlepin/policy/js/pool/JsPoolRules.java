@@ -82,6 +82,7 @@ public class JsPoolRules implements PoolRules {
         args.put("log", log);
         args.put("helper", new PoolHelper(this.poolManager,
             this.productAdapter, null));
+        args.put("standalone", config.standalone());
         List<PoolUpdate> poolsUpdated = null;
         try {
             poolsUpdated = jsRules.invokeMethod("updatePools", args);

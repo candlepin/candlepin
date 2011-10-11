@@ -90,8 +90,8 @@ public class PoolHelper {
             pool.getStartDate(), pool.getEndDate(), pool.getContractNumber(),
             pool.getAccountNumber(), pool.getProvidedProducts());
 
-        consumerSpecificPool.addAttribute(new PoolAttribute("requires_host",
-                sourceEntitlement.getConsumer().getUuid()));
+        consumerSpecificPool.setAttribute("requires_host",
+            sourceEntitlement.getConsumer().getUuid());
         consumerSpecificPool.setAttribute("pool_derived", "true");
         consumerSpecificPool.setAttribute("virt_only", "true");
 
@@ -153,6 +153,7 @@ public class PoolHelper {
         boolean hasChanged = false;
         Product product = sub.getProduct();
         for (Attribute attr : product.getAttributes()) {
+
             String attributeName = attr.getName();
             String attributeValue = attr.getValue();
 
@@ -161,6 +162,7 @@ public class PoolHelper {
             processed.add(attributeName);
 
             if (pool.hasProductAttribute(attributeName)) {
+
                 ProductPoolAttribute provided =
                     pool.getProductAttribute(attributeName);
                 boolean productsAreSame = product.getId().equals(provided.getProductId());

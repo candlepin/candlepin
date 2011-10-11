@@ -681,31 +681,44 @@ var Pool = {
             // Expected quantity is normally the subscription's quantity, but for
             // virt only pools we expect it to be sub quantity * virt_limit:
             var expectedQuantity = sub.getQuantity() * sub.getProduct().getMultiplier();
-            if (existingPool.hasAttribute("virt_only") &&
-                existingPool.getAttributeValue("virt_only").equals("true")) {
-                // Assuming there mere be a virt limit attribute set:
+
+            /*
+             *  WARNING: when updating pools, we have the added complication of having to
+             *  watch out for pools that candlepin creates internally. (i.e. virt bonus
+             *  pools in hosted (created when sub is first detected), and host restricted
+             *  virt pools when on-site. (created when a host binds)
+             */
+            if (existingPool.hasAttribute("pool_derived") &&
+                existingPool.attributeEquals("virt_only", "true")) {
+
+                // Assuming there mere be a virt limit attribute set on the sub product,
+                // this is true for all pools with pool_derived. (for now...)
                 var virt_limit = attributes.get("virt_limit");
 
                 if ('unlimited'.equals(virt_limit)) {
-                    // Bad to hardcode this conversion here
-                    // TODO:  Figure out a better way translate this value!
                     expectedQuantity = -1;
-                } else {
-                    expectedQuantity = sub.getQuantity() * parseInt(virt_limit);
+                }
+                else {
+                    if (standalone) {
+                        expectedQuantity = parseInt(virt_limit);
+                    }
+                    else {
+                        expectedQuantity = sub.getQuantity() * parseInt(virt_limit);
+                    }
                 }
             }
 
             var quantityChanged = !(expectedQuantity == existingPool.getQuantity());
             var productsChanged = helper.checkForChangedProducts(existingPool, sub);
 
-            var poolAttributesChanged = helper.copyProductAttributesOntoPool(sub,
+            var productAttributesChanged = helper.copyProductAttributesOntoPool(sub,
                                                                              existingPool);
-            if (poolAttributesChanged) {
-                log.info("Updated pool attributes from subscription.");
+            if (productAttributesChanged) {
+                log.info("Updated product attributes from subscription.");
             }
 
             if (!(quantityChanged || datesChanged || productsChanged ||
-                  poolAttributesChanged)) {
+                  productAttributesChanged)) {
                 //TODO: Should we check whether pool is overflowing here?
                 log.info("   No updates required.");
                 continue;
