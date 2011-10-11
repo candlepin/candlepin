@@ -127,12 +127,13 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @EnforceAccessControl
     public Consumer findByVirtUuid(String uuid) {
         Consumer result = null;
-        List<Consumer> options = (List<Consumer>)currentSession().createCriteria(Consumer.class)
+        List<Consumer> options = (List<Consumer>) currentSession()
+            .createCriteria(Consumer.class)
             .addOrder(Order.desc("updated"))
             .add(Restrictions.sqlRestriction("{alias}.id in (select cp_consumer_id " +
                 "from cp_consumer_facts where mapkey = 'virt.uuid' and element = ?)",
                 uuid, Hibernate.STRING)).list();
-        if(options != null && options.size() != 0) {
+        if (options != null && options.size() != 0) {
             result = options.get(0);
         }
         return result;
