@@ -32,6 +32,7 @@ public interface SubjectKeyIdentifierWriter {
      * @return DER encoded subjet key identifier
      * @throws CertificateParsingException thrown if problem parsing cert
      * @throws IOException thrown if error reading cert
+     * @throws InvalidKeyException thrown if there's a problem with the key
      */
     DEREncodable getSubjectKeyIdentifier(KeyPair clientKeyPair,
         Set<X509ExtensionWrapper> extensions)
