@@ -48,6 +48,7 @@ import org.fedoraproject.candlepin.model.GuestId;
 import org.fedoraproject.candlepin.model.IdentityCertificate;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.OwnerCurator;
+import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.User;
 import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
@@ -630,6 +631,7 @@ public class ConsumerResource {
         }
 
         log.debug("Updating guests.");
+        List<GuestId> removedGuests = getRemovedGuestIds(existing, incoming);
 
         // Ensure that existing actually has guest ids initialized.
         if (existing.getGuestIds() != null) {
@@ -639,7 +641,71 @@ public class ConsumerResource {
         for (GuestId cg : incoming.getGuestIds()) {
             existing.addGuestId(cg);
         }
+
+        log.debug("Updating guest entitlements.");
+
+        // Check guests that are existing/added.
+        for (GuestId guestId : incoming.getGuestIds()) {
+            Consumer guest = consumerCurator.findByVirtUuid(guestId.getGuestId());
+            if (guest == null) {
+                // The guest has not registered.
+                continue;
+            }
+
+            Consumer host = consumerCurator.getHost(guestId.getGuestId());
+            if (host != null && !existing.equals(host)) {
+                // The guest was reported by another host.
+                revokeGuestEntitlementsMatchingHost(host, guest);
+            }
+        }
+
+        // Check guests that have been removed.
+        for (GuestId guestId : removedGuests) {
+            Consumer guest = consumerCurator.findByVirtUuid(guestId.getGuestId());
+            if (guest != null) {
+                // The guest is actually registered. Remove the entitlements
+                // that are associated with this host.
+                revokeGuestEntitlementsMatchingHost(existing, guest);
+            }
+        }
         return true;
+    }
+
+    private List<GuestId> getRemovedGuestIds(Consumer existing, Consumer incoming) {
+        List<GuestId> existingIds = existing.getGuestIds() == null ?
+            new ArrayList<GuestId>() : new ArrayList<GuestId>(existing.getGuestIds());
+        List<GuestId> incomingIds = incoming.getGuestIds() == null ?
+            new ArrayList<GuestId>() : new ArrayList<GuestId>(incoming.getGuestIds());
+
+        List<GuestId> removedGuests = new ArrayList<GuestId>(existingIds);
+        removedGuests.removeAll(incomingIds);
+        return removedGuests;
+    }
+
+    /**
+     * @param guestConsumer
+     */
+    private void revokeGuestEntitlementsMatchingHost(Consumer host, Consumer guest) {
+        for (Entitlement entitlement : guest.getEntitlements()) {
+            Pool pool = entitlement.getPool();
+            String requiredHost = getRequiredHost(pool);
+            if (isVirtOnly(pool) && requiredHost.equals(host.getUuid())) {
+                log.debug("Removing entitlement " + entitlement.getProductId() +
+                    " from guest " + guest.getName());
+                poolManager.revokeEntitlement(entitlement);
+            }
+        }
+    }
+
+    private String getRequiredHost(Pool pool) {
+        return pool.hasAttribute("requires_host") ?
+            pool.getAttributeValue("requires_host") : "";
+    }
+
+    private boolean isVirtOnly(Pool pool) {
+        String virtOnly = pool.hasAttribute("virt_only") ?
+            pool.getAttributeValue("virt_only") : "false";
+        return virtOnly.equalsIgnoreCase("true") || virtOnly.equals("1");
     }
 
     /**

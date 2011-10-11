@@ -31,16 +31,19 @@ import java.util.Locale;
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
+import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.model.ActivationKeyCurator;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerInstalledProduct;
 import org.fedoraproject.candlepin.model.ConsumerTypeCurator;
+import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.GuestId;
 import org.fedoraproject.candlepin.resource.ConsumerResource;
 import org.fedoraproject.candlepin.service.IdentityCertServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.service.UserServiceAdapter;
+import org.fedoraproject.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -60,6 +63,7 @@ public class ConsumerResourceUpdateTest {
     @Mock private EventSink sink;
     @Mock private EventFactory eventFactory;
     @Mock private ActivationKeyCurator activationKeyCurator;
+    @Mock private PoolManager poolManager;
     private I18n i18n;
 
     private ConsumerResource resource;
@@ -71,7 +75,7 @@ public class ConsumerResourceUpdateTest {
         this.resource = new ConsumerResource(this.consumerCurator,
             this.consumerTypeCurator, null, this.subscriptionService, null,
             this.idCertService, null, this.i18n, this.sink, this.eventFactory, null, null,
-            this.userService, null, null, null, null, null,
+            this.userService, null, poolManager, null, null, null,
             this.activationKeyCurator, null);
 
     }
@@ -178,7 +182,7 @@ public class ConsumerResourceUpdateTest {
     }
 
     @Test
-    public void testUpdateConsumerDoesNotChangeWhenGuestIdsNotIncludedInRequest() {
+    public void testUpdateConsumerDoesNotChangeGuestsWhenGuestIdsNotIncludedInRequest() {
         String uuid = "TEST_CONSUMER";
         String[] guests = new String[]{ "Guest 1", "Guest 2" };
         Consumer existing = createConsumerWithGuests(guests);
@@ -263,6 +267,200 @@ public class ConsumerResourceUpdateTest {
     }
 
     @Test
+    public void ensureNewGuestHasEntitlementsRevokedIfItWasMigratedFromAnotherHost() {
+        String uuid = "TEST_CONSUMER";
+        Consumer existingHost = createConsumerWithGuests("Guest 1", "Guest 2");
+        existingHost.setUuid(uuid);
+
+        Entitlement entitlement = TestUtil.createEntitlement();
+        entitlement.getPool().setAttribute("virt_only", "1");
+        entitlement.getPool().setAttribute("requires_host", uuid);
+
+        Consumer guest1 = new Consumer();
+        guest1.setUuid("Guest 1");
+        guest1.addEntitlement(entitlement);
+
+        when(consumerCurator.findByVirtUuid("Guest 1")).thenReturn(guest1);
+        // Ensure that the guests host is the existing.
+        when(consumerCurator.getHost("Guest 1")).thenReturn(existingHost);
+
+        Consumer existingMigratedTo = createConsumerWithGuests();
+        existingMigratedTo.setUuid("MIGRATED_TO");
+        when(this.consumerCurator.findByUuid(existingMigratedTo.getUuid()))
+            .thenReturn(existingMigratedTo);
+
+        this.resource.updateConsumer(existingMigratedTo.getUuid(),
+            createConsumerWithGuests("Guest 1"));
+
+        verify(poolManager).revokeEntitlement(eq(entitlement));
+    }
+
+    @Test
+    public void ensureExistingGuestHasEntitlementIsRemovedIfAlreadyAssocWithDiffHost() {
+        String uuid = "TEST_CONSUMER";
+        Consumer existingHost = createConsumerWithGuests("Guest 1", "Guest 2");
+        existingHost.setUuid(uuid);
+
+        Entitlement entitlement = TestUtil.createEntitlement();
+        entitlement.getPool().setAttribute("virt_only", "1");
+        entitlement.getPool().setAttribute("requires_host", uuid);
+
+        Consumer guest1 = new Consumer();
+        guest1.setUuid("Guest 1");
+        guest1.addEntitlement(entitlement);
+
+        when(consumerCurator.findByVirtUuid("Guest 1")).thenReturn(guest1);
+        // Ensure that the guests host is the existing.
+        when(consumerCurator.getHost("Guest 1")).thenReturn(existingHost);
+
+        Consumer existingMigratedTo = createConsumerWithGuests("Guest 1");
+        existingMigratedTo.setUuid("MIGRATED_TO");
+        when(this.consumerCurator.findByUuid(existingMigratedTo.getUuid()))
+            .thenReturn(existingMigratedTo);
+
+        this.resource.updateConsumer(existingMigratedTo.getUuid(),
+            createConsumerWithGuests("Guest 1"));
+
+        verify(poolManager).revokeEntitlement(eq(entitlement));
+    }
+
+    @Test
+    public void ensureGuestEntitlementsUntouchedWhenGuestIsNewWithNoOtherHost() {
+        String uuid = "TEST_CONSUMER";
+        Consumer host = createConsumerWithGuests();
+        host.setUuid(uuid);
+
+        when(this.consumerCurator.findByUuid(uuid)).thenReturn(host);
+
+        Consumer updatedHost = createConsumerWithGuests("Guest 1");
+        updatedHost.setUuid(uuid);
+
+        Entitlement entitlement = TestUtil.createEntitlement();
+        entitlement.getPool().setAttribute("virt_only", "1");
+        entitlement.getPool().setAttribute("requires_host", uuid);
+
+        Consumer guest1 = new Consumer();
+        guest1.setUuid("Guest 1");
+        guest1.addEntitlement(entitlement);
+
+        when(consumerCurator.findByVirtUuid("Guest 1")).thenReturn(guest1);
+
+        // Ensure that the guest was not reported by another host.
+        when(consumerCurator.getHost("Guest 1")).thenReturn(null);
+
+        this.resource.updateConsumer(host.getUuid(), updatedHost);
+        verify(poolManager, never()).revokeEntitlement(eq(entitlement));
+    }
+
+    @Test
+    public void ensureGuestEntitlementsUntouchedWhenGuestExistsWithNoOtherHost() {
+        String uuid = "TEST_CONSUMER";
+        Consumer host = createConsumerWithGuests("Guest 1");
+        host.setUuid(uuid);
+
+        when(this.consumerCurator.findByUuid(uuid)).thenReturn(host);
+
+        Consumer updatedHost = createConsumerWithGuests("Guest 1");
+        updatedHost.setUuid(uuid);
+
+        Entitlement entitlement = TestUtil.createEntitlement();
+        entitlement.getPool().setAttribute("virt_only", "1");
+        entitlement.getPool().setAttribute("requires_host", uuid);
+
+        Consumer guest1 = new Consumer();
+        guest1.setUuid("Guest 1");
+        guest1.addEntitlement(entitlement);
+
+        when(consumerCurator.findByVirtUuid("Guest 1")).thenReturn(guest1);
+
+        // Ensure that the guest was already reported by same host.
+        when(consumerCurator.getHost("Guest 1")).thenReturn(host);
+
+        this.resource.updateConsumer(host.getUuid(), updatedHost);
+        verify(poolManager, never()).revokeEntitlement(eq(entitlement));
+    }
+
+    @Test
+    public void ensureGuestEntitlementsAreRevokedWhenGuestIsRemovedFromHost() {
+        String uuid = "TEST_CONSUMER";
+        Consumer host = createConsumerWithGuests("Guest 1", "Guest 2");
+        host.setUuid(uuid);
+
+        when(this.consumerCurator.findByUuid(uuid)).thenReturn(host);
+
+        Consumer updatedHost = createConsumerWithGuests("Guest 2");
+        updatedHost.setUuid(uuid);
+
+        Entitlement entitlement = TestUtil.createEntitlement();
+        entitlement.getPool().setAttribute("virt_only", "1");
+        entitlement.getPool().setAttribute("requires_host", uuid);
+
+        Consumer guest1 = new Consumer();
+        guest1.setUuid("Guest 1");
+        guest1.addEntitlement(entitlement);
+
+        when(consumerCurator.findByVirtUuid("Guest 1")).thenReturn(guest1);
+
+        this.resource.updateConsumer(host.getUuid(), updatedHost);
+        verify(consumerCurator).findByVirtUuid(eq("Guest 1"));
+        verify(poolManager).revokeEntitlement(eq(entitlement));
+    }
+
+
+    @Test
+    public void ensureGuestEntitlementsAreNotRemovedWhenGuestsAndHostAreTheSame() {
+        String uuid = "TEST_CONSUMER";
+        Consumer host = createConsumerWithGuests("Guest 1");
+        host.setUuid(uuid);
+
+        when(this.consumerCurator.findByUuid(uuid)).thenReturn(host);
+
+        Consumer updatedHost = createConsumerWithGuests("Guest 1");
+        updatedHost.setUuid(uuid);
+
+        Entitlement entitlement = TestUtil.createEntitlement();
+        entitlement.getPool().setAttribute("virt_only", "1");
+        entitlement.getPool().setAttribute("requires_host", uuid);
+
+        Consumer guest1 = new Consumer();
+        guest1.setUuid("Guest 1");
+        guest1.addEntitlement(entitlement);
+
+        when(consumerCurator.findByVirtUuid("Guest 1")).thenReturn(guest1);
+        when(consumerCurator.getHost("Guest 1")).thenReturn(host);
+
+        this.resource.updateConsumer(host.getUuid(), updatedHost);
+
+        verify(poolManager, never()).revokeEntitlement(eq(entitlement));
+    }
+
+    @Test
+    public void guestEntitlementsNotRemovedIfEntitlementIsVirtOnlyButRequiresHostNotSet() {
+        String uuid = "TEST_CONSUMER";
+        Consumer host = createConsumerWithGuests("Guest 1", "Guest 2");
+        host.setUuid(uuid);
+
+        when(this.consumerCurator.findByUuid(uuid)).thenReturn(host);
+
+        Consumer updatedHost = createConsumerWithGuests("Guest 2");
+        updatedHost.setUuid(uuid);
+
+        Entitlement entitlement = TestUtil.createEntitlement();
+        entitlement.getPool().setAttribute("virt_only", "1");
+
+        Consumer guest1 = new Consumer();
+        guest1.setUuid("Guest 1");
+        guest1.addEntitlement(entitlement);
+
+        when(consumerCurator.findByVirtUuid("Guest 1")).thenReturn(guest1);
+
+        this.resource.updateConsumer(host.getUuid(), updatedHost);
+
+        verify(consumerCurator).findByVirtUuid(eq("Guest 1"));
+        verify(poolManager, never()).revokeEntitlement(eq(entitlement));
+    }
+
+    @Test
     public void multipleUpdatesCanOccur() {
         String uuid = "A Consumer";
         String expectedFactName = "FACT1";
@@ -291,7 +489,6 @@ public class ConsumerResourceUpdateTest {
         assertTrue(existing.getInstalledProducts().contains(expectedInstalledProduct));
         assertEquals(1, existing.getGuestIds().size());
         assertTrue(existing.getGuestIds().contains(expectedGuestId));
-
     }
 
     private Consumer createConsumerWithGuests(String ... guestIds) {
