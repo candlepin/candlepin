@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.4.19
+Version: 0.4.20
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -130,6 +130,20 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Wed Oct 12 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.20-1
+- checkstyle: fix javadoc for bouncycastle changes (jmrodri@gmail.com)
+- checkstyle: remove *ALL* trailing whitespace (jmrodri@gmail.com)
+- remove tabs (jmrodri@gmail.com)
+- checkstyle: check for trailing whitespace (jmrodri@gmail.com)
+- ditch tomcat5 (jesusr@redhat.com)
+- require bouncycastle, symlink & remove old bc (jesusr@redhat.com)
+- upgrade to bouncycastle 1.46 (fix code to match exceptions)
+  (jesusr@redhat.com)
+- Update the script to generate fake exports to the new API
+  (bkearney@redhat.com)
+- Fix unit tests broken by rules change (cduryee@redhat.com)
+- Drop default of debug logging. (dgoodwin@redhat.com)
+
 * Wed Oct 05 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.19-1
 - Do not add rulewarning.unsupported.number.of.sockets if sockets is not
   defined on the consumer or product, or if the product has zero sockets.
