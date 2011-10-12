@@ -78,7 +78,7 @@ public class JsExportRulesTest {
     public void cannotExportProduct() throws NoSuchMethodException {
         Entitlement entitlement = mock(Entitlement.class);
         Consumer consumer = mock(Consumer.class);
-        ConsumerType consumerType = mock(ConsumerType.class);
+        ConsumerType type = mock(ConsumerType.class);
         Pool pool = mock(Pool.class);
         Product product = mock(Product.class);
         Set<PoolAttribute> attributes = new HashSet<PoolAttribute>();
@@ -91,8 +91,8 @@ public class JsExportRulesTest {
         when(productAdapterMock.getProductById("12345")).thenReturn(product);
         when(product.getAttributes()).thenReturn(new HashSet<ProductAttribute>());
         when(pool.getAttributes()).thenReturn(attributes);
-        when(consumer.getType()).thenReturn(consumerType);
-        when(consumerType.isManifest()).thenReturn(true);
+        when(consumer.getType()).thenReturn(type);
+        when(type.isManifest()).thenReturn(true);
 
         assertFalse(exportRules.canExport(entitlement));
     }

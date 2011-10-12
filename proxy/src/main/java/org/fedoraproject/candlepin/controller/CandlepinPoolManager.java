@@ -309,7 +309,7 @@ public class CandlepinPoolManager implements PoolManager {
         return this.poolCurator.find(poolId);
     }
 
-    public Pool lookupBySubscriptionId(String id) {
+    public List<Pool> lookupBySubscriptionId(String id) {
         return this.poolCurator.lookupBySubscriptionId(id);
     }
 
@@ -753,5 +753,35 @@ public class CandlepinPoolManager implements PoolManager {
 
         poolCurator.delete(pool);
         sink.sendEvent(event);
+    }
+    
+    /**
+     * Decrement the count of pools derived via virt_limit.
+     *
+     *
+     *
+     * @param ent The entitlement that the pool was derived from.
+     */
+    public void decrementDerivedPools(Entitlement ent) {
+        Pool pool = ent.getPool();
+        String virtLimit = pool.getAttributeValue("virt_limit"); 
+        if (virtLimit == null || virtLimit.trim().equals("")) {
+            if (pool.getProductAttribute("virt_limit") != null) {
+                virtLimit = pool.getProductAttribute("virt_limit").getValue();
+            }
+        }
+        if (virtLimit != null && 
+            !virtLimit.trim().equals("") && 
+            !virtLimit.equals("unlimited")) {
+            int quantity = Integer.parseInt(virtLimit);
+            quantity *= ent.getQuantity();
+            for (Pool derivedPool : poolCurator.lookupBySubscriptionId(
+                          pool.getSubscriptionId())) {
+                if (!derivedPool.getId().equals(pool.getId())) {
+                    derivedPool.setQuantity(derivedPool.getQuantity() - quantity);    
+                    poolCurator.merge(derivedPool);
+                }
+            }
+        }
     }
 }

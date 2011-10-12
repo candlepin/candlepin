@@ -108,4 +108,8 @@ public class ReadOnlyConsumer {
     public String getUsername() {
         return consumer.getUsername();
     }
+    
+    public boolean isManifest() {
+        return consumer.getType().isManifest();
+    }
 }

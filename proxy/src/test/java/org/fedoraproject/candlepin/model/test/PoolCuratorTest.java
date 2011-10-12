@@ -17,11 +17,6 @@ package org.fedoraproject.candlepin.model.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
@@ -31,8 +26,14 @@ import org.fedoraproject.candlepin.model.ProvidedProduct;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
+
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 
 public class PoolCuratorTest extends DatabaseTestFixture {
@@ -173,10 +174,10 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         this.subCurator.create(sub);
         
         Pool newPool = poolManager.createPoolsForSubscription(sub).get(0);
-        Pool pool = poolCurator.lookupBySubscriptionId(sub.getId());
+        List<Pool> pools = poolCurator.lookupBySubscriptionId(sub.getId());
         
-        assertEquals(160L, pool.getQuantity().longValue());
-        assertEquals(newPool.getQuantity(), pool.getQuantity());
+        assertEquals(160L, pools.get(0).getQuantity().longValue());
+        assertEquals(newPool.getQuantity(), pools.get(0).getQuantity());
     }
 
     @Test

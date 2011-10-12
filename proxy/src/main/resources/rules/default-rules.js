@@ -378,17 +378,19 @@ var Entitlement = {
     },
 
     post_user_license: function() {
-        // Default to using the same product from the pool.
-        var productId = pool.getProductId();
-
-        // Check if the sub-pool should be for a different product:
-        if (attributes.containsKey("user_license_product")) {
-            productId = attributes.get("user_license_product");
+        if (!consumer.isManifest()) {
+	        // Default to using the same product from the pool.
+	        var productId = pool.getProductId();
+	
+	        // Check if the sub-pool should be for a different product:
+	        if (attributes.containsKey("user_license_product")) {
+	            productId = attributes.get("user_license_product");
+	        }
+	
+	        // Create a sub-pool for this user
+	        post.createUserRestrictedPool(productId, pool,
+	                                      attributes.get("user_license"));
         }
-
-        // Create a sub-pool for this user
-        post.createUserRestrictedPool(productId, pool,
-                                      attributes.get("user_license"));
     },
 
     pre_requires_consumer_type: function() {
@@ -401,19 +403,26 @@ var Entitlement = {
     },
 
     post_virt_limit: function() {
-        if (attributes.containsKey("virt_limit") && standalone) {
-            var productId = pool.getProductId();
-	        var virt_limit = attributes.get("virt_limit");
-
-	        if ('unlimited'.equals(virt_limit)) {
-	            post.createHostRestrictedPool(productId, pool, 'unlimited');
-	        } else {
-	            var virt_quantity = parseInt(virt_limit) * entitlement.getQuantity();
-	            if (virt_quantity > 0) {
-	                post.createHostRestrictedPool(productId, pool,
-	                        virt_quantity.toString());
-	            }
-	        }
+        if (attributes.containsKey("virt_limit")) {
+            if (standalone) {
+	            var productId = pool.getProductId();
+		        var virt_limit = attributes.get("virt_limit");
+	
+		        if ('unlimited'.equals(virt_limit)) {
+		            post.createHostRestrictedPool(productId, pool, 'unlimited');
+		        } else {
+		            var virt_quantity = parseInt(virt_limit) * entitlement.getQuantity();
+		            if (virt_quantity > 0) {
+		                post.createHostRestrictedPool(productId, pool,
+		                        virt_quantity.toString());
+		            }
+		        }
+		    }
+		    else {
+		        if (consumer.isManifest()) {
+		                post.decrementDerivedPool(entitlement);
+		        }
+		    }
 	    }
     },
 
@@ -766,7 +775,7 @@ var Export = {
         pool_derived = attributes.containsKey('pool_derived') &&
                     'true'.equals(attributes.get('pool_derived'));
 
-        return !consumer.getType().isManifest() || !pool_derived;
+        return !consumer.isManifest() || !pool_derived;
     }
 }
 

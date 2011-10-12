@@ -19,7 +19,6 @@ import org.fedoraproject.candlepin.model.Attribute;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
-import org.fedoraproject.candlepin.model.PoolAttribute;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.model.ProductAttribute;
 import org.fedoraproject.candlepin.model.ProductPoolAttribute;
@@ -97,6 +96,17 @@ public class PoolHelper {
 
         consumerSpecificPool.setSubscriptionId(pool.getSubscriptionId());
         poolManager.createPool(consumerSpecificPool);
+    }
+    
+    /**
+     * Decrement the count for a derived pool.
+     *
+     *
+     *
+     * @param ent Entitlement that has the parent pool.
+     */
+    public void decrementDerivedPool(Entitlement ent) {
+        poolManager.decrementDerivedPools(ent);
     }
 
 

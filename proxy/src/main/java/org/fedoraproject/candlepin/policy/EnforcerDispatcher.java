@@ -14,41 +14,40 @@
  */
 package org.fedoraproject.candlepin.policy;
 
-import java.util.List;
-import java.util.Map;
-
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
-import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
 import org.fedoraproject.candlepin.policy.js.compliance.ComplianceStatus;
 import org.fedoraproject.candlepin.policy.js.entitlement.EntitlementRules;
-import org.fedoraproject.candlepin.policy.js.pool.PoolHelper;
 import org.fedoraproject.candlepin.policy.js.entitlement.PreEntHelper;
+import org.fedoraproject.candlepin.policy.js.pool.PoolHelper;
 
 import com.google.inject.Inject;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * EnforcerDispatcher
  */
 public class EnforcerDispatcher implements Enforcer {
 
-    private CandlepinConsumerTypeEnforcer candlepinEnforcer;
+    private ManifestEntitlementRules manifestEnforcer;
     private EntitlementRules jsEnforcer;
 
     @Inject
     public EnforcerDispatcher(EntitlementRules jsEnforcer,
-        CandlepinConsumerTypeEnforcer candlepinEnforcer) {
+        ManifestEntitlementRules candlepinEnforcer) {
         this.jsEnforcer = jsEnforcer;
-        this.candlepinEnforcer = candlepinEnforcer;
+        this.manifestEnforcer = candlepinEnforcer;
     }
 
     @Override
     public PoolHelper postEntitlement(Consumer consumer, PoolHelper postEntHelper,
         Entitlement ent) {
-        if (isCandlepinConsumer(consumer)) {
-            return candlepinEnforcer.postEntitlement(consumer, postEntHelper, ent);
+        if (consumer.getType().isManifest()) {
+            return manifestEnforcer.postEntitlement(consumer, postEntHelper, ent);
         }
         return jsEnforcer.postEntitlement(consumer, postEntHelper, ent);
     }
@@ -57,23 +56,19 @@ public class EnforcerDispatcher implements Enforcer {
     public PreEntHelper preEntitlement(
         Consumer consumer, Pool entitlementPool, Integer quantity) {
 
-        if (isCandlepinConsumer(consumer)) {
-            return candlepinEnforcer.preEntitlement(consumer, entitlementPool, quantity);
+        if (consumer.getType().isManifest()) {
+            return manifestEnforcer.preEntitlement(consumer, entitlementPool, quantity);
         }
 
         return jsEnforcer.preEntitlement(consumer, entitlementPool, quantity);
-    }
-
-    private boolean isCandlepinConsumer(Consumer consumer) {
-        return consumer.getType().isType(ConsumerTypeEnum.CANDLEPIN);
     }
 
     @Override
     public Map<Pool, Integer> selectBestPools(Consumer consumer, String[] productIds,
         List<Pool> pools, ComplianceStatus compliance)
         throws RuleExecutionException {
-        if (isCandlepinConsumer(consumer)) {
-            return candlepinEnforcer.selectBestPools(consumer, productIds, pools,
+        if (consumer.getType().isManifest()) {
+            return manifestEnforcer.selectBestPools(consumer, productIds, pools,
                 compliance);
         }
         return jsEnforcer.selectBestPools(consumer, productIds, pools, compliance);

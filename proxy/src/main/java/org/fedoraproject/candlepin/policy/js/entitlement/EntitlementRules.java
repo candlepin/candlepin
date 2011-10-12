@@ -20,6 +20,7 @@ import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.policy.AbstractEntitlementRules;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.ValidationError;
 import org.fedoraproject.candlepin.policy.ValidationWarning;
@@ -42,9 +43,6 @@ import org.apache.log4j.Logger;
 import org.mozilla.javascript.RhinoException;
 import org.xnap.commons.i18n.I18n;
 
-import java.io.Serializable;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -55,29 +53,7 @@ import java.util.Set;
 /**
  * Enforces the Javascript Rules definition.
  */
-public class EntitlementRules implements Enforcer {
-
-    private static Logger log = Logger.getLogger(EntitlementRules.class);
-    private static Logger rulesLogger =
-        Logger.getLogger(EntitlementRules.class.getCanonicalName() + ".rules");
-    private DateSource dateSource;
-
-    private ProductServiceAdapter prodAdapter;
-    private I18n i18n;
-    private Map<String, Set<Rule>> attributesToRules;
-    private JsRules jsRules;
-    private Config config;
-    private ConsumerCurator consumerCurator;
-
-    private static final String PROD_ARCHITECTURE_SEPARATOR = ",";
-    private static final String PRE_PREFIX = "pre_";
-    private static final String POST_PREFIX = "post_";
-    private static final String SELECT_POOL_PREFIX = "select_pool_";
-    private static final String GLOBAL_SELECT_POOL_FUNCTION = SELECT_POOL_PREFIX +
-        "global";
-    private static final String GLOBAL_PRE_FUNCTION = PRE_PREFIX + "global";
-    private static final String GLOBAL_POST_FUNCTION = POST_PREFIX + "global";
-
+public class EntitlementRules extends AbstractEntitlementRules implements Enforcer {
 
     @Inject
     public EntitlementRules(DateSource dateSource,
@@ -92,25 +68,14 @@ public class EntitlementRules implements Enforcer {
         this.attributesToRules = null;
         this.config = config;
         this.consumerCurator = consumerCurator;
+        
+        log = Logger.getLogger(EntitlementRules.class);
+        rulesLogger =
+            Logger.getLogger(EntitlementRules.class.getCanonicalName() + ".rules");
+
 
         jsRules.init("entitlement_name_space");
         rulesInit();
-    }
-
-    private void rulesInit() {
-        String mappings;
-        try {
-            mappings = jsRules.invokeMethod("attribute_mappings");
-            this.attributesToRules = parseAttributeMappings(mappings);
-        }
-        catch (RhinoException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        catch (NoSuchMethodException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
     }
 
     @Override
@@ -298,212 +263,4 @@ public class EntitlementRules implements Enforcer {
             return null;
         }
     }
-
-    /**
-     * Default behavior if no product specific and no global pool select rules
-     * exist.
-     *
-     * @param pools
-     *            Pools to choose from.
-     * @return First pool in the list. (default behavior)
-     */
-    private Map<Pool, Integer> selectBestPoolDefault(List<Pool> pools) {
-        if (pools.size() > 0) {
-            Map<Pool, Integer> toReturn = new HashMap<Pool, Integer>();
-            for (Pool pool : pools) {
-                toReturn.put(pool, 1);
-            }
-            return toReturn;
-        }
-
-        return null;
-    }
-
-    public List<Rule> rulesForAttributes(Set<String> attributes,
-            Map<String, Set<Rule>> rules) {
-        Set<Rule> possibleMatches = new HashSet<Rule>();
-        for (String attribute : attributes) {
-            if (rules.containsKey(attribute)) {
-                possibleMatches.addAll(rules.get(attribute));
-            }
-        }
-
-        List<Rule> matches = new LinkedList<Rule>();
-        for (Rule rule : possibleMatches) {
-            if (attributes.containsAll(rule.getAttributes())) {
-                matches.add(rule);
-            }
-        }
-
-        // Always run the global rule, and run it first
-        matches.add(new Rule("global", 0, new HashSet<String>()));
-
-        Collections.sort(matches, new RuleOrderComparator());
-        return matches;
-    }
-
-    public Map<String, Set<Rule>> parseAttributeMappings(String mappings) {
-        Map<String, Set<Rule>> toReturn = new HashMap<String, Set<Rule>>();
-        if (mappings.trim().isEmpty()) {
-            return toReturn;
-        }
-
-        String[] separatedMappings = mappings.split(",");
-
-        for (String mapping : separatedMappings) {
-            Rule rule = parseRule(mapping);
-            for (String attribute : rule.getAttributes()) {
-                if (!toReturn.containsKey(attribute)) {
-                    toReturn.put(attribute,
-                        new HashSet<Rule>(Collections.singletonList(rule)));
-                }
-                toReturn.get(attribute).add(rule);
-            }
-        }
-        return toReturn;
-    }
-
-    public Rule parseRule(String toParse) {
-        String[] tokens = toParse.split(":");
-
-        if (tokens.length < 3) {
-            throw new IllegalArgumentException(
-                i18n.tr(
-                    "''{0}'' Should contain name, priority and at least one attribute",
-                    toParse)
-            );
-        }
-
-        Set<String> attributes = new HashSet<String>();
-        for (int i = 2; i < tokens.length; i++) {
-            attributes.add(tokens[i].trim());
-        }
-
-        try {
-            return new Rule(tokens[0].trim(), Integer.parseInt(tokens[1]), attributes);
-        }
-        catch (NumberFormatException e) {
-            throw new IllegalArgumentException(
-                i18n.tr("second parameter should be the priority number.", e));
-        }
-    }
-
-    private void callPreEntitlementRules(List<Rule> matchingRules,
-        Map<String, Object> args) {
-        for (Rule rule : matchingRules) {
-            jsRules.invokeRule(PRE_PREFIX + rule.getRuleName(), args);
-        }
-    }
-
-    private void callPostEntitlementRules(List<Rule> matchingRules) {
-        for (Rule rule : matchingRules) {
-            jsRules.invokeRule(POST_PREFIX + rule.getRuleName());
-        }
-    }
-
-    private void invokeGlobalPostEntitlementRule(Map<String, Object> args) {
-        // No method for this product, try to find a global function, if
-        // neither exists this is ok and we'll just carry on.
-        try {
-            jsRules.invokeMethod(GLOBAL_POST_FUNCTION, args);
-            log.debug("Ran rule: " + GLOBAL_POST_FUNCTION);
-        }
-        catch (NoSuchMethodException ex) {
-            // This is fine, I hope...
-            log.warn("No default rule found: " + GLOBAL_POST_FUNCTION);
-        }
-        catch (RhinoException ex) {
-            throw new RuleExecutionException(ex);
-        }
-    }
-
-    /**
-     * RuleOrderComparator
-     */
-    public static class RuleOrderComparator implements Comparator<Rule>, Serializable {
-        @Override
-        public int compare(Rule o1, Rule o2) {
-            return Integer.valueOf(o2.getOrder()).compareTo(
-                Integer.valueOf(o1.getOrder()));
-        }
-    }
-
-    /**
-     * Rule
-     */
-    public static class Rule {
-        private final String ruleName;
-        private final int order;
-        private final Set<String> attributes;
-
-        public Rule(String ruleName, int order, Set<String> attributes) {
-            this.ruleName = ruleName;
-            this.order = order;
-            this.attributes = attributes;
-        }
-
-        public String getRuleName() {
-            return ruleName;
-        }
-
-        public int getOrder() {
-            return order;
-        }
-
-        public Set<String> getAttributes() {
-            return attributes;
-        }
-
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result +
-                ((attributes == null) ? 0 : attributes.hashCode());
-            result = prime * result + order;
-            result = prime * result +
-                ((ruleName == null) ? 0 : ruleName.hashCode());
-            return result;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (obj == null) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-
-            Rule other = (Rule) obj;
-            if (attributes == null) {
-                if (other.attributes != null) {
-                    return false;
-                }
-            }
-            else if (!attributes.equals(other.attributes)) {
-                return false;
-            }
-            if (order != other.order) {
-                return false;
-            }
-            if (ruleName == null) {
-                if (other.ruleName != null) {
-                    return false;
-                }
-            }
-            else if (!ruleName.equals(other.ruleName)) {
-                return false;
-            }
-            return true;
-        }
-
-        public String toString() {
-            return "'" + ruleName + "':" + order + ":" + attributes.toString();
-        }
-    }
-
 }
