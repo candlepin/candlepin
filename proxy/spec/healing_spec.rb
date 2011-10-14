@@ -41,6 +41,35 @@ describe 'Healing' do
     ents[0]['pool']['id'].should == pool['id']
   end
 
+  it 'entitles non-compliant products despite a valid future entitlement' do
+    parent_prod = create_product()
+    current_sub = @cp.create_subscription(@owner['key'], parent_prod['id'],
+      10, [@product1['id'], @product2['id']])
+
+    # Create a future sub, the entitlement should not come from this one:
+    future_sub = @cp.create_subscription(@owner['key'], parent_prod['id'],
+      10, [@product1['id'], @product2['id']], '', '', Date.today + 30,
+        Date.today + 60)
+
+    @cp.refresh_pools(@owner['key'])
+
+    # 35 days in future should land in our sub:
+    future_iso8601 = (Time.now + (60 * 60 * 24 * 35)).utc.iso8601 # a string
+    pool = find_pool(@owner['id'], future_sub['id'], future_iso8601)
+    pp "Pool start date"
+    pp pool['startDate']
+
+    ent = @consumer_cp.consume_pool(pool['id'])
+    pp "Ent start date"
+    pp ent
+
+    current_pool = find_pool(@owner['id'], current_sub['id'])
+
+    ents = @consumer_cp.consume_product()
+    ents.size.should == 1
+    ents[0]['pool']['id'].should == current_pool['id']
+  end
+
   it 'entitles non-compliant products at a future date' do
     parent_prod = create_product()
 
