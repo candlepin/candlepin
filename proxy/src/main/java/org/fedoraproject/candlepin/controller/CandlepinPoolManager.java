@@ -469,7 +469,7 @@ public class CandlepinPoolManager implements PoolManager {
             throw new EntitlementRefusedException(result);
         }
 
-        Entitlement e = new Entitlement(pool, consumer, new Date(),
+        Entitlement e = new Entitlement(pool, consumer, pool.getStartDate(),
             pool.getEndDate(), quantity);
         consumer.addEntitlement(e);
         pool.getEntitlements().add(e);
