@@ -14,7 +14,6 @@ function gendb ()
     evalrc $? "schema generation failed"
 
     dropdb -U candlepin candlepin
-    evalrc $? "dropdb failed"
 
     createdb -U candlepin candlepin
     evalrc $? "createdb failed"
