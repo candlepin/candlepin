@@ -78,14 +78,14 @@ install -d -m 755 $RPM_BUILD_ROOT/%{_sysconfdir}/tomcat6/
 unzip target/%{name}-%{version}.war -d $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat6/webapps/%{name}/
 ln -s /etc/candlepin/certs/keystore $RPM_BUILD_ROOT/%{_sysconfdir}/tomcat6/keystore
 rm -f $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat6/webapps/%{name}/WEB-INF/lib/bc*jdk16*.jar
-ln -s %{_datadir}/java/bcprov.jar $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat6/webapps/%{name}/WEB-INF/lib/bcproj.jar
+ln -s %{_datadir}/java/bcprov.jar $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat6/webapps/%{name}/WEB-INF/lib/bcprov.jar
 
 # jbossas
 install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/
 install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/%{name}.war
 unzip target/%{name}-%{version}.war -d $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/%{name}.war/
 rm -f $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/%{name}.war/WEB-INF/lib/bc*jdk16*.jar
-ln -s %{_datadir}/java/bcprov.jar $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/%{name}.war/WEB-INF/lib/bcproj.jar
+ln -s %{_datadir}/java/bcprov.jar $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/%{name}.war/WEB-INF/lib/bcprov.jar
 
 # devel
 install -d -m 755 $RPM_BUILD_ROOT/%{_datadir}/%{name}/lib/
@@ -131,7 +131,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %changelog
 * Thu Oct 13 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.21-1
-- respin to right tag 
+- respin to right tag
 
 * Wed Oct 12 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.20-1
 - checkstyle: fix javadoc for bouncycastle changes (jmrodri@gmail.com)
