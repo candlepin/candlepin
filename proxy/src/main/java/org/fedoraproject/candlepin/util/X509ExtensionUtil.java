@@ -77,6 +77,9 @@ public class X509ExtensionUtil {
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
             OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SKU_KEY), false, sub
             .getProduct().getId().toString()));
+        toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
+            OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_QUANTITY_KEY), false, sub
+            .getQuantity().toString()));
         String socketLimit = sub.getProduct().getAttributeValue("sockets");
         if (socketLimit != null) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
