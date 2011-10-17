@@ -15,7 +15,9 @@
 package org.fedoraproject.candlepin.pinsetter.tasks;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
@@ -95,6 +97,10 @@ public class MigrateOwnerJobTest {
         assertEquals("admin", jd.getJobDataMap().get("owner_key"));
         assertEquals("http://foo.example.com/candlepin",
             jd.getJobDataMap().get("uri"));
+        assertTrue(jd.requestsRecovery());
+        assertFalse(jd.isDurable());
+        assertFalse(jd.isStateful());
+        assertFalse(jd.isVolatile());
         assertEquals(false, jd.getJobDataMap().get("delete"));
     }
 

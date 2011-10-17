@@ -15,6 +15,8 @@
 package org.fedoraproject.candlepin.pinsetter.tasks;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -66,6 +68,10 @@ public class RefreshPoolsJobTest {
         JobDetail detail = RefreshPoolsJob.forOwner(owner);
         assertNotNull(detail);
         assertNotNull(detail.getJobDataMap());
+        assertTrue(detail.requestsRecovery());
+        assertFalse(detail.isDurable());
+        assertFalse(detail.isStateful());
+        assertFalse(detail.isVolatile());
         assertEquals("owner key", detail.getJobDataMap().get(JobStatus.TARGET_ID));
     }
 }

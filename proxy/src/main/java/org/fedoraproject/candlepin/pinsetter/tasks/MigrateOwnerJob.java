@@ -356,6 +356,8 @@ public class MigrateOwnerJob implements Job {
 
         JobDetail detail = new JobDetail("migrate_owner_" + Util.generateUUID(),
             MigrateOwnerJob.class);
+        // recover the job upon restarts
+        detail.setRequestsRecovery(true);
         JobDataMap map = new JobDataMap();
         map.put("owner_key", key);
         map.put("uri", uri);
