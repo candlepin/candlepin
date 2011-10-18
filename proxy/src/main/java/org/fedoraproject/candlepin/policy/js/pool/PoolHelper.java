@@ -99,16 +99,24 @@ public class PoolHelper {
     }
     
     /**
-     * Decrement the count for a derived pool.
+     * Retrieve all pools with the subscription id.
      *
-     *
-     *
-     * @param ent Entitlement that has the parent pool.
+     * @param id Subscription Id for cross-reference.
+     * @return list of found pools 
      */
-    public void decrementDerivedPool(Entitlement ent) {
-        poolManager.decrementDerivedPools(ent);
+    public List<Pool> lookupBySubscriptionId(String id) {
+        return poolManager.lookupBySubscriptionId(id);
     }
-
+    
+    /**
+     * Update count for a pool.
+     *
+     * @param pool The pool.
+     * @param adjust the amount to adjust (+/-)
+     */
+    public void updatePoolQuantity(Pool pool, int adjust) {
+        poolManager.updatePoolQuantity(pool, adjust);
+    }
 
     /**
      * Copies the provided products from a subscription to a pool.

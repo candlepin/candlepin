@@ -12,13 +12,20 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.fedoraproject.candlepin.policy;
+package org.fedoraproject.candlepin.policy.js.entitlement;
 
 import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
+import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.js.JsRules;
+import org.fedoraproject.candlepin.policy.js.ReadOnlyConsumer;
+import org.fedoraproject.candlepin.policy.js.ReadOnlyProduct;
 import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
+import org.fedoraproject.candlepin.policy.js.pool.PoolHelper;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.util.DateSource;
 
@@ -195,6 +202,29 @@ public abstract class AbstractEntitlementRules implements Enforcer {
             throw new RuleExecutionException(ex);
         }
     }
+    
+    protected void callPostUnbindRules(List<Rule> matchingRules) {
+        for (Rule rule : matchingRules) {
+            jsRules.invokeRule(POST_PREFIX + rule.getRuleName());
+        }
+    }
+
+    protected void invokeGlobalPostUnbindRule(Map<String, Object> args) {
+        // No method for this product, try to find a global function, if
+        // neither exists this is ok and we'll just carry on.
+        try {
+            jsRules.invokeMethod(GLOBAL_POST_FUNCTION, args);
+            log.debug("Ran rule: " + GLOBAL_POST_FUNCTION);
+        }
+        catch (NoSuchMethodException ex) {
+            // This is fine, I hope...
+            log.warn("No default rule found: " + GLOBAL_POST_FUNCTION);
+        }
+        catch (RhinoException ex) {
+            throw new RuleExecutionException(ex);
+        }
+    }
+
 
     /**
      * RuleOrderComparator
@@ -283,6 +313,63 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         public String toString() {
             return "'" + ruleName + "':" + order + ":" + attributes.toString();
         }
+    }
+    
+    protected void runPostEntitlement(PoolHelper postHelper, Entitlement ent) {
+        Pool pool = ent.getPool();
+        Consumer c = ent.getConsumer();
+
+        // Provide objects for the script:
+        String topLevelProductId = pool.getProductId();
+        Product product = prodAdapter.getProductById(topLevelProductId);
+        Map<String, String> allAttributes = jsRules.getFlattenedAttributes(product, pool);
+
+        Map<String, Object> args = new HashMap<String, Object>();
+        args.put("consumer", new ReadOnlyConsumer(c));
+        args.put("product", new ReadOnlyProduct(product));
+        args.put("post", postHelper);
+        args.put("pool", pool);
+        args.put("attributes", allAttributes);
+        args.put("log", rulesLogger);
+        args.put("standalone", config.standalone());
+        args.put("entitlement", ent);
+
+        log.debug("Running post-entitlement rules for: " + c.getUuid() +
+            " product: " + topLevelProductId);
+
+        List<Rule> matchingRules
+            = rulesForAttributes(allAttributes.keySet(), attributesToRules);
+
+        invokeGlobalPostEntitlementRule(args);
+        callPostEntitlementRules(matchingRules);
+    }
+    
+    protected void runPostUnbind(PoolHelper postHelper, Entitlement ent) {
+        Pool pool = ent.getPool();
+        Consumer c = ent.getConsumer();
+
+        // Provide objects for the script:
+        String topLevelProductId = pool.getProductId();
+        Product product = prodAdapter.getProductById(topLevelProductId);
+        Map<String, String> allAttributes = jsRules.getFlattenedAttributes(product, pool);
+
+        Map<String, Object> args = new HashMap<String, Object>();
+        args.put("consumer", new ReadOnlyConsumer(c));
+        args.put("product", new ReadOnlyProduct(product));
+        args.put("post", postHelper);
+        args.put("pool", pool);
+        args.put("attributes", allAttributes);
+        args.put("log", rulesLogger);
+        args.put("standalone", config.standalone());
+        args.put("entitlement", ent);
+
+        log.debug("Running post-unbind rules for: " + c.getUuid() +
+            " product: " + topLevelProductId);
+
+        List<Rule> matchingRules
+            = rulesForAttributes(allAttributes.keySet(), attributesToRules);
+
+        callPostUnbindRules(matchingRules);
     }
 
 }

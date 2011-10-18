@@ -14,15 +14,13 @@
  */
 package org.fedoraproject.candlepin.resource.test;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
-
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventFactory;
@@ -47,10 +45,17 @@ import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.resource.OwnerResource;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
+
 import org.jboss.resteasy.plugins.providers.atom.Entry;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 /**
  * OwnerResourceTest
  */
@@ -446,8 +451,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testEntitlementsRevocationWithFifoOrder() throws Exception {
-        Pool pool = doTestEntitlementsRevocationCommon(7, 4, 4, true);
-        assertTrue(this.poolCurator.find(pool.getId()).getConsumed() == 4);
+        Pool pool = doTestEntitlementsRevocationCommon(7, 4, 5, true);
+        assertEquals(4L, this.poolCurator.find(pool.getId()).getConsumed()
+            .longValue());
     }
 
     @Test

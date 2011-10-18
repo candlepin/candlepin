@@ -144,8 +144,6 @@ public interface PoolManager {
      * @param sub the subscription
      */
     void updatePoolForSubscription(Pool existingPool, Subscription sub);
-    
-    
-    void decrementDerivedPools(Entitlement ent);
-
+        
+    void updatePoolQuantity(Pool pool, long adjust);
 }

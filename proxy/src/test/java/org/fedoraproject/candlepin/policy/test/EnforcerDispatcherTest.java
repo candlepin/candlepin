@@ -26,9 +26,9 @@ import org.fedoraproject.candlepin.model.ConsumerType;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.policy.EnforcerDispatcher;
-import org.fedoraproject.candlepin.policy.ManifestEntitlementRules;
 import org.fedoraproject.candlepin.policy.js.compliance.ComplianceStatus;
 import org.fedoraproject.candlepin.policy.js.entitlement.EntitlementRules;
+import org.fedoraproject.candlepin.policy.js.entitlement.ManifestEntitlementRules;
 import org.fedoraproject.candlepin.policy.js.pool.PoolHelper;
 
 import org.junit.Before;

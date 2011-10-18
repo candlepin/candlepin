@@ -20,7 +20,9 @@ import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
 import org.fedoraproject.candlepin.policy.js.compliance.ComplianceStatus;
 import org.fedoraproject.candlepin.policy.js.entitlement.EntitlementRules;
+import org.fedoraproject.candlepin.policy.js.entitlement.ManifestEntitlementRules;
 import org.fedoraproject.candlepin.policy.js.entitlement.PreEntHelper;
+import org.fedoraproject.candlepin.policy.js.entitlement.PreUnbindHelper;
 import org.fedoraproject.candlepin.policy.js.pool.PoolHelper;
 
 import com.google.inject.Inject;
@@ -74,4 +76,19 @@ public class EnforcerDispatcher implements Enforcer {
         return jsEnforcer.selectBestPools(consumer, productIds, pools, compliance);
     }
 
+    public PreUnbindHelper preUnbind(Consumer consumer, Pool entitlementPool) {
+        if (consumer.getType().isManifest()) {
+            return manifestEnforcer.preUnbind(consumer, entitlementPool);
+        }
+
+        return jsEnforcer.preUnbind(consumer, entitlementPool);    
+    }
+
+    public PoolHelper postUnbind(Consumer consumer, PoolHelper postEntHelper, 
+                Entitlement ent) {
+        if (consumer.getType().isManifest()) {
+            return manifestEnforcer.postUnbind(consumer, postEntHelper, ent);
+        }
+        return jsEnforcer.postUnbind(consumer, postEntHelper, ent);
+    }
 }

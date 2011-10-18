@@ -40,6 +40,7 @@ import org.fedoraproject.candlepin.policy.ValidationResult;
 import org.fedoraproject.candlepin.policy.js.compliance.ComplianceRules;
 import org.fedoraproject.candlepin.policy.js.compliance.ComplianceStatus;
 import org.fedoraproject.candlepin.policy.js.entitlement.PreEntHelper;
+import org.fedoraproject.candlepin.policy.js.entitlement.PreUnbindHelper;
 import org.fedoraproject.candlepin.policy.js.pool.PoolHelper;
 import org.fedoraproject.candlepin.policy.js.pool.PoolUpdate;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
@@ -610,7 +611,6 @@ public class CandlepinPoolManager implements PoolManager {
             productId, null, false, false);
     }
 
-    // TODO: Does the enforcer have any rules around removing entitlements?
     @Override
     @Transactional
     public void removeEntitlement(Entitlement entitlement) {
@@ -619,8 +619,20 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         Consumer consumer = entitlement.getConsumer();
-        consumer.removeEntitlement(entitlement);
+        Pool pool = entitlement.getPool();
+        PreUnbindHelper preHelper = enforcer.preUnbind(consumer,
+            pool);
+        ValidationResult result = preHelper.getResult();
 
+        if (!result.isSuccessful()) {
+            if (log.isDebugEnabled()) {
+                log.debug("Unbind failure from pool: " +
+                    pool.getId() + ", error: " + 
+                    result.getErrors());
+            }
+        }
+
+        consumer.removeEntitlement(entitlement);
         // Look for pools referencing this entitlement as their source
         // entitlement
         // and clean them up as well:
@@ -628,15 +640,16 @@ public class CandlepinPoolManager implements PoolManager {
             deletePool(p);
         }
 
-        Event event = eventFactory.entitlementDeleted(entitlement);
-
-        Pool pool = entitlement.getPool();
         poolCurator.merge(pool);
         entitlementCurator.delete(entitlement);
+        Event event = eventFactory.entitlementDeleted(entitlement);
 
         // The quantity is calculated at fetch time. We update it here
         // To reflect what we just removed from the db.
         pool.setConsumed(pool.getConsumed() - entitlement.getQuantity());
+        // post unbind actions
+        PoolHelper poolHelper = new PoolHelper(this, productAdapter, entitlement);
+        enforcer.postUnbind(consumer, poolHelper, entitlement);
 
         // Find all of the entitlements that modified the original entitlement,
         // and regenerate those to remove the content sets.
@@ -756,32 +769,17 @@ public class CandlepinPoolManager implements PoolManager {
     }
     
     /**
-     * Decrement the count of pools derived via virt_limit.
+     * Adjust the count of a pool.
      *
-     *
-     *
-     * @param ent The entitlement that the pool was derived from.
+     * @param pool The pool.
+     * @param adjust the long amount to adjust (+/-)
      */
-    public void decrementDerivedPools(Entitlement ent) {
-        Pool pool = ent.getPool();
-        String virtLimit = pool.getAttributeValue("virt_limit"); 
-        if (virtLimit == null || virtLimit.trim().equals("")) {
-            if (pool.getProductAttribute("virt_limit") != null) {
-                virtLimit = pool.getProductAttribute("virt_limit").getValue();
-            }
+    public void updatePoolQuantity(Pool pool, long adjust) {
+        long newCount = pool.getQuantity() + adjust;
+        if (newCount < 0) {
+            newCount = 0;
         }
-        if (virtLimit != null && 
-            !virtLimit.trim().equals("") && 
-            !virtLimit.equals("unlimited")) {
-            int quantity = Integer.parseInt(virtLimit);
-            quantity *= ent.getQuantity();
-            for (Pool derivedPool : poolCurator.lookupBySubscriptionId(
-                          pool.getSubscriptionId())) {
-                if (!derivedPool.getId().equals(pool.getId())) {
-                    derivedPool.setQuantity(derivedPool.getQuantity() - quantity);    
-                    poolCurator.merge(derivedPool);
-                }
-            }
-        }
+        pool.setQuantity(newCount);    
+        poolCurator.merge(pool);
     }
 }

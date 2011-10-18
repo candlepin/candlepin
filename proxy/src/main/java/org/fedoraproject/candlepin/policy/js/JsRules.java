@@ -14,14 +14,11 @@
  */
 package org.fedoraproject.candlepin.policy.js;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import org.apache.log4j.Logger;
 import org.fedoraproject.candlepin.model.Attribute;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
+
+import org.apache.log4j.Logger;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.RhinoException;
@@ -29,6 +26,10 @@ import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 import org.mozilla.javascript.Undefined;
 import org.mozilla.javascript.Wrapper;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * JsRules - javascript runner 
@@ -73,6 +74,12 @@ public class JsRules {
                 Context.exit();
             }
         }
+    }
+    
+    public void reinitTo(String namespace) {
+        initialized = false;
+        init(namespace);
+        
     }
 
     Object unwrapReturnValue(Object result) {

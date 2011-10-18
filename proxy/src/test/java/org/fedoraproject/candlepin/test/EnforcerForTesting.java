@@ -14,18 +14,19 @@
  */
 package org.fedoraproject.candlepin.test;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
-import org.fedoraproject.candlepin.policy.js.pool.PoolHelper;
 import org.fedoraproject.candlepin.policy.js.compliance.ComplianceStatus;
 import org.fedoraproject.candlepin.policy.js.entitlement.PreEntHelper;
+import org.fedoraproject.candlepin.policy.js.entitlement.PreUnbindHelper;
+import org.fedoraproject.candlepin.policy.js.pool.PoolHelper;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * EnforcerForTesting
@@ -56,5 +57,14 @@ public class EnforcerForTesting implements Enforcer {
             best.put(pool, 1);
         }
         return best;
+    }
+    
+    public PreUnbindHelper preUnbind(Consumer consumer, Pool entitlementPool) {
+        return new PreUnbindHelper(null); 
+    }
+
+    public PoolHelper postUnbind(Consumer consumer, PoolHelper postEntHelper, 
+            Entitlement ent) {
+        return postEntHelper;
     }
 }

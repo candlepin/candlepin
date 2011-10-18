@@ -24,6 +24,10 @@ function compliance_name_space() {
 	return Compliance;
 }
 
+function unbind_name_space() {
+	return Unbind;
+}
+
 /* Utility functions */
 function contains(a, obj) {
     for (var i = 0; i < a.length; i++) {
@@ -420,8 +424,20 @@ var Entitlement = {
 		    }
 		    else {
 		        if (consumer.isManifest()) {
-		                post.decrementDerivedPool(entitlement);
-		        }
+			        var virtLimit = attributes.get("virt_limit");
+			        if (!'unlimited'.equals(virt_limit)) {
+			            var virt_quantity = parseInt(virt_limit) * entitlement.getQuantity();
+			            if (virt_quantity > 0) {
+			                var pools = post.lookupBySubscriptionId(pool.getSubscriptionId());
+				            for (var idex = 0 ; idex < pools.length(); idex++ ) {
+				                var derivedPool = pools.get(idex);
+				                if (!derivedPool.getId().equals(pool.getId())) {
+				                    post.updatePoolQuantity(derivedPool, -1 * virt_quantity);
+				                }
+				            }
+				        }
+			        }
+			    }
 		    }
 	    }
     },
@@ -474,6 +490,7 @@ var Entitlement = {
     },
 
     post_global: function() {
+        log.debug("me");
     },
 
     select_pool_global: function() {
@@ -912,5 +929,37 @@ var Compliance = {
 
         return status;
     }
+}
+    
+var Unbind = {
 
+    // defines mapping of product attributes to functions
+    // the format is: <function name>:<order number>:<attr1>:...:<attrn>, comma-separated ex.:
+    // func1:1:attr1:attr2:attr3, func2:2:attr3:attr4
+    attribute_mappings: function() {
+        return  "virt_limit:1:virt_limit";
+    },
+    
+    pre_virt_limit: function() {
+    },
+    
+    post_virt_limit: function() {
+	    if (attributes.containsKey("virt_limit")) {
+	        if (!standalone && consumer.isManifest()) {
+		        var virtLimit = attributes.get("virt_limit");
+		        if (!'unlimited'.equals(virt_limit)) {
+		            var virt_quantity = parseInt(virt_limit) * entitlement.getQuantity();
+		            if (virt_quantity > 0) {
+		                var pools = post.lookupBySubscriptionId(pool.getSubscriptionId());
+			            for (var idex = 0 ; idex < pools.length(); idex++ ) {
+			                var derivedPool = pools.get(idex);
+			                if (!derivedPool.getId().equals(pool.getId())) {
+			                    post.updatePoolQuantity(derivedPool, virt_quantity);
+			                }
+			            }
+			        }
+		        }
+		    }
+	    }
+    }
 }

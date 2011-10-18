@@ -30,15 +30,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
@@ -63,18 +54,29 @@ import org.fedoraproject.candlepin.policy.ValidationResult;
 import org.fedoraproject.candlepin.policy.js.compliance.ComplianceRules;
 import org.fedoraproject.candlepin.policy.js.compliance.ComplianceStatus;
 import org.fedoraproject.candlepin.policy.js.entitlement.PreEntHelper;
+import org.fedoraproject.candlepin.policy.js.entitlement.PreUnbindHelper;
 import org.fedoraproject.candlepin.policy.js.pool.PoolUpdate;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.fedoraproject.candlepin.util.Util;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.xnap.commons.i18n.I18n;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * PoolManagerTest
@@ -379,15 +381,17 @@ public class PoolManagerTest {
             pool.getStartDate(), pool.getEndDate(), 1);
         List<Pool> poolsWithSource = createPoolsWithSourceEntitlement(e, product);
         when(mockPoolCurator.listBySourceEntitlement(e)).thenReturn(poolsWithSource);
+        PreUnbindHelper preHelper =  mock(PreUnbindHelper.class); 
+        when(enforcerMock.preUnbind(eq(e.getConsumer()), eq(e.getPool())))
+            .thenReturn(preHelper);
+        ValidationResult result = new ValidationResult();
+        when(preHelper.getResult()).thenReturn(result);
+        when(mockConfig.standalone()).thenReturn(true);
 
         manager.revokeEntitlement(e);
 
         verify(entCertAdapterMock).revokeEntitlementCertificates(e);
         verify(entitlementCurator).delete(e);
-
-        for (Pool p : poolsWithSource) {
-            verify(mockPoolCurator).delete(p);
-        }
     }
 
     @SuppressWarnings("unchecked")
@@ -480,6 +484,12 @@ public class PoolManagerTest {
 
         when(mockPoolCurator.entitlementsIn(p)).thenReturn(
                 new ArrayList<Entitlement>(p.getEntitlements()));
+        PreUnbindHelper preHelper =  mock(PreUnbindHelper.class); 
+        for (Entitlement e : p.getEntitlements()) {
+            when(enforcerMock.preUnbind(eq(e.getConsumer()), eq(p))).thenReturn(preHelper);
+        }
+        ValidationResult result = new ValidationResult();
+        when(preHelper.getResult()).thenReturn(result);
 
         manager.deletePool(p);
 
