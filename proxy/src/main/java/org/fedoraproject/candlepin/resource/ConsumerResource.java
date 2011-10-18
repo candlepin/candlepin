@@ -518,11 +518,6 @@ public class ConsumerResource {
         // If nothing changes we won't send.
         Event event = eventFactory.consumerModified(toUpdate, consumer);
 
-        // Hold onto a list of the initial GuestId objects so that we can determine
-        // which were added and removed when sending events.
-        List<GuestId> initialGuestIds = toUpdate.getGuestIds() == null ?
-            new ArrayList<GuestId>() : new ArrayList<GuestId>(toUpdate.getGuestIds());
-
         boolean changesMade = checkForFactsUpdate(toUpdate, consumer);
         changesMade = checkForInstalledProductsUpdate(toUpdate, consumer) || changesMade;
         changesMade = checkForGuestsUpdate(toUpdate, consumer) || changesMade;
@@ -540,29 +535,7 @@ public class ConsumerResource {
             // Set the updated date here b/c @PreUpdate will not get fired
             // since only the facts table will receive the update.
             toUpdate.setUpdated(new Date());
-
-            sendGuestIdEvents(toUpdate, initialGuestIds);
             sink.sendEvent(event);
-        }
-    }
-
-    private void sendGuestIdEvents(Consumer updated, List<GuestId> initialGuestIds) {
-        // GuestId list may be null. We want to make sure that we clone the list
-        // as we are removing from it.
-        List<GuestId> createdIds = updated.getGuestIds() == null ?
-            new ArrayList<GuestId>() : new ArrayList<GuestId>(updated.getGuestIds());
-
-        // Determine which guest ids were new and send events.
-        createdIds.removeAll(initialGuestIds);
-        for (GuestId id : createdIds) {
-            sink.sendEvent(eventFactory.guestIdCreated(updated, id));
-        }
-
-        // Determine which guest ids were deleted and send events.
-        List<GuestId> deletedIds = new ArrayList<GuestId>(initialGuestIds);
-        deletedIds.removeAll(updated.getGuestIds());
-        for (GuestId id : deletedIds) {
-            sink.sendEvent(eventFactory.guestIdDeleted(updated, id));
         }
     }
 
@@ -632,20 +605,26 @@ public class ConsumerResource {
 
         log.debug("Updating guests.");
         List<GuestId> removedGuests = getRemovedGuestIds(existing, incoming);
+        List<GuestId> addedGuests = getAddedGuestIds(existing, incoming);
 
         // Ensure that existing actually has guest ids initialized.
         if (existing.getGuestIds() != null) {
+            // Always clear existing id so that the timestamps are updated
+            // on each ID.
             existing.getGuestIds().clear();
-        }
-
-        for (GuestId cg : incoming.getGuestIds()) {
-            existing.addGuestId(cg);
         }
 
         log.debug("Updating guest entitlements.");
 
         // Check guests that are existing/added.
         for (GuestId guestId : incoming.getGuestIds()) {
+            existing.addGuestId(guestId);
+
+            // If adding a new GuestId send notification.
+            if (addedGuests.contains(guestId)) {
+                sink.sendEvent(eventFactory.guestIdCreated(existing, guestId));
+            }
+
             Consumer guest = consumerCurator.findByVirtUuid(guestId.getGuestId());
             if (guest == null) {
                 // The guest has not registered.
@@ -653,14 +632,26 @@ public class ConsumerResource {
             }
 
             Consumer host = consumerCurator.getHost(guestId.getGuestId());
+            // Check if the guest was already reported by another host.
             if (host != null && !existing.equals(host)) {
-                // The guest was reported by another host.
+                // If the guest already existed and was already reported, send an event
+                // stating that the guest is hosted in two places. We only do this if
+                // the guest already exists since the other host may have not yet
+                // reported that the guest was removed/migrated.
+                if (!removedGuests.contains(guestId) && !addedGuests.contains(guestId)) {
+                    log.warn("Guest " + guestId.getGuestId() +
+                        " is currently being hosted by two hosts: " +
+                        existing.getUuid() + " " + host.getUuid());
+                }
                 revokeGuestEntitlementsMatchingHost(host, guest);
             }
         }
 
         // Check guests that have been removed.
         for (GuestId guestId : removedGuests) {
+            // Report that the guestId was removed.
+            sink.sendEvent(eventFactory.guestIdDeleted(existing, guestId));
+
             Consumer guest = consumerCurator.findByVirtUuid(guestId.getGuestId());
             if (guest != null) {
                 // The guest is actually registered. Remove the entitlements
@@ -671,14 +662,27 @@ public class ConsumerResource {
         return true;
     }
 
-    private List<GuestId> getRemovedGuestIds(Consumer existing, Consumer incoming) {
-        List<GuestId> existingIds = existing.getGuestIds() == null ?
-            new ArrayList<GuestId>() : new ArrayList<GuestId>(existing.getGuestIds());
-        List<GuestId> incomingIds = incoming.getGuestIds() == null ?
-            new ArrayList<GuestId>() : new ArrayList<GuestId>(incoming.getGuestIds());
+    /**
+     * @param existing
+     * @param incoming
+     * @return
+     */
+    private List<GuestId> getAddedGuestIds(Consumer existing, Consumer incoming) {
+        return getDifferenceInGuestIds(incoming, existing);
+    }
 
-        List<GuestId> removedGuests = new ArrayList<GuestId>(existingIds);
-        removedGuests.removeAll(incomingIds);
+    private List<GuestId> getRemovedGuestIds(Consumer existing, Consumer incoming) {
+        return getDifferenceInGuestIds(existing, incoming);
+    }
+
+    private List<GuestId> getDifferenceInGuestIds(Consumer c1, Consumer c2) {
+        List<GuestId> ids1 = c1.getGuestIds() == null ?
+            new ArrayList<GuestId>() : new ArrayList<GuestId>(c1.getGuestIds());
+        List<GuestId> ids2 = c2.getGuestIds() == null ?
+            new ArrayList<GuestId>() : new ArrayList<GuestId>(c2.getGuestIds());
+
+        List<GuestId> removedGuests = new ArrayList<GuestId>(ids1);
+        removedGuests.removeAll(ids2);
         return removedGuests;
     }
 
