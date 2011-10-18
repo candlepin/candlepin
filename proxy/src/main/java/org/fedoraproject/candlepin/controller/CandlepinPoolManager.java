@@ -380,7 +380,7 @@ public class CandlepinPoolManager implements PoolManager {
                     pool, 1);
                 ValidationResult result = preHelper.getResult();
 
-                if (!result.isSuccessful()) {
+                if (result.hasErrors() || result.hasWarnings()) {
                     // Just keep the last one around, if we need it
                     failedResult = result;
                     if (log.isDebugEnabled()) {

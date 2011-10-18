@@ -1417,6 +1417,28 @@ public class DefaultRulesTest {
             pools, compliance);
     }
 
+    @Test(expected = RuleExecutionException.class)
+    public void testCannotConsumeTooManySocketsNoStacking() {
+        consumer.setFact("cpu.cpu_socket(s)", "44");
+
+        Product product = mockProductSockets("productID", "John Q Product", "22");
+
+        Pool pool = mockPool(product);
+        pool.setQuantity(1L);
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool);
+        enforcer.selectBestPools(consumer, new String[]{ "productId" }, pools, compliance);
+    }
+
+    private Product mockProductSockets(String pid, String productName, String sockets) {
+        Product product = new Product(pid, productName);
+        product.setAttribute("sockets", sockets);
+        product.setAttribute("multi-entitlement", "no");
+        when(this.prodAdapter.getProductById(pid)).thenReturn(product);
+        return product;
+    }
+
+
     private Pool setupUserRestrictedPool() {
         Product product = new Product(productId, "A user restricted product");
         Pool pool = TestUtil.createPool(owner, product);
