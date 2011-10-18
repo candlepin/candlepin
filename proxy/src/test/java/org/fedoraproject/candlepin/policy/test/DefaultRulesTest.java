@@ -776,6 +776,40 @@ public class DefaultRulesTest {
         assertEquals(4, bestPools.get(pool).intValue());
     }
 
+    /*
+     * Two pools providing the exact same products, but one is virt_only and requires_host,
+     * while the other is just virt_only.
+     */
+    @Test
+    public void selectBestPoolsPrefersVirtOnlyHostRestricted() {
+        String productId1 = "A";
+
+        Product product1 = new Product(productId1, "A test product");
+
+        Pool pool1 = TestUtil.createPool(owner, product1);
+        pool1.setId("DEAD-BEEF");
+        pool1.setAttribute("virt_only", "true");
+
+        Pool pool2 = TestUtil.createPool(owner, product1);
+        pool2.setId("DEAD-BEEF2");
+        pool2.setAttribute("virt_only", "true");
+        pool2.setAttribute("requires_host", "HOSTUUID");
+
+        when(this.prodAdapter.getProductById(productId1)).thenReturn(product1);
+
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool1);
+        pools.add(pool2);
+
+        Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer,
+            new String[]{ productId1 }, pools, compliance);
+
+        assertEquals(1, bestPools.size());
+        assertTrue(bestPools.containsKey(pool2));
+        assertEquals(1, bestPools.get(pool2).intValue());
+
+    }
+
     @Test
     public void selectBestPoolsRegularAndStackingRequested() {
         consumer.setFact("cpu.cpu_socket(s)", "4");

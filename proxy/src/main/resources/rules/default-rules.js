@@ -333,8 +333,21 @@ function comparePools(pool1, pool2) {
     else if (pool2.getAttribute("virt_only") == "true" && pool1.getAttribute("virt_only") != "true") {
     	return false;
     }
+    
+    // If both virt_only, prefer one with host_requires, otherwise keep looking 
+    // for a reason to pick one or the other. We know that the host must match 
+    // as pools are filtered before even being passed to select best pools.
+    if (pool1.getAttribute("virt_only") == "true" && pool2.getAttribute("virt_only") == "true") {
+        if (pool1.getAttribute("requires_host") != null && pool2.getAttribute("requires_host") == null) {
+            return true;
+        }
+        if (pool2.getAttribute("requires_host") != null && pool1.getAttribute("requires_host") == null) {
+            return false;
+        }
+        // If neither condition is true, no preference...
+    }
 
-    // If two pools are equal, select the pool that expires first
+    // If two pools are still considered equal, select the pool that expires first
     if (pool2.getEndDate().after(pool1.getEndDate())) {
     	return true;
     }
