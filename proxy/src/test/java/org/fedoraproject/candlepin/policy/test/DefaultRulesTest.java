@@ -552,9 +552,11 @@ public class DefaultRulesTest {
             new ConsumerType(ConsumerTypeEnum.SYSTEM));
         Pool pool = setupHostRestrictedPool(parent);
 
+        String guestId = "virtguestuuid";
         consumer.setFact("virt.is_guest", "true");
+        consumer.setFact("virt.uuid", guestId);
 
-        when(consumerCurator.getHost(consumer.getUuid())).thenReturn(parent);
+        when(consumerCurator.getHost(guestId)).thenReturn(parent);
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
             .getResult();
@@ -573,9 +575,11 @@ public class DefaultRulesTest {
             new ConsumerType(ConsumerTypeEnum.SYSTEM));
 
         when(config.standalone()).thenReturn(false);
+        String guestId = "virtguestuuid";
         consumer.setFact("virt.is_guest", "true");
+        consumer.setFact("virt.uuid", guestId);
 
-        when(consumerCurator.getHost(consumer.getUuid())).thenReturn(otherParent);
+        when(consumerCurator.getHost(guestId)).thenReturn(otherParent);
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
             .getResult();
@@ -595,9 +599,11 @@ public class DefaultRulesTest {
             new ConsumerType(ConsumerTypeEnum.SYSTEM));
         Pool pool = setupHostRestrictedPool(otherParent);
 
+        String guestId = "virtguestuuid";
         consumer.setFact("virt.is_guest", "true");
+        consumer.setFact("virt.uuid", guestId);
 
-        when(consumerCurator.getHost(consumer.getUuid())).thenReturn(parent);
+        when(consumerCurator.getHost(guestId)).thenReturn(parent);
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
             .getResult();
@@ -616,9 +622,11 @@ public class DefaultRulesTest {
             new ConsumerType(ConsumerTypeEnum.SYSTEM));
         Pool pool = setupHostRestrictedPool(otherParent);
 
+        String guestId = "virtguestuuid";
         consumer.setFact("virt.is_guest", "true");
+        consumer.setFact("virt.uuid", guestId);
 
-        when(consumerCurator.getHost(consumer.getUuid())).thenReturn(null);
+        when(consumerCurator.getHost(guestId)).thenReturn(null);
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
             .getResult();

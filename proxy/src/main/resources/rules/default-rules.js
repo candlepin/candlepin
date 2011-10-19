@@ -387,7 +387,10 @@ var Entitlement = {
         if (!standalone) {
             return;
         }
-        var hostConsumer = pre.getHostConsumer(consumer.getUuid());
+        log.debug("guest virt.uuid = " + consumer.getFact("virt.uuid"));
+        var hostConsumer = pre.getHostConsumer(consumer.getFact("virt.uuid"));
+        log.debug("host consumer = " + hostConsumer);
+        log.debug("requires host = " + attributes.get('requires_host'));
 
         if (hostConsumer == null || !hostConsumer.getUuid().equals(attributes.get('requires_host'))) {
             pre.addError("virt.guest.host.does.not.match.pool.owner");
