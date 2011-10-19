@@ -129,7 +129,7 @@ public class DefaultRulesTest {
             new ConsumerType(ConsumerTypeEnum.SYSTEM));
 
         productCache = new ReadOnlyProductCache(prodAdapter);
-        poolRules = new JsPoolRules(new JsRulesProvider(rulesCurator).get(), 
+        poolRules = new JsPoolRules(new JsRulesProvider(rulesCurator).get(),
             poolManagerMock,
             prodAdapter, config);
     }
@@ -672,13 +672,13 @@ public class DefaultRulesTest {
         verify(postHelper, never()).createHostRestrictedPool(pool.getProductId(),
             pool, pool.getAttributeValue("virt_limit"));
     }
-    
+
     @Test
     public void hostedVirtLimitAltersBonusPoolQuantity() {
         when(config.standalone()).thenReturn(false);
         Consumer c = new Consumer("test consumer", "test user", owner,
             new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
-        Enforcer enf = new ManifestEntitlementRules(new DateSourceImpl(), 
+        Enforcer enf = new ManifestEntitlementRules(new DateSourceImpl(),
             new JsRulesProvider(rulesCurator).get(),
             prodAdapter, I18nFactory.getI18n(getClass(), Locale.US,
                 I18nFactory.FALLBACK), config, consumerCurator);
@@ -698,21 +698,22 @@ public class DefaultRulesTest {
         assertEquals(new Long(100), virtBonusPool.getQuantity());
         assertEquals("true", virtBonusPool.getAttributeValue("virt_only"));
         assertEquals("10", virtBonusPool.getProductAttribute("virt_limit").getValue());
-     
+
         Entitlement e = new Entitlement(physicalPool, c, new Date(), new Date(),
             1);
-        PoolHelper postHelper = new PoolHelper(poolManagerMock, prodAdapter, e); 
+        PoolHelper postHelper = new PoolHelper(poolManagerMock, prodAdapter, e);
         List<Pool> poolList = new ArrayList<Pool>();
         poolList.add(virtBonusPool);
-        when(poolManagerMock.lookupBySubscriptionId(eq(physicalPool.getSubscriptionId()))).thenReturn(poolList);
-        
+        when(poolManagerMock.lookupBySubscriptionId(eq(physicalPool.getSubscriptionId())))
+            .thenReturn(poolList);
+
         enf.postEntitlement(c, postHelper, e);
         verify(poolManagerMock).updatePoolQuantity(eq(virtBonusPool), eq(-10L));
 
         enf.postUnbind(consumer, postHelper, e);
         verify(poolManagerMock).updatePoolQuantity(eq(virtBonusPool), eq(10L));
     }
-    
+
     private Subscription createVirtLimitSub(String productId, int quantity, int virtLimit) {
         Product product = new Product(productId, productId);
         product.setAttribute("virt_limit", new Integer(virtLimit).toString());

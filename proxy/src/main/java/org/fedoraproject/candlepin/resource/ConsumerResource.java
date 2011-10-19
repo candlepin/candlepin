@@ -588,12 +588,17 @@ public class ConsumerResource {
     }
 
     /**
-     * Check if the consumers installed products have changed. If they do not appear to
-     * have been specified in this PUT, skip updating installed products entirely.
+     * Check if the consumers guest IDs have changed. If they do not appear to
+     * have been specified in this PUT, skip updating guest IDs entirely.
+     *
+     * If a consumer's guest was already reported by another consumer (host),
+     * all entitlements related to the other host are revoked. Also, if a
+     * guest ID is removed from this host, then all entitlements related to
+     * this host are revoked from the guest.
      *
      * @param existing existing consumer
      * @param incoming incoming consumer
-     * @return True if installed products were included in request and have changed.
+     * @return True if guest IDs were included in request and have changed.
      */
     private boolean checkForGuestsUpdate(Consumer existing, Consumer incoming) {
 
@@ -603,7 +608,7 @@ public class ConsumerResource {
             return false;
         }
 
-        log.debug("Updating guests.");
+        log.debug("Updating consumer's guest IDs.");
         List<GuestId> removedGuests = getRemovedGuestIds(existing, incoming);
         List<GuestId> addedGuests = getAddedGuestIds(existing, incoming);
 
@@ -622,6 +627,7 @@ public class ConsumerResource {
 
             // If adding a new GuestId send notification.
             if (addedGuests.contains(guestId)) {
+                log.debug("New guest ID added: " + guestId.getGuestId());
                 sink.sendEvent(eventFactory.guestIdCreated(existing, guestId));
             }
 
@@ -634,15 +640,17 @@ public class ConsumerResource {
             Consumer host = consumerCurator.getHost(guestId.getGuestId());
             // Check if the guest was already reported by another host.
             if (host != null && !existing.equals(host)) {
-                // If the guest already existed and was already reported, send an event
-                // stating that the guest is hosted in two places. We only do this if
-                // the guest already exists since the other host may have not yet
-                // reported that the guest was removed/migrated.
+                // If the guest already existed and its host consumer is not the same
+                // as the one being updated, then log a warning.
                 if (!removedGuests.contains(guestId) && !addedGuests.contains(guestId)) {
                     log.warn("Guest " + guestId.getGuestId() +
                         " is currently being hosted by two hosts: " +
                         existing.getUuid() + " " + host.getUuid());
                 }
+
+                // Revoke any entitlements related to the other host.
+                log.debug("Guest was associated with another host. Revoking entitlements" +
+                    " related to host: " + host.getName());
                 revokeGuestEntitlementsMatchingHost(host, guest);
             }
         }
@@ -650,12 +658,14 @@ public class ConsumerResource {
         // Check guests that have been removed.
         for (GuestId guestId : removedGuests) {
             // Report that the guestId was removed.
+            log.debug("Guest ID removed: " + guestId.getGuestId());
             sink.sendEvent(eventFactory.guestIdDeleted(existing, guestId));
 
             Consumer guest = consumerCurator.findByVirtUuid(guestId.getGuestId());
             if (guest != null) {
                 // The guest is actually registered. Remove the entitlements
                 // that are associated with this host.
+                log.debug("Guest ID was removed. Revoking host related entitlements.");
                 revokeGuestEntitlementsMatchingHost(existing, guest);
             }
         }
