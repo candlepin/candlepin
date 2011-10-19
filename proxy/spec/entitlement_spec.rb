@@ -12,11 +12,14 @@ describe 'Entitlements' do
       {:attributes => {"multi-entitlement" => "yes"}})
     @super_awesome = create_product(nil, random_string('super_awesome'), 
                                     :attributes => { 'cpu.cpu_socket(s)' => 4 })
+    @virt_limit = create_product(nil, random_string('virt_limit'),
+      {:attributes => {"virt_limit" => "10"}})
 
     #entitle owner for the virt and monitoring products.
     @cp.create_subscription(@owner.key, @virt.id, 20)
     @cp.create_subscription(@owner.key, @monitoring.id, 4)
     @cp.create_subscription(@owner.key, @super_awesome.id, 4)
+    @cp.create_subscription(@owner.key, @virt_limit.id, 5)
 
     @cp.refresh_pools(@owner.key)
 
@@ -114,6 +117,38 @@ describe 'Entitlements' do
     consumer ||= @system
     consumer.list_pools(:product => product.id, :consumer => consumer.uuid).first
   end
-  
+
+  it 'should revoke guest entitlements if the host entitlement is unbound - standalone only' do
+    if @cp.get_status()['standalone']:
+
+      guest_system = consumer_client(@user, 'guest_system', :system, 'admin', {'virt.is_guest' => 'True', 
+                                            'virt.uuid' => '26db01a5-5d25-60cf-cf19-39bf118d0ead'})
+      guests = [{'guestId' => '26db01a5-5d25-60cf-cf19-39bf118d0ead'}]
+      @system.update_consumer({:guestIds => guests})
+      entitlement = @system.consume_product @virt_limit.id
+      pools =  @cp.list_pools(:owner => @owner.id, :product => @virt_limit.id)
+      pools.should have(2).things
+      @system.list_entitlements().size.should == 1
+
+
+      #ensure that the pool consumed by the guest is the bonus one
+      chosen_id = ''
+      for pool in pools:
+        this_one = false
+        for at in pool['attributes']:
+          if at.name == 'pool_derived' and at.value == 'true':
+            chosen_id = pool.id
+          end
+        end
+      end
+      guest_entitlement = guest_system.consume_product @virt_limit.id
+      guest_entitlement.first.pool.id.should == chosen_id
+
+      #revoke entitlement from hosted
+      @cp.unbind_entitlement(entitlement[0].id, :uuid => @system.uuid)
+      guest_system.list_entitlements().should be_empty
+    end
+  end
+
 end
 

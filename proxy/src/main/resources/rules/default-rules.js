@@ -370,10 +370,10 @@ var Entitlement = {
     },
 
     pre_virt_only: function() {
-        var virt_pool = 'true'.equals(attributes.get('virt_only'));
+        var virt_pool = 'true'.equalsIgnoreCase(attributes.get('virt_only'));
         var guest = false;
         if (consumer.hasFact('virt.is_guest')) {
-            guest = 'true'.equals(consumer.getFact('virt.is_guest'));
+            guest = 'true'.equalsIgnoreCase(consumer.getFact('virt.is_guest'));
         }
 
         if (virt_pool && !guest) {
@@ -804,7 +804,7 @@ var Pool = {
 var Export = {
     can_export_entitlement: function() {
         pool_derived = attributes.containsKey('pool_derived') &&
-                    'true'.equals(attributes.get('pool_derived'));
+                    'true'.equalsIgnoreCase(attributes.get('pool_derived'));
 
         return !consumer.isManifest() || !pool_derived;
     }

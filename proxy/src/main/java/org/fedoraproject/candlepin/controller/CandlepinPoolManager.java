@@ -634,9 +634,11 @@ public class CandlepinPoolManager implements PoolManager {
 
         consumer.removeEntitlement(entitlement);
         // Look for pools referencing this entitlement as their source
-        // entitlement
-        // and clean them up as well:
+        // entitlement and clean them up as well
         for (Pool p : poolCurator.listBySourceEntitlement(entitlement)) {
+            for (Entitlement e : p.getEntitlements()) {
+                this.revokeEntitlement(e);
+            }
             deletePool(p);
         }
 
