@@ -17,26 +17,14 @@ package org.fedoraproject.candlepin.policy.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.when;
 
 import org.fedoraproject.candlepin.config.Config;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-
+import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.ConsumerType;
@@ -50,7 +38,9 @@ import org.fedoraproject.candlepin.model.ProductAttribute;
 import org.fedoraproject.candlepin.model.ProvidedProduct;
 import org.fedoraproject.candlepin.model.Rules;
 import org.fedoraproject.candlepin.model.RulesCurator;
+import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.policy.Enforcer;
+import org.fedoraproject.candlepin.policy.PoolRules;
 import org.fedoraproject.candlepin.policy.ValidationResult;
 import org.fedoraproject.candlepin.policy.js.JsRules;
 import org.fedoraproject.candlepin.policy.js.JsRulesProvider;
@@ -58,6 +48,8 @@ import org.fedoraproject.candlepin.policy.js.ReadOnlyProductCache;
 import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
 import org.fedoraproject.candlepin.policy.js.compliance.ComplianceStatus;
 import org.fedoraproject.candlepin.policy.js.entitlement.EntitlementRules;
+import org.fedoraproject.candlepin.policy.js.entitlement.ManifestEntitlementRules;
+import org.fedoraproject.candlepin.policy.js.pool.JsPoolRules;
 import org.fedoraproject.candlepin.policy.js.pool.PoolHelper;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.test.TestDateUtil;
@@ -69,6 +61,19 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.xnap.commons.i18n.I18nFactory;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * DefaultRulesTest
@@ -84,10 +89,12 @@ public class DefaultRulesTest {
     @Mock
     private ConsumerCurator consumerCurator;
     @Mock private ComplianceStatus compliance;
+    @Mock private PoolManager poolManagerMock;
     private ReadOnlyProductCache productCache;
     private Owner owner;
     private Consumer consumer;
     private String productId = "a-product";
+    private PoolRules poolRules;
 
     @Before
     public void createEnforcer() throws Exception {
@@ -122,6 +129,9 @@ public class DefaultRulesTest {
             new ConsumerType(ConsumerTypeEnum.SYSTEM));
 
         productCache = new ReadOnlyProductCache(prodAdapter);
+        poolRules = new JsPoolRules(new JsRulesProvider(rulesCurator).get(), 
+            poolManagerMock,
+            prodAdapter, config);
     }
 
     private Pool createPool(Owner owner, Product product) {
@@ -661,6 +671,56 @@ public class DefaultRulesTest {
 
         verify(postHelper, never()).createHostRestrictedPool(pool.getProductId(),
             pool, pool.getAttributeValue("virt_limit"));
+    }
+    
+    @Test
+    public void hostedVirtLimitAltersBonusPoolQuantity() {
+        when(config.standalone()).thenReturn(false);
+        Consumer c = new Consumer("test consumer", "test user", owner,
+            new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
+        Enforcer enf = new ManifestEntitlementRules(new DateSourceImpl(), 
+            new JsRulesProvider(rulesCurator).get(),
+            prodAdapter, I18nFactory.getI18n(getClass(), Locale.US,
+                I18nFactory.FALLBACK), config, consumerCurator);
+        Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);
+        List<Pool> pools = poolRules.createPools(s);
+        assertEquals(2, pools.size());
+
+        Pool physicalPool = pools.get(0);
+        physicalPool.setId("physical");
+        Pool virtBonusPool = pools.get(1);
+        virtBonusPool.setId("virt");
+
+        assertEquals(new Long(10), physicalPool.getQuantity());
+        assertEquals(0, physicalPool.getAttributes().size());
+
+        // Quantity on bonus pool should be virt limit * sub quantity:
+        assertEquals(new Long(100), virtBonusPool.getQuantity());
+        assertEquals("true", virtBonusPool.getAttributeValue("virt_only"));
+        assertEquals("10", virtBonusPool.getProductAttribute("virt_limit").getValue());
+     
+        Entitlement e = new Entitlement(physicalPool, c, new Date(), new Date(),
+            1);
+        PoolHelper postHelper = new PoolHelper(poolManagerMock, prodAdapter, e); 
+        List<Pool> poolList = new ArrayList<Pool>();
+        poolList.add(virtBonusPool);
+        when(poolManagerMock.lookupBySubscriptionId(eq(physicalPool.getSubscriptionId()))).thenReturn(poolList);
+        
+        enf.postEntitlement(c, postHelper, e);
+        verify(poolManagerMock).updatePoolQuantity(eq(virtBonusPool), eq(-10L));
+
+        enf.postUnbind(consumer, postHelper, e);
+        verify(poolManagerMock).updatePoolQuantity(eq(virtBonusPool), eq(10L));
+    }
+    
+    private Subscription createVirtLimitSub(String productId, int quantity, int virtLimit) {
+        Product product = new Product(productId, productId);
+        product.setAttribute("virt_limit", new Integer(virtLimit).toString());
+        when(prodAdapter.getProductById(productId)).thenReturn(product);
+        Subscription s = TestUtil.createSubscription(product);
+        s.setQuantity(new Long(quantity));
+        s.setId("subId");
+        return s;
     }
 
     @Test

@@ -20,18 +20,20 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
-import java.io.File;
-import java.io.PrintStream;
-import java.util.ArrayList;
-
+import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.model.Rules;
 import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.model.Status;
 import org.fedoraproject.candlepin.resource.StatusResource;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
+import java.io.File;
+import java.io.PrintStream;
+import java.util.ArrayList;
 
 
 /**
@@ -40,6 +42,7 @@ import org.mockito.MockitoAnnotations;
 public class StatusResourceTest {
 
     @Mock private RulesCurator rulesCurator;
+    @Mock private Config config;
 
     @Before
     public void setUp() {
@@ -53,7 +56,7 @@ public class StatusResourceTest {
             .getClassLoader().getResource("candlepin_info.properties").toURI()));
         ps.println("version=${version}");
         ps.println("release=${release}");
-        StatusResource sr = new StatusResource(rulesCurator);
+        StatusResource sr = new StatusResource(rulesCurator, config);
         Status s = sr.status();
         ps.close();
         assertNotNull(s);
@@ -67,7 +70,7 @@ public class StatusResourceTest {
         PrintStream ps = new PrintStream(new File(this.getClass()
             .getClassLoader().getResource("candlepin_info.properties").toURI()));
         ps.println("foo");
-        StatusResource sr = new StatusResource(rulesCurator);
+        StatusResource sr = new StatusResource(rulesCurator, config);
         Status s = sr.status();
         ps.close();
         assertNotNull(s);
@@ -83,7 +86,7 @@ public class StatusResourceTest {
         ps.println("version=${version}");
         ps.println("release=${release}");
         when(rulesCurator.listAll()).thenThrow(new RuntimeException());
-        StatusResource sr = new StatusResource(rulesCurator);
+        StatusResource sr = new StatusResource(rulesCurator, config);
         Status s = sr.status();
         ps.close();
         assertNotNull(s);
