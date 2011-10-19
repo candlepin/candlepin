@@ -369,6 +369,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         List<Rule> matchingRules
             = rulesForAttributes(allAttributes.keySet(), attributesToRules);
 
+        invokeGlobalPostUnbindRule(args);
         callPostUnbindRules(matchingRules);
     }
 
