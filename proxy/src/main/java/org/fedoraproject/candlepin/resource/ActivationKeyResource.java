@@ -65,6 +65,11 @@ public class ActivationKeyResource {
         this.eventSink = eventSink;
     }
 
+    /**
+     * @return an ActivationKey
+     * @httpcode 400
+     * @httpcode 200
+     */
     @GET
     @Path("{activation_key_id}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -76,6 +81,11 @@ public class ActivationKeyResource {
         return key;
     }
 
+    /**
+     * @return a list of Pool objects
+     * @httpcode 400
+     * @httpcode 200
+     */
     @GET
     @Path("{activation_key_id}/pools")
     @Produces(MediaType.APPLICATION_JSON)
@@ -89,6 +99,11 @@ public class ActivationKeyResource {
         return pools;
     }
 
+    /**
+     * @return an ActivationKey
+     * @httpcode 400
+     * @httpcode 200
+     */
     @PUT
     @Path("{activation_key_id}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -102,6 +117,11 @@ public class ActivationKeyResource {
         return toUpdate;
     }
 
+    /**
+     * @return a Pool
+     * @httpcode 400
+     * @httpcode 200
+     */
     @POST
     @Path("{activation_key_id}/pools/{pool_id}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -147,6 +167,11 @@ public class ActivationKeyResource {
         return pool;
     }
 
+    /**
+     * @return a Pool
+     * @httpcode 400
+     * @httpcode 200
+     */
     @DELETE
     @Path("{activation_key_id}/pools/{pool_id}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -161,6 +186,10 @@ public class ActivationKeyResource {
         return pool;
     }
 
+    /**
+     * @return a list of ActivationKey objects
+     * @httpcode 200
+     */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<ActivationKey> findActivationKey() {
@@ -168,6 +197,10 @@ public class ActivationKeyResource {
         return keyList;
     }
 
+    /**
+     * @httpcode 400
+     * @httpcode 200
+     */
     @DELETE
     @Path("{activation_key_id}")
     @Produces(MediaType.APPLICATION_JSON)

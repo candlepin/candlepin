@@ -187,6 +187,7 @@ public class OwnerResource {
      * Return list of Owners.
      *
      * @return list of Owners
+     * @httpcode 200
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -211,6 +212,8 @@ public class OwnerResource {
      *
      * @param ownerKey Owner ID.
      * @return the owner identified by the given id.
+     * @httpcode 404
+     * @httpcode 200
      */
     @GET
     @Path("/{owner_key}")
@@ -224,6 +227,8 @@ public class OwnerResource {
      *
      * @param ownerKey Owner ID.
      * @return the info of the owner identified by the given id.
+     * @httpcode 404
+     * @httpcode 200
      */
     @GET
     @Path("/{owner_key}/info")
@@ -238,6 +243,8 @@ public class OwnerResource {
      * Creates a new Owner
      *
      * @return the new owner
+     * @httpcode 400
+     * @httpcode 200
      */
     @POST
     @Produces(MediaType.APPLICATION_JSON)
@@ -262,6 +269,8 @@ public class OwnerResource {
 
     /**
      * Deletes an owner
+     * @httpcode 404
+     * @httpcode 200
      */
     @DELETE
     @Path("/{owner_key}")
@@ -336,6 +345,8 @@ public class OwnerResource {
      *
      * @param ownerKey id of the owner whose entitlements are sought.
      * @return the entitlements for the owner of the given id.
+     * @httpcode 404
+     * @httpcode 200
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -357,6 +368,8 @@ public class OwnerResource {
      *
      * @param ownerKey id of the owner whose keys are sought.
      * @return the activation keys for the owner of the given id.
+     * @httpcode 404
+     * @httpcode 200
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -373,6 +386,9 @@ public class OwnerResource {
      *
      * @param ownerKey id of the owner whose keys are sought.
      * @return the activation keys for the owner of the given id.
+     * @httpcode 400
+     * @httpcode 404
+     * @httpcode 200
      */
     @POST
     @Produces(MediaType.APPLICATION_JSON)
@@ -416,6 +432,9 @@ public class OwnerResource {
      *
      * @param ownerKey id of the owner whose consumers are sought.
      * @return the consumers for the owner of the given id.
+     * @httpcode 400
+     * @httpcode 404
+     * @httpcode 200
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -454,6 +473,9 @@ public class OwnerResource {
      *
      * @param ownerKey id of the owner whose entitlement pools are sought.
      * @return the entitlement pools for the owner of the given id.
+     * @httpcode 400
+     * @httpcode 404
+     * @httpcode 200
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -489,6 +511,11 @@ public class OwnerResource {
             activeOnDate, true, listAll);
     }
 
+    /**
+     * @return the created Subscription
+     * @httpcode 404
+     * @httpcode 200
+     */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -501,6 +528,11 @@ public class OwnerResource {
         return subService.createSubscription(subscription);
     }
 
+    /**
+     * @return the owner Feed
+     * @httpcode 404
+     * @httpcode 200
+     */
     @GET
     @Produces("application/atom+xml")
     @Path("{owner_key}/atom")
@@ -514,6 +546,11 @@ public class OwnerResource {
         return feed;
     }
 
+    /**
+     * @return the consumer Feed
+     * @httpcode 404
+     * @httpcode 200
+     */
     @GET
     @Produces("application/atom+xml")
     @Path("{owner_key}/consumers/{consumer_uuid}/atom")
@@ -528,6 +565,11 @@ public class OwnerResource {
         return feed;
     }
 
+    /**
+     * @return a list of Events
+     * @httpcode 404
+     * @httpcode 200
+     */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/events")
@@ -541,6 +583,11 @@ public class OwnerResource {
         return events;
     }
 
+    /**
+     * @return a list of Subscriptions
+     * @httpcode 404
+     * @httpcode 200
+     */
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -578,6 +625,8 @@ public class OwnerResource {
      * @param key
      * @param owner
      * @return the update {@link Owner}
+     * @httpcode 404
+     * @httpcode 200
      */
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
@@ -601,6 +650,8 @@ public class OwnerResource {
      *
      * @param ownerKey unique id key of the owner whose pools should be updated
      * @return the status of the pending job
+     * @httpcode 404
+     * @httpcode 202
      */
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
@@ -624,6 +675,10 @@ public class OwnerResource {
         return RefreshPoolsJob.forOwner(owner);
     }
 
+    /**
+     * @httpcode 404
+     * @httpcode 200
+     */
     @PUT
     @Path("/subscriptions")
     public void updateSubscription(Subscription subscription) {
@@ -637,6 +692,12 @@ public class OwnerResource {
         this.subscriptionCurator.merge(subscription);
     }
 
+    /**
+     * @httpcode 400
+     * @httpcode 404
+     * @httpcode 500
+     * @httpcode 200
+     */
     @POST
     @Path("{owner_key}/imports")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
@@ -676,6 +737,11 @@ public class OwnerResource {
         }
     }
 
+    /**
+     * @return a list of ImportRecords
+     * @httpcode 404
+     * @httpcode 200
+     */
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -687,6 +753,12 @@ public class OwnerResource {
         return this.importRecordCurator.findRecords(owner);
     }
 
+    /**
+     * @return a list of Statistics
+     * @httpcode 400
+     * @httpcode 404
+     * @httpcode 200
+     */
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -709,6 +781,12 @@ public class OwnerResource {
                                 ResourceDateParser.parseDateString(to));
     }
 
+    /**
+     * @return a list of Statistics
+     * @httpcode 400
+     * @httpcode 404
+     * @httpcode 200
+     */
     @GET
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -732,6 +810,12 @@ public class OwnerResource {
                                 ResourceDateParser.parseDateString(to));
     }
 
+    /**
+     * @return a list of Statistics
+     * @httpcode 400
+     * @httpcode 404
+     * @httpcode 200
+     */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/statistics/{qtype}/{vtype}")
@@ -756,6 +840,12 @@ public class OwnerResource {
                                 ResourceDateParser.parseDateString(to));
     }
 
+    /**
+     * @return an EntitlementCertificate
+     * @httpcode 400
+     * @httpcode 404
+     * @httpcode 200
+     */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -797,6 +887,11 @@ public class OwnerResource {
         }
     }
 
+    /**
+     * @return an EntitlementCertificate
+     * @httpcode 404
+     * @httpcode 200
+     */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/uebercert")

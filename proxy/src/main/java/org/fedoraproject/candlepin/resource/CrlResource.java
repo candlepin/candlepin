@@ -49,6 +49,7 @@ public class CrlResource {
      * @return the current CRL
      * @throws CRLException if there is issue generating the CRL
      * @throws IOException if there is a problem serializing the CRL
+     * @httpcode 200
      */
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN })

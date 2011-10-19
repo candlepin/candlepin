@@ -59,6 +59,7 @@ public class AdminResource {
      * Repeated calls are not required, but will be harmless.
      *
      * @return Description if db was or already is initialized.
+     * @httpcode 200
      */
     @GET
     @Produces({MediaType.TEXT_PLAIN})

@@ -58,6 +58,8 @@ public class RulesResource {
      * Uploads new Rules, returns a copy of the uploaded rules.
      * @param rulesBuffer rules to upload.
      * @return a copy of the uploaded rules.
+     * @httpcode 400
+     * @httpcode 200
      */
     @POST
     @Consumes({ MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN })
@@ -85,6 +87,8 @@ public class RulesResource {
     /**
      * return a the rules as a string.
      * @return a the rules as a string.
+     * @httpcode 503
+     * @httpcode 200
      */
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN })
@@ -104,7 +108,7 @@ public class RulesResource {
 
     /**
      * deletes any uploaded rules, use bundled rules instead
-     *
+     * @httpcode 200
      */
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)

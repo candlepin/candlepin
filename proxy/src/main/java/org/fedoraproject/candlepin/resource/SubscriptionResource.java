@@ -65,12 +65,21 @@ public class SubscriptionResource {
 
     }
 
+    /**
+     * @return a list of Subscriptions
+     * @httpcode 200
+     */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<Subscription> getSubscriptions() {
         return subService.getSubscriptions();
     }
 
+    /**
+     * @return a Subscription
+     * @httpcode 400
+     * @httpcode 200
+     */
     @GET
     @Path("/{subscription_id}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -80,6 +89,7 @@ public class SubscriptionResource {
         Subscription subscription = verifyAndFind(subscriptionId);
         return subscription;
     }
+
 
     @GET
     @Path("/{subscription_id}/cert")
@@ -95,6 +105,11 @@ public class SubscriptionResource {
         return subCert;
     }
 
+    /**
+     * @httpcode 400
+     * @httpcode 503
+     * @httpcode 200
+     */
     @POST
     public void activateSubscription(
         @QueryParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
@@ -126,6 +141,10 @@ public class SubscriptionResource {
         response.setStatus(HttpServletResponse.SC_ACCEPTED);
     }
 
+    /**
+     * @httpcode 400
+     * @httpcode 200
+     */
     @DELETE
     @Path("/{subscription_id}")
     @Produces(MediaType.APPLICATION_JSON)

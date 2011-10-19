@@ -64,12 +64,20 @@ public class UserResource {
         this.ownerCurator = ownerCurator;
     }
 
+    /**
+     * @return a list of Users
+     * @httpcode 200
+     */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<User> list() {
         return userService.listUsers();
     }
 
+    /**
+     * @return a User
+     * @httpcode 200
+     */
     @GET
     @Path("/{username}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -77,6 +85,11 @@ public class UserResource {
         @Verify(User.class) String username) {
         return userService.findByLogin(username);
     }
+
+    /**
+     * @return a list of Roles
+     * @httpcode 200
+     */
     /*
      * getUserRoles will only return roles for one user. If you want a
      * full view of a role, use /roles/ instead.
@@ -96,6 +109,10 @@ public class UserResource {
         return roles;
     }
 
+    /**
+     * @return a User
+     * @httpcode 200
+     */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -106,6 +123,11 @@ public class UserResource {
         return userService.createUser(user);
     }
 
+    /**
+     * @return a User
+     * @httpcode 404
+     * @httpcode 200
+     */
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -122,6 +144,10 @@ public class UserResource {
     }
 
 
+    /**
+     * @httpcode 410
+     * @httpcode 200
+     */
     @DELETE
     @Path("/{username}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -135,6 +161,10 @@ public class UserResource {
         }
     }
 
+    /**
+     * @return a list of Owners
+     * @httpcode 200
+     */
     @GET
     @Path("/{username}/owners")
     @Produces(MediaType.APPLICATION_JSON)

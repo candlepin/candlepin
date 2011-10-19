@@ -75,6 +75,7 @@ public class StatusResource {
      * status to see if a server is up and running
      *
      * @return the running status
+     * @httpcode 200
      */
     @GET
     @Produces({ MediaType.APPLICATION_JSON})

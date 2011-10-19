@@ -50,12 +50,20 @@ public class ContentResource {
         this.idGenerator = idGenerator;
     }
 
+    /**
+     * @return a list of Content objects
+     * @httpcode 200
+     */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<Content> list() {
         return contentCurator.listAll();
     }
 
+    /**
+     * @return a Content object
+     * @httpcode 400
+     */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{content_id}")
@@ -70,6 +78,10 @@ public class ContentResource {
         return content;
     }
 
+    /**
+     * @return a Content object
+     * @httpcode 200
+     */
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     public Content createContent(Content content) {
@@ -89,6 +101,9 @@ public class ContentResource {
         return contentCurator.create(content);
     }
 
+    /**
+     * @httpcode 200
+     */
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{content_id}")

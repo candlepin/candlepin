@@ -50,6 +50,10 @@ public class EventResource {
         this.eventAdapter = eventAdapter;
     }
 
+    /**
+     * @return a list of Event objects
+     * @httpcode 200
+     */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<Event> listEvents() {
@@ -60,6 +64,11 @@ public class EventResource {
         return events;
     }
 
+    /**
+     * @return an Event
+     * @httpcode 404
+     * @httpcode 200
+     */
     @GET
     @Path("{uuid}")
     @Produces(MediaType.APPLICATION_JSON)

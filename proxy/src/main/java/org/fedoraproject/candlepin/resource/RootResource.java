@@ -72,6 +72,10 @@ public class RootResource {
     public RootResource() {
     }
 
+    /**
+     * @httpcode 200
+     * @return a list of links
+     */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @SecurityHole(noAuth = true)

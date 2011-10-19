@@ -47,7 +47,8 @@ public class StatisticResource {
 
     /**
      * Gathers statistics in system and records them in stat history table.
-     *
+     * @httpcode 503
+     * @httpcode 200
      */
     @PUT
     public void execute() {

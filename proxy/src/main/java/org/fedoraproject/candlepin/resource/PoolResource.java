@@ -94,6 +94,7 @@ public class PoolResource {
      * @httpcode 400 if both consumer and owner are given, or if a product id is
      *           specified without a consumer or owner
      * @httpcode 404 if a specified consumer or owner is not found
+     * @httpcode 403
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -171,6 +172,7 @@ public class PoolResource {
      * @return the pool identified by the id
      * @httpcode 200 if the request succeeded
      * @httpcode 404 if the pool with the specified id is not found
+     * @httpcode 404
      */
     @GET
     @Path("/{pool_id}")
@@ -186,6 +188,11 @@ public class PoolResource {
             "Entitlement Pool with ID ''{0}'' could not be found", id));
     }
 
+    /**
+     * @return a list of Statistics
+     * @httpcode 400
+     * @httpcode 200
+     */
     @GET
     @Path("{pool_id}/statistics")
     @Produces(MediaType.APPLICATION_JSON)
@@ -200,6 +207,10 @@ public class PoolResource {
                                 ResourceDateParser.parseDateString(to));
     }
 
+    /**
+     * @return a list of Statistics
+     * @httpcode 200
+     */
     @GET
     @Path("{pool_id}/statistics/{vtype}")
     @Produces(MediaType.APPLICATION_JSON)

@@ -55,6 +55,7 @@ public class ConsumerTypeResource {
      * List available ConsumerTypes
      *
      * @return all the consumer types
+     * @httpcode 200
      */
     @GET
     @Produces({MediaType.APPLICATION_JSON })
@@ -67,6 +68,8 @@ public class ConsumerTypeResource {
      * Return the consumer type identified by the given label.
      *
      * @return a consumer type
+     * @httpcode 404
+     * @httpcode 200
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -87,6 +90,8 @@ public class ConsumerTypeResource {
      *
      * @return newly created ConsumerType
      * @throws BadRequestException When the type is not found
+     * @httpcode 400
+     * @httpcode 200
      */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -108,7 +113,8 @@ public class ConsumerTypeResource {
      *
      * @return newly created ConsumerType
      * @throws BadRequestException When the type is not found
-     *
+     * @httpcode 400
+     * @httpcode 200
      */
     @PUT
     @Path("/{id}")
@@ -128,6 +134,9 @@ public class ConsumerTypeResource {
 
     /**
      * Deletes a consumer type
+     *
+     * @httpcode 400
+     * @httpcode 200
      */
     @DELETE
     @Path("/{id}")

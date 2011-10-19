@@ -79,6 +79,8 @@ public class EntitlementResource {
      * @param consumerUuid consumerUuid to check if entitled or not
      * @param productId productLabel to check if entitled or not
      * @return boolean if entitled or not
+     * @httpcode 404
+     * @httpcode 200
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -100,6 +102,11 @@ public class EntitlementResource {
                 consumerUuid, productId));
     }
 
+    /**
+     * @return a list of Entitlement objects
+     * @httpcode 400
+     * @httpcode 200
+     */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<Entitlement> listAllForConsumer(
@@ -123,6 +130,8 @@ public class EntitlementResource {
      * Return the entitlement for the given id.
      * @param dbid entitlement id.
      * @return the entitlement for the given id.
+     * @httpcode 404
+     * @httpcode 200
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -141,6 +150,9 @@ public class EntitlementResource {
      * Remove an entitlement by ID.
      *
      * @param dbid the entitlement to delete.
+     * @httpcode 403
+     * @httpcode 404
+     * @httpcode 200
      */
     @DELETE
     @Path("/{dbid}")
@@ -154,6 +166,10 @@ public class EntitlementResource {
             i18n.tr("Entitlement with ID ''{0}'' could not be found", dbid));
     }
 
+    /**
+     * @return a JobDetail
+     * @httpcode 202
+     */
     @PUT
     @Path("product/{product_id}")
     public JobDetail regenerateEntitlementCertificatesForProduct(

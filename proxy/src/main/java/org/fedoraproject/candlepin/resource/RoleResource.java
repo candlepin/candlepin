@@ -64,6 +64,11 @@ public class RoleResource {
         this.permissionCurator = permCurator;
     }
 
+    /**
+     * @return the created Role
+     * @httpcode 404
+     * @httpcode 200
+     */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -83,6 +88,11 @@ public class RoleResource {
         return r;
     }
 
+    /**
+     * @return the updated Role
+     * @httpcode 404
+     * @httpcode 200
+     */
     @PUT
     @Path("{role_id}")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -99,6 +109,12 @@ public class RoleResource {
         return this.userService.updateRole(existingRole);
     }
 
+    /**
+     * @return the role with the added permission
+     * @httpcode 404
+     * @httpcode 400
+     * @httpcode 200
+     */
     @POST
     @Path("{role_id}/permissions")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -125,6 +141,11 @@ public class RoleResource {
         return r;
     }
 
+    /**
+     * @return the role with the removed permission
+     * @httpcode 404
+     * @httpcode 200
+     */
     @DELETE
     @Path("{role_id}/permissions/{perm_id}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -173,6 +194,10 @@ public class RoleResource {
         return user;
     }
 
+    /**
+     * @return a Role
+     * @httpcode 200
+     */
     @GET
     @Path("{role_id}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -180,12 +205,20 @@ public class RoleResource {
         return lookupRole(roleId);
     }
 
+    /**
+     * @httpcode 200
+     */
     @DELETE
     @Path("/{role_id}")
     public void deleteRole(@PathParam("role_id") String roleId) {
         this.userService.deleteRole(roleId);
     }
 
+    /**
+     * @return a Role
+     * @httpcode 404
+     * @httpcode 200
+     */
     @POST
     @Path("/{role_id}/users/{username}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -197,6 +230,10 @@ public class RoleResource {
         return role;
     }
 
+    /**
+     * @return a Role
+     * @httpcode 404
+     */
     @DELETE
     @Path("/{role_id}/users/{username}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -208,6 +245,10 @@ public class RoleResource {
         return role;
     }
 
+    /**
+     * @return a list of Roles
+     * @httpcode 200
+     */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Wrapped(element = "roles")

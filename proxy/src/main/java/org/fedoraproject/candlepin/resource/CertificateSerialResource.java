@@ -40,12 +40,20 @@ public class CertificateSerialResource {
         this.certificateSerialCurator = certificateSerialCurator;
     }
 
+    /**
+     * @return a list of CertificateSerial objects
+     * @httpcode 200
+     */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<CertificateSerial> getCertificateSerials() {
         return this.certificateSerialCurator.listAll();
     }
 
+    /**
+     * @return a CertificateSerial
+     * @httpcode 200
+     */
     @GET
     @Path("/{serial_id}")
     @Produces(MediaType.APPLICATION_JSON)

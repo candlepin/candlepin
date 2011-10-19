@@ -169,6 +169,9 @@ public class ConsumerResource {
      * List available Consumers
      *
      * @return list of available consumers.
+     * @httpcode 400
+     * @httpcode 404
+     * @httpcode 200
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -203,6 +206,8 @@ public class ConsumerResource {
      *
      * @param uuid uuid of the consumer sought.
      * @return the consumer identified by the given uuid.
+     * @httpcode 404
+     * @httpcode 200
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -232,6 +237,10 @@ public class ConsumerResource {
      * @return newly created Consumer
      * @throws BadRequestException generic exception type for web services We
      *         are calling this "registerConsumer" in the api discussions
+     * @httpcode 400
+     * @httpcode 403
+     * @httpcode 404
+     * @httpcode 200
      */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -496,6 +505,10 @@ public class ConsumerResource {
         return type;
     }
 
+    /**
+     * @httpcode 404
+     * @httpcode 200
+     */
     // While this is a PUT, we are treating it as a PATCH until this operation
     // becomes more prevalent. We only update the portions of the consumer that appear
     // to be set.
@@ -588,6 +601,9 @@ public class ConsumerResource {
      * delete the consumer.
      *
      * @param uuid uuid of the consumer to delete.
+     * @httpcode 403
+     * @httpcode 404
+     * @httpcode 200
      */
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
@@ -621,6 +637,8 @@ public class ConsumerResource {
      *
      * @param consumerUuid UUID of the consumer
      * @return list of the client certificates for the given consumer.
+     * @httpcode 404
+     * @httpcode 200
      */
     @GET
     @Path("{consumer_uuid}/certificates")
@@ -646,6 +664,12 @@ public class ConsumerResource {
         return returnCerts;
     }
 
+    /**
+     * @return a File of exported certificates
+     * @httpcode 500
+     * @httpcode 404
+     * @httpcode 200
+     */
     @GET
     @Produces("application/zip")
     @Path("/{consumer_uuid}/certificates")
@@ -709,6 +733,8 @@ public class ConsumerResource {
      *
      * @param consumerUuid UUID of the consumer
      * @return list of the client certificate metadata for the given consumer.
+     * @httpcode 404
+     * @httpcode 200
      */
     @GET
     @Path("{consumer_uuid}/certificates/serials")
@@ -754,6 +780,10 @@ public class ConsumerResource {
      * @param entitleDateStr specific date to entitle by.
      * @return Response with a list of entitlements or if async is true, a
      *         JobDetail.
+     * @httpcode 400
+     * @httpcode 403
+     * @httpcode 404
+     * @httpcode 200
      */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -875,6 +905,12 @@ public class ConsumerResource {
         return entitlement;
     }
 
+    /**
+     * @return a list of Entitlement objects
+     * @httpcode 400
+     * @httpcode 404
+     * @httpcode 200
+     */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{consumer_uuid}/entitlements")
@@ -897,6 +933,11 @@ public class ConsumerResource {
 
     }
 
+    /**
+     * @return an Owner
+     * @httpcode 404
+     * @httpcode 200
+     */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{consumer_uuid}/owner")
@@ -911,6 +952,8 @@ public class ConsumerResource {
      * Unbind all entitlements.
      *
      * @param consumerUuid Unique id for the Consumer.
+     * @httpcode 404
+     * @httpcode 200
      */
     @DELETE
     @Path("/{consumer_uuid}/entitlements")
@@ -940,6 +983,9 @@ public class ConsumerResource {
      * Remove an entitlement by ID.
      *
      * @param dbid the entitlement to delete.
+     * @httpcode 403
+     * @httpcode 404
+     * @httpcode 200
      */
     @DELETE
     @Path("/{consumer_uuid}/entitlements/{dbid}")
@@ -959,6 +1005,11 @@ public class ConsumerResource {
             "Entitlement with ID ''{0}'' could not be found.", dbid));
     }
 
+    /**
+     * @httpcode 403
+     * @httpcode 404
+     * @httpcode 200
+     */
     @DELETE
     @Path("/{consumer_uuid}/certificates/{serial}")
     public void unbindBySerial(
@@ -979,6 +1030,11 @@ public class ConsumerResource {
                 serial.toString())); // prevent serial number formatting.
     }
 
+    /**
+     * @return a list of Event objects
+     * @httpcode 404
+     * @httpcode 200
+     */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}/events")
@@ -993,6 +1049,10 @@ public class ConsumerResource {
         return events;
     }
 
+    /**
+     * @httpcode 404
+     * @httpcode 200
+     */
     @PUT
     @Path("/{consumer_uuid}/certificates")
     public void regenerateEntitlementCertificates(
@@ -1008,6 +1068,13 @@ public class ConsumerResource {
         }
     }
 
+    /**
+     * @return a File
+     * @httpcode 403
+     * @httpcode 500
+     * @httpcode 404
+     * @httpcode 200
+     */
     @GET
     @Produces("application/zip")
     @Path("{consumer_uuid}/export")
@@ -1045,6 +1112,9 @@ public class ConsumerResource {
      *
      * @param uuid uuid of the consumer sought.
      * @return the consumer identified by the given uuid.
+     * @httpcode 400
+     * @httpcode 404
+     * @httpcode 200
      */
     @POST
     @Produces(MediaType.APPLICATION_JSON)
@@ -1103,7 +1173,11 @@ public class ConsumerResource {
 
         return idCert;
     }
-
+    /**
+     * @return a set of String objects
+     * @httpcode 404
+     * @httpcode 200
+     */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{consumer_uuid}/guests")
@@ -1113,6 +1187,11 @@ public class ConsumerResource {
         return consumer.getGuestIds();
     }
 
+    /**
+     * @httpcode 400
+     * @httpcode 404
+     * @httpcode 200
+     */
     @PUT
     @Path("/{consumer_uuid}/guests/{guest_uuid}")
     public void addGuest(
@@ -1126,6 +1205,11 @@ public class ConsumerResource {
         consumerCurator.merge(consumer);
     }
 
+    /**
+     * @httpcode 400
+     * @httpcode 404
+     * @httpcode 200
+     */
     @DELETE
     @Path("/{consumer_uuid}/guests/{guest_uuid}")
     public void removeGuest(

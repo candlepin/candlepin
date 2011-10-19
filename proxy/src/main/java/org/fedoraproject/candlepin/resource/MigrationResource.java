@@ -45,6 +45,11 @@ public class MigrationResource {
         this.i18n = i18n;
     }
 
+    /**
+     * @return a JobDetail
+     * @httpcode 400
+     * @httpcode 202
+     */
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     public JobDetail createMigration(@QueryParam("entity") String entity,
@@ -59,6 +64,10 @@ public class MigrationResource {
         throw new BadRequestException(i18n.tr("Bad entity value."));
     }
 
+    /**
+     * @return a JobDetail
+     * @httpcode 202
+     */
     private JobDetail migrateOwner(@QueryParam("entity") String entity,
         @QueryParam("id") String ownerKey,
         @QueryParam("uri") String url,

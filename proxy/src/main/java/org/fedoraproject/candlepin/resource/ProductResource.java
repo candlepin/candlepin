@@ -78,6 +78,7 @@ public class ProductResource {
      * returns the list of Products available.
      *
      * @return the list of available products.
+     * @httpcode 200
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -91,6 +92,8 @@ public class ProductResource {
      * @param pid
      *            uuid of the product sought.
      * @return the product identified by the given uuid.
+     * @httpcode 404
+     * @httpcode 200
      */
     @GET
     @Path("/{product_uuid}")
@@ -107,6 +110,11 @@ public class ProductResource {
             i18n.tr("Product with UUID ''{0}'' could not be found", pid));
     }
 
+    /**
+     * @return the ProductCertificate
+     * @httpcode 404
+     * @httpcode 200
+     */
     @GET
     @Path("/{product_uuid}/certificate")
     @Produces(MediaType.APPLICATION_JSON)
@@ -129,6 +137,7 @@ public class ProductResource {
      * @param product
      * @return the newly created product, or the product that already
      *         exists
+     * @httpcode 200
      */
     @POST
     @Produces(MediaType.APPLICATION_JSON)
@@ -136,6 +145,10 @@ public class ProductResource {
         return prodAdapter.createProduct(product);
     }
 
+    /**
+     * @return the Product
+     * @httpcode 200
+     */
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_uuid}/content/{content_id}")
@@ -150,6 +163,9 @@ public class ProductResource {
         return prodAdapter.createProduct(product);
     }
 
+    /**
+     * @httpcode 200
+     */
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_uuid}/content/{content_id}")
@@ -158,6 +174,11 @@ public class ProductResource {
         prodAdapter.removeContent(pid, contentId);
     }
 
+    /**
+     * @httpcode 400
+     * @httpcode 404
+     * @httpcode 200
+     */
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_uuid}")
@@ -176,6 +197,11 @@ public class ProductResource {
         prodAdapter.deleteProduct(product);
     }
 
+    /**
+     * @return a list of Statistics
+     * @httpcode 400
+     * @httpcode 200
+     */
     @GET
     @Path("/{prod_id}/statistics")
     @Produces(MediaType.APPLICATION_JSON)
@@ -189,6 +215,11 @@ public class ProductResource {
                                 ResourceDateParser.parseDateString(to));
     }
 
+    /**
+     * @return a list of Statistics
+     * @httpcode 400
+     * @httpcode 200
+     */
     @GET
     @Path("/{prod_id}/statistics/{vtype}")
     @Produces(MediaType.APPLICATION_JSON)

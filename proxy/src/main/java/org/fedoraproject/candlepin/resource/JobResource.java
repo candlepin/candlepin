@@ -88,6 +88,12 @@ public class JobResource {
         return true;
     }
 
+    /**
+     * @return a collection of JobStatus objects.
+     * @httpcode 400
+     * @httpcode 404
+     * @httpcode 200
+     */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Collection<JobStatus> getStatuses(
@@ -127,6 +133,10 @@ public class JobResource {
         return statuses;
     }
 
+    /**
+     * @return a SchedulerStatus
+     * @httpcode 200
+     */
     @GET
     @Path("scheduler")
     @Produces(MediaType.APPLICATION_JSON)
@@ -142,6 +152,11 @@ public class JobResource {
         return ss;
     }
 
+    /**
+     * @return a SchedulerStatus
+     * @httpcode 500
+     * @httpcode 200
+     */
     @POST
     @Path("scheduler")
     @Produces(MediaType.APPLICATION_JSON)
@@ -160,6 +175,10 @@ public class JobResource {
         return getSchedulerStatus();
     }
 
+    /**
+     * @return a JobStatus
+     * @httpcode 200
+     */
     @GET
     @Path("/{job_id}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -167,6 +186,12 @@ public class JobResource {
         return curator.find(jobId);
     }
 
+    /**
+     * @return a JobStatus
+     * @httpcode 400
+     * @httpcode 404
+     * @httpcode 200
+     */
     @DELETE
     @Path("/{job_id}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -182,6 +207,10 @@ public class JobResource {
         return curator.cancel(jobId);
     }
 
+    /**
+     * @return a JobStatus
+     * @httpcode 200
+     */
     @POST
     @Path("/{job_id}")
     @Produces(MediaType.APPLICATION_JSON)

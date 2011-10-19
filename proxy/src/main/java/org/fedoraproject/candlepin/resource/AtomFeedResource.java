@@ -45,6 +45,10 @@ public class AtomFeedResource {
         this.adapter = adapter;
     }
 
+    /**
+     * @return a Feed
+     * @httpcode 200
+     */
     @GET
     @Produces({"application/atom+xml", MediaType.APPLICATION_JSON})
     public Feed getFeed() {
