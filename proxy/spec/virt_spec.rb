@@ -7,7 +7,7 @@ describe 'Standalone Virt-Limit Subscriptions' do
   include CandlepinScenarios
 
   before(:each) do
-    return if is_hosted?
+    pending("candlepin running in standalone mode") if is_hosted?
 
     @owner = create_owner random_string('virt_owner')
     @user = user_client(@owner, random_string('virt_user'))
@@ -62,17 +62,7 @@ describe 'Standalone Virt-Limit Subscriptions' do
 
   end
 
-  it 'should list host restricted pool only for its guests' do
-    pending("candlepin running in standalone mode") if is_hosted?
-
-    # Other guest shouldn't be able to see the virt sub-pool:
-    pools = @guest2_client.list_pools :consumer => @guest2['uuid']
-    pools.should have(1).things
-  end
-
   it 'should create a virt_only pool for hosts guests' do
-    pending("candlepin running in standalone mode") if is_hosted?
-
     # Get the attribute that indicates which host:
     requires_host = @guest_pool['attributes'].find_all {
       |i| i['name'] == 'requires_host' }[0]
@@ -88,9 +78,13 @@ describe 'Standalone Virt-Limit Subscriptions' do
     end.should raise_exception(RestClient::Forbidden)
   end
 
-  it 'should revoke guest entitlements when host unbinds' do
-    pending("candlepin running in standalone mode") if is_hosted?
+  it 'should list host restricted pool only for its guests' do
+    # Other guest shouldn't be able to see the virt sub-pool:
+    pools = @guest2_client.list_pools :consumer => @guest2['uuid']
+    pools.should have(1).things
+  end
 
+  it 'should revoke guest entitlements when host unbinds' do
     # Guest 1 should be able to use the pool:
     @guest1_client.consume_pool(@guest_pool['id'])
     @guest1_client.list_entitlements.length.should == 1
@@ -102,10 +96,14 @@ describe 'Standalone Virt-Limit Subscriptions' do
   end
 
   it 'should revoke guest entitlements when guest changes hosts' do
-    pending("candlepin running in standalone mode") if is_hosted?
-
     @guest1_client.consume_pool(@guest_pool['id'])
     @guest1_client.list_entitlements.length.should == 1
+
+    # Host 1 stops reporting guest:
+    @host1_client.update_consumer({:guestIds => []})
+
+    # Entitlement should be gone:
+    @guest1_client.list_entitlements.length.should == 0
   end
 
 end
