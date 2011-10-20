@@ -19,8 +19,6 @@ import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
-import org.fedoraproject.candlepin.exceptions.ForbiddenException;
-import org.fedoraproject.candlepin.guice.PrincipalProvider;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Entitlement;
@@ -45,7 +43,6 @@ import org.fedoraproject.candlepin.policy.js.pool.PoolUpdate;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
-import org.fedoraproject.candlepin.util.Util;
 
 import com.google.inject.Inject;
 import com.wideplay.warp.persist.Transactional;
@@ -53,9 +50,7 @@ import com.wideplay.warp.persist.Transactional;
 import edu.emory.mathcs.backport.java.util.Arrays;
 
 import org.apache.log4j.Logger;
-import org.xnap.commons.i18n.I18n;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -85,8 +80,6 @@ public class CandlepinPoolManager implements PoolManager {
     private ConsumerCurator consumerCurator;
     private EntitlementCertServiceAdapter entCertAdapter;
     private EntitlementCertificateCurator entitlementCertificateCurator;
-    private PrincipalProvider principalProvider;
-    private I18n i18n;
     private ComplianceRules complianceRules;
 
     /**
@@ -104,7 +97,7 @@ public class CandlepinPoolManager implements PoolManager {
         EventFactory eventFactory, Config config, Enforcer enforcer,
         PoolRules poolRules, EntitlementCurator curator1,
         ConsumerCurator consumerCurator, EntitlementCertificateCurator ecC,
-        PrincipalProvider principalProvider, I18n i18n, ComplianceRules complianceRules) {
+        ComplianceRules complianceRules) {
 
         this.poolCurator = poolCurator;
         this.subAdapter = subAdapter;
@@ -118,8 +111,6 @@ public class CandlepinPoolManager implements PoolManager {
         this.poolRules = poolRules;
         this.entCertAdapter = entCertAdapter;
         this.entitlementCertificateCurator = ecC;
-        this.principalProvider = principalProvider;
-        this.i18n = i18n;
         this.complianceRules = complianceRules;
     }
 
@@ -613,11 +604,6 @@ public class CandlepinPoolManager implements PoolManager {
     @Override
     @Transactional
     public void removeEntitlement(Entitlement entitlement) {
-        // bypassing this test. may reinstate.
-        //if (this.principalProvider.get() instanceof ConsumerPrincipal) {
-        //    checkForOutstandingSubPoolEntitlements(entitlement);
-        //}
-
         Consumer consumer = entitlement.getConsumer();
         Pool pool = entitlement.getPool();
         PreUnbindHelper preHelper = enforcer.preUnbind(consumer,
@@ -627,7 +613,7 @@ public class CandlepinPoolManager implements PoolManager {
         if (!result.isSuccessful()) {
             if (log.isDebugEnabled()) {
                 log.debug("Unbind failure from pool: " +
-                    pool.getId() + ", error: " + 
+                    pool.getId() + ", error: " +
                     result.getErrors());
             }
         }
@@ -668,74 +654,6 @@ public class CandlepinPoolManager implements PoolManager {
         removeEntitlement(entitlement);
     }
 
-    /**
-     * Check if the given entitlement has any pools referencing it as their
-     * source entitlement, and those pools have outstanding entitlements. This
-     * method is used to prevent security violations when unbinding as a
-     * consumer, where other consumers are using those sub-pool entitlements.
-     *
-     * @param e Entitlement to check.
-     */
-    private void checkForOutstandingSubPoolEntitlements(Entitlement entitlement) {
-        String entitlementId = entitlement.getId();
-        int size = this.poolCurator.getNoOfDependentEntitlements(entitlementId);
-        if (size > 0) {
-            this.poolCurator.disableConsumerFilter(); // don't need it.
-            StringBuilder builder = new StringBuilder("");
-            builder.append(i18n.tr(
-                "\n-Cannot unsubscribe entitlement ''{0}'' because:",
-                entitlementId));
-
-            List<EntitlementCertificate> entCerts = this.poolCurator
-                .retrieveEntCertsOfPoolsWithSourceEntitlement(entitlementId);
-
-            // form consumer -> [entitlementCertificate, ...] mapping
-            Map<Consumer, List<EntitlementCertificate>> map = Util.newMap();
-            for (Iterator<EntitlementCertificate> iterator = entCerts
-                .iterator(); iterator.hasNext();) {
-                EntitlementCertificate cert = iterator.next();
-                Consumer consumer = cert.getEntitlement().getConsumer();
-                if (!map.containsKey(consumer)) {
-                    map.put(consumer, new ArrayList<EntitlementCertificate>());
-                }
-                map.get(consumer).add(cert);
-            }
-
-            // create the error message:
-            for (Iterator<Entry<Consumer, List<EntitlementCertificate>>> iterator = map
-                .entrySet().iterator(); iterator.hasNext();) {
-                Entry<Consumer, List<EntitlementCertificate>> entry = iterator
-                    .next();
-                Consumer consumer = entry.getKey();
-                List<EntitlementCertificate> certs = entry.getValue();
-                builder.append(i18n.tr(
-                    "\n  {0} consumer ''{1}'' with id ''{2}'' has " +
-                        "the following entitlements:", consumer.getType()
-                        .getLabel(), consumer.getName(), consumer.getUuid()));
-
-                for (Iterator<EntitlementCertificate> iterator2 = certs
-                    .iterator(); iterator2.hasNext();) {
-                    EntitlementCertificate certificate = iterator2.next();
-                    Entitlement ent = certificate.getEntitlement();
-                    builder.append(i18n.tr("\n    Entitlement ''{0}'':",
-                        ent.getId()));
-                    builder.append(i18n.tr("\n        account number: ''{0}''",
-                        ent.getAccountNumber()));
-                    builder.append(i18n.tr("\n        serial number: ''{0}''",
-                        certificate.getSerial().getId()));
-                }
-            }
-            builder.append(i18n.tr(
-                "\n\nThese consumed entitlements were derived " +
-                    "from subscription pool: ''{0}''.", entitlement.getPool()
-                    .getId()));
-            builder.append(i18n
-                .tr("\nYou must first unsubscribe these consumers " +
-                    "from these entitlements.\n"));
-            throw new ForbiddenException(builder.toString());
-        }
-    }
-
     @Override
     @Transactional
     public void revokeAllEntitlements(Consumer consumer) {
@@ -769,7 +687,7 @@ public class CandlepinPoolManager implements PoolManager {
         poolCurator.delete(pool);
         sink.sendEvent(event);
     }
-    
+
     /**
      * Adjust the count of a pool.
      *
@@ -781,7 +699,7 @@ public class CandlepinPoolManager implements PoolManager {
         if (newCount < 0) {
             newCount = 0;
         }
-        pool.setQuantity(newCount);    
+        pool.setQuantity(newCount);
         poolCurator.merge(pool);
     }
 }
