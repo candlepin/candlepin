@@ -41,6 +41,7 @@ public class SubscriptionResourceTest  {
 
     @Mock private SubscriptionServiceAdapter subService;
     @Mock private ConsumerCurator consumerCurator;
+
     @Mock private HttpServletResponse response;
 
     @Before
@@ -63,6 +64,11 @@ public class SubscriptionResourceTest  {
     @Test(expected = BadRequestException.class)
     public void activateNoEmail() {
         subResource.activateSubscription("random", null, "en_us", null);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void noSubForCert() {
+        subResource.getSubCert("philadelphia-experiment");
     }
 
     @Test(expected = BadRequestException.class)

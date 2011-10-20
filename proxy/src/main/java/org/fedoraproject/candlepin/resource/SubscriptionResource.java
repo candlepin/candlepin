@@ -34,6 +34,7 @@ import org.fedoraproject.candlepin.exceptions.BadRequestException;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.model.Subscription;
+import org.fedoraproject.candlepin.model.SubscriptionsCertificate;
 import org.fedoraproject.candlepin.service.SubscriptionServiceAdapter;
 import org.xnap.commons.i18n.I18n;
 
@@ -59,7 +60,9 @@ public class SubscriptionResource {
         I18n i18n) {
         this.subService = subService;
         this.consumerCurator = consumerCurator;
+
         this.i18n = i18n;
+
     }
 
     @GET
@@ -76,6 +79,20 @@ public class SubscriptionResource {
 
         Subscription subscription = verifyAndFind(subscriptionId);
         return subscription;
+    }
+
+    @GET
+    @Path("/{subscription_id}/cert")
+    @Produces(MediaType.APPLICATION_JSON)
+    public SubscriptionsCertificate getSubCert(
+        @PathParam("subscription_id") String subscriptionId) {
+        Subscription sub = verifyAndFind(subscriptionId);
+        SubscriptionsCertificate subCert = sub.getCertificate();
+        if (subCert == null) {
+            throw new BadRequestException(
+                i18n.tr("no certificate for subscription {0}", subscriptionId));
+        }
+        return subCert;
     }
 
     @POST

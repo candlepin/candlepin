@@ -483,6 +483,10 @@ class Candlepin
     return get("/subscriptions/#{sub_id}")
   end
 
+  def get_subscription_cert(sub_id)
+    return get("/subscriptions/#{sub_id}/cert")
+  end
+
   def create_subscription(owner_key, product_id, quantity=1,
                           provided_products=[], contract_number='',
                           account_number='',start_date=nil,
