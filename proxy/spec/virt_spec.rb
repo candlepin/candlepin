@@ -33,6 +33,13 @@ describe 'Standalone Virt-Limit Subscriptions' do
     @host1_client = Candlepin.new(username=nil, password=nil,
         cert=@host1['idCert']['cert'],
         key=@host1['idCert']['key'])
+
+    @host2 = @user.register(random_string('host'), :system, nil,
+      {}, nil, nil, [], [])
+    @host2_client = Candlepin.new(username=nil, password=nil,
+        cert=@host2['idCert']['cert'],
+        key=@host2['idCert']['key'])
+
     @host_ent = @host1_client.consume_pool(@virt_limit_pool['id'])[0]
 
     # After binding the host should see no pools available:
@@ -107,6 +114,28 @@ describe 'Standalone Virt-Limit Subscriptions' do
 
     # Entitlement should be gone:
     @guest1_client.list_entitlements.length.should == 0
+  end
+
+  it 'should revoke guest entitlements when guest is added by another host' do
+    @guest1_client.consume_pool(@guest_pool['id'])
+    @guest1_client.list_entitlements.length.should == 1
+
+    # Add guest 2 to host 1 so we can make sure that only guest1's
+    # entitlements are revoked.
+    @host1_client.update_consumer({:guestIds => [{'guestId' => @uuid2}]});
+    @guest2_client.consume_pool(@guest_pool['id'])
+    @guest2_client.list_entitlements.length.should == 1
+
+    # Host 2 reports the new guest before Host 1 reports it removed.
+    @host2_client.update_consumer({:guestIds => [{'guestId' => @uuid1}]})
+
+    # Entitlement should be removed from guest 1 as host is changed.
+    # Note: This does not necessarily mean that host 1 will never report it again.
+    @guest1_client.list_entitlements.length.should == 0
+
+    # Entitlements should have remained the same for guest 2 and its host
+    # is the same.
+    @guest2_client.list_entitlements.length.should == 1
   end
 
 end

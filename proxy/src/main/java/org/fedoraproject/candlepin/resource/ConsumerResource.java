@@ -623,6 +623,10 @@ public class ConsumerResource {
 
         // Check guests that are existing/added.
         for (GuestId guestId : incoming.getGuestIds()) {
+            Consumer host = consumerCurator.getHost(guestId.getGuestId());
+            Consumer guest = consumerCurator.findByVirtUuid(guestId.getGuestId());
+
+            // Add back the guestId.
             existing.addGuestId(guestId);
 
             // If adding a new GuestId send notification.
@@ -631,13 +635,11 @@ public class ConsumerResource {
                 sink.sendEvent(eventFactory.guestIdCreated(existing, guestId));
             }
 
-            Consumer guest = consumerCurator.findByVirtUuid(guestId.getGuestId());
+            // The guest has not registered. No need to process entitlements.
             if (guest == null) {
-                // The guest has not registered.
                 continue;
             }
 
-            Consumer host = consumerCurator.getHost(guestId.getGuestId());
             // Check if the guest was already reported by another host.
             if (host != null && !existing.equals(host)) {
                 // If the guest already existed and its host consumer is not the same
@@ -672,11 +674,6 @@ public class ConsumerResource {
         return true;
     }
 
-    /**
-     * @param existing
-     * @param incoming
-     * @return
-     */
     private List<GuestId> getAddedGuestIds(Consumer existing, Consumer incoming) {
         return getDifferenceInGuestIds(incoming, existing);
     }
@@ -696,9 +693,6 @@ public class ConsumerResource {
         return removedGuests;
     }
 
-    /**
-     * @param guestConsumer
-     */
     private void revokeGuestEntitlementsMatchingHost(Consumer host, Consumer guest) {
         for (Entitlement entitlement : guest.getEntitlements()) {
             Pool pool = entitlement.getPool();
