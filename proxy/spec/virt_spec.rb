@@ -35,6 +35,10 @@ describe 'Standalone Virt-Limit Subscriptions' do
         key=@host1['idCert']['key'])
     @host_ent = @host1_client.consume_pool(@virt_limit_pool['id'])[0]
 
+    # After binding the host should see no pools available:
+    pools = @host1_client.list_pools :consumer => @host1['uuid']
+    pools.should be_empty
+
     # Setup two virt guest consumers:
     @uuid1 = random_string('system.uuid')
     @uuid2 = random_string('system.uuid')

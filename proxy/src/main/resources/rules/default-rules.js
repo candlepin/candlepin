@@ -387,10 +387,11 @@ var Entitlement = {
         if (!standalone) {
             return;
         }
-        log.debug("guest virt.uuid = " + consumer.getFact("virt.uuid"));
+        if (!consumer.hasFact("virt.uuid")) {
+            pre.addError("no.virt.uuid");
+            return;
+        }
         var hostConsumer = pre.getHostConsumer(consumer.getFact("virt.uuid"));
-        log.debug("host consumer = " + hostConsumer);
-        log.debug("requires host = " + attributes.get('requires_host'));
 
         if (hostConsumer == null || !hostConsumer.getUuid().equals(attributes.get('requires_host'))) {
             pre.addError("virt.guest.host.does.not.match.pool.owner");
