@@ -89,7 +89,6 @@ describe 'Standalone Virt-Limit Subscriptions' do
     @guest1_client.consume_pool(@guest_pool['id'])
     @guest1_client.list_entitlements.length.should == 1
 
-    # TODO: This will pass if we do it as the admin @cp connection:
     @host1_client.unbind_entitlement(@host_ent['id'])
 
     @guest1_client.list_entitlements.length.should == 0

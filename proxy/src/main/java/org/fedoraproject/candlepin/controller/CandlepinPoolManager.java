@@ -17,7 +17,6 @@ package org.fedoraproject.candlepin.controller;
 import org.fedoraproject.candlepin.audit.Event;
 import org.fedoraproject.candlepin.audit.EventFactory;
 import org.fedoraproject.candlepin.audit.EventSink;
-import org.fedoraproject.candlepin.auth.ConsumerPrincipal;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.config.ConfigProperties;
 import org.fedoraproject.candlepin.exceptions.ForbiddenException;
@@ -614,9 +613,10 @@ public class CandlepinPoolManager implements PoolManager {
     @Override
     @Transactional
     public void removeEntitlement(Entitlement entitlement) {
-        if (this.principalProvider.get() instanceof ConsumerPrincipal) {
-            checkForOutstandingSubPoolEntitlements(entitlement);
-        }
+        // bypassing this test. may reinstate.
+        //if (this.principalProvider.get() instanceof ConsumerPrincipal) {
+        //    checkForOutstandingSubPoolEntitlements(entitlement);
+        //}
 
         Consumer consumer = entitlement.getConsumer();
         Pool pool = entitlement.getPool();

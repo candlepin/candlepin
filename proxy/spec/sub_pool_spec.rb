@@ -69,20 +69,16 @@ describe 'Sub-Pool' do
     order_number.should == @subscription.id
   end
 
-  it 'prevents unregister as consumer with outstanding entitlements' do
-    lambda {
-      @person_client.unregister(@person_client.uuid)
-    }.should raise_exception(RestClient::Forbidden)
+  it 'allows unregister as consumer with outstanding entitlements' do
+    @person_client.unregister(@person_client.uuid)
   end
 
   it 'allows unregister as admin with outstanding entitlements' do
     @cp.unregister(@person_client.uuid)
   end
 
-  it 'prevents unbind as consumer with outstanding entitlements' do
-    lambda {
-      @person_client.unbind_entitlement(@parent_ent['id'])
-    }.should raise_exception(RestClient::Forbidden)
+  it 'allows unbind as consumer with outstanding entitlements' do
+    @person_client.unbind_entitlement(@parent_ent['id'])
   end
 
   it 'should use the correct name for the child pools' do
