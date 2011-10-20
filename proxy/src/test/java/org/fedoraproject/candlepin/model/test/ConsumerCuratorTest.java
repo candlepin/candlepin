@@ -91,7 +91,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     @SuppressWarnings("unchecked")
-    public void getGuestConsumerSharedId() {
+    public void getGuestConsumerSharedId() throws Exception {
         Owner owner = new Owner("test-owner", "Test Owner");
         owner = ownerCurator.create(owner);
         ConsumerType ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
@@ -103,9 +103,15 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         Consumer gConsumer1 = new Consumer("guestConsumer1", "testUser", owner, ct);
         gConsumer1.getFacts().put("virt.uuid", "test-guest-1");
         consumerCurator.create(gConsumer1);
+
+        // This can happen so fast the consumers end up with the same update time,
+        // it's 5 milliseconds, deal with it.
+        Thread.sleep(5);
+
         Consumer gConsumer2 = new Consumer("guestConsumer2", "testUser", owner, ct);
         gConsumer2.getFacts().put("virt.uuid", "test-guest-1");
         consumerCurator.create(gConsumer2);
+
         hConsumer1.addGuestId(new GuestId("test-guest-1"));
         hConsumer2.addGuestId(new GuestId("test-guest-1"));
         consumerCurator.update(hConsumer1);
@@ -115,7 +121,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         List<Consumer> guests2 = consumerCurator.getGuests(hConsumer2);
         assertTrue(guests1.size() == 0);
         assertTrue(guests2.size() == 1);
-        assertTrue(guests2.get(0).getName().equals("guestConsumer2"));
+        assertEquals("guestConsumer2", guests2.get(0).getName());
     }
 
     @Test
