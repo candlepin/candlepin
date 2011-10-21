@@ -284,6 +284,10 @@ public class Pool extends AbstractHibernateObject implements Linkable, Owned {
     }
 
     /**
+     * Attribute comparison helper, safe to use even if property is null.
+     *
+     * Used primarily in the javascript rules.
+     *
      * @param key Desired attribute.
      * @param expectedValue Expected value.
      * @return true if the pool has the given attribute and it is equal to the value,
