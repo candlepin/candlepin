@@ -18,7 +18,7 @@ package org.fedoraproject.candlepin.policy;
  * Thrown when a consumer is missing a fact the rules try to access.
  */
 public class MissingFactException extends RuntimeException {
-    
+
     private static final long serialVersionUID = 1L;
 
     public MissingFactException(String consumerUuid, String missingFact) {

@@ -43,7 +43,7 @@ public class ValidationResult {
     public List<ValidationError> getErrors() {
         return errors;
     }
-    
+
     /**
      * Add an error
      * @param error error to add
@@ -67,7 +67,7 @@ public class ValidationResult {
     public List<ValidationWarning> getWarnings() {
         return warnings;
     }
-    
+
     /**
      * Add a warning
      * @param warning warning to add

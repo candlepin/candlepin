@@ -61,12 +61,12 @@ public class AMQPBusEventAdapter implements Function<Event, String> {
     @Inject
     public AMQPBusEventAdapter(ObjectMapper mapper,
         PKIReader rdr, PKIUtility util) {
-        
+
         this.mapper = mapper;
         this.reader = rdr;
         this.pkiutil = util;
     }
-    
+
     @Override
     public String apply(Event event) {
         Function<Event, String> func = mp.get(event.getTarget());
@@ -120,7 +120,7 @@ public class AMQPBusEventAdapter implements Function<Event, String> {
                 }
             }
         }
-        
+
         private void consumerModified(Consumer consumer,
             Map<String, Object> result, Event event) {
             consumerCreated(consumer, result, event);
@@ -135,10 +135,10 @@ public class AMQPBusEventAdapter implements Function<Event, String> {
             Map<String, Object> rs, Event event) {
             rs.put("identity_cert", consumer.getIdCert().getCert());
             rs.put("identity_cert_key", consumer.getIdCert().getKey());
-            rs.put("hardware_facts", consumer.getFacts());            
+            rs.put("hardware_facts", consumer.getFacts());
         }
     }
-    
+
 
     /**
      * EntitlementStrFunc
@@ -171,7 +171,7 @@ public class AMQPBusEventAdapter implements Function<Event, String> {
                 log.debug("Subscription message:" + subscription.getId());
                 // Owner is in every type
                 result.put("owner", subscription.getOwner().getKey());
-                
+
                 if (event.getType() != Event.Type.DELETED) {
                     log.debug("Subscription is NOT DELETED, which is good");
                     result.put("name", subscription.getProduct().getId());
@@ -185,7 +185,7 @@ public class AMQPBusEventAdapter implements Function<Event, String> {
                     catch (Exception e) {
                         e.printStackTrace();
                         throw new RuntimeException(e);
-                    } 
+                    }
                     result.put("content_sets", createContentMap(subscription));
                 }
             }
@@ -209,10 +209,10 @@ public class AMQPBusEventAdapter implements Function<Event, String> {
 
             return contentList;
         }
-        
+
     }
 
-    
+
 
     /**
      * OwnerFunction
@@ -225,7 +225,7 @@ public class AMQPBusEventAdapter implements Function<Event, String> {
         }
 
     }
-    
+
     /**
      * @param result
      */
@@ -238,7 +238,7 @@ public class AMQPBusEventAdapter implements Function<Event, String> {
         }
         return "";
     }
-    
+
     private <T> T deserialize(String value, Class<T> clas) {
         try {
             return this.mapper.readValue(value, clas);
@@ -248,7 +248,7 @@ public class AMQPBusEventAdapter implements Function<Event, String> {
         }
         return null;
     }
-    
+
     private <T> T deserialize(Event event, Class<T> clas) {
         return deserialize(event.getType() == Type.DELETED ? event
             .getOldEntity() : event.getNewEntity(), clas);

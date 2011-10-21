@@ -62,9 +62,9 @@ import org.fedoraproject.candlepin.exceptions.ConflictException;
  */
 public class Importer {
     private static Logger log = Logger.getLogger(Importer.class);
-    
+
     /**
-     * 
+     *
      * files we use to perform import
      */
     enum ImportFile {
@@ -75,16 +75,16 @@ public class Importer {
         ENTITLEMENT_CERTIFICATES("entitlement_certificates"),
         PRODUCTS("products"),
         RULES("rules");
-        
+
         private String fileName;
         ImportFile(String fileName) {
             this.fileName = fileName;
         }
-        
+
         public String fileName() {
             return fileName;
         }
-        
+
     }
 
     private ConsumerTypeCurator consumerTypeCurator;
@@ -101,9 +101,9 @@ public class Importer {
     private CertificateSerialCurator csCurator;
     private EventSink sink;
     private I18n i18n;
-    
+
     @Inject
-    public Importer(ConsumerTypeCurator consumerTypeCurator, ProductCurator productCurator, 
+    public Importer(ConsumerTypeCurator consumerTypeCurator, ProductCurator productCurator,
         RulesCurator rulesCurator, OwnerCurator ownerCurator,
         ContentCurator contentCurator, SubscriptionCurator subCurator, PoolManager pm,
         PKIUtility pki, Config config, ExporterMetadataCurator emc,
@@ -172,21 +172,21 @@ public class Importer {
         InputStream exportStream = null;
         try {
             tmpDir = new SyncUtils(config).makeTempDir("import");
-            
+
             extractArchive(tmpDir, exportFile);
-            
+
             exportStream = new FileInputStream(new File(tmpDir, "consumer_export.zip"));
             boolean verifiedSignature = pki.verifySHA256WithRSAHashWithUpstreamCACert(
                 exportStream,
                 loadSignature(new File(tmpDir, "signature")));
-        /*    
+        /*
             if (!verifiedSignature) {
                 throw new ImporterException(i18n.tr("Failed import file hash check."));
             }*/
-            
-            File exportDir 
+
+            File exportDir
                 = extractArchive(tmpDir, new File(tmpDir, "consumer_export.zip"));
-            
+
             Map<String, File> importFiles = new HashMap<String, File>();
             for (File file : exportDir.listFiles()) {
                 importFiles.put(file.getName(), file);
@@ -220,19 +220,19 @@ public class Importer {
             }
         }
     }
-    
+
     @Transactional(rollbackOn = {IOException.class,
             ImporterException.class, RuntimeException.class})
     public void importObjects(Owner owner, Map<String, File> importFiles)
         throws IOException, ImporterException {
-        
+
         File metadata = importFiles.get(ImportFile.META.fileName());
 
         // system level elements
         validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, metadata);
         importRules(importFiles.get(ImportFile.RULES.fileName()).listFiles());
         importConsumerTypes(importFiles.get(ImportFile.CONSUMER_TYPE.fileName()).listFiles());
-        
+
         // per user elements
         validateMetadata(ExporterMetadata.TYPE_PER_USER, owner, metadata);
         importConsumer(owner, importFiles.get(ImportFile.CONSUMER.fileName()));
@@ -247,13 +247,13 @@ public class Importer {
         else {
             log.warn("No products found to import, skipping product and entitlement import.");
         }
-        
+
         poolManager.refreshPools(owner);
     }
-    
+
     public void importRules(File[] rulesFiles) throws IOException {
         RulesImporter importer = new RulesImporter(rulesCurator);
-        
+
         // Only importing a single rules file now.
         Reader reader = null;
         try {
@@ -266,7 +266,7 @@ public class Importer {
             }
         }
     }
-    
+
     public void importConsumerTypes(File[] consumerTypes) throws IOException {
         ConsumerTypeImporter importer = new ConsumerTypeImporter(consumerTypeCurator);
         Set<ConsumerType> consumerTypeObjs = new HashSet<ConsumerType>();
@@ -275,7 +275,7 @@ public class Importer {
             try {
                 reader = new FileReader(consumerType);
                 consumerTypeObjs.add(importer.createObject(mapper, reader));
-            } 
+            }
             finally {
                 if (reader != null) {
                     reader.close();
@@ -300,7 +300,7 @@ public class Importer {
             }
         }
     }
-    
+
     public Set<Product> importProducts(File[] products) throws IOException {
         ProductImporter importer = new ProductImporter(productCurator, contentCurator, poolManager);
         Set<Product> productsToImport = new HashSet<Product>();
@@ -324,19 +324,19 @@ public class Importer {
         // TODO: Do we need to cleanup unused products? Looked at this earlier and it
         // looks somewhat complex and a little bit dangerous, so we're leaving them
         // around for now.
-        
+
         return productsToImport;
     }
-    
+
     public void importEntitlements(Owner owner, Set<Product> products, File[] entitlements)
-        throws IOException, SyncDataFormatException { 
+        throws IOException, SyncDataFormatException {
         EntitlementImporter importer = new EntitlementImporter(subCurator, csCurator, sink);
 
         Map<String, Product> productsById = new HashMap<String, Product>();
         for (Product product : products) {
             productsById.put(product.getId(), product);
         }
-        
+
         Set<Subscription> subscriptionsToImport = new HashSet<Subscription>();
         for (File entitlement : entitlements) {
             Reader reader = null;
@@ -344,17 +344,17 @@ public class Importer {
                 log.debug("Import entitlement: " + entitlement.getName());
                 reader = new FileReader(entitlement);
                 subscriptionsToImport.add(importer.importObject(mapper, reader, owner, productsById));
-            } 
+            }
             finally {
                 if (reader != null) {
                     reader.close();
                 }
             }
         }
-        
+
         importer.store(owner, subscriptionsToImport);
     }
-        
+
     /**
      * Create a tar.gz archive of the exported directory.
      *
@@ -381,7 +381,7 @@ public class Importer {
             if (directory != null) {
                 new File(tempDir, directory).mkdirs();
             }
-            
+
             fileoutputstream = new FileOutputStream(new File(tempDir, entryName));
 
             int n;
@@ -389,7 +389,7 @@ public class Importer {
                 fileoutputstream.write(buf, 0, n);
             }
 
-            fileoutputstream.close(); 
+            fileoutputstream.close();
             zipinputstream.closeEntry();
             zipentry = zipinputstream.getNextEntry();
 
@@ -399,15 +399,15 @@ public class Importer {
 
         return new File(tempDir.getAbsolutePath(), "export");
     }
-    
+
     private byte[] loadSignature(File signatureFile) throws IOException {
         FileInputStream signature = null;
         // signature is never going to be a huge file, therefore cast is a-okay
-        byte[] signatureBytes = new byte[(int) signatureFile.length()]; 
-        
+        byte[] signatureBytes = new byte[(int) signatureFile.length()];
+
         try {
             signature = new FileInputStream(signatureFile);
-            
+
             int offset = 0;
             int numRead = 0;
             while (offset < signatureBytes.length && numRead >= 0) {

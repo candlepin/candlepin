@@ -45,7 +45,7 @@ import javax.ws.rs.core.MediaType;
 
 /**
  * API Gateway into /product
- * 
+ *
  * @version $Rev$
  */
 @Path("/products")
@@ -58,7 +58,7 @@ public class ProductResource {
 
     /**
      * default ctor
-     * 
+     *
      * @param prodAdapter
      *            Product Adapter used to interact with multiple services.
      */
@@ -76,7 +76,7 @@ public class ProductResource {
 
     /**
      * returns the list of Products available.
-     * 
+     *
      * @return the list of available products.
      */
     @GET
@@ -87,13 +87,13 @@ public class ProductResource {
 
     /**
      * Return the Product identified by the given uuid.
-     * 
+     *
      * @param pid
      *            uuid of the product sought.
      * @return the product identified by the given uuid.
      */
     @GET
-    @Path("/{product_uuid}")    
+    @Path("/{product_uuid}")
     @Produces(MediaType.APPLICATION_JSON)
     @SecurityHole
     public Product getProduct(@PathParam("product_uuid") String pid) {
@@ -106,26 +106,26 @@ public class ProductResource {
         throw new NotFoundException(
             i18n.tr("Product with UUID ''{0}'' could not be found", pid));
     }
-    
+
     @GET
     @Path("/{product_uuid}/certificate")
     @Produces(MediaType.APPLICATION_JSON)
     @SecurityHole
     public ProductCertificate getProductCertificate(
         @PathParam("product_uuid") String productId) {
-        
+
         Product product = prodAdapter.getProductById(productId);
-        
+
         if (product == null) {
             throw new NotFoundException(
                 i18n.tr("Product with UUID ''{0}'' could not be found", productId));
         }
-        
+
         return prodAdapter.getProductCertificate(product);
     }
-    
+
     /**
-     * 
+     *
      * @param product
      * @return the newly created product, or the product that already
      *         exists
@@ -134,22 +134,22 @@ public class ProductResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Product createProduct(Product product) {
         return prodAdapter.createProduct(product);
-    }   
-    
+    }
+
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_uuid}/content/{content_id}")
     public Product addContent(@PathParam("product_uuid") String pid,
-                              @PathParam("content_id") String contentId, 
+                              @PathParam("content_id") String contentId,
                               @QueryParam("enabled") Boolean enabled) {
         Product product = prodAdapter.getProductById(pid);
         Content content = contentCurator.find(contentId);
-        
+
         ProductContent productContent = new ProductContent(product, content, enabled);
         product.getProductContent().add(productContent);
         return prodAdapter.createProduct(product);
     }
-    
+
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_uuid}/content/{content_id}")
@@ -157,7 +157,7 @@ public class ProductResource {
                               @PathParam("content_id") String contentId) {
         prodAdapter.removeContent(pid, contentId);
     }
-    
+
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product_uuid}")

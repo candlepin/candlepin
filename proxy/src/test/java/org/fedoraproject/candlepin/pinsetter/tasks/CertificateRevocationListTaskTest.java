@@ -46,8 +46,8 @@ import java.security.cert.X509CRL;
 @RunWith(MockitoJUnitRunner.class)
 public class CertificateRevocationListTaskTest {
     private CertificateRevocationListTask task;
-     
-    @Mock private CrlGenerator generator; 
+
+    @Mock private CrlGenerator generator;
     @Mock private Config config;
     @Mock private PKIUtility pkiUtility;
 
@@ -83,7 +83,7 @@ public class CertificateRevocationListTaskTest {
         assertTrue(f.length() > 0);
         f.delete();
     }
-    
+
     @Test
     public void emptyFile() throws IOException, JobExecutionException, CRLException {
         File f = null;
@@ -106,7 +106,7 @@ public class CertificateRevocationListTaskTest {
             }
         }
     }
-    
+
     @Test(expected = JobExecutionException.class)
     public void handleCRLException() throws Exception {
         File f = null;

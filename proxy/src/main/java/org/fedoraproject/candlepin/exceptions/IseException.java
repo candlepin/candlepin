@@ -24,7 +24,7 @@ public class IseException extends CandlepinException {
     public IseException(String message) {
         super(Status.INTERNAL_SERVER_ERROR, message);
     }
-    
+
     public IseException(String message, Throwable t) {
         super(Status.INTERNAL_SERVER_ERROR, message, t);
     }

@@ -24,25 +24,25 @@ import java.security.cert.X509Certificate;
  * A generic mechanism for reading CA certificates from an underlying datastore.
  */
 public interface PKIReader {
-    
+
     /**
      * Supplies the CA's {@link X509Certificate}.
-     * 
+     *
      * @return a new Cert
      * @throws IOException if a file can't be read or is not found
      * @throws CertificateException  if there is an error from the underlying cert factory
      */
     X509Certificate getCACert() throws IOException, CertificateException;
-    
+
     X509Certificate getUpstreamCACert()  throws IOException, CertificateException;
-    
+
     /**
      * Supplies the CA's {@link PrivateKey}.
-     * 
+     *
      * @return a new PrivateKey
      * @throws IOException if a file can't be read or is not found
      * @throws GeneralSecurityException if something violated policy
      */
     PrivateKey getCaKey() throws IOException, GeneralSecurityException;
-   
+
 }

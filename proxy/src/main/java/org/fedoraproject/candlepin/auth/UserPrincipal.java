@@ -33,7 +33,7 @@ public class UserPrincipal extends Principal {
 
     /**
      * Create a user principal
-     * 
+     *
      * @param username
      */
 
@@ -45,7 +45,7 @@ public class UserPrincipal extends Principal {
         if (permissions != null) {
             this.permissions.addAll(permissions);
         }
-        
+
         addPermissionToManageSelf();
     }
 

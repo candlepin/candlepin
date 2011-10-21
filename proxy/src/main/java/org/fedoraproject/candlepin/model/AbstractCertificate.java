@@ -31,41 +31,41 @@ public abstract class AbstractCertificate extends AbstractHibernateObject {
 
     @Column(nullable = false)
     private byte[] cert;
-    
+
     @XmlTransient
     public void setKeyAsBytes(byte[] key) {
         this.key = key;
     }
-    
+
     @XmlTransient
     public byte[] getKeyAsBytes() {
         return key;
     }
-    
+
     public String getKey() {
         return new String(key);
     }
-    
+
     public void setKey(String key) {
-        this.key = key.getBytes();        
-    }    
+        this.key = key.getBytes();
+    }
 
     @XmlTransient
     public void setCertAsBytes(byte[] cert) {
         this.cert = cert;
     }
-    
+
     @XmlTransient
     public byte[] getCertAsBytes() {
         return cert;
     }
-    
+
     public String getCert() {
         return new String(cert);
     }
-    
+
     public void setCert(String cert) {
-        this.cert = cert.getBytes();        
+        this.cert = cert.getBytes();
     }
-    
+
 }

@@ -49,34 +49,34 @@ public class ContentResource {
         this.contentCurator = contentCurator;
         this.idGenerator = idGenerator;
     }
-    
+
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public List<Content> list() {
         return contentCurator.listAll();
     }
-    
+
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{content_id}")
     public Content getContent(@PathParam("content_id") String contentId) {
         Content content = contentCurator.find(contentId);
-        
+
         if (content == null) {
             throw new BadRequestException(
                 i18n.tr("Content with id {0} could not be found", contentId));
         }
-        
+
         return content;
     }
-    
+
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     public Content createContent(Content content) {
         if (content.getGpgUrl() == null) {
             content.setGpgUrl("");
         }
-        
+
         if (content.getId() == null || content.getId().trim().length() == 0) {
             content.setId(idGenerator.generateId());
             return contentCurator.create(content);

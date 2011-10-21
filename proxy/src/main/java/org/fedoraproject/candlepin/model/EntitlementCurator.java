@@ -38,7 +38,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     private static Logger log = Logger.getLogger(EntitlementCurator.class);
     private ProductServiceAdapter productAdapter;
     private I18n i18n;
-    
+
     /**
      * default ctor
      */
@@ -48,7 +48,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         this.productAdapter = productAdapter;
         this.i18n = i18n;
     }
-    
+
     // TODO: handles addition of new entitlements only atm!
     /**
      * @param entitlements entitlements to update
@@ -58,7 +58,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     public Set<Entitlement> bulkUpdate(Set<Entitlement> entitlements) {
         Set<Entitlement> toReturn = new HashSet<Entitlement>();
         for (Entitlement toUpdate : entitlements) {
-            Entitlement found = find(toUpdate.getId()); 
+            Entitlement found = find(toUpdate.getId());
             if (found != null) {
                 toReturn.add(found);
                 continue;
@@ -73,10 +73,10 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             .add(Restrictions.eq("consumer", consumer));
         return listByCriteria(query);
     }
-    
+
     /**
      * List entitlements for a consumer which are valid for a specific date.
-     * 
+     *
      * @param consumer Consumer to list entitlements for.
      * @param activeOn The date we want to see entitlements which are active on.
      * @return List of entitlements.
@@ -101,10 +101,10 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     public List<Entitlement> listByOwner(Owner owner) {
         DetachedCriteria query = DetachedCriteria.forClass(Entitlement.class)
             .add(Restrictions.eq("owner", owner));
-        
+
         return listByCriteria(query);
     }
-    
+
     /*
      * Creates date filtering criteria to for checking if an entitlement has any overlap
      * with a "modifying" entitlement that has just been granted.
@@ -129,42 +129,42 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
                         Restrictions.le("endDate", endDate)))));
         return criteria;
     }
-    
+
     /**
-     * List all entitlements for the given consumer which provide the given product ID, 
+     * List all entitlements for the given consumer which provide the given product ID,
      * and overlap at least partially with the given start and end dates.
-     * 
+     *
      * i.e. given start date must be within the entitlements start/end dates, or
-     * the given end date must be within the entitlements start/end dates, 
+     * the given end date must be within the entitlements start/end dates,
      * or the given start date must be before the entitlement *and* the given end date
      * must be after entitlement. (i.e. we are looking for *any* overlap)
-     * 
+     *
      * @param consumer Consumer whose entitlements we're checking.
      * @param productId Find entitlements providing this productId.
-     * @param startDate Find entitlements 
+     * @param startDate Find entitlements
      * @param endDate
      * @return list of entitlements providing the given product
      */
-    public Set<Entitlement> listProviding(Consumer consumer, String productId, 
+    public Set<Entitlement> listProviding(Consumer consumer, String productId,
         Date startDate, Date endDate) {
-        
+
         // Will re-use this criteria for both queries we need to do:
-        
+
         // Find direct matches on the pool's product ID:
         Criteria parentProductCrit = createModifiesDateFilteringCriteria(consumer,
             startDate, endDate).createCriteria("pool").add(
                 Restrictions.eq("productId", productId));
-        
-        // Using a set to prevent duplicate matches, if somehow 
+
+        // Using a set to prevent duplicate matches, if somehow
         Set<Entitlement> finalResults = new HashSet<Entitlement>();
         finalResults.addAll(parentProductCrit.list());
-        
+
         Criteria providedCrit = createModifiesDateFilteringCriteria(consumer, startDate,
             endDate).createCriteria("pool")
             .createCriteria("providedProducts")
             .add(Restrictions.eq("productId", productId));
         finalResults.addAll(providedCrit.list());
-        
+
         return finalResults;
     }
 
@@ -177,7 +177,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
 
         modifying.addAll(listModifying(consumer, entitlement.getProductId(),
                 startDate, endDate));
-        
+
         for (ProvidedProduct product : entitlement.getPool().getProvidedProducts()) {
             modifying.addAll(listModifying(consumer, product.getProductId(),
                     startDate, endDate));
@@ -185,7 +185,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
 
         return modifying;
     }
-    
+
     public List<Entitlement> listModifying(Consumer consumer, String productId,
         Date startDate, Date endDate) {
 
@@ -256,9 +256,9 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     public List<Entitlement> listByConsumerAndProduct(Consumer consumer, String productId) {
         DetachedCriteria query = DetachedCriteria.forClass(Entitlement.class)
             .add(Restrictions.eq("consumer", consumer));
-        
+
         List<Entitlement> results = listByCriteria(query);
-        
+
         // TODO: Possible to do this via hibernate query? No luck on first attempt
         // with criteria query.
         List<Entitlement> filtered = new LinkedList<Entitlement>();
@@ -269,13 +269,13 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         }
         return filtered;
     }
-    
+
     @Transactional
     public void delete(Entitlement entity) {
         Entitlement toDelete = find(entity.getId());
         log.debug("Deleting entitlement: " + toDelete);
         log.debug("certs.size = " + toDelete.getCertificates().size());
-        
+
         for (EntitlementCertificate cert : toDelete.getCertificates()) {
             currentSession().delete(cert);
         }
@@ -285,7 +285,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         currentSession().delete(toDelete);
         flush();
     }
-    
+
     @Transactional
     public Entitlement findByCertificateSerial(Long serial) {
         return (Entitlement) currentSession().createCriteria(Entitlement.class)
@@ -306,5 +306,5 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         this.currentSession().replicate(ent, ReplicationMode.EXCEPTION);
 
         return ent;
-    }    
+    }
 }

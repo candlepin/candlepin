@@ -24,10 +24,10 @@ import org.aopalliance.intercept.MethodInvocation;
  * TestingInterceptor
  */
 public class TestingInterceptor implements MethodInterceptor {
-    
+
     private final MethodInterceptor wrapped;
     private AtomicBoolean enabled = new AtomicBoolean(false);
-    
+
     public TestingInterceptor(final MethodInterceptor wrapped) {
         this.wrapped = wrapped;
     }
@@ -39,11 +39,11 @@ public class TestingInterceptor implements MethodInterceptor {
         }
         return wrapped.invoke(invocation);
     }
-    
+
     public void enable() {
         enabled.getAndSet(true);
     }
-    
+
     public void disable() {
         enabled.getAndSet(false);
     }

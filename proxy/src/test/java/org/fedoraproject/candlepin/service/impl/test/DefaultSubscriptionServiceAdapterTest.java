@@ -35,7 +35,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 public class DefaultSubscriptionServiceAdapterTest extends DatabaseTestFixture {
-    
+
     private Owner owner;
     private Product parentProduct;
     private Product childProduct;
@@ -47,25 +47,25 @@ public class DefaultSubscriptionServiceAdapterTest extends DatabaseTestFixture {
         owner = createOwner();
         ownerCurator.create(owner);
         parentProduct = TestUtil.createProduct();
-        
+
         childProduct = TestUtil.createProduct();
         productCurator.create(childProduct);
         productCurator.create(parentProduct);
-        
+
         Set<Product> providedProducts = new HashSet<Product>();
         providedProducts.add(childProduct);
         s1 = new Subscription(owner, parentProduct, providedProducts, 100L,
                 TestUtil.createDate(2010, 2, 8), TestUtil.createDate(2050, 2, 8),
                 TestUtil.createDate(2010, 2, 1));
-        
+
         subCurator.create(s1);
-        
+
         adapter = injector.getInstance(DefaultSubscriptionServiceAdapter.class);
     }
-    
+
     @Test
     public void testGetSubscriptions() {
-        List<Subscription> subs = adapter.getSubscriptions(owner, 
+        List<Subscription> subs = adapter.getSubscriptions(owner,
             parentProduct.getId().toString());
         assertEquals(1, subs.size());
     }
@@ -74,29 +74,29 @@ public class DefaultSubscriptionServiceAdapterTest extends DatabaseTestFixture {
     public void testGetSubscriptionsNoneExist() {
         Owner owner2 = createOwner();
         ownerCurator.create(owner2);
-        List<Subscription> subs = adapter.getSubscriptions(owner2, 
+        List<Subscription> subs = adapter.getSubscriptions(owner2,
             parentProduct.getId().toString());
         assertEquals(0, subs.size());
     }
-    
+
     @Test
     public void testGetSubscription() {
         Subscription s = adapter.getSubscription(s1.getId());
         assertNotNull(s);
         assertEquals(Long.valueOf(100), s.getQuantity());
-        
+
         s = adapter.getSubscription("-15");
         assertNull(s);
     }
-    
-    
+
+
     @Test
     public void testGetAllSubscriptionsSince() {
         List<Subscription> subs = adapter.getSubscriptionsSince(
                 TestUtil.createDate(2010, 1, 20));
         assertEquals(1, subs.size());
         assertEquals(s1.getId(), subs.get(0).getId());
-        
+
         subs = adapter.getSubscriptionsSince(
                 TestUtil.createDate(2010, 2, 2));
         assertEquals(0, subs.size());
@@ -109,10 +109,10 @@ public class DefaultSubscriptionServiceAdapterTest extends DatabaseTestFixture {
         assertEquals(1, subs.size());
         assertEquals(s1.getId(), subs.get(0).getId());
     }
-    
+
     @Test
     public void testGetSubscriptionsProviding() {
-        List<Subscription> subIds = adapter.getSubscriptions(owner, 
+        List<Subscription> subIds = adapter.getSubscriptions(owner,
             parentProduct.getId());
         assertEquals(1, subIds.size());
 

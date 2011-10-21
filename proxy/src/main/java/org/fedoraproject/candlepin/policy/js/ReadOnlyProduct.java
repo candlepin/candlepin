@@ -40,7 +40,7 @@ public class ReadOnlyProduct {
         this.product = product;
         initializeReadOnlyAttributes();
     }
-   
+
     /**
      * Return the product name
      * @return the product name
@@ -48,7 +48,7 @@ public class ReadOnlyProduct {
     public String getName() {
         return product.getName();
     }
-   
+
     /**
      * Return the product id
      * @return the product id
@@ -56,7 +56,7 @@ public class ReadOnlyProduct {
     public String getId() {
         return product.getId();
     }
-   
+
     // We may want to drop this and force use of the flattened attributes list.
     /**
      * Return product attribute matching the given name.
@@ -66,7 +66,7 @@ public class ReadOnlyProduct {
     public String getAttribute(String name) {
         return attributes.get(name);
     }
-    
+
     public Map<String, String> getAttributes() {
         return attributes;
     }
@@ -74,7 +74,7 @@ public class ReadOnlyProduct {
     public boolean hasAttribute(String key) {
         return product.hasAttribute(key);
     }
-   
+
     @Override
     public boolean equals(Object anObject) {
         if (this == anObject) {
@@ -88,12 +88,12 @@ public class ReadOnlyProduct {
 
         return product.getId().equals(another.getId());
     }
-    
+
     @Override
     public int hashCode() {
         return product.getId().hashCode() * 31;
     }
-    
+
     /**
      * Return a list of read-only products from the given set of products.
      * @param products read/write version of products.

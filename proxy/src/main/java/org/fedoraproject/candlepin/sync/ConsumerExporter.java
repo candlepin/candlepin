@@ -26,15 +26,15 @@ import com.google.inject.Inject;
  * Consumer - maps to the consumer.json file
  */
 public class ConsumerExporter {
-    
+
     @Inject
     ConsumerExporter() {
     }
-    
+
     void export(ObjectMapper mapper, Writer writer, Consumer consumer)
         throws IOException {
         ConsumerDto dto = new ConsumerDto(consumer.getUuid());
-        
+
         mapper.writeValue(writer, dto);
     }
 }

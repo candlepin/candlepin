@@ -22,15 +22,15 @@ import org.fedoraproject.candlepin.model.EntitlementCertificateCurator;
 
 /**
  * BaseEntitlementCertServiceAdapter
- * 
- * Shared base class for all entitlement cert service adapters. Because we store the 
+ *
+ * Shared base class for all entitlement cert service adapters. Because we store the
  * certs in most cases, some functionality is common to all.
  */
-public abstract class BaseEntitlementCertServiceAdapter implements 
+public abstract class BaseEntitlementCertServiceAdapter implements
     EntitlementCertServiceAdapter {
-    
+
     protected EntitlementCertificateCurator entCertCurator;
-    
+
     @Override
     public List<EntitlementCertificate> listForConsumer(
         Consumer consumer) {

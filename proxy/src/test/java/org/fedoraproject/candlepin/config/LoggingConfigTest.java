@@ -32,11 +32,11 @@ import java.util.Map;
  * LoggingConfigTest
  */
 public class LoggingConfigTest {
-    
+
     private Config config;
-    
+
     private LoggingConfig lc;
-    
+
     @Before
     public void init() {
         config = mock(Config.class);
@@ -48,17 +48,17 @@ public class LoggingConfigTest {
         Logger l = Logger.getLogger(LoggingConfigTest.class);
         assertNotNull(l);
         assertNull(l.getLevel());
-        
+
         Map<String, String> loglevels = new HashMap<String, String>();
         loglevels.put(LoggingConfigTest.class.getName(), "DEBUG");
-        
+
         when(config.configurationWithPrefix(LoggingConfig.PREFIX)).thenReturn(loglevels);
-        
+
         lc.configure(config);
         assertNotNull(l.getLevel());
         assertEquals(Level.DEBUG, l.getLevel());
     }
-    
+
     @Test(expected = NullPointerException.class)
     public void expectNull() {
         when(config.configurationWithPrefix(LoggingConfig.PREFIX)).thenReturn(null);

@@ -97,17 +97,17 @@ public class PoolHelper {
         consumerSpecificPool.setSubscriptionId(pool.getSubscriptionId());
         poolManager.createPool(consumerSpecificPool);
     }
-    
+
     /**
      * Retrieve all pools with the subscription id.
      *
      * @param id Subscription Id for cross-reference.
-     * @return list of found pools 
+     * @return list of found pools
      */
     public List<Pool> lookupBySubscriptionId(String id) {
         return poolManager.lookupBySubscriptionId(id);
     }
-    
+
     /**
      * Update count for a pool.
      *

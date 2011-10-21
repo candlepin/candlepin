@@ -34,7 +34,7 @@ public class ConfigurationParserTest {
                 return "a.b";
             }
         };
-        
+
         Properties props = cp.parseConfig(new HashMap<String, String>() {
             {
                 put("a.b.a.b", "value");
@@ -43,7 +43,7 @@ public class ConfigurationParserTest {
                 put("a.d.a.b", "value");
             }
         });
-        
+
         assertNotNull(cp);
         assertEquals("a.b", cp.getPrefix());
         assertNotNull(props);

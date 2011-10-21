@@ -91,48 +91,48 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     public void testProductName() {
         Product p = new Product("someProduct", "An Extremely Great Product");
         productCurator.create(p);
-        
+
         Pool pool = createPoolAndSub(owner, p, 100L,
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
         poolCurator.create(pool);
-        
+
         List<Pool> results = poolCurator.listByOwnerAndProduct(owner, p.getId());
         Pool onlyPool = results.get(0);
-        
+
         assertEquals("An Extremely Great Product", onlyPool.getProductName());
     }
-    
+
     @Test
     public void testProductNameViaFind() {
         Product p = new Product("another", "A Great Operating System");
         productCurator.create(p);
-        
+
         Pool pool = createPoolAndSub(owner, p, 25L,
             TestUtil.createDate(1999, 1, 10), TestUtil.createDate(2099, 1, 9));
         poolCurator.create(pool);
         pool = poolCurator.find(pool.getId());
-        
+
         assertEquals("A Great Operating System", pool.getProductName());
     }
-    
+
     @Test
     public void testProductNameViaFindAll() {
         Product p = new Product("another", "A Great Operating System");
         productCurator.create(p);
-        
+
         Pool pool = createPoolAndSub(owner, p, 25L,
             TestUtil.createDate(1999, 1, 10), TestUtil.createDate(2099, 1, 9));
         poolCurator.create(pool);
         pool = poolCurator.listAll().get(0);
-        
+
         assertEquals("A Great Operating System", pool.getProductName());
     }
-    
+
     @Test
     public void testFuzzyProductMatchingWithoutSubscription() {
         Product parent = TestUtil.createProduct();
         productCurator.create(parent);
-        
+
         Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
         ProvidedProduct providedProduct = new ProvidedProduct(
             product.getId(), "Test Provided Product");
@@ -144,17 +144,17 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         List<Pool> results = poolCurator.listByOwnerAndProduct(owner, product.getId());
         assertEquals(1, results.size());
     }
-    
+
     @Test
     public void testPoolProducts() {
         Product another = TestUtil.createProduct();
         productCurator.create(another);
-        
+
         Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
         ProvidedProduct providedProduct = new ProvidedProduct(
             another.getId(), "Test Provided Product");
         providedProducts.add(providedProduct);
-        
+
         Pool pool = TestUtil.createPool(owner, product, providedProducts, 5);
         providedProduct.setPool(pool);
         poolCurator.create(pool);
@@ -168,14 +168,14 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     public void testMultiplierCreation() {
         Product product = new Product("someProduct", "An Extremely Great Product", 10L);
         productCurator.create(product);
-        
-        Subscription sub = new Subscription(owner, product, new HashSet<Product>(), 16L, 
+
+        Subscription sub = new Subscription(owner, product, new HashSet<Product>(), 16L,
             TestUtil.createDate(2006, 10, 21), TestUtil.createDate(2020, 1, 1), new Date());
         this.subCurator.create(sub);
-        
+
         Pool newPool = poolManager.createPoolsForSubscription(sub).get(0);
         List<Pool> pools = poolCurator.lookupBySubscriptionId(sub.getId());
-        
+
         assertEquals(160L, pools.get(0).getQuantity().longValue());
         assertEquals(newPool.getQuantity(), pools.get(0).getQuantity());
     }
@@ -212,7 +212,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertEquals(1, poolCurator.listAvailableEntitlementPools(null, owner, null,
             activeOn, false, false).size());
     }
-    
+
     @Test
     public void testListByActiveOnIncludesSameEndDay() {
         Date activeOn = TestUtil.createDate(2011, 2, 2);
@@ -224,7 +224,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertEquals(1, poolCurator.listAvailableEntitlementPools(null, owner, null,
             activeOn, false, false).size());
     }
-    
+
     @Test
     public void testListByActiveOnInTheMiddle() {
         Date activeOn = TestUtil.createDate(2011, 2, 2);

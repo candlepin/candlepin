@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.pinsetter.tasks;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.eq;
@@ -143,12 +144,21 @@ public class EntitlerJobTest {
         serialize(detail.getJobDataMap());
     }
 
+    @Test
+    public void recoveryIsFalse() {
+        JobDetail detail = EntitlerJob.bindByPool("pool10", consumerUuid, 1);
+        assertFalse(detail.requestsRecovery());
+        assertFalse(detail.isDurable());
+        assertFalse(detail.isStateful());
+        assertFalse(detail.isVolatile());
+    }
+
     private void serialize(Object obj) throws IOException {
         ObjectOutput out = new ObjectOutputStream(new FileOutputStream("obj.ser"));
         out.writeObject(obj);
         out.close();
     }
-    
+
     @Test(expected = JobExecutionException.class)
     public void handleException() throws JobExecutionException {
         String pool = "pool10";

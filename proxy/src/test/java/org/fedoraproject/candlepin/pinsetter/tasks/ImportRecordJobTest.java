@@ -70,14 +70,14 @@ public class ImportRecordJobTest {
     public void singleOwner() throws Exception {
         Owner owner = new Owner("owner");
         ownerCurator.create(owner);
-        
+
         for (int i = 0; i < 13; i++) {
             ImportRecord record = new ImportRecord(owner);
             record.recordStatus(ImportRecord.Status.SUCCESS, "great!");
-            
+
             this.importRecordCurator.create(record);
         }
-        
+
         this.job.execute(null);
 
         List<ImportRecord> records = this.importRecordCurator.findRecords(owner);

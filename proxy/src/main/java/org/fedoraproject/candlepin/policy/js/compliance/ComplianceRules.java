@@ -31,15 +31,15 @@ import com.google.inject.Inject;
 
 /**
  * Compliance
- * 
+ *
  * A class used to check consumer compliance status.
  */
 public class ComplianceRules {
-    
+
     private EntitlementCurator entCurator;
     private JsRules jsRules;
     private static Logger log = Logger.getLogger(ComplianceRules.class);
-        
+
     @Inject
     public ComplianceRules(JsRules jsRules, EntitlementCurator entCurator) {
         this.entCurator = entCurator;
@@ -49,15 +49,15 @@ public class ComplianceRules {
 
     /**
      * Check compliance status for a consumer on a specific date.
-     * 
+     *
      * @param c Consumer to check.
      * @param date Date to check compliance status for.
      * @return Compliance status.
      */
     public ComplianceStatus getStatus(Consumer c, Date date) {
-        
+
         List<Entitlement> ents = entCurator.listByConsumerAndDate(c, date);
-        
+
         Map<String, Object> args = new HashMap<String, Object>();
         args.put("consumer", c);
         args.put("entitlements", ents);
@@ -76,5 +76,5 @@ public class ComplianceRules {
         }
         return status;
     }
-    
+
 }

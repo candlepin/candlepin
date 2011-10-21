@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Generate a diff file of the candlepin schema between two points in history.
-# 
+#
 # Useage:
 # schemadiff PERIOD
 #
@@ -16,7 +16,7 @@ function diff_schemas() {
     local schema1=$1
     local schema2=$2
     diff -u $schema1 $schema2
-   
+
     return $?
 }
 

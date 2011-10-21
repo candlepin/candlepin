@@ -106,20 +106,20 @@ public class BasicAuthViaUserServiceTest {
     @Test
     public void correctPrincipal() throws Exception {
         Owner owner = new Owner("user", "user");
-        
+
         setUserAndPassword("user", "redhat");
         when(userService.validateUser("user", "redhat")).thenReturn(true);
         // TODO: test will fail, need to mock the permissions setup
 
         Set<OwnerPermission> permissions = new HashSet<OwnerPermission>();
         permissions.add(new OwnerPermission(owner, Access.ALL));
-        
+
         User user = new User();
         user.addRole(new Role("test_role",
             new HashSet<User>(), permissions));
         when(userService.findByLogin("user")).thenReturn(new User());
-        
-        UserPrincipal expected = new UserPrincipal("user", 
+
+        UserPrincipal expected = new UserPrincipal("user",
                 new ArrayList<Permission>(permissions), false);
         assertEquals(expected, this.auth.getPrincipal(request));
     }
@@ -127,7 +127,7 @@ public class BasicAuthViaUserServiceTest {
     // TODO:  Add in owner creation/retrieval tests?
 
     private void setUserAndPassword(String username, String password) {
-        headers.getRequestHeaders().add("Authorization", 
+        headers.getRequestHeaders().add("Authorization",
             "BASIC " + encodeUserAndPassword(username, password));
     }
 

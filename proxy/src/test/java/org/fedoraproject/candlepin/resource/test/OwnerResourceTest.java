@@ -81,7 +81,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         productCurator.create(product);
         eventFactory = injector.getInstance(EventFactory.class);
         this.config = (CandlepinCommonTestConfig) injector
-            .getInstance(Config.class);        
+            .getInstance(Config.class);
     }
 
     @Test
@@ -479,7 +479,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         List<ActivationKey> keys = ownerResource.ownerActivationKeys(owner.getKey());
         assertEquals(1, keys.size());
     }
-    
+
     @Test(expected = BadRequestException.class)
     public void testActivationKeyRequiresName() {
         ActivationKey key = new ActivationKey();
@@ -576,7 +576,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         roleCurator.create(r);
         ownerResource.deleteOwner(owner.getKey(), false);
     }
-    
+
     @Test(expected = BadRequestException.class)
     public void testActivationKeyNameUnique() {
         ActivationKey ak = mock(ActivationKey.class);
@@ -584,15 +584,15 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ActivationKeyCurator akc = mock(ActivationKeyCurator.class);
         Owner o = mock(Owner.class);
         OwnerCurator oc = mock(OwnerCurator.class);
-        
+
         when(ak.getName()).thenReturn("testKey");
         when(akc.lookupForOwner(eq("testKey"), eq(o))).thenReturn(akOld);
         when(oc.lookupByKey(eq("testOwner"))).thenReturn(o);
-        
+
         OwnerResource or = new OwnerResource(oc, null,
             null, akc, null, null, i18n, null, null, null,
             null, null, null, null, null, null, null,
             null, null, null, null, null, null, null);
         or.createActivationKey("testOwner", ak);
-    }    
+    }
 }

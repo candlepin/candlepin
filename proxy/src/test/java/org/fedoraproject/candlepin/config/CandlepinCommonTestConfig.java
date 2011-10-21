@@ -25,12 +25,12 @@ public class CandlepinCommonTestConfig extends Config {
     @Override
     protected Map<String, String> loadProperties() {
         Map<String, String> properties = super.loadProperties();
-        
+
         // set ssl cert/key path for testing
         try {
             String cert = getClass().getResource("candlepin-ca.crt").toURI().getPath();
             String key = getClass().getResource("candlepin-ca.key").toURI().getPath();
-        
+
             properties.put(ConfigProperties.CA_CERT, cert);
             properties.put(ConfigProperties.CA_CERT_UPSTREAM, cert);
             properties.put(ConfigProperties.CA_KEY, key);
@@ -38,10 +38,10 @@ public class CandlepinCommonTestConfig extends Config {
         catch (URISyntaxException e) {
             throw new RuntimeException("Error loading cert/key resources!", e);
         }
-        
+
         return properties;
     }
-    
+
     public void setProperty(String key, String value) {
         this.configuration.put(key, value);
     }

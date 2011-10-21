@@ -27,7 +27,7 @@ public class ConsumerTypeCurator extends AbstractHibernateCurator<ConsumerType> 
 
     /**
      * lookup the ConsumerType by its label.
-     * 
+     *
      * @param label
      *            type to lookup
      * @return ConsumerType whose label matches the given label.

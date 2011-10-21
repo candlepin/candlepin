@@ -49,7 +49,7 @@ import com.google.inject.Injector;
 public class CandlepinExceptionMapper implements
     ExceptionMapper<RuntimeException> {
     private static Logger logger = Logger.getLogger(CandlepinExceptionMapper.class);
-    private static final List<MediaType> DESIRED_RESPONSE_TYPES = 
+    private static final List<MediaType> DESIRED_RESPONSE_TYPES =
         new LinkedList<MediaType>() {
             {
                 add(MediaType.APPLICATION_JSON_TYPE);
@@ -79,7 +79,7 @@ public class CandlepinExceptionMapper implements
             responseMediaType = headerMediaTypes.size() == 0 ? MediaType.TEXT_PLAIN_TYPE :
                 getBestMatch(DESIRED_RESPONSE_TYPES, headerMediaTypes);
         }
-        if (responseMediaType == null || (responseMediaType.getType().equals("*") && 
+        if (responseMediaType == null || (responseMediaType.getType().equals("*") &&
                 responseMediaType.getSubtype().equals("*"))) {
             responseMediaType = MediaType.APPLICATION_JSON_TYPE;
         }
@@ -87,13 +87,15 @@ public class CandlepinExceptionMapper implements
         ResponseBuilder bldr = null;
         // Resteasy wraps the actual exception sometimes
         Throwable cause = exception.getCause() == null ? exception : exception.getCause();
-        if (cause instanceof CandlepinException || 
-                exception instanceof CandlepinException) {
+        if (cause instanceof CandlepinException) {
             bldr = getBuilder((CandlepinException) cause, responseMediaType);
+        }
+        else if (exception instanceof CandlepinException) {
+            bldr = getBuilder((CandlepinException) exception, responseMediaType);
         }
         else if (cause instanceof DefaultOptionsMethodException) {
             Response resp = ((Failure) cause).getResponse();
-            return (resp != null) ? resp : 
+            return (resp != null) ? resp :
                 getDefaultBuilder(cause, responseMediaType).build();
         }
         else if (cause instanceof org.jboss.resteasy.spi.BadRequestException ||
@@ -143,7 +145,7 @@ public class CandlepinExceptionMapper implements
             .compile("(?:javax\\.ws\\.rs\\.\\w+\\(\\\")([\\w\\s]+)(\\\"\\))");
     private static final Pattern ILLEGAL_VAL_REGEX =
             Pattern.compile(":?value\\sis\\s'([\\w\\s]+)(:?'\\sfor)");
-    
+
     private ResponseBuilder getDefaultBuilder(Throwable exception,
         MediaType responseMediaType) {
         Throwable cause = exception;
@@ -161,5 +163,5 @@ public class CandlepinExceptionMapper implements
             .entity(new ExceptionMessage(message)).type(responseMediaType);
         return bldr;
     }
-    
+
 }

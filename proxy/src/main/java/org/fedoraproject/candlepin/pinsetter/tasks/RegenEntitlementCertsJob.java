@@ -25,14 +25,14 @@ import org.fedoraproject.candlepin.controller.PoolManager;
  * The Class RegenEntitlementCertsJob.
  */
 public class RegenEntitlementCertsJob implements Job {
-    
+
     private PoolManager poolManager;
     public static final String PROD_ID = "product_id";
     @Inject
     public RegenEntitlementCertsJob(PoolManager poolManager) {
         this.poolManager = poolManager;
     }
-    
+
     @Override
     public void execute(JobExecutionContext arg0) throws JobExecutionException {
         String prodId = arg0.getJobDetail().getJobDataMap().getString(

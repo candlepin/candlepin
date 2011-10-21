@@ -45,23 +45,23 @@ public class CrlGenerator {
     private CertificateSerialCurator certificateSerialCurator;
 
     private static Logger log = Logger.getLogger(CrlGenerator.class);
-    
+
     /**
      * Instantiates a new certificate revocation list task.
-     * 
+     *
      * @param curator the curator
      * @param pkiUtility PKIUtility for crl creation
      */
     @Inject
     public CrlGenerator(CertificateSerialCurator curator, PKIUtility pkiUtility) {
-        
+
         this.certificateSerialCurator = curator;
         this.pkiUtility = pkiUtility;
     }
 
     /**
      * Update crl.
-     * 
+     *
      * @param x509crl the x509crl
      * @return the x509 crl
      */
@@ -69,7 +69,7 @@ public class CrlGenerator {
         List<X509CRLEntryWrapper> crlEntries = null;
         BigInteger no = getCRLNumber(x509crl);
         log.info("Old CRLNumber is : " + no);
-        
+
         if (x509crl != null) {
             crlEntries = this.toSimpleCRLEntries(removeExpiredSerials(x509crl
                 .getRevokedCertificates()));
@@ -77,17 +77,17 @@ public class CrlGenerator {
         else {
             crlEntries = newList();
         }
-        
+
         crlEntries.addAll(getNewSerialsToAppendAndSetThemConsumed());
         this.certificateSerialCurator.deleteExpiredSerials();
-        
+
         return pkiUtility.createX509CRL(crlEntries, no
             .add(BigInteger.ONE));
     }
-    
+
     /**
      * Generate a new CRL.
-     * 
+     *
      * @return the x509 CRL
      */
     public X509CRL createCRL() {
@@ -96,12 +96,12 @@ public class CrlGenerator {
 
     /**
      * Gets the new serials to append and set them consumed.
-     * 
+     *
      * @return the new serials to append and set them consumed
      */
     protected List<X509CRLEntryWrapper> getNewSerialsToAppendAndSetThemConsumed() {
         List<X509CRLEntryWrapper> entries = Util.newList();
-        List<CertificateSerial> serials =  
+        List<CertificateSerial> serials =
             this.certificateSerialCurator.retrieveTobeCollectedSerials();
         for (CertificateSerial cs : serials) {
             entries.add(new X509CRLEntryWrapper(cs.getSerial(),
@@ -124,13 +124,13 @@ public class CrlGenerator {
             log.debug("Total number of serials retrieved from db: #" +
                 entries.size());
         }
-        
+
         return entries;
     }
 
     /**
      * Removes the expired serials.
-     * 
+     *
      * @param revokedEntries the revoked entries
      * @return the set
      */
@@ -159,21 +159,21 @@ public class CrlGenerator {
 
     /**
      * Gets the cRL number.
-     * 
+     *
      * @param x509crl the x509crl
      * @return the cRL number
      */
     protected BigInteger getCRLNumber(X509CRL x509crl) {
         if (x509crl == null) {
-            return BigInteger.ZERO; 
+            return BigInteger.ZERO;
         }
         return new BigInteger(pkiUtility.decodeDERValue(x509crl.getExtensionValue(
             OIDUtil.CRL_NUMBER)));
     }
-    
+
     /**
      * To simple crl entries.
-     * 
+     *
      * @param entries the entries
      * @return the list
      */
@@ -186,5 +186,5 @@ public class CrlGenerator {
         }
         return crlEntries;
     }
-    
+
 }

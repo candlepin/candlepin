@@ -26,14 +26,14 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
     protected ContentCurator() {
         super(Content.class);
     }
-    
+
     @Transactional
     public Content findByLabel(String label) {
         return (Content) currentSession().createCriteria(Content.class)
             .add(Restrictions.eq("label", label))
             .uniqueResult();
     }
-    
+
     @Transactional
     public void createOrUpdate(Content c) {
         Content existing = findByLabel(c.getLabel());

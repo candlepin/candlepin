@@ -83,7 +83,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
 
     /**
      * Constructor Use this variant when creating a new object to persist.
-     * 
+     *
      * @param id Product label
      * @param name Human readable Product name
      */
@@ -138,7 +138,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
 
     /**
      * sets the product name.
-     * 
+     *
      * @param name name of the product
      */
     public void setName(String name) {
@@ -330,7 +330,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
     /**
      * Returns true if this product has a content set which modifies the given
      * product:
-     * 
+     *
      * @param productId
      * @return true if this product modifies the given product ID
      */

@@ -20,7 +20,7 @@ import com.google.inject.AbstractModule;
 
 /**
  * KatelloModule
- * 
+ *
  * Katello specific guice setup for adapters
  */
 public class KatelloModule extends AbstractModule {

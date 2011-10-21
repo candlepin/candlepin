@@ -50,23 +50,23 @@ public class ProductAttribute extends AbstractHibernateObject implements Attribu
     @Column
     protected String value;
 
-    
+
     @ManyToOne
     @ForeignKey(name = "fk_product_id")
     @JoinColumn(nullable = false)
-    @Index(name = "cp_prodattribute_prod_fk_idx")    
+    @Index(name = "cp_prodattribute_prod_fk_idx")
     private Product product;
 
     public ProductAttribute() {
     }
-    
+
     public ProductAttribute(String name, String val) {
         this.name = name;
         this.value = val;
     }
 
     public String toString() {
-        return "ProductAttribute [id=" + id + ", name=" + name + ", value=" + value + 
+        return "ProductAttribute [id=" + id + ", name=" + name + ", value=" + value +
             ", product=" + product + "]";
     }
 

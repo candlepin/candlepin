@@ -29,7 +29,7 @@ public interface IdentityCertServiceAdapter {
      * Generate an identity certificate, used to verify the identity of the
      * consumer during all future communication between Candlepin and the
      * consumer.
-     * 
+     *
      * @param consumer Consumer.
      * @return the identity certificate for the given consumer.
      * @throws IOException if there is a file system problem

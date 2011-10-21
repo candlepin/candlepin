@@ -97,7 +97,7 @@ public class StatisticCurator extends AbstractHibernateCurator<Statistic> {
         create(consumerCountStatistic);
 
         consumerCountStatistic = new Statistic(EntryType.SYSTEM,
-            ValueType.PHYSICAL, null, oi.getConsumerGuestCounts().get(OwnerInfo.PHYSICAL), 
+            ValueType.PHYSICAL, null, oi.getConsumerGuestCounts().get(OwnerInfo.PHYSICAL),
             owner.getId());
         create(consumerCountStatistic);
 
@@ -121,7 +121,7 @@ public class StatisticCurator extends AbstractHibernateCurator<Statistic> {
             count++;
             map.put(sockets, count);
         }
-        
+
         for (Entry<String, Integer> entry : map.entrySet()) {
             Statistic socketCountStatistic = new Statistic(
                 EntryType.CONSUMERSBYSOCKETCOUNT, ValueType.RAW, entry.getKey(),
@@ -257,7 +257,7 @@ public class StatisticCurator extends AbstractHibernateCurator<Statistic> {
                 .intValue());
             int productPercentage = 0;
             if (totalProductCountTotal > 0) {
-                productPercentage = (perProductConsumedCount * 100 / 
+                productPercentage = (perProductConsumedCount * 100 /
                                      totalProductCountTotal);
             }
             Statistic perPoolCountPercentageStatistic = new Statistic(

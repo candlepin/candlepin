@@ -92,15 +92,15 @@ public class DefaultEntitlementCertServiceAdapter extends
         throws GeneralSecurityException, IOException {
         return generateEntitlementCert(entitlement, sub, product, false);
     }
-    
+
     @Override
     public EntitlementCertificate generateUeberCert(Entitlement entitlement,
         Subscription sub, Product product)
         throws GeneralSecurityException, IOException {
         return generateEntitlementCert(entitlement, sub, product, true);
     }
-    
-    
+
+
     @Override
     public void revokeEntitlementCertificates(Entitlement e) {
         for (EntitlementCertificate cert : e.getCertificates()) {
@@ -168,9 +168,9 @@ public class DefaultEntitlementCertServiceAdapter extends
 
     public X509Certificate createX509Certificate(Entitlement ent,
         Subscription sub, Product product, BigInteger serialNumber,
-        KeyPair keyPair, boolean useContentPrefix) 
+        KeyPair keyPair, boolean useContentPrefix)
         throws GeneralSecurityException, IOException {
-        
+
         // oiduitl is busted at the moment, so do this manually
         Set<X509ExtensionWrapper> extensions = new LinkedHashSet<X509ExtensionWrapper>();
         Set<Product> products = new HashSet<Product>(getProvidedProducts(ent
@@ -181,7 +181,7 @@ public class DefaultEntitlementCertServiceAdapter extends
             .filter(products, PROD_FILTER_PREDICATE)) {
             extensions.addAll(extensionUtil.productExtensions(prod));
             extensions.addAll(extensionUtil.contentExtensions(
-                filterProductContent(prod, ent), 
+                filterProductContent(prod, ent),
                 useContentPrefix ? ent.getOwner().getContentPrefix() : null));
         }
 
@@ -204,7 +204,7 @@ public class DefaultEntitlementCertServiceAdapter extends
 
         return x509Cert;
     }
-    
+
     private EntitlementCertificate generateEntitlementCert(Entitlement entitlement,
         Subscription sub, Product product, boolean thisIsUeberCert)
         throws GeneralSecurityException, IOException {

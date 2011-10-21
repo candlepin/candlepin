@@ -42,7 +42,7 @@ describe 'Entitlement Certificate' do
     @system.list_certificates.length.should == 1
     old_certs = @system.list_certificates()
     @system.regenerate_entitlement_certificates()
-    
+
     new_certs = @system.list_certificates()
     old_certs.size.should == new_certs.size
     old_ids = old_certs.map { |cert| cert['serial']['id']}
@@ -54,7 +54,7 @@ describe 'Entitlement Certificate' do
     @system.list_certificates.length.should == 1
     old_certs = @system.list_certificates()
     ents = @system.list_entitlements()
-    
+
     @system.regenerate_entitlement_certificates_for_entitlement(ents[0].id)
     new_certs = @system.list_certificates()
     old_ids = old_certs.map { |cert| cert['serial']['id']}
@@ -68,13 +68,13 @@ describe 'Entitlement Certificate' do
     @cp.create_subscription(@owner.key, coolapp.id, 10)
     @cp.refresh_pools(@owner.key)
     @system.consume_product coolapp.id
-    
-    @cp.regenerate_entitlement_certificates_for_product(coolapp.id)  
-    
+
+    @cp.regenerate_entitlement_certificates_for_product(coolapp.id)
+
     @system.list_certificates.length.should == 2
     old_certs = @system.list_certificates()
     @system.regenerate_entitlement_certificates()
-    
+
     new_certs = @system.list_certificates()
     old_certs.size.should == new_certs.size
     old_ids = old_certs.map { |cert| cert['serial']['id']}

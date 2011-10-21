@@ -38,13 +38,13 @@ public class CrlResource {
 
     private CrlGenerator crlGenerator;
     private PKIUtility pkiUtility;
-    
+
     @Inject
     public CrlResource(CrlGenerator crlGenerator, PKIUtility pkiUtility) {
         this.crlGenerator = crlGenerator;
         this.pkiUtility = pkiUtility;
     }
-    
+
     /**
      * @return the current CRL
      * @throws CRLException if there is issue generating the CRL
@@ -52,9 +52,9 @@ public class CrlResource {
      */
     @GET
     @Produces({ MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN })
-    public String getCurrentCrl(@Context Principal principal) 
+    public String getCurrentCrl(@Context Principal principal)
         throws CRLException, IOException {
-        
+
         X509CRL crl = this.crlGenerator.createCRL();
         return new String(pkiUtility.getPemEncoded(crl));
     }

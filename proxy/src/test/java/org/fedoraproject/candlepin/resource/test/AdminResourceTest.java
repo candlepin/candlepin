@@ -40,14 +40,14 @@ public class AdminResourceTest {
     private ConsumerTypeCurator ctc;
     private UserServiceAdapter usa;
     private AdminResource ar;
-    
+
     @Before
     public void init() {
         ctc = mock(ConsumerTypeCurator.class);
         usa = mock(UserServiceAdapter.class);
         ar = new AdminResource(ctc, usa);
     }
-    
+
     @Test
     public void initialize() {
         when(ctc.lookupByLabel(ConsumerTypeEnum.SYSTEM.getLabel())).thenReturn(null);
@@ -56,7 +56,7 @@ public class AdminResourceTest {
             any(ConsumerType.class));
         verify(usa).createUser(any(User.class));
     }
-    
+
     @Test
     public void initWithException() {
         when(ctc.lookupByLabel(ConsumerTypeEnum.SYSTEM.getLabel())).thenReturn(null);
@@ -64,7 +64,7 @@ public class AdminResourceTest {
             new UnsupportedOperationException());
         assertEquals("Initialized!", ar.initialize());
     }
-    
+
     @Test
     public void alreadyInitialized() {
         ConsumerType ct = mock(ConsumerType.class);

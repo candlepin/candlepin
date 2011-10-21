@@ -182,7 +182,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         assertTrue(isEncodedContentValid(encodedContent));
         assertFalse(encodedContent.containsKey(REQUIRED_TAGS.toString()));
     }
-    
+
     @Test
     public void testPrefixesShouldBeUsed() throws Exception {
         owner.setContentPrefix("/somePrefix/");
@@ -196,7 +196,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
                 CONTENT_ID)), any(Date.class), any(Date.class),
             any(KeyPair.class), any(BigInteger.class), any(String.class));
     }
-    
+
     @Test
     public void testPrefixesAreNotUsedForUeberCertificate() throws Exception {
         owner.setContentPrefix("/somePrefix/");
@@ -364,9 +364,9 @@ public class DefaultEntitlementCertServiceAdapterTest {
             any(Date.class), any(KeyPair.class), any(BigInteger.class),
             any(String.class));
     }
-    
-    
-    
+
+
+
     @Test
     public void supportValuesPresentOnCertIfAttributePresent() throws Exception {
 
@@ -407,7 +407,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     private Map<String, X509ExtensionWrapper> getEncodedContent(
         Set<X509ExtensionWrapper> contentExtensions) {
-        Map<String, X509ExtensionWrapper> encodedContent = 
+        Map<String, X509ExtensionWrapper> encodedContent =
             new HashMap<String, X509ExtensionWrapper>();
 
         for (X509ExtensionWrapper ext : contentExtensions) {
@@ -460,12 +460,12 @@ public class DefaultEntitlementCertServiceAdapterTest {
                 public String getFormat() {
                     return null;
                 }
-        
+
                 @Override
                 public byte[] getEncoded() {
                     return null;
                 }
-        
+
                 @Override
                 public String getAlgorithm() {
                     return null;
@@ -486,7 +486,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         ArgumentMatcher<Set<X509ExtensionWrapper>> {
 
         public boolean matches(Object list) {
-            Map<String, X509ExtensionWrapper> encodedContent = 
+            Map<String, X509ExtensionWrapper> encodedContent =
                 new HashMap<String, X509ExtensionWrapper>();
 
             for (X509ExtensionWrapper ext : (Set<X509ExtensionWrapper>) list) {
@@ -512,7 +512,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         }
 
         public boolean matches(Object list) {
-            Map<String, X509ExtensionWrapper> encodedContent = 
+            Map<String, X509ExtensionWrapper> encodedContent =
                 new HashMap<String, X509ExtensionWrapper>();
 
             for (X509ExtensionWrapper ext : (Set<X509ExtensionWrapper>) list) {
@@ -557,7 +557,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             super(value, "1.3.6.1.4.1.2312.9.4.18");
         }
     }
-    
+
     static class ListContainsContentUrl extends OidMatcher {
 
         public ListContainsContentUrl(String value, String contentID) {
@@ -575,7 +575,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         }
 
         public boolean matches(Object list) {
-            Map<String, X509ExtensionWrapper> encodedContent = 
+            Map<String, X509ExtensionWrapper> encodedContent =
                 new HashMap<String, X509ExtensionWrapper>();
 
             for (X509ExtensionWrapper ext : (Set<X509ExtensionWrapper>) list) {

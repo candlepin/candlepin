@@ -41,7 +41,7 @@ public class EventResource {
     private EventCurator eventCurator;
     private I18n i18n;
     private EventAdapter eventAdapter;
-    
+
 
     @Inject
     public EventResource(EventCurator eventCurator, I18n i18n, EventAdapter eventAdapter) {
@@ -59,7 +59,7 @@ public class EventResource {
         }
         return events;
     }
-    
+
     @GET
     @Path("{uuid}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -71,7 +71,7 @@ public class EventResource {
             eventAdapter.addMessageText(events);
             return toReturn;
         }
-        
+
         throw new NotFoundException(i18n.tr(
             "Event with ID ''{0}'' could not be found.", uuid));
     }

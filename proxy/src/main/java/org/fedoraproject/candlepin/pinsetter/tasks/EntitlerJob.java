@@ -75,7 +75,8 @@ public class EntitlerJob implements Job {
 
         JobDetail detail = new JobDetail("bind_by_pool_" + Util.generateUUID(),
             EntitlerJob.class);
-
+        // do not recover the job upon restarts
+        detail.setRequestsRecovery(false);
         JobDataMap map = new JobDataMap();
         map.put("pool_id", poolId);
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.CONSUMER);

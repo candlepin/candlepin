@@ -59,7 +59,7 @@ public class ProductImporterTest {
         when(poolManagerMock.getListOfEntitlementPoolsForProduct(anyString()))
             .thenReturn(new ArrayList<Pool>());
     }
-    
+
     @Test
     public void testCreateObject() throws Exception {
         Product product = TestUtil.createProduct();
@@ -107,7 +107,7 @@ public class ProductImporterTest {
 
         verify(productCuratorMock).createOrUpdate(created);
     }
-    
+
     @Test
     public void testContentCreated() throws Exception {
         Product product = TestUtil.createProduct();

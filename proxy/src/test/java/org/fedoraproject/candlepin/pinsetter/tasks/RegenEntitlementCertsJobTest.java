@@ -39,15 +39,15 @@ public class RegenEntitlementCertsJobTest {
         JobExecutionContext jec = mock(JobExecutionContext.class);
         JobDetail detail = mock(JobDetail.class);
         JobDataMap jdm = mock(JobDataMap.class);
-        
+
         when(jdm.getString(eq("product_id"))).thenReturn("foobarbaz");
         when(detail.getJobDataMap()).thenReturn(jdm);
         when(jec.getJobDetail()).thenReturn(detail);
-        
+
         // test
         RegenEntitlementCertsJob recj = new RegenEntitlementCertsJob(pm);
         recj.execute(jec);
-        
+
         // verification
         verify(pm).regenerateCertificatesOf(eq("foobarbaz"));
     }

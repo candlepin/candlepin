@@ -40,9 +40,9 @@ import org.quartz.JobExecutionException;
  */
 public class PinsetterJobListenerTest {
     private PinsetterJobListener listener;
-    private JobCurator jcurator;       
+    private JobCurator jcurator;
     private JobExecutionContext ctx;
-    
+
     @Before
     public void init() {
         jcurator = mock(JobCurator.class);
@@ -54,7 +54,7 @@ public class PinsetterJobListenerTest {
     public void name() {
         assertEquals(PinsetterJobListener.LISTENER_NAME, listener.getName());
     }
-    
+
     @Test
     public void tobeExecuted() {
         Principal principal = mock(Principal.class);
@@ -63,25 +63,25 @@ public class PinsetterJobListenerTest {
         JobStatus status = mock(JobStatus.class);
 
         map.put(PinsetterJobListener.PRINCIPAL_KEY, principal);
-        
+
         when(ctx.getMergedJobDataMap()).thenReturn(map);
         when(detail.getName()).thenReturn("foo");
         when(ctx.getJobDetail()).thenReturn(detail);
         when(jcurator.find(eq("foo"))).thenReturn(status);
-        
+
         listener.jobToBeExecuted(ctx);
-        
+
         verify(status).update(eq(ctx));
         verify(jcurator).merge(eq(status));
     }
-    
+
     @Test
     public void vetoed() {
         listener.jobExecutionVetoed(ctx);
         verifyZeroInteractions(ctx);
         verifyZeroInteractions(jcurator);
     }
-    
+
     @Test
     public void executed() {
         JobDetail detail = mock(JobDetail.class);
@@ -90,13 +90,13 @@ public class PinsetterJobListenerTest {
         when(detail.getName()).thenReturn("foo");
         when(ctx.getJobDetail()).thenReturn(detail);
         when(jcurator.find(eq("foo"))).thenReturn(status);
-        
+
         listener.jobWasExecuted(ctx, null);
-        
+
         verify(status).update(eq(ctx));
         verify(jcurator).merge(eq(status));
     }
-    
+
     @Test
     public void executedNullStatus() {
         JobExecutionException e = mock(JobExecutionException.class);
@@ -106,14 +106,14 @@ public class PinsetterJobListenerTest {
         when(detail.getName()).thenReturn("foo");
         when(ctx.getJobDetail()).thenReturn(detail);
         when(jcurator.find(eq("foo"))).thenReturn(null);
-        
+
         listener.jobWasExecuted(ctx, e);
 
         verifyZeroInteractions(status);
         verify(jcurator, never()).merge(eq(status));
         verifyZeroInteractions(e);
     }
-    
+
     @Test
     public void tobeExecutedNull() {
         Principal principal = mock(Principal.class);
@@ -122,14 +122,14 @@ public class PinsetterJobListenerTest {
         JobStatus status = mock(JobStatus.class);
 
         map.put(PinsetterJobListener.PRINCIPAL_KEY, principal);
-        
+
         when(ctx.getMergedJobDataMap()).thenReturn(map);
         when(detail.getName()).thenReturn("foo");
         when(ctx.getJobDetail()).thenReturn(detail);
         when(jcurator.find(eq("foo"))).thenReturn(null);
-        
+
         listener.jobToBeExecuted(ctx);
-        
+
         verifyZeroInteractions(status);
         verify(jcurator, never()).merge(eq(status));
     }

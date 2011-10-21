@@ -35,7 +35,7 @@ import org.fedoraproject.candlepin.model.Pool;
 
 /**
  * JsonProvider
- * 
+ *
  * Our own json provider for jax-rs, allowing us to configure jackson as we see fit
  * and deal with input validation.
  */
@@ -48,19 +48,19 @@ public class JsonProvider extends JacksonJsonProvider {
     public JsonProvider(Config config) {
         // Prefer jackson annotations, but use jaxb if no jackson.
         super(Annotations.JACKSON, Annotations.JAXB);
-       
+
         ObjectMapper mapper = _mapperConfig.getDefaultMapper();
         configureHateoasObjectMapper(mapper, config);
         setMapper(mapper);
     }
-    
+
     private void configureHateoasObjectMapper(ObjectMapper mapper, Config config) {
         mapper.configure(SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS, false);
-        
+
         if (config.indentJson()) {
             mapper.configure(SerializationConfig.Feature.INDENT_OUTPUT, true);
         }
-        
+
         CandlepinSerializerProvider csp = new CandlepinSerializerProvider();
         CandlepinSerializerFactory factory = new CandlepinSerializerFactory();
         Class [] serializeThese = {
@@ -74,11 +74,11 @@ public class JsonProvider extends JacksonJsonProvider {
         }
         mapper.setSerializerFactory(factory);
         mapper.setSerializerProvider(csp);
-        
+
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
         AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
         AnnotationIntrospector pair = new AnnotationIntrospector.Pair(primary, secondary);
-        
+
         mapper.getSerializationConfig().setAnnotationIntrospector(pair);
         mapper.getDeserializationConfig().setAnnotationIntrospector(pair);
     }

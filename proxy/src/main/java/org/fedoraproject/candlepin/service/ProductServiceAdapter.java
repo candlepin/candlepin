@@ -34,45 +34,45 @@ public interface ProductServiceAdapter {
      * @return specific product
      */
     Product getProductById(String id);
-    
+
     /**
      * List all Products
      * @return all products.
      */
     List<Product> getProducts();
-    
+
     /**
      * Creates a new {@link Product}.
-     * 
+     *
      * @param product
      * @return the created {@link Product}
      * @throws UnsupportedOperationException if this implementation does not
      *         support new product creation
      */
     Product createProduct(Product product);
-    
+
     /**
      * deletes specified product
      * @param product
      */
     void deleteProduct(Product product);
-    
+
     /**
      * given a list of skus, return a set of sku, name pairs
      * @param skus skus
      * @return hashmap of sku, name pairs
      */
     HashMap<String, String> getProductNamesByProductId(String[] skus);
-     
+
     /**
      * Gets the certificate that defines the given product, creating one
      * if necessary.
-     * 
+     *
      * @param product
      * @return the stored or created {@link ProductCertificate}
      */
     ProductCertificate getProductCertificate(Product product);
-    
+
     /**
      * Used to purge product cache
      */

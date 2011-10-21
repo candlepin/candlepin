@@ -391,7 +391,9 @@ public class DefaultRulesTest {
     }
 
     @Test
-    public void missingConsumerSocketsShouldGenerateWarning() {
+    public void missingConsumerSocketsShouldNotGenerateWarning() {
+        // non-system consumers do not have socket counts, no warning
+        // should be generated (per IT)
         Pool pool = setupArchTest("sockets", "2", "cpu.cpu_socket(s)", "2");
 
         // Get rid of the facts that setupTest set.
@@ -400,11 +402,14 @@ public class DefaultRulesTest {
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
             .getResult();
         assertFalse(result.hasErrors());
-        assertTrue(result.hasWarnings());
+        assertFalse(result.hasWarnings());
     }
 
     @Test
-    public void testZeroConsumerSocketsShouldGenerateWarning() {
+    public void testZeroConsumerSocketsShouldNotGenerateWarning() {
+        // there was a bug in an IT adapter where a null socket count was being
+        // set to zero. As a hotfix, we do not generate a warning when socket
+        // count is zero.
         Pool pool = setupArchTest("sockets", "0", "cpu.cpu_socket(s)", "2");
 
         // Get rid of the facts that setupTest set.
@@ -413,7 +418,7 @@ public class DefaultRulesTest {
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
             .getResult();
         assertFalse(result.hasErrors());
-        assertTrue(result.hasWarnings());
+        assertFalse(result.hasWarnings());
     }
 
     private Pool setupArchTest(final String attributeName,
@@ -437,7 +442,7 @@ public class DefaultRulesTest {
 
     @Test
     public void exceedingNumberOfSocketsShouldGenerateWarning() {
-        Pool pool = setupArchTest("sockets", "2", "cpu.cpu_sockets", "4");
+        Pool pool = setupArchTest("sockets", "2", "cpu.cpu_socket(s)", "4");
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
             .getResult();
@@ -1649,6 +1654,27 @@ public class DefaultRulesTest {
 
         enforcer.selectBestPools(consumer, new String[]{ productId2, productId3 },
             pools, compliance);
+    }
+
+    @Test(expected = RuleExecutionException.class)
+    public void testCannotConsumeTooManySocketsNoStacking() {
+        consumer.setFact("cpu.cpu_socket(s)", "44");
+
+        Product product = mockProductSockets("productID", "John Q Product", "22");
+
+        Pool pool = mockPool(product);
+        pool.setQuantity(1L);
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool);
+        enforcer.selectBestPools(consumer, new String[]{ "productId" }, pools, compliance);
+    }
+
+    private Product mockProductSockets(String pid, String productName, String sockets) {
+        Product product = new Product(pid, productName);
+        product.setAttribute("sockets", sockets);
+        product.setAttribute("multi-entitlement", "no");
+        when(this.prodAdapter.getProductById(pid)).thenReturn(product);
+        return product;
     }
 
     private Pool setupUserRestrictedPool() {

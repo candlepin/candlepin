@@ -32,7 +32,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 /**
- * JsRules - javascript runner 
+ * JsRules - javascript runner
  */
 public class JsRules {
     private static Logger log = Logger.getLogger(JsRules.class);
@@ -42,7 +42,7 @@ public class JsRules {
     private Scriptable scope;
 
     private boolean initialized = false;
-    
+
     public JsRules(Scriptable scope) {
         this.scope = scope;
     }
@@ -50,12 +50,12 @@ public class JsRules {
     /**
      * initialize the javascript rules for the provided namespace. you must run this
      * before trying to run a javascript rule or method.
-     * 
+     *
      * @param namespace the javascript rules namespace containing the rules type you want
      */
     public void init(String namespace) {
         this.namespace = namespace;
-        
+
         if (!initialized) {
 
             Context context = Context.enter();
@@ -63,7 +63,7 @@ public class JsRules {
                 Object func = ScriptableObject.getProperty(scope, namespace);
                 this.rulesNameSpace = unwrapReturnValue(((Function) func).call(context,
                     scope, scope, Context.emptyArgs));
-                
+
                 this.initialized = true;
             }
             catch (RhinoException ex) {
@@ -96,7 +96,7 @@ public class JsRules {
         Scriptable localScope = Context.toObject(this.rulesNameSpace, scope);
         Object func = ScriptableObject.getProperty(localScope, method);
         if (!(func instanceof Function)) {
-            throw new NoSuchMethodException("no such javascript method: " + method); 
+            throw new NoSuchMethodException("no such javascript method: " + method);
         }
         Context context = Context.enter();
         try {
@@ -130,7 +130,7 @@ public class JsRules {
             throw new RuleExecutionException(ex);
         }
     }
-    
+
     public void invokeRule(String ruleName, Map<String, Object> args) {
         for (Entry<String, Object> entry : args.entrySet()) {
             scope.put(entry.getKey(), scope, entry.getValue());
@@ -138,7 +138,7 @@ public class JsRules {
         }
         invokeRule(ruleName);
     }
-        
+
     /**
      * Both products and pools can carry attributes, we need to trigger rules for each.
      * In this map, pool attributes will override product attributes, should the same
@@ -161,17 +161,17 @@ public class JsRules {
         }
         return allAttributes;
     }
-    
+
     public ReadOnlyPool[] convertArray(Object output) {
         return (ReadOnlyPool[]) Context.jsToJava(output, ReadOnlyPool[].class);
     }
-    
+
     public Map<ReadOnlyPool, Integer> convertMap(Object output) {
         Map<ReadOnlyPool, Integer> toReturn = new HashMap<ReadOnlyPool, Integer>();
-        
+
         Map<ReadOnlyPool, Double> result =
             (Map<ReadOnlyPool, Double>) Context.jsToJava(output, Map.class);
-        
+
         for (ReadOnlyPool pool : result.keySet()) {
             try {
                 Integer count = (Integer) result.get(pool).intValue();
@@ -183,11 +183,11 @@ public class JsRules {
                 log.debug("CONVERT id is not readonly pool, ignoring: " + e);
             }
         }
-        
+
         if (toReturn.isEmpty()) {
             return null;
         }
-        
+
         log.debug("CONVERT returning hashmap");
         return toReturn;
     }

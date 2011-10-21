@@ -41,7 +41,7 @@ public class Config {
     /**
      * Creates a new <code>Config</code> instance using the
      * file name to override values defined in {@link ConfigProperties}.
-     * 
+     *
      * @param configFileName the file that contains the configuration values
      */
     public Config(String configFileName) {
@@ -250,9 +250,9 @@ public class Config {
 
         value = value.toLowerCase();
 
-        return value.equals("true") || 
-            value.equals("on") || 
-            value.equals("1") || 
+        return value.equals("true") ||
+            value.equals("on") ||
+            value.equals("1") ||
             value.equals("yes");
     }
 

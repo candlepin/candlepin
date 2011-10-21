@@ -57,7 +57,7 @@ public class AtomFeedResourceTest {
     private AtomFeedResource afr;
     private Injector injector;
     private I18n i18n;
-     
+
     @Before
     public void setUp() {
         injector = Guice.createInjector(
@@ -66,13 +66,13 @@ public class AtomFeedResourceTest {
             PersistenceService.usingJpa()
                 .across(UnitOfWork.REQUEST)
                 .buildModule()
-        );        
-        i18n = injector.getInstance(I18n.class);        
+        );
+        i18n = injector.getInstance(I18n.class);
         ec = mock(EventCurator.class);
         ea = new EventAdapterImpl(new ConfigForTesting(), i18n);
         afr = new AtomFeedResource(ec, ea);
     }
-    
+
     @Test
     public void getFeed() {
         List<Event> events = getEvents(10);
@@ -81,7 +81,7 @@ public class AtomFeedResourceTest {
         assertNotNull(f);
         assertEquals(10, f.getEntries().size());
     }
-    
+
     @Test
     public void getEmptyFeed() {
         when(ec.listMostRecent(eq(1000))).thenReturn(new ArrayList<Event>());
@@ -89,7 +89,7 @@ public class AtomFeedResourceTest {
         assertNotNull(f);
         assertTrue(f.getEntries().isEmpty());
     }
-    
+
     private List<Event> getEvents(int count) {
         List<Event> list = new ArrayList<Event>(count);
         Target[] targets = Target.values();
@@ -97,14 +97,14 @@ public class AtomFeedResourceTest {
         for (int i = 0; i < count; i++) {
             Event e = new Event();
             e.setTarget(targets[i % targets.length]);
-            e.setType(types[i % types.length]);    
+            e.setType(types[i % types.length]);
             e.setTimestamp(new Date());
             e.setPrincipal(new PrincipalData());
             list.add(e);
         }
         return list;
     }
-    
+
     private static class ConfigForTesting extends Config {
         public ConfigForTesting() {
             super(ConfigProperties.DEFAULT_PROPERTIES);

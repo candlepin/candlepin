@@ -33,6 +33,6 @@ public class ForbiddenException extends CandlepinException {
     public ForbiddenException(String message, Throwable e) {
         super(Status.FORBIDDEN, message, e);
     }
-    
-    
+
+
 }

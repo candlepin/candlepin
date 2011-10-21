@@ -25,7 +25,7 @@ public class NoAuthPrincipal extends Principal {
     }
 
     @Override
-    public String getPrincipalName() {       
+    public String getPrincipalName() {
         return "Anonymous";
     }
 
@@ -33,5 +33,5 @@ public class NoAuthPrincipal extends Principal {
     public boolean hasFullAccess() {
         return false;
     }
-   
+
 }

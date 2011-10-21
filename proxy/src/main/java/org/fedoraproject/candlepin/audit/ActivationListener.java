@@ -48,29 +48,29 @@ public class ActivationListener implements EventListener {
         mapper.getSerializationConfig().setAnnotationIntrospector(pair);
         mapper.getDeserializationConfig().setAnnotationIntrospector(pair);
     }
-    
+
     @Override
     public void onEvent(Event e) {
-        if (e.getType().equals(Event.Type.CREATED) && 
-                e.getTarget().equals(Event.Target.POOL)) { 
+        if (e.getType().equals(Event.Type.CREATED) &&
+                e.getTarget().equals(Event.Target.POOL)) {
             String poolJson = e.getNewEntity();
             Reader reader = new StringReader(poolJson);
-            try { 
+            try {
                 Pool pool = mapper.readValue(reader, Pool.class);
                 subscriptionService.sendActivationEmail(pool.getSubscriptionId());
-            } 
-            catch (JsonMappingException ex) { 
+            }
+            catch (JsonMappingException ex) {
                 logError(e);
             }
-            catch (JsonParseException ex) { 
+            catch (JsonParseException ex) {
                 logError(e);
-            } 
-            catch (IOException ex) { 
+            }
+            catch (IOException ex) {
                 logError(e);
             }
         }
     }
-    
+
     private void logError(Event e) {
         log.debug("Invalid JSON for pool : " + e.getEntityId());
     }

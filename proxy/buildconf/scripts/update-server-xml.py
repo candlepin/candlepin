@@ -8,16 +8,16 @@ from sys import argv, exit
 https_connector_configuration="""
 <Connector port="8443" protocol="HTTP/1.1" SSLEnabled="true"
            maxThreads="150" scheme="https" secure="true"
-           clientAuth="want" SSLProtocol="TLS" 
+           clientAuth="want" SSLProtocol="TLS"
            keystoreFile="conf/keystore"
-           truststoreFile="conf/keystore" 
+           truststoreFile="conf/keystore"
            keystorePass="password"
            keystoreType="PKCS12"
            ciphers="SSL_RSA_WITH_3DES_EDE_CBC_SHA,TLS_RSA_WITH_AES_256_CBC_SHA,
                     TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA,TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA,
                     TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA,TLS_ECDH_RSA_WITH_AES_128_CBC_SHA,
                     TLS_ECDH_RSA_WITH_AES_256_CBC_SHA,TLS_ECDH_anon_WITH_3DES_EDE_CBC_SHA,
-                    TLS_ECDH_anon_WITH_AES_128_CBC_SHA,TLS_ECDH_anon_WITH_AES_256_CBC_SHA" 
+                    TLS_ECDH_anon_WITH_AES_128_CBC_SHA,TLS_ECDH_anon_WITH_AES_256_CBC_SHA"
            truststorePass="password" />"""
 
 existing_https_connector_pattern = '<Connector port="8443".*?/>'

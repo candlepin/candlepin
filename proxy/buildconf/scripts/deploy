@@ -1,4 +1,4 @@
-#!/bin/sh 
+#!/bin/sh
 function evalrc ()
 {
     if [ "$1" -ne "0" ] ; then
@@ -14,7 +14,6 @@ function gendb ()
     evalrc $? "schema generation failed"
 
     dropdb -U candlepin candlepin
-    evalrc $? "dropdb failed"
 
     createdb -U candlepin candlepin
     evalrc $? "createdb failed"

@@ -38,19 +38,19 @@
   </GlobalNamingResources>
 
   <!-- A "Service" is a collection of one or more "Connectors" that share
-       a single "Container" Note:  A "Service" is not itself a "Container", 
+       a single "Container" Note:  A "Service" is not itself a "Container",
        so you may not define subcomponents such as "Valves" at this level.
        Documentation at /docs/config/service.html
    -->
   <Service name="Catalina">
-  
+
     <!--The connectors can use a shared executor, you can define one or more named thread pools-->
     <!--
-    <Executor name="tomcatThreadPool" namePrefix="catalina-exec-" 
+    <Executor name="tomcatThreadPool" namePrefix="catalina-exec-"
         maxThreads="150" minSpareThreads="4"/>
     -->
-    
-    
+
+
     <!-- A "Connector" represents an endpoint by which requests are received
          and responses are returned. Documentation at :
          Java HTTP Connector: /docs/config/http.html (blocking & non-blocking)
@@ -62,12 +62,12 @@
     <!-- A "Connector" using the shared thread pool-->
     <!--
     <Connector executor="tomcatThreadPool"
-               port="8080" protocol="HTTP/1.1" 
-               connectionTimeout="20000" 
+               port="8080" protocol="HTTP/1.1"
+               connectionTimeout="20000"
                redirectPort="8443" />
-    -->           
+    -->
     <!-- Define a SSL HTTP/1.1 Connector on port 8443
-         This connector uses the JSSE configuration, when using APR, the 
+         This connector uses the JSSE configuration, when using APR, the
          connector should be using the OpenSSL style configuration
          described in the APR documentation -->
     <!--
@@ -75,17 +75,17 @@
                maxThreads="150" scheme="https" secure="true"
                clientAuth="false" sslProtocol="TLS" />
     -->
-    <Connector port="8443" maxHttpHeaderSize="8192" 
-      maxThreads="150" minSpareThreads="25" maxSpareThreads="75" 
-      enableLookups="true" disableUploadTimeout="true" 
+    <Connector port="8443" maxHttpHeaderSize="8192"
+      maxThreads="150" minSpareThreads="25" maxSpareThreads="75"
+      enableLookups="true" disableUploadTimeout="true"
       acceptCount="100" scheme="https" secure="true" SSLEnabled="true"
       clientAuth="true"
       keystoreFile="${catalina.home}/conf/certs/rest_api_test.jks"
       keystoreType="JKS"
       keystorePass="password"
       truststoreFile="${catalina.home}/conf/certs/rest_api_test.jks"
-      truststoreType="JKS" 
-      truststorePass="password" 
+      truststoreType="JKS"
+      truststorePass="password"
       SSLVerifyClient="require" SSLVerifyDepth="2" SSLEngine="on" SSLProtocol="all" />
 
     <!-- Define an AJP 1.3 Connector on port 8009 -->
@@ -99,8 +99,8 @@
          Documentation at /docs/config/engine.html -->
 
     <!-- You should set jvmRoute to support load-balancing via AJP ie :
-    <Engine name="Catalina" defaultHost="localhost" jvmRoute="jvm1">         
-    --> 
+    <Engine name="Catalina" defaultHost="localhost" jvmRoute="jvm1">
+    -->
     <Engine defaultHost="localhost" name="Catalina">
 
       <!--For clustering, please take a look at documentation at:
@@ -108,7 +108,7 @@
           /docs/config/cluster.html (reference documentation) -->
       <!--
       <Cluster className="org.apache.catalina.ha.tcp.SimpleTcpCluster"/>
-      -->        
+      -->
 
       <!-- The request dumper valve dumps useful debugging information about
            the request and response data received and sent by Tomcat.
@@ -137,7 +137,7 @@
         <!-- Access log processes all example.
              Documentation at: /docs/config/valve.html -->
         <!--
-        <Valve className="org.apache.catalina.valves.AccessLogValve" directory="logs"  
+        <Valve className="org.apache.catalina.valves.AccessLogValve" directory="logs"
                prefix="localhost_access_log." suffix=".txt" pattern="common" resolveHosts="false"/>
         -->
 

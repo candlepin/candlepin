@@ -33,11 +33,11 @@ import org.apache.log4j.Logger;
  * AccessControlInterceptor
  */
 public class AccessControlInterceptor implements MethodInterceptor {
-    
+
     private static Logger log = Logger.getLogger(AccessControlInterceptor.class);
 
     @Inject private Provider<Principal> principalProvider;
-    
+
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
 
@@ -45,7 +45,7 @@ public class AccessControlInterceptor implements MethodInterceptor {
         if (principalProvider.get().hasFullAccess()) {
             return invocation.proceed();
         }
-        
+
         String invokedMethodName = invocation.getMethod().getName();
         if (invokedMethodName.startsWith("list")) {
             Object entity = ((AbstractHibernateCurator) invocation.getThis()).entityType();
@@ -68,7 +68,7 @@ public class AccessControlInterceptor implements MethodInterceptor {
             }
             crudAccessControl(entity);
         }
-            
+
         return invocation.proceed();
     }
 
@@ -79,7 +79,7 @@ public class AccessControlInterceptor implements MethodInterceptor {
 
         if (currentUser instanceof UserPrincipal) {
             enableOwnerFilter((UserPrincipal) currentUser, invocation.getThis());
-        } 
+        }
         else if (currentUser instanceof ConsumerPrincipal) {
             enableConsumerFilter((ConsumerPrincipal) currentUser, invocation.getThis());
         }
@@ -93,10 +93,10 @@ public class AccessControlInterceptor implements MethodInterceptor {
             throw new ForbiddenException("access denied.");
         }
     }
-    
+
     private void enableConsumerFilter(ConsumerPrincipal currentUser, Object target) {
         AbstractHibernateCurator curator = (AbstractHibernateCurator) target;
-        
+
         String filterName = curator.entityType().getSimpleName() + "_CONSUMER_FILTER";
         curator.enableFilter(filterName, "consumer_id", currentUser.getConsumer().getId());
     }

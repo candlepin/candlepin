@@ -19,13 +19,13 @@ import org.hibernate.criterion.Restrictions;
 /**
  * ProductCertificateCurator
  */
-public class ProductCertificateCurator 
+public class ProductCertificateCurator
     extends AbstractHibernateCurator<ProductCertificate> {
 
     public ProductCertificateCurator() {
         super(ProductCertificate.class);
     }
-    
+
     public ProductCertificate findForProduct(Product product) {
         return (ProductCertificate) currentSession()
             .createCriteria(ProductCertificate.class)

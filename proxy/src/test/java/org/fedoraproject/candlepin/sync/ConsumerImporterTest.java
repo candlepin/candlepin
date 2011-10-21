@@ -36,10 +36,10 @@ import static org.junit.Assert.*;
  * ConsumerImporterTest
  */
 public class ConsumerImporterTest {
-    
+
     private ConsumerImporter importer;
     private ObjectMapper mapper;
-    private OwnerCurator curator; 
+    private OwnerCurator curator;
 
     @Before
     public void setUp() {
@@ -50,12 +50,12 @@ public class ConsumerImporterTest {
 
     @Test
     public void importShouldCreateAValidConsumer() throws IOException, ImporterException {
-        ConsumerDto consumer = 
+        ConsumerDto consumer =
             importer.createObject(mapper, new StringReader("{\"uuid\":\"test-uuid\"}"));
-        
+
         assertEquals("test-uuid", consumer.getUuid());
     }
-    
+
     @Test
     public void importHandlesUnknownPropertiesGracefully() throws Exception {
 
@@ -81,32 +81,32 @@ public class ConsumerImporterTest {
         Owner owner = new Owner();
         ConsumerDto consumer = new ConsumerDto();
         consumer.setUuid("test-uuid");
-        
+
         importer.store(owner, consumer);
-        
+
         assertEquals("test-uuid", owner.getUpstreamUuid());
         verify(curator).merge(owner);
     }
-    
+
     @Test
     public void importConsumerWithSameUuidOnOwnerShouldDoNothing() throws ImporterException {
         Owner owner = new Owner();
         owner.setUpstreamUuid("test-uuid");
         ConsumerDto consumer = new ConsumerDto();
         consumer.setUuid("test-uuid");
-        
+
         importer.store(owner, consumer);
-        
+
         assertEquals("test-uuid", owner.getUpstreamUuid());
     }
-    
+
     @Test(expected = ImporterException.class)
     public void importConsumerWithMismatchedUuidShouldThrowException() throws ImporterException {
         Owner owner = new Owner();
         owner.setUpstreamUuid("another-test-uuid");
         ConsumerDto consumer = new ConsumerDto();
         consumer.setUuid("test-uuid");
-        
+
         importer.store(owner, consumer);
     }
 
@@ -115,7 +115,7 @@ public class ConsumerImporterTest {
         Owner owner = new Owner();
         ConsumerDto consumer = new ConsumerDto();
         consumer.setUuid(null);
-        
+
         importer.store(owner, consumer);
     }
 }

@@ -31,7 +31,7 @@ import com.google.inject.Singleton;
 
 /**
  * ContentTypeHackFilter
- * 
+ *
  * RESTEasy 2.2.1GA requires GET requests with no body to still have a content type set,
  * which at least some of our client stuff (the ruby lib) doesn't do. If you don't have
  * the content type set, you'll end up getting an HTTP 415 response. This servlet filter

@@ -371,7 +371,7 @@ public class CandlepinPoolManager implements PoolManager {
                     pool, 1);
                 ValidationResult result = preHelper.getResult();
 
-                if (!result.isSuccessful()) {
+                if (result.hasErrors() || result.hasWarnings()) {
                     // Just keep the last one around, if we need it
                     failedResult = result;
                     if (log.isDebugEnabled()) {
@@ -460,7 +460,7 @@ public class CandlepinPoolManager implements PoolManager {
             throw new EntitlementRefusedException(result);
         }
 
-        Entitlement e = new Entitlement(pool, consumer, new Date(),
+        Entitlement e = new Entitlement(pool, consumer, pool.getStartDate(),
             pool.getEndDate(), quantity);
         consumer.addEntitlement(e);
         pool.getEntitlements().add(e);

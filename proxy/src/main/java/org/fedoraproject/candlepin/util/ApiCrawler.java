@@ -136,7 +136,7 @@ public class ApiCrawler {
             }
         }
     }
-    
+
     /* Find parameters that are run through the security interceptor.
      * right now this expects them to only be path params (not query params),
      * but you can have more than one per method.
@@ -154,7 +154,7 @@ public class ApiCrawler {
                     pathName = p.value();
                 }
             }
-            
+
             if (hasVerify && pathName != null) {
                 apiCall.verifiedParams.add(pathName);
             }
@@ -183,7 +183,7 @@ public class ApiCrawler {
         public RestApiCall() {
             httpVerbs = new LinkedList<String>();
             queryParams = new LinkedList<ApiParam>();
-            
+
             // these are the names of the security enforced path params
             verifiedParams = new LinkedList<String>();
         }
@@ -219,7 +219,7 @@ public class ApiCrawler {
         public List<String> getVerifiedParams() {
             return verifiedParams;
         }
-        
+
         public List<ApiParam> getQueryParams() {
             return queryParams;
         }

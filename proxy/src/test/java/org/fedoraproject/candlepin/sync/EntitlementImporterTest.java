@@ -78,7 +78,7 @@ public class EntitlementImporterTest {
         verify(curator, never()).merge(testSub);
         verify(sink, atLeastOnce()).emitSubscriptionCreated(testSub);
     }
-    
+
     @Test
     public void testSingleSubscriptionInDbAndListCausesMerge() {
         // given
@@ -101,7 +101,7 @@ public class EntitlementImporterTest {
         verify(curator, never()).delete(testSub);
         verify(sink, atLeastOnce()).emitSubscriptionModified(testSub, testSub);
     }
-    
+
     @Test
     public void testEmptyListCausesDbRemove() {
         // given

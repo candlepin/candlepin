@@ -34,7 +34,7 @@ public class EventSource {
     static final String QUEUE_ADDRESS = "event";
     private ClientSession session;
     private ObjectMapper mapper;
-    
+
     @Inject
     public EventSource(ObjectMapper mapper) {
         ClientSessionFactory factory =  createSessionFactory();
@@ -55,7 +55,7 @@ public class EventSource {
         return HornetQClient.createClientSessionFactory(
             new TransportConfiguration(InVMConnectorFactory.class.getName()));
     }
-    
+
     void shutDown() {
         try {
             session.stop();
@@ -65,7 +65,7 @@ public class EventSource {
             log.warn("Exception while trying to shutdown hornetq", e);
         }
     }
-    
+
     void registerListener(EventListener listener) {
         String queueName = QUEUE_ADDRESS + "." + listener.getClass().getCanonicalName();
         log.debug("registering listener for " + queueName);
@@ -81,7 +81,7 @@ public class EventSource {
                     throw e;
                 }
             }
-            
+
             ClientConsumer consumer = session.createConsumer(queueName);
             consumer.setMessageHandler(new ListenerWrapper(listener, mapper));
         }

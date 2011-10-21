@@ -38,13 +38,13 @@ public class MigrateResourceTest {
 
     private MigrationResource resource;
     private I18n i18n;
-    
+
     @Before
     public void init() {
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         resource = new MigrationResource(i18n);
     }
-    
+
     @Test
     public void create() {
         JobDetail detail = resource.createMigration("owner", "admin",
@@ -56,15 +56,15 @@ public class MigrateResourceTest {
         assertEquals("http://localhost/candlepin", map.get("uri"));
         assertTrue(map.getBoolean("delete"));
     }
-    
+
     @Test(expected = BadRequestException.class)
     public void nullEntity() {
         resource.createMigration(null, "key", "uri", false);
     }
-    
+
     @Test(expected = BadRequestException.class)
     public void invalidEntity() {
         resource.createMigration("badentity", "key", "url", false);
     }
-    
+
 }

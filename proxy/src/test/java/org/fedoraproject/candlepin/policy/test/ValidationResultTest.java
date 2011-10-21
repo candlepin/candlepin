@@ -32,7 +32,7 @@ import org.junit.Test;
  */
 public class ValidationResultTest {
     private ValidationResult vr;
-    
+
     @Before
     public void init() {
         vr = new ValidationResult();
@@ -43,21 +43,21 @@ public class ValidationResultTest {
         assertNotNull(vr.getErrors());
         assertTrue(vr.getErrors().isEmpty());
     }
-    
+
     @Test
     public void addErrorsNull() {
         vr.addError((ValidationError) null);
         assertFalse(vr.getErrors().isEmpty());
         assertTrue(null == vr.getErrors().get(0));
     }
-    
+
     @Test
     public void addErrorString() {
         vr.addError("error1");
         assertFalse(vr.getErrors().isEmpty());
         assertFalse(vr.getErrors().isEmpty());
     }
-    
+
     @Test
     public void addError() {
         ValidationError ve = mock(ValidationError.class);
@@ -65,12 +65,12 @@ public class ValidationResultTest {
         assertFalse(vr.getErrors().isEmpty());
         assertEquals(ve, vr.getErrors().get(0));
     }
-    
+
     @Test
     public void getWarnings() {
         assertTrue(vr.getWarnings().isEmpty());
     }
-    
+
     @Test
     public void addWarning() {
         ValidationWarning vw = mock(ValidationWarning.class);
@@ -78,28 +78,28 @@ public class ValidationResultTest {
         assertFalse(vr.getWarnings().isEmpty());
         assertEquals(vw, vr.getWarnings().get(0));
     }
-    
+
     @Test
     public void addWarningString() {
         vr.addWarning("warning");
         assertFalse(vr.getWarnings().isEmpty());
         assertEquals("warning", vr.getWarnings().get(0).getResourceKey());
     }
-    
+
     @Test
     public void hasErrors() {
         assertFalse(vr.hasErrors());
         vr.addError("error");
         assertTrue(vr.hasErrors());
     }
-    
+
     @Test
     public void hasWarnings() {
         assertFalse(vr.hasWarnings());
         vr.addWarning("warning");
         assertTrue(vr.hasWarnings());
     }
-    
+
     @Test
     public void isSuccessful() {
         assertTrue(vr.isSuccessful());

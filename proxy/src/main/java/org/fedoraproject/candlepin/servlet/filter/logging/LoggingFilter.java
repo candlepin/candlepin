@@ -88,7 +88,7 @@ public class LoggingFilter implements Filter {
      */
     private void logHeaders(LoggingRequestWrapper lRequest) {
         Enumeration<?> headerNames = lRequest.getHeaderNames();
-        StringBuilder builder = 
+        StringBuilder builder =
             new StringBuilder().append("\nRequest: ")
                 .append(lRequest.getMethod()).append("  ")
                 .append(lRequest.getRequestURL());

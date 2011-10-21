@@ -28,16 +28,16 @@ import static org.junit.Assert.assertTrue;
  * MetaExporterTest
  */
 public class MetaExporterTest {
-    
+
     @Test
     public void testMetaExporter() throws IOException {
         ObjectMapper mapper = SyncUtils.getObjectMapper(
             new Config(new HashMap<String, String>()));
-        
+
         MetaExporter meta = new MetaExporter();
-        
+
         StringWriter writer = new StringWriter();
-        
+
         meta.export(mapper, writer, new Meta());
         assertTrue(writer.toString().contains("\"version\":\"0.0.0\""));
     }

@@ -35,7 +35,7 @@ import org.hibernate.annotations.GenericGenerator;
 @Table(name = "cp_rules")
 @Embeddable
 public class Rules extends AbstractHibernateObject{
-    
+
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
@@ -46,7 +46,7 @@ public class Rules extends AbstractHibernateObject{
     @Basic(fetch = FetchType.LAZY)
     @Column(name = "rules_blob")
     private String rules;
-    
+
     /**
      * ctor
      * @param rulesBlob Rules script
@@ -54,21 +54,21 @@ public class Rules extends AbstractHibernateObject{
     public Rules(String rulesBlob) {
         this.rules = rulesBlob;
     }
-    
+
     /**
      * default ctor
      */
     public Rules() {
     }
-    
+
     /**
      * @return rules blob
      */
     public String getRules() {
         return rules;
     }
-    
-    
+
+
     @Override
     public Serializable getId() {
         // TODO Auto-generated method stub

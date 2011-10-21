@@ -25,29 +25,29 @@ import com.google.inject.Inject;
  * ConsumerAuth
  */
 public abstract class ConsumerAuth implements AuthProvider {
-    
+
     private static Logger log = Logger.getLogger(ConsumerAuth.class);
-    
+
     protected ConsumerCurator consumerCurator;
 
     @Inject
     ConsumerAuth(ConsumerCurator consumerCurator) {
         this.consumerCurator = consumerCurator;
     }
-        
+
     public ConsumerPrincipal createPrincipal(String consumerUuid) {
         ConsumerPrincipal principal = null;
-        
+
         if (consumerUuid != null) {
             Consumer consumer = this.consumerCurator.getConsumer(consumerUuid);
 
             if (consumer != null) {
                 principal = new ConsumerPrincipal(consumer);
-                    
+
                 if (log.isDebugEnabled() && principal != null) {
                     log.debug("principal created for consumer '" +
                             principal.getConsumer().getUuid());
-                }                    
+                }
             }
         }
 

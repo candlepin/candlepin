@@ -79,7 +79,7 @@ public class OAuth implements AuthProvider {
 
     /**
      * Attempt to pull a principal off of an oauth signed message.
-     * 
+     *
      * @return the principal if it can be created, nil otherwise
      */
     public Principal getPrincipal(HttpRequest request) {
@@ -111,7 +111,7 @@ public class OAuth implements AuthProvider {
         }
         catch (OAuthProblemException e) {
             log.debug("OAuth Problem", e);
-            
+
             // XXX: for some reason invalid signature (like bad password) has a
             // status code of 200. make it 401 unauthorized instead.
             if (e.getProblem().equals("signature_invalid")) {
@@ -143,7 +143,7 @@ public class OAuth implements AuthProvider {
     /**
      * Get an oauth accessor for a given message. An exception is thrown if no
      * accessor is found.
-     * 
+     *
      * @param msg
      * @return
      */

@@ -95,7 +95,7 @@ public class RulesResource {
                 return Base64.encodeBase64String(rules.getBytes());
             }
             return "";
-        } 
+        }
         catch (CuratorException e) {
             log.error("couldn't read rules file", e);
             throw new ServiceUnavailableException(i18n.tr("couldn't read rules file"));

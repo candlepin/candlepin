@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.pki.impl;
 
 import java.io.IOException;
+import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.cert.CertificateParsingException;
 import java.util.Set;
@@ -32,7 +33,7 @@ public class DefaultSubjectKeyIdentifierWriter implements SubjectKeyIdentifierWr
     @Override
     public DEREncodable getSubjectKeyIdentifier(KeyPair clientKeyPair,
                                                 Set<X509ExtensionWrapper> extensions)
-        throws CertificateParsingException, IOException {
+        throws CertificateParsingException, IOException, InvalidKeyException {
 
         return new SubjectKeyIdentifierStructure(clientKeyPair.getPublic());
     }

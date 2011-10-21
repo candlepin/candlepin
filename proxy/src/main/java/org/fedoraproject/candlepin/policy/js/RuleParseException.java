@@ -20,7 +20,7 @@ package org.fedoraproject.candlepin.policy.js;
 public class RuleParseException extends RuntimeException {
 
     /**
-     * 
+     *
      */
     private static final long serialVersionUID = -1089224966478743419L;
 

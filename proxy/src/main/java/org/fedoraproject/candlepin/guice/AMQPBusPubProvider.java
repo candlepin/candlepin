@@ -55,7 +55,7 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
     private Function<Event, String> adapter;
     private TopicSession session;
     private static org.slf4j.Logger log = LoggerFactory.getLogger(AMQPBusPubProvider.class);
-    
+
     // external events may not have the same name as the internal events
     private Map<String, String> targetToEvent = new HashMap<String, String>() {
         private static final long serialVersionUID = 2L;
@@ -71,7 +71,7 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
         @Named("abc") Function adapter) {
         try {
             configureSslProperties(config);
-            
+
             this.ctx = new InitialContext(buildConfigurationProperties(config));
             ConnectionFactory connectionFactory = (ConnectionFactory) ctx
                 .lookup("qpidConnectionfactory");
@@ -100,20 +100,20 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
         System.setProperty("javax.net.ssl.trustStorePassword",
             config.getString(ConfigProperties.AMQP_TRUSTSTORE_PASSWORD));
     }
-    
+
 
     /**
      * @return A Properties object containing the amqp configuration for jms
      */
     private Properties buildConfigurationProperties(Config config) {
         Properties properties = new Properties();
-        
+
         properties.put("java.naming.factory.initial",
             "org.apache.qpid.jndi.PropertiesFileInitialContextFactory");
         properties.put("connectionfactory.qpidConnectionfactory",
             "amqp://guest:guest@localhost/test?brokerlist='" +
             config.getString(ConfigProperties.AMQP_CONNECT_STRING) + "'");
-        
+
         for (Target target : Target.values()) {
             for (Type type : Type.values()) {
                 // topic name is the internal key used to find the
@@ -150,7 +150,7 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
         Util.closeSafely(this.connection, "AMQPConnection");
         Util.closeSafely(this.ctx, "AMQPContext");
     }
-    
+
     protected final void storeTopicProducer(Type type, Target target,
         Map<Type, TopicPublisher> map) throws JMSException, NamingException {
         String name = getTopicName(type, target);
@@ -179,5 +179,5 @@ public class AMQPBusPubProvider implements Provider<AMQPBusPublisher> {
             storeTopicProducer(type, target, map);
         }
     }
-    
+
 }

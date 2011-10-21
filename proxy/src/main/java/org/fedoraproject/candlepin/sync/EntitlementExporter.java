@@ -24,9 +24,9 @@ import org.fedoraproject.candlepin.model.Entitlement;
  * EntitlementExporter
  */
 public class EntitlementExporter {
-    void export(ObjectMapper mapper, Writer writer, Entitlement entitlement) 
+    void export(ObjectMapper mapper, Writer writer, Entitlement entitlement)
         throws IOException {
-        
+
         mapper.writeValue(writer, entitlement);
     }
 }

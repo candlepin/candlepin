@@ -117,9 +117,9 @@ public class ActivationKeyResource {
         }
         ActivationKey key = findKey(activationKeyId);
         Pool pool = findPool(poolId);
-        
+
         if (pool.getAttributeValue("requires_consumer_type") != null &&
-            pool.getAttributeValue("requires_consumer_type").equals("person") || 
+            pool.getAttributeValue("requires_consumer_type").equals("person") ||
             pool.getProductAttribute("requires_consumer_type") != null &&
             pool.getProductAttribute("requires_consumer_type").getValue()
                   .equals("person")) {
@@ -140,8 +140,8 @@ public class ActivationKeyResource {
         if (quantity > pool.getQuantity()) {
             throw new BadRequestException(
                 i18n.tr("The quantity must not be greater than the total " +
-                    "allowed for the pool"));                        
-        }        
+                    "allowed for the pool"));
+        }
         key.addPool(pool, quantity);
         activationKeyCurator.update(key);
         return pool;
@@ -180,7 +180,7 @@ public class ActivationKeyResource {
 
         activationKeyCurator.delete(key);
     }
-    
+
     private ActivationKey findKey(String activationKeyId) {
         ActivationKey key = activationKeyCurator
         .find(activationKeyId);

@@ -34,7 +34,7 @@ public class CandlepinSerializer extends JsonSerializer<Linkable> {
     public void serialize(Linkable obj, JsonGenerator jg,
         SerializerProvider sp) throws IOException, JsonProcessingException {
         JsonStreamContext context = jg.getOutputContext();
-        
+
         // If serializing a nested object, we just want to serialize ID and href, if the
         // object supports it.
         if (context.inObject()) {
@@ -68,7 +68,7 @@ public class CandlepinSerializer extends JsonSerializer<Linkable> {
                 throw new RuntimeException(e);
             }
         }
-        
+
         // Otherwise, serialize normally:
         else {
             // Assume we only configure this serializer on a mapper that's using

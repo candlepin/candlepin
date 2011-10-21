@@ -61,7 +61,7 @@ public class JobStatus extends AbstractHibernateObject {
         OWNER,
         CONSUMER;
     }
-    
+
     @Id
     private String id;
     @Column(length = 15)
@@ -71,7 +71,7 @@ public class JobStatus extends AbstractHibernateObject {
     private Date finishTime;
     private String result;
     private String principalName;
-    
+
     private TargetType targetType;
     private String targetId;
 
@@ -99,7 +99,7 @@ public class JobStatus extends AbstractHibernateObject {
     private String getTargetId(JobDetail jobDetail) {
         return (String) jobDetail.getJobDataMap().get(TARGET_ID);
     }
-    
+
     public void update(JobExecutionContext context) {
         this.startTime = context.getFireTime();
         long runTime = context.getJobRunTime();
@@ -157,12 +157,12 @@ public class JobStatus extends AbstractHibernateObject {
 
         return targetType.name().toLowerCase();
     }
-    
+
     public String getTargetId() {
         return targetId;
     }
 
-    
+
     public String getStatusPath() {
         return "/jobs/" + this.id;
     }

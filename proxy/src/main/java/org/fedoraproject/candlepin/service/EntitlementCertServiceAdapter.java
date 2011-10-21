@@ -41,11 +41,11 @@ public interface EntitlementCertServiceAdapter {
      * @throws IOException thrown if there's a problem reading the cert.
      * @throws GeneralSecurityException thrown security problem
      */
-    EntitlementCertificate generateEntitlementCert(Entitlement entitlement, 
+    EntitlementCertificate generateEntitlementCert(Entitlement entitlement,
         Subscription sub, Product product)
         throws GeneralSecurityException, IOException;
-    
-    
+
+
     /**
      * Generate an ueber certificate, used to grant access to all content for the owner.
      *
@@ -60,11 +60,11 @@ public interface EntitlementCertServiceAdapter {
      */
     EntitlementCertificate generateUeberCert(Entitlement entitlement,
         Subscription sub, Product product)
-        throws GeneralSecurityException, IOException;    
-    
+        throws GeneralSecurityException, IOException;
+
     /**
      * Revoke certificates for the given entitlement
-     * 
+     *
      * @param e Entitlement for which the certificates are going to be revoked
      */
     void revokeEntitlementCertificates(Entitlement e);

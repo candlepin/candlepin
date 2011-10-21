@@ -21,7 +21,7 @@ package org.fedoraproject.candlepin.auth;
 public class ExternalSystemPrincipal extends SystemPrincipal {
 
     @Override
-    public String getPrincipalName() {       
+    public String getPrincipalName() {
         return "External System";
     }
 

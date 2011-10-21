@@ -129,7 +129,7 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
         securityInterceptor = new TestingInterceptor(se);
 
         bindInterceptor(Matchers.inPackage(Package
-            .getPackage("org.fedoraproject.candlepin.resource")), 
+            .getPackage("org.fedoraproject.candlepin.resource")),
             Matchers.any(), securityInterceptor);
 
         bind(CertificateRevocationListTask.class);

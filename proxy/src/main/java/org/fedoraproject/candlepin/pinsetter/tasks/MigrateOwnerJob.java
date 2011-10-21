@@ -102,7 +102,7 @@ public class MigrateOwnerJob implements Job {
         if (uri == null || "".equals(uri.trim())) {
             return "";
         }
-        
+
         String[] parts = uri.split("://");
         if (parts.length > 1) {
             String[] paths = parts[1].split("/");
@@ -118,7 +118,7 @@ public class MigrateOwnerJob implements Job {
             buf.append("/candlepin");
             uri = buf.toString();
         }
-       
+
         return uri;
     }
 
@@ -137,14 +137,14 @@ public class MigrateOwnerJob implements Job {
         OwnerClient oclient = conn.connect(OwnerClient.class, creds, uri);
 
         log.info("Migrating owner [" + key +
-            "] from candlepin instance running on [" + uri + "]");       
+            "] from candlepin instance running on [" + uri + "]");
         replicateOwner(key, oclient);
 
 
         log.info("Migrating pools for owner [" + key +
             "] from candlepin instance running on [" + uri + "]");
         replicatePools(key, oclient);
-        
+
         log.info("Migrating entitlements for owner [" + key +
             "] from candlepin instance running on [" + uri + "]");
         replicateEntitlements(key, oclient);
@@ -152,12 +152,12 @@ public class MigrateOwnerJob implements Job {
         log.info("Migrating consumers for owner [" + key +
             "] from candlepin instance running on [" + uri + "]");
         replicateConsumers(key, oclient);
-        
+
         ConsumerClient cclient = conn.connect(ConsumerClient.class, creds, uri);
         log.info("Associating consumers to their entitlements for owner [" +
             key + "]");
         associateConsumersToEntitlements(key, cclient);
-        
+
         if (delete) {
             log.info("Removing owner [" + key +
                 "] from candlepin instance running on [" + uri + "]");
@@ -168,13 +168,13 @@ public class MigrateOwnerJob implements Job {
                 "] will not be deleted from candlepin instance running on [" +
                 uri + "]");
         }
-        
+
         log.info("FINISHED - migration of owner [" + key +
             "] from candlepin instance running on [" + uri + "]");
     }
-    
+
     /**
-     * deletes the owner from the <strong>other</strong> Candlepin instance. 
+     * deletes the owner from the <strong>other</strong> Candlepin instance.
      * @param key owner key to be deleted.
      * @param client Candlepin client.
      * @throws WebApplicationException if the other Candlepin instance returns
@@ -203,10 +203,10 @@ public class MigrateOwnerJob implements Job {
         Owner owner = ownerCurator.lookupByKey(key);
         log.debug("owner [" + owner.getDisplayName() + "] has [" +
             owner.getConsumers().size() + "] consumers");
-        
+
         List<Consumer> consumers = consumerCurator.listByOwner(owner);
         for (Consumer c : consumers) {
-            
+
             if (log.isDebugEnabled()) {
                 log.debug("Processing consumer [" + c.getUuid() + "]");
             }
@@ -216,17 +216,17 @@ public class MigrateOwnerJob implements Job {
             if (rsp.getStatus() != Status.OK.getStatusCode()) {
                 throw new WebApplicationException(rsp);
             }
-            
+
             for (Entitlement e : rsp.getEntity()) {
                 Entitlement realent = entCurator.find(e.getId());
                 realent.setConsumer(c);
                 entCurator.merge(realent);
             }
         }
-        
+
         sink.emitOwnerMigrated(owner);
     }
-    
+
     /**
      * Replicates the Owner from the Candlepin pointed to by the client.
      * @param key owner key who should be migrated.
@@ -236,7 +236,7 @@ public class MigrateOwnerJob implements Job {
      */
     private void replicateOwner(String key, OwnerClient client) {
         ClientResponse<Owner> rsp = client.replicateOwner(key);
-        
+
         log.info("call returned - status: [" + rsp.getStatus() + "] reason [" +
             rsp.getResponseStatus() + "]");
 
@@ -246,7 +246,7 @@ public class MigrateOwnerJob implements Job {
 
         Owner owner = rsp.getEntity();
         ownerCurator.replicate(owner);
-        
+
     }
 
     /**
@@ -261,7 +261,7 @@ public class MigrateOwnerJob implements Job {
         if (rsp.getStatus() != Status.OK.getStatusCode()) {
             throw new WebApplicationException(rsp);
         }
-        
+
         List<Pool> pools = rsp.getEntity();
 
         for (Pool pool : pools) {
@@ -285,21 +285,21 @@ public class MigrateOwnerJob implements Job {
     private void replicateConsumers(String key, OwnerClient client) {
         // track down consumers for the owner
         ClientResponse<List<Consumer>> rsp = client.replicateConsumers(key);
-        
+
         if (rsp.getStatus() != Status.OK.getStatusCode()) {
             throw new WebApplicationException(rsp);
         }
-        
+
         for (Consumer consumer : rsp.getEntity()) {
             log.info("importing consumer: " + consumer.toString());
-            
+
             log.info("consumer.id: " + consumer.getId());
             log.info("consumer.entitlements:  " +
                 consumer.getEntitlements().toString());
             log.info("consumer.facts: " + consumer.getFacts().toString());
             log.info("consumer.keyPair: " + consumer.getKeyPair());
             log.info("consumer.idcert: " + consumer.getIdCert());
-             
+
             consumerCurator.replicate(consumer);
         }
     }
@@ -314,11 +314,11 @@ public class MigrateOwnerJob implements Job {
      */
     private void replicateEntitlements(String key, OwnerClient client) {
         ClientResponse<List<Entitlement>> rsp = client.replicateEntitlements(key);
-        
+
         if (rsp.getStatus() != Status.OK.getStatusCode()) {
             throw new WebApplicationException(rsp);
         }
-        
+
         Owner owner = ownerCurator.lookupByKey(key);
         List<Entitlement> ents = rsp.getEntity();
 
@@ -334,12 +334,12 @@ public class MigrateOwnerJob implements Job {
                 entPool.setSourceEntitlement(entCurator.find(ent.getId()));
                 poolCurator.merge(entPool);
             }
-        }        
+        }
     }
 
     /**
      * Creates the JobDetail for this MigrateOwnerJob class. The JobDetail will
-     * get passed in through the execute method via the JobExecutionContext. 
+     * get passed in through the execute method via the JobExecutionContext.
      * @param key owner key who should be migrated.
      * @param uri URI of the Candlepin instance where owner will be pulled.
      * @param delete true if owner should be deleted from the Candlepin
@@ -353,15 +353,17 @@ public class MigrateOwnerJob implements Job {
 
         JobDetail detail = new JobDetail("migrate_owner_" + Util.generateUUID(),
             MigrateOwnerJob.class);
+        // recover the job upon restarts
+        detail.setRequestsRecovery(true);
         JobDataMap map = new JobDataMap();
         map.put("owner_key", key);
         map.put("uri", uri);
         map.put("delete", delete);
-        
+
         detail.setJobDataMap(map);
         return detail;
     }
-    
+
     private static void validateInput(String key, String uri) {
         if (StringUtils.isEmpty(key)) {
             throw new BadRequestException("Invalid owner key");
@@ -370,7 +372,7 @@ public class MigrateOwnerJob implements Job {
         if (StringUtils.isEmpty(uri)) {
             throw new BadRequestException("Invalid URL [" + uri + "]");
         }
-        
+
         try {
             new URL(uri);
         }

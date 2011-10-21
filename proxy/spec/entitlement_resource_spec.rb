@@ -4,7 +4,7 @@ describe 'Entitlement Resource' do
 
   include CandlepinMethods
   include CandlepinScenarios
-  
+
   before do
     @owner = create_owner random_string 'test_owner'
     @monitoring_prod = create_product(name='monitoring')
@@ -16,11 +16,11 @@ describe 'Entitlement Resource' do
 
     @cp.refresh_pools(@owner.key)
 
-    #create consumer 
+    #create consumer
     user = user_client(@owner, 'billy')
     @system = consumer_client(user, 'system6')
-  end 
-  
+  end
+
   it 'should allow entitlement certificate regeneration based on product id' do
     @system.consume_product(@monitoring_prod.id)
     old_ent = @system.list_certificate_serials()[0]
@@ -71,5 +71,5 @@ describe 'Entitlement Resource' do
       # Then
     end.should raise_exception(RestClient::Forbidden)
   end
- 
+
 end

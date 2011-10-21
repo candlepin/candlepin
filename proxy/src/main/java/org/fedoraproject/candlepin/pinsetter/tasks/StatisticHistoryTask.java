@@ -25,7 +25,7 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
 /**
- * StatisticHistoryTask. 
+ * StatisticHistoryTask.
  */
 public class StatisticHistoryTask implements Job {
 

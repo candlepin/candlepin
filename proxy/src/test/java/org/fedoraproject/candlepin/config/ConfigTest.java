@@ -39,7 +39,7 @@ public class ConfigTest {
     public void init() {
         config = new Config();
     }
-    
+
     @Test
     public void testTrimSpaces() {
         TreeMap<String, String> testData = new TreeMap<String, String>();
@@ -285,7 +285,7 @@ public class ConfigTest {
         assertEquals("v2", array[1]);
         assertEquals(" v3", array[2]);
     }
-    
+
     @Test
     public void containsKey() {
         TreeMap<String, String> testdata = new TreeMap<String, String>();

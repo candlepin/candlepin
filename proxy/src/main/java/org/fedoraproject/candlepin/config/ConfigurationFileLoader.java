@@ -27,7 +27,7 @@ import java.util.Properties;
  * ConfigurationFileLoader
  */
 public class ConfigurationFileLoader {
-    
+
     /**
      * @param configurationFile config file to read
      * @return returns the configuration as a Map
@@ -48,7 +48,7 @@ public class ConfigurationFileLoader {
         }
         return new HashMap<String, String>();
     }
-    
+
     @SuppressWarnings("unchecked")
     protected Map<String, String> loadConfiguration(InputStream input) throws IOException {
         Properties loaded = new Properties();

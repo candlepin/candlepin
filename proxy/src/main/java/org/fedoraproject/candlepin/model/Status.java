@@ -30,21 +30,21 @@ public class Status {
     private String version;
     private String release;
     private Boolean standalone;
-   
+
     /**
      * default ctor
      */
     public Status() {
-      
+
     }
-    
+
     public Status(Boolean result, String version, String release, Boolean standalone) {
         this.result = result;
         this.version = version;
         this.release = release;
         this.standalone = standalone;
     }
-    
+
     public Boolean getResult() {
         return result;
     }
@@ -67,7 +67,7 @@ public class Status {
     public void setRelease(String release) {
         this.release = release;
     }
-    
+
     public Boolean getStandalone() {
         return standalone;
     }

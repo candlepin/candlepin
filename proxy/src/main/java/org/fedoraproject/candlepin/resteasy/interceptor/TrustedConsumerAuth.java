@@ -24,14 +24,14 @@ import org.jboss.resteasy.spi.HttpRequest;
 import com.google.inject.Inject;
 
 /**
- * This auth form allows for a consumer id to 
+ * This auth form allows for a consumer id to
  * be passed in a clear http header. This should
  * be used only if the environment is known to be secure
  */
 class TrustedConsumerAuth extends ConsumerAuth {
 
     public static final String CONSUMER_HEADER = "cp-consumer";
-    
+
     @Inject
     TrustedConsumerAuth(ConsumerCurator consumerCurator) {
         super(consumerCurator);

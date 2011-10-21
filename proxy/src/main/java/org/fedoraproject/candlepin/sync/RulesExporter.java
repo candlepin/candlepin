@@ -25,14 +25,14 @@ import com.google.inject.Inject;
  * RulesExporter
  */
 public class RulesExporter {
-    
+
     private RulesCurator rulesCurator;
-    
+
     @Inject
     public RulesExporter(RulesCurator rulesCurator) {
         this.rulesCurator = rulesCurator;
     }
-    
+
     void export(Writer writer) throws IOException {
         writer.write(rulesCurator.getRules().getRules());
     }

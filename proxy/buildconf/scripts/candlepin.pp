@@ -7,13 +7,13 @@
 # FOR A PARTICULAR PURPOSE. You should have received a copy of GPLv2
 # along with this software; if not, see
 # http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
-# 
+#
 # Red Hat trademarks are not licensed under GPLv2+. No permission is
 # granted to use or replicate Red Hat trademarks that are incorporated
 # in this software or its documentation.
 
- 
- 
+
+
 #
 # Creates and installs the Candlepin server. This
 # will probably only work against a clean install
@@ -43,15 +43,15 @@ package {"candlepin-tomcat6":
 #
 # Set up Postrges
 #
-package { [postgresql, ruby-postgres, postgresql-server]: 
-    ensure => installed, 
+package { [postgresql, ruby-postgres, postgresql-server]:
+    ensure => installed,
 }
 
 exec {"initdb":
         command => "service postgresql initdb",
         creates => "/var/lib/pgsql/data/pg_hba.conf",
         path => "/sbin",
-        subscribe => [Package[postgresql-server], Package[postgresql]]            
+        subscribe => [Package[postgresql-server], Package[postgresql]]
 }
 
 file {"/var/lib/pgsql/data/pg_hba.conf":

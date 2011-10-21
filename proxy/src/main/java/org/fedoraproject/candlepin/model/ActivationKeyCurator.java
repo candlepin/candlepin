@@ -33,13 +33,13 @@ public class ActivationKeyCurator extends AbstractHibernateCurator<ActivationKey
         return (List<ActivationKey>) currentSession().createCriteria(ActivationKey.class)
         .add(Restrictions.eq("owner", owner)).list();
     }
-    
+
     @Transactional
     public ActivationKey update(ActivationKey key) {
         save(key);
         return key;
     }
-    
+
     @Transactional
     public ActivationKey lookupForOwner(String keyName, Owner owner) {
         return (ActivationKey) currentSession().createCriteria(ActivationKey.class)

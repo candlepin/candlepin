@@ -77,6 +77,8 @@ public class RefreshPoolsJob implements Job {
         // Give each job a UUID to ensure that it is unique
         JobDetail detail = new JobDetail("refresh_pools_" + Util.generateUUID(),
                 RefreshPoolsJob.class);
+        // recover the job upon restarts
+        detail.setRequestsRecovery(true);
         JobDataMap map = new JobDataMap();
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.OWNER);
         map.put(JobStatus.TARGET_ID, owner.getKey());

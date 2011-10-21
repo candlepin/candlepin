@@ -26,7 +26,7 @@ public class X509CRLEntryWrapper {
 
     /**
      * Instantiates a new simple crl entry.
-     * 
+     *
      * @param serialNumber the serial number
      * @param revocationDate the revocation date
      */
@@ -34,11 +34,11 @@ public class X509CRLEntryWrapper {
         this.serialNumber = serialNumber;
         this.revocationDate = revocationDate;
     }
-    
+
     public BigInteger getSerialNumber() {
         return this.serialNumber;
     }
-    
+
     public Date getRevocationDate() {
         return this.revocationDate;
     }

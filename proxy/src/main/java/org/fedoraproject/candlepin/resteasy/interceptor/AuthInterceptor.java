@@ -104,7 +104,7 @@ public class AuthInterceptor implements PreProcessInterceptor {
 
     /**
      * Interrogates the request and sets the principal for the request.
-     * 
+     *
      * @throws WebApplicationException when no auths result in a valid principal
      * @throws Failure when there is an unkown failure in the code
      * @return the Server Response

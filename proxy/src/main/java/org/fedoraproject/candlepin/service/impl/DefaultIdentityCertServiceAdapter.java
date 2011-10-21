@@ -53,7 +53,7 @@ public class DefaultIdentityCertServiceAdapter implements
     public DefaultIdentityCertServiceAdapter(PKIUtility pki,
         IdentityCertificateCurator identityCertCurator,
         KeyPairCurator keyPairCurator,
-        CertificateSerialCurator serialCurator, 
+        CertificateSerialCurator serialCurator,
         @Named("endDateGenerator") Function endDtGen) {
         this.pki = pki;
         this.idCertCurator = identityCertCurator;
@@ -120,14 +120,14 @@ public class DefaultIdentityCertServiceAdapter implements
         // We need the sequence generated id before we create the EntitlementCertificate,
         // otherwise we could have used cascading create
         serialCurator.create(serial);
-        
+
         String dn = createDN(consumer);
         IdentityCertificate identityCert = new IdentityCertificate();
         KeyPair keyPair = keyPairCurator.getConsumerKeyPair(consumer);
         X509Certificate x509cert = pki.createX509Certificate(dn, null,
             startDate, endDate, keyPair, BigInteger.valueOf(serial.getId()),
             consumer.getName());
-        
+
         identityCert.setCert(new String(pki.getPemEncoded(x509cert)));
         identityCert.setKey(new String(pki.getPemEncoded(keyPair.getPrivate())));
         identityCert.setSerial(serial);

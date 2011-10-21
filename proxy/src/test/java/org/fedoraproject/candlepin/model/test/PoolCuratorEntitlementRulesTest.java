@@ -107,12 +107,12 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
         poolCurator.create(pool);
 
-        consumer.setFact("cpu.sockets", "4");
+        consumer.setFact("cpu.cpu_socket(s)", "4");
         List<Pool> results =
             poolCurator.listByConsumer(consumer);
         assertEquals(0, results.size());
     }
-    
+
     @Test
     public void concurrentCreationOfEntitlementsShouldWorkIfUnderMaxMemberLimit()
         throws Exception {
@@ -122,8 +122,8 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
         newProduct.addAttribute(new ProductAttribute("multi-entitlement", "yes"));
         productCurator.create(newProduct);
 
-        Pool consumerPool = createPoolAndSub(owner, newProduct, 
-            numAvailEntitlements, TestUtil.createDate(2009, 11, 30), 
+        Pool consumerPool = createPoolAndSub(owner, newProduct,
+            numAvailEntitlements, TestUtil.createDate(2009, 11, 30),
             TestUtil.createDate(2050, 11, 30));
         consumerPool = poolCurator.create(consumerPool);
 
@@ -145,7 +145,7 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
         Product newProduct = TestUtil.createProduct();
         productCurator.create(newProduct);
 
-        Pool consumerPool = createPoolAndSub(owner, newProduct, numAvailEntitlements, 
+        Pool consumerPool = createPoolAndSub(owner, newProduct, numAvailEntitlements,
             TestUtil.createDate(2009, 11, 30), TestUtil.createDate(2050, 11, 30));
         poolCurator.create(consumerPool);
 
@@ -161,7 +161,7 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
     @Override
     protected Module getGuiceOverrideModule() {
         return new AbstractModule() {
-            
+
             @Override
             protected void configure() {
                 bind(Enforcer.class).to(EntitlementRules.class);

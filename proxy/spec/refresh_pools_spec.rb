@@ -28,7 +28,7 @@ describe 'Refresh Pools' do
   it 'creates the correct number of pools' do
     # ------- Given ---------
     owner = create_owner 'some-owner'
-        
+
     # Create 6 subscriptions to different products
     6.times do |i|
       name = random_string("product-#{i}")

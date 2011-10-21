@@ -43,7 +43,7 @@ public class AMQPBusPublisher implements EventListener{
     private Map<Target, Map<Type, TopicPublisher>> producerMap;
 
     @Inject
-    public AMQPBusPublisher(TopicSession session, 
+    public AMQPBusPublisher(TopicSession session,
             @Named("eventToQpidAdapter")Function<Event, String> amqpbea,
             Map<Target, Map<Type, TopicPublisher>> producerMap) {
         this.session = session;

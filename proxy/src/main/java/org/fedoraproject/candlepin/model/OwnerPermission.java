@@ -48,13 +48,13 @@ public class OwnerPermission extends AbstractHibernateObject implements Permissi
     @JoinColumn(nullable = false)
     @Index(name = "cp_permission_owner_fk_idx")
     private Owner owner;
-    
+
     @ManyToOne
     @ForeignKey(name = "fk_permission_role")
     @JoinColumn(nullable = false)
     @Index(name = "cp_permission_role_fk_idx")
     private Role role;
-    
+
     private Access access;
 
     public OwnerPermission(Owner owner, Access access) {
@@ -100,7 +100,7 @@ public class OwnerPermission extends AbstractHibernateObject implements Permissi
                 return true;
             }
         }
-        
+
         // If asked to verify access to an object that does not implement Owned,
         // as far as this permission goes, we probably have to deny access.
         return false;

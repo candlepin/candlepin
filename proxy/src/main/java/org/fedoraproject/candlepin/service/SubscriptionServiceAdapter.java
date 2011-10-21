@@ -36,7 +36,7 @@ public interface SubscriptionServiceAdapter {
      * @return all subscriptions for the given owner.
      */
     List<Subscription> getSubscriptions(Owner owner);
-    
+
     /**
      * List all subscriptions for the given owner and product, which have
      * changed or been created since the given date.
@@ -49,17 +49,17 @@ public interface SubscriptionServiceAdapter {
 
     /**
      * List all subscriptions for the given owner and product.
-     * 
+     *
      * This method may do "fuzzy" product matching, where the subscription returned
      * may actually be for a different product than requested, but would provide
      * access to it.
-     * 
+     *
      * @param owner Owner of the subscriptions.
      * @param productId product ID desired.
      * @return all subscriptions for the given owner which provide this product.
      */
     List<Subscription> getSubscriptions(Owner owner, String productId);
-    
+
     /**
      * List all subscriptions which have been changed or created since the
      * given date.
@@ -68,33 +68,33 @@ public interface SubscriptionServiceAdapter {
      * given date.
      */
     List<Subscription> getSubscriptionsSince(Date sinceDate);
-    
+
     /**
      * Lookup a specific subscription.
      * @param subscriptionId id of the subscription to return.
      * @return Subscription whose id matches subscriptionId
      */
     Subscription getSubscription(String subscriptionId);
-    
+
     /**
      * Return all subscriptions.
      * @return all subscriptions.
      */
     List<Subscription> getSubscriptions();
-    
+
     /**
-     * Checks to see if the customer has subscription terms that need to be accepted 
+     * Checks to see if the customer has subscription terms that need to be accepted
      * @param owner
      * @return false if no subscriptions a runtime exception will a localized message
      * if there are terms to be accepted
      */
     boolean hasUnacceptedSubscriptionTerms(Owner owner);
-    
-    
+
+
     /**
      * A pool for a subscription id has been created. Send the activation email
      * if necessary
-     * 
+     *
      * @param subscriptionId
      */
     void sendActivationEmail(String subscriptionId);
@@ -117,24 +117,24 @@ public interface SubscriptionServiceAdapter {
      */
     void activateSubscription(Consumer consumer, String email,
             String emailLocale);
-    
+
     /**
-     * Create the given subscription. 
-     * 
-     * Raise not implemented exception if you do not wish to support this 
+     * Create the given subscription.
+     *
+     * Raise not implemented exception if you do not wish to support this
      * in your subscription service.
-     * 
+     *
      * @param s Subscription to create.
      * @return Newly created Subscription.
      */
     Subscription createSubscription(Subscription s);
-    
+
     /**
      * Delete the given subscription.
-     * 
-     * Raise not implemented exception if you do not wish to support this 
+     *
+     * Raise not implemented exception if you do not wish to support this
      * in your subscription service.
-     * 
+     *
      * @param s Subscription to destroy.
      */
     void deleteSubscription(Subscription s);

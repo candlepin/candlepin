@@ -42,17 +42,12 @@ import java.util.Set;
  */
 public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
-    @Inject
-    private EntitlementCurator entitlementCurator;
-    @Inject
-    private ConsumerTypeCurator consumerTypeCurator;
-    @Inject
-    private Config config;
-    @Inject
-    private I18n i18n;
+    @Inject private EntitlementCurator entitlementCurator;
+    @Inject private ConsumerTypeCurator consumerTypeCurator;
+    @Inject private Config config;
+    @Inject private I18n i18n;
     private static final int NAME_LENGTH = 250;
-
-    // private static Logger log = Logger.getLogger(ConsumerCurator.class);
+    //private static Logger log = Logger.getLogger(ConsumerCurator.class);
 
     protected ConsumerCurator() {
         super(Consumer.class);
@@ -95,10 +90,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             ReplicationMode.EXCEPTION);
         this.currentSession().replicate(idCert, ReplicationMode.EXCEPTION);
 
-        // for (Consumer childConsumer : consumer.getChildConsumers()) {
-        // consumer.setChildConsumers(childConsumers)
-        // }
-
         this.currentSession().replicate(consumer, ReplicationMode.EXCEPTION);
 
         return consumer;
@@ -127,7 +118,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @EnforceAccessControl
     public Consumer findByVirtUuid(String uuid) {
         Consumer result = null;
-        List<Consumer> options = (List<Consumer>) currentSession()
+        List<Consumer> options = currentSession()
             .createCriteria(Consumer.class)
             .addOrder(Order.desc("updated"))
             .add(Restrictions.sqlRestriction("{alias}.id in (select cp_consumer_id " +

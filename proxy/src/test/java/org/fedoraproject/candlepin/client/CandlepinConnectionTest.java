@@ -40,14 +40,14 @@ public class CandlepinConnectionTest {
         OwnerClient client = conn.connect(OwnerClient.class, creds,
             "http://localhost:8080/candlepin/");
         ClientResponse<Owner> resp = client.replicateOwner("admin");
-        
+
         assertNotNull(resp);
         assertEquals(200, resp.getStatus());
         Owner o = resp.getEntity();
         assertNotNull(o);
         System.out.println(o);
     }
-    
+
     @Ignore("needs mock connection to test with")
     @Test
     public void doesnotexist() {
@@ -56,7 +56,7 @@ public class CandlepinConnectionTest {
         OwnerClient client = conn.connect(OwnerClient.class, creds,
             "http://localhost:8080/candlepin/");
         ClientResponse<Owner> resp = client.replicateOwner("doesnotexist");
-        
+
         assertNotNull(resp);
         assertEquals(404, resp.getStatus());
     }

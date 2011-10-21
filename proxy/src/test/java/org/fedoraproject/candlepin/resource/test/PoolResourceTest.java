@@ -40,7 +40,7 @@ import org.junit.Test;
  * PoolResourceTest
  */
 public class PoolResourceTest extends DatabaseTestFixture {
-    
+
     private Owner owner1;
     private Owner owner2;
     private Pool pool1;
@@ -56,20 +56,20 @@ public class PoolResourceTest extends DatabaseTestFixture {
     private static final int START_YEAR = 2000;
     private static final int END_YEAR = 3000;
     private Principal adminPrincipal;
-    
+
     @Before
     public void setUp() {
         owner1 = createOwner();
         owner2 = createOwner();
         ownerCurator.create(owner1);
         ownerCurator.create(owner2);
-        
+
         product1 = new Product(PRODUCT_CPULIMITED, PRODUCT_CPULIMITED);
         product2 = TestUtil.createProduct();
         productCurator.create(product1);
         productCurator.create(product2);
-        
-        
+
+
         pool1 = createPoolAndSub(owner1, product1, 500L,
              TestUtil.createDate(START_YEAR, 1, 1), TestUtil.createDate(END_YEAR, 1, 1));
         pool2 = createPoolAndSub(owner1, product2, 500L,
@@ -79,11 +79,11 @@ public class PoolResourceTest extends DatabaseTestFixture {
         poolCurator.create(pool1);
         poolCurator.create(pool2);
         poolCurator.create(pool3);
-        
+
         poolResource = injector.getInstance(PoolResource.class);
-        
+
         // Consumer system with too many cpu cores:
-        
+
         failConsumer = TestUtil.createConsumer(createOwner());
         failConsumer.setFact("cpu_cores", "4");
         consumerTypeCurator.create(failConsumer.getType());
@@ -94,7 +94,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
         passConsumer.setFact("cpu_cores", "2");
         consumerTypeCurator.create(passConsumer.getType());
         consumerCurator.create(passConsumer);
-        
+
         foreignConsumer = TestUtil.createConsumer(owner2);
         foreignConsumer.setFact("cpu_cores", "2");
         consumerTypeCurator.create(foreignConsumer.getType());
@@ -103,7 +103,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
         // Run most of these tests as an owner admin:
         adminPrincipal = setupPrincipal(owner1, Access.ALL);
     }
-    
+
     @Test(expected = ForbiddenException.class)
     public void testUserCannotListAllPools() {
         List<Pool> pools = poolResource.list(null, null, null, false, null, adminPrincipal);
@@ -116,10 +116,10 @@ public class PoolResourceTest extends DatabaseTestFixture {
             setupAdminPrincipal("superadmin"));
         assertEquals(3, pools.size());
     }
-   
+
     @Test
     public void testListForOrg() {
-        List<Pool> pools = poolResource.list(owner1.getId(), null, null, false, null, 
+        List<Pool> pools = poolResource.list(owner1.getId(), null, null, false, null,
             adminPrincipal);
         assertEquals(2, pools.size());
         Principal p = setupPrincipal(owner2, Access.ALL);
@@ -130,10 +130,10 @@ public class PoolResourceTest extends DatabaseTestFixture {
     @Ignore
     @Test
     public void testListForProduct() {
-        List<Pool> pools = poolResource.list(null, null, product1.getId(), false, null, 
+        List<Pool> pools = poolResource.list(null, null, product1.getId(), false, null,
             adminPrincipal);
         assertEquals(2, pools.size());
-        pools = poolResource.list(null, null, product2.getId(), false, null, 
+        pools = poolResource.list(null, null, product2.getId(), false, null,
             adminPrincipal);
         assertEquals(1, pools.size());
     }
@@ -144,7 +144,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
             null, adminPrincipal);
         assertEquals(1, pools.size());
     }
-    
+
     @Test(expected = ForbiddenException.class)
     public void testCannotListPoolsInAnotherOwner() {
         List<Pool> pools = poolResource.list(owner2.getId(), null, product2.getId(),
@@ -154,26 +154,26 @@ public class PoolResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testListConsumerAndProductFiltering() {
-        List<Pool> pools = poolResource.list(null, passConsumer.getUuid(), 
+        List<Pool> pools = poolResource.list(null, passConsumer.getUuid(),
             product1.getId(), false, null, adminPrincipal);
         assertEquals(1, pools.size());
     }
-    
+
     @Test(expected = ForbiddenException.class)
     public void testCannotListPoolsForConsumerInAnotherOwner() {
-        List<Pool> pools = poolResource.list(null, failConsumer.getUuid(), 
+        List<Pool> pools = poolResource.list(null, failConsumer.getUuid(),
             product1.getId(), false, null, adminPrincipal);
         assertEquals(0, pools.size());
     }
-    
-    // Filtering by both a consumer and an owner makes no sense (we should use the 
+
+    // Filtering by both a consumer and an owner makes no sense (we should use the
     // owner of that consumer), so make sure we error if someone tries.
     @Test(expected = BadRequestException.class)
     public void testListBlocksConsumerOwnerFiltering() {
-        poolResource.list(owner1.getId(), passConsumer.getUuid(), 
+        poolResource.list(owner1.getId(), passConsumer.getUuid(),
             product1.getId(), false, null, adminPrincipal);
     }
-    
+
     @Test
     public void testListConsumerFiltering() {
         setupPrincipal(new ConsumerPrincipal(passConsumer));
@@ -181,32 +181,32 @@ public class PoolResourceTest extends DatabaseTestFixture {
             null, adminPrincipal);
         assertEquals(2, pools.size());
     }
-    
+
     @Test(expected = NotFoundException.class)
     public void testListNoSuchOwner() {
         poolResource.list("-1", null, null, false, null, adminPrincipal);
     }
-    
+
     @Test(expected = NotFoundException.class)
     public void testListNoSuchConsumer() {
         poolResource.list(null, "blah", null, false, null, adminPrincipal);
     }
-    
+
     @Test
     public void testListNoSuchProduct() {
         assertEquals(0, poolResource.list(owner1.getId(), null, "boogity", false,
             null, adminPrincipal).size());
     }
-    
+
     @Test(expected = ForbiddenException.class)
     public void ownerAdminCannotListAnotherOwnersPools() {
-        List<Pool> pools = poolResource.list(owner1.getId(), null, null, false, null, 
+        List<Pool> pools = poolResource.list(owner1.getId(), null, null, false, null,
             adminPrincipal);
         assertEquals(2, pools.size());
-        
+
         Principal anotherPrincipal = setupPrincipal(owner2, Access.ALL);
         securityInterceptor.enable();
-        
+
         poolResource.list(owner1.getId(), null, null, false, null, anotherPrincipal);
     }
 
@@ -215,7 +215,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
     public void testConsumerCannotListPoolsForAnotherOwnersConsumer() {
         Principal p = setupPrincipal(new ConsumerPrincipal(foreignConsumer));
         securityInterceptor.enable();
-        
+
         poolResource.list(null, passConsumer.getUuid(), null, false, null, p);
     }
 
@@ -244,7 +244,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
     public void testActiveOnDate() {
         // Need to be a super admin to do this:
         String activeOn = new Integer(START_YEAR + 1).toString();
-        List<Pool> pools = poolResource.list(null, null, null, false, activeOn, 
+        List<Pool> pools = poolResource.list(null, null, null, false, activeOn,
             setupAdminPrincipal("superadmin"));
         assertEquals(3, pools.size());
 

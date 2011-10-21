@@ -27,7 +27,7 @@ public class ValidationError {
     public ValidationError(String resourceKey) {
         this.resourceKey = resourceKey;
     }
-   
+
     /**
      * Return the value of the resource key.
      * @return the value of the resource key.

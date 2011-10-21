@@ -1425,6 +1425,43 @@
                 "warning_period": 90,
                 "management_enabled" : 1
             }
+        },
+
+        {
+            "name": "Awesome OS with zero sockets defined",
+            "id": "awesomeos-zero-sockets",
+            "version": "6.1",
+            "arch": "ppc64",
+            "type": "MKT",
+            "provided_products": [
+                "37062",
+                "37060"
+            ],
+            "attributes": {
+                "sockets": 0,
+                "warning_period": 30,
+                "management_enabled" : 1,
+                "support_level" : "Standard",
+                "support_type" : "L1-L3"
+            }
+        },
+
+        {
+            "name": "Awesome OS with no sockets defined",
+            "id": "awesomeos-no-sockets",
+            "version": "6.1",
+            "arch": "ppc64",
+            "type": "MKT",
+            "provided_products": [
+                "37062",
+                "37060"
+            ],
+            "attributes": {
+                "warning_period": 30,
+                "management_enabled" : 1,
+                "support_level" : "Standard",
+                "support_type" : "L1-L3"
+            }
         }
     ]
 }

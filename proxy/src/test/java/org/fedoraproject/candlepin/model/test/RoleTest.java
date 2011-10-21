@@ -32,9 +32,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class RoleTest extends DatabaseTestFixture {
-    
+
     private Owner owner;
-    
+
     @Before
     public void setUp() throws Exception {
         owner = createOwner();
@@ -42,41 +42,41 @@ public class RoleTest extends DatabaseTestFixture {
 
     @Test
     public void testCreate() throws Exception {
-        
+
         Role r = createRole(owner);
-        
+
         Role lookedUp = roleCurator.find(r.getId());
         assertEquals(1, lookedUp.getPermissions().size());
         assertEquals(1, lookedUp.getUsers().size());
     }
-    
+
     private Role createRole(Owner o) {
         User user = new User(RandomStringUtils.random(5), "pass");
         userCurator.create(user);
-        
+
         OwnerPermission p = new OwnerPermission(o, Access.ALL);
-        
+
         Role r = new Role("role" + TestUtil.randomInt());
         r.addPermission(p);
         r.addUser(user);
         roleCurator.create(r);
         return r;
     }
-    
+
     @Test
     public void testListForOwner() {
         Owner o2 = createOwner();
-        
+
         Role r1 = createRole(owner);
         createRole(o2);
-        
+
         List<Role> roles = roleCurator.listForOwner(owner);
         assertEquals(1, roles.size());
         assertEquals(r1, roles.get(0));
         assertEquals(1, roles.get(0).getUsers().size());
         assertEquals(1, roles.get(0).getPermissions().size());
     }
-    
+
     @Test
     public void testAddPermission() {
         Role role = new Role("myrole");
@@ -87,10 +87,10 @@ public class RoleTest extends DatabaseTestFixture {
         OwnerPermission perm = role.getPermissions().iterator().next();
         assertNotNull(perm.getId());
     }
-    
+
 //    @Test
 //    public void testNoDuplicatePermissionsInSameRole() {
 //        fail();
 //    }
-    
+
 }

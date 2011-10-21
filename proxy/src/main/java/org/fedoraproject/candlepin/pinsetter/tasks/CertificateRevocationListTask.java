@@ -43,18 +43,18 @@ import java.util.UUID;
  * CertificateRevocationListTask.
  */
 public class CertificateRevocationListTask implements Job {
-    
+
     public static final String DEFAULT_SCHEDULE = "0 0 12 * * ?";
-    
+
     private Config config;
     private CrlGenerator crlGenerator;
     private PKIUtility pkiUtility;
-    
+
     private static Logger log = Logger.getLogger(CertificateRevocationListTask.class);
 
     /**
      * Instantiates a new certificate revocation list task.
-     * 
+     *
      * @param crlGenerator the generator
      * @param conf the conf
      */
@@ -137,5 +137,5 @@ public class CertificateRevocationListTask implements Job {
         }
 
     }
-    
+
 }

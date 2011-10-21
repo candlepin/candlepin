@@ -36,10 +36,10 @@ pool2 = cp.list_pools(:owner => owner['id'], :product => product2['id'])[0]
 
 org_admin_username = random_string("orgadmin")
 org_admin_password = 'password'
-cp.create_user(owner['key'], org_admin_username, org_admin_password)
+cp.create_user(org_admin_username, org_admin_password, true)
 org_admin_cp = Candlepin.new(org_admin_username, org_admin_password)
 consumer = org_admin_cp.register(random_string('dummyconsumer'), "candlepin",
-  nil, {}, nil)
+  nil, {}, nil, owner['key'])
 consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'],
   HOST, PORT)
 consumer_cp.consume_pool(pool1['id'], {:quantity => 20})

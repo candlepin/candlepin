@@ -33,11 +33,11 @@ public class ProductExporterTest {
     public void testProductExport() throws IOException {
         ObjectMapper mapper = SyncUtils.getObjectMapper(
             new Config(new HashMap<String, String>()));
-        
+
         ProductExporter exporter = new ProductExporter();
-        
+
         StringWriter writer = new StringWriter();
-        
+
         Product product = new Product("my-id", "product name");
         exporter.export(mapper, writer, product);
         String s = writer.toString();

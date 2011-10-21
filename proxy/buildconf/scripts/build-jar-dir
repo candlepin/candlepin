@@ -43,7 +43,7 @@ do_find_jar() {
 
 unset _LINK_CMD
 unset _IVY_XML
-unset lib_directory 
+unset lib_directory
 unset repository
 unset jar_list
 unset debug

@@ -91,7 +91,7 @@ public class ConsumerType extends AbstractHibernateObject {
 
     /**
      * ConsumerType constructor with label
-     * 
+     *
      * @param labelIn to set
      */
     public ConsumerType(String labelIn) {

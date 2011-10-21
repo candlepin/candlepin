@@ -25,7 +25,7 @@ public class PropertyUtil {
 
     private PropertyUtil() {
     }
-    
+
     /**
      * Returns the value of the static property named field of the given Class
      * as a String. Returns null if the field is not static.
@@ -37,7 +37,7 @@ public class PropertyUtil {
      */
     public static String getStaticPropertyAsString(Class clazz, String field)
         throws NoSuchFieldException {
-        
+
         String value = null;
         try {
             Field f = clazz.getDeclaredField(field);
@@ -56,10 +56,10 @@ public class PropertyUtil {
         catch (IllegalAccessException iae) {
             throw new RuntimeException(iae);
         }
-        
+
         return value;
     }
-    
+
     /**
      * Returns the value of the static property named field of the given Class
      * as a String. Returns null if the field is not static.
@@ -72,7 +72,7 @@ public class PropertyUtil {
      */
     public static String getStaticPropertyAsString(String cname, String field)
         throws NoSuchFieldException, ClassNotFoundException {
-        
+
         Class clazz = Class.forName(cname);
         return PropertyUtil.getStaticPropertyAsString(clazz, field);
     }

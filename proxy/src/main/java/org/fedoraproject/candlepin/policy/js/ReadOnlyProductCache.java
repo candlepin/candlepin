@@ -27,12 +27,12 @@ public class ReadOnlyProductCache {
 
     private Map<String, ReadOnlyProduct> products;
     private ProductServiceAdapter productAdapter;
-    
+
     public ReadOnlyProductCache(ProductServiceAdapter productAdapter) {
         products = new HashMap<String, ReadOnlyProduct>();
         this.productAdapter = productAdapter;
     }
-    
+
     public ReadOnlyProduct getProductById(String productId) {
         if (!products.containsKey(productId)) {
             products.put(productId,
@@ -40,7 +40,7 @@ public class ReadOnlyProductCache {
         }
         return products.get(productId);
     }
-    
+
     public void addProducts(Set<ReadOnlyProduct> products) {
         for (ReadOnlyProduct product : products) {
             if (!this.products.containsKey(product.getId())) {

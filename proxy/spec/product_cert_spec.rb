@@ -41,7 +41,7 @@ describe 'Product Certificate' do
 
   def get_oid(product, label)
     oid = @@oid_map[label]
-    
+
     "1.3.6.1.4.1.2312.9.1.#{product.id}.#{oid}"
   end
 end

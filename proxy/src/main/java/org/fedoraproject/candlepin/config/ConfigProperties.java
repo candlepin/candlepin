@@ -51,7 +51,7 @@ public class ConfigProperties {
     public static final String AUDIT_LOG_VERBOSE = "candlepin.audit.log_verbose";
 
     public static final String PRETTY_PRINT = "candlepin.pretty_print";
-    public static final String REVOKE_ENTITLEMENT_IN_FIFO_ORDER = 
+    public static final String REVOKE_ENTITLEMENT_IN_FIFO_ORDER =
                                       "candlepin.entitlement.revoke.order.fifo";
     public static final String ACTIVATION_DEBUG_PREFIX =
                                       "candlepin.subscription.activation.debug_prefix";

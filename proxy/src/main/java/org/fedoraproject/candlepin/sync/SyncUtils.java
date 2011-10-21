@@ -42,13 +42,13 @@ class SyncUtils {
             }
         }
     }
-    
+
     static ObjectMapper getObjectMapper(Config config) {
         ObjectMapper mapper = new ObjectMapper();
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
         AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
         AnnotationIntrospector pair = new AnnotationIntrospector.Pair(primary, secondary);
-        
+
         mapper.getSerializationConfig().setAnnotationIntrospector(pair);
         mapper.getDeserializationConfig().setAnnotationIntrospector(pair);
         mapper.getSerializationConfig().set(
@@ -72,7 +72,7 @@ class SyncUtils {
         }
 
         if (!tmp.mkdirs()) {
-            throw new IOException("Could not create temp directory: " + 
+            throw new IOException("Could not create temp directory: " +
                 tmp.getAbsolutePath());
         }
 
