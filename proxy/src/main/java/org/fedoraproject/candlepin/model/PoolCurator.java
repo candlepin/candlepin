@@ -249,14 +249,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 .add(Restrictions.eq("restrictedToUsername", username)));
     }
 
-    @Transactional
-    @EnforceAccessControl
-    public List<Pool> listPoolsRestrictedToParentConsumer(String uuid) {
-        return listByCriteria(
-            DetachedCriteria.forClass(Pool.class)
-                .add(Restrictions.eq("restrictedToParentConsumer", uuid)));
-    }
-
     @SuppressWarnings("unchecked")
     public List<Entitlement> retrieveFreeEntitlementsOfPool(Pool existingPool,
         boolean lifo) {
