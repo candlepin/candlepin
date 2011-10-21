@@ -81,10 +81,10 @@ public class EnforcerDispatcher implements Enforcer {
             return manifestEnforcer.preUnbind(consumer, entitlementPool);
         }
 
-        return jsEnforcer.preUnbind(consumer, entitlementPool);    
+        return jsEnforcer.preUnbind(consumer, entitlementPool);
     }
 
-    public PoolHelper postUnbind(Consumer consumer, PoolHelper postEntHelper, 
+    public PoolHelper postUnbind(Consumer consumer, PoolHelper postEntHelper,
                 Entitlement ent) {
         if (consumer.getType().isManifest()) {
             return manifestEnforcer.postUnbind(consumer, postEntHelper, ent);

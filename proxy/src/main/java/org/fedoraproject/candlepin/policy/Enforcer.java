@@ -73,8 +73,7 @@ public interface Enforcer {
      */
     Map<Pool, Integer> selectBestPools(Consumer consumer, String[] productIds,
         List<Pool> pools, ComplianceStatus compliance) throws RuleExecutionException;
-    
-    
+
     /**
      * Run pre-entitlement checks.
      *

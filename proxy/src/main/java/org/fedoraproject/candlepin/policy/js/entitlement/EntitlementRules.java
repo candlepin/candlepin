@@ -67,7 +67,7 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         this.attributesToRules = null;
         this.config = config;
         this.consumerCurator = consumerCurator;
-        
+
         log = Logger.getLogger(EntitlementRules.class);
         rulesLogger =
             Logger.getLogger(EntitlementRules.class.getCanonicalName() + ".rules");
@@ -77,7 +77,7 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
     @Override
     public PreEntHelper preEntitlement(
         Consumer consumer, Pool entitlementPool, Integer quantity) {
-        
+
         jsRules.reinitTo("entitlement_name_space");
         rulesInit();
 
@@ -133,17 +133,17 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
     @Override
     public PoolHelper postEntitlement(
             Consumer consumer, PoolHelper postEntHelper, Entitlement ent) {
-        
+
         jsRules.reinitTo("entitlement_name_space");
         rulesInit();
-        
+
         runPostEntitlement(postEntHelper, ent);
         return postEntHelper;
     }
 
     public Map<Pool, Integer> selectBestPools(Consumer consumer, String[] productIds,
         List<Pool> pools, ComplianceStatus compliance) {
-        
+
         jsRules.reinitTo("entitlement_name_space");
         rulesInit();
 
@@ -242,7 +242,7 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
             return null;
         }
     }
-    
+
     public PreUnbindHelper preUnbind(Consumer consumer, Pool entitlementPool) {
         jsRules.reinitTo("unbind_name_space");
         rulesInit();

@@ -37,8 +37,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * ManifestEntitlementRules - Exists primarily to allow consumers of manifest type 
- * to have alternate rules checks. 
+ * ManifestEntitlementRules - Exists primarily to allow consumers of manifest type
+ * to have alternate rules checks.
  */
 public class ManifestEntitlementRules extends AbstractEntitlementRules implements Enforcer {
 
@@ -55,7 +55,7 @@ public class ManifestEntitlementRules extends AbstractEntitlementRules implement
         this.attributesToRules = null;
         this.config = config;
         this.consumerCurator = consumerCurator;
-        
+
         log = Logger.getLogger(ManifestEntitlementRules.class);
         rulesLogger =
             Logger.getLogger(ManifestEntitlementRules.class.getCanonicalName() + ".rules");
@@ -71,7 +71,7 @@ public class ManifestEntitlementRules extends AbstractEntitlementRules implement
         runPostEntitlement(postEntHelper, ent);
         return postEntHelper;
     }
-    
+
     @Override
     public PreEntHelper preEntitlement(
             Consumer consumer, Pool entitlementPool, Integer quantity) {
@@ -100,13 +100,13 @@ public class ManifestEntitlementRules extends AbstractEntitlementRules implement
         }
         return best;
     }
-    
+
     public PreUnbindHelper preUnbind(Consumer consumer, Pool entitlementPool) {
         jsRules.reinitTo("unbind_name_space");
         rulesInit();
         return new PreUnbindHelper(consumerCurator);
     }
-    
+
     public PoolHelper postUnbind(Consumer c, PoolHelper postHelper, Entitlement ent) {
         jsRules.reinitTo("unbind_name_space");
         rulesInit();

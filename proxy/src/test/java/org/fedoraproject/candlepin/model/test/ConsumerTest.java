@@ -443,7 +443,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         lookedUp = consumerCurator.find(consumer.getId());
         assertEquals(1, lookedUp.getInstalledProducts().size());
     }
-    
+
     @Test
     public void testGuests() throws Exception {
         Consumer lookedUp = consumerCurator.find(consumer.getId());

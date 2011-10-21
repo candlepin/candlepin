@@ -75,11 +75,10 @@ public class JsRules {
             }
         }
     }
-    
+
     public void reinitTo(String namespace) {
         initialized = false;
         init(namespace);
-        
     }
 
     Object unwrapReturnValue(Object result) {

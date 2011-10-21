@@ -136,7 +136,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     // WARNING: can't initialize to a default value here, we need to be able to see
     // if it was specified on an incoming update, so it must be null if no value came in.
     private Boolean autoheal;
-    
+
     public Consumer(String name, String userName, Owner owner, ConsumerType type) {
         this();
 

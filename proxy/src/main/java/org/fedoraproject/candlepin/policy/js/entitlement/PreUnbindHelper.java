@@ -63,7 +63,7 @@ public class PreUnbindHelper {
      * be registered to Candlepin.
      *
      * @param guestId Virt guest ID to search for a host for.
-     * 
+     *
      * @return Consumer
      */
     public Consumer getHostConsumer(String guestId) {

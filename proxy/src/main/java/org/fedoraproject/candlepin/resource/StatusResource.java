@@ -50,8 +50,8 @@ public class StatusResource {
     private String release = "Unknown";
 
     private boolean standalone = true;
-    
-    private RulesCurator rulesCurator;    
+
+    private RulesCurator rulesCurator;
     private Config config;
 
     @Inject

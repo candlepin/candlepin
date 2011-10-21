@@ -118,7 +118,7 @@ public class ManifestEntitlementRulesTest extends DatabaseTestFixture {
         ConsumerType type = mock(ConsumerType.class);
         Pool pool = mock(Pool.class);
         Product product = mock(Product.class);
-        
+
         when(e.getPool()).thenReturn(pool);
         when(e.getConsumer()).thenReturn(c);
         when(c.getType()).thenReturn(type);
@@ -127,7 +127,7 @@ public class ManifestEntitlementRulesTest extends DatabaseTestFixture {
         when(productAdapter.getProductById(eq("testProd"))).thenReturn(product);
         when(product.getAttributes()).thenReturn(new HashSet<ProductAttribute>());
         when(pool.getAttributes()).thenReturn(new HashSet<PoolAttribute>());
-               
+
         assertEquals(ph, enforcer.postEntitlement(c, ph, e));
     }
 

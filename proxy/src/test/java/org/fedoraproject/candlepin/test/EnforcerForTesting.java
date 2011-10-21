@@ -58,12 +58,12 @@ public class EnforcerForTesting implements Enforcer {
         }
         return best;
     }
-    
+
     public PreUnbindHelper preUnbind(Consumer consumer, Pool entitlementPool) {
-        return new PreUnbindHelper(null); 
+        return new PreUnbindHelper(null);
     }
 
-    public PoolHelper postUnbind(Consumer consumer, PoolHelper postEntHelper, 
+    public PoolHelper postUnbind(Consumer consumer, PoolHelper postEntHelper,
             Entitlement ent) {
         return postEntHelper;
     }

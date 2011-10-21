@@ -55,7 +55,7 @@ public class StatusTest {
         status.setRelease("3");
         assertEquals("3", status.getRelease());
     }
-    
+
     @Test
     public void standalone() {
         assertEquals(Boolean.TRUE, status.getStandalone());

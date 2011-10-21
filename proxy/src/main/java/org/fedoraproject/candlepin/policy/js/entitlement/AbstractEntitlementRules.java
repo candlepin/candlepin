@@ -50,7 +50,6 @@ public abstract class AbstractEntitlementRules implements Enforcer {
 
     protected Logger log = null;
     protected Logger rulesLogger = null;
-    
     protected DateSource dateSource;
 
     protected ProductServiceAdapter prodAdapter;
@@ -202,7 +201,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
             throw new RuleExecutionException(ex);
         }
     }
-    
+
     protected void callPostUnbindRules(List<Rule> matchingRules) {
         for (Rule rule : matchingRules) {
             jsRules.invokeRule(POST_PREFIX + rule.getRuleName());
@@ -314,7 +313,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
             return "'" + ruleName + "':" + order + ":" + attributes.toString();
         }
     }
-    
+
     protected void runPostEntitlement(PoolHelper postHelper, Entitlement ent) {
         Pool pool = ent.getPool();
         Consumer c = ent.getConsumer();
@@ -343,7 +342,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         invokeGlobalPostEntitlementRule(args);
         callPostEntitlementRules(matchingRules);
     }
-    
+
     protected void runPostUnbind(PoolHelper postHelper, Entitlement ent) {
         Pool pool = ent.getPool();
         Consumer c = ent.getConsumer();
