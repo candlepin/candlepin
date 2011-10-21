@@ -101,14 +101,12 @@ public class RoleResource {
         //Only operate here if you only have 1 ID to pull,
         //but if the user passes in an ID in the body of the JSON
         //and that ID is NOT equal to what the ID in the URL is, then throw an error
-        if (role.getId() == null || (role.getId() != null && roleId.equals(role.getId()))) {
-            Role existingRole = lookupRole(roleId);
-            existingRole.setName(role.getName());
-            return this.userService.updateRole(existingRole);
+        if (role.getId() != null && !roleId.equals(role.getId())) {
+            throw new BadRequestException(i18n.tr("Role ID does not match path."));
         }
-        else {
-          throw new BadRequestException(i18n.tr("Role ID does not match path."));
-        }
+        Role existingRole = lookupRole(roleId);
+        existingRole.setName(role.getName());
+        return this.userService.updateRole(existingRole);
     }
 
     /**
