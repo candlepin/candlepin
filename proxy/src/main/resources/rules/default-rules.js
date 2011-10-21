@@ -130,6 +130,12 @@ function hasNoInstalledOverlap(pool, compliance) {
 }
 
 function architectureMatches(product, consumer) {
+    // Non-system consumers without an architecture fact can pass this rule
+    // regardless what arch the product requires.
+    if (!consumer.hasFact("uname.machine") && !consumer.getType().equals("system")) {
+        return true;
+    }
+
     var supportedArches = [];
     var archString = product.getAttribute('arch');
     if (archString != null) {

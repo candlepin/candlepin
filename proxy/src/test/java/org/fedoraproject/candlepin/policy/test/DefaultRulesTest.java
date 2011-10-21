@@ -229,6 +229,24 @@ public class DefaultRulesTest {
     }
 
     @Test
+    public void missingConsumerArchitectureShouldNotGenerateWarningForNonSystem() {
+
+        String nonSystemType = "somethingElse";
+        Product product = new Product(productId, "A product for testing");
+        product.addAttribute(new ProductAttribute("arch", "x86_64"));
+        product.setAttribute("requires_consumer_type", nonSystemType);
+        Pool pool = TestUtil.createPool(owner, product);
+        pool.setId("fakeid" + TestUtil.randomInt());
+        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+        consumer.setType(new ConsumerType(nonSystemType));
+
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
+            .getResult();
+        assertFalse(result.hasErrors());
+        assertFalse(result.hasWarnings());
+    }
+
+    @Test
     public void architectureMatches() {
         Pool pool = setupArchTest("arch", "x86_64", "uname.machine", "x86_64");
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
