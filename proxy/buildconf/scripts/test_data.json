@@ -1431,7 +1431,7 @@
             "name": "Awesome OS with zero sockets defined",
             "id": "awesomeos-zero-sockets",
             "version": "6.1",
-            "arch": "ppc64",
+            "arch": "ALL",
             "type": "MKT",
             "provided_products": [
                 "37062",
@@ -1450,7 +1450,7 @@
             "name": "Awesome OS with no sockets defined",
             "id": "awesomeos-no-sockets",
             "version": "6.1",
-            "arch": "ppc64",
+            "arch": "ALL",
             "type": "MKT",
             "provided_products": [
                 "37062",
