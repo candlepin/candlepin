@@ -93,8 +93,10 @@ public class SubscriptionResource {
 
     @GET
     @Path("/{subscription_id}/cert")
-    @Produces(MediaType.APPLICATION_JSON)
-    public SubscriptionsCertificate getSubCert(
+    // cpc passes up content-type on all calls, make sure we don't 415 it
+    @Consumes(MediaType.TEXT_PLAIN)
+    @Produces({ MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN })
+    public String getSubCert(
         @PathParam("subscription_id") String subscriptionId) {
         Subscription sub = verifyAndFind(subscriptionId);
         SubscriptionsCertificate subCert = sub.getCertificate();
@@ -102,7 +104,7 @@ public class SubscriptionResource {
             throw new BadRequestException(
                 i18n.tr("no certificate for subscription {0}", subscriptionId));
         }
-        return subCert;
+        return subCert.getCert();
     }
 
     /**
