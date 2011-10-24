@@ -400,17 +400,17 @@ var Entitlement = {
 
     post_user_license: function() {
         if (!consumer.isManifest()) {
-	        // Default to using the same product from the pool.
-	        var productId = pool.getProductId();
-	
-	        // Check if the sub-pool should be for a different product:
-	        if (attributes.containsKey("user_license_product")) {
-	            productId = attributes.get("user_license_product");
-	        }
-	
-	        // Create a sub-pool for this user
-	        post.createUserRestrictedPool(productId, pool,
-	                                      attributes.get("user_license"));
+            // Default to using the same product from the pool.
+            var productId = pool.getProductId();
+
+            // Check if the sub-pool should be for a different product:
+            if (attributes.containsKey("user_license_product")) {
+                productId = attributes.get("user_license_product");
+            }
+
+            // Create a sub-pool for this user
+            post.createUserRestrictedPool(productId, pool,
+                                          attributes.get("user_license"));
         }
     },
 
@@ -426,36 +426,36 @@ var Entitlement = {
     post_virt_limit: function() {
         if (attributes.containsKey("virt_limit")) {
             if (standalone) {
-	            var productId = pool.getProductId();
-		        var virt_limit = attributes.get("virt_limit");
-		        if ('unlimited'.equals(virt_limit)) {
-		            post.createHostRestrictedPool(productId, pool, 'unlimited');
-		        } else {
-		            var virt_quantity = parseInt(virt_limit) * entitlement.getQuantity();
-		            if (virt_quantity > 0) {
-		                post.createHostRestrictedPool(productId, pool,
-		                        virt_quantity.toString());
-		            }
-		        }
-		    }
-		    else {
-		        if (consumer.isManifest()) {
-			        var virt_limit = attributes.get("virt_limit");
-			        if (!'unlimited'.equals(virt_limit)) {
-			            var virt_quantity = parseInt(virt_limit) * entitlement.getQuantity();
-			            if (virt_quantity > 0) {
-			                var pools = post.lookupBySubscriptionId(pool.getSubscriptionId());
-				            for (var idex = 0 ; idex < pools.size(); idex++ ) {
-				                var derivedPool = pools.get(idex);
-            	                if (!derivedPool.getId().equals(pool.getId())) {
-				                    post.updatePoolQuantity(derivedPool, -1 * virt_quantity);
-				                }
-				            }
-				        }
-			        }
-			    }
-		    }
-	    }
+                var productId = pool.getProductId();
+                var virt_limit = attributes.get("virt_limit");
+                if ('unlimited'.equals(virt_limit)) {
+                    post.createHostRestrictedPool(productId, pool, 'unlimited');
+                } else {
+                    var virt_quantity = parseInt(virt_limit) * entitlement.getQuantity();
+                    if (virt_quantity > 0) {
+                        post.createHostRestrictedPool(productId, pool,
+                                virt_quantity.toString());
+                    }
+                }
+            }
+            else {
+                if (consumer.isManifest()) {
+                    var virt_limit = attributes.get("virt_limit");
+                    if (!'unlimited'.equals(virt_limit)) {
+                        var virt_quantity = parseInt(virt_limit) * entitlement.getQuantity();
+                        if (virt_quantity > 0) {
+                            var pools = post.lookupBySubscriptionId(pool.getSubscriptionId());
+                            for (var idex = 0 ; idex < pools.size(); idex++ ) {
+                                var derivedPool = pools.get(idex);
+                                if (!derivedPool.getId().equals(pool.getId())) {
+                                    post.updatePoolQuantity(derivedPool, -1 * virt_quantity);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     },
 
     pre_architecture: function() {
@@ -962,22 +962,22 @@ var Unbind = {
     },
     
     post_virt_limit: function() {
-	    if (attributes.containsKey("virt_limit")) {
-	        if (!standalone && consumer.isManifest()) {
-		        var virt_limit = attributes.get("virt_limit");
-		        if (!'unlimited'.equals(virt_limit)) {
-		            var virt_quantity = parseInt(virt_limit) * entitlement.getQuantity();
-		            if (virt_quantity > 0) {
-		                var pools = post.lookupBySubscriptionId(pool.getSubscriptionId());
-			            for (var idex = 0 ; idex < pools.size(); idex++ ) {
-			                var derivedPool = pools.get(idex);
-			                if (!derivedPool.getId().equals(pool.getId())) {
-			                    post.updatePoolQuantity(derivedPool, virt_quantity);
-			                }
-			            }
-			        }
-		        }
-		    }
-	    }
+        if (attributes.containsKey("virt_limit")) {
+            if (!standalone && consumer.isManifest()) {
+                var virt_limit = attributes.get("virt_limit");
+                if (!'unlimited'.equals(virt_limit)) {
+                    var virt_quantity = parseInt(virt_limit) * entitlement.getQuantity();
+                    if (virt_quantity > 0) {
+                        var pools = post.lookupBySubscriptionId(pool.getSubscriptionId());
+                        for (var idex = 0 ; idex < pools.size(); idex++ ) {
+                            var derivedPool = pools.get(idex);
+                            if (!derivedPool.getId().equals(pool.getId())) {
+                                post.updatePoolQuantity(derivedPool, virt_quantity);
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
