@@ -37,9 +37,9 @@ public class StatusTest {
 
     @Test
     public void result() {
-        assertTrue(status.getResult().booleanValue());
+        assertTrue(status.getResult());
         status.setResult(Boolean.FALSE);
-        assertFalse(status.getResult().booleanValue());
+        assertFalse(status.getResult());
     }
 
     @Test

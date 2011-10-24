@@ -62,7 +62,7 @@ public class StatusResourceTest {
         assertNotNull(s);
         assertEquals("${release}", s.getRelease());
         assertEquals("${version}", s.getVersion());
-        assertTrue(s.getResult().booleanValue());
+        assertTrue(s.getResult());
     }
 
     @Test
@@ -76,7 +76,7 @@ public class StatusResourceTest {
         assertNotNull(s);
         assertEquals("Unknown", s.getRelease());
         assertEquals("Unknown", s.getVersion());
-        assertTrue(s.getResult().booleanValue());
+        assertTrue(s.getResult());
     }
 
     @Test
@@ -92,6 +92,6 @@ public class StatusResourceTest {
         assertNotNull(s);
         assertEquals("${release}", s.getRelease());
         assertEquals("${version}", s.getVersion());
-        assertFalse(s.getResult().booleanValue());
+        assertFalse(s.getResult());
     }
 }

@@ -26,10 +26,10 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 public class Status {
 
-    private Boolean result;
+    private boolean result;
     private String version;
     private String release;
-    private Boolean standalone;
+    private boolean standalone;
 
     /**
      * default ctor
@@ -45,11 +45,11 @@ public class Status {
         this.standalone = standalone;
     }
 
-    public Boolean getResult() {
+    public boolean getResult() {
         return result;
     }
 
-    public void setResult(Boolean result) {
+    public void setResult(boolean result) {
         this.result = result;
     }
     public String getVersion() {
@@ -68,11 +68,11 @@ public class Status {
         this.release = release;
     }
 
-    public Boolean getStandalone() {
+    public boolean getStandalone() {
         return standalone;
     }
 
-    public void setStandalone(Boolean standalone) {
+    public void setStandalone(boolean standalone) {
         this.standalone = standalone;
     }
 }
