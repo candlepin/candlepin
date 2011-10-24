@@ -25,6 +25,7 @@ import org.fedoraproject.candlepin.policy.js.JsRules;
 import org.fedoraproject.candlepin.policy.js.ReadOnlyConsumer;
 import org.fedoraproject.candlepin.policy.js.ReadOnlyProduct;
 import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
+import org.fedoraproject.candlepin.policy.js.compliance.ComplianceStatus;
 import org.fedoraproject.candlepin.policy.js.pool.PoolHelper;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.util.DateSource;
@@ -372,4 +373,53 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         callPostUnbindRules(matchingRules);
     }
 
+    public PoolHelper postEntitlement(
+            Consumer consumer, PoolHelper postEntHelper, Entitlement ent) {
+
+        jsRules.reinitTo("entitlement_name_space");
+        rulesInit();
+
+        runPostEntitlement(postEntHelper, ent);
+        return postEntHelper;
+    }
+
+    public PreUnbindHelper preUnbind(Consumer consumer, Pool entitlementPool) {
+        jsRules.reinitTo("unbind_name_space");
+        rulesInit();
+        return new PreUnbindHelper(consumerCurator);
+    }
+
+    public PoolHelper postUnbind(Consumer c, PoolHelper postHelper, Entitlement ent) {
+        jsRules.reinitTo("unbind_name_space");
+        rulesInit();
+        runPostUnbind(postHelper, ent);
+        return postHelper;
+    }
+
+    public PreEntHelper preEntitlement(
+            Consumer consumer, Pool entitlementPool, Integer quantity) {
+
+        jsRules.reinitTo("entitlement_name_space");
+        rulesInit();
+
+        return new PreEntHelper(1, null);
+    }
+
+    public Map<Pool, Integer> selectBestPools(Consumer consumer, String[] productIds,
+        List<Pool> pools, ComplianceStatus compliance)
+        throws RuleExecutionException {
+
+        jsRules.reinitTo("entitlement_name_space");
+        rulesInit();
+
+        if (pools.isEmpty()) {
+            return null;
+        }
+
+        Map<Pool, Integer> best = new HashMap<Pool, Integer>();
+        for (Pool pool : pools) {
+            best.put(pool, 1);
+        }
+        return best;
+    }
 }

@@ -131,16 +131,6 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
     }
 
     @Override
-    public PoolHelper postEntitlement(
-            Consumer consumer, PoolHelper postEntHelper, Entitlement ent) {
-
-        jsRules.reinitTo("entitlement_name_space");
-        rulesInit();
-
-        runPostEntitlement(postEntHelper, ent);
-        return postEntHelper;
-    }
-
     public Map<Pool, Integer> selectBestPools(Consumer consumer, String[] productIds,
         List<Pool> pools, ComplianceStatus compliance) {
 
@@ -241,18 +231,5 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         else {
             return null;
         }
-    }
-
-    public PreUnbindHelper preUnbind(Consumer consumer, Pool entitlementPool) {
-        jsRules.reinitTo("unbind_name_space");
-        rulesInit();
-        return new PreUnbindHelper(consumerCurator);
-    }
-
-    public PoolHelper postUnbind(Consumer c, PoolHelper postHelper, Entitlement ent) {
-        jsRules.reinitTo("unbind_name_space");
-        rulesInit();
-        runPostUnbind(postHelper, ent);
-        return postHelper;
     }
 }
