@@ -619,6 +619,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         consumer.removeEntitlement(entitlement);
+
         // Look for pools referencing this entitlement as their source
         // entitlement and clean them up as well
         for (Pool p : poolCurator.listBySourceEntitlement(entitlement)) {
@@ -695,6 +696,7 @@ public class CandlepinPoolManager implements PoolManager {
      * @param adjust the long amount to adjust (+/-)
      */
     public void updatePoolQuantity(Pool pool, long adjust) {
+        pool = poolCurator.lockAndLoad(pool);
         long newCount = pool.getQuantity() + adjust;
         if (newCount < 0) {
             newCount = 0;
