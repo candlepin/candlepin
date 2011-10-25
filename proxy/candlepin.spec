@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.4.22
+Version: 0.4.23
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -130,6 +130,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Tue Oct 25 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.23-1
+- don't use bouncycastle for now (jesusr@redhat.com)
+
 * Tue Oct 25 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.22-1
 - Alter testdata to make zero socket/no socket more easily testable.
   (cduryee@redhat.com)
