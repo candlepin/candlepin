@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.4.21
+Version: 0.4.22
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -130,6 +130,103 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Tue Oct 25 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.22-1
+- Alter testdata to make zero socket/no socket more easily testable.
+  (cduryee@redhat.com)
+- return a string for the subscrpition cert, to make it easier for thumbslug to
+  parse (cduryee@redhat.com)
+- Remove prints in rspec tests. (dgoodwin@redhat.com)
+- Made the logging conditional. (wpoteat@redhat.com)
+- bonus pool quantity adjustments were made synchronous. (wpoteat@redhat.com)
+- 747399: Allow non-system consumers with no arch fact to pass arch rule.
+  (dgoodwin@redhat.com)
+- Add a test script for bonus pool unbind. (dgoodwin@redhat.com)
+- Change to primitive boolean for status (wpoteat@redhat.com)
+- Changes from code review for EntitlementRules refactoring. (wpoteat@redhat.com)
+- Whitespace cleanup in default rules. (dgoodwin@redhat.com)
+- Cleaning up role update code (tsmart@redhat.com)
+- Cleaning up role put/edit to no longer require the ID to be passed into the
+  body of the JSON (tsmart@redhat.com)
+- Adding a comment. (dgoodwin@redhat.com)
+- Added GuestId event messages to EventAdapterImpl (mstead@redhat.com)
+- Adding httpcode doclet to document what http status codes are returned by a
+  call. (awood@redhat.com)
+- Remove an unused method. (dgoodwin@redhat.com)
+- Fix intermittent ConsumerCuratorTest failure. (dgoodwin@redhat.com)
+- Expose subscription certs via candlepin API, for use by thumbslug.
+  (cduryee@redhat.com)
+- Fixed problem where wrong host was being looked up when checking host change.
+  (mstead@redhat.com)
+- Cleanup dead code. (dgoodwin@redhat.com)
+- Fix host list pools bug. (dgoodwin@redhat.com)
+- updates to virt and sub-pool tests for allowing entitlement revocation when
+  there are sub-pools (wpoteat@redhat.com)
+- More virt spec testing. (dgoodwin@redhat.com)
+- Add virt spec tests. (dgoodwin@redhat.com)
+- Revoke bonus entitlements when source entitlement is unbound
+  (wpoteat@redhat.com)
+- Fix host restricted pool binds. (dgoodwin@redhat.com)
+- Correction to the method call order (wpoteat@redhat.com)
+- Cleanup: Updating logs and comments. (mstead@redhat.com)
+- Moved guestId add/removed event sending into checkForGuestUpdate
+  (mstead@redhat.com)
+- Correction to post_virt_only in unbind. Status reports standalone true/false.
+  (wpoteat@redhat.com)
+- 743704: do not allow autobind to bind to pools with warnings
+  (cduryee@redhat.com)
+- Prefer virt_only + requires_host pools over just virt_only.
+  (dgoodwin@redhat.com)
+- 746035: set entitlement start dates to start date of pool
+  (alikins@redhat.com)
+- spec to check that entitlements get created with pool start date
+  (dgoodwin@redhat.com)
+- Post unbind reduction of bonus pools (wpoteat@redhat.com)
+- 717650: enable recovery on specific async jobs. (jesusr@redhat.com)
+- 744259: Entitlement quantity was missing in the entitlement certificate.
+  (awood@redhat.com)
+- fix bouncycastle jar name: bcprov *NOT* bcproj (jesusr@redhat.com)
+- 735354: dropdb in deploy script fails on first run (jesusr@redhat.com)
+- Revoke guest entitlements when host changes. (mstead@redhat.com)
+- Decrement derived pool when parent pool is included in manifest.
+  (wpoteat@redhat.com)
+- Don't enforce requires_host in hosted. (dgoodwin@redhat.com)
+- Fix refresh pools for standalone. (dgoodwin@redhat.com)
+- Port virt_limit.spec to Java unit tests. (dgoodwin@redhat.com)
+- Unit Tests for ConsumerCurator host/guest. (wpoteat@redhat.com)
+- More comment cleanup. (dgoodwin@redhat.com)
+- Remove TODO + comment cleanup. (dgoodwin@redhat.com)
+- Adding consumer curator TODOs. (dgoodwin@redhat.com)
+- Code cleanup. (dgoodwin@redhat.com)
+- Ensure that facts, products and guestIds can be updated at same time.
+  (mstead@redhat.com)
+- Send events on updateConsumer for each guestId that is added/removed from
+  consumer. (mstead@redhat.com)
+- Spec tests for /consumers/{uuid}/host and /consumers/{uuid}/guests
+  (wpoteat@redhat.com)
+- Remove virt_limit spec. (dgoodwin@redhat.com)
+- Remove parent restricted column in cp_pool. (dgoodwin@redhat.com)
+- Fixing broken spec tests due to guestsIds rename. (mstead@redhat.com)
+- More guestsIds to guestIds fixes. (dgoodwin@redhat.com)
+- Modification to the use of a sql query on get consumer by system uuid
+  (wpoteat@redhat.com)
+- Fix setGuestIds method name. (dgoodwin@redhat.com)
+- Fix issues with virt host restricted pools. (dgoodwin@redhat.com)
+- Drop virt_limit_spec.rb. (dgoodwin@redhat.com)
+- Update to allow /host and /guests to function (wpoteat@redhat.com)
+- Fixed broken test (mstead@redhat.com)
+- Added test cases for PUT /consumers/{uuid} updating guestIds. (mstead@redhat.com)
+- Removing unneeded add/remove guest functions in candlepin_api (mstead@redhat.com)
+- Use host lookup in rules when checking virt_only pools. (dgoodwin@redhat.com)
+- Incorrect name for accessor (wpoteat@redhat.com)
+- Removed old parent/child relationship (wpoteat@redhat.com)
+- Expose host consumer lookup to rules. (dgoodwin@redhat.com)
+- Restore if null set checks in Consumer. (dgoodwin@redhat.com)
+- refactor for rules (wpoteat@redhat.com)
+- Update for unit tests (wpoteat@redhat.com)
+- Refactor ConsumerGuest to GuestId. (dgoodwin@redhat.com)
+- Addition (wpoteat@redhat.com)
+- First checkin for virt-guest handling (wpoteat@redhat.com)
+
 * Thu Oct 13 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.21-1
 - respin to right tag
 
