@@ -673,8 +673,8 @@ public class ConsumerResource {
 
                 // Revoke any entitlements related to the other host.
                 if (log.isDebugEnabled()) {
-                    log.debug("Guest was associated with another host. Revoking entitlements" +
-                        " related to host: " + host.getName());
+                    log.debug("Guest was associated with another host. Revoking " +
+                        "entitlements related to host: " + host.getName());
                 }
                 revokeGuestEntitlementsMatchingHost(host, guest);
             }

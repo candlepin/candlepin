@@ -15,15 +15,9 @@
 package org.fedoraproject.candlepin.policy.js.entitlement;
 
 import org.fedoraproject.candlepin.config.Config;
-import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
-import org.fedoraproject.candlepin.model.Entitlement;
-import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.policy.Enforcer;
 import org.fedoraproject.candlepin.policy.js.JsRules;
-import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
-import org.fedoraproject.candlepin.policy.js.compliance.ComplianceStatus;
-import org.fedoraproject.candlepin.policy.js.pool.PoolHelper;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.util.DateSource;
 
@@ -31,10 +25,6 @@ import com.google.inject.Inject;
 
 import org.apache.log4j.Logger;
 import org.xnap.commons.i18n.I18n;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * ManifestEntitlementRules - Exists primarily to allow consumers of manifest type
