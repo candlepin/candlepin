@@ -14,19 +14,22 @@
  */
 package org.fedoraproject.candlepin.policy.js.pool;
 
-import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.policy.PoolRules;
-import com.google.inject.Inject;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.exceptions.IseException;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Subscription;
+import org.fedoraproject.candlepin.policy.PoolRules;
 import org.fedoraproject.candlepin.policy.js.JsRules;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
+
+import com.google.inject.Inject;
+
+import org.apache.log4j.Logger;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -38,13 +41,15 @@ public class JsPoolRules implements PoolRules {
     private JsRules jsRules;
     private PoolManager poolManager;
     private ProductServiceAdapter productAdapter;
+    private Config config;
 
     @Inject
     public JsPoolRules(JsRules jsRules, PoolManager poolManager,
-        ProductServiceAdapter productAdapter) {
+        ProductServiceAdapter productAdapter, Config config) {
         this.jsRules = jsRules;
         this.poolManager = poolManager;
         this.productAdapter = productAdapter;
+        this.config = config;
         jsRules.init("pool_name_space");
     }
 
@@ -55,6 +60,7 @@ public class JsPoolRules implements PoolRules {
         args.put("attributes", jsRules.getFlattenedAttributes(sub.getProduct(), null));
         args.put("helper", new PoolHelper(this.poolManager,
             this.productAdapter, null));
+        args.put("standalone", config.standalone());
         List<Pool> poolsCreated = null;
         try {
             poolsCreated = jsRules.invokeMethod("createPools", args);
@@ -76,6 +82,7 @@ public class JsPoolRules implements PoolRules {
         args.put("log", log);
         args.put("helper", new PoolHelper(this.poolManager,
             this.productAdapter, null));
+        args.put("standalone", config.standalone());
         List<PoolUpdate> poolsUpdated = null;
         try {
             poolsUpdated = jsRules.invokeMethod("updatePools", args);

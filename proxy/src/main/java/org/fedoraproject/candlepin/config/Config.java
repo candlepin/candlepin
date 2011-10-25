@@ -165,6 +165,20 @@ public class Config {
         return getBoolean(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES);
     }
 
+    /**
+     * Use to make decisions on behavior. Hosted vs. Standalone
+     *
+     * Default is Standalone
+     * For hosted use candlepin.conf:
+     * candlepin.standalone = false
+     *
+     * @return if system is standalone.
+     */
+    public boolean standalone() {
+        return getBoolean(ConfigProperties.STANDALONE);
+    }
+
+
     protected Map<String, String> loadProperties() {
         try {
             return new ConfigurationFileLoader().loadProperties(this.configFile);

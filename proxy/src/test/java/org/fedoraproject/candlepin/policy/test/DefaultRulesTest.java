@@ -17,9 +17,50 @@ package org.fedoraproject.candlepin.policy.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.controller.PoolManager;
+import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerCurator;
+import org.fedoraproject.candlepin.model.ConsumerType;
+import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.Owner;
+import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.PoolAttribute;
+import org.fedoraproject.candlepin.model.Product;
+import org.fedoraproject.candlepin.model.ProductAttribute;
+import org.fedoraproject.candlepin.model.ProvidedProduct;
+import org.fedoraproject.candlepin.model.Rules;
+import org.fedoraproject.candlepin.model.RulesCurator;
+import org.fedoraproject.candlepin.model.Subscription;
+import org.fedoraproject.candlepin.policy.Enforcer;
+import org.fedoraproject.candlepin.policy.PoolRules;
+import org.fedoraproject.candlepin.policy.ValidationResult;
+import org.fedoraproject.candlepin.policy.js.JsRules;
+import org.fedoraproject.candlepin.policy.js.JsRulesProvider;
+import org.fedoraproject.candlepin.policy.js.ReadOnlyProductCache;
+import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
+import org.fedoraproject.candlepin.policy.js.compliance.ComplianceStatus;
+import org.fedoraproject.candlepin.policy.js.entitlement.EntitlementRules;
+import org.fedoraproject.candlepin.policy.js.entitlement.ManifestEntitlementRules;
+import org.fedoraproject.candlepin.policy.js.pool.JsPoolRules;
+import org.fedoraproject.candlepin.policy.js.pool.PoolHelper;
+import org.fedoraproject.candlepin.service.ProductServiceAdapter;
+import org.fedoraproject.candlepin.test.TestDateUtil;
+import org.fedoraproject.candlepin.test.TestUtil;
+import org.fedoraproject.candlepin.util.DateSourceImpl;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.xnap.commons.i18n.I18nFactory;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -34,36 +75,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import org.fedoraproject.candlepin.model.Consumer;
-import org.fedoraproject.candlepin.model.ConsumerType;
-import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
-import org.fedoraproject.candlepin.model.Entitlement;
-import org.fedoraproject.candlepin.model.Owner;
-import org.fedoraproject.candlepin.model.Pool;
-import org.fedoraproject.candlepin.model.Product;
-import org.fedoraproject.candlepin.model.ProductAttribute;
-import org.fedoraproject.candlepin.model.ProvidedProduct;
-import org.fedoraproject.candlepin.model.Rules;
-import org.fedoraproject.candlepin.model.RulesCurator;
-import org.fedoraproject.candlepin.policy.Enforcer;
-import org.fedoraproject.candlepin.policy.ValidationResult;
-import org.fedoraproject.candlepin.policy.js.JsRules;
-import org.fedoraproject.candlepin.policy.js.JsRulesProvider;
-import org.fedoraproject.candlepin.policy.js.ReadOnlyProductCache;
-import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
-import org.fedoraproject.candlepin.policy.js.compliance.ComplianceStatus;
-import org.fedoraproject.candlepin.policy.js.entitlement.EntitlementRules;
-import org.fedoraproject.candlepin.policy.js.pool.PoolHelper;
-import org.fedoraproject.candlepin.service.ProductServiceAdapter;
-import org.fedoraproject.candlepin.test.TestDateUtil;
-import org.fedoraproject.candlepin.test.TestUtil;
-import org.fedoraproject.candlepin.util.DateSourceImpl;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.xnap.commons.i18n.I18nFactory;
-
 /**
  * DefaultRulesTest
  */
@@ -73,11 +84,17 @@ public class DefaultRulesTest {
     private RulesCurator rulesCurator;
     @Mock
     private ProductServiceAdapter prodAdapter;
+    @Mock
+    private Config config;
+    @Mock
+    private ConsumerCurator consumerCurator;
     @Mock private ComplianceStatus compliance;
+    @Mock private PoolManager poolManagerMock;
     private ReadOnlyProductCache productCache;
     private Owner owner;
     private Consumer consumer;
     private String productId = "a-product";
+    private PoolRules poolRules;
 
     @Before
     public void createEnforcer() throws Exception {
@@ -105,13 +122,16 @@ public class DefaultRulesTest {
         JsRules jsRules = new JsRulesProvider(rulesCurator).get();
         enforcer = new EntitlementRules(new DateSourceImpl(), jsRules,
             prodAdapter, I18nFactory.getI18n(getClass(), Locale.US,
-                I18nFactory.FALLBACK));
+                I18nFactory.FALLBACK), config, consumerCurator);
 
         owner = new Owner();
         consumer = new Consumer("test consumer", "test user", owner,
             new ConsumerType(ConsumerTypeEnum.SYSTEM));
 
         productCache = new ReadOnlyProductCache(prodAdapter);
+        poolRules = new JsPoolRules(new JsRulesProvider(rulesCurator).get(),
+            poolManagerMock,
+            prodAdapter, config);
     }
 
     private Pool createPool(Owner owner, Product product) {
@@ -532,7 +552,6 @@ public class DefaultRulesTest {
     public void userRestrictedPoolPassesPre() {
         Pool pool = setupUserRestrictedPool();
         consumer.setUsername("bob");
-
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
             .getResult();
         assertFalse(result.hasErrors());
@@ -548,6 +567,192 @@ public class DefaultRulesTest {
             .getResult();
         assertTrue(result.hasErrors());
         assertFalse(result.hasWarnings());
+    }
+
+    @Test
+    public void virtOnlyPoolGuestHostMatches() {
+        Consumer parent = new Consumer("test parent consumer", "test user", owner,
+            new ConsumerType(ConsumerTypeEnum.SYSTEM));
+        Pool pool = setupHostRestrictedPool(parent);
+
+        String guestId = "virtguestuuid";
+        consumer.setFact("virt.is_guest", "true");
+        consumer.setFact("virt.uuid", guestId);
+
+        when(consumerCurator.getHost(guestId)).thenReturn(parent);
+
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
+            .getResult();
+        assertFalse(result.hasErrors());
+        assertFalse(result.hasWarnings());
+    }
+
+    // There shouldn't be any way to get a host restricted pool in hosted, but make sure
+    // if it were to happen, it wouldn't be enforced.
+    @Test
+    public void hostedVirtOnlyPoolGuestHostDoesNotMatch() {
+        Consumer parent = new Consumer("test parent consumer", "test user", owner,
+            new ConsumerType(ConsumerTypeEnum.SYSTEM));
+        Pool pool = setupHostRestrictedPool(parent);
+        Consumer otherParent = new Consumer("test parent consumer", "test user", owner,
+            new ConsumerType(ConsumerTypeEnum.SYSTEM));
+
+        when(config.standalone()).thenReturn(false);
+        String guestId = "virtguestuuid";
+        consumer.setFact("virt.is_guest", "true");
+        consumer.setFact("virt.uuid", guestId);
+
+        when(consumerCurator.getHost(guestId)).thenReturn(otherParent);
+
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
+            .getResult();
+        assertFalse(result.hasErrors());
+        assertFalse(result.hasWarnings());
+    }
+
+    @Test
+    public void virtOnlyPoolGuestHostDoesNotMatch() {
+        when(config.standalone()).thenReturn(true);
+        // Parent consumer of our guest:
+        Consumer parent = new Consumer("test parent consumer", "test user", owner,
+            new ConsumerType(ConsumerTypeEnum.SYSTEM));
+
+        // Another parent we'll make a virt only pool for:
+        Consumer otherParent = new Consumer("test parent consumer", "test user", owner,
+            new ConsumerType(ConsumerTypeEnum.SYSTEM));
+        Pool pool = setupHostRestrictedPool(otherParent);
+
+        String guestId = "virtguestuuid";
+        consumer.setFact("virt.is_guest", "true");
+        consumer.setFact("virt.uuid", guestId);
+
+        when(consumerCurator.getHost(guestId)).thenReturn(parent);
+
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
+            .getResult();
+        assertFalse(result.hasWarnings());
+        assertEquals(1, result.getErrors().size());
+        assertEquals("virt.guest.host.does.not.match.pool.owner",
+            result.getErrors().get(0).getResourceKey());
+    }
+
+    @Test
+    public void virtOnlyPoolGuestNoHost() {
+        when(config.standalone()).thenReturn(true);
+
+        // Another parent we'll make a virt only pool for:
+        Consumer otherParent = new Consumer("test parent consumer", "test user", owner,
+            new ConsumerType(ConsumerTypeEnum.SYSTEM));
+        Pool pool = setupHostRestrictedPool(otherParent);
+
+        String guestId = "virtguestuuid";
+        consumer.setFact("virt.is_guest", "true");
+        consumer.setFact("virt.uuid", guestId);
+
+        when(consumerCurator.getHost(guestId)).thenReturn(null);
+
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
+            .getResult();
+        assertFalse(result.hasWarnings());
+        assertEquals(1, result.getErrors().size());
+        assertEquals("virt.guest.host.does.not.match.pool.owner",
+            result.getErrors().get(0).getResourceKey());
+    }
+
+    @Test
+    public void standaloneParentConsumerPostCreatesSubPool() {
+        Pool pool = setupVirtLimitPool();
+        Entitlement e = new Entitlement(pool, consumer, new Date(), new Date(),
+            5);
+
+        PoolHelper postHelper = mock(PoolHelper.class);
+        when(config.standalone()).thenReturn(true);
+        enforcer.postEntitlement(consumer, postHelper, e);
+
+        // Pool quantity should be virt_limit * entitlement quantity:
+        verify(postHelper).createHostRestrictedPool(eq(pool.getProductId()),
+            eq(pool), eq("50"));
+    }
+
+    @Test
+    public void standaloneParentConsumerPostCreatesUnlimitedSubPool() {
+        Pool pool = setupVirtLimitPool();
+        pool.setAttribute("virt_limit", "unlimited");
+        Entitlement e = new Entitlement(pool, consumer, new Date(), new Date(),
+            5);
+
+        PoolHelper postHelper = mock(PoolHelper.class);
+        when(config.standalone()).thenReturn(true);
+        enforcer.postEntitlement(consumer, postHelper, e);
+
+        // Pool quantity should be virt_limit * entitlement quantity:
+        verify(postHelper).createHostRestrictedPool(eq(pool.getProductId()),
+            eq(pool), eq("unlimited"));
+    }
+
+    @Test
+    public void hostedParentConsumerPostCreatesNoPool() {
+        Pool pool = setupVirtLimitPool();
+        Entitlement e = new Entitlement(pool, consumer, new Date(), new Date(),
+            1);
+
+        PoolHelper postHelper = mock(PoolHelper.class);
+        when(config.standalone()).thenReturn(false);
+        enforcer.postEntitlement(consumer, postHelper, e);
+
+        verify(postHelper, never()).createHostRestrictedPool(pool.getProductId(),
+            pool, pool.getAttributeValue("virt_limit"));
+    }
+
+    @Test
+    public void hostedVirtLimitAltersBonusPoolQuantity() {
+        when(config.standalone()).thenReturn(false);
+        Consumer c = new Consumer("test consumer", "test user", owner,
+            new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
+        Enforcer enf = new ManifestEntitlementRules(new DateSourceImpl(),
+            new JsRulesProvider(rulesCurator).get(),
+            prodAdapter, I18nFactory.getI18n(getClass(), Locale.US,
+                I18nFactory.FALLBACK), config, consumerCurator);
+        Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);
+        List<Pool> pools = poolRules.createPools(s);
+        assertEquals(2, pools.size());
+
+        Pool physicalPool = pools.get(0);
+        physicalPool.setId("physical");
+        Pool virtBonusPool = pools.get(1);
+        virtBonusPool.setId("virt");
+
+        assertEquals(new Long(10), physicalPool.getQuantity());
+        assertEquals(0, physicalPool.getAttributes().size());
+
+        // Quantity on bonus pool should be virt limit * sub quantity:
+        assertEquals(new Long(100), virtBonusPool.getQuantity());
+        assertEquals("true", virtBonusPool.getAttributeValue("virt_only"));
+        assertEquals("10", virtBonusPool.getProductAttribute("virt_limit").getValue());
+
+        Entitlement e = new Entitlement(physicalPool, c, new Date(), new Date(),
+            1);
+        PoolHelper postHelper = new PoolHelper(poolManagerMock, prodAdapter, e);
+        List<Pool> poolList = new ArrayList<Pool>();
+        poolList.add(virtBonusPool);
+        when(poolManagerMock.lookupBySubscriptionId(eq(physicalPool.getSubscriptionId())))
+            .thenReturn(poolList);
+
+        enf.postEntitlement(c, postHelper, e);
+        verify(poolManagerMock).updatePoolQuantity(eq(virtBonusPool), eq(-10L));
+
+        enf.postUnbind(consumer, postHelper, e);
+        verify(poolManagerMock).updatePoolQuantity(eq(virtBonusPool), eq(10L));
+    }
+
+    private Subscription createVirtLimitSub(String productId, int quantity, int virtLimit) {
+        Product product = new Product(productId, productId);
+        product.setAttribute("virt_limit", new Integer(virtLimit).toString());
+        when(prodAdapter.getProductById(productId)).thenReturn(product);
+        Subscription s = TestUtil.createSubscription(product);
+        s.setQuantity(new Long(quantity));
+        s.setId("subId");
+        return s;
     }
 
     @Test
@@ -661,6 +866,40 @@ public class DefaultRulesTest {
 
         assertTrue(bestPools.containsKey(pool));
         assertEquals(4, bestPools.get(pool).intValue());
+    }
+
+    /*
+     * Two pools providing the exact same products, but one is virt_only and requires_host,
+     * while the other is just virt_only.
+     */
+    @Test
+    public void selectBestPoolsPrefersVirtOnlyHostRestricted() {
+        String productId1 = "A";
+
+        Product product1 = new Product(productId1, "A test product");
+
+        Pool pool1 = TestUtil.createPool(owner, product1);
+        pool1.setId("DEAD-BEEF");
+        pool1.setAttribute("virt_only", "true");
+
+        Pool pool2 = TestUtil.createPool(owner, product1);
+        pool2.setId("DEAD-BEEF2");
+        pool2.setAttribute("virt_only", "true");
+        pool2.setAttribute("requires_host", "HOSTUUID");
+
+        when(this.prodAdapter.getProductById(productId1)).thenReturn(product1);
+
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool1);
+        pools.add(pool2);
+
+        Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer,
+            new String[]{ productId1 }, pools, compliance);
+
+        assertEquals(1, bestPools.size());
+        assertTrue(bestPools.containsKey(pool2));
+        assertEquals(1, bestPools.get(pool2).intValue());
+
     }
 
     @Test
@@ -1456,11 +1695,33 @@ public class DefaultRulesTest {
         return product;
     }
 
-
     private Pool setupUserRestrictedPool() {
         Product product = new Product(productId, "A user restricted product");
         Pool pool = TestUtil.createPool(owner, product);
         pool.setRestrictedToUsername("bob");
+        pool.setId("fakeid" + TestUtil.randomInt());
+        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+        return pool;
+    }
+
+    private Pool setupHostRestrictedPool(Consumer parent) {
+        Product product = new Product(productId, "A host restricted product");
+        Pool pool = TestUtil.createPool(owner, product);
+        pool.addAttribute(new PoolAttribute("virt_only", "true"));
+        pool.addAttribute(new PoolAttribute("requires_host", parent.getUuid()));
+        pool.setId("fakeid" + TestUtil.randomInt());
+        Entitlement e = new Entitlement(pool, parent, new Date(), new Date(),
+            1);
+
+        pool.setSourceEntitlement(e);
+        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+        return pool;
+    }
+
+    private Pool setupVirtLimitPool() {
+        Product product = new Product(productId, "A virt_limit product");
+        Pool pool = TestUtil.createPool(owner, product);
+        pool.addAttribute(new PoolAttribute("virt_limit", "10"));
         pool.setId("fakeid" + TestUtil.randomInt());
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
         return pool;

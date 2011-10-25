@@ -24,9 +24,11 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
 import org.hibernate.annotations.MapKeyManyToMany;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -38,7 +40,6 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
@@ -103,16 +104,6 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @Index(name = "cp_consumer_owner_fk_idx")
     private Owner owner;
 
-    // Consumers *can* be organized into a hierarchy, could be useful in cases
-    // such as host/guests.
-    @ManyToOne(targetEntity = Consumer.class)
-    @JoinColumn(name = "parent_consumer_id")
-    @Index(name = "cp_consumer_parent_fk_idx")
-    private Consumer parent;
-
-    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
-    private Set<Consumer> childConsumers;
-
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "consumer", fetch = FetchType.LAZY)
     private Set<Entitlement> entitlements;
 
@@ -135,10 +126,11 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @Transient
     private boolean canActivate;
 
-    @CollectionOfElements(targetElement = String.class)
-    @JoinTable(name = "cp_guest_list", joinColumns = @JoinColumn(name = "consumer_id"))
-    @Column(name = "guest_id")
-    private Set<String> guestIds = new HashSet<String>();
+    @OneToMany(mappedBy = "consumer", targetEntity = GuestId.class)
+    @Cascade({org.hibernate.annotations.CascadeType.ALL,
+        org.hibernate.annotations.CascadeType.MERGE,
+        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    private List<GuestId> guestIds;
 
     // An instruction for the client to initiate an autoheal request.
     // WARNING: can't initialize to a default value here, we need to be able to see
@@ -154,6 +146,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         this.type = type;
         this.facts = new HashMap<String, String>();
         this.installedProducts = new HashSet<ConsumerInstalledProduct>();
+        this.guestIds = new ArrayList<GuestId>();
         this.autoheal = true;
     }
 
@@ -161,7 +154,6 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         // This constructor is for creating a new Consumer in the DB, so we'll
         // generate a UUID at this point.
         this.ensureUUID();
-        this.childConsumers = new HashSet<Consumer>();
         this.entitlements = new HashSet<Entitlement>();
     }
 
@@ -248,43 +240,6 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
      */
     public void setType(ConsumerType typeIn) {
         type = typeIn;
-    }
-
-    /**
-     * @return child consumers.
-     */
-    @XmlTransient
-    public Set<Consumer> getChildConsumers() {
-        return childConsumers;
-    }
-
-    /**
-     * @param childConsumers children consumers.
-     */
-    public void setChildConsumers(Set<Consumer> childConsumers) {
-        this.childConsumers = childConsumers;
-    }
-
-    /**
-     * @param child child consumer.
-     */
-    public void addChildConsumer(Consumer child) {
-        child.setParent(this);
-        this.childConsumers.add(child);
-    }
-
-    /**
-     * @return this Consumer's parent.
-     */
-    public Consumer getParent() {
-        return parent;
-    }
-
-    /**
-     * @param parent parant consumer
-     */
-    public void setParent(Consumer parent) {
-        this.parent = parent;
     }
 
     /**
@@ -507,24 +462,24 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     }
 
     /**
-     * @param guestIds the guestIds to set
+     * @param guests the GuestIds to set
      */
-    public void setGuestIds(Set<String> guestIds) {
-        this.guestIds = guestIds;
+    public void setGuestIds(List<GuestId> guests) {
+        this.guestIds = guests;
     }
 
     /**
      * @return the guestIds
      */
-    public Set<String> getGuestIds() {
+    public List<GuestId> getGuestIds() {
         return guestIds;
     }
 
-    public void addGuestId(String guestId) {
+    public void addGuestId(GuestId guestId) {
+        if (guestIds == null) {
+            guestIds = new ArrayList<GuestId>();
+        }
+        guestId.setConsumer(this);
         guestIds.add(guestId);
-    }
-
-    public void removeGuestId(String guestId) {
-        guestIds.remove(guestId);
     }
 }

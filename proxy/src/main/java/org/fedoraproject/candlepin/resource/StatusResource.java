@@ -14,6 +14,15 @@
  */
 package org.fedoraproject.candlepin.resource;
 
+import org.fedoraproject.candlepin.auth.interceptor.SecurityHole;
+import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.model.RulesCurator;
+import org.fedoraproject.candlepin.model.Status;
+
+import com.google.inject.Inject;
+
+import org.apache.log4j.Logger;
+
 import java.io.InputStream;
 import java.util.Properties;
 
@@ -21,13 +30,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-
-import org.apache.log4j.Logger;
-import org.fedoraproject.candlepin.auth.interceptor.SecurityHole;
-import org.fedoraproject.candlepin.model.RulesCurator;
-import org.fedoraproject.candlepin.model.Status;
-
-import com.google.inject.Inject;
 
 /**
  * Status Resource
@@ -47,10 +49,14 @@ public class StatusResource {
      */
     private String release = "Unknown";
 
+    private boolean standalone = true;
+
     private RulesCurator rulesCurator;
+    private Config config;
 
     @Inject
-    public StatusResource(RulesCurator rulesCurator) {
+    public StatusResource(RulesCurator rulesCurator,
+                          Config config) {
         this.rulesCurator = rulesCurator;
         try {
             InputStream in = this.getClass().getClassLoader().
@@ -65,6 +71,9 @@ public class StatusResource {
                 release = props.getProperty("release");
             }
             in.close();
+            if (!config.standalone()) {
+                standalone = false;
+            }
         }
         catch (Exception e) {
             log.error("Can not load candlepin_info.properties", e);
@@ -88,7 +97,7 @@ public class StatusResource {
         catch (Exception e) {
             good = false;
         }
-        Status status = new Status(good, version, release);
+        Status status = new Status(good, version, release, standalone);
         return status;
     }
 }

@@ -23,14 +23,14 @@ import static org.mockito.Mockito.when;
 
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerType;
-import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
-import org.fedoraproject.candlepin.policy.CandlepinConsumerTypeEnforcer;
 import org.fedoraproject.candlepin.policy.EnforcerDispatcher;
 import org.fedoraproject.candlepin.policy.js.compliance.ComplianceStatus;
 import org.fedoraproject.candlepin.policy.js.entitlement.EntitlementRules;
+import org.fedoraproject.candlepin.policy.js.entitlement.ManifestEntitlementRules;
 import org.fedoraproject.candlepin.policy.js.pool.PoolHelper;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -41,7 +41,7 @@ import java.util.List;
  * EnforcerDispatcherTest
  */
 public class EnforcerDispatcherTest {
-    private CandlepinConsumerTypeEnforcer ce;
+    private ManifestEntitlementRules ce;
     private EntitlementRules rules;
     private EnforcerDispatcher ed;
     private ComplianceStatus compliance;
@@ -49,19 +49,19 @@ public class EnforcerDispatcherTest {
     @Before
     public void init() {
         rules = mock(EntitlementRules.class);
-        ce = mock(CandlepinConsumerTypeEnforcer.class);
+        ce = mock(ManifestEntitlementRules.class);
         ed = new EnforcerDispatcher(rules, ce);
         compliance = mock(ComplianceStatus.class);
     }
 
     @Test
-    public void postEntitlementCandlepinConsumer() {
+    public void postEntitlementManifestConsumer() {
         Consumer c = mock(Consumer.class);
         PoolHelper ph = mock(PoolHelper.class);
         Entitlement e = mock(Entitlement.class);
         ConsumerType type = mock(ConsumerType.class);
         when(c.getType()).thenReturn(type);
-        when(type.isType(eq(ConsumerTypeEnum.CANDLEPIN))).thenReturn(true);
+        when(type.isManifest()).thenReturn(true);
 
         ed.postEntitlement(c, ph, e);
 
@@ -76,7 +76,7 @@ public class EnforcerDispatcherTest {
         Entitlement e = mock(Entitlement.class);
         ConsumerType type = mock(ConsumerType.class);
         when(c.getType()).thenReturn(type);
-        when(type.isType(eq(ConsumerTypeEnum.CANDLEPIN))).thenReturn(false);
+        when(type.isManifest()).thenReturn(false);
 
         ed.postEntitlement(c, ph, e);
 
@@ -85,12 +85,12 @@ public class EnforcerDispatcherTest {
     }
 
     @Test
-    public void preEntitlementCandlepinConsumer() {
+    public void preEntitlementManifestConsumer() {
         Consumer c = mock(Consumer.class);
         Pool p = mock(Pool.class);
         ConsumerType type = mock(ConsumerType.class);
         when(c.getType()).thenReturn(type);
-        when(type.isType(eq(ConsumerTypeEnum.CANDLEPIN))).thenReturn(true);
+        when(type.isManifest()).thenReturn(true);
 
         ed.preEntitlement(c, p, 10);
 
@@ -104,7 +104,7 @@ public class EnforcerDispatcherTest {
         Pool p = mock(Pool.class);
         ConsumerType type = mock(ConsumerType.class);
         when(c.getType()).thenReturn(type);
-        when(type.isType(eq(ConsumerTypeEnum.CANDLEPIN))).thenReturn(false);
+        when(type.isManifest()).thenReturn(false);
 
         ed.preEntitlement(c, p, 10);
 
@@ -113,7 +113,7 @@ public class EnforcerDispatcherTest {
     }
 
     @Test
-    public void bestPoolCandlepinConsumer() {
+    public void bestPoolManifestConsumer() {
         Consumer c = mock(Consumer.class);
         String[] pids = {"10", "20", "30"};
         Pool p = mock(Pool.class);
@@ -121,7 +121,7 @@ public class EnforcerDispatcherTest {
         pools.add(p);
         ConsumerType type = mock(ConsumerType.class);
         when(c.getType()).thenReturn(type);
-        when(type.isType(eq(ConsumerTypeEnum.CANDLEPIN))).thenReturn(true);
+        when(type.isManifest()).thenReturn(true);
 
 
         ed.selectBestPools(c, pids, pools, compliance);
@@ -139,7 +139,7 @@ public class EnforcerDispatcherTest {
         pools.add(p);
         ConsumerType type = mock(ConsumerType.class);
         when(c.getType()).thenReturn(type);
-        when(type.isType(eq(ConsumerTypeEnum.CANDLEPIN))).thenReturn(false);
+        when(type.isManifest()).thenReturn(false);
 
         ed.selectBestPools(c, pids, pools, compliance);
         verify(rules, atLeastOnce()).selectBestPools(eq(c), eq(pids), eq(pools),

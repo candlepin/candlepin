@@ -32,8 +32,8 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 /**
  * Post Entitlement Helper, this object is provided as a global variable to the
@@ -71,6 +71,51 @@ public class PoolHelper {
                 this.sourceEntitlement.getConsumer().getUsername());
 
         poolManager.createPool(consumerSpecificPool);
+    }
+
+    /**
+     * Create a pool only for virt guests of a particular host consumer.
+     *
+     *
+     *
+     * @param productId Label of the product the pool is for.
+     * @param pool Pool this host restricted pool is being derived from.
+     * @param quantity Number of entitlements for this pool, also accepts "unlimited".
+     */
+    public void createHostRestrictedPool(String productId, Pool pool,
+        String quantity) {
+
+        Pool consumerSpecificPool = createPool(productId, pool.getOwner(), quantity,
+            pool.getStartDate(), pool.getEndDate(), pool.getContractNumber(),
+            pool.getAccountNumber(), pool.getProvidedProducts());
+
+        consumerSpecificPool.setAttribute("requires_host",
+            sourceEntitlement.getConsumer().getUuid());
+        consumerSpecificPool.setAttribute("pool_derived", "true");
+        consumerSpecificPool.setAttribute("virt_only", "true");
+
+        consumerSpecificPool.setSubscriptionId(pool.getSubscriptionId());
+        poolManager.createPool(consumerSpecificPool);
+    }
+
+    /**
+     * Retrieve all pools with the subscription id.
+     *
+     * @param id Subscription Id for cross-reference.
+     * @return list of found pools
+     */
+    public List<Pool> lookupBySubscriptionId(String id) {
+        return poolManager.lookupBySubscriptionId(id);
+    }
+
+    /**
+     * Update count for a pool.
+     *
+     * @param pool The pool.
+     * @param adjust the amount to adjust (+/-)
+     */
+    public void updatePoolQuantity(Pool pool, int adjust) {
+        poolManager.updatePoolQuantity(pool, adjust);
     }
 
     /**
@@ -126,6 +171,7 @@ public class PoolHelper {
         boolean hasChanged = false;
         Product product = sub.getProduct();
         for (Attribute attr : product.getAttributes()) {
+
             String attributeName = attr.getName();
             String attributeValue = attr.getValue();
 
@@ -134,6 +180,7 @@ public class PoolHelper {
             processed.add(attributeName);
 
             if (pool.hasProductAttribute(attributeName)) {
+
                 ProductPoolAttribute provided =
                     pool.getProductAttribute(attributeName);
                 boolean productsAreSame = product.getId().equals(provided.getProductId());

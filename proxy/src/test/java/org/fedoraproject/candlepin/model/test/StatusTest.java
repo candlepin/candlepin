@@ -32,14 +32,14 @@ public class StatusTest {
 
     @Before
     public void init() {
-        status = new Status(Boolean.TRUE, "1.0", "2");
+        status = new Status(Boolean.TRUE, "1.0", "2", Boolean.TRUE);
     }
 
     @Test
     public void result() {
-        assertTrue(status.getResult().booleanValue());
+        assertTrue(status.getResult());
         status.setResult(Boolean.FALSE);
-        assertFalse(status.getResult().booleanValue());
+        assertFalse(status.getResult());
     }
 
     @Test
@@ -54,5 +54,12 @@ public class StatusTest {
         assertEquals("2", status.getRelease());
         status.setRelease("3");
         assertEquals("3", status.getRelease());
+    }
+
+    @Test
+    public void standalone() {
+        assertEquals(Boolean.TRUE, status.getStandalone());
+        status.setStandalone(Boolean.FALSE);
+        assertEquals(Boolean.FALSE, status.getStandalone());
     }
 }

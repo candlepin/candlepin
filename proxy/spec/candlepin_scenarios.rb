@@ -180,6 +180,14 @@ module CandlepinMethods
     order_end_date.day.should == end_date.day
   end
 
+  def is_hosted?
+    return ! @cp.get_status()['standalone']
+  end
+
+  def is_standalone?
+    return @cp.get_status()['standalone']
+  end
+
 end
 
 module ExportMethods

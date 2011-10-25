@@ -12,11 +12,14 @@ describe 'Entitlements' do
       {:attributes => {"multi-entitlement" => "yes"}})
     @super_awesome = create_product(nil, random_string('super_awesome'),
                                     :attributes => { 'cpu.cpu_socket(s)' => 4 })
+    @virt_limit = create_product(nil, random_string('virt_limit'),
+      {:attributes => {"virt_limit" => "10"}})
 
     #entitle owner for the virt and monitoring products.
     @cp.create_subscription(@owner.key, @virt.id, 20)
     @cp.create_subscription(@owner.key, @monitoring.id, 4)
     @cp.create_subscription(@owner.key, @super_awesome.id, 4)
+    @cp.create_subscription(@owner.key, @virt_limit.id, 5)
 
     @cp.refresh_pools(@owner.key)
 

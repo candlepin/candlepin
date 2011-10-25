@@ -14,6 +14,16 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import org.fedoraproject.candlepin.util.DateSource;
+
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.Formula;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Index;
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
+
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -31,15 +41,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
-import org.fedoraproject.candlepin.util.DateSource;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.Formula;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
 
 /**
  * Represents a pool of products eligible to be consumed (entitled).
@@ -280,6 +281,24 @@ public class Pool extends AbstractHibernateObject implements Linkable, Owned {
 
     public boolean hasAttribute(String key) {
         return findAttribute(this.attributes, key) != null;
+    }
+
+    /**
+     * Attribute comparison helper, safe to use even if property is null.
+     *
+     * Used primarily in the javascript rules.
+     *
+     * @param key Desired attribute.
+     * @param expectedValue Expected value.
+     * @return true if the pool has the given attribute and it is equal to the value,
+     * false otherwise.
+     */
+    public boolean attributeEquals(String key, String expectedValue) {
+        String val = getAttributeValue(key);
+        if (val != null && val.equals(expectedValue))  {
+            return true;
+        }
+        return false;
     }
 
     public Set<PoolAttribute> getAttributes() {

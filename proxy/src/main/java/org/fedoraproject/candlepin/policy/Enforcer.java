@@ -14,16 +14,17 @@
  */
 package org.fedoraproject.candlepin.policy;
 
-import java.util.List;
-import java.util.Map;
-
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
-import org.fedoraproject.candlepin.policy.js.pool.PoolHelper;
 import org.fedoraproject.candlepin.policy.js.compliance.ComplianceStatus;
 import org.fedoraproject.candlepin.policy.js.entitlement.PreEntHelper;
+import org.fedoraproject.candlepin.policy.js.entitlement.PreUnbindHelper;
+import org.fedoraproject.candlepin.policy.js.pool.PoolHelper;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * Enforces the entitlement rules definitions.
@@ -72,5 +73,29 @@ public interface Enforcer {
      */
     Map<Pool, Integer> selectBestPools(Consumer consumer, String[] productIds,
         List<Pool> pools, ComplianceStatus compliance) throws RuleExecutionException;
+
+    /**
+     * Run pre-entitlement checks.
+     *
+     * Ensures sufficient entitlements remain, but also verifies all attributes
+     * on the product and relevant entitlement pool pass using the current
+     * policy.
+     *
+     * This is run prior to granting an entitlement.
+     *
+     * @param consumer Consumer who wishes to consume an entitlement.
+     * @param entitlementPool Entitlement pool to consume from.
+     * @return TODO
+     */
+    PreUnbindHelper preUnbind(Consumer consumer, Pool entitlementPool);
+
+    /**
+     * Run post-entitlement actions.
+     *
+     * @param postEntHelper A post entitlement helper.
+     * @param ent The entitlement that was just granted.
+     * @return post-entitlement processor
+     */
+    PoolHelper postUnbind(Consumer c, PoolHelper postEntHelper, Entitlement ent);
 
 }

@@ -24,6 +24,10 @@ function compliance_name_space() {
     return Compliance;
 }
 
+function unbind_name_space() {
+	return Unbind;
+}
+
 /* Utility functions */
 function contains(a, obj) {
     for (var i = 0; i < a.length; i++) {
@@ -335,8 +339,21 @@ function comparePools(pool1, pool2) {
     else if (pool2.getAttribute("virt_only") == "true" && pool1.getAttribute("virt_only") != "true") {
         return false;
     }
+    
+    // If both virt_only, prefer one with host_requires, otherwise keep looking 
+    // for a reason to pick one or the other. We know that the host must match 
+    // as pools are filtered before even being passed to select best pools.
+    if (pool1.getAttribute("virt_only") == "true" && pool2.getAttribute("virt_only") == "true") {
+        if (pool1.getAttribute("requires_host") != null && pool2.getAttribute("requires_host") == null) {
+            return true;
+        }
+        if (pool2.getAttribute("requires_host") != null && pool1.getAttribute("requires_host") == null) {
+            return false;
+        }
+        // If neither condition is true, no preference...
+    }
 
-    // If two pools are equal, select the pool that expires first
+    // If two pools are still considered equal, select the pool that expires first
     if (pool2.getEndDate().after(pool1.getEndDate())) {
         return true;
     }
@@ -353,38 +370,97 @@ var Entitlement = {
             "sockets:1:sockets," +
             "requires_consumer_type:1:requires_consumer_type," +
             "user_license:1:user_license," +
-            "virt_only:1:virt_only";
+            "virt_only:1:virt_only," +
+            "virt_limit:1:virt_limit," +
+            "requires_host:1:requires_host";
     },
 
     pre_virt_only: function() {
-        var virt_pool = 'true'.equals(attributes.get('virt_only'));
+        var virt_pool = 'true'.equalsIgnoreCase(attributes.get('virt_only'));
         var guest = false;
         if (consumer.hasFact('virt.is_guest')) {
-            guest = 'true'.equals(consumer.getFact('virt.is_guest'));
+            guest = 'true'.equalsIgnoreCase(consumer.getFact('virt.is_guest'));
         }
 
         if (virt_pool && !guest) {
-           pre.addError("rulefailed.virt.only");
+            pre.addError("rulefailed.virt.only");
+        }
+    },
+
+    pre_requires_host: function() {
+        // It shouldn't be possible to get a host restricted pool in hosted, but just in
+        // case, make sure it won't be enforced if we do.
+        if (!standalone) {
+            return;
+        }
+        if (!consumer.hasFact("virt.uuid")) {
+            pre.addError("no.virt.uuid");
+            return;
+        }
+        var hostConsumer = pre.getHostConsumer(consumer.getFact("virt.uuid"));
+
+        if (hostConsumer == null || !hostConsumer.getUuid().equals(attributes.get('requires_host'))) {
+            pre.addError("virt.guest.host.does.not.match.pool.owner");
         }
     },
 
     post_user_license: function() {
-        // Default to using the same product from the pool.
-        var productId = pool.getProductId();
+        if (!consumer.isManifest()) {
+            // Default to using the same product from the pool.
+            var productId = pool.getProductId();
 
-        // Check if the sub-pool should be for a different product:
-        if (attributes.containsKey("user_license_product")) {
-            productId = attributes.get("user_license_product");
+            // Check if the sub-pool should be for a different product:
+            if (attributes.containsKey("user_license_product")) {
+                productId = attributes.get("user_license_product");
+            }
+
+            // Create a sub-pool for this user
+            post.createUserRestrictedPool(productId, pool,
+                                          attributes.get("user_license"));
         }
-
-        // Create a sub-pool for this user
-        post.createUserRestrictedPool(productId, pool,
-                                      attributes.get("user_license"));
     },
 
     pre_requires_consumer_type: function() {
         if (!attributes.get("requires_consumer_type").equals(consumer.getType())) {
             pre.addError("rulefailed.consumer.type.mismatch");
+        }
+    },
+
+    pre_virt_limit: function() {
+    },
+
+    post_virt_limit: function() {
+        if (attributes.containsKey("virt_limit")) {
+            if (standalone) {
+                var productId = pool.getProductId();
+                var virt_limit = attributes.get("virt_limit");
+                if ('unlimited'.equals(virt_limit)) {
+                    post.createHostRestrictedPool(productId, pool, 'unlimited');
+                } else {
+                    var virt_quantity = parseInt(virt_limit) * entitlement.getQuantity();
+                    if (virt_quantity > 0) {
+                        post.createHostRestrictedPool(productId, pool,
+                                virt_quantity.toString());
+                    }
+                }
+            }
+            else {
+                if (consumer.isManifest()) {
+                    var virt_limit = attributes.get("virt_limit");
+                    if (!'unlimited'.equals(virt_limit)) {
+                        var virt_quantity = parseInt(virt_limit) * entitlement.getQuantity();
+                        if (virt_quantity > 0) {
+                            var pools = post.lookupBySubscriptionId(pool.getSubscriptionId());
+                            for (var idex = 0 ; idex < pools.size(); idex++ ) {
+                                var derivedPool = pools.get(idex);
+                                if (!derivedPool.getId().equals(pool.getId())) {
+                                    post.updatePoolQuantity(derivedPool, -1 * virt_quantity);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
 
@@ -621,7 +697,7 @@ var Pool = {
         pools.add(newPool);
 
         // Check if we need to create a virt-only pool for this subscription:
-        if (attributes.containsKey("virt_limit")) {
+        if (attributes.containsKey("virt_limit") && !standalone) {
             var virt_limit = attributes.get("virt_limit");
             var virt_attributes = new java.util.HashMap();
             virt_attributes.put("virt_only", "true");
@@ -660,31 +736,44 @@ var Pool = {
             // Expected quantity is normally the subscription's quantity, but for
             // virt only pools we expect it to be sub quantity * virt_limit:
             var expectedQuantity = sub.getQuantity() * sub.getProduct().getMultiplier();
-            if (existingPool.hasAttribute("virt_only") &&
-                existingPool.getAttributeValue("virt_only").equals("true")) {
-                // Assuming there mere be a virt limit attribute set:
+
+            /*
+             *  WARNING: when updating pools, we have the added complication of having to
+             *  watch out for pools that candlepin creates internally. (i.e. virt bonus
+             *  pools in hosted (created when sub is first detected), and host restricted
+             *  virt pools when on-site. (created when a host binds)
+             */
+            if (existingPool.hasAttribute("pool_derived") &&
+                existingPool.attributeEquals("virt_only", "true")) {
+
+                // Assuming there mere be a virt limit attribute set on the sub product,
+                // this is true for all pools with pool_derived. (for now...)
                 var virt_limit = attributes.get("virt_limit");
 
                 if ('unlimited'.equals(virt_limit)) {
-                    // Bad to hardcode this conversion here
-                    // TODO:  Figure out a better way translate this value!
                     expectedQuantity = -1;
-                } else {
-                    expectedQuantity = sub.getQuantity() * parseInt(virt_limit);
+                }
+                else {
+                    if (standalone) {
+                        expectedQuantity = parseInt(virt_limit);
+                    }
+                    else {
+                        expectedQuantity = sub.getQuantity() * parseInt(virt_limit);
+                    }
                 }
             }
 
             var quantityChanged = !(expectedQuantity == existingPool.getQuantity());
             var productsChanged = helper.checkForChangedProducts(existingPool, sub);
 
-            var poolAttributesChanged = helper.copyProductAttributesOntoPool(sub,
+            var productAttributesChanged = helper.copyProductAttributesOntoPool(sub,
                                                                              existingPool);
-            if (poolAttributesChanged) {
-                log.info("Updated pool attributes from subscription.");
+            if (productAttributesChanged) {
+                log.info("Updated product attributes from subscription.");
             }
 
             if (!(quantityChanged || datesChanged || productsChanged ||
-                  poolAttributesChanged)) {
+                  productAttributesChanged)) {
                 //TODO: Should we check whether pool is overflowing here?
                 log.info("   No updates required.");
                 continue;
@@ -725,9 +814,9 @@ var Pool = {
 var Export = {
     can_export_entitlement: function() {
         pool_derived = attributes.containsKey('pool_derived') &&
-                    'true'.equals(attributes.get('pool_derived'));
+                    'true'.equalsIgnoreCase(attributes.get('pool_derived'));
 
-        return !consumer.getType().isManifest() || !pool_derived;
+        return !consumer.isManifest() || !pool_derived;
     }
 }
 
@@ -864,5 +953,37 @@ var Compliance = {
 
         return status;
     }
+}
+    
+var Unbind = {
 
+    // defines mapping of product attributes to functions
+    // the format is: <function name>:<order number>:<attr1>:...:<attrn>, comma-separated ex.:
+    // func1:1:attr1:attr2:attr3, func2:2:attr3:attr4
+    attribute_mappings: function() {
+        return  "virt_limit:1:virt_limit";
+    },
+    
+    pre_virt_limit: function() {
+    },
+    
+    post_virt_limit: function() {
+        if (attributes.containsKey("virt_limit")) {
+            if (!standalone && consumer.isManifest()) {
+                var virt_limit = attributes.get("virt_limit");
+                if (!'unlimited'.equals(virt_limit)) {
+                    var virt_quantity = parseInt(virt_limit) * entitlement.getQuantity();
+                    if (virt_quantity > 0) {
+                        var pools = post.lookupBySubscriptionId(pool.getSubscriptionId());
+                        for (var idex = 0 ; idex < pools.size(); idex++ ) {
+                            var derivedPool = pools.get(idex);
+                            if (!derivedPool.getId().equals(pool.getId())) {
+                                post.updatePoolQuantity(derivedPool, virt_quantity);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

@@ -14,11 +14,11 @@
  */
 package org.fedoraproject.candlepin.policy.js.export;
 
-import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Product;
 import org.fedoraproject.candlepin.policy.js.JsRules;
+import org.fedoraproject.candlepin.policy.js.ReadOnlyConsumer;
 import org.fedoraproject.candlepin.policy.js.RuleExecutionException;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 
@@ -48,7 +48,7 @@ public class JsExportRules {
 
     public boolean canExport(Entitlement entitlement) {
         Pool pool = entitlement.getPool();
-        Consumer consumer = entitlement.getConsumer();
+        ReadOnlyConsumer consumer = new ReadOnlyConsumer(entitlement.getConsumer());
         Product product = this.productAdapter.getProductById(pool.getProductId());
         Map<String, String> allAttributes = jsRules.getFlattenedAttributes(product, pool);
 

@@ -14,24 +14,28 @@
  */
 package org.fedoraproject.candlepin.model;
 
+import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
+import org.fedoraproject.candlepin.config.Config;
+import org.fedoraproject.candlepin.config.ConfigProperties;
+import org.fedoraproject.candlepin.exceptions.BadRequestException;
+
+import com.google.inject.Inject;
+import com.wideplay.warp.persist.Transactional;
+
+import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
+import org.hibernate.ReplicationMode;
+import org.hibernate.criterion.Order;
+import org.hibernate.criterion.Restrictions;
+import org.xnap.commons.i18n.I18n;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
-
-import org.fedoraproject.candlepin.auth.interceptor.EnforceAccessControl;
-import org.fedoraproject.candlepin.config.Config;
-import org.fedoraproject.candlepin.config.ConfigProperties;
-import org.hibernate.Criteria;
-import org.hibernate.ReplicationMode;
-import org.hibernate.criterion.Restrictions;
-import org.fedoraproject.candlepin.exceptions.BadRequestException;
-import org.xnap.commons.i18n.I18n;
-
-import com.google.inject.Inject;
-import com.wideplay.warp.persist.Transactional;
+import java.util.Set;
 
 /**
  * ConsumerCurator
@@ -62,11 +66,12 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     protected void validate(Consumer entity) {
-        //#TODO Look at generic validation framework
-        if ((entity.getName() != null) && (entity.getName().length() >= NAME_LENGTH)) {
-            throw new BadRequestException(
-                i18n.tr("Name of the consumer should be shorter than {0} characters.",
-                    NAME_LENGTH));
+        // #TODO Look at generic validation framework
+        if ((entity.getName() != null) &&
+            (entity.getName().length() >= NAME_LENGTH)) {
+            throw new BadRequestException(i18n.tr(
+                "Name of the consumer should be shorter than {0} characters.",
+                NAME_LENGTH));
         }
     }
 
@@ -76,18 +81,14 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             entitlement.setConsumer(consumer);
         }
 
-        consumer.setParent(consumer.getParent());
-        ConsumerType consumerType = consumerTypeCurator.lookupByLabel(
-            consumer.getType().getLabel());
+        ConsumerType consumerType = consumerTypeCurator.lookupByLabel(consumer
+            .getType().getLabel());
         consumer.setType(consumerType);
 
         IdentityCertificate idCert = consumer.getIdCert();
-        this.currentSession().replicate(idCert.getSerial(), ReplicationMode.EXCEPTION);
+        this.currentSession().replicate(idCert.getSerial(),
+            ReplicationMode.EXCEPTION);
         this.currentSession().replicate(idCert, ReplicationMode.EXCEPTION);
-
-        //        for (Consumer childConsumer : consumer.getChildConsumers()) {
-//            consumer.setChildConsumers(childConsumers)
-//        }
 
         this.currentSession().replicate(consumer, ReplicationMode.EXCEPTION);
 
@@ -96,6 +97,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
     /**
      * Lookup consumer by its name
+     *
      * @param name consumer name to find
      * @return Consumer whose name matches the given name, null otherwise.
      */
@@ -103,8 +105,29 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @EnforceAccessControl
     public Consumer findByName(String name) {
         return (Consumer) currentSession().createCriteria(Consumer.class)
-            .add(Restrictions.eq("name", name))
-            .uniqueResult();
+            .add(Restrictions.eq("name", name)).uniqueResult();
+    }
+
+    /**
+     * Lookup consumer by its virt.uuid
+     *
+     * @param uuid consumer virt.uuid to find
+     * @return Consumer whose name matches the given virt.uuid, null otherwise.
+     */
+    @Transactional
+    @EnforceAccessControl
+    public Consumer findByVirtUuid(String uuid) {
+        Consumer result = null;
+        List<Consumer> options = currentSession()
+            .createCriteria(Consumer.class)
+            .addOrder(Order.desc("updated"))
+            .add(Restrictions.sqlRestriction("{alias}.id in (select cp_consumer_id " +
+                "from cp_consumer_facts where mapkey = 'virt.uuid' and element = ?)",
+                uuid, Hibernate.STRING)).list();
+        if (options != null && options.size() != 0) {
+            result = options.get(0);
+        }
+        return result;
     }
 
     /**
@@ -117,16 +140,16 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Transactional
     @EnforceAccessControl
     public Consumer findByUser(User user) {
-        ConsumerType person = consumerTypeCurator.lookupByLabel(
-            ConsumerType.ConsumerTypeEnum.PERSON.getLabel());
+        ConsumerType person = consumerTypeCurator
+            .lookupByLabel(ConsumerType.ConsumerTypeEnum.PERSON.getLabel());
         return (Consumer) currentSession().createCriteria(Consumer.class)
-        .add(Restrictions.eq("username", user.getUsername()))
-        .add(Restrictions.eq("type", person))
-        .uniqueResult();
+            .add(Restrictions.eq("username", user.getUsername()))
+            .add(Restrictions.eq("type", person)).uniqueResult();
     }
 
     /**
      * Lookup the Consumer by its uuid.
+     *
      * @param uuid Consumer uuid sought.
      * @return Consumer whose uuid matches the given value, or null otherwise.
      */
@@ -136,20 +159,19 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         return getConsumer(uuid);
     }
 
-    // NOTE:  This is a giant hack that is for use *only* by SSLAuth in order
-    //        to bypass the authentication.  Do not call it!
-    // TODO:  Come up with a better way to do this!
+    // NOTE: This is a giant hack that is for use *only* by SSLAuth in order
+    // to bypass the authentication. Do not call it!
+    // TODO: Come up with a better way to do this!
     public Consumer getConsumer(String uuid) {
         return (Consumer) currentSession().createCriteria(Consumer.class)
-            .add(Restrictions.eq("uuid", uuid))
-            .uniqueResult();
+            .add(Restrictions.eq("uuid", uuid)).uniqueResult();
     }
 
     @SuppressWarnings("unchecked")
     @Transactional
     @EnforceAccessControl
     public List<Consumer> listByOwner(Owner owner) {
-        return (List<Consumer>) currentSession().createCriteria(Consumer.class)
+        return currentSession().createCriteria(Consumer.class)
             .add(Restrictions.eq("owner", owner)).list();
     }
 
@@ -179,7 +201,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             criteria.add(Restrictions.eq("owner", owner));
         }
 
-        return (List<Consumer>) criteria.list();
+        return criteria.list();
     }
 
     /**
@@ -196,17 +218,14 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
         validate(updatedConsumer);
         // TODO: Are any of these read-only?
-        existingConsumer.setChildConsumers(
-            bulkUpdate(updatedConsumer.getChildConsumers()));
-        existingConsumer.setEntitlements(
-                entitlementCurator.bulkUpdate(updatedConsumer.getEntitlements()));
+        existingConsumer.setEntitlements(entitlementCurator
+            .bulkUpdate(updatedConsumer.getEntitlements()));
         Map<String, String> newFacts = filterFacts(updatedConsumer.getFacts());
         if (factsChanged(newFacts, existingConsumer.getFacts())) {
             existingConsumer.setFacts(newFacts);
         }
         existingConsumer.setName(updatedConsumer.getName());
         existingConsumer.setOwner(updatedConsumer.getOwner());
-        existingConsumer.setParent(updatedConsumer.getParent());
         existingConsumer.setType(updatedConsumer.getType());
         existingConsumer.setUuid(updatedConsumer.getUuid());
 
@@ -216,7 +235,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     private boolean factsChanged(Map<String, String> updatedFacts,
-            Map<String, String> existingFacts) {
+        Map<String, String> existingFacts) {
         return !existingFacts.equals(updatedFacts);
     }
 
@@ -247,6 +266,71 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             toReturn.add(update(toUpdate));
         }
         return toReturn;
+    }
+
+    /**
+     * Get host consumer for a guest system id.
+     *
+     * As multiple hosts could have reported the same guest ID, we find the newest
+     * and assume this is the authoritative host for the guest.
+     *
+     * @param guestId a virtual guest ID (not a consumer UUID)
+     * @return host consumer who most recently reported the given guestId (if any)
+     */
+    @Transactional
+    @EnforceAccessControl
+    public Consumer getHost(String guestId) {
+
+        // TODO: could the query do the work for us here? sort on updated time, limit to 1.
+        // Avoids any potential (albeit unlikely) hibernate issues where we mistakenly
+        // load a bunch of data.
+        List<GuestId> consumers = currentSession()
+            .createCriteria(GuestId.class)
+            .add(Restrictions.eq("guestId", guestId))
+            .list();
+        Consumer newest = null;
+        if (consumers != null) {
+            for (GuestId cg : consumers) {
+                if (newest == null ||
+                    cg.getUpdated().getTime() > newest.getUpdated().getTime()) {
+                    newest = cg.getConsumer();
+                }
+            }
+        }
+        return newest;
+    }
+
+    /**
+     * Get guest consumers for a host consumer.
+     *
+     * @param consumer host consumer to find the guests for
+     * @return list of registered guest consumers for this host
+     */
+    @Transactional
+    @EnforceAccessControl
+    public List<Consumer> getGuests(Consumer consumer) {
+        if (consumer.getFact("virt.uuid") != null &&
+            !consumer.getFact("virt.uuid").trim().equals("")) {
+            throw new BadRequestException(i18n.tr(
+                "The consumer with UUID {0} is a virtual guest. " +
+                "It does not have guests.",
+                consumer.getUuid()));
+        }
+        List<Consumer> guests = new ArrayList<Consumer>();
+        List<GuestId> consumerGuests = consumer.getGuestIds();
+        if (consumerGuests != null) {
+            for (GuestId cg : consumerGuests) {
+                // Check if this is the most recent host to report the guest by asking
+                // for the consumer's current host and comparing it to ourselves.
+                if (consumer.equals(getHost(cg.getGuestId()))) {
+                    Consumer guest = findByVirtUuid(cg.getGuestId());
+                    if (guest != null) {
+                        guests.add(guest);
+                    }
+                }
+            }
+        }
+        return guests;
     }
 
 }

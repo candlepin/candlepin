@@ -14,14 +14,15 @@
  */
 package org.fedoraproject.candlepin.controller;
 
-import java.util.Date;
-import java.util.List;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.policy.EntitlementRefusedException;
+
+import java.util.Date;
+import java.util.List;
 
 /**
  *
@@ -91,7 +92,7 @@ public interface PoolManager {
 
     Iterable<Pool> getListOfEntitlementPoolsForProduct(String productId);
 
-    Pool lookupBySubscriptionId(String id);
+    List<Pool> lookupBySubscriptionId(String id);
 
     /**
      * Check our underlying subscription service and update the pool data. Note
@@ -144,4 +145,5 @@ public interface PoolManager {
      */
     void updatePoolForSubscription(Pool existingPool, Subscription sub);
 
+    void updatePoolQuantity(Pool pool, long adjust);
 }

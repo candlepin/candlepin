@@ -17,7 +17,6 @@ package org.fedoraproject.candlepin.policy.js.entitlement;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.ConsumerCurator;
 import org.fedoraproject.candlepin.policy.ValidationResult;
-import org.fedoraproject.candlepin.policy.js.ReadOnlyPool;
 
 /**
  * Helper class for the pre-entitlement functions in our Javascript rules.
@@ -25,14 +24,12 @@ import org.fedoraproject.candlepin.policy.js.ReadOnlyPool;
  * Object is used as a holder for utility methods useful to all rules files, as well as
  * a mechanism for the rules to return a small amount of state.
  */
-public class PreEntHelper {
+public class PreUnbindHelper {
 
     private ValidationResult result;
-    private Integer quantityToConsume;
     private ConsumerCurator consumerCurator;
 
-    public PreEntHelper(Integer quantityToConsume, ConsumerCurator consumerCurator) {
-        this.quantityToConsume = quantityToConsume;
+    public PreUnbindHelper(ConsumerCurator consumerCurator) {
         this.consumerCurator = consumerCurator;
         result = new ValidationResult();
     }
@@ -61,29 +58,6 @@ public class PreEntHelper {
         return result;
     }
 
-    public Integer getQuantity() {
-        return quantityToConsume;
-    }
-
-    /**
-     * Verify entitlements are available in the given pool.
-     *
-     * WARNING: It is extremely important the author of a rules file makes
-     * sure this function is called at appropriate times in pre_global() and
-     * normally within all product specific functions. If not, entitlements
-     * will be granted with no checking against overall consumption limits,
-     * leaving a scenario that will have to be dealt with via compliance
-     * checking.
-     *
-     * @param entPool read-only entitlement pool to be checked.
-     */
-    public void checkQuantity(ReadOnlyPool entPool) {
-        if (!entPool.entitlementsAvailable(quantityToConsume)) {
-            result.addError("rulefailed.no.entitlements.available");
-        }
-    }
-
-
     /**
      * Lookup a host consumer for the given guest ID, if one exists. The host may not
      * be registered to Candlepin.
@@ -93,6 +67,7 @@ public class PreEntHelper {
      * @return Consumer
      */
     public Consumer getHostConsumer(String guestId) {
+        // TODO: proxy to consumer curator
         return consumerCurator.getHost(guestId);
     }
 }

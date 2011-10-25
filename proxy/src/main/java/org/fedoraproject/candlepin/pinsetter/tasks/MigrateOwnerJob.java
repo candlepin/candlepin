@@ -296,10 +296,7 @@ public class MigrateOwnerJob implements Job {
             log.info("consumer.id: " + consumer.getId());
             log.info("consumer.entitlements:  " +
                 consumer.getEntitlements().toString());
-            log.info("consumer.childConsumers: " +
-                consumer.getChildConsumers().toString());
             log.info("consumer.facts: " + consumer.getFacts().toString());
-            log.info("consumer.parent: " + consumer.getParent());
             log.info("consumer.keyPair: " + consumer.getKeyPair());
             log.info("consumer.idcert: " + consumer.getIdCert());
 

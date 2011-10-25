@@ -33,6 +33,7 @@ import org.fedoraproject.candlepin.guice.PrincipalProvider;
 import org.fedoraproject.candlepin.model.ActivationKey;
 import org.fedoraproject.candlepin.model.Consumer;
 import org.fedoraproject.candlepin.model.Entitlement;
+import org.fedoraproject.candlepin.model.GuestId;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.Subscription;
@@ -259,6 +260,23 @@ public class EventFactory {
             todelete.getProduct().getName(), principalProvider.get(),
             o.getId(), null, todelete.getId(), oldJson, null, null, null);
         return e;
+    }
+
+    public Event guestIdCreated(Consumer consumer, GuestId guestId) {
+        return this.createGuestIdEvent(consumer, guestId, Event.Type.CREATED);
+    }
+
+    public Event guestIdDeleted(Consumer consumer, GuestId guestId) {
+        return this.createGuestIdEvent(consumer, guestId, Event.Type.DELETED);
+    }
+
+    private Event createGuestIdEvent(Consumer affectedConsumer, GuestId affectedGuestId,
+        Event.Type eventType) {
+        Event event = new Event(eventType, Event.Target.GUESTID,
+            affectedGuestId.getGuestId(), principalProvider.get(),
+            affectedConsumer.getOwner().getId(), affectedConsumer.getId(),
+            affectedGuestId.getId(), null, entityToJson(affectedGuestId), null, null);
+        return event;
     }
 
     private String entityToJson(Object entity) {

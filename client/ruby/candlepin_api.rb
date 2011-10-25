@@ -94,6 +94,8 @@ class Candlepin
     consumer[:facts] = params[:facts] if params[:facts]
     consumer[:installedProducts] = \
         params[:installedProducts] if params[:installedProducts]
+    consumer[:guestIds] = \
+        params[:guestIds] if params[:guestIds]
     consumer[:autoheal] = params[:autoheal] if params.has_key?(:autoheal)
 
     path = get_path("consumers")
@@ -469,6 +471,16 @@ class Candlepin
     get("/consumers/#{consumer_id}")
   end
 
+  def get_consumer_host(consumer_id=nil)
+    consumer_id ||= @uuid
+    get("/consumers/#{consumer_id}/host")
+  end
+
+  def get_consumer_guests(consumer_id=nil)
+    consumer_id ||= @uuid
+    get("/consumers/#{consumer_id}/guests")
+  end
+
   def unbind_entitlement(eid, params={})
     uuid = params[:uuid] || @uuid
     delete("/consumers/#{uuid}/entitlements/#{eid}")
@@ -681,14 +693,6 @@ class Candlepin
 
   def get_guests(consumer_id)
     get("/consumers/#{consumer_id}/guests")
-  end
-
-  def add_guest_to_consumer(consumer_id, guest_id)
-    put("/consumers/#{consumer_id}/guests/#{guest_id}")
-  end
-
-  def remove_guest_from_consumer(consumer_id, guest_id)
-    delete("/consumers/#{consumer_id}/guests/#{guest_id}")
   end
 
   def get(uri, accept_header = :json)

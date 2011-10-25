@@ -156,6 +156,8 @@ public class EventAdapterImpl implements EventAdapter {
             I18n.marktr("{0} created the activation key {1}"));
         MESSAGES.put("ACTIVATIONKEYDELETED",
             I18n.marktr("{0} deleted the activation key {1}"));
+        MESSAGES.put("GUESTIDCREATED", I18n.marktr("{0} created the guest id {1}"));
+        MESSAGES.put("GUESTIDDELETED", I18n.marktr("{0} deleted the guest id {1}"));
     }
 
 }

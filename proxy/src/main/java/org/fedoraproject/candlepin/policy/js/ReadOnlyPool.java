@@ -14,6 +14,12 @@
  */
 package org.fedoraproject.candlepin.policy.js;
 
+import org.fedoraproject.candlepin.model.Attribute;
+import org.fedoraproject.candlepin.model.Pool;
+import org.fedoraproject.candlepin.model.PoolAttribute;
+import org.fedoraproject.candlepin.model.ProductPoolAttribute;
+import org.fedoraproject.candlepin.model.ProvidedProduct;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -22,12 +28,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.fedoraproject.candlepin.model.Attribute;
-import org.fedoraproject.candlepin.model.Pool;
-import org.fedoraproject.candlepin.model.PoolAttribute;
-import org.fedoraproject.candlepin.model.ProductPoolAttribute;
-import org.fedoraproject.candlepin.model.ProvidedProduct;
 
 /**
  * represents a read-only entitlement pool
@@ -163,5 +163,4 @@ public class ReadOnlyPool {
     public ReadOnlyProduct getTopLevelProduct() {
         return productCache.getProductById(entPool.getProductId());
     }
-
 }
