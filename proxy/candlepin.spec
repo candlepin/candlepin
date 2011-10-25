@@ -19,12 +19,12 @@ BuildArch: noarch
 BuildRequires: java >= 0:1.6.0
 BuildRequires: ant >= 0:1.7.0
 BuildRequires: gettext
-BuildRequires: bouncycastle
+#BuildRequires: bouncycastle
 BuildRequires: candlepin-deps >= 0:0.0.18
 Requires: java >= 0:1.6.0
 #until cpsetup is removed
 Requires: wget
-Requires: bouncycastle
+#Requires: bouncycastle
 %define __jar_repack %{nil}
 
 %description
@@ -77,15 +77,15 @@ install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat6/webapps/%{name}/
 install -d -m 755 $RPM_BUILD_ROOT/%{_sysconfdir}/tomcat6/
 unzip target/%{name}-%{version}.war -d $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat6/webapps/%{name}/
 ln -s /etc/candlepin/certs/keystore $RPM_BUILD_ROOT/%{_sysconfdir}/tomcat6/keystore
-rm -f $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat6/webapps/%{name}/WEB-INF/lib/bc*jdk16*.jar
-ln -s %{_datadir}/java/bcprov.jar $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat6/webapps/%{name}/WEB-INF/lib/bcprov.jar
+#rm -f $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat6/webapps/%{name}/WEB-INF/lib/bc*jdk16*.jar
+#ln -s %{_datadir}/java/bcprov.jar $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat6/webapps/%{name}/WEB-INF/lib/bcprov.jar
 
 # jbossas
 install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/
 install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/%{name}.war
 unzip target/%{name}-%{version}.war -d $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/%{name}.war/
-rm -f $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/%{name}.war/WEB-INF/lib/bc*jdk16*.jar
-ln -s %{_datadir}/java/bcprov.jar $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/%{name}.war/WEB-INF/lib/bcprov.jar
+#rm -f $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/%{name}.war/WEB-INF/lib/bc*jdk16*.jar
+#ln -s %{_datadir}/java/bcprov.jar $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/%{name}.war/WEB-INF/lib/bcprov.jar
 
 # devel
 install -d -m 755 $RPM_BUILD_ROOT/%{_datadir}/%{name}/lib/
