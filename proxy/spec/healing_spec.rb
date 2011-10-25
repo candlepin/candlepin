@@ -56,12 +56,8 @@ describe 'Healing' do
     # 35 days in future should land in our sub:
     future_iso8601 = (Time.now + (60 * 60 * 24 * 35)).utc.iso8601 # a string
     pool = find_pool(@owner['id'], future_sub['id'], future_iso8601)
-    pp "Pool start date"
-    pp pool['startDate']
 
     ent = @consumer_cp.consume_pool(pool['id'])
-    pp "Ent start date"
-    pp ent
 
     current_pool = find_pool(@owner['id'], current_sub['id'])
 
