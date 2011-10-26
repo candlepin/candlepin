@@ -18,6 +18,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.fedoraproject.candlepin.config.Config;
@@ -26,8 +29,13 @@ import org.fedoraproject.candlepin.model.RulesCurator;
 import org.fedoraproject.candlepin.model.Status;
 import org.fedoraproject.candlepin.resource.StatusResource;
 
+import org.apache.log4j.Appender;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.apache.log4j.spi.LoggingEvent;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -93,5 +101,31 @@ public class StatusResourceTest {
         assertEquals("${release}", s.getRelease());
         assertEquals("${version}", s.getVersion());
         assertFalse(s.getResult());
+    }
+
+    @Test
+    public void simulateVersionFilter() throws Exception {
+        // setup logger to see if we actually log anything
+        Logger srLogger = Logger.getLogger(StatusResource.class);
+        Appender mockapp = mock(Appender.class);
+        srLogger.addAppender(mockapp);
+        srLogger.setLevel(Level.DEBUG);
+        ArgumentCaptor<LoggingEvent> message = ArgumentCaptor.forClass(LoggingEvent.class);
+
+        PrintStream ps = new PrintStream(new File(this.getClass()
+            .getClassLoader().getResource("candlepin_info.properties").toURI()));
+        ps.println("version=${version}");
+        ps.println("release=${release}");
+        StatusResource sr = new StatusResource(null, null);
+        Status s = sr.status();
+        ps.close();
+
+        // make sure we did not log anything which indicates
+        // an exception
+        verify(mockapp, never()).doAppend(message.capture());
+        assertEquals("${release}", s.getRelease());
+        assertEquals("${version}", s.getVersion());
+        assertTrue(s.getResult());
+        assertFalse(s.getStandalone());
     }
 }

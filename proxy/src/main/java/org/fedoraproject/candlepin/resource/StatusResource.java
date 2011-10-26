@@ -71,7 +71,7 @@ public class StatusResource {
                 release = props.getProperty("release");
             }
             in.close();
-            if (!config.standalone()) {
+            if (config == null || !config.standalone()) {
                 standalone = false;
             }
         }
@@ -92,7 +92,9 @@ public class StatusResource {
     public Status status() {
         boolean good = true;
         try {
-            rulesCurator.listAll();
+            if (rulesCurator != null) {
+                rulesCurator.listAll();
+            }
         }
         catch (Exception e) {
             good = false;
