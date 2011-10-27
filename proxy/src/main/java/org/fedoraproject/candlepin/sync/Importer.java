@@ -133,7 +133,7 @@ public class Importer {
      * @throws IOException thrown if there's a problem reading the file
      * @throws ImporterException thrown if the metadata is invalid.
      */
-    public void validateMetadata(String type, Owner owner, File meta)
+    public void validateMetadata(String type, Owner owner, File meta, boolean force)
         throws IOException, ImporterException {
         Meta m = mapper.readValue(meta, Meta.class);
         if (type == null) {
@@ -157,7 +157,7 @@ public class Importer {
             lastrun = expMetaCurator.create(lastrun);
         }
         else {
-            if (lastrun.getExported().compareTo(m.getCreated()) >= 0) {
+            if (!force && lastrun.getExported().compareTo(m.getCreated()) >= 0) {
                 throw new ConflictException(i18n.tr("Import is older than existing data"));
             }
             else {
@@ -167,7 +167,8 @@ public class Importer {
         }
     }
 
-    public void loadExport(Owner owner, File exportFile) throws ImporterException {
+    public void loadExport(Owner owner, File exportFile, boolean force)
+        throws ImporterException {
         File tmpDir = null;
         InputStream exportStream = null;
         try {
@@ -192,7 +193,7 @@ public class Importer {
                 importFiles.put(file.getName(), file);
             }
 
-            importObjects(owner, importFiles);
+            importObjects(owner, importFiles, force);
         }
         catch (CertificateException e) {
             throw new ImportExtractionException("unable to extract export archive", e);
@@ -223,18 +224,18 @@ public class Importer {
 
     @Transactional(rollbackOn = {IOException.class,
             ImporterException.class, RuntimeException.class})
-    public void importObjects(Owner owner, Map<String, File> importFiles)
+    public void importObjects(Owner owner, Map<String, File> importFiles, boolean force)
         throws IOException, ImporterException {
 
         File metadata = importFiles.get(ImportFile.META.fileName());
 
         // system level elements
-        validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, metadata);
+        validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, metadata, force);
         importRules(importFiles.get(ImportFile.RULES.fileName()).listFiles());
         importConsumerTypes(importFiles.get(ImportFile.CONSUMER_TYPE.fileName()).listFiles());
 
         // per user elements
-        validateMetadata(ExporterMetadata.TYPE_PER_USER, owner, metadata);
+        validateMetadata(ExporterMetadata.TYPE_PER_USER, owner, metadata, force);
         importConsumer(owner, importFiles.get(ImportFile.CONSUMER.fileName()));
 
         // If the consumer has no entitlements, this products directory will end up empty.

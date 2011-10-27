@@ -76,7 +76,7 @@ public class ImporterTest {
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
         Importer i = new Importer(null, null, null, null, null, null, null,
             null, null, emc, null, null, i18n);
-        i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta);
+        i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta, false);
 
         assertTrue(f.delete());
         assertTrue(actualmeta.delete());
@@ -91,7 +91,7 @@ public class ImporterTest {
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(null);
         Importer i = new Importer(null, null, null, null, null, null, null,
             null, null, emc, null, null, i18n);
-        i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta);
+        i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta, false);
         assertTrue(f.delete());
         assertTrue(actualmeta.delete());
         verify(emc).create(any(ExporterMetadata.class));
@@ -109,7 +109,7 @@ public class ImporterTest {
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
         Importer i = new Importer(null, null, null, null, null, null, null,
             null, null, emc, null, null, i18n);
-        i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta);
+        i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta, false);
     }
 
     @Test(expected = ImporterException.class)
@@ -120,7 +120,7 @@ public class ImporterTest {
                 null, null, null, null, null, i18n);
 
             // null Type should cause exception
-            i.validateMetadata(null, null, actualmeta);
+            i.validateMetadata(null, null, actualmeta, false);
         }
         finally {
             assertTrue(actualmeta.delete());
@@ -138,7 +138,7 @@ public class ImporterTest {
             null, null, emc, null, null, i18n);
 
         // null Type should cause exception
-        i.validateMetadata(ExporterMetadata.TYPE_PER_USER, null, actualmeta);
+        i.validateMetadata(ExporterMetadata.TYPE_PER_USER, null, actualmeta, false);
         verify(emc, never()).create(any(ExporterMetadata.class));
     }
 

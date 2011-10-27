@@ -59,4 +59,10 @@ describe 'Candlepin Import' do
     error.statusMessage.should == 'Import is older than existing data'
   end
 
+  it 'should return a success on a force import' do
+    # This test must run after a successful import has already occurred. 
+    @cp.import(@import_owner.key, @export_filename, {:force => true})
+  end
+
+
 end

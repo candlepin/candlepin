@@ -639,8 +639,11 @@ class Candlepin
     delete "/jobs/#{job_id}"
   end
 
-  def import(owner_key, filename)
-    post_file "/owners/#{owner_key}/imports", File.new(filename)
+  def import(owner_key, filename, params = {})
+    force = params[:force] || false
+    path = "/owners/#{owner_key}/imports"
+    path += "?force=#{force}"
+    post_file path, File.new(filename)
   end
 
   def generate_statistics()

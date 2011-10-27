@@ -698,11 +698,13 @@ public class OwnerResource {
      * @httpcode 404
      * @httpcode 500
      * @httpcode 200
+     * @httpcode 409
      */
     @POST
     @Path("{owner_key}/imports")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public void importData(@PathParam("owner_key") @Verify(Owner.class) String ownerKey,
+        @QueryParam("force") @DefaultValue("false") boolean force,
         MultipartInput input) {
         Owner owner = findOwner(ownerKey);
 
@@ -711,10 +713,10 @@ public class OwnerResource {
             File archive = part.getBody(new GenericType<File>() {
             });
             log.info("Importing archive: " + archive.getAbsolutePath());
-            importer.loadExport(owner, archive);
+            importer.loadExport(owner, archive, force);
 
             sink.emitImportCreated(owner);
-            recordImportSuccess(owner);
+            recordImportSuccess(owner, force);
         }
         catch (IOException e) {
             recordImportFailure(owner, e);
@@ -969,10 +971,15 @@ public class OwnerResource {
         return hunderedYearsFromNow;
     }
 
-    private void recordImportSuccess(Owner owner) {
+    private void recordImportSuccess(Owner owner, boolean force) {
         ImportRecord record = new ImportRecord(owner);
-        record.recordStatus(ImportRecord.Status.SUCCESS,
-            i18n.tr("{0} file imported successfully.", owner.getKey()));
+
+        String msg = i18n.tr("{0} file imported successfully.", owner.getKey());
+        if (force) {
+            msg = i18n.tr("{0} file imported forcibly", owner.getKey());
+        }
+
+        record.recordStatus(ImportRecord.Status.SUCCESS, msg);
 
         this.importRecordCurator.create(record);
     }
