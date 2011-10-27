@@ -1,6 +1,6 @@
 #!/bin/sh
 # for some reason calling msgfmt directly from ant
-# causes it to complain that org.fedoraproject.candlepin.i18n.Messages
+# causes it to complain that org.candlepin.i18n.Messages
 # is not a proper java class name. But this hacky little
 # script works just fine.
 
@@ -11,5 +11,5 @@ LOCALE=`echo $SOURCE | sed 's/\.po//' | awk -F / '{print $(NF)}'`
 # this is what we expect, I did it this way so that we can easily
 # switch between /usr/bin/msgfmt and this script
 #
-# msgfmt --java -r org.fedoraproject.candlepin.i18n.Messages -d $DIR -l $LOCALE $SOURCE
+# msgfmt --java -r org.candlepin.i18n.Messages -d $DIR -l $LOCALE $SOURCE
 msgfmt --java -r $PKG -d $DIR -l $LOCALE $SOURCE

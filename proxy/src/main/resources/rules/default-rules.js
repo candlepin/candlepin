@@ -680,13 +680,13 @@ var Pool = {
         var pools = new java.util.LinkedList();
         var quantity = sub.getQuantity() * sub.getProduct().getMultiplier();
         var providedProducts = new java.util.HashSet();
-        var newPool = new org.fedoraproject.candlepin.model.Pool(sub.getOwner(), sub.getProduct().getId(),
+        var newPool = new org.candlepin.model.Pool(sub.getOwner(), sub.getProduct().getId(),
                 sub.getProduct().getName(), providedProducts,
                     quantity, sub.getStartDate(), sub.getEndDate(), sub.getContractNumber(),
                     sub.getAccountNumber());
         if (sub.getProvidedProducts() != null) {
             for each (var p in sub.getProvidedProducts().toArray()) {
-                var providedProduct = new org.fedoraproject.candlepin.model.
+                var providedProduct = new org.candlepin.model.
                     ProvidedProduct(p.getId(), p.getName());
                 providedProduct.setPool(newPool);
                 providedProducts.add(providedProduct);
@@ -797,13 +797,13 @@ var Pool = {
 
                 if (sub.getProvidedProducts() != null) {
                     for each (var p in sub.getProvidedProducts().toArray()) {
-                        var providedProduct = new org.fedoraproject.candlepin.model.
+                        var providedProduct = new org.candlepin.model.
                             ProvidedProduct(p.getId(), p.getName());
                         existingPool.addProvidedProduct(providedProduct);
                     }
                 }
             }
-            poolsUpdated.add(new org.fedoraproject.candlepin.policy.js.pool.PoolUpdate(
+            poolsUpdated.add(new org.candlepin.policy.js.pool.PoolUpdate(
                                  existingPool, datesChanged, quantityChanged, productsChanged));
         }
         return poolsUpdated;
@@ -875,7 +875,7 @@ var Compliance = {
      * Checks compliance status for a consumer on a given date.
      */
     get_status: function() {
-        var status = new org.fedoraproject.candlepin.policy.js.compliance.ComplianceStatus(ondate);
+        var status = new org.candlepin.policy.js.compliance.ComplianceStatus(ondate);
 
         // Track the stack IDs we've already checked to save some time:
         var compliant_stack_ids = new java.util.HashSet();

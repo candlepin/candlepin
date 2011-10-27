@@ -163,7 +163,7 @@ define "candlepin" do
     sources.each do |source|
       locale = source.match("\/([^/]*)?\.po$")[1]
       if nopo.nil? #we do this inside the loop, in order to still create a stub "generate" var
-        sh "msgfmt --java -r org.fedoraproject.candlepin.i18n.Messages -d #{dir} -l #{locale} #{source}"
+        sh "msgfmt --java -r org.candlepin.i18n.Messages -d #{dir} -l #{locale} #{source}"
       end
     end
   end
@@ -196,7 +196,7 @@ define "candlepin" do
   #
   doc
 
-  package(:jar, :id=>'candlepin-api').clean.include 'target/classes/org/fedoraproject/candlepin/auth','target/classes/org/fedoraproject/candlepin/config','target/classes/org/fedoraproject/candlepin/service','target/classes/org/fedoraproject/candlepin/model','target/classes/org/fedoraproject/candlepin/pki', 'target/classes/org/fedoraproject/candlepin/exceptions', 'target/classes/org/fedoraproject/candlepin/util', :path=>"org/fedoraproject/candlepin/"
+  package(:jar, :id=>'candlepin-api').clean.include 'target/classes/org/candlepin/auth','target/classes/org/candlepin/config','target/classes/org/candlepin/service','target/classes/org/candlepin/model','target/classes/org/candlepin/pki', 'target/classes/org/candlepin/exceptions', 'target/classes/org/candlepin/util', :path=>"org/candlepin/"
   package(:war, :id=>"candlepin").libs += artifacts(HSQLDB)
   package(:war, :id=>"candlepin").classes << generate
 
@@ -206,7 +206,7 @@ define "candlepin" do
 
     # Join compile classpath with the package jar:
     cp = [project('candlepin').package(:jar)] | compile_classpath
-    Java::Commands.java('org.fedoraproject.candlepin.util.ApiCrawler', {:classpath => cp})
+    Java::Commands.java('org.candlepin.util.ApiCrawler', {:classpath => cp})
 
     classes = artifacts(cp).collect do |a|
       task(a.to_s).invoke
@@ -221,7 +221,7 @@ define "candlepin" do
     # Add in the options as the last arg
     sources << {:name => 'Candlepin API',
                 :classpath => classes,
-                :doclet => 'org.fedoraproject.candlepin.util.ApiDoclet',
+                :doclet => 'org.candlepin.util.ApiDoclet',
                 :docletpath => ['target/classes', classes].flatten.join(File::PATH_SEPARATOR),
                 :output => 'target'}
 

@@ -11,7 +11,7 @@
   <property name="webapp.test.dir" location="${cp-home}/src/test/webapp" />
   <property name="target.dir" location="${cp-home}/target" />
   <property name="lib.dir" location="${libdir}" />
-  <property name="pkgname" value="org.fedoraproject.candlepin" />
+  <property name="pkgname" value="org.candlepin" />
 
   <macrodef name="grepfromspec">
     <attribute name="text" />
@@ -49,7 +49,7 @@
     <mkdir dir="${target.dir}/generated-source" />
     <apply executable="${script.dir}/antmsgfmt"
            dest="${target.dir}/generated-source">
-      <arg value="org.fedoraproject.candlepin.i18n.Messages" />
+      <arg value="org.candlepin.i18n.Messages" />
       <arg value="${target.dir}/generated-source" />
       <fileset dir="${cp-home}/po">
         <include name="**/*.po" />

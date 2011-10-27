@@ -3,7 +3,7 @@ style.
 
 
 candlepin.importorder - specifies the order imports should be specified
- - org.fedoraproject.candlepin
+ - org.candlepin
  - com
  - org
  - java

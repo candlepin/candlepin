@@ -15,7 +15,7 @@
 
     <listener>
       <listener-class>
-        org.fedoraproject.candlepin.guice.CandlepinContextListener
+        org.candlepin.guice.CandlepinContextListener
       </listener-class>
     </listener>
 
