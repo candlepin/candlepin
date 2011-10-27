@@ -201,7 +201,7 @@ end
 # compile resource files
 #
 task :createresourcebundles do
-  puts %x{msgfmt --java2 -d po/classes -r org.fedoraproject.candlepin.i18n.Messages -l de po/de.po}
+  puts %x{msgfmt --java2 -d po/classes -r org.candlepin.i18n.Messages -l de po/de.po}
 end
 
 

@@ -8,4 +8,4 @@ do
     CLASSPATH=$CLASSPATH:$entry
 done
 #echo $CLASSPATH
-java -classpath $CLASSPATH org.fedoraproject.candlepin.client.CLIMain $*
+java -classpath $CLASSPATH org.candlepin.client.CLIMain $*
