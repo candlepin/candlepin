@@ -93,13 +93,13 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
     @Test
     public void testUeberConsumerIsCreated() throws Exception {
         or.createUeberCertificate(principal, owner.getKey());
-        assertNotNull(consumerCurator.findByName("ueber_cert_consumer"));
+        assertNotNull(consumerCurator.findByName(owner, "ueber_cert_consumer"));
     }
 
     @Test
     public void testUeberEntitlementIsGenerated() throws Exception {
         or.createUeberCertificate(principal, owner.getKey());
-        Consumer c = consumerCurator.findByName("ueber_cert_consumer");
+        Consumer c = consumerCurator.findByName(owner, "ueber_cert_consumer");
 
         assertTrue(poolCurator.listByConsumer(c).size() == 1);
     }
@@ -133,6 +133,10 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
     @Test(expected = NotFoundException.class)
     public void certificateRetrievalRaisesExceptionIfNoCertificateWasGenerated()
         throws Exception {
+        // generate certificate for one owner
+        or.createUeberCertificate(principal, owner.getKey());
+
+        // verify that owner under test doesn't have a certificate
         Owner anotherOwner = ownerCurator.create(new Owner(OWNER_NAME + "1"));
         or.getUeberCertificate(principal, anotherOwner.getKey());
     }

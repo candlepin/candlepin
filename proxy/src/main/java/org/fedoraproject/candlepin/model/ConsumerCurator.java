@@ -103,9 +103,11 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      */
     @Transactional
     @EnforceAccessControl
-    public Consumer findByName(String name) {
+    public Consumer findByName(Owner o, String name) {
         return (Consumer) currentSession().createCriteria(Consumer.class)
-            .add(Restrictions.eq("name", name)).uniqueResult();
+            .add(Restrictions.eq("name", name))
+            .add(Restrictions.eq("owner", o))
+            .uniqueResult();
     }
 
     /**
