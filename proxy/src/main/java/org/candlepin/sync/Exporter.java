@@ -28,6 +28,7 @@ import org.candlepin.pki.PKIUtility;
 import org.candlepin.policy.js.export.JsExportRules;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
+import org.candlepin.util.VersionUtil;
 
 import com.google.inject.Inject;
 
@@ -269,10 +270,14 @@ public class Exporter {
     private void exportMeta(File baseDir) throws IOException {
         File file = new File(baseDir.getCanonicalPath(), "meta.json");
         FileWriter writer = new FileWriter(file);
-        Meta m = new Meta();
-        m.setCreated(new Date());
+        Meta m = new Meta(getVersion(), new Date());
         meta.export(mapper, writer, m);
         writer.close();
+    }
+
+    private String getVersion() throws IOException {
+        Map<String, String> map = VersionUtil.getVersionMap();
+        return map.get("version") + "-" + map.get("release");
     }
 
     private void exportConsumer(File baseDir, Consumer consumer) throws IOException {

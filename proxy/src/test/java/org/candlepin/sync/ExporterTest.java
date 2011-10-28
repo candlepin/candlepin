@@ -324,7 +324,7 @@ public class ExporterTest {
             Meta m = om.readValue(
                 new FileInputStream("/tmp/meta.json"), Meta.class);
             assertNotNull(m);
-            assertEquals("0.0.0", m.getVersion());
+            assertEquals("${version}-${release}", m.getVersion());
             assertTrue(start.before(m.getCreated()));
         }
     }

@@ -18,13 +18,13 @@ import org.candlepin.auth.interceptor.SecurityHole;
 import org.candlepin.config.Config;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.Status;
+import org.candlepin.util.VersionUtil;
 
 import com.google.inject.Inject;
 
 import org.apache.log4j.Logger;
 
-import java.io.InputStream;
-import java.util.Properties;
+import java.util.Map;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -59,18 +59,10 @@ public class StatusResource {
                           Config config) {
         this.rulesCurator = rulesCurator;
         try {
-            InputStream in = this.getClass().getClassLoader().
-                getResourceAsStream("candlepin_info.properties");
-            Properties props = new Properties();
-            props.load(in);
-            if (props.containsKey("version")) {
-                version = props.getProperty("version");
-            }
+            Map<String, String> map = VersionUtil.getVersionMap();
+            version = map.get("version");
+            release = map.get("release");
 
-            if (props.containsKey("release")) {
-                release = props.getProperty("release");
-            }
-            in.close();
             if (config == null || !config.standalone()) {
                 standalone = false;
             }

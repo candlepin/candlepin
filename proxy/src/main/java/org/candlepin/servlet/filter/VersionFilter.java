@@ -14,12 +14,12 @@
  */
 package org.candlepin.servlet.filter;
 
-import org.candlepin.model.Status;
-import org.candlepin.resource.StatusResource;
+import org.candlepin.util.VersionUtil;
 
 import com.google.inject.Singleton;
 
 import java.io.IOException;
+import java.util.Map;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -47,9 +47,9 @@ public class VersionFilter implements Filter {
         chain.doFilter(request, response);
         HttpServletResponse rsp = (HttpServletResponse) response;
 
-        Status status = new StatusResource(null, null).status();
-        rsp.addHeader(VERSION_HEADER, status.getVersion() + "-" +
-            status.getRelease());
+        Map<String, String> map = VersionUtil.getVersionMap();
+        rsp.addHeader(VERSION_HEADER, map.get("version") + "-" +
+            map.get("release"));
     }
 
     @Override
