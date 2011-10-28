@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.4.23
+Version: 0.4.24
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -130,6 +130,13 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Fri Oct 28 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.24-1
+- Provide the ability to force an import that is older than existing data.
+  (awood@redhat.com)
+- first created uebercertificate no longer returned for all owners (ddolguik@redhat.com)
+- Latest string files (bkearney@redhat.com)
+- fix NPE being logged during Candlepin usage. (jmrodri@gmail.com)
+
 * Tue Oct 25 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.23-1
 - don't use bouncycastle for now (jesusr@redhat.com)
 
