@@ -91,6 +91,16 @@ if [ -f $HOME/.candlepinrc ] ; then
     source $HOME/.candlepinrc
 fi
 
+while getopts ":fgt" opt; do
+    case $opt in
+        f  ) FORCECERT="1" ;;
+        g  ) GENDB="1";;
+        t  ) TESTDATA="1";;
+    esac
+done
+
+shift $(($OPTIND - 1))
+
 if [ "$JBOSS_HOME" != "" ]; then
     # we're using JBOSS AS
     isrpm $JBOSS_HOME
@@ -153,8 +163,12 @@ if [ "$GENDB" == "1" ]; then
 	gendb	
 fi
 
+if [ "$FORCECERT" == "1" ]; then
+    GEN_CERTS_ARGS="-f"
+fi
+
 # generate SSL certs if they are needed
-sh -x `dirname $0`/gen-certs
+sh -x `dirname $0`/gen-certs $GEN_CERTS_ARGS
 
 # update keystore file and put it into tomcat's conf directory
 update_keystore

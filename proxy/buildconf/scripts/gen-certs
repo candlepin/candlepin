@@ -8,10 +8,14 @@ CA_PUB_KEY=$CERTS_HOME/candlepin-ca-pub.key
 CA_CERT=$CERTS_HOME/candlepin-ca.crt
 KEYSTORE=$CERTS_HOME/keystore
 
-# Read in user defined variables
-if [ -f $HOME/.candlepinrc ] ; then
-    source $HOME/.candlepinrc
-fi
+while getopts ":f" opt; do
+    case $opt in
+        f  ) FORCECERT="1" ;;
+    esac
+done
+
+shift $(($OPTIND - 1))
+
 
 rpm -q openssl > /dev/null
 if [ "$?" -ne 0 ]; then
