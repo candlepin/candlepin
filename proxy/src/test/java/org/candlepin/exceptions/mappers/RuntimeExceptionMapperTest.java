@@ -12,104 +12,70 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.exceptions;
+package org.candlepin.exceptions.mappers;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import javax.servlet.http.HttpServletRequest;
+import org.candlepin.exceptions.CandlepinException;
+import org.candlepin.exceptions.ExceptionMessage;
+import org.candlepin.sync.ImportExtractionException;
+import org.candlepin.util.VersionUtil;
+import org.jboss.resteasy.spi.BadRequestException;
+import org.jboss.resteasy.spi.DefaultOptionsMethodException;
+import org.jboss.resteasy.util.HttpHeaderNames;
+import org.junit.Ignore;
+import org.junit.Test;
+
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
-import org.apache.log4j.Appender;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
-import org.apache.log4j.spi.LoggingEvent;
-import org.candlepin.guice.I18nProvider;
-import org.candlepin.sync.ImportExtractionException;
-import org.jboss.resteasy.spi.DefaultOptionsMethodException;
-import org.jboss.resteasy.util.HttpHeaderNames;
-import org.junit.Before;
-import org.junit.Test;
-import org.xnap.commons.i18n.I18n;
-
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-
-
 
 /**
- * CandlepinExceptionMapperTest
+ * RuntimeExceptionMapperTest
  */
-public class CandlepinExceptionMapperTest {
-
-    private Injector injector;
-    private HttpServletRequest req;
-    private CandlepinExceptionMapper cem;
-    private Logger logger;
-    private Appender mockappender;
-
-
-    @Before
-    public void init() {
-        MapperTestModule mtm = new MapperTestModule();
-        injector = Guice.createInjector(mtm);
-        req = injector.getInstance(HttpServletRequest.class);
-        cem = injector.getInstance(CandlepinExceptionMapper.class);
-
-        // prep the logger
-        logger = Logger.getLogger(CandlepinExceptionMapper.class);
-        mockappender = mock(Appender.class);
-        logger.addAppender(mockappender);
-        logger.setLevel(Level.DEBUG);
-    }
+public class RuntimeExceptionMapperTest extends TestExceptionMapperBase {
 
     @Test
     public void toResponseBasicRuntimeException() {
         when(req.getHeader(HttpHeaderNames.ACCEPT)).thenReturn("application/json");
 
-        Response r = cem.toResponse(new RuntimeException("test exception"));
+        Response r = rem.toResponse(new RuntimeException("test exception"));
 
         assertNotNull(r);
         assertEquals(Status.INTERNAL_SERVER_ERROR.getStatusCode(), r.getStatus());
         MultivaluedMap<String, Object> mm =  r.getMetadata();
         assertNotNull(mm);
         assertEquals(MediaType.APPLICATION_JSON_TYPE, mm.get("Content-Type").get(0));
-
-        System.out.println(r.getEntity().getClass().getName());
-        for (String key : mm.keySet()) {
-            Object value = mm.getFirst(key);
-            System.out.println("(k,v) = (" + key + ", " + value + ")");
-        }
-        verify(mockappender).doAppend(any(LoggingEvent.class));
+        assertEquals("${version}-${release}",
+            r.getMetadata().get(VersionUtil.VERSION_HEADER).get(0));
         verifyMessage(r, rtmsg("test exception"));
     }
 
+    @Ignore
     @Test
     public void defaultOptionsException() {
         Response forex = mock(Response.class);
         when(req.getHeader(HttpHeaderNames.ACCEPT)).thenReturn("application/json");
 
-        Response r = cem.toResponse(new DefaultOptionsMethodException("", forex));
-        assertEquals(r, forex);
+        Response r = rem.toResponse(new DefaultOptionsMethodException("", forex));
+        assertEquals(forex, r);
     }
 
     @Test
     public void nullAcceptHeader() {
         when(req.getHeader(HttpHeaderNames.ACCEPT)).thenReturn(null);
-        Response r = cem.toResponse(new RuntimeException("null accept header"));
+        Response r = rem.toResponse(new RuntimeException("null accept header"));
         assertNotNull(r);
         MultivaluedMap<String, Object> mm = r.getMetadata();
         assertNotNull(mm);
         assertEquals(MediaType.APPLICATION_JSON_TYPE, mm.get("Content-Type").get(0));
+        assertEquals("${version}-${release}",
+            r.getMetadata().get(VersionUtil.VERSION_HEADER).get(0));
         verifyMessage(r, rtmsg("null accept header"));
     }
 
@@ -121,7 +87,7 @@ public class CandlepinExceptionMapperTest {
             new ExceptionMessage().setDisplayMessage("you screwed up"));
         when(req.getHeader(HttpHeaderNames.ACCEPT)).thenReturn("application/json");
 
-        Response r = cem.toResponse(ce);
+        Response r = rem.toResponse(ce);
         assertNotNull(r);
         assertEquals(Status.CONFLICT.getStatusCode(), r.getStatus());
         verifyMessage(r, "you screwed up");
@@ -135,7 +101,7 @@ public class CandlepinExceptionMapperTest {
             new ExceptionMessage().setDisplayMessage("you screwed up"));
         when(req.getHeader(HttpHeaderNames.ACCEPT)).thenReturn("application/json");
         when(ce.getCause()).thenReturn(new ImportExtractionException("Error"));
-        Response r = cem.toResponse(ce);
+        Response r = rem.toResponse(ce);
         assertNotNull(r);
         assertEquals(Status.CONFLICT.getStatusCode(), r.getStatus());
         verifyMessage(r, "you screwed up");
@@ -147,33 +113,24 @@ public class CandlepinExceptionMapperTest {
 
         RuntimeException child = new RuntimeException("child ex");
         RuntimeException re = new RuntimeException("foobar", child);
-        Response r = cem.toResponse(re);
+        Response r = rem.toResponse(re);
         assertNotNull(r);
         assertEquals(Status.INTERNAL_SERVER_ERROR.getStatusCode(), r.getStatus());
         verifyMessage(r, rtmsg("child ex"));
     }
 
-    private String rtmsg(String msg) {
-        return "Runtime Error " + msg;
+    @Test
+    public void jbossBadRequestException() {
+        String foo = "foo";
+        BadRequestException bre = new BadRequestException(foo);
+        Response r = rem.toResponse(bre);
+
+        assertEquals(Status.INTERNAL_SERVER_ERROR.getStatusCode(), r.getStatus());
+        verifyMessage(r, "Runtime Error");
     }
 
-    private void verifyMessage(Response r, String expectedmsg) {
-        ExceptionMessage em = (ExceptionMessage) r.getEntity();
-
-        assertNotNull(em);
-        System.out.println(em.getDisplayMessage());
-        assertTrue(expectedmsg,
-            em.getDisplayMessage().startsWith(expectedmsg));
-    }
-
-    public static class MapperTestModule extends AbstractModule {
-
-        @Override
-        protected void configure() {
-            bind(CandlepinExceptionMapper.class);
-            bind(I18n.class).toProvider(I18nProvider.class);
-            bind(HttpServletRequest.class).toInstance(mock(HttpServletRequest.class));
-        }
-
+    @Override
+    public Class getMapperClass() {
+        return RuntimeExceptionMapper.class;
     }
 }

@@ -14,13 +14,11 @@
  */
 package org.candlepin.guice;
 
-import org.candlepin.servlet.filter.ContentTypeHackFilter;
-import org.candlepin.servlet.filter.VersionFilter;
-import org.candlepin.servlet.filter.logging.LoggingFilter;
-
 import com.google.inject.servlet.ServletModule;
 import com.wideplay.warp.persist.PersistenceFilter;
 
+import org.candlepin.servlet.filter.ContentTypeHackFilter;
+import org.candlepin.servlet.filter.logging.LoggingFilter;
 import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
 
 /**
@@ -32,7 +30,6 @@ public class CandlepinFilterModule extends ServletModule {
     protected void configureServlets() {
         filter("/*").through(PersistenceFilter.class);
         filter("/*").through(LoggingFilter.class);
-        filter("/*").through(VersionFilter.class);
         filter("/*").through(ContentTypeHackFilter.class);
 
         serve("/*").with(HttpServletDispatcher.class);

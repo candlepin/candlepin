@@ -14,7 +14,13 @@
  */
 package org.candlepin.guice;
 
-import java.util.Properties;
+import com.google.common.base.Function;
+import com.google.inject.AbstractModule;
+import com.google.inject.Singleton;
+import com.google.inject.matcher.Matcher;
+import com.google.inject.matcher.Matchers;
+import com.google.inject.name.Names;
+import com.wideplay.warp.persist.jpa.JpaUnit;
 
 import org.candlepin.audit.AMQPBusEventAdapter;
 import org.candlepin.audit.AMQPBusPublisher;
@@ -27,7 +33,23 @@ import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.CrlGenerator;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.PoolManager;
-import org.candlepin.exceptions.CandlepinExceptionMapper;
+import org.candlepin.exceptions.mappers.BadRequestExceptionMapper;
+import org.candlepin.exceptions.mappers.CandlepinExceptionMapper;
+import org.candlepin.exceptions.mappers.DefaultOptionsMethodExceptionMapper;
+import org.candlepin.exceptions.mappers.FailureExceptionMapper;
+import org.candlepin.exceptions.mappers.InternalServerErrorExceptionMapper;
+import org.candlepin.exceptions.mappers.JAXBMarshalExceptionMapper;
+import org.candlepin.exceptions.mappers.JAXBUnmarshalExceptionMapper;
+import org.candlepin.exceptions.mappers.MethodNotAllowedExceptionMapper;
+import org.candlepin.exceptions.mappers.NoLogWebApplicationExceptionMapper;
+import org.candlepin.exceptions.mappers.NotAcceptableExceptionMapper;
+import org.candlepin.exceptions.mappers.NotFoundExceptionMapper;
+import org.candlepin.exceptions.mappers.ReaderExceptionMapper;
+import org.candlepin.exceptions.mappers.RuntimeExceptionMapper;
+import org.candlepin.exceptions.mappers.UnauthorizedExceptionMapper;
+import org.candlepin.exceptions.mappers.UnsupportedMediaTypeExceptionMapper;
+import org.candlepin.exceptions.mappers.WebApplicationExceptionMapper;
+import org.candlepin.exceptions.mappers.WriterExceptionMapper;
 import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.pinsetter.core.GuiceJobFactory;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
@@ -71,6 +93,7 @@ import org.candlepin.resource.UserResource;
 import org.candlepin.resteasy.JsonProvider;
 import org.candlepin.resteasy.interceptor.AuthInterceptor;
 import org.candlepin.resteasy.interceptor.PinsetterAsyncInterceptor;
+import org.candlepin.resteasy.interceptor.VersionPostInterceptor;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.service.impl.DefaultUniqueIdGenerator;
 import org.candlepin.sync.ConsumerExporter;
@@ -87,13 +110,7 @@ import org.quartz.JobListener;
 import org.quartz.spi.JobFactory;
 import org.xnap.commons.i18n.I18n;
 
-import com.google.common.base.Function;
-import com.google.inject.AbstractModule;
-import com.google.inject.Singleton;
-import com.google.inject.matcher.Matcher;
-import com.google.inject.matcher.Matchers;
-import com.google.inject.name.Names;
-import com.wideplay.warp.persist.jpa.JpaUnit;
+import java.util.Properties;
 
 /**
  * CandlepinProductionConfiguration
@@ -143,7 +160,23 @@ public class CandlepinModule extends AbstractModule {
         bind(AdminResource.class);
         bind(StatusResource.class);
         bind(StatisticResource.class);
+        bind(UnsupportedMediaTypeExceptionMapper.class);
+        bind(UnauthorizedExceptionMapper.class);
+        bind(NotFoundExceptionMapper.class);
+        bind(NotAcceptableExceptionMapper.class);
+        bind(NoLogWebApplicationExceptionMapper.class);
+        bind(MethodNotAllowedExceptionMapper.class);
+        bind(InternalServerErrorExceptionMapper.class);
+        bind(DefaultOptionsMethodExceptionMapper.class);
+        bind(BadRequestExceptionMapper.class);
+        bind(WebApplicationExceptionMapper.class);
+        bind(FailureExceptionMapper.class);
+        bind(ReaderExceptionMapper.class);
+        bind(WriterExceptionMapper.class);
         bind(CandlepinExceptionMapper.class);
+        bind(RuntimeExceptionMapper.class);
+        bind(JAXBUnmarshalExceptionMapper.class);
+        bind(JAXBMarshalExceptionMapper.class);
         bind(Principal.class).toProvider(PrincipalProvider.class);
         bind(JsRulesProvider.class).asEagerSingleton();
         bind(JsRules.class).toProvider(JsRulesProvider.class);
@@ -153,6 +186,7 @@ public class CandlepinModule extends AbstractModule {
         bind(I18n.class).toProvider(I18nProvider.class);
         bind(AuthInterceptor.class);
         bind(PinsetterAsyncInterceptor.class);
+        bind(VersionPostInterceptor.class);
         bind(JsonProvider.class).asEagerSingleton();
         bind(EventSink.class).to(EventSinkImpl.class);
         bind(JobFactory.class).to(GuiceJobFactory.class);

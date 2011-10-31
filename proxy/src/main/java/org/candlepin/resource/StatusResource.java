@@ -22,8 +22,6 @@ import org.candlepin.util.VersionUtil;
 
 import com.google.inject.Inject;
 
-import org.apache.log4j.Logger;
-
 import java.util.Map;
 
 import javax.ws.rs.GET;
@@ -36,8 +34,6 @@ import javax.ws.rs.core.MediaType;
  */
 @Path("/status")
 public class StatusResource {
-
-    private static Logger log = Logger.getLogger(StatusResource.class);
 
     /**
      * The current version of candlepin
@@ -52,23 +48,18 @@ public class StatusResource {
     private boolean standalone = true;
 
     private RulesCurator rulesCurator;
-    private Config config;
 
     @Inject
     public StatusResource(RulesCurator rulesCurator,
                           Config config) {
         this.rulesCurator = rulesCurator;
-        try {
-            Map<String, String> map = VersionUtil.getVersionMap();
-            version = map.get("version");
-            release = map.get("release");
 
-            if (config == null || !config.standalone()) {
-                standalone = false;
-            }
-        }
-        catch (Exception e) {
-            log.error("Can not load candlepin_info.properties", e);
+        Map<String, String> map = VersionUtil.getVersionMap();
+        version = map.get("version");
+        release = map.get("release");
+
+        if (config == null || !config.standalone()) {
+            standalone = false;
         }
     }
 

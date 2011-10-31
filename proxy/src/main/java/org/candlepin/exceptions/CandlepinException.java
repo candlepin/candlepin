@@ -46,7 +46,12 @@ public class CandlepinException extends RuntimeException {
     public Status httpReturnCode() {
         return returnCode;
     }
-
+    /**
+     * Add the ability for exceptions to set headers in the response. This
+     * allows me to use basic auth from the browser. Should be overridden
+     * by child exceptions if they want to include headers.
+     * @return headers
+     */
     public Map<String, String> headers() {
         return new HashMap<String, String>();
     }

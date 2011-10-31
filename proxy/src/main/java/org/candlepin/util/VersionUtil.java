@@ -14,6 +14,8 @@
  */
 package org.candlepin.util;
 
+import org.apache.log4j.Logger;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -24,11 +26,15 @@ import java.util.Properties;
  * VersionUtil
  */
 public class VersionUtil {
+    private static Logger log = Logger.getLogger(VersionUtil.class);
+
+    public static final String VERSION_HEADER = "X-Candlepin-Version";
+
     private VersionUtil() {
         // Quiet checkstyle
     }
 
-    public static Map<String, String> getVersionMap() throws IOException {
+    public static Map<String, String> getVersionMap() {
         Map<String, String> map = new HashMap<String, String>();
 
         map.put("version", "Unknown");
@@ -38,14 +44,29 @@ public class VersionUtil {
             .getResourceAsStream("candlepin_info.properties");
 
         Properties props = new Properties();
-        props.load(in);
-        if (props.containsKey("version")) {
-            map.put("version", props.getProperty("version"));
+
+        try {
+            props.load(in);
+            if (props.containsKey("version")) {
+                map.put("version", props.getProperty("version"));
+            }
+            if (props.containsKey("release")) {
+                map.put("release", props.getProperty("release"));
+            }
         }
-        if (props.containsKey("release")) {
-            map.put("release", props.getProperty("release"));
+        catch (IOException ioe) {
+            log.error("Can not load candlepin_info.properties", ioe);
         }
-        in.close();
+        finally {
+            try {
+                if (in != null) {
+                    in.close();
+                }
+            }
+            catch (IOException ioe) {
+                log.error("problem closing candlepin_info reader");
+            }
+        }
 
         return map;
     }
