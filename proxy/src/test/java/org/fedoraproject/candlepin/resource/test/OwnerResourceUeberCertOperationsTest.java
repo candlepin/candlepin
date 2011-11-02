@@ -17,7 +17,6 @@ package org.fedoraproject.candlepin.resource.test;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import org.fedoraproject.candlepin.auth.Principal;
 import org.fedoraproject.candlepin.auth.UserPrincipal;
@@ -44,8 +43,7 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
     /**
      *
      */
-    private static final String UEBER_PRODUCT = "_ueber_product";
-
+    private static final String UEBER_PRODUCT = Product.UEBER_PRODUCT_POSTFIX;
     private static final String OWNER_NAME = "Jar_Jar_Binks";
 
     private Owner owner;
@@ -71,7 +69,7 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
             null, null, consumerCurator, null, i18n, null, null, null,
             null, null, poolManager, null, null, null, subAdapter,
             null, consumerTypeCurator, productAdapter, contentCurator,
-            entCertCurator, entitlementCurator, uniqueIdGenerator);
+            entCertCurator, entitlementCurator, uniqueIdGenerator, ueberCertGenerator);
     }
 
     @Test
@@ -83,10 +81,10 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
     @Test
     public void testUeberSubscriptionIsCreated() throws Exception {
         or.createUeberCertificate(principal, owner.getKey());
-        List<Subscription> ueberSubscription = subAdapter.getSubscriptions(owner);
+        Subscription ueberSubscription = subAdapter.findUeberSubscription(owner);
 
-        assertTrue(ueberSubscription.size() == 1);
-        assertTrue(ueberSubscription.get(0).getProduct() ==
+        assertNotNull(ueberSubscription);
+        assertTrue(ueberSubscription.getProduct() ==
             productCurator.lookupByName(owner.getKey() + UEBER_PRODUCT));
     }
 
@@ -101,7 +99,7 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
         or.createUeberCertificate(principal, owner.getKey());
         Consumer c = consumerCurator.findByName(owner, "ueber_cert_consumer");
 
-        assertTrue(poolCurator.listByConsumer(c).size() == 1);
+        assertNotNull(poolCurator.findUeberPool(owner));
     }
 
     @Test

@@ -26,6 +26,7 @@ import org.fedoraproject.candlepin.controller.CrlGenerator;
 import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.exceptions.CandlepinExceptionMapper;
+import org.fedoraproject.candlepin.model.UeberCertificateGenerator;
 import org.fedoraproject.candlepin.model.JobCurator;
 import org.fedoraproject.candlepin.pinsetter.core.GuiceJobFactory;
 import org.fedoraproject.candlepin.pinsetter.core.PinsetterJobListener;
@@ -176,6 +177,9 @@ public class CandlepinModule extends AbstractModule {
         bind(RefreshPoolsJob.class);
         bind(EntitlerJob.class);
 
+        //UeberCerts
+        bind(UeberCertificateGenerator.class);
+
         // The order in which interceptors are bound is important!
         // We need role enforcement to be executed before access control
         Matcher resourcePkgMatcher = Matchers.inPackage(Package.getPackage(
@@ -192,6 +196,7 @@ public class CandlepinModule extends AbstractModule {
         bind(AMQPBusPublisher.class).toProvider(AMQPBusPubProvider.class)
                 .in(Singleton.class);
 
+        // flexible end date for identity certificates
         bind(Function.class).annotatedWith(Names.named("endDateGenerator"))
             .to(ExpiryDateFunction.class).in(Singleton.class);
     }

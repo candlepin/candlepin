@@ -63,6 +63,7 @@ import org.fedoraproject.candlepin.model.StatisticCurator;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
 import org.fedoraproject.candlepin.model.SubscriptionsCertificateCurator;
+import org.fedoraproject.candlepin.model.UeberCertificateGenerator;
 import org.fedoraproject.candlepin.model.UserCurator;
 import org.fedoraproject.candlepin.service.EntitlementCertServiceAdapter;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
@@ -121,6 +122,7 @@ public class DatabaseTestFixture {
     protected CandlepinPoolManager poolManager;
     protected StatisticCurator statisticCurator;
     protected UniqueIdGenerator uniqueIdGenerator;
+    protected UeberCertificateGenerator ueberCertGenerator;
 
     @Before
     public void init() {
@@ -177,6 +179,7 @@ public class DatabaseTestFixture {
         statisticCurator = injector.getInstance(StatisticCurator.class);
         i18n = injector.getInstance(I18n.class);
         uniqueIdGenerator = injector.getInstance(UniqueIdGenerator.class);
+        ueberCertGenerator = injector.getInstance(UeberCertificateGenerator.class);
 
         securityInterceptor = testingModule.securityInterceptor();
 

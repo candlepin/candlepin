@@ -66,6 +66,8 @@ import javax.xml.bind.annotation.XmlTransient;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Consumer extends AbstractHibernateObject implements Linkable, Owned {
 
+    public static final String UEBER_CERT_CONSUMER = "ueber_cert_consumer";
+
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")

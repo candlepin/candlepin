@@ -14,10 +14,12 @@
  */
 package org.fedoraproject.candlepin.model.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
+import org.fedoraproject.candlepin.auth.NoAuthPrincipal;
 import org.fedoraproject.candlepin.model.Consumer;
+import org.fedoraproject.candlepin.model.ConsumerType;
+import org.fedoraproject.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
@@ -26,7 +28,6 @@ import org.fedoraproject.candlepin.model.ProvidedProduct;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.test.DatabaseTestFixture;
 import org.fedoraproject.candlepin.test.TestUtil;
-
 import org.junit.Before;
 import org.junit.Test;
 
@@ -46,6 +47,9 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     public void setUp() {
         owner = createOwner();
         ownerCurator.create(owner);
+
+        ConsumerType systemType = new ConsumerType(ConsumerTypeEnum.SYSTEM);
+        consumerTypeCurator.create(systemType);
 
         product = TestUtil.createProduct();
         productCurator.create(product);
@@ -82,6 +86,20 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         // If we specify no date filtering, the expired pool should be returned:
         results =
+            poolCurator.listAvailableEntitlementPools(consumer, consumer.getOwner(),
+                (String) null, null, true, false);
+        assertEquals(1, results.size());
+    }
+
+    @Test
+    public void testAvailablePoolsDoesNotIncludeUeberPool() throws Exception {
+        Pool pool = createPoolAndSub(owner, product, 100L,
+            TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2005, 3, 2));
+        poolCurator.create(pool);
+
+        ueberCertGenerator.generate(owner, new NoAuthPrincipal());
+
+        List<Pool> results =
             poolCurator.listAvailableEntitlementPools(consumer, consumer.getOwner(),
                 (String) null, null, true, false);
         assertEquals(1, results.size());
