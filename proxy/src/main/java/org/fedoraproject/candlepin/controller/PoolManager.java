@@ -145,5 +145,7 @@ public interface PoolManager {
      */
     void updatePoolForSubscription(Pool existingPool, Subscription sub);
 
-    void updatePoolQuantity(Pool pool, long adjust);
+    Pool updatePoolQuantity(Pool pool, long adjust);
+
+    Pool setPoolQuantity(Pool pool, long set);
 }

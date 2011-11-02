@@ -19,10 +19,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.mock;
 
 import org.fedoraproject.candlepin.auth.UserPrincipal;
 import org.fedoraproject.candlepin.config.Config;
 import org.fedoraproject.candlepin.controller.PoolManager;
+import org.fedoraproject.candlepin.model.Entitlement;
 import org.fedoraproject.candlepin.model.Owner;
 import org.fedoraproject.candlepin.model.Pool;
 import org.fedoraproject.candlepin.model.PoolAttribute;
@@ -468,6 +470,8 @@ public class JsPoolRulesTest {
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);
         List<Pool> pools = poolRules.createPools(s);
         assertEquals(1, pools.size());
+        Entitlement ent = mock(Entitlement.class);
+        when(ent.getQuantity()).thenReturn(1);
 
         // Now make a pool that would have been created for guests only after a host
         // bound to the parent pool:
@@ -476,6 +480,7 @@ public class JsPoolRulesTest {
         consumerSpecificPool.setAttribute("pool_derived", "true");
         consumerSpecificPool.setAttribute("virt_only", "true");
         consumerSpecificPool.setQuantity(10L);
+        consumerSpecificPool.setSourceEntitlement(ent);
         pools.add(consumerSpecificPool);
 
         List<PoolUpdate> updates = poolRules.updatePools(s, pools);
@@ -489,6 +494,8 @@ public class JsPoolRulesTest {
         List<Pool> pools = poolRules.createPools(s);
         assertEquals(1, pools.size());
         s.setQuantity(new Long(20));
+        Entitlement ent = mock(Entitlement.class);
+        when(ent.getQuantity()).thenReturn(1);
 
         // Now make a pool that would have been created for guests only after a host
         // bound to the parent pool:
@@ -497,6 +504,7 @@ public class JsPoolRulesTest {
         consumerSpecificPool.setAttribute("pool_derived", "true");
         consumerSpecificPool.setAttribute("virt_only", "true");
         consumerSpecificPool.setQuantity(10L);
+        consumerSpecificPool.setSourceEntitlement(ent);
         pools.add(consumerSpecificPool);
 
         s.getProduct().setAttribute("virt_limit", "40");

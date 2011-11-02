@@ -203,6 +203,22 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         }
     }
 
+    protected void invokeGlobalPreEntitlementRule(Map<String, Object> args) {
+        // No method for this product, try to find a global function, if
+        // neither exists this is ok and we'll just carry on.
+        try {
+            jsRules.invokeMethod(GLOBAL_PRE_FUNCTION, args);
+            log.debug("Ran rule: " + GLOBAL_PRE_FUNCTION);
+        }
+        catch (NoSuchMethodException ex) {
+            // This is fine, I hope...
+            log.warn("No default rule found: " + GLOBAL_PRE_FUNCTION);
+        }
+        catch (RhinoException ex) {
+            throw new RuleExecutionException(ex);
+        }
+    }
+
     protected void callPostUnbindRules(List<Rule> matchingRules) {
         for (Rule rule : matchingRules) {
             jsRules.invokeRule(POST_PREFIX + rule.getRuleName());

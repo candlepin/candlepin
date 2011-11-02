@@ -18,6 +18,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -55,7 +57,6 @@ import org.fedoraproject.candlepin.service.ProductServiceAdapter;
 import org.fedoraproject.candlepin.test.TestDateUtil;
 import org.fedoraproject.candlepin.test.TestUtil;
 import org.fedoraproject.candlepin.util.DateSourceImpl;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -713,7 +714,7 @@ public class DefaultRulesTest {
             new JsRulesProvider(rulesCurator).get(),
             prodAdapter, I18nFactory.getI18n(getClass(), Locale.US,
                 I18nFactory.FALLBACK), config, consumerCurator);
-        Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);
+        Subscription s = createVirtLimitSub("virtLimitProduct", 10, "10");
         List<Pool> pools = poolRules.createPools(s);
         assertEquals(2, pools.size());
 
@@ -745,9 +746,98 @@ public class DefaultRulesTest {
         verify(poolManagerMock).updatePoolQuantity(eq(virtBonusPool), eq(10L));
     }
 
-    private Subscription createVirtLimitSub(String productId, int quantity, int virtLimit) {
+    @Test
+    public void hostedVirtLimitUnlimitedBonusPoolQuantity() {
+        when(config.standalone()).thenReturn(false);
+        Consumer c = new Consumer("test consumer", "test user", owner,
+            new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
+        Enforcer enf = new ManifestEntitlementRules(new DateSourceImpl(),
+            new JsRulesProvider(rulesCurator).get(),
+            prodAdapter, I18nFactory.getI18n(getClass(), Locale.US,
+                I18nFactory.FALLBACK), config, consumerCurator);
+        Subscription s = createVirtLimitSub("virtLimitProduct", 10, "unlimited");
+        List<Pool> pools = poolRules.createPools(s);
+        assertEquals(2, pools.size());
+
+        Pool physicalPool = pools.get(0);
+        physicalPool.setId("physical");
+        Pool virtBonusPool = pools.get(1);
+        virtBonusPool.setId("virt");
+
+        assertEquals(new Long(10), physicalPool.getQuantity());
+        assertEquals(0, physicalPool.getAttributes().size());
+
+        // Quantity on bonus pool should be -1:
+        assertEquals(new Long(-1), virtBonusPool.getQuantity());
+        assertEquals("true", virtBonusPool.getAttributeValue("virt_only"));
+        assertEquals("unlimited", virtBonusPool.getProductAttribute("virt_limit")
+            .getValue());
+
+        Entitlement e = new Entitlement(physicalPool, c, new Date(), new Date(),
+            1);
+        PoolHelper postHelper = new PoolHelper(poolManagerMock, prodAdapter, e);
+        List<Pool> poolList = new ArrayList<Pool>();
+        poolList.add(virtBonusPool);
+        when(poolManagerMock.lookupBySubscriptionId(eq(physicalPool.getSubscriptionId())))
+            .thenReturn(poolList);
+
+        enf.postEntitlement(c, postHelper, e);
+        verify(poolManagerMock, never()).updatePoolQuantity(any(Pool.class), anyInt());
+
+        enf.postUnbind(consumer, postHelper, e);
+        verify(poolManagerMock, never()).updatePoolQuantity(any(Pool.class), anyInt());
+    }
+
+    @Test
+    public void exportAllPhysicalZeroBonusPoolQuantity() {
+        when(config.standalone()).thenReturn(false);
+        Consumer c = new Consumer("test consumer", "test user", owner,
+            new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
+        Enforcer enf = new ManifestEntitlementRules(new DateSourceImpl(),
+            new JsRulesProvider(rulesCurator).get(),
+            prodAdapter, I18nFactory.getI18n(getClass(), Locale.US,
+                I18nFactory.FALLBACK), config, consumerCurator);
+        Subscription s = createVirtLimitSub("virtLimitProduct", 10, "unlimited");
+        List<Pool> pools = poolRules.createPools(s);
+        assertEquals(2, pools.size());
+
+        Pool physicalPool = pools.get(0);
+        physicalPool.setId("physical");
+        Pool virtBonusPool = pools.get(1);
+        virtBonusPool.setId("virt");
+
+        assertEquals(new Long(10), physicalPool.getQuantity());
+        assertEquals(0, physicalPool.getAttributes().size());
+
+        // Quantity on bonus pool should be -1:
+        assertEquals(new Long(-1), virtBonusPool.getQuantity());
+        assertEquals("true", virtBonusPool.getAttributeValue("virt_only"));
+        assertEquals("unlimited", virtBonusPool.getProductAttribute("virt_limit")
+            .getValue());
+
+        Entitlement e = new Entitlement(physicalPool, c, new Date(), new Date(),
+            10);
+        physicalPool.setConsumed(10L);
+        physicalPool.setExported(10L);
+        PoolHelper postHelper = new PoolHelper(poolManagerMock, prodAdapter, e);
+        List<Pool> poolList = new ArrayList<Pool>();
+        poolList.add(virtBonusPool);
+        when(poolManagerMock.lookupBySubscriptionId(eq(physicalPool.getSubscriptionId())))
+            .thenReturn(poolList);
+
+        enf.postEntitlement(c, postHelper, e);
+        verify(poolManagerMock).setPoolQuantity(eq(virtBonusPool), eq(0L));
+        virtBonusPool.setQuantity(0L);
+
+        enf.postUnbind(consumer, postHelper, e);
+        verify(poolManagerMock).setPoolQuantity(eq(virtBonusPool), eq(-1L));
+    }
+
+    private Subscription createVirtLimitSub(String productId,
+                                            int quantity,
+                                            String virtLimit) {
         Product product = new Product(productId, productId);
-        product.setAttribute("virt_limit", new Integer(virtLimit).toString());
+        product.setAttribute("virt_limit", virtLimit);
         when(prodAdapter.getProductById(productId)).thenReturn(product);
         Subscription s = TestUtil.createSubscription(product);
         s.setQuantity(new Long(quantity));

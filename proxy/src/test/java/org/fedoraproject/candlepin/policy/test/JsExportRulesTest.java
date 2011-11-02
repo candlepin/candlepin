@@ -128,8 +128,6 @@ public class JsExportRulesTest {
         Pool pool = mock(Pool.class);
         Product product = mock(Product.class);
         Set<PoolAttribute> attributes = new HashSet<PoolAttribute>();
-        attributes.add(new PoolAttribute("pool_derived", "false"));
-
 
         when(entitlement.getPool()).thenReturn(pool);
         when(entitlement.getConsumer()).thenReturn(consumer);

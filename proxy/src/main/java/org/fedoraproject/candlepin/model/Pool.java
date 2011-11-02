@@ -126,6 +126,11 @@ public class Pool extends AbstractHibernateObject implements Linkable, Owned {
              "where ent.pool_id = id)")
     private Long consumed;
 
+    @Formula("(select sum(ent.quantity) from cp_entitlement ent, cp_consumer cons, " +
+        "cp_consumer_type ctype where ent.pool_id = id and ent.consumer_id = cons.id " +
+        "and cons.type_id = ctype.id and ctype.manifest = 'Y')")
+    private Long exported;
+
     // TODO: May not still be needed, iirc a temporary hack for client.
     private String productName;
 
@@ -216,6 +221,22 @@ public class Pool extends AbstractHibernateObject implements Linkable, Owned {
         // Even tho this is calculated at DB fetch time, we allow
         // setting it for changes in a single txn
         this.consumed = consumed;
+    }
+
+    /**
+     * @return quantity currently exported.
+     */
+    public Long getExported() {
+        return exported == null ? 0 : exported;
+    }
+
+    /**
+     * @param exported set the activate uses.
+     */
+    public void setExported(Long exported) {
+        // Even tho this is calculated at DB fetch time, we allow
+        // setting it for changes in a single txn
+        this.exported = exported;
     }
 
     /**
