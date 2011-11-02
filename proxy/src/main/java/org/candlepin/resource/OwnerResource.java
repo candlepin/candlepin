@@ -14,6 +14,26 @@
  */
 package org.candlepin.resource;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+
+import org.apache.log4j.Logger;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventAdapter;
 import org.candlepin.audit.EventFactory;
@@ -31,9 +51,7 @@ import org.candlepin.model.ActivationKeyCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
-import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
@@ -52,14 +70,12 @@ import org.candlepin.model.OwnerPermission;
 import org.candlepin.model.OwnerPermissionCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
-import org.candlepin.model.Product;
-import org.candlepin.model.ProductContent;
 import org.candlepin.model.Statistic;
 import org.candlepin.model.StatisticCurator;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
+import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
-import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -67,11 +83,6 @@ import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.sync.Importer;
 import org.candlepin.sync.ImporterException;
 import org.candlepin.sync.SyncDataFormatException;
-
-import com.google.inject.Inject;
-import com.wideplay.warp.persist.Transactional;
-
-import org.apache.log4j.Logger;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
@@ -80,26 +91,8 @@ import org.jboss.resteasy.util.GenericType;
 import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
+import com.google.inject.Inject;
+import com.wideplay.warp.persist.Transactional;
 
 
 /**
@@ -110,7 +103,6 @@ public class OwnerResource {
     /**
      *
      */
-    public static final String UEBER_CERT_CONSUMER = "ueber_cert_consumer";
     private OwnerCurator ownerCurator;
     private OwnerInfoCurator ownerInfoCurator;
     private PoolCurator poolCurator;
@@ -131,11 +123,9 @@ public class OwnerResource {
     private OwnerPermissionCurator permissionCurator;
     private PoolManager poolManager;
     private ConsumerTypeCurator consumerTypeCurator;
-    private ProductServiceAdapter prodAdapter;
-    private UniqueIdGenerator idGenerator;
-    private ContentCurator contentCurator;
     private EntitlementCertificateCurator entitlementCertCurator;
     private EntitlementCurator entitlementCurator;
+    private UeberCertificateGenerator ueberCertGenerator;
     private static final int FEED_LIMIT = 1000;
 
     @Inject
@@ -156,7 +146,8 @@ public class OwnerResource {
         ProductServiceAdapter prodAdapter,
         ContentCurator contentCurator,
         EntitlementCertificateCurator entitlementCertCurator,
-        EntitlementCurator entitlementCurator, UniqueIdGenerator idGenerator) {
+        EntitlementCurator entitlementCurator, UniqueIdGenerator idGenerator,
+        UeberCertificateGenerator ueberCertGenerator) {
 
         this.ownerCurator = ownerCurator;
         this.ownerInfoCurator = ownerInfoCurator;
@@ -177,11 +168,9 @@ public class OwnerResource {
         this.subService = subService;
         this.permissionCurator = permCurator;
         this.consumerTypeCurator = consumerTypeCurator;
-        this.prodAdapter = prodAdapter;
-        this.contentCurator = contentCurator;
-        this.idGenerator = idGenerator;
         this.entitlementCertCurator = entitlementCertCurator;
         this.entitlementCurator = entitlementCurator;
+        this.ueberCertGenerator = ueberCertGenerator;
     }
 
     /**
@@ -863,7 +852,9 @@ public class OwnerResource {
                 "owner with key: {0} was not found.", ownerKey));
         }
 
-        Consumer ueberConsumer = consumerCurator.findByName(o, UEBER_CERT_CONSUMER);
+        Consumer ueberConsumer = 
+            consumerCurator.findByName(o, Consumer.UEBER_CERT_CONSUMER);
+        
         // ueber cert has already been generated - re-generate it now
         if (ueberConsumer != null) {
             List<Entitlement> ueberEntitlement
@@ -873,15 +864,7 @@ public class OwnerResource {
         }
 
         try {
-            Product ueberProduct = createUeberProduct(o);
-            createUeberSubscription(o, ueberProduct);
-            poolManager.refreshPools(o);
-            Consumer consumer = createUeberConsumer(principal, o);
-
-            List<Pool> ueberPool = poolCurator.listAvailableEntitlementPools(
-                null, o, ueberProduct.getId(), null, false, false);
-
-            return generateUeberCertificate(consumer, ueberPool);
+            return ueberCertGenerator.generate(o, principal);
         }
         catch (Exception e) {
             log.error("Problem generating ueber cert for owner: " + o.getKey(), e);
@@ -907,7 +890,9 @@ public class OwnerResource {
                 "owner with key: {0} was not found.", ownerKey));
         }
 
-        Consumer ueberConsumer = consumerCurator.findByName(o, UEBER_CERT_CONSUMER);
+        Consumer ueberConsumer = 
+            consumerCurator.findByName(o, Consumer.UEBER_CERT_CONSUMER);
+        
         if (ueberConsumer == null) {
             throw new NotFoundException(i18n.tr(
                 "ueber certificate for owner {0} was not found. Please generate one.",
@@ -919,56 +904,6 @@ public class OwnerResource {
             = entitlementCertCurator.listForConsumer(ueberConsumer);
 
         return ueberCertificate.get(0);
-    }
-
-    private EntitlementCertificate generateUeberCertificate(Consumer consumer,
-        List<Pool> ueberPool) throws EntitlementRefusedException {
-        Entitlement e = poolManager.ueberCertEntitlement(consumer, ueberPool.get(0), 1);
-        return (EntitlementCertificate) e.getCertificates().toArray()[0];
-    }
-
-    private Consumer createUeberConsumer(Principal principal, Owner o) {
-        ConsumerType type = lookupConsumerType(ConsumerTypeEnum.SYSTEM.toString());
-        Consumer consumer = consumerCurator.create(new Consumer(
-            UEBER_CERT_CONSUMER,
-            principal.getUsername(),
-            o,
-            type));
-        return consumer;
-    }
-
-    private void createUeberSubscription(Owner o, Product ueberProduct) {
-        Subscription subscription = new Subscription(o, ueberProduct,
-            new HashSet<Product>(), 1L, now(), hundredYearsFromNow(), now());
-        subService.createSubscription(subscription);
-    }
-
-    private Product createUeberProduct(Owner o) {
-        Product ueberProduct = prodAdapter.createProduct(
-            new Product(null, o.getKey() + "_ueber_product", 1L));
-
-        Content ueberContent = contentCurator.create(new Content(
-            "ueber_content", idGenerator.generateId(),
-            ueberProduct.getId() + "_ueber_content", "yum", "Custom",
-            "/" + o.getKey(), ""));
-
-        ProductContent productContent =
-            new ProductContent(ueberProduct, ueberContent, true);
-        ueberProduct.getProductContent().add(productContent);
-        return ueberProduct;
-    }
-
-    private Date now() {
-        Calendar now = Calendar.getInstance();
-        Date currentTime = now.getTime();
-        return currentTime;
-    }
-
-    private Date hundredYearsFromNow() {
-        Calendar now = Calendar.getInstance();
-        now.add(Calendar.YEAR, 100);
-        Date hunderedYearsFromNow = now.getTime();
-        return hunderedYearsFromNow;
     }
 
     private void recordImportSuccess(Owner owner, boolean force) {

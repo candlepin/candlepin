@@ -81,6 +81,13 @@ public interface SubscriptionServiceAdapter {
      * @return all subscriptions.
      */
     List<Subscription> getSubscriptions();
+    
+    /**
+     * Return subscription used to generate ueber-certificate 
+     * @param owner
+     * @return UeberSubscription or null if not found
+     */
+    Subscription findUeberSubscription(Owner owner);
 
     /**
      * Checks to see if the customer has subscription terms that need to be accepted

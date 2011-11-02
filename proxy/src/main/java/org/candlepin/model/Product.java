@@ -45,6 +45,8 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @Table(name = "cp_product")
 public class Product extends AbstractHibernateObject implements Linkable {
+    
+    public final static String UEBER_PRODUCT_POSTFIX = "_ueber_product";
 
     // Product ID is stored as a string.
     // This is a subset of the product OID known as the hash.
@@ -106,6 +108,10 @@ public class Product extends AbstractHibernateObject implements Linkable {
         setAttribute("variant", variant);
         setAttribute("type", type);
         setAttribute("arch", arch);
+    }
+    
+    public static Product createUeberProductForOwner(Owner o) {
+        return new Product(null, ueberProductNameForOwner(o), 1L);
     }
 
     protected Product() {
@@ -341,6 +347,10 @@ public class Product extends AbstractHibernateObject implements Linkable {
             }
         }
         return false;
+    }
+    
+    public static String ueberProductNameForOwner(Owner o) {
+        return o.getKey() + UEBER_PRODUCT_POSTFIX;
     }
 
 }

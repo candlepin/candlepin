@@ -14,10 +14,17 @@
  */
 package org.candlepin.model.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
@@ -26,14 +33,8 @@ import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Subscription;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
-
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 
 public class PoolCuratorTest extends DatabaseTestFixture {
@@ -46,6 +47,9 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     public void setUp() {
         owner = createOwner();
         ownerCurator.create(owner);
+
+        ConsumerType systemType = new ConsumerType(ConsumerTypeEnum.SYSTEM);
+        consumerTypeCurator.create(systemType);
 
         product = TestUtil.createProduct();
         productCurator.create(product);
@@ -82,6 +86,20 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         // If we specify no date filtering, the expired pool should be returned:
         results =
+            poolCurator.listAvailableEntitlementPools(consumer, consumer.getOwner(),
+                (String) null, null, true, false);
+        assertEquals(1, results.size());
+    }
+    
+    @Test
+    public void testAvailablePoolsDoesNotIncludeUeberPool() throws Exception {
+        Pool pool = createPoolAndSub(owner, product, 100L,
+            TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2005, 3, 2));
+        poolCurator.create(pool);
+
+        ueberCertGenerator.generate(owner, new NoAuthPrincipal());
+
+        List<Pool> results =
             poolCurator.listAvailableEntitlementPools(consumer, consumer.getOwner(),
                 (String) null, null, true, false);
         assertEquals(1, results.size());

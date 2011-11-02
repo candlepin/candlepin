@@ -63,6 +63,7 @@ import org.candlepin.model.StatisticCurator;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.model.SubscriptionsCertificateCurator;
+import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.model.UserCurator;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
@@ -121,6 +122,7 @@ public class DatabaseTestFixture {
     protected CandlepinPoolManager poolManager;
     protected StatisticCurator statisticCurator;
     protected UniqueIdGenerator uniqueIdGenerator;
+    protected UeberCertificateGenerator ueberCertGenerator;
 
     @Before
     public void init() {
@@ -177,6 +179,7 @@ public class DatabaseTestFixture {
         statisticCurator = injector.getInstance(StatisticCurator.class);
         i18n = injector.getInstance(I18n.class);
         uniqueIdGenerator = injector.getInstance(UniqueIdGenerator.class);
+        ueberCertGenerator = injector.getInstance(UeberCertificateGenerator.class);
 
         securityInterceptor = testingModule.securityInterceptor();
 
@@ -227,7 +230,7 @@ public class DatabaseTestFixture {
         p.setSubscriptionId(sub.getId());
         return poolCurator.create(p);
     }
-
+    
     protected Owner createOwner() {
         Owner o = new Owner("Test Owner " + TestUtil.randomInt());
         ownerCurator.create(o);

@@ -14,10 +14,6 @@
  */
 package org.candlepin.model;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.hibernate.annotations.CollectionOfElements;
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -30,6 +26,11 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.candlepin.service.UniqueIdGenerator;
+import org.hibernate.annotations.CollectionOfElements;
+
 /**
  * ProductContent
  */
@@ -38,6 +39,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Entity
 @Table(name = "cp_content")
 public class Content extends AbstractHibernateObject {
+    
+    public final static String UEBER_CONTENT_NAME = "ueber_content";
 
     @Id
     private String id;
@@ -85,6 +88,15 @@ public class Content extends AbstractHibernateObject {
     }
 
     public Content() {
+    }
+    
+    public static Content createUeberContent(
+        UniqueIdGenerator idGenerator, Owner o, Product p) {
+        
+        return new Content(
+            UEBER_CONTENT_NAME, idGenerator.generateId(),
+            ueberContentLabelForProduct(p), "yum", "Custom",
+            "/" + o.getKey(), "");
     }
 
     /*
@@ -209,6 +221,10 @@ public class Content extends AbstractHibernateObject {
      */
     public void setRequiredTags(String requiredTags) {
         this.requiredTags = requiredTags;
+    }
+    
+    public static String ueberContentLabelForProduct(Product p) {
+        return p.getId() + "_" + UEBER_CONTENT_NAME;
     }
 
 }

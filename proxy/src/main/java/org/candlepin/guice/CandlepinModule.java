@@ -14,6 +14,8 @@
  */
 package org.candlepin.guice;
 
+import java.util.Properties;
+
 import org.candlepin.audit.AMQPBusEventAdapter;
 import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.EventSink;
@@ -26,6 +28,7 @@ import org.candlepin.controller.CrlGenerator;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.exceptions.CandlepinExceptionMapper;
+import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.pinsetter.core.GuiceJobFactory;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.core.PinsetterKernel;
@@ -80,6 +83,9 @@ import org.candlepin.util.DateSource;
 import org.candlepin.util.DateSourceImpl;
 import org.candlepin.util.ExpiryDateFunction;
 import org.candlepin.util.X509ExtensionUtil;
+import org.quartz.JobListener;
+import org.quartz.spi.JobFactory;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.common.base.Function;
 import com.google.inject.AbstractModule;
@@ -88,12 +94,6 @@ import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
 import com.wideplay.warp.persist.jpa.JpaUnit;
-
-import org.quartz.JobListener;
-import org.quartz.spi.JobFactory;
-import org.xnap.commons.i18n.I18n;
-
-import java.util.Properties;
 
 /**
  * CandlepinProductionConfiguration
@@ -171,6 +171,9 @@ public class CandlepinModule extends AbstractModule {
         // Async Jobs
         bind(RefreshPoolsJob.class);
         bind(EntitlerJob.class);
+        
+        //UeberCerts
+        bind(UeberCertificateGenerator.class);
 
         // The order in which interceptors are bound is important!
         // We need role enforcement to be executed before access control

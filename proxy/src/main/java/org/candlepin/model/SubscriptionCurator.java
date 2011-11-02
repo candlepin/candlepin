@@ -50,9 +50,12 @@ public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> 
      */
     @SuppressWarnings("unchecked")
     public List<Subscription> listByOwner(Owner o) {
-        List<Subscription> subs = currentSession().createCriteria(
-                Subscription.class)
-            .add(Restrictions.eq("owner", o)).list();
+        List<Subscription> subs = currentSession()
+            .createCriteria(Subscription.class)
+            .add(Restrictions.eq("owner", o))
+                .createCriteria("product")
+                    .add(Restrictions.ne("name", Product.ueberProductNameForOwner(o)))
+            .list();
         if (subs == null) {
             return new LinkedList<Subscription>();
         }
@@ -60,6 +63,20 @@ public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> 
         return subs;
     }
 
+    /**
+     * Return an ueber subscription filtered by owner.
+     * @param o Owner of the subscription.
+     * @return an ueber subscription filtered by owner or null.
+     */
+    public Subscription findUeberSubscription(Owner o) {
+        return (Subscription) currentSession()
+        .createCriteria(Subscription.class)
+        .add(Restrictions.eq("owner", o))
+            .createCriteria("product")
+                .add(Restrictions.eq("name", Product.ueberProductNameForOwner(o)))
+        .uniqueResult();
+    }
+    
     /**
      * Return a list of subscriptions for the given product.
      *

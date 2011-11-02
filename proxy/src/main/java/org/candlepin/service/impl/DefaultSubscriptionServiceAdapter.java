@@ -106,6 +106,11 @@ public class DefaultSubscriptionServiceAdapter implements
     public List<Subscription> getSubscriptions(Owner owner) {
         return subCurator.listByOwner(owner);
     }
+    
+    @Override
+    public Subscription findUeberSubscription(Owner owner) {
+        return subCurator.findUeberSubscription(owner);
+    }
 
     @Override
     public List<Subscription> getSubscriptions() {
