@@ -31,10 +31,10 @@ import org.candlepin.model.Entitlement;
 public class ComplianceStatus {
 
     private Date date;
+    private Date compliantUntil;
     private Set<String> nonCompliantProducts;
     private Map<String, Set<Entitlement>> compliantProducts;
     private Map<String, Set<Entitlement>> partiallyCompliantProducts; // stacked
-
     private Map<String, Set<Entitlement>> partialStacks;
 
     public ComplianceStatus(Date date) {
@@ -110,6 +110,18 @@ public class ComplianceStatus {
             partialStacks.put(stackId, new HashSet<Entitlement>());
         }
         partialStacks.get(stackId).add(entitlement);
+    }
+
+    public Date getCompliantUntil() {
+        return this.compliantUntil;
+    }
+
+    public void setCompliantUntil(Date date) {
+        this.compliantUntil = date;
+    }
+
+    public boolean isCompliant() {
+        return nonCompliantProducts.isEmpty() && partiallyCompliantProducts.isEmpty();
     }
 
 }

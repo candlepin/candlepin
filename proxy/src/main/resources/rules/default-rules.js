@@ -913,91 +913,136 @@ function find_relevant_pids(entitlement, consumer) {
 }
 
 var Compliance = {
-
-    /**
-     * Checks compliance status for a consumer on a given date.
-     */
     get_status: function() {
-        var status = new org.candlepin.policy.js.compliance.ComplianceStatus(ondate);
-
-        // Track the stack IDs we've already checked to save some time:
-        var compliant_stack_ids = new java.util.HashSet();
-        var non_compliant_stack_ids = new java.util.HashSet();
-
-        log.debug("Checking compliance status for consumer: " + consumer.getUuid());
-        for each (var e in entitlements.toArray()) {
-            log.debug("  checking entitlement: " + e.getId());
-            relevant_pids = find_relevant_pids(e, consumer);
-            log.debug("    relevant products: " + relevant_pids);
-
-            partially_stacked = false;
-            // If the pool is stacked, check that the stack requirements are met:
-            if (is_stacked(e)) {
-                var stack_id = e.getPool().getProductAttribute("stacking_id").getValue();
-                log.debug("    pool has stack ID: " + stack_id);
-
-                // Shortcuts for stacks we've already checked:
-                if (non_compliant_stack_ids.contains(stack_id) > 0) {
-                    log.debug("    stack already found to be non-compliant");
-                    partially_stacked = true;
-                    status.addPartialStack(stack_id, e);
-                }
-                else if (compliant_stack_ids.contains(stack_id) > 0) {
-                    log.debug("    stack already found to be compliant");
-                }
-                // Otherwise check the stack and add appropriately:
-                else if(!stack_is_compliant(consumer, stack_id, entitlements, log)) {
-                    log.debug("    stack is non-compliant");
-                    partially_stacked = true;
-                    status.addPartialStack(stack_id, e);
-                    non_compliant_stack_ids.add(stack_id);
-                }
-                else {
-                    log.debug("    stack is compliant");
-                    compliant_stack_ids.add(stack_id);
-                }
-            }
-
-            for each (relevant_pid in relevant_pids) {
-                if (partially_stacked) {
-                    log.debug("   partially compliant: " + relevant_pid);
-                    status.addPartiallyCompliantProduct(relevant_pid, e);
-                }
-                else {
-                    log.debug("    fully compliant: " + relevant_pid);
-                    status.addCompliantProduct(relevant_pid, e);
-                }
-            }
+        var status = getComplianceStatusOnDate(consumer, entitlements, ondate, log);
+        var compliantUntil = ondate;
+        if (status.isCompliant()) {
+			if (entitlements.isEmpty()) {
+				compliantUntil = null;
+			}
+			else {
+				compliantUntil = determineCompliantUntilDate(consumer, ondate, helper, log);
+			}
         }
-
-        // Run through each partially compliant product, if we also found a
-        // regular entitlement which provides that product, then it should not be
-        // considered partially compliant as well. We do however still leave the *stack*
-        // in partial stacks list, as this should be repaired. (it could offer other
-        // products)
-        for each (var partial_prod in status.getPartiallyCompliantProducts().keySet().toArray()) {
-            if (status.getCompliantProducts().keySet().contains(partial_prod)) {
-                status.getPartiallyCompliantProducts().remove(partial_prod);
-            }
-        }
-
-        // Run through the consumer's installed products and see if there are any we
-        // didn't find an entitlement for along the way:
-        if (consumer.getInstalledProducts() != null) {
-            for each (var installed_prod in consumer.getInstalledProducts().toArray()) {
-                var installed_pid = installed_prod.getProductId();
-                // Not compliant if we didn't find any entitlements for this product:
-                if (!status.getCompliantProducts().containsKey(installed_pid) &&
-                        !status.getPartiallyCompliantProducts().containsKey(installed_pid)) {
-                    status.addNonCompliantProduct(installed_pid);
-                }
-            }
-        }
-
+        status.setCompliantUntil(compliantUntil);
         return status;
     }
 }
-    
+
+/**
+ * Checks compliance status for a consumer on a given date.
+ */
+function getComplianceStatusOnDate(consumer, entitlements, ondate, log) {
+	var status = new org.candlepin.policy.js.compliance.ComplianceStatus(ondate);
+
+    // Track the stack IDs we've already checked to save some time:
+    var compliant_stack_ids = new java.util.HashSet();
+    var non_compliant_stack_ids = new java.util.HashSet();
+
+    log.debug("Checking compliance status for consumer: " + consumer.getUuid());
+    for each (var e in entitlements.toArray()) {
+        log.debug("  checking entitlement: " + e.getId());
+        relevant_pids = find_relevant_pids(e, consumer);
+        log.debug("    relevant products: " + relevant_pids);
+
+        partially_stacked = false;
+        // If the pool is stacked, check that the stack requirements are met:
+        if (is_stacked(e)) {
+            var stack_id = e.getPool().getProductAttribute("stacking_id").getValue();
+            log.debug("    pool has stack ID: " + stack_id);
+
+            // Shortcuts for stacks we've already checked:
+            if (non_compliant_stack_ids.contains(stack_id) > 0) {
+                log.debug("    stack already found to be non-compliant");
+                partially_stacked = true;
+                status.addPartialStack(stack_id, e);
+            }
+            else if (compliant_stack_ids.contains(stack_id) > 0) {
+                log.debug("    stack already found to be compliant");
+            }
+            // Otherwise check the stack and add appropriately:
+            else if(!stack_is_compliant(consumer, stack_id, entitlements, log)) {
+                log.debug("    stack is non-compliant");
+                partially_stacked = true;
+                status.addPartialStack(stack_id, e);
+                non_compliant_stack_ids.add(stack_id);
+            }
+            else {
+                log.debug("    stack is compliant");
+                compliant_stack_ids.add(stack_id);
+            }
+        }
+
+        for each (relevant_pid in relevant_pids) {
+            if (partially_stacked) {
+                log.debug("   partially compliant: " + relevant_pid);
+                status.addPartiallyCompliantProduct(relevant_pid, e);
+            }
+            else {
+                log.debug("    fully compliant: " + relevant_pid);
+                status.addCompliantProduct(relevant_pid, e);
+            }
+        }
+    }
+
+    // Run through each partially compliant product, if we also found a
+    // regular entitlement which provides that product, then it should not be
+    // considered partially compliant as well. We do however still leavecomplianceRules.getStatus(consumer, next); the *stack*
+    // in partial stacks list, as this should be repaired. (it could offer other
+    // products)
+    for each (var partial_prod in status.getPartiallyCompliantProducts().keySet().toArray()) {
+        if (status.getCompliantProducts().keySet().contains(partial_prod)) {
+            status.getPartiallyCompliantProducts().remove(partial_prod);
+        }
+    }
+
+    // Run through the consumer's installed products and see if there are any we
+    // didn't find an entitlement for along the way:
+    if (consumer.getInstalledProducts() != null) {
+        for each (var installed_prod in consumer.getInstalledProducts().toArray()) {
+            var installed_pid = installed_prod.getProductId();
+            // Not compliant if we didn't find any entitlements for this product:
+            if (!status.getCompliantProducts().containsKey(installed_pid) &&
+                    !status.getPartiallyCompliantProducts().containsKey(installed_pid)) {
+                status.addNonCompliantProduct(installed_pid);
+            }
+        }
+    }
+    return status;
+}
+
+/**
+ * Determine the compliant until date for a consumer based on the specifed start date
+ * and entitlements.
+ */
+function determineCompliantUntilDate(consumer, startDate, complianceHelper, log) {
+	var initialEntitlements = complianceHelper.getEntitlementsOnDate(consumer, startDate);
+	// Get all end dates from current entitlements sorted ascending.
+	var dates = complianceHelper.getSortedEndDatesFromEntitlements(initialEntitlements)
+		.toArray();
+
+	for each (var dateToCheck in dates) {
+		var next = new Date(dateToCheck.getTime());
+		var jsStartDate = new Date(startDate.getTime());
+
+		// Ignore past dates.
+		if (next < jsStartDate) {
+			continue;
+		}
+		// Need to check if we are still compliant after the end date,
+		// so we add one second.
+		next.setSeconds(next.getSeconds() + 1);
+
+		var entitlementsOnDate = complianceHelper.getEntitlementsOnDate(consumer,
+				next);
+		var status = getComplianceStatusOnDate(consumer, entitlementsOnDate, next, log);
+        if (!status.isCompliant()) {
+		return next;
+        }
+	}
+	return null;
+}
+
 var Unbind = {
 
     // defines mapping of product attributes to functions

@@ -53,6 +53,8 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.User;
 import org.candlepin.pinsetter.tasks.EntitlerJob;
+import org.candlepin.policy.js.compliance.ComplianceRules;
+import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.consumer.ConsumerDeleteHelper;
 import org.candlepin.policy.js.consumer.ConsumerRules;
 import org.candlepin.resource.util.ResourceDateParser;
@@ -77,6 +79,7 @@ import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -129,6 +132,7 @@ public class ConsumerResource {
     private OwnerCurator ownerCurator;
     private ActivationKeyCurator activationKeyCurator;
     private Entitler entitler;
+    private ComplianceRules complianceRules;
 
     @Inject
     public ConsumerResource(ConsumerCurator consumerCurator,
@@ -143,7 +147,7 @@ public class ConsumerResource {
         Exporter exporter, PoolManager poolManager,
         ConsumerRules consumerRules, ConsumerDeleteHelper consumerDeleteHelper,
         OwnerCurator ownerCurator, ActivationKeyCurator activationKeyCurator,
-        Entitler entitler) {
+        Entitler entitler, ComplianceRules complianceRules) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -165,6 +169,7 @@ public class ConsumerResource {
         this.eventAdapter = eventAdapter;
         this.activationKeyCurator = activationKeyCurator;
         this.entitler = entitler;
+        this.complianceRules = complianceRules;
     }
 
     /**
@@ -1381,5 +1386,22 @@ public class ConsumerResource {
                 consumer.getUuid()));
         }
         return consumerCurator.getHost(consumer.getFact("virt.uuid"));
+    }
+
+    /**
+     * Return the compliance status of the specified consumer.
+     *
+     * @param uuid uuid of the consumer to get status for.
+     * @return the compliance status by the given uuid.
+     * @httpcode 404
+     * @httpcode 200
+     */
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{consumer_uuid}/compliance")
+    public ComplianceStatus getComplianceStatus(
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid) {
+        Consumer consumer = verifyAndLookupConsumer(uuid);
+        return this.complianceRules.getStatus(consumer, Calendar.getInstance().getTime());
     }
 }

@@ -19,6 +19,8 @@ import static org.mockito.Mockito.*;
 
 
 import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -89,14 +91,20 @@ public class ComplianceRulesTest {
 
     private Entitlement mockEntitlement(Consumer consumer, String productId,
         String ... providedProductIds) {
+        return mockEntitlement(consumer, productId,
+            TestUtil.createDate(2000, 1, 1), TestUtil.createDate(2050, 1, 1),
+            providedProductIds);
+    }
+
+    private Entitlement mockEntitlement(Consumer consumer, String productId,
+        Date start, Date end, String ... providedProductIds) {
 
         Set<ProvidedProduct> provided = new HashSet<ProvidedProduct>();
         for (String pid : providedProductIds) {
             provided.add(new ProvidedProduct(pid, pid));
         }
         Pool p = new Pool(owner, productId, productId, provided,
-            new Long(1000), TestUtil.createDate(2000, 1, 1),
-            TestUtil.createDate(2050, 1, 1), "1000", "1000");
+            new Long(1000), start, end, "1000", "1000");
         Entitlement e = new Entitlement(p, consumer, p.getStartDate(), p.getEndDate(), 1);
         return e;
     }
@@ -393,5 +401,106 @@ public class ComplianceRulesTest {
         assertEquals(1, status.getPartialStacks().size());
     }
 
+    @Test
+    public void compliantUntilDateIsNullWhenNoInstalledProductsAndNoEntitlements() {
+        Consumer consumer = mockConsumer(new String[0]);
+        ComplianceStatus status = compliance.getStatus(consumer, new Date());
+        assertNull(status.getCompliantUntil());
+    }
+
+    @Test
+    public void compliantUntilDateIsOnDateWhenInstalledProductsButNoEntitlements() {
+        Consumer consumer = mockConsumer(new String[]{ "Only One Installed Prod"});
+        Date expectedOnDate = TestUtil.createDate(20011, 4, 12);
+        ComplianceStatus status = compliance.getStatus(consumer, expectedOnDate);
+        assertEquals(expectedOnDate, status.getCompliantUntil());
+    }
+
+    @Test
+    public void compliantUntilDateIsDateOfFirstEntitlementToExpireCausingNonCompliant() {
+        Consumer consumer = mockConsumer(new String[]{ PRODUCT_1, PRODUCT_2 });
+
+        Date start = TestUtil.createDate(2005, 6, 12);
+
+        Entitlement ent1 = mockEntitlement(consumer, "Provides Product 1 For Short Period",
+            start, TestUtil.createDate(2005, 6, 22), PRODUCT_1);
+
+        Entitlement ent2 = mockEntitlement(consumer, "Provides Product 1 past Ent3",
+            TestUtil.createDate(2005, 6, 20), TestUtil.createDate(2005, 7, 28), PRODUCT_1);
+
+        Entitlement ent3 = mockEntitlement(consumer, "Provides Product 2 Past Ent1",
+            start, TestUtil.createDate(2005, 7, 18), PRODUCT_2);
+
+        // Set up entitlements at specific dates.
+        Date statusDate = TestUtil.createDate(2005, 6, 14);
+        when(entCurator.listByConsumerAndDate(eq(consumer),
+            eq(statusDate))).thenReturn(Arrays.asList(ent1, ent3));
+
+        when(entCurator.listByConsumerAndDate(eq(consumer),
+            eq(addSecond(ent1.getEndDate())))).thenReturn(Arrays.asList(ent2, ent3));
+
+        when(entCurator.listByConsumerAndDate(eq(consumer),
+            eq(addSecond(ent2.getEndDate())))).thenReturn(
+                Arrays.asList(new Entitlement[0]));
+
+        Date expectedDate = addSecond(ent3.getEndDate());
+        when(entCurator.listByConsumerAndDate(eq(consumer),
+            eq(expectedDate))).thenReturn(Arrays.asList(ent2));
+
+        ComplianceStatus status = compliance.getStatus(consumer, statusDate);
+        assertEquals(expectedDate, status.getCompliantUntil());
+    }
+
+    private Date addSecond(Date date) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+        cal.add(Calendar.SECOND, 1);
+        return cal.getTime();
+    }
+
+    @Test
+    public void compliantUntilDateIsOnDateWhenPartialStack() {
+        Consumer c = mockConsumer(new String [] {PRODUCT_1, PRODUCT_2});
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+
+        // Partial stack: covers only 4 sockets... consumer has 8.
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(ents);
+
+        Date expectedOnDate = TestUtil.createDate(2011, 8, 30);
+        ComplianceStatus status = compliance.getStatus(c, expectedOnDate);
+        assertEquals(1, status.getPartialStacks().size());
+        assertEquals(expectedOnDate, status.getCompliantUntil());
+    }
+
+    // NOTE: This scenario should NEVER happen since listByConsumerAndDate should
+    //       never return dates before the specified date. This test exists to
+    //       test the guard clauses in the ComplianceRulesHelper in case it ever happened.
+    @Test
+    public void expiredEntitlementIsIgnoredWhenCalculatingCompliantUntilDate() {
+        Consumer consumer = mockConsumer(new String[]{ PRODUCT_1 });
+
+        Date start = TestUtil.createDate(2005, 6, 12);
+
+        Entitlement expired = mockEntitlement(consumer, "Provides Product 1 past Ent3",
+            TestUtil.createDate(2005, 5, 20), TestUtil.createDate(2005, 6, 2), PRODUCT_1);
+
+        Entitlement ent = mockEntitlement(consumer, "Provides Product 1 For Short Period",
+            start, TestUtil.createDate(2005, 6, 22), PRODUCT_1);
+
+        // Set up entitlements at specific dates.
+        when(entCurator.listByConsumerAndDate(eq(consumer),
+            eq(start))).thenReturn(Arrays.asList(expired, ent));
+
+        when(entCurator.listByConsumerAndDate(eq(consumer),
+            eq(addSecond(ent.getEndDate())))).thenReturn(Arrays.asList(new Entitlement[0]));
+
+        Date expectedDate = addSecond(ent.getEndDate());
+        ComplianceStatus status = compliance.getStatus(consumer, start);
+        assertEquals(expectedDate, status.getCompliantUntil());
+    }
 
 }
