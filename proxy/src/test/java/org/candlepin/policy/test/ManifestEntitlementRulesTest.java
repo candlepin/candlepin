@@ -136,10 +136,20 @@ public class ManifestEntitlementRulesTest extends DatabaseTestFixture {
         Consumer c = mock(Consumer.class);
         Pool p = mock(Pool.class);
         ReadOnlyPool roPool = mock(ReadOnlyPool.class);
+        ConsumerType type = mock(ConsumerType.class);
+        Product product = mock(Product.class);
+
+        when(c.getType()).thenReturn(type);
+        when(type.isManifest()).thenReturn(true);
+        when(p.getProductId()).thenReturn("testProd");
+        when(productAdapter.getProductById(eq("testProd"))).thenReturn(product);
+        when(product.getAttributes()).thenReturn(new HashSet<ProductAttribute>());
+        when(p.getAttributes()).thenReturn(new HashSet<PoolAttribute>());
+
         PreEntHelper peh = enforcer.preEntitlement(c, p, 10);
         assertNotNull(peh);
         peh.checkQuantity(roPool);
-        verify(roPool).entitlementsAvailable(eq(1));
+        verify(roPool).entitlementsAvailable(eq(10));
     }
 
     @Test(expected = NullPointerException.class)

@@ -15,6 +15,7 @@
 package org.candlepin.model;
 
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Type;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -43,7 +44,8 @@ public class ConsumerType extends AbstractHibernateObject {
     @Column(nullable = false, unique = true)
     private String label;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 1)
+    @Type(type = "yes_no")
     private boolean manifest = false;
 
     /**

@@ -430,32 +430,48 @@ var Entitlement = {
     },
 
     post_virt_limit: function() {
-        if (attributes.containsKey("virt_limit")) {
-            if (standalone) {
-                var productId = pool.getProductId();
-                var virt_limit = attributes.get("virt_limit");
-                if ('unlimited'.equals(virt_limit)) {
-                    post.createHostRestrictedPool(productId, pool, 'unlimited');
-                } else {
-                    var virt_quantity = parseInt(virt_limit) * entitlement.getQuantity();
-                    if (virt_quantity > 0) {
-                        post.createHostRestrictedPool(productId, pool,
-                                virt_quantity.toString());
-                    }
+        if (standalone) {
+            var productId = pool.getProductId();
+            var virt_limit = attributes.get("virt_limit");
+            if ('unlimited'.equals(virt_limit)) {
+                post.createHostRestrictedPool(productId, pool, 'unlimited');
+            } else {
+                var virt_quantity = parseInt(virt_limit) * entitlement.getQuantity();
+                if (virt_quantity > 0) {
+                    post.createHostRestrictedPool(productId, pool,
+                            virt_quantity.toString());
                 }
             }
-            else {
-                if (consumer.isManifest()) {
-                    var virt_limit = attributes.get("virt_limit");
-                    if (!'unlimited'.equals(virt_limit)) {
-                        var virt_quantity = parseInt(virt_limit) * entitlement.getQuantity();
-                        if (virt_quantity > 0) {
-                            var pools = post.lookupBySubscriptionId(pool.getSubscriptionId());
-                            for (var idex = 0 ; idex < pools.size(); idex++ ) {
-                                var derivedPool = pools.get(idex);
-                                if (!derivedPool.getId().equals(pool.getId())) {
-                                    post.updatePoolQuantity(derivedPool, -1 * virt_quantity);
-                                }
+        }
+        else {
+            // if we are exporting we need to deal with the bonus pools
+            if (consumer.isManifest()) {
+                var virt_limit = attributes.get("virt_limit");
+                if (!'unlimited'.equals(virt_limit)) {
+                    // if the bonus pool is not unlimited, then the bonus pool quantity
+                    //   needs to be adjusted based on the virt limit
+                    var virt_quantity = parseInt(virt_limit) * entitlement.getQuantity();
+                    if (virt_quantity > 0) {
+                        var pools = post.lookupBySubscriptionId(pool.getSubscriptionId());
+                        for (var idex = 0 ; idex < pools.size(); idex++ ) {
+                            var derivedPool = pools.get(idex);
+                            if (derivedPool.getAttributeValue("pool_derived")) {
+                                derivedPool = post.updatePoolQuantity(derivedPool, -1 * virt_quantity);
+                            }
+                        }
+                    }
+                }
+                else {
+                    // if the bonus pool is unlimited, then the quantity needs to go to 0
+                    //   when the physical pool is exhausted completely by export.
+                    //   A quantity of 0 will block future binds, whereas -1 does not.
+                    if (pool.getQuantity() == pool.getExported()) {
+                        //getting all pools matching the sub id. Filtering out the 'parent'.
+                        var pools = post.lookupBySubscriptionId(pool.getSubscriptionId());
+                        for (var idex = 0 ; idex < pools.size(); idex++ ) {
+                            var derivedPool = pools.get(idex);
+                            if (derivedPool.getAttributeValue("pool_derived")) {
+                                derivedPool = post.setPoolQuantity(derivedPool, 0);
                             }
                         }
                     }
@@ -488,24 +504,26 @@ var Entitlement = {
     },
 
     pre_global: function() {
-        if (consumer.hasEntitlement(pool.getId()) && product.getAttribute("multi-entitlement") != "yes") {
-            pre.addError("rulefailed.consumer.already.has.product");
-        }
-
-        if (pre.getQuantity() > 1 && product.getAttribute("multi-entitlement") != "yes") {
-            pre.addError("rulefailed.pool.does.not.support.multi-entitlement");
-        }
-
-        // If the product has no required consumer type, assume it is restricted to "system":
-        if (!product.hasAttribute("requires_consumer_type")) {
-            if (!consumer.getType().equals("system")) {
-                pre.addError("rulefailed.consumer.type.mismatch");
+        if (!consumer.isManifest()) {
+            if (consumer.hasEntitlement(pool.getId()) && product.getAttribute("multi-entitlement") != "yes") {
+                pre.addError("rulefailed.consumer.already.has.product");
             }
 
-        }
+            if (pre.getQuantity() > 1 && product.getAttribute("multi-entitlement") != "yes") {
+                pre.addError("rulefailed.pool.does.not.support.multi-entitlement");
+            }
 
-        if (pool.getRestrictedToUsername() != null && !pool.getRestrictedToUsername().equals(consumer.getUsername())) {
-            pre.addError("pool.not.available.to.user, pool= '" + pool.getRestrictedToUsername() + "', actual username='" + consumer.getUsername() + "'" );
+            // If the product has no required consumer type, assume it is restricted to "system":
+            if (!product.hasAttribute("requires_consumer_type")) {
+                if (!consumer.getType().equals("system")) {
+                    pre.addError("rulefailed.consumer.type.mismatch");
+                }
+
+            }
+
+            if (pool.getRestrictedToUsername() != null && !pool.getRestrictedToUsername().equals(consumer.getUsername())) {
+                pre.addError("pool.not.available.to.user, pool= '" + pool.getRestrictedToUsername() + "', actual username='" + consumer.getUsername() + "'" );
+            }
         }
 
         // FIXME
@@ -713,7 +731,7 @@ var Pool = {
                 var virt_limit_quantity = parseInt(virt_limit);
 
                 if (virt_limit_quantity > 0) {
-                    var virt_quantity = sub.getQuantity() * virt_limit_quantity;
+                    var virt_quantity = quantity * virt_limit_quantity;
 
                     pools.add(helper.createPool(sub, sub.getProduct().getId(),
                                                 virt_quantity.toString(), virt_attributes));
@@ -751,14 +769,32 @@ var Pool = {
                 var virt_limit = attributes.get("virt_limit");
 
                 if ('unlimited'.equals(virt_limit)) {
-                    expectedQuantity = -1;
+                    if (existingPool.getQuantity() == 0) {
+                        // this will only happen if the rules set it to be 0.
+                        //   don't modify
+                        expectedQuantity = 0;
+                    }
+                    else {
+                        // pretty much all the rest.
+                        expectedQuantity = -1;
+                    }
                 }
                 else {
                     if (standalone) {
-                        expectedQuantity = parseInt(virt_limit);
+                        // this is how we determined the quantity
+                        expectedQuantity = existingPool.getSourceEntitlement().getQuantity() * parseInt(virt_limit);
                     }
                     else {
-                        expectedQuantity = sub.getQuantity() * parseInt(virt_limit);
+                        // we need to see if a parent pool exists and has been exported. Adjust is number exported
+                        //   from a parent pool. If no parent pool, adjust = 0 [a scenario of virtual pool only]
+                        var adjust = 0;
+                        for (var idex = 0 ; idex < pools.size(); idex++ ) {
+                            var derivedPool = pools.get(idex);
+                            if (!derivedPool.getAttributeValue("pool_derived")) {
+                                adjust = derivedPool.getExported();
+                            }
+                        }
+                        expectedQuantity = (expectedQuantity-adjust) * parseInt(virt_limit);
                     }
                 }
             }
@@ -813,9 +849,7 @@ var Pool = {
 
 var Export = {
     can_export_entitlement: function() {
-        pool_derived = attributes.containsKey('pool_derived') &&
-                    'true'.equalsIgnoreCase(attributes.get('pool_derived'));
-
+        pool_derived = attributes.containsKey('pool_derived');
         return !consumer.isManifest() || !pool_derived;
     }
 }
@@ -968,18 +1002,31 @@ var Unbind = {
     },
     
     post_virt_limit: function() {
-        if (attributes.containsKey("virt_limit")) {
-            if (!standalone && consumer.isManifest()) {
-                var virt_limit = attributes.get("virt_limit");
-                if (!'unlimited'.equals(virt_limit)) {
-                    var virt_quantity = parseInt(virt_limit) * entitlement.getQuantity();
-                    if (virt_quantity > 0) {
-                        var pools = post.lookupBySubscriptionId(pool.getSubscriptionId());
-                        for (var idex = 0 ; idex < pools.size(); idex++ ) {
-                            var derivedPool = pools.get(idex);
-                            if (!derivedPool.getId().equals(pool.getId())) {
-                                post.updatePoolQuantity(derivedPool, virt_quantity);
-                            }
+        if (!standalone && consumer.isManifest()) {
+            var virt_limit = attributes.get("virt_limit");
+            if (!'unlimited'.equals(virt_limit)) {
+                // As we have unbound an entitlement from a physical pool that was previously
+                //   exported, we need to add back the reduced bonus pool quantity.
+                var virt_quantity = parseInt(virt_limit) * entitlement.getQuantity();
+                if (virt_quantity > 0) {
+                    var pools = post.lookupBySubscriptionId(pool.getSubscriptionId());
+                    for (var idex = 0 ; idex < pools.size(); idex++ ) {
+                        var derivedPool = pools.get(idex);
+                        if (derivedPool.getAttributeValue("pool_derived")) {
+                            post.updatePoolQuantity(derivedPool, virt_quantity);
+                        }
+                    }
+                }
+            }
+            else {
+                // As we have unbound an entitlement from a physical pool that was previously
+                //   exported, we need to set the unlimited bonus pool quantity to -1.
+                var pools = post.lookupBySubscriptionId(pool.getSubscriptionId());
+                for (var idex = 0 ; idex < pools.size(); idex++ ) {
+                    var derivedPool = pools.get(idex);
+                    if (derivedPool.getAttributeValue("pool_derived")) {
+                        if(derivedPool.getQuantity() == 0) {
+                            post.setPoolQuantity(derivedPool, -1);
                         }
                     }
                 }

@@ -14,17 +14,28 @@
  */
 package org.candlepin.policy.js.entitlement;
 
-import org.candlepin.config.Config;
-import org.candlepin.model.ConsumerCurator;
-import org.candlepin.policy.Enforcer;
-import org.candlepin.policy.js.JsRules;
-import org.candlepin.service.ProductServiceAdapter;
-import org.candlepin.util.DateSource;
-
 import com.google.inject.Inject;
 
 import org.apache.log4j.Logger;
+import org.candlepin.config.Config;
+import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.Pool;
+import org.candlepin.model.Product;
+import org.candlepin.policy.Enforcer;
+import org.candlepin.policy.ValidationError;
+import org.candlepin.policy.ValidationWarning;
+import org.candlepin.policy.js.JsRules;
+import org.candlepin.policy.js.ReadOnlyConsumer;
+import org.candlepin.policy.js.ReadOnlyPool;
+import org.candlepin.policy.js.ReadOnlyProduct;
+import org.candlepin.policy.js.ReadOnlyProductCache;
+import org.candlepin.service.ProductServiceAdapter;
+import org.candlepin.util.DateSource;
 import org.xnap.commons.i18n.I18n;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * ManifestEntitlementRules - Exists primarily to allow consumers of manifest type
@@ -49,5 +60,61 @@ public class ManifestEntitlementRules extends AbstractEntitlementRules implement
         log = Logger.getLogger(ManifestEntitlementRules.class);
         rulesLogger =
             Logger.getLogger(ManifestEntitlementRules.class.getCanonicalName() + ".rules");
+    }
+
+    @Override
+    public PreEntHelper preEntitlement(
+        Consumer consumer, Pool entitlementPool, Integer quantity) {
+
+        jsRules.reinitTo("entitlement_name_space");
+        rulesInit();
+
+        PreEntHelper preHelper = runPreEntitlement(consumer, entitlementPool, quantity);
+
+        return preHelper;
+    }
+
+    /**
+     * The standard pre entitlement runs both the global and the attribute rules
+     *    Here we have limited it to the global only as the exclusions based on 
+     *    attribute values do not apply to export scenarios. 
+     * @param consumer
+     * @param pool
+     * @param quantity
+     * @return
+     */
+    private PreEntHelper runPreEntitlement(Consumer consumer, Pool pool, Integer quantity) {
+        PreEntHelper preHelper = new PreEntHelper(quantity, consumerCurator);
+
+        // Provide objects for the script:
+        String topLevelProductId = pool.getProductId();
+        Product product = prodAdapter.getProductById(topLevelProductId);
+        Map<String, String> allAttributes = jsRules.getFlattenedAttributes(product, pool);
+
+        Map<String, Object> args = new HashMap<String, Object>();
+        args.put("consumer", new ReadOnlyConsumer(consumer));
+        args.put("product", new ReadOnlyProduct(product));
+        args.put("pool", new ReadOnlyPool(pool, new ReadOnlyProductCache(prodAdapter)));
+        args.put("pre", preHelper);
+        args.put("attributes", allAttributes);
+        args.put("prodAttrSeparator", PROD_ARCHITECTURE_SEPARATOR);
+        args.put("standalone", config.standalone());
+        args.put("log", rulesLogger);
+
+        log.debug("Running pre-entitlement global rule for: " + consumer.getUuid() +
+            " product: " + topLevelProductId);
+
+        invokeGlobalPreEntitlementRule(args);
+
+        if (log.isDebugEnabled()) {
+            for (ValidationError error : preHelper.getResult().getErrors()) {
+                log.debug("  Rule error: " + error.getResourceKey());
+            }
+            for (ValidationWarning warning : preHelper.getResult().getWarnings()) {
+                log.debug("  Rule warning: " + warning.getResourceKey());
+            }
+        }
+
+        return preHelper;
     }
 }

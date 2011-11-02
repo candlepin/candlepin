@@ -113,9 +113,21 @@ public class PoolHelper {
      *
      * @param pool The pool.
      * @param adjust the amount to adjust (+/-)
+     * @return pool
      */
-    public void updatePoolQuantity(Pool pool, int adjust) {
-        poolManager.updatePoolQuantity(pool, adjust);
+    public Pool updatePoolQuantity(Pool pool, int adjust) {
+        return poolManager.updatePoolQuantity(pool, adjust);
+    }
+
+    /**
+     * Set count for a pool.
+     *
+     * @param pool The pool.
+     * @param set the long amount to set
+     * @return pool
+     */
+    public Pool setPoolQuantity(Pool pool, long set) {
+        return poolManager.setPoolQuantity(pool, set);
     }
 
     /**

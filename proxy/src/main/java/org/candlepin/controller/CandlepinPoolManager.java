@@ -178,7 +178,8 @@ public class CandlepinPoolManager implements PoolManager {
         }
     }
 
-    private void deleteExcessEntitlements(Pool existingPool) {
+    @Transactional
+    public void deleteExcessEntitlements(Pool existingPool) {
         boolean lifo = !config
             .getBoolean(ConfigProperties.REVOKE_ENTITLEMENT_IN_FIFO_ORDER);
 
@@ -465,6 +466,13 @@ public class CandlepinPoolManager implements PoolManager {
         consumer.addEntitlement(e);
         pool.getEntitlements().add(e);
 
+        // The quantity is calculated at fetch time. We update it here
+        // To reflect what we just added to the db.
+        pool.setConsumed(pool.getConsumed() + quantity);
+        if (consumer.getType().isManifest()) {
+            pool.setExported(pool.getExported() + quantity);
+        }
+
         PoolHelper poolHelper = new PoolHelper(this, productAdapter, e);
         enforcer.postEntitlement(consumer, poolHelper, e);
 
@@ -476,10 +484,26 @@ public class CandlepinPoolManager implements PoolManager {
             this.regenerateCertificatesOf(regenEnt, generateUeberCert);
         }
 
-        // The quantity is calculated at fetch time. We update it here
-        // To reflect what we just added to the db.
-        pool.setConsumed(pool.getConsumed() + quantity);
+        // we might have changed the bonus pool quantities, lets find out.
+        checkBonusPoolQuantities(consumer, pool);
+
         return e;
+    }
+
+    /**
+     * This method will pull the bonus pools from a physical and make sure that
+     *  the bonus pools are not over-consumed.
+     *
+     * @param consumer
+     * @param pool
+     */
+    private void checkBonusPoolQuantities(Consumer consumer, Pool pool) {
+        for (Pool derivedPool : lookupBySubscriptionId(pool.getSubscriptionId())) {
+            if (derivedPool.getId() != pool.getId() &&
+                derivedPool.getQuantity() != -1) {
+                deleteExcessEntitlements(derivedPool);
+            }
+        }
     }
 
     /**
@@ -636,6 +660,9 @@ public class CandlepinPoolManager implements PoolManager {
         // The quantity is calculated at fetch time. We update it here
         // To reflect what we just removed from the db.
         pool.setConsumed(pool.getConsumed() - entitlement.getQuantity());
+        if (consumer.getType().isManifest()) {
+            pool.setExported(pool.getExported() - entitlement.getQuantity());
+        }
         // post unbind actions
         PoolHelper poolHelper = new PoolHelper(this, productAdapter, entitlement);
         enforcer.postUnbind(consumer, poolHelper, entitlement);
@@ -690,18 +717,34 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     /**
-     * Adjust the count of a pool.
+     * Adjust the count of a pool. The caller does not have knowledge
+     *   of the current quantity. It only determines how much to adjust.
      *
      * @param pool The pool.
      * @param adjust the long amount to adjust (+/-)
+     * @return pool
      */
-    public void updatePoolQuantity(Pool pool, long adjust) {
+    public Pool updatePoolQuantity(Pool pool, long adjust) {
         pool = poolCurator.lockAndLoad(pool);
         long newCount = pool.getQuantity() + adjust;
         if (newCount < 0) {
             newCount = 0;
         }
         pool.setQuantity(newCount);
-        poolCurator.merge(pool);
+        return poolCurator.merge(pool);
+    }
+
+    /**
+     * Set the count of a pool. The caller sets the absolute quantity.
+     *   Current use is setting unlimited bonus pool to -1 or 0.
+     *
+     * @param pool The pool.
+     * @param set the long amount to set
+     * @return pool
+     */
+    public Pool setPoolQuantity(Pool pool, long set) {
+        pool = poolCurator.lockAndLoad(pool);
+        pool.setQuantity(set);
+        return poolCurator.merge(pool);
     }
 }

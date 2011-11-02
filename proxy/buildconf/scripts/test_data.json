@@ -1388,7 +1388,20 @@
                 "37060"
             ],
             "attributes": {
-                "virt_limit": 4
+                "virt_limit": 4,
+                "multi-entitlement": "yes"
+            }
+        },
+        {
+            "name": "Awesome OS with unlimited virtual guests",
+            "id": "awesomeos-virt-unlimited",
+            "version": "6.1",
+            "type": "MKT",
+            "provided_products": [
+                "37060"
+            ],
+            "attributes": {
+                "virt_limit": "unlimited"
             }
         },
         {
