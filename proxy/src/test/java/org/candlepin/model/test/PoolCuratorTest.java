@@ -14,7 +14,8 @@
  */
 package org.candlepin.model.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Date;
 import java.util.HashSet;
@@ -90,7 +91,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
                 (String) null, null, true, false);
         assertEquals(1, results.size());
     }
-    
+
     @Test
     public void testAvailablePoolsDoesNotIncludeUeberPool() throws Exception {
         Pool pool = createPoolAndSub(owner, product, 100L,

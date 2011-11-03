@@ -45,16 +45,16 @@ public class UeberCertificateGenerator {
     private I18n i18n;
 
     @Inject
-    public UeberCertificateGenerator(PoolManager poolManager, 
-        PoolCurator poolCurator, 
+    public UeberCertificateGenerator(PoolManager poolManager,
+        PoolCurator poolCurator,
         ProductServiceAdapter prodAdapter,
-        ContentCurator contentCurator, 
+        ContentCurator contentCurator,
         UniqueIdGenerator idGenerator,
-        SubscriptionServiceAdapter subService, 
-        ConsumerTypeCurator consumerTypeCurator, 
+        SubscriptionServiceAdapter subService,
+        ConsumerTypeCurator consumerTypeCurator,
         ConsumerCurator consumerCurator,
         I18n i18n) {
-        
+
         this.poolManager = poolManager;
         this.poolCurator = poolCurator;
         this.prodAdapter = prodAdapter;
@@ -64,35 +64,35 @@ public class UeberCertificateGenerator {
         this.consumerTypeCurator = consumerTypeCurator;
         this.consumerCurator = consumerCurator;
         this.i18n = i18n;
-        
+
     }
-    
-    public EntitlementCertificate generate(Owner o, Principal principal) 
+
+    public EntitlementCertificate generate(Owner o, Principal principal)
         throws EntitlementRefusedException {
-        
+
         Product ueberProduct = createUeberProduct(o);
         Subscription ueberSubscription = createUeberSubscription(o, ueberProduct);
         poolManager.createPoolsForSubscription(ueberSubscription);
         Consumer consumer = createUeberConsumer(principal, o);
 
-        Pool ueberPool = poolCurator.findUeberPool(o);                 
+        Pool ueberPool = poolCurator.findUeberPool(o);
         return generateUeberCertificate(consumer, ueberPool);
-        
+
     }
 
     public Product createUeberProduct(Owner o) {
-        Product ueberProduct = 
+        Product ueberProduct =
             prodAdapter.createProduct(Product.createUeberProductForOwner(o));
-        Content ueberContent = 
+        Content ueberContent =
             contentCurator.create(Content.createUeberContent(idGenerator, o, ueberProduct));
 
         ProductContent productContent =
             new ProductContent(ueberProduct, ueberContent, true);
         ueberProduct.getProductContent().add(productContent);
-        
+
         return ueberProduct;
     }
-    
+
     public Subscription createUeberSubscription(Owner o, Product ueberProduct) {
         Subscription subscription = new Subscription(o, ueberProduct,
             new HashSet<Product>(), 1L, now(), hundredYearsFromNow(), now());
@@ -108,7 +108,7 @@ public class UeberCertificateGenerator {
             type));
         return consumer;
     }
-    
+
     public EntitlementCertificate generateUeberCertificate(Consumer consumer,
         Pool ueberPool) throws EntitlementRefusedException {
         Entitlement e = poolManager.ueberCertEntitlement(consumer, ueberPool, 1);
@@ -124,7 +124,7 @@ public class UeberCertificateGenerator {
         }
         return type;
     }
-    
+
     private Date now() {
         Calendar now = Calendar.getInstance();
         Date currentTime = now.getTime();

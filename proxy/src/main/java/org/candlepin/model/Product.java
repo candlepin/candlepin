@@ -14,9 +14,6 @@
  */
 package org.candlepin.model;
 
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CollectionOfElements;
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -34,6 +31,9 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CollectionOfElements;
+
 /**
  * Represents a Product that can be consumed and entitled. Products define the
  * software or entity they want to entitle i.e. RHEL Server. They also contain
@@ -45,8 +45,8 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @Table(name = "cp_product")
 public class Product extends AbstractHibernateObject implements Linkable {
-    
-    public final static String UEBER_PRODUCT_POSTFIX = "_ueber_product";
+
+    public static final  String UEBER_PRODUCT_POSTFIX = "_ueber_product";
 
     // Product ID is stored as a string.
     // This is a subset of the product OID known as the hash.
@@ -109,7 +109,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
         setAttribute("type", type);
         setAttribute("arch", arch);
     }
-    
+
     public static Product createUeberProductForOwner(Owner o) {
         return new Product(null, ueberProductNameForOwner(o), 1L);
     }
@@ -348,7 +348,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
         }
         return false;
     }
-    
+
     public static String ueberProductNameForOwner(Owner o) {
         return o.getKey() + UEBER_PRODUCT_POSTFIX;
     }

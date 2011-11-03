@@ -313,7 +313,7 @@
     </module>
     <!-- <module name="AnonInnerLength"/> -->
     <module name="ParameterNumber">
-      <property name="max" value="24"/>
+      <property name="max" value="25"/>
     </module>
     <!-- <module name="OuterTypeNumber"/> -->
 

@@ -39,8 +39,8 @@ import org.hibernate.annotations.CollectionOfElements;
 @Entity
 @Table(name = "cp_content")
 public class Content extends AbstractHibernateObject {
-    
-    public final static String UEBER_CONTENT_NAME = "ueber_content";
+
+    public static final  String UEBER_CONTENT_NAME = "ueber_content";
 
     @Id
     private String id;
@@ -89,10 +89,10 @@ public class Content extends AbstractHibernateObject {
 
     public Content() {
     }
-    
+
     public static Content createUeberContent(
         UniqueIdGenerator idGenerator, Owner o, Product p) {
-        
+
         return new Content(
             UEBER_CONTENT_NAME, idGenerator.generateId(),
             ueberContentLabelForProduct(p), "yum", "Custom",
@@ -222,7 +222,7 @@ public class Content extends AbstractHibernateObject {
     public void setRequiredTags(String requiredTags) {
         this.requiredTags = requiredTags;
     }
-    
+
     public static String ueberContentLabelForProduct(Product p) {
         return p.getId() + "_" + UEBER_CONTENT_NAME;
     }

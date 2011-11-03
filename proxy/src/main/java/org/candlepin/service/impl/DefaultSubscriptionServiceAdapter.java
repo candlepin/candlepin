@@ -21,19 +21,19 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.exceptions.ServiceUnavailableException;
+import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.service.SubscriptionServiceAdapter;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
-import org.candlepin.config.Config;
-import org.candlepin.config.ConfigProperties;
-import org.candlepin.exceptions.ServiceUnavailableException;
-import org.candlepin.model.Consumer;
-import org.xnap.commons.i18n.I18n;
 
 /**
  * default SubscriptionAdapter implementation
@@ -106,7 +106,7 @@ public class DefaultSubscriptionServiceAdapter implements
     public List<Subscription> getSubscriptions(Owner owner) {
         return subCurator.listByOwner(owner);
     }
-    
+
     @Override
     public Subscription findUeberSubscription(Owner owner) {
         return subCurator.findUeberSubscription(owner);

@@ -16,8 +16,8 @@ package org.candlepin.service;
 
 import java.util.Date;
 import java.util.List;
-import org.candlepin.model.Consumer;
 
+import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Subscription;
 
@@ -81,9 +81,9 @@ public interface SubscriptionServiceAdapter {
      * @return all subscriptions.
      */
     List<Subscription> getSubscriptions();
-    
+
     /**
-     * Return subscription used to generate ueber-certificate 
+     * Return subscription used to generate ueber-certificate
      * @param owner
      * @return UeberSubscription or null if not found
      */

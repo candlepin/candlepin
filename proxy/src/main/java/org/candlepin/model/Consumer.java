@@ -14,16 +14,6 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.util.Util;
-
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CollectionOfElements;
-import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
-import org.hibernate.annotations.MapKeyManyToMany;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -50,6 +40,15 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.candlepin.util.Util;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CollectionOfElements;
+import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Index;
+import org.hibernate.annotations.MapKeyManyToMany;
+
 
 /**
  * A Consumer is the entity that uses a given Entitlement. It can be a user,
@@ -65,9 +64,9 @@ import javax.xml.bind.annotation.XmlTransient;
 @Table(name = "cp_consumer")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Consumer extends AbstractHibernateObject implements Linkable, Owned {
-    
+
     public static final String UEBER_CERT_CONSUMER = "ueber_cert_consumer";
-    
+
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")
@@ -158,7 +157,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         this.ensureUUID();
         this.entitlements = new HashSet<Entitlement>();
     }
-    
+
     /**
      * @return the Consumer's uuid
      */

@@ -230,7 +230,7 @@ public class DatabaseTestFixture {
         p.setSubscriptionId(sub.getId());
         return poolCurator.create(p);
     }
-    
+
     protected Owner createOwner() {
         Owner o = new Owner("Test Owner " + TestUtil.randomInt());
         ownerCurator.create(o);

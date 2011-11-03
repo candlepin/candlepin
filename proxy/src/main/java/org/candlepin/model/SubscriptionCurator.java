@@ -14,13 +14,13 @@
  */
 package org.candlepin.model;
 
-import org.apache.log4j.Logger;
-import org.hibernate.Criteria;
-import org.hibernate.criterion.Restrictions;
-
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+
+import org.apache.log4j.Logger;
+import org.hibernate.Criteria;
+import org.hibernate.criterion.Restrictions;
 
 /**
  * Subscription manager.
@@ -70,13 +70,13 @@ public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> 
      */
     public Subscription findUeberSubscription(Owner o) {
         return (Subscription) currentSession()
-        .createCriteria(Subscription.class)
-        .add(Restrictions.eq("owner", o))
+            .createCriteria(Subscription.class)
+            .add(Restrictions.eq("owner", o))
             .createCriteria("product")
-                .add(Restrictions.eq("name", Product.ueberProductNameForOwner(o)))
-        .uniqueResult();
+            .add(Restrictions.eq("name", Product.ueberProductNameForOwner(o)))
+            .uniqueResult();
     }
-    
+
     /**
      * Return a list of subscriptions for the given product.
      *

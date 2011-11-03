@@ -852,9 +852,9 @@ public class OwnerResource {
                 "owner with key: {0} was not found.", ownerKey));
         }
 
-        Consumer ueberConsumer = 
+        Consumer ueberConsumer =
             consumerCurator.findByName(o, Consumer.UEBER_CERT_CONSUMER);
-        
+
         // ueber cert has already been generated - re-generate it now
         if (ueberConsumer != null) {
             List<Entitlement> ueberEntitlement
@@ -890,9 +890,9 @@ public class OwnerResource {
                 "owner with key: {0} was not found.", ownerKey));
         }
 
-        Consumer ueberConsumer = 
+        Consumer ueberConsumer =
             consumerCurator.findByName(o, Consumer.UEBER_CERT_CONSUMER);
-        
+
         if (ueberConsumer == null) {
             throw new NotFoundException(i18n.tr(
                 "ueber certificate for owner {0} was not found. Please generate one.",
