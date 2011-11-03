@@ -2,7 +2,7 @@
 <config xmlns="http://zanata.org/namespace/config/">
     <url>https://translate.zanata.org/zanata/</url> 
     <project>candlepin</project> 
-    <project-version>0.4</project-version>
+    <project-version>0.5</project-version>
     <locales>
         <locale>as</locale>
         <locale map-from="bn">bn-IN</locale>

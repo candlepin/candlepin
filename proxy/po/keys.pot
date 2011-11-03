@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-10-27 16:46-0400\n"
+"POT-Creation-Date: 2011-11-03 14:56-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -31,7 +31,7 @@ msgstr ""
 msgid "Name of the consumer should be shorter than {0} characters."
 msgstr ""
 
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:315
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:317
 #, java-format
 msgid "The consumer with UUID {0} is a virtual guest. It does not have guests."
 msgstr ""
@@ -39,6 +39,13 @@ msgstr ""
 #: src/main/java/org/candlepin/model/EntitlementCurator.java:241
 #, java-format
 msgid "No product found for product id {0}"
+msgstr ""
+
+#: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:122
+#: src/main/java/org/candlepin/resource/OwnerResource.java:454
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:505
+#, java-format
+msgid "No such consumer type: {0}"
 msgstr ""
 
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:113
@@ -194,7 +201,7 @@ msgid "A consumer or owner is needed to filter on product"
 msgstr ""
 
 #: src/main/java/org/candlepin/resource/PoolResource.java:130
-#: src/main/java/org/candlepin/resource/OwnerResource.java:503
+#: src/main/java/org/candlepin/resource/OwnerResource.java:492
 #, java-format
 msgid "consumer: {0} not found"
 msgstr ""
@@ -247,47 +254,41 @@ msgstr ""
 msgid "couldn't generate statistics"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:256
+#: src/main/java/org/candlepin/resource/OwnerResource.java:245
 #, java-format
 msgid "Cound not create the Owner: {0}. Parent {1} does not exist."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:268
+#: src/main/java/org/candlepin/resource/OwnerResource.java:257
 #, java-format
 msgid "Cound not create the Owner: {0}"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:406
+#: src/main/java/org/candlepin/resource/OwnerResource.java:395
 msgid "Must provide a name for activation key."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:413
+#: src/main/java/org/candlepin/resource/OwnerResource.java:402
 msgid ""
 "Activation key names must be alphanumeric or the characters '-' or '_'. ["
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:420
+#: src/main/java/org/candlepin/resource/OwnerResource.java:409
 msgid "Activation key name ["
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:465
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:505
-#, java-format
-msgid "No such consumer type: {0}"
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:607
-#: src/main/java/org/candlepin/resource/OwnerResource.java:672
-#: src/main/java/org/candlepin/resource/OwnerResource.java:776
-#: src/main/java/org/candlepin/resource/OwnerResource.java:806
-#: src/main/java/org/candlepin/resource/OwnerResource.java:835
-#: src/main/java/org/candlepin/resource/OwnerResource.java:861
-#: src/main/java/org/candlepin/resource/OwnerResource.java:905
+#: src/main/java/org/candlepin/resource/OwnerResource.java:596
+#: src/main/java/org/candlepin/resource/OwnerResource.java:661
+#: src/main/java/org/candlepin/resource/OwnerResource.java:767
+#: src/main/java/org/candlepin/resource/OwnerResource.java:797
+#: src/main/java/org/candlepin/resource/OwnerResource.java:826
+#: src/main/java/org/candlepin/resource/OwnerResource.java:852
+#: src/main/java/org/candlepin/resource/OwnerResource.java:890
 #, java-format
 msgid "owner with key: {0} was not found."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:617
+#: src/main/java/org/candlepin/resource/OwnerResource.java:606
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1067
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:120
 #: src/main/java/org/candlepin/resource/SubscriptionResource.java:135
@@ -295,32 +296,37 @@ msgstr ""
 msgid "No such consumer: {0}"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:691
+#: src/main/java/org/candlepin/resource/OwnerResource.java:680
 #, java-format
 msgid "subscription with id: {0} not found."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:721
+#: src/main/java/org/candlepin/resource/OwnerResource.java:712
 msgid "Error reading export archive"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:726
+#: src/main/java/org/candlepin/resource/OwnerResource.java:717
 msgid "Bad data in export archive"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:887
+#: src/main/java/org/candlepin/resource/OwnerResource.java:872
 #, java-format
 msgid "Problem generating ueber cert for owner {0}"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:911
+#: src/main/java/org/candlepin/resource/OwnerResource.java:898
 #, java-format
 msgid "ueber certificate for owner {0} was not found. Please generate one."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:975
+#: src/main/java/org/candlepin/resource/OwnerResource.java:912
 #, java-format
 msgid "{0} file imported successfully."
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:914
+#, java-format
+msgid "{0} file imported forcibly"
 msgstr ""
 
 #: src/main/java/org/candlepin/resource/MigrationResource.java:64
@@ -721,6 +727,6 @@ msgstr ""
 msgid "Error getting oauth consumer Key"
 msgstr ""
 
-#: src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java:140
+#: src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java:145
 msgid "Standalone candlepin does not support redeeming a subscription."
 msgstr ""
