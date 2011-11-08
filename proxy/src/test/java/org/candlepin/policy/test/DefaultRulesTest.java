@@ -159,6 +159,37 @@ public class DefaultRulesTest {
         assertFalse(result.isSuccessful());
     }
 
+    @Test
+    public void manifestConsumerCannotBindToDerivedPool() {
+        when(config.standalone()).thenReturn(false);
+        Consumer c = new Consumer("test consumer", "test user", owner,
+            new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
+        Enforcer enf = new ManifestEntitlementRules(new DateSourceImpl(),
+            new JsRulesProvider(rulesCurator).get(),
+            prodAdapter, I18nFactory.getI18n(getClass(), Locale.US,
+                I18nFactory.FALLBACK), config, consumerCurator);
+
+        Product product = new Product(productId, "A product for testing");
+        Pool pool = createPool(owner, product);
+        pool.setAttribute("pool_derived", "true");
+
+        Entitlement e = new Entitlement(pool, c, new Date(), new Date(),
+            1);
+        c.addEntitlement(e);
+
+        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+
+        ValidationResult result = enf.preEntitlement(c, pool, 1)
+            .getResult();
+
+        assertTrue(result.hasErrors());
+        assertFalse(result.isSuccessful());
+        assertEquals(1, result.getErrors().size());
+        assertTrue(result.getErrors().get(0).getResourceKey().contains("manifest"));
+    }
+
+
+
     @Test public void bindWithQuantityNoMultiEntitle() {
         Product product = new Product(productId, "A product for testing");
         Pool pool = createPool(owner, product);
