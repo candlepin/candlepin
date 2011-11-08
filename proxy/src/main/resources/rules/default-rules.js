@@ -526,6 +526,15 @@ var Entitlement = {
             }
         }
 
+        // Manifest consumers should not be able to find to any derived pools. Because
+        // they are exempt from all pre-rules, to keep these derived pools out of the list
+        // they can bind to we must use pre_global, which is used for manifest consumers.
+        else {
+            if (pool.getAttributes().containsKey("pool_derived")) {
+                pre.addError("pool.not.available.to.manifest.consumers");
+            }
+        }
+
         // FIXME
         // for auto sub stacking, we need to be able to pull across multiple
         // pools eventually, so this would need to go away in that case
