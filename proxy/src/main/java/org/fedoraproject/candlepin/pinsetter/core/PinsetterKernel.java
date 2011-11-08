@@ -44,6 +44,7 @@ import java.io.Serializable;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
@@ -316,8 +317,25 @@ public class PinsetterKernel {
      * @throws PinsetterException if there is an error scheduling the job
      */
     public JobStatus scheduleSingleJob(JobDetail jobDetail) throws PinsetterException {
-        return scheduleJob(jobDetail, SINGLE_JOB_GROUP, new SimpleTrigger(
-            jobDetail.getName() + " trigger", SINGLE_JOB_GROUP));
+        return scheduleSingleJob(jobDetail, new Date());
+    }
+    
+    /**
+     * Schedule a long-running job for a single execution.
+     *
+     * @param jobDetail the long-running job to perform - assumed to be
+     *     prepopulated with a valid job task and name
+     * @param start time the job should start, if null defaults to now.
+     * @return the initial status of the submitted job
+     * @throws PinsetterException if there is an error scheduling the job
+     */
+    public JobStatus scheduleSingleJob(JobDetail detail, Date start) throws PinsetterException {
+        if (start == null) {
+            start = new Date();
+        }
+
+        return scheduleJob(detail, SINGLE_JOB_GROUP, new SimpleTrigger(
+            detail.getName() + " trigger", SINGLE_JOB_GROUP, start));
     }
 
     public boolean getSchedulerStatus() throws PinsetterException {
