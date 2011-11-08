@@ -26,8 +26,14 @@ import org.candlepin.util.VersionUtil;
 import org.jboss.resteasy.spi.BadRequestException;
 import org.jboss.resteasy.spi.DefaultOptionsMethodException;
 import org.jboss.resteasy.util.HttpHeaderNames;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.net.URISyntaxException;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -39,6 +45,15 @@ import javax.ws.rs.core.Response.Status;
  * RuntimeExceptionMapperTest
  */
 public class RuntimeExceptionMapperTest extends TestExceptionMapperBase {
+
+    @Before
+    public void setUp() throws IOException, URISyntaxException {
+        PrintStream ps = new PrintStream(new File(this.getClass()
+            .getClassLoader().getResource("candlepin_info.properties").toURI()));
+        ps.println("version=${version}");
+        ps.println("release=${release}");
+        ps.close();
+    }
 
     @Test
     public void toResponseBasicRuntimeException() {
