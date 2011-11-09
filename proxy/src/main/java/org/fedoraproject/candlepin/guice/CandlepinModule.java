@@ -26,6 +26,7 @@ import org.fedoraproject.candlepin.controller.CrlGenerator;
 import org.fedoraproject.candlepin.controller.Entitler;
 import org.fedoraproject.candlepin.controller.PoolManager;
 import org.fedoraproject.candlepin.exceptions.CandlepinExceptionMapper;
+import org.fedoraproject.candlepin.model.JobCurator;
 import org.fedoraproject.candlepin.pinsetter.core.GuiceJobFactory;
 import org.fedoraproject.candlepin.pinsetter.core.PinsetterJobListener;
 import org.fedoraproject.candlepin.pinsetter.core.PinsetterKernel;
@@ -33,6 +34,7 @@ import org.fedoraproject.candlepin.pinsetter.tasks.CertificateRevocationListTask
 import org.fedoraproject.candlepin.pinsetter.tasks.EntitlerJob;
 import org.fedoraproject.candlepin.pinsetter.tasks.JobCleaner;
 import org.fedoraproject.candlepin.pinsetter.tasks.RefreshPoolsJob;
+import org.fedoraproject.candlepin.pinsetter.tasks.RefreshPoolsJobListener;
 import org.fedoraproject.candlepin.pki.PKIReader;
 import org.fedoraproject.candlepin.pki.PKIUtility;
 import org.fedoraproject.candlepin.pki.impl.BouncyCastlePKIReader;
@@ -83,6 +85,7 @@ import org.fedoraproject.candlepin.util.X509ExtensionUtil;
 
 import com.google.common.base.Function;
 import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
@@ -93,6 +96,8 @@ import org.quartz.JobListener;
 import org.quartz.spi.JobFactory;
 import org.xnap.commons.i18n.I18n;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -156,7 +161,6 @@ public class CandlepinModule extends AbstractModule {
         bind(JsonProvider.class).asEagerSingleton();
         bind(EventSink.class).to(EventSinkImpl.class);
         bind(JobFactory.class).to(GuiceJobFactory.class);
-        bind(JobListener.class).to(PinsetterJobListener.class);
         bind(PinsetterKernel.class);
         bind(CertificateRevocationListTask.class);
         bind(JobCleaner.class);
@@ -188,8 +192,24 @@ public class CandlepinModule extends AbstractModule {
         bind(AMQPBusPublisher.class).toProvider(AMQPBusPubProvider.class)
                 .in(Singleton.class);
 
-        // flexible end date for identity certificates
         bind(Function.class).annotatedWith(Names.named("endDateGenerator"))
             .to(ExpiryDateFunction.class).in(Singleton.class);
+    }
+
+    /**
+     * Guice Provider method. Allows injecting a generic list of things into
+     * another class. This particular method returns a List of JobListeners
+     * to be passed into the PinsetterKernel.
+     * http://code.google.com/p/google-guice/wiki/ProvidesMethods
+     *
+     * @param curator JobCurator used to locate JobStatuses.
+     * @return list of JobListeners
+     */
+    @Provides
+    public List<JobListener> providesJobListeners(JobCurator curator) {
+        List<JobListener> listeners = new ArrayList<JobListener>();
+        listeners.add(new PinsetterJobListener(curator));
+        listeners.add(new RefreshPoolsJobListener(curator));
+        return listeners;
     }
 }

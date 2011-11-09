@@ -15,6 +15,7 @@
 package org.fedoraproject.candlepin.model;
 
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -126,6 +127,51 @@ public class JobCuratorTest extends DatabaseTestFixture{
         assertNotNull(job);
         assertEquals(jobid, job.getId());
         assertEquals(JobStatus.JobState.CANCELLED, job.getState());
+    }
+
+    @Test
+    public void findActiveByOwnerKeyAndName() {
+        // these jobs should be found based on the criteria: refresh_pools job
+        // operating on the admin owner in a runnable state. A running state
+        // is CREATED, PENDING, RUNNING.
+        newJobStatus().id("refresh_pools_352edf479c3c")
+            .owner("admin").state(JobState.CREATED).create();
+        newJobStatus().id("refresh_pools_934121aa3f37")
+            .owner("admin").state(JobState.PENDING).create();
+        newJobStatus().id("refresh_pools_934121aa3f38")
+            .owner("admin").state(JobState.RUNNING).create();
+
+        // these jobs should *NOT* be found even though they are in a
+        // running state but not operating on the admin owner
+        newJobStatus().id("refresh_pools_27c2c5c36b09")
+            .owner("duey").state(JobState.RUNNING).create();
+        newJobStatus().id("refresh_pools_352edf479c3b")
+            .owner("louis").state(JobState.CREATED).create();
+        newJobStatus().id("refresh_pools_934121aa3f39")
+            .owner("huey").state(JobState.PENDING).create();
+
+        // operating on admin but *NOT* in a running state
+        newJobStatus().id("refresh_pools_27c2c5c36b10")
+            .owner("admin").state(JobState.FINISHED).create();
+        newJobStatus().id("refresh_pools_27c2c5c36b11")
+            .owner("admin").state(JobState.FAILED).create();
+
+        // *NOT* refresh pools jobs
+        newJobStatus().id("ImportRecordJob-fc2710d79a8c").owner("huey").create();
+        newJobStatus().id("JobCleaner-be64-2ee28cc796bc").owner("huey").create();
+        newJobStatus().id("CertificateRevocationListTask-06241c567151")
+            .owner("admin").create();
+
+        // Look for the refresh_pools jobs operating on the admin owner.
+        List<JobStatus> jobs = curator.findActiveByOwnerKeyAndName(
+                "admin", "refresh_pools");
+
+
+        assertFalse(jobs.isEmpty());
+        assertEquals(3, jobs.size());
+        assertEquals("refresh_pools_352edf479c3c", jobs.get(0).getId());
+        assertEquals("refresh_pools_934121aa3f37", jobs.get(1).getId());
+        assertEquals("refresh_pools_934121aa3f38", jobs.get(2).getId());
     }
 
     private JobStatusBuilder newJobStatus() {
