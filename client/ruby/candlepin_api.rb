@@ -501,7 +501,7 @@ class Candlepin
   end
 
   def get_subscription_cert(sub_id)
-    return get_text("/subscriptions/#{sub_id}/cert")
+    return get_text("/subscriptions/#{sub_id}/cert", 'text/plain')
   end
 
   def create_subscription(owner_key, product_id, quantity=1,
@@ -720,8 +720,12 @@ class Candlepin
     filename
   end
 
-  def get_text(uri)
-    response = get_client(uri, Net::HTTP::Get, :get)[URI.escape(uri)].get :content_type => 'text/plain'
+  def get_text(uri, accept_header = nil)
+    if accept_header.nil?
+      response = get_client(uri, Net::HTTP::Get, :get)[URI.escape(uri)].get :content_type => 'text/plain'
+    else
+      response = get_client(uri, Net::HTTP::Get, :get)[URI.escape(uri)].get :content_type => 'text/plain', :accept => accept_header
+    end
     return (response.body)
   end
 

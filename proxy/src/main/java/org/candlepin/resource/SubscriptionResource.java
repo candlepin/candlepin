@@ -36,6 +36,7 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.service.SubscriptionServiceAdapter;
+import org.jboss.resteasy.annotations.providers.jaxb.DoNotUseJAXBProvider;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
@@ -90,21 +91,37 @@ public class SubscriptionResource {
         return subscription;
     }
 
+    @DoNotUseJAXBProvider
+    @GET
+    @Path("{subscription_id}/cert")
+    // cpc passes up content-type on all calls, make sure we don't 415 it
+    @Consumes({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+    @Produces({ MediaType.TEXT_PLAIN })
+    public String getSubCertAsPem(
+        @PathParam("subscription_id") String subscriptionId) {
+        SubscriptionsCertificate subCert = getSubCertWorker(subscriptionId);
+        log.debug("get as pem");
+        return subCert.getCert() + subCert.getKey();
+    }
 
     @GET
-    @Path("/{subscription_id}/cert")
-    // cpc passes up content-type on all calls, make sure we don't 415 it
-    @Consumes(MediaType.TEXT_PLAIN)
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN })
-    public String getSubCert(
+    @Path("{subscription_id}/cert")
+    @Consumes({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+    @Produces({ MediaType.APPLICATION_JSON})
+    public SubscriptionsCertificate getSubCert(
         @PathParam("subscription_id") String subscriptionId) {
+        SubscriptionsCertificate subCert = getSubCertWorker(subscriptionId);
+        return subCert;
+    }
+
+    private SubscriptionsCertificate getSubCertWorker(String subscriptionId) {
         Subscription sub = verifyAndFind(subscriptionId);
         SubscriptionsCertificate subCert = sub.getCertificate();
         if (subCert == null) {
             throw new BadRequestException(
                 i18n.tr("no certificate for subscription {0}", subscriptionId));
         }
-        return subCert.getCert();
+        return subCert;
     }
 
     /**
