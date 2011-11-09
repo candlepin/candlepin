@@ -14,20 +14,28 @@
  */
 package org.candlepin.resteasy.interceptor;
 
-import com.google.inject.Inject;
-import javax.ws.rs.ext.Provider;
 import org.candlepin.auth.Principal;
 import org.candlepin.exceptions.ServiceUnavailableException;
+import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.PinsetterException;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.candlepin.pinsetter.core.model.JobStatus;
+
+import com.google.inject.Inject;
+
+import org.apache.commons.lang.time.DateUtils;
 import org.jboss.resteasy.annotations.interception.ServerInterceptor;
 import org.jboss.resteasy.core.ServerResponse;
 import org.jboss.resteasy.spi.interception.PostProcessInterceptor;
 import org.jboss.resteasy.util.HttpResponseCodes;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
+
+import java.util.Date;
+import java.util.List;
+
+import javax.ws.rs.ext.Provider;
 
 /**
  * Resteasy interceptor that handles scheduling a one-time pinsetter job if the
@@ -42,12 +50,16 @@ public class PinsetterAsyncInterceptor implements PostProcessInterceptor {
 
     private PinsetterKernel pinsetterKernel;
     private com.google.inject.Provider<Principal> principalProvider;
+    private JobCurator jobCurator;
 
     @Inject
     public PinsetterAsyncInterceptor(PinsetterKernel pinsetterKernel,
-        com.google.inject.Provider<Principal> principalProvider) {
+        com.google.inject.Provider<Principal> principalProvider,
+        JobCurator jobCurator) {
+
         this.pinsetterKernel = pinsetterKernel;
         this.principalProvider = principalProvider;
+        this.jobCurator = jobCurator;
     }
 
     /**
@@ -63,8 +75,27 @@ public class PinsetterAsyncInterceptor implements PostProcessInterceptor {
             JobDetail jobDetail = (JobDetail) entity;
             setJobPrincipal(jobDetail);
 
+            JobDataMap map = jobDetail.getJobDataMap();
+
             try {
-                JobStatus status = this.pinsetterKernel.scheduleSingleJob(jobDetail);
+                JobStatus status = null;
+
+                if (JobStatus.TargetType.OWNER.equals(map.get(JobStatus.TARGET_TYPE))) {
+                    String ownerKey = (String) map.get(JobStatus.TARGET_ID);
+                    List<JobStatus> statuses = jobCurator.findActiveByOwnerKeyAndName(
+                            ownerKey, "refresh_pools_");
+                    if (statuses == null || !statuses.isEmpty()) {
+                        // add just enough time to allow for pausing
+                        status = pinsetterKernel.scheduleSingleJob(jobDetail,
+                            DateUtils.addMinutes(new Date(), 1));
+                        pinsetterKernel.pauseJob(jobDetail.getName(), jobDetail.getGroup());
+                    }
+                }
+
+                if (status == null) {
+                    // schedules the job now
+                    status = pinsetterKernel.scheduleSingleJob(jobDetail);
+                }
 
                 response.setEntity(status);
                 response.setStatus(HttpResponseCodes.SC_ACCEPTED);
@@ -84,5 +115,4 @@ public class PinsetterAsyncInterceptor implements PostProcessInterceptor {
         map.put(PinsetterJobListener.PRINCIPAL_KEY, this.principalProvider.get());
         jobDetail.setJobDataMap(map);
     }
-
 }

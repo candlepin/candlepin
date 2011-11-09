@@ -19,6 +19,7 @@ import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.core.model.JobStatus.JobState;
 import org.candlepin.pinsetter.core.model.JobStatus.TargetType;
 
+import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 
 import java.util.Date;
@@ -60,6 +61,38 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
                .setInteger("completed", JobState.FINISHED.ordinal())
                .setInteger("cancelled", JobState.CANCELLED.ordinal())
                .executeUpdate();
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<JobStatus> findActiveByOwnerKeyAndName(
+        String ownerKey, String name) {
+
+        JobState[] states = new JobState[3];
+        states[0] = JobState.CREATED;
+        states[1] = JobState.PENDING;
+        states[2] = JobState.RUNNING;
+
+        return currentSession().createCriteria(JobStatus.class)
+            .add(Restrictions.eq("targetId", ownerKey))
+            .add(Restrictions.eq("targetType", TargetType.OWNER))
+            .add(Restrictions.in("state", states))
+            .add(Restrictions.ilike("id", "%" + name + "%")).list();
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<JobStatus> findPendingByOwnerKeyAndName(
+        String ownerKey, String name) {
+
+        JobState[] states = new JobState[2];
+        states[0] = JobState.CREATED;
+        states[1] = JobState.PENDING;
+
+        return currentSession().createCriteria(JobStatus.class)
+            .addOrder(Order.asc("created"))
+            .add(Restrictions.eq("targetId", ownerKey))
+            .add(Restrictions.eq("targetType", TargetType.OWNER))
+            .add(Restrictions.in("state", states))
+            .add(Restrictions.ilike("id", "%" + name + "%")).list();
     }
 
     public List<JobStatus> findByOwnerKey(String ownerKey) {
