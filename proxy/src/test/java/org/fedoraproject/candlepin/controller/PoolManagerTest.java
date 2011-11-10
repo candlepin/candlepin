@@ -461,6 +461,61 @@ public class PoolManagerTest {
         assertEquals(e.size(), 1);
     }
 
+    @Test
+    public void testRefreshPoolsRemovesExpiredSubscriptionsAlongWithItsPoolsAndEnts() {
+        PreUnbindHelper preHelper =  mock(PreUnbindHelper.class);
+
+        Date expiredStart = TestUtil.createDate(2004, 5, 5);
+        Date expiredDate = TestUtil.createDate(2005, 5, 5);
+
+        List<Subscription> subscriptions = Util.newList();
+
+        Subscription sub = TestUtil.createSubscription(getOwner(),
+            TestUtil.createProduct());
+        sub.setStartDate(expiredStart);
+        sub.setEndDate(expiredDate);
+        sub.setId("123");
+        subscriptions.add(sub);
+
+        when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
+            subscriptions);
+
+        List<Pool> pools = Util.newList();
+        Pool p = TestUtil.createPool(sub.getOwner(), sub.getProduct());
+        p.setSubscriptionId(sub.getId());
+        p.setStartDate(expiredStart);
+        p.setEndDate(expiredDate);
+        p.setConsumed(1L);
+        pools.add(p);
+
+        when(mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
+            any(Owner.class), anyString(), any(Date.class),
+            anyBoolean(), anyBoolean()))
+        .thenReturn(pools);
+
+        List<Entitlement> poolEntitlements = Util.newList();
+        Entitlement ent = TestUtil.createEntitlement();
+        ent.setPool(p);
+        ent.setQuantity(1);
+        poolEntitlements.add(ent);
+
+        when(mockPoolCurator.entitlementsIn(eq(p))).thenReturn(poolEntitlements);
+        when(enforcerMock.preUnbind(eq(ent.getConsumer()), eq(ent.getPool())))
+        .thenReturn(preHelper);
+
+        ValidationResult result = new ValidationResult();
+        when(preHelper.getResult()).thenReturn(result);
+
+        manager.refreshPools(sub.getOwner());
+
+        verify(mockSubAdapter).deleteSubscription(eq(sub));
+        verify(mockPoolCurator).delete(eq(p));
+
+        // Verify the entitlement was removed.
+        verify(entCertAdapterMock).revokeEntitlementCertificates(eq(ent));
+        verify(entitlementCurator).delete(eq(ent));
+    }
+
     private List<Pool> createPoolsWithSourceEntitlement(Entitlement e, Product p) {
         List<Pool> pools = new LinkedList<Pool>();
         Pool pool1 = TestUtil.createPool(e.getOwner(), p);

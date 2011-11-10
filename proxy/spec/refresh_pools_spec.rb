@@ -66,4 +66,30 @@ describe 'Refresh Pools' do
     pools[0].providedProducts.length.should == 1
   end
 
+  it 'deletes expired subscriptions along with pools and entitlements' do
+    owner = create_owner random_string
+    product = create_product(random_string, random_string)
+    sub = @cp.create_subscription(owner.key, product.id, 500,
+      [])
+    @cp.refresh_pools(owner.key)
+    pools = @cp.list_pools({:owner => owner.id})
+    pools.length.should == 1
+
+    user = user_client(owner, random_string("user"))
+
+    consumer_id = random_string("consumer")
+    consumer = consumer_client(user, consumer_id)
+    consumer.consume_pool(pools.first.id).size.should == 1
+
+    # Update the subscription to be expired so that
+    # sub, pool, and entitlements are removed.
+    sub.startDate = Date.today - 20
+    sub.endDate = Date.today - 10
+    @cp.update_subscription(sub)
+    @cp.refresh_pools(owner.key)
+
+    @cp.list_subscriptions(owner.key).size.should == 0
+    @cp.list_pools({:owner => owner.id}).size.should == 0
+    @cp.get_consumer(consumer.uuid).entitlementCount.should == 0
+  end
 end
