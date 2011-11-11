@@ -92,7 +92,7 @@ public class ConsumerResourceCreationTest {
             this.consumerTypeCurator, null, this.subscriptionService, null,
             this.idCertService, null, this.i18n, this.sink, null, null, null,
             this.userService, null, null, null, null, this.ownerCurator,
-            this.activationKeyCurator, null);
+            this.activationKeyCurator, null, null);
 
         this.system = new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
 

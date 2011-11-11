@@ -62,6 +62,7 @@ public class ComplianceRules {
         args.put("consumer", c);
         args.put("entitlements", ents);
         args.put("ondate", date);
+        args.put("helper", new ComplianceRulesHelper(entCurator));
         args.put("log", log);
 
         ComplianceStatus status = null;

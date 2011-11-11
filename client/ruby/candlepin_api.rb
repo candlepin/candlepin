@@ -471,6 +471,11 @@ class Candlepin
     get("/consumers/#{consumer_id}")
   end
 
+  def get_compliance(consumer_id=nil)
+    consumer_id ||= @uuid
+    get("/consumers/#{consumer_id}/compliance")
+  end
+
   def get_consumer_host(consumer_id=nil)
     consumer_id ||= @uuid
     get("/consumers/#{consumer_id}/host")

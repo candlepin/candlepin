@@ -181,7 +181,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         ConsumerResource consumerResource = new ConsumerResource(
             mockedConsumerCurator, null, null, null, null, null,
             mockedEntitlementCertServiceAdapter, null, null, null, null, null,
-            null, null, null, null, null, null, null, null);
+            null, null, null, null, null, null, null, null, null);
 
         List<CertificateSerialDto> serials = consumerResource
             .getEntitlementCertificateSerials(consumer.getUuid());
@@ -627,7 +627,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         CandlepinPoolManager mgr = mock(CandlepinPoolManager.class);
         ConsumerResource cr = new ConsumerResource(this.consumerCurator, null,
             null, null, null, null, null, null, null, null, null, null, null,
-            null, mgr, null, null, null, null, null);
+            null, mgr, null, null, null, null, null, null);
         cr.regenerateEntitlementCertificates(this.consumer.getUuid(), null);
         Mockito.verify(mgr, Mockito.times(1))
             .regenerateEntitlementCertificates(eq(this.consumer));
@@ -642,7 +642,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
         ConsumerResource cr = new ConsumerResource(this.consumerCurator, null,
             null, null, this.entitlementCurator, null, null, null, null, null,
             null, null, null, null, this.poolManager, null, null, null,
-            null, null);
+            null, null, null);
 
         Response rsp = consumerResource.bind(
             consumer.getUuid(), pool.getId().toString(), null, 1, null,
@@ -696,7 +696,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
             null, null, null, mockedIdSvc, null, null, sink, factory, null,
-            null, null, null, null, null, null, ownerCurator, null, null);
+            null, null, null, null, null, null, ownerCurator, null, null, null);
 
         Consumer fooc = cr.regenerateIdentityCertificates(lconsumer.getUuid());
 
@@ -735,7 +735,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         ConsumerResource cr = new ConsumerResource(null, ctc,
             null, null, null, null, null, i18n, null, null, null,
-            null, null, null, null, null, null, oc, akc, null);
+            null, null, null, null, null, null, oc, akc, null, null);
         cr.create(c, nap, null, "testOwner", "testKey");
     }
 
@@ -757,7 +757,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
             ConsumerResource cr = new ConsumerResource(cc, null,
                 null, sa, null, null, null, i18n, null, null, null,
-                null, null, null, null, null, null, null, null, e);
+                null, null, null, null, null, null, null, null, e, null);
             cr.bind("fakeConsumer", null, prodIds, 1, null, null, false, null);
         }
         catch (Throwable t) {
@@ -783,7 +783,7 @@ public class ConsumerResourceTest extends DatabaseTestFixture {
 
         ConsumerResource cr = new ConsumerResource(cc, null,
             null, sa, null, null, null, i18n, null, null, null,
-            null, null, null, null, null, null, null, null, e);
+            null, null, null, null, null, null, null, null, e, null);
         String dtStr = "2011-09-26T18:10:50.184081+00:00";
         Date dt = ResourceDateParser.parseDateString(dtStr);
         cr.bind("fakeConsumer", null, null, 1, null, null, false, dtStr);
