@@ -188,7 +188,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
             // double check after pools refresh
             assertTrue(p.getConsumed() == 10);
             assertTrue(p.getQuantity() == 10);
-        }        
+        }
     }
 
     @Test

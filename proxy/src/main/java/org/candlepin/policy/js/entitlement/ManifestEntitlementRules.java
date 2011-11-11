@@ -76,8 +76,8 @@ public class ManifestEntitlementRules extends AbstractEntitlementRules implement
 
     /**
      * The standard pre entitlement runs both the global and the attribute rules
-     *    Here we have limited it to the global only as the exclusions based on 
-     *    attribute values do not apply to export scenarios. 
+     *    Here we have limited it to the global only as the exclusions based on
+     *    attribute values do not apply to export scenarios.
      * @param consumer
      * @param pool
      * @param quantity
