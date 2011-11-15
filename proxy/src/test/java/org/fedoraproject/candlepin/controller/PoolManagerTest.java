@@ -490,8 +490,7 @@ public class PoolManagerTest {
 
         when(mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
             any(Owner.class), anyString(), any(Date.class),
-            anyBoolean(), anyBoolean()))
-        .thenReturn(pools);
+            anyBoolean(), anyBoolean())).thenReturn(pools);
 
         List<Entitlement> poolEntitlements = Util.newList();
         Entitlement ent = TestUtil.createEntitlement();
@@ -500,8 +499,8 @@ public class PoolManagerTest {
         poolEntitlements.add(ent);
 
         when(mockPoolCurator.entitlementsIn(eq(p))).thenReturn(poolEntitlements);
-        when(enforcerMock.preUnbind(eq(ent.getConsumer()), eq(ent.getPool())))
-        .thenReturn(preHelper);
+        when(enforcerMock.preUnbind(eq(ent.getConsumer()),
+            eq(ent.getPool()))).thenReturn(preHelper);
 
         ValidationResult result = new ValidationResult();
         when(preHelper.getResult()).thenReturn(result);
