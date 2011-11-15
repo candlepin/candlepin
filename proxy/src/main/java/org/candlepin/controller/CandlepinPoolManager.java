@@ -160,6 +160,14 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         for (Subscription sub : subs) {
+            // Delete any expired subscriptions. Leave it in the map
+            // so that the pools will get deleted as well.
+            if (isExpired(sub)) {
+                log.debug("Deleting expired subscription " + sub);
+                subAdapter.deleteSubscription(sub);
+                continue;
+            }
+
             if (!poolExistsForSubscription(subToPoolMap, sub.getId())) {
                 this.createPoolsForSubscription(sub);
                 subToPoolMap.remove(sub.getId());
@@ -176,6 +184,11 @@ public class CandlepinPoolManager implements PoolManager {
                 deletePool(p);
             }
         }
+    }
+
+    private boolean isExpired(Subscription subscription) {
+        Date now = new Date();
+        return now.after(subscription.getEndDate());
     }
 
     @Transactional
