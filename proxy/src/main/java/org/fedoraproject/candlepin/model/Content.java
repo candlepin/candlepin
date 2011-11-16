@@ -28,7 +28,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.candlepin.service.UniqueIdGenerator;
+import org.fedoraproject.candlepin.service.UniqueIdGenerator;
 import org.hibernate.annotations.CollectionOfElements;
 
 /**

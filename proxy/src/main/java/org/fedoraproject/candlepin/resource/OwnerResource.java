@@ -54,6 +54,7 @@ import org.fedoraproject.candlepin.model.Statistic;
 import org.fedoraproject.candlepin.model.StatisticCurator;
 import org.fedoraproject.candlepin.model.Subscription;
 import org.fedoraproject.candlepin.model.SubscriptionCurator;
+import org.fedoraproject.candlepin.model.UeberCertificateGenerator;
 import org.fedoraproject.candlepin.pinsetter.tasks.RefreshPoolsJob;
 import org.fedoraproject.candlepin.resource.util.ResourceDateParser;
 import org.fedoraproject.candlepin.service.ProductServiceAdapter;
