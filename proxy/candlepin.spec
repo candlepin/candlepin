@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.4.25
+Version: 0.4.26
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -130,6 +130,16 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Wed Nov 16 2011 jesus m. rodriguez <jmrodri@gmail.com> 0.4.26-1
+- Filter out uebercert-related pools and subscriptions (dmitri@redhat.com)
+- 750307: duplicate pools possible (jmrodri@gmail.com)
+- 750351: Delete expired subscriptions on refreshPools (mstead@redhat.com)
+- return public/private key pair for upstream certificate (jbowes@redhat.com)
+- Added new API call to ConsumerResource for getting current compliance status.
+  (mstead@redhat.com)
+- 751158: Deny manifest consumers access to derived pools. (dgoodwin@redhat.com)
+- Behavior of unlimited bonus pool when physical pool is exhausted.  (wpoteat@redhat.com)
+
 * Fri Oct 28 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.25-1
 - bump candlepin-deps to 0.0.21 (jesusr@redhat.com)
 
