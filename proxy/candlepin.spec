@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.4.26
+Version: 0.4.27
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -130,6 +130,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Wed Nov 16 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.27-1
+- fix compile error after bad merge. (jesusr@redhat.com)
+
 * Wed Nov 16 2011 jesus m. rodriguez <jmrodri@gmail.com> 0.4.26-1
 - Filter out uebercert-related pools and subscriptions (dmitri@redhat.com)
 - 750307: duplicate pools possible (jmrodri@gmail.com)
