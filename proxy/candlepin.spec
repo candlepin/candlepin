@@ -20,7 +20,7 @@ BuildRequires: java >= 0:1.6.0
 BuildRequires: ant >= 0:1.7.0
 BuildRequires: gettext
 #BuildRequires: bouncycastle
-BuildRequires: candlepin-deps >= 0:0.0.18
+BuildRequires: candlepin-deps >= 0:0.0.21
 Requires: java >= 0:1.6.0
 #until cpsetup is removed
 Requires: wget
@@ -106,21 +106,22 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %config(noreplace) %{_sysconfdir}/%{name}/%{name}.conf
+%dir %{_datadir}/%{name}/
 %{_datadir}/%{name}/cpsetup
 %{_datadir}/%{name}/schema/
 %{_sysconfdir}/%{name}/certs/
 
 %files jboss
 %defattr(-,jboss,jboss,-)
-%{_localstatedir}/lib/jbossas/server/production/deploy/%{name}*
+%{_localstatedir}/lib/jbossas/server/production/deploy/%{name}.war/*
 %{_localstatedir}/lib/%{name}
 %{_localstatedir}/log/%{name}
 %{_localstatedir}/cache/%{name}
 
 %files tomcat6
 %defattr(644,tomcat,tomcat,775)
-%{_localstatedir}/lib/tomcat6/webapps/%{name}*
-%{_localstatedir}/lib/%{name}
+%{_localstatedir}/lib/tomcat6/webapps/%{name}/*
+%{_localstatedir}/lib/%{name}/
 %{_localstatedir}/log/%{name}
 %{_localstatedir}/cache/%{name}
 %{_sysconfdir}/tomcat6/keystore
