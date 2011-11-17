@@ -115,7 +115,7 @@ LOGDRIVER = 'logdriver:logdriver:jar:1.0'
 #
 # Specify Maven 2.0 remote repositories here, like this:
 repositories.remote << "http://jmrodri.fedorapeople.org/ivy/candlepin/"
-repositories.remote << "http://www.ibiblio.org/maven2/"
+repositories.remote << "http://mirrors.ibiblio.org/pub/mirrors/maven2/"
 repositories.remote << "http://repository.jboss.org/nexus/content/groups/public/"
 repositories.remote << "http://gettext-commons.googlecode.com/svn/maven-repository/"
 repositories.remote << "http://oauth.googlecode.com/svn/code/maven/"
