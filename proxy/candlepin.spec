@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.5.0
+Version: 0.5.1
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -130,6 +130,30 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Wed Nov 16 2011 jesus m. rodriguez <jmrodri@gmail.com> 0.5.1-1
+- 750307: duplicate pools possible (jmrodri@gmail.com)
+- Push the new strings file, do not pull (bkearney@redhat.com)
+- Revert "Syncing the strings" (bkearney@redhat.com)
+- Syncing the strings (bkearney@redhat.com)
+- 750351: Delete expired subscriptions on refreshPools (mstead@redhat.com)
+- return public/private key pair for upstream certificate (jbowes@redhat.com)
+- Added new API call to ConsumerResource for getting current compliance status. (mstead@redhat.com)
+- 751158: Deny manifest consumers access to derived pools. (dgoodwin@redhat.com)
+- Behavior of unlimited bonus pool when physical pool is exhausted.  (wpoteat@redhat.com)
+- write test data to candlepin_info.properties to fix unit test (jmrodri@gmail.com)
+- 688707: capture all of the internal exceptions, transform into JSON.  (jmrodri@gmail.com)
+- Latest strings (bkearney@redhat.com)
+- Filter out uebercert-related pools and subscriptions (dmitri@redhat.com)
+- 749361: Candlepin exports did not have a proper version in meta.json (awood@redhat.com)
+- Allow command line options to override values in .candlepinrc (awood@redhat.com)
+- version bump (jesusr@redhat.com)
+- move org.fedoraproject.candlepin -> org.candlepin (jmrodri@gmail.com)
+- Provide the ability to force an import that is older than existing data. (awood@redhat.com)
+- fixed a bug when the first created uebercertificate would be returned for all
+  owners (ddolguik@redhat.com)
+- Latest string files (bkearney@redhat.com)
+- fix NPE being logged during Candlepin usage. (jmrodri@gmail.com)
+
 * Tue Oct 25 2011 jesus m. rodriguez <jesusr@redhat.com> 0.4.23-1
 - don't use bouncycastle for now (jesusr@redhat.com)
 
