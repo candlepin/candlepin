@@ -40,6 +40,23 @@ describe 'Virt Only Pools' do
     end.should raise_exception(RestClient::Forbidden)
   end
 
+  it 'virt_only product should result in virt_only pool' do
+    virt_product = new_product true
+    guest = consumer_client(@user, 'virty', :system, nil, {
+      'virt.is_guest' => true
+    })
+
+    entitlement = guest.consume_product(virt_product.id)
+    @cp.get_pool(entitlement.first.pool.id).attributes.each do |att|
+      found = false
+      if att.name == 'virt_only'
+        att.value.should == 'true'
+        found = true
+      end
+      found.should == true
+    end
+  end
+
   private
 
   def new_product(virt_only)

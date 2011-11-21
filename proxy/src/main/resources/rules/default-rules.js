@@ -721,6 +721,16 @@ var Pool = {
         }
         helper.copyProductAttributesOntoPool(sub, newPool);
         newPool.setSubscriptionId(sub.getId());
+        var virtAtt = sub.getProduct().getAttribute("virt_only");
+
+        // note: the product attributes are getting copied above, but the following will make
+        //   virt_only a pool attribute. That makes the pool explicitly virt_only to subscription
+        //    manager and any other downstream comsumer.
+        if (virtAtt != null && virtAtt.getValue() != null &&
+            !virtAtt.getValue().equals("")) {
+            newPool.addAttribute(new org.candlepin.model.PoolAttribute("virt_only", virtAtt.getValue()));
+        }
+
         pools.add(newPool);
 
         // Check if we need to create a virt-only pool for this subscription:

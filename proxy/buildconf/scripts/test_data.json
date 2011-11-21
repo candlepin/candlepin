@@ -1475,6 +1475,17 @@
                 "support_level" : "Standard",
                 "support_type" : "L1-L3"
             }
+        },
+        {
+            "name": "Awesome OS Modifier Virt Only",
+            "id": "awesomeos-modifier-virt",
+            "type": "MKT",
+            "provided_products": [
+                "37080"
+            ],
+            "attributes": {
+                "virt_only": true
+            }
         }
     ]
 }
