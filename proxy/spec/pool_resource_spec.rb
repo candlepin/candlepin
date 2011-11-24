@@ -109,4 +109,37 @@ describe 'Pool Resource' do
     # Should see the pool despite rules warning because we used listall:
     pools.size.should == 1
   end
+
+  it 'can delete pools' do
+    owner1 = create_owner random_string('test_owner')
+    owner1_client = user_client(owner1, random_string('testuser'))
+
+    product = create_product
+    @cp.create_subscription(owner1.key, product.id, 10)
+    @cp.refresh_pools(owner1.key)
+
+    pool = owner1_client.list_pools(:owner => owner1.id).first
+
+    consumer1_cp = consumer_client(owner1_client, random_string('testsystem'))
+    ent = consumer1_cp.consume_pool(pool['id']).first
+
+    # Org admin should not be able to do this:
+    lambda {
+      owner1_client.delete_pool(pool['id'])
+    }.should raise_exception(RestClient::Forbidden)
+
+    # Super admin can:
+    @cp.delete_pool(pool['id'])
+
+    lambda {
+      @cp.get_pool(pool['id'])
+    }.should raise_exception(RestClient::ResourceNotFound)
+
+    # Entitlement should be gone:
+    lambda {
+      consumer1_cp.get_entitlement(ent['id'])
+    }.should raise_exception(RestClient::ResourceNotFound)
+
+  end
+
 end

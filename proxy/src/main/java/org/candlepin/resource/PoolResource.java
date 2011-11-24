@@ -19,6 +19,7 @@ import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.interceptor.SecurityHole;
 import org.candlepin.auth.interceptor.Verify;
+import org.candlepin.controller.PoolManager;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.NotFoundException;
@@ -40,6 +41,7 @@ import org.xnap.commons.i18n.I18n;
 import java.util.Date;
 import java.util.List;
 
+import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -61,19 +63,21 @@ public class PoolResource {
     private OwnerCurator ownerCurator;
     private StatisticCurator statisticCurator;
     private I18n i18n;
+    private PoolManager poolManager;
 
     @Inject
     public PoolResource(PoolCurator poolCurator,
 
         ConsumerCurator consumerCurator, OwnerCurator ownerCurator,
         StatisticCurator statisticCurator, I18n i18n,
-        EventSink eventSink) {
+        EventSink eventSink, PoolManager poolManager) {
 
         this.poolCurator = poolCurator;
         this.consumerCurator = consumerCurator;
         this.ownerCurator = ownerCurator;
         this.statisticCurator = statisticCurator;
         this.i18n = i18n;
+        this.poolManager = poolManager;
     }
 
     /**
@@ -186,6 +190,26 @@ public class PoolResource {
 
         throw new NotFoundException(i18n.tr(
             "Entitlement Pool with ID ''{0}'' could not be found", id));
+    }
+
+    /**
+     * Revoke an entitlements for a pool and delete it.
+     *
+     * @param id the id of the pool
+     * @httpcode 200 if the request succeeded
+     * @httpcode 404 if the pool with the specified id is not found
+     */
+    @DELETE
+    @Path("/{pool_id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public void deletePool(@PathParam("pool_id") String id) {
+        Pool pool = poolCurator.find(id);
+        if (pool == null) {
+            throw new NotFoundException(i18n.tr(
+                "Entitlement Pool with ID ''{0}'' could not be found", id));
+        }
+
+        poolManager.deletePool(pool);
     }
 
     /**

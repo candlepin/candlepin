@@ -265,6 +265,10 @@ class Candlepin
     get("/pools/#{poolid}")
   end
 
+  def delete_pool(pool_id)
+    delete("/pools/#{pool_id}")
+  end
+
   # Deprecated, unless you're a super admin actually looking to list all pools:
   def list_pools(params = {})
     path = "/pools?"
