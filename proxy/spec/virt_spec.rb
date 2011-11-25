@@ -105,7 +105,7 @@ describe 'Standalone Virt-Limit Subscriptions' do
     @guest1_client.list_entitlements.length.should == 0
   end
 
-  it 'should revoke guest entitlements when guest changes hosts' do
+  it 'should revoke guest entitlements when host stops reporting guest ID' do
     @guest1_client.consume_pool(@guest_pool['id'])
     @guest1_client.list_entitlements.length.should == 1
 
