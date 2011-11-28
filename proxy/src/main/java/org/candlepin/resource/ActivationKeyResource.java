@@ -14,22 +14,6 @@
  */
 package org.candlepin.resource;
 
-import org.candlepin.audit.EventSink;
-import org.candlepin.auth.Access;
-import org.candlepin.auth.interceptor.Verify;
-import org.candlepin.exceptions.BadRequestException;
-import org.candlepin.model.ActivationKey;
-import org.candlepin.model.ActivationKeyCurator;
-import org.candlepin.model.ActivationKeyPool;
-import org.candlepin.model.Pool;
-import org.candlepin.model.PoolCurator;
-import org.candlepin.model.ProductPoolAttribute;
-
-import com.google.inject.Inject;
-
-import org.apache.log4j.Logger;
-import org.xnap.commons.i18n.I18n;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,6 +27,21 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+
+import org.apache.log4j.Logger;
+import org.candlepin.audit.EventSink;
+import org.candlepin.auth.Access;
+import org.candlepin.auth.interceptor.Verify;
+import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.model.ActivationKey;
+import org.candlepin.model.ActivationKeyCurator;
+import org.candlepin.model.ActivationKeyPool;
+import org.candlepin.model.Pool;
+import org.candlepin.model.PoolCurator;
+import org.candlepin.model.ProductPoolAttribute;
+import org.xnap.commons.i18n.I18n;
+
+import com.google.inject.Inject;
 
 /**
  * SubscriptionTokenResource
@@ -157,7 +156,7 @@ public class ActivationKeyResource {
                         " a quantity greater than one."));
             }
         }
-        if (quantity > pool.getQuantity()) {
+        if ((!pool.isUnlimited()) && (quantity > pool.getQuantity())) {
             throw new BadRequestException(
                 i18n.tr("The quantity must not be greater than the total " +
                     "allowed for the pool"));

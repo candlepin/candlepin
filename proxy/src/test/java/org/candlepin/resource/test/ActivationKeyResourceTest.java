@@ -22,6 +22,8 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.Date;
+
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.ActivationKey;
 import org.candlepin.model.ActivationKeyCurator;
@@ -33,11 +35,8 @@ import org.candlepin.model.ProductPoolAttribute;
 import org.candlepin.resource.ActivationKeyResource;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
-
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.Date;
 
 /**
  * SubscriptionTokenResourceTest
@@ -160,6 +159,26 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
             pc, null, null);
         akr.addPoolToKey("testKey", "testPool", 15);
     }
+
+    @Test
+    public void testActivationKeyWithUnlimitedPool() {
+        ActivationKey ak = mock(ActivationKey.class);
+        ActivationKeyCurator akc = mock(ActivationKeyCurator.class);
+        Pool p = mock(Pool.class);
+        PoolCurator pc = mock(PoolCurator.class);
+        ProductPoolAttribute ppa = mock(ProductPoolAttribute.class);
+
+        when(akc.find(eq("testKey"))).thenReturn(ak);
+        when(pc.find(eq("testPool"))).thenReturn(p);
+        when(p.isUnlimited()).thenReturn(true);
+        when(p.getProductAttribute(eq("multi-entitlement"))).thenReturn(ppa);
+        when(ppa.getValue()).thenReturn("yes");
+
+        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n,
+            pc, null, null);
+        akr.addPoolToKey("testKey", "testPool", 15);
+    }
+
 
     @Test(expected = BadRequestException.class)
     public void testActivationKeyWithPersonConsumerType() {
