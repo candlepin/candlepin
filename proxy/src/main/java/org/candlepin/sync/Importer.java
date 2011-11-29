@@ -231,7 +231,16 @@ public class Importer {
 
         // system level elements
         validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, metadata, force);
-        importRules(importFiles.get(ImportFile.RULES.fileName()).listFiles());
+
+        /*
+         * Rules import is causing serious problems due to version mismatches, generally
+         * where an on-site candlepin is importing a manifest from an older candlepin,
+         * and the rules either cause problems or just won't work. This is being disabled
+         * temporarily until we figure out if the feature can remain or needs to be
+         * scrapped.
+         */
+//        importRules(importFiles.get(ImportFile.RULES.fileName()).listFiles());
+
         importConsumerTypes(importFiles.get(ImportFile.CONSUMER_TYPE.fileName()).listFiles());
 
         // per user elements
