@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.5.1
+Version: 0.5.2
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -131,6 +131,18 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Tue Nov 29 2011 Devan Goodwin <dgoodwin@rm-rf.ca> 0.5.2-1
+- Disable manifest rules import. (dgoodwin@redhat.com)
+- 755677: Activation Keys should not check quantity on umlimited pools
+  (bkearney@redhat.com)
+- 754841: Implement DELETE /pools/id. (dgoodwin@redhat.com)
+- 754843: Fix legacy virt bonus pools missing pool_derived.
+  (dgoodwin@redhat.com)
+- 753093: The Available Subscriptions count do not show correctly in
+  Subscription Manager GUI (wpoteat@redhat.com)
+- Fix rpm so that files are not left around. (jesusr@redhat.com)
+- move files to proper location to match package. (jmrodri@gmail.com)
+
 * Wed Nov 16 2011 jesus m. rodriguez <jmrodri@gmail.com> 0.5.1-1
 - 750307: duplicate pools possible (jmrodri@gmail.com)
 - Push the new strings file, do not pull (bkearney@redhat.com)
