@@ -18,6 +18,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.atMost;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -29,8 +30,13 @@ import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.candlepin.pinsetter.core.TestJob;
 import org.candlepin.pinsetter.core.model.JobStatus;
 
+import org.apache.log4j.Appender;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.apache.log4j.spi.LoggingEvent;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -137,5 +143,37 @@ public class RefreshPoolsJobListenerTest {
 
         verifyZeroInteractions(exc);
         verify(scheduler, never()).resumeJob(anyString(), anyString());
+    }
+
+    @Test
+    public void skipNullDetails() throws SchedulerException {
+        // prep to make sure we log a message upon error
+        Logger log = Logger.getLogger(RefreshPoolsJobListener.class);
+        Appender mockapp = mock(Appender.class);
+        log.addAppender(mockapp);
+        log.setLevel(Level.DEBUG);
+        ArgumentCaptor<LoggingEvent> message = ArgumentCaptor.forClass(LoggingEvent.class);
+
+        detail.getJobDataMap().put(JobStatus.TARGET_ID, "admin");
+        List<JobStatus> statuses = new ArrayList<JobStatus>();
+        JobStatus status = mock(JobStatus.class);
+        statuses.add(status);
+        JobStatus status1 = mock(JobStatus.class);
+        statuses.add(status1);
+
+        when(status.getId()).thenReturn("refresh_pools_33dbb42ffc24");
+        when(status1.getId()).thenReturn("refresh_pools_33dbb42ffc25");
+        when(scheduler.getJobDetail(eq("refresh_pools_33dbb42ffc25"),
+            eq(PinsetterKernel.SINGLE_JOB_GROUP))).thenReturn(null);
+        when(scheduler.getJobDetail(eq("refresh_pools_33dbb42ffc24"),
+            eq(PinsetterKernel.SINGLE_JOB_GROUP))).thenReturn(detail);
+        when(jcurator.findPendingByOwnerKeyAndName(eq("admin"),
+            eq("refresh_pools"))).thenReturn(statuses);
+
+        listener.jobWasExecuted(ctx, exc);
+
+        verify(mockapp, atMost(1)).doAppend(message.capture());
+        verify(scheduler, atMost(1)).resumeJob(anyString(), anyString());
+        verifyZeroInteractions(exc);
     }
 }

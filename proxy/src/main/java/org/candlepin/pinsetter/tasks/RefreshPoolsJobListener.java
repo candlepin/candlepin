@@ -79,12 +79,20 @@ public class RefreshPoolsJobListener implements JobListener {
                     jobCurator.findPendingByOwnerKeyAndName(ownerKey, "refresh_pools");
 
                 if (statuses != null && !statuses.isEmpty()) {
-                    // find first pending job, then unpause it.
-                    JobStatus status = statuses.get(0);
-                    detail = ctxScheduler.getJobDetail(
-                        status.getId(), PinsetterKernel.SINGLE_JOB_GROUP);
-                    ctxScheduler.resumeJob(
-                        detail.getName(), PinsetterKernel.SINGLE_JOB_GROUP);
+                    for (JobStatus status : statuses) {
+                        detail = ctxScheduler.getJobDetail(
+                            status.getId(), PinsetterKernel.SINGLE_JOB_GROUP);
+
+                        if (detail == null) {
+                            // we don't have this job, move to a different one
+                            log.warn("No detail found for [" + status.getId() + "]");
+                            continue;
+                        }
+                        else {
+                            ctxScheduler.resumeJob(
+                                detail.getName(), PinsetterKernel.SINGLE_JOB_GROUP);
+                        }
+                    }
                 }
             }
             catch (SchedulerException e) {
