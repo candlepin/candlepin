@@ -394,7 +394,7 @@ var Entitlement = {
             return;
         }
         if (!consumer.hasFact("virt.uuid")) {
-            pre.addError("no.virt.uuid");
+            pre.addError("rulefailed.virt.only");
             return;
         }
         var hostConsumer = pre.getHostConsumer(consumer.getFact("virt.uuid"));

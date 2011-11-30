@@ -98,6 +98,7 @@ public class Entitler {
             // string is dependent on the caller (ie pool vs product)
             String msg;
             String error = e.getResult().getErrors().get(0).getResourceKey();
+
             if (error.equals("rulefailed.consumer.already.has.product")) {
                 msg = i18n.tr(
                     "This consumer is already subscribed to the product " +
@@ -115,6 +116,18 @@ public class Entitler {
             }
             else if (error.equals("rulefailed.pool.does.not.support.multi-entitlement")) {
                 msg = i18n.tr("Multi-entitlement not supported for pool with id ''{0}''.",
+                    pool.getId());
+            }
+            else if (error.equals("virt.guest.host.does.not.match.pool.owner")) {
+                msg = i18n.tr("Guest''s host does not match owner of pool: ''{0}''.",
+                    pool.getId());
+            }
+            else if (error.equals("pool.not.available.to.manifest.consumers")) {
+                msg = i18n.tr("Pool not available to manifest consumers: ''{0}''.",
+                    pool.getId());
+            }
+            else if (error.equals("rulefailed.virt.only")) {
+                msg = i18n.tr("Pool is restricted to virtual guests: ''{0}''.",
                     pool.getId());
             }
             else {
