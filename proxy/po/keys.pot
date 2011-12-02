@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-11-16 16:05-0500\n"
+"POT-Creation-Date: 2011-12-02 08:12-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -192,41 +192,42 @@ msgstr ""
 msgid "couldn't read rules file"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/PoolResource.java:113
+#: src/main/java/org/candlepin/resource/PoolResource.java:117
 msgid "Cannot filter on both owner and consumer"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/PoolResource.java:117
+#: src/main/java/org/candlepin/resource/PoolResource.java:121
 msgid "A consumer or owner is needed to filter on product"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/PoolResource.java:130
+#: src/main/java/org/candlepin/resource/PoolResource.java:134
 #: src/main/java/org/candlepin/resource/OwnerResource.java:492
 #, java-format
 msgid "consumer: {0} not found"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/PoolResource.java:136
+#: src/main/java/org/candlepin/resource/PoolResource.java:140
 #, java-format
 msgid "User {0} cannot access consumer {1}"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/PoolResource.java:147
+#: src/main/java/org/candlepin/resource/PoolResource.java:151
 #, java-format
 msgid "owner: {0}"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/PoolResource.java:151
+#: src/main/java/org/candlepin/resource/PoolResource.java:155
 #, java-format
 msgid "User {0} cannot access owner {1}"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/PoolResource.java:160
+#: src/main/java/org/candlepin/resource/PoolResource.java:164
 #, java-format
 msgid "User {0} cannot access all pools."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/PoolResource.java:188
+#: src/main/java/org/candlepin/resource/PoolResource.java:192
+#: src/main/java/org/candlepin/resource/PoolResource.java:209
 #, java-format
 msgid "Entitlement Pool with ID ''{0}'' could not be found"
 msgstr ""
@@ -333,32 +334,32 @@ msgstr ""
 msgid "Bad entity value."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:136
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:135
 msgid "The quantity must be greater than 0"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:146
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:145
 msgid ""
 "Pools requiring a 'person' consumer should not be added to an activation key "
 "since a consumer type of 'person' cannot be used with activation keys"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:155
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:154
 msgid ""
 "Error: Only pools with multi-entitlement product subscriptions can be added "
 "to the activation key with a quantity greater than one."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:162
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:161
 msgid "The quantity must not be greater than the total allowed for the pool"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:223
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:222
 #, java-format
 msgid "ActivationKey with id {0} could not be found"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:234
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:233
 #, java-format
 msgid "Pool with id {0} could not be found"
 msgstr ""
@@ -645,57 +646,72 @@ msgstr ""
 msgid "Subscription pool {0} does not exist."
 msgstr ""
 
-#: src/main/java/org/candlepin/controller/Entitler.java:103
+#: src/main/java/org/candlepin/controller/Entitler.java:104
 #, java-format
 msgid ""
 "This consumer is already subscribed to the product matching pool with id "
 "''{0}''."
 msgstr ""
 
-#: src/main/java/org/candlepin/controller/Entitler.java:108
+#: src/main/java/org/candlepin/controller/Entitler.java:109
 #, java-format
 msgid "No free entitlements are available for the pool with id ''{0}''."
 msgstr ""
 
-#: src/main/java/org/candlepin/controller/Entitler.java:113
+#: src/main/java/org/candlepin/controller/Entitler.java:114
 #, java-format
 msgid ""
 "Consumers of this type are not allowed to subscribe to the pool with id "
 "''{0}''."
 msgstr ""
 
-#: src/main/java/org/candlepin/controller/Entitler.java:117
+#: src/main/java/org/candlepin/controller/Entitler.java:118
 #, java-format
 msgid "Multi-entitlement not supported for pool with id ''{0}''."
 msgstr ""
 
-#: src/main/java/org/candlepin/controller/Entitler.java:121
+#: src/main/java/org/candlepin/controller/Entitler.java:122
+#, java-format
+msgid "Guest''s host does not match owner of pool: ''{0}''."
+msgstr ""
+
+#: src/main/java/org/candlepin/controller/Entitler.java:126
+#, java-format
+msgid "Pool not available to manifest consumers: ''{0}''."
+msgstr ""
+
+#: src/main/java/org/candlepin/controller/Entitler.java:130
+#, java-format
+msgid "Pool is restricted to virtual guests: ''{0}''."
+msgstr ""
+
+#: src/main/java/org/candlepin/controller/Entitler.java:134
 #, java-format
 msgid "Unable to entitle consumer to the pool with id ''{0}''.: {1}"
 msgstr ""
 
-#: src/main/java/org/candlepin/controller/Entitler.java:163
+#: src/main/java/org/candlepin/controller/Entitler.java:176
 #, java-format
 msgid "This consumer is already subscribed to the product ''{0}''"
 msgstr ""
 
-#: src/main/java/org/candlepin/controller/Entitler.java:167
+#: src/main/java/org/candlepin/controller/Entitler.java:180
 #, java-format
 msgid ""
 "There are not enough free entitlements available for the product ''{0}''"
 msgstr ""
 
-#: src/main/java/org/candlepin/controller/Entitler.java:171
+#: src/main/java/org/candlepin/controller/Entitler.java:184
 #, java-format
 msgid "Consumers of this type are not allowed to the product ''{0}''"
 msgstr ""
 
-#: src/main/java/org/candlepin/controller/Entitler.java:176
+#: src/main/java/org/candlepin/controller/Entitler.java:189
 #, java-format
 msgid "Only virtual systems can consume the product ''{0}''"
 msgstr ""
 
-#: src/main/java/org/candlepin/controller/Entitler.java:181
+#: src/main/java/org/candlepin/controller/Entitler.java:194
 #, java-format
 msgid "Unable to entitle consumer to the product ''{0}'': {1}"
 msgstr ""
