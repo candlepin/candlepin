@@ -145,7 +145,7 @@ public class OAuth implements AuthProvider {
      * accessor is found.
      *
      * @param msg
-     * @return
+     * @return the OAuth accessor for the given message.
      */
     protected OAuthAccessor getAccessor(OAuthMessage msg) {
         try {

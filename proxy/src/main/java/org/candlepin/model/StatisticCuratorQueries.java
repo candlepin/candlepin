@@ -29,9 +29,6 @@ import com.google.inject.Inject;
  */
 public class StatisticCuratorQueries extends AbstractHibernateCurator<Statistic>  {
 
-    /**
-     * @param entityType
-     */
     @Inject
     public StatisticCuratorQueries() {
         super(Statistic.class);

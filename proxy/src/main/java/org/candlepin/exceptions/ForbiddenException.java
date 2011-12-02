@@ -26,7 +26,6 @@ public class ForbiddenException extends CandlepinException {
     }
 
     /**
-     * @param returnCode
      * @param message
      * @param e
      */

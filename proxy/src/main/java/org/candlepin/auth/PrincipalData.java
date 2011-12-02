@@ -24,10 +24,8 @@ public class PrincipalData {
     private String name;
 
     /**
-     * @param ownerId
-     * @param roles
-     * @param type
-     * @param name
+     * @param type data type
+     * @param name type name
      */
     public PrincipalData(String type, String name) {
         this.type = type;
