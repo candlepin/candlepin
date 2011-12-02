@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.5.2
+Version: 0.5.3
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -131,6 +131,16 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Fri Dec 02 2011 jesus m. rodriguez <jesusr@redhat.com> 0.5.3-1
+- 758462: ensure job detail isn't null, skip it. (jesusr@redhat.com)
+- javadoc: remove unused tags (jesusr@redhat.com)
+- fix javadoc warnings: add tools.jar to classpath & define httpcode tag
+  (jesusr@redhat.com)
+- Latest strings (bkearney@redhat.com)
+- 756628: Translate missing rule errors. (dgoodwin@redhat.com)
+- Remove some unused test products (and add a couple new ones)
+  (alikins@redhat.com)
+
 * Tue Nov 29 2011 Devan Goodwin <dgoodwin@rm-rf.ca> 0.5.2-1
 - Disable manifest rules import. (dgoodwin@redhat.com)
 - 755677: Activation Keys should not check quantity on umlimited pools
