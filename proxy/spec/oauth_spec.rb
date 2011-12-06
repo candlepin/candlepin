@@ -96,16 +96,6 @@ describe 'OAuth' do
   it 'falls back to trusted system auth if no headers are set' do
     res = make_request(oauth_consumer, oauth_secret,
                        "/candlepin/consumers/#{@consumer.uuid}")
-    # a trusted system can't access consumer info
-    res.code.should == '403'
-
-    prod = create_product('product', random_string('product-multiple-arch'),
-                          :attribute => { :arch => 'i386, x86_64'})
-    subscription = @cp.create_subscription(@owner.key, prod.id)
-
-    res = make_request(oauth_consumer, oauth_secret,
-                       "/candlepin/subscriptions/#{subscription.id}")
-    # but it can access subscriptions
     res.code.should == '200'
   end
 end
