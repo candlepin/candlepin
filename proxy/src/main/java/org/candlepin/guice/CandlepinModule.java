@@ -81,6 +81,7 @@ import org.candlepin.resource.ContentResource;
 import org.candlepin.resource.CrlResource;
 import org.candlepin.resource.EntitlementResource;
 import org.candlepin.resource.EventResource;
+import org.candlepin.resource.HypervisorResource;
 import org.candlepin.resource.JobResource;
 import org.candlepin.resource.MigrationResource;
 import org.candlepin.resource.OwnerResource;
@@ -140,6 +141,7 @@ public class CandlepinModule extends AbstractModule {
         bind(X509ExtensionUtil.class);
         bind(CrlGenerator.class);
         bind(ConsumerResource.class);
+        bind(HypervisorResource.class);
         bind(ConsumerTypeResource.class);
         bind(ContentResource.class);
         bind(AtomFeedResource.class);

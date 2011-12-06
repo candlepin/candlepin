@@ -515,7 +515,7 @@ var Entitlement = {
 
             // If the product has no required consumer type, assume it is restricted to "system":
             if (!product.hasAttribute("requires_consumer_type")) {
-                if (!consumer.getType().equals("system")) {
+                if (!consumer.getType().equals("system") && !consumer.getType().equals("hypervisor")) {
                     pre.addError("rulefailed.consumer.type.mismatch");
                 }
 

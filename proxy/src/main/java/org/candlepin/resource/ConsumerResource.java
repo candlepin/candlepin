@@ -527,27 +527,34 @@ public class ConsumerResource {
     public void updateConsumer(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid,
         Consumer consumer) {
-
         Consumer toUpdate = verifyAndLookupConsumer(uuid);
+        performConsumerUpdates(consumer, toUpdate);
+    }
 
+    // Requires security hole since security interceptor will intercept when the method is
+    // called. This is because it is protected. This method is called from other resources,
+    // and therefore it assumes the caller is screened first.
+    // TODO Might be a better way to do this.
+    @SecurityHole(noAuth = true)
+    protected boolean performConsumerUpdates(Consumer updated, Consumer toUpdate) {
         if (log.isDebugEnabled()) {
-            log.debug("Updating consumer: " + uuid);
+            log.debug("Updating consumer: " + toUpdate.getUuid());
         }
         // We need a representation of the consumer before making any modifications.
         // If nothing changes we won't send.
-        Event event = eventFactory.consumerModified(toUpdate, consumer);
+        Event event = eventFactory.consumerModified(toUpdate, updated);
 
-        boolean changesMade = checkForFactsUpdate(toUpdate, consumer);
-        changesMade = checkForInstalledProductsUpdate(toUpdate, consumer) || changesMade;
-        changesMade = checkForGuestsUpdate(toUpdate, consumer) || changesMade;
+        boolean changesMade = checkForFactsUpdate(toUpdate, updated);
+        changesMade = checkForInstalledProductsUpdate(toUpdate, updated) || changesMade;
+        changesMade = checkForGuestsUpdate(toUpdate, updated) || changesMade;
 
         // Allow optional setting of the autoheal attribute:
-        if (consumer.isAutoheal() != null &&
-            toUpdate.isAutoheal() != consumer.isAutoheal()) {
+        if (updated.isAutoheal() != null &&
+            toUpdate.isAutoheal() != updated.isAutoheal()) {
             if (log.isDebugEnabled()) {
                 log.debug("   Updating consumer autoheal setting.");
             }
-            toUpdate.setAutoheal(consumer.isAutoheal());
+            toUpdate.setAutoheal(updated.isAutoheal());
             changesMade = true;
         }
 
@@ -558,6 +565,7 @@ public class ConsumerResource {
             toUpdate.setUpdated(new Date());
             sink.sendEvent(event);
         }
+        return changesMade;
     }
 
     /**

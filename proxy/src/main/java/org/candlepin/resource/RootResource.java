@@ -66,6 +66,7 @@ public class RootResource {
         RESOURCE_CLASSES.add(ActivationKeyResource.class);
         RESOURCE_CLASSES.add(RoleResource.class);
         RESOURCE_CLASSES.add(MigrationResource.class);
+        RESOURCE_CLASSES.add(HypervisorResource.class);
     }
 
     @Inject

@@ -85,6 +85,13 @@ class Candlepin
     return @consumer
   end
 
+  def hypervisor_check_in(owner, host_guest_mapping={})
+    path = get_path("hypervisors") + "?owner=#{owner}"
+    consumers = post(path, host_guest_mapping)
+    return consumers
+  end
+
+
   def update_consumer(params)
     uuid = params[:uuid] || @uuid
 

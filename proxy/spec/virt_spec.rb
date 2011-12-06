@@ -1,31 +1,15 @@
 require 'candlepin_scenarios'
+require 'virt_fixture'
 
 # This spec tests virt limited products in a standalone Candlepin deployment.
 # (which we assume to be testing against)
 describe 'Standalone Virt-Limit Subscriptions' do
   include CandlepinMethods
   include CandlepinScenarios
+  include VirtFixture
 
   before(:each) do
     pending("candlepin running in standalone mode") if is_hosted?
-
-    @owner = create_owner random_string('virt_owner')
-    @user = user_client(@owner, random_string('virt_user'))
-
-    # Create a sub for a virt limited product:
-    @virt_limit_product = create_product(nil, nil, {
-      :attributes => {
-        :virt_limit => 3
-      }
-    })
-    @sub = @cp.create_subscription(@owner.key,
-      @virt_limit_product.id, 10)
-    @cp.refresh_pools(@owner.key)
-
-    @pools = @user.list_pools :owner => @owner.id, \
-      :product => @virt_limit_product.id
-    @pools.size.should == 1
-    @virt_limit_pool = @pools[0]
 
     # Setup two virt host consumers:
     @host1 = @user.register(random_string('host'), :system, nil,
@@ -45,21 +29,6 @@ describe 'Standalone Virt-Limit Subscriptions' do
     # After binding the host should see no pools available:
     pools = @host1_client.list_pools :consumer => @host1['uuid']
     pools.should be_empty
-
-    # Setup two virt guest consumers:
-    @uuid1 = random_string('system.uuid')
-    @uuid2 = random_string('system.uuid')
-    @guest1 = @user.register(random_string('guest'), :system, nil,
-      {'virt.uuid' => @uuid1, 'virt.is_guest' => 'true'}, nil, nil, [], [])
-    @guest1_client = Candlepin.new(username=nil, password=nil,
-        cert=@guest1['idCert']['cert'],
-        key=@guest1['idCert']['key'])
-
-    @guest2 = @user.register(random_string('guest'), :system, nil,
-      {'virt.uuid' => @uuid2, 'virt.is_guest' => 'true'}, nil, nil, [], [])
-    @guest2_client = Candlepin.new(username=nil, password=nil,
-        cert=@guest2['idCert']['cert'],
-        key=@guest2['idCert']['key'])
 
     # Link the host and the guest:
     @host1_client.update_consumer({:guestIds => [{'guestId' => @uuid1}]})

@@ -113,6 +113,10 @@ module CandlepinMethods
     Candlepin.new(nil, nil, consumer.idCert.cert, consumer.idCert.key)
   end
 
+  def registered_consumer_client(consumer)
+    Candlepin.new(nil, nil, consumer.idCert.cert, consumer.idCert.key)
+  end
+
   # List all the pools for the given owner, and find one that matches
   # a specific subscription ID. (we often want to verify what pool was used,
   # but the pools are created indirectly after a refresh so it's hard to
