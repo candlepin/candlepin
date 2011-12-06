@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.5.3
+Version: 0.5.4
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -131,6 +131,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Tue Dec 06 2011 Devan Goodwin <dgoodwin@rm-rf.ca> 0.5.4-1
+- Fix logic error with SystemPrincipal's. (dgoodwin@redhat.com)
+
 * Fri Dec 02 2011 jesus m. rodriguez <jesusr@redhat.com> 0.5.3-1
 - 758462: ensure job detail isn't null, skip it. (jesusr@redhat.com)
 - javadoc: remove unused tags (jesusr@redhat.com)
