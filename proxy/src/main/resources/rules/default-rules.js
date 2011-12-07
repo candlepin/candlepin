@@ -774,18 +774,6 @@ var Pool = {
             // virt only pools we expect it to be sub quantity * virt_limit:
             var expectedQuantity = sub.getQuantity() * sub.getProduct().getMultiplier();
 
-            // Upgrade old virt pools prior to pool_derived. This can probably be removed
-            // someday.
-            var poolChanged = false; // used to indicate if we upgraded this pool from an old version somehow.
-            if (!standalone && existingPool.attributeEquals("virt_only", "true") &&
-                    existingPool.attributeEquals("virt_limit", "0") &&
-                    !existingPool.hasAttribute("pool_derived")) {
-
-                log.info("Found virt pool missing pool_derived attribute, adding...");
-                existingPool.setAttribute("pool_derived", "true");
-                poolChanged = true;
-            }
-
             /*
              *  WARNING: when updating pools, we have the added complication of having to
              *  watch out for pools that candlepin creates internally. (i.e. virt bonus
@@ -840,7 +828,7 @@ var Pool = {
             }
 
             if (!(quantityChanged || datesChanged || productsChanged ||
-                  productAttributesChanged || poolChanged)) {
+                  productAttributesChanged)) {
                 //TODO: Should we check whether pool is overflowing here?
                 log.info("   No updates required.");
                 continue;

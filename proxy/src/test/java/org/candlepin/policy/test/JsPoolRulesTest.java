@@ -216,27 +216,6 @@ public class JsPoolRulesTest {
     }
 
     @Test
-    public void addPoolDerivedAttribute() {
-        when(configMock.standalone()).thenReturn(false);
-        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
-        s.getProduct().addAttribute(new ProductAttribute("virt_limit", "5"));
-        s.setQuantity(10L);
-
-        // Setup a pool with a single (different) provided product:
-        Pool p = copyFromSub(s);
-        p.addAttribute(new PoolAttribute("virt_only", "true"));
-        p.addAttribute(new PoolAttribute("virt_limit", "0"));
-        p.setQuantity(50L);
-
-        List<Pool> existingPools = new java.util.LinkedList<Pool>();
-        existingPools.add(p);
-        List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools);
-
-        assertEquals(1, updates.size());
-        assertEquals("true", p.getAttributeValue("pool_derived"));
-    }
-
-    @Test
     public void productAttributesCopiedOntoPoolDuringUpdate() {
         Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
         Pool p = copyFromSub(s);
