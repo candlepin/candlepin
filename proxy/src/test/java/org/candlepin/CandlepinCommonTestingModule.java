@@ -111,7 +111,7 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
         bind(EntitlementCertServiceAdapter.class).to(
             StubEntitlementCertServiceAdapter.class);
         bind(ScriptEngineProvider.class);
-        bind(I18n.class).toProvider(I18nProvider.class);
+        bind(I18n.class).toProvider(I18nProvider.class).asEagerSingleton();
 
         bind(JobFactory.class).to(GuiceJobFactory.class);
         bind(JobListener.class).to(PinsetterJobListener.class);

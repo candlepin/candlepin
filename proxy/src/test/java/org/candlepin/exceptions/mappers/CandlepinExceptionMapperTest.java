@@ -77,7 +77,7 @@ public class CandlepinExceptionMapperTest {
         @Override
         protected void configure() {
             bind(CandlepinExceptionMapper.class);
-            bind(I18n.class).toProvider(I18nProvider.class);
+            bind(I18n.class).toProvider(I18nProvider.class).asEagerSingleton();
             bind(HttpServletRequest.class).toInstance(mock(HttpServletRequest.class));
         }
 
