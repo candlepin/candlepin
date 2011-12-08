@@ -188,7 +188,7 @@ define "candlepin" do
   end
   test.with COMMONS, DB, RESTEASY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, DOM4J, HSQLDB, GUICE, QUARTZ, GETTEXT_COMMONS, MIME4J, RHINO, generate
   test.with LOGDRIVER if Buildr.environment == 'logdriver'
-  test.using :java_args => [ '-Xmx1g' ]
+  test.using :java_args => [ '-Xmx1g', '-XX:+HeapDumpOnOutOfMemoryError' ]
 
 
   #
