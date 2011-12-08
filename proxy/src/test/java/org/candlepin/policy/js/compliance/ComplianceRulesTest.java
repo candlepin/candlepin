@@ -122,9 +122,21 @@ public class ComplianceRulesTest {
         return e;
     }
 
+    private Consumer mockConsumerWithTwoProductsAndNoEntitlements() {
+        return mockConsumer(new String [] {PRODUCT_1, PRODUCT_2});
+    }
+
+    private Consumer mockFullyEntitledConsumer() {
+        Consumer c = mockConsumer(new String [] {PRODUCT_1, PRODUCT_2});
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+        ents.add(mockEntitlement(c, "Awesome Product", PRODUCT_1, PRODUCT_2));
+        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(ents);
+        return c;
+    }
+
     @Test
     public void noEntitlements() {
-        Consumer c = mockConsumer(new String [] {PRODUCT_1, PRODUCT_2});
+        Consumer c = mockConsumerWithTwoProductsAndNoEntitlements();
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
         assertEquals(2, status.getNonCompliantProducts().size());
@@ -152,10 +164,7 @@ public class ComplianceRulesTest {
 
     @Test
     public void fullyEntitled() {
-        Consumer c = mockConsumer(new String [] {PRODUCT_1, PRODUCT_2});
-        List<Entitlement> ents = new LinkedList<Entitlement>();
-        ents.add(mockEntitlement(c, "Awesome Product", PRODUCT_1, PRODUCT_2));
-        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(ents);
+        Consumer c = mockFullyEntitledConsumer();
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
@@ -501,6 +510,85 @@ public class ComplianceRulesTest {
         Date expectedDate = addSecond(ent.getEndDate());
         ComplianceStatus status = compliance.getStatus(consumer, start);
         assertEquals(expectedDate, status.getCompliantUntil());
+    }
+
+    @Test
+    public void statusGreenWhenConsumerHasNoInstalledProducts() {
+        Consumer c = mockConsumer(new String [] {});
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(ents);
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+        assertEquals(ComplianceStatus.GREEN, status.getStatus());
+    }
+
+    @Test
+    public void statusGreenWhenFullyEntitled() {
+        Consumer c = mockFullyEntitledConsumer();
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+        assertEquals(ComplianceStatus.GREEN, status.getStatus());
+    }
+
+    @Test
+    public void statusYellowWhenNoNonCompliantAndHasPartiallyCoveredProducts() {
+        Consumer c = mockConsumer(new String [] {PRODUCT_1});
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product", PRODUCT_1));
+        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(ents);
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+        assertEquals(1, status.getPartiallyCompliantProducts().size());
+        assertEquals(ComplianceStatus.YELLOW, status.getStatus());
+    }
+
+    @Test
+    public void statusRedWhenNonCompliantProductOnly() {
+        Consumer c = mockConsumerWithTwoProductsAndNoEntitlements();
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+        assertEquals(ComplianceStatus.RED, status.getStatus());
+    }
+
+    @Test
+    public void statusRedWhenNonCompliantProductAndCompliantProduct() {
+        Consumer c = mockConsumer(new String [] {PRODUCT_1, PRODUCT_2});
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+        ents.add(mockEntitlement(c, "Awesome Product", PRODUCT_1));
+        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(ents);
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+        assertEquals(1, status.getCompliantProducts().size());
+        assertEquals(1, status.getNonCompliantProducts().size());
+        assertEquals(ComplianceStatus.RED, status.getStatus());
+    }
+
+    @Test
+    public void statusRedWhenNonCompliantProductAndPartialProduct() {
+        Consumer c = mockConsumer(new String [] {PRODUCT_1, PRODUCT_2});
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product", PRODUCT_1));
+        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(ents);
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+        assertEquals(1, status.getPartiallyCompliantProducts().size());
+        assertEquals(1, status.getNonCompliantProducts().size());
+        assertEquals(ComplianceStatus.RED, status.getStatus());
+    }
+
+    @Test
+    public void statusRedOneWhenNonCompliantProductAndCompliantAndPartial() {
+        Consumer c = mockConsumer(new String [] {PRODUCT_1, PRODUCT_2, PRODUCT_3});
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product", PRODUCT_1));
+        ents.add(mockEntitlement(c, "Another Product", PRODUCT_3));
+        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(ents);
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+        assertEquals(1, status.getPartiallyCompliantProducts().size());
+        assertEquals(1, status.getCompliantProducts().size());
+        assertEquals(1, status.getNonCompliantProducts().size());
+        assertEquals(ComplianceStatus.RED, status.getStatus());
     }
 
 }

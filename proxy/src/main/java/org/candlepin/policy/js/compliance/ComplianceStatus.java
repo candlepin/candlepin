@@ -29,6 +29,9 @@ import org.candlepin.model.Entitlement;
  * about which products are fully entitled, not entitled, or partially entitled. (stacked)
  */
 public class ComplianceStatus {
+    public static final String GREEN = "valid";
+    public static final String YELLOW = "partial";
+    public static final String RED = "invalid";
 
     private Date date;
     private Date compliantUntil;
@@ -36,10 +39,10 @@ public class ComplianceStatus {
     private Map<String, Set<Entitlement>> compliantProducts;
     private Map<String, Set<Entitlement>> partiallyCompliantProducts; // stacked
     private Map<String, Set<Entitlement>> partialStacks;
+    private String status;
 
     public ComplianceStatus(Date date) {
         this.date = date;
-
         this.nonCompliantProducts = new HashSet<String>();
         this.compliantProducts = new HashMap<String, Set<Entitlement>>();
         this.partiallyCompliantProducts = new HashMap<String, Set<Entitlement>>();
@@ -122,6 +125,16 @@ public class ComplianceStatus {
 
     public boolean isCompliant() {
         return nonCompliantProducts.isEmpty() && partiallyCompliantProducts.isEmpty();
+    }
+
+    public String getStatus() {
+        if (isCompliant()) {
+            return GREEN;
+        }
+        if (!partiallyCompliantProducts.isEmpty() && nonCompliantProducts.isEmpty()) {
+            return YELLOW;
+        }
+        return RED;
     }
 
 }
