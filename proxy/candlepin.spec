@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.5.5
+Version: 0.5.6
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -131,6 +131,14 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Tue Dec 13 2011 jesus m. rodriguez <jesusr@redhat.com> 0.5.6-1
+- 766974: force job to authenticate temporarily while we fix the REAL bug. (jesusr@redhat.com)
+- Added status string to ComplianceStatus. (mstead@redhat.com)
+- Class to enable debug logging of guice, create for debugging perf problems. (jmrodri@gmail.com)
+- perf: improve test performance by remove jpa init (jmrodri@gmail.com)
+- dump heap to a .hprof file if OOME hit. (jesusr@redhat.com)
+- Revert "754843: Fix legacy virt bonus pools missing pool_derived." (dgoodwin@redhat.com)
+
 * Wed Dec 07 2011 jesus m. rodriguez <jesusr@redhat.com> 0.5.5-1
 - Added support for Host registration when host can not register itself. (mstead@redhat.com)
 
