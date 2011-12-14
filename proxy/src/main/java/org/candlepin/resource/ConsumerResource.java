@@ -51,6 +51,8 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
+import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.User;
 import org.candlepin.pinsetter.tasks.EntitlerJob;
 import org.candlepin.policy.js.compliance.ComplianceRules;
@@ -227,6 +229,8 @@ public class ConsumerResource {
             // enrich with subscription data
             consumer.setCanActivate(subAdapter
                 .canActivateSubscription(consumer));
+            // enrich with installed product data
+            addDataToInstalledProducts(consumer);
         }
 
         return consumer;
@@ -1411,5 +1415,86 @@ public class ConsumerResource {
         @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid) {
         Consumer consumer = verifyAndLookupConsumer(uuid);
         return this.complianceRules.getStatus(consumer, Calendar.getInstance().getTime());
+    }
+
+    private void addDataToInstalledProducts(Consumer consumer) {
+
+        ComplianceStatus complianceStatus = complianceRules.getStatus(
+                           consumer, Calendar.getInstance().getTime());
+
+        for (ConsumerInstalledProduct cip : consumer.getInstalledProducts()) {
+            String prodId = cip.getProductId();
+            Product prod = productAdapter.getProductById(prodId);
+            if (prod != null) {
+                cip.setArch(prod.getAttributeValue("arch"));
+                cip.setVersion(prod.getAttributeValue("version"));
+                String status = "";
+                if (complianceStatus.getNonCompliantProducts().contains(prodId)) {
+                    status = "red";
+                }
+                else if (complianceStatus.getPartiallyCompliantProducts()
+                    .containsKey(prodId)) {
+                    status = "yellow";
+                }
+                else if (complianceStatus.getCompliantProducts().containsKey(
+                    prodId)) {
+                    status = "green";
+                }
+                cip.setStatus(status);
+                cip.setStartDate(getStartDate(consumer, prod));
+                cip.setEndDate(getEndDate(consumer, prod));
+            }
+        }
+    }
+
+    /**
+     * This method uses the same algorithm for finding the start date as is currently in use
+     *  in Subscription Manager. It is the earliest start date of the product's collection of
+     *  entitlement certificates.
+     * @param consumer
+     * @param prod
+     * @return
+     */
+    private Date getStartDate(Consumer consumer, Product prod) {
+        Date start = null;
+        for (Entitlement ent : consumer.getEntitlements()) {
+            if (prod.getId().equals(ent.getPool().getProductId()) &&
+                (start == null || start.getTime() >= ent.getStartDate().getTime())) {
+                start = ent.getStartDate();
+            }
+            for (ProvidedProduct pp : ent.getPool().getProvidedProducts()) {
+                if (pp.getProductId().equals(prod.getId()) &&
+                    (start == null || start.getTime() >= ent.getStartDate().getTime())) {
+                    start = ent.getStartDate();
+                }
+            }
+        }
+        return start;
+    }
+
+    /**
+     * This method uses the same algorithm for finding the end date as is currently in use
+     *  in Subscription Manager. It is the latest end date of the product's collection of
+     *  entitlement certificates. It ignores date gaps in coverage, stacking, or multi-
+     *  entitlement considerations.
+     * @param consumer
+     * @param prod
+     * @return
+     */
+    private Date getEndDate(Consumer consumer, Product prod) {
+        Date end = null;
+        for (Entitlement ent : consumer.getEntitlements()) {
+            if (prod.getId().equals(ent.getPool().getProductId()) &&
+                (end == null || end.getTime() <= ent.getEndDate().getTime())) {
+                end = ent.getEndDate();
+            }
+            for (ProvidedProduct pp : ent.getPool().getProvidedProducts()) {
+                if (pp.getProductId().equals(prod.getId()) &&
+                    (end == null || end.getTime() <= ent.getEndDate().getTime())) {
+                    end = ent.getEndDate();
+                }
+            }
+        }
+        return end;
     }
 }

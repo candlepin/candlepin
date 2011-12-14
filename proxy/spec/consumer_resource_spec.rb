@@ -247,6 +247,44 @@ describe 'Consumer Resource' do
     consumer['facts'].length.should == 1
   end
 
+  it 'should allow the installed products to be enriched with product information' do
+    owner = create_owner random_string('owner')
+    user = user_client(owner, random_string("user"))
+    cp_client = consumer_client(user, random_string('consumer'), :system,
+                                nil, {:'arch' => 'test_arch1'}, owner.key)
+
+    product1 = create_product(random_string('product'), random_string('product'),
+                           :attributes => { :'arch' => 'ALL',
+                                            :'version' => '3.11',
+                                            :'multi-entitlement' => 'yes'})
+    installed = [
+        {'productId' => product1.id, 'productName' => product1.name}
+    ]
+    cp_client.update_consumer({:installedProducts => installed})
+
+    subs1 = @cp.create_subscription(owner.key, product1.id, 1, [], '', '', Date.today, Date.today + 365)
+    @cp.refresh_pools(owner.key)
+
+    for pool in @cp.list_owner_pools(owner.key) do
+        cp_client.consume_pool(pool.id)
+    end
+
+    consumer = @cp.get_consumer(cp_client.uuid)
+    for installed_product in consumer['installedProducts'] do
+         installed_product['arch'].should == 'ALL'
+         installed_product['version'].should == '3.11'
+         installed_product['status'].should == 'green'
+         start_date = Date.strptime(installed_product['startDate'])
+         start_date.year.should == Date.today.year
+         start_date.month.should == Date.today.month
+         start_date.day.should == Date.today.day
+         end_date = Date.strptime(installed_product['endDate'])
+         end_date.year.should == (Date.today + 365).year
+         end_date.month.should == (Date.today + 365).month
+         end_date.day.should == (Date.today + 365).day
+    end
+  end
+
   it 'should allow a consumer to update their autoheal flag' do
     user_cp = user_client(@owner1, random_string('billy'))
     consumer = user_cp.register(random_string('system'), :system, nil,

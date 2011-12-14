@@ -14,6 +14,12 @@
  */
 package org.candlepin.model;
 
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Index;
+import java.util.Date;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -21,15 +27,11 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
 
 /**
  * Represents a product installed (not necessarily entitled) on a consumer.
@@ -53,6 +55,21 @@ public class ConsumerInstalledProduct extends AbstractHibernateObject {
 
     @Column(name = "product_name")
     private String productName;
+
+    @Transient
+    private String version;
+
+    @Transient
+    private String arch;
+
+    @Transient
+    private String status;
+
+    @Transient
+    private Date startDate;
+
+    @Transient
+    private Date endDate;
 
     @ManyToOne
     @ForeignKey(name = "fk_consumer_installed_product")
@@ -98,6 +115,46 @@ public class ConsumerInstalledProduct extends AbstractHibernateObject {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
+    public String getArch() {
+        return arch;
+    }
+
+    public void setArch(String arch) {
+        this.arch = arch;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public Date getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(Date startDate) {
+        this.startDate = startDate;
+    }
+
+    public Date getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(Date endDate) {
+        this.endDate = endDate;
     }
 
     @XmlTransient
