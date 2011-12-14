@@ -14,111 +14,21 @@
  */
 package org.candlepin.service.impl.test;
 
-import static org.junit.Assert.*;
+import junit.framework.TestCase;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
 
-import org.candlepin.model.Owner;
-import org.candlepin.model.Product;
-import org.candlepin.model.Subscription;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.impl.DefaultSubscriptionServiceAdapter;
-import org.candlepin.test.DatabaseTestFixture;
-import org.candlepin.test.TestUtil;
-import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.Mockito;
+import org.mockito.runners.MockitoJUnitRunner;
 
-public class DefaultSubscriptionServiceAdapterTest extends DatabaseTestFixture {
-
-    private Owner owner;
-    private Product parentProduct;
-    private Product childProduct;
-    private Subscription s1;
-    private SubscriptionServiceAdapter adapter;
-
-    @Before
-    public void setUp() {
-        owner = createOwner();
-        ownerCurator.create(owner);
-        parentProduct = TestUtil.createProduct();
-
-        childProduct = TestUtil.createProduct();
-        productCurator.create(childProduct);
-        productCurator.create(parentProduct);
-
-        Set<Product> providedProducts = new HashSet<Product>();
-        providedProducts.add(childProduct);
-        s1 = new Subscription(owner, parentProduct, providedProducts, 100L,
-                TestUtil.createDate(2010, 2, 8), TestUtil.createDate(2050, 2, 8),
-                TestUtil.createDate(2010, 2, 1));
-
-        subCurator.create(s1);
-
-        adapter = injector.getInstance(DefaultSubscriptionServiceAdapter.class);
-    }
-
-    @Test
-    public void testGetSubscriptions() {
-        List<Subscription> subs = adapter.getSubscriptions(owner,
-            parentProduct.getId().toString());
-        assertEquals(1, subs.size());
-    }
-
-    @Test
-    public void testGetSubscriptionsNoneExist() {
-        Owner owner2 = createOwner();
-        ownerCurator.create(owner2);
-        List<Subscription> subs = adapter.getSubscriptions(owner2,
-            parentProduct.getId().toString());
-        assertEquals(0, subs.size());
-    }
-
-    @Test
-    public void testGetSubscription() {
-        Subscription s = adapter.getSubscription(s1.getId());
-        assertNotNull(s);
-        assertEquals(Long.valueOf(100), s.getQuantity());
-
-        s = adapter.getSubscription("-15");
-        assertNull(s);
-    }
-
-
-    @Test
-    public void testGetAllSubscriptionsSince() {
-        List<Subscription> subs = adapter.getSubscriptionsSince(
-                TestUtil.createDate(2010, 1, 20));
-        assertEquals(1, subs.size());
-        assertEquals(s1.getId(), subs.get(0).getId());
-
-        subs = adapter.getSubscriptionsSince(
-                TestUtil.createDate(2010, 2, 2));
-        assertEquals(0, subs.size());
-    }
-
-    @Test
-    public void testGetSubscriptionsSince() {
-        List<Subscription> subs = adapter.getSubscriptionsSince(owner,
-            TestUtil.createDate(2010, 1, 20));
-        assertEquals(1, subs.size());
-        assertEquals(s1.getId(), subs.get(0).getId());
-    }
-
-    @Test
-    public void testGetSubscriptionsProviding() {
-        List<Subscription> subIds = adapter.getSubscriptions(owner,
-            parentProduct.getId());
-        assertEquals(1, subIds.size());
-
-        subIds = adapter.getSubscriptions(owner, childProduct.getId());
-        assertEquals(1, subIds.size());
-    }
+@RunWith(MockitoJUnitRunner.class)
+public class DefaultSubscriptionServiceAdapterTest extends TestCase {
 
     @Test
     public void activationPrefix() {
@@ -130,7 +40,7 @@ public class DefaultSubscriptionServiceAdapterTest extends DatabaseTestFixture {
         Mockito.when(consumer.getName()).thenReturn("megaman");
 
         SubscriptionServiceAdapter adapter =
-                new DefaultSubscriptionServiceAdapter(subCurator, config, null, null);
+                new DefaultSubscriptionServiceAdapter(null, config, null, null);
 
         assertTrue(adapter.canActivateSubscription(consumer));
     }
@@ -145,7 +55,7 @@ public class DefaultSubscriptionServiceAdapterTest extends DatabaseTestFixture {
         Mockito.when(consumer.getName()).thenReturn("superman");
 
         SubscriptionServiceAdapter adapter =
-                new DefaultSubscriptionServiceAdapter(subCurator, config, null, null);
+                new DefaultSubscriptionServiceAdapter(null, config, null, null);
 
         assertFalse(adapter.canActivateSubscription(consumer));
     }
@@ -160,7 +70,7 @@ public class DefaultSubscriptionServiceAdapterTest extends DatabaseTestFixture {
         Mockito.when(consumer.getName()).thenReturn("anything");
 
         SubscriptionServiceAdapter adapter =
-                new DefaultSubscriptionServiceAdapter(subCurator, config, null, null);
+                new DefaultSubscriptionServiceAdapter(null, config, null, null);
 
         assertFalse(adapter.canActivateSubscription(consumer));
     }
@@ -175,7 +85,7 @@ public class DefaultSubscriptionServiceAdapterTest extends DatabaseTestFixture {
         Mockito.when(consumer.getName()).thenReturn("anything");
 
         SubscriptionServiceAdapter adapter =
-                new DefaultSubscriptionServiceAdapter(subCurator, config, null, null);
+                new DefaultSubscriptionServiceAdapter(null, config, null, null);
 
         assertFalse(adapter.canActivateSubscription(consumer));
     }
