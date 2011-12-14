@@ -14,14 +14,9 @@
  */
 package org.candlepin.auth.interceptor;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.ws.rs.DELETE;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Provider;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
@@ -42,12 +37,18 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.User;
+import org.candlepin.resteasy.interceptor.AuthUtil;
 import org.candlepin.util.Util;
 import org.xnap.commons.i18n.I18n;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.Provider;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.ws.rs.DELETE;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 
 /**
  * Interceptor for enforcing role based access to REST API methods.
@@ -91,7 +92,9 @@ public class SecurityInterceptor implements MethodInterceptor {
 
         log.debug("Invoked security interceptor " + invocation.getMethod());
 
-        SecurityHole securityHole = checkForSecurityHoleAnnotation(invocation);
+        SecurityHole securityHole = AuthUtil.checkForSecurityHoleAnnotation(
+            invocation.getMethod());
+
         // If method is annotated with SecurityHole and requires no authentication,
         // allow to proceed:
         if (securityHole != null && securityHole.noAuth()) {
@@ -119,16 +122,6 @@ public class SecurityInterceptor implements MethodInterceptor {
 
         String error = "Insufficient permissions";
         throw new ForbiddenException(i18n.tr(error));
-    }
-
-    private SecurityHole checkForSecurityHoleAnnotation(MethodInvocation invocation) {
-        for (Annotation annotation : invocation.getMethod().getAnnotations()) {
-            if (annotation instanceof SecurityHole) {
-                return (SecurityHole) annotation;
-            }
-        }
-
-        return null;
     }
 
     /**

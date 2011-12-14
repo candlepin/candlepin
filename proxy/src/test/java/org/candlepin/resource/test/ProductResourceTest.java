@@ -15,6 +15,7 @@
 package org.candlepin.resource.test;
 
 
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -23,11 +24,11 @@ import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.Subscription;
 import org.candlepin.resource.ProductResource;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.xnap.commons.i18n.I18n;
@@ -106,5 +107,29 @@ public class ProductResourceTest extends DatabaseTestFixture {
         pr.deleteProduct("10");
     }
 
+    @Test
+    public void getProduct() {
+        Product p = createProduct();
+        p = productResource.createProduct(p);
+        securityInterceptor.enable();
 
+        Product p1 = productResource.getProduct(p.getId());
+        assertEquals(p1, p);
+    }
+
+    @Test
+    public void getProductCertificate() {
+        Product p = createProduct();
+        p = productResource.createProduct(p);
+        // ensure we check SecurityHole
+        securityInterceptor.enable();
+
+        ProductCertificate cert = new ProductCertificate();
+        cert.setCert("some text");
+        cert.setKey("some key");
+        cert.setProduct(p);
+        productCertificateCurator.create(cert);
+        ProductCertificate cert1 = productResource.getProductCertificate(p.getId());
+        assertEquals(cert, cert1);
+    }
 }

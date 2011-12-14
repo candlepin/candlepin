@@ -46,7 +46,7 @@ describe 'Authorization' do
     trusted_cp = trusted_consumer_client("JarJarBinksIsMyCoPilot")
     lambda do
       trusted_cp.list_entitlements
-    end.should raise_exception(RestClient::ResourceNotFound)
+    end.should raise_exception(RestClient::Request::Unauthorized)
   end
 
   it 'allows in trused users' do

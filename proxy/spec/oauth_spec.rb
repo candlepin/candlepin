@@ -86,11 +86,11 @@ describe 'OAuth' do
     res.code.should == '200'
   end
 
-  it 'returns 403 if an unknown consumer is requested' do
+  it 'returns 401 if an unknown consumer is requested' do
     res = make_request(oauth_consumer, oauth_secret,
                        "/candlepin/consumers/#{@consumer.uuid}",
                        {'cp-consumer' => "some unknown consumer"})
-    res.code.should == '403'
+    res.code.should == '401'
   end
 
   it 'falls back to trusted system auth if no headers are set' do

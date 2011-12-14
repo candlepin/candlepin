@@ -53,7 +53,6 @@ public class CandlepinConnection {
      */
     public <T> T connect(Class<T> clazz, Credentials creds, String uri) {
         HttpClient httpclient = new HttpClient();
-        httpclient.getParams().setAuthenticationPreemptive(true);
         httpclient.getState().setCredentials(AuthScope.ANY, creds);
         ClientExecutor clientExecutor = new ApacheHttpClientExecutor(httpclient);
         return ProxyFactory.create(clazz, uri,

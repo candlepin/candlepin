@@ -56,11 +56,9 @@ class BasicAuth extends UserAuth {
                     password = userpass[1];
                 }
 
-                log
-                    .debug("check for: " + username +
-                        " - password of length #" +
-                        (password == null ? 0 : password.length()) +
-                        " = <omitted>");
+                log.debug("check for: " + username + " - password of length #" +
+                    (password == null ? 0 : password.length()) + " = <omitted>");
+
                 if (userServiceAdapter.validateUser(username, password)) {
                     Principal principal = createPrincipal(username);
                     if (log.isDebugEnabled()) {

@@ -14,12 +14,15 @@
  */
 package org.candlepin.resteasy.interceptor;
 
-import java.util.List;
-
+import org.candlepin.auth.interceptor.SecurityHole;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.jboss.resteasy.spi.HttpRequest;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.util.List;
 
 /**
  * AuthUtil
@@ -67,5 +70,15 @@ public class AuthUtil {
         }
 
         return o;
+    }
+
+    public static SecurityHole checkForSecurityHoleAnnotation(Method method) {
+        for (Annotation annotation : method.getAnnotations()) {
+            if (annotation instanceof SecurityHole) {
+                return (SecurityHole) annotation;
+            }
+        }
+
+        return null;
     }
 }

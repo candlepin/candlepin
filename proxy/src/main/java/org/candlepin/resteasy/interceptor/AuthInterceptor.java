@@ -14,17 +14,16 @@
  */
 package org.candlepin.resteasy.interceptor;
 
-import java.util.ArrayList;
-import java.util.Date;
-
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.ext.Provider;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 
 import org.apache.log4j.Logger;
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.auth.Principal;
+import org.candlepin.auth.interceptor.SecurityHole;
 import org.candlepin.config.Config;
+import org.candlepin.exceptions.UnauthorizedException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.OwnerCurator;
@@ -37,9 +36,12 @@ import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.spi.interception.PreProcessInterceptor;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.ext.Provider;
 
 /**
  * NoAuthInterceptor
@@ -112,17 +114,13 @@ public class AuthInterceptor implements PreProcessInterceptor {
     public ServerResponse preProcess(HttpRequest request, ResourceMethod method)
         throws Failure, WebApplicationException {
 
+        SecurityHole securityHole = AuthUtil.checkForSecurityHoleAnnotation(
+            method.getMethod());
+
         Principal principal = null;
-        boolean noAuthAllowed = false;
 
         if (log.isDebugEnabled()) {
             log.debug("Authentication check for " + request.getUri().getPath());
-        }
-
-        // No authentication is required, give a no auth principal
-        if (noAuthAllowed) {
-            log.debug("No auth allowed for resource; setting NoAuth principal");
-            principal = new NoAuthPrincipal();
         }
 
         // Check all the configured providers
@@ -136,8 +134,15 @@ public class AuthInterceptor implements PreProcessInterceptor {
 
         // At this point, there is no provider that has given a valid principal,
         // so we use the NoAuthPrincipal here
+        // No authentication is required, give a no auth principal
         if (principal == null) {
-            principal = new NoAuthPrincipal();
+            if (securityHole != null && securityHole.noAuth()) {
+                log.debug("No auth allowed for resource; setting NoAuth principal");
+                principal = new NoAuthPrincipal();
+            }
+            else {
+                throw new UnauthorizedException("Invalid credentials.");
+            }
         }
 
         // Expose the principal for Resteasy to inject via @Context
