@@ -20,7 +20,13 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.candlepin.controller.PoolManager;
+import org.candlepin.model.Consumer;
+import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductPoolAttribute;
@@ -29,13 +35,8 @@ import org.candlepin.model.Subscription;
 import org.candlepin.policy.js.pool.PoolHelper;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.TestUtil;
-
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * PoolHelperTest
@@ -47,6 +48,7 @@ public class PoolHelperTest {
     private Product product;
     private PoolManager pm;
     private ProductServiceAdapter psa;
+    private Entitlement ent;
 
     @Before
     public void init() {
@@ -55,6 +57,7 @@ public class PoolHelperTest {
         product = mock(Product.class);
         pm = mock(PoolManager.class);
         psa = mock(ProductServiceAdapter.class);
+        ent = mock(Entitlement.class);
 
         // default to an empty list, override in the test
         when(pool.getProvidedProducts()).thenReturn(Collections.EMPTY_SET);
@@ -140,8 +143,9 @@ public class PoolHelperTest {
         Pool targetPool = TestUtil.createPool(targetProduct);
 
         PoolHelper ph = new PoolHelper(pm, psa, null);
-        assertTrue("Update expected.", ph.copyProductAttributesOntoPool(sourceSub,
-            targetPool));
+        when(psa.getProductById(targetProduct.getId())).thenReturn(targetProduct);
+        assertTrue("Update expected.",
+            ph.copyProductAttributesOntoPool(sourceSub, targetPool));
         assertEquals(2, targetPool.getProductAttributes().size());
         assertTrue(targetPool.hasProductAttribute("A1"));
         assertTrue(targetPool.hasProductAttribute("A2"));
@@ -158,8 +162,9 @@ public class PoolHelperTest {
         targetPool.setProductAttribute("A1", "V1", targetProduct.getId());
 
         PoolHelper ph = new PoolHelper(pm, psa, null);
-        assertTrue("Update expected.", ph.copyProductAttributesOntoPool(sourceSub,
-            targetPool));
+        when(psa.getProductById(targetProduct.getId())).thenReturn(targetProduct);
+        assertTrue("Update expected.",
+            ph.copyProductAttributesOntoPool(sourceSub, targetPool));
         assertEquals(1, targetPool.getProductAttributes().size());
         assertTrue(targetPool.hasProductAttribute("A1"));
         assertEquals("V-updated", targetPool.getProductAttribute("A1").getValue());
@@ -175,9 +180,32 @@ public class PoolHelperTest {
         targetPool.setProductAttribute("A1", "V1", targetProduct.getId());
 
         PoolHelper ph = new PoolHelper(pm, psa, null);
-        assertTrue("Update expected.", ph.copyProductAttributesOntoPool(sourceSub,
-            targetPool));
+        when(psa.getProductById(targetProduct.getId())).thenReturn(targetProduct);
+        assertTrue("Update expected.",
+            ph.copyProductAttributesOntoPool(sourceSub, targetPool));
         assertTrue(targetPool.getProductAttributes().isEmpty());
+    }
+
+    @Test
+    public void copyProductAttributesForHostRestrictedPools() {
+        Product targetProduct = TestUtil.createProduct();
+        Consumer cons = TestUtil.createConsumer();
+        targetProduct.getAttributes().clear();
+        targetProduct.setAttribute("A1", "V1");
+        targetProduct.setAttribute("A2", "V2");
+        Subscription sourceSub = TestUtil.createSubscription(targetProduct);
+        Pool targetPool = TestUtil.createPool(targetProduct);
+
+        when(psa.getProductById(targetProduct.getId())).thenReturn(targetProduct);
+        when(ent.getConsumer()).thenReturn(cons);
+
+        PoolHelper ph = new PoolHelper(pm, psa, ent);
+        Pool hostRestrictedPool = ph.createHostRestrictedPool(targetProduct.getId(),
+            targetPool, "unlimited");
+
+        assertEquals(2, hostRestrictedPool.getProductAttributes().size());
+        assertTrue(hostRestrictedPool.hasProductAttribute("A1"));
+        assertTrue(hostRestrictedPool.hasProductAttribute("A2"));
     }
 
 }
