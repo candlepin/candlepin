@@ -190,7 +190,7 @@ public class CandlepinModule extends AbstractModule {
         bind(UserResource.class);
         bind(UniqueIdGenerator.class).to(DefaultUniqueIdGenerator.class);
 
-        bind(I18n.class).toProvider(I18nProvider.class).asEagerSingleton();
+        bind(I18n.class).toProvider(I18nProvider.class);
         bind(AuthInterceptor.class);
         bind(PinsetterAsyncInterceptor.class);
         bind(VersionPostInterceptor.class);

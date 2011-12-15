@@ -71,7 +71,7 @@ public abstract class TestExceptionMapperBase {
         @Override
         protected void configure() {
             bind(mapper);
-            bind(I18n.class).toProvider(I18nProvider.class).asEagerSingleton();
+            bind(I18n.class).toProvider(I18nProvider.class);
             bind(HttpServletRequest.class).toInstance(mock(HttpServletRequest.class));
         }
 
