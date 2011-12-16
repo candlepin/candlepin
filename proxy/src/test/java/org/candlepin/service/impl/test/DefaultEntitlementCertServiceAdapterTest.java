@@ -126,7 +126,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
         entitlement.setConsumer(Mockito.mock(Consumer.class));
         entitlement.setStartDate(subscription.getStartDate());
         entitlement.setEndDate(subscription.getEndDate());
-        entitlement.setFlexExpiryDays(60);
         entitlement.setPool(pool);
         entitlement.setOwner(owner);
 

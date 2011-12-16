@@ -97,8 +97,6 @@ public class Entitlement extends AbstractHibernateObject implements Linkable, Ow
 
     private Integer quantity;
 
-    private Integer flexExpiryDays = 0;
-
     private String accountNumber;
     private String contractNumber;
 
@@ -248,14 +246,6 @@ public class Entitlement extends AbstractHibernateObject implements Linkable, Ow
     public String toString() {
         return "Entitlement[id=" + getId() + ", product=" + getProductId() +
             ", consumer= " + (consumer == null ? "null" : consumer.getUuid()) + "]";
-    }
-
-    public Integer getFlexExpiryDays() {
-        return flexExpiryDays;
-    }
-
-    public void setFlexExpiryDays(Integer flexExpiryDays) {
-        this.flexExpiryDays = flexExpiryDays;
     }
 
     public String getHref() {
