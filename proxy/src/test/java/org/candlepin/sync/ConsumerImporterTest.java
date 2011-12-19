@@ -14,23 +14,23 @@
  */
 package org.candlepin.sync;
 
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
-
-import static org.junit.Assert.*;
 
 /**
  * ConsumerImporterTest
@@ -71,7 +71,12 @@ public class ConsumerImporterTest {
     }
 
     @Test(expected = JsonMappingException.class)
-    public void importFailsOnUnknownPropertiesWithDefaultConfig() throws Exception {
+    public void importFailsOnUnknownPropertiesWithNonDefaultConfig() throws Exception {
+        // Override default config to error out on unknown properties:
+        Map<String, String> configProps = new HashMap<String, String>();
+        configProps.put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "true");
+        mapper = SyncUtils.getObjectMapper(new Config(configProps));
+
         importer.createObject(mapper, new StringReader(
             "{\"uuid\":\"test-uuid\", \"unknown\":\"notreal\"}"));
     }

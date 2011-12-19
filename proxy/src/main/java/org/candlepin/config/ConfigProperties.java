@@ -15,16 +15,15 @@
 
 package org.candlepin.config;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.commons.lang.StringUtils;
 import org.candlepin.pinsetter.tasks.CancelJobJob;
 import org.candlepin.pinsetter.tasks.CertificateRevocationListTask;
 import org.candlepin.pinsetter.tasks.ImportRecordJob;
 import org.candlepin.pinsetter.tasks.JobCleaner;
 import org.candlepin.pinsetter.tasks.StatisticHistoryTask;
-
-import org.apache.commons.lang.StringUtils;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Defines a map of default properties used to prepopulate the {@link Config}.
@@ -126,7 +125,7 @@ public class ConfigProperties {
                 this.put(OAUTH_AUTHENTICATION, "true");
                 this.put(BASIC_AUTHENTICATION, "true");
 
-                this.put(FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "true");
+                this.put(FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
 
                 // Pinsetter
                 this.put("org.quartz.threadPool.class",
