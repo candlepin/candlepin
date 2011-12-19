@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.5.6
+Version: 0.5.7
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -131,6 +131,19 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Mon Dec 19 2011 Bryan Kearney <bkearney@redhat.com> 0.5.7-1
+- 760560: Bonus pools, which provide per host entitlements, were not inheriting
+  the attributes which included SLA and architecture (bkearney@redhat.com)
+- Pull in the latest string (bkearney@redhat.com)
+- 754426: Remove the remaining flex expiry code from Entitlement
+  (jbowes@redhat.com)
+- perf: seperate mockable consumer resource test from integration ones
+  (jbowes@redhat.com)
+- Pull db specific tests out of DefaultSubscriptionServiceAdapaterTest
+  (jbowes@redhat.com)
+- Revert "perf: make I18nProvider a singleton" (jesusr@redhat.com)
+- perf: make I18nProvider a singleton (jmrodri@gmail.com)
+
 * Tue Dec 13 2011 jesus m. rodriguez <jesusr@redhat.com> 0.5.6-1
 - 766974: force job to authenticate temporarily while we fix the REAL bug. (jesusr@redhat.com)
 - Added status string to ComplianceStatus. (mstead@redhat.com)
