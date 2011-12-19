@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.5.7
+Version: 0.5.8
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -131,6 +131,15 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Mon Dec 19 2011 Bryan Kearney <bkearney@redhat.com> 0.5.8-1
+- Make imports be more resiliant. (bkearney@redhat.com)
+- Provide better error logging for manifest imports (bkearney@redhat.com)
+- checkstyle fix (jesusr@redhat.com)
+- 766974: return 401 UNAUTHORISED when creds can make a difference.
+  (jesusr@redhat.com)
+- Updated consumer return JSON to include more information for the installed
+  products. (wpoteat@redhat.com)
+
 * Mon Dec 19 2011 Bryan Kearney <bkearney@redhat.com> 0.5.7-1
 - 760560: Bonus pools, which provide per host entitlements, were not inheriting
   the attributes which included SLA and architecture (bkearney@redhat.com)
