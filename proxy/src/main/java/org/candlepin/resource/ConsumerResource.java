@@ -51,7 +51,6 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.User;
 import org.candlepin.pinsetter.tasks.EntitlerJob;
@@ -1448,9 +1447,9 @@ public class ConsumerResource {
     }
 
     /**
-     * This method uses the same algorithm for finding the start date as is currently in use
-     *  in Subscription Manager. It is the earliest start date of the product's collection of
-     *  entitlement certificates.
+     * This method uses the same algorithm for finding the start date as is
+     * currently in use in Subscription Manager. It is the earliest start
+     * date of the product's collection of entitlement certificates.
      * @param consumer
      * @param prod
      * @return
