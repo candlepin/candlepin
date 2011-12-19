@@ -14,31 +14,6 @@
  */
 package org.candlepin.sync;
 
-import org.candlepin.audit.EventSink;
-import org.candlepin.config.Config;
-import org.candlepin.model.CertificateSerialCurator;
-import org.candlepin.model.ConsumerType;
-import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.ContentCurator;
-import org.candlepin.model.ExporterMetadata;
-import org.candlepin.model.ExporterMetadataCurator;
-import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
-import org.candlepin.model.RulesCurator;
-import org.candlepin.model.Subscription;
-import org.candlepin.model.SubscriptionCurator;
-import org.candlepin.pki.PKIUtility;
-import org.xnap.commons.i18n.I18n;
-
-import com.google.inject.Inject;
-import com.wideplay.warp.persist.Transactional;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
-import org.codehaus.jackson.map.ObjectMapper;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -54,8 +29,32 @@ import java.util.Map;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.log4j.Logger;
+import org.candlepin.audit.EventSink;
+import org.candlepin.config.Config;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.exceptions.ConflictException;
+import org.candlepin.model.CertificateSerialCurator;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.ContentCurator;
+import org.candlepin.model.ExporterMetadata;
+import org.candlepin.model.ExporterMetadataCurator;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
+import org.candlepin.model.RulesCurator;
+import org.candlepin.model.Subscription;
+import org.candlepin.model.SubscriptionCurator;
+import org.candlepin.pki.PKIUtility;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.xnap.commons.i18n.I18n;
+
+import com.google.inject.Inject;
+import com.wideplay.warp.persist.Transactional;
 
 /**
  * Importer
@@ -196,9 +195,11 @@ public class Importer {
             importObjects(owner, importFiles, force);
         }
         catch (CertificateException e) {
+            log.error("Exception caught importing archive", e);
             throw new ImportExtractionException("unable to extract export archive", e);
         }
         catch (IOException e) {
+            log.error("Exception caught importing archive", e);
             throw new ImportExtractionException("unable to extract export archive", e);
         }
         finally {
