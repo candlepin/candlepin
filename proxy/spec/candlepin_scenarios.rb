@@ -163,27 +163,6 @@ module CandlepinMethods
     return value
   end
 
-  # ent_cert here is the JSON representation:
-  def verify_cert_dates(ent_cert, end_date, flex_days)
-    ent_cert.entitlement.flexExpiryDays.should == flex_days
-
-    cert = OpenSSL::X509::Certificate.new(ent_cert.cert)
-
-    # Check the entitlement end date:
-    cert_end_date = cert.not_after
-    flex_end_date = end_date + flex_days
-    cert_end_date.year.should == flex_end_date.year
-    cert_end_date.month.should == flex_end_date.month
-    cert_end_date.day.should == flex_end_date.day
-
-    # Check the order namespace end date, this one should not have changed:
-    order_end_date = Date.strptime(get_extension(cert,
-        "1.3.6.1.4.1.2312.9.4.7"))
-    order_end_date.year.should == end_date.year
-    order_end_date.month.should == end_date.month
-    order_end_date.day.should == end_date.day
-  end
-
   def is_hosted?
     return ! @cp.get_status()['standalone']
   end
@@ -211,9 +190,7 @@ module ExportMethods
     @cp.add_role_user(role['id'], @user['username'])
     owner_client = Candlepin.new(@user['username'], 'password')
 
-    @flex_days = 30
-    product1 = create_product(random_string(), random_string(),
-        {:attributes => {"flex_expiry" => @flex_days.to_s}})
+    product1 = create_product(random_string(), random_string())
     product2 = create_product()
     virt_product = create_product(random_string('virt_product'),
                                   random_string('virt_product'),
@@ -236,7 +213,7 @@ module ExportMethods
 
     @candlepin_client = consumer_client(owner_client, random_string(),
         "candlepin")
-    @flex_entitlement = @candlepin_client.consume_pool(pool1.id)[0]
+    @entitlement1 = @candlepin_client.consume_pool(pool1.id)[0]
     @entitlement2 = @candlepin_client.consume_pool(pool2.id)[0]
     @candlepin_client.consume_pool(pool3.id)
 
@@ -275,8 +252,7 @@ module ExportMethods
     ## use the process for creating the import above to make one that is an update
     ## You must execute the create_candlepin_export method in the same test before
     ## this one.
-    product1 = create_product(random_string(), random_string(),
-        {:attributes => {"flex_expiry" => @flex_days.to_s}})
+    product1 = create_product(random_string(), random_string())
     product2 = create_product()
     content = create_content({:metadata_expire => 6000,
       :required_tags => "TAG1,TAG2"})
@@ -295,7 +271,7 @@ module ExportMethods
     @candlepin_client.consume_pool(pool2.id)
 
     @cp.unbind_entitlement(@entitlement2.id, :uuid => @candlepin_client.uuid)
-    @candlepin_client.regenerate_entitlement_certificates_for_entitlement(@flex_entitlement.id)
+    @candlepin_client.regenerate_entitlement_certificates_for_entitlement(@entitlement1.id)
 
     # Make a temporary directory where we can safely extract our archive:
     @tmp_dir_update = File.join(Dir.tmpdir, random_string('candlepin-rspec'))

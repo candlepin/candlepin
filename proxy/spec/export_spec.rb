@@ -73,21 +73,6 @@ describe 'Candlepin Export' do
     end.should be_empty
   end
 
-  it 'does not trigger flex expiry rules' do
-    flex_ent_file = File.join(@export_dir, 'entitlements', '%s.json' %
-        @flex_entitlement.id)
-    exported_ent = parse_file(flex_ent_file)
-    # Check the flex expiry product did not modify end dates:
-    date = Date.strptime(exported_ent['endDate'])
-    date.month.should == 5
-    date.day.should == 29
-    date.year.should == 2025
-
-    # Flex days should *not* have been set, Candlepin consumers do not
-    # execute the rules. The product will carry the attribute downstream.
-    exported_ent['flexExpiryDays'].should == 0
-  end
-
   it 'exports entitlement certificates' do
     entitlement_certs_dir = File.join(@export_dir, 'entitlement_certificates')
 
