@@ -14,25 +14,43 @@
  */
 package org.candlepin.auth;
 
-import org.candlepin.model.Entitlement;
-import org.junit.Assert;
-
-import org.junit.Test;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
+
+import org.candlepin.model.Entitlement;
+import org.junit.Before;
+import org.junit.Test;
 
 /**
  * NoAuthPrincipalTest
  */
 public class SystemPrincipalTest {
 
+    private SystemPrincipal principal;
+
+    @Before
+    public void init() {
+        principal = new SystemPrincipal();
+    }
+
     @Test
     public void fullAccess() {
-        Assert.assertTrue(new SystemPrincipal().hasFullAccess());
+        assertTrue(principal.hasFullAccess());
     }
 
     @Test
     public void canAccessEntities() {
         Entitlement e = mock(Entitlement.class);
-        Assert.assertTrue(new SystemPrincipal().canAccess(e, Access.ALL));
+        assertTrue(principal.canAccess(e, Access.ALL));
+    }
+
+    @Test
+    public void type() {
+        assertEquals("system", principal.getType());
+    }
+
+    @Test
+    public void name() {
+        assertEquals("System", principal.getPrincipalName());
     }
 }

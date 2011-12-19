@@ -15,28 +15,34 @@
 package org.candlepin.auth;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
+import org.junit.Before;
 import org.junit.Test;
 
 /**
- * NoAuthPrincipalTest
+ * ExternalSystemPrincipalTest
  */
-public class NoAuthPrincipalTest {
-    private NoAuthPrincipal principal = new NoAuthPrincipal();
+public class ExternalSystemPrincipalTest {
 
-    @Test
-    public void noFullAccess() {
-        assertFalse(principal.hasFullAccess());
-    }
+    private ExternalSystemPrincipal principal;
 
-    @Test
-    public void type() {
-        assertEquals("no_auth", principal.getType());
+    @Before
+    public void init() {
+        principal = new ExternalSystemPrincipal();
     }
 
     @Test
     public void name() {
-        assertEquals("Anonymous", principal.getPrincipalName());
+        assertEquals("External System", principal.getPrincipalName());
+    }
+
+    @Test
+    public void type() {
+        assertEquals("system", principal.getType());
+    }
+
+    @Test
+    public void fullaccess() {
+        assertEquals(true, principal.hasFullAccess());
     }
 }

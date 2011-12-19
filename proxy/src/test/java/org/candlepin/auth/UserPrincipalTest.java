@@ -117,4 +117,26 @@ public class UserPrincipalTest {
         UserPrincipal up = new UserPrincipal("admin", perms, false);
         assertTrue(up.getOwners().isEmpty());
     }
+
+    @Test
+    public void equalsNull() {
+        assertFalse(user.equals(null));
+    }
+
+    @Test
+    public void equalsOtherObject() {
+        assertFalse(user.equals(new Object()));
+    }
+
+    @Test
+    public void equalsAnotherConsumerPrincipal() {
+        UserPrincipal up = new UserPrincipal("icup", null, true);
+        assertTrue(user.equals(up));
+    }
+
+    @Test
+    public void equalsDifferentConsumer() {
+        UserPrincipal up = new UserPrincipal("admin", null, true);
+        assertFalse(user.equals(up));
+    }
 }
