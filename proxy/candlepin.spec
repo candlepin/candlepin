@@ -3,6 +3,10 @@
 %global _binary_payload w9.gzdio
 %global _source_payload w9.gzdio
 
+%global selinux_variants mls strict targeted
+%global selinux_policyver %(%{__sed} -e 's,.*selinux-policy-\\([^/]*\\)/.*,\\1,' /usr/share/selinux/devel/policyhelp || echo 0.0.0)
+%global modulename candlepin
+
 Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
@@ -55,11 +59,40 @@ Group: Development/Libraries
 %description devel
 Development libraries for candlepin integration
 
+%package selinux
+Summary:        SELinux policy module supporting candlepin
+Group:          System Environment/Base
+BuildRequires:  checkpolicy
+BuildRequires:  selinux-policy-devel
+BuildRequires:  /usr/share/selinux/devel/policyhelp
+BuildRequires:  hardlink
+
+%if "%{selinux_policyver}" != ""
+Requires:       selinux-policy >= %{selinux_policyver}
+%endif
+Requires:       %{name} = %{version}-%{release}
+Requires(post):   /usr/sbin/semodule
+Requires(post):   /sbin/restorecon
+Requires(postun): /usr/sbin/semodule
+Requires(postun): /sbin/restorecon
+
+%description selinux
+SELinux policy module supporting candlepin
+
 %prep
 %setup -q
 
 %build
 ant -Dlibdir=/usr/share/candlepin/lib/ clean package genschema
+
+cd selinux
+for selinuxvariant in %{selinux_variants}
+do
+  make NAME=${selinuxvariant} -f /usr/share/selinux/devel/Makefile
+  mv %{modulename}.pp %{modulename}.pp.${selinuxvariant}
+  make NAME=${selinuxvariant} -f /usr/share/selinux/devel/Makefile clean
+done
+cd -
 
 %install
 rm -rf $RPM_BUILD_ROOT
@@ -101,8 +134,35 @@ install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/cache/%{name}
 install -d -m 755 $RPM_BUILD_ROOT/%{_datadir}/%{name}/schema/
 cp -r target/schema/* $RPM_BUILD_ROOT/%{_datadir}/%{name}/schema/
 
+cd selinux
+for selinuxvariant in %{selinux_variants}
+do
+  install -d $RPM_BUILD_ROOT/%{_datadir}/selinux/${selinuxvariant}
+  install -p -m 644 %{modulename}.pp.${selinuxvariant} \
+    $RPM_BUILD_ROOT/%{_datadir}/selinux/${selinuxvariant}/%{modulename}.pp
+done
+cd -
+/usr/sbin/hardlink -cv $RPM_BUILD_ROOT/%{_datadir}/selinux
+
 %clean
 rm -rf $RPM_BUILD_ROOT
+
+%post selinux
+for selinuxvariant in %{selinux_variants}
+do
+  /usr/sbin/semodule -s ${selinuxvariant} -i \
+    %{_datadir}/selinux/${selinuxvariant}/%{modulename}.pp &> /dev/null || :
+done
+/sbin/restorecon %{_localstatedir}/cache/thumbslug || :
+
+%postun selinux
+if [ $1 -eq 0 ] ; then
+  for selinuxvariant in %{selinux_variants}
+  do
+     /usr/sbin/semodule -s ${selinuxvariant} -r %{modulename} &> /dev/null || :
+  done
+fi
+
 
 %files
 %config(noreplace) %{_sysconfdir}/%{name}/%{name}.conf
@@ -129,6 +189,13 @@ rm -rf $RPM_BUILD_ROOT
 %files devel
 %defattr(644,root,root,775)
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
+
+
+%files selinux
+%defattr(-,root,root,0755)
+%doc selinux/*
+%{_datadir}/selinux/*/%{modulename}.pp
+
 
 %changelog
 * Mon Dec 19 2011 Bryan Kearney <bkearney@redhat.com> 0.5.8-1
