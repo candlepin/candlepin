@@ -89,6 +89,13 @@ public class RoleResource {
     }
 
     /**
+     * Update a representation of a role.
+     *
+     * To avoid race conditions, we do not support updating the user or permission
+     * collections. Currently this call will only update the role name.
+     *
+     * See the specific nested POST/DELETE calls for modifying users and permissions.
+     *
      * @return the updated Role
      * @httpcode 404
      * @httpcode 200
