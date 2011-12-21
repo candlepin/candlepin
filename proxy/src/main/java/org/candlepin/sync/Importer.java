@@ -231,7 +231,12 @@ public class Importer {
         File metadata = importFiles.get(ImportFile.META.fileName());
 
         // system level elements
-        validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, metadata, force);
+        /*
+         * Checking a system wide last import date breaks multi-tenant deployments whenever
+         * one org imports a manifest slightly older than another org who has already
+         * imported. Disabled for now. See bz #769644.
+         */
+//        validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, metadata, force);
 
         /*
          * Rules import is causing serious problems due to version mismatches, generally

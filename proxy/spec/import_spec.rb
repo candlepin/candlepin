@@ -60,8 +60,19 @@ describe 'Candlepin Import' do
   end
 
   it 'should return a success on a force import' do
-    # This test must run after a successful import has already occurred. 
+    # This test must run after a successful import has already occurred.
     @cp.import(@import_owner.key, @export_filename, {:force => true})
+  end
+
+  it 'should allow importing older manifests into another owner' do
+    create_candlepin_export()
+    older_export = @export_filename
+    create_candlepin_export()
+    newer_export = @export_filename
+    owner1 = @cp.create_owner(random_string("owner1"))
+    owner2 = @cp.create_owner(random_string("owner1"))
+    @cp.import(owner1['key'], newer_export)
+    @cp.import(owner2['key'], older_export)
   end
 
 
