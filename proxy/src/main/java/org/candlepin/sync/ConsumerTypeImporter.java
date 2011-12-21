@@ -16,14 +16,12 @@ package org.candlepin.sync;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
-import org.hibernate.exception.ConstraintViolationException;
+import org.codehaus.jackson.map.ObjectMapper;
 
 /**
  * ConsumerTypeImporter
@@ -48,27 +46,11 @@ public class ConsumerTypeImporter {
      * @param consumerTypes Set of different consumer types.
      */
     public void store(Set<ConsumerType> consumerTypes) {
-        Set<String> resolved = new HashSet<String>();
-
         log.debug("Creating/updating consumer types");
         for (ConsumerType consumerType : consumerTypes) {
             if (curator.lookupByLabel(consumerType.getLabel()) == null) {
                 curator.create(consumerType);
                 log.debug("Created consumer type: " + consumerType.getLabel());
-            }
-            resolved.add(consumerType.getLabel());
-        }
-        log.debug("Deleting old consumer types");
-        for (ConsumerType consumerType : curator.listAll()) {
-            if (!resolved.contains(consumerType.getLabel())) {
-                try {
-                    curator.delete(consumerType);
-                    log.debug("Deleted consumer type: " + consumerType.getLabel());
-                }
-                catch (ConstraintViolationException e) {
-                    log.debug("Skipping deletion (constraint violation raised) for: " +
-                        consumerType.getLabel());
-                }
             }
         }
     }
