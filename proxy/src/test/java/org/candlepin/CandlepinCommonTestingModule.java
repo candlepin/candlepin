@@ -43,6 +43,7 @@ import org.candlepin.policy.js.pool.JsPoolRules;
 import org.candlepin.resource.ActivationKeyResource;
 import org.candlepin.resource.ConsumerResource;
 import org.candlepin.resource.EntitlementResource;
+import org.candlepin.resource.EnvironmentResource;
 import org.candlepin.resource.OwnerResource;
 import org.candlepin.resource.PoolResource;
 import org.candlepin.resource.ProductResource;
@@ -94,6 +95,7 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
         bind(PoolResource.class);
         bind(EntitlementResource.class);
         bind(OwnerResource.class);
+        bind(EnvironmentResource.class);
         bind(SubscriptionResource.class);
         bind(ActivationKeyResource.class);
         bind(ProductServiceAdapter.class)

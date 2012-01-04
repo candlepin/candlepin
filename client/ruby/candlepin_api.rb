@@ -561,6 +561,25 @@ class Candlepin
     return get("/activation_keys/#{key_id}")
   end
 
+  def create_environment(owner_key, env_id)
+    env = {
+      :id => env_id,
+    }
+    return post("/owners/#{owner_key}/environments", env)
+  end
+
+  def list_environments(owner_key)
+    return get("/owners/#{owner_key}/environments")
+  end
+
+  def get_environment(env_id)
+    return get("/environments/#{env_id}")
+  end
+
+  def delete_environment(env_id)
+    return delete("/environments/#{env_id}")
+  end
+
   def update_activation_key(key)
     return put("/activation_keys/#{key['id']}", key)
   end

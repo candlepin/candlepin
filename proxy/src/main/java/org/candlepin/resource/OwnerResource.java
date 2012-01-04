@@ -57,6 +57,8 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.Environment;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.EventCurator;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
@@ -100,9 +102,7 @@ import com.wideplay.warp.persist.Transactional;
  */
 @Path("/owners")
 public class OwnerResource {
-    /**
-     *
-     */
+
     private OwnerCurator ownerCurator;
     private OwnerInfoCurator ownerInfoCurator;
     private PoolCurator poolCurator;
@@ -126,6 +126,7 @@ public class OwnerResource {
     private EntitlementCertificateCurator entitlementCertCurator;
     private EntitlementCurator entitlementCurator;
     private UeberCertificateGenerator ueberCertGenerator;
+    private EnvironmentCurator envCurator;
     private static final int FEED_LIMIT = 1000;
 
     @Inject
@@ -147,7 +148,8 @@ public class OwnerResource {
         ContentCurator contentCurator,
         EntitlementCertificateCurator entitlementCertCurator,
         EntitlementCurator entitlementCurator, UniqueIdGenerator idGenerator,
-        UeberCertificateGenerator ueberCertGenerator) {
+        UeberCertificateGenerator ueberCertGenerator,
+        EnvironmentCurator envCurator) {
 
         this.ownerCurator = ownerCurator;
         this.ownerInfoCurator = ownerInfoCurator;
@@ -171,6 +173,7 @@ public class OwnerResource {
         this.entitlementCertCurator = entitlementCertCurator;
         this.entitlementCurator = entitlementCurator;
         this.ueberCertGenerator = ueberCertGenerator;
+        this.envCurator = envCurator;
     }
 
     /**
@@ -301,6 +304,10 @@ public class OwnerResource {
             log.info("Deleting activation key: " + key);
             activationKeyCurator.delete(key);
         }
+        for (Environment e : owner.getEnvironments()) {
+            log.info("Deleting environment: " + e.getId());
+            envCurator.delete(e);
+        }
         for (Subscription s : subscriptionCurator.listByOwner(owner)) {
             log.info("Deleting subscription: " + s);
             subscriptionCurator.delete(s);
@@ -415,6 +422,39 @@ public class OwnerResource {
         sink.emitActivationKeyCreated(newKey);
 
         return newKey;
+    }
+
+    /**
+     * @return the created Environment
+     * @httpcode 404
+     * @httpcode 200
+     */
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{owner_key}/environments")
+    public Environment createEnv(
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey, Environment env) {
+        Owner owner = findOwner(ownerKey);
+        env.setOwner(owner);
+        env = envCurator.create(env);
+        return env;
+    }
+
+    /**
+     * List all environments for a particular owner.
+     *
+     * @return list of environments
+     * @httpcode 200
+     */
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{owner_key}/environments")
+    @Wrapped(element = "environments")
+    public List<Environment> listEnvironments(@PathParam("owner_key")
+        @Verify(Owner.class) String ownerKey) {
+        Owner owner = findOwner(ownerKey);
+        return envCurator.listForOwner(owner);
     }
 
     /**

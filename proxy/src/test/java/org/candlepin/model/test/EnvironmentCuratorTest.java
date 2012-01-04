@@ -16,6 +16,8 @@ package org.candlepin.model.test;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.List;
+
 import org.candlepin.model.Environment;
 import org.candlepin.model.Owner;
 import org.candlepin.test.DatabaseTestFixture;
@@ -50,6 +52,18 @@ public class EnvironmentCuratorTest extends DatabaseTestFixture {
 
         envCurator.delete(e);
         assertEquals(0, envCurator.listAll().size());
+    }
+
+    @Test public void listForOwner() {
+
+        Owner owner = new Owner("test-owner", "Test Owner");
+        owner = ownerCurator.create(owner);
+
+        Environment e = new Environment("env1", owner);
+        e = envCurator.create(e);
+
+        List<Environment> envs = envCurator.listForOwner(owner);
+        assertEquals(1, envs.size());
     }
 
 }

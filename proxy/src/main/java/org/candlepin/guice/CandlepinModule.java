@@ -80,6 +80,7 @@ import org.candlepin.resource.ConsumerTypeResource;
 import org.candlepin.resource.ContentResource;
 import org.candlepin.resource.CrlResource;
 import org.candlepin.resource.EntitlementResource;
+import org.candlepin.resource.EnvironmentResource;
 import org.candlepin.resource.EventResource;
 import org.candlepin.resource.HypervisorResource;
 import org.candlepin.resource.JobResource;
@@ -149,6 +150,7 @@ public class CandlepinModule extends AbstractModule {
         bind(PoolResource.class);
         bind(EntitlementResource.class);
         bind(OwnerResource.class);
+        bind(EnvironmentResource.class);
         bind(RoleResource.class);
         bind(RootResource.class);
         bind(ProductResource.class);

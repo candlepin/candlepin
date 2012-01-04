@@ -32,6 +32,8 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.Environment;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
@@ -76,6 +78,7 @@ public class SecurityInterceptor implements MethodInterceptor {
         this.storeMap = new HashMap<Class, EntityStore>();
 
         storeMap.put(Owner.class, new OwnerStore());
+        storeMap.put(Environment.class, new EnvironmentStore());
         storeMap.put(Consumer.class, new ConsumerStore());
         storeMap.put(Entitlement.class, new EntitlementStore());
         storeMap.put(Pool.class, new PoolStore());
@@ -227,6 +230,19 @@ public class SecurityInterceptor implements MethodInterceptor {
             }
 
             return ownerCurator.lookupByKey(key);
+        }
+    }
+
+    private class EnvironmentStore implements EntityStore {
+        private EnvironmentCurator envCurator;
+
+        @Override
+        public Object lookup(String key) {
+            if (envCurator == null) {
+                envCurator = injector.getInstance(EnvironmentCurator.class);
+            }
+
+            return envCurator.find(key);
         }
     }
 
