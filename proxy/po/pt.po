@@ -2,7 +2,6 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
 msgid ""
 msgstr ""
 "Project-Id-Version: 0.5.X\n"
@@ -35,7 +34,8 @@ msgstr "O nome do consumidor deve ser menor que {0} caractéres."
 msgid ""
 "The consumer with UUID {0} is a virtual guest. It does not have guests."
 msgstr ""
-"O consumidor com o UUID {0} é um convidado virtual. Ele não possui convidados."
+"O consumidor com o UUID {0} é um convidado virtual. Ele não possui "
+"convidados."
 
 #: src/main/java/org/candlepin/model/EntitlementCurator.java:241
 #, java-format

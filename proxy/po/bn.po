@@ -2,7 +2,7 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-# 
+# runab <runab@redhat.com>, 2011. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: 0.5.X\n"
@@ -34,7 +34,7 @@ msgstr "গ্রাহকের নাম লেখার সময় সর্�
 #, java-format
 msgid ""
 "The consumer with UUID {0} is a virtual guest. It does not have guests."
-msgstr ""
+msgstr "UUID {0} সহ একটি গ্রাহক ভার্চুয়াল গেস্ট। এর কোনো ভার্চুয়াল গেস্ট নেই।"
 
 #: src/main/java/org/candlepin/model/EntitlementCurator.java:241
 #, java-format
@@ -179,12 +179,12 @@ msgstr "{0} দ্বারা অ্যাক্টিভেশন-কি {1} �
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:159
 #, java-format
 msgid "{0} created the guest id {1}"
-msgstr ""
+msgstr "{0} দ্বারা নতুন গেস্ট id {1} তৈরি করা হয়েছে"
 
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:160
 #, java-format
 msgid "{0} deleted the guest id {1}"
-msgstr ""
+msgstr "{0} দ্বারা গেস্ট id {1} মুছে ফেলা হয়েছে"
 
 #: src/main/java/org/candlepin/resource/RulesResource.java:81
 msgid "Error decoding the rules. The text should be base 64 encoded"
@@ -335,7 +335,7 @@ msgstr "{0}-টি ফাইল সাফল্যের সাথে ইম্�
 #: src/main/java/org/candlepin/resource/OwnerResource.java:914
 #, java-format
 msgid "{0} file imported forcibly"
-msgstr ""
+msgstr "{0}-টি ফাইল বলপূর্বক ইম্পোর্ট করা হয়েছে।"
 
 #: src/main/java/org/candlepin/resource/MigrationResource.java:64
 msgid "Bad entity value."
@@ -562,7 +562,7 @@ msgstr "{0} গ্রাহকের জন্য id cert পুনরায় প
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1385
 #, java-format
 msgid "The consumer with UUID {0} is not a virtual guest."
-msgstr ""
+msgstr "UUID {0} সহ গ্রাহক ভার্চুয়াল গেস্ট নয়।"
 
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:101
 #, java-format
@@ -578,7 +578,7 @@ msgstr "''{0}'' ID সহ এনটাইটেলমেন্ট পাওয়�
 #: src/main/java/org/candlepin/resource/SubscriptionResource.java:122
 #, java-format
 msgid "no certificate for subscription {0}"
-msgstr ""
+msgstr "{0} সাবস্ক্রিপশনের কোনো সার্টিফিকেট উপস্থিত নেই"
 
 #: src/main/java/org/candlepin/resource/SubscriptionResource.java:141
 msgid "email is required for notification"
@@ -698,17 +698,18 @@ msgstr "''{0}'' id বিশিষ্ট পুলের জন্য একা�
 #: src/main/java/org/candlepin/controller/Entitler.java:122
 #, java-format
 msgid "Guest''s host does not match owner of pool: ''{0}''."
-msgstr ""
+msgstr "গেস্টের হোস্ট ও পুলের মালিকের মধ্যে গরমিল: ''{0}''."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:126
 #, java-format
 msgid "Pool not available to manifest consumers: ''{0}''."
-msgstr ""
+msgstr "ম্যানিফেস্ট গ্রাহকদের জন্য পুল উপলব্ধ নয়: ''{0}''।"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:130
 #, java-format
 msgid "Pool is restricted to virtual guests: ''{0}''."
 msgstr ""
+"শুধুমাত্র ভার্চুয়াল গেস্টদের ব্যবহারের জন্য পুলটি সংরক্ষিত হয়েছে: ''{0}''."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:134
 #, java-format
