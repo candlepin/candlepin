@@ -14,22 +14,24 @@
  */
 package org.candlepin.model;
 
-import java.util.List;
-
 import org.hibernate.criterion.Restrictions;
 
 /**
- * EnvironmentCurator
+ * EnvironmentContentCurator
  */
-public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
+public class EnvironmentContentCurator extends
+        AbstractHibernateCurator<EnvironmentContent> {
 
-    protected EnvironmentCurator() {
-        super(Environment.class);
+    protected EnvironmentContentCurator() {
+        super(EnvironmentContent.class);
     }
 
-    public List<Environment> listForOwner(Owner o) {
-        return this.currentSession().createCriteria(Environment.class)
-            .add(Restrictions.eq("owner", o)).list();
+    public EnvironmentContent lookupByEnvironmentAndContent(
+        Environment e, Content c) {
+
+        return (EnvironmentContent) this.currentSession().createCriteria(
+            EnvironmentContent.class).add(Restrictions.eq("environment", e))
+            .add(Restrictions.eq("content", c)).uniqueResult();
     }
 
 }

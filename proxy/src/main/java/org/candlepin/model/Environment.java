@@ -15,12 +15,16 @@
 package org.candlepin.model;
 
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -51,8 +55,11 @@ public class Environment extends AbstractHibernateObject implements Serializable
 
     @Id
     @Column(length = 32)
-
     private String id;
+
+    @OneToMany(mappedBy = "environment", targetEntity = EnvironmentContent.class,
+        cascade = CascadeType.ALL)
+    private Set<EnvironmentContent> environmentContent = new HashSet<EnvironmentContent>();
 
 
     public Environment() {
@@ -88,6 +95,14 @@ public class Environment extends AbstractHibernateObject implements Serializable
 
     public void setOwner(Owner owner) {
         this.owner = owner;
+    }
+
+    public Set<EnvironmentContent> getEnvironmentContent() {
+        return environmentContent;
+    }
+
+    public void setEnvironmentContent(Set<EnvironmentContent> environmentContent) {
+        this.environmentContent = environmentContent;
     }
 
 }

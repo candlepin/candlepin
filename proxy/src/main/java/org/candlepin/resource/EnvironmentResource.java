@@ -16,7 +16,11 @@ package org.candlepin.resource;
 
 import org.candlepin.auth.interceptor.Verify;
 import org.candlepin.exceptions.NotFoundException;
+import org.candlepin.model.Content;
+import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Environment;
+import org.candlepin.model.EnvironmentContent;
+import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
 
 import com.google.inject.Inject;
@@ -28,9 +32,11 @@ import java.util.List;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 /**
@@ -41,12 +47,17 @@ public class EnvironmentResource {
 
     private EnvironmentCurator envCurator;
     private I18n i18n;
+    private ContentCurator contentCurator;
+    private EnvironmentContentCurator envContentCurator;
 
     @Inject
-    public EnvironmentResource(EnvironmentCurator envCurator, I18n i18n) {
+    public EnvironmentResource(EnvironmentCurator envCurator, I18n i18n,
+        ContentCurator contentCurator, EnvironmentContentCurator envContentCurator) {
 
         this.envCurator = envCurator;
         this.i18n = i18n;
+        this.contentCurator = contentCurator;
+        this.envContentCurator = envContentCurator;
     }
 
 
@@ -94,5 +105,74 @@ public class EnvironmentResource {
     public List<Environment> getEnvironments() {
         return envCurator.listAll();
     }
+
+    /**
+     * Promote content into an environment.
+     *
+     * Consumers registered to this environment will now receive this content in
+     * their entitlement certificates.
+     *
+     * @httpcode 200
+     * @httpcode 404
+     * @return the environment content
+     */
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/{env_id}/content/{content_id}")
+    public EnvironmentContent promoteContent(
+            @PathParam("env_id") @Verify(Environment.class) String envId,
+            @PathParam("content_id") String contentId,
+            @QueryParam("enabled") Boolean enabled) {
+
+        Environment env = lookupEnvironment(envId);
+        Content content = lookupContent(contentId);
+
+        EnvironmentContent envContent = new EnvironmentContent(env, content, enabled);
+        env.getEnvironmentContent().add(envContent);
+
+        envContentCurator.create(envContent);
+        return envContent;
+    }
+
+    /**
+     * Demote content from an environment.
+     *
+     * Consumer's registered to this environment will no see this content in their
+     * entitlement certificates. (after they are regenerated and synced to clients)
+     *
+     * @httpcode 200
+     * @httpcode 404
+     */
+    @DELETE
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/{env_id}/content/{content_id}")
+    public void removeContent(@PathParam("env_id") @Verify(Environment.class) String envId,
+                              @PathParam("content_id") String contentId) {
+
+        Environment e = lookupEnvironment(envId);
+        Content c = lookupContent(contentId);
+        EnvironmentContent envContent =
+            envContentCurator.lookupByEnvironmentAndContent(e, c);
+        envContentCurator.delete(envContent);
+    }
+
+    private Environment lookupEnvironment(String envId) {
+        Environment e = envCurator.find(envId);
+        if (e == null) {
+            throw new NotFoundException(i18n.tr(
+                "No such environment : {0}", envId));
+        }
+        return e;
+    }
+
+    private Content lookupContent(String contentId) {
+        Content content = contentCurator.find(contentId);
+        if (content == null) {
+            throw new NotFoundException(i18n.tr(
+                "No such content: {0}", contentId));
+        }
+        return content;
+    }
+
 
 }

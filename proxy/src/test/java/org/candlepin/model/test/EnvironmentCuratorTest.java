@@ -25,9 +25,6 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.junit.Test;
 
 
-/**
- *
- */
 public class EnvironmentCuratorTest extends DatabaseTestFixture {
 
     @Test

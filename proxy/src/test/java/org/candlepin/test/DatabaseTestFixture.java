@@ -44,6 +44,7 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.EventCurator;
 import org.candlepin.model.Owner;
@@ -105,6 +106,7 @@ public class DatabaseTestFixture {
     protected PoolCurator poolCurator;
     protected DateSourceForTesting dateSource;
     protected EntitlementCurator entitlementCurator;
+    protected EnvironmentContentCurator envContentCurator;
     protected ProductAttributeCurator attributeCurator;
     protected RulesCurator rulesCurator;
     protected EventCurator eventCurator;
@@ -168,6 +170,7 @@ public class DatabaseTestFixture {
         activationKeyCurator = injector.getInstance(ActivationKeyCurator.class);
         contentCurator = injector.getInstance(ContentCurator.class);
         envCurator = injector.getInstance(EnvironmentCurator.class);
+        envContentCurator = injector.getInstance(EnvironmentContentCurator.class);
         unitOfWork = injector.getInstance(WorkManager.class);
 
         productAdapter = injector.getInstance(ProductServiceAdapter.class);

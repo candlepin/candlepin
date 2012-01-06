@@ -90,6 +90,7 @@ public class Owner extends AbstractHibernateObject implements Serializable,
     public Owner() {
         consumers = new HashSet<Consumer>();
         pools = new HashSet<Pool>();
+        environments = new HashSet<Environment>();
     }
 
     /**
@@ -99,11 +100,13 @@ public class Owner extends AbstractHibernateObject implements Serializable,
      * @param displayName Owner's name - suitable for UI
      */
     public Owner(String key, String displayName) {
+
         this.key = key;
         this.displayName = displayName;
 
         consumers = new HashSet<Consumer>();
         pools = new HashSet<Pool>();
+        environments = new HashSet<Environment>();
     }
 
     /**
@@ -334,6 +337,7 @@ public class Owner extends AbstractHibernateObject implements Serializable,
         this.activationKeys = activationKeys;
     }
 
+    @XmlTransient
     public Set<Environment> getEnvironments() {
         return environments;
     }

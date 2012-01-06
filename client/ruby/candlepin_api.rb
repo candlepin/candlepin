@@ -385,6 +385,16 @@ class Candlepin
     delete("/products/#{product_id}/content/#{content_id}")
   end
 
+  # Promote content to a particular environment.
+  def promote_content(env_id, content_id)
+    post("/environments/#{env_id}/content/#{content_id}")
+  end
+
+  # Demomote content from a particular environment.
+  def demote_content(env_id, content_id)
+    delete("/environments/#{env_id}/content/#{content_id}")
+  end
+
   def create_product(id, name, params={}, dependentProductIds=[])
 
     multiplier = params[:multiplier] || 1
