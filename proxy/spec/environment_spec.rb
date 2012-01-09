@@ -7,7 +7,8 @@ describe 'Environments' do
   before(:each) do
     @owner = create_owner random_string('test_owner')
     @org_admin = user_client(@owner, 'guy')
-    @env = @org_admin.create_environment(@owner['key'], 'testenv1')
+    @env = @org_admin.create_environment(@owner['key'], 'testenv1',
+      "My Test Env 1")
   end
 
   it 'can be created by owner admin' do
@@ -25,7 +26,8 @@ describe 'Environments' do
     foreign_owner = create_owner(random_string('test_owner'))
     foreign_admin = user_client(foreign_owner, 'bill')
     lambda {
-      env = foreign_admin.create_environment(@owner['key'], 'testenv2')
+      env = foreign_admin.create_environment(@owner['key'], 'testenv2',
+        "My test env 2")
     }.should raise_exception(RestClient::Forbidden)
   end
 

@@ -26,6 +26,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -43,7 +44,8 @@ import org.hibernate.annotations.Index;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_environment")
+@Table(name = "cp_environment",
+    uniqueConstraints = {@UniqueConstraint(columnNames = {"owner_id", "name"})})
 public class Environment extends AbstractHibernateObject implements Serializable,
     Owned {
 
@@ -52,6 +54,9 @@ public class Environment extends AbstractHibernateObject implements Serializable
     @JoinColumn(nullable = false)
     @Index(name = "cp_env_owner_fk_idx")
     private Owner owner;
+
+    @Column(nullable = false)
+    private String name;
 
     @Id
     @Column(length = 32)
@@ -65,9 +70,10 @@ public class Environment extends AbstractHibernateObject implements Serializable
     public Environment() {
     }
 
-    public Environment(String id, Owner owner) {
+    public Environment(String id, String name, Owner owner) {
         this.id = id;
         this.owner = owner;
+        this.name = name;
     }
 
 
@@ -103,6 +109,14 @@ public class Environment extends AbstractHibernateObject implements Serializable
 
     public void setEnvironmentContent(Set<EnvironmentContent> environmentContent) {
         this.environmentContent = environmentContent;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
 }
