@@ -68,4 +68,9 @@ describe 'Environments' do
     @env['environmentContent'].size.should == 0
   end
 
+  it 'can register consumers' do
+    @org_admin.register(random_string('testsystem'), :system, nil, {},
+        nil, nil, [], [], @env['id'])
+  end
+
 end

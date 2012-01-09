@@ -67,7 +67,8 @@ class Candlepin
 
   # TODO: need to switch to a params hash, getting to be too many arguments.
   def register(name, type=:system, uuid=nil, facts={}, username=nil,
-              owner_key=nil, activation_keys=[], installedProducts=[])
+              owner_key=nil, activation_keys=[], installedProducts=[],
+              environment=nil)
     consumer = {
       :type => {:label => type},
       :name => name,
@@ -77,8 +78,12 @@ class Candlepin
 
     consumer[:uuid] = uuid if not uuid.nil?
 
-    path = get_path("consumers") + "?"
-    path = path + "owner=#{owner_key}&" if not owner_key.nil?
+    if environment.nil?
+      path = get_path("consumers") + "?"
+      path = path + "owner=#{owner_key}&" if not owner_key.nil?
+    else
+      path = "/environments/#{environment}/consumers?"
+    end
     path += "username=#{username}&" if username
     path += "activation_keys=" + activation_keys.join(",") if activation_keys.length > 0
     @consumer = post(path, consumer)

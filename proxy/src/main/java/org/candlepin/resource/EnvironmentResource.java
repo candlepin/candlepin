@@ -14,8 +14,12 @@
  */
 package org.candlepin.resource;
 
+import org.candlepin.auth.Principal;
+import org.candlepin.auth.interceptor.SecurityHole;
 import org.candlepin.auth.interceptor.Verify;
+import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
+import org.candlepin.model.Consumer;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Environment;
@@ -30,6 +34,7 @@ import org.xnap.commons.i18n.I18n;
 
 import java.util.List;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -37,6 +42,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 /**
@@ -49,15 +55,18 @@ public class EnvironmentResource {
     private I18n i18n;
     private ContentCurator contentCurator;
     private EnvironmentContentCurator envContentCurator;
+    private ConsumerResource consumerResource;
 
     @Inject
     public EnvironmentResource(EnvironmentCurator envCurator, I18n i18n,
-        ContentCurator contentCurator, EnvironmentContentCurator envContentCurator) {
+        ContentCurator contentCurator, EnvironmentContentCurator envContentCurator,
+        ConsumerResource consumerResource) {
 
         this.envCurator = envCurator;
         this.i18n = i18n;
         this.contentCurator = contentCurator;
         this.envContentCurator = envContentCurator;
+        this.consumerResource = consumerResource;
     }
 
 
@@ -174,5 +183,21 @@ public class EnvironmentResource {
         return content;
     }
 
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @SecurityHole(noAuth = true)
+    @Path("/{env_id}/consumers")
+    public Consumer create(@PathParam("env_id") String envId, Consumer consumer,
+        @Context Principal principal, @QueryParam("username") String userName,
+        @QueryParam("owner") String ownerKey,
+        @QueryParam("activation_keys") String activationKeys)
+        throws BadRequestException {
+
+        Environment e = lookupEnvironment(envId);
+        consumer.setEnvironment(e);
+        return this.consumerResource.create(consumer, principal, userName,
+            e.getOwner().getKey(), activationKeys);
+    }
 
 }
