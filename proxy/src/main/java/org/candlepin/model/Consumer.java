@@ -105,6 +105,12 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @Index(name = "cp_consumer_owner_fk_idx")
     private Owner owner;
 
+    @ManyToOne
+    @ForeignKey(name = "fk_consumer_env")
+    @JoinColumn(nullable = true)
+    @Index(name = "cp_consumer_env_fk_idx")
+    private Environment environment;
+
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "consumer", fetch = FetchType.LAZY)
     private Set<Entitlement> entitlements;
 
@@ -482,5 +488,13 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         }
         guestId.setConsumer(this);
         guestIds.add(guestId);
+    }
+
+    public Environment getEnvironment() {
+        return environment;
+    }
+
+    public void setEnvironment(Environment environment) {
+        this.environment = environment;
     }
 }

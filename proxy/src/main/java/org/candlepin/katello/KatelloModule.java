@@ -14,6 +14,7 @@
  */
 package org.candlepin.katello;
 
+import org.candlepin.resource.EnvironmentResource;
 import org.candlepin.service.UserServiceAdapter;
 
 import com.google.inject.AbstractModule;
@@ -28,6 +29,9 @@ public class KatelloModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(UserServiceAdapter.class).to(KatelloUserServiceAdapter.class);
+
+        // Enable the environment REST API:
+        bind(EnvironmentResource.class);
     }
 
 }
