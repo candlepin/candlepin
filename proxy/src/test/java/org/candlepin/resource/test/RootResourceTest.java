@@ -17,6 +17,7 @@ package org.candlepin.resource.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import org.candlepin.config.Config;
 import org.candlepin.resource.Link;
 import org.candlepin.resource.RootResource;
 
@@ -32,7 +33,7 @@ public class RootResourceTest {
 
     @Test
     public void getRootResources() {
-        RootResource rr = new RootResource();
+        RootResource rr = new RootResource(new Config());
         List<Link> links = rr.getRootResources();
         assertNotNull(links);
         for (Link link : links) {

@@ -55,6 +55,9 @@ public class ConfigProperties {
     public static final String ACTIVATION_DEBUG_PREFIX =
                                       "candlepin.subscription.activation.debug_prefix";
 
+    // Space separated list of resources to hide in the GET / list:
+    public static final String HIDDEN_RESOURCES = "candlepin.hidden_resources";
+
     // Authentication
     public static final String TRUSTED_AUTHENTICATION = "candlepin.auth.trusted.enable";
     public static final String SSL_AUTHENTICATION = "candlepin.auth.ssl.enable";
@@ -125,6 +128,10 @@ public class ConfigProperties {
                 this.put(OAUTH_AUTHENTICATION, "true");
                 this.put(BASIC_AUTHENTICATION, "true");
 
+                // By default, environments should be hidden so clients do not need to
+                // submit one when registering.
+                this.put(HIDDEN_RESOURCES, "environments");
+
                 this.put(FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
 
                 // Pinsetter
@@ -149,6 +156,7 @@ public class ConfigProperties {
                 this.put(SHARD_USERNAME, "admin");
                 this.put(SHARD_PASSWORD, "admin");
                 this.put(STANDALONE, "true");
+
             }
         };
     public static final String CRL_FILE_PATH = "candlepin.crl.file";
