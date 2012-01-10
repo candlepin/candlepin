@@ -194,12 +194,18 @@ public class X509ExtensionUtil {
     }
 
     public Set<X509ExtensionWrapper> contentExtensions(
-        Set<ProductContent> productContent, String contentPrefix) {
+        Set<ProductContent> productContent, String contentPrefix,
+        Set<String> promotedContent, Consumer consumer) {
 
         Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<X509ExtensionWrapper>();
 
-        // for (Content con : content) {
         for (ProductContent pc : productContent) {
+            if (consumer.getEnvironment() != null && !promotedContent.contains(
+                pc.getContent().getId())) {
+                log.debug("Skipping content not promoted to environment: " +
+                    pc.getContent().getId());
+                continue;
+            }
 
             // augment the content path with the prefix if it is passed in
             String contentPath = pc.getContent().getContentUrl();

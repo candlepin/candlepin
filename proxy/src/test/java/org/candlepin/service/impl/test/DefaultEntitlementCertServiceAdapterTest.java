@@ -28,6 +28,8 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.Environment;
+import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolAttribute;
@@ -141,7 +143,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
     @Test
     public void testContentExtentionCreation() {
         Set<X509ExtensionWrapper> contentExtensions = extensionUtil
-            .contentExtensions(product.getProductContent(), null);
+            .contentExtensions(product.getProductContent(), null,
+                new HashSet<String>(), entitlement.getConsumer());
         Map<String, X509ExtensionWrapper> encodedContent = getEncodedContent(
             contentExtensions);
         assertTrue(isEncodedContentValid(encodedContent));
@@ -150,16 +153,52 @@ public class DefaultEntitlementCertServiceAdapterTest {
         // Nullify this, and make sure it's not there.
         content.setMetadataExpire(null);
         contentExtensions = extensionUtil.contentExtensions(
-            product.getProductContent(), "");
+            product.getProductContent(), "",
+            new HashSet<String>(), entitlement.getConsumer());
         encodedContent = getEncodedContent(contentExtensions);
         assertTrue(isEncodedContentValid(encodedContent));
         assertFalse(encodedContent.containsKey(CONTENT_METADATA_EXPIRE.toString()));
     }
 
     @Test
+    public void testContentExtentionExcludesNonPromotedContent() {
+
+        // Environment, but no promoted content:
+        Environment e = new Environment("env1", "Env 1", owner);
+        when(entitlement.getConsumer().getEnvironment()).thenReturn(e);
+
+        Set<X509ExtensionWrapper> contentExtensions = extensionUtil
+            .contentExtensions(product.getProductContent(), null,
+                new HashSet<String>(), entitlement.getConsumer());
+        Map<String, X509ExtensionWrapper> encodedContent = getEncodedContent(
+            contentExtensions);
+        assertFalse(encodedContent.containsKey(content.getLabel()));
+    }
+
+    @Test
+    public void testContentExtentionIncludesPromotedContent() {
+
+        // Environment, with promoted content:
+        Environment e = new Environment("env1", "Env 1", owner);
+        e.getEnvironmentContent().add(new EnvironmentContent(e, content, true));
+        when(entitlement.getConsumer().getEnvironment()).thenReturn(e);
+
+        Set<String> promotedContent = new HashSet<String>();
+        promotedContent.add(content.getId());
+        Set<X509ExtensionWrapper> contentExtensions = extensionUtil
+            .contentExtensions(product.getProductContent(), null,
+                promotedContent, entitlement.getConsumer());
+        Map<String, X509ExtensionWrapper> encodedContent = getEncodedContent(
+            contentExtensions);
+        assertTrue(isEncodedContentValid(encodedContent));
+        assertTrue(encodedContent.containsKey(content.getLabel()));
+    }
+
+    @Test
     public void testContentRequiredTagsExtention() {
         Set<X509ExtensionWrapper> contentExtensions = extensionUtil
-            .contentExtensions(product.getProductContent(), null);
+            .contentExtensions(product.getProductContent(), null,
+                new HashSet<String>(), entitlement.getConsumer());
         Map<String, X509ExtensionWrapper> encodedContent = getEncodedContent(
             contentExtensions);
         assertTrue(isEncodedContentValid(encodedContent));
@@ -168,7 +207,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         // Nullify this, and make sure it's not there.
         content.setRequiredTags(null);
         contentExtensions = extensionUtil.contentExtensions(
-            product.getProductContent(), "");
+            product.getProductContent(), "",
+            new HashSet<String>(), entitlement.getConsumer());
         encodedContent = getEncodedContent(contentExtensions);
         assertTrue(isEncodedContentValid(encodedContent));
         assertFalse(encodedContent.containsKey(REQUIRED_TAGS.toString()));
@@ -176,7 +216,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         // Empty string, and make sure it's not there.
         content.setRequiredTags("");
         contentExtensions = extensionUtil.contentExtensions(
-            product.getProductContent(), "");
+            product.getProductContent(), "",
+            new HashSet<String>(), entitlement.getConsumer());
         encodedContent = getEncodedContent(contentExtensions);
         assertTrue(isEncodedContentValid(encodedContent));
         assertFalse(encodedContent.containsKey(REQUIRED_TAGS.toString()));

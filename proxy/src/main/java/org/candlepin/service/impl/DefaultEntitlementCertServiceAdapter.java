@@ -30,6 +30,7 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.KeyPairCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
@@ -138,6 +139,7 @@ public class DefaultEntitlementCertServiceAdapter extends
      */
     public Set<ProductContent> filterProductContent(Product prod, Entitlement ent) {
         Set<ProductContent> filtered = new HashSet<ProductContent>();
+
         for (ProductContent pc : prod.getProductContent()) {
             boolean include = true;
             if (pc.getContent().getModifiedProductIds().size() > 0) {
@@ -177,12 +179,27 @@ public class DefaultEntitlementCertServiceAdapter extends
             .getPool(), sub));
         products.add(product);
 
+        // Build a set of all content IDs promoted to the consumer's environment so
+        // we can determine if anything needs to be skipped:
+        Set<String> promotedContent = new HashSet<String>();
+        if (ent.getConsumer().getEnvironment() != null) {
+            log.debug("Consumer has environment, checking for promoted content in: " +
+                ent.getConsumer().getEnvironment());
+            for (EnvironmentContent envContent :
+                    ent.getConsumer().getEnvironment().getEnvironmentContent()) {
+                log.debug("  promoted content: " + envContent.getContent().getId());
+                promotedContent.add(envContent.getContent().getId());
+            }
+        }
+
+
         for (Product prod : Collections2
             .filter(products, PROD_FILTER_PREDICATE)) {
             extensions.addAll(extensionUtil.productExtensions(prod));
             extensions.addAll(extensionUtil.contentExtensions(
                 filterProductContent(prod, ent),
-                useContentPrefix ? ent.getOwner().getContentPrefix() : null));
+                useContentPrefix ? ent.getOwner().getContentPrefix() : null,
+                    promotedContent, ent.getConsumer()));
         }
 
         if (sub != null) {
