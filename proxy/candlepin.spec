@@ -11,7 +11,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.5.8
+Version: 0.5.9
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -198,6 +198,18 @@ fi
 
 
 %changelog
+* Wed Jan 11 2012 jesus m. rodriguez <jesusr@redhat.com> 0.5.9-1
+- i18n: extracted and merged strings. (jesusr@redhat.com)
+- 743968: Do not import rules files exported from older candlepins (cduryee@redhat.com)
+- initial selinux policy import (alikins@redhat.com)
+- latest string files (bkearney@redhat.com)
+- Latest strings from zanata (bkearney@redhat.com)
+- 769644: Disable system wide checking of last manifest import date. (dgoodwin@redhat.com)
+- No longer remove old consumer types on import. (mstead@redhat.com)
+- tests: small gains in coverage (jmrodri@gmail.com)
+- Clarify PUT /roles does not update collections in API documentation. (dgoodwin@redhat.com)
+- tests: increase test coverage. (jesusr@redhat.com)
+
 * Mon Dec 19 2011 Bryan Kearney <bkearney@redhat.com> 0.5.8-1
 - Make imports be more resiliant. (bkearney@redhat.com)
 - Provide better error logging for manifest imports (bkearney@redhat.com)
