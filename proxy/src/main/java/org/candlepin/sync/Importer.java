@@ -46,10 +46,10 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.model.RulesCurator;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.pki.PKIUtility;
+import org.candlepin.util.VersionUtil;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.xnap.commons.i18n.I18n;
 
@@ -89,7 +89,7 @@ public class Importer {
     private ConsumerTypeCurator consumerTypeCurator;
     private ProductCurator productCurator;
     private ObjectMapper mapper;
-    private RulesCurator rulesCurator;
+    private RulesImporter rulesImporter;
     private OwnerCurator ownerCurator;
     private ContentCurator contentCurator;
     private SubscriptionCurator subCurator;
@@ -103,7 +103,7 @@ public class Importer {
 
     @Inject
     public Importer(ConsumerTypeCurator consumerTypeCurator, ProductCurator productCurator,
-        RulesCurator rulesCurator, OwnerCurator ownerCurator,
+        RulesImporter rulesImporter, OwnerCurator ownerCurator,
         ContentCurator contentCurator, SubscriptionCurator subCurator, PoolManager pm,
         PKIUtility pki, Config config, ExporterMetadataCurator emc,
         CertificateSerialCurator csc, EventSink sink, I18n i18n) {
@@ -111,7 +111,7 @@ public class Importer {
         this.config = config;
         this.consumerTypeCurator = consumerTypeCurator;
         this.productCurator = productCurator;
-        this.rulesCurator = rulesCurator;
+        this.rulesImporter = rulesImporter;
         this.ownerCurator = ownerCurator;
         this.contentCurator = contentCurator;
         this.subCurator = subCurator;
@@ -238,14 +238,9 @@ public class Importer {
          */
 //        validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, metadata, force);
 
-        /*
-         * Rules import is causing serious problems due to version mismatches, generally
-         * where an on-site candlepin is importing a manifest from an older candlepin,
-         * and the rules either cause problems or just won't work. This is being disabled
-         * temporarily until we figure out if the feature can remain or needs to be
-         * scrapped.
-         */
-//        importRules(importFiles.get(ImportFile.RULES.fileName()).listFiles());
+
+        importRules(importFiles.get(ImportFile.RULES.fileName()).listFiles(), metadata);
+
 
         importConsumerTypes(importFiles.get(ImportFile.CONSUMER_TYPE.fileName()).listFiles());
 
@@ -267,20 +262,32 @@ public class Importer {
         poolManager.refreshPools(owner);
     }
 
-    public void importRules(File[] rulesFiles) throws IOException {
-        RulesImporter importer = new RulesImporter(rulesCurator);
+    public void importRules(File[] rulesFiles, File metadata) throws IOException {
 
-        // Only importing a single rules file now.
-        Reader reader = null;
-        try {
-            reader = new FileReader(rulesFiles[0]);
-            importer.importObject(reader);
-        }
-        finally {
-            if (reader != null) {
-                reader.close();
+        // only import rules if versions are ok
+        Meta m = mapper.readValue(metadata, Meta.class);
+
+        if (VersionUtil.getRulesVersionCompatibility(m.getVersion())) {
+            // Only importing a single rules file now.
+            Reader reader = null;
+            try {
+                reader = new FileReader(rulesFiles[0]);
+                rulesImporter.importObject(reader);
+            }
+            finally {
+                if (reader != null) {
+                    reader.close();
+                }
             }
         }
+        else {
+            log.warn(
+                i18n.tr("Incompatible rules: import version {0} older than our version {1}.",
+                    m.getVersion(), VersionUtil.getVersionString()));
+            log.warn(
+                i18n.tr("Manifest data will be imported without rules import."));
+        }
+
     }
 
     public void importConsumerTypes(File[] consumerTypes) throws IOException {
