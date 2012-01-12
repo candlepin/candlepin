@@ -16,6 +16,7 @@ package org.candlepin.util;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.Subscription;
@@ -27,6 +28,7 @@ import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -195,12 +197,12 @@ public class X509ExtensionUtil {
 
     public Set<X509ExtensionWrapper> contentExtensions(
         Set<ProductContent> productContent, String contentPrefix,
-        Set<String> promotedContent, Consumer consumer) {
+        Map<String, EnvironmentContent> promotedContent, Consumer consumer) {
 
         Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<X509ExtensionWrapper>();
 
         for (ProductContent pc : productContent) {
-            if (consumer.getEnvironment() != null && !promotedContent.contains(
+            if (consumer.getEnvironment() != null && !promotedContent.containsKey(
                 pc.getContent().getId())) {
                 log.debug("Skipping content not promoted to environment: " +
                     pc.getContent().getId());
@@ -236,9 +238,24 @@ public class X509ExtensionUtil {
             toReturn.add(new X509ExtensionWrapper(contentOid + "." +
                 OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_GPG_URL_KEY), false,
                 pc.getContent().getGpgUrl()));
+
+            // Check if we should override the enabled flag due to setting on promoted
+            // content:
+            Boolean enabled = pc.getEnabled();
+            log.debug("default enabled flag = " + enabled);
+            if (consumer.getEnvironment() != null) {
+                // we know content has been promoted at this point:
+                Boolean enabledOverride = promotedContent.get(
+                    pc.getContent().getId()).getEnabled();
+                if (enabledOverride != null) {
+                    log.debug("overriding enabled flag: " + enabledOverride);
+                    enabled = enabledOverride;
+                }
+            }
+
             toReturn.add(new X509ExtensionWrapper(contentOid + "." +
-                OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_ENABLED), false, (pc
-                .getEnabled()) ? "1" : "0"));
+                OIDUtil.CHANNEL_FAMILY_OIDS.get(OIDUtil.CF_ENABLED), false,
+                (enabled) ? "1" : "0"));
 
             // Include metadata expiry if specified on the content:
             if (pc.getContent().getMetadataExpire() != null) {
