@@ -1,20 +1,5 @@
 require 'candlepin_scenarios'
 
-class OpenSSL::X509::Certificate
-
-  # Shorthand for looking at extensions by oid
-  def [](extension)
-    load_extensions
-    @extensions[extension]
-  end
-
-  private
-
-  def load_extensions
-    @extensions ||= Hash[extensions.collect { |ext| [ext.oid, ext.value] }]
-  end
-end
-
 describe 'Identity Certificate' do
 
   include CandlepinMethods

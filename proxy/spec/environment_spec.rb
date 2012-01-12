@@ -68,9 +68,31 @@ describe 'Environments' do
     @env['environmentContent'].size.should == 0
   end
 
-  it 'can register consumers' do
-    @org_admin.register(random_string('testsystem'), :system, nil, {},
+  it 'filters content not promoted to environment' do
+    consumer = @org_admin.register(random_string('testsystem'), :system, nil, {},
         nil, nil, [], [], @env['id'])
+    consumer['environment'].should_not be_nil
+    consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'],
+      consumer['idCert']['key'])
+
+    product = create_product
+    content = create_content # promoted
+    content2 = create_content # not promoted
+    @cp.add_content_to_product(product['id'], content['id'])
+    @cp.add_content_to_product(product['id'], content2['id'])
+
+    @org_admin.promote_content(@env['id'], content['id'])
+
+    @cp.create_subscription(@owner['key'], product['id'], 10)
+    @cp.refresh_pools(@owner['key'])
+
+    pools = @cp.list_pools(:owner => @owner['id'], :product => product['id'])
+    ent = consumer_cp.consume_pool(pools[0]['id'])[0]
+
+    x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
+    extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.value] }]
+    extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{content2['id']}.1").should_not be_true
+    extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{content['id']}.1").should be_true
   end
 
 end

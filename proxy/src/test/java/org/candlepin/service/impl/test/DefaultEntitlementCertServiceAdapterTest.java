@@ -144,7 +144,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void testContentExtentionCreation() {
         Set<X509ExtensionWrapper> contentExtensions = extensionUtil
             .contentExtensions(product.getProductContent(), null,
-                new HashSet<String>(), entitlement.getConsumer());
+                new HashMap<String, EnvironmentContent>(), entitlement.getConsumer());
         Map<String, X509ExtensionWrapper> encodedContent = getEncodedContent(
             contentExtensions);
         assertTrue(isEncodedContentValid(encodedContent));
@@ -154,7 +154,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         content.setMetadataExpire(null);
         contentExtensions = extensionUtil.contentExtensions(
             product.getProductContent(), "",
-            new HashSet<String>(), entitlement.getConsumer());
+            new HashMap<String, EnvironmentContent>(), entitlement.getConsumer());
         encodedContent = getEncodedContent(contentExtensions);
         assertTrue(isEncodedContentValid(encodedContent));
         assertFalse(encodedContent.containsKey(CONTENT_METADATA_EXPIRE.toString()));
@@ -169,7 +169,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         Set<X509ExtensionWrapper> contentExtensions = extensionUtil
             .contentExtensions(product.getProductContent(), null,
-                new HashSet<String>(), entitlement.getConsumer());
+                new HashMap<String, EnvironmentContent>(), entitlement.getConsumer());
         Map<String, X509ExtensionWrapper> encodedContent = getEncodedContent(
             contentExtensions);
         assertFalse(encodedContent.containsKey(content.getLabel()));
@@ -183,8 +183,9 @@ public class DefaultEntitlementCertServiceAdapterTest {
         e.getEnvironmentContent().add(new EnvironmentContent(e, content, true));
         when(entitlement.getConsumer().getEnvironment()).thenReturn(e);
 
-        Set<String> promotedContent = new HashSet<String>();
-        promotedContent.add(content.getId());
+        Map<String, EnvironmentContent> promotedContent =
+            new HashMap<String, EnvironmentContent>();
+        promotedContent.put(content.getId(), e.getEnvironmentContent().iterator().next());
         Set<X509ExtensionWrapper> contentExtensions = extensionUtil
             .contentExtensions(product.getProductContent(), null,
                 promotedContent, entitlement.getConsumer());
@@ -198,7 +199,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void testContentRequiredTagsExtention() {
         Set<X509ExtensionWrapper> contentExtensions = extensionUtil
             .contentExtensions(product.getProductContent(), null,
-                new HashSet<String>(), entitlement.getConsumer());
+                new HashMap<String, EnvironmentContent>(), entitlement.getConsumer());
         Map<String, X509ExtensionWrapper> encodedContent = getEncodedContent(
             contentExtensions);
         assertTrue(isEncodedContentValid(encodedContent));
@@ -208,7 +209,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         content.setRequiredTags(null);
         contentExtensions = extensionUtil.contentExtensions(
             product.getProductContent(), "",
-            new HashSet<String>(), entitlement.getConsumer());
+            new HashMap<String, EnvironmentContent>(), entitlement.getConsumer());
         encodedContent = getEncodedContent(contentExtensions);
         assertTrue(isEncodedContentValid(encodedContent));
         assertFalse(encodedContent.containsKey(REQUIRED_TAGS.toString()));
@@ -217,7 +218,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         content.setRequiredTags("");
         contentExtensions = extensionUtil.contentExtensions(
             product.getProductContent(), "",
-            new HashSet<String>(), entitlement.getConsumer());
+            new HashMap<String, EnvironmentContent>(), entitlement.getConsumer());
         encodedContent = getEncodedContent(contentExtensions);
         assertTrue(isEncodedContentValid(encodedContent));
         assertFalse(encodedContent.containsKey(REQUIRED_TAGS.toString()));
