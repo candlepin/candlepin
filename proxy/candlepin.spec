@@ -11,7 +11,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.5.9
+Version: 0.5.10
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -199,6 +199,9 @@ fi
 
 
 %changelog
+* Thu Jan 12 2012 jesus m. rodriguez <jesusr@redhat.com> 0.5.10-1
+- add buildrequires for selinux-policy-doc (jesusr@redhat.com)
+
 * Wed Jan 11 2012 jesus m. rodriguez <jesusr@redhat.com> 0.5.9-1
 - i18n: extracted and merged strings. (jesusr@redhat.com)
 - 743968: Do not import rules files exported from older candlepins (cduryee@redhat.com)
