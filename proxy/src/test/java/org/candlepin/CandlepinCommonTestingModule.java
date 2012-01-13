@@ -85,7 +85,6 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
     @Override
     public void configure() {
 
-        bind(JPAInitializer.class).asEagerSingleton();
         bindConstant().annotatedWith(JpaUnit.class).to("default");
 
         bind(X509ExtensionUtil.class);

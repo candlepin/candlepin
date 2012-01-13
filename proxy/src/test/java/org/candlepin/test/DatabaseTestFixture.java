@@ -14,6 +14,8 @@
  */
 package org.candlepin.test;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
@@ -72,6 +74,8 @@ import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.util.DateSource;
+import org.hibernate.ejb.HibernateEntityManagerImplementor;
+import org.junit.After;
 import org.junit.Before;
 import org.xnap.commons.i18n.I18n;
 
@@ -79,6 +83,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
+import com.wideplay.warp.persist.PersistenceFilter;
 import com.wideplay.warp.persist.PersistenceService;
 import com.wideplay.warp.persist.UnitOfWork;
 import com.wideplay.warp.persist.WorkManager;
@@ -127,6 +132,8 @@ public class DatabaseTestFixture {
     protected StatisticCurator statisticCurator;
     protected UniqueIdGenerator uniqueIdGenerator;
     protected UeberCertificateGenerator ueberCertGenerator;
+    
+    private PersistenceService persistanceService;
 
     @Before
     public void init() {
@@ -145,6 +152,9 @@ public class DatabaseTestFixture {
                 PersistenceService.usingJpa().across(UnitOfWork.REQUEST)
                     .buildModule());
         }
+
+        persistanceService = injector.getInstance(PersistenceService.class);
+        persistanceService.start();
 
         injector.getInstance(EntityManagerFactory.class);
         emf = injector.getProvider(EntityManagerFactory.class).get();
@@ -192,6 +202,32 @@ public class DatabaseTestFixture {
         dateSource = (DateSourceForTesting) injector
             .getInstance(DateSource.class);
         dateSource.currentDate(TestDateUtil.date(2010, 1, 1));
+        
+        
+        unitOfWork.beginWork();
+    }
+    
+    @After
+    public void shutdown() {
+        unitOfWork.endWork();
+
+        injector.getInstance(PersistenceFilter.class).destroy();
+        
+        HibernateEntityManagerImplementor hem =
+            (HibernateEntityManagerImplementor) entityManager();
+        Connection connection = hem.getSession().connection();
+        try {
+            connection.createStatement().execute("SHUTDOWN");
+        }
+        catch (SQLException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        
+        entityManager().close();
+        emf.close();
+
+        persistanceService.shutdown();
     }
 
     protected Module getGuiceOverrideModule() {
