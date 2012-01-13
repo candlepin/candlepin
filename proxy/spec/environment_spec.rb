@@ -53,6 +53,14 @@ describe 'Environments' do
     }.should raise_exception(RestClient::Forbidden)
   end
 
+  it 'can be searched by environment name' do
+    another_env = @org_admin.create_environment(@owner['key'], 'testenv2',
+      "Another Env")
+    envs = @org_admin.list_environments(@owner['key'], "Another Env")
+    envs.size.should == 1
+    envs[0]['id'].should == 'testenv2'
+  end
+
   it 'can have promoted content' do
     content = create_content
     @org_admin.promote_content(@env['id'], content['id'])

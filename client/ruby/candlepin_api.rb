@@ -586,8 +586,10 @@ class Candlepin
     return post("/owners/#{owner_key}/environments", env)
   end
 
-  def list_environments(owner_key)
-    return get("/owners/#{owner_key}/environments")
+  def list_environments(owner_key, env_name=nil)
+    path = "/owners/#{owner_key}/environments"
+    path << "?name=#{env_name}&" if env_name
+    return get(path)
   end
 
   def get_environment(env_id)

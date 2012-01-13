@@ -32,6 +32,11 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
             .add(Restrictions.eq("owner", o)).list();
     }
 
+    public List<Environment> listForOwnerByName(Owner o, String envName) {
+        return this.currentSession().createCriteria(Environment.class)
+            .add(Restrictions.eq("owner", o)).add(Restrictions.eq("name", envName)).list();
+    }
+
     public void evict(Environment e) {
         this.currentSession().evict(e);
     }

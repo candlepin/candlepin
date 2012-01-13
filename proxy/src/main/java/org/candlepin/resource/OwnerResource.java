@@ -444,6 +444,7 @@ public class OwnerResource {
     /**
      * List all environments for a particular owner.
      *
+     * @param envName Optional environment name filter to search for.
      * @return list of environments
      * @httpcode 200
      */
@@ -452,9 +453,16 @@ public class OwnerResource {
     @Path("{owner_key}/environments")
     @Wrapped(element = "environments")
     public List<Environment> listEnvironments(@PathParam("owner_key")
-        @Verify(Owner.class) String ownerKey) {
+        @Verify(Owner.class) String ownerKey, @QueryParam("name") String envName) {
         Owner owner = findOwner(ownerKey);
-        return envCurator.listForOwner(owner);
+        List<Environment> envs = null;
+        if (envName == null) {
+            envs = envCurator.listForOwner(owner);
+        }
+        else {
+            envs = envCurator.listForOwnerByName(owner, envName);
+        }
+        return envs;
     }
 
     /**
