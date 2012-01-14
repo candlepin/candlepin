@@ -127,20 +127,25 @@ public class EnvironmentResource {
      */
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{env_id}/content/{content_id}")
-    public EnvironmentContent promoteContent(
+    @Path("/{env_id}/content")
+    public List<EnvironmentContent> promoteContent(
             @PathParam("env_id") @Verify(Environment.class) String envId,
-            @PathParam("content_id") String contentId,
-            @QueryParam("enabled") Boolean enabled) {
+            List<EnvironmentContent> contentToPromote) {
+//            @PathParam("content_id") String contentId,
+//            @QueryParam("enabled") Boolean enabled) {
 
         Environment env = lookupEnvironment(envId);
-        Content content = lookupContent(contentId);
 
-        EnvironmentContent envContent = new EnvironmentContent(env, content, enabled);
-        env.getEnvironmentContent().add(envContent);
+        for (EnvironmentContent promoteMe : contentToPromote) {
+            // Make sure the content exists:
+            Content content = lookupContent(promoteMe.getContent().getId());
+            promoteMe.setContent(content);
+            promoteMe.setEnvironment(env);
+            envContentCurator.create(promoteMe);
+            env.getEnvironmentContent().add(promoteMe);
+        }
 
-        envContentCurator.create(envContent);
-        return envContent;
+        return contentToPromote;
     }
 
     /**

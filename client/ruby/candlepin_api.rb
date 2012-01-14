@@ -391,10 +391,17 @@ class Candlepin
   end
 
   # Promote content to a particular environment.
-  def promote_content(env_id, content_id, enabled=nil)
-    url = "/environments/#{env_id}/content/#{content_id}"
-    url << "?enabled=#{enabled}" if not enabled.nil?
-    post(url)
+  def promote_content(env_id, content_ids, enabled=nil)
+    url = "/environments/#{env_id}/content"
+
+    envContent = []
+    content_ids.each do |cid|
+      envContent << {
+        'content' => {'id' => cid},
+        'enabled' => enabled,
+      }
+    end
+    post(url, envContent)
   end
 
   # Demomote content from a particular environment.
