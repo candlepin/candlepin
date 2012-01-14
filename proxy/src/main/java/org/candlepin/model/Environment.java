@@ -58,6 +58,9 @@ public class Environment extends AbstractHibernateObject implements Serializable
     @Column(nullable = false)
     private String name;
 
+    @Column(nullable = true)
+    private String description;
+
     @Id
     @Column(length = 32)
     private String id;
@@ -117,6 +120,14 @@ public class Environment extends AbstractHibernateObject implements Serializable
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
 }

@@ -8,7 +8,7 @@ describe 'Environments' do
     @owner = create_owner random_string('test_owner')
     @org_admin = user_client(@owner, 'guy')
     @env = @org_admin.create_environment(@owner['key'], 'testenv1',
-      "My Test Env 1")
+      "My Test Env 1", "For test systems only.")
   end
 
   it 'can be created by owner admin' do
