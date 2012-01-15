@@ -118,6 +118,10 @@ public class EnvironmentResource {
     /**
      * Promote content into an environment.
      *
+     * This call accepts multiple content sets to promote at once, after which
+     * all affected certificates for consumers in the enironment will be
+     * regenerated.
+     *
      * Consumers registered to this environment will now receive this content in
      * their entitlement certificates.
      *
@@ -131,8 +135,6 @@ public class EnvironmentResource {
     public List<EnvironmentContent> promoteContent(
             @PathParam("env_id") @Verify(Environment.class) String envId,
             List<EnvironmentContent> contentToPromote) {
-//            @PathParam("content_id") String contentId,
-//            @QueryParam("enabled") Boolean enabled) {
 
         Environment env = lookupEnvironment(envId);
 
@@ -145,6 +147,8 @@ public class EnvironmentResource {
             env.getEnvironmentContent().add(promoteMe);
         }
 
+        // TODO: regenerate certs here
+
         return contentToPromote;
     }
 
@@ -154,20 +158,31 @@ public class EnvironmentResource {
      * Consumer's registered to this environment will no see this content in their
      * entitlement certificates. (after they are regenerated and synced to clients)
      *
+     * This call accepts multiple content IDs to demote at once, allowing us to
+     * mass demote, then trigger a cert regeneration.
+     *
+     * NOTE: This call expects the actual content IDs, *not* the ID created for
+     * each EnvironmentContent object created after a promotion. This is to help
+     * integrate with other management apps which should not have to track/lookup
+     * a specific ID for the content to demote.
+     *
      * @httpcode 200
      * @httpcode 404
      */
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{env_id}/content/{content_id}")
+    @Path("/{env_id}/content")
     public void removeContent(@PathParam("env_id") @Verify(Environment.class) String envId,
-                              @PathParam("content_id") String contentId) {
+                              @QueryParam("content") String[] contentIds) {
 
         Environment e = lookupEnvironment(envId);
-        Content c = lookupContent(contentId);
-        EnvironmentContent envContent =
-            envContentCurator.lookupByEnvironmentAndContent(e, c);
-        envContentCurator.delete(envContent);
+        for (String contentId : contentIds) {
+            Content c = lookupContent(contentId);
+            EnvironmentContent envContent =
+                envContentCurator.lookupByEnvironmentAndContent(e, c);
+            envContentCurator.delete(envContent);
+        }
+        // TODO: regenerate certs here
     }
 
     private Environment lookupEnvironment(String envId) {

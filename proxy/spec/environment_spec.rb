@@ -72,9 +72,12 @@ describe 'Environments' do
 
   it 'can demote content' do
     content = create_content
+    content2 = create_content
     @org_admin.promote_content(@env['id'],
         [{:content => {:id => content['id']}}])
-    @org_admin.demote_content(@env['id'], content['id'])
+    @org_admin.promote_content(@env['id'],
+        [{:content => {:id => content2['id']}}])
+    @org_admin.demote_content(@env['id'], [content['id'], content2['id']])
     @env = @org_admin.get_environment(@env['id'])
     @env['environmentContent'].size.should == 0
   end

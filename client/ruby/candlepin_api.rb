@@ -406,8 +406,15 @@ class Candlepin
   end
 
   # Demomote content from a particular environment.
-  def demote_content(env_id, content_id)
-    delete("/environments/#{env_id}/content/#{content_id}")
+  #
+  # Pass the actual content IDs here, rather than the ID assigned to the
+  # EnvironmentContent object.
+  def demote_content(env_id, content_ids)
+    url = "/environments/#{env_id}/content?"
+    content_ids.each do |cid|
+      url << "content=#{cid}&"
+    end
+    delete(url)
   end
 
   def create_product(id, name, params={}, dependentProductIds=[])
