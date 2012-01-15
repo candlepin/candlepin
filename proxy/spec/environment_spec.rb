@@ -49,7 +49,8 @@ describe 'Environments' do
 
     lambda {
       content = create_content
-      foreign_admin.promote_content(@env['id'], [content['id']])
+      foreign_admin.promote_content(@env['id'],
+        [{:content => {:id => content['id']}}])
     }.should raise_exception(RestClient::Forbidden)
   end
 
@@ -63,14 +64,16 @@ describe 'Environments' do
 
   it 'can have promoted content' do
     content = create_content
-    @org_admin.promote_content(@env['id'], [content['id']])
+    @org_admin.promote_content(@env['id'],
+        [{:content => {:id => content['id']}}])
     @env = @org_admin.get_environment(@env['id'])
     @env['environmentContent'].size.should == 1
   end
 
   it 'can demote content' do
     content = create_content
-    @org_admin.promote_content(@env['id'], [content['id']])
+    @org_admin.promote_content(@env['id'],
+        [{:content => {:id => content['id']}}])
     @org_admin.demote_content(@env['id'], content['id'])
     @env = @org_admin.get_environment(@env['id'])
     @env['environmentContent'].size.should == 0
@@ -89,7 +92,12 @@ describe 'Environments' do
     @cp.add_content_to_product(product['id'], content['id'])
     @cp.add_content_to_product(product['id'], content2['id'])
 
-    @org_admin.promote_content(@env['id'], [content['id']])
+    # Override enabled to false:
+    @org_admin.promote_content(@env['id'],
+        [{
+          :content => {:id => content['id']},
+          :enabled => false,
+        }])
 
     @cp.create_subscription(@owner['key'], product['id'], 10)
     @cp.refresh_pools(@owner['key'])
@@ -101,6 +109,9 @@ describe 'Environments' do
     extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.value] }]
     extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{content2['id']}.1").should_not be_true
     extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{content['id']}.1").should be_true
+
+    # Make sure the enabled field was overridden to false:
+    extensions_hash["1.3.6.1.4.1.2312.9.2.#{content['id']}.1.8"].should == "..0"
   end
 
 end
