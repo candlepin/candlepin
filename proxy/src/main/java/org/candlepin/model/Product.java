@@ -232,6 +232,15 @@ public class Product extends AbstractHibernateObject implements Linkable {
         return false;
     }
 
+    public boolean hasContent(String contentId) {
+        for (ProductContent pc : getProductContent()) {
+            if (pc.getContent().getId().equals(contentId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public boolean equals(Object anObject) {
         if (this == anObject) {

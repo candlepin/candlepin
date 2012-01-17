@@ -17,6 +17,7 @@ package org.candlepin.resource;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.interceptor.SecurityHole;
 import org.candlepin.auth.interceptor.Verify;
+import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Consumer;
@@ -32,7 +33,9 @@ import com.google.inject.Inject;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.xnap.commons.i18n.I18n;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -56,17 +59,19 @@ public class EnvironmentResource {
     private ContentCurator contentCurator;
     private EnvironmentContentCurator envContentCurator;
     private ConsumerResource consumerResource;
+    private CandlepinPoolManager poolManager;
 
     @Inject
     public EnvironmentResource(EnvironmentCurator envCurator, I18n i18n,
         ContentCurator contentCurator, EnvironmentContentCurator envContentCurator,
-        ConsumerResource consumerResource) {
+        ConsumerResource consumerResource, CandlepinPoolManager poolManager) {
 
         this.envCurator = envCurator;
         this.i18n = i18n;
         this.contentCurator = contentCurator;
         this.envContentCurator = envContentCurator;
         this.consumerResource = consumerResource;
+        this.poolManager = poolManager;
     }
 
 
@@ -138,6 +143,7 @@ public class EnvironmentResource {
 
         Environment env = lookupEnvironment(envId);
 
+        Set<String> contentIds = new HashSet<String>();
         for (EnvironmentContent promoteMe : contentToPromote) {
             // Make sure the content exists:
             Content content = lookupContent(promoteMe.getContent().getId());
@@ -145,9 +151,10 @@ public class EnvironmentResource {
             promoteMe.setEnvironment(env);
             envContentCurator.create(promoteMe);
             env.getEnvironmentContent().add(promoteMe);
+            contentIds.add(promoteMe.getContent().getId());
         }
 
-        // TODO: regenerate certs here
+        poolManager.regenerateCertificatesOf(env, contentIds);
 
         return contentToPromote;
     }
@@ -172,17 +179,20 @@ public class EnvironmentResource {
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{env_id}/content")
-    public void removeContent(@PathParam("env_id") @Verify(Environment.class) String envId,
+    public void demoteContent(@PathParam("env_id") @Verify(Environment.class) String envId,
                               @QueryParam("content") String[] contentIds) {
 
         Environment e = lookupEnvironment(envId);
+        Set<String> demotedContentIds = new HashSet<String>();
         for (String contentId : contentIds) {
             Content c = lookupContent(contentId);
             EnvironmentContent envContent =
                 envContentCurator.lookupByEnvironmentAndContent(e, c);
             envContentCurator.delete(envContent);
+            demotedContentIds.add(contentId);
         }
-        // TODO: regenerate certs here
+
+        poolManager.regenerateCertificatesOf(e, demotedContentIds);
     }
 
     private Environment lookupEnvironment(String envId) {

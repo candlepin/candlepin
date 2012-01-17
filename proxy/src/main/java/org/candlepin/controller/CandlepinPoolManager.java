@@ -25,10 +25,12 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.Environment;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Subscription;
 import org.candlepin.policy.Enforcer;
 import org.candlepin.policy.EntitlementRefusedException;
@@ -593,6 +595,45 @@ public class CandlepinPoolManager implements PoolManager {
         for (Entitlement e : iterable) {
             regenerateCertificatesOf(e, false);
         }
+    }
+
+    /**
+     * Used to regenerate certificates affected by a mass content promotion/demotion.
+     *
+     * WARNING: can be quite expensive, currently we must look up all entitlements in the
+     * environment, all provided products for each entitlement, and check if any product
+     * provides any of the modified content set IDs.
+     *
+     * @param e Environment where the content was promoted/demoted.
+     * @param effectedContent List of content set IDs promoted/demoted.
+     */
+    @Transactional
+    public void regenerateCertificatesOf(Environment e, Set<String> effectedContent) {
+        log.info("Regenerating relevant certificates in environment: " + e.getId());
+        List<Entitlement> allEnvEnts = entitlementCurator.listByEnvironment(e);
+        Set<Entitlement> entsToRegen = new HashSet<Entitlement>();
+        for (Entitlement ent : allEnvEnts) {
+            Product prod = productAdapter.getProductById(ent.getProductId());
+            for (String contentId : effectedContent) {
+                if (prod.hasContent(contentId)) {
+                    entsToRegen.add(ent);
+                }
+            }
+
+            // Now the provided products:
+            for (ProvidedProduct provided : ent.getPool().getProvidedProducts()) {
+                Product providedProd = productAdapter.getProductById(
+                    provided.getProductId());
+                for (String contentId : effectedContent) {
+                    if (providedProd.hasContent(contentId)) {
+                        entsToRegen.add(ent);
+                    }
+                }
+            }
+        }
+        log.info("Found " + entsToRegen.size() + " certificates to regenerate.");
+
+        regenerateCertificatesOf(entsToRegen);
     }
 
     /**
