@@ -310,7 +310,7 @@ public class Importer {
 
     public void importConsumer(Owner owner, File consumerFile) throws IOException,
         SyncDataFormatException {
-        ConsumerImporter importer = new ConsumerImporter(ownerCurator);
+        ConsumerImporter importer = new ConsumerImporter(ownerCurator, i18n);
         Reader reader = null;
         try {
             reader = new FileReader(consumerFile);
@@ -353,7 +353,8 @@ public class Importer {
 
     public void importEntitlements(Owner owner, Set<Product> products, File[] entitlements)
         throws IOException, SyncDataFormatException {
-        EntitlementImporter importer = new EntitlementImporter(subCurator, csCurator, sink);
+        EntitlementImporter importer = new EntitlementImporter(subCurator, csCurator,
+            sink, i18n);
 
         Map<String, Product> productsById = new HashMap<String, Product>();
         for (Product product : products) {

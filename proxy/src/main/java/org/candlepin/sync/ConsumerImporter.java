@@ -20,6 +20,7 @@ import java.io.Reader;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * ConsumerImporter
@@ -27,9 +28,11 @@ import org.candlepin.model.OwnerCurator;
 public class ConsumerImporter {
 
     private OwnerCurator curator;
+    private I18n i18n;
 
-    public ConsumerImporter(OwnerCurator curator) {
+    public ConsumerImporter(OwnerCurator curator, I18n i18n) {
         this.curator = curator;
+        this.i18n = i18n;
     }
 
     public ConsumerDto createObject(ObjectMapper mapper, Reader reader) throws IOException {
@@ -39,12 +42,13 @@ public class ConsumerImporter {
     public void store(Owner owner, ConsumerDto consumer) throws SyncDataFormatException {
 
         if (consumer.getUuid() == null) {
-            throw new SyncDataFormatException("null uuid on consumer info");
+            throw new SyncDataFormatException(i18n.tr("No ID for upstream distributor"));
         }
 
         if (owner.getUpstreamUuid() != null &&
             !owner.getUpstreamUuid().equals(consumer.getUuid())) {
-            throw new SyncDataFormatException("mismatched consumer uuid for this owner");
+            throw new SyncDataFormatException(
+                i18n.tr("Owner has already imported from another distributor"));
         }
 
         owner.setUpstreamUuid(consumer.getUuid());

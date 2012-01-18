@@ -711,12 +711,11 @@ public class OwnerResource {
             recordImportFailure(owner, e);
             throw new IseException(i18n.tr("Error reading export archive"), e);
         }
+        // These come back with internationalized messages, so we can transfer:
         catch (SyncDataFormatException e) {
             recordImportFailure(owner, e);
-            throw new BadRequestException(
-                i18n.tr("Bad data in export archive"), e);
+            throw new BadRequestException(e.getMessage(), e);
         }
-        // These come back with internationalized messages, so we can transfer:
         catch (ImporterException e) {
             recordImportFailure(owner, e);
             throw new IseException(e.getMessage(), e);

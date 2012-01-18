@@ -29,6 +29,7 @@ import org.candlepin.model.SubscriptionsCertificate;
 
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.xnap.commons.i18n.I18n;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -46,13 +47,15 @@ public class EntitlementImporter {
     private SubscriptionCurator subscriptionCurator;
     private CertificateSerialCurator csCurator;
     private EventSink sink;
+    private I18n i18n;
 
     public EntitlementImporter(SubscriptionCurator subscriptionCurator,
-        CertificateSerialCurator csCurator, EventSink sink) {
+        CertificateSerialCurator csCurator, EventSink sink, I18n i18n) {
 
         this.subscriptionCurator = subscriptionCurator;
         this.csCurator = csCurator;
         this.sink = sink;
+        this.i18n = i18n;
     }
 
     public Subscription importObject(ObjectMapper mapper, Reader reader, Owner owner,
@@ -113,8 +116,8 @@ public class EntitlementImporter {
         String productId) throws SyncDataFormatException {
         Product product = productsById.get(productId);
         if (product == null) {
-            throw new SyncDataFormatException("Unable to find product with id: " +
-                productId);
+            throw new SyncDataFormatException(i18n.tr("Unable to find product with ID: " +
+                productId));
         }
         return product;
     }

@@ -16,6 +16,11 @@ package org.candlepin.sync;
 
 /**
  * SyncDataFormatException
+ *
+ * Thrown when encountering some kind of problem with the format of the data in a manifest
+ * being imported.
+ *
+ * NOTE: exception messages passed here must be translated.
  */
 public class SyncDataFormatException extends ImporterException {
 
