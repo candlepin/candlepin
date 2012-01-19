@@ -158,6 +158,7 @@ describe 'Environments' do
         [{
           :content => {:id => content2['id']},
         }])
+    sleep 1
     ent = consumer_cp.list_entitlements()[0]
     x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
     extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.value] }]
@@ -168,6 +169,7 @@ describe 'Environments' do
 
     # Demote it and check again:
     @org_admin.demote_content(@env['id'], [content2['id']])
+    sleep 1
     ent = consumer_cp.list_entitlements()[0]
     x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
     extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.value] }]

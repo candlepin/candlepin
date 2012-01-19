@@ -28,10 +28,15 @@ import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
+import org.candlepin.pinsetter.tasks.RegenEnvEntitlementCertsJob;
+import org.candlepin.pinsetter.tasks.RegenProductEntitlementCertsJob;
+import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
 
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
+import org.quartz.JobDataMap;
+import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.HashSet;
@@ -146,14 +151,19 @@ public class EnvironmentResource {
      * Consumers registered to this environment will now receive this content in
      * their entitlement certificates.
      *
+     * Because the certificate regeneraiton can be quite time consuming, this
+     * is done as an asynchronous job. The content will be promoted and immediately
+     * available for new entitlements, but existing entitlements could take some time
+     * to be regenerated and sent down to clients as they check in.
+     *
      * @httpcode 200
      * @httpcode 404
-     * @return the environment content
+     * @return Async job details.
      */
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{env_id}/content")
-    public List<EnvironmentContent> promoteContent(
+    public JobDetail promoteContent(
             @PathParam("env_id") @Verify(Environment.class) String envId,
             List<EnvironmentContent> contentToPromote) {
 
@@ -170,9 +180,14 @@ public class EnvironmentResource {
             contentIds.add(promoteMe.getContent().getId());
         }
 
-        poolManager.regenerateCertificatesOf(env, contentIds);
 
-        return contentToPromote;
+        JobDetail detail = new JobDetail("regen_entitlement_cert_of_env" +
+            Util.generateUUID(), RegenProductEntitlementCertsJob.class);
+        JobDataMap map = new JobDataMap();
+        map.put(RegenEnvEntitlementCertsJob.ENV, env);
+        map.put(RegenEnvEntitlementCertsJob.CONTENT, contentIds);
+        detail.setJobDataMap(map);
+        return detail;
     }
 
     /**
@@ -191,12 +206,14 @@ public class EnvironmentResource {
      *
      * @httpcode 200
      * @httpcode 404
+     * @return Async job details.
      */
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{env_id}/content")
-    public void demoteContent(@PathParam("env_id") @Verify(Environment.class) String envId,
-                              @QueryParam("content") String[] contentIds) {
+    public JobDetail demoteContent(
+        @PathParam("env_id") @Verify(Environment.class) String envId,
+        @QueryParam("content") String[] contentIds) {
 
         Environment e = lookupEnvironment(envId);
         Set<String> demotedContentIds = new HashSet<String>();
@@ -208,7 +225,14 @@ public class EnvironmentResource {
             demotedContentIds.add(contentId);
         }
 
-        poolManager.regenerateCertificatesOf(e, demotedContentIds);
+        JobDetail detail = new JobDetail("regen_entitlement_cert_of_env" +
+            Util.generateUUID(), RegenProductEntitlementCertsJob.class);
+        JobDataMap map = new JobDataMap();
+        map.put(RegenEnvEntitlementCertsJob.ENV, e);
+        map.put(RegenEnvEntitlementCertsJob.CONTENT, demotedContentIds);
+        detail.setJobDataMap(map);
+        return detail;
+
     }
 
     private Environment lookupEnvironment(String envId) {
