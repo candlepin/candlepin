@@ -21,6 +21,7 @@ import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Environment;
@@ -60,11 +61,13 @@ public class EnvironmentResource {
     private EnvironmentContentCurator envContentCurator;
     private ConsumerResource consumerResource;
     private CandlepinPoolManager poolManager;
+    private ConsumerCurator consumerCurator;
 
     @Inject
     public EnvironmentResource(EnvironmentCurator envCurator, I18n i18n,
         ContentCurator contentCurator, EnvironmentContentCurator envContentCurator,
-        ConsumerResource consumerResource, CandlepinPoolManager poolManager) {
+        ConsumerResource consumerResource, CandlepinPoolManager poolManager,
+        ConsumerCurator consumerCurator) {
 
         this.envCurator = envCurator;
         this.i18n = i18n;
@@ -72,6 +75,7 @@ public class EnvironmentResource {
         this.envContentCurator = envContentCurator;
         this.consumerResource = consumerResource;
         this.poolManager = poolManager;
+        this.consumerCurator = consumerCurator;
     }
 
 
@@ -94,6 +98,11 @@ public class EnvironmentResource {
     }
 
     /**
+     * Delete an environment.
+     *
+     * WARNING: this will delete all consumers in the environment and revoke their
+     * entitlement certificates.
+     *
      * @httpcode 404
      * @httpcode 200
      */
@@ -104,6 +113,13 @@ public class EnvironmentResource {
         if (e == null) {
             throw new NotFoundException(i18n.tr("No such environment: {0}", envId));
         }
+
+        // Cleanup all consumers and their entitlements:
+        for (Consumer c : e.getConsumers()) {
+            poolManager.revokeAllEntitlements(c);
+            consumerCurator.delete(c);
+        }
+
         envCurator.delete(e);
     }
 

@@ -16,6 +16,7 @@ package org.candlepin.model;
 
 import java.io.Serializable;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
@@ -30,6 +31,7 @@ import javax.persistence.UniqueConstraint;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.Index;
@@ -64,6 +66,9 @@ public class Environment extends AbstractHibernateObject implements Serializable
     @Id
     @Column(length = 32)
     private String id;
+
+    @OneToMany(mappedBy = "environment", targetEntity = Consumer.class)
+    private List<Consumer> consumers;
 
     @OneToMany(mappedBy = "environment", targetEntity = EnvironmentContent.class,
         cascade = CascadeType.ALL)
@@ -128,6 +133,15 @@ public class Environment extends AbstractHibernateObject implements Serializable
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    @XmlTransient
+    public List<Consumer> getConsumers() {
+        return consumers;
+    }
+
+    public void setConsumers(List<Consumer> consumers) {
+        this.consumers = consumers;
     }
 
 }

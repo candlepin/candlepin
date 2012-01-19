@@ -18,7 +18,12 @@ describe 'Environments' do
   end
 
   it 'can be deleted by owner admin' do
+    consumer = @org_admin.register(random_string('testsystem'), :system, nil, {},
+        nil, nil, [], [], @env['id'])
     @org_admin.delete_environment(@env['id'])
+    lambda {
+      @org_admin.get_consumer(consumer['uuid'])
+    }.should raise_exception(RestClient::ResourceNotFound)
     @org_admin.list_environments(@owner['key']).length.should == 0
   end
 
