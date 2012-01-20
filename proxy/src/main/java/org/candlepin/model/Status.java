@@ -15,6 +15,8 @@
 
 package org.candlepin.model;
 
+import java.util.Date;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -30,6 +32,7 @@ public class Status {
     private String version;
     private String release;
     private boolean standalone;
+    private Date timeUTC;
 
     /**
      * default ctor
@@ -43,6 +46,7 @@ public class Status {
         this.version = version;
         this.release = release;
         this.standalone = standalone;
+        this.timeUTC = new Date();
     }
 
     public boolean getResult() {
@@ -74,5 +78,13 @@ public class Status {
 
     public void setStandalone(boolean standalone) {
         this.standalone = standalone;
+    }
+
+    public Date getTimeUTC() {
+        return timeUTC;
+    }
+
+    public void setTimeUTC(Date timeUTC) {
+        this.timeUTC = timeUTC;
     }
 }

@@ -32,9 +32,12 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.Locale;
 
 /**
  * EntitlementImporterTest
@@ -47,6 +50,8 @@ public class EntitlementImporterTest {
     private Owner owner;
     private Subscription testSub;
     private EntitlementImporter importer;
+    private I18n i18n;
+
 
     @Before
     public void init() {
@@ -57,7 +62,8 @@ public class EntitlementImporterTest {
         this.owner = new Owner();
         this.testSub.setOwner(this.owner);
 
-        this.importer = new EntitlementImporter(this.curator, null, this.sink);
+        this.importer = new EntitlementImporter(this.curator, null, this.sink, i18n);
+        i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
     }
 
     @Test

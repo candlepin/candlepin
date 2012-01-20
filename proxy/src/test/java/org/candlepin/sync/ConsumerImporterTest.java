@@ -21,6 +21,7 @@ import static org.mockito.Mockito.verify;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import org.candlepin.config.Config;
@@ -31,6 +32,8 @@ import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
+import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
 
 /**
  * ConsumerImporterTest
@@ -40,11 +43,13 @@ public class ConsumerImporterTest {
     private ConsumerImporter importer;
     private ObjectMapper mapper;
     private OwnerCurator curator;
+    private I18n i18n;
 
     @Before
     public void setUp() {
         curator = mock(OwnerCurator.class);
-        importer = new ConsumerImporter(curator);
+        i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
+        importer = new ConsumerImporter(curator, i18n);
         mapper = SyncUtils.getObjectMapper(new Config(new HashMap<String, String>()));
     }
 

@@ -12,22 +12,26 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.sync;
+package org.candlepin.util;
+
+import static org.junit.Assert.*;
+
+import org.junit.Test;
 
 /**
- * SyncDataFormatException
- *
- * Thrown when encountering some kind of problem with the format of the data in a manifest
- * being imported.
- *
- * NOTE: exception messages passed here must be translated.
+ * VersionTest
  */
-public class SyncDataFormatException extends ImporterException {
+public class VersionTest {
 
-    private static final long serialVersionUID = 1L;
+    @Test
+    public void testCompareTo() {
+        Version v1 = new Version("0.4.0");
+        Version v2 = new Version("0.5.1");
+        Version v3 = new Version("0.3.99");
+        assertEquals(v1.compareTo(v1), 0);
+        assertEquals(v1.compareTo(v3), 1);
+        assertEquals(v1.compareTo(v2), -1);
 
-    public SyncDataFormatException(String msg) {
-        super(msg);
     }
 
 }

@@ -21,25 +21,29 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.model.ExporterMetadata;
-import org.candlepin.model.ExporterMetadataCurator;
-
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.junit.Before;
-import org.junit.Test;
-import org.xnap.commons.i18n.I18n;
-import org.xnap.commons.i18n.I18nFactory;
-
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.io.Reader;
+import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 
 import org.candlepin.config.Config;
 import org.candlepin.exceptions.ConflictException;
+import org.candlepin.model.ExporterMetadata;
+import org.candlepin.model.ExporterMetadataCurator;
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
 
 
 /**
@@ -49,11 +53,19 @@ public class ImporterTest {
 
     private ObjectMapper mapper;
     private I18n i18n;
+    private static final String MOCK_JS_PATH = "/tmp/empty.js";
 
     @Before
-    public void init() {
+    public void init() throws FileNotFoundException, URISyntaxException {
         mapper = SyncUtils.getObjectMapper(new Config(new HashMap<String, String>()));
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
+
+        PrintStream ps = new PrintStream(new File(this.getClass()
+            .getClassLoader().getResource("candlepin_info.properties").toURI()));
+        ps.println("version=0.0.3");
+        ps.println("release=1");
+        ps.close();
+
     }
 
     @Test
@@ -65,8 +77,8 @@ public class ImporterTest {
          * make sure version is > ABC
          */
 
-        File f = createFile("/tmp/meta");
-        File actualmeta = createFile("/tmp/meta.json");
+        File f = createFile("/tmp/meta", "0.0.3");
+        File actualmeta = createFile("/tmp/meta.json", "0.0.3");
         ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
         ExporterMetadata em = new ExporterMetadata();
         Date daybefore = getDateBeforeDays(1);
@@ -85,8 +97,8 @@ public class ImporterTest {
 
     @Test
     public void firstRun() throws Exception {
-        File f = createFile("/tmp/meta");
-        File actualmeta = createFile("/tmp/meta.json");
+        File f = createFile("/tmp/meta", "0.0.3");
+        File actualmeta = createFile("/tmp/meta.json", "0.0.3");
         ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(null);
         Importer i = new Importer(null, null, null, null, null, null, null,
@@ -100,7 +112,7 @@ public class ImporterTest {
     @Test(expected = ConflictException.class)
     public void oldImport() throws Exception {
         // create actual first
-        File actualmeta = createFile("/tmp/meta.json");
+        File actualmeta = createFile("/tmp/meta.json", "0.0.3");
         ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
         ExporterMetadata em = new ExporterMetadata();
         em.setCreated(getDateAfterDays(1));
@@ -112,9 +124,43 @@ public class ImporterTest {
         i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta, false);
     }
 
+    @Test
+    public void newerVersionImport() throws Exception {
+        // if we do are importing candlepin 0.0.10 data into candlepin 0.0.3,
+        // import the rules.
+
+        File actualmeta = createFile("/tmp/meta.json", "0.0.10");
+        File[] jsArray = createMockJsFile(MOCK_JS_PATH);
+        ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
+        RulesImporter ri = mock(RulesImporter.class);
+        when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(null);
+        Importer i = new Importer(null, null, ri, null, null, null, null,
+            null, null, emc, null, null, i18n);
+        i.importRules(jsArray, actualmeta);
+
+        //verify that rules were imported
+        verify(ri).importObject(any(Reader.class));
+
+    }
+    @Test
+    public void olderVersionImport() throws Exception {
+        // if we are importing candlepin 0.0.1 data into
+        // candlepin 0.0.3, do not import the rules
+        File actualmeta = createFile("/tmp/meta.json", "0.0.1");
+        ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
+        RulesImporter ri = mock(RulesImporter.class);
+
+        when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(null);
+        Importer i = new Importer(null, null, ri, null, null, null, null,
+            null, null, emc, null, null, i18n);
+        i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta, false);
+        //verify that rules were not imported
+        verify(ri, never()).importObject(any(Reader.class));
+    }
+
     @Test(expected = ImporterException.class)
     public void nullType() throws ImporterException, IOException {
-        File actualmeta = createFile("/tmp/meta.json");
+        File actualmeta = createFile("/tmp/meta.json", "0.0.3");
         try {
             Importer i = new Importer(null, null, null, null, null, null, null,
                 null, null, null, null, null, i18n);
@@ -129,7 +175,7 @@ public class ImporterTest {
 
     @Test(expected = ImporterException.class)
     public void expectOwner() throws ImporterException, IOException {
-        File actualmeta = createFile("/tmp/meta.json");
+        File actualmeta = createFile("/tmp/meta.json", "0.0.3");
         ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
         when(emc.lookupByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, null))
             .thenReturn(null);
@@ -142,13 +188,36 @@ public class ImporterTest {
         verify(emc, never()).create(any(ExporterMetadata.class));
     }
 
-    private File createFile(String filename)
+    @After
+    public void tearDown() throws Exception {
+        PrintStream ps = new PrintStream(new File(this.getClass()
+            .getClassLoader().getResource("candlepin_info.properties").toURI()));
+        ps.println("version=${version}");
+        ps.println("release=${release}");
+        ps.close();
+        File mockJs = new File(MOCK_JS_PATH);
+        mockJs.delete();
+    }
+
+    private File createFile(String filename, String version)
         throws JsonGenerationException, JsonMappingException, IOException {
 
         File f = new File(filename);
-        Meta meta = new Meta("0.0.0", new Date());
+        Meta meta = new Meta(version, new Date());
         mapper.writeValue(f, meta);
         return f;
+    }
+
+    private File[] createMockJsFile(String filename)
+        throws IOException {
+
+        FileWriter f = new FileWriter(filename);
+        f.write("// nothing to see here");
+        f.close();
+
+        File[] fileArray = new File[1];
+        fileArray[0] = new File(filename);
+        return fileArray;
     }
 
     private Date getDateBeforeDays(int days) {

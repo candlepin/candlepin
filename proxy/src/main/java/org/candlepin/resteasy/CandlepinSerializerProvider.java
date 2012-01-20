@@ -26,7 +26,7 @@ import org.codehaus.jackson.map.ser.StdSerializerProvider;
  */
 public class CandlepinSerializerProvider extends StdSerializerProvider {
 
-    private SerializerCache cachedSerializers = new SerializerCache();
+    private static SerializerCache cachedSerializers = new SerializerCache();
 
     public CandlepinSerializerProvider() {
         super();

@@ -1,0 +1,114 @@
+
+## <summary>policy for candlepin</summary>
+
+
+########################################
+## <summary>
+##	Transition to candlepin.
+## </summary>
+## <param name="domain">
+## <summary>
+##	Domain allowed to transition.
+## </summary>
+## </param>
+#
+interface(`candlepin_domtrans',`
+	gen_require(`
+		type candlepin_t, candlepin_exec_t;
+	')
+
+	corecmd_search_bin($1)
+	domtrans_pattern($1, candlepin_exec_t, candlepin_t)
+')
+
+
+########################################
+## <summary>
+##	Search candlepin conf directories.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+#
+interface(`candlepin_search_conf',`
+	gen_require(`
+		type candlepin_etc_rw_t;
+	')
+
+	allow $1 candlepin_etc_rw_t:dir search_dir_perms;
+	files_search_etc($1)
+')
+
+########################################
+## <summary>
+##	Read candlepin conf files.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+#
+interface(`candlepin_read_conf_files',`
+	gen_require(`
+		type candlepin_etc_rw_t;
+	')
+
+	allow $1 candlepin_etc_rw_t:file read_file_perms;
+	allow $1 candlepin_etc_rw_t:dir list_dir_perms;
+	files_search_etc($1)
+')
+
+########################################
+## <summary>
+##	Manage candlepin conf files.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+#
+interface(`candlepin_manage_conf_files',`
+	gen_require(`
+		type candlepin_etc_rw_t;
+	')
+
+	manage_files_pattern($1, candlepin_etc_rw_t, candlepin_etc_rw_t)
+	files_search_etc($1)
+')
+
+
+########################################
+## <summary>
+##	All of the rules required to administrate
+##	an candlepin environment
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+## <param name="role">
+##	<summary>
+##	Role allowed access.
+##	</summary>
+## </param>
+## <rolecap/>
+#
+interface(`candlepin_admin',`
+	gen_require(`
+		type candlepin_t;
+	type candlepin_etc_rw_t;
+	')
+
+	allow $1 candlepin_t:process { ptrace signal_perms };
+	ps_process_pattern($1, candlepin_t)
+
+	files_search_etc($1)
+	admin_pattern($1, candlepin_etc_rw_t)
+
+')
+

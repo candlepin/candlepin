@@ -1,0 +1,4 @@
+
+/usr/sbin/candlepin		--	gen_context(system_u:object_r:candlepin_exec_t,s0)
+
+/etc/candlepin(/.*)?		gen_context(system_u:object_r:candlepin_etc_rw_t,s0)

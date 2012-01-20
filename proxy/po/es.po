@@ -2,28 +2,132 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-# 
 msgid ""
 msgstr ""
 "Project-Id-Version: 0.5.X\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-12-02 08:12-0500\n"
+"POT-Creation-Date: 2012-01-11 15:27-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: \n"
 
-#: src/main/java/org/candlepin/auth/interceptor/SecurityInterceptor.java:195
-msgid "Unable to verify request."
-msgstr "No se pudo verificar solicitud."
+#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:119
+#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:155
+msgid "Invalid oauth consumer or secret"
+msgstr "Inválido usuario de oauth o secreto"
 
-#: src/main/java/org/candlepin/auth/interceptor/SecurityInterceptor.java:204
+#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:123
 #, java-format
-msgid "{0} with id {1} could not be found"
-msgstr "{0} con ID {1} no se pudo encontrar"
+msgid "OAuth problem encountered. Internal message is: {0}"
+msgstr "Se encontró problema de OAuth. Mensaje interno es: {0}"
+
+#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:129
+#, java-format
+msgid "OAuth error encountered. Internal message is: {0}"
+msgstr "Se encontró error de OAuth. Mensaje interno es: {0}"
+
+#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:160
+msgid "Error getting oauth consumer Key"
+msgstr "Error en la obtención de llave de usuario oauth"
+
+#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:71
+msgid "Invalid Credentials"
+msgstr "Credenciales inválidas"
+
+#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:86
+msgid "Error contacting user service"
+msgstr "Error al contactar servicio de usuario"
+
+#: src/main/java/org/candlepin/controller/Entitler.java:77
+#, java-format
+msgid "Subscription pool {0} does not exist."
+msgstr "No existe grupo de suscripción {0}."
+
+#: src/main/java/org/candlepin/controller/Entitler.java:104
+#, java-format
+msgid ""
+"This consumer is already subscribed to the product matching pool with id "
+"''{0}''."
+msgstr ""
+"Este usuario ya está suscrito al producto que coincide con el grupo con ID "
+"''{0}''."
+
+#: src/main/java/org/candlepin/controller/Entitler.java:109
+#, java-format
+msgid "No free entitlements are available for the pool with id ''{0}''."
+msgstr "No hay derechos gratuitos disponibles para el grupo con ID ''{0}''."
+
+#: src/main/java/org/candlepin/controller/Entitler.java:114
+#, java-format
+msgid ""
+"Consumers of this type are not allowed to subscribe to the pool with id "
+"''{0}''."
+msgstr ""
+"Los usuarios de este tipo no están autorizados para suscribirse al grupo con "
+"ID ''{0}''."
+
+#: src/main/java/org/candlepin/controller/Entitler.java:118
+#, java-format
+msgid "Multi-entitlement not supported for pool with id ''{0}''."
+msgstr "Multi-derechos no soportados para grupo con ID ''{0}''."
+
+#: src/main/java/org/candlepin/controller/Entitler.java:122
+#, java-format
+msgid "Guest''s host does not match owner of pool: ''{0}''."
+msgstr "El host de Guest no coincide con el propietario del grupo: ''{0}''."
+
+#: src/main/java/org/candlepin/controller/Entitler.java:126
+#, java-format
+msgid "Pool not available to manifest consumers: ''{0}''."
+msgstr "El grupo no está disponible para usuarios de manifiestos: ''{0}''."
+
+#: src/main/java/org/candlepin/controller/Entitler.java:130
+#, java-format
+msgid "Pool is restricted to virtual guests: ''{0}''."
+msgstr "El grupo está restringido a huéspedes virtuales: ''{0}''."
+
+#: src/main/java/org/candlepin/controller/Entitler.java:134
+#, java-format
+msgid "Unable to entitle consumer to the pool with id ''{0}''.: {1}"
+msgstr "No se puede autorizar usuario para el grupo con ID ''{0}''.: {1}"
+
+#: src/main/java/org/candlepin/controller/Entitler.java:176
+#, java-format
+msgid "This consumer is already subscribed to the product ''{0}''"
+msgstr "Este usuario ya está suscrito al producto ''{0}''"
+
+#: src/main/java/org/candlepin/controller/Entitler.java:180
+#, java-format
+msgid ""
+"There are not enough free entitlements available for the product ''{0}''"
+msgstr "No hay suficientes derechos gratuitos para el producto ''{0}''"
+
+#: src/main/java/org/candlepin/controller/Entitler.java:184
+#, java-format
+msgid "Consumers of this type are not allowed to the product ''{0}''"
+msgstr ""
+"Los consumidores de este tipo no tiene permiso para el producto ''{0}''"
+
+#: src/main/java/org/candlepin/controller/Entitler.java:189
+#, java-format
+msgid "Only virtual systems can consume the product ''{0}''"
+msgstr "Solamente sistemas virtuales pueden consumir el producto ''{0}''"
+
+#: src/main/java/org/candlepin/controller/Entitler.java:194
+#, java-format
+msgid "Unable to entitle consumer to the product ''{0}'': {1}"
+msgstr "No pudo autorizar usuario para el producto ''{0}'': {1}"
+
+#: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:122
+#: src/main/java/org/candlepin/resource/OwnerResource.java:454
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:513
+#, java-format
+msgid "No such consumer type: {0}"
+msgstr "No existe dicho tipo de usuario: {0}"
 
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:73
 #, java-format
@@ -32,8 +136,7 @@ msgstr "Nombre del usuario debe ser de menos de {0} caracteres."
 
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:317
 #, java-format
-msgid ""
-"The consumer with UUID {0} is a virtual guest. It does not have guests."
+msgid "The consumer with UUID {0} is a virtual guest. It does not have guests."
 msgstr "El consumidor con UUID {0} es un huésped virtual. No tiene huéspedes."
 
 #: src/main/java/org/candlepin/model/EntitlementCurator.java:241
@@ -41,12 +144,54 @@ msgstr "El consumidor con UUID {0} es un huésped virtual. No tiene huéspedes."
 msgid "No product found for product id {0}"
 msgstr "No se encontró producto para ID de producto {0}"
 
-#: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:122
-#: src/main/java/org/candlepin/resource/OwnerResource.java:454
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:510
+#: src/main/java/org/candlepin/policy/js/entitlement/AbstractEntitlementRules.java:158
 #, java-format
-msgid "No such consumer type: {0}"
-msgstr "No existe dicho tipo de usuario: {0}"
+msgid "''{0}'' Should contain name, priority and at least one attribute"
+msgstr "''{0}'' Debe contener nombre, prioridad y al menos un atributo"
+
+#: src/main/java/org/candlepin/policy/js/entitlement/AbstractEntitlementRules.java:173
+msgid "second parameter should be the priority number."
+msgstr "Segundo parámetro debe ser el número de prioridad."
+
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:86
+#, java-format
+msgid "Entitlements for {0} expired on: {1}"
+msgstr "Derechos para {0} expirados en: {1}"
+
+#: src/main/java/org/candlepin/auth/interceptor/SecurityInterceptor.java:188
+msgid "Unable to verify request."
+msgstr "No se pudo verificar solicitud."
+
+#: src/main/java/org/candlepin/auth/interceptor/SecurityInterceptor.java:197
+#, java-format
+msgid "{0} with id {1} could not be found"
+msgstr "{0} con ID {1} no se pudo encontrar"
+
+#: src/main/java/org/candlepin/guice/I18nProvider.java:85
+#: src/main/java/org/candlepin/exceptions/mappers/BadRequestExceptionMapper.java:70
+msgid "Bad Request"
+msgstr "Solicitud incorrecta"
+
+#: src/main/java/org/candlepin/sync/Importer.java:139
+msgid "Wrong metadata type"
+msgstr "Tipo de metadatos incorrecto"
+
+#: src/main/java/org/candlepin/sync/Importer.java:148
+msgid "Invalid owner"
+msgstr "Propietario inválido"
+
+#: src/main/java/org/candlepin/sync/Importer.java:160
+msgid "Import is older than existing data"
+msgstr "La importación es anterior a los datos existentes"
+
+#: src/main/java/org/candlepin/sync/Importer.java:285
+#, java-format
+msgid "Incompatible rules: import version {0} older than our version {1}."
+msgstr ""
+
+#: src/main/java/org/candlepin/sync/Importer.java:288
+msgid "Manifest data will be imported without rules import."
+msgstr ""
 
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:113
 #, java-format
@@ -184,6 +329,34 @@ msgstr "{0} creado el ID de huésped {1}"
 msgid "{0} deleted the guest id {1}"
 msgstr "{0} borrado el ID de huésped {1}"
 
+#: src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java:145
+msgid "Standalone candlepin does not support redeeming a subscription."
+msgstr "Candlepin autónomo no soporta redención de suscripción."
+
+#: src/main/java/org/candlepin/resource/EventResource.java:85
+#, java-format
+msgid "Event with ID ''{0}'' could not be found."
+msgstr "No se pudo encontrar evento con ID ''{0}''."
+
+#: src/main/java/org/candlepin/resource/ContentResource.java:75
+#, java-format
+msgid "Content with id {0} could not be found"
+msgstr "Contenido con ID {0} no se encontró"
+
+#: src/main/java/org/candlepin/resource/ProductResource.java:110
+#: src/main/java/org/candlepin/resource/ProductResource.java:129
+#: src/main/java/org/candlepin/resource/ProductResource.java:189
+#, java-format
+msgid "Product with UUID ''{0}'' could not be found"
+msgstr "No se encontró producto con UUID ''{0}''"
+
+#: src/main/java/org/candlepin/resource/ProductResource.java:193
+#, java-format
+msgid "Product with UUID ''{0}'' cannot be deleted while subscriptions exist."
+msgstr ""
+"No se puede borrar product con UUID ''{0}'' mientras las suscripciones "
+"existan."
+
 #: src/main/java/org/candlepin/resource/RulesResource.java:81
 msgid "Error decoding the rules. The text should be base 64 encoded"
 msgstr "Error al descifrar las reglas. Este texto debe ser cifrado en base 64"
@@ -232,6 +405,64 @@ msgstr "El usuario {0}no puede acceder a todos los grupos."
 msgid "Entitlement Pool with ID ''{0}'' could not be found"
 msgstr "No se encontró grupo de derechos con ID ''{0}'' "
 
+#: src/main/java/org/candlepin/resource/JobResource.java:108
+msgid "You must specify an owner key, consumer uuid, or principal name."
+msgstr ""
+"Debe especificar una llave de propietario, UUID de usuario o nombre "
+"principal."
+
+#: src/main/java/org/candlepin/resource/JobResource.java:114
+msgid ""
+"You must specify one of owner key, consumer uuid, or principal name, but not "
+"all."
+msgstr ""
+"Debe especificar una llave de propietario, UUID de usuario o nombre "
+"principal, pero no todos."
+
+#: src/main/java/org/candlepin/resource/JobResource.java:173
+msgid "Error setting scheduler status"
+msgstr "Error al establecer el estatus del programador"
+
+#: src/main/java/org/candlepin/resource/JobResource.java:201
+msgid "job already cancelled"
+msgstr "Tarea ya cancelada"
+
+#: src/main/java/org/candlepin/resource/JobResource.java:204
+msgid "cannot cancel a job that is not in CREATED state"
+msgstr "No se puede cancelar una tarea que no esté en el estado CREADO."
+
+#: src/main/java/org/candlepin/resource/RoleResource.java:82
+#, java-format
+msgid "No such owner: {0}"
+msgstr "No existe propietario: {0}"
+
+#: src/main/java/org/candlepin/resource/RoleResource.java:112
+msgid "Role ID does not match path."
+msgstr "ID de rol no coincide con ruta."
+
+#: src/main/java/org/candlepin/resource/RoleResource.java:138
+msgid "Access type NONE not supported."
+msgstr "Tipo de acceso NONE no está soportado."
+
+#: src/main/java/org/candlepin/resource/RoleResource.java:177
+#, java-format
+msgid "No such permission: {0} in role: {1}"
+msgstr "No existe el permiso: {0} en rol: {1}"
+
+#: src/main/java/org/candlepin/resource/RoleResource.java:191
+#, java-format
+msgid "No such role: {0}"
+msgstr "No existe el rol: {0}"
+
+#: src/main/java/org/candlepin/resource/RoleResource.java:199
+#, java-format
+msgid "No such user: {0}"
+msgstr "No existe usuarior: {0}"
+
+#: src/main/java/org/candlepin/resource/MigrationResource.java:64
+msgid "Bad entity value."
+msgstr "Valor de entidad errado"
+
 #: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:85
 msgid "ConsumerType with id '"
 msgstr "Tipo de usuario con ID '"
@@ -251,101 +482,14 @@ msgstr "Tipo de usuario con etiqueta {0} no se encontró"
 msgid "Consumer Type with id {0} could not be found"
 msgstr "Tipo de usuario con ID {0} no se encontró"
 
-#: src/main/java/org/candlepin/resource/StatisticResource.java:61
-msgid "couldn't generate statistics"
-msgstr "No se pudieron generar estadísticas"
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:245
-#, java-format
-msgid "Cound not create the Owner: {0}. Parent {1} does not exist."
-msgstr "No se pudo crear el Propietario: {0}. Padre {1} no existe."
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:257
-#, java-format
-msgid "Cound not create the Owner: {0}"
-msgstr "No se pudo crear el Propietario: {0} "
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:395
-msgid "Must provide a name for activation key."
-msgstr "Debe proporcionar un nombre para llave de activación"
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:402
-msgid ""
-"Activation key names must be alphanumeric or the characters '-' or '_'. ["
-msgstr ""
-"Los nombres de llaves de activación deben ser alfanuméricos o caracteres '-'"
-" o '_'. ["
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:409
-msgid "Activation key name ["
-msgstr "Nombre de llave de activación ["
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:596
-#: src/main/java/org/candlepin/resource/OwnerResource.java:661
-#: src/main/java/org/candlepin/resource/OwnerResource.java:767
-#: src/main/java/org/candlepin/resource/OwnerResource.java:797
-#: src/main/java/org/candlepin/resource/OwnerResource.java:826
-#: src/main/java/org/candlepin/resource/OwnerResource.java:852
-#: src/main/java/org/candlepin/resource/OwnerResource.java:890
-#, java-format
-msgid "owner with key: {0} was not found."
-msgstr "Propietario con llave: {0} no se encontró. "
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:606
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1072
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:120
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:152
-#, java-format
-msgid "No such consumer: {0}"
-msgstr "No hay usuario: {0}"
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:680
-#, java-format
-msgid "subscription with id: {0} not found."
-msgstr "Suscripción con ID: {0} no se encontró."
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:712
-msgid "Error reading export archive"
-msgstr "Error en la lectura del archivo de exportación"
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:717
-msgid "Bad data in export archive"
-msgstr "Datos incorrectos en el archivo de exportación"
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:872
-#, java-format
-msgid "Problem generating ueber cert for owner {0}"
-msgstr "Problema al generar certificado Ueber para propietario {0}"
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:898
-#, java-format
-msgid "ueber certificate for owner {0} was not found. Please generate one."
-msgstr ""
-"No se encontró el certificado Ueber para propietario  {0}. Por favor generar"
-" uno.  "
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:912
-#, java-format
-msgid "{0} file imported successfully."
-msgstr "{0} archivo importado correctamente."
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:914
-#, java-format
-msgid "{0} file imported forcibly"
-msgstr "{0} archivo importado por la fuerza"
-
-#: src/main/java/org/candlepin/resource/MigrationResource.java:64
-msgid "Bad entity value."
-msgstr "Valor de entidad errado"
-
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:135
 msgid "The quantity must be greater than 0"
 msgstr "La cantidad debe ser mayor que 0"
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:145
 msgid ""
-"Pools requiring a 'person' consumer should not be added to an activation key"
-" since a consumer type of 'person' cannot be used with activation keys"
+"Pools requiring a 'person' consumer should not be added to an activation key "
+"since a consumer type of 'person' cannot be used with activation keys"
 msgstr ""
 "Los grupos que requieren un usuario 'persona' deben ser agregados a una "
 "llave de activación porque el tipo de usuario 'persona' no puede usarse con "
@@ -374,175 +518,225 @@ msgstr "Llave de activación con id {0} no se pudo encontrar"
 msgid "Pool with id {0} could not be found"
 msgstr "Grupo con id {0} no se pudo encontrar"
 
-#: src/main/java/org/candlepin/resource/EventResource.java:85
+#: src/main/java/org/candlepin/resource/StatisticResource.java:61
+msgid "couldn't generate statistics"
+msgstr "No se pudieron generar estadísticas"
+
+#: src/main/java/org/candlepin/resource/SubscriptionResource.java:122
 #, java-format
-msgid "Event with ID ''{0}'' could not be found."
-msgstr "No se pudo encontrar evento con ID ''{0}''."
+msgid "no certificate for subscription {0}"
+msgstr "No hay certificado para suscripción {0}"
 
-#: src/main/java/org/candlepin/resource/JobResource.java:108
-msgid "You must specify an owner key, consumer uuid, or principal name."
-msgstr ""
-"Debe especificar una llave de propietario, UUID de usuario o nombre "
-"principal."
+#: src/main/java/org/candlepin/resource/SubscriptionResource.java:141
+msgid "email is required for notification"
+msgstr "Se requiere correo-e para notificación"
 
-#: src/main/java/org/candlepin/resource/JobResource.java:114
+#: src/main/java/org/candlepin/resource/SubscriptionResource.java:146
+msgid "email locale is required for notification"
+msgstr "Se requiere correo-e local para notificación "
+
+#: src/main/java/org/candlepin/resource/SubscriptionResource.java:152
+#: src/main/java/org/candlepin/resource/OwnerResource.java:606
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1083
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:120
+#, java-format
+msgid "No such consumer: {0}"
+msgstr "No hay usuario: {0}"
+
+#: src/main/java/org/candlepin/resource/SubscriptionResource.java:182
+#, java-format
+msgid "Subscription with id {0} could not be found"
+msgstr "No se encontró suscripción con ID {0}"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:245
+#, java-format
+msgid "Cound not create the Owner: {0}. Parent {1} does not exist."
+msgstr "No se pudo crear el Propietario: {0}. Padre {1} no existe."
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:257
+#, java-format
+msgid "Cound not create the Owner: {0}"
+msgstr "No se pudo crear el Propietario: {0} "
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:395
+msgid "Must provide a name for activation key."
+msgstr "Debe proporcionar un nombre para llave de activación"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:402
 msgid ""
-"You must specify one of owner key, consumer uuid, or principal name, but not"
-" all."
+"Activation key names must be alphanumeric or the characters '-' or '_'. ["
 msgstr ""
-"Debe especificar una llave de propietario, UUID de usuario o nombre "
-"principal, pero no todos."
+"Los nombres de llaves de activación deben ser alfanuméricos o caracteres '-' "
+"o '_'. ["
 
-#: src/main/java/org/candlepin/resource/JobResource.java:173
-msgid "Error setting scheduler status"
-msgstr "Error al establecer el estatus del programador"
+#: src/main/java/org/candlepin/resource/OwnerResource.java:409
+msgid "Activation key name ["
+msgstr "Nombre de llave de activación ["
 
-#: src/main/java/org/candlepin/resource/JobResource.java:201
-msgid "job already cancelled"
-msgstr "Tarea ya cancelada"
-
-#: src/main/java/org/candlepin/resource/JobResource.java:204
-msgid "cannot cancel a job that is not in CREATED state"
-msgstr "No se puede cancelar una tarea que no esté en el estado CREADO."
-
-#: src/main/java/org/candlepin/resource/ContentResource.java:75
+#: src/main/java/org/candlepin/resource/OwnerResource.java:596
+#: src/main/java/org/candlepin/resource/OwnerResource.java:661
+#: src/main/java/org/candlepin/resource/OwnerResource.java:767
+#: src/main/java/org/candlepin/resource/OwnerResource.java:797
+#: src/main/java/org/candlepin/resource/OwnerResource.java:826
+#: src/main/java/org/candlepin/resource/OwnerResource.java:852
+#: src/main/java/org/candlepin/resource/OwnerResource.java:890
 #, java-format
-msgid "Content with id {0} could not be found"
-msgstr "Contenido con ID {0} no se encontró"
+msgid "owner with key: {0} was not found."
+msgstr "Propietario con llave: {0} no se encontró. "
 
-#: src/main/java/org/candlepin/resource/ProductResource.java:110
-#: src/main/java/org/candlepin/resource/ProductResource.java:129
-#: src/main/java/org/candlepin/resource/ProductResource.java:189
+#: src/main/java/org/candlepin/resource/OwnerResource.java:680
 #, java-format
-msgid "Product with UUID ''{0}'' could not be found"
-msgstr "No se encontró producto con UUID ''{0}''"
+msgid "subscription with id: {0} not found."
+msgstr "Suscripción con ID: {0} no se encontró."
 
-#: src/main/java/org/candlepin/resource/ProductResource.java:193
+#: src/main/java/org/candlepin/resource/OwnerResource.java:712
+msgid "Error reading export archive"
+msgstr "Error en la lectura del archivo de exportación"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:717
+msgid "Bad data in export archive"
+msgstr "Datos incorrectos en el archivo de exportación"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:872
 #, java-format
-msgid "Product with UUID ''{0}'' cannot be deleted while subscriptions exist."
+msgid "Problem generating ueber cert for owner {0}"
+msgstr "Problema al generar certificado Ueber para propietario {0}"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:898
+#, java-format
+msgid "ueber certificate for owner {0} was not found. Please generate one."
 msgstr ""
-"No se puede borrar product con UUID ''{0}'' mientras las suscripciones "
-"existan."
+"No se encontró el certificado Ueber para propietario  {0}. Por favor generar "
+"uno.  "
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:201
+#: src/main/java/org/candlepin/resource/OwnerResource.java:912
+#, java-format
+msgid "{0} file imported successfully."
+msgstr "{0} archivo importado correctamente."
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:914
+#, java-format
+msgid "{0} file imported forcibly"
+msgstr "{0} archivo importado por la fuerza"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:202
 #, java-format
 msgid "Organization with key: {0} was not found."
 msgstr "No se encontró organización con llave: {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:267
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:270
 msgid "Insufficient permissions"
 msgstr "Permisos insuficientes"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:273
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:276
 msgid "Must specify an org to register with activation keys."
 msgstr ""
 "Debe especificar una organización para registrar con llaves de activación."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:277
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:280
 msgid "Cannot specify username with activation keys."
 msgstr "No puede especificar el nombre de usuario con llaves de activación."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:283
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:286
 msgid "System name cannot contain most special characters."
 msgstr ""
 "Nombre de sistema no puede contener la mayoría de caracteres especiales."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:289
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:292
 msgid "System name cannot begin with # character"
 msgstr "Nombre de sistema no puede comenzar por el caracter #"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:311
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:314
 msgid "A consumer type of 'person' cannot be used with activation keys"
-msgstr ""
-"No se puede usar un tipo de usuario 'persona' con llaves de activación"
+msgstr "No se puede usar un tipo de usuario 'persona' con llaves de activación"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:365
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:368
 msgid "Pool ID must be provided"
 msgstr "ID de grupo debe proporcionarse"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:385
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:388
 #, java-format
 msgid "Problem creating consumer {0}"
 msgstr "Problema al crear usuario {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:394
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:397
 #, java-format
 msgid "Activation key ''{0}'' not found for organization ''{1}''."
 msgstr ""
 "No se encontró la llave de activación ''{0}'' para la organización ''{1}''."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:416
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:419
 #, java-format
 msgid "User {0} has no roles for organization {1}"
 msgstr "El usuario  {0} no tiene roles para la organización {1}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:428
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:431
 #, java-format
 msgid "User {0} has already registered a personal consumer"
 msgstr "Usuario {0} ya ha registrado un usuario personal"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:445
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:448
 msgid "You must specify an organization for new consumers."
 msgstr "Debe especificar una organización para nuevos usuarios-"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:456
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:459
 #, java-format
 msgid "Organization {0} does not exist."
 msgstr "No existe la organización {0}."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:463
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:466
 #, java-format
 msgid "User {0} cannot access organization {1}"
 msgstr "El usuario {0} no puede acceder a la organización {1}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:791
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:802
 #, java-format
 msgid "Cannot unregister {0} consumer {1} because: {2}"
 msgstr "No puede cancelar registro {0} usuario {1} porque: {2}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:874
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:885
 msgid "Unable to create entitlement archive"
 msgstr "No se pudo crear archivador de derechos"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:983
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:994
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1005
 msgid "Cannot bind by multiple parameters."
 msgstr "No puede vincular múltiples parámetros."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:988
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:999
 msgid "Cannot specify a quantity when auto-binding."
 msgstr "No se puede especificar una cantidad al auto vincular."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1056
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1067
 #, java-format
 msgid "Asked to be subscribed to a product that has no pool: {0} "
 msgstr "Solicitó suscribirse a un producto que no tiene grupo: {0} "
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1082
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1093
 #, java-format
 msgid "No such entitlement: {0}"
 msgstr "No existe tal derecho: {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1105
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1116
 #, java-format
 msgid "No such product: {0}"
 msgstr "No existe tal producto: {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1148
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1159
 msgid "Consumer with ID "
 msgstr "Usuario con ID"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1185
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1196
 #, java-format
 msgid "Entitlement with ID ''{0}'' could not be found."
 msgstr "No se encontró derecho con ID ''{0}'' ."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1209
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1220
 #, java-format
 msgid "Entitlement Certificate with serial number {0} could not be found."
 msgstr "Certificado de derecho con número serial {0}no se encontró."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1270
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1281
 #, java-format
 msgid ""
 "Consumer {0} cannot be exported. A manifest cannot be made for consumer of "
@@ -551,16 +745,16 @@ msgstr ""
 "No puede ser exportado el usuario {0}. Un manifiesto no puede hacerse para "
 "un usuario de tipo  ''{1}''."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1285
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1296
 msgid "Unable to create export archive"
 msgstr "No se pudo crear archivo de exportación"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1318
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1329
 #, java-format
 msgid "Problem regenerating id cert for consumer {0}"
 msgstr "Problema al regenerar ID de certificado para usuario {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1385
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1396
 #, java-format
 msgid "The consumer with UUID {0} is not a virtual guest."
 msgstr "El usuario con UUID {0} no es un huésped virtual."
@@ -576,200 +770,12 @@ msgstr "Usuario: {0} no tiene derecho para producto {1}"
 msgid "Entitlement with ID ''{0}'' could not be found"
 msgstr "No se encontró derecho con ID ''{0}'' ."
 
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:122
-#, java-format
-msgid "no certificate for subscription {0}"
-msgstr "No hay certificado para suscripción {0}"
-
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:141
-msgid "email is required for notification"
-msgstr "Se requiere correo-e para notificación"
-
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:146
-msgid "email locale is required for notification"
-msgstr "Se requiere correo-e local para notificación "
-
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:182
-#, java-format
-msgid "Subscription with id {0} could not be found"
-msgstr "No se encontró suscripción con ID {0}"
-
-#: src/main/java/org/candlepin/resource/RoleResource.java:82
-#, java-format
-msgid "No such owner: {0}"
-msgstr "No existe propietario: {0}"
-
-#: src/main/java/org/candlepin/resource/RoleResource.java:105
-msgid "Role ID does not match path."
-msgstr "ID de rol no coincide con ruta."
-
-#: src/main/java/org/candlepin/resource/RoleResource.java:131
-msgid "Access type NONE not supported."
-msgstr "Tipo de acceso NONE no está soportado."
-
-#: src/main/java/org/candlepin/resource/RoleResource.java:170
-#, java-format
-msgid "No such permission: {0} in role: {1}"
-msgstr "No existe el permiso: {0} en rol: {1}"
-
-#: src/main/java/org/candlepin/resource/RoleResource.java:184
-#, java-format
-msgid "No such role: {0}"
-msgstr "No existe el rol: {0}"
-
-#: src/main/java/org/candlepin/resource/RoleResource.java:192
-#, java-format
-msgid "No such user: {0}"
-msgstr "No existe usuarior: {0}"
-
-#: src/main/java/org/candlepin/exceptions/mappers/CandlepinExceptionMapper.java:95
-#, java-format
-msgid "Runtime Error {0} at {1}.{2}:{3}"
-msgstr "Error de tiempo de ejecución {0} en {1}.{2}:{3}"
-
 #: src/main/java/org/candlepin/exceptions/mappers/BadRequestExceptionMapper.java:66
 #, java-format
 msgid "{0} is not a valid value for {1}"
 msgstr "{0}no es el valor válido para {1}"
 
-#: src/main/java/org/candlepin/exceptions/mappers/BadRequestExceptionMapper.java:70
-#: src/main/java/org/candlepin/guice/I18nProvider.java:85
-msgid "Bad Request"
-msgstr "Solicitud incorrecta"
-
-#: src/main/java/org/candlepin/sync/Importer.java:140
-msgid "Wrong metadata type"
-msgstr "Tipo de metadatos incorrecto"
-
-#: src/main/java/org/candlepin/sync/Importer.java:149
-msgid "Invalid owner"
-msgstr "Propietario inválido"
-
-#: src/main/java/org/candlepin/sync/Importer.java:161
-msgid "Import is older than existing data"
-msgstr "La importación es anterior a los datos existentes"
-
-#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:86
+#: src/main/java/org/candlepin/exceptions/mappers/CandlepinExceptionMapper.java:95
 #, java-format
-msgid "Entitlements for {0} expired on: {1}"
-msgstr "Derechos para {0} expirados en: {1}"
-
-#: src/main/java/org/candlepin/policy/js/entitlement/AbstractEntitlementRules.java:158
-#, java-format
-msgid "''{0}'' Should contain name, priority and at least one attribute"
-msgstr "''{0}'' Debe contener nombre, prioridad y al menos un atributo"
-
-#: src/main/java/org/candlepin/policy/js/entitlement/AbstractEntitlementRules.java:173
-msgid "second parameter should be the priority number."
-msgstr "Segundo parámetro debe ser el número de prioridad."
-
-#: src/main/java/org/candlepin/controller/Entitler.java:77
-#, java-format
-msgid "Subscription pool {0} does not exist."
-msgstr "No existe grupo de suscripción {0}."
-
-#: src/main/java/org/candlepin/controller/Entitler.java:104
-#, java-format
-msgid ""
-"This consumer is already subscribed to the product matching pool with id "
-"''{0}''."
-msgstr ""
-"Este usuario ya está suscrito al producto que coincide con el grupo con ID "
-"''{0}''."
-
-#: src/main/java/org/candlepin/controller/Entitler.java:109
-#, java-format
-msgid "No free entitlements are available for the pool with id ''{0}''."
-msgstr "No hay derechos gratuitos disponibles para el grupo con ID ''{0}''."
-
-#: src/main/java/org/candlepin/controller/Entitler.java:114
-#, java-format
-msgid ""
-"Consumers of this type are not allowed to subscribe to the pool with id "
-"''{0}''."
-msgstr ""
-"Los usuarios de este tipo no están autorizados para suscribirse al grupo con"
-" ID ''{0}''."
-
-#: src/main/java/org/candlepin/controller/Entitler.java:118
-#, java-format
-msgid "Multi-entitlement not supported for pool with id ''{0}''."
-msgstr "Multi-derechos no soportados para grupo con ID ''{0}''."
-
-#: src/main/java/org/candlepin/controller/Entitler.java:122
-#, java-format
-msgid "Guest''s host does not match owner of pool: ''{0}''."
-msgstr "El host de Guest no coincide con el propietario del grupo: ''{0}''."
-
-#: src/main/java/org/candlepin/controller/Entitler.java:126
-#, java-format
-msgid "Pool not available to manifest consumers: ''{0}''."
-msgstr "El grupo no está disponible para usuarios de manifiestos: ''{0}''."
-
-#: src/main/java/org/candlepin/controller/Entitler.java:130
-#, java-format
-msgid "Pool is restricted to virtual guests: ''{0}''."
-msgstr "El grupo está restringido a huéspedes virtuales: ''{0}''."
-
-#: src/main/java/org/candlepin/controller/Entitler.java:134
-#, java-format
-msgid "Unable to entitle consumer to the pool with id ''{0}''.: {1}"
-msgstr "No se puede autorizar usuario para el grupo con ID ''{0}''.: {1}"
-
-#: src/main/java/org/candlepin/controller/Entitler.java:176
-#, java-format
-msgid "This consumer is already subscribed to the product ''{0}''"
-msgstr "Este usuario ya está suscrito al producto ''{0}''"
-
-#: src/main/java/org/candlepin/controller/Entitler.java:180
-#, java-format
-msgid ""
-"There are not enough free entitlements available for the product ''{0}''"
-msgstr "No hay suficientes derechos gratuitos para el producto ''{0}''"
-
-#: src/main/java/org/candlepin/controller/Entitler.java:184
-#, java-format
-msgid "Consumers of this type are not allowed to the product ''{0}''"
-msgstr ""
-"Los consumidores de este tipo no tiene permiso para el producto ''{0}''"
-
-#: src/main/java/org/candlepin/controller/Entitler.java:189
-#, java-format
-msgid "Only virtual systems can consume the product ''{0}''"
-msgstr "Solamente sistemas virtuales pueden consumir el producto ''{0}''"
-
-#: src/main/java/org/candlepin/controller/Entitler.java:194
-#, java-format
-msgid "Unable to entitle consumer to the product ''{0}'': {1}"
-msgstr "No pudo autorizar usuario para el producto ''{0}'': {1}"
-
-#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:73
-msgid "Invalid Credentials"
-msgstr "Credenciales inválidas"
-
-#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:88
-msgid "Error contacting user service"
-msgstr "Error al contactar servicio de usuario"
-
-#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:119
-#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:155
-msgid "Invalid oauth consumer or secret"
-msgstr "Inválido usuario de oauth o secreto"
-
-#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:123
-#, java-format
-msgid "OAuth problem encountered. Internal message is: {0}"
-msgstr "Se encontró problema de OAuth. Mensaje interno es: {0}"
-
-#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:129
-#, java-format
-msgid "OAuth error encountered. Internal message is: {0}"
-msgstr "Se encontró error de OAuth. Mensaje interno es: {0}"
-
-#: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:160
-msgid "Error getting oauth consumer Key"
-msgstr "Error en la obtención de llave de usuario oauth"
-
-#: src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java:145
-msgid "Standalone candlepin does not support redeeming a subscription."
-msgstr "Candlepin autónomo no soporta redención de suscripción."
+msgid "Runtime Error {0} at {1}.{2}:{3}"
+msgstr "Error de tiempo de ejecución {0} en {1}.{2}:{3}"

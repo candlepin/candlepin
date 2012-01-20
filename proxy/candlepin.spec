@@ -3,11 +3,15 @@
 %global _binary_payload w9.gzdio
 %global _source_payload w9.gzdio
 
+%global selinux_variants mls strict targeted
+%global selinux_policyver %(%{__sed} -e 's,.*selinux-policy-\\([^/]*\\)/.*,\\1,' /usr/share/selinux/devel/policyhelp || echo 0.0.0)
+%global modulename candlepin
+
 Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.5.8
+Version: 0.5.11
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -19,6 +23,7 @@ BuildArch: noarch
 BuildRequires: java >= 0:1.6.0
 BuildRequires: ant >= 0:1.7.0
 BuildRequires: gettext
+BuildRequires: selinux-policy-doc
 #BuildRequires: bouncycastle
 BuildRequires: candlepin-deps >= 0:0.0.21
 Requires: java >= 0:1.6.0
@@ -55,11 +60,40 @@ Group: Development/Libraries
 %description devel
 Development libraries for candlepin integration
 
+%package selinux
+Summary:        SELinux policy module supporting candlepin
+Group:          System Environment/Base
+BuildRequires:  checkpolicy
+BuildRequires:  selinux-policy-devel
+BuildRequires:  /usr/share/selinux/devel/policyhelp
+BuildRequires:  hardlink
+
+%if "%{selinux_policyver}" != ""
+Requires:       selinux-policy >= %{selinux_policyver}
+%endif
+Requires:       %{name} = %{version}-%{release}
+Requires(post):   /usr/sbin/semodule
+Requires(post):   /sbin/restorecon
+Requires(postun): /usr/sbin/semodule
+Requires(postun): /sbin/restorecon
+
+%description selinux
+SELinux policy module supporting candlepin
+
 %prep
 %setup -q
 
 %build
 ant -Dlibdir=/usr/share/candlepin/lib/ clean package genschema
+
+cd selinux
+for selinuxvariant in %{selinux_variants}
+do
+  make NAME=${selinuxvariant} -f /usr/share/selinux/devel/Makefile
+  mv %{modulename}.pp %{modulename}.pp.${selinuxvariant}
+  make NAME=${selinuxvariant} -f /usr/share/selinux/devel/Makefile clean
+done
+cd -
 
 %install
 rm -rf $RPM_BUILD_ROOT
@@ -101,8 +135,35 @@ install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/cache/%{name}
 install -d -m 755 $RPM_BUILD_ROOT/%{_datadir}/%{name}/schema/
 cp -r target/schema/* $RPM_BUILD_ROOT/%{_datadir}/%{name}/schema/
 
+cd selinux
+for selinuxvariant in %{selinux_variants}
+do
+  install -d $RPM_BUILD_ROOT/%{_datadir}/selinux/${selinuxvariant}
+  install -p -m 644 %{modulename}.pp.${selinuxvariant} \
+    $RPM_BUILD_ROOT/%{_datadir}/selinux/${selinuxvariant}/%{modulename}.pp
+done
+cd -
+/usr/sbin/hardlink -cv $RPM_BUILD_ROOT/%{_datadir}/selinux
+
 %clean
 rm -rf $RPM_BUILD_ROOT
+
+%post selinux
+for selinuxvariant in %{selinux_variants}
+do
+  /usr/sbin/semodule -s ${selinuxvariant} -i \
+    %{_datadir}/selinux/${selinuxvariant}/%{modulename}.pp &> /dev/null || :
+done
+/sbin/restorecon %{_localstatedir}/cache/thumbslug || :
+
+%postun selinux
+if [ $1 -eq 0 ] ; then
+  for selinuxvariant in %{selinux_variants}
+  do
+     /usr/sbin/semodule -s ${selinuxvariant} -r %{modulename} &> /dev/null || :
+  done
+fi
+
 
 %files
 %config(noreplace) %{_sysconfdir}/%{name}/%{name}.conf
@@ -130,7 +191,32 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(644,root,root,775)
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
+
+%files selinux
+%defattr(-,root,root,0755)
+%doc selinux/*
+%{_datadir}/selinux/*/%{modulename}.pp
+
+
 %changelog
+* Tue Jan 17 2012 jesus m. rodriguez <jesusr@redhat.com> 0.5.11-1
+- rebuilding to new branch
+
+* Thu Jan 12 2012 jesus m. rodriguez <jesusr@redhat.com> 0.5.10-1
+- add buildrequires for selinux-policy-doc (jesusr@redhat.com)
+
+* Wed Jan 11 2012 jesus m. rodriguez <jesusr@redhat.com> 0.5.9-1
+- i18n: extracted and merged strings. (jesusr@redhat.com)
+- 743968: Do not import rules files exported from older candlepins (cduryee@redhat.com)
+- initial selinux policy import (alikins@redhat.com)
+- latest string files (bkearney@redhat.com)
+- Latest strings from zanata (bkearney@redhat.com)
+- 769644: Disable system wide checking of last manifest import date. (dgoodwin@redhat.com)
+- No longer remove old consumer types on import. (mstead@redhat.com)
+- tests: small gains in coverage (jmrodri@gmail.com)
+- Clarify PUT /roles does not update collections in API documentation. (dgoodwin@redhat.com)
+- tests: increase test coverage. (jesusr@redhat.com)
+
 * Mon Dec 19 2011 Bryan Kearney <bkearney@redhat.com> 0.5.8-1
 - Make imports be more resiliant. (bkearney@redhat.com)
 - Provide better error logging for manifest imports (bkearney@redhat.com)

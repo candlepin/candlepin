@@ -16,10 +16,12 @@ package org.candlepin.model.test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import org.candlepin.model.Status;
+import java.util.Date;
 
+import org.candlepin.model.Status;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -61,5 +63,13 @@ public class StatusTest {
         assertEquals(Boolean.TRUE, status.getStandalone());
         status.setStandalone(Boolean.FALSE);
         assertEquals(Boolean.FALSE, status.getStandalone());
+    }
+
+    @Test
+    public void timeUTC() {
+        assertNotNull(status.getTimeUTC());
+        Date date = new Date();
+        status.setTimeUTC(date);
+        assertEquals(status.getTimeUTC(), date);
     }
 }

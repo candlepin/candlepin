@@ -1,0 +1,43 @@
+policy_module(candlepin, 1.0.0)
+
+########################################
+#
+# Declarations
+#
+
+type candlepin_t;
+type candlepin_exec_t;
+init_daemon_domain(candlepin_t, candlepin_exec_t)
+
+permissive candlepin_t;
+
+type candlepin_etc_rw_t;
+files_type(candlepin_etc_rw_t)
+
+########################################
+#
+# candlepin local policy
+#
+
+allow candlepin_t self:fifo_file rw_fifo_file_perms;
+allow candlepin_t self:unix_stream_socket create_stream_socket_perms;
+
+manage_dirs_pattern(candlepin_t, candlepin_etc_rw_t, candlepin_etc_rw_t)
+manage_files_pattern(candlepin_t, candlepin_etc_rw_t, candlepin_etc_rw_t)
+
+sysnet_dns_name_resolve(candlepin_t)
+corenet_all_recvfrom_unlabeled(candlepin_t)
+
+allow candlepin_t self:tcp_socket create_stream_socket_perms;
+corenet_tcp_sendrecv_generic_if(candlepin_t)
+corenet_tcp_sendrecv_generic_node(candlepin_t)
+corenet_tcp_sendrecv_all_ports(candlepin_t)
+corenet_tcp_bind_generic_node(candlepin_t)
+corenet_tcp_bind_http_port(candlepin_t)
+
+domain_use_interactive_fds(candlepin_t)
+
+
+logging_send_syslog_msg(candlepin_t)
+
+miscfiles_read_localization(candlepin_t)
