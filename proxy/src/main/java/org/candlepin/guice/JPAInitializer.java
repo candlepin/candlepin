@@ -27,6 +27,6 @@ public class JPAInitializer {
      */
     @Inject
     protected JPAInitializer(PersistenceService service) {
-        //service.start();
+        service.start();
     }
 }
