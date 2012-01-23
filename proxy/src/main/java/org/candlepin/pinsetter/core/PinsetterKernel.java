@@ -20,7 +20,6 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.tasks.CancelJobJob;
-import org.candlepin.pinsetter.tasks.RefreshPoolsJobListener;
 import org.candlepin.util.PropertyUtil;
 import org.candlepin.util.Util;
 
@@ -45,7 +44,6 @@ import java.io.Serializable;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
@@ -59,7 +57,7 @@ import java.util.Set;
 public class PinsetterKernel {
 
     private static final String CRON_GROUP = "cron group";
-    public static final String SINGLE_JOB_GROUP = "async group";
+    private static final String SINGLE_JOB_GROUP = "async group";
 
     private static Logger log = Logger.getLogger(PinsetterKernel.class);
 
@@ -75,7 +73,7 @@ public class PinsetterKernel {
      */
     @Inject
     public PinsetterKernel(Config conf, JobFactory jobFactory,
-        @Nullable List<JobListener> listeners, JobCurator jobCurator,
+        @Nullable JobListener listener, JobCurator jobCurator,
         StdSchedulerFactory fact) throws InstantiationException {
 
         this.config = conf;
@@ -89,10 +87,8 @@ public class PinsetterKernel {
             scheduler = fact.getScheduler();
             scheduler.setJobFactory(jobFactory);
 
-            if (listeners != null) {
-                for (JobListener listener : listeners) {
-                    scheduler.addJobListener(listener);
-                }
+            if (listener != null) {
+                scheduler.addJobListener(listener);
             }
         }
         catch (SchedulerException e) {
@@ -315,28 +311,8 @@ public class PinsetterKernel {
      * @throws PinsetterException if there is an error scheduling the job
      */
     public JobStatus scheduleSingleJob(JobDetail jobDetail) throws PinsetterException {
-        return scheduleSingleJob(jobDetail, new Date());
-    }
-
-    /**
-     * Schedule a long-running job for a single execution.
-     *
-     * @param detail the long-running job to perform - assumed to be
-     *     prepopulated with a valid job task and name
-     * @param start time the job should start, if null defaults to now.
-     * @return the initial status of the submitted job
-     * @throws PinsetterException if there is an error scheduling the job
-     */
-    public JobStatus scheduleSingleJob(JobDetail detail, Date start)
-        throws PinsetterException {
-
-        if (start == null) {
-            start = new Date();
-        }
-
-        detail.addJobListener(RefreshPoolsJobListener.LISTENER_NAME);
-        return scheduleJob(detail, SINGLE_JOB_GROUP, new SimpleTrigger(
-            detail.getName() + " trigger", SINGLE_JOB_GROUP, start));
+        return scheduleJob(jobDetail, SINGLE_JOB_GROUP, new SimpleTrigger(
+            jobDetail.getName() + " trigger", SINGLE_JOB_GROUP));
     }
 
     public boolean getSchedulerStatus() throws PinsetterException {
@@ -347,15 +323,6 @@ public class PinsetterKernel {
         catch (SchedulerException e) {
             throw new PinsetterException("There was a problem gathering" +
                         "scheduler status ", e);
-        }
-    }
-
-    public void pauseJob(String jobName, String groupName) throws PinsetterException {
-        try {
-            scheduler.pauseJob(jobName, groupName);
-        }
-        catch (SchedulerException e) {
-            throw new PinsetterException("There was a problem pausing " + jobName, e);
         }
     }
 
