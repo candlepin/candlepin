@@ -34,6 +34,8 @@ import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
+import com.wideplay.warp.persist.WorkManager;
+
 
 /**
  * PinsetterJobListenerTest
@@ -41,12 +43,14 @@ import org.quartz.JobExecutionException;
 public class PinsetterJobListenerTest {
     private PinsetterJobListener listener;
     private JobCurator jcurator;
+    private WorkManager workManager;
     private JobExecutionContext ctx;
 
     @Before
     public void init() {
         jcurator = mock(JobCurator.class);
-        listener = new PinsetterJobListener(jcurator);
+        workManager = mock(WorkManager.class);
+        listener = new PinsetterJobListener(jcurator, workManager);
         ctx = mock(JobExecutionContext.class);
     }
 
