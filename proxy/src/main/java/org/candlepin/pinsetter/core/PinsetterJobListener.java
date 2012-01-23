@@ -20,6 +20,8 @@ import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.core.model.JobStatus.JobState;
 
 import com.google.inject.Inject;
+import com.wideplay.warp.persist.Transactional;
+import com.wideplay.warp.persist.WorkManager;
 
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.quartz.JobExecutionContext;
@@ -38,9 +40,15 @@ public class PinsetterJobListener implements JobListener {
 
     private JobCurator curator;
 
+    // this is a seperate workManager and units of work from the actual pinsetter
+    // job because we want to tie this closer to the quartz execution, rather than
+    // job execution.
+    private WorkManager workManager;
+
     @Inject
-    public PinsetterJobListener(JobCurator curator) {
+    public PinsetterJobListener(JobCurator curator, WorkManager workManager) {
         this.curator = curator;
+        this.workManager = workManager;
     }
 
     @Override
@@ -52,7 +60,10 @@ public class PinsetterJobListener implements JobListener {
     public void jobToBeExecuted(JobExecutionContext context) {
         Principal principal = (Principal) context.getMergedJobDataMap().get(PRINCIPAL_KEY);
         ResteasyProviderFactory.pushContext(Principal.class, principal);
+
+        workManager.beginWork();
         updateJob(context);
+        workManager.endWork();
     }
 
     @Override
@@ -63,7 +74,9 @@ public class PinsetterJobListener implements JobListener {
     @Override
     public void jobWasExecuted(JobExecutionContext context,
         JobExecutionException exception) {
+        workManager.beginWork();
         updateJob(context, exception);
+        workManager.endWork();
         ResteasyProviderFactory.popContextData(Principal.class);
     }
 
@@ -71,6 +84,7 @@ public class PinsetterJobListener implements JobListener {
         updateJob(ctx, null);
     }
 
+    @Transactional
     private void updateJob(JobExecutionContext ctx, JobExecutionException exc) {
         JobStatus status = curator.find(ctx.getJobDetail().getName());
         if (status != null) {
