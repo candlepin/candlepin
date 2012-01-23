@@ -64,7 +64,6 @@ public class PinsetterKernel {
     private static Logger log = Logger.getLogger(PinsetterKernel.class);
 
     private Scheduler scheduler;
-    private ChainedListener chainedJobListener;
     private Config config;
     private JobCurator jobCurator;
 
@@ -95,9 +94,6 @@ public class PinsetterKernel {
                     scheduler.addJobListener(listener);
                 }
             }
-
-            // Setup TriggerListener chains here.
-            chainedJobListener = new ChainedListener();
         }
         catch (SchedulerException e) {
             throw new InstantiationException("this.scheduler failed: " +
@@ -197,7 +193,6 @@ public class PinsetterKernel {
                     log.warn("No schedule found for " + jobImpl + ". Skipping...");
                 }
             }
-            scheduler.addTriggerListener(chainedJobListener);
         }
         catch (SchedulerException e) {
             throw new RuntimeException(e.getLocalizedMessage(), e);

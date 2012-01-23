@@ -117,7 +117,6 @@ public class PinsetterKernelTest {
         pk = new PinsetterKernel(config, jfactory, listeners, jcurator, sfactory);
         pk.startup();
         verify(sched).start();
-        verify(sched).addTriggerListener(any(ChainedListener.class));
         verify(jcurator, atMost(2)).create(any(JobStatus.class));
         verify(sched, atMost(2)).scheduleJob(any(JobDetail.class), any(Trigger.class));
     }
@@ -135,7 +134,6 @@ public class PinsetterKernelTest {
         pk = new PinsetterKernel(config, jfactory, listeners, jcurator, sfactory);
         pk.startup();
         verify(sched).start();
-        verify(sched).addTriggerListener(any(ChainedListener.class));
         ArgumentCaptor<JobStatus> arg = ArgumentCaptor.forClass(JobStatus.class);
         verify(jcurator, atMost(1)).create(arg.capture());
         JobStatus stat = (JobStatus) arg.getValue();
@@ -151,7 +149,6 @@ public class PinsetterKernelTest {
             Util.getClassName(JobCleaner.class)))).thenReturn(status);
         pk.startup();
         verify(sched).start();
-        verify(sched).addTriggerListener(any(ChainedListener.class));
         verify(jcurator, atMost(1)).create(any(JobStatus.class));
         verify(sched, atMost(2)).scheduleJob(any(JobDetail.class), any(Trigger.class));
     }
@@ -326,7 +323,6 @@ public class PinsetterKernelTest {
         pk = new PinsetterKernel(config, jfactory, listeners, jcurator, sfactory);
         pk.startup();
         verify(sched).start();
-        verify(sched, never()).addTriggerListener(any(ChainedListener.class));
         verify(jcurator, never()).create(any(JobStatus.class));
         verify(sched, never()).scheduleJob(any(JobDetail.class), any(Trigger.class));
     }
@@ -346,7 +342,6 @@ public class PinsetterKernelTest {
         pk = new PinsetterKernel(config, jfactory, listeners, jcurator, sfactory);
         pk.startup();
         verify(sched).start();
-        verify(sched).addTriggerListener(any(ChainedListener.class));
         verify(jcurator, atMost(2)).create(any(JobStatus.class));
         verify(sched, atMost(2)).scheduleJob(any(JobDetail.class), any(Trigger.class));
     }
