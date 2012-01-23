@@ -14,6 +14,9 @@
  */
 package org.candlepin.pinsetter.tasks;
 
+import javax.persistence.PersistenceException;
+
+import org.apache.log4j.Logger;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
@@ -21,6 +24,7 @@ import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
+import com.wideplay.warp.persist.Transactional;
 
 import org.quartz.Job;
 import org.quartz.JobDataMap;
@@ -52,6 +56,7 @@ public class RefreshPoolsJob implements Job {
      * @param context the job's execution context
      */
     @Override
+    @Transactional
     public void execute(JobExecutionContext context) throws JobExecutionException {
         String ownerKey = context.getMergedJobDataMap().getString(JobStatus.TARGET_ID);
         Owner owner = ownerCurator.lookupByKey(ownerKey);

@@ -721,6 +721,7 @@ var Pool = {
         }
         helper.copyProductAttributesOntoPool(sub, newPool);
         newPool.setSubscriptionId(sub.getId());
+        newPool.setSubscriptionSubKey("master");
         var virtAtt = sub.getProduct().getAttribute("virt_only");
 
         // note: the product attributes are getting copied above, but the following will make
@@ -744,18 +745,22 @@ var Pool = {
             virt_attributes.put("virt_limit", "0");
 
             if ('unlimited'.equals(virt_limit)) {
-                pools.add(helper.createPool(sub, sub.getProduct().getId(),
-                                            'unlimited', virt_attributes));
+                var derivedPool = helper.createPool(sub, sub.getProduct().getId(),
+                                                    'unlimited', virt_attributes);
             } else {
                 var virt_limit_quantity = parseInt(virt_limit);
 
                 if (virt_limit_quantity > 0) {
                     var virt_quantity = quantity * virt_limit_quantity;
 
-                    pools.add(helper.createPool(sub, sub.getProduct().getId(),
-                                                virt_quantity.toString(), virt_attributes));
+                    var derivedPool = helper.createPool(sub, sub.getProduct().getId(),
+                                                        virt_quantity.toString(),
+                                                        virt_attributes);
                 }
             }
+            derivedPool.setSubscriptionSubKey("derived");
+
+            pools.add(derivedPool);
         }
         return pools;
     },
