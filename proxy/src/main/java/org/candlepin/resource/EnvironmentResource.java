@@ -29,7 +29,6 @@ import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.pinsetter.tasks.RegenEnvEntitlementCertsJob;
-import org.candlepin.pinsetter.tasks.RegenProductEntitlementCertsJob;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
@@ -182,7 +181,7 @@ public class EnvironmentResource {
 
 
         JobDetail detail = new JobDetail("regen_entitlement_cert_of_env" +
-            Util.generateUUID(), RegenProductEntitlementCertsJob.class);
+            Util.generateUUID(), RegenEnvEntitlementCertsJob.class);
         JobDataMap map = new JobDataMap();
         map.put(RegenEnvEntitlementCertsJob.ENV, env);
         map.put(RegenEnvEntitlementCertsJob.CONTENT, contentIds);
@@ -226,7 +225,7 @@ public class EnvironmentResource {
         }
 
         JobDetail detail = new JobDetail("regen_entitlement_cert_of_env" +
-            Util.generateUUID(), RegenProductEntitlementCertsJob.class);
+            Util.generateUUID(), RegenEnvEntitlementCertsJob.class);
         JobDataMap map = new JobDataMap();
         map.put(RegenEnvEntitlementCertsJob.ENV, e);
         map.put(RegenEnvEntitlementCertsJob.CONTENT, demotedContentIds);
