@@ -861,6 +861,7 @@ var Pool = {
             if (productsChanged) {
                 log.info("   Subscription products changed.");
                 existingPool.setProductName(sub.getProduct().getName());
+		existingPool.setProductId(sub.getProduct().getId());
                 existingPool.getProvidedProducts().clear();
 
                 if (sub.getProvidedProducts() != null) {
