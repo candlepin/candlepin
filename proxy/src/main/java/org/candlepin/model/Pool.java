@@ -37,6 +37,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
+import javax.persistence.Version;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -49,7 +51,8 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement(name = "pool")
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_pool")
+@Table(name = "cp_pool",
+    uniqueConstraints = {@UniqueConstraint(columnNames={"subscriptionid", "subscriptionsubkey"})})
 public class Pool extends AbstractHibernateObject implements Linkable, Owned {
 
     @Id
@@ -72,6 +75,12 @@ public class Pool extends AbstractHibernateObject implements Linkable, Owned {
     // of our SubscriptionService will be used to use this data.
     @Column(nullable = true)
     private String subscriptionId;
+
+    // since one subscription can create multiple pools, we need to use a combination of
+    // subid/some other key to uniquely identify a pool. subscriptionSubKey is set in the js rules,
+    // according to the same logic that will create more than one pool per sub.
+    @Column(nullable = true)
+    private String subscriptionSubKey;
 
     /* Indicates this pool was created as a result of granting an entitlement.
      * Allows us to know that we need to clean this pool up if that entitlement
@@ -133,6 +142,9 @@ public class Pool extends AbstractHibernateObject implements Linkable, Owned {
 
     // TODO: May not still be needed, iirc a temporary hack for client.
     private String productName;
+
+    @Version
+    private int version;
 
     public Pool() {
     }
@@ -598,5 +610,19 @@ public class Pool extends AbstractHibernateObject implements Linkable, Owned {
             }
         }
         return null;
+    }
+
+    /**
+     * @return the subscriptionSubKey
+     */
+    public String getSubscriptionSubKey() {
+        return subscriptionSubKey;
+    }
+
+    /**
+     * @param subscriptionSubKey the subscriptionSubKey to set
+     */
+    public void setSubscriptionSubKey(String subscriptionSubKey) {
+        this.subscriptionSubKey = subscriptionSubKey;
     }
 }

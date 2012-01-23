@@ -14,6 +14,7 @@
  */
 package org.candlepin.pinsetter.core;
 
+import org.apache.log4j.Logger;
 import org.candlepin.auth.Principal;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
@@ -34,6 +35,7 @@ import org.quartz.JobListener;
  * record the status of the job for later retreival.
  */
 public class PinsetterJobListener implements JobListener {
+    private static final Logger log = Logger.getLogger(PinsetterJobListener.class);
 
     public static final String LISTENER_NAME = "Pinsetter Job Listener";
     public static final String PRINCIPAL_KEY = "principal_key";
@@ -96,6 +98,9 @@ public class PinsetterJobListener implements JobListener {
                 status.update(ctx);
             }
             curator.merge(status);
+        }
+        else {
+            log.debug("No jobinfo found for job: " + ctx);
         }
     }
 }
