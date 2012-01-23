@@ -50,9 +50,7 @@ import org.quartz.Trigger;
 import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.spi.JobFactory;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 /**
  * PinsetterKernelTest
@@ -64,7 +62,6 @@ public class PinsetterKernelTest {
     private JobFactory jfactory;
     private JobCurator jcurator;
     private JobListener jlistener;
-    private List<JobListener> listeners;
     private StdSchedulerFactory sfactory;
     private Config config;
     private Scheduler sched;
@@ -75,8 +72,6 @@ public class PinsetterKernelTest {
         jfactory = mock(JobFactory.class);
         jcurator = mock(JobCurator.class);
         jlistener = mock(JobListener.class);
-        listeners = new ArrayList<JobListener>();
-        listeners.add(jlistener);
         sfactory = mock(StdSchedulerFactory.class);
         config = new Config(
             new HashMap<String, String>() {
@@ -106,7 +101,7 @@ public class PinsetterKernelTest {
     }
     @Test
     public void ctor() throws Exception {
-        pk = new PinsetterKernel(config, jfactory, listeners, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
         verify(sched).setJobFactory(eq(jfactory));
         verify(sched).addJobListener(eq(jlistener));
     }
@@ -114,7 +109,7 @@ public class PinsetterKernelTest {
     @SuppressWarnings("serial")
     @Test
     public void configure() throws Exception {
-        pk = new PinsetterKernel(config, jfactory, listeners, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
         pk.startup();
         verify(sched).start();
         verify(jcurator, atMost(2)).create(any(JobStatus.class));
@@ -131,7 +126,7 @@ public class PinsetterKernelTest {
                     put(ConfigProperties.ENABLE_PINSETTER, "false");
                 }
             });
-        pk = new PinsetterKernel(config, jfactory, listeners, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
         pk.startup();
         verify(sched).start();
         ArgumentCaptor<JobStatus> arg = ArgumentCaptor.forClass(JobStatus.class);
@@ -143,7 +138,7 @@ public class PinsetterKernelTest {
 
     @Test
     public void handleExistingJobStatus() throws Exception {
-        pk = new PinsetterKernel(config, jfactory, listeners, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
         JobStatus status = mock(JobStatus.class);
         when(jcurator.find(startsWith(
             Util.getClassName(JobCleaner.class)))).thenReturn(status);
@@ -160,7 +155,7 @@ public class PinsetterKernelTest {
         String[] jobs = {"fakejob1", "fakejob2"};
         when(sched.getJobNames(eq(crongrp))).thenReturn(jobs);
         when(sched.getJobNames(eq(singlegrp))).thenReturn(jobs);
-        pk = new PinsetterKernel(config, jfactory, listeners, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
         pk.shutdown();
 
         verify(sched, atMost(1)).standby();
@@ -175,7 +170,7 @@ public class PinsetterKernelTest {
     public void noJobsDuringShutdown() throws Exception {
         String[] jobs = new String[0];
         when(sched.getJobNames(anyString())).thenReturn(jobs);
-        pk = new PinsetterKernel(config, jfactory, listeners, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
         pk.shutdown();
 
         verify(sched, atMost(1)).standby();
@@ -186,14 +181,14 @@ public class PinsetterKernelTest {
     @Test(expected = PinsetterException.class)
     public void handleFailedShutdown() throws Exception {
         doThrow(new SchedulerException()).when(sched).standby();
-        pk = new PinsetterKernel(config, jfactory, listeners, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
         pk.shutdown();
         verify(sched, never()).shutdown();
     }
 
     @Test
     public void scheduleByString() throws Exception {
-        pk = new PinsetterKernel(config, jfactory, listeners, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
         pk.scheduleJob(TestJob.class, "testjob", "*/1 * * * * ?");
         ArgumentCaptor<Trigger> arg = ArgumentCaptor.forClass(Trigger.class);
         verify(jcurator, atMost(1)).create(any(JobStatus.class));
@@ -204,13 +199,13 @@ public class PinsetterKernelTest {
 
     @Test(expected = PinsetterException.class)
     public void handleParseException() throws Exception {
-        pk = new PinsetterKernel(config, jfactory, listeners, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
         pk.scheduleJob(TestJob.class, "testjob", "how bout them apples");
     }
 
     @Test
     public void scheduleByTrigger() throws Exception {
-        pk = new PinsetterKernel(config, jfactory, listeners, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
         CronTrigger trigger = new CronTrigger("job", "grp", "*/1 * * * * ?");
         pk.scheduleJob(TestJob.class, "testjob", trigger);
         ArgumentCaptor<Trigger> arg = ArgumentCaptor.forClass(Trigger.class);
@@ -224,7 +219,7 @@ public class PinsetterKernelTest {
         CronTrigger trigger = new CronTrigger("job", "grp", "*/1 * * * * ?");
         doThrow(new SchedulerException()).when(sched).scheduleJob(
             any(JobDetail.class), eq(trigger));
-        pk = new PinsetterKernel(config, jfactory, listeners, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
         pk.scheduleJob(TestJob.class, "testjob", trigger);
         verify(jcurator, atMost(1)).create(any(JobStatus.class));
     }
@@ -234,7 +229,7 @@ public class PinsetterKernelTest {
         String singlegrp = "async group";
         String[] jobs = {"fakejob1", "fakejob2"};
         when(sched.getJobNames(eq(singlegrp))).thenReturn(jobs);
-        pk = new PinsetterKernel(config, jfactory, listeners, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
         pk.cancelJob("fakejob1", singlegrp);
         verify(sched, atMost(1)).deleteJob(eq(jobs[0]), eq(singlegrp));
     }
@@ -250,7 +245,7 @@ public class PinsetterKernelTest {
         when(detail.getName()).thenReturn("name");
         when(detail.getGroup()).thenReturn("group");
         when(detail.getJobDataMap()).thenReturn(map);
-        pk = new PinsetterKernel(config, jfactory, listeners, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
         pk.scheduleSingleJob(detail);
         verify(detail).setGroup(eq(singlegrp));
         verify(detail).addJobListener(eq(PinsetterJobListener.LISTENER_NAME));
@@ -260,20 +255,20 @@ public class PinsetterKernelTest {
     @Test
     public void schedulerStatus() throws Exception {
         when(sched.isInStandbyMode()).thenReturn(false);
-        pk = new PinsetterKernel(config, jfactory, listeners, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
         assertTrue(pk.getSchedulerStatus());
     }
 
     @Test
     public void pauseScheduler() throws Exception {
-        pk = new PinsetterKernel(config, jfactory, listeners, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
         pk.pauseScheduler();
         verify(sched, atMost(1)).standby();
     }
 
     @Test
     public void unpauseScheduler() throws Exception {
-        pk = new PinsetterKernel(config, jfactory, listeners, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
         pk.unpauseScheduler();
         verify(jcurator).findCanceledJobs();
         verify(sched).start();
@@ -295,7 +290,7 @@ public class PinsetterKernelTest {
         String[] jobs = {"fakejob1", "fakejob2"};
         when(sched.getJobNames(eq(crongrp))).thenReturn(jobs);
         when(sched.getJobNames(eq(singlegrp))).thenReturn(jobs);
-        pk = new PinsetterKernel(config, jfactory, listeners, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
         pk.shutdown();
 
         verify(sched, atMost(1)).standby();
@@ -320,7 +315,7 @@ public class PinsetterKernelTest {
         jobs[0] = JobCleaner.class.getName();
         jobs[1] = StatisticHistoryTask.class.getName();
         when(sched.getJobNames(eq("cron group"))).thenReturn(jobs);
-        pk = new PinsetterKernel(config, jfactory, listeners, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
         pk.startup();
         verify(sched).start();
         verify(jcurator, never()).create(any(JobStatus.class));
@@ -339,7 +334,7 @@ public class PinsetterKernelTest {
             });
         String[] jobs = new String[0];
         when(sched.getJobNames(eq("cron group"))).thenReturn(jobs);
-        pk = new PinsetterKernel(config, jfactory, listeners, jcurator, sfactory);
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
         pk.startup();
         verify(sched).start();
         verify(jcurator, atMost(2)).create(any(JobStatus.class));
