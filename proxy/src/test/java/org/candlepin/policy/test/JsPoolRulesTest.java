@@ -556,4 +556,27 @@ public class JsPoolRulesTest {
         assertEquals(0, updates.size());
     }
 
+    @Test
+    public void updateVirtOnlyNoVirtLimit() {
+        when(configMock.standalone()).thenReturn(false);
+        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
+        s.setQuantity(10L);
+
+        // Setup a pool with a single (different) provided product:
+        Pool p = copyFromSub(s);
+        p.addAttribute(new PoolAttribute("virt_only", "true"));
+        p.addAttribute(new PoolAttribute("pool_derived", "true"));
+        p.setQuantity(20L);
+
+        List<Pool> existingPools = new java.util.LinkedList<Pool>();
+        existingPools.add(p);
+        List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools);
+
+        assertEquals(1, updates.size());
+        PoolUpdate update = updates.get(0);
+        assertFalse(update.getProductsChanged());
+        assertFalse(update.getDatesChanged());
+        assertTrue(update.getQuantityChanged());
+        assertEquals(Long.valueOf(10), update.getPool().getQuantity());
+    }
 }
