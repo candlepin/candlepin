@@ -29,6 +29,7 @@ import java.util.Set;
 
 import org.candlepin.policy.js.JsRulesProvider;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
@@ -63,6 +64,7 @@ public class ComplianceRulesTest {
     private static final String STACK_ID_2 = "my-stack-2";
 
     @Mock private EntitlementCurator entCurator;
+    @Mock private ConsumerCurator consumerCurator;
     @Mock private RulesCurator rulesCuratorMock;
     private JsRulesProvider provider;
 
@@ -76,7 +78,7 @@ public class ComplianceRulesTest {
         when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
         when(rulesCuratorMock.getRules()).thenReturn(rules);
         provider = new JsRulesProvider(rulesCuratorMock);
-        compliance = new ComplianceRules(provider.get(), entCurator);
+        compliance = new ComplianceRules(provider.get(), entCurator, consumerCurator);
         owner = new Owner("test");
     }
 

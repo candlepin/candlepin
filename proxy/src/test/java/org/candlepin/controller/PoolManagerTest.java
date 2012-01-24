@@ -117,6 +117,7 @@ public class PoolManagerTest {
     private Owner o;
     private Pool pool;
     private Product product;
+    private ComplianceStatus dummyComplianceStatus;
 
     @Before
     public void init() throws Exception {
@@ -133,6 +134,10 @@ public class PoolManagerTest {
         when(entCertAdapterMock.generateEntitlementCert(any(Entitlement.class),
             any(Subscription.class), any(Product.class))).thenReturn(
                 new EntitlementCertificate());
+
+        dummyComplianceStatus = new ComplianceStatus(new Date());
+        when(complianceRules.getStatus(any(Consumer.class), any(Date.class))).thenReturn(
+            dummyComplianceStatus);
     }
 
     @Test

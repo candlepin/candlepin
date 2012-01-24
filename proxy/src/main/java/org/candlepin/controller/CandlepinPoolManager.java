@@ -489,6 +489,10 @@ public class CandlepinPoolManager implements PoolManager {
         PoolHelper poolHelper = new PoolHelper(this, productAdapter, e);
         enforcer.postEntitlement(consumer, poolHelper, e);
 
+        // Check consumer's new compliance status and save:
+        ComplianceStatus compliance = complianceRules.getStatus(consumer, new Date());
+        consumer.setStatus(compliance.getStatus());
+
         entitlementCurator.create(e);
         consumerCurator.update(consumer);
 
@@ -684,6 +688,11 @@ public class CandlepinPoolManager implements PoolManager {
         // and regenerate those to remove the content sets.
         this.regenerateCertificatesOf(entitlementCurator
             .listModifying(entitlement));
+
+        // Check consumer's new compliance status and save:
+        ComplianceStatus compliance = complianceRules.getStatus(consumer, new Date());
+        consumer.setStatus(compliance.getStatus());
+        consumerCurator.update(consumer);
 
         sink.sendEvent(event);
     }
