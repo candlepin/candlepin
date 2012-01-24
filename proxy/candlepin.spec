@@ -7,7 +7,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.5.5.1
+Version: 0.5.5.2
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -131,6 +131,18 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
 %changelog
+* Tue Jan 24 2012 jesus m. rodriguez <jesusr@redhat.com> 0.5.5.2-1
+- checkstyle: loads of minor fixes (jesusr@redhat.com)
+- bump version (jesusr@redhat.com)
+- 750307: Prevent duplicate pools via unique constraints (jbowes@redhat.com)
+- Revert "750307: duplicate pools possible" (jbowes@redhat.com)
+- Wrap JobCurator operations in units of work (jbowes@redhat.com)
+- remove unused pinsetter chained listener (jbowes@redhat.com)
+- Update productId on refreshPools if changed (jbowes@redhat.com)
+- adding test to verify update occurs (jesusr@redhat.com)
+- remove commented out code (jesusr@redhat.com)
+- fix NaN error in rules.js (jesusr@redhat.com)
+
 * Wed Dec 07 2011 jesus m. rodriguez <jesusr@redhat.com> 0.5.5-1
 - Added support for Host registration when host can not register itself. (mstead@redhat.com)
 
