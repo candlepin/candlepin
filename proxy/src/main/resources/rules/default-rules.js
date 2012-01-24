@@ -793,7 +793,11 @@ var Pool = {
              *  virt pools when on-site. (created when a host binds)
              */
             if (existingPool.hasAttribute("pool_derived") &&
-                existingPool.attributeEquals("virt_only", "true")) {
+                existingPool.attributeEquals("virt_only", "true") &&
+                existingPool.hasProductAttribute("virt_limit")) {
+
+            /*if (existingPool.hasAttribute("pool_derived") &&
+                existingPool.attributeEquals("virt_only", "true")) {*/
 
                 // Assuming there mere be a virt limit attribute set on the sub product,
                 // this is true for all pools with pool_derived. (for now...)
