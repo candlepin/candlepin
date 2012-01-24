@@ -51,8 +51,8 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement(name = "pool")
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_pool",
-    uniqueConstraints = {@UniqueConstraint(columnNames={"subscriptionid", "subscriptionsubkey"})})
+@Table(name = "cp_pool", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"subscriptionid", "subscriptionsubkey"})})
 public class Pool extends AbstractHibernateObject implements Linkable, Owned {
 
     @Id
@@ -69,16 +69,18 @@ public class Pool extends AbstractHibernateObject implements Linkable, Owned {
 
     private Boolean activeSubscription = Boolean.TRUE;
 
-    // An identifier for the subscription this pool is associated with. Note that
-    // this is not a database foreign key. The subscription identified could exist
-    // in another system only accessible to us as a service. Actual implementations
-    // of our SubscriptionService will be used to use this data.
+    // An identifier for the subscription this pool is associated with. Note
+    // that this is not a database foreign key. The subscription identified
+    // could exist in another system only accessible to us as a service.
+    // Actual implementations of our SubscriptionService will be used to use
+    // this data.
     @Column(nullable = true)
     private String subscriptionId;
 
-    // since one subscription can create multiple pools, we need to use a combination of
-    // subid/some other key to uniquely identify a pool. subscriptionSubKey is set in the js rules,
-    // according to the same logic that will create more than one pool per sub.
+    // since one subscription can create multiple pools, we need to use a
+    // combination of subid/some other key to uniquely identify a pool.
+    // subscriptionSubKey is set in the js rules, according to the same logic
+    // that will create more than one pool per sub.
     @Column(nullable = true)
     private String subscriptionSubKey;
 
