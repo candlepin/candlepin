@@ -35,7 +35,7 @@ import org.quartz.JobListener;
  * record the status of the job for later retreival.
  */
 public class PinsetterJobListener implements JobListener {
-    private static final Logger log = Logger.getLogger(PinsetterJobListener.class);
+    private static Logger log = Logger.getLogger(PinsetterJobListener.class);
 
     public static final String LISTENER_NAME = "Pinsetter Job Listener";
     public static final String PRINCIPAL_KEY = "principal_key";

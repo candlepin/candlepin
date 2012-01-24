@@ -311,7 +311,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         pools = poolCurator.listByOwnerAndProduct(o, product2.getId());
         assertEquals(1, pools.size());
     }
-    
+
     /**
      *
      */

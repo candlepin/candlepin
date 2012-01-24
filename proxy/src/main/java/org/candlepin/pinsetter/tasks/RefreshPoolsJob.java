@@ -14,9 +14,6 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import javax.persistence.PersistenceException;
-
-import org.apache.log4j.Logger;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
