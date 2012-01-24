@@ -531,6 +531,7 @@ public class ConsumerResource {
         @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid,
         Consumer consumer) {
         Consumer toUpdate = verifyAndLookupConsumer(uuid);
+
         performConsumerUpdates(consumer, toUpdate);
     }
 
@@ -706,6 +707,21 @@ public class ConsumerResource {
                         "entitlements related to host: " + host.getName());
                 }
                 revokeGuestEntitlementsMatchingHost(host, guest);
+                // now autosubscribe to the new host. We bypass bind() since we
+                // are being invoked via the host, not the guest.
+
+                // only attempt this if there are installed products, otherwise there
+                // is nothing to bind to
+                if (guest.getInstalledProducts() == null ||
+                    guest.getInstalledProducts().isEmpty()) {
+                    log.debug("No installed products for guest, unable to autosubscribe");
+                }
+                else {
+                    log.debug("Autosubscribing migrated guest.");
+                    List<Entitlement> entitlements =  entitler.bindByProducts(
+                                                                    null, guest, null);
+                    entitler.sendEvents(entitlements);
+                }
             }
         }
 
@@ -717,15 +733,6 @@ public class ConsumerResource {
             }
             sink.sendEvent(eventFactory.guestIdDeleted(existing, guestId));
 
-            Consumer guest = consumerCurator.findByVirtUuid(guestId.getGuestId());
-            if (guest != null) {
-                // The guest is actually registered. Remove the entitlements
-                // that are associated with this host.
-                if (log.isDebugEnabled()) {
-                    log.debug("Guest ID was removed. Revoking host related entitlements.");
-                }
-                revokeGuestEntitlementsMatchingHost(existing, guest);
-            }
         }
         return true;
     }

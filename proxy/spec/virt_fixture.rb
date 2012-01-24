@@ -17,13 +17,20 @@ module VirtFixture
             :virt_limit => 3
           }
         })
-        @sub = @cp.create_subscription(@owner.key,
+        # this is useful later on for autosubscribe
+        @installed_product_list = [
+        {'productId' => @virt_limit_product.id, 'productName' => @virt_limit_product.name}]
+
+        #create two subs, to do migration testing
+        @sub1 = @cp.create_subscription(@owner.key,
+          @virt_limit_product.id, 10)
+        @sub2 = @cp.create_subscription(@owner.key,
           @virt_limit_product.id, 10)
         @cp.refresh_pools(@owner.key)
 
         @pools = @user.list_pools :owner => @owner.id, \
           :product => @virt_limit_product.id
-        @pools.size.should == 1
+        @pools.size.should == 2
         @virt_limit_pool = @pools[0]
 
         # Setup two virt guest consumers:
