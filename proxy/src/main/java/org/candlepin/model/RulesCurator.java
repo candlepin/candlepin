@@ -67,6 +67,18 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
         return existingRuleSet.get(0);
     }
 
+    private Date getUpdatedFromDB() {
+        @SuppressWarnings("unchecked")
+        List<Date> result = getEntityManager().createQuery("SELECT updated FROM Rules")
+            .getResultList();
+        if (result.size() < 1) {
+            return null;
+        }
+        else {
+            return result.get(0);
+        }
+    }
+
     /**
      * Get the last updated timestamp for the rules (either from disk or db),
      * without reading in the full rules file.
@@ -74,9 +86,9 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
      * @return the last updated timestamp for the rules
      */
     public Date getUpdated() {
-        List<Rules> dbRules = listAll();
-        if (dbRules.size() > 0) {
-            return dbRules.get(0).getUpdated();
+        Date updated = getUpdatedFromDB();
+        if (updated != null) {
+            return updated;
         }
 
         URL rulesUrl = this.getClass().getResource(getDefaultRulesFile());
