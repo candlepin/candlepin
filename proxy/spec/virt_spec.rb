@@ -92,7 +92,7 @@ describe 'Standalone Virt-Limit Subscriptions' do
     @guest1_client.list_entitlements.length.should == 1
   end
 
-  it 'should obtain a new entitlement when guest is migrated to another host' do
+  it 'should not obtain a new entitlement when guest is migrated to another host' do
 
     @guest1_client.update_consumer({:installedProducts => @installed_product_list})
     @guest1_client.consume_pool(@guest_pool['id'])
@@ -111,8 +111,8 @@ describe 'Standalone Virt-Limit Subscriptions' do
     # Host 2 reports the new guest before Host 1 reports it removed.
     @host2_client.update_consumer({:guestIds => [{'guestId' => @uuid1}]})
 
-    # Entitlement should still be on guest1 since it was migrated and autosubscribed
-    @guest1_client.list_entitlements.length.should == 1
+    # Entitlement should not be on the guest anymore (see 768872 comment #41)
+    @guest1_client.list_entitlements.length.should == 0
     # make sure we have a different entitlement than we started with
     new_ent = @guest1_client.list_entitlements.first.id
     new_ent.should_not == original_ent

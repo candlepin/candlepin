@@ -707,6 +707,8 @@ public class ConsumerResource {
                         "entitlements related to host: " + host.getName());
                 }
                 revokeGuestEntitlementsMatchingHost(host, guest);
+                // commented out per mkhusid (see 768872, around comment #41)
+                /*
                 // now autosubscribe to the new host. We bypass bind() since we
                 // are being invoked via the host, not the guest.
 
@@ -721,7 +723,7 @@ public class ConsumerResource {
                     List<Entitlement> entitlements =  entitler.bindByProducts(
                                                                     null, guest, null);
                     entitler.sendEvents(entitlements);
-                }
+                }*/
             }
         }
 
