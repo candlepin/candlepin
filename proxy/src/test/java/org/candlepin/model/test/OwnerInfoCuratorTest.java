@@ -25,6 +25,7 @@ import org.candlepin.model.OwnerInfo;
 import org.candlepin.model.OwnerInfoCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
@@ -551,35 +552,30 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testConsumerCountsByEntitlementStatus() {
-        final String entitlementsValid = "True";
-        final String entitlementsInvalid = "False";
-
         ConsumerType type = consumerTypeCurator.lookupByLabel("system");
-        Consumer consumer1 = new Consumer("test-consumer", "test-user", owner, type);
-        consumer1.setFact("system.entitlements_valid", entitlementsValid);
+        Consumer consumer1 = new Consumer("test-consumer1", "test-user", owner, type);
+        consumer1.setStatus(ComplianceStatus.GREEN);
         consumerCurator.create(consumer1);
 
-        Consumer consumer2 = new Consumer("test-consumer", "test-user", owner, type);
-        consumer2.setFact("system.entitlements_valid", entitlementsInvalid);
+        Consumer consumer2 = new Consumer("test-consumer2", "test-user", owner, type);
+        consumer2.setStatus(ComplianceStatus.RED);
         consumerCurator.create(consumer2);
 
-        Consumer consumer3 = new Consumer("test-consumer", "test-user", owner, type);
-        consumer3.setFact("system.entitlements_valid", entitlementsValid);
+        Consumer consumer3 = new Consumer("test-consumer3", "test-user", owner, type);
+        consumer3.setStatus(ComplianceStatus.GREEN);
         consumerCurator.create(consumer3);
 
-        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
-        assertEquals((Integer) 2, info.getConsumerCountByStatus(entitlementsValid));
-        assertEquals((Integer) 1, info.getConsumerCountByStatus(entitlementsInvalid));
-    }
-
-    @Test
-    public void testConsumerCountsByEntitlementStatusReturnsZeroIfStatusWasNotDefined() {
-        ConsumerType type = consumerTypeCurator.lookupByLabel("system");
-        Consumer consumer1 = new Consumer("test-consumer", "test-user", owner, type);
-        consumer1.setFact("system.entitlements_valid", "Known Status");
-        consumerCurator.create(consumer1);
+        Consumer consumer4 = new Consumer("test-consumer3", "test-user", owner, type);
+        consumer4.setStatus(ComplianceStatus.YELLOW);
+        consumerCurator.create(consumer4);
 
         OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+        assertEquals((Integer) 2, info.getConsumerCountByStatus(ComplianceStatus.GREEN));
+        assertEquals((Integer) 1, info.getConsumerCountByStatus(ComplianceStatus.RED));
+        assertEquals((Integer) 1, info.getConsumerCountByStatus(ComplianceStatus.YELLOW));
+
+        // Make sure unknown statuses report 0 consumers:
         assertEquals((Integer) 0, info.getConsumerCountByStatus("Unknown Status"));
     }
+
 }
