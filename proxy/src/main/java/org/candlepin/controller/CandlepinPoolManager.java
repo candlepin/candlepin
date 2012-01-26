@@ -605,16 +605,16 @@ public class CandlepinPoolManager implements PoolManager {
      * provides any of the modified content set IDs.
      *
      * @param e Environment where the content was promoted/demoted.
-     * @param effectedContent List of content set IDs promoted/demoted.
+     * @param affectedContent List of content set IDs promoted/demoted.
      */
     @Transactional
-    public void regenerateCertificatesOf(Environment e, Set<String> effectedContent) {
+    public void regenerateCertificatesOf(Environment e, Set<String> affectedContent) {
         log.info("Regenerating relevant certificates in environment: " + e.getId());
         List<Entitlement> allEnvEnts = entitlementCurator.listByEnvironment(e);
         Set<Entitlement> entsToRegen = new HashSet<Entitlement>();
         for (Entitlement ent : allEnvEnts) {
             Product prod = productAdapter.getProductById(ent.getProductId());
-            for (String contentId : effectedContent) {
+            for (String contentId : affectedContent) {
                 if (prod.hasContent(contentId)) {
                     entsToRegen.add(ent);
                 }
@@ -624,7 +624,7 @@ public class CandlepinPoolManager implements PoolManager {
             for (ProvidedProduct provided : ent.getPool().getProvidedProducts()) {
                 Product providedProd = productAdapter.getProductById(
                     provided.getProductId());
-                for (String contentId : effectedContent) {
+                for (String contentId : affectedContent) {
                     if (providedProd.hasContent(contentId)) {
                         entsToRegen.add(ent);
                     }
