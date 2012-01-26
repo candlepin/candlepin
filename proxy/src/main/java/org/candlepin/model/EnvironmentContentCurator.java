@@ -14,6 +14,8 @@
  */
 package org.candlepin.model;
 
+import java.util.List;
+
 import org.hibernate.criterion.Restrictions;
 
 /**
@@ -27,11 +29,19 @@ public class EnvironmentContentCurator extends
     }
 
     public EnvironmentContent lookupByEnvironmentAndContent(
-        Environment e, Content c) {
+        Environment e, String contentId) {
 
         return (EnvironmentContent) this.currentSession().createCriteria(
             EnvironmentContent.class).add(Restrictions.eq("environment", e))
-            .add(Restrictions.eq("content", c)).uniqueResult();
+            .add(Restrictions.eq("contentId", contentId)).uniqueResult();
+    }
+
+    public List<EnvironmentContent> lookupByAndContent(
+        String contentId) {
+
+        return this.currentSession().createCriteria(
+            EnvironmentContent.class)
+            .add(Restrictions.eq("contentId", contentId)).list();
     }
 
 }

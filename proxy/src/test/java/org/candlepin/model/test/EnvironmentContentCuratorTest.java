@@ -54,17 +54,19 @@ public class EnvironmentContentCuratorTest extends DatabaseTestFixture {
         p.addContent(c);
         productCurator.create(p);
 
-        envContent = new EnvironmentContent(e, c, true);
+        envContent = new EnvironmentContent(e, c.getId(), true);
         envContent = envContentCurator.create(envContent);
     }
 
     @Test
     public void create() {
-        envContent = envContentCurator.lookupByEnvironmentAndContent(e, c);
+        envContent = envContentCurator.lookupByEnvironmentAndContent(e, c.getId());
         assertNotNull(envContent);
 
         e = envCurator.find(e.getId());
         assertEquals(1, e.getEnvironmentContent().size());
+
+        assertEquals(1, envContentCurator.lookupByAndContent(c.getId()).size());
     }
 
     @Test
@@ -76,7 +78,7 @@ public class EnvironmentContentCuratorTest extends DatabaseTestFixture {
 
     @Test(expected = PersistenceException.class)
     public void createDuplicate() {
-        envContent = new EnvironmentContent(e, c, true);
+        envContent = new EnvironmentContent(e, c.getId(), true);
         envContentCurator.create(envContent);
     }
 

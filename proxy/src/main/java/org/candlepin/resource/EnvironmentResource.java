@@ -22,8 +22,6 @@ import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
-import org.candlepin.model.Content;
-import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
@@ -61,7 +59,6 @@ public class EnvironmentResource {
 
     private EnvironmentCurator envCurator;
     private I18n i18n;
-    private ContentCurator contentCurator;
     private EnvironmentContentCurator envContentCurator;
     private ConsumerResource consumerResource;
     private CandlepinPoolManager poolManager;
@@ -69,13 +66,12 @@ public class EnvironmentResource {
 
     @Inject
     public EnvironmentResource(EnvironmentCurator envCurator, I18n i18n,
-        ContentCurator contentCurator, EnvironmentContentCurator envContentCurator,
+        EnvironmentContentCurator envContentCurator,
         ConsumerResource consumerResource, CandlepinPoolManager poolManager,
         ConsumerCurator consumerCurator) {
 
         this.envCurator = envCurator;
         this.i18n = i18n;
-        this.contentCurator = contentCurator;
         this.envContentCurator = envContentCurator;
         this.consumerResource = consumerResource;
         this.poolManager = poolManager;
@@ -171,12 +167,11 @@ public class EnvironmentResource {
         Set<String> contentIds = new HashSet<String>();
         for (EnvironmentContent promoteMe : contentToPromote) {
             // Make sure the content exists:
-            Content content = lookupContent(promoteMe.getContent().getId());
-            promoteMe.setContent(content);
+            promoteMe.setContentId(promoteMe.getContentId());
             promoteMe.setEnvironment(env);
             envContentCurator.create(promoteMe);
             env.getEnvironmentContent().add(promoteMe);
-            contentIds.add(promoteMe.getContent().getId());
+            contentIds.add(promoteMe.getContentId());
         }
 
 
@@ -217,9 +212,8 @@ public class EnvironmentResource {
         Environment e = lookupEnvironment(envId);
         Set<String> demotedContentIds = new HashSet<String>();
         for (String contentId : contentIds) {
-            Content c = lookupContent(contentId);
             EnvironmentContent envContent =
-                envContentCurator.lookupByEnvironmentAndContent(e, c);
+                envContentCurator.lookupByEnvironmentAndContent(e, contentId);
             envContentCurator.delete(envContent);
             demotedContentIds.add(contentId);
         }
@@ -241,15 +235,6 @@ public class EnvironmentResource {
                 "No such environment : {0}", envId));
         }
         return e;
-    }
-
-    private Content lookupContent(String contentId) {
-        Content content = contentCurator.find(contentId);
-        if (content == null) {
-            throw new NotFoundException(i18n.tr(
-                "No such content: {0}", contentId));
-        }
-        return content;
     }
 
     @POST

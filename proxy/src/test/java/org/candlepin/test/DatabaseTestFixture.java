@@ -132,7 +132,7 @@ public class DatabaseTestFixture {
     protected StatisticCurator statisticCurator;
     protected UniqueIdGenerator uniqueIdGenerator;
     protected UeberCertificateGenerator ueberCertGenerator;
-    
+
     private PersistenceService persistanceService;
 
     @Before
@@ -202,17 +202,17 @@ public class DatabaseTestFixture {
         dateSource = (DateSourceForTesting) injector
             .getInstance(DateSource.class);
         dateSource.currentDate(TestDateUtil.date(2010, 1, 1));
-        
-        
+
+
         unitOfWork.beginWork();
     }
-    
+
     @After
     public void shutdown() {
         unitOfWork.endWork();
 
         injector.getInstance(PersistenceFilter.class).destroy();
-        
+
         HibernateEntityManagerImplementor hem =
             (HibernateEntityManagerImplementor) entityManager();
         Connection connection = hem.getSession().connection();
@@ -223,7 +223,7 @@ public class DatabaseTestFixture {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        
+
         entityManager().close();
         emf.close();
 

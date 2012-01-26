@@ -394,7 +394,7 @@ class Candlepin
   #
   # The promotions list should contain hashes like:
   # {
-  #   :content => {:id => contentId},
+  #   :contentId => contentId,
   #   :enabled => enabled,
   # }
   #

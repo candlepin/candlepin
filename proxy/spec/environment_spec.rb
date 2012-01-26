@@ -55,7 +55,7 @@ describe 'Environments' do
     lambda {
       content = create_content
       foreign_admin.promote_content(@env['id'],
-        [{:content => {:id => content['id']}}])
+        [{:contentId => content['id']}])
     }.should raise_exception(RestClient::Forbidden)
   end
 
@@ -70,7 +70,7 @@ describe 'Environments' do
   it 'can have promoted content' do
     content = create_content
     @org_admin.promote_content(@env['id'],
-        [{:content => {:id => content['id']}}])
+        [{:contentId => content['id']}])
     @env = @org_admin.get_environment(@env['id'])
     @env['environmentContent'].size.should == 1
   end
@@ -79,9 +79,9 @@ describe 'Environments' do
     content = create_content
     content2 = create_content
     @org_admin.promote_content(@env['id'],
-        [{:content => {:id => content['id']}}])
+        [{:contentId => content['id']}])
     @org_admin.promote_content(@env['id'],
-        [{:content => {:id => content2['id']}}])
+        [{:contentId => content2['id']}])
     @org_admin.demote_content(@env['id'], [content['id'], content2['id']])
     @env = @org_admin.get_environment(@env['id'])
     @env['environmentContent'].size.should == 0
@@ -103,7 +103,7 @@ describe 'Environments' do
     # Override enabled to false:
     @org_admin.promote_content(@env['id'],
         [{
-          :content => {:id => content['id']},
+          :contentId => content['id'],
           :enabled => false,
         }])
 
@@ -138,7 +138,7 @@ describe 'Environments' do
     # Override enabled to false:
     @org_admin.promote_content(@env['id'],
         [{
-          :content => {:id => content['id']},
+          :contentId => content['id'],
         }])
 
     @cp.create_subscription(@owner['key'], product['id'], 10)
@@ -156,7 +156,7 @@ describe 'Environments' do
     # Promote the other content set and make sure certs were regenerated:
     @org_admin.promote_content(@env['id'],
         [{
-          :content => {:id => content2['id']},
+          :contentId => content2['id'],
         }])
     sleep 1
     ent = consumer_cp.list_entitlements()[0]

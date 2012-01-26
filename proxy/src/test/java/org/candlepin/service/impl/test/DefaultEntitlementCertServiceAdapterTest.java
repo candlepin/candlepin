@@ -180,7 +180,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         // Environment, with promoted content:
         Environment e = new Environment("env1", "Env 1", owner);
-        e.getEnvironmentContent().add(new EnvironmentContent(e, content, true));
+        e.getEnvironmentContent().add(new EnvironmentContent(e, content.getId(), true));
         when(entitlement.getConsumer().getEnvironment()).thenReturn(e);
 
         Map<String, EnvironmentContent> promotedContent =

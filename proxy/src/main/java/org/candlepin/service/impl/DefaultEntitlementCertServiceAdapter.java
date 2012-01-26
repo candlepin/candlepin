@@ -190,8 +190,8 @@ public class DefaultEntitlementCertServiceAdapter extends
                 ent.getConsumer().getEnvironment());
             for (EnvironmentContent envContent :
                     ent.getConsumer().getEnvironment().getEnvironmentContent()) {
-                log.debug("  promoted content: " + envContent.getContent().getId());
-                promotedContent.put(envContent.getContent().getId(), envContent);
+                log.debug("  promoted content: " + envContent.getContentId());
+                promotedContent.put(envContent.getContentId(), envContent);
             }
         }
 
