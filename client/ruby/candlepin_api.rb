@@ -382,6 +382,10 @@ class Candlepin
     get("/content/#{content_id}")
   end
 
+  def delete_content(content_id)
+    delete("/content/#{content_id}")
+  end
+
   def add_content_to_product(product_id, content_id, enabled=true)
     post("/products/#{product_id}/content/#{content_id}?enabled=#{enabled}")
   end

@@ -75,6 +75,17 @@ describe 'Environments' do
     @env['environmentContent'].size.should == 1
   end
 
+  it 'cleans up env content when content is deleted' do
+    content = create_content
+    @org_admin.promote_content(@env['id'],
+        [{:contentId => content['id']}])
+    @env = @org_admin.get_environment(@env['id'])
+    @env['environmentContent'].size.should == 1
+    @cp.delete_content(content['id'])
+    @env = @org_admin.get_environment(@env['id'])
+    @env['environmentContent'].size.should == 0
+  end
+
   it 'can demote content' do
     content = create_content
     content2 = create_content

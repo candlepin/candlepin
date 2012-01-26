@@ -17,11 +17,16 @@ import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Locale;
 
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
+import org.candlepin.model.Environment;
+import org.candlepin.model.EnvironmentContent;
+import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.resource.ContentResource;
 import org.candlepin.service.impl.DefaultUniqueIdGenerator;
 import org.junit.Before;
@@ -36,12 +41,15 @@ public class ContentResourceTest {
     private ContentCurator cc;
     private ContentResource cr;
     private I18n i18n;
+    private EnvironmentContentCurator envContentCurator;
 
     @Before
     public void init() {
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         cc = mock(ContentCurator.class);
-        cr = new ContentResource(cc, i18n, new DefaultUniqueIdGenerator());
+        envContentCurator = mock(EnvironmentContentCurator.class);
+        cr = new ContentResource(cc, i18n, new DefaultUniqueIdGenerator(),
+            envContentCurator);
     }
 
     @Test
@@ -78,7 +86,6 @@ public class ContentResourceTest {
         when(cc.find(eq(10L))).thenReturn(null);
         cr.createContent(content);
         verify(cc, atLeastOnce()).create(content);
-
     }
 
     @Test
@@ -86,8 +93,14 @@ public class ContentResourceTest {
         Content content = mock(Content.class);
         when(content.getId()).thenReturn("10");
         when(cc.find(eq("10"))).thenReturn(content);
+        List<EnvironmentContent> envContents = new LinkedList<EnvironmentContent>();
+        EnvironmentContent ec = new EnvironmentContent(mock(Environment.class),
+            content.getId(), true);
+        envContents.add(ec);
+        when(envContentCurator.lookupByAndContent(content.getId())).thenReturn(envContents);
         cr.remove("10");
         verify(cc, atLeastOnce()).delete(eq(content));
+        verify(envContentCurator, atLeastOnce()).delete(eq(ec));
     }
 
     @Test(expected = BadRequestException.class)

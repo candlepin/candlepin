@@ -27,6 +27,8 @@ import javax.ws.rs.core.MediaType;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
+import org.candlepin.model.EnvironmentContent;
+import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.service.UniqueIdGenerator;
 import org.xnap.commons.i18n.I18n;
 
@@ -41,13 +43,16 @@ public class ContentResource {
     private ContentCurator contentCurator;
     private I18n i18n;
     private UniqueIdGenerator idGenerator;
+    private EnvironmentContentCurator envContentCurator;
 
     @Inject
     public ContentResource(ContentCurator contentCurator, I18n i18n,
-        UniqueIdGenerator idGenerator) {
+        UniqueIdGenerator idGenerator, EnvironmentContentCurator envContentCurator) {
         this.i18n = i18n;
         this.contentCurator = contentCurator;
         this.idGenerator = idGenerator;
+        this.envContentCurator = envContentCurator;
+
     }
 
     /**
@@ -110,5 +115,10 @@ public class ContentResource {
     public void remove(@PathParam("content_id") String cid) {
         Content nuke = getContent(cid);
         contentCurator.delete(nuke);
+
+        // Clean up any dangling environment content:
+        for (EnvironmentContent ec : envContentCurator.lookupByAndContent(cid)) {
+            envContentCurator.delete(ec);
+        }
     }
 }
