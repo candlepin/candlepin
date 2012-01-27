@@ -1410,10 +1410,18 @@ public class ConsumerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}/compliance")
+    @Transactional
     public ComplianceStatus getComplianceStatus(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid) {
         Consumer consumer = verifyAndLookupConsumer(uuid);
-        return this.complianceRules.getStatus(consumer, Calendar.getInstance().getTime());
+        ComplianceStatus status = this.complianceRules.getStatus(consumer,
+            Calendar.getInstance().getTime());
+
+        // NOTE: If this method ever changes to accept an optional date, do not update this
+        // field on the consumer if the date is specified:
+        consumer.setStatus(status.getStatus());
+
+        return status;
     }
 
     private void addDataToInstalledProducts(Consumer consumer) {
