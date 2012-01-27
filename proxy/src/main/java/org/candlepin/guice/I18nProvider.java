@@ -61,7 +61,9 @@ public class I18nProvider implements Provider<I18n> {
 
         locale = (locale == null) ? Locale.US : locale;
 
-        log.debug("Getting i18n engine for locale " + locale);
+        if (log.isDebugEnabled()) {
+            log.debug("Getting i18n engine for locale " + locale);
+        }
 
         // If the locale does not exist, xnap is pretty inefficient.
         // This cache will hold the records more efficiently.

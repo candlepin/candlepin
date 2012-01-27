@@ -17,6 +17,9 @@ package org.candlepin.model.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Date;
+import java.util.List;
+
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
@@ -24,10 +27,7 @@ import org.candlepin.model.GuestId;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
 import org.candlepin.test.DatabaseTestFixture;
-
 import org.junit.Test;
-
-import java.util.List;
 
 /**
  *
@@ -141,5 +141,19 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
         List<Consumer> guests = consumerCurator.getGuests(consumer);
         assertTrue(guests.size() == 0);
+    }
+
+    @Test
+    public void updatelastCheckin() throws Exception {
+        Owner owner = new Owner("test-owner", "Test Owner");
+        Date date = new Date();
+        owner = ownerCurator.create(owner);
+        ConsumerType ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
+        ct = consumerTypeCurator.create(ct);
+        Consumer consumer = new Consumer("hostConsumer", "testUser", owner, ct);
+        consumer.setLastCheckin(date);
+        consumer = consumerCurator.create(consumer);
+        consumerCurator.updateLastCheckin(consumer);
+        assertTrue(consumer.getLastCheckin().after(date));
     }
 }

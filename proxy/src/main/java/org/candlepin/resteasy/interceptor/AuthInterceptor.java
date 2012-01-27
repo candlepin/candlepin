@@ -14,8 +14,11 @@
  */
 package org.candlepin.resteasy.interceptor;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.ext.Provider;
 
 import org.apache.log4j.Logger;
 import org.candlepin.auth.ConsumerPrincipal;
@@ -24,7 +27,6 @@ import org.candlepin.auth.Principal;
 import org.candlepin.auth.interceptor.SecurityHole;
 import org.candlepin.config.Config;
 import org.candlepin.exceptions.UnauthorizedException;
-import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.service.UserServiceAdapter;
@@ -36,12 +38,8 @@ import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.spi.interception.PreProcessInterceptor;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.ext.Provider;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 
 /**
  * NoAuthInterceptor
@@ -153,14 +151,10 @@ public class AuthInterceptor implements PreProcessInterceptor {
             // lest our security settings start getting upset when we try to
             // update a consumer without any roles:
             ConsumerPrincipal p = (ConsumerPrincipal) principal;
-            updateLastCheckin(p.getConsumer());
+            consumerCurator.updateLastCheckin(p.getConsumer());
         }
 
         return null;
     }
 
-    private void updateLastCheckin(Consumer consumer) {
-        consumer.setLastCheckin(new Date());
-        consumerCurator.update(consumer);
-    }
 }

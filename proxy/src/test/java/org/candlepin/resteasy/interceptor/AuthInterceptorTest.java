@@ -20,9 +20,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
+import java.lang.reflect.Method;
+import java.security.cert.X509Certificate;
+import java.util.Locale;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.NoAuthPrincipal;
@@ -44,11 +46,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.xnap.commons.i18n.I18n;
 
-import java.lang.reflect.Method;
-import java.security.cert.X509Certificate;
-import java.util.Locale;
-
-import javax.servlet.http.HttpServletRequest;
+import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 
 /**
  * AuthInterceptorTest
@@ -155,7 +155,7 @@ public class AuthInterceptorTest {
 
         Principal p1 = ResteasyProviderFactory.getContextData(Principal.class);
         assertTrue(p1 instanceof ConsumerPrincipal);
-        verify(cc).update(eq(c));
+        verify(cc).updateLastCheckin(eq(c));
     }
 
     /**

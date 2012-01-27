@@ -283,6 +283,35 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         // If we get here, no exception was raised, so we're happy!
     }
 
+    @Test
+    public void testRefreshPoolsWithChangedProductShouldUpdatePool() {
+        Product product1 = TestUtil.createProduct("product 1", "Product 1");
+        Product product2 = TestUtil.createProduct("product 2", "Product 2");
+
+        productAdapter.createProduct(product1);
+        productAdapter.createProduct(product2);
+
+        Subscription subscription = new Subscription(o, product1, new HashSet<Product>(),
+            5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date());
+        subCurator.create(subscription);
+
+        // set up initial pool
+        poolManager.refreshPools(o);
+
+        List<Pool> pools = poolCurator.listByOwnerAndProduct(o, product1.getId());
+        assertEquals(1, pools.size());
+
+        // now alter the product behind the sub, and make sure the pool is also updated
+        subscription.setProduct(product2);
+        subCurator.merge(subscription);
+
+        // set up initial pool
+        poolManager.refreshPools(o);
+
+        pools = poolCurator.listByOwnerAndProduct(o, product2.getId());
+        assertEquals(1, pools.size());
+    }
+
     /**
      *
      */

@@ -14,6 +14,8 @@
  */
 package org.candlepin.pinsetter.core;
 
+import javax.persistence.PersistenceException;
+
 import com.wideplay.warp.persist.WorkManager;
 
 import org.quartz.Job;
@@ -46,6 +48,27 @@ class TransactionalPinsetterJob implements Job {
         workManager.beginWork();
         try {
             wrappedJob.execute(context);
+        }
+        catch (PersistenceException e) {
+            // Multiple refreshpools running at once can cause the following:
+            // one job attempts to delete a pool that was deleted by another job
+            // one job attempts to add a pool that was already added
+            // one job attempts to update a pool that was already updated
+            // all 3 of these conditions will cause some form of JPA/hibernate
+            // exception to bubble up.  the exception seems to vary based on the
+            // underlying db, so just catch the toplevel  exception. We then
+            // throw an exception that will let pinsetter/quartz know  that
+            // there was a race condition detected, and get it to reschedule
+            // the job. the other job will have completed successfully, and
+            // this one can then run (and possibly use new information, which
+            // is why there could be two jobs in the queue for  the same owner).
+            //
+            // I guess if other jobs fail its ok to restart them, too?
+            // note that we have to catch at this level rather than inside the
+            // job for any update collisions, which will only be detected
+            // on commit.
+
+            throw new JobExecutionException(e, true);
         }
         finally {
             workManager.endWork();

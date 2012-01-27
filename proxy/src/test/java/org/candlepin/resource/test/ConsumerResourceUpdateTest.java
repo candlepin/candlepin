@@ -31,6 +31,7 @@ import java.util.Locale;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
+import org.candlepin.controller.Entitler;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.ActivationKeyCurator;
 import org.candlepin.model.Consumer;
@@ -64,6 +65,7 @@ public class ConsumerResourceUpdateTest {
     @Mock private EventFactory eventFactory;
     @Mock private ActivationKeyCurator activationKeyCurator;
     @Mock private PoolManager poolManager;
+    @Mock private Entitler entitler;
     private I18n i18n;
 
     private ConsumerResource resource;
@@ -76,8 +78,7 @@ public class ConsumerResourceUpdateTest {
             this.consumerTypeCurator, null, this.subscriptionService, null,
             this.idCertService, null, this.i18n, this.sink, this.eventFactory, null, null,
             this.userService, null, poolManager, null, null, null,
-            this.activationKeyCurator, null, null);
-
+            this.activationKeyCurator, this.entitler, null);
     }
 
     @Test
@@ -266,8 +267,11 @@ public class ConsumerResourceUpdateTest {
         verify(sink).sendEvent(eq(event));
     }
 
+    /*
+     commented out per mkhusid, see 768872 comment #41
+
     @Test
-    public void ensureNewGuestHasEntitlementsRevokedIfItWasMigratedFromAnotherHost() {
+    public void ensureNewGuestIsHealedIfItWasMigratedFromAnotherHost() {
         String uuid = "TEST_CONSUMER";
         Consumer existingHost = createConsumerWithGuests("Guest 1", "Guest 2");
         existingHost.setUuid(uuid);
@@ -279,10 +283,13 @@ public class ConsumerResourceUpdateTest {
         Consumer guest1 = new Consumer();
         guest1.setUuid("Guest 1");
         guest1.addEntitlement(entitlement);
+        ConsumerInstalledProduct installed = mock(ConsumerInstalledProduct.class);
+        guest1.addInstalledProduct(installed);
 
         when(consumerCurator.findByVirtUuid("Guest 1")).thenReturn(guest1);
         // Ensure that the guests host is the existing.
         when(consumerCurator.getHost("Guest 1")).thenReturn(existingHost);
+        when(consumerCurator.findByUuid("Guest 1")).thenReturn(guest1);
 
         Consumer existingMigratedTo = createConsumerWithGuests();
         existingMigratedTo.setUuid("MIGRATED_TO");
@@ -293,10 +300,13 @@ public class ConsumerResourceUpdateTest {
             createConsumerWithGuests("Guest 1"));
 
         verify(poolManager).revokeEntitlement(eq(entitlement));
-    }
+        verify(entitler).bindByProducts(null, guest1, null);
+    } */
 
     @Test
     public void ensureExistingGuestHasEntitlementIsRemovedIfAlreadyAssocWithDiffHost() {
+        // the guest in this test does not have any installed products, we
+        // expect them to get their entitlements stripped on migration
         String uuid = "TEST_CONSUMER";
         Consumer existingHost = createConsumerWithGuests("Guest 1", "Guest 2");
         existingHost.setUuid(uuid);
@@ -381,7 +391,7 @@ public class ConsumerResourceUpdateTest {
     }
 
     @Test
-    public void ensureGuestEntitlementsAreRevokedWhenGuestIsRemovedFromHost() {
+    public void ensureGuestEntitlementsAreNotRevokedWhenGuestIsRemovedFromHost() {
         String uuid = "TEST_CONSUMER";
         Consumer host = createConsumerWithGuests("Guest 1", "Guest 2");
         host.setUuid(uuid);
@@ -402,8 +412,8 @@ public class ConsumerResourceUpdateTest {
         when(consumerCurator.findByVirtUuid("Guest 1")).thenReturn(guest1);
 
         this.resource.updateConsumer(host.getUuid(), updatedHost);
-        verify(consumerCurator).findByVirtUuid(eq("Guest 1"));
-        verify(poolManager).revokeEntitlement(eq(entitlement));
+        //verify(consumerCurator).findByVirtUuid(eq("Guest 1"));
+        verify(poolManager, never()).revokeEntitlement(eq(entitlement));
     }
 
 
@@ -456,7 +466,7 @@ public class ConsumerResourceUpdateTest {
 
         this.resource.updateConsumer(host.getUuid(), updatedHost);
 
-        verify(consumerCurator).findByVirtUuid(eq("Guest 1"));
+        //verify(consumerCurator).findByVirtUuid(eq("Guest 1"));
         verify(poolManager, never()).revokeEntitlement(eq(entitlement));
     }
 
