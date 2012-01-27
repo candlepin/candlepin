@@ -20,6 +20,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -41,10 +42,13 @@ import org.candlepin.model.GuestId;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.policy.js.compliance.ComplianceRules;
+import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.resource.dto.HypervisorCheckInResult;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -91,6 +95,9 @@ public class HypervisorResourceTest {
     @Mock
     private PoolManager poolManager;
 
+    @Mock
+    private ComplianceRules complianceRules;
+
     private ConsumerResource consumerResource;
 
     private I18n i18n;
@@ -107,7 +114,7 @@ public class HypervisorResourceTest {
             this.consumerTypeCurator, null, this.subscriptionService, null,
             this.idCertService, null, this.i18n, this.sink, this.eventFactory, null, null,
             this.userService, null, null, null, null, this.ownerCurator,
-            this.activationKeyCurator, null, null);
+            this.activationKeyCurator, null, this.complianceRules);
         hypervisorResource = new HypervisorResource(consumerResource, poolManager,
             consumerCurator);
 
@@ -118,6 +125,8 @@ public class HypervisorResourceTest {
                 return invocation.getArguments()[0];
             }
         });
+        when(complianceRules.getStatus(any(Consumer.class), any(Date.class)))
+        .thenReturn(new ComplianceStatus(new Date()));
     }
 
     @Test

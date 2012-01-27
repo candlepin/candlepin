@@ -375,6 +375,11 @@ public class ConsumerResource {
                 }
             }
 
+            ComplianceStatus compliance = complianceRules.getStatus(consumer,
+                Calendar.getInstance().getTime());
+            consumer.setStatus(compliance.getStatus());
+            consumerCurator.update(consumer);
+
             return consumer;
         }
         catch (CandlepinException ce) {
@@ -563,6 +568,11 @@ public class ConsumerResource {
 
         if (changesMade) {
             log.info("Consumer updated.");
+
+            ComplianceStatus compliance = complianceRules.getStatus(toUpdate,
+                Calendar.getInstance().getTime());
+            toUpdate.setStatus(compliance.getStatus());
+
             // Set the updated date here b/c @PreUpdate will not get fired
             // since only the facts table will receive the update.
             toUpdate.setUpdated(new Date());
