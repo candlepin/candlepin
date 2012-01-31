@@ -97,10 +97,12 @@ public class HypervisorResource {
                         null);
                     result.created(consumer);
                 }
+                /* commented out per 768872
                 // Revoke all entitlements from the host if no guests were reported.
                 else if (guestIds == null || guestIds.isEmpty()) {
                     poolManager.revokeAllEntitlements(consumer);
                 }
+                */
 
                 Consumer withIds = new Consumer();
                 withIds.setGuestIds(guestIds);

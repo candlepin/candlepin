@@ -63,17 +63,17 @@ describe 'Hypervisor Resource' do
     @guest1_client.list_entitlements.length.should == 1
   end
 
-  it 'should revoke host entitlements when guestId list is empty' do
+  it 'should not revoke host entitlements when guestId list is empty' do
     @host_client.list_entitlements.length.should == 1
     # Host reports no guests.
     host_mapping_no_guests = get_host_guest_mapping(@expected_host, [])
     results = @user.hypervisor_check_in(@owner.key,  host_mapping_no_guests)
     results.created.size.should == 0
     results.updated.size.should == 1
-    @host_client.list_entitlements.length.should == 0
+    @host_client.list_entitlements.length.should == 1
   end
 
-  it 'should revoke host and guest entitlements when guestId list is empty' do
+  it 'should not revoke host and guest entitlements when guestId list is empty' do
     guest_pool = find_guest_virt_pool(@guest1_client, @guest1.uuid)
 
     @guest1_client.consume_pool(guest_pool.id)
@@ -85,9 +85,9 @@ describe 'Hypervisor Resource' do
     results.created.size.should == 0
     results.updated.size.should == 1
 
-    # Entitlement should be gone:
-    @guest1_client.list_entitlements.length.should == 0
-    @host_client.list_entitlements.length.should == 0
+    # Entitlement should not be gone:
+    @guest1_client.list_entitlements.length.should == 1
+    @host_client.list_entitlements.length.should == 1
   end
 
   def get_host_guest_mapping(host_uuid, guest_id_list)
