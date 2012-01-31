@@ -59,7 +59,7 @@ describe 'Hypervisor Resource' do
     results.created.size.should == 0
     results.updated.size.should == 1
 
-    # Entitlement should be gone:
+    # Entitlement should not be gone:
     @guest1_client.list_entitlements.length.should == 1
   end
 
