@@ -585,7 +585,7 @@ public class ConsumerResource {
         boolean changesMade = checkForFactsUpdate(toUpdate, updated);
         changesMade = checkForInstalledProductsUpdate(toUpdate, updated) || changesMade;
         changesMade = checkForGuestsUpdate(toUpdate, updated) || changesMade;
-
+ 
         // Allow optional setting of the autoheal attribute:
         if (updated.isAutoheal() != null &&
             toUpdate.isAutoheal() != updated.isAutoheal()) {
@@ -593,6 +593,14 @@ public class ConsumerResource {
                 log.debug("   Updating consumer autoheal setting.");
             }
             toUpdate.setAutoheal(updated.isAutoheal());
+            changesMade = true;
+        }
+        
+        if (updated.getReleaseVer() != null) {
+            if (log.isDebugEnabled()) {
+                log.debug("   Updating consumer releaseVer setting.");
+            }
+            toUpdate.setReleaseVer(updated.getReleaseVer());
             changesMade = true;
         }
 
@@ -1524,6 +1532,15 @@ public class ConsumerResource {
                 consumer.getUuid()));
         }
         return consumerCurator.getHost(consumer.getFact("virt.uuid"));
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/{consumer_uuid}/release")
+    public String getRelease(
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
+        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        return new String(consumer.getReleaseVer().toString());
     }
 
     /**
