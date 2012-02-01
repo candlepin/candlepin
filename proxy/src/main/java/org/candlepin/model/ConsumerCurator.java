@@ -14,14 +14,19 @@
  */
 package org.candlepin.model;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
 import org.candlepin.auth.interceptor.EnforceAccessControl;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.exceptions.BadRequestException;
-
-import com.google.inject.Inject;
-import com.wideplay.warp.persist.Transactional;
-
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.ReplicationMode;
@@ -29,13 +34,8 @@ import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 import org.xnap.commons.i18n.I18n;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
+import com.google.inject.Inject;
+import com.wideplay.warp.persist.Transactional;
 
 /**
  * ConsumerCurator
@@ -234,6 +234,19 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         save(existingConsumer);
 
         return existingConsumer;
+    }
+
+    /**
+     * Modifies the last check in and persists the entity. Make sure that the data
+     * is refreshed before using this method.
+     * @param consumer the consumer to update
+     * @return Updated consumer
+     */
+    @Transactional
+    public Consumer updateLastCheckin(Consumer consumer) {
+        consumer.setLastCheckin(new Date());
+        save(consumer);
+        return consumer;
     }
 
     private boolean factsChanged(Map<String, String> updatedFacts,

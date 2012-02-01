@@ -16,6 +16,7 @@ package org.candlepin.controller;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.Environment;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Subscription;
@@ -23,6 +24,7 @@ import org.candlepin.policy.EntitlementRefusedException;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -111,6 +113,8 @@ public interface PoolManager {
      * @param ueberCertificate TODO
      */
     void regenerateCertificatesOf(Entitlement e, boolean ueberCertificate);
+
+    void regenerateCertificatesOf(Environment env, Set<String> contentIds);
 
     void regenerateCertificatesOf(String productId);
 

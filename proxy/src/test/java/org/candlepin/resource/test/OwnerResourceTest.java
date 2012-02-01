@@ -592,7 +592,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource or = new OwnerResource(oc, null,
             null, akc, null, null, i18n, null, null, null,
             null, null, null, null, null, null, null,
-            null, null, null, null, null, null, null, null);
+            null, null, null, null, null, null, null, null, null);
         or.createActivationKey("testOwner", ak);
     }
 }

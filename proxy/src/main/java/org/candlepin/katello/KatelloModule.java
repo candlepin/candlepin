@@ -28,6 +28,7 @@ public class KatelloModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(UserServiceAdapter.class).to(KatelloUserServiceAdapter.class);
+
     }
 
 }

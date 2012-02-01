@@ -126,6 +126,26 @@ public class ProductImporterTest {
         assertEquals(new Long(1000), c.getMetadataExpire());
     }
 
+    @Test
+    public void testExistingProductContentAdded() throws Exception {
+        Product oldProduct = TestUtil.createProduct("fake id", "fake name");
+        Product newProduct = TestUtil.createProduct("fake id", "fake name");
+
+        addContentTo(newProduct);
+        Content c = newProduct.getProductContent().iterator().next().getContent();
+
+        when(productCuratorMock.lookupById(oldProduct.getId())).thenReturn(oldProduct);
+
+        Set<Product> storeThese = new HashSet<Product>();
+        storeThese.add(newProduct);
+
+        importer.store(storeThese);
+
+        verify(productCuratorMock).createOrUpdate(newProduct);
+        verify(contentCuratorMock).createOrUpdate(c);
+    }
+
+
     // Returns the Content object added
     private void addContentTo(Product p) {
         Content c = new Content("name", "100130", "label", "type",

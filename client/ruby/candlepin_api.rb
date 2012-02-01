@@ -67,7 +67,8 @@ class Candlepin
 
   # TODO: need to switch to a params hash, getting to be too many arguments.
   def register(name, type=:system, uuid=nil, facts={}, username=nil,
-              owner_key=nil, activation_keys=[], installedProducts=[])
+              owner_key=nil, activation_keys=[], installedProducts=[],
+              environment=nil)
     consumer = {
       :type => {:label => type},
       :name => name,
@@ -77,8 +78,12 @@ class Candlepin
 
     consumer[:uuid] = uuid if not uuid.nil?
 
-    path = get_path("consumers") + "?"
-    path = path + "owner=#{owner_key}&" if not owner_key.nil?
+    if environment.nil?
+      path = get_path("consumers") + "?"
+      path = path + "owner=#{owner_key}&" if not owner_key.nil?
+    else
+      path = "/environments/#{environment}/consumers?"
+    end
     path += "username=#{username}&" if username
     path += "activation_keys=" + activation_keys.join(",") if activation_keys.length > 0
     @consumer = post(path, consumer)
@@ -377,12 +382,43 @@ class Candlepin
     get("/content/#{content_id}")
   end
 
+  def delete_content(content_id)
+    delete("/content/#{content_id}")
+  end
+
   def add_content_to_product(product_id, content_id, enabled=true)
     post("/products/#{product_id}/content/#{content_id}?enabled=#{enabled}")
   end
 
   def remove_content_from_product(product_id, content_id)
     delete("/products/#{product_id}/content/#{content_id}")
+  end
+
+  # Promote content to a particular environment.
+  #
+  # The promotions list should contain hashes like:
+  # {
+  #   :contentId => contentId,
+  #   :enabled => enabled,
+  # }
+  #
+  # Skip the enabled field entirely if you would prefer to just use the default
+  # enabled flag from the content.
+  def promote_content(env_id, content_promotions)
+    url = "/environments/#{env_id}/content"
+    post(url, content_promotions)
+  end
+
+  # Demomote content from a particular environment.
+  #
+  # Pass the actual content IDs here, rather than the ID assigned to the
+  # EnvironmentContent object.
+  def demote_content(env_id, content_ids)
+    url = "/environments/#{env_id}/content?"
+    content_ids.each do |cid|
+      url << "content=#{cid}&"
+    end
+    delete(url)
   end
 
   def create_product(id, name, params={}, dependentProductIds=[])
@@ -559,6 +595,29 @@ class Candlepin
 
   def get_activation_key(key_id)
     return get("/activation_keys/#{key_id}")
+  end
+
+  def create_environment(owner_key, env_id, env_name, description=nil)
+    env = {
+      :id => env_id,
+      :name => env_name,
+      :description => description,
+    }
+    return post("/owners/#{owner_key}/environments", env)
+  end
+
+  def list_environments(owner_key, env_name=nil)
+    path = "/owners/#{owner_key}/environments"
+    path << "?name=#{env_name}&" if env_name
+    return get(path)
+  end
+
+  def get_environment(env_id)
+    return get("/environments/#{env_id}")
+  end
+
+  def delete_environment(env_id)
+    return delete("/environments/#{env_id}")
   end
 
   def update_activation_key(key)

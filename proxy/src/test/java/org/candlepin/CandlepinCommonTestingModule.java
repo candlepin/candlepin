@@ -23,7 +23,6 @@ import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.guice.CandlepinModule;
 import org.candlepin.guice.I18nProvider;
-import org.candlepin.guice.JPAInitializer;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.guice.ScriptEngineProvider;
 import org.candlepin.guice.TestPrincipalProvider;
@@ -43,6 +42,7 @@ import org.candlepin.policy.js.pool.JsPoolRules;
 import org.candlepin.resource.ActivationKeyResource;
 import org.candlepin.resource.ConsumerResource;
 import org.candlepin.resource.EntitlementResource;
+import org.candlepin.resource.EnvironmentResource;
 import org.candlepin.resource.OwnerResource;
 import org.candlepin.resource.PoolResource;
 import org.candlepin.resource.ProductResource;
@@ -84,7 +84,6 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
     @Override
     public void configure() {
 
-        bind(JPAInitializer.class).asEagerSingleton();
         bindConstant().annotatedWith(JpaUnit.class).to("default");
 
         bind(X509ExtensionUtil.class);
@@ -94,6 +93,7 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
         bind(PoolResource.class);
         bind(EntitlementResource.class);
         bind(OwnerResource.class);
+        bind(EnvironmentResource.class);
         bind(SubscriptionResource.class);
         bind(ActivationKeyResource.class);
         bind(ProductServiceAdapter.class)

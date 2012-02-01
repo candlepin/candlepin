@@ -47,7 +47,7 @@ describe 'Hypervisor Resource' do
     check_hypervisor_consumer(consumer, @expected_host, updated_guest_ids)
   end
 
-  it 'should revoke guest entitlements when guest no longer registered' do
+  it 'should not revoke guest entitlements when guest no longer registered' do
     guest_pool = find_guest_virt_pool(@guest1_client, @guest1.uuid)
 
     @guest1_client.consume_pool(guest_pool.id)
@@ -59,8 +59,8 @@ describe 'Hypervisor Resource' do
     results.created.size.should == 0
     results.updated.size.should == 1
 
-    # Entitlement should be gone:
-    @guest1_client.list_entitlements.length.should == 0
+    # Entitlement should not be gone:
+    @guest1_client.list_entitlements.length.should == 1
   end
 
   it 'should revoke host entitlements when guestId list is empty' do

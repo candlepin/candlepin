@@ -22,7 +22,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
-import org.candlepin.pinsetter.tasks.RegenEntitlementCertsJob;
+import org.candlepin.pinsetter.tasks.RegenProductEntitlementCertsJob;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.util.Util;
 
@@ -176,9 +176,9 @@ public class EntitlementResource {
             @PathParam("product_id") String productId) {
         prodAdapter.purgeCache();
         JobDetail detail = new JobDetail("regen_entitlement_cert_of_prod" +
-            Util.generateUUID(), RegenEntitlementCertsJob.class);
+            Util.generateUUID(), RegenProductEntitlementCertsJob.class);
         JobDataMap map = new JobDataMap();
-        map.put(RegenEntitlementCertsJob.PROD_ID, productId);
+        map.put(RegenProductEntitlementCertsJob.PROD_ID, productId);
         detail.setJobDataMap(map);
         return detail;
     }

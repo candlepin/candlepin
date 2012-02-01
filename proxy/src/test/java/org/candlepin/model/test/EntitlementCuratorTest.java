@@ -26,6 +26,7 @@ import java.util.Set;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.Environment;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
@@ -46,6 +47,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     private EntitlementCertificate secondCertificate;
     private Owner owner;
     private Consumer consumer;
+    private Environment environment;
     private Calendar cal;
     private Date overlappingDate;
     private Date futureDate;
@@ -61,7 +63,11 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         owner = createOwner();
         ownerCurator.create(owner);
 
+        environment = new Environment("env1", "Env 1", owner);
+        envCurator.create(environment);
+
         consumer = createConsumer(owner);
+        consumer.setEnvironment(environment);
         consumerCurator.create(consumer);
 
         Product product = TestUtil.createProduct();
@@ -294,6 +300,13 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     public void listForConsumerOnDate() {
         List<Entitlement> ents = entitlementCurator.listByConsumerAndDate(
             consumer, createDate(2015, 1, 1));
+        assertEquals(2, ents.size());
+    }
+
+    @Test
+    public void listByEnvironment() {
+        List<Entitlement> ents = entitlementCurator.listByEnvironment(
+            environment);
         assertEquals(2, ents.size());
     }
 

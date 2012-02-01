@@ -14,29 +14,40 @@
  */
 package org.candlepin.pinsetter.tasks;
 
+import java.util.Set;
+
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
 import com.google.inject.Inject;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.model.Environment;
 
 /**
- * The Class RegenEntitlementCertsJob.
+ * RegenEnvEntitlementCertsJob
+ *
+ * Regenerates entitlements within an environment which are affected by the
+ * promotion/demotion of the given content sets.
  */
-public class RegenEntitlementCertsJob implements Job {
+public class RegenEnvEntitlementCertsJob implements Job {
 
     private PoolManager poolManager;
-    public static final String PROD_ID = "product_id";
+    public static final String ENV = "env_id";
+    public static final String CONTENT = "content_ids";
+
     @Inject
-    public RegenEntitlementCertsJob(PoolManager poolManager) {
+    public RegenEnvEntitlementCertsJob(PoolManager poolManager) {
         this.poolManager = poolManager;
     }
 
     @Override
     public void execute(JobExecutionContext arg0) throws JobExecutionException {
-        String prodId = arg0.getJobDetail().getJobDataMap().getString(
-            "product_id");
-        this.poolManager.regenerateCertificatesOf(prodId);
+        Environment env = (Environment) arg0.getJobDetail().getJobDataMap().get(
+            ENV);
+        Set<String> contentIds = (Set<String>)
+            arg0.getJobDetail().getJobDataMap().get(CONTENT);
+
+        this.poolManager.regenerateCertificatesOf(env, contentIds);
     }
 }

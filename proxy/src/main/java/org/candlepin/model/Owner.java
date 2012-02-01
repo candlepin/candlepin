@@ -70,6 +70,9 @@ public class Owner extends AbstractHibernateObject implements Serializable,
     @OneToMany(mappedBy = "owner", targetEntity = ActivationKey.class)
     private Set<ActivationKey> activationKeys;
 
+    @OneToMany(mappedBy = "owner", targetEntity = Environment.class)
+    private Set<Environment> environments;
+
     // EntitlementPool is the owning side of this relationship.
     @OneToMany(mappedBy = "owner", targetEntity = Pool.class)
     private Set<Pool> pools;
@@ -87,6 +90,7 @@ public class Owner extends AbstractHibernateObject implements Serializable,
     public Owner() {
         consumers = new HashSet<Consumer>();
         pools = new HashSet<Pool>();
+        environments = new HashSet<Environment>();
     }
 
     /**
@@ -96,11 +100,13 @@ public class Owner extends AbstractHibernateObject implements Serializable,
      * @param displayName Owner's name - suitable for UI
      */
     public Owner(String key, String displayName) {
+
         this.key = key;
         this.displayName = displayName;
 
         consumers = new HashSet<Consumer>();
         pools = new HashSet<Pool>();
+        environments = new HashSet<Environment>();
     }
 
     /**
@@ -329,5 +335,14 @@ public class Owner extends AbstractHibernateObject implements Serializable,
      */
     public void setActivationKeys(Set<ActivationKey> activationKeys) {
         this.activationKeys = activationKeys;
+    }
+
+    @XmlTransient
+    public Set<Environment> getEnvironments() {
+        return environments;
+    }
+
+    public void setEnvironments(Set<Environment> environments) {
+        this.environments = environments;
     }
 }

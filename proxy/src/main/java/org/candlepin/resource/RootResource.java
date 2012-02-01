@@ -22,6 +22,7 @@ import com.google.inject.Inject;
 
 import org.apache.log4j.Logger;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -32,6 +33,8 @@ import javax.ws.rs.core.MediaType;
 
 
 import org.candlepin.auth.interceptor.SecurityHole;
+import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
 
 /**
  * A root resource, responsible for returning client a struct of links to the
@@ -43,6 +46,7 @@ public class RootResource {
 
     private static Logger log = Logger.getLogger(RootResource.class);
     public static final List<Class> RESOURCE_CLASSES;
+    private Config config;
     static {
         RESOURCE_CLASSES = new LinkedList<Class>();
         RESOURCE_CLASSES.add(AdminResource.class);
@@ -67,10 +71,12 @@ public class RootResource {
         RESOURCE_CLASSES.add(RoleResource.class);
         RESOURCE_CLASSES.add(MigrationResource.class);
         RESOURCE_CLASSES.add(HypervisorResource.class);
+        RESOURCE_CLASSES.add(EnvironmentResource.class);
     }
 
     @Inject
-    public RootResource() {
+    public RootResource(Config config) {
+        this.config = config;
     }
 
     /**
@@ -81,6 +87,11 @@ public class RootResource {
     @Produces(MediaType.APPLICATION_JSON)
     @SecurityHole(noAuth = true)
     public List<Link> getRootResources() {
+
+        // Hidden resources will be omitted from the supported list we send to the clients:
+        List<String> hideResources = Arrays.asList(config.getString(
+            ConfigProperties.HIDDEN_RESOURCES).split(" "));
+
         List<Link> links = new LinkedList<Link>();
         for (Class c : RESOURCE_CLASSES) {
             Path a = (Path) c.getAnnotation(Path.class);
@@ -90,7 +101,14 @@ public class RootResource {
             if (rel.charAt(0) == '/') {
                 rel = rel.substring(1);
             }
-            links.add(new Link(rel, href));
+
+            if (!hideResources.contains(rel)) {
+                links.add(new Link(rel, href));
+            }
+            else {
+                log.debug("Hiding supported resource: " + rel);
+            }
+
         }
         return links;
     }

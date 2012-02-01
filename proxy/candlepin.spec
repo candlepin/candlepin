@@ -11,7 +11,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.5.11
+Version: 0.5.14
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -199,6 +199,26 @@ fi
 
 
 %changelog
+* Wed Jan 25 2012 Chris Duryee (beav) <cduryee@redhat.com>
+- 768872: do not autosubscribe guests that are migrated (cduryee@redhat.com)
+
+* Wed Jan 25 2012 Chris Duryee (beav) <cduryee@redhat.com>
+- checkstyle: loads of minor fixes (jesusr@redhat.com)
+- 768872: autosubscribe VMs when they migrate to a new host
+  (cduryee@redhat.com)
+* Tue Jan 24 2012 jesus m. rodriguez <jesusr@redhat.com> 0.5.12-1
+- Optimize RulesCurator db updated time lookup (jbowes@redhat.com)
+- 750307: Prevent duplicate pools via unique constraints (jbowes@redhat.com)
+- Revert "750307: duplicate pools possible" (jbowes@redhat.com)
+- Wrap JobCurator operations in units of work (jbowes@redhat.com)
+- remove unused pinsetter chained listener (jbowes@redhat.com)
+- Update productId on refreshPools if changed (jbowes@redhat.com)
+- fix NaN error in rules.js (jesusr@redhat.com)
+- Remove extra logic from the update checkin time path. (bkearney@redhat.com)
+- 782561: Better error messages during manifest import. (dgoodwin@redhat.com)
+- 772935: Add current time UTC to the status call (bkearney@redhat.com)
+- Make the cache of serializers global. (bkearney@redhat.com)
+
 * Tue Jan 17 2012 jesus m. rodriguez <jesusr@redhat.com> 0.5.11-1
 - rebuilding to new branch
 

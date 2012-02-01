@@ -126,7 +126,7 @@ public class HypervisorResourceTest {
             }
         });
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class)))
-        .thenReturn(new ComplianceStatus(new Date()));
+            .thenReturn(new ComplianceStatus(new Date()));
     }
 
     @Test

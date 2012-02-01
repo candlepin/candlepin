@@ -24,11 +24,17 @@ describe 'Standalone Virt-Limit Subscriptions' do
         cert=@host2['idCert']['cert'],
         key=@host2['idCert']['key'])
 
+    pools = @host1_client.list_pools :consumer => @host1['uuid']
     @host_ent = @host1_client.consume_pool(@virt_limit_pool['id'])[0]
-
     # After binding the host should see no pools available:
     pools = @host1_client.list_pools :consumer => @host1['uuid']
-    pools.should be_empty
+    # one should remain
+    pools.length.should == 1
+
+    pools = @host2_client.list_pools :consumer => @host2['uuid']
+    host2_ent = @host2_client.consume_pool(@virt_limit_pool['id'])[0]
+    # After binding the host should see no pools available:
+    pools = @host2_client.list_pools :consumer => @host2['uuid']
 
     # Link the host and the guest:
     @host1_client.update_consumer({:guestIds => [{'guestId' => @uuid1}]})
@@ -37,7 +43,8 @@ describe 'Standalone Virt-Limit Subscriptions' do
 
     # Find the host-restricted pool:
     pools = @guest1_client.list_pools :consumer => @guest1['uuid']
-    pools.should have(2).things
+
+    pools.should have(3).things
     @guest_pool = pools.find_all { |i| !i['sourceEntitlement'].nil? }[0]
 
   end
@@ -61,7 +68,7 @@ describe 'Standalone Virt-Limit Subscriptions' do
   it 'should list host restricted pool only for its guests' do
     # Other guest shouldn't be able to see the virt sub-pool:
     pools = @guest2_client.list_pools :consumer => @guest2['uuid']
-    pools.should have(1).things
+    pools.should have(2).things
   end
 
   it 'should revoke guest entitlements when host unbinds' do
@@ -74,7 +81,7 @@ describe 'Standalone Virt-Limit Subscriptions' do
     @guest1_client.list_entitlements.length.should == 0
   end
 
-  it 'should revoke guest entitlements when host stops reporting guest ID' do
+  it 'should not revoke guest entitlements when host stops reporting guest ID' do
     @guest1_client.consume_pool(@guest_pool['id'])
     @guest1_client.list_entitlements.length.should == 1
 
@@ -82,25 +89,34 @@ describe 'Standalone Virt-Limit Subscriptions' do
     @host1_client.update_consumer({:guestIds => []})
 
     # Entitlement should be gone:
-    @guest1_client.list_entitlements.length.should == 0
+    @guest1_client.list_entitlements.length.should == 1
   end
 
-  it 'should revoke guest entitlements when guest is added by another host' do
+  it 'should not obtain a new entitlement when guest is migrated to another host' do
+
+    @guest1_client.update_consumer({:installedProducts => @installed_product_list})
     @guest1_client.consume_pool(@guest_pool['id'])
+    original_ent = @guest1_client.list_entitlements.first.id
     @guest1_client.list_entitlements.length.should == 1
 
     # Add guest 2 to host 1 so we can make sure that only guest1's
     # entitlements are revoked.
-    @host1_client.update_consumer({:guestIds => [{'guestId' => @uuid2}]});
+    @host1_client.update_consumer({:guestIds => [{'guestId' => @uuid2}, {'guestId' => @uuid1}]});
+
     @guest2_client.consume_pool(@guest_pool['id'])
     @guest2_client.list_entitlements.length.should == 1
+
+
 
     # Host 2 reports the new guest before Host 1 reports it removed.
     @host2_client.update_consumer({:guestIds => [{'guestId' => @uuid1}]})
 
-    # Entitlement should be removed from guest 1 as host is changed.
-    # Note: This does not necessarily mean that host 1 will never report it again.
+    # Entitlement should not be on the guest anymore (see 768872 comment #41)
     @guest1_client.list_entitlements.length.should == 0
+    # make sure we have a different entitlement than we started with
+    new_ent = @guest1_client.list_entitlements.first.id
+    new_ent.should_not == original_ent
+
 
     # Entitlements should have remained the same for guest 2 and its host
     # is the same.

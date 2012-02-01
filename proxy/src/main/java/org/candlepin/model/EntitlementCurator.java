@@ -74,6 +74,12 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         return listByCriteria(query);
     }
 
+    public List<Entitlement> listByEnvironment(Environment environment) {
+        Criteria criteria = currentSession().createCriteria(Entitlement.class)
+            .createCriteria("consumer").add(Restrictions.eq("environment", environment));
+        return criteria.list();
+    }
+
     /**
      * List entitlements for a consumer which are valid for a specific date.
      *

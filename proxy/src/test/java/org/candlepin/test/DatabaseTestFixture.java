@@ -14,6 +14,8 @@
  */
 package org.candlepin.test;
 
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
@@ -44,6 +46,8 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.EnvironmentContentCurator;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.EventCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
@@ -70,6 +74,8 @@ import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.util.DateSource;
+import org.hibernate.ejb.HibernateEntityManagerImplementor;
+import org.junit.After;
 import org.junit.Before;
 import org.xnap.commons.i18n.I18n;
 
@@ -77,6 +83,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
+import com.wideplay.warp.persist.PersistenceFilter;
 import com.wideplay.warp.persist.PersistenceService;
 import com.wideplay.warp.persist.UnitOfWork;
 import com.wideplay.warp.persist.WorkManager;
@@ -104,6 +111,7 @@ public class DatabaseTestFixture {
     protected PoolCurator poolCurator;
     protected DateSourceForTesting dateSource;
     protected EntitlementCurator entitlementCurator;
+    protected EnvironmentContentCurator envContentCurator;
     protected ProductAttributeCurator attributeCurator;
     protected RulesCurator rulesCurator;
     protected EventCurator eventCurator;
@@ -116,6 +124,7 @@ public class DatabaseTestFixture {
     protected CertificateSerialCurator certSerialCurator;
     protected OwnerPermissionCurator permissionCurator;
     protected RoleCurator roleCurator;
+    protected EnvironmentCurator envCurator;
     protected I18n i18n;
     protected TestingInterceptor securityInterceptor;
     protected EntitlementCertServiceAdapter entitlementCertService;
@@ -123,6 +132,8 @@ public class DatabaseTestFixture {
     protected StatisticCurator statisticCurator;
     protected UniqueIdGenerator uniqueIdGenerator;
     protected UeberCertificateGenerator ueberCertGenerator;
+
+    private PersistenceService persistanceService;
 
     @Before
     public void init() {
@@ -141,6 +152,9 @@ public class DatabaseTestFixture {
                 PersistenceService.usingJpa().across(UnitOfWork.REQUEST)
                     .buildModule());
         }
+
+        persistanceService = injector.getInstance(PersistenceService.class);
+        persistanceService.start();
 
         injector.getInstance(EntityManagerFactory.class);
         emf = injector.getProvider(EntityManagerFactory.class).get();
@@ -165,6 +179,8 @@ public class DatabaseTestFixture {
         subCurator = injector.getInstance(SubscriptionCurator.class);
         activationKeyCurator = injector.getInstance(ActivationKeyCurator.class);
         contentCurator = injector.getInstance(ContentCurator.class);
+        envCurator = injector.getInstance(EnvironmentCurator.class);
+        envContentCurator = injector.getInstance(EnvironmentContentCurator.class);
         unitOfWork = injector.getInstance(WorkManager.class);
 
         productAdapter = injector.getInstance(ProductServiceAdapter.class);
@@ -186,6 +202,32 @@ public class DatabaseTestFixture {
         dateSource = (DateSourceForTesting) injector
             .getInstance(DateSource.class);
         dateSource.currentDate(TestDateUtil.date(2010, 1, 1));
+
+
+        unitOfWork.beginWork();
+    }
+
+    @After
+    public void shutdown() {
+        unitOfWork.endWork();
+
+        injector.getInstance(PersistenceFilter.class).destroy();
+
+        HibernateEntityManagerImplementor hem =
+            (HibernateEntityManagerImplementor) entityManager();
+        Connection connection = hem.getSession().connection();
+        try {
+            connection.createStatement().execute("SHUTDOWN");
+        }
+        catch (SQLException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        entityManager().close();
+        emf.close();
+
+        persistanceService.shutdown();
     }
 
     protected Module getGuiceOverrideModule() {
