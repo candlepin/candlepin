@@ -15,6 +15,7 @@
 package org.candlepin.resource.test;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -44,10 +45,13 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerPermission;
 import org.candlepin.model.User;
+import org.candlepin.policy.js.compliance.ComplianceRules;
+import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.resource.ConsumerResource;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -60,7 +64,6 @@ import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
 import edu.emory.mathcs.backport.java.util.Collections;
-
 /**
  *
  */
@@ -77,6 +80,7 @@ public class ConsumerResourceCreationTest {
     @Mock private OwnerCurator ownerCurator;
     @Mock private EventSink sink;
     @Mock private ActivationKeyCurator activationKeyCurator;
+    @Mock private ComplianceRules complianceRules;
     private I18n i18n;
 
     private ConsumerResource resource;
@@ -92,7 +96,7 @@ public class ConsumerResourceCreationTest {
             this.consumerTypeCurator, null, this.subscriptionService, null,
             this.idCertService, null, this.i18n, this.sink, null, null, null,
             this.userService, null, null, null, null, this.ownerCurator,
-            this.activationKeyCurator, null, null);
+            this.activationKeyCurator, null, this.complianceRules);
 
         this.system = new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
 
@@ -114,6 +118,8 @@ public class ConsumerResourceCreationTest {
         when(idCertService.generateIdentityCert(any(Consumer.class)))
                 .thenReturn(new IdentityCertificate());
         when(ownerCurator.lookupByKey(owner.getKey())).thenReturn(owner);
+        when(complianceRules.getStatus(any(Consumer.class), any(Date.class)))
+                .thenReturn(new ComplianceStatus(new Date()));
     }
 
     private Consumer createConsumer(String consumerName) {
@@ -272,6 +278,15 @@ public class ConsumerResourceCreationTest {
         consumer.setType(system);
         consumer.setName("consumername");
         resource.create(consumer, p, USER, owner.getKey(), "");
+    }
 
+    @Test
+    public void setStatusOnCreate() {
+        Principal p = new TrustedUserPrincipal("anyuser");
+        Consumer consumer = new Consumer();
+        consumer.setType(system);
+        consumer.setName("consumername");
+        resource.create(consumer, p, USER, owner.getKey(), "");
+        verify(complianceRules).getStatus(eq(consumer), any(Date.class));
     }
 }

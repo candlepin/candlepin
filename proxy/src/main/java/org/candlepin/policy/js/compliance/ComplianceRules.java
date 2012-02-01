@@ -21,6 +21,7 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.policy.js.JsRules;
@@ -37,13 +38,17 @@ import com.google.inject.Inject;
 public class ComplianceRules {
 
     private EntitlementCurator entCurator;
+    private ConsumerCurator consumerCurator;
     private JsRules jsRules;
     private static Logger log = Logger.getLogger(ComplianceRules.class);
 
     @Inject
-    public ComplianceRules(JsRules jsRules, EntitlementCurator entCurator) {
+    public ComplianceRules(JsRules jsRules, EntitlementCurator entCurator,
+        ConsumerCurator consumerCurator) {
         this.entCurator = entCurator;
+        this.consumerCurator = consumerCurator;
         this.jsRules = jsRules;
+
         jsRules.init("compliance_name_space");
     }
 
@@ -75,6 +80,7 @@ public class ComplianceRules {
         catch (RhinoException e) {
             throw new RuleExecutionException(e);
         }
+
         return status;
     }
 

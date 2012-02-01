@@ -325,21 +325,7 @@ public class ConsumerResource {
         consumer.setCanActivate(subAdapter.canActivateSubscription(consumer));
         consumer.setAutoheal(true); // this is the default
 
-        if (log.isDebugEnabled()) {
-            log.debug("Got consumerTypeLabel of: " + type.getLabel());
-            log.debug("got facts: \n" + consumer.getFacts());
-
-            if (consumer.getFacts() != null) {
-                for (String key : consumer.getFacts().keySet()) {
-                    log.debug("   " + key + " = " + consumer.getFact(key));
-                }
-            }
-
-            log.debug("Activation keys:");
-            for (ActivationKey activationKey : keys) {
-                log.debug("   " + activationKey.getName());
-            }
-        }
+        logNewConsumerDebugInfo(consumer, keys, type);
 
         if (consumer.getInstalledProducts() != null) {
             for (ConsumerInstalledProduct p : consumer.getInstalledProducts()) {
@@ -375,6 +361,11 @@ public class ConsumerResource {
                 }
             }
 
+            ComplianceStatus compliance = complianceRules.getStatus(consumer,
+                Calendar.getInstance().getTime());
+            consumer.setEntitlementStatus(compliance.getStatus());
+            consumerCurator.update(consumer);
+
             return consumer;
         }
         catch (CandlepinException ce) {
@@ -386,6 +377,25 @@ public class ConsumerResource {
             e.printStackTrace();
             throw new BadRequestException(i18n.tr(
                 "Problem creating consumer {0}", consumer));
+        }
+    }
+
+    private void logNewConsumerDebugInfo(Consumer consumer,
+        List<ActivationKey> keys, ConsumerType type) {
+        if (log.isDebugEnabled()) {
+            log.debug("Got consumerTypeLabel of: " + type.getLabel());
+            log.debug("got facts: \n" + consumer.getFacts());
+
+            if (consumer.getFacts() != null) {
+                for (String key : consumer.getFacts().keySet()) {
+                    log.debug("   " + key + " = " + consumer.getFact(key));
+                }
+            }
+
+            log.debug("Activation keys:");
+            for (ActivationKey activationKey : keys) {
+                log.debug("   " + activationKey.getName());
+            }
         }
     }
 
@@ -564,6 +574,11 @@ public class ConsumerResource {
 
         if (changesMade) {
             log.info("Consumer updated.");
+
+            ComplianceStatus compliance = complianceRules.getStatus(toUpdate,
+                Calendar.getInstance().getTime());
+            toUpdate.setEntitlementStatus(compliance.getStatus());
+
             // Set the updated date here b/c @PreUpdate will not get fired
             // since only the facts table will receive the update.
             toUpdate.setUpdated(new Date());
@@ -1419,10 +1434,18 @@ public class ConsumerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{consumer_uuid}/compliance")
+    @Transactional
     public ComplianceStatus getComplianceStatus(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid) {
         Consumer consumer = verifyAndLookupConsumer(uuid);
-        return this.complianceRules.getStatus(consumer, Calendar.getInstance().getTime());
+        ComplianceStatus status = this.complianceRules.getStatus(consumer,
+            Calendar.getInstance().getTime());
+
+        // NOTE: If this method ever changes to accept an optional date, do not update this
+        // field on the consumer if the date is specified:
+        consumer.setEntitlementStatus(status.getStatus());
+
+        return status;
     }
 
     private void addDataToInstalledProducts(Consumer consumer) {

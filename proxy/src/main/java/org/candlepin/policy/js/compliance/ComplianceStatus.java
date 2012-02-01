@@ -39,7 +39,6 @@ public class ComplianceStatus {
     private Map<String, Set<Entitlement>> compliantProducts;
     private Map<String, Set<Entitlement>> partiallyCompliantProducts; // stacked
     private Map<String, Set<Entitlement>> partialStacks;
-    private String status;
 
     public ComplianceStatus(Date date) {
         this.date = date;

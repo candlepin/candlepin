@@ -24,6 +24,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
@@ -40,6 +41,8 @@ import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.GuestId;
+import org.candlepin.policy.js.compliance.ComplianceRules;
+import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.resource.ConsumerResource;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -65,6 +68,7 @@ public class ConsumerResourceUpdateTest {
     @Mock private EventFactory eventFactory;
     @Mock private ActivationKeyCurator activationKeyCurator;
     @Mock private PoolManager poolManager;
+    @Mock private ComplianceRules complianceRules;
     @Mock private Entitler entitler;
     private I18n i18n;
 
@@ -78,7 +82,10 @@ public class ConsumerResourceUpdateTest {
             this.consumerTypeCurator, null, this.subscriptionService, null,
             this.idCertService, null, this.i18n, this.sink, this.eventFactory, null, null,
             this.userService, null, poolManager, null, null, null,
-            this.activationKeyCurator, this.entitler, null);
+            this.activationKeyCurator, this.entitler, this.complianceRules);
+
+        when(complianceRules.getStatus(any(Consumer.class), any(Date.class)))
+            .thenReturn(new ComplianceStatus(new Date()));
     }
 
     @Test
@@ -111,6 +118,29 @@ public class ConsumerResourceUpdateTest {
 
         this.resource.updateConsumer(consumer.getUuid(), incoming);
         verify(sink).sendEvent((Event) any());
+    }
+
+    @Test
+    public void setStatusOnUpdate() throws Exception {
+        ConsumerInstalledProduct a = new ConsumerInstalledProduct("a", "Product A");
+        ConsumerInstalledProduct b = new ConsumerInstalledProduct("b", "Product B");
+        ConsumerInstalledProduct c = new ConsumerInstalledProduct("c", "Product C");
+
+        Consumer consumer = new Consumer();
+        String uuid = "FAKEUUID";
+        consumer.setUuid(uuid);
+        consumer.addInstalledProduct(a);
+        consumer.addInstalledProduct(b);
+
+        when(this.consumerCurator.findByUuid(uuid)).thenReturn(consumer);
+
+        Consumer incoming = new Consumer();
+        incoming.addInstalledProduct(b);
+        incoming.addInstalledProduct(c);
+
+        this.resource.updateConsumer(consumer.getUuid(), incoming);
+        verify(sink).sendEvent((Event) any());
+        verify(complianceRules).getStatus(eq(consumer), any(Date.class));
     }
 
     @Test
