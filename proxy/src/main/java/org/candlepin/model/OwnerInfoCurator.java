@@ -206,8 +206,9 @@ public class OwnerInfoCurator {
     }
 
     private void setConsumerCountsByComplianceStatus(Owner owner, OwnerInfo info) {
-        String queryStr = "select c.status, count(c) from Consumer c where " +
-            "c.owner = :owner and c.status is not null group by c.status";
+        String queryStr = "select c.entitlementStatus, count(c) from Consumer c where " +
+            "c.owner = :owner and c.entitlementStatus is not null group by " +
+            "c.entitlementStatus";
         Query consumerQuery = currentSession().createQuery(queryStr)
             .setEntity("owner", owner);
         Iterator iter = consumerQuery.iterate();

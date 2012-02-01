@@ -84,7 +84,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     private String username;
 
     @Column(length = 32)
-    private String status;
+    private String entitlementStatus;
 
     /*
      * Because this object is used both as a Hibernate object, as well as a DTO to be
@@ -493,12 +493,12 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         guestIds.add(guestId);
     }
 
-    public String getStatus() {
-        return status;
+    public String getEntitlementStatus() {
+        return entitlementStatus;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
+    public void setEntitlementStatus(String status) {
+        this.entitlementStatus = status;
     }
 
     public Environment getEnvironment() {

@@ -363,7 +363,7 @@ public class ConsumerResource {
 
             ComplianceStatus compliance = complianceRules.getStatus(consumer,
                 Calendar.getInstance().getTime());
-            consumer.setStatus(compliance.getStatus());
+            consumer.setEntitlementStatus(compliance.getStatus());
             consumerCurator.update(consumer);
 
             return consumer;
@@ -577,7 +577,7 @@ public class ConsumerResource {
 
             ComplianceStatus compliance = complianceRules.getStatus(toUpdate,
                 Calendar.getInstance().getTime());
-            toUpdate.setStatus(compliance.getStatus());
+            toUpdate.setEntitlementStatus(compliance.getStatus());
 
             // Set the updated date here b/c @PreUpdate will not get fired
             // since only the facts table will receive the update.
@@ -1443,7 +1443,7 @@ public class ConsumerResource {
 
         // NOTE: If this method ever changes to accept an optional date, do not update this
         // field on the consumer if the date is specified:
-        consumer.setStatus(status.getStatus());
+        consumer.setEntitlementStatus(status.getStatus());
 
         return status;
     }

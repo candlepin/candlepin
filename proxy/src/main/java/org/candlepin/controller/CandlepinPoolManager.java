@@ -493,7 +493,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         // Check consumer's new compliance status and save:
         ComplianceStatus compliance = complianceRules.getStatus(consumer, new Date());
-        consumer.setStatus(compliance.getStatus());
+        consumer.setEntitlementStatus(compliance.getStatus());
 
         entitlementCurator.create(e);
         consumerCurator.update(consumer);
@@ -732,7 +732,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         // Check consumer's new compliance status and save:
         ComplianceStatus compliance = complianceRules.getStatus(consumer, new Date());
-        consumer.setStatus(compliance.getStatus());
+        consumer.setEntitlementStatus(compliance.getStatus());
         consumerCurator.update(consumer);
 
         sink.sendEvent(event);

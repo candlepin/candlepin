@@ -554,19 +554,19 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
     public void testConsumerCountsByEntitlementStatus() {
         ConsumerType type = consumerTypeCurator.lookupByLabel("system");
         Consumer consumer1 = new Consumer("test-consumer1", "test-user", owner, type);
-        consumer1.setStatus(ComplianceStatus.GREEN);
+        consumer1.setEntitlementStatus(ComplianceStatus.GREEN);
         consumerCurator.create(consumer1);
 
         Consumer consumer2 = new Consumer("test-consumer2", "test-user", owner, type);
-        consumer2.setStatus(ComplianceStatus.RED);
+        consumer2.setEntitlementStatus(ComplianceStatus.RED);
         consumerCurator.create(consumer2);
 
         Consumer consumer3 = new Consumer("test-consumer3", "test-user", owner, type);
-        consumer3.setStatus(ComplianceStatus.GREEN);
+        consumer3.setEntitlementStatus(ComplianceStatus.GREEN);
         consumerCurator.create(consumer3);
 
         Consumer consumer4 = new Consumer("test-consumer3", "test-user", owner, type);
-        consumer4.setStatus(ComplianceStatus.YELLOW);
+        consumer4.setEntitlementStatus(ComplianceStatus.YELLOW);
         consumerCurator.create(consumer4);
 
         OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);

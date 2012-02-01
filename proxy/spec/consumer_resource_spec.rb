@@ -19,20 +19,20 @@ describe 'Consumer Resource' do
   end
 
   it 'should set compliance status and update compliance status' do
-    @consumer1.get_consumer()['status'].should == "valid"
+    @consumer1.get_consumer()['entitlementStatus'].should == "valid"
     product1 = create_product(random_string('product'), random_string('product'))
     installed = [
         {'productId' => product1.id, 'productName' => product1.name}
     ]
     @consumer1.update_consumer({:installedProducts => installed})
-    @consumer1.get_consumer()['status'].should == "invalid"
+    @consumer1.get_consumer()['entitlementStatus'].should == "invalid"
 
     subs = @cp.create_subscription(@owner1.key, product1.id)
     @cp.refresh_pools(@owner1.key)
     pool = @consumer1.list_pools({:owner => @owner1['id']}).first
 
     @consumer1.consume_pool(pool.id).size.should == 1
-    @consumer1.get_consumer()['status'].should == "valid"
+    @consumer1.get_consumer()['entitlementStatus'].should == "valid"
   end
 
   it 'allows super admins to see all consumers' do
