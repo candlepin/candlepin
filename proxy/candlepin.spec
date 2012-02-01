@@ -11,7 +11,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.5.14
+Version: 0.5.15
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -199,6 +199,28 @@ fi
 
 
 %changelog
+* Wed Feb 01 2012 jesus m. rodriguez <jesusr@redhat.com> 0.5.15-1
+- Merge branch 'status' (dgoodwin@redhat.com)
+- 768872: do not remove entitlements when host reports zero guests (cduryee@redhat.com)
+- 741931: Make i18n provider as slim as possible (bkearney@redhat.com)
+- Bump max jvm mem to 2gig for testing (jbowes@redhat.com)
+- Clear up some database related memory leaks in our tests (jbowes@redhat.com)
+- Change API to demote multiple content sets from env. (dgoodwin@redhat.com)
+- Improve promotion ruby wrapper and spec test. (dgoodwin@redhat.com)
+- Allow promotion of multiple content sets at once. (dgoodwin@redhat.com)
+- Support environment descriptions. (dgoodwin@redhat.com)
+- Support lookup of environment by it's friendly name. (dgoodwin@redhat.com)
+- Test environment content filtering. (dgoodwin@redhat.com)
+- Respect overridden enabled setting on content. (dgoodwin@redhat.com)
+- Exclude non-promoted content during cert generation. (dgoodwin@redhat.com)
+- Support environment registration. (dgoodwin@redhat.com)
+- Add names for environments, needed by client. (dgoodwin@redhat.com)
+- Add config to hide supported resources. (dgoodwin@redhat.com)
+- Only expose environment REST calls in Katello module. (dgoodwin@redhat.com)
+- Add support for promoting content into an environment. (dgoodwin@redhat.com)
+- Add REST API for environment management. (dgoodwin@redhat.com)
+- Add Environment and curator classes. (dgoodwin@redhat.com)
+
 * Wed Jan 25 2012 Chris Duryee (beav) <cduryee@redhat.com>
 - 768872: do not autosubscribe guests that are migrated (cduryee@redhat.com)
 
