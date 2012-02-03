@@ -11,7 +11,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.5.15
+Version: 0.5.16
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -199,6 +199,11 @@ fi
 
 
 %changelog
+* Fri Feb 03 2012 jesus m. rodriguez <jesusr@redhat.com> 0.5.16-1
+- 786963: allow manifest imports to handle complex version numbers (jesusr@redhat.com)
+- 784905: Fix deletion of orgs with an ueber certificate. (dgoodwin@redhat.com)
+- Fix a migration bug with product attributes on pools. (dgoodwin@redhat.com)
+
 * Wed Feb 01 2012 jesus m. rodriguez <jesusr@redhat.com> 0.5.15-1
 - Merge branch 'status' (dgoodwin@redhat.com)
 - 768872: do not remove entitlements when host reports zero guests (cduryee@redhat.com)
