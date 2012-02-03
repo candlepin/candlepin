@@ -70,23 +70,21 @@ public class VersionUtil {
 
         return map;
     }
-    public static Version getVersion() {
-        return new Version(getVersionMap().get("version"));
-    }
 
     public static String getVersionString() {
         return getVersionMap().get("version");
     }
 
-    public static boolean getRulesVersionCompatibility(String v) {
+    public static boolean getRulesVersionCompatibility(String importVersion) {
         // if the import version is older than our version, the
         // rules are not compatible
-        Version importVersion = new Version(v);
-        Version myVersion = getVersion();
+        RpmVersionComparator rpmcmp = new RpmVersionComparator();
+        String myVersion = getVersionMap().get("version");
 
-        if (myVersion.compareTo(importVersion) == 1) {
+        if (rpmcmp.compare(myVersion, importVersion) == 1) {
             return false;
         }
+
         return true;
     }
 }
