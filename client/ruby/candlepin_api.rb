@@ -166,6 +166,11 @@ class Candlepin
     put("/owners/#{owner_key}", owner)
   end
 
+  def generate_ueber_cert(owner_key)
+    uri = "/owners/#{owner_key}/uebercert"
+    post uri
+  end
+
   def delete_owner(owner_key, revoke=true)
     uri = "/owners/#{owner_key}"
     uri << '?revoke=false' unless revoke

@@ -316,6 +316,9 @@ public class OwnerResource {
             log.info("Deleting pool: " + p);
             poolCurator.delete(p);
         }
+
+        cleanupUeberCert(owner);
+
         ExporterMetadata m = exportCurator.lookupByTypeAndOwner(
             ExporterMetadata.TYPE_PER_USER, owner);
         if (m != null) {
@@ -335,6 +338,26 @@ public class OwnerResource {
 
         log.info("Deleting owner: " + owner);
         ownerCurator.delete(owner);
+    }
+
+    /**
+     * The subscription and pool created when generating a uebercert do not appear
+     * in the normal list of pools/subscriptions for that owner, and so do not get
+     * cleaned up by the normal operations. Instead we must check if they exist and
+     * explicitly delete them.
+     *
+     * @param owner Owner to check for uebercert subscription and pool.
+     */
+    private void cleanupUeberCert(Owner owner) {
+        Subscription ueberSub = subscriptionCurator.findUeberSubscription(owner);
+        if (ueberSub != null) {
+            subscriptionCurator.delete(ueberSub);
+        }
+
+        Pool ueberPool = poolCurator.findUeberPool(owner);
+        if (ueberPool != null) {
+            poolCurator.delete(ueberPool);
+        }
     }
 
     /**
