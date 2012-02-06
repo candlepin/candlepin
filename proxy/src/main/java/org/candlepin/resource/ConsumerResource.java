@@ -14,6 +14,34 @@
  */
 package org.candlepin.resource;
 
+import java.io.File;
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
+import org.apache.log4j.Logger;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventAdapter;
 import org.candlepin.audit.EventFactory;
@@ -51,13 +79,13 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.User;
 import org.candlepin.pinsetter.tasks.EntitlerJob;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.consumer.ConsumerDeleteHelper;
 import org.candlepin.policy.js.consumer.ConsumerRules;
+import org.candlepin.resource.util.ConsumerInstalledProductEnricher;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
@@ -67,41 +95,12 @@ import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.sync.ExportCreationException;
 import org.candlepin.sync.Exporter;
 import org.candlepin.util.Util;
-
-import com.google.inject.Inject;
-import com.wideplay.warp.persist.Transactional;
-
-import org.apache.log4j.Logger;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
 
-import java.io.File;
-import java.io.IOException;
-import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import com.google.inject.Inject;
+import com.wideplay.warp.persist.Transactional;
 
 /**
  * API Gateway for Consumers
@@ -1455,79 +1454,15 @@ public class ConsumerResource {
         ComplianceStatus complianceStatus = complianceRules.getStatus(
                            consumer, Calendar.getInstance().getTime());
 
+        ConsumerInstalledProductEnricher enricher = new ConsumerInstalledProductEnricher(
+            consumer, complianceStatus, complianceRules);
+
         for (ConsumerInstalledProduct cip : consumer.getInstalledProducts()) {
             String prodId = cip.getProductId();
             Product prod = productAdapter.getProductById(prodId);
             if (prod != null) {
-                cip.setArch(prod.getAttributeValue("arch"));
-                cip.setVersion(prod.getAttributeValue("version"));
-                String status = "";
-                if (complianceStatus.getNonCompliantProducts().contains(prodId)) {
-                    status = "red";
-                }
-                else if (complianceStatus.getPartiallyCompliantProducts()
-                    .containsKey(prodId)) {
-                    status = "yellow";
-                }
-                else if (complianceStatus.getCompliantProducts().containsKey(
-                    prodId)) {
-                    status = "green";
-                }
-                cip.setStatus(status);
-                cip.setStartDate(getStartDate(consumer, prod));
-                cip.setEndDate(getEndDate(consumer, prod));
+                enricher.enrich(cip, prod);
             }
         }
-    }
-
-    /**
-     * This method uses the same algorithm for finding the start date as is
-     * currently in use in Subscription Manager. It is the earliest start
-     * date of the product's collection of entitlement certificates.
-     * @param consumer
-     * @param prod
-     * @return
-     */
-    private Date getStartDate(Consumer consumer, Product prod) {
-        Date start = null;
-        for (Entitlement ent : consumer.getEntitlements()) {
-            if (prod.getId().equals(ent.getPool().getProductId()) &&
-                (start == null || start.getTime() >= ent.getStartDate().getTime())) {
-                start = ent.getStartDate();
-            }
-            for (ProvidedProduct pp : ent.getPool().getProvidedProducts()) {
-                if (pp.getProductId().equals(prod.getId()) &&
-                    (start == null || start.getTime() >= ent.getStartDate().getTime())) {
-                    start = ent.getStartDate();
-                }
-            }
-        }
-        return start;
-    }
-
-    /**
-     * This method uses the same algorithm for finding the end date as is currently in use
-     *  in Subscription Manager. It is the latest end date of the product's collection of
-     *  entitlement certificates. It ignores date gaps in coverage, stacking, or multi-
-     *  entitlement considerations.
-     * @param consumer
-     * @param prod
-     * @return
-     */
-    private Date getEndDate(Consumer consumer, Product prod) {
-        Date end = null;
-        for (Entitlement ent : consumer.getEntitlements()) {
-            if (prod.getId().equals(ent.getPool().getProductId()) &&
-                (end == null || end.getTime() <= ent.getEndDate().getTime())) {
-                end = ent.getEndDate();
-            }
-            for (ProvidedProduct pp : ent.getPool().getProvidedProducts()) {
-                if (pp.getProductId().equals(prod.getId()) &&
-                    (end == null || end.getTime() <= ent.getEndDate().getTime())) {
-                    end = ent.getEndDate();
-                }
-            }
-        }
-        return end;
     }
 }

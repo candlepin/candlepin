@@ -25,7 +25,7 @@ function compliance_name_space() {
 }
 
 function unbind_name_space() {
-	return Unbind;
+    return Unbind;
 }
 
 /* Utility functions */
@@ -339,9 +339,9 @@ function comparePools(pool1, pool2) {
     else if (pool2.getAttribute("virt_only") == "true" && pool1.getAttribute("virt_only") != "true") {
         return false;
     }
-    
-    // If both virt_only, prefer one with host_requires, otherwise keep looking 
-    // for a reason to pick one or the other. We know that the host must match 
+
+    // If both virt_only, prefer one with host_requires, otherwise keep looking
+    // for a reason to pick one or the other. We know that the host must match
     // as pools are filtered before even being passed to select best pools.
     if (pool1.getAttribute("virt_only") == "true" && pool2.getAttribute("virt_only") == "true") {
         if (pool1.getAttribute("requires_host") != null && pool2.getAttribute("requires_host") == null) {
@@ -747,7 +747,7 @@ var Pool = {
             if ('unlimited'.equals(virt_limit)) {
                 var derivedPool = helper.createPool(sub, sub.getProduct().getId(),
                                                     'unlimited', virt_attributes);
-	        derivedPool.setSubscriptionSubKey("derived");
+            derivedPool.setSubscriptionSubKey("derived");
                 pools.add(derivedPool);
             } else {
                 var virt_limit_quantity = parseInt(virt_limit);
@@ -758,8 +758,8 @@ var Pool = {
                     var derivedPool = helper.createPool(sub, sub.getProduct().getId(),
                                                         virt_quantity.toString(),
                                                         virt_attributes);
-		    derivedPool.setSubscriptionSubKey("derived");
-		    pools.add(derivedPool);
+            derivedPool.setSubscriptionSubKey("derived");
+            pools.add(derivedPool);
                 }
             }
         }
@@ -855,7 +855,7 @@ var Pool = {
             if (productsChanged) {
                 log.info("   Subscription products changed.");
                 existingPool.setProductName(sub.getProduct().getName());
-		existingPool.setProductId(sub.getProduct().getId());
+                existingPool.setProductId(sub.getProduct().getId());
                 existingPool.getProvidedProducts().clear();
 
                 if (sub.getProvidedProducts() != null) {
@@ -955,15 +955,23 @@ var Compliance = {
         var status = getComplianceStatusOnDate(consumer, entitlements, ondate, log);
         var compliantUntil = ondate;
         if (status.isCompliant()) {
-			if (entitlements.isEmpty()) {
-				compliantUntil = null;
-			}
-			else {
-				compliantUntil = determineCompliantUntilDate(consumer, ondate, helper, log);
-			}
+            if (entitlements.isEmpty()) {
+                compliantUntil = null;
+            }
+            else {
+                compliantUntil = determineCompliantUntilDate(consumer, ondate, helper, log);
+            }
         }
         status.setCompliantUntil(compliantUntil);
         return status;
+    },
+
+    is_stack_compliant: function() {
+        return stack_is_compliant(consumer, stack_id, entitlements, log);
+    },
+
+    is_ent_compliant: function () {
+        return ent_is_compliant(consumer, ent, log);
     }
 }
 
@@ -971,7 +979,7 @@ var Compliance = {
  * Checks compliance status for a consumer on a given date.
  */
 function getComplianceStatusOnDate(consumer, entitlements, ondate, log) {
-	var status = new org.candlepin.policy.js.compliance.ComplianceStatus(ondate);
+    var status = new org.candlepin.policy.js.compliance.ComplianceStatus(ondate);
 
     // Track the stack IDs we've already checked to save some time:
     var compliant_stack_ids = new java.util.HashSet();
@@ -1059,31 +1067,31 @@ function getComplianceStatusOnDate(consumer, entitlements, ondate, log) {
  * and entitlements.
  */
 function determineCompliantUntilDate(consumer, startDate, complianceHelper, log) {
-	var initialEntitlements = complianceHelper.getEntitlementsOnDate(consumer, startDate);
-	// Get all end dates from current entitlements sorted ascending.
-	var dates = complianceHelper.getSortedEndDatesFromEntitlements(initialEntitlements)
-		.toArray();
+    var initialEntitlements = complianceHelper.getEntitlementsOnDate(consumer, startDate);
+    // Get all end dates from current entitlements sorted ascending.
+    var dates = complianceHelper.getSortedEndDatesFromEntitlements(initialEntitlements)
+        .toArray();
 
-	for each (var dateToCheck in dates) {
-		var next = new Date(dateToCheck.getTime());
-		var jsStartDate = new Date(startDate.getTime());
+    for each (var dateToCheck in dates) {
+        var next = new Date(dateToCheck.getTime());
+        var jsStartDate = new Date(startDate.getTime());
 
-		// Ignore past dates.
-		if (next < jsStartDate) {
-			continue;
-		}
-		// Need to check if we are still compliant after the end date,
-		// so we add one second.
-		next.setSeconds(next.getSeconds() + 1);
-
-		var entitlementsOnDate = complianceHelper.getEntitlementsOnDate(consumer,
-				next);
-		var status = getComplianceStatusOnDate(consumer, entitlementsOnDate, next, log);
-        if (!status.isCompliant()) {
-		return next;
+        // Ignore past dates.
+        if (next < jsStartDate) {
+            continue;
         }
-	}
-	return null;
+        // Need to check if we are still compliant after the end date,
+        // so we add one second.
+        next.setSeconds(next.getSeconds() + 1);
+
+        var entitlementsOnDate = complianceHelper.getEntitlementsOnDate(consumer,
+                next);
+        var status = getComplianceStatusOnDate(consumer, entitlementsOnDate, next, log);
+        if (!status.isCompliant()) {
+        return next;
+        }
+    }
+    return null;
 }
 
 var Unbind = {
@@ -1094,10 +1102,10 @@ var Unbind = {
     attribute_mappings: function() {
         return  "virt_limit:1:virt_limit";
     },
-    
+
     pre_virt_limit: function() {
     },
-    
+
     post_virt_limit: function() {
         if (!standalone && consumer.isManifest()) {
             var virt_limit = attributes.get("virt_limit");

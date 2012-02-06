@@ -65,19 +65,40 @@ public class ComplianceRules {
         args.put("ondate", date);
         args.put("helper", new ComplianceRulesHelper(entCurator));
         args.put("log", log);
+        return runJsFunction(ComplianceStatus.class, "get_status", args);
+    }
 
-        ComplianceStatus status = null;
+    public boolean isStackCompliant(Consumer consumer, String stackId,
+        List<Entitlement> entsToConsider) {
+        Map<String, Object> args = new HashMap<String, Object>();
+        args.put("stack_id", stackId);
+        args.put("consumer", consumer);
+        args.put("entitlements", entsToConsider);
+        args.put("log", log);
+        return runJsFunction(Boolean.class, "is_stack_compliant", args);
+    }
+
+    public boolean isEntitlementCompliant(Consumer consumer, Entitlement ent) {
+        Map<String, Object> args = new HashMap<String, Object>();
+        args.put("consumer", consumer);
+        args.put("ent", ent);
+        args.put("log", log);
+        return runJsFunction(Boolean.class, "is_ent_compliant", args);
+    }
+
+    private <T extends Object> T runJsFunction(Class<T> clazz, String function,
+        Map<String, Object> args) {
+        T returner = null;
         try {
-            status = jsRules.invokeMethod("get_status", args);
+            returner = jsRules.invokeMethod(function, args);
         }
         catch (NoSuchMethodException e) {
-            log.warn("No compliance javascript method found: get_status");
+            log.warn("No compliance javascript method found: " + function);
         }
         catch (RhinoException e) {
             throw new RuleExecutionException(e);
         }
-
-        return status;
+        return returner;
     }
 
 }

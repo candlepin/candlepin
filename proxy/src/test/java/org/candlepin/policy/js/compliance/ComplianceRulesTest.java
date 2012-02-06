@@ -667,7 +667,6 @@ public class ComplianceRulesTest {
     public void statusRedOneWhenNonCompliantProductAndCompliantAndPartial() {
         Consumer c = mockConsumer(new String [] {PRODUCT_1, PRODUCT_2, PRODUCT_3});
         List<Entitlement> ents = new LinkedList<Entitlement>();
-
         ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product", PRODUCT_1));
         ents.add(mockEntitlement(c, "Another Product", PRODUCT_3));
         when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(ents);
@@ -679,4 +678,58 @@ public class ComplianceRulesTest {
         assertEquals(ComplianceStatus.RED, status.getStatus());
     }
 
+    @Test
+    public void stackIsCompliant() {
+        Consumer c = mock(Consumer.class);
+        when(c.hasFact("cpu.cpu_socket(s)")).thenReturn(true);
+        when(c.getFact("cpu.cpu_socket(s)")).thenReturn("2");
+
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product", PRODUCT_1));
+        assertTrue(compliance.isStackCompliant(c, STACK_ID_1, ents));
+    }
+
+    @Test
+    public void stackIsNotCompliant() {
+        Consumer c = mock(Consumer.class);
+        when(c.hasFact("cpu.cpu_socket(s)")).thenReturn(true);
+        when(c.getFact("cpu.cpu_socket(s)")).thenReturn("4");
+
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+        ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product", PRODUCT_1));
+        ents.add(mockEntitlement(c, "Another Product", PRODUCT_3));
+        assertFalse(compliance.isStackCompliant(c, STACK_ID_1, ents));
+    }
+
+    @Test
+    public void entIsCompliantIfSocketsNotSetOnEntPool() {
+        Consumer c = mock(Consumer.class);
+        when(c.hasFact("cpu.cpu_socket(s)")).thenReturn(true);
+        when(c.getFact("cpu.cpu_socket(s)")).thenReturn("2");
+
+        Entitlement ent = mockEntitlement(c, PRODUCT_1);
+        assertTrue(compliance.isEntitlementCompliant(c, ent));
+    }
+
+    @Test
+    public void entIsCompliantWhenSocketsAreCovered() {
+        Consumer c = mock(Consumer.class);
+        when(c.hasFact("cpu.cpu_socket(s)")).thenReturn(true);
+        when(c.getFact("cpu.cpu_socket(s)")).thenReturn("4");
+
+        Entitlement ent = mockEntitlement(c, PRODUCT_1);
+        ent.getPool().setProductAttribute("sockets", "4", PRODUCT_1);
+        assertTrue(compliance.isEntitlementCompliant(c, ent));
+    }
+
+    @Test
+    public void entIsNotCompliantWhenSocketsAreNotCovered() {
+        Consumer c = mock(Consumer.class);
+        when(c.hasFact("cpu.cpu_socket(s)")).thenReturn(true);
+        when(c.getFact("cpu.cpu_socket(s)")).thenReturn("8");
+
+        Entitlement ent = mockEntitlement(c, PRODUCT_1);
+        ent.getPool().setProductAttribute("sockets", "4", PRODUCT_1);
+        assertFalse(compliance.isEntitlementCompliant(c, ent));
+    }
 }
