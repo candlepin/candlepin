@@ -52,7 +52,6 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void addGuestConsumers() {
         Owner owner = new Owner("test-owner", "Test Owner");
         owner = ownerCurator.create(owner);
@@ -75,7 +74,6 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void addGuestsNotConsumers() {
         Owner owner = new Owner("test-owner", "Test Owner");
         owner = ownerCurator.create(owner);
@@ -92,7 +90,6 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void getGuestConsumerSharedId() throws Exception {
         Owner owner = new Owner("test-owner", "Test Owner");
         owner = ownerCurator.create(owner);
