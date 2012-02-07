@@ -56,6 +56,11 @@ public class DeletedConsumer extends AbstractHibernateObject {
     @Column(name = "owner_id", length = 32, nullable = false)
     private String ownerId;
 
+    public DeletedConsumer(String cid, String oid) {
+        consumerId = cid;
+        ownerId = oid;
+    }
+
     @Override
     public String getId() {
         return id;

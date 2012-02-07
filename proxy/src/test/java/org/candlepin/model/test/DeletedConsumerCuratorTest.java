@@ -40,19 +40,13 @@ public class DeletedConsumerCuratorTest extends DatabaseTestFixture {
         super.init();
         dcc = injector.getInstance(DeletedConsumerCurator.class);
 
-        DeletedConsumer dc = new DeletedConsumer();
-        dc.setConsumerId("abcde");
-        dc.setOwnerId("10");
+        DeletedConsumer dc = new DeletedConsumer("abcde", "10");
         dcc.create(dc);
 
-        dc = new DeletedConsumer();
-        dc.setConsumerId("fghij");
-        dc.setOwnerId("10");
+        dc = new DeletedConsumer("fghij", "10");
         dcc.create(dc);
 
-        dc = new DeletedConsumer();
-        dc.setConsumerId("klmno");
-        dc.setOwnerId("20");
+        dc = new DeletedConsumer("klmno", "20");
         dcc.create(dc);
     }
 

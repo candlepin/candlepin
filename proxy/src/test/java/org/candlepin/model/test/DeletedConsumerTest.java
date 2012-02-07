@@ -24,18 +24,21 @@ import org.junit.Test;
  */
 public class DeletedConsumerTest {
 
-    private DeletedConsumer dc = new DeletedConsumer();
+    private DeletedConsumer dc = new DeletedConsumer("abcde", "10");
+
 
     @Test
     public void consumerId() {
-        dc.setConsumerId("abcde");
         assertEquals("abcde", dc.getConsumerId());
+        dc.setConsumerId("changed");
+        assertEquals("changed", dc.getConsumerId());
     }
 
     @Test
     public void ownerId() {
-        dc.setOwnerId("abcde");
-        assertEquals("abcde", dc.getOwnerId());
+        assertEquals("10", dc.getOwnerId());
+        dc.setOwnerId("11");
+        assertEquals("11", dc.getOwnerId());
     }
 
 }
