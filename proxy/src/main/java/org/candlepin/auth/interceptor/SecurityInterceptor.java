@@ -259,7 +259,7 @@ public class SecurityInterceptor implements MethodInterceptor {
             if ("deleted-consumer-id".equals(key)) {
                 // XXX: 410 lookup
                 log.info("Key is deleted, throwing GoneException");
-                throw new GoneException("Consumer " + key + " has been deleted");
+                throw new GoneException("Consumer " + key + " has been deleted", key);
             }
             return consumerCurator.findByUuid(key);
         }
