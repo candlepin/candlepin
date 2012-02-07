@@ -44,6 +44,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
     @Inject private EntitlementCurator entitlementCurator;
     @Inject private ConsumerTypeCurator consumerTypeCurator;
+    @Inject private DeletedConsumerCurator deletedConsumerCurator;
     @Inject private Config config;
     @Inject private I18n i18n;
     private static final int NAME_LENGTH = 250;
@@ -63,6 +64,18 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         }
         validate(entity);
         return super.create(entity);
+    }
+
+    @Transactional
+    @EnforceAccessControl
+    public void delete(Consumer entity) {
+        // save off the ids before we delete
+        DeletedConsumer dc = new DeletedConsumer(entity.getId(),
+            entity.getOwner().getId());
+
+        super.delete(entity);
+
+        deletedConsumerCurator.create(dc);
     }
 
     protected void validate(Consumer entity) {
