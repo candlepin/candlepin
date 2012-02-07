@@ -26,7 +26,6 @@ public class DeletedConsumerTest {
 
     private DeletedConsumer dc = new DeletedConsumer("abcde", "10");
 
-
     @Test
     public void consumerId() {
         assertEquals("abcde", dc.getConsumerId());
