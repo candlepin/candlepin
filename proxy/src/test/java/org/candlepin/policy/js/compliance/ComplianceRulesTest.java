@@ -179,6 +179,93 @@ public class ComplianceRulesTest {
     }
 
     /*
+     * Test an installed product which has a normal non-stacked entitlement, but to a
+     * product which does not cover sufficient sockets for the system.
+     */
+    @Test
+    public void regularEntButLackingSocketCoverage() {
+        Consumer c = mockConsumer(new String [] {PRODUCT_1});
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+        ents.add(mockEntitlement(c, "Awesome Product", PRODUCT_1));
+        ents.get(0).getPool().addProductAttribute(new ProductPoolAttribute("sockets",
+            "4", PRODUCT_1));
+        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(ents);
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(1, status.getPartiallyCompliantProducts().size());
+        assertEquals(0, status.getCompliantProducts().size());
+        assertEquals(0, status.getPartialStacks().size());
+
+        assertTrue(status.getPartiallyCompliantProducts().keySet().contains(PRODUCT_1));
+    }
+
+    /*
+     * Test an installed product with two normal non-stacked entitlements, one which
+     * provides enough sockets, and one which does not. Note that these entitlements
+     * are not stacked together.
+     */
+    @Test
+    public void regularEntsOneLackingSocketCoverage() {
+        // Consumer with 8 sockets:
+        Consumer c = mockConsumer(new String [] {PRODUCT_1});
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+
+        // One entitlement that only provides four sockets:
+        ents.add(mockEntitlement(c, "Awesome Product", PRODUCT_1));
+        ents.get(0).getPool().addProductAttribute(new ProductPoolAttribute("sockets",
+            "4", PRODUCT_1));
+
+        // One entitlement that provides ten sockets:
+        ents.add(mockEntitlement(c, "Awesome Product", PRODUCT_1));
+        ents.get(1).getPool().addProductAttribute(new ProductPoolAttribute("sockets",
+            "10", PRODUCT_1));
+        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(ents);
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(0, status.getPartiallyCompliantProducts().size());
+        assertEquals(1, status.getCompliantProducts().size());
+        assertEquals(0, status.getPartialStacks().size());
+
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_1));
+    }
+
+    /*
+     * Test an installed product with two normal non-stacked entitlements, both of which
+     * do not provide enough sockets for the system. Note that these entitlements
+     * are not stacked together.
+     */
+    @Test
+    public void regularEntsBothLackingSocketCoverage() {
+        // Consumer with 8 sockets:
+        Consumer c = mockConsumer(new String [] {PRODUCT_1});
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+
+        // One entitlement that only provides four sockets:
+        ents.add(mockEntitlement(c, "Awesome Product", PRODUCT_1));
+        ents.get(0).getPool().addProductAttribute(new ProductPoolAttribute("sockets",
+            "4", PRODUCT_1));
+
+        // One entitlement that provides 6 sockets:
+        ents.add(mockEntitlement(c, "Awesome Product", PRODUCT_1));
+        ents.get(1).getPool().addProductAttribute(new ProductPoolAttribute("sockets",
+            "6", PRODUCT_1));
+        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(ents);
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(1, status.getPartiallyCompliantProducts().size());
+        assertEquals(0, status.getCompliantProducts().size());
+        assertEquals(0, status.getPartialStacks().size());
+
+        assertTrue(status.getPartiallyCompliantProducts().keySet().contains(PRODUCT_1));
+    }
+
+    /*
      * Test an installed product which is fully covered by a normal entitlement, but also
      * by a partial stack. In this case it should show up as a compliant product,
      * a partial stack, but not a partially compliant product.

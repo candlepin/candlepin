@@ -76,8 +76,11 @@ public class ComplianceStatus {
     }
 
     /**
+     * Partially compliant products may be partially stacked, or just non-stacked regular
+     * entitlements which carry a socket limitation which the consumer system exceeds.
+     *
      * @return Map of compliant product IDs and the entitlements that partially
-     * provide them. (i.e. partially stacked)
+     * provide them.
      */
     public Map<String, Set<Entitlement>> getPartiallyCompliantProducts() {
         return partiallyCompliantProducts;

@@ -910,6 +910,26 @@ function stack_is_compliant(consumer, stack_id, ents, log) {
     return covered_sockets >= consumer_sockets;
 }
 
+/*
+ * Check an entitlement to see if it provides sufficent CPU sockets a consumer.
+ */
+function ent_is_compliant(consumer, ent, log) {
+
+    if (!ent.getPool().hasProductAttribute("sockets")) {
+        return true;
+    }
+
+    log.debug("Checking entitlement compliance: " + ent.getId());
+    var consumer_sockets = 1;
+    if (consumer.hasFact(SOCKET_FACT)) {
+        consumer_sockets = parseInt(consumer.getFact(SOCKET_FACT));
+    }
+
+    var covered_sockets = parseInt(ent.getPool().getProductAttribute("sockets").getValue()) * ent.getQuantity();
+
+    return covered_sockets >= consumer_sockets;
+}
+
 /**
  * Returns an array of product IDs the entitlement provides which are relevant
  * (installed) on the given consumer.
@@ -963,8 +983,9 @@ function getComplianceStatusOnDate(consumer, entitlements, ondate, log) {
         log.debug("    relevant products: " + relevant_pids);
 
         partially_stacked = false;
+        var ent_is_stacked = is_stacked(e);
         // If the pool is stacked, check that the stack requirements are met:
-        if (is_stacked(e)) {
+        if (ent_is_stacked) {
             var stack_id = e.getPool().getProductAttribute("stacking_id").getValue();
             log.debug("    pool has stack ID: " + stack_id);
 
@@ -995,7 +1016,11 @@ function getComplianceStatusOnDate(consumer, entitlements, ondate, log) {
                 log.debug("   partially compliant: " + relevant_pid);
                 status.addPartiallyCompliantProduct(relevant_pid, e);
             }
-            else {
+            else if (!ent_is_compliant(consumer, e, log) && !ent_is_stacked) {
+                log.debug("    partially compliant (non-stacked): " + relevant_pid);
+                status.addPartiallyCompliantProduct(relevant_pid, e);
+            }
+            else  {
                 log.debug("    fully compliant: " + relevant_pid);
                 status.addCompliantProduct(relevant_pid, e);
             }
