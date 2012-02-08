@@ -6,14 +6,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 0.5.X\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-01-11 15:27-0500\n"
+"POT-Creation-Date: 2011-12-02 08:12-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: \n"
 
 #: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:119
 #: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:155
@@ -59,7 +59,8 @@ msgstr ""
 #: src/main/java/org/candlepin/controller/Entitler.java:109
 #, java-format
 msgid "No free entitlements are available for the pool with id ''{0}''."
-msgstr "Keine freien Berechtigungen verfügbar für den Pool mit der ID ''{0}''."
+msgstr ""
+"Keine freien Berechtigungen verfügbar für den Pool mit der ID ''{0}''."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:114
 #, java-format
@@ -140,9 +141,11 @@ msgstr "Name des Verbrauchers sollte kürzer als {0} Zeichen sein."
 
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:317
 #, java-format
-msgid "The consumer with UUID {0} is a virtual guest. It does not have guests."
+msgid ""
+"The consumer with UUID {0} is a virtual guest. It does not have guests."
 msgstr ""
-"Der Verbraucher mit der UUID {0} ist ein virtueller Gast. Er hat keine Gäste."
+"Der Verbraucher mit der UUID {0} ist ein virtueller Gast. Er hat keine "
+"Gäste."
 
 #: src/main/java/org/candlepin/model/EntitlementCurator.java:241
 #, java-format
@@ -196,6 +199,7 @@ msgid "Incompatible rules: import version {0} older than our version {1}."
 msgstr ""
 
 #: src/main/java/org/candlepin/sync/Importer.java:288
+#, 
 msgid "Manifest data will be imported without rules import."
 msgstr ""
 
@@ -338,7 +342,8 @@ msgstr "{0} löschte die Gast-ID {1}"
 #: src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java:145
 msgid "Standalone candlepin does not support redeeming a subscription."
 msgstr ""
-"Standalone-Candlepin unterstützt nicht das Zurückerlangen von Subskriptionen."
+"Standalone-Candlepin unterstützt nicht das Zurückerlangen von "
+"Subskriptionen."
 
 #: src/main/java/org/candlepin/resource/EventResource.java:85
 #, java-format
@@ -366,7 +371,8 @@ msgstr ""
 
 #: src/main/java/org/candlepin/resource/RulesResource.java:81
 msgid "Error decoding the rules. The text should be base 64 encoded"
-msgstr "Fehler beim Dekodieren der Regeln. Der Text sollte base64-kodiert sein"
+msgstr ""
+"Fehler beim Dekodieren der Regeln. Der Text sollte base64-kodiert sein"
 
 #: src/main/java/org/candlepin/resource/RulesResource.java:105
 msgid "couldn't read rules file"
@@ -374,7 +380,8 @@ msgstr "Regeldatei konnte nicht gelesen werden"
 
 #: src/main/java/org/candlepin/resource/PoolResource.java:117
 msgid "Cannot filter on both owner and consumer"
-msgstr "Nach Besitzer und Verbraucher kann nicht gleichzeitig gefiltert werden"
+msgstr ""
+"Nach Besitzer und Verbraucher kann nicht gleichzeitig gefiltert werden"
 
 #: src/main/java/org/candlepin/resource/PoolResource.java:121
 msgid "A consumer or owner is needed to filter on product"
@@ -421,11 +428,11 @@ msgstr ""
 
 #: src/main/java/org/candlepin/resource/JobResource.java:114
 msgid ""
-"You must specify one of owner key, consumer uuid, or principal name, but not "
-"all."
+"You must specify one of owner key, consumer uuid, or principal name, but not"
+" all."
 msgstr ""
-"Sie müssen entweder Besitzerschlüssel, Verbraucher-UUID, oder Principal-Name "
-"angeben, aber nicht alle drei."
+"Sie müssen entweder Besitzerschlüssel, Verbraucher-UUID, oder Principal-Name"
+" angeben, aber nicht alle drei."
 
 #: src/main/java/org/candlepin/resource/JobResource.java:173
 msgid "Error setting scheduler status"
@@ -498,8 +505,8 @@ msgstr "Anzahl muss größer als 0 sein"
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:145
 msgid ""
-"Pools requiring a 'person' consumer should not be added to an activation key "
-"since a consumer type of 'person' cannot be used with activation keys"
+"Pools requiring a 'person' consumer should not be added to an activation key"
+" since a consumer type of 'person' cannot be used with activation keys"
 msgstr ""
 "Pools, die einen 'Personen'-Verbraucher erfordern, sollten nicht zu einem "
 "Aktivierungsschlüssel hinzugefügt werden, da der Verbrauchertyp 'Person' "
@@ -677,8 +684,8 @@ msgstr "Problem beim Erstellen von Verbraucher {0}"
 #, java-format
 msgid "Activation key ''{0}'' not found for organization ''{1}''."
 msgstr ""
-"Aktivierungsschlüssel ''{0}'' konnte nicht für Organisation ''{1}'' gefunden "
-"werden."
+"Aktivierungsschlüssel ''{0}'' konnte nicht für Organisation ''{1}'' gefunden"
+" werden."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:419
 #, java-format

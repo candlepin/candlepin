@@ -6,14 +6,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 0.5.X\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-01-11 15:27-0500\n"
+"POT-Creation-Date: 2011-12-02 08:12-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: \n"
 
 #: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:119
 #: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:155
@@ -52,19 +52,24 @@ msgstr "సబ్‌స్క్రిప్షన్ పూల్ {0} లేద
 msgid ""
 "This consumer is already subscribed to the product matching pool with id "
 "''{0}''."
-msgstr "ఐడి ''{0}'' తో వుత్పత్తి సరిజోడీ పూల్‌కు యీ వినియోగదారి యిప్పటికే సబ్‌స్క్రైబ్ అయెను."
+msgstr ""
+"ఐడి ''{0}'' తో వుత్పత్తి సరిజోడీ పూల్‌కు యీ వినియోగదారి యిప్పటికే "
+"సబ్‌స్క్రైబ్ అయెను."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:109
 #, java-format
 msgid "No free entitlements are available for the pool with id ''{0}''."
-msgstr "ఐడి ''{0}'' తో వున్న పూల్ కొరకు యే వుచిత యెన్టైటిల్మెంట్లు అందుబాటులో లేవు."
+msgstr ""
+"ఐడి ''{0}'' తో వున్న పూల్ కొరకు యే వుచిత యెన్టైటిల్మెంట్లు అందుబాటులో లేవు."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:114
 #, java-format
 msgid ""
 "Consumers of this type are not allowed to subscribe to the pool with id "
 "''{0}''."
-msgstr "ఐడి ''{0}'' తో వున్న పూల్‌కు సబ్‌స్క్రైబ్ అగుటకు యీ రకమైన వినియోగదారులు అనుమతించబడరు."
+msgstr ""
+"ఐడి ''{0}'' తో వున్న పూల్‌కు సబ్‌స్క్రైబ్ అగుటకు యీ రకమైన వినియోగదారులు "
+"అనుమతించబడరు."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:118
 #, java-format
@@ -100,7 +105,8 @@ msgstr "ఈ వినియోగదారి యిప్పిటికే వ
 #, java-format
 msgid ""
 "There are not enough free entitlements available for the product ''{0}''"
-msgstr "ఉత్పత్తి ''{0}'' కొరకు సరిపోయినన్ని వుచిత యెన్టైటిల్మెంట్సు అందుబాటులో లేవు."
+msgstr ""
+"ఉత్పత్తి ''{0}'' కొరకు సరిపోయినన్ని వుచిత యెన్టైటిల్మెంట్సు అందుబాటులో లేవు."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:184
 #, java-format
@@ -131,7 +137,8 @@ msgstr "వినియోగదారుని పేరు {0} అక్షర
 
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:317
 #, java-format
-msgid "The consumer with UUID {0} is a virtual guest. It does not have guests."
+msgid ""
+"The consumer with UUID {0} is a virtual guest. It does not have guests."
 msgstr "UUID {0} తో వినియోగదారి వర్చ్యువల్ గెస్టు. అది గెస్టులను కలిగిలేదు."
 
 #: src/main/java/org/candlepin/model/EntitlementCurator.java:241
@@ -185,6 +192,7 @@ msgid "Incompatible rules: import version {0} older than our version {1}."
 msgstr ""
 
 #: src/main/java/org/candlepin/sync/Importer.java:288
+#, 
 msgid "Manifest data will be imported without rules import."
 msgstr ""
 
@@ -326,7 +334,8 @@ msgstr "{0} గెస్టు ఐడి {1} సృష్టించెను"
 
 #: src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java:145
 msgid "Standalone candlepin does not support redeeming a subscription."
-msgstr "సబ్‌స్క్రిప్షన్‌ను వెచ్చించుటకు స్టాండెలోన్ కాండిల్‌పిన్ తోడ్పాటునీయదు."
+msgstr ""
+"సబ్‌స్క్రిప్షన్‌ను వెచ్చించుటకు స్టాండెలోన్ కాండిల్‌పిన్ తోడ్పాటునీయదు."
 
 #: src/main/java/org/candlepin/resource/EventResource.java:85
 #, java-format
@@ -348,7 +357,8 @@ msgstr "UUID ''{0}'' తో వుత్పత్తి కనుగొనబడ
 #: src/main/java/org/candlepin/resource/ProductResource.java:193
 #, java-format
 msgid "Product with UUID ''{0}'' cannot be deleted while subscriptions exist."
-msgstr "UUID ''{0}'' తో వుత్పత్తి తొలగించబడలేదు సబ్‌స్క్రిప్షన్లు వున్నప్పుడు."
+msgstr ""
+"UUID ''{0}'' తో వుత్పత్తి తొలగించబడలేదు సబ్‌స్క్రిప్షన్లు వున్నప్పుడు."
 
 #: src/main/java/org/candlepin/resource/RulesResource.java:81
 msgid "Error decoding the rules. The text should be base 64 encoded"
@@ -400,13 +410,16 @@ msgstr "ఎన్టైటిల్మెంట్ పూల్ \"{0}\" ఐడ�
 
 #: src/main/java/org/candlepin/resource/JobResource.java:108
 msgid "You must specify an owner key, consumer uuid, or principal name."
-msgstr "మీరు తప్పక వొక యజమాని కీ, వినియోగదారి uuid, లేదా ప్రిన్సిపల్ పేరు తెలపాలి."
+msgstr ""
+"మీరు తప్పక వొక యజమాని కీ, వినియోగదారి uuid, లేదా ప్రిన్సిపల్ పేరు తెలపాలి."
 
 #: src/main/java/org/candlepin/resource/JobResource.java:114
 msgid ""
-"You must specify one of owner key, consumer uuid, or principal name, but not "
-"all."
-msgstr "మీరు యజమాని కీ, వినియోగదారి uuid, లేదా పిన్సిపల్ పేరు వీటిలో యేదోవొకటి తెలపాలి, అన్నీ కాదు."
+"You must specify one of owner key, consumer uuid, or principal name, but not"
+" all."
+msgstr ""
+"మీరు యజమాని కీ, వినియోగదారి uuid, లేదా పిన్సిపల్ పేరు వీటిలో యేదోవొకటి "
+"తెలపాలి, అన్నీ కాదు."
 
 #: src/main/java/org/candlepin/resource/JobResource.java:173
 msgid "Error setting scheduler status"
@@ -477,19 +490,19 @@ msgstr "పరిమాణం తప్పక 0 కన్నా యెక్క�
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:145
 msgid ""
-"Pools requiring a 'person' consumer should not be added to an activation key "
-"since a consumer type of 'person' cannot be used with activation keys"
+"Pools requiring a 'person' consumer should not be added to an activation key"
+" since a consumer type of 'person' cannot be used with activation keys"
 msgstr ""
-"'person' వినియోగదారి అవసరమైన పూల్సు క్రియాశీల కీను జతచేయకూడదు యెంచేతంటే 'person' రకమైన వినియోగదారి "
-"క్రియాశీల కీలతో వుపయోగించబడలేదు"
+"'person' వినియోగదారి అవసరమైన పూల్సు క్రియాశీల కీను జతచేయకూడదు యెంచేతంటే "
+"'person' రకమైన వినియోగదారి క్రియాశీల కీలతో వుపయోగించబడలేదు"
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:154
 msgid ""
 "Error: Only pools with multi-entitlement product subscriptions can be added "
 "to the activation key with a quantity greater than one."
 msgstr ""
-"దోషం: ఒకటి కన్నా యెక్కువ పరిమాణంతో బహుళ-యెన్టైటిల్మెంట్ వుత్పత్తి సబ్‌స్క్రిప్షన్సుతో వున్న పూల్సు మాత్రమే "
-"క్రియాశీల కీకు జతచేయబడును."
+"దోషం: ఒకటి కన్నా యెక్కువ పరిమాణంతో బహుళ-యెన్టైటిల్మెంట్ వుత్పత్తి "
+"సబ్‌స్క్రిప్షన్సుతో వున్న పూల్సు మాత్రమే క్రియాశీల కీకు జతచేయబడును."
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:161
 msgid "The quantity must not be greater than the total allowed for the pool"
@@ -552,7 +565,9 @@ msgstr "క్రియాశీల కీ కొరకు వొక పేర�
 #: src/main/java/org/candlepin/resource/OwnerResource.java:402
 msgid ""
 "Activation key names must be alphanumeric or the characters '-' or '_'. ["
-msgstr "క్రియాశీల కీ పేరులు తప్పక ఆల్ఫాన్యూమరిక్ లేదా అక్షరములు '-' లేదా '_'. [ అయివుండాలి"
+msgstr ""
+"క్రియాశీల కీ పేరులు తప్పక ఆల్ఫాన్యూమరిక్ లేదా అక్షరములు '-' లేదా '_'. [ "
+"అయివుండాలి"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:409
 msgid "Activation key name ["
@@ -721,7 +736,9 @@ msgstr "వరుస సంఖ్య {0}తో యెన్‌టైటిల్
 msgid ""
 "Consumer {0} cannot be exported. A manifest cannot be made for consumer of "
 "type ''{1}''."
-msgstr "వినియోగదారి {0} యెగుమతికాలేదు. ''{1}'' రకమైన వినియోగదారి కొరకు మానిఫెస్ట్ చేయబడలేదు."
+msgstr ""
+"వినియోగదారి {0} యెగుమతికాలేదు. ''{1}'' రకమైన వినియోగదారి కొరకు మానిఫెస్ట్ "
+"చేయబడలేదు."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1296
 msgid "Unable to create export archive"
@@ -740,7 +757,8 @@ msgstr "UUID {0} తో వినియోగదారి వర్చ్యు�
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:101
 #, java-format
 msgid "Consumer: {0} has no entitlement for product {1}"
-msgstr "వినియోగదారి: {0} యెటువంటి యెన్‌టైటిల్‌మెంట్స్ వుత్పత్తి {1} కొరకు కలిగిలేదు"
+msgstr ""
+"వినియోగదారి: {0} యెటువంటి యెన్‌టైటిల్‌మెంట్స్ వుత్పత్తి {1} కొరకు కలిగిలేదు"
 
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:146
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:166

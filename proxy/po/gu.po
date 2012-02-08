@@ -6,14 +6,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 0.5.X\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-01-11 15:27-0500\n"
+"POT-Creation-Date: 2011-12-02 08:12-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: \n"
 
 #: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:119
 #: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:155
@@ -52,7 +52,9 @@ msgstr "ઉમેદવારી પુલ {0} અસ્તિત્વ ધર�
 msgid ""
 "This consumer is already subscribed to the product matching pool with id "
 "''{0}''."
-msgstr "આ ગ્રાહક id ''{0}'' સાથે પ્રોડક્ટને પુલ સાથે સરખાવીને પહેલેથી જ ઉમેદવારી કરેલ છે."
+msgstr ""
+"આ ગ્રાહક id ''{0}'' સાથે પ્રોડક્ટને પુલ સાથે સરખાવીને પહેલેથી જ ઉમેદવારી "
+"કરેલ છે."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:109
 #, java-format
@@ -64,7 +66,8 @@ msgstr "id ''{0}'' સાથે પુલ માટે મુક્ત એંટ
 msgid ""
 "Consumers of this type are not allowed to subscribe to the pool with id "
 "''{0}''."
-msgstr "આ પ્રકારનાં ગ્રાહકો id ''{0}'' સાથે પુલ માટે ઉમેદવારી કરવા પરવાનગી આપેલ નથી."
+msgstr ""
+"આ પ્રકારનાં ગ્રાહકો id ''{0}'' સાથે પુલ માટે ઉમેદવારી કરવા પરવાનગી આપેલ નથી."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:118
 #, java-format
@@ -131,7 +134,8 @@ msgstr "ગ્રાહકનું નાં {0} અક્ષરો કરત�
 
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:317
 #, java-format
-msgid "The consumer with UUID {0} is a virtual guest. It does not have guests."
+msgid ""
+"The consumer with UUID {0} is a virtual guest. It does not have guests."
 msgstr "UUID {0} સાથે ગ્રાહક એક વર્ચ્યુઅલ મહેમાન છે. તેની પાસે મહેમાનો નથી."
 
 #: src/main/java/org/candlepin/model/EntitlementCurator.java:241
@@ -185,6 +189,7 @@ msgid "Incompatible rules: import version {0} older than our version {1}."
 msgstr ""
 
 #: src/main/java/org/candlepin/sync/Importer.java:288
+#, 
 msgid "Manifest data will be imported without rules import."
 msgstr ""
 
@@ -348,7 +353,9 @@ msgstr "UUID ''{0}'' સાથે પ્રોડક્ટને શોધી �
 #: src/main/java/org/candlepin/resource/ProductResource.java:193
 #, java-format
 msgid "Product with UUID ''{0}'' cannot be deleted while subscriptions exist."
-msgstr "UUID ''{0}'' સાથે પ્રોડક્ટ કાઢી શકાતી નથી જ્યારે ઉમેદવારીઓ અસ્તિત્વ ધરાવે છે."
+msgstr ""
+"UUID ''{0}'' સાથે પ્રોડક્ટ કાઢી શકાતી નથી જ્યારે ઉમેદવારીઓ અસ્તિત્વ ધરાવે "
+"છે."
 
 #: src/main/java/org/candlepin/resource/RulesResource.java:81
 msgid "Error decoding the rules. The text should be base 64 encoded"
@@ -400,15 +407,16 @@ msgstr "ID ''{0}'' સાથે એંટાઇટેલમેંટ પુલ �
 
 #: src/main/java/org/candlepin/resource/JobResource.java:108
 msgid "You must specify an owner key, consumer uuid, or principal name."
-msgstr "તમારે માલિકી કી, ગ્રાહક uuid, અથવા પ્રિન્સીપલ નામને સ્પષ્ટ કરવુ જ જોઇએ."
+msgstr ""
+"તમારે માલિકી કી, ગ્રાહક uuid, અથવા પ્રિન્સીપલ નામને સ્પષ્ટ કરવુ જ જોઇએ."
 
 #: src/main/java/org/candlepin/resource/JobResource.java:114
 msgid ""
-"You must specify one of owner key, consumer uuid, or principal name, but not "
-"all."
+"You must specify one of owner key, consumer uuid, or principal name, but not"
+" all."
 msgstr ""
-"તમારે માલિકી કી, ગ્રાહક uuid, અથવા પ્રિન્સીપલ નામમાંથી એકને સ્પષ્ટ કરવુ જ જોઇએ, પરંતુ "
-"બધા નહિં."
+"તમારે માલિકી કી, ગ્રાહક uuid, અથવા પ્રિન્સીપલ નામમાંથી એકને સ્પષ્ટ કરવુ જ "
+"જોઇએ, પરંતુ બધા નહિં."
 
 #: src/main/java/org/candlepin/resource/JobResource.java:173
 msgid "Error setting scheduler status"
@@ -479,19 +487,19 @@ msgstr "ગુણવત્તા 0 કરતા વધારે જ હોવી
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:145
 msgid ""
-"Pools requiring a 'person' consumer should not be added to an activation key "
-"since a consumer type of 'person' cannot be used with activation keys"
+"Pools requiring a 'person' consumer should not be added to an activation key"
+" since a consumer type of 'person' cannot be used with activation keys"
 msgstr ""
-"પુલને 'માણસ' ગ્રાહકની જરૂર છે કે જે સક્રિયકરણ કીમાં ઉમેરાયેલ હોવુ જોઇએ નહિં જ્યાં સુધી "
-"'માણસ' નો ગ્રાહક પ્રકાર સક્રિયકરણ કીઓ સાથે વાપરી શકાતો નથી"
+"પુલને 'માણસ' ગ્રાહકની જરૂર છે કે જે સક્રિયકરણ કીમાં ઉમેરાયેલ હોવુ જોઇએ નહિં "
+"જ્યાં સુધી 'માણસ' નો ગ્રાહક પ્રકાર સક્રિયકરણ કીઓ સાથે વાપરી શકાતો નથી"
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:154
 msgid ""
 "Error: Only pools with multi-entitlement product subscriptions can be added "
 "to the activation key with a quantity greater than one."
 msgstr ""
-"ભૂલ: મલ્ટી-એંટાઇટેલમેંટ પ્રોડક્ટ સાથે ફક્ત પુલો એક કરતા વધારે ગુણવત્તા સાથે સક્રિયકરણ કીમાં "
-"ઉમેરી શકાય છે."
+"ભૂલ: મલ્ટી-એંટાઇટેલમેંટ પ્રોડક્ટ સાથે ફક્ત પુલો એક કરતા વધારે ગુણવત્તા સાથે "
+"સક્રિયકરણ કીમાં ઉમેરી શકાય છે."
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:161
 msgid "The quantity must not be greater than the total allowed for the pool"
@@ -554,7 +562,8 @@ msgstr "સક્રિયકરણ કી માટે નામને પૂ�
 #: src/main/java/org/candlepin/resource/OwnerResource.java:402
 msgid ""
 "Activation key names must be alphanumeric or the characters '-' or '_'. ["
-msgstr "સક્રિયકરણ કી નામો આલ્ફાન્યૂમેરિક અથવા અક્ષરો '-' અથવા '_' હોવા જ જોઇએ. ["
+msgstr ""
+"સક્રિયકરણ કી નામો આલ્ફાન્યૂમેરિક અથવા અક્ષરો '-' અથવા '_' હોવા જ જોઇએ. ["
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:409
 msgid "Activation key name ["
@@ -592,7 +601,9 @@ msgstr "માલિક {0} માટે ueber પ્રમાણપત્રન
 #: src/main/java/org/candlepin/resource/OwnerResource.java:898
 #, java-format
 msgid "ueber certificate for owner {0} was not found. Please generate one."
-msgstr "માલિક {0} માટે ueber પ્રમાણપત્ર મળ્યુ ન હતુ. મહેરબાની કરીને એકને ઉત્પન્ન કરો."
+msgstr ""
+"માલિક {0} માટે ueber પ્રમાણપત્ર મળ્યુ ન હતુ. મહેરબાની કરીને એકને ઉત્પન્ન "
+"કરો."
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:912
 #, java-format
@@ -724,8 +735,8 @@ msgid ""
 "Consumer {0} cannot be exported. A manifest cannot be made for consumer of "
 "type ''{1}''."
 msgstr ""
-"ગ્રાહક {0} નિકાસ કરી શકાતુ નથી. manifest ને ગ્રાહકનાં પ્રકાર ''{1}'' માટે બનાવી "
-"શકાતુ નથી."
+"ગ્રાહક {0} નિકાસ કરી શકાતુ નથી. manifest ને ગ્રાહકનાં પ્રકાર ''{1}'' માટે "
+"બનાવી શકાતુ નથી."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1296
 msgid "Unable to create export archive"
@@ -734,7 +745,8 @@ msgstr "નિકાસ પેટીને બનાવવાનું અસમ
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1329
 #, java-format
 msgid "Problem regenerating id cert for consumer {0}"
-msgstr "ગ્રાહક {0} માટે id પ્રમાણપત્રને પુન:ઉત્પન્ન કરી રહ્યા હોય ત્યારે સમસ્યા"
+msgstr ""
+"ગ્રાહક {0} માટે id પ્રમાણપત્રને પુન:ઉત્પન્ન કરી રહ્યા હોય ત્યારે સમસ્યા"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1396
 #, java-format

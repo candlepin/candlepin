@@ -2,18 +2,19 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# rajesh <rajesh@fedoraproject.org>, 2012. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: 0.5.X\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-01-11 15:27-0500\n"
+"POT-Creation-Date: 2011-12-02 08:12-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: \n"
 
 #: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:119
 #: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:155
@@ -52,7 +53,9 @@ msgstr "सदस्यता पूल {0} मौजूद नहीं है.
 msgid ""
 "This consumer is already subscribed to the product matching pool with id "
 "''{0}''."
-msgstr "यह ग्राहक उत्पाद मैचिंग पूल के साथ पहले से सदस्यता लिया है ''{0}'' आईडी के साथ."
+msgstr ""
+"यह ग्राहक उत्पाद मैचिंग पूल के साथ पहले से सदस्यता लिया है ''{0}'' आईडी के "
+"साथ."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:109
 #, java-format
@@ -64,7 +67,9 @@ msgstr "id ''{0}'' के साथ पूल के लिए कोई नि�
 msgid ""
 "Consumers of this type are not allowed to subscribe to the pool with id "
 "''{0}''."
-msgstr "इस प्रकार के ग्राहक  ''{0}'' के साथ पूल में सदस्यता के लिए अनुमति प्राप्त नहीं है"
+msgstr ""
+"इस प्रकार के ग्राहक  ''{0}'' के साथ पूल में सदस्यता के लिए अनुमति प्राप्त "
+"नहीं है"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:118
 #, java-format
@@ -84,7 +89,7 @@ msgstr "ग्राहक को मेनिफेस्ट करने क�
 #: src/main/java/org/candlepin/controller/Entitler.java:130
 #, java-format
 msgid "Pool is restricted to virtual guests: ''{0}''."
-msgstr ""
+msgstr "पूल वर्चुअल अतिथि के लिए सीमित है: ''{0}''."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:134
 #, java-format
@@ -131,8 +136,9 @@ msgstr "ग्राहकों के नाम {0} वर्ण से कम
 
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:317
 #, java-format
-msgid "The consumer with UUID {0} is a virtual guest. It does not have guests."
-msgstr "UUID {0} के साथ उपभोक्ता एक आभासी अतिथि है. इसके पास अतिथि नहीं है."
+msgid ""
+"The consumer with UUID {0} is a virtual guest. It does not have guests."
+msgstr "UUID {0} के साथ उपभोक्ता एक आभासी अतिथि है. इसके पास अतिथि नहीं है.\n"
 
 #: src/main/java/org/candlepin/model/EntitlementCurator.java:241
 #, java-format
@@ -185,6 +191,7 @@ msgid "Incompatible rules: import version {0} older than our version {1}."
 msgstr ""
 
 #: src/main/java/org/candlepin/sync/Importer.java:288
+#, 
 msgid "Manifest data will be imported without rules import."
 msgstr ""
 
@@ -400,14 +407,17 @@ msgstr "ID ''{0}'' के साथ एंटाइटेलमेंट पू�
 
 #: src/main/java/org/candlepin/resource/JobResource.java:108
 msgid "You must specify an owner key, consumer uuid, or principal name."
-msgstr "आपको जरूर एक स्वामी कुंजी ग्राहक uuid, या प्रिंसिपल नाम निर्दिष्ट करने चाहिए."
+msgstr ""
+"आपको जरूर एक स्वामी कुंजी ग्राहक uuid, या प्रिंसिपल नाम निर्दिष्ट करने "
+"चाहिए."
 
 #: src/main/java/org/candlepin/resource/JobResource.java:114
 msgid ""
-"You must specify one of owner key, consumer uuid, or principal name, but not "
-"all."
+"You must specify one of owner key, consumer uuid, or principal name, but not"
+" all."
 msgstr ""
-"आपको जरूर एक स्वामी कुंजी, ग्राहक uuid या प्रिंसिपल नाम निर्दिष्ट करने चाहिए न कि सभी."
+"आपको जरूर एक स्वामी कुंजी, ग्राहक uuid या प्रिंसिपल नाम निर्दिष्ट करने चाहिए"
+" न कि सभी."
 
 #: src/main/java/org/candlepin/resource/JobResource.java:173
 msgid "Error setting scheduler status"
@@ -478,19 +488,20 @@ msgstr "मात्रा को 0 से अधिक जरूर होन�
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:145
 msgid ""
-"Pools requiring a 'person' consumer should not be added to an activation key "
-"since a consumer type of 'person' cannot be used with activation keys"
+"Pools requiring a 'person' consumer should not be added to an activation key"
+" since a consumer type of 'person' cannot be used with activation keys"
 msgstr ""
-"एक 'व्यक्ति' ग्राहक की जरूरत के लिए पूल को किसी सक्रियकरण कुंजी में नहीं जोड़ा जाना चाहिए "
-"क्योंकि 'व्यक्ति' का एक  ग्राहक प्रकार सक्रियकरण कुंजी से प्रयोग नहीं किया जा सकता है"
+"एक 'व्यक्ति' ग्राहक की जरूरत के लिए पूल को किसी सक्रियकरण कुंजी में नहीं "
+"जोड़ा जाना चाहिए क्योंकि 'व्यक्ति' का एक  ग्राहक प्रकार सक्रियकरण कुंजी से "
+"प्रयोग नहीं किया जा सकता है"
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:154
 msgid ""
 "Error: Only pools with multi-entitlement product subscriptions can be added "
 "to the activation key with a quantity greater than one."
 msgstr ""
-"त्रुटि: बहुल एंटाइटेलमेंट उत्पाद सदस्यता के साथ पूल को सक्रियकरण कुंजी में जोड़ा जा सकता है जो "
-"एक से अधिक बड़ा है."
+"त्रुटि: बहुल एंटाइटेलमेंट उत्पाद सदस्यता के साथ पूल को सक्रियकरण कुंजी में "
+"जोड़ा जा सकता है जो एक से अधिक बड़ा है."
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:161
 msgid "The quantity must not be greater than the total allowed for the pool"
@@ -553,7 +564,8 @@ msgstr "सक्रियकरण कुंजी के लिए एक न�
 #: src/main/java/org/candlepin/resource/OwnerResource.java:402
 msgid ""
 "Activation key names must be alphanumeric or the characters '-' or '_'. ["
-msgstr "सक्रियकरण कुंजी नामों को जरूर वर्णांकिक या वर्ण '-' या '_'. [  का होना चाहिए"
+msgstr ""
+"सक्रियकरण कुंजी नामों को जरूर वर्णांकिक या वर्ण '-' या '_'. [  का होना चाहिए"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:409
 msgid "Activation key name ["
@@ -630,7 +642,9 @@ msgstr "तंत्र नाम # वर्ण के साथ आरंभ �
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:314
 msgid "A consumer type of 'person' cannot be used with activation keys"
-msgstr "'व्यक्ति' की तरह का ग्राहक सक्रियकरण कुंजी के साथ प्रयोग नहीं किया जा सकता है"
+msgstr ""
+"'व्यक्ति' की तरह का ग्राहक सक्रियकरण कुंजी के साथ प्रयोग नहीं किया जा सकता "
+"है"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:368
 msgid "Pool ID must be provided"
@@ -691,7 +705,8 @@ msgstr "ऑटो-बाइंडिंग के दौरान कोई म�
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1067
 #, java-format
 msgid "Asked to be subscribed to a product that has no pool: {0} "
-msgstr "उत्पाद में सदस्यता लेने के लिए कहा गया जिसके पास कोई पूल नहीं है: {0} "
+msgstr ""
+"उत्पाद में सदस्यता लेने के लिए कहा गया जिसके पास कोई पूल नहीं है: {0} "
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1093
 #, java-format
@@ -723,8 +738,8 @@ msgid ""
 "Consumer {0} cannot be exported. A manifest cannot be made for consumer of "
 "type ''{1}''."
 msgstr ""
-"ग्राहक {0} को निर्यात नहीं किया जा सकता है. एक मेनिफेस्ट ''{1}'' प्रकार के ग्राहक के "
-"लिए नहीं बनाया जा सकता है. "
+"ग्राहक {0} को निर्यात नहीं किया जा सकता है. एक मेनिफेस्ट ''{1}'' प्रकार के "
+"ग्राहक के लिए नहीं बनाया जा सकता है. "
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1296
 msgid "Unable to create export archive"

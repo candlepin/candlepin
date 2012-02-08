@@ -6,14 +6,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 0.5.X\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-01-11 15:27-0500\n"
+"POT-Creation-Date: 2011-12-02 08:12-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: \n"
 
 #: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:119
 #: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:155
@@ -131,7 +131,8 @@ msgstr "使用者的名稱必須少於 {0} 個字元。"
 
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:317
 #, java-format
-msgid "The consumer with UUID {0} is a virtual guest. It does not have guests."
+msgid ""
+"The consumer with UUID {0} is a virtual guest. It does not have guests."
 msgstr "消耗者（UUID {0}）是虛擬客座端，不具有客座端。"
 
 #: src/main/java/org/candlepin/model/EntitlementCurator.java:241
@@ -185,6 +186,7 @@ msgid "Incompatible rules: import version {0} older than our version {1}."
 msgstr ""
 
 #: src/main/java/org/candlepin/sync/Importer.java:288
+#, 
 msgid "Manifest data will be imported without rules import."
 msgstr ""
 
@@ -404,8 +406,8 @@ msgstr "您必須指定擁有者的金鑰、消耗者的 uuid、或主要名稱�
 
 #: src/main/java/org/candlepin/resource/JobResource.java:114
 msgid ""
-"You must specify one of owner key, consumer uuid, or principal name, but not "
-"all."
+"You must specify one of owner key, consumer uuid, or principal name, but not"
+" all."
 msgstr "您必須指定擁有者金鑰、消耗者 uuid、或主要名稱之一，而不是全部。"
 
 #: src/main/java/org/candlepin/resource/JobResource.java:173
@@ -477,11 +479,9 @@ msgstr "數量必須大於零"
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:145
 msgid ""
-"Pools requiring a 'person' consumer should not be added to an activation key "
-"since a consumer type of 'person' cannot be used with activation keys"
-msgstr ""
-"需要「person」消耗者的集區不該被加入到啟動金鑰中，因為屬於「person」的消耗者"
-"類型無法與啟動金鑰合用"
+"Pools requiring a 'person' consumer should not be added to an activation key"
+" since a consumer type of 'person' cannot be used with activation keys"
+msgstr "需要「person」消耗者的集區不該被加入到啟動金鑰中，因為屬於「person」的消耗者類型無法與啟動金鑰合用"
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:154
 msgid ""

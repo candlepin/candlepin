@@ -2,18 +2,19 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# ngoswami <ngoswami@fedoraproject.org>, 2012. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: 0.5.X\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-01-11 15:27-0500\n"
+"POT-Creation-Date: 2011-12-02 08:12-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: \n"
 
 #: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:119
 #: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:155
@@ -53,7 +54,8 @@ msgid ""
 "This consumer is already subscribed to the product matching pool with id "
 "''{0}''."
 msgstr ""
-"এইজন উপভোক্তা ইতিমধ্যে আইডি ''{0}'' -ৰ সৈতে উৎপাদন মিল খোৱা পুলৰ লগত স্বাক্ষৰীত।"
+"এইজন উপভোক্তা ইতিমধ্যে আইডি ''{0}'' -ৰ সৈতে উৎপাদন মিল খোৱা পুলৰ লগত "
+"স্বাক্ষৰীত।"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:109
 #, java-format
@@ -132,7 +134,8 @@ msgstr "উপভোক্তাজনৰ নাম {0} আখৰতকে স�
 
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:317
 #, java-format
-msgid "The consumer with UUID {0} is a virtual guest. It does not have guests."
+msgid ""
+"The consumer with UUID {0} is a virtual guest. It does not have guests."
 msgstr "UUID {0} -ৰ উপভোক্তা এজন ভাৰছুৱেল অতিথি হয়। ইয়াৰ কোনো অতিথি নাই।"
 
 #: src/main/java/org/candlepin/model/EntitlementCurator.java:241
@@ -143,7 +146,8 @@ msgstr "উৎপাদন আই-ডি {0} -ৰ কাৰণে কোনো �
 #: src/main/java/org/candlepin/policy/js/entitlement/AbstractEntitlementRules.java:158
 #, java-format
 msgid "''{0}'' Should contain name, priority and at least one attribute"
-msgstr "''{0}'' -এ নাম, প্ৰাথমিকতা আৰু অন্তত এটা বৈশিষ্ট অন্তৰ্ভুক্ত কৰিব লাগিব"
+msgstr ""
+"''{0}'' -এ নাম, প্ৰাথমিকতা আৰু অন্তত এটা বৈশিষ্ট অন্তৰ্ভুক্ত কৰিব লাগিব"
 
 #: src/main/java/org/candlepin/policy/js/entitlement/AbstractEntitlementRules.java:173
 msgid "second parameter should be the priority number."
@@ -184,10 +188,11 @@ msgstr "ইমপোৰ্ট কৰা তথ্য উপস্থিত ত�
 #, java-format
 msgid "Incompatible rules: import version {0} older than our version {1}."
 msgstr ""
+"খাপ নখোৱা নিয়মসমূহ: আমাৰ সংস্কৰণ {1} কে পুৰনি সংস্কৰণ {0} ইমপোৰ্ট কৰক।"
 
 #: src/main/java/org/candlepin/sync/Importer.java:288
 msgid "Manifest data will be imported without rules import."
-msgstr ""
+msgstr "মেনিফেস্ট তথ্য নিয়মসমূহ ইমপোৰ্ট নকৰাকৈ ইমপোৰ্ট কৰা হব।"
 
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:113
 #, java-format
@@ -349,7 +354,8 @@ msgstr "UUID ''{0}'' -ৰ সৈতে উৎপাদন পোৱা নগল
 #: src/main/java/org/candlepin/resource/ProductResource.java:193
 #, java-format
 msgid "Product with UUID ''{0}'' cannot be deleted while subscriptions exist."
-msgstr "স্বাক্ষৰণসমূহ অস্তিত্ববান থাকোতে UUID ''{0}'' -ৰ সৈতে উৎপাদন মচিব নোৱাৰি।"
+msgstr ""
+"স্বাক্ষৰণসমূহ অস্তিত্ববান থাকোতে UUID ''{0}'' -ৰ সৈতে উৎপাদন মচিব নোৱাৰি।"
 
 #: src/main/java/org/candlepin/resource/RulesResource.java:81
 msgid "Error decoding the rules. The text should be base 64 encoded"
@@ -401,15 +407,16 @@ msgstr "ID ''{0}'' -ৰ সৈতে অনুজ্ঞা পুল পোৱ�
 
 #: src/main/java/org/candlepin/resource/JobResource.java:108
 msgid "You must specify an owner key, consumer uuid, or principal name."
-msgstr "আপুনি এটা গৰাকী চাবি, গ্ৰাহক uuid, অথবা অধ্যক্ষ নাম ধাৰ্য্য কৰিব লাগিব।"
+msgstr ""
+"আপুনি এটা গৰাকী চাবি, গ্ৰাহক uuid, অথবা অধ্যক্ষ নাম ধাৰ্য্য কৰিব লাগিব।"
 
 #: src/main/java/org/candlepin/resource/JobResource.java:114
 msgid ""
-"You must specify one of owner key, consumer uuid, or principal name, but not "
-"all."
+"You must specify one of owner key, consumer uuid, or principal name, but not"
+" all."
 msgstr ""
-"আপুনি গৰাকী চাবি, গ্ৰাহক uuid, অথবা অধ্যক্ষ নাম যিকোনো এটা ধাৰ্য্য কৰিব লাগিব, "
-"কিন্তু সকলো নহয়।"
+"আপুনি গৰাকী চাবি, গ্ৰাহক uuid, অথবা অধ্যক্ষ নাম যিকোনো এটা ধাৰ্য্য কৰিব "
+"লাগিব, কিন্তু সকলো নহয়।"
 
 #: src/main/java/org/candlepin/resource/JobResource.java:173
 msgid "Error setting scheduler status"
@@ -480,19 +487,20 @@ msgstr "পৰিমাণ ০ কে ডাঙৰ হব লাগিব"
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:145
 msgid ""
-"Pools requiring a 'person' consumer should not be added to an activation key "
-"since a consumer type of 'person' cannot be used with activation keys"
+"Pools requiring a 'person' consumer should not be added to an activation key"
+" since a consumer type of 'person' cannot be used with activation keys"
 msgstr ""
-"এজন 'person' গ্ৰাহকৰ প্ৰয়োজন থকা পুলসমূহক এটা সক্ৰিয়কৰণ চাবিলে যোগ কৰিব নালাগিব "
-"যিহেতু 'person' ধৰণৰ গ্ৰাহকক সক্ৰিয়কৰণ চাবিসমূহৰ সৈতে ব্যৱহাৰ কৰিব নোৱাৰি"
+"এজন 'person' গ্ৰাহকৰ প্ৰয়োজন থকা পুলসমূহক এটা সক্ৰিয়কৰণ চাবিলে যোগ কৰিব "
+"নালাগিব যিহেতু 'person' ধৰণৰ গ্ৰাহকক সক্ৰিয়কৰণ চাবিসমূহৰ সৈতে ব্যৱহাৰ কৰিব "
+"নোৱাৰি"
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:154
 msgid ""
 "Error: Only pools with multi-entitlement product subscriptions can be added "
 "to the activation key with a quantity greater than one."
 msgstr ""
-"ত্ৰুটি: কেৱল বহু-অনুজ্ঞা উৎপাদন স্বাক্ষৰণসমূহৰ লগত থকা পুলসমূহক সক্ৰিয়কৰণ চাবিলে একতকে "
-"অধিক এটা পৰিমাণৰ সৈতে যোগ কৰিব পাৰি। "
+"ত্ৰুটি: কেৱল বহু-অনুজ্ঞা উৎপাদন স্বাক্ষৰণসমূহৰ লগত থকা পুলসমূহক সক্ৰিয়কৰণ "
+"চাবিলে একতকে অধিক এটা পৰিমাণৰ সৈতে যোগ কৰিব পাৰি। "
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:161
 msgid "The quantity must not be greater than the total allowed for the pool"
@@ -555,7 +563,8 @@ msgstr "সক্ৰিয়কৰণ চাবিৰ বাবে এটা ন�
 #: src/main/java/org/candlepin/resource/OwnerResource.java:402
 msgid ""
 "Activation key names must be alphanumeric or the characters '-' or '_'. ["
-msgstr "সক্ৰিয়কৰণ চাবি নামসমূহ আল্ফানিউমাৰিক অথবা আখৰসমূহ '-' অথবা '_' হব লাগিব। ["
+msgstr ""
+"সক্ৰিয়কৰণ চাবি নামসমূহ আল্ফানিউমাৰিক অথবা আখৰসমূহ '-' অথবা '_' হব লাগিব। ["
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:409
 msgid "Activation key name ["
@@ -593,7 +602,8 @@ msgstr "গৰাকী {0} -ৰ বাবে ueber প্ৰমাণপত্�
 #: src/main/java/org/candlepin/resource/OwnerResource.java:898
 #, java-format
 msgid "ueber certificate for owner {0} was not found. Please generate one."
-msgstr "গৰাকী {0} -ৰ বাবে ueber প্ৰমাণপত্ৰ পোৱা নগল। অনুগ্ৰহ কৰি এটা সৃজন কৰক।"
+msgstr ""
+"গৰাকী {0} -ৰ বাবে ueber প্ৰমাণপত্ৰ পোৱা নগল। অনুগ্ৰহ কৰি এটা সৃজন কৰক।"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:912
 #, java-format
@@ -616,7 +626,8 @@ msgstr "অপৰ্যাপ্ত অনুমতিসমূহ"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:276
 msgid "Must specify an org to register with activation keys."
-msgstr "সক্ৰিয়কৰণ চাবিসমূহৰ সৈতে ৰেজিস্টাৰ কৰিবলে এটা সংঘঠন ধাৰ্য্য কৰিব লাগিব।"
+msgstr ""
+"সক্ৰিয়কৰণ চাবিসমূহৰ সৈতে ৰেজিস্টাৰ কৰিবলে এটা সংঘঠন ধাৰ্য্য কৰিব লাগিব।"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:280
 msgid "Cannot specify username with activation keys."
@@ -725,8 +736,8 @@ msgid ""
 "Consumer {0} cannot be exported. A manifest cannot be made for consumer of "
 "type ''{1}''."
 msgstr ""
-"উপভোক্তা {0} -ক এক্সপোৰ্ট কৰিব নোৱাৰি। ধৰণ ''{1}'' -ৰ উপভোক্তাৰ বাবে এটা ব্যক্ত "
-"নিৰ্মাণ কৰিব নোৱাৰি।"
+"উপভোক্তা {0} -ক এক্সপোৰ্ট কৰিব নোৱাৰি। ধৰণ ''{1}'' -ৰ উপভোক্তাৰ বাবে এটা "
+"ব্যক্ত নিৰ্মাণ কৰিব নোৱাৰি।"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1296
 msgid "Unable to create export archive"

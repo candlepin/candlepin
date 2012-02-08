@@ -2,18 +2,19 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# fvalen <fvalen@fedoraproject.org>, 2012. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: 0.5.X\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-01-11 15:27-0500\n"
+"POT-Creation-Date: 2011-12-02 08:12-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: \n"
 
 #: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:119
 #: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:155
@@ -105,12 +106,14 @@ msgstr "Questo utente risulta già sottoscritto al prodotto ''{0}''"
 msgid ""
 "There are not enough free entitlements available for the product ''{0}''"
 msgstr ""
-"Non sono disponibili entitlement gratuiti sufficienti per il prodotto ''{0}''"
+"Non sono disponibili entitlement gratuiti sufficienti per il prodotto "
+"''{0}''"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:184
 #, java-format
 msgid "Consumers of this type are not allowed to the product ''{0}''"
-msgstr "Gli utenti di questo tipo non sono abilitati a questo prodotto ''{0}''"
+msgstr ""
+"Gli utenti di questo tipo non sono abilitati a questo prodotto ''{0}''"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:189
 #, java-format
@@ -136,8 +139,10 @@ msgstr "Il nome utente deve avere meno di {0} caratteri."
 
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:317
 #, java-format
-msgid "The consumer with UUID {0} is a virtual guest. It does not have guests."
-msgstr "L'utenza con un UUID {0} è un guest virtuale. Non presenta alcun guest"
+msgid ""
+"The consumer with UUID {0} is a virtual guest. It does not have guests."
+msgstr ""
+"L'utenza con un UUID {0} è un guest virtuale. Non presenta alcun guest"
 
 #: src/main/java/org/candlepin/model/EntitlementCurator.java:241
 #, java-format
@@ -188,10 +193,12 @@ msgstr "Il processo d'importazione è più vecchio dei dati esistenti"
 #, java-format
 msgid "Incompatible rules: import version {0} older than our version {1}."
 msgstr ""
+"Regole incompatibili: versione di importazione {0} più vecchia della nostra "
+"versione {1}."
 
 #: src/main/java/org/candlepin/sync/Importer.java:288
 msgid "Manifest data will be imported without rules import."
-msgstr ""
+msgstr "I dati del manifesto saranno importati senza le regole."
 
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:113
 #, java-format
@@ -411,12 +418,13 @@ msgstr "Impossibile trovare un Entitlement Pool con ID ''{0}''"
 #: src/main/java/org/candlepin/resource/JobResource.java:108
 msgid "You must specify an owner key, consumer uuid, or principal name."
 msgstr ""
-"Specifica una chiave del proprietario, uuid dell'utenza o un nome principale."
+"Specifica una chiave del proprietario, uuid dell'utenza o un nome "
+"principale."
 
 #: src/main/java/org/candlepin/resource/JobResource.java:114
 msgid ""
-"You must specify one of owner key, consumer uuid, or principal name, but not "
-"all."
+"You must specify one of owner key, consumer uuid, or principal name, but not"
+" all."
 msgstr ""
 "Specifica uno tra la chiave del proprietario, uuid dell'utenza o un nome "
 "principale ma non tutti."
@@ -490,12 +498,12 @@ msgstr "La quantità deve essere maggiore di 0"
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:145
 msgid ""
-"Pools requiring a 'person' consumer should not be added to an activation key "
-"since a consumer type of 'person' cannot be used with activation keys"
+"Pools requiring a 'person' consumer should not be added to an activation key"
+" since a consumer type of 'person' cannot be used with activation keys"
 msgstr ""
-"I pool che hanno bisogno dell'utenza 'persona' non devono essere aggiunti ad "
-"una chiave di attivazione poichè questo tipo di utenza non può essere usata "
-"con le chiavi di attivazione."
+"I pool che hanno bisogno dell'utenza 'persona' non devono essere aggiunti ad"
+" una chiave di attivazione poichè questo tipo di utenza non può essere usata"
+" con le chiavi di attivazione."
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:154
 msgid ""
@@ -503,8 +511,8 @@ msgid ""
 "to the activation key with a quantity greater than one."
 msgstr ""
 "Errore: Solo i pool con sottoscrizioni al prodotto con entitlement multipli "
-"possono essere aggiunti alla chiave di attivazione con una quantità maggiore "
-"di uno."
+"possono essere aggiunti alla chiave di attivazione con una quantità maggiore"
+" di uno."
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:161
 msgid "The quantity must not be greater than the total allowed for the pool"
@@ -603,8 +611,8 @@ msgstr "Dati errati nell'archivio di esportazione"
 #, java-format
 msgid "Problem generating ueber cert for owner {0}"
 msgstr ""
-"Problemi durante la generazione di un euber cert (certificato master) per il "
-"proprietario {0}"
+"Problemi durante la generazione di un euber cert (certificato master) per il"
+" proprietario {0}"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:898
 #, java-format
@@ -744,7 +752,8 @@ msgstr "Impossibile trovare un entitlement con ID ''{0}''."
 #, java-format
 msgid "Entitlement Certificate with serial number {0} could not be found."
 msgstr ""
-"Impossibile trovare un Certificato dell''entitlement con numero di serie {0}."
+"Impossibile trovare un Certificato dell''entitlement con numero di serie "
+"{0}."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1281
 #, java-format

@@ -2,18 +2,19 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# nnakakit <nnakakit@fedoraproject.org>, 2012. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: 0.5.X\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-01-11 15:27-0500\n"
+"POT-Creation-Date: 2011-12-02 08:12-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: \n"
 
 #: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:119
 #: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:155
@@ -52,9 +53,7 @@ msgstr "サブスクリプションプール {0} は存在しません"
 msgid ""
 "This consumer is already subscribed to the product matching pool with id "
 "''{0}''."
-msgstr ""
-"このコンシューマーは id ''{0}'' のプールに一致する製品に既にサブスクライブさ"
-"れています"
+msgstr "このコンシューマーは id ''{0}'' のプールに一致する製品に既にサブスクライブされています"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:109
 #, java-format
@@ -66,15 +65,12 @@ msgstr "id ''{0}'' を持つプールにはフリーのエンタイトルメン�
 msgid ""
 "Consumers of this type are not allowed to subscribe to the pool with id "
 "''{0}''."
-msgstr ""
-"このタイプのコンシューマーは id ''{0}'' のプールへサブスクライブすることは許"
-"可されていません"
+msgstr "このタイプのコンシューマーは id ''{0}'' のプールへサブスクライブすることは許可されていません"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:118
 #, java-format
 msgid "Multi-entitlement not supported for pool with id ''{0}''."
-msgstr ""
-"id ''{0}'' を持つプールには複数エンタイトルメントのサポートはありません"
+msgstr "id ''{0}'' を持つプールには複数エンタイトルメントのサポートはありません"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:122
 #, java-format
@@ -136,7 +132,8 @@ msgstr "コンシューマーの名前は {0} 文字以下にする必要があ�
 
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:317
 #, java-format
-msgid "The consumer with UUID {0} is a virtual guest. It does not have guests."
+msgid ""
+"The consumer with UUID {0} is a virtual guest. It does not have guests."
 msgstr "UUID {0} のコンシューマーは仮想ゲストです。 ゲストはありません。"
 
 #: src/main/java/org/candlepin/model/EntitlementCurator.java:241
@@ -187,11 +184,11 @@ msgstr "インポートは既存データよりも古いものです"
 #: src/main/java/org/candlepin/sync/Importer.java:285
 #, java-format
 msgid "Incompatible rules: import version {0} older than our version {1}."
-msgstr ""
+msgstr "インポートされるバージョン {0} が現在のバージョン {1} より古い場合は、規則は同時に使用できません。"
 
 #: src/main/java/org/candlepin/sync/Importer.java:288
 msgid "Manifest data will be imported without rules import."
-msgstr ""
+msgstr "マニフェストデータは規則をインポートしなくてもインポートされます。"
 
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:113
 #, java-format
@@ -353,17 +350,15 @@ msgstr "UUID ''{0}'' を持つ製品は見つかりません"
 #: src/main/java/org/candlepin/resource/ProductResource.java:193
 #, java-format
 msgid "Product with UUID ''{0}'' cannot be deleted while subscriptions exist."
-msgstr ""
-"UUID ''{0}'' を持つ製品はサブスクリプションの存在中には削除できません。"
+msgstr "UUID ''{0}'' を持つ製品はサブスクリプションの存在中には削除できません。"
 
 #: src/main/java/org/candlepin/resource/RulesResource.java:81
 msgid "Error decoding the rules. The text should be base 64 encoded"
-msgstr ""
-"規則の復号化でエラー。テキストは base 64 でエンコードする必要があります"
+msgstr "規則の復号化でエラー。テキストは base 64 でエンコードする必要があります"
 
 #: src/main/java/org/candlepin/resource/RulesResource.java:105
 msgid "couldn't read rules file"
-msgstr "規則ファイルを読み込めません"
+msgstr "規則のファイルを読み込めません"
 
 #: src/main/java/org/candlepin/resource/PoolResource.java:117
 msgid "Cannot filter on both owner and consumer"
@@ -409,16 +404,13 @@ msgstr ""
 
 #: src/main/java/org/candlepin/resource/JobResource.java:108
 msgid "You must specify an owner key, consumer uuid, or principal name."
-msgstr ""
-"所有者キー、コンシューマー uuid、又は主要な名前を指定する必要があります。"
+msgstr "所有者キー、コンシューマー uuid、又は主要な名前を指定する必要があります。"
 
 #: src/main/java/org/candlepin/resource/JobResource.java:114
 msgid ""
-"You must specify one of owner key, consumer uuid, or principal name, but not "
-"all."
-msgstr ""
-"所有者キー、コンシューマー uuid、又は主要な名前の１つを指定する必要があります"
-"が、全てではありません。"
+"You must specify one of owner key, consumer uuid, or principal name, but not"
+" all."
+msgstr "所有者キー、コンシューマー uuid、又は主要な名前の１つを指定する必要がありますが、全てではありません。"
 
 #: src/main/java/org/candlepin/resource/JobResource.java:173
 msgid "Error setting scheduler status"
@@ -491,20 +483,16 @@ msgstr ""
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:145
 msgid ""
-"Pools requiring a 'person' consumer should not be added to an activation key "
-"since a consumer type of 'person' cannot be used with activation keys"
+"Pools requiring a 'person' consumer should not be added to an activation key"
+" since a consumer type of 'person' cannot be used with activation keys"
 msgstr ""
-"コンシューマータイプ「ユーザー」はアクティベーションキーで使用できないため、"
-"「ユーザー」コンシューマーを必要とするプールはアクティベーションキーに追加し"
-"てはいけません。"
+"コンシューマータイプ「ユーザー」はアクティベーションキーで使用できないため、「ユーザー」コンシューマーを必要とするプールはアクティベーションキーに追加してはいけません。"
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:154
 msgid ""
 "Error: Only pools with multi-entitlement product subscriptions can be added "
 "to the activation key with a quantity greater than one."
-msgstr ""
-"エラー: 複数エンタイトルメントの製品サブスクリプションを持つプールのみが１以"
-"上の数量でアクティベーションキーに追加できます"
+msgstr "エラー: 複数エンタイトルメントの製品サブスクリプションを持つプールのみが１以上の数量でアクティベーションキーに追加できます"
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:161
 msgid "The quantity must not be greater than the total allowed for the pool"
@@ -567,9 +555,7 @@ msgstr "アクティベーションキーの名前を提供して下さい"
 #: src/main/java/org/candlepin/resource/OwnerResource.java:402
 msgid ""
 "Activation key names must be alphanumeric or the characters '-' or '_'. ["
-msgstr ""
-"アクティベーションキーの名前は英数字か、又は文字 '-' か '_'. [ でなければなり"
-"ません"
+msgstr "アクティベーションキーの名前は英数字か、又は文字 '-' か '_'. [ でなければなりません"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:409
 msgid "Activation key name ["
@@ -646,8 +632,7 @@ msgstr "システム名は # 文字で開始できません"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:314
 msgid "A consumer type of 'person' cannot be used with activation keys"
-msgstr ""
-"コンシューマータイプ「ユーザー」はアクティベーションキーと使用できません"
+msgstr "コンシューマータイプ「ユーザー」はアクティベーションキーと使用できません"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:368
 msgid "Pool ID must be provided"
@@ -739,9 +724,7 @@ msgstr "シリアル番号 {0} のエンタイトルメント証明書は見付�
 msgid ""
 "Consumer {0} cannot be exported. A manifest cannot be made for consumer of "
 "type ''{1}''."
-msgstr ""
-"コンシューマー {0} はエキスポートできません。タイプ ''{1}'' のコンシューマー"
-"にはマニフェストを作成できません。"
+msgstr "コンシューマー {0} はエキスポートできません。タイプ ''{1}'' のコンシューマーにはマニフェストを作成できません。"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1296
 msgid "Unable to create export archive"
