@@ -168,10 +168,10 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
         consumerCurator.delete(consumer);
         DeletedConsumerCurator dcc = injector.getInstance(DeletedConsumerCurator.class);
-        assertEquals(1, dcc.countByConsumerId(cid));
-        DeletedConsumer dc = dcc.findByConsumerId(cid);
+        assertEquals(1, dcc.countByConsumerUuid(cid));
+        DeletedConsumer dc = dcc.findByConsumerUuid(cid);
 
-        assertEquals(cid, dc.getConsumerId());
+        assertEquals(cid, dc.getConsumerUuid());
         assertEquals(owner.getId(), dc.getOwnerId());
     }
 }

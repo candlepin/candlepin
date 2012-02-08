@@ -52,16 +52,16 @@ public class DeletedConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void byConsumerId() {
-        DeletedConsumer found = dcc.findByConsumerId("abcde");
-        assertEquals("abcde", found.getConsumerId());
+        DeletedConsumer found = dcc.findByConsumerUuid("abcde");
+        assertEquals("abcde", found.getConsumerUuid());
     }
 
     @Test
     public void byConsumer() {
         Consumer c = mock(Consumer.class);
-        when(c.getId()).thenReturn("abcde");
+        when(c.getUuid()).thenReturn("abcde");
         DeletedConsumer found = dcc.findByConsumer(c);
-        assertEquals("abcde", found.getConsumerId());
+        assertEquals("abcde", found.getConsumerUuid());
     }
 
     @Test
@@ -80,19 +80,19 @@ public class DeletedConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void countByConsumerId() {
-        assertEquals(1, dcc.countByConsumerId("abcde"));
-        assertEquals(0, dcc.countByConsumerId("dontfind"));
-        assertEquals(1, dcc.countByConsumerId("fghij"));
+        assertEquals(1, dcc.countByConsumerUuid("abcde"));
+        assertEquals(0, dcc.countByConsumerUuid("dontfind"));
+        assertEquals(1, dcc.countByConsumerUuid("fghij"));
     }
 
     @Test
     public void countByConsumer() {
         Consumer c = mock(Consumer.class);
-        when(c.getId()).thenReturn("abcde");
+        when(c.getUuid()).thenReturn("abcde");
         assertEquals(1, dcc.countByConsumer(c));
 
         c = mock(Consumer.class);
-        when(c.getId()).thenReturn("dontfind");
+        when(c.getUuid()).thenReturn("dontfind");
         assertEquals(0, dcc.countByConsumer(c));
     }
 }

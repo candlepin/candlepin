@@ -30,12 +30,12 @@ public class DeletedConsumerCurator extends
     }
 
     public DeletedConsumer findByConsumer(Consumer c) {
-        return findByConsumerId(c.getId());
+        return findByConsumerUuid(c.getUuid());
     }
 
-    public DeletedConsumer findByConsumerId(String cid) {
+    public DeletedConsumer findByConsumerUuid(String uuid) {
         return (DeletedConsumer) currentSession().createCriteria(DeletedConsumer.class)
-            .add(Restrictions.eq("consumerId", cid))
+            .add(Restrictions.eq("consumerUuid", uuid))
             .uniqueResult();
     }
 
@@ -51,12 +51,12 @@ public class DeletedConsumerCurator extends
     }
 
     public int countByConsumer(Consumer c) {
-        return countByConsumerId(c.getId());
+        return countByConsumerUuid(c.getUuid());
     }
 
-    public int countByConsumerId(String cid) {
+    public int countByConsumerUuid(String uuid) {
         return (Integer) currentSession().createCriteria(DeletedConsumer.class)
-                        .add(Restrictions.eq("consumerId", cid))
+                        .add(Restrictions.eq("consumerUuid", uuid))
                         .setProjection(Projections.rowCount()).uniqueResult();
 
     }

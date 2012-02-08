@@ -46,8 +46,8 @@ public class DeletedConsumer extends AbstractHibernateObject {
      * using the id instead of actual Consumer because we will be deleting the
      * real consumer hence no foreign key.
      */
-    @Column(name = "consumer_id", length = 32, nullable = false, unique = true)
-    private String consumerId;
+    @Column(name = "consumer_uuid", length = 255, nullable = false, unique = true)
+    private String consumerUuid;
 
     /**
      * using the id instead of actual Owner because the owner could be deleted
@@ -56,8 +56,8 @@ public class DeletedConsumer extends AbstractHibernateObject {
     @Column(name = "owner_id", length = 32, nullable = false)
     private String ownerId;
 
-    public DeletedConsumer(String cid, String oid) {
-        consumerId = cid;
+    public DeletedConsumer(String cuuid, String oid) {
+        consumerUuid = cuuid;
         ownerId = oid;
     }
 
@@ -73,12 +73,12 @@ public class DeletedConsumer extends AbstractHibernateObject {
         this.id = id;
     }
 
-    public void setConsumerId(String cid) {
-        consumerId = cid;
+    public void setConsumerUuid(String cid) {
+        consumerUuid = cid;
     }
 
-    public String getConsumerId() {
-        return consumerId;
+    public String getConsumerUuid() {
+        return consumerUuid;
     }
 
     public void setOwnerId(String oid) {
