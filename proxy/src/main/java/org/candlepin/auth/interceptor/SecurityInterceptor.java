@@ -101,7 +101,7 @@ public class SecurityInterceptor implements MethodInterceptor {
         // If method is annotated with SecurityHole and requires no authentication,
         // allow to proceed:
         if (securityHole != null && securityHole.noAuth()) {
-            log.warn("Allowing invocation to proceed with no authentication required.");
+            log.debug("Allowing invocation to proceed with no authentication required.");
             return invocation.proceed();
         }
 

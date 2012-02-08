@@ -713,14 +713,14 @@ public class ConsumerResource {
                 if (!removedGuests.contains(guestId) && !addedGuests.contains(guestId)) {
                     log.warn("Guest " + guestId.getGuestId() +
                         " is currently being hosted by two hosts: " +
-                        existing.getUuid() + " " + host.getUuid());
+                        existing.getName() + " " + host.getName());
                 }
 
                 // Revoke any entitlements related to the other host.
-                if (log.isDebugEnabled()) {
-                    log.debug("Guest was associated with another host. Revoking " +
-                        "entitlements related to host: " + host.getName());
-                }
+                log.warn("Guest was associated with another host. Revoking " +
+                        "invalidated host-specific entitlements related to host: " +
+                        host.getName());
+
                 revokeGuestEntitlementsMatchingHost(host, guest);
                 // commented out per mkhusid (see 768872, around comment #41)
                 /*
@@ -778,11 +778,13 @@ public class ConsumerResource {
             Pool pool = entitlement.getPool();
             String requiredHost = getRequiredHost(pool);
             if (isVirtOnly(pool) && requiredHost.equals(host.getUuid())) {
-                if (log.isDebugEnabled()) {
-                    log.debug("Removing entitlement " + entitlement.getProductId() +
-                        " from guest " + guest.getName());
-                }
+                log.warn("Removing entitlement " + entitlement.getProductId() +
+                    " from guest " + guest.getName());
                 poolManager.revokeEntitlement(entitlement);
+            }
+            else {
+                log.info("Entitlement " + entitlement.getProductId() +
+                         "on " + guest.getName() + "is still valid, not removed");
             }
         }
     }
