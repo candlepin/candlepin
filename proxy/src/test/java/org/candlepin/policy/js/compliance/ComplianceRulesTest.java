@@ -189,6 +189,7 @@ public class ComplianceRulesTest {
         ents.add(mockEntitlement(c, "Awesome Product", PRODUCT_1));
         ents.get(0).getPool().addProductAttribute(new ProductPoolAttribute("sockets",
             "4", PRODUCT_1));
+        ents.get(0).setQuantity(1000); // quantity makes no difference outside stacking
         when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));

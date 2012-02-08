@@ -925,7 +925,7 @@ function ent_is_compliant(consumer, ent, log) {
         consumer_sockets = parseInt(consumer.getFact(SOCKET_FACT));
     }
 
-    var covered_sockets = parseInt(ent.getPool().getProductAttribute("sockets").getValue()) * ent.getQuantity();
+    var covered_sockets = parseInt(ent.getPool().getProductAttribute("sockets").getValue());
 
     return covered_sockets >= consumer_sockets;
 }
