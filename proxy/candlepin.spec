@@ -11,7 +11,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.5.16
+Version: 0.5.17
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -199,6 +199,16 @@ fi
 
 
 %changelog
+* Thu Feb 09 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.5.17-1
+- 789034: Replace $env if possible when generating ent certs.
+  (dgoodwin@redhat.com)
+- better log statements for debugging migration issues (cduryee@redhat.com)
+- Ignore quantity when checking sockets for non-stacked entitlements.
+  (dgoodwin@redhat.com)
+- make zanata translations compile (alikins@redhat.com)
+- translations from zanata (alikins@redhat.com)
+- Check sockets on non-stacked entitlements as well. (dgoodwin@redhat.com)
+
 * Fri Feb 03 2012 jesus m. rodriguez <jesusr@redhat.com> 0.5.16-1
 - 786963: allow manifest imports to handle complex version numbers (jesusr@redhat.com)
 - 784905: Fix deletion of orgs with an ueber certificate. (dgoodwin@redhat.com)
