@@ -19,6 +19,8 @@ import java.util.List;
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.DeletedConsumerCurator;
+
 import org.jboss.resteasy.spi.HttpRequest;
 
 import com.google.inject.Inject;
@@ -33,8 +35,9 @@ class TrustedConsumerAuth extends ConsumerAuth {
     public static final String CONSUMER_HEADER = "cp-consumer";
 
     @Inject
-    TrustedConsumerAuth(ConsumerCurator consumerCurator) {
-        super(consumerCurator);
+    TrustedConsumerAuth(ConsumerCurator consumerCurator,
+        DeletedConsumerCurator deletedConsumerCurator) {
+        super(consumerCurator, deletedConsumerCurator);
     }
 
     public Principal getPrincipal(HttpRequest request) {

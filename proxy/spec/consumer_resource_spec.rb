@@ -42,6 +42,13 @@ describe 'Consumer Resource' do
     end.should raise_exception(RestClient::Gone)
   end
 
+  it 'should return a 410 for a consumer with an invalid identity cert' do
+    @consumer1.unregister
+    lambda do
+      @consumer1.unregister
+    end.should raise_exception(RestClient::Gone)
+  end
+
   it 'allows super admins to see all consumers' do
 
     uuids = []

@@ -16,8 +16,10 @@ package org.candlepin.resteasy.interceptor;
 
 import org.apache.log4j.Logger;
 import org.candlepin.auth.ConsumerPrincipal;
+import org.candlepin.exceptions.GoneException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.DeletedConsumerCurator;
 
 import com.google.inject.Inject;
 
@@ -29,16 +31,26 @@ public abstract class ConsumerAuth implements AuthProvider {
     private static Logger log = Logger.getLogger(ConsumerAuth.class);
 
     protected ConsumerCurator consumerCurator;
+    protected DeletedConsumerCurator deletedConsumerCurator;
 
     @Inject
-    ConsumerAuth(ConsumerCurator consumerCurator) {
+    ConsumerAuth(ConsumerCurator consumerCurator,
+        DeletedConsumerCurator deletedConsumerCurator) {
         this.consumerCurator = consumerCurator;
+        this.deletedConsumerCurator = deletedConsumerCurator;
     }
 
     public ConsumerPrincipal createPrincipal(String consumerUuid) {
         ConsumerPrincipal principal = null;
 
         if (consumerUuid != null) {
+            // If this UUID has been deleted, return a 410.
+            if (deletedConsumerCurator.countByConsumerUuid(consumerUuid) > 0) {
+                log.debug("Key " + consumerUuid + " is deleted, throwing GoneException");
+                throw new GoneException("Consumer " + consumerUuid +
+                    " has been deleted", consumerUuid);
+            }
+
             Consumer consumer = this.consumerCurator.getConsumer(consumerUuid);
 
             if (consumer != null) {
