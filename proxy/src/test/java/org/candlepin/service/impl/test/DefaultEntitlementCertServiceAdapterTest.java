@@ -239,6 +239,39 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
 
     @Test
+    public void testPrefixExpandsEnvIfConsumerHasOne() throws Exception {
+        owner.setContentPrefix("/someorg/$env/");
+
+        // Setup an environment for the consumer:
+        Environment e = new Environment("env1", "Env 1", owner);
+        e.getEnvironmentContent().add(new EnvironmentContent(e, content.getId(), true));
+        when(entitlement.getConsumer().getEnvironment()).thenReturn(e);
+
+        certServiceAdapter.createX509Certificate(entitlement, subscription,
+            product, new BigInteger("1234"), keyPair(), true);
+
+        verify(mockedPKI).createX509Certificate(
+            any(String.class),
+            argThat(new ListContainsContentUrl("/someorg/env1/" + CONTENT_URL,
+                CONTENT_ID)), any(Date.class), any(Date.class),
+            any(KeyPair.class), any(BigInteger.class), any(String.class));
+    }
+
+    @Test
+    public void testPrefixIgnoresEnvIfConsumerHasNone() throws Exception {
+        owner.setContentPrefix("/someorg/$env/");
+
+        certServiceAdapter.createX509Certificate(entitlement, subscription,
+            product, new BigInteger("1234"), keyPair(), true);
+
+        verify(mockedPKI).createX509Certificate(
+            any(String.class),
+            argThat(new ListContainsContentUrl("/someorg/$env/" + CONTENT_URL,
+                CONTENT_ID)), any(Date.class), any(Date.class),
+            any(KeyPair.class), any(BigInteger.class), any(String.class));
+    }
+
+    @Test
     public void testPrefixesAreNotUsedForUeberCertificate() throws Exception {
         owner.setContentPrefix("/somePrefix/");
 
@@ -405,8 +438,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
             any(Date.class), any(KeyPair.class), any(BigInteger.class),
             any(String.class));
     }
-
-
 
     @Test
     public void supportValuesPresentOnCertIfAttributePresent() throws Exception {

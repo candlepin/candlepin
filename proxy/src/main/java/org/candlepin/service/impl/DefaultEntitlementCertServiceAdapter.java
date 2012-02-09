@@ -32,6 +32,7 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.KeyPairCurator;
 import org.candlepin.model.Pool;
@@ -195,13 +196,21 @@ public class DefaultEntitlementCertServiceAdapter extends
             }
         }
 
+        String contentPrefix = null;
+        if (useContentPrefix) {
+            contentPrefix = ent.getOwner().getContentPrefix();
+            Environment env = ent.getConsumer().getEnvironment();
+            if (contentPrefix != null && env != null) {
+                contentPrefix = contentPrefix.replaceAll("\\$env", env.getId());
+            }
+        }
+
         for (Product prod : Collections2
             .filter(products, PROD_FILTER_PREDICATE)) {
             extensions.addAll(extensionUtil.productExtensions(prod));
             extensions.addAll(extensionUtil.contentExtensions(
                 filterProductContent(prod, ent),
-                useContentPrefix ? ent.getOwner().getContentPrefix() : null,
-                    promotedContent, ent.getConsumer()));
+                contentPrefix, promotedContent, ent.getConsumer()));
         }
 
         if (sub != null) {
