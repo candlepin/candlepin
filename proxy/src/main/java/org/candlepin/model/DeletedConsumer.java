@@ -61,6 +61,10 @@ public class DeletedConsumer extends AbstractHibernateObject {
         ownerId = oid;
     }
 
+    public DeletedConsumer() {
+
+    }
+
     @Override
     public String getId() {
         return id;

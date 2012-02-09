@@ -36,6 +36,7 @@ import org.candlepin.model.ActivationKey;
 import org.candlepin.model.ActivationKeyCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
@@ -249,18 +250,23 @@ public class SecurityInterceptor implements MethodInterceptor {
 
     private class ConsumerStore implements EntityStore {
         private ConsumerCurator consumerCurator;
+        private DeletedConsumerCurator deletedConsumerCurator;
 
         @Override
         public Object lookup(String key) {
             if (consumerCurator == null) {
                 consumerCurator = injector.getInstance(ConsumerCurator.class);
             }
-            // XXX: mockup code for testing
-            if ("deleted-consumer-id".equals(key)) {
-                // XXX: 410 lookup
-                log.info("Key is deleted, throwing GoneException");
+
+            if (deletedConsumerCurator == null) {
+                deletedConsumerCurator = injector.getInstance(DeletedConsumerCurator.class);
+            }
+
+            if (deletedConsumerCurator.countByConsumerUuid(key) > 0) {
+                log.debug("Key " + key + " is deleted, throwing GoneException");
                 throw new GoneException("Consumer " + key + " has been deleted", key);
             }
+
             return consumerCurator.findByUuid(key);
         }
     }

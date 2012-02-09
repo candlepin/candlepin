@@ -70,7 +70,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @EnforceAccessControl
     public void delete(Consumer entity) {
         // save off the ids before we delete
-        DeletedConsumer dc = new DeletedConsumer(entity.getId(),
+        DeletedConsumer dc = new DeletedConsumer(entity.getUuid(),
             entity.getOwner().getId());
 
         super.delete(entity);

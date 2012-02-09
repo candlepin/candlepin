@@ -35,6 +35,13 @@ describe 'Consumer Resource' do
     @consumer1.get_consumer()['entitlementStatus'].should == "valid"
   end
 
+  it 'should return a 410 for deleted consumers' do
+    @cp.unregister(@consumer1.uuid)
+    lambda do
+      @cp.get_consumer(@consumer1.uuid)
+    end.should raise_exception(RestClient::Gone)
+  end
+
   it 'allows super admins to see all consumers' do
 
     uuids = []
