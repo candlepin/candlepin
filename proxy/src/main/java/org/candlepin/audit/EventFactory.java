@@ -275,7 +275,8 @@ public class EventFactory {
         Event event = new Event(eventType, Event.Target.GUESTID,
             affectedGuestId.getGuestId(), principalProvider.get(),
             affectedConsumer.getOwner().getId(), affectedConsumer.getId(),
-            affectedGuestId.getId(), null, entityToJson(affectedGuestId), null, null);
+            // we use getGuestId here since we may not have a guestID obj with an ID yet
+            affectedGuestId.getGuestId(), null, entityToJson(affectedGuestId), null, null);
         return event;
     }
 
