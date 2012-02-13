@@ -90,8 +90,6 @@ data['roles'].each do |new_role|
 end
 
 puts
-owners = cp.list_owners({:fetch => true})
-owner_key = owners[0]['key']
 
 # import all the content sets
 puts "Importing content set data..."
@@ -117,6 +115,10 @@ data['content'].each do |c|
                     c['vendor'], params)
 end
 
+
+owners = cp.list_owners({:fetch => true})
+owner_keys = owners.map{|owner| owner['key']}.compact
+owner_key = 'admin'
 
 CERT_DIR='generated_certs'
 if not File.directory? CERT_DIR
@@ -159,19 +161,28 @@ data['products'].each do |product|
   # and create subscriptions for it:
   if id.to_i.to_s != id:
     # Create a SMALL and a LARGE with the slightly similar begin/end dates.
-    subscription = cp.create_subscription(owner_key,
-                                          product_ret['id'], SMALL_SUB_QUANTITY, provided_products,
-                                          contract_number, '12331131231', startDate1, endDate1)
-    contract_number += 1
-    subscription = cp.create_subscription(owner_key,
-                                          product_ret['id'], LARGE_SUB_QUANTITY, provided_products,
-                                          contract_number, '12331131231', startDate1, endDate1)
+    owner_keys.each do |owner_key|
+      subscription = cp.create_subscription(owner_key,
+                                            product_ret['id'],
+                                            SMALL_SUB_QUANTITY,
+                                            provided_products,
+                                            contract_number, '12331131231',
+                                            startDate1, endDate1)
+      contract_number += 1
+      subscription = cp.create_subscription(owner_key,
+                                            product_ret['id'],
+                                            LARGE_SUB_QUANTITY,
+                                            provided_products,
+                                            contract_number, '12331131231',
+                                            startDate1, endDate1)
 
-    # Create a subscription for the future:
-    subscription = cp.create_subscription(owner_key, product_ret['id'],
-                                          15, provided_products,
-                                          contract_number, '12331131231', startDate2, endDate2)
-    contract_number += 1
+      # Create a subscription for the future:
+      subscription = cp.create_subscription(owner_key, product_ret['id'],
+                                            15, provided_products,
+                                            contract_number, '12331131231',
+                                            startDate2, endDate2)
+      contract_number += 1
+    end
   end
 
   # TODO: not sure what's going on here?
@@ -188,4 +199,7 @@ data['products'].each do |product|
 end
 
 # Refresh to create pools for all subscriptions just created:
-cp.refresh_pools(owner_key)
+owner_keys.each do |owner_key|
+    puts "refreshing pools for " + owner_key
+    cp.refresh_pools(owner_key)
+end
