@@ -842,11 +842,11 @@ public class DefaultRulesTest {
 
         Pool physicalPool = pools.get(0);
         physicalPool.setId("physical");
-        
+
         assertEquals(new Long(10), physicalPool.getQuantity());
         assertEquals(0, physicalPool.getAttributes().size());
     }
-    
+
     @Test
     public void exportAllPhysicalZeroBonusPoolQuantity() {
         when(config.standalone()).thenReturn(false);
