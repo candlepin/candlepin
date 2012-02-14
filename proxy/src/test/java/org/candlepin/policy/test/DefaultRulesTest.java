@@ -17,6 +17,7 @@ package org.candlepin.policy.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
@@ -819,6 +820,33 @@ public class DefaultRulesTest {
         verify(poolManagerMock, never()).updatePoolQuantity(any(Pool.class), anyInt());
     }
 
+    @Test
+    public void hostedVirtLimitBadValueDoesntTraceBack() {
+        when(config.standalone()).thenReturn(false);
+        Consumer c = new Consumer("test consumer", "test user", owner,
+            new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
+        Enforcer enf = new ManifestEntitlementRules(new DateSourceImpl(),
+            new JsRulesProvider(rulesCurator).get(),
+            prodAdapter, I18nFactory.getI18n(getClass(), Locale.US,
+                I18nFactory.FALLBACK), config, consumerCurator);
+        Subscription s = createVirtLimitSub("virtLimitProduct", 10, "badvalue");
+
+        List<Pool> pools = null;
+        try {
+            pools = poolRules.createPools(s);
+        }
+        catch (Exception e) {
+            fail();
+        }
+        assertEquals(1, pools.size());
+
+        Pool physicalPool = pools.get(0);
+        physicalPool.setId("physical");
+        
+        assertEquals(new Long(10), physicalPool.getQuantity());
+        assertEquals(0, physicalPool.getAttributes().size());
+    }
+    
     @Test
     public void exportAllPhysicalZeroBonusPoolQuantity() {
         when(config.standalone()).thenReturn(false);

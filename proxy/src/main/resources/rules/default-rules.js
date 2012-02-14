@@ -747,6 +747,8 @@ var Pool = {
             if ('unlimited'.equals(virt_limit)) {
                 var derivedPool = helper.createPool(sub, sub.getProduct().getId(),
                                                     'unlimited', virt_attributes);
+	        derivedPool.setSubscriptionSubKey("derived");
+                pools.add(derivedPool);
             } else {
                 var virt_limit_quantity = parseInt(virt_limit);
 
@@ -756,11 +758,10 @@ var Pool = {
                     var derivedPool = helper.createPool(sub, sub.getProduct().getId(),
                                                         virt_quantity.toString(),
                                                         virt_attributes);
+		    derivedPool.setSubscriptionSubKey("derived");
+		    pools.add(derivedPool);
                 }
             }
-            derivedPool.setSubscriptionSubKey("derived");
-
-            pools.add(derivedPool);
         }
         return pools;
     },
