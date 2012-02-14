@@ -16,6 +16,7 @@ package org.candlepin.service.impl;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.net.URLEncoder;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
@@ -201,7 +202,8 @@ public class DefaultEntitlementCertServiceAdapter extends
             contentPrefix = ent.getOwner().getContentPrefix();
             Environment env = ent.getConsumer().getEnvironment();
             if (contentPrefix != null && env != null) {
-                contentPrefix = contentPrefix.replaceAll("\\$env", env.getId());
+                String encodedEnvName = URLEncoder.encode(env.getName(), "UTF-8");
+                contentPrefix = contentPrefix.replaceAll("\\$env", encodedEnvName);
             }
         }
 

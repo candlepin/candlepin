@@ -243,7 +243,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         owner.setContentPrefix("/someorg/$env/");
 
         // Setup an environment for the consumer:
-        Environment e = new Environment("env1", "Env 1", owner);
+        Environment e = new Environment("env1", "Awesome Environment #1", owner);
         e.getEnvironmentContent().add(new EnvironmentContent(e, content.getId(), true));
         when(entitlement.getConsumer().getEnvironment()).thenReturn(e);
 
@@ -252,9 +252,9 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         verify(mockedPKI).createX509Certificate(
             any(String.class),
-            argThat(new ListContainsContentUrl("/someorg/env1/" + CONTENT_URL,
-                CONTENT_ID)), any(Date.class), any(Date.class),
-            any(KeyPair.class), any(BigInteger.class), any(String.class));
+            argThat(new ListContainsContentUrl("/someorg/Awesome+Environment+%231/" +
+                CONTENT_URL, CONTENT_ID)), any(Date.class), any(Date.class),
+                any(KeyPair.class), any(BigInteger.class), any(String.class));
     }
 
     @Test

@@ -29,6 +29,10 @@ public class X509ExtensionWrapper {
         this.value = value;
     }
 
+    public String toString() {
+        return "[" + oid + " = " + value + "]";
+    }
+
     public String getOid() {
         return oid;
     }
