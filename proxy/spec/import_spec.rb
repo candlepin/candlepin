@@ -1,4 +1,5 @@
 require 'candlepin_scenarios'
+require 'json'
 
 describe 'Candlepin Import' do
 
@@ -75,5 +76,19 @@ describe 'Candlepin Import' do
     @cp.import(owner2['key'], older_export)
   end
 
+  it 'should return 400 when importing already used manifest' do
+    # export was already imported into another org in the
+    # before statement, let's ensure a second import causes
+    # the expected error
+    owner2 = @cp.create_owner(random_string("owner2"))
+
+    begin
+      @cp.import(owner2['key'], @export_filename)
+    rescue RestClient::Exception => e
+        expected = "This distributor has already been imported by another owner"
+        JSON.parse(e.http_body)["displayMessage"].should == expected
+        e.http_code.should == 400
+    end
+  end
 
 end

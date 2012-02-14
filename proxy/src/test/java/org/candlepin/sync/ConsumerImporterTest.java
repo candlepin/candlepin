@@ -93,7 +93,6 @@ public class ConsumerImporterTest {
         consumer.setUuid("test-uuid");
 
         importer.store(owner, consumer);
-
         assertEquals("test-uuid", owner.getUpstreamUuid());
         verify(curator).merge(owner);
     }

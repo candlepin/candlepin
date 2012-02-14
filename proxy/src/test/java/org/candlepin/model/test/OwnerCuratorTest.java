@@ -15,6 +15,7 @@
 package org.candlepin.model.test;
 
 import javax.persistence.RollbackException;
+import javax.persistence.PersistenceException;
 import org.candlepin.model.Owner;
 import org.candlepin.test.DatabaseTestFixture;
 import org.junit.Assert;
@@ -45,5 +46,16 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         newOwner.setId(owner.getId());
 
         this.ownerCurator.replicate(newOwner);
+    }
+
+    @Test(expected = PersistenceException.class)
+    public void upstreamUuidConstraint() {
+        Owner owner1 = new Owner("owner1");
+        owner1.setUpstreamUuid("sameuuid");
+        Owner owner2 = new Owner("owner2");
+        owner2.setUpstreamUuid("sameuuid");
+
+        ownerCurator.create(owner1);
+        ownerCurator.create(owner2);
     }
 }

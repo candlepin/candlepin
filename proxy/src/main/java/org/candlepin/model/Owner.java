@@ -81,7 +81,7 @@ public class Owner extends AbstractHibernateObject implements Serializable,
      * The uuid of the consumer in the upstream candlepin that maps to this
      * owner, for entitlement syncing.
      */
-    @Column(name = "upstream_uuid")
+    @Column(name = "upstream_uuid", unique = true)
     private String upstreamUuid;
 
     /**

@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import javax.persistence.PersistenceException;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
@@ -51,6 +52,7 @@ import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.util.VersionUtil;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.hibernate.exception.ConstraintViolationException;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
@@ -197,6 +199,17 @@ public class Importer {
         catch (CertificateException e) {
             log.error("Exception caught importing archive", e);
             throw new ImportExtractionException("unable to extract export archive", e);
+        }
+        catch (PersistenceException pe) {
+            log.error("Failed to import archive", pe);
+            Throwable cause = pe.getCause();
+            if (cause != null && cause instanceof ConstraintViolationException) {
+                throw new SyncDataFormatException(
+                    i18n.tr("This distributor has already been imported by another owner"));
+            }
+            else {
+                throw new ImportExtractionException(i18n.tr("Failed to import archive"), pe);
+            }
         }
         catch (IOException e) {
             log.error("Exception caught importing archive", e);

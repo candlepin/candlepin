@@ -26,7 +26,6 @@ import org.xnap.commons.i18n.I18n;
  * ConsumerImporter
  */
 public class ConsumerImporter {
-
     private OwnerCurator curator;
     private I18n i18n;
 

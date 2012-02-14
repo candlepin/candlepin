@@ -16,34 +16,53 @@ package org.candlepin.sync;
 
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.io.Reader;
-import java.net.URISyntaxException;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Locale;
-
 import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.exceptions.ConflictException;
+import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.Rules;
+import org.candlepin.model.RulesCurator;
+import org.candlepin.pki.PKIUtility;
+import org.candlepin.policy.js.export.JsExportRules;
+import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.hibernate.exception.ConstraintViolationException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
+import java.io.Reader;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+
+import javax.persistence.PersistenceException;
 
 
 /**
@@ -186,6 +205,54 @@ public class ImporterTest {
         // null Type should cause exception
         i.validateMetadata(ExporterMetadata.TYPE_PER_USER, null, actualmeta, false);
         verify(emc, never()).create(any(ExporterMetadata.class));
+    }
+
+    @Test(expected = SyncDataFormatException.class)
+    public void constraintViolation() throws Exception {
+        Owner o = mock(Owner.class);
+        Consumer c = mock(Consumer.class);
+        ConsumerTypeCurator ctc = mock(ConsumerTypeCurator.class);
+
+        MetaExporter meta = new MetaExporter();
+        ConsumerExporter ce = new ConsumerExporter();
+        ConsumerTypeExporter cte = new ConsumerTypeExporter();
+        ConsumerType ct = new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
+        List<ConsumerType> cts = new ArrayList<ConsumerType>();
+        cts.add(ct);
+        RulesCurator rc = mock(RulesCurator.class);
+        Rules r = mock(Rules.class);
+        RulesImporter ri = new RulesImporter(rc);
+        RulesExporter re = new RulesExporter(rc);
+        EntitlementCertExporter ece = new EntitlementCertExporter();
+        EntitlementCertServiceAdapter ecsa = mock(EntitlementCertServiceAdapter.class);
+        EntitlementCurator ec = mock(EntitlementCurator.class);
+        EntitlementExporter ee = new EntitlementExporter();
+        PKIUtility pki = mock(PKIUtility.class);
+        Config config = mock(Config.class);
+        JsExportRules rules = mock(JsExportRules.class);
+        ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
+        OwnerCurator oc = mock(OwnerCurator.class);
+
+        when(c.getUuid()).thenReturn("fake-uuid");
+        when(ctc.listAll()).thenReturn(cts);
+        when(ctc.lookupByLabel(eq("system"))).thenReturn(ct);
+        when(r.getRules()).thenReturn("rules");
+        when(rc.getRules()).thenReturn(r);
+        when(pki.getSHA256WithRSAHash(any(InputStream.class))).thenReturn("sig".getBytes());
+        when(pki.verifySHA256WithRSAHashWithUpstreamCACert(
+            any(InputStream.class), eq("sig".getBytes()))).thenReturn(true);
+        when(config.getString(eq(ConfigProperties.SYNC_WORK_DIR))).thenReturn("/tmp/");
+        when(oc.merge(any(Owner.class))).thenThrow(new PersistenceException(
+            "fake exception", new ConstraintViolationException(null, null, null, null)));
+
+        Exporter ex = new Exporter(ctc, meta, ce, cte, re, ece, ecsa, null,
+            null, null, ec, ee, pki, config, rules);
+        File export = ex.getFullExport(c);
+
+        Importer i = new Importer(ctc, null, ri, oc, null, null, null,
+            pki, config, emc, null, null, i18n);
+
+        i.loadExport(o, export, false);
     }
 
     @After
