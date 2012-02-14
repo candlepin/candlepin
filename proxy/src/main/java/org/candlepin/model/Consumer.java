@@ -86,6 +86,9 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @Column(length = 32)
     private String entitlementStatus;
 
+    @Column(length = 32)
+    private String serviceLevel;
+
     /*
      * Because this object is used both as a Hibernate object, as well as a DTO to be
      * serialized and sent to callers, we do some magic with these two cert related
@@ -499,6 +502,14 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     public void setEntitlementStatus(String status) {
         this.entitlementStatus = status;
+    }
+
+    public String getServiceLevel() {
+        return serviceLevel;
+    }
+
+    public void setServiceLevel(String level) {
+        this.serviceLevel = level;
     }
 
     public Environment getEnvironment() {

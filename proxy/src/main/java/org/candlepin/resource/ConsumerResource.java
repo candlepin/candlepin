@@ -78,6 +78,7 @@ import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.User;
 import org.candlepin.pinsetter.tasks.EntitlerJob;
@@ -127,6 +128,7 @@ public class ConsumerResource {
     private static final int FEED_LIMIT = 1000;
     private Exporter exporter;
     private PoolManager poolManager;
+    private PoolCurator poolCurator;
     private ConsumerRules consumerRules;
     private ConsumerDeleteHelper consumerDeleteHelper;
     private OwnerCurator ownerCurator;
@@ -144,7 +146,7 @@ public class ConsumerResource {
         EntitlementCertServiceAdapter entCertServiceAdapter, I18n i18n,
         EventSink sink, EventFactory eventFactory, EventCurator eventCurator,
         EventAdapter eventAdapter, UserServiceAdapter userService,
-        Exporter exporter, PoolManager poolManager,
+        Exporter exporter, PoolManager poolManager, PoolCurator poolCurator,
         ConsumerRules consumerRules, ConsumerDeleteHelper consumerDeleteHelper,
         OwnerCurator ownerCurator, ActivationKeyCurator activationKeyCurator,
         Entitler entitler, ComplianceRules complianceRules) {
@@ -163,6 +165,7 @@ public class ConsumerResource {
         this.userService = userService;
         this.exporter = exporter;
         this.poolManager = poolManager;
+        this.poolCurator = poolCurator;
         this.consumerRules = consumerRules;
         this.consumerDeleteHelper = consumerDeleteHelper;
         this.ownerCurator = ownerCurator;
@@ -337,6 +340,8 @@ public class ConsumerResource {
             }
         }
 
+        checkServiceLevel(owner, consumer);
+
         try {
             consumer = consumerCurator.create(consumer);
             IdentityCertificate idCert = generateIdCert(consumer, false);
@@ -377,6 +382,20 @@ public class ConsumerResource {
             throw new BadRequestException(i18n.tr(
                 "Problem creating consumer {0}", consumer));
         }
+    }
+
+    private void checkServiceLevel(Owner owner, Consumer consumer)
+        throws BadRequestException {
+        if (consumer.getServiceLevel() != null &&
+            !consumer.getServiceLevel().trim().equals("")) {
+            if (!poolCurator.retrieveServiceLevelsForOwner(owner)
+                 .contains(consumer.getServiceLevel())) {
+                throw new BadRequestException(
+                    i18n.tr("Cannot set a service level for a consumer " +
+                            "that is not available to its organization."));
+            }
+        }
+
     }
 
     private void logNewConsumerDebugInfo(Consumer consumer,
@@ -568,6 +587,17 @@ public class ConsumerResource {
                 log.debug("   Updating consumer autoheal setting.");
             }
             toUpdate.setAutoheal(updated.isAutoheal());
+            changesMade = true;
+        }
+
+        // Allow optional setting of the service level attribute:
+        if (updated.getServiceLevel() != null &&
+            toUpdate.getServiceLevel() != updated.getServiceLevel()) {
+            if (log.isDebugEnabled()) {
+                log.debug("   Updating consumer service level setting.");
+            }
+            checkServiceLevel(toUpdate.getOwner(), updated);
+            toUpdate.setServiceLevel(updated.getServiceLevel());
             changesMade = true;
         }
 

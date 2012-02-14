@@ -322,6 +322,39 @@ describe 'Consumer Resource' do
     consumer['autoheal'].should == false
   end
 
+  it 'should allow a consumer to update their service level' do
+    product1 = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:support_level => 'VIP'}})
+    subs = @cp.create_subscription(@owner1.key, product1.id)
+    @cp.refresh_pools(@owner1.key)
+
+    user_cp = user_client(@owner1, random_string('billy'))
+    consumer = user_cp.register(random_string('system'), :system, nil,
+      {}, nil, nil, [], [])
+    consumer_client = Candlepin.new(username=nil, password=nil,
+        cert=consumer['idCert']['cert'],
+        key=consumer['idCert']['key'])
+
+    consumer = @cp.get_consumer(consumer['uuid'])
+    consumer['serviceLevel'].should == nil
+
+    consumer_client.update_consumer({:serviceLevel => 'VIP'})
+    consumer = @cp.get_consumer(consumer['uuid'])
+    consumer['serviceLevel'].should == 'VIP'
+
+    # Empty update shouldn't modify the setting:
+    consumer_client.update_consumer({})
+    consumer = @cp.get_consumer(consumer['uuid'])
+    consumer['serviceLevel'].should == 'VIP'
+
+    # Should not be able to set service level to one not available by org
+    lambda do
+        consumer_client.update_consumer({:serviceLevel => 'Ultra-VIP'})
+    end.should raise_exception(RestClient::BadRequest)
+
+  end
+
   it 'should not allow the same UUID to be registered twice' do
     owner = create_owner random_string('owner')
     user = user_client(owner, random_string('willy'))

@@ -109,6 +109,7 @@ class Candlepin
     consumer[:guestIds] = \
         params[:guestIds] if params[:guestIds]
     consumer[:autoheal] = params[:autoheal] if params.has_key?(:autoheal)
+    consumer[:serviceLevel] = params[:serviceLevel] if params.has_key?(:serviceLevel)
 
     path = get_path("consumers")
     put("#{path}/#{uuid}", consumer)
@@ -304,6 +305,13 @@ class Candlepin
     path << "consumer=#{params[:consumer]}&" if params[:consumer]
     path << "product=#{params[:product]}&" if params[:product]
     path << "listall=#{params[:listall]}&" if params[:listall]
+    results = get(path)
+
+    return results
+  end
+
+  def list_owner_service_levels(owner_key)
+    path = "/owners/#{owner_key}/servicelevels"
     results = get(path)
 
     return results

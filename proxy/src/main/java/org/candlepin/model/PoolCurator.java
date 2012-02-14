@@ -14,11 +14,8 @@
  */
 package org.candlepin.model;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
+import com.google.inject.Inject;
+import com.wideplay.warp.persist.Transactional;
 
 import org.apache.log4j.Logger;
 import org.candlepin.auth.interceptor.EnforceAccessControl;
@@ -34,8 +31,13 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.impl.FilterImpl;
 
-import com.google.inject.Inject;
-import com.wideplay.warp.persist.Transactional;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 /**
  * EntitlementPoolCurator
@@ -382,6 +384,22 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         currentSession().refresh(pool, LockMode.UPGRADE);
         getEntityManager().refresh(pool);
         return pool;
+    }
+
+    public Set<String> retrieveServiceLevelsForOwner(Owner owner) {
+        Set<String> result = new HashSet<String>();
+        List<ProductPoolAttribute> items =  currentSession()
+            .createCriteria(ProductPoolAttribute.class)
+            .add(Restrictions.eq("name", "support_level"))
+            .createCriteria("pool")
+            .add(Restrictions.eq("owner", owner))
+            .list();
+        for (ProductPoolAttribute item : items) {
+            if (item.getValue() != null) {
+                result.add(item.getValue());
+            }
+        }
+        return result;
     }
 
 }

@@ -518,7 +518,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     public void testRegenerateEntitlementCertificateWithValidConsumerByEntitlement() {
         ConsumerResource cr = new ConsumerResource(this.consumerCurator, null,
             null, null, this.entitlementCurator, null, null, null, null, null,
-            null, null, null, null, this.poolManager, null, null, null,
+            null, null, null, null, this.poolManager, null, null, null, null,
             null, null, null);
 
         Response rsp = consumerResource.bind(

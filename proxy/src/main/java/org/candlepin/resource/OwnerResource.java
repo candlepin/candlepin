@@ -14,24 +14,8 @@
  */
 package org.candlepin.resource;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
+import com.google.inject.Inject;
+import com.wideplay.warp.persist.Transactional;
 
 import org.apache.log4j.Logger;
 import org.candlepin.audit.Event;
@@ -93,8 +77,25 @@ import org.jboss.resteasy.util.GenericType;
 import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
 
-import com.google.inject.Inject;
-import com.wideplay.warp.persist.Transactional;
+import java.io.File;
+import java.io.IOException;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 
 
 /**
@@ -381,6 +382,24 @@ public class OwnerResource {
         }
 
         return toReturn;
+    }
+
+    /**
+     * Return the support levels for the owner of the given id.
+     *
+     * @param ownerKey id of the owner whose support levels are sought.
+     * @return the support levels for the owner of the given id.
+     * @httpcode 404
+     * @httpcode 200
+     */
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{owner_key}/servicelevels")
+    public Set<String> ownerServiceLevels(
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
+        Owner owner = findOwner(ownerKey);
+
+        return poolCurator.retrieveServiceLevelsForOwner(owner);
     }
 
     /**

@@ -155,4 +155,24 @@ describe 'Owner Resource' do
     owner = create_owner random_string('☠pirate org yarr☠')
   end
 
+  it "lets owners show service levels" do
+    owner = create_owner random_string("test_owner1")
+    product1 = create_product(random_string("test_id"),
+                              random_string("test_name"),
+                              {:attributes => {:support_level => 'Really High'}})
+    @cp.create_subscription(owner['key'], product1.id, 10)
+    product2 = create_product(random_string("test_id"),
+                              random_string("test_name"),
+                              {:attributes => {:support_level => 'Really Low'}})
+    @cp.create_subscription(owner['key'], product2.id, 10)
+    product3 = create_product(random_string("test_id"),
+                              random_string("test_name"),
+                              {:attributes => {:support_level => 'Really Low'}})
+    @cp.create_subscription(owner['key'], product3.id, 10)
+
+    @cp.refresh_pools(owner['key'])
+    levels = @cp.list_owner_service_levels(owner['key'])
+    levels.length.should == 2
+  end
+
 end
