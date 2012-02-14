@@ -164,7 +164,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         ct = consumerTypeCurator.create(ct);
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
         consumer = consumerCurator.create(consumer);
-        String cid = consumer.getId();
+        String cid = consumer.getUuid();
 
         consumerCurator.delete(consumer);
         DeletedConsumerCurator dcc = injector.getInstance(DeletedConsumerCurator.class);
