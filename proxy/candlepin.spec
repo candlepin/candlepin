@@ -11,7 +11,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.5.18
+Version: 0.5.19
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -199,6 +199,15 @@ fi
 
 
 %changelog
+* Wed Feb 15 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.5.19-1
+- 790417: Use environment name instead of ID in content URLs
+  (dgoodwin@redhat.com)
+- Properly set start/end dates for Installed Products (mstead@redhat.com)
+- fix virt_limit case where value is not unlimited, and <=1 (jbowes@redhat.com)
+- populate test subscriptions for all test owners (jbowes@redhat.com)
+- 786730: occasional NPE from virt-who when reporting new guest IDs
+  (cduryee@redhat.com)
+
 * Thu Feb 09 2012 Chris Duryee (beav) <cduryee@redhat.com>
 - 786730: occasional NPE from virt-who when reporting new guest IDs
   (cduryee@redhat.com)
