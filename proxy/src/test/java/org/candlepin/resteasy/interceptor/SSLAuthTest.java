@@ -27,6 +27,7 @@ import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
+import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.jboss.resteasy.spi.HttpRequest;
@@ -39,13 +40,14 @@ public class SSLAuthTest {
 
     @Mock private HttpRequest request;
     @Mock private ConsumerCurator consumerCurator;
+    @Mock private DeletedConsumerCurator deletedConsumerCurator;
 
     private SSLAuth auth;
 
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        this.auth = new SSLAuth(this.consumerCurator);
+        this.auth = new SSLAuth(this.consumerCurator, this.deletedConsumerCurator);
     }
 
     /**

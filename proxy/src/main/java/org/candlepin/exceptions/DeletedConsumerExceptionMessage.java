@@ -14,16 +14,25 @@
  */
 package org.candlepin.exceptions;
 
-import javax.ws.rs.core.Response.Status;
-
 /**
- * GoneException
+ * DeletedConsumerExceptionMessage
  */
-public class GoneException extends CandlepinException  {
-    public GoneException(String message) {
-        super(Status.GONE, message);
+public class DeletedConsumerExceptionMessage extends ExceptionMessage {
+    private String deletedId;
+
+
+    public DeletedConsumerExceptionMessage(String message, String deletedId) {
+        super(message);
+        this.deletedId = deletedId;
     }
-    public GoneException(String message, String deletedId) {
-        super(Status.GONE, new DeletedConsumerExceptionMessage(message, deletedId));
+
+    public String getDeletedId() {
+        return deletedId;
     }
+
+    public void setDeletedId(String deletedId) {
+        this.deletedId = deletedId;
+    }
+
+
 }

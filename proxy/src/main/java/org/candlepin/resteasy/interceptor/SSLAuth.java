@@ -21,6 +21,8 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 import org.candlepin.auth.Principal;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.DeletedConsumerCurator;
+
 import org.jboss.resteasy.spi.HttpRequest;
 
 import com.google.inject.Inject;
@@ -36,8 +38,9 @@ class SSLAuth extends ConsumerAuth {
     private static Logger log = Logger.getLogger(SSLAuth.class);
 
     @Inject
-    SSLAuth(ConsumerCurator consumerCurator) {
-        super(consumerCurator);
+    SSLAuth(ConsumerCurator consumerCurator,
+        DeletedConsumerCurator deletedConsumerCurator) {
+        super(consumerCurator, deletedConsumerCurator);
     }
 
     public Principal getPrincipal(HttpRequest request) {

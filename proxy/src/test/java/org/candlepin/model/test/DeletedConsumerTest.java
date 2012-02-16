@@ -12,18 +12,32 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.exceptions;
+package org.candlepin.model.test;
 
-import javax.ws.rs.core.Response.Status;
+import static org.junit.Assert.assertEquals;
+
+import org.candlepin.model.DeletedConsumer;
+import org.junit.Test;
 
 /**
- * GoneException
+ * DeletedConsumerTest
  */
-public class GoneException extends CandlepinException  {
-    public GoneException(String message) {
-        super(Status.GONE, message);
+public class DeletedConsumerTest {
+
+    private DeletedConsumer dc = new DeletedConsumer("abcde", "10");
+
+    @Test
+    public void consumerId() {
+        assertEquals("abcde", dc.getConsumerUuid());
+        dc.setConsumerUuid("changed");
+        assertEquals("changed", dc.getConsumerUuid());
     }
-    public GoneException(String message, String deletedId) {
-        super(Status.GONE, new DeletedConsumerExceptionMessage(message, deletedId));
+
+    @Test
+    public void ownerId() {
+        assertEquals("10", dc.getOwnerId());
+        dc.setOwnerId("11");
+        assertEquals("11", dc.getOwnerId());
     }
+
 }

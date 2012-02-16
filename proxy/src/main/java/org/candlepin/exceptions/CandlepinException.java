@@ -33,6 +33,14 @@ public class CandlepinException extends RuntimeException {
        this(returnCode, message, null);
     }
 
+    // ctor for sending in a subclassed ExceptionMessage
+    public CandlepinException(Status returnCode, ExceptionMessage em) {
+        super(em.getDisplayMessage(), null);
+        this.returnCode = returnCode;
+        this.message = em;
+    }
+
+
     public CandlepinException(Status returnCode, String message, Throwable e) {
         super(message, e);
         this.returnCode = returnCode;

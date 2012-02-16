@@ -23,7 +23,7 @@ describe 'Environments' do
     @org_admin.delete_environment(@env['id'])
     lambda {
       @org_admin.get_consumer(consumer['uuid'])
-    }.should raise_exception(RestClient::ResourceNotFound)
+    }.should raise_exception(RestClient::Gone)
     @org_admin.list_environments(@owner['key']).length.should == 0
   end
 

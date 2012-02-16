@@ -36,6 +36,7 @@ import org.candlepin.exceptions.UnauthorizedException;
 import org.candlepin.guice.I18nProvider;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.User;
 import org.candlepin.service.UserServiceAdapter;
@@ -59,6 +60,7 @@ public class AuthInterceptorTest {
     private UserServiceAdapter usa;
     private OwnerCurator oc;
     private ConsumerCurator cc;
+    private DeletedConsumerCurator dcc;
     private Injector injector;
 
     @Before
@@ -67,8 +69,9 @@ public class AuthInterceptorTest {
         usa = mock(UserServiceAdapter.class);
         oc = mock(OwnerCurator.class);
         cc = mock(ConsumerCurator.class);
+        dcc = mock(DeletedConsumerCurator.class);
         injector = Guice.createInjector(new AuthInterceptorTestModule());
-        interceptor = new AuthInterceptor(config, usa, oc, cc, injector);
+        interceptor = new AuthInterceptor(config, usa, oc, cc, dcc, injector);
     }
 
     @Test(expected = UnauthorizedException.class)

@@ -17,17 +17,19 @@ package org.candlepin.model.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Date;
-import java.util.List;
-
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.DeletedConsumer;
+import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
 import org.candlepin.test.DatabaseTestFixture;
 import org.junit.Test;
+
+import java.util.Date;
+import java.util.List;
 
 /**
  *
@@ -50,7 +52,6 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void addGuestConsumers() {
         Owner owner = new Owner("test-owner", "Test Owner");
         owner = ownerCurator.create(owner);
@@ -73,7 +74,6 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void addGuestsNotConsumers() {
         Owner owner = new Owner("test-owner", "Test Owner");
         owner = ownerCurator.create(owner);
@@ -90,7 +90,6 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     public void getGuestConsumerSharedId() throws Exception {
         Owner owner = new Owner("test-owner", "Test Owner");
         owner = ownerCurator.create(owner);
@@ -155,5 +154,24 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumer = consumerCurator.create(consumer);
         consumerCurator.updateLastCheckin(consumer);
         assertTrue(consumer.getLastCheckin().after(date));
+    }
+
+    @Test
+    public void delete() {
+        Owner owner = new Owner("test-owner", "Test Owner");
+        owner = ownerCurator.create(owner);
+        ConsumerType ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
+        ct = consumerTypeCurator.create(ct);
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        consumer = consumerCurator.create(consumer);
+        String cid = consumer.getUuid();
+
+        consumerCurator.delete(consumer);
+        DeletedConsumerCurator dcc = injector.getInstance(DeletedConsumerCurator.class);
+        assertEquals(1, dcc.countByConsumerUuid(cid));
+        DeletedConsumer dc = dcc.findByConsumerUuid(cid);
+
+        assertEquals(cid, dc.getConsumerUuid());
+        assertEquals(owner.getId(), dc.getOwnerId());
     }
 }

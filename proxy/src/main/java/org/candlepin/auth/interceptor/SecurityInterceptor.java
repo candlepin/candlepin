@@ -14,9 +14,14 @@
  */
 package org.candlepin.auth.interceptor;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.Provider;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.ws.rs.DELETE;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
@@ -24,12 +29,14 @@ import org.apache.log4j.Logger;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.exceptions.ForbiddenException;
+import org.candlepin.exceptions.GoneException;
 import org.candlepin.exceptions.IseException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.ActivationKey;
 import org.candlepin.model.ActivationKeyCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
@@ -43,14 +50,9 @@ import org.candlepin.resteasy.interceptor.AuthUtil;
 import org.candlepin.util.Util;
 import org.xnap.commons.i18n.I18n;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.ws.rs.DELETE;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Provider;
 
 /**
  * Interceptor for enforcing role based access to REST API methods.
@@ -248,11 +250,21 @@ public class SecurityInterceptor implements MethodInterceptor {
 
     private class ConsumerStore implements EntityStore {
         private ConsumerCurator consumerCurator;
+        private DeletedConsumerCurator deletedConsumerCurator;
 
         @Override
         public Object lookup(String key) {
             if (consumerCurator == null) {
                 consumerCurator = injector.getInstance(ConsumerCurator.class);
+            }
+
+            if (deletedConsumerCurator == null) {
+                deletedConsumerCurator = injector.getInstance(DeletedConsumerCurator.class);
+            }
+
+            if (deletedConsumerCurator.countByConsumerUuid(key) > 0) {
+                log.debug("Key " + key + " is deleted, throwing GoneException");
+                throw new GoneException("Consumer " + key + " has been deleted", key);
             }
 
             return consumerCurator.findByUuid(key);

@@ -28,6 +28,7 @@ import org.candlepin.auth.interceptor.SecurityHole;
 import org.candlepin.config.Config;
 import org.candlepin.exceptions.UnauthorizedException;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.service.UserServiceAdapter;
 import org.jboss.resteasy.annotations.interception.ServerInterceptor;
@@ -51,6 +52,7 @@ public class AuthInterceptor implements PreProcessInterceptor {
 
     private Injector injector;
     private ConsumerCurator consumerCurator;
+    private DeletedConsumerCurator deletedConsumerCurator;
     private OwnerCurator ownerCurator;
     private Config config;
     private UserServiceAdapter userService;
@@ -59,13 +61,14 @@ public class AuthInterceptor implements PreProcessInterceptor {
     @Inject
     public AuthInterceptor(Config config, UserServiceAdapter userService,
         OwnerCurator ownerCurator, ConsumerCurator consumerCurator,
-        Injector injector) {
+        DeletedConsumerCurator deletedConsumerCurator, Injector injector) {
         super();
         this.consumerCurator = consumerCurator;
         this.injector = injector;
         this.config = config;
         this.userService = userService;
         this.ownerCurator = ownerCurator;
+        this.deletedConsumerCurator = deletedConsumerCurator;
         this.setupAuthStrategies();
     }
 
@@ -77,7 +80,8 @@ public class AuthInterceptor implements PreProcessInterceptor {
         // use oauth
         if (config.oAuthEnabled()) {
             log.debug("OAuth Authentication is enabled.");
-            TrustedConsumerAuth consumerAuth = new TrustedConsumerAuth(consumerCurator);
+            TrustedConsumerAuth consumerAuth =
+                new TrustedConsumerAuth(consumerCurator, deletedConsumerCurator);
             TrustedUserAuth userAuth = new TrustedUserAuth(userService, injector);
             TrustedExternalSystemAuth systemAuth = new TrustedExternalSystemAuth();
             providers
@@ -92,12 +96,12 @@ public class AuthInterceptor implements PreProcessInterceptor {
         // consumer certificates
         if (config.sslAuthEnabled()) {
             log.debug("Certificate Based Authentication is enabled.");
-            providers.add(new SSLAuth(consumerCurator));
+            providers.add(new SSLAuth(consumerCurator, deletedConsumerCurator));
         }
         // trusted headers
         if (config.trustedAuthEnabled()) {
             log.debug("Trusted Authentication is enabled.");
-            providers.add(new TrustedConsumerAuth(consumerCurator));
+            providers.add(new TrustedConsumerAuth(consumerCurator, deletedConsumerCurator));
             providers.add(new TrustedUserAuth(userService, injector));
         }
     }
