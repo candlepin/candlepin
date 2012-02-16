@@ -560,11 +560,26 @@ var Entitlement = {
             log.debug("   " + pool.getId());
         }
 
+        var consumerSLA = consumer.getServiceLevel();
+        if (consumerSLA) {
+            log.debug("Filtering pools by SLA: " + consumerSLA);
+        }
+
         // Builds out the pools_by_class by iterating each pool, checking which products it provides (that
         // are relevant to this request), then filtering out other pools which provide the *exact* same products
         // by selecting the preferred pool based on other criteria.
         for (var i = 0 ; i < pools.length ; i++) {
             var pool = pools[i];
+
+            // If the SLA of the consumer does not match that of the pool
+            // we do not consider the pool.
+            var poolSLA = pool.getProductAttribute('support_level');
+            if (consumerSLA && consumerSLA != poolSLA) {
+                log.debug("Skipping pool " + pool.getId() +
+                        " since SLA does not match that of the consumer.");
+                continue;
+            }
+
             log.debug("Checking pool for best unique provides combination: " +
                     pool.getId());
             log.debug("  top level product: " + (pool.getTopLevelProduct().getId()));

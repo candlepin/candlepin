@@ -149,6 +149,4 @@ describe 'Healing' do
     ents[0]['quantity'].should == 2
   end
 
-
-
 end

@@ -941,6 +941,59 @@ public class DefaultRulesTest {
         assertEquals(1, bestPools.get(pool).intValue());
     }
 
+    @Test
+    public void ensureSelectBestPoolsFiltersPoolsBySLAWhenConsumerHasSLASet() {
+        // Create Premium SLA prod
+        String slaPremiumProdId = "premium-sla-product";
+        Product slaPremiumProduct = new Product(slaPremiumProdId,
+                                         "Product with SLA Permium");
+        slaPremiumProduct.setAttribute("support_level", "Premium");
+
+        Pool slaPremiumPool = TestUtil.createPool(owner, slaPremiumProduct);
+        slaPremiumPool.setId("pool-with-premium-sla");
+        slaPremiumPool.setProductAttribute("support_level", "Premium",
+            slaPremiumProdId);
+
+        // Create Standard SLA Product
+        String slaStandardProdId = "standard-sla-product";
+        Product slaStandardProduct = new Product(slaStandardProdId,
+                                         "Product with SLA Standard");
+        slaStandardProduct.setAttribute("support_level", "Standard");
+
+        Pool slaStandardPool = TestUtil.createPool(owner, slaStandardProduct);
+        slaStandardPool.setId("pool-with-standard-sla");
+        slaStandardPool.setProductAttribute("support_level", "Standard",
+            slaStandardProdId);
+
+        // Create a product with no SLA.
+        Product noSLAProduct = new Product(productId, "A test product");
+        Pool noSLAPool = TestUtil.createPool(owner, noSLAProduct);
+        noSLAPool.setId("pool-1");
+
+        // Ensure correct products are returned when requested.
+        when(this.prodAdapter.getProductById(productId)).thenReturn(
+            noSLAProduct);
+        when(this.prodAdapter.getProductById(slaPremiumProdId)).thenReturn(
+            slaPremiumProduct);
+        when(this.prodAdapter.getProductById(slaStandardProdId)).thenReturn(
+            slaStandardProduct);
+
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(noSLAPool);
+        pools.add(slaPremiumPool);
+        pools.add(slaStandardPool);
+
+        // SLA filtering only occurs when consumer has SLA set.
+        consumer.setServiceLevel("Premium");
+
+        Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer,
+            new String[]{ productId, slaPremiumProdId, slaStandardProdId},
+            pools, compliance);
+
+        assertEquals(1, bestPools.size());
+        assertEquals(1, bestPools.get(slaPremiumPool).intValue());
+    }
+
     private Product mockStackingProduct(String pid, String productName,
         String stackId, String sockets) {
         Product product = new Product(pid, productName);

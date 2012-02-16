@@ -112,4 +112,8 @@ public class ReadOnlyConsumer {
     public boolean isManifest() {
         return consumer.getType().isManifest();
     }
+
+    public String getServiceLevel() {
+        return consumer.getServiceLevel();
+    }
 }
