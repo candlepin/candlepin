@@ -821,7 +821,7 @@ public class ConsumerResource {
             }
         }
         // perform the entitlement revocation
-        for (Entitlement entitlement: deletableGuestEntitlements) {
+        for (Entitlement entitlement : deletableGuestEntitlements) {
             poolManager.revokeEntitlement(entitlement);
         }
 
