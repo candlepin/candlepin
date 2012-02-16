@@ -4,8 +4,35 @@ require 'rubygems'
 require 'rest_client'
 
 describe 'Owner Resource' do
+
   include CandlepinMethods
   include CandlepinScenarios
+
+  it 'allows consumers to view their service levels' do
+    owner = create_owner random_string('owner1')
+    owner_admin = user_client(owner, 'bill')
+    owner2 = create_owner random_string('owner2')
+
+    consumer = owner_admin.register('somesystem')
+    consumer_client = Candlepin.new(username=nil, password=nil,
+        cert=consumer['idCert']['cert'],
+        key=consumer['idCert']['key'])
+
+    product1 = create_product(random_string("test_id"),
+      random_string("test_name"),
+      {:attributes => {:support_level => 'VIP'}})
+    @cp.create_subscription(owner['key'], product1.id, 10)
+
+    @cp.refresh_pools(owner['key'])
+    levels = consumer_client.list_owner_service_levels(owner['key'])
+    levels.size.should == 1
+    levels[0].should == 'VIP'
+
+    # Should be rejected listing another owner's service levels:
+    lambda do
+      consumer_client.list_owner_service_levels(owner2['key'])
+    end.should raise_exception(RestClient::Forbidden)
+  end
 
   it 'should allow a client to create an owner with parent' do
     owner = create_owner random_string('test_owner')

@@ -396,7 +396,8 @@ public class OwnerResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/servicelevels")
     public Set<String> ownerServiceLevels(
-        @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
+        @PathParam("owner_key") @Verify(value = Owner.class,
+            require = Access.READ_SERVICE_LEVELS) String ownerKey) {
         Owner owner = findOwner(ownerKey);
 
         return poolCurator.retrieveServiceLevelsForOwner(owner);
