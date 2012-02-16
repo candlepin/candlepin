@@ -803,19 +803,28 @@ public class ConsumerResource {
     }
 
     private void revokeGuestEntitlementsMatchingHost(Consumer host, Consumer guest) {
+        // we need to create a list of entitlements to delete before actually
+        // deleting, otherwise we are tampering with the loop iterator (BZ #786730)
+        Set<Entitlement> deletableGuestEntitlements = new HashSet<Entitlement>();
         for (Entitlement entitlement : guest.getEntitlements()) {
             Pool pool = entitlement.getPool();
             String requiredHost = getRequiredHost(pool);
             if (isVirtOnly(pool) && requiredHost.equals(host.getUuid())) {
                 log.warn("Removing entitlement " + entitlement.getProductId() +
                     " from guest " + guest.getName());
-                poolManager.revokeEntitlement(entitlement);
+                deletableGuestEntitlements.add(entitlement);
             }
             else {
                 log.info("Entitlement " + entitlement.getProductId() +
-                         "on " + guest.getName() + "is still valid, not removed");
+                         " on " + guest.getName() +
+                         " is still valid, and will not be removed.");
             }
         }
+        // perform the entitlement revocation
+        for (Entitlement entitlement: deletableGuestEntitlements) {
+            poolManager.revokeEntitlement(entitlement);
+        }
+
     }
 
     private String getRequiredHost(Pool pool) {

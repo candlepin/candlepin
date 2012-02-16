@@ -94,10 +94,19 @@ describe 'Standalone Virt-Limit Subscriptions' do
 
   it 'should not obtain a new entitlement when guest is migrated to another host' do
 
+    # create a second product in order to test bz #786730
+
+    @second_product = create_product()
+    @cp.create_subscription(@owner.key, @second_product.id, 1)
+    @cp.refresh_pools(@owner.key)
+
+    @installed_product_list = [
+    {'productId' => @virt_limit_product.id, 'productName' => @virt_limit_product.name},
+    {'productId' => @second_product.id, 'productName' => @second_product.name}]
+
     @guest1_client.update_consumer({:installedProducts => @installed_product_list})
-    @guest1_client.consume_pool(@guest_pool['id'])
-    original_ent = @guest1_client.list_entitlements.first.id
-    @guest1_client.list_entitlements.length.should == 1
+    @guest1_client.consume_product()
+    @guest1_client.list_entitlements.length.should == 2
 
     # Add guest 2 to host 1 so we can make sure that only guest1's
     # entitlements are revoked.
@@ -106,17 +115,14 @@ describe 'Standalone Virt-Limit Subscriptions' do
     @guest2_client.consume_pool(@guest_pool['id'])
     @guest2_client.list_entitlements.length.should == 1
 
-
-
     # Host 2 reports the new guest before Host 1 reports it removed.
+    # this is where the error would occur without the 786730 fix
     @host2_client.update_consumer({:guestIds => [{'guestId' => @uuid1}]})
 
-    # Entitlement should not be on the guest anymore (see 768872 comment #41)
-    @guest1_client.list_entitlements.length.should == 0
-    # make sure we have a different entitlement than we started with
-    new_ent = @guest1_client.list_entitlements.first.id
-    new_ent.should_not == original_ent
-
+    # host-specific entitlement should not be on the guest anymore (see 768872 comment #41)
+    # second_product's entitlement should still be there, though.
+    @guest1_client.list_entitlements(:product_id => @second_product.id).length.should == 1
+    @guest1_client.list_entitlements(:product_id => @virt_limit_product.id).length.should == 0
 
     # Entitlements should have remained the same for guest 2 and its host
     # is the same.

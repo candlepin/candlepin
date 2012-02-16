@@ -17,6 +17,7 @@ package org.candlepin.exceptions.mappers;
 import static org.jboss.resteasy.util.MediaTypeHelper.getBestMatch;
 import static org.jboss.resteasy.util.MediaTypeHelper.parseHeader;
 
+import org.apache.log4j.Logger;
 import org.candlepin.exceptions.ExceptionMessage;
 import org.candlepin.util.VersionUtil;
 
@@ -56,6 +57,9 @@ public class CandlepinExceptionMapper {
     @Inject
     protected I18n i18n;
 
+    private static Logger log = Logger.getLogger(CandlepinExceptionMapper.class);
+
+
     public MediaType determineBestMediaType() {
 
         // injectory the request directly seems to annoying Candlepin startup.
@@ -94,6 +98,7 @@ public class CandlepinExceptionMapper {
         String clazz = ele.getClassName();
         String message = i18n.tr("Runtime Error {0} at {1}.{2}:{3}",
             exception.getMessage(), clazz, method, line);
+        log.error(message, exception);
         if (status == null) {
             status = Status.INTERNAL_SERVER_ERROR;
         }

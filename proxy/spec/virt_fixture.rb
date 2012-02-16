@@ -17,9 +17,7 @@ module VirtFixture
             :virt_limit => 3
           }
         })
-        # this is useful later on for autosubscribe
-        @installed_product_list = [
-        {'productId' => @virt_limit_product.id, 'productName' => @virt_limit_product.name}]
+
 
         #create two subs, to do migration testing
         @sub1 = @cp.create_subscription(@owner.key,
