@@ -11,7 +11,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.5.19
+Version: 0.5.20
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -199,6 +199,13 @@ fi
 
 
 %changelog
+* Thu Feb 16 2012 Chris Duryee (beav) <cduryee@redhat.com>
+- 786730: multi-entitlement guests were not migrating properly, and logging fix
+  (cduryee@redhat.com)
+- Infrastructure for SLA for owner and consumer (wpoteat@redhat.com)
+- Return a 410 from the ConsumerAuth auth provider. (awood@redhat.com)
+- Return a 410 from the SecurityInterceptor. (awood@redhat.com)
+- class to track deleted consumers. (jmrodri@gmail.com)
 * Wed Feb 15 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.5.19-1
 - 790417: Use environment name instead of ID in content URLs
   (dgoodwin@redhat.com)
