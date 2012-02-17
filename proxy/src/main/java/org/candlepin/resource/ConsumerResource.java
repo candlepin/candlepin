@@ -592,7 +592,7 @@ public class ConsumerResource {
 
         // Allow optional setting of the service level attribute:
         if (updated.getServiceLevel() != null &&
-            toUpdate.getServiceLevel() != updated.getServiceLevel()) {
+            !updated.getServiceLevel().equals(toUpdate.getServiceLevel())) {
             if (log.isDebugEnabled()) {
                 log.debug("   Updating consumer service level setting.");
             }
