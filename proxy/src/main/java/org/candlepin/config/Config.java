@@ -39,8 +39,8 @@ public class Config {
     }
 
     /**
-     * Creates a new <code>Config</code> instance using the
-     * file name to override values defined in {@link ConfigProperties}.
+     * Creates a new <code>Config</code> instance using the file name to
+     * override values defined in {@link ConfigProperties}.
      *
      * @param configFileName the file that contains the configuration values
      */
@@ -48,8 +48,8 @@ public class Config {
         this.configFile = new File(configFileName);
 
         // start with the default values
-        this.configuration =
-            new TreeMap<String, String>(ConfigProperties.DEFAULT_PROPERTIES);
+        this.configuration = new TreeMap<String, String>(
+            ConfigProperties.DEFAULT_PROPERTIES);
 
         // override with user-specified values
         this.configuration.putAll(loadProperties());
@@ -57,8 +57,8 @@ public class Config {
     }
 
     public Config(Map<String, String> properties) {
-        this.configuration =
-            new TreeMap<String, String>(ConfigProperties.DEFAULT_PROPERTIES);
+        this.configuration = new TreeMap<String, String>(
+            ConfigProperties.DEFAULT_PROPERTIES);
         this.configuration.putAll(properties);
         this.configuration = this.trimSpaces(configuration);
     }
@@ -77,6 +77,7 @@ public class Config {
 
     /**
      * Return configuration entry for the given prefix.
+     *
      * @param prefix prefix for the entry sought.
      * @return configuration entry for the given prefix.
      */
@@ -86,6 +87,7 @@ public class Config {
 
     /**
      * Returns all of the entries with the given prefix.
+     *
      * @param prefix part of the configuration key being sought.
      * @return all of the entries with the given prefix.
      */
@@ -99,6 +101,7 @@ public class Config {
      * prefix as well. For example, if you pass in a prefix of "a.c" and the
      * defaults map contains a key that beings with "b.d" it WILL not be added
      * to the returned Properties.
+     *
      * @param prefix part of the configuration key being sought.
      * @param defaults default values you'd like to see defined.
      * @return all of the entries with the given prefix.
@@ -121,6 +124,7 @@ public class Config {
 
     /**
      * Returns the JPA Configuration properties.
+     *
      * @return the JPA Configuration properties.
      */
     public Properties jpaConfiguration() {
@@ -129,6 +133,7 @@ public class Config {
 
     /**
      * Returns the Database Basic Authentication Configuration properties
+     *
      * @return the Database Basic Authentication Configuration properties
      */
     public Properties dbBasicAuthConfiguration() {
@@ -166,11 +171,8 @@ public class Config {
     }
 
     /**
-     * Use to make decisions on behavior. Hosted vs. Standalone
-     *
-     * Default is Standalone
-     * For hosted use candlepin.conf:
-     * candlepin.standalone = false
+     * Use to make decisions on behavior. Hosted vs. Standalone Default is
+     * Standalone For hosted use candlepin.conf: candlepin.standalone = false
      *
      * @return if system is standalone.
      */
@@ -178,18 +180,31 @@ public class Config {
         return getBoolean(ConfigProperties.STANDALONE);
     }
 
+    /**
+     * Returns true if candlpin should support per environment content filtering
+     * Default is Standalone For hosted use candlepin.conf: candlepin.standalone
+     * = false
+     *
+     * @return if system is standalone.
+     */
+    public boolean enableEnvironmentFiltering() {
+        return getBoolean(ConfigProperties.ENV_CONTENT_FILTERING);
+    }
 
     protected Map<String, String> loadProperties() {
         try {
-            return new ConfigurationFileLoader().loadProperties(this.configFile);
+            return new ConfigurationFileLoader()
+                .loadProperties(this.configFile);
         }
         catch (IOException e) {
-            throw new RuntimeException("Problem loading candlepin configuration file.", e);
+            throw new RuntimeException(
+                "Problem loading candlepin configuration file.", e);
         }
     }
 
     /**
      * Returns true if the configuration has an entry for the given key.
+     *
      * @param key sought after key
      * @return true if the configuration has an entry for the given key.
      */
@@ -206,8 +221,9 @@ public class Config {
     }
 
     /**
-     * Get the configuration entry for the given string name.  If the value
-     * is null, then return the given defValue.  defValue can be null as well.
+     * Get the configuration entry for the given string name. If the value is
+     * null, then return the given defValue. defValue can be null as well.
+     *
      * @param name name of property
      * @param defValue default value for property if it is null.
      * @return the value of the property with the given name, or defValue.
@@ -250,10 +266,8 @@ public class Config {
 
         value = value.toLowerCase();
 
-        return value.equals("true") ||
-            value.equals("on") ||
-            value.equals("1") ||
-            value.equals("yes");
+        return value.equals("true") || value.equals("on") ||
+            value.equals("1") || value.equals("yes");
     }
 
     public int getInt(String s) {

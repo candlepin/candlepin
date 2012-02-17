@@ -14,6 +14,7 @@
  */
 package org.candlepin.util;
 
+import org.candlepin.config.Config;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EnvironmentContent;
@@ -23,6 +24,8 @@ import org.candlepin.model.Subscription;
 import org.candlepin.pki.X509ExtensionWrapper;
 
 import org.apache.log4j.Logger;
+
+import com.google.inject.Inject;
 
 import java.text.SimpleDateFormat;
 import java.util.Collections;
@@ -38,10 +41,13 @@ public class X509ExtensionUtil {
 
     private static Logger log = Logger.getLogger(X509ExtensionUtil.class);
     private SimpleDateFormat iso8601DateFormat;
+    private Config config;
 
-    public X509ExtensionUtil() {
+    @Inject
+    public X509ExtensionUtil(Config config) {
         // Output everything in UTC
         this.iso8601DateFormat = Util.getUTCDateFormat();
+        this.config = config;
     }
 
     public Set<X509ExtensionWrapper> consumerExtensions(Consumer consumer) {
@@ -202,11 +208,13 @@ public class X509ExtensionUtil {
         Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<X509ExtensionWrapper>();
 
         for (ProductContent pc : productContent) {
-            if (consumer.getEnvironment() != null && !promotedContent.containsKey(
-                pc.getContent().getId())) {
-                log.debug("Skipping content not promoted to environment: " +
-                    pc.getContent().getId());
-                continue;
+            if (config.enableEnvironmentFiltering()) {
+                if (consumer.getEnvironment() != null && !promotedContent.containsKey(
+                    pc.getContent().getId())) {
+                    log.debug("Skipping content not promoted to environment: " +
+                        pc.getContent().getId());
+                    continue;
+                }
             }
 
             // augment the content path with the prefix if it is passed in

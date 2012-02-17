@@ -93,6 +93,8 @@ public class ConfigProperties {
     public static final String SHARD_WEBAPP = "candlepin.shard.webapp";
 
     public static final String STANDALONE = "candlepin.standalone";
+    public static final String ENV_CONTENT_FILTERING =
+        "candlepin.environment_content_filtering";
 
     public static final Map<String, String> DEFAULT_PROPERTIES =
         new HashMap<String, String>() {
@@ -157,6 +159,7 @@ public class ConfigProperties {
                 this.put(SHARD_PASSWORD, "admin");
                 this.put(STANDALONE, "true");
 
+                this.put(ENV_CONTENT_FILTERING, "true");
             }
         };
     public static final String CRL_FILE_PATH = "candlepin.crl.file";
