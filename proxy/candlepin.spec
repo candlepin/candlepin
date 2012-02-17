@@ -11,7 +11,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.5.20
+Version: 0.5.21
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -199,6 +199,13 @@ fi
 
 
 %changelog
+* Fri Feb 17 2012 jesus m. rodriguez <jesusr@redhat.com> 0.5.21-1
+- 794852: Add the filtering check to the per environment enable section (bkearney@redhat.com)
+- Use a config value to enable or disable content filtering by environment. (bkearney@redhat.com)
+- import: ensure upstream uuid is unique (jesusr@redhat.com)
+- Compare SLA strings by string value, not object id. (mstead@redhat.com)
+- Allow consumer principals to list owner service levels (dgoodwin@redhat.com)
+
 * Thu Feb 16 2012 Chris Duryee (beav) <cduryee@redhat.com>
 - 786730: multi-entitlement guests were not migrating properly, and logging fix
   (cduryee@redhat.com)
