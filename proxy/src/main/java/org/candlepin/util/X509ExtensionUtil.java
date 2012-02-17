@@ -14,6 +14,14 @@
  */
 package org.candlepin.util;
 
+import java.text.SimpleDateFormat;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.log4j.Logger;
 import org.candlepin.config.Config;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
@@ -23,16 +31,7 @@ import org.candlepin.model.ProductContent;
 import org.candlepin.model.Subscription;
 import org.candlepin.pki.X509ExtensionWrapper;
 
-import org.apache.log4j.Logger;
-
 import com.google.inject.Inject;
-
-import java.text.SimpleDateFormat;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * X509ExtensionUtil
@@ -207,8 +206,10 @@ public class X509ExtensionUtil {
 
         Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<X509ExtensionWrapper>();
 
+        boolean enableEnvironmentFiltering = config.environmentFileringEnabled();
+
         for (ProductContent pc : productContent) {
-            if (config.enableEnvironmentFiltering()) {
+            if (enableEnvironmentFiltering) {
                 if (consumer.getEnvironment() != null && !promotedContent.containsKey(
                     pc.getContent().getId())) {
                     log.debug("Skipping content not promoted to environment: " +
@@ -251,7 +252,7 @@ public class X509ExtensionUtil {
             // content:
             Boolean enabled = pc.getEnabled();
             log.debug("default enabled flag = " + enabled);
-            if (consumer.getEnvironment() != null) {
+            if ((consumer.getEnvironment() != null) && enableEnvironmentFiltering) {
                 // we know content has been promoted at this point:
                 Boolean enabledOverride = promotedContent.get(
                     pc.getContent().getId()).getEnabled();

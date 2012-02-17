@@ -182,12 +182,13 @@ public class Config {
 
     /**
      * Returns true if candlpin should support per environment content filtering
-     * Default is Standalone For hosted use candlepin.conf: candlepin.standalone
+     * Default is Enabled. For hosted use candlepin.conf:
+     * candlepin.environment_content_filtering.
      * = false
      *
-     * @return if system is standalone.
+     * @return if system should filter content by environment.
      */
-    public boolean enableEnvironmentFiltering() {
+    public boolean environmentFileringEnabled() {
         return getBoolean(ConfigProperties.ENV_CONTENT_FILTERING);
     }
 
