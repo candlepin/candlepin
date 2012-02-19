@@ -22,13 +22,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.security.cert.CertificateException;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+
 import javax.persistence.PersistenceException;
 
 import org.apache.commons.io.FileUtils;
@@ -162,7 +162,7 @@ public class Importer {
                 throw new ConflictException(i18n.tr("Import is older than existing data"));
             }
             else {
-                lastrun.setExported(new Date());
+                lastrun.setExported(m.getCreated());
                 expMetaCurator.merge(lastrun);
             }
         }
