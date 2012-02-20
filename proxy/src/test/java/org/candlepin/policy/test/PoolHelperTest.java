@@ -195,6 +195,7 @@ public class PoolHelperTest {
         targetProduct.setAttribute("A2", "V2");
         Subscription sourceSub = TestUtil.createSubscription(targetProduct);
         Pool targetPool = TestUtil.createPool(targetProduct);
+        targetPool.setId("jso_speedwagon");
 
         when(psa.getProductById(targetProduct.getId())).thenReturn(targetProduct);
         when(ent.getConsumer()).thenReturn(cons);
@@ -203,6 +204,8 @@ public class PoolHelperTest {
         Pool hostRestrictedPool = ph.createHostRestrictedPool(targetProduct.getId(),
             targetPool, "unlimited");
 
+        assertEquals(targetPool.getId(),
+            hostRestrictedPool.getAttributeValue("source_pool_id"));
         assertEquals(2, hostRestrictedPool.getProductAttributes().size());
         assertTrue(hostRestrictedPool.hasProductAttribute("A1"));
         assertTrue(hostRestrictedPool.hasProductAttribute("A2"));

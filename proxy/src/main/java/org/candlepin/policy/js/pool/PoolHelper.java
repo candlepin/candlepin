@@ -95,6 +95,10 @@ public class PoolHelper {
         consumerSpecificPool.setAttribute("pool_derived", "true");
         consumerSpecificPool.setAttribute("virt_only", "true");
 
+        // attribute per 795431, useful for rolling up pool info in headpin
+        consumerSpecificPool.setAttribute("source_pool_id", pool.getId());
+
+
         consumerSpecificPool.setSubscriptionId(pool.getSubscriptionId());
         this.copyProductIDAttributesOntoPool(productId, consumerSpecificPool);
         poolManager.createPool(consumerSpecificPool);
