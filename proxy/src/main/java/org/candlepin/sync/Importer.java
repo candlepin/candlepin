@@ -200,7 +200,15 @@ public class Importer {
             log.error("Exception caught importing archive", e);
             throw new ImportExtractionException("unable to extract export archive", e);
         }
+        catch (ConstraintViolationException cve) {
+            // sometimes the violation comes up as a direct exception
+            log.error("Failed to import archive", cve);
+            throw new SyncDataFormatException(
+                i18n.tr("This distributor has already been imported by another owner"));
+        }
         catch (PersistenceException pe) {
+            // other times the violation comes up wrapped in a
+            // PersistenceException
             log.error("Failed to import archive", pe);
             Throwable cause = pe.getCause();
             if (cause != null && cause instanceof ConstraintViolationException) {
