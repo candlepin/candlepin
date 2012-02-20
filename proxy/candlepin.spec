@@ -99,7 +99,7 @@ SELinux policy module supporting candlepin
 %setup -q
 
 %build
-ant -Dlibdir=/usr/share/candlepin/lib/ clean package genschema
+ant -Dlibdir=/usr/share/java/ clean package genschema
 
 cd selinux
 for selinuxvariant in %{selinux_variants}
