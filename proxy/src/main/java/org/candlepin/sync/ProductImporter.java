@@ -58,6 +58,11 @@ public class ProductImporter {
         for (ProductAttribute a : importedProduct.getAttributes()) {
             a.setId(null);
         }
+
+        // Multiplication has already happened on the upstream candlepin. set this to 1
+        // so we can use multipliers on local products if necessary.
+        importedProduct.setMultiplier(1L);
+
         // TODO: test product content doesn't dangle
         return importedProduct;
     }

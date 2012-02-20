@@ -25,6 +25,17 @@ describe 'Candlepin Import' do
     pools.length.should == 2
   end
 
+  it 'ignores multiplier for pool quantity' do
+    pools = @import_owner_client.list_pools({:owner => @import_owner['id']})
+    pools.length.should == 2
+
+    # 1 product has a multiplier of 2 upstream, the other 1.
+    # 1 entitlement is consumed from each pool for the export, so
+    # quantity should be 1 on both.
+    pools[0]['quantity'].should == 1
+    pools[1]['quantity'].should == 1
+  end
+
   it 'modifies owner to reference upstream consumer' do
     o = @cp.get_owner(@import_owner.key)
     o.upstreamUuid.should == @candlepin_client.uuid

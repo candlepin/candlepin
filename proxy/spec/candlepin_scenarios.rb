@@ -190,7 +190,8 @@ module ExportMethods
     @cp.add_role_user(role['id'], @user['username'])
     owner_client = Candlepin.new(@user['username'], 'password')
 
-    product1 = create_product(random_string(), random_string())
+    product1 = create_product(random_string(), random_string(),
+                              {:multiplier => 2})
     product2 = create_product()
     virt_product = create_product(random_string('virt_product'),
                                   random_string('virt_product'),
