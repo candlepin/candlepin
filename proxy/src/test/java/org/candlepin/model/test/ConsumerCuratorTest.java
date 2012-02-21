@@ -17,6 +17,9 @@ package org.candlepin.model.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Date;
+import java.util.List;
+
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
@@ -27,9 +30,6 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
 import org.candlepin.test.DatabaseTestFixture;
 import org.junit.Test;
-
-import java.util.Date;
-import java.util.List;
 
 /**
  *
@@ -173,5 +173,35 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
         assertEquals(cid, dc.getConsumerUuid());
         assertEquals(owner.getId(), dc.getOwnerId());
+    }
+
+    @Test
+    public void deleteTwice() {
+        // attempt to create and delete the same consumer uuid twice
+        Owner owner = new Owner("test-owner", "Test Owner");
+        Owner altOwner = new Owner("test-owner2", "Test Owner2");
+
+        owner = ownerCurator.create(owner);
+        altOwner = ownerCurator.create(altOwner);
+
+        ConsumerType ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
+        ct = consumerTypeCurator.create(ct);
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        consumer.setUuid("Doppelganger");
+        consumer = consumerCurator.create(consumer);
+
+        consumerCurator.delete(consumer);
+        DeletedConsumerCurator dcc = injector.getInstance(DeletedConsumerCurator.class);
+        DeletedConsumer dc = dcc.findByConsumerUuid("Doppelganger");
+        Date deletionDate1 = dc.getUpdated();
+
+        consumer = new Consumer("testConsumer", "testUser", altOwner, ct);
+        consumer.setUuid("Doppelganger");
+        consumer = consumerCurator.create(consumer);
+        consumerCurator.delete(consumer);
+        dc = dcc.findByConsumerUuid("Doppelganger");
+        Date deletionDate2 = dc.getUpdated();
+        assertEquals(-1, deletionDate1.compareTo(deletionDate2));
+        assertEquals(altOwner.getId(), dc.getOwnerId());
     }
 }
