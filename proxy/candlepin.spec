@@ -35,6 +35,9 @@ BuildRequires: google-guice
 BuildRequires: log4j
 BuildRequires: jakarta-commons-lang
 BuildRequires: codehaus-jackson
+BuildRequires: codehaus-jackson-mapper-lgpl
+BuildRequires: codehaus-jackson-xc
+BuildRequires: codehaus-jackson-jaxrs
 Requires: java >= 0:1.6.0
 #until cpsetup is removed
 Requires: wget
