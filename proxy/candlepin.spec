@@ -28,6 +28,7 @@ BuildRequires: bouncycastle
 #BuildRequires: candlepin-deps >= 0:0.0.21
 BuildRequires: hibernate3 >= 3.3.2
 BuildRequires: hibernate3-annotations >= 0:3.4.0
+BuildRequires: google-collections
 BuildRequires: resteasy
 BuildRequires: hornetq
 BuildRequires: mockito
