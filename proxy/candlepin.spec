@@ -37,6 +37,7 @@ BuildRequires: log4j
 BuildRequires: jakarta-commons-lang
 BuildRequires: jakarta-commons-io
 BuildRequires: codehaus-jackson
+BuildRequires: codehaus-jackson-core-lgpl
 BuildRequires: codehaus-jackson-mapper-lgpl
 BuildRequires: codehaus-jackson-xc
 BuildRequires: codehaus-jackson-jaxrs
