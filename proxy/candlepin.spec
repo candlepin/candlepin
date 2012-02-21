@@ -41,7 +41,7 @@ BuildRequires: codehaus-jackson-core-lgpl
 BuildRequires: codehaus-jackson-mapper-lgpl
 BuildRequires: codehaus-jackson-xc
 BuildRequires: codehaus-jackson-jaxrs
-BuildRequires: quartz
+#BuildRequires: quartz
 Requires: java >= 0:1.6.0
 #until cpsetup is removed
 Requires: wget
