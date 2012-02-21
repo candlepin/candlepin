@@ -24,7 +24,7 @@ BuildRequires: java >= 0:1.6.0
 BuildRequires: ant >= 0:1.7.0
 BuildRequires: gettext
 BuildRequires: selinux-policy-doc
-#BuildRequires: bouncycastle
+BuildRequires: bouncycastle
 #BuildRequires: candlepin-deps >= 0:0.0.21
 BuildRequires: hibernate3 >= 3.3.2
 BuildRequires: hibernate3-annotations >= 0:3.4.0
