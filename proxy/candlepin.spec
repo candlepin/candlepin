@@ -34,6 +34,7 @@ BuildRequires: mockito
 BuildRequires: google-guice
 BuildRequires: log4j
 BuildRequires: jakarta-commons-lang
+BuildRequires: jakarta-commons-io
 BuildRequires: codehaus-jackson
 BuildRequires: codehaus-jackson-mapper-lgpl
 BuildRequires: codehaus-jackson-xc
