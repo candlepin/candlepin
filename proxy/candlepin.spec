@@ -36,6 +36,7 @@ BuildRequires: google-guice
 BuildRequires: log4j
 BuildRequires: jakarta-commons-lang
 BuildRequires: jakarta-commons-io
+BuildRequires: jakarta-commons-codec
 BuildRequires: codehaus-jackson
 BuildRequires: codehaus-jackson-core-lgpl
 BuildRequires: codehaus-jackson-mapper-lgpl
