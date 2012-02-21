@@ -102,4 +102,11 @@ describe 'Candlepin Import' do
     end
   end
 
+  it "should store the subscription's upstream entitlement cert" do
+    sublist = @cp.list_subscriptions(@import_owner.key)
+    cert = @cp.get_subscription_cert sublist.first.id
+    cert[0..26].should == "-----BEGIN CERTIFICATE-----"
+    cert.include?("-----BEGIN RSA PRIVATE KEY-----").should == true
+  end
+
 end

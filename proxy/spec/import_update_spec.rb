@@ -39,11 +39,4 @@ describe 'Candlepin Import Update' do
     hasChanged.should == true
   end
 
-  it 'should access the subscription cert' do
-      cert = @cp.get_subscription_cert @sublist.first.id
-      cert[0..26].should == "-----BEGIN CERTIFICATE-----"
-      cert.include?("-----BEGIN RSA PRIVATE KEY-----").should == true
-  end
-
-
 end
