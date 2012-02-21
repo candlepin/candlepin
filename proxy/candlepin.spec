@@ -31,6 +31,7 @@ BuildRequires: hibernate3-annotations >= 0:3.4.0
 BuildRequires: resteasy
 BuildRequires: mockito
 BuildRequires: google-guice
+BuildRequires: log4j
 Requires: java >= 0:1.6.0
 #until cpsetup is removed
 Requires: wget
