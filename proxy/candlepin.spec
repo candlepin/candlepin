@@ -29,6 +29,7 @@ BuildRequires: selinux-policy-doc
 BuildRequires: hibernate3 >= 3.3.2
 BuildRequires: hibernate3-annotations >= 0:3.4.0
 BuildRequires: resteasy
+BuildRequires: hornetq
 BuildRequires: mockito
 BuildRequires: google-guice
 BuildRequires: log4j
