@@ -33,6 +33,7 @@ BuildRequires: hornetq
 BuildRequires: mockito
 BuildRequires: google-guice
 BuildRequires: log4j
+BuildRequires: jakarta-commons-lang
 Requires: java >= 0:1.6.0
 #until cpsetup is removed
 Requires: wget
