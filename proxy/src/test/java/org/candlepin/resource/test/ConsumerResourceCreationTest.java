@@ -15,6 +15,7 @@
 package org.candlepin.resource.test;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -63,7 +64,6 @@ import org.mockito.stubbing.Answer;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
-import edu.emory.mathcs.backport.java.util.Collections;
 /**
  *
  */
@@ -127,7 +127,8 @@ public class ConsumerResourceCreationTest {
         perms.addAll(role.getPermissions());
         Principal principal = new UserPrincipal(USER, perms, false);
 
-        return createConsumer(consumerName, principal, Collections.emptyList());
+        List<String> empty = Collections.emptyList();
+        return createConsumer(consumerName, principal, empty);
     }
 
     private Consumer createConsumer(String consumerName, Principal principal,
@@ -205,7 +206,8 @@ public class ConsumerResourceCreationTest {
     @Test(expected = ForbiddenException.class)
     public void authRequired() {
         Principal p = new NoAuthPrincipal();
-        createConsumer("sys.example.com", p, Collections.emptyList());
+        List<String> empty = Collections.emptyList();
+        createConsumer("sys.example.com", p, empty);
     }
 
     private List<String> mockActivationKeys() {

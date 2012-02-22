@@ -49,10 +49,9 @@ import org.candlepin.service.SubscriptionServiceAdapter;
 import com.google.inject.Inject;
 import com.wideplay.warp.persist.Transactional;
 
-import edu.emory.mathcs.backport.java.util.Arrays;
-
 import org.apache.log4j.Logger;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;

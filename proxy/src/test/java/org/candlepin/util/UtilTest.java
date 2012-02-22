@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.math.BigInteger;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
@@ -49,8 +50,6 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-
-import edu.emory.mathcs.backport.java.util.Arrays;
 
 /**
  * Test Class for the Util class

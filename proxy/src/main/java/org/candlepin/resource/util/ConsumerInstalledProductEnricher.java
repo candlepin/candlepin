@@ -16,6 +16,7 @@ package org.candlepin.resource.util;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -26,8 +27,6 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.Product;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
-
-import edu.emory.mathcs.backport.java.util.Collections;
 
 /**
  * Responsible for enriching a {@link ConsumerInstalledProduct} with

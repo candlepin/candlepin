@@ -34,12 +34,11 @@ import org.candlepin.util.DateSource;
 
 import com.google.inject.Inject;
 
-import edu.emory.mathcs.backport.java.util.Arrays;
-
 import org.apache.log4j.Logger;
 import org.mozilla.javascript.RhinoException;
 import org.xnap.commons.i18n.I18n;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
