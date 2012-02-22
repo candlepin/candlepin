@@ -75,7 +75,17 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
         super.delete(entity);
 
-        deletedConsumerCurator.create(dc);
+        DeletedConsumer existing = deletedConsumerCurator.
+                    findByConsumerUuid(dc.getConsumerUuid());
+        if (existing != null) {
+            // update the owner ID in case the same UUID was specified by two owners
+            existing.setOwnerId(dc.getOwnerId());
+            existing.setUpdated(new Date());
+            deletedConsumerCurator.save(existing);
+        }
+        else {
+            deletedConsumerCurator.create(dc);
+        }
     }
 
     protected void validate(Consumer entity) {
