@@ -45,7 +45,7 @@ msgstr "Erreur lors du contact au service utilisateur"
 #: src/main/java/org/candlepin/controller/Entitler.java:77
 #, java-format
 msgid "Subscription pool {0} does not exist."
-msgstr "Le pool d'abonnements {0} n''existe pas."
+msgstr "Le pool d''abonnements {0} n''existe pas."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:104
 #, java-format
