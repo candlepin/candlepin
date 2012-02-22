@@ -11,7 +11,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.5.21
+Version: 0.5.22
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -199,6 +199,17 @@ fi
 
 
 %changelog
+* Wed Feb 22 2012 jesus m. rodriguez <jesusr@redhat.com> 0.5.22-1
+- 754369: A single quote causes the french string replacement to not be replaced (bkearney@redhat.com)
+- Update DeletedConsumer when identical UUID is used for deleted consumer.  (cduryee@redhat.com)
+- latest translations from zanata (alikins@redhat.com)
+- Make import certificate spec more resilient (jbowes@redhat.com)
+- 795431: add source_pool_id attribute on bonus pools (cduryee@redhat.com)
+- 789127: ignore multiplier on imported products (jbowes@redhat.com)
+- Filter select best pools by SLA if set on consumer. (mstead@redhat.com)
+- 787278: import: also capture ConstraintViolation directly.  (jesusr@redhat.com)
+- 790751: validate older import check against export creation date (cduryee@redhat.com)
+
 * Fri Feb 17 2012 jesus m. rodriguez <jesusr@redhat.com> 0.5.21-1
 - 794852: Add the filtering check to the per environment enable section (bkearney@redhat.com)
 - Use a config value to enable or disable content filtering by environment. (bkearney@redhat.com)
