@@ -17,12 +17,14 @@ package org.candlepin.model.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.candlepin.auth.NoAuthPrincipal;
+import org.candlepin.model.ActivationKey;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
@@ -255,5 +257,25 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         assertEquals(1, poolCurator.listAvailableEntitlementPools(null, owner, null,
             activeOn, false, false).size());
+    }
+
+    @Test
+    public void testActivationKeyList() {
+        Date activeOn = TestUtil.createDate(2011, 2, 2);
+
+        Pool pool = TestUtil.createPool(owner, product);
+        pool.setEndDate(activeOn);
+        poolCurator.create(pool);
+        List<Pool> pools = new ArrayList<Pool>();
+        pools.add(pool);
+
+        assertEquals(0, poolCurator.getActivationKeysForPool(pool).size());
+
+        ActivationKey ak = TestUtil.createActivationKey(owner, pools);
+        activationKeyCurator.create(ak);
+
+        // test the pool and its inverse
+        assertEquals(1, ak.getPools().size());
+        assertEquals(1, poolCurator.getActivationKeysForPool(pool).size());
     }
 }

@@ -81,6 +81,18 @@ describe 'Standalone Virt-Limit Subscriptions' do
     @guest1_client.list_entitlements.length.should == 0
   end
 
+  it 'should revoke guest entitlements and remove activation keys when host unbinds' do
+    activation_key = @cp.create_activation_key(@owner['key'], random_string('test_token'))
+    @cp.add_pool_to_key(activation_key['id'], @guest_pool['id'])
+    # Guest 1 should be able to use the pool:
+    @guest1_client.consume_pool(@guest_pool['id'])
+    @guest1_client.list_entitlements.length.should == 1
+
+    @host1_client.unbind_entitlement(@host_ent['id'])
+
+    @guest1_client.list_entitlements.length.should == 0
+  end
+
   it 'should not revoke guest entitlements when host stops reporting guest ID' do
     @guest1_client.consume_pool(@guest_pool['id'])
     @guest1_client.list_entitlements.length.should == 1

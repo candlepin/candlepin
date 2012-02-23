@@ -627,4 +627,6 @@ public class Pool extends AbstractHibernateObject implements Linkable, Owned {
     public void setSubscriptionSubKey(String subscriptionSubKey) {
         this.subscriptionSubKey = subscriptionSubKey;
     }
+
+
 }

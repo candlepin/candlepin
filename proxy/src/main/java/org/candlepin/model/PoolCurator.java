@@ -386,6 +386,19 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return pool;
     }
 
+    public List<ActivationKey> getActivationKeysForPool(Pool p) {
+        List<ActivationKey> activationKeys = new ArrayList<ActivationKey>();
+        List<ActivationKeyPool> activationKeyPools = new ArrayList<ActivationKeyPool>();
+
+        activationKeyPools = currentSession().createCriteria(ActivationKeyPool.class)
+            .add(Restrictions.eq("pool", p)).list();
+
+        for (ActivationKeyPool akp : activationKeyPools) {
+            activationKeys.add(akp.getKey());
+        }
+
+        return activationKeys;
+    }
     public Set<String> retrieveServiceLevelsForOwner(Owner owner) {
         Set<String> result = new HashSet<String>();
         List<ProductPoolAttribute> items =  currentSession()

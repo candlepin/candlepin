@@ -19,6 +19,7 @@ import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.model.ActivationKey;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
@@ -768,6 +769,13 @@ public class CandlepinPoolManager implements PoolManager {
     @Transactional
     public void deletePool(Pool pool) {
         Event event = eventFactory.poolDeleted(pool);
+
+        // remove the link between the key and the pool before deleting the pool
+        // TODO: is there a better way to do this with hibernate annotations?
+        List<ActivationKey> keys = poolCurator.getActivationKeysForPool(pool);
+        for (ActivationKey k : keys) {
+            k.removePool(pool);
+        }
 
         // Must do a full revoke for all entitlements:
         for (Entitlement e : poolCurator.entitlementsIn(pool)) {

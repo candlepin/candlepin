@@ -71,6 +71,7 @@ public class ActivationKeyTest extends DatabaseTestFixture {
         key.addPool(pool, 5);
         activationKeyCurator.create(key);
         activationKeyCurator.refresh(key);
+        assertNotNull(poolCurator.getActivationKeysForPool(pool));
         assertNotNull(key.getPools());
         assertTrue("The count of pools should be 1", key.getPools().size() == 1);
     }
