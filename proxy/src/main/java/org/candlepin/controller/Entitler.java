@@ -14,9 +14,7 @@
  */
 package org.candlepin.controller;
 
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
+import com.google.inject.Inject;
 
 import org.apache.log4j.Logger;
 import org.candlepin.audit.Event;
@@ -27,11 +25,15 @@ import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolQuantity;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.xnap.commons.i18n.I18n;
 
-import com.google.inject.Inject;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * entitler
@@ -195,6 +197,36 @@ public class Entitler {
                     productId, error);
             }
             throw new ForbiddenException(msg);
+        }
+    }
+
+    /**
+     * Entitles the given Consumer to the given Product. Will seek out pools
+     * which provide access to this product, either directly or as a child, and
+     * select the best one based on a call to the rules engine.
+     *
+     * @param consumer The consumer being entitled.
+     * @return List of Entitlements
+     */
+    public List<PoolQuantity> getDryRunMap(Consumer consumer,
+        String serviceLevelOverride) {
+
+        try {
+            Owner owner = consumer.getOwner();
+            Date entitleDate = new Date();
+
+            List<PoolQuantity> map = poolManager.getBestPools(
+                consumer, null, entitleDate, owner, serviceLevelOverride);
+            log.debug("Created map: " + map);
+            return map;
+        }
+        catch (EntitlementRefusedException e) {
+            // Could be multiple errors, but we'll just report the first one for
+            // now:
+            // TODO: Convert resource key to user friendly string?
+            // See below for more TODOS
+            String error = e.getResult().getErrors().get(0).getResourceKey();
+            throw new ForbiddenException(error);
         }
     }
 

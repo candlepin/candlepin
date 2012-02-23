@@ -14,6 +14,12 @@
  */
 package org.candlepin.controller;
 
+import com.google.inject.Inject;
+import com.wideplay.warp.persist.Transactional;
+
+import java.util.Arrays;
+
+import org.apache.log4j.Logger;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
@@ -30,6 +36,7 @@ import org.candlepin.model.Environment;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
+import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Subscription;
@@ -47,12 +54,6 @@ import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 
-import com.google.inject.Inject;
-import com.wideplay.warp.persist.Transactional;
-
-import org.apache.log4j.Logger;
-
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -352,6 +353,28 @@ public class CandlepinPoolManager implements PoolManager {
             entitleDate = new Date();
         }
 
+        List<PoolQuantity> bestPools = getBestPools(consumer, productIds,
+            entitleDate, owner, null);
+
+        if (bestPools == null) {
+            throw new RuntimeException("No entitlements for products: " +
+                Arrays.toString(productIds));
+        }
+
+        // now make the entitlements
+        for (PoolQuantity entry : bestPools) {
+            entitlements.add(addEntitlement(consumer, entry.getPool(),
+                entry.getQuantity(), false));
+        }
+
+        return entitlements;
+    }
+
+    public List<PoolQuantity> getBestPools(Consumer consumer,
+        String[] productIds, Date entitleDate, Owner owner,
+        String serviceLevelOverride)
+        throws EntitlementRefusedException {
+
         ValidationResult failedResult = null;
         List<Pool> allOwnerPools = poolCurator.listByOwner(owner, entitleDate);
         List<Pool> filteredPools = new LinkedList<Pool>();
@@ -369,7 +392,7 @@ public class CandlepinPoolManager implements PoolManager {
             productIds = tmpSet.toArray(new String [] {});
         }
 
-        log.info("Attempting auto-bind for products on date: " + entitleDate);
+        log.info("Attempting for products on date: " + entitleDate);
         for (String productId : productIds) {
             log.info("  " + productId);
         }
@@ -411,20 +434,8 @@ public class CandlepinPoolManager implements PoolManager {
                 Arrays.toString(productIds));
         }
 
-        Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer,
-            productIds, filteredPools, compliance);
-        if (bestPools == null) {
-            throw new RuntimeException("No entitlements for products: " +
-                Arrays.toString(productIds));
-        }
-
-        // now make the entitlements
-        for (Entry<Pool, Integer> entry : bestPools.entrySet()) {
-            entitlements.add(addEntitlement(consumer, entry.getKey(),
-                entry.getValue(), false));
-        }
-
-        return entitlements;
+        return enforcer.selectBestPools(consumer,
+            productIds, filteredPools, compliance, serviceLevelOverride);
     }
 
     public Entitlement entitleByProduct(Consumer consumer, String productId)

@@ -551,6 +551,13 @@ class Candlepin
     delete("/consumers/#{uuid}/entitlements/#{eid}")
   end
 
+  def autobind_dryrun(consumer_id, service_level=nil)
+    consumer_id ||= @uuid
+    query = "/consumers/#{consumer_id}/entitlements/dry-run"
+    query << "?service_level=#{service_level}" if service_level
+    get(query)
+  end
+
   def list_subscriptions(owner_key, params={})
     results = get("/owners/#{owner_key}/subscriptions")
     return results

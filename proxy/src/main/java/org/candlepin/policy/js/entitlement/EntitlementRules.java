@@ -14,10 +14,16 @@
  */
 package org.candlepin.policy.js.entitlement;
 
+import com.google.inject.Inject;
+
+import java.util.Arrays;
+
+import org.apache.log4j.Logger;
 import org.candlepin.config.Config;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.policy.Enforcer;
 import org.candlepin.policy.ValidationError;
@@ -31,14 +37,10 @@ import org.candlepin.policy.js.RuleExecutionException;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.util.DateSource;
-
-import com.google.inject.Inject;
-
-import org.apache.log4j.Logger;
 import org.mozilla.javascript.RhinoException;
 import org.xnap.commons.i18n.I18n;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -128,8 +130,8 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
     }
 
     @Override
-    public Map<Pool, Integer> selectBestPools(Consumer consumer, String[] productIds,
-        List<Pool> pools, ComplianceStatus compliance) {
+    public List<PoolQuantity> selectBestPools(Consumer consumer, String[] productIds,
+        List<Pool> pools, ComplianceStatus compliance, String serviceLevelOverride) {
 
         jsRules.reinitTo("entitlement_name_space");
         rulesInit();
@@ -160,7 +162,7 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
 
         // Provide objects for the script:
         Map<String, Object> args = new HashMap<String, Object>();
-        args.put("consumer", new ReadOnlyConsumer(consumer));
+        args.put("consumer", new ReadOnlyConsumer(consumer, serviceLevelOverride));
         args.put("pools", readOnlyPools.toArray());
         args.put("products", readOnlyProducts.toArray());
         args.put("prodAttrSeparator", PROD_ARCHITECTURE_SEPARATOR);
@@ -210,14 +212,14 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
                 "Rule did not select a pool for products: " + Arrays.toString(productIds));
         }
 
-        Map<Pool, Integer> bestPools = new HashMap<Pool, Integer>();
+        List<PoolQuantity> bestPools = new ArrayList<PoolQuantity>();
         for (Pool p : pools) {
             for (ReadOnlyPool rp : result.keySet()) {
                 if (p.getId().equals(rp.getId())) {
                     log.debug("Best pool: " + p);
 
                     int quantity = result.get(rp);
-                    bestPools.put(p, quantity);
+                    bestPools.add(new PoolQuantity(p, quantity));
                 }
             }
         }

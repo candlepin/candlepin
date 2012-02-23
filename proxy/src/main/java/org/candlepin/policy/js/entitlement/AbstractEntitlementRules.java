@@ -14,11 +14,13 @@
  */
 package org.candlepin.policy.js.entitlement;
 
+import org.apache.log4j.Logger;
 import org.candlepin.config.Config;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.policy.Enforcer;
 import org.candlepin.policy.js.JsRules;
@@ -29,12 +31,11 @@ import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.pool.PoolHelper;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.util.DateSource;
-
-import org.apache.log4j.Logger;
 import org.mozilla.javascript.RhinoException;
 import org.xnap.commons.i18n.I18n;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -93,11 +94,11 @@ public abstract class AbstractEntitlementRules implements Enforcer {
      *            Pools to choose from.
      * @return First pool in the list. (default behavior)
      */
-    protected Map<Pool, Integer> selectBestPoolDefault(List<Pool> pools) {
+    protected List<PoolQuantity> selectBestPoolDefault(List<Pool> pools) {
         if (pools.size() > 0) {
-            Map<Pool, Integer> toReturn = new HashMap<Pool, Integer>();
+            List<PoolQuantity> toReturn = new ArrayList<PoolQuantity>();
             for (Pool pool : pools) {
-                toReturn.put(pool, 1);
+                toReturn.add(new PoolQuantity(pool, 1));
             }
             return toReturn;
         }
@@ -341,7 +342,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         Map<String, String> allAttributes = jsRules.getFlattenedAttributes(product, pool);
 
         Map<String, Object> args = new HashMap<String, Object>();
-        args.put("consumer", new ReadOnlyConsumer(c));
+        args.put("consumer", new ReadOnlyConsumer(c, null));
         args.put("product", new ReadOnlyProduct(product));
         args.put("post", postHelper);
         args.put("pool", pool);
@@ -421,8 +422,8 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         return new PreEntHelper(1, null);
     }
 
-    public Map<Pool, Integer> selectBestPools(Consumer consumer, String[] productIds,
-        List<Pool> pools, ComplianceStatus compliance)
+    public List<PoolQuantity> selectBestPools(Consumer consumer, String[] productIds,
+        List<Pool> pools, ComplianceStatus compliance, String serviceLevelOverride)
         throws RuleExecutionException {
 
         jsRules.reinitTo("entitlement_name_space");
@@ -432,9 +433,9 @@ public abstract class AbstractEntitlementRules implements Enforcer {
             return null;
         }
 
-        Map<Pool, Integer> best = new HashMap<Pool, Integer>();
+        List<PoolQuantity> best = new ArrayList<PoolQuantity>();
         for (Pool pool : pools) {
-            best.put(pool, 1);
+            best.add(new PoolQuantity(pool, 1));
         }
         return best;
     }

@@ -26,6 +26,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
@@ -41,7 +42,6 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.DateSourceForTesting;
 import org.candlepin.test.TestDateUtil;
 import org.candlepin.test.TestUtil;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -312,9 +312,9 @@ public class EnforcerTest extends DatabaseTestFixture {
         List<Pool> availablePools
             = Arrays.asList(new Pool[] {pool1, pool2, desired, pool3});
 
-        Map<Pool, Integer> result = enforcer.selectBestPools(consumer,
-            new String[] {"a-product"}, availablePools, compliance);
-        assertEquals(1, result.get(desired).intValue());
+        List<PoolQuantity> result = enforcer.selectBestPools(consumer,
+            new String[] {"a-product"}, availablePools, compliance, null);
+        assertTrue(result.contains(new PoolQuantity(desired, 1)));
     }
 
     @Test
@@ -339,9 +339,9 @@ public class EnforcerTest extends DatabaseTestFixture {
         List<Pool> availablePools
             = Arrays.asList(new Pool[] {pool1, pool2, desired});
 
-        Map<Pool, Integer> result = enforcer.selectBestPools(consumer,
-            new String[] {"a-product"}, availablePools, compliance);
-        assertEquals(1, result.get(desired).intValue());
+        List<PoolQuantity> result = enforcer.selectBestPools(consumer,
+            new String[] {"a-product"}, availablePools, compliance, null);
+        assertTrue(result.contains(new PoolQuantity(desired, 1)));
     }
 
     @Test
@@ -362,9 +362,9 @@ public class EnforcerTest extends DatabaseTestFixture {
 
         List<Pool> availablePools = Arrays.asList(new Pool[] {pool1, pool2, desired});
 
-        Map<Pool, Integer> result = enforcer.selectBestPools(consumer,
-            new String[] {"a-product"}, availablePools, compliance);
-        assertEquals(1, result.get(desired).intValue());
+        List<PoolQuantity> result = enforcer.selectBestPools(consumer,
+            new String[] {"a-product"}, availablePools, compliance, null);
+        assertTrue(result.contains(new PoolQuantity(desired, 1)));
     }
 
     @Test
@@ -373,8 +373,9 @@ public class EnforcerTest extends DatabaseTestFixture {
             .thenReturn(new Product(HIGHEST_QUANTITY_PRODUCT, HIGHEST_QUANTITY_PRODUCT));
 
         // There are no pools for the product in this case:
-        Map<Pool, Integer> result = enforcer.selectBestPools(consumer,
-            new String[] {HIGHEST_QUANTITY_PRODUCT}, new LinkedList<Pool>(), compliance);
+        List<PoolQuantity> result = enforcer.selectBestPools(consumer,
+            new String[] {HIGHEST_QUANTITY_PRODUCT}, new LinkedList<Pool>(), compliance,
+            null);
         assertNull(result);
     }
 
@@ -392,7 +393,7 @@ public class EnforcerTest extends DatabaseTestFixture {
             .thenReturn(product);
 
         enforcer.selectBestPools(consumer, new String[] {"a-product"},
-            Collections.singletonList(pool1), compliance);
+            Collections.singletonList(pool1), compliance, null);
     }
 
     @Test
@@ -411,9 +412,9 @@ public class EnforcerTest extends DatabaseTestFixture {
         List<Pool> availablePools
             = Arrays.asList(new Pool[] {pool1, pool2});
 
-        Map<Pool, Integer> result = enforcer.selectBestPools(consumer,
-            new String[] {product.getId()}, availablePools, compliance);
-        assertEquals(1, result.get(pool1).intValue());
+        List<PoolQuantity> result = enforcer.selectBestPools(consumer,
+            new String[] {product.getId()}, availablePools, compliance, null);
+        assertTrue(result.contains(new PoolQuantity(pool1, 1)));
     }
 
     private EntitlementRules.Rule rule(String name, int priority, String... attrs) {

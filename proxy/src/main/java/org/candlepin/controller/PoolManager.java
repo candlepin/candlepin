@@ -19,6 +19,7 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.Environment;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Subscription;
 import org.candlepin.policy.EntitlementRefusedException;
 
@@ -89,6 +90,9 @@ public interface PoolManager {
         Date entitleDate)
         throws EntitlementRefusedException;
 
+    List<PoolQuantity> getBestPools(Consumer consumer, String[] productIds,
+        Date entitleDate, Owner owner, String serviceLevelOverride)
+        throws EntitlementRefusedException;
 
     Pool find(String poolId);
 

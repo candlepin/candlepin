@@ -17,6 +17,7 @@ package org.candlepin.test;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolQuantity;
 import org.candlepin.policy.Enforcer;
 import org.candlepin.policy.js.RuleExecutionException;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -24,9 +25,8 @@ import org.candlepin.policy.js.entitlement.PreEntHelper;
 import org.candlepin.policy.js.entitlement.PreUnbindHelper;
 import org.candlepin.policy.js.pool.PoolHelper;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * EnforcerForTesting
@@ -46,15 +46,16 @@ public class EnforcerForTesting implements Enforcer {
     }
 
     @Override
-    public Map<Pool, Integer> selectBestPools(Consumer consumer, String[] productIds,
-        List<Pool> pools, ComplianceStatus compliance) throws RuleExecutionException {
+    public List<PoolQuantity> selectBestPools(Consumer consumer, String[] productIds,
+        List<Pool> pools, ComplianceStatus compliance, String serviceLevelOverride)
+        throws RuleExecutionException {
         if (pools.isEmpty()) {
             return null;
         }
 
-        Map<Pool, Integer> best = new HashMap<Pool, Integer>();
+        List<PoolQuantity> best = new ArrayList<PoolQuantity>();
         for (Pool pool : pools) {
-            best.put(pool, 1);
+            best.add(new PoolQuantity(pool, 1));
         }
         return best;
     }

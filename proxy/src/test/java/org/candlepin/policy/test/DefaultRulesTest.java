@@ -18,9 +18,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -36,6 +36,7 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolAttribute;
+import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProvidedProduct;
@@ -914,8 +915,8 @@ public class DefaultRulesTest {
         List<Pool> pools = new LinkedList<Pool>();
         pools.add(pool);
 
-        Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance);
+        List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null);
 
         assertEquals(1, bestPools.size());
     }
@@ -934,11 +935,11 @@ public class DefaultRulesTest {
         List<Pool> pools = new LinkedList<Pool>();
         pools.add(pool);
 
-        Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance);
+        List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null);
 
         assertEquals(1, bestPools.size());
-        assertEquals(1, bestPools.get(pool).intValue());
+        assertTrue(bestPools.contains(new PoolQuantity(pool, 1)));
     }
 
     @Test
@@ -986,12 +987,12 @@ public class DefaultRulesTest {
         // SLA filtering only occurs when consumer has SLA set.
         consumer.setServiceLevel("Premium");
 
-        Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer,
+        List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
             new String[]{ productId, slaPremiumProdId, slaStandardProdId},
-            pools, compliance);
+            pools, compliance, null);
 
         assertEquals(1, bestPools.size());
-        assertEquals(1, bestPools.get(slaPremiumPool).intValue());
+        assertTrue(bestPools.contains(new PoolQuantity(slaPremiumPool, 1)));
     }
 
     private Product mockStackingProduct(String pid, String productName,
@@ -1033,11 +1034,11 @@ public class DefaultRulesTest {
         pools.add(pool);
         pools.add(pool2);
 
-        Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance);
+        List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null);
 
         assertEquals(1, bestPools.size());
-        assertEquals(4, bestPools.get(pool).intValue());
+        assertTrue(bestPools.contains(new PoolQuantity(pool, 4)));
     }
 
     @Test
@@ -1063,11 +1064,10 @@ public class DefaultRulesTest {
         pools.add(pool2);
         pools.add(pool3);
 
-        Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance);
+        List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null);
 
-        assertTrue(bestPools.containsKey(pool));
-        assertEquals(4, bestPools.get(pool).intValue());
+        assertTrue(bestPools.contains(new PoolQuantity(pool, 4)));
     }
 
     /*
@@ -1095,13 +1095,11 @@ public class DefaultRulesTest {
         pools.add(pool1);
         pools.add(pool2);
 
-        Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId1 }, pools, compliance);
+        List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
+            new String[]{ productId1 }, pools, compliance, null);
 
         assertEquals(1, bestPools.size());
-        assertTrue(bestPools.containsKey(pool2));
-        assertEquals(1, bestPools.get(pool2).intValue());
-
+        assertTrue(bestPools.contains(new PoolQuantity(pool2, 1)));
     }
 
     @Test
@@ -1127,14 +1125,11 @@ public class DefaultRulesTest {
 
         // System has both the stacked product, as well as another non-stacked product,
         // we should be able to auto-subscribe to both:
-        Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId2, productId }, pools, compliance);
+        List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
+            new String[]{ productId2, productId }, pools, compliance, null);
 
-        assertEquals(1, bestPools.get(nonStackedPool).intValue());
-
-        // check first to avoid NPE
-        assertTrue(bestPools.containsKey(stackedPool));
-        assertEquals(4, bestPools.get(stackedPool).intValue());
+        assertTrue(bestPools.contains(new PoolQuantity(nonStackedPool, 1)));
+        assertTrue(bestPools.contains(new PoolQuantity(stackedPool, 4)));
     }
 
     // Test a system requesting a *provided* product, when pools provide it, each
@@ -1163,10 +1158,10 @@ public class DefaultRulesTest {
 
         // System has both the stacked product, as well as another non-stacked product,
         // we should be able to auto-subscribe to both:
-        Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ providedProductId }, pools, compliance);
+        List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
+            new String[]{ providedProductId }, pools, compliance, null);
 
-        assertEquals(4, bestPools.get(pool).intValue());
+        assertTrue(bestPools.contains(new PoolQuantity(pool, 4)));
     }
 
     /*
@@ -1193,12 +1188,12 @@ public class DefaultRulesTest {
 
         // System has both the stacked product, as well as another non-stacked product,
         // we should be able to auto-subscribe to both:
-        Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance);
+        List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null);
 
         assertEquals(2, bestPools.size());
-        assertEquals(1, bestPools.get(pool2).intValue());
-        assertEquals(3, bestPools.get(pool).intValue());
+        assertTrue(bestPools.contains(new PoolQuantity(pool2, 1)));
+        assertTrue(bestPools.contains(new PoolQuantity(pool, 3)));
     }
 
 
@@ -1213,11 +1208,11 @@ public class DefaultRulesTest {
         List<Pool> pools = new LinkedList<Pool>();
         pools.add(pool);
 
-        Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance);
+        List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null);
 
         assertEquals(1, bestPools.size());
-        assertEquals(4, bestPools.get(pool).intValue());
+        assertTrue(bestPools.contains(new PoolQuantity(pool, 4)));
     }
 
     @Test
@@ -1232,12 +1227,12 @@ public class DefaultRulesTest {
         List<Pool> pools = new LinkedList<Pool>();
         pools.add(pool);
 
-        Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance);
+        List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null);
 
         // we should consume as many as possible, even if this doesnt fully entitle
         assertEquals(1, bestPools.size());
-        assertEquals(5, bestPools.get(pool).intValue());
+        assertTrue(bestPools.contains(new PoolQuantity(pool, 5)));
     }
 
     @Test
@@ -1252,11 +1247,11 @@ public class DefaultRulesTest {
         List<Pool> pools = new LinkedList<Pool>();
         pools.add(pool);
 
-        Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance);
+        List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null);
 
         assertEquals(1, bestPools.size());
-        assertEquals(11, bestPools.get(pool).intValue());
+        assertTrue(bestPools.contains(new PoolQuantity(pool, 11)));
     }
 
     @Test
@@ -1278,11 +1273,11 @@ public class DefaultRulesTest {
         pools.add(pool);
         pools.add(pool2);
 
-        Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance);
+        List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null);
 
         assertEquals(1, bestPools.size());
-        assertEquals(10, bestPools.get(pool).intValue());
+        assertTrue(bestPools.contains(new PoolQuantity(pool, 10)));
     }
 
     @Test
@@ -1304,12 +1299,11 @@ public class DefaultRulesTest {
         pools.add(pool);
         pools.add(pool2);
 
-        Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance);
+        List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null);
 
         assertEquals(1, bestPools.size());
-        assertTrue(bestPools.containsKey(pool2));
-        assertEquals(3, bestPools.get(pool2).intValue());
+        assertTrue(bestPools.contains(new PoolQuantity(pool2, 3)));
     }
 
     @Test
@@ -1325,8 +1319,8 @@ public class DefaultRulesTest {
         List<Pool> pools = new LinkedList<Pool>();
         pools.add(pool);
 
-        Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance);
+        List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null);
 
         assertEquals(1, bestPools.size());
     }
@@ -1348,7 +1342,8 @@ public class DefaultRulesTest {
 
         try {
             enforcer
-                .selectBestPools(consumer, new String[]{ productId }, pools, compliance);
+                .selectBestPools(consumer, new String[]{ productId },
+                    pools, compliance, null);
         }
         catch (Exception e) {
             // eatit
@@ -1374,7 +1369,8 @@ public class DefaultRulesTest {
 
         try {
             enforcer
-                .selectBestPools(consumer, new String[]{ productId }, pools, compliance);
+                .selectBestPools(consumer, new String[]{ productId },
+                    pools, compliance, null);
         }
         catch (Exception e) {
             // eatit
@@ -1396,8 +1392,8 @@ public class DefaultRulesTest {
         pools.add(pool1);
         pools.add(pool2);
 
-        Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance);
+        List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null);
 
         assertEquals(1, bestPools.size());
     }
@@ -1418,12 +1414,11 @@ public class DefaultRulesTest {
         pools.add(pool1);
         pools.add(pool2);
 
-        Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance);
+        List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null);
 
         assertEquals(1, bestPools.size());
-
-        assertEquals(1, bestPools.get(pool2).intValue());
+        assertTrue(bestPools.contains(new PoolQuantity(pool2, 1)));
     }
 
     @Test
@@ -1442,11 +1437,11 @@ public class DefaultRulesTest {
         List<Pool> pools = new LinkedList<Pool>();
         pools.add(pool1);
 
-        Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer, new String[]{
-            productId1, productId2 }, pools, compliance);
+        List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer, new String[]{
+            productId1, productId2 }, pools, compliance, null);
 
         assertEquals(1, bestPools.size());
-        assertEquals(1, bestPools.get(pool1).intValue());
+        assertTrue(bestPools.contains(new PoolQuantity(pool1, 1)));
     }
 
     @Test
@@ -1470,11 +1465,11 @@ public class DefaultRulesTest {
         List<Pool> pools = new LinkedList<Pool>();
         pools.add(pool1);
 
-        Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer, new String[]{
-            productId1, productId2 }, pools, compliance);
+        List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer, new String[]{
+            productId1, productId2 }, pools, compliance, null);
 
         assertEquals(1, bestPools.size());
-        assertEquals(1, bestPools.get(pool1).intValue());
+        assertTrue(bestPools.contains(new PoolQuantity(pool1, 1)));
     }
 
     @Test
@@ -1504,11 +1499,11 @@ public class DefaultRulesTest {
         pools.add(pool1);
         pools.add(pool2);
 
-        Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer, new String[]{
-            productId1, productId2 }, pools, compliance);
+        List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer, new String[]{
+            productId1, productId2 }, pools, compliance, null);
 
         assertEquals(1, bestPools.size());
-        assertEquals(1, bestPools.get(pool2).intValue());
+        assertTrue(bestPools.contains(new PoolQuantity(pool2, 1)));
     }
 
     @Test
@@ -1540,11 +1535,11 @@ public class DefaultRulesTest {
         pools.add(pool2);
         pools.add(pool3);
 
-        Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer, new String[]{
-            productId1, productId2 }, pools, compliance);
+        List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer, new String[]{
+            productId1, productId2 }, pools, compliance, null);
 
         assertEquals(1, bestPools.size());
-        assertEquals(1, bestPools.get(pool3).intValue());
+        assertTrue(bestPools.contains(new PoolQuantity(pool3, 1)));
     }
 
     @Test
@@ -1577,11 +1572,11 @@ public class DefaultRulesTest {
         pools.add(pool1);
         pools.add(pool2);
 
-        Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer, new String[]{
-            productId1, productId2, productId3 }, pools, compliance);
+        List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer, new String[]{
+            productId1, productId2, productId3 }, pools, compliance, null);
 
         assertEquals(1, bestPools.size());
-        assertEquals(1, bestPools.get(pool2).intValue());
+        assertTrue(bestPools.contains(new PoolQuantity(pool2, 1)));
     }
 
     @Test
@@ -1616,8 +1611,8 @@ public class DefaultRulesTest {
         pools.add(pool1);
         pools.add(pool2);
 
-        Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer, new String[]{
-            productId1, productId2, productId3 }, pools, compliance);
+        List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer, new String[]{
+            productId1, productId2, productId3 }, pools, compliance, null);
 
         assertEquals(2, bestPools.size());
     }
@@ -1641,11 +1636,11 @@ public class DefaultRulesTest {
         pools.add(pool1);
         pools.add(pool2);
 
-        Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId1 }, pools, compliance);
+        List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
+            new String[]{ productId1 }, pools, compliance, null);
 
         assertEquals(1, bestPools.size());
-        assertEquals(1, bestPools.get(pool2).intValue());
+        assertTrue(bestPools.contains(new PoolQuantity(pool2, 1)));
     }
 
     @Test
@@ -1669,11 +1664,11 @@ public class DefaultRulesTest {
         pools.add(pool1);
         pools.add(pool2);
 
-        Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId1 }, pools, compliance);
+        List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
+            new String[]{ productId1 }, pools, compliance, null);
 
         assertEquals(1, bestPools.size());
-        assertEquals(1, bestPools.get(pool1).intValue());
+        assertTrue(bestPools.contains(new PoolQuantity(pool1, 1)));
     }
 
     // Trying to select best pools for a product that we're already entitled to will
@@ -1699,7 +1694,8 @@ public class DefaultRulesTest {
         when(compliance.getCompliantProducts()).thenReturn(fakeCompliantProducts);
 
         // will raise the RuleExecutionException, for 0 pools
-        enforcer.selectBestPools(consumer, new String[]{ productId1 }, pools, compliance);
+        enforcer.selectBestPools(consumer, new String[]{ productId1 },
+            pools, compliance, null);
     }
 
     // With two pools available, selectBestPools will give us the pool that doesn't
@@ -1736,11 +1732,11 @@ public class DefaultRulesTest {
 
         when(compliance.getCompliantProducts()).thenReturn(fakeCompliantProducts);
 
-        Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId2, productId3 }, pools, compliance);
+        List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
+            new String[]{ productId2, productId3 }, pools, compliance, null);
 
         assertEquals(1, bestPools.size());
-        assertEquals(1, bestPools.get(pool2).intValue());
+        assertTrue(bestPools.contains(new PoolQuantity(pool2, 1)));
 
     }
 
@@ -1776,11 +1772,10 @@ public class DefaultRulesTest {
 
         when(compliance.getPartialStacks()).thenReturn(fakePartial);
 
-        Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId3 }, pools, compliance);
+        List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
+            new String[]{ productId3 }, pools, compliance, null);
         assertEquals(1, bestPools.size());
-        assertTrue(bestPools.containsKey(pool1));
-        assertEquals(2, bestPools.get(pool1).intValue());
+        assertTrue(bestPools.contains(new PoolQuantity(pool1, 2)));
     }
 
     @Test
@@ -1824,11 +1819,10 @@ public class DefaultRulesTest {
 
         when(compliance.getPartialStacks()).thenReturn(fakePartial);
 
-        Map<Pool, Integer> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId2, productId3 }, pools, compliance);
+        List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
+            new String[]{ productId2, productId3 }, pools, compliance, null);
         assertEquals(1, bestPools.size());
-        assertTrue(bestPools.containsKey(pool1));
-        assertEquals(2, bestPools.get(pool1).intValue());
+        assertTrue(bestPools.contains(new PoolQuantity(pool1, 2)));
     }
 
     // we shouldn't be able to get any new entitlements
@@ -1873,7 +1867,7 @@ public class DefaultRulesTest {
         when(compliance.getPartialStacks()).thenReturn(fakePartial);
 
         enforcer.selectBestPools(consumer, new String[]{ productId2, productId3 },
-            pools, compliance);
+            pools, compliance, null);
     }
 
     @Test(expected = RuleExecutionException.class)
@@ -1886,7 +1880,8 @@ public class DefaultRulesTest {
         pool.setQuantity(1L);
         List<Pool> pools = new LinkedList<Pool>();
         pools.add(pool);
-        enforcer.selectBestPools(consumer, new String[]{ "productId" }, pools, compliance);
+        enforcer.selectBestPools(consumer, new String[]{ "productId" },
+            pools, compliance, null);
     }
 
     private Product mockProductSockets(String pid, String productName, String sockets) {

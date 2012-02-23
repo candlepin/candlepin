@@ -44,6 +44,7 @@ import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
+import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Subscription;
@@ -69,11 +70,9 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -419,10 +418,11 @@ public class PoolManagerTest {
         when(badResult.isSuccessful()).thenReturn(false);
         when(goodResult.isSuccessful()).thenReturn(true);
 
-        Map<Pool, Integer> bestPools = new HashMap<Pool, Integer>();
-        bestPools.put(pool1, 1);
+        List<PoolQuantity> bestPools = new ArrayList<PoolQuantity>();
+        bestPools.add(new PoolQuantity(pool1, 1));
         when(enforcerMock.selectBestPools(any(Consumer.class), any(String[].class),
-            any(List.class), any(ComplianceStatus.class))).thenReturn(bestPools);
+            any(List.class), any(ComplianceStatus.class), any(String.class)))
+            .thenReturn(bestPools);
 
         Entitlement e = manager.entitleByProduct(TestUtil.createConsumer(o),
             product.getId());
@@ -454,10 +454,11 @@ public class PoolManagerTest {
         when(helper.getResult()).thenReturn(result);
         when(result.isSuccessful()).thenReturn(true);
 
-        Map<Pool, Integer> bestPools = new HashMap<Pool, Integer>();
-        bestPools.put(pool1, 1);
+        List<PoolQuantity> bestPools = new ArrayList<PoolQuantity>();
+        bestPools.add(new PoolQuantity(pool1, 1));
         when(enforcerMock.selectBestPools(any(Consumer.class), any(String[].class),
-            any(List.class), any(ComplianceStatus.class))).thenReturn(bestPools);
+            any(List.class), any(ComplianceStatus.class), any(String.class)))
+            .thenReturn(bestPools);
 
         List<Entitlement> e = manager.entitleByProducts(TestUtil.createConsumer(o),
             new String[] { product.getId() }, now);
@@ -591,17 +592,18 @@ public class PoolManagerTest {
         when(helper.getResult()).thenReturn(result);
         when(result.isSuccessful()).thenReturn(true);
 
-        Map<Pool, Integer> bestPools = new HashMap<Pool, Integer>();
-        bestPools.put(pool1, 1);
+        List<PoolQuantity> bestPools = new ArrayList<PoolQuantity>();
+        bestPools.add(new PoolQuantity(pool1, 1));
         when(enforcerMock.selectBestPools(any(Consumer.class), any(String[].class),
-            any(List.class), any(ComplianceStatus.class))).thenReturn(bestPools);
+            any(List.class), any(ComplianceStatus.class), any(String.class)))
+            .thenReturn(bestPools);
 
         // Make the call but provide a null array of product IDs (simulates healing):
         manager.entitleByProducts(TestUtil.createConsumer(o),
             null, now);
 
         verify(enforcerMock).selectBestPools(any(Consumer.class), eq(installedPids),
-            any(List.class), eq(mockCompliance));
+            any(List.class), eq(mockCompliance), any(String.class));
 
 
     }

@@ -29,6 +29,7 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolAttribute;
+import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.Rules;
@@ -45,7 +46,6 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.DateSourceForTesting;
 import org.candlepin.test.TestDateUtil;
 import org.candlepin.test.TestUtil;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -54,10 +54,8 @@ import org.mockito.MockitoAnnotations;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 
 /**
  * CandlepinConsumerTypeEnforcerTest
@@ -154,22 +152,24 @@ public class ManifestEntitlementRulesTest extends DatabaseTestFixture {
 
     @Test(expected = NullPointerException.class)
     public void bestPoolsNull() {
-        enforcer.selectBestPools(null, null, null, compliance);
+        enforcer.selectBestPools(null, null, null, compliance, null);
     }
 
     @Test
     public void bestPoolEmpty() {
         assertEquals(null,
-            enforcer.selectBestPools(null, null, new ArrayList<Pool>(), compliance));
+            enforcer.selectBestPools(null, null, new ArrayList<Pool>(),
+                compliance, null));
     }
 
     @Test
     public void bestPool() {
-        Map<Pool, Integer> pools = new HashMap<Pool, Integer>();
+        List<PoolQuantity> pools = new ArrayList<PoolQuantity>();
         List<Pool> allPools = new ArrayList<Pool>();
         allPools.add(mock(Pool.class));
-        pools.put(allPools.get(0), 1);
-        assertEquals(pools, enforcer.selectBestPools(null, null, allPools, compliance));
+        pools.add(new PoolQuantity(allPools.get(0), 1));
+        assertEquals(pools.get(0), enforcer.selectBestPools(null, null, allPools,
+            compliance, null).get(0));
     }
 
 }

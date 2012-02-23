@@ -561,7 +561,7 @@ var Entitlement = {
         }
 
         var consumerSLA = consumer.getServiceLevel();
-        if (consumerSLA) {
+        if (consumerSLA && !consumerSLA.equals("")) {
             log.debug("Filtering pools by SLA: " + consumerSLA);
         }
 
@@ -574,7 +574,7 @@ var Entitlement = {
             // If the SLA of the consumer does not match that of the pool
             // we do not consider the pool.
             var poolSLA = pool.getProductAttribute('support_level');
-            if (consumerSLA && consumerSLA != poolSLA) {
+            if (consumerSLA  && !consumerSLA.equals("") && consumerSLA != poolSLA) {
                 log.debug("Skipping pool " + pool.getId() +
                         " since SLA does not match that of the consumer.");
                 continue;

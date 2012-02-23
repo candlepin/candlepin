@@ -17,6 +17,7 @@ package org.candlepin.policy;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolQuantity;
 import org.candlepin.policy.js.RuleExecutionException;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.entitlement.PreEntHelper;
@@ -24,7 +25,6 @@ import org.candlepin.policy.js.entitlement.PreUnbindHelper;
 import org.candlepin.policy.js.pool.PoolHelper;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Enforces the entitlement rules definitions.
@@ -71,8 +71,9 @@ public interface Enforcer {
      * @throws RuleExecutionException Thrown if both pools and a rule exist, but no
      * pool is returned.
      */
-    Map<Pool, Integer> selectBestPools(Consumer consumer, String[] productIds,
-        List<Pool> pools, ComplianceStatus compliance) throws RuleExecutionException;
+    List<PoolQuantity> selectBestPools(Consumer consumer, String[] productIds,
+        List<Pool> pools, ComplianceStatus compliance, String serviceLevelOverride)
+        throws RuleExecutionException;
 
     /**
      * Run pre-entitlement checks.

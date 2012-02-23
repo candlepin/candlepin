@@ -24,6 +24,7 @@ import org.candlepin.policy.MissingFactException;
 public class ReadOnlyConsumer {
 
     private final Consumer consumer;
+    private String serviceLevelOverride = "";
 
     /**
      * ctor
@@ -31,6 +32,20 @@ public class ReadOnlyConsumer {
      */
     public ReadOnlyConsumer(Consumer consumer) {
         this.consumer = consumer;
+    }
+
+    /**
+     * ctor
+     * @param consumer read-write consumer to be copied.
+     */
+    public ReadOnlyConsumer(Consumer consumer, String serviceLevelOverride) {
+        this.consumer = consumer;
+        if (serviceLevelOverride == null) {
+            this.serviceLevelOverride = "";
+        }
+        else {
+            this.serviceLevelOverride = serviceLevelOverride;
+        }
     }
 
     /**
@@ -114,6 +129,12 @@ public class ReadOnlyConsumer {
     }
 
     public String getServiceLevel() {
-        return consumer.getServiceLevel();
+        if (serviceLevelOverride != null &&
+            !serviceLevelOverride.trim().equals("")) {
+            return serviceLevelOverride;
+        }
+        else {
+            return consumer.getServiceLevel();
+        }
     }
 }

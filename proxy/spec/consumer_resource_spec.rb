@@ -351,13 +351,22 @@ describe 'Consumer Resource' do
         key=consumer['idCert']['key'])
 
     consumer = @cp.get_consumer(consumer['uuid'])
-    consumer['serviceLevel'].should == nil
+    consumer['serviceLevel'].should == ''
 
     consumer_client.update_consumer({:serviceLevel => 'VIP'})
     consumer = @cp.get_consumer(consumer['uuid'])
     consumer['serviceLevel'].should == 'VIP'
 
-    # Empty update shouldn't modify the setting:
+    # Make sure we can reset to empty for service level
+    consumer_client.update_consumer({:serviceLevel => ''})
+    consumer = @cp.get_consumer(consumer['uuid'])
+    consumer['serviceLevel'].should == ''
+
+    # Empty update shouldn't modify the setting [after reset to VIP]:
+    consumer_client.update_consumer({:serviceLevel => 'VIP'})
+    consumer = @cp.get_consumer(consumer['uuid'])
+    consumer['serviceLevel'].should == 'VIP'
+
     consumer_client.update_consumer({})
     consumer = @cp.get_consumer(consumer['uuid'])
     consumer['serviceLevel'].should == 'VIP'
@@ -365,6 +374,58 @@ describe 'Consumer Resource' do
     # Should not be able to set service level to one not available by org
     lambda do
         consumer_client.update_consumer({:serviceLevel => 'Ultra-VIP'})
+    end.should raise_exception(RestClient::BadRequest)
+
+  end
+
+  it 'should allow a consumer dry run an autosubscribe' do
+    product1 = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:support_level => 'VIP'}})
+    product2 = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:support_level => 'Ultra-VIP'}})
+    subs1 = @cp.create_subscription(@owner1.key, product1.id)
+    subs2 = @cp.create_subscription(@owner1.key, product2.id)
+    @cp.refresh_pools(@owner1.key)
+
+    user_cp = user_client(@owner1, random_string('billy'))
+    consumer = user_cp.register(random_string('system'), :system, nil,
+      {}, nil, nil, [], [])
+    consumer_client = Candlepin.new(username=nil, password=nil,
+        cert=consumer['idCert']['cert'],
+        key=consumer['idCert']['key'])
+
+    installed = [
+        {'productId' => product1.id, 'productName' => product1.name},
+        {'productId' => product2.id, 'productName' => product2.name}]
+
+    consumer_client.update_consumer({:serviceLevel => 'VIP',
+                                     :installedProducts => installed})
+    consumer = @cp.get_consumer(consumer['uuid'])
+    consumer['serviceLevel'].should == 'VIP'
+
+    # dry run against the set service level
+    pools = @cp.autobind_dryrun(consumer['uuid'])
+    pools.length.should == 1
+    pool_id = pools.first.pool.id
+    pool = @cp.get_pool(pool_id)
+    pool.subscriptionId.should == subs1.id
+
+    # dry run against the override service level
+    pools = @cp.autobind_dryrun(consumer['uuid'], 'Ultra-VIP')
+    pools.length.should == 1
+    pool_id = pools.first.pool.id
+    pool = @cp.get_pool(pool_id)
+    pool.subscriptionId.should == subs2.id
+
+    # ensure the override use did not change the setting
+    consumer = @cp.get_consumer(consumer['uuid'])
+    consumer['serviceLevel'].should == 'VIP'
+
+    # dry run with unknown level should return badrequest
+    lambda do
+        @cp.autobind_dryrun(consumer['uuid'], 'Standard').length.should == 0
     end.should raise_exception(RestClient::BadRequest)
 
   end

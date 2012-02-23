@@ -14,9 +14,12 @@
  */
 package org.candlepin.policy;
 
+import com.google.inject.Inject;
+
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolQuantity;
 import org.candlepin.policy.js.RuleExecutionException;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
@@ -25,10 +28,7 @@ import org.candlepin.policy.js.entitlement.PreEntHelper;
 import org.candlepin.policy.js.entitlement.PreUnbindHelper;
 import org.candlepin.policy.js.pool.PoolHelper;
 
-import com.google.inject.Inject;
-
 import java.util.List;
-import java.util.Map;
 
 /**
  * EnforcerDispatcher
@@ -66,14 +66,15 @@ public class EnforcerDispatcher implements Enforcer {
     }
 
     @Override
-    public Map<Pool, Integer> selectBestPools(Consumer consumer, String[] productIds,
-        List<Pool> pools, ComplianceStatus compliance)
+    public List<PoolQuantity> selectBestPools(Consumer consumer, String[] productIds,
+        List<Pool> pools, ComplianceStatus compliance, String serviceLevelOverride)
         throws RuleExecutionException {
         if (consumer.getType().isManifest()) {
             return manifestEnforcer.selectBestPools(consumer, productIds, pools,
-                compliance);
+                compliance, serviceLevelOverride);
         }
-        return jsEnforcer.selectBestPools(consumer, productIds, pools, compliance);
+        return jsEnforcer.selectBestPools(consumer, productIds, pools,
+            compliance, serviceLevelOverride);
     }
 
     public PreUnbindHelper preUnbind(Consumer consumer, Pool entitlementPool) {

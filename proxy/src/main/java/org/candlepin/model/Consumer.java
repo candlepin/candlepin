@@ -86,7 +86,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @Column(length = 32)
     private String entitlementStatus;
 
-    @Column(length = 32)
+    @Column(length = 32, nullable = false)
     private String serviceLevel;
 
     /*
@@ -161,6 +161,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         this.installedProducts = new HashSet<ConsumerInstalledProduct>();
         this.guestIds = new ArrayList<GuestId>();
         this.autoheal = true;
+        this.serviceLevel = "";
     }
 
     public Consumer() {

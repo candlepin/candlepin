@@ -123,11 +123,12 @@ public class EnforcerDispatcherTest {
         when(c.getType()).thenReturn(type);
         when(type.isManifest()).thenReturn(true);
 
-
-        ed.selectBestPools(c, pids, pools, compliance);
-        verify(rules, never()).selectBestPools(eq(c), eq(pids), eq(pools), eq(compliance));
+        String test = null;
+        ed.selectBestPools(c, pids, pools, compliance, test);
+        verify(rules, never()).selectBestPools(eq(c), eq(pids), eq(pools),
+            eq(compliance), eq(test));
         verify(ce, atLeastOnce()).selectBestPools(eq(c), eq(pids), eq(pools),
-            eq(compliance));
+            eq(compliance), eq(test));
     }
 
     @Test
@@ -141,9 +142,11 @@ public class EnforcerDispatcherTest {
         when(c.getType()).thenReturn(type);
         when(type.isManifest()).thenReturn(false);
 
-        ed.selectBestPools(c, pids, pools, compliance);
+        String test = null;
+        ed.selectBestPools(c, pids, pools, compliance, test);
         verify(rules, atLeastOnce()).selectBestPools(eq(c), eq(pids), eq(pools),
-            eq(compliance));
-        verify(ce, never()).selectBestPools(eq(c), eq(pids), eq(pools), eq(compliance));
+            eq(compliance), eq(test));
+        verify(ce, never()).selectBestPools(eq(c), eq(pids), eq(pools),
+            eq(compliance), eq(test));
     }
 }

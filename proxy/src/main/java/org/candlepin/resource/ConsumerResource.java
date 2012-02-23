@@ -14,32 +14,8 @@
  */
 package org.candlepin.resource;
 
-import java.io.File;
-import java.io.IOException;
-import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import com.google.inject.Inject;
+import com.wideplay.warp.persist.Transactional;
 
 import org.apache.log4j.Logger;
 import org.candlepin.audit.Event;
@@ -79,6 +55,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
+import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.User;
 import org.candlepin.pinsetter.tasks.EntitlerJob;
@@ -100,8 +77,32 @@ import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
 
-import com.google.inject.Inject;
-import com.wideplay.warp.persist.Transactional;
+import java.io.File;
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 /**
  * API Gateway for Consumers
@@ -326,6 +327,9 @@ public class ConsumerResource {
         consumer.setType(type);
         consumer.setCanActivate(subAdapter.canActivateSubscription(consumer));
         consumer.setAutoheal(true); // this is the default
+        if (consumer.getServiceLevel() == null) {
+            consumer.setServiceLevel("");
+        }
 
         logNewConsumerDebugInfo(consumer, keys, type);
 
@@ -340,7 +344,7 @@ public class ConsumerResource {
             }
         }
 
-        checkServiceLevel(owner, consumer);
+        checkServiceLevel(owner, consumer.getServiceLevel());
 
         try {
             consumer = consumerCurator.create(consumer);
@@ -384,12 +388,12 @@ public class ConsumerResource {
         }
     }
 
-    private void checkServiceLevel(Owner owner, Consumer consumer)
+    private void checkServiceLevel(Owner owner, String serviceLevel)
         throws BadRequestException {
-        if (consumer.getServiceLevel() != null &&
-            !consumer.getServiceLevel().trim().equals("")) {
+        if (serviceLevel != null &&
+            !serviceLevel.trim().equals("")) {
             if (!poolCurator.retrieveServiceLevelsForOwner(owner)
-                 .contains(consumer.getServiceLevel())) {
+                 .contains(serviceLevel)) {
                 throw new BadRequestException(
                     i18n.tr("Cannot set a service level for a consumer " +
                             "that is not available to its organization."));
@@ -591,13 +595,14 @@ public class ConsumerResource {
         }
 
         // Allow optional setting of the service level attribute:
-        if (updated.getServiceLevel() != null &&
-            !updated.getServiceLevel().equals(toUpdate.getServiceLevel())) {
+        String level = updated.getServiceLevel();
+        if (level != null &&
+            !level.equals(toUpdate.getServiceLevel())) {
             if (log.isDebugEnabled()) {
                 log.debug("   Updating consumer service level setting.");
             }
-            checkServiceLevel(toUpdate.getOwner(), updated);
-            toUpdate.setServiceLevel(updated.getServiceLevel());
+            checkServiceLevel(toUpdate.getOwner(), level);
+            toUpdate.setServiceLevel(level);
             changesMade = true;
         }
 
@@ -1117,6 +1122,7 @@ public class ConsumerResource {
         // otherwise we do what we do today.
         //
         List<Entitlement> entitlements = null;
+
         if (poolIdString != null) {
             entitlements = entitler.bindByPool(poolIdString, consumer, quantity);
         }
@@ -1138,6 +1144,55 @@ public class ConsumerResource {
 
         return Response.status(Response.Status.OK)
             .type(MediaType.APPLICATION_JSON).entity(entitlements).build();
+    }
+
+    /**
+     * Request a list of pools and quantities that would result in an actual auto-bind.
+     *
+     * This is a dry run of an autobind. It allows the client to see what would be the
+     * result of an autobind without executing it. It can only do this for the prevously
+     * established list of installed products for the consumer
+     *
+     * If a service level is included in the request, then that level will override the
+     * one stored on the consumer. If no service level is included then the existing
+     * one will be used.
+     *
+     * @param consumerUuid Consumer identifier to be entitled
+     * @param serviceLevel String service level override to be used for run
+     * @return Response with a list of PoolQuantities containing the pool and number.
+     * @httpcode 400
+     * @httpcode 403
+     * @httpcode 404
+     * @httpcode 200
+     */
+    @GET
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/{consumer_uuid}/entitlements/dry-run")
+    public List<PoolQuantity> dryBind(
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
+        @QueryParam("service_level") String serviceLevel) {
+
+        // Verify consumer exists:
+        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+
+        List<PoolQuantity> dryRunPools = new ArrayList<PoolQuantity>();
+
+        try {
+            checkServiceLevel(consumer.getOwner(), serviceLevel);
+            dryRunPools = entitler.getDryRunMap(consumer, serviceLevel);
+        }
+        catch (ForbiddenException fe) {
+            throw fe;
+        }
+        catch (BadRequestException bre) {
+            throw bre;
+        }
+        catch (RuntimeException re) {
+            return dryRunPools;
+        }
+
+        return dryRunPools;
     }
 
     private Consumer verifyAndLookupConsumer(String consumerUuid) {
