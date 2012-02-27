@@ -28,10 +28,6 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
-
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.candlepin.auth.Principal;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.ActivationKey;
@@ -39,18 +35,23 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.test.TestUtil;
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.hornetq.api.core.HornetQBuffers;
 import org.hornetq.api.core.HornetQException;
 import org.hornetq.api.core.client.ClientMessage;
 import org.hornetq.api.core.client.ClientProducer;
 import org.hornetq.api.core.client.ClientSession;
 import org.hornetq.api.core.client.ClientSessionFactory;
+import org.hornetq.api.core.client.ServerLocator;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+
+import java.util.ArrayList;
 
 /**
  * EventSinkImplTest
@@ -63,6 +64,7 @@ public class EventSinkImplTest {
     @Mock private ClientProducer mockClientProducer;
     @Mock private ClientMessage mockClientMessage;
     @Mock private PrincipalProvider mockPrincipalProvider;
+    @Mock private ServerLocator mockLocator;
     private EventFactory factory;
     private EventSinkImpl eventSinkImpl;
     private Principal principal;
@@ -78,6 +80,7 @@ public class EventSinkImplTest {
         when(mockClientSession.createMessage(anyBoolean())).thenReturn(mockClientMessage);
         when(mockClientMessage.getBodyBuffer()).thenReturn(
             HornetQBuffers.fixedBuffer(2000));
+        when(mockSessionFactory.getServerLocator()).thenReturn(mockLocator);
         this.mapper = spy(new ObjectMapper());
         this.eventSinkImpl = createEventSink(mockSessionFactory);
     }

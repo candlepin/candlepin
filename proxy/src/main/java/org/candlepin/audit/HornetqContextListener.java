@@ -14,9 +14,8 @@
  */
 package org.candlepin.audit;
 
-import java.io.File;
-import java.util.HashSet;
-import java.util.List;
+import com.google.common.collect.Lists;
+import com.google.inject.Injector;
 
 import org.apache.log4j.Logger;
 import org.candlepin.config.Config;
@@ -27,6 +26,7 @@ import org.hornetq.api.core.TransportConfiguration;
 import org.hornetq.api.core.client.ClientSession;
 import org.hornetq.api.core.client.ClientSessionFactory;
 import org.hornetq.api.core.client.HornetQClient;
+import org.hornetq.api.core.client.ServerLocator;
 import org.hornetq.core.config.Configuration;
 import org.hornetq.core.config.impl.ConfigurationImpl;
 import org.hornetq.core.remoting.impl.invm.InVMAcceptorFactory;
@@ -35,8 +35,9 @@ import org.hornetq.core.server.HornetQServer;
 import org.hornetq.core.server.JournalType;
 import org.hornetq.core.server.impl.HornetQServerImpl;
 
-import com.google.common.collect.Lists;
-import com.google.inject.Injector;
+import java.io.File;
+import java.util.HashSet;
+import java.util.List;
 
 /**
  * HornetqContextListener - Invoked from our core CandlepinContextListener, thus
@@ -141,15 +142,16 @@ public class HornetqContextListener {
         log.debug("Cleaning old message queues");
         String [] queues = hornetqServer.getHornetQServerControl().getQueueNames();
 
-        ClientSessionFactory factory =  HornetQClient.createClientSessionFactory(
+        ServerLocator locator = HornetQClient.createServerLocatorWithoutHA(
             new TransportConfiguration(InVMConnectorFactory.class.getName()));
 
         try {
+            ClientSessionFactory factory =  locator.createSessionFactory();
             ClientSession session = factory.createSession(true, true);
             session.start();
 
             for (int i = 0; i < queues.length; i++) {
-                int msgCount =
+                long msgCount =
                     session.queueQuery(new SimpleString(queues[i])).getMessageCount();
                 if (msgCount == 0) {
                     log.debug(String.format("found queue '%s' with 0 messages. deleting",
@@ -166,6 +168,10 @@ public class HornetqContextListener {
             session.close();
         }
         catch (HornetQException e) {
+            log.error("Problem cleaning old message queues - " + e);
+            throw new RuntimeException(e);
+        }
+        catch (Exception e) {
             log.error("Problem cleaning old message queues - " + e);
             throw new RuntimeException(e);
         }

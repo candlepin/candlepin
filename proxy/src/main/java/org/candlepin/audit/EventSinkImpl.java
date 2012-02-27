@@ -14,8 +14,10 @@
  */
 package org.candlepin.audit;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
 import org.apache.log4j.Logger;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.ActivationKey;
@@ -23,6 +25,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Subscription;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.hornetq.api.core.HornetQException;
 import org.hornetq.api.core.TransportConfiguration;
 import org.hornetq.api.core.client.ClientMessage;
@@ -31,9 +34,6 @@ import org.hornetq.api.core.client.ClientSession;
 import org.hornetq.api.core.client.ClientSessionFactory;
 import org.hornetq.api.core.client.HornetQClient;
 import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory;
-
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 /**
  * EventSink - Reliably dispatches events to all configured listeners.
@@ -53,22 +53,27 @@ public class EventSinkImpl implements EventSink {
     public EventSinkImpl(EventFactory eventFactory, ObjectMapper mapper) {
         this.eventFactory = eventFactory;
         this.mapper = mapper;
-        factory =  createClientSessionFactory();
-
-        largeMsgSize = new Config().getInt(ConfigProperties.HORNETQ_LARGE_MSG_SIZE);
-        factory.setMinLargeMessageSize(largeMsgSize);
         try {
+            factory =  createClientSessionFactory();
+
+            largeMsgSize = new Config().getInt(ConfigProperties.HORNETQ_LARGE_MSG_SIZE);
+            factory.getServerLocator().setMinLargeMessageSize(largeMsgSize);
+
             clientSession = factory.createSession();
             clientProducer = clientSession.createProducer(EventSource.QUEUE_ADDRESS);
         }
         catch (HornetQException e) {
             throw new RuntimeException(e);
         }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    protected ClientSessionFactory createClientSessionFactory() {
-        return HornetQClient.createClientSessionFactory(
-            new TransportConfiguration(InVMConnectorFactory.class.getName()));
+    protected ClientSessionFactory createClientSessionFactory() throws Exception {
+        return HornetQClient.createServerLocatorWithoutHA(
+            new TransportConfiguration(
+                InVMConnectorFactory.class.getName())).createSessionFactory();
     }
 
     @Override

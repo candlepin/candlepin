@@ -30,7 +30,7 @@ BuildRequires: hibernate3 >= 3.3.2
 BuildRequires: hibernate3-annotations >= 0:3.4.0
 BuildRequires: google-collections
 BuildRequires: resteasy
-BuildRequires: hornetq
+BuildRequires: hornetq >= 0:2.2.11
 BuildRequires: mockito
 BuildRequires: google-guice
 BuildRequires: log4j

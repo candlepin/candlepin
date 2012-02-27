@@ -37,9 +37,10 @@ public class EventSource {
 
     @Inject
     public EventSource(ObjectMapper mapper) {
-        ClientSessionFactory factory =  createSessionFactory();
         this.mapper = mapper;
+
         try {
+            ClientSessionFactory factory =  createSessionFactory();
             session = factory.createSession(true, true);
             session.start();
         }
@@ -50,10 +51,12 @@ public class EventSource {
 
     /**
      * @return new instance of {@link ClientSessionFactory}
+     * @throws Exception
      */
-    protected ClientSessionFactory createSessionFactory() {
-        return HornetQClient.createClientSessionFactory(
-            new TransportConfiguration(InVMConnectorFactory.class.getName()));
+    protected ClientSessionFactory createSessionFactory() throws Exception {
+        return HornetQClient.createServerLocatorWithoutHA(
+            new TransportConfiguration(
+                InVMConnectorFactory.class.getName())).createSessionFactory();
     }
 
     void shutDown() {
