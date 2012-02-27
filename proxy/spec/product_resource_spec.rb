@@ -24,5 +24,12 @@ describe 'Product Resource' do
     user_cp.get_product(prod['id'])
   end
 
+  it 'create two products with the same name' do
+    product1 = create_product(id=nil, name='doppelganger')
+    product2 = create_product(id=nil, name='doppelganger')
+    product1.id.should_not  == product2.id
+    product1.name.should == product2.name
+  end
+
 end
 

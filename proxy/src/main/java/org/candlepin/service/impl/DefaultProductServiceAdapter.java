@@ -14,6 +14,7 @@
  */
 package org.candlepin.service.impl;
 
+import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Product;
@@ -85,26 +86,28 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
         return prodCurator.listAll();
     }
 
-    // TODO: Looks like this needs to change, there should probably be an error
-    // thrown if you try to create a product that already exists, not a silent
-    // return.
-    // This may have been done for the tests, so those may need to be modified
-    // to only
-    // create the products if they do not exist.
     @Override
     public Product createProduct(Product product) {
-        if ((prodCurator.find(product.getId()) == null)) {
+        if (prodCurator.find(product.getId()) != null) {
+            throw new BadRequestException("product with ID " + product.getId() +
+                " already exists");
+        }
+        else {
             if (product.getId() == null || product.getId().trim().equals("")) {
                 product.setId(idGenerator.generateId());
             }
             Product newProduct = prodCurator.create(product);
             return newProduct;
         }
-        return prodCurator.find(product.getId());
     }
 
     @Override
     public void deleteProduct(Product product) {
+        // clean up any product certificates
+        ProductCertificate cert = prodCertCurator.findForProduct(product);
+        if (cert != null) {
+            prodCertCurator.delete(cert);
+        }
         prodCurator.delete(product);
     }
 

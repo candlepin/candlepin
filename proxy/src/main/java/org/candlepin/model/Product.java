@@ -54,7 +54,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
     @Column(length = 32, unique = true)
     private String id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String name;
 
     /**

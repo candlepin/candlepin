@@ -22,6 +22,7 @@ module CandlepinScenarios
         @roles.reverse_each { |r| @cp.delete_role r['id'] }
         @owners.reverse_each { |owner| @cp.delete_owner owner.key }
         @users.reverse_each { |user| @cp.delete_user user['username'] }
+        @products.reverse_each { |product| @cp.delete_product product['id'] }
 
         # restore the original rules
         if (@rules)
@@ -57,7 +58,9 @@ module CandlepinMethods
     # random strings.
     id ||= rand(100000).to_s #id has to be a number. OID encoding fails otherwise
     name ||= random_string('testproduct')
-    @cp.create_product(id, name, params)
+    product = @cp.create_product(id, name, params)
+    @products <<  product
+    return product
   end
 
   def create_content(params={})
@@ -190,10 +193,11 @@ module ExportMethods
     @cp.add_role_user(role['id'], @user['username'])
     owner_client = Candlepin.new(@user['username'], 'password')
 
-    product1 = create_product(random_string(), random_string(),
+    # the before(:each) is not initialized yet, call create_product sans wrapper
+    product1 = @cp.create_product(random_string(), random_string(),
                               {:multiplier => 2})
-    product2 = create_product()
-    virt_product = create_product(random_string('virt_product'),
+    product2 = @cp.create_product(random_string(), random_string())
+    virt_product = @cp.create_product(random_string('virt_product'),
                                   random_string('virt_product'),
                                   {:attributes => {:virt_only => true,
                                                    :pool_derived => true}})
@@ -253,8 +257,8 @@ module ExportMethods
     ## use the process for creating the import above to make one that is an update
     ## You must execute the create_candlepin_export method in the same test before
     ## this one.
-    product1 = create_product(random_string(), random_string())
-    product2 = create_product()
+    product1 = @cp.create_product(random_string(), random_string())
+    product2 = @cp.create_product(random_string(), random_string())
     content = create_content({:metadata_expire => 6000,
       :required_tags => "TAG1,TAG2"})
     @cp.add_content_to_product(product1.id, content.id)

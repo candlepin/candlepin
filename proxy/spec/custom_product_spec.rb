@@ -5,14 +5,9 @@ describe 'Custom Product' do
   include CandlepinMethods
   include CandlepinScenarios
 
-  before(:all) do
-    @cp = Candlepin.new('admin', 'admin')
-    @owner = @cp.create_owner(random_string("test_owner"))
-    #@owner = @cp.get_owner('admin')
-  end
 
-  after(:all) do
-    @cp.delete_owner(@owner.key)
+  before(:each) do
+    @owner = create_owner(random_string("test_owner"))
   end
 
  it 'create custom products and subscribe' do
@@ -42,6 +37,8 @@ describe 'Custom Product' do
 
     product1.id.should == @owner.key + '_product_1'
     product2.id.should_not == ''
+    @cp.delete_subscription(sub1['id'])
+    @cp.delete_subscription(sub2['id'])
 
  end
 

@@ -456,6 +456,10 @@ class Candlepin
     get("/products/#{product_id}")
   end
 
+  def delete_product(product_id)
+    delete("/products/#{product_id}")
+  end
+
   def get_product_cert(product_id)
     get("/products/#{product_id}/certificate")
   end

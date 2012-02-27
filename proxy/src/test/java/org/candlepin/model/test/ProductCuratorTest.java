@@ -68,14 +68,17 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         productCurator.create(prod);
     }
 
-    @Test(expected = PersistenceException.class)
-    public void nameUnique() {
+    @Test
+    public void nameNonUnique() {
 
         Product prod = new Product("label1", "name");
         productCurator.create(prod);
 
         Product prod2 = new Product("label2", "name");
         productCurator.create(prod2);
+
+        assertEquals(prod.getName(), prod2.getName());
+        assertFalse(prod.getId().equals(prod2.getId()));
     }
 
     @Test(expected = PersistenceException.class)
