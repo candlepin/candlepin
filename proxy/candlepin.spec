@@ -11,7 +11,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.5.22
+Version: 0.5.23
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -199,6 +199,13 @@ fi
 
 
 %changelog
+* Mon Feb 27 2012 Chris Duryee (beav) <cduryee@redhat.com>
+- 788940: allow products to have the same name (cduryee@redhat.com)
+- Ability to dry-run an autocommit and present a pool/quantity response
+  (wpoteat@redhat.com)
+- 784665: remove activation key -> pool association before removing pool
+  (cduryee@redhat.com)
+
 * Wed Feb 22 2012 jesus m. rodriguez <jesusr@redhat.com> 0.5.22-1
 - 754369: A single quote causes the french string replacement to not be replaced (bkearney@redhat.com)
 - Update DeletedConsumer when identical UUID is used for deleted consumer.  (cduryee@redhat.com)
