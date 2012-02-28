@@ -23,7 +23,6 @@ import org.candlepin.pinsetter.tasks.CancelJobJob;
 import org.candlepin.util.PropertyUtil;
 import org.candlepin.util.Util;
 
-import com.google.common.base.Nullable;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -73,7 +72,7 @@ public class PinsetterKernel {
      */
     @Inject
     public PinsetterKernel(Config conf, JobFactory jobFactory,
-        @Nullable JobListener listener, JobCurator jobCurator,
+        JobListener listener, JobCurator jobCurator,
         StdSchedulerFactory fact) throws InstantiationException {
 
         this.config = conf;

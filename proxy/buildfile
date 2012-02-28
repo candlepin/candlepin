@@ -83,7 +83,7 @@ GUICE =  [group('guice-assistedinject', 'guice-multibindings',
            'javax.inject:javax.inject:jar:1',
            'javax.servlet:servlet-api:jar:2.5']
 
-COLLECTIONS = 'com.google.collections:google-collections:jar:0.9'
+COLLECTIONS = 'com.google.collections:google-collections:jar:1.0'
 
 LDAP = 'com.novell.ldap:jldap:jar:4.3'
 OAUTH= [group('oauth',
