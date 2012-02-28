@@ -32,7 +32,7 @@ BuildRequires: google-collections
 BuildRequires: resteasy
 BuildRequires: hornetq >= 0:2.2.11
 BuildRequires: mockito
-BuildRequires: google-guice
+BuildRequires: google-guice >= 0:3.0
 BuildRequires: log4j
 BuildRequires: jakarta-commons-lang
 BuildRequires: jakarta-commons-io
