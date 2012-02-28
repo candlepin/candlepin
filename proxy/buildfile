@@ -25,7 +25,7 @@ RESTEASY = [group('jaxrs-api',
                   # XXX: this version requires us to use
                   # ContentTypeHackFilter.java when updating,
                   # please check if its still needed, and remove if not.
-                  :version => '2.2.1.GA'),
+                  :version => '2.3.1.GA'),
             'javax.persistence:persistence-api:jar:1.0',
             'org.scannotation:scannotation:jar:1.0.2',
             'commons-httpclient:commons-httpclient:jar:3.1']
