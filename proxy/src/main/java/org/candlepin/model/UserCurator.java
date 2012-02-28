@@ -17,7 +17,7 @@ package org.candlepin.model;
 import org.candlepin.auth.interceptor.EnforceAccessControl;
 import org.hibernate.criterion.Restrictions;
 
-import com.wideplay.warp.persist.Transactional;
+import com.google.inject.persist.Transactional;
 
 /**
  *

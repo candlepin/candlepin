@@ -21,7 +21,7 @@ import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
-import com.wideplay.warp.persist.Transactional;
+import com.google.inject.persist.Transactional;
 
 import org.quartz.Job;
 import org.quartz.JobDataMap;

@@ -20,7 +20,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
-import com.wideplay.warp.persist.WorkManager;
+import com.google.inject.persist.UnitOfWork;
 
 import org.junit.Test;
 import org.quartz.Job;
@@ -33,7 +33,7 @@ public class TransactionalPinsetterJobTest {
 
     @Test
     public void execute() throws Exception {
-        WorkManager manager = mock(WorkManager.class);
+        UnitOfWork manager = mock(UnitOfWork.class);
         Job wrapped = mock(Job.class);
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         TransactionalPinsetterJob tpj = new TransactionalPinsetterJob(
@@ -41,9 +41,9 @@ public class TransactionalPinsetterJobTest {
 
         tpj.execute(ctx);
 
-        verify(manager).beginWork();
+        verify(manager).begin();
         verify(wrapped).execute(eq(ctx));
-        verify(manager).endWork();
+        verify(manager).end();
         verifyNoMoreInteractions(wrapped);
         verifyNoMoreInteractions(manager);
     }

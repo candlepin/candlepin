@@ -16,7 +16,7 @@ package org.candlepin.model;
 
 import org.hibernate.criterion.Restrictions;
 
-import com.wideplay.warp.persist.Transactional;
+import com.google.inject.persist.Transactional;
 
 /**
  * ContentCurator

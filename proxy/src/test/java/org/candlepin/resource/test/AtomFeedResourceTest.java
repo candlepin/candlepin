@@ -41,8 +41,6 @@ import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.wideplay.warp.persist.PersistenceService;
-import com.wideplay.warp.persist.UnitOfWork;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -62,10 +60,7 @@ public class AtomFeedResourceTest {
     public void setUp() {
         injector = Guice.createInjector(
             new CandlepinCommonTestingModule(),
-            new CandlepinNonServletEnvironmentTestingModule(),
-            PersistenceService.usingJpa()
-                .across(UnitOfWork.REQUEST)
-                .buildModule()
+            new CandlepinNonServletEnvironmentTestingModule()
         );
         i18n = injector.getInstance(I18n.class);
         ec = mock(EventCurator.class);

@@ -18,7 +18,7 @@ import java.util.List;
 
 import org.hibernate.criterion.Restrictions;
 
-import com.wideplay.warp.persist.Transactional;
+import com.google.inject.persist.Transactional;
 
 /**
  * SubscriptionTokenCurator

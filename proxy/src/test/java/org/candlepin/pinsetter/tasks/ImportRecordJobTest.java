@@ -16,8 +16,6 @@ package org.candlepin.pinsetter.tasks;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.wideplay.warp.persist.PersistenceService;
-import com.wideplay.warp.persist.UnitOfWork;
 import java.util.List;
 import org.candlepin.CandlepinCommonTestingModule;
 import org.candlepin.CandlepinNonServletEnvironmentTestingModule;
@@ -43,10 +41,7 @@ public class ImportRecordJobTest {
         CandlepinCommonTestingModule testingModule = new CandlepinCommonTestingModule();
         Injector injector = Guice.createInjector(
                 testingModule,
-                new CandlepinNonServletEnvironmentTestingModule(),
-                PersistenceService.usingJpa()
-                    .across(UnitOfWork.REQUEST)
-                    .buildModule()
+                new CandlepinNonServletEnvironmentTestingModule()
         );
 
         this.ownerCurator = injector.getInstance(OwnerCurator.class);

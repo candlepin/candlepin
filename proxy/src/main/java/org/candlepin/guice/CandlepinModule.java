@@ -20,7 +20,7 @@ import com.google.inject.Singleton;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
-import com.wideplay.warp.persist.jpa.JpaUnit;
+import com.google.inject.persist.jpa.JpaPersistModule;
 
 import org.candlepin.audit.AMQPBusEventAdapter;
 import org.candlepin.audit.AMQPBusPublisher;
@@ -112,8 +112,6 @@ import org.quartz.JobListener;
 import org.quartz.spi.JobFactory;
 import org.xnap.commons.i18n.I18n;
 
-import java.util.Properties;
-
 /**
  * CandlepinProductionConfiguration
  */
@@ -121,15 +119,10 @@ public class CandlepinModule extends AbstractModule {
 
     @Override
     public void configure() {
+
+        install(new JpaPersistModule("default").properties(
+            new Config().jpaConfiguration()));
         bind(JPAInitializer.class).asEagerSingleton();
-
-        bind(Properties.class).annotatedWith(JpaUnit.class).toInstance(
-            new Config().jpaConfiguration());
-
-        // We default to test persistence unit (HSQL),
-        // /etc/candlepin/candlepin.conf
-        // will override:
-        bindConstant().annotatedWith(JpaUnit.class).to("default");
 
         bind(Config.class).asEagerSingleton();
         bind(PKIUtility.class).to(BouncyCastlePKIUtility.class).asEagerSingleton();

@@ -27,7 +27,7 @@ import org.hibernate.criterion.DetachedCriteria;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
-import com.wideplay.warp.persist.Transactional;
+import com.google.inject.persist.Transactional;
 
 /**
  * AbstractHibernateCurator

@@ -20,7 +20,7 @@ import org.candlepin.auth.interceptor.EnforceAccessControl;
 import org.hibernate.criterion.Restrictions;
 
 import com.google.inject.Inject;
-import com.wideplay.warp.persist.Transactional;
+import com.google.inject.persist.Transactional;
 
 /**
  * EntitlementCertificateCurator

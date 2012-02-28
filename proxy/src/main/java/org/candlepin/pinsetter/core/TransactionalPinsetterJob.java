@@ -16,7 +16,7 @@ package org.candlepin.pinsetter.core;
 
 import javax.persistence.PersistenceException;
 
-import com.wideplay.warp.persist.WorkManager;
+import com.google.inject.persist.UnitOfWork;
 
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
@@ -31,12 +31,12 @@ import org.quartz.JobExecutionException;
  */
 class TransactionalPinsetterJob implements Job {
 
-    private WorkManager workManager;
+    private UnitOfWork unitOfWork;
     private Job wrappedJob;
 
-    TransactionalPinsetterJob(Job wrappedJob, WorkManager workManager) {
+    TransactionalPinsetterJob(Job wrappedJob, UnitOfWork unitOfWork) {
         this.wrappedJob = wrappedJob;
-        this.workManager = workManager;
+        this.unitOfWork = unitOfWork;
     }
 
     @Override
@@ -45,7 +45,7 @@ class TransactionalPinsetterJob implements Job {
          * Execute our 'real' job inside a custom unit of work scope, instead
          * of the guice provided one, which is http request scoped.
          */
-        workManager.beginWork();
+        unitOfWork.begin();
         try {
             wrappedJob.execute(context);
         }
@@ -71,7 +71,7 @@ class TransactionalPinsetterJob implements Job {
             throw new JobExecutionException(e, true);
         }
         finally {
-            workManager.endWork();
+            unitOfWork.end();
         }
     }
 

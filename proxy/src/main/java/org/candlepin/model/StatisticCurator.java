@@ -18,7 +18,7 @@ import org.candlepin.model.Statistic.EntryType;
 import org.candlepin.model.Statistic.ValueType;
 
 import com.google.inject.Inject;
-import com.wideplay.warp.persist.Transactional;
+import com.google.inject.persist.Transactional;
 
 import org.hibernate.Query;
 import org.hibernate.Session;

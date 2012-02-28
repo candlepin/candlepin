@@ -15,7 +15,7 @@
 package org.candlepin.guice;
 
 import com.google.inject.Inject;
-import com.wideplay.warp.persist.PersistenceService;
+import com.google.inject.persist.PersistService;
 
 /**
  * Initializes the JPA service
@@ -26,7 +26,7 @@ public class JPAInitializer {
      * @param service to be initialized.
      */
     @Inject
-    protected JPAInitializer(PersistenceService service) {
+    protected JPAInitializer(PersistService service) {
         service.start();
     }
 }

@@ -16,7 +16,7 @@ package org.candlepin.model;
 
 import org.candlepin.util.Util;
 
-import com.wideplay.warp.persist.Transactional;
+import com.google.inject.persist.Transactional;
 
 import org.apache.log4j.Logger;
 

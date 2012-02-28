@@ -21,8 +21,8 @@ import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.core.model.JobStatus.JobState;
 
 import com.google.inject.Inject;
-import com.wideplay.warp.persist.Transactional;
-import com.wideplay.warp.persist.WorkManager;
+import com.google.inject.persist.Transactional;
+import com.google.inject.persist.UnitOfWork;
 
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.quartz.JobExecutionContext;
@@ -42,15 +42,15 @@ public class PinsetterJobListener implements JobListener {
 
     private JobCurator curator;
 
-    // this is a seperate workManager and units of work from the actual pinsetter
+    // this is a seperate unitOfWork and units of work from the actual pinsetter
     // job because we want to tie this closer to the quartz execution, rather than
     // job execution.
-    private WorkManager workManager;
+    private UnitOfWork unitOfWork;
 
     @Inject
-    public PinsetterJobListener(JobCurator curator, WorkManager workManager) {
+    public PinsetterJobListener(JobCurator curator, UnitOfWork unitOfWork) {
         this.curator = curator;
-        this.workManager = workManager;
+        this.unitOfWork = unitOfWork;
     }
 
     @Override
@@ -63,9 +63,9 @@ public class PinsetterJobListener implements JobListener {
         Principal principal = (Principal) context.getMergedJobDataMap().get(PRINCIPAL_KEY);
         ResteasyProviderFactory.pushContext(Principal.class, principal);
 
-        workManager.beginWork();
+        unitOfWork.begin();
         updateJob(context);
-        workManager.endWork();
+        unitOfWork.end();
     }
 
     @Override
@@ -76,9 +76,9 @@ public class PinsetterJobListener implements JobListener {
     @Override
     public void jobWasExecuted(JobExecutionContext context,
         JobExecutionException exception) {
-        workManager.beginWork();
+        unitOfWork.begin();
         updateJob(context, exception);
-        workManager.endWork();
+        unitOfWork.end();
         ResteasyProviderFactory.popContextData(Principal.class);
     }
 

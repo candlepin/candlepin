@@ -83,10 +83,9 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
-import com.wideplay.warp.persist.PersistenceFilter;
-import com.wideplay.warp.persist.PersistenceService;
-import com.wideplay.warp.persist.UnitOfWork;
-import com.wideplay.warp.persist.WorkManager;
+import com.google.inject.persist.PersistFilter;
+import com.google.inject.persist.PersistService;
+import com.google.inject.persist.UnitOfWork;
 
 /**
  * Test fixture for test classes requiring access to the database.
@@ -118,7 +117,7 @@ public class DatabaseTestFixture {
     protected SubscriptionCurator subCurator;
     protected ActivationKeyCurator activationKeyCurator;
     protected ContentCurator contentCurator;
-    protected WorkManager unitOfWork;
+    protected UnitOfWork unitOfWork;
     protected HttpServletRequest httpServletRequest;
     protected EntitlementCertificateCurator entCertCurator;
     protected CertificateSerialCurator certSerialCurator;
@@ -133,7 +132,7 @@ public class DatabaseTestFixture {
     protected UniqueIdGenerator uniqueIdGenerator;
     protected UeberCertificateGenerator ueberCertGenerator;
 
-    private PersistenceService persistanceService;
+    private PersistService persistanceService;
 
     @Before
     public void init() {
@@ -141,20 +140,17 @@ public class DatabaseTestFixture {
         CandlepinCommonTestingModule testingModule = new CandlepinCommonTestingModule();
         if (guiceOverrideModule == null) {
             injector = Guice.createInjector(testingModule,
-                new CandlepinNonServletEnvironmentTestingModule(),
-                PersistenceService.usingJpa().across(UnitOfWork.REQUEST)
-                    .buildModule());
+                new CandlepinNonServletEnvironmentTestingModule());
+              //  PersistService.usingJpa().across(UnitOfWork.REQUEST)
+//                    .buildModule());
         }
         else {
             injector = Guice.createInjector(Modules.override(testingModule)
                 .with(guiceOverrideModule),
-                new CandlepinNonServletEnvironmentTestingModule(),
-                PersistenceService.usingJpa().across(UnitOfWork.REQUEST)
-                    .buildModule());
+                new CandlepinNonServletEnvironmentTestingModule());
         }
 
-        persistanceService = injector.getInstance(PersistenceService.class);
-        persistanceService.start();
+        persistanceService = injector.getInstance(PersistService.class);
 
         injector.getInstance(EntityManagerFactory.class);
         emf = injector.getProvider(EntityManagerFactory.class).get();
@@ -181,7 +177,7 @@ public class DatabaseTestFixture {
         contentCurator = injector.getInstance(ContentCurator.class);
         envCurator = injector.getInstance(EnvironmentCurator.class);
         envContentCurator = injector.getInstance(EnvironmentContentCurator.class);
-        unitOfWork = injector.getInstance(WorkManager.class);
+        unitOfWork = injector.getInstance(UnitOfWork.class);
 
         productAdapter = injector.getInstance(ProductServiceAdapter.class);
         subAdapter = injector.getInstance(SubscriptionServiceAdapter.class);
@@ -202,16 +198,11 @@ public class DatabaseTestFixture {
         dateSource = (DateSourceForTesting) injector
             .getInstance(DateSource.class);
         dateSource.currentDate(TestDateUtil.date(2010, 1, 1));
-
-
-        unitOfWork.beginWork();
     }
 
     @After
     public void shutdown() {
-        unitOfWork.endWork();
-
-        injector.getInstance(PersistenceFilter.class).destroy();
+        injector.getInstance(PersistFilter.class).destroy();
 
         HibernateEntityManagerImplementor hem =
             (HibernateEntityManagerImplementor) entityManager();
@@ -226,8 +217,6 @@ public class DatabaseTestFixture {
 
         entityManager().close();
         emf.close();
-
-        persistanceService.shutdown();
     }
 
     protected Module getGuiceOverrideModule() {

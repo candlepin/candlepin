@@ -23,6 +23,7 @@ import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.guice.CandlepinModule;
 import org.candlepin.guice.I18nProvider;
+import org.candlepin.guice.JPAInitializer;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.guice.ScriptEngineProvider;
 import org.candlepin.guice.TestPrincipalProvider;
@@ -74,7 +75,7 @@ import com.google.common.base.Function;
 import com.google.inject.Singleton;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
-import com.wideplay.warp.persist.jpa.JpaUnit;
+import com.google.inject.persist.jpa.JpaPersistModule;
 
 public class CandlepinCommonTestingModule extends CandlepinModule {
 
@@ -84,7 +85,8 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
     @Override
     public void configure() {
 
-        bindConstant().annotatedWith(JpaUnit.class).to("default");
+        install(new JpaPersistModule("default"));
+        bind(JPAInitializer.class).asEagerSingleton();
 
         bind(X509ExtensionUtil.class);
         bind(Config.class).to(CandlepinCommonTestConfig.class)

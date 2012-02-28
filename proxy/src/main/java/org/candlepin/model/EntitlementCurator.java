@@ -29,7 +29,7 @@ import org.hibernate.criterion.Restrictions;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
-import com.wideplay.warp.persist.Transactional;
+import com.google.inject.persist.Transactional;
 
 /**
  * EntitlementCurator

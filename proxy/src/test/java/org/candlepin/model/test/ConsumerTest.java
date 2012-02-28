@@ -62,8 +62,6 @@ public class ConsumerTest extends DatabaseTestFixture {
 
     @Before
     public void setUpTestObjects() {
-        unitOfWork.beginWork();
-
         owner = new Owner("Example Corporation");
         rhel = new Product("rhel", "Red Hat Enterprise Linux");
         jboss = new Product("jboss", "JBoss");
@@ -79,8 +77,6 @@ public class ConsumerTest extends DatabaseTestFixture {
         consumer.setFact("foo1", "bar1");
 
         consumerCurator.create(consumer);
-
-        unitOfWork.endWork();
     }
 
     @Test(expected = PersistenceException.class)

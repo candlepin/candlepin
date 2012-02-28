@@ -15,7 +15,7 @@
 package org.candlepin.resource;
 
 import com.google.inject.Inject;
-import com.wideplay.warp.persist.Transactional;
+import com.google.inject.persist.Transactional;
 
 import org.apache.log4j.Logger;
 import org.candlepin.audit.Event;

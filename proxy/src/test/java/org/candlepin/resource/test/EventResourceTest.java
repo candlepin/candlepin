@@ -23,8 +23,6 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.wideplay.warp.persist.PersistenceService;
-import com.wideplay.warp.persist.UnitOfWork;
 
 import org.candlepin.CandlepinCommonTestingModule;
 import org.candlepin.CandlepinNonServletEnvironmentTestingModule;
@@ -55,10 +53,7 @@ public class EventResourceTest {
         ec = mock(EventCurator.class);
         injector = Guice.createInjector(
             new CandlepinCommonTestingModule(),
-            new CandlepinNonServletEnvironmentTestingModule(),
-            PersistenceService.usingJpa()
-                .across(UnitOfWork.REQUEST)
-                .buildModule()
+            new CandlepinNonServletEnvironmentTestingModule()
         );
     }
 

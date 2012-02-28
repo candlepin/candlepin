@@ -36,8 +36,6 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
-import com.wideplay.warp.persist.PersistenceService;
-import com.wideplay.warp.persist.UnitOfWork;
 
 import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.HornetqContextListener;
@@ -110,9 +108,6 @@ public class CandlepinContextListener extends
      */
     protected List<Module> getModules() {
         List<Module> modules = new LinkedList<Module>();
-
-        modules.add(PersistenceService.usingJpa().across(UnitOfWork.REQUEST)
-                .buildModule());
 
         modules.add(Modules.override(new DefaultConfig()).with(
                 new CustomizableModules().load()));

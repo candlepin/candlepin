@@ -21,7 +21,7 @@ import org.quartz.spi.TriggerFiredBundle;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.wideplay.warp.persist.WorkManager;
+import com.google.inject.persist.UnitOfWork;
 
 /**
  * GuiceJobFactory is a custom Quartz JobFactory implementation which
@@ -43,6 +43,6 @@ public class GuiceJobFactory implements JobFactory {
     public Job newJob(TriggerFiredBundle trigger) throws SchedulerException {
         Class<Job> jobClass = trigger.getJobDetail().getJobClass();
         return new TransactionalPinsetterJob(injector.getInstance(jobClass),
-            injector.getInstance(WorkManager.class));
+            injector.getInstance(UnitOfWork.class));
     }
 }
