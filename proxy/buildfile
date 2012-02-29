@@ -39,7 +39,7 @@ JACKSON = [group('jackson-core-lgpl',
                  'jackson-jaxrs',
                  'jackson-xc',
                  :under => 'org.codehaus.jackson',
-                 :version => '1.5.3')]
+                 :version => '1.6.3')]
 SUN_JAXB = 'com.sun.xml.bind:jaxb-impl:jar:2.1.12'
 JUNIT = ['junit:junit:jar:4.5', 'org.mockito:mockito-all:jar:1.8.5']
 LOG4J = 'log4j:log4j:jar:1.2.14'

@@ -35,33 +35,32 @@ public class CandlepinSerializerFactory extends CustomSerializerFactory {
      *      java/org/codehaus/jackson/map/ser/BasicSerializerFactory.java
      */
     public JsonSerializer<Object> createSerializerSkipCustom(
-        Class type, SerializationConfig config) {
+        JavaType type, SerializationConfig config) {
 
         /* [JACKSON-220]: Very first thing, let's check annotations to
          * see if we have explicit definition
          */
-        JavaType jt = TypeFactory.type(type);
-        BasicBeanDescription beanDesc = config.introspect(jt.getRawClass());
+        BasicBeanDescription beanDesc = config.introspect(type);
         JsonSerializer<?> ser = findSerializerFromAnnotation(config,
             beanDesc.getClassInfo());
         if (ser == null) {
             // First, fast lookup for exact type:
-            ser = super.findSerializerByLookup(jt, config, beanDesc);
+            ser = super.findSerializerByLookup(type, config, beanDesc);
             if (ser == null) {
                 // and then introspect for some safe (?) JDK types
-                ser = super.findSerializerByPrimaryType(jt, config, beanDesc);
+                ser = super.findSerializerByPrimaryType(type, config, beanDesc);
                 if (ser == null) {
                     /* And this is where this class comes in: if type is
                      * not a known "primary JDK type", perhaps it's a bean?
                      * We can still get a null, if we can't find a single
                      * suitable bean property.
                      */
-                    ser = this.findBeanSerializer(jt, config, beanDesc);
+                    ser = this.findBeanSerializer(type, config, beanDesc);
                     /* Finally: maybe we can still deal with it as an
                      * implementation of some basic JDK interface?
                      */
                     if (ser == null) {
-                        ser = super.findSerializerByAddonType(jt, config, beanDesc);
+                        ser = super.findSerializerByAddonType(type, config, beanDesc);
                     }
                 }
             }

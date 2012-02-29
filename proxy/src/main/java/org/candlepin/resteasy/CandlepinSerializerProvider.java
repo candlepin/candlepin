@@ -14,11 +14,14 @@
  */
 package org.candlepin.resteasy;
 
+import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.JsonSerializer;
 import org.codehaus.jackson.map.SerializationConfig;
 import org.codehaus.jackson.map.SerializerFactory;
 import org.codehaus.jackson.map.ser.SerializerCache;
 import org.codehaus.jackson.map.ser.StdSerializerProvider;
+import org.codehaus.jackson.map.type.TypeFactory;
+import org.codehaus.jackson.type.JavaType;
 
 /**
  * CandlepinSerializerProvider - Custom serializer implementation to expose our
@@ -50,7 +53,8 @@ public class CandlepinSerializerProvider extends StdSerializerProvider {
         }
 
         CandlepinSerializerFactory csf = (CandlepinSerializerFactory) _serializerFactory;
-        ser = (JsonSerializer<Object>) csf.createSerializerSkipCustom(valueType, _config);
+        ser = (JsonSerializer<Object>) csf.createSerializerSkipCustom(TypeFactory.type(valueType),
+            _config);
 
         // Needed to create it, lets add to the cache
         cachedSerializers.addNonTypedSerializer(valueType, ser);
