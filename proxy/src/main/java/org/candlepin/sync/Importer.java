@@ -41,6 +41,7 @@ import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.ContentCurator;
+import org.candlepin.model.Entitlement;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
 import org.candlepin.model.Owner;
@@ -50,7 +51,9 @@ import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.pki.PKIUtility;
+import org.candlepin.util.Util;
 import org.candlepin.util.VersionUtil;
+
 import org.codehaus.jackson.map.ObjectMapper;
 import org.hibernate.exception.ConstraintViolationException;
 import org.xnap.commons.i18n.I18n;
@@ -269,10 +272,19 @@ public class Importer {
         validateMetadata(ExporterMetadata.TYPE_PER_USER, owner, metadata, force);
         importConsumer(owner, importFiles.get(ImportFile.CONSUMER.fileName()));
 
+        Set<Entitlement> entitlementsToRegen = Util.newSet();
+
         // If the consumer has no entitlements, this products directory will end up empty.
         // This also implies there will be no entitlements to import.
         if (importFiles.get(ImportFile.PRODUCTS.fileName()) != null) {
-            Set<Product> importedProducts = importProducts(importFiles.get(ImportFile.PRODUCTS.fileName()).listFiles());
+            ProductImporter importer = new ProductImporter(productCurator, contentCurator, poolManager);
+
+            Set<Product> importedProducts = importProducts(
+                importFiles.get(ImportFile.PRODUCTS.fileName()).listFiles(),
+                importer);
+
+            entitlementsToRegen = importer.getEntitlementsToRegenerate(importedProducts);
+
             importEntitlements(owner, importedProducts,
                 importFiles.get(ImportFile.ENTITLEMENTS.fileName()).listFiles());
         }
@@ -280,7 +292,8 @@ public class Importer {
             log.warn("No products found to import, skipping product and entitlement import.");
         }
 
-        poolManager.refreshPools(owner);
+        entitlementsToRegen.addAll(poolManager.refreshPoolsWithoutRegeneration(owner));
+        poolManager.regenerateCertificatesOf(entitlementsToRegen);
     }
 
     public void importRules(File[] rulesFiles, File metadata) throws IOException {
@@ -345,8 +358,8 @@ public class Importer {
         }
     }
 
-    public Set<Product> importProducts(File[] products) throws IOException {
-        ProductImporter importer = new ProductImporter(productCurator, contentCurator, poolManager);
+    public Set<Product> importProducts(File[] products, ProductImporter importer)
+        throws IOException {
         Set<Product> productsToImport = new HashSet<Product>();
         for (File product : products) {
             // Skip product.pem's, we just need the json to import:

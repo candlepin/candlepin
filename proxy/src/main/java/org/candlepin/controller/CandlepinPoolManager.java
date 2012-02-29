@@ -53,6 +53,7 @@ import org.candlepin.policy.js.pool.PoolUpdate;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
+import org.candlepin.util.Util;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -117,15 +118,7 @@ public class CandlepinPoolManager implements PoolManager {
         this.complianceRules = complianceRules;
     }
 
-    /**
-     * Check our underlying subscription service and update the pool data. Note
-     * that refreshing the pools doesn't actually take any action, should a
-     * subscription be reduced, expired, or revoked. Pre-existing entitlements
-     * will need to be dealt with separately from this event.
-     *
-     * @param owner Owner to be refreshed.
-     */
-    public void refreshPools(Owner owner) {
+    public Set<Entitlement> refreshPoolsWithoutRegeneration(Owner owner) {
         if (log.isDebugEnabled()) {
             log.debug("Refreshing pools");
         }
@@ -162,6 +155,7 @@ public class CandlepinPoolManager implements PoolManager {
             }
         }
 
+        Set<Entitlement> entitlementsToRegen = Util.newSet();
         for (Subscription sub : subs) {
             // Delete any expired subscriptions. Leave it in the map
             // so that the pools will get deleted as well.
@@ -176,7 +170,9 @@ public class CandlepinPoolManager implements PoolManager {
                 subToPoolMap.remove(sub.getId());
             }
             else {
-                updatePoolsForSubscription(subToPoolMap.get(sub.getId()), sub);
+                entitlementsToRegen.addAll(
+                    updatePoolsForSubscription(subToPoolMap.get(sub.getId()), sub)
+                );
                 subToPoolMap.remove(sub.getId());
             }
         }
@@ -187,6 +183,23 @@ public class CandlepinPoolManager implements PoolManager {
                 deletePool(p);
             }
         }
+
+        return entitlementsToRegen;
+    }
+
+    /**
+     * Check our underlying subscription service and update the pool data. Note
+     * that refreshing the pools doesn't actually take any action, should a
+     * subscription be reduced, expired, or revoked. Pre-existing entitlements
+     * will need to be dealt with separately from this event.
+     *
+     * @param owner Owner to be refreshed.
+     */
+    public void refreshPools(Owner owner) {
+        Set<Entitlement> entitlementsToRegen = refreshPoolsWithoutRegeneration(owner);
+
+        // now regenerate all pending entitlements
+        regenerateCertificatesOf(entitlementsToRegen);
     }
 
     private boolean isExpired(Subscription subscription) {
@@ -221,7 +234,7 @@ public class CandlepinPoolManager implements PoolManager {
      * @param existingPools the existing pools
      * @param sub the sub
      */
-    public void updatePoolsForSubscription(List<Pool> existingPools,
+    private Set<Entitlement> updatePoolsForSubscription(List<Pool> existingPools,
         Subscription sub) {
 
         /*
@@ -239,6 +252,7 @@ public class CandlepinPoolManager implements PoolManager {
         List<PoolUpdate> updatedPools = poolRules.updatePools(sub,
             existingPools);
 
+        Set<Entitlement> entitlementsToRegen = Util.newSet();
         for (PoolUpdate updatedPool : updatedPools) {
 
             Pool existingPool = updatedPool.getPool();
@@ -262,7 +276,7 @@ public class CandlepinPoolManager implements PoolManager {
                     // TODO: perhaps optimize it to use hibernate query?
                     this.entitlementCurator.merge(entitlement);
                 }
-                regenerateCertificatesOf(entitlements);
+                entitlementsToRegen.addAll(entitlements);
             }
             // save changes for the pool
             this.poolCurator.merge(existingPool);
@@ -271,12 +285,15 @@ public class CandlepinPoolManager implements PoolManager {
                 existingPool);
             sink.sendEvent(poolEvents.get(existingPool.getId()));
         }
+
+        return entitlementsToRegen;
     }
 
     public void updatePoolForSubscription(Pool existingPool, Subscription sub) {
         List<Pool> tempList = new LinkedList<Pool>();
         tempList.add(existingPool);
-        updatePoolsForSubscription(tempList, sub);
+        Set<Entitlement> entitlementsToUpdate = updatePoolsForSubscription(tempList, sub);
+        regenerateCertificatesOf(entitlementsToUpdate);
     }
 
     private boolean poolExistsForSubscription(

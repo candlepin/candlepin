@@ -276,4 +276,28 @@ public class Entitlement extends AbstractHibernateObject implements Linkable, Ow
         this.contractNumber = contractNumber;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+
+        if (!(obj instanceof Entitlement)) {
+            return false;
+        }
+
+        Entitlement e = (Entitlement) obj;
+
+        return (id == null ? e.id == null : id.equals(e.getId()));
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 17;
+        if (null != id) {
+            result = 37 * result + id.hashCode();
+        }
+        return result;
+    }
+
 }
