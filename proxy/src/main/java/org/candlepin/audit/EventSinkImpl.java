@@ -33,8 +33,8 @@ import org.hornetq.api.core.client.ClientProducer;
 import org.hornetq.api.core.client.ClientSession;
 import org.hornetq.api.core.client.ClientSessionFactory;
 import org.hornetq.api.core.client.HornetQClient;
+import org.hornetq.api.core.client.ServerLocator;
 import org.hornetq.core.remoting.impl.invm.InVMConnectorFactory;
-
 /**
  * EventSink - Reliably dispatches events to all configured listeners.
  */
@@ -54,11 +54,9 @@ public class EventSinkImpl implements EventSink {
         this.eventFactory = eventFactory;
         this.mapper = mapper;
         try {
-            factory =  createClientSessionFactory();
-
             largeMsgSize = new Config().getInt(ConfigProperties.HORNETQ_LARGE_MSG_SIZE);
-            factory.getServerLocator().setMinLargeMessageSize(largeMsgSize);
 
+            factory =  createClientSessionFactory();
             clientSession = factory.createSession();
             clientProducer = clientSession.createProducer(EventSource.QUEUE_ADDRESS);
         }
@@ -71,9 +69,10 @@ public class EventSinkImpl implements EventSink {
     }
 
     protected ClientSessionFactory createClientSessionFactory() throws Exception {
-        return HornetQClient.createServerLocatorWithoutHA(
-            new TransportConfiguration(
-                InVMConnectorFactory.class.getName())).createSessionFactory();
+        ServerLocator locator = HornetQClient.createServerLocatorWithoutHA(
+            new TransportConfiguration(InVMConnectorFactory.class.getName()));
+        locator.setMinLargeMessageSize(largeMsgSize);
+        return locator.createSessionFactory();
     }
 
     @Override
