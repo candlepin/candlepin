@@ -68,7 +68,6 @@ COMMONS = ['commons-beanutils:commons-beanutils:jar:1.7.0',
            'commons-io:commons-io:jar:1.3.2',
            'commons-logging:commons-logging:jar:1.1.1',
            'commons-lang:commons-lang:jar:2.5']
-JDOM = 'jdom:jdom:jar:1.0'
 DOM4J = ['dom4j:dom4j:jar:1.6.1']
 HSQLDB = ['hsqldb:hsqldb:jar:1.8.0.10']
 GETTEXT_COMMONS = 'org.xnap.commons:gettext-commons:jar:0.9.6'
@@ -177,7 +176,7 @@ define "candlepin" do
   # building
   #
   compile.options.target = '1.6'
-  compile_classpath = [COMMONS, DB, RESTEASY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM,
+  compile_classpath = [COMMONS, DB, RESTEASY, LOG4J, HIBERNATE, BOUNCYCASTLE,
     GUICE, DOM4J, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ, SUN_JAXB, MIME4J, AMQP, LDAP, OAUTH, RHINO, COLLECTIONS]
   compile.with compile_classpath
   compile.with LOGDRIVER if Buildr.environment == 'logdriver'
@@ -190,7 +189,7 @@ define "candlepin" do
   test.setup do |task|
     filter('src/main/resources/META-INF').into('target/classes/META-INF').run
   end
-  test.with COMMONS, DB, RESTEASY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM, DOM4J, HSQLDB, GUICE, QUARTZ, GETTEXT_COMMONS, MIME4J, RHINO, COLLECTIONS, generate
+  test.with COMMONS, DB, RESTEASY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE, DOM4J, HSQLDB, GUICE, QUARTZ, GETTEXT_COMMONS, MIME4J, RHINO, COLLECTIONS, generate
   test.with LOGDRIVER if Buildr.environment == 'logdriver'
   test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
 
@@ -286,7 +285,7 @@ define "candlepin" do
 
         ant.taskdef :name=>'schema',
           :classname=>'org.hibernate.tool.ant.HibernateToolTask',
-          :classpath=>Buildr.artifacts([HIBERNATE, HSQLDB, DB, COMMONS, LOG4J, JDOM, DOM4J, RESTEASY, JACKSON, QUARTZ]).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR)
+          :classpath=>Buildr.artifacts([HIBERNATE, HSQLDB, DB, COMMONS, LOG4J, DOM4J, RESTEASY, JACKSON, QUARTZ]).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR)
 
         ant.schema :destdir=>'target/schema' do
           ant.classpath :path=>_('target/classes')
