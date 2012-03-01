@@ -166,7 +166,6 @@ fi
 
 
 %files
-%config(noreplace) %{_sysconfdir}/%{name}/%{name}.conf
 %dir %{_datadir}/%{name}/
 %{_datadir}/%{name}/cpsetup
 %{_datadir}/%{name}/schema/
@@ -178,6 +177,8 @@ fi
 %{_localstatedir}/lib/%{name}
 %{_localstatedir}/log/%{name}
 %{_localstatedir}/cache/%{name}
+%defattr(600,jboss,jboss,-)
+%config(noreplace) %{_sysconfdir}/%{name}/%{name}.conf
 
 %files tomcat6
 %defattr(644,tomcat,tomcat,775)
@@ -186,6 +187,8 @@ fi
 %{_localstatedir}/log/%{name}
 %{_localstatedir}/cache/%{name}
 %{_sysconfdir}/tomcat6/keystore
+%defattr(600,tomcat,tomcat,-)
+%config(noreplace) %{_sysconfdir}/%{name}/%{name}.conf
 
 %files devel
 %defattr(644,root,root,775)
