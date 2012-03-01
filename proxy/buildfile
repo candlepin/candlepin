@@ -204,6 +204,14 @@ define "candlepin" do
   package(:war, :id=>"candlepin").libs += artifacts(HSQLDB)
   package(:war, :id=>"candlepin").classes << generate
 
+  desc 'Print a list of dependencies'
+  task :antdeps do
+    artifacts(compile_classpath).collect do |a|
+      jar = File.basename(a.to_s).sub!(/(.*)-\d.*.jar/, '\1')
+      puts "<include name=\"**/#{jar}-*.jar\"/>"
+    end
+  end
+
   desc 'Crawl the REST API and print a summary.'
   task :apicrawl  do
     options.test = 'no'
