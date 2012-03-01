@@ -87,15 +87,16 @@
         <include name="**/backport-util-concurrent-*.jar"/>
         <include name="**/commons-digester-*.jar"/>
         <include name="**/commons-configuration-*.jar"/>
-        <include name="**/geronimo-spec-jms-*.jar"/>
         <include name="**/jldap-*.jar"/>
         <include name="**/oauth-*.jar"/>
         <include name="**/oauth-provider-*.jar"/>
         <include name="**/js-*.jar"/>
         <include name="**/google-collections-*.jar"/>
-	<include name="**/jpa_1_0_api.jar"/>
+        <include name="**/jpa_1_0_api.jar"/>
         <include name="**/log4j*.jar"/>
         <include name="**/servlet_api*.jar"/>
+        <include name="**/jms.jar"/>
+        <exclude name="**/*-sources.jar" />
       </fileset>
     </classpath>
   </taskdef>
@@ -206,15 +207,16 @@
             <include name="**/backport-util-concurrent-*.jar"/>
             <include name="**/commons-digester-*.jar"/>
             <include name="**/commons-configuration-*.jar"/>
-            <include name="**/geronimo-spec-jms-*.jar"/>
             <include name="**/jldap-*.jar"/>
             <include name="**/oauth-*.jar"/>
             <include name="**/oauth-provider-*.jar"/>
             <include name="**/js-*.jar"/>
             <include name="**/google-collections-*.jar"/>
-	    <include name="**/jpa_1_0_api.jar"/>
+            <include name="**/jpa_1_0_api.jar"/>
             <include name="**/log4j*.jar"/>
             <include name="**/servlet_api*.jar"/>
+            <include name="**/jms.jar"/>
+            <exclude name="**/*-sources.jar" />
         </fileset>
       </classpath>
     </javac>
@@ -323,21 +325,22 @@
         <include name="**/backport-util-concurrent-*.jar"/>
         <include name="**/commons-digester-*.jar"/>
         <include name="**/commons-configuration-*.jar"/>
-        <include name="**/geronimo-spec-jms-*.jar"/>
         <include name="**/jldap-*.jar"/>
         <include name="**/oauth-*.jar"/>
         <include name="**/oauth-provider-*.jar"/>
         <include name="**/js-*.jar"/>
         <include name="**/google-collections-*.jar"/>
-	<include name="**/jpa_1_0_api.jar"/>
+        <include name="**/jpa_1_0_api.jar"/>
         <include name="**/log4j*.jar"/>
         <include name="**/servlet_api*.jar"/>
+        <include name="**/jms.jar"/>
         <exclude name="**/emma*.jar" />
         <exclude name="**/hamcrest*.jar" />
         <exclude name="**/jmock*.jar" />
         <exclude name="**/junit*.jar" />
         <exclude name="**/mockito*.jar" />
         <exclude name="**/schemaSpy*.jar" />
+        <exclude name="**/*-sources.jar" />
       </lib>
     </war>
   </target>
