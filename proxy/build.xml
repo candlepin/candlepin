@@ -44,7 +44,6 @@
         <include name="**/resteasy-multipart-provider-*.jar"/>
         <include name="**/scannotation-*.jar"/>
         <include name="**/commons-httpclient-*.jar"/>
-        <include name="**/log4j-*.jar"/>
         <include name="**/hibernate-core-*.jar"/>
         <include name="**/hibernate-annotations-*.jar"/>
         <include name="**/hibernate-commons-annotations-*.jar"/>
@@ -96,6 +95,7 @@
         <include name="**/js-*.jar"/>
         <include name="**/google-collections-*.jar"/>
 	<include name="**/jpa_1_0_api.jar"/>
+        <include name="**/log4j*.jar"/>
       </fileset>
     </classpath>
   </taskdef>
@@ -163,7 +163,6 @@
             <include name="**/resteasy-multipart-provider-*.jar"/>
             <include name="**/scannotation-*.jar"/>
             <include name="**/commons-httpclient-*.jar"/>
-            <include name="**/log4j-*.jar"/>
             <include name="**/hibernate-core-*.jar"/>
             <include name="**/hibernate-annotations-*.jar"/>
             <include name="**/hibernate-commons-annotations-*.jar"/>
@@ -215,6 +214,7 @@
             <include name="**/js-*.jar"/>
             <include name="**/google-collections-*.jar"/>
 	    <include name="**/jpa_1_0_api.jar"/>
+            <include name="**/log4j*.jar"/>
         </fileset>
       </classpath>
     </javac>
@@ -280,7 +280,6 @@
         <include name="**/resteasy-multipart-provider-*.jar"/>
         <include name="**/scannotation-*.jar"/>
         <include name="**/commons-httpclient-*.jar"/>
-        <include name="**/log4j-*.jar"/>
         <include name="**/hibernate-core-*.jar"/>
         <include name="**/hibernate-annotations-*.jar"/>
         <include name="**/hibernate-commons-annotations-*.jar"/>
@@ -332,6 +331,7 @@
         <include name="**/js-*.jar"/>
         <include name="**/google-collections-*.jar"/>
 	<include name="**/jpa_1_0_api.jar"/>
+        <include name="**/log4j*.jar"/>
         <exclude name="**/emma*.jar" />
         <exclude name="**/hamcrest*.jar" />
         <exclude name="**/jmock*.jar" />
