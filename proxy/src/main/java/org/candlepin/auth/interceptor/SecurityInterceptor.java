@@ -201,7 +201,7 @@ public class SecurityInterceptor implements MethodInterceptor {
                         if (typeName.equals("Owner")) {
                             typeName = "Organization";
                         }
-                        log.error("No such entity: " + typeName + " id: " + verifyParam);
+                        log.info("No such entity: " + typeName + " id: " + verifyParam);
 
                         throw new NotFoundException(
                             i18n.tr("{0} with id {1} could not be found",
