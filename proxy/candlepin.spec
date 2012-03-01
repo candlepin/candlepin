@@ -43,6 +43,7 @@ BuildRequires: codehaus-jackson-mapper-lgpl
 BuildRequires: codehaus-jackson-xc
 BuildRequires: codehaus-jackson-jaxrs
 BuildRequires: jakarta-commons-httpclient
+BuildRequires: jpa_1_0_api
 #BuildRequires: quartz
 Requires: java >= 0:1.6.0
 #until cpsetup is removed
