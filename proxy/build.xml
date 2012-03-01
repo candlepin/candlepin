@@ -69,7 +69,6 @@
         <include name="**/guice-*.jar"/>
         <include name="**/aopalliance-*.jar"/>
         <include name="**/javax.inject-*.jar"/>
-        <include name="**/servlet-api-*.jar"/>
         <include name="**/jackson-core-lgpl-*.jar"/>
         <include name="**/jackson-mapper-lgpl-*.jar"/>
         <include name="**/jackson-jaxrs-*.jar"/>
@@ -96,6 +95,7 @@
         <include name="**/google-collections-*.jar"/>
 	<include name="**/jpa_1_0_api.jar"/>
         <include name="**/log4j*.jar"/>
+        <include name="**/servlet_api*.jar"/>
       </fileset>
     </classpath>
   </taskdef>
@@ -188,7 +188,6 @@
             <include name="**/guice-*.jar"/>
             <include name="**/aopalliance-*.jar"/>
             <include name="**/javax.inject-*.jar"/>
-            <include name="**/servlet-api-*.jar"/>
             <include name="**/jackson-core-lgpl-*.jar"/>
             <include name="**/jackson-mapper-lgpl-*.jar"/>
             <include name="**/jackson-jaxrs-*.jar"/>
@@ -215,6 +214,7 @@
             <include name="**/google-collections-*.jar"/>
 	    <include name="**/jpa_1_0_api.jar"/>
             <include name="**/log4j*.jar"/>
+            <include name="**/servlet_api*.jar"/>
         </fileset>
       </classpath>
     </javac>
@@ -305,7 +305,6 @@
         <include name="**/guice-*.jar"/>
         <include name="**/aopalliance-*.jar"/>
         <include name="**/javax.inject-*.jar"/>
-        <include name="**/servlet-api-*.jar"/>
         <include name="**/jackson-core-lgpl-*.jar"/>
         <include name="**/jackson-mapper-lgpl-*.jar"/>
         <include name="**/jackson-jaxrs-*.jar"/>
@@ -332,6 +331,7 @@
         <include name="**/google-collections-*.jar"/>
 	<include name="**/jpa_1_0_api.jar"/>
         <include name="**/log4j*.jar"/>
+        <include name="**/servlet_api*.jar"/>
         <exclude name="**/emma*.jar" />
         <exclude name="**/hamcrest*.jar" />
         <exclude name="**/jmock*.jar" />
