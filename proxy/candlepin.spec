@@ -45,6 +45,8 @@ BuildRequires: codehaus-jackson-jaxrs
 BuildRequires: jakarta-commons-httpclient
 BuildRequires: jpa_1_0_api
 BuildRequires: qpid-java-client >= 0:0.9
+# required for qpid
+BuildRequires: jms >= 0:1.1
 #BuildRequires: quartz
 Requires: java >= 0:1.6.0
 #until cpsetup is removed
