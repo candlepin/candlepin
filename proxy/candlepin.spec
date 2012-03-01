@@ -44,6 +44,7 @@ BuildRequires: codehaus-jackson-xc
 BuildRequires: codehaus-jackson-jaxrs
 BuildRequires: jakarta-commons-httpclient
 BuildRequires: jpa_1_0_api
+BuildRequires: qpid-java-client >= 0:0.9
 #BuildRequires: quartz
 Requires: java >= 0:1.6.0
 #until cpsetup is removed
@@ -58,6 +59,7 @@ Requires: codehaus-jackson-xc
 Requires: codehaus-jackson-core-lgpl
 Requires: codehaus-jackson-mapper-lgpl
 Requires: codehaus-jackson-jaxrs
+Requires: qpid-java-client >= 0:0.9
 #Requires: bouncycastle
 %define __jar_repack %{nil}
 
