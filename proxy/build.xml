@@ -44,6 +44,7 @@
             <include name="**/slf4j-api.jar"/>
             <include name="**/slf4j-log4j12.jar"/>
             <include name="**/dom4j.jar"/>
+            <include name="**/jpa_1_0_api.jar"/>
             <!-- QUARTZ -->
             <include name="**/quartz.jar"/>
         <exclude name="**/*-sources.jar" />
@@ -130,7 +131,7 @@
             <include name="**/slf4j-api.jar"/>
             <include name="**/slf4j-log4j12.jar"/>
             <include name="**/dom4j.jar"/>
-            <include name="**/bcprov-jdk16.jar"/>
+            <include name="**/jpa_1_0_api.jar"/>
             <!-- GUICE -->
             <include name="**/guice-assistedinject.jar"/>
             <include name="**/guice-multibindings.jar"/>
@@ -160,6 +161,7 @@
             <!-- not required for qpid 0.14 include name="**/mina-core-*.jar"/ -->
             <!-- include name="**/mina-filter-ssl-*.jar"/ -->
             <!-- include name="**/backport-util-concurrent-*.jar"/ -->
+            <include name="**/bcprov-jdk16.jar"/>
             <include name="**/commons-digester-*.jar"/>
             <include name="**/commons-configuration-*.jar"/>
             <include name="**/jldap-*.jar"/>
@@ -167,7 +169,6 @@
             <include name="**/oauth-provider-*.jar"/>
             <include name="**/js.jar"/>
             <include name="**/google-collections.jar"/>
-            <include name="**/jpa_1_0_api.jar"/>
             <include name="**/log4j.jar"/>
             <include name="**/servlet_api.jar"/>
             <include name="**/jms.jar"/>
