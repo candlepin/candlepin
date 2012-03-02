@@ -47,6 +47,7 @@ BuildRequires: jpa_1_0_api
 BuildRequires: qpid-java-client >= 0:0.9
 # required for qpid
 BuildRequires: jms >= 0:1.1
+BuildRequires: oauth
 #BuildRequires: quartz
 Requires: java >= 0:1.6.0
 #until cpsetup is removed
@@ -55,6 +56,8 @@ Requires: wget
 #Requires: aopalliance >= 0:1.0
 Requires: hibernate3 >= 3.3.2
 Requires: hibernate3-annotations >= 0:3.4.0
+Requires: hibernate3-entitymanager >= 0:3.4.0
+Requires: c3p0
 Requires: resteasy
 Requires: google-guice
 Requires: codehaus-jackson-xc
@@ -62,6 +65,9 @@ Requires: codehaus-jackson-core-lgpl
 Requires: codehaus-jackson-mapper-lgpl
 Requires: codehaus-jackson-jaxrs
 Requires: qpid-java-client >= 0:0.9
+Requires: hornetq
+Requires: netty
+Requires: oauth
 #Requires: bouncycastle
 %define __jar_repack %{nil}
 
