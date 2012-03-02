@@ -26,7 +26,6 @@ RESTEASY = [group('jaxrs-api',
                   # ContentTypeHackFilter.java when updating,
                   # please check if its still needed, and remove if not.
                   :version => '2.3.1.GA'),
-            'javax.persistence:persistence-api:jar:1.0',
             'org.scannotation:scannotation:jar:1.0.2',
             'commons-httpclient:commons-httpclient:jar:3.1']
 
@@ -49,6 +48,7 @@ HIBERNATE = ['org.hibernate:hibernate-core:jar:3.3.2.GA',
              'org.hibernate:hibernate-entitymanager:jar:3.4.0.GA',
              'org.hibernate:hibernate-tools:jar:3.2.4.GA',
              'org.hibernate:hibernate-validator:jar:3.1.0.GA',
+             'javax.persistence:persistence-api:jar:1.0',
              'antlr:antlr:jar:2.7.6',
              'asm:asm:jar:3.0',
              'cglib:cglib:jar:2.2',
@@ -293,7 +293,8 @@ define "candlepin" do
 
         ant.taskdef :name=>'schema',
           :classname=>'org.hibernate.tool.ant.HibernateToolTask',
-          :classpath=>Buildr.artifacts([HIBERNATE, HSQLDB, DB, COMMONS, LOG4J, RESTEASY, JACKSON, QUARTZ]).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR)
+          #:classpath=>Buildr.artifacts([HIBERNATE, HSQLDB, DB, COMMONS, LOG4J, RESTEASY, JACKSON, QUARTZ]).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR)
+          :classpath=>Buildr.artifacts([HIBERNATE, COMMONS, LOG4J, QUARTZ]).each(&:invoke).map(&:name).join(File::PATH_SEPARATOR)
 
         ant.schema :destdir=>'target/schema' do
           ant.classpath :path=>_('target/classes')
