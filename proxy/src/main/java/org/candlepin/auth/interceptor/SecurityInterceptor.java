@@ -199,7 +199,7 @@ public class SecurityInterceptor implements MethodInterceptor {
                         // invoke though.
                         String typeName = Util.getClassName(verifyType);
                         if (typeName.equals("Owner")) {
-                            typeName = "Organization";
+                            typeName = i18n.tr("Organization");
                         }
                         log.info("No such entity: " + typeName + " id: " + verifyParam);
 
