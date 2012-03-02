@@ -31,7 +31,6 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Linkable;
 import org.candlepin.model.Owner;
-import org.candlepin.model.Pool;
 
 /**
  * JsonProvider
@@ -67,7 +66,6 @@ public class JsonProvider extends JacksonJsonProvider {
             Consumer.class,
             Entitlement.class,
             Owner.class,
-            Pool.class,
         };
         for (Class<Linkable> c : serializeThese) {
             factory.addSpecificMapping(c, new CandlepinSerializer());

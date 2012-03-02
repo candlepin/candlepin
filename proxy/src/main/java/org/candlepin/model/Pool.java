@@ -53,7 +53,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @Table(name = "cp_pool", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"subscriptionid", "subscriptionsubkey"})})
-public class Pool extends AbstractHibernateObject implements Linkable, Owned {
+public class Pool extends AbstractHibernateObject implements Persisted, Owned {
 
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -543,14 +543,6 @@ public class Pool extends AbstractHibernateObject implements Linkable, Owned {
 
     public String getHref() {
         return "/pools/" + getId();
-    }
-
-    @Override
-    public void setHref(String href) {
-        /*
-         * No-op, here to aid with updating objects which have nested objects that were
-         * originally sent down to the client in HATEOAS form.
-         */
     }
 
     public void setProductAttributes(Set<ProductPoolAttribute> attrs) {
