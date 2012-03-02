@@ -48,7 +48,8 @@ BuildRequires: qpid-java-client >= 0:0.9
 # required for qpid
 BuildRequires: jms >= 0:1.1
 BuildRequires: oauth
-#BuildRequires: quartz
+BuildRequires: rhino
+BuildRequires: quartz
 Requires: java >= 0:1.6.0
 #until cpsetup is removed
 Requires: wget
@@ -68,6 +69,9 @@ Requires: qpid-java-client >= 0:0.9
 Requires: hornetq
 Requires: netty
 Requires: oauth
+Requires: rhino
+Requires: quartz
+Requires: log4j
 #Requires: bouncycastle
 %define __jar_repack %{nil}
 
