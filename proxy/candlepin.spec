@@ -30,6 +30,8 @@ BuildRequires: hibernate3 >= 3.3.2
 BuildRequires: hibernate3-annotations >= 0:3.4.0
 # for schema
 BuildRequires: hibernate3-entitymanager >= 0:3.4.0
+BuildRequires: hibernate3-commons-annotations
+# end for schema
 BuildRequires: google-collections >= 0:1.0
 BuildRequires: resteasy >= 0:2.3.1
 BuildRequires: hornetq >= 0:2.2.11

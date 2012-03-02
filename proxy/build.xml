@@ -34,6 +34,7 @@
             <include name="**/hibernate-core.jar"/>
             <include name="**/hibernate-annotations.jar"/>
             <include name="**/hibernate-entitymanager-*.jar"/>
+            <include name="**/hibernate-commons-annotations.jar"/>
             <!-- RUNTIME include name="**/c3p0-*.jar"/ -->
             <!-- include name="**/hibernate-validator-*.jar"/ -->
             <include name="**/antlr.jar"/>
