@@ -15,6 +15,7 @@
 package org.candlepin.model;
 
 import org.candlepin.util.DateSource;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ForeignKey;
@@ -53,6 +54,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @Table(name = "cp_pool", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"subscriptionid", "subscriptionsubkey"})})
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Pool extends AbstractHibernateObject implements Persisted, Owned {
 
     @Id
