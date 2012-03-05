@@ -31,6 +31,7 @@ BuildRequires: hibernate3-annotations >= 0:3.4.0
 # for schema
 BuildRequires: hibernate3-entitymanager >= 0:3.4.0
 BuildRequires: hibernate3-commons-annotations
+# broken deps :( BuildRequires: freemarker
 # end for schema
 BuildRequires: google-collections >= 0:1.0
 BuildRequires: resteasy >= 0:2.3.1
