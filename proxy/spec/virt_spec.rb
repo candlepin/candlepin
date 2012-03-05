@@ -100,8 +100,20 @@ describe 'Standalone Virt-Limit Subscriptions' do
     # Host 1 stops reporting guest:
     @host1_client.update_consumer({:guestIds => []})
 
-    # Entitlement should be gone:
+    # Entitlement should not be gone:
     @guest1_client.list_entitlements.length.should == 1
+  end
+
+  it 'should lose entitlement when guest stops and is restarted elsewhere' do
+    @guest1_client.consume_pool(@guest_pool['id'])
+    @guest1_client.list_entitlements.length.should == 1
+
+    # Host 1 stops reporting guest:
+    @host1_client.update_consumer({:guestIds => []})
+    @host2_client.update_consumer({:guestIds => [{'guestId' => @uuid1}]})
+
+    # Entitlement should be gone:
+    @guest1_client.list_entitlements.length.should == 0
   end
 
   it 'should not obtain a new entitlement when guest is migrated to another host' do

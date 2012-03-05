@@ -757,7 +757,7 @@ public class ConsumerResource {
                         "invalidated host-specific entitlements related to host: " +
                         host.getName());
 
-                revokeGuestEntitlementsMatchingHost(host, guest);
+                revokeGuestEntitlementsNotMatchingHost(existing, guest);
                 // commented out per mkhusid (see 768872, around comment #41)
                 /*
                 // now autosubscribe to the new host. We bypass bind() since we
@@ -775,6 +775,12 @@ public class ConsumerResource {
                                                                     null, guest, null);
                     entitler.sendEvents(entitlements);
                 }*/
+            }
+            else if (host == null) {
+                // now check for any entitlements that may have come from another host
+                // that properly reported the guest consumer as going away,
+                // and revoke those.
+                revokeGuestEntitlementsNotMatchingHost(existing, guest);
             }
         }
 
@@ -809,14 +815,14 @@ public class ConsumerResource {
         return removedGuests;
     }
 
-    private void revokeGuestEntitlementsMatchingHost(Consumer host, Consumer guest) {
+    private void revokeGuestEntitlementsNotMatchingHost(Consumer host, Consumer guest) {
         // we need to create a list of entitlements to delete before actually
         // deleting, otherwise we are tampering with the loop iterator (BZ #786730)
         Set<Entitlement> deletableGuestEntitlements = new HashSet<Entitlement>();
         for (Entitlement entitlement : guest.getEntitlements()) {
             Pool pool = entitlement.getPool();
             String requiredHost = getRequiredHost(pool);
-            if (isVirtOnly(pool) && requiredHost.equals(host.getUuid())) {
+            if (isVirtOnly(pool) && !requiredHost.equals(host.getUuid())) {
                 log.warn("Removing entitlement " + entitlement.getProductId() +
                     " from guest " + guest.getName());
                 deletableGuestEntitlements.add(entitlement);
