@@ -28,7 +28,10 @@
       <fileset dir="${lib.dir}">
         <!-- hibernate tools -->
         <include name="**/hibernate-tools-*.jar"/>
-        <include name="**/freemarker-*.jar"/>
+        <include name="**/freemarker.jar"/>
+        <include name="**/jboss-logging.jar"/>
+        <include name="**/freemarker.jar"/>
+            <include name="**/commons-logging.jar"/>
             <include name="**/log4j.jar"/>
             <!-- HIBERNATE -->
             <include name="**/hibernate-core.jar"/>
