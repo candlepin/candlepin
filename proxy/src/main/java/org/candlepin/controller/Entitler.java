@@ -31,6 +31,7 @@ import org.candlepin.model.PoolQuantity;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.xnap.commons.i18n.I18n;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -208,26 +209,29 @@ public class Entitler {
      * @param consumer The consumer being entitled.
      * @return List of Entitlements
      */
-    public List<PoolQuantity> getDryRunMap(Consumer consumer,
+    public List<PoolQuantity> getDryRun(Consumer consumer,
         String serviceLevelOverride) {
 
+        List<PoolQuantity> result = new ArrayList<PoolQuantity>();
         try {
             Owner owner = consumer.getOwner();
             Date entitleDate = new Date();
 
-            List<PoolQuantity> map = poolManager.getBestPools(
+            result = poolManager.getBestPools(
                 consumer, null, entitleDate, owner, serviceLevelOverride);
-            log.debug("Created map: " + map);
-            return map;
+            log.debug("Created Pool Quantity list: " + result);
         }
         catch (EntitlementRefusedException e) {
-            // Could be multiple errors, but we'll just report the first one for
-            // now:
-            // TODO: Convert resource key to user friendly string?
-            // See below for more TODOS
-            String error = e.getResult().getErrors().get(0).getResourceKey();
-            throw new ForbiddenException(error);
+            // If we catch an exception we will just return an empty list
+            // The dry run just reports that an autobind will have no pools
+            // We will debug log the message, but returning does not seem to add
+            // to the process
+            if (log.isDebugEnabled()) {
+                String message = e.getResult().getErrors().get(0).getResourceKey();
+                log.debug("consumer dry-run " + consumer.getUuid() + ": " + message);
+            }
         }
+        return result;
     }
 
     public void sendEvents(List<Entitlement> entitlements) {

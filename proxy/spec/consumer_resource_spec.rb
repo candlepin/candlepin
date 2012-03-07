@@ -378,7 +378,7 @@ describe 'Consumer Resource' do
 
   end
 
-  it 'should allow a consumer dry run an autosubscribe' do
+  it 'should allow a consumer dry run an autosubscribe based on service level' do
     product1 = create_product(random_string('product'),
                               random_string('product'),
                               {:attributes => {:support_level => 'VIP'}})
@@ -427,7 +427,35 @@ describe 'Consumer Resource' do
     lambda do
         @cp.autobind_dryrun(consumer['uuid'], 'Standard').length.should == 0
     end.should raise_exception(RestClient::BadRequest)
+  end
 
+  it 'should return empty list for dry run where all pools are blocked because of consumer type' do
+    product1 = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:requires_consumer_type => :person}})
+    product2 = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:requires_consumer_type => :person}})
+    subs1 = @cp.create_subscription(@owner1.key, product1.id)
+    subs2 = @cp.create_subscription(@owner1.key, product2.id)
+    @cp.refresh_pools(@owner1.key)
+
+    user_cp = user_client(@owner1, random_string('billy'))
+    consumer = user_cp.register(random_string('system'), :system, nil,
+      {}, nil, nil, [], [])
+    consumer_client = Candlepin.new(username=nil, password=nil,
+        cert=consumer['idCert']['cert'],
+        key=consumer['idCert']['key'])
+
+    installed = [
+        {'productId' => product1.id, 'productName' => product1.name},
+        {'productId' => product2.id, 'productName' => product2.name}]
+
+    consumer_client.update_consumer({:installedProducts => installed})
+
+    # dry run
+    pools = @cp.autobind_dryrun(consumer['uuid'])
+    pools.length.should == 0
   end
 
   it 'should not allow the same UUID to be registered twice' do

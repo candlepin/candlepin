@@ -1188,10 +1188,10 @@ public class ConsumerResource {
 
         try {
             checkServiceLevel(consumer.getOwner(), serviceLevel);
-            dryRunPools = entitler.getDryRunMap(consumer, serviceLevel);
+            dryRunPools = entitler.getDryRun(consumer, serviceLevel);
         }
         catch (ForbiddenException fe) {
-            throw fe;
+            return dryRunPools;
         }
         catch (BadRequestException bre) {
             throw bre;
