@@ -108,7 +108,7 @@ public class Entitler {
             }
             else if (error.equals("rulefailed.no.entitlements.available")) {
                 msg = i18n.tr(
-                    "No free entitlements are available for the pool with " +
+                    "No entitlements are available from the pool with " +
                     "id ''{0}''.", pool.getId());
             }
             else if (error.equals("rulefailed.consumer.type.mismatch")) {
