@@ -125,10 +125,7 @@ public class OwnerInfoCurator {
                 productFamily = "none";
             }
 
-            int count = 0;
-            for (Entitlement entitlement : pool.getEntitlements()) {
-                count += entitlement.getQuantity();
-            }
+            int count = getEntitlementCountForPool(pool);
 
             if ("true".equals(getAttribute(pool, "virt_only"))) {
                 info.addToEntitlementsConsumedByFamily(productFamily, 0, count);
@@ -203,6 +200,20 @@ public class OwnerInfoCurator {
         Integer physicalCount = ((Long) physicalQuery.iterate().next()).intValue() -
             guestCount;
         info.setPhysicalCount(physicalCount);
+    }
+
+    private int getEntitlementCountForPool(Pool pool) {
+        String queryStr = "select sum(e.quantity) from Entitlement e " +
+            "where e.pool = :pool";
+        Query query = currentSession().createQuery(queryStr)
+            .setEntity("pool", pool);
+        Long count = (Long) query.uniqueResult();
+        if (count == null) {
+            return 0;
+        }
+        else {
+            return count.intValue();
+        }
     }
 
     private void setConsumerCountsByComplianceStatus(Owner owner, OwnerInfo info) {

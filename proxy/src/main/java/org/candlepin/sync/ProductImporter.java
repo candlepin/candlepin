@@ -16,7 +16,6 @@ package org.candlepin.sync;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -67,11 +66,8 @@ public class ProductImporter {
         return importedProduct;
     }
 
-    public void store(Set<Product> products) {
-        //have to maintain a map because entitlements don't
-        //override equals/hashcode and only way to maintain unique
-        //entitlements is to have a key -> value right now.
-        Map<String, Entitlement> toRegenEntitlements = Util.newMap();
+    public Set<Entitlement> getEntitlementsToRegenerate(Set<Product> products) {
+        Set<Entitlement> entitlementsToRegen = Util.newSet();
         for (Product importedProduct : products) {
             final Product existingProduct = this.curator.find(importedProduct
                 .getId());
@@ -80,12 +76,17 @@ public class ProductImporter {
                 for (Pool pool : this.poolManager
                     .getListOfEntitlementPoolsForProduct(importedProduct.getId())) {
                     for (Entitlement e : pool.getEntitlements()) {
-                        if (!toRegenEntitlements.containsKey(e.getId())) {
-                            toRegenEntitlements.put(e.getId(), e);
-                        }
+                        entitlementsToRegen.add(e);
                     }
                 }
             }
+        }
+
+        return entitlementsToRegen;
+    }
+
+    public void store(Set<Product> products) {
+        for (Product importedProduct : products) {
             // Handling the storing/updating of Content here. This is
             // technically a
             // disjoint entity, but really only makes sense in the concept of
@@ -97,12 +98,8 @@ public class ProductImporter {
                 contentCurator.createOrUpdate(content.getContent());
             }
 
-
             curator.createOrUpdate(importedProduct);
         }
-
-      //regenerate entitlement certificates.
-        this.poolManager.regenerateCertificatesOf(toRegenEntitlements.values());
     }
 
     protected final boolean hasProductChanged(Product existingProd, Product importedProd) {

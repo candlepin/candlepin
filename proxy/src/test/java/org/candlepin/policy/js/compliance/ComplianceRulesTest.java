@@ -25,6 +25,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 import org.candlepin.policy.js.JsRulesProvider;
@@ -113,6 +114,11 @@ public class ComplianceRulesTest {
         String productId, String ... providedProductIds) {
 
         Entitlement e = mockEntitlement(consumer, productId, providedProductIds);
+
+        Random gen = new Random();
+        int id = gen.nextInt(Integer.MAX_VALUE);
+        e.setId(String.valueOf(id));
+
         Pool p = e.getPool();
 
         // Setup the attributes for stacking:

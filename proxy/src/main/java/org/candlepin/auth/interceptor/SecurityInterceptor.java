@@ -197,10 +197,15 @@ public class SecurityInterceptor implements MethodInterceptor {
                         // This is bad, we're verifying a parameter with an ID which
                         // doesn't seem to exist in the DB. Error will be thrown in
                         // invoke though.
-                        log.error("No such entity: " + verifyType + " id: " + verifyParam);
+                        String typeName = Util.getClassName(verifyType);
+                        if (typeName.equals("Owner")) {
+                            typeName = i18n.tr("Organization");
+                        }
+                        log.info("No such entity: " + typeName + " id: " + verifyParam);
+
                         throw new NotFoundException(
                             i18n.tr("{0} with id {1} could not be found",
-                                Util.getClassName(verifyType), verifyParam));
+                                typeName, verifyParam));
                     }
 
                     // Deny access if the entity to be verified turns out to be null, or

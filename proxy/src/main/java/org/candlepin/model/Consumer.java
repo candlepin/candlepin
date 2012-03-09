@@ -45,6 +45,7 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
 import org.hibernate.annotations.MapKeyManyToMany;
@@ -116,6 +117,10 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @JoinColumn(nullable = true)
     @Index(name = "cp_consumer_env_fk_idx")
     private Environment environment;
+
+    @Formula("(select sum(ent.quantity) from cp_entitlement ent " +
+        "where ent.consumer_id = id)")
+    private Long entitlementCount;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "consumer", fetch = FetchType.LAZY)
     private Set<Entitlement> entitlements;
@@ -357,12 +362,11 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         this.facts.put(name, value);
     }
 
-    public int getEntitlementCount() {
-        int total = 0;
-        for (Entitlement ent : this.getEntitlements()) {
-            total += ent.getQuantity();
+    public long getEntitlementCount() {
+        if (entitlementCount == null) {
+            return 0;
         }
-        return total;
+        return entitlementCount.longValue();
     }
     /**
      * @return Returns the entitlements.

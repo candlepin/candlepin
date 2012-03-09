@@ -110,6 +110,8 @@ public interface PoolManager {
      */
     void refreshPools(Owner owner);
 
+    Set<Entitlement> refreshPoolsWithoutRegeneration(Owner owner);
+
     void regenerateCertificatesOf(Iterable<Entitlement> iterable);
 
     /**
@@ -131,17 +133,6 @@ public interface PoolManager {
     void revokeEntitlement(Entitlement entitlement);
 
     void removeEntitlement(Entitlement entitlement);
-
-
-    /**
-     * Update the given list of pools for a subscription.
-     *
-     * This method checks for change in quantity, dates, and products.
-     *
-     * @param existingPools the existing pools referencing this subscription
-     * @param sub the subscription
-     */
-    void updatePoolsForSubscription(List<Pool> existingPools, Subscription sub);
 
     /**
      * Update the given pool for a subscription.

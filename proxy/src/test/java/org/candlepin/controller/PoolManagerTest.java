@@ -557,8 +557,12 @@ public class PoolManagerTest {
         Pool newPool = TestUtil.createPool(o, product);
         Entitlement e1 = new Entitlement(newPool, TestUtil.createConsumer(o),
             newPool.getStartDate(), newPool.getEndDate(), 1);
+        e1.setId("1");
+
         Entitlement e2 = new Entitlement(newPool, TestUtil.createConsumer(o),
             newPool.getStartDate(), newPool.getEndDate(), 1);
+        e2.setId("2");
+
         newPool.getEntitlements().add(e1);
         newPool.getEntitlements().add(e2);
         return newPool;

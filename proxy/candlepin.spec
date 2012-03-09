@@ -11,7 +11,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.5.23
+Version: 0.5.24
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -214,7 +214,6 @@ fi
 
 
 %files
-%config(noreplace) %{_sysconfdir}/%{name}/%{name}.conf
 %dir %{_datadir}/%{name}/
 %{_datadir}/%{name}/cpsetup
 %{_datadir}/%{name}/schema/
@@ -226,6 +225,8 @@ fi
 %{_localstatedir}/lib/%{name}
 %{_localstatedir}/log/%{name}
 %{_localstatedir}/cache/%{name}
+%defattr(600,jboss,jboss,-)
+%config(noreplace) %{_sysconfdir}/%{name}/%{name}.conf
 
 %files tomcat6
 %defattr(644,tomcat,tomcat,775)
@@ -234,6 +235,8 @@ fi
 %{_localstatedir}/log/%{name}
 %{_localstatedir}/cache/%{name}
 %{_sysconfdir}/tomcat6/keystore
+%defattr(600,tomcat,tomcat,-)
+%config(noreplace) %{_sysconfdir}/%{name}/%{name}.conf
 
 %files devel
 %defattr(644,root,root,775)
@@ -247,6 +250,23 @@ fi
 
 
 %changelog
+* Wed Mar 07 2012 Chris Duryee (beav) <cduryee@redhat.com>
+- Performance improvement for OwnerInfo REST query (wpoteat@redhat.com)
+- 798227: revoke guest certs from previous host on migration
+  (jbowes@redhat.com)
+- 785170: Prevent duplicate entitlement regenerations on import.
+  (awood@redhat.com)
+- Allow all pool information to be returned in JSON (wpoteat@redhat.com)
+- 796468: Ensure that the word Organization is translated (bkearney@redhat.com)
+- 798430: Make the config file read only by the tomcat/jboss user
+  (bkearney@redhat.com)
+- 798372: Lower the log severity of passing in an incorrect org id
+  (bkearney@redhat.com)
+- 795798: Improve the error message for invalid service levels
+  (bkearney@redhat.com)
+- 796468: Use the term Organization instead of Owner when passing in incorrect
+  Owner keys. (bkearney@redhat.com)
+
 * Mon Feb 27 2012 Chris Duryee (beav) <cduryee@redhat.com>
 - 788940: allow products to have the same name (cduryee@redhat.com)
 - Ability to dry-run an autocommit and present a pool/quantity response
