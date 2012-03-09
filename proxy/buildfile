@@ -84,7 +84,6 @@ GUICE =  [group('guice-assistedinject', 'guice-multibindings',
 
 COLLECTIONS = 'com.google.collections:google-collections:jar:1.0'
 
-LDAP = 'com.novell.ldap:jldap:jar:4.3'
 OAUTH= [group('oauth',
               'oauth-provider',
               :under => 'net.oauth.core',
@@ -177,7 +176,7 @@ define "candlepin" do
   #
   compile.options.target = '1.6'
   compile_classpath = [COMMONS, DB, RESTEASY, LOG4J, HIBERNATE, BOUNCYCASTLE,
-    GUICE, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ, SUN_JAXB, MIME4J, AMQP, LDAP, OAUTH, RHINO, COLLECTIONS]
+    GUICE, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ, SUN_JAXB, MIME4J, AMQP, OAUTH, RHINO, COLLECTIONS]
   compile.with compile_classpath
   compile.with LOGDRIVER if Buildr.environment == 'logdriver'
 

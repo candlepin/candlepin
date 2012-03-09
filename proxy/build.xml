@@ -168,7 +168,6 @@
             <include name="**/bcprov-jdk16.jar"/>
             <include name="**/commons-digester-*.jar"/>
             <include name="**/commons-configuration-*.jar"/>
-            <include name="**/jldap-*.jar"/>
             <include name="**/oauth-*.jar"/>
             <include name="**/oauth-provider-*.jar"/>
             <include name="**/js.jar"/>
@@ -285,7 +284,6 @@
         <include name="**/backport-util-concurrent-*.jar"/>
         <include name="**/commons-digester-*.jar"/>
         <include name="**/commons-configuration-*.jar"/>
-        <include name="**/jldap-*.jar"/>
         <include name="**/oauth-*.jar"/>
         <include name="**/oauth-provider-*.jar"/>
         <include name="**/js-*.jar"/>
