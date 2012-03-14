@@ -2,6 +2,7 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# ngoswami <ngoswami@fedoraproject.org>, 2012. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: 0.5.X\n"
@@ -20,59 +21,54 @@ msgid "Standalone candlepin does not support redeeming a subscription."
 msgstr "স্টেন্ডএলৌন candlepin -এ এটা স্বাক্ষৰণ ঘুৰাই নিয়া সমৰ্থন নকৰে।"
 
 #: src/main/java/org/candlepin/sync/ConsumerImporter.java:44
-#, 
 msgid "No ID for upstream distributor"
-msgstr ""
+msgstr "আপস্ট্ৰিম বিতৰনকাৰীৰ বাবে কোনো ID নাই"
 
 #: src/main/java/org/candlepin/sync/ConsumerImporter.java:50
-#, 
 msgid "Owner has already imported from another distributor"
-msgstr ""
+msgstr "গৰাকীয়ে ইতিমধ্যে অন্য বিতৰণকাৰীৰ পৰা ইমপোৰ্ট কৰিছে"
 
-#: src/main/java/org/candlepin/sync/Importer.java:141
+#: src/main/java/org/candlepin/sync/Importer.java:144
 msgid "Wrong metadata type"
 msgstr "ভুল মেটাডাটাৰ ধৰণ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:150
+#: src/main/java/org/candlepin/sync/Importer.java:153
 msgid "Invalid owner"
 msgstr "অবৈধ অধিকাৰী"
 
-#: src/main/java/org/candlepin/sync/Importer.java:162
+#: src/main/java/org/candlepin/sync/Importer.java:165
 msgid "Import is older than existing data"
 msgstr "ইমপোৰ্ট কৰা তথ্য উপস্থিত তথ্যত কে পুৰনি"
 
-#: src/main/java/org/candlepin/sync/Importer.java:207
-#: src/main/java/org/candlepin/sync/Importer.java:216
-#, 
-msgid "This distributor has already been imported by another owner"
-msgstr ""
-
+#: src/main/java/org/candlepin/sync/Importer.java:210
 #: src/main/java/org/candlepin/sync/Importer.java:219
-#, 
-msgid "Failed to import archive"
-msgstr ""
+msgid "This distributor has already been imported by another owner"
+msgstr "এই বিতৰণকাৰীক ইতিমধ্যে অন্য গৰাকী দ্বাৰা ইমপোৰ্ট কৰা হৈছে"
 
-#: src/main/java/org/candlepin/sync/Importer.java:306
+#: src/main/java/org/candlepin/sync/Importer.java:222
+msgid "Failed to import archive"
+msgstr "আৰ্কাইভ ইমপোৰ্ট কৰিবলে ব্যৰ্থ"
+
+#: src/main/java/org/candlepin/sync/Importer.java:319
 #, java-format
 msgid "Incompatible rules: import version {0} older than our version {1}."
 msgstr ""
 "খাপ নখোৱা নিয়মসমূহ: আমাৰ সংস্কৰণ {1} কে পুৰনি সংস্কৰণ {0} ইমপোৰ্ট কৰক।"
 
-#: src/main/java/org/candlepin/sync/Importer.java:309
+#: src/main/java/org/candlepin/sync/Importer.java:322
 msgid "Manifest data will be imported without rules import."
 msgstr "মেনিফেস্ট তথ্য নিয়মসমূহ ইমপোৰ্ট নকৰাকৈ ইমপোৰ্ট কৰা হব।"
 
 #: src/main/java/org/candlepin/sync/EntitlementImporter.java:119
-#, 
 msgid "Unable to find product with ID: "
-msgstr ""
+msgstr "ID ৰ সৈতে উৎপাদন বিচাৰিবলে অক্ষম:"
 
-#: src/main/java/org/candlepin/controller/Entitler.java:77
+#: src/main/java/org/candlepin/controller/Entitler.java:80
 #, java-format
 msgid "Subscription pool {0} does not exist."
 msgstr "স্বাক্ষৰণ পুল {0} অস্তিত্ববান নহয়।"
 
-#: src/main/java/org/candlepin/controller/Entitler.java:104
+#: src/main/java/org/candlepin/controller/Entitler.java:107
 #, java-format
 msgid ""
 "This consumer is already subscribed to the product matching pool with id "
@@ -81,65 +77,65 @@ msgstr ""
 "এইজন উপভোক্তা ইতিমধ্যে আইডি ''{0}'' -ৰ সৈতে উৎপাদন মিল খোৱা পুলৰ লগত "
 "স্বাক্ষৰীত।"
 
-#: src/main/java/org/candlepin/controller/Entitler.java:109
+#: src/main/java/org/candlepin/controller/Entitler.java:112
 #, java-format
-msgid "No free entitlements are available for the pool with id ''{0}''."
-msgstr "আইডি ''{0}'' -ৰ সৈতে কোনো বিনামূলীয়া অনুজ্ঞা উপলব্ধ নাই।"
+msgid "No entitlements are available from the pool with id ''{0}''."
+msgstr ""
 
-#: src/main/java/org/candlepin/controller/Entitler.java:114
+#: src/main/java/org/candlepin/controller/Entitler.java:117
 #, java-format
 msgid ""
 "Consumers of this type are not allowed to subscribe to the pool with id "
 "''{0}''."
 msgstr "এইধৰণৰ উপভোক্তাক আইডি ''{0}'' -ৰ সৈতে পুললে স্বাক্ষৰ কৰাৰ অনুমতি নাই।"
 
-#: src/main/java/org/candlepin/controller/Entitler.java:118
+#: src/main/java/org/candlepin/controller/Entitler.java:121
 #, java-format
 msgid "Multi-entitlement not supported for pool with id ''{0}''."
 msgstr "আইডি ''{0}'' -ৰ সৈতে পুলৰ বাবে বহু-অনুজ্ঞা সমৰ্থিত নহয়।"
 
-#: src/main/java/org/candlepin/controller/Entitler.java:122
+#: src/main/java/org/candlepin/controller/Entitler.java:125
 #, java-format
 msgid "Guest''s host does not match owner of pool: ''{0}''."
 msgstr "অতিথিৰ হস্ট পুলৰ গৰাকীৰ সৈতে মিল নাখায়: ''{0}''।"
 
-#: src/main/java/org/candlepin/controller/Entitler.java:126
+#: src/main/java/org/candlepin/controller/Entitler.java:129
 #, java-format
 msgid "Pool not available to manifest consumers: ''{0}''."
 msgstr "উপভোক্তাসমূহক মেনিফেস্ট কৰিবলে পুল উপলব্ধ নহয়: ''{0}''।"
 
-#: src/main/java/org/candlepin/controller/Entitler.java:130
+#: src/main/java/org/candlepin/controller/Entitler.java:133
 #, java-format
 msgid "Pool is restricted to virtual guests: ''{0}''."
 msgstr "পুল ভাৰছুৱেল অতিথিসমূহৰ বাবে সংৰক্ষীত: ''{0}''।"
 
-#: src/main/java/org/candlepin/controller/Entitler.java:134
+#: src/main/java/org/candlepin/controller/Entitler.java:137
 #, java-format
 msgid "Unable to entitle consumer to the pool with id ''{0}''.: {1}"
 msgstr "আইডি ''{0}'' -ৰ সৈতে উপভোক্তাক পুললে অনুজ্ঞা কৰিবলে অক্ষম: {1}"
 
-#: src/main/java/org/candlepin/controller/Entitler.java:176
+#: src/main/java/org/candlepin/controller/Entitler.java:179
 #, java-format
 msgid "This consumer is already subscribed to the product ''{0}''"
 msgstr "এইজন উপভোক্তা ইতিমধ্যে উৎপাদন ''{0}'' -লে স্বাক্ষৰীত"
 
-#: src/main/java/org/candlepin/controller/Entitler.java:180
+#: src/main/java/org/candlepin/controller/Entitler.java:183
 #, java-format
 msgid ""
 "There are not enough free entitlements available for the product ''{0}''"
 msgstr "উৎপাদন ''{0}'' -ৰ বাবে পৰ্যাপ্ত বিনামূলীয়া অনুজ্ঞাসমূহ উপলব্ধ নাই"
 
-#: src/main/java/org/candlepin/controller/Entitler.java:184
+#: src/main/java/org/candlepin/controller/Entitler.java:187
 #, java-format
 msgid "Consumers of this type are not allowed to the product ''{0}''"
 msgstr "এইধৰণৰ উপভোক্তাসকলক উৎপাদন ''{0}'' কাৰণে আজ্ঞা দিয়া নহয়"
 
-#: src/main/java/org/candlepin/controller/Entitler.java:189
+#: src/main/java/org/candlepin/controller/Entitler.java:192
 #, java-format
 msgid "Only virtual systems can consume the product ''{0}''"
 msgstr "উৎপাদন ''{0}'' -ক কেৱল ভাৰছুৱেল চিস্টেমসমূহে উপভোগ কৰিব পাৰিব "
 
-#: src/main/java/org/candlepin/controller/Entitler.java:194
+#: src/main/java/org/candlepin/controller/Entitler.java:197
 #, java-format
 msgid "Unable to entitle consumer to the product ''{0}'': {1}"
 msgstr "উপভোক্তাজনক উৎপাদন ''{0}'' -লে অনুজ্ঞা দিবলে অক্ষম: {1}"
@@ -148,12 +144,12 @@ msgstr "উপভোক্তাজনক উৎপাদন ''{0}'' -লে অ
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:114
 #, java-format
 msgid "No such environment: {0}"
-msgstr ""
+msgstr "এনে কোনো পৰিৱেশ নাই: {0}"
 
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:235
 #, java-format
 msgid "No such environment : {0}"
-msgstr ""
+msgstr "এনে কোনো পৰিৱেশ নাই: {0}"
 
 #: src/main/java/org/candlepin/resource/RoleResource.java:82
 #, java-format
@@ -233,7 +229,7 @@ msgstr "অধিসূচনাৰ বাবে ই-মেইল স্থা�
 
 #: src/main/java/org/candlepin/resource/SubscriptionResource.java:152
 #: src/main/java/org/candlepin/resource/OwnerResource.java:697
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1147
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1218
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:120
 #, java-format
 msgid "No such consumer: {0}"
@@ -282,7 +278,7 @@ msgid "Activation key name ["
 msgstr "সক্ৰিয়কৰণ চাবি নাম ["
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:545
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:541
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:547
 #: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:122
 #, java-format
 msgid "No such consumer type: {0}"
@@ -378,129 +374,127 @@ msgstr "ব্যৱহাৰকাৰী {0} -এ সকলো পুল অভ
 msgid "Entitlement Pool with ID ''{0}'' could not be found"
 msgstr "ID ''{0}'' -ৰ সৈতে অনুজ্ঞা পুল পোৱা নাযায়"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:204
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:205
 #, java-format
 msgid "Organization with key: {0} was not found."
 msgstr "চাবি: {0} -ৰ সৈতে সংঘঠন পোৱা নগল।"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:272
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:273
 msgid "Insufficient permissions"
 msgstr "অপৰ্যাপ্ত অনুমতিসমূহ"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:278
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:279
 msgid "Must specify an org to register with activation keys."
 msgstr ""
 "সক্ৰিয়কৰণ চাবিসমূহৰ সৈতে ৰেজিস্টাৰ কৰিবলে এটা সংঘঠন ধাৰ্য্য কৰিব লাগিব।"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:282
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:283
 msgid "Cannot specify username with activation keys."
 msgstr "সক্ৰিয়কৰণ চাবিৰ সৈতে ব্যৱহাৰকাৰীনাম ধাৰ্য্য কৰিব নোৱাৰি।"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:288
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:289
 msgid "System name cannot contain most special characters."
 msgstr "চিস্টেম নামত সৰহভাগ বিশেষ আখৰসমূহ থাকিব নোৱাৰিব।"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:294
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:295
 msgid "System name cannot begin with # character"
 msgstr "চিস্টেম নাম # আখৰৰ সৈতে আৰম্ভ হব নোৱাৰে"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:316
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:317
 msgid "A consumer type of 'person' cannot be used with activation keys"
 msgstr "'person' ধৰণৰ এজন গ্ৰাহক সক্ৰিয়কৰণ চাবিসমূহৰ সৈতে ব্যৱহাৰ কৰিব নোৱাৰি"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:358
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:362
 msgid "Pool ID must be provided"
 msgstr "পুল ID দি থোৱা হ'ব লাগিব"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:383
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:387
 #, java-format
 msgid "Problem creating consumer {0}"
 msgstr "ব্যৱহাৰকাৰী {0} সৃষ্টি কৰোতে সমস্যা"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:394
-#, 
-msgid ""
-"Cannot set a service level for a consumer that is not available to its "
-"organization."
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:399
+#, java-format
+msgid "Service level {0} is not available to consumers of organization {1}."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:425
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:431
 #, java-format
 msgid "Activation key ''{0}'' not found for organization ''{1}''."
 msgstr "সংঘঠন ''{1}'' -ৰ বাবে সক্ৰিয়কৰণ চাবি ''{0}'' পোৱা নগল।"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:447
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:453
 #, java-format
 msgid "User {0} has no roles for organization {1}"
 msgstr "ব্যৱহাৰকাৰী {0} -ৰ সংঘঠন {1} -ৰ বাবে কোনো ভূমিকা নাই"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:459
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:465
 #, java-format
 msgid "User {0} has already registered a personal consumer"
 msgstr "ব্যৱহাৰকাৰী {0} -এ ইতিমধ্যে এজন ব্যক্তিগত উপভোক্তা ৰেজিস্টাৰ কৰি লৈছে"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:476
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:482
 msgid "You must specify an organization for new consumers."
 msgstr "নতুন উপভোক্তাসমূহৰ বাবে আপুনি এটা সংঘঠন ধাৰ্য্য কৰিব লাগিব।"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:487
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:493
 #, java-format
 msgid "Organization {0} does not exist."
 msgstr "সংঘঠন {0} -ৰ অস্তিত্ব নাই।"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:494
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:500
 #, java-format
 msgid "User {0} cannot access organization {1}"
 msgstr "ব্যৱহাৰকাৰী {0} -য় সংঘঠন {1} অভিগম কৰিব নোৱাৰে"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:866
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:887
 #, java-format
 msgid "Cannot unregister {0} consumer {1} because: {2}"
 msgstr "উপভোক্তা {1} -ক আনৰেজিস্টাৰ {0} কৰিব নোৱাৰি কাৰণ: {2}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:949
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:970
 msgid "Unable to create entitlement archive"
 msgstr "অনুজ্ঞা আৰ্কাইভ সৃষ্টি কৰিবলে অক্ষম"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1058
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1069
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1079
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1090
 msgid "Cannot bind by multiple parameters."
 msgstr "কেইবাটাও প্ৰাচলৰে বান্ধিব নোৱাৰি।"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1063
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1084
 msgid "Cannot specify a quantity when auto-binding."
 msgstr "স্বচালিতভাৱে-বান্ধী থাকোতে এটা পৰিমাণ ধাৰ্য্য কৰিব নোৱাৰি।"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1131
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1153
 #, java-format
 msgid "Asked to be subscribed to a product that has no pool: {0} "
 msgstr "এটা উৎপাদন যাৰ কোনো পুল: {0} নাই তাৰ সৈতে স্বাক্ষৰ কৰিবলে সোধা হৈছে"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1157
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1228
 #, java-format
 msgid "No such entitlement: {0}"
 msgstr "এনে কোনো অনুজ্ঞা: {0} নাই"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1180
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1251
 #, java-format
 msgid "No such product: {0}"
 msgstr "এনে কোনো উৎপাদন: {0} নাই"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1223
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1294
 msgid "Consumer with ID "
 msgstr "উপভোক্তা যাৰ ID "
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1260
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1331
 #, java-format
 msgid "Entitlement with ID ''{0}'' could not be found."
 msgstr "ID ''{0}'' -ৰ সৈতে অনুজ্ঞা পোৱা নগল।"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1284
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1355
 #, java-format
 msgid "Entitlement Certificate with serial number {0} could not be found."
 msgstr "ক্ৰমিক নম্বৰ {0} থকা অনুজ্ঞা পত্ৰ পোৱা নগল।"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1345
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1416
 #, java-format
 msgid ""
 "Consumer {0} cannot be exported. A manifest cannot be made for consumer of "
@@ -509,16 +503,16 @@ msgstr ""
 "উপভোক্তা {0} -ক এক্সপোৰ্ট কৰিব নোৱাৰি। ধৰণ ''{1}'' -ৰ উপভোক্তাৰ বাবে এটা "
 "ব্যক্ত নিৰ্মাণ কৰিব নোৱাৰি।"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1360
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1431
 msgid "Unable to create export archive"
 msgstr "এক্সপোৰ্ট সাঁচনি সৃষ্টি কৰিবলে অক্ষম"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1393
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1464
 #, java-format
 msgid "Problem regenerating id cert for consumer {0}"
 msgstr "উপভোক্তা {0} -ৰ বাবে আই-ডি চাৰ্ট পুনৰ সৃজন কৰিবলে সমস্যা"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1460
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1531
 #, java-format
 msgid "The consumer with UUID {0} is not a virtual guest."
 msgstr "UUID {0} -ৰ সৈতে উপভোক্তা এজন ভাৰছুৱেল অতিথি নহয়।"
@@ -605,12 +599,12 @@ msgstr "বেয়া অনুৰোধ"
 msgid "No product found for product id {0}"
 msgstr "উৎপাদন আই-ডি {0} -ৰ কাৰণে কোনো উৎপাদন পোৱা নগল"
 
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:86
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:96
 #, java-format
 msgid "Name of the consumer should be shorter than {0} characters."
 msgstr "উপভোক্তাজনৰ নাম {0} আখৰতকে সৰু হ'ব লাগিব।"
 
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:343
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:353
 #, java-format
 msgid ""
 "The consumer with UUID {0} is a virtual guest. It does not have guests."
@@ -621,6 +615,11 @@ msgid "Unable to verify request."
 msgstr "অনুৰোধ সতাসত্য নিৰূপণ কৰিবলে অক্ষম।"
 
 #: src/main/java/org/candlepin/auth/interceptor/SecurityInterceptor.java:202
+#, 
+msgid "Organization"
+msgstr ""
+
+#: src/main/java/org/candlepin/auth/interceptor/SecurityInterceptor.java:207
 #, java-format
 msgid "{0} with id {1} could not be found"
 msgstr "আইডি {1} -ৰ সৈতে {0} পোৱা নাযায়"
@@ -761,17 +760,17 @@ msgstr "{0} -এ অথিথি আইডি {1} সৃষ্টি কৰি�
 msgid "{0} deleted the guest id {1}"
 msgstr "{0} -এ অতিথি আইডি {1} মচি পেলালে"
 
-#: src/main/java/org/candlepin/policy/js/entitlement/AbstractEntitlementRules.java:158
+#: src/main/java/org/candlepin/policy/js/entitlement/AbstractEntitlementRules.java:159
 #, java-format
 msgid "''{0}'' Should contain name, priority and at least one attribute"
 msgstr ""
 "''{0}'' -এ নাম, প্ৰাথমিকতা আৰু অন্তত এটা বৈশিষ্ট অন্তৰ্ভুক্ত কৰিব লাগিব"
 
-#: src/main/java/org/candlepin/policy/js/entitlement/AbstractEntitlementRules.java:173
+#: src/main/java/org/candlepin/policy/js/entitlement/AbstractEntitlementRules.java:174
 msgid "second parameter should be the priority number."
 msgstr "দ্বিতীয় প্ৰাচল প্ৰাথমিক নম্বৰ হ'ব লাগিব।"
 
-#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:86
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:87
 #, java-format
 msgid "Entitlements for {0} expired on: {1}"
 msgstr "{0} -ৰ বাবে থকা অনুজ্ঞাসমূহ: {1} -ত অৱসিত হ'ল"
