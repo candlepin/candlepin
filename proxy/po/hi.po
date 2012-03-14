@@ -610,7 +610,7 @@ msgstr "ग्राहकों के नाम {0} वर्ण से कम
 #, java-format
 msgid ""
 "The consumer with UUID {0} is a virtual guest. It does not have guests."
-msgstr "UUID {0} के साथ उपभोक्ता एक आभासी अतिथि है. इसके पास अतिथि नहीं है.\n"
+msgstr "UUID {0} के साथ उपभोक्ता एक आभासी अतिथि है. इसके पास अतिथि नहीं है."
 
 #: src/main/java/org/candlepin/auth/interceptor/SecurityInterceptor.java:193
 msgid "Unable to verify request."
