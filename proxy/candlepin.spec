@@ -11,7 +11,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.5.25
+Version: 0.5.26
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -202,6 +202,10 @@ fi
 
 
 %changelog
+* Wed Mar 14 2012 jesus m. rodriguez <jesusr@redhat.com> 0.5.26-1
+- latest strings from zanata (alikins@redhat.com)
+- add releasever (alikins@redhat.com)
+
 * Wed Mar 14 2012 jesus m. rodriguez <jesusr@redhat.com> 0.5.25-1
 - 800652: Dry-run autobind errors when all pools are unavailable for a consumer (wpoteat@redhat.com)
 - 719743: Modified the error message when there are no entitlements for a pool (bkearney@redhat.com)
