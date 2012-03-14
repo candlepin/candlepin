@@ -539,7 +539,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
      * @return the releaseVer
      */
     public String getReleaseVer() {
-         return releaseVer;
+        return releaseVer;
     }
 
 }

@@ -585,7 +585,7 @@ public class ConsumerResource {
         boolean changesMade = checkForFactsUpdate(toUpdate, updated);
         changesMade = checkForInstalledProductsUpdate(toUpdate, updated) || changesMade;
         changesMade = checkForGuestsUpdate(toUpdate, updated) || changesMade;
- 
+
         // Allow optional setting of the autoheal attribute:
         if (updated.isAutoheal() != null &&
             toUpdate.isAutoheal() != updated.isAutoheal()) {
@@ -595,7 +595,7 @@ public class ConsumerResource {
             toUpdate.setAutoheal(updated.isAutoheal());
             changesMade = true;
         }
-        
+
         if (updated.getReleaseVer() != null) {
             if (log.isDebugEnabled()) {
                 log.debug("   Updating consumer releaseVer setting.");
