@@ -596,6 +596,14 @@ public class ConsumerResource {
             changesMade = true;
         }
 
+        if (updated.getReleaseVer() != null) {
+            if (log.isDebugEnabled()) {
+                log.debug("   Updating consumer releaseVer setting.");
+            }
+            toUpdate.setReleaseVer(updated.getReleaseVer());
+            changesMade = true;
+        }
+
         // Allow optional setting of the service level attribute:
         String level = updated.getServiceLevel();
         if (level != null &&
@@ -1188,10 +1196,10 @@ public class ConsumerResource {
 
         try {
             checkServiceLevel(consumer.getOwner(), serviceLevel);
-            dryRunPools = entitler.getDryRunMap(consumer, serviceLevel);
+            dryRunPools = entitler.getDryRun(consumer, serviceLevel);
         }
         catch (ForbiddenException fe) {
-            throw fe;
+            return dryRunPools;
         }
         catch (BadRequestException bre) {
             throw bre;
@@ -1524,6 +1532,15 @@ public class ConsumerResource {
                 consumer.getUuid()));
         }
         return consumerCurator.getHost(consumer.getFact("virt.uuid"));
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/{consumer_uuid}/release")
+    public String getRelease(
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
+        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        return new String(consumer.getReleaseVer().toString());
     }
 
     /**

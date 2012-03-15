@@ -65,6 +65,10 @@ public class Content extends AbstractHibernateObject {
     @Column(nullable = true)
     private String requiredTags;
 
+    // for selecting Y/Z strean
+    @Column(nullable =  true)
+    private String releaseVer;
+
     // attribute?
     @Column(nullable = true)
     private String gpgUrl;
@@ -225,6 +229,20 @@ public class Content extends AbstractHibernateObject {
 
     public static String ueberContentLabelForProduct(Product p) {
         return p.getId() + "_" + UEBER_CONTENT_NAME;
+    }
+
+    /**
+     * @param releaseVer the releaseVer to set
+     */
+    public void setReleaseVer(String releaseVer) {
+        this.releaseVer = releaseVer;
+    }
+
+    /**
+     * @return the releaseVer
+     */
+    public String getReleaseVer() {
+        return releaseVer;
     }
 
 }
