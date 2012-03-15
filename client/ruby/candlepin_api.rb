@@ -734,6 +734,10 @@ class Candlepin
     get "/jobs?owner=#{owner_key}"
   end
 
+  def get_job(job_id)
+    get "/jobs/#{job_id}"
+  end
+
   def cancel_job(job_id)
     delete "/jobs/#{job_id}"
   end
@@ -743,6 +747,11 @@ class Candlepin
     path = "/owners/#{owner_key}/imports"
     path += "?force=#{force}"
     post_file path, File.new(filename)
+  end
+
+  def undo_import(owner_key)
+    path = "/owners/#{owner_key}/imports"
+    delete(path)
   end
 
   def generate_statistics()
@@ -851,7 +860,8 @@ class Candlepin
   end
 
   def delete(uri)
-    get_client(uri, Net::HTTP::Delete, :delete)[URI.escape(uri)].delete
+    response = get_client(uri, Net::HTTP::Delete, :delete)[URI.escape(uri)].delete
+    return JSON.parse(response.body) unless response.body.empty?
   end
 
   protected

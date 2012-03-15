@@ -774,6 +774,58 @@ public class OwnerResource {
     }
 
     /**
+     * Cleans out all imported subscriptions and triggers a background refresh pools.
+     * Link to an upstream distributor is removed for the owner, so they can import from
+     * another distributor. Other owners can also now import the manifests originally
+     * used in this owner.
+     *
+     * This call does not differentiate between any specific import, it just
+     * destroys all subscriptions with an upstream pool ID, essentially anything from
+     * an import. Custom subscriptions will be left alone.
+     *
+     * Imports do carry rules and product information which is global to the candlepin
+     * server. This import data is *not* undone, we assume that updates to this data
+     * can be safely kept.
+     *
+     * @return the status of the pending job
+     * @httpcode 404
+     * @httpcode 200
+     */
+    @DELETE
+    @Path("{owner_key}/imports")
+    @Produces(MediaType.APPLICATION_JSON)
+    public JobDetail undoImports(
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
+
+        Owner owner = findOwner(ownerKey);
+        log.info("Deleting all subscriptions from manifests for owner: " + ownerKey);
+
+        // In this situation we know we should be querying the curator rather than the
+        // service:
+        List<Subscription> subs = subscriptionCurator.listByOwner(owner);
+        for (Subscription sub : subs) {
+
+            // Subscriptions from manifests will have an upstream pool ID, so only
+            // these should be deleted. Anything else is likely a custom subscription
+            // and needs to be left alone.
+            if (sub.getUpstreamPoolId() != null) {
+                subscriptionCurator.delete(sub);
+            }
+        }
+
+        // Clear out upstream ID so owner can import from other distributors:
+        owner.setUpstreamUuid(null);
+
+        ExporterMetadata metadata = exportCurator.lookupByTypeAndOwner(
+            ExporterMetadata.TYPE_PER_USER, owner);
+        exportCurator.delete(metadata);
+
+
+        // Refresh pools to cleanup entitlements:
+        return RefreshPoolsJob.forOwner(owner);
+    }
+
+    /**
      * @httpcode 400
      * @httpcode 404
      * @httpcode 500

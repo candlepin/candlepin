@@ -51,6 +51,21 @@ module CandlepinMethods
     @owners.delete owner
   end
 
+  # Loop to wait for the given job ID to complete, with timeout.
+  def wait_for_job(job_id, timeout_seconds)
+    states = ['FINISHED', 'CANCELLED', 'FAILED']
+    wait_interval = 2 # seconds
+    total_taken = 0
+    while total_taken < timeout_seconds
+      sleep wait_interval
+      total_taken += wait_interval
+      status = @cp.get_job(job_id)
+      if states.include? status['state']
+        return
+      end
+    end
+  end
+
   # Wrapper for the ruby API's create product. Products do not get cleaned
   # up when an owner is deleted so we will need to track them.
   def create_product(id=nil, name=nil, params={})
