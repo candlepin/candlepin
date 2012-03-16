@@ -701,7 +701,9 @@ public class OwnerResource {
     }
 
     /**
-     * expose updates for owners
+     * Update an owner.
+     *
+     * To un-set the defaultServiceLevel for an owner, submit an empty string.
      *
      * @param key
      * @param owner
@@ -716,12 +718,41 @@ public class OwnerResource {
     public Owner updateOwner(@PathParam("owner_key") @Verify(Owner.class) String key,
         Owner owner) {
         Owner toUpdate = findOwner(key);
-        log.debug("Updating");
+        log.debug("Updating owner: " + key);
+
+        // TODO: support requests that do not specify all properties, only those to be
+        // modified.
         toUpdate.setDisplayName(owner.getDisplayName());
         toUpdate.setKey(owner.getKey());
         toUpdate.setParentOwner(owner.getParentOwner());
+
+        // Make sure we don't wipe out the service level if none was included in the
+        // request. Interpret empty string as a signal to clear the default service
+        // level.
+        if (owner.getDefaultServiceLevel() != null) {
+            if (owner.getDefaultServiceLevel().equals("")) {
+                toUpdate.setDefaultServiceLevel(null);
+            }
+            else {
+                checkServiceLevel(toUpdate, owner.getDefaultServiceLevel());
+                toUpdate.setDefaultServiceLevel(owner.getDefaultServiceLevel());
+            }
+        }
+
         ownerCurator.merge(toUpdate);
         return toUpdate;
+    }
+
+    private void checkServiceLevel(Owner owner, String serviceLevel)
+        throws BadRequestException {
+        if (!poolCurator.retrieveServiceLevelsForOwner(owner)
+             .contains(serviceLevel)) {
+            throw new BadRequestException(
+                i18n.tr(
+                    "Service level {0} is not available " +
+                    "to consumers of organization {1}.",
+                    serviceLevel, owner.getKey()));
+        }
     }
 
     /**

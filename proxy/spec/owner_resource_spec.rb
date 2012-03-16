@@ -112,6 +112,38 @@ describe 'Owner Resource' do
     new_owner.key.should == owner.key
   end
 
+  it "lets owners update their default service level" do
+    owner = create_owner random_string("test_owner2")
+    owner_key = owner['key']
+    owner['defaultServiceLevel'].should be_nil
+
+    # Create a subscription with a service level so we have
+    # something available:
+    product1 = create_product(random_string("test_id"),
+      random_string("test_name"),
+      {:attributes => {:support_level => 'VIP'}})
+    @cp.create_subscription(owner['key'], product1.id, 10)
+    @cp.refresh_pools(owner['key'])
+
+    # Set an initial service level:
+    owner['defaultServiceLevel'] = 'VIP'
+    @cp.update_owner(owner_key, owner)
+    new_owner = @cp.get_owner(owner_key)
+    new_owner['defaultServiceLevel'].should == 'VIP'
+
+    # Try setting a service level not available in the org:
+    owner['defaultServiceLevel'] = 'TooElite'
+    lambda do
+      @cp.update_owner(owner_key, owner)
+    end.should raise_exception(RestClient::BadRequest)
+
+    # Make sure we can 'unset' with empty string:
+    owner['defaultServiceLevel'] = ''
+    @cp.update_owner(owner_key, owner)
+    new_owner = @cp.get_owner(owner_key)
+    new_owner['defaultServiceLevel'].should be_nil
+  end
+
   it "updates consumed entitlement count" do
     #TODO put this into candlepin_api.rb if others want to use it
     def stats_helper(owner, expected_available, expected_consumed)

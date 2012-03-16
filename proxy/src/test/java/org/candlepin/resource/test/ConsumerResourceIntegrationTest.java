@@ -47,6 +47,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerPermission;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
 import org.candlepin.pki.PKIReader;
@@ -85,6 +86,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
     private User someuser;
 
+    private static final String DEFAULT_SERVICE_LEVEL = "VIP";
+
     @Override
     protected Module getGuiceOverrideModule() {
         return new ProductCertCreationModule();
@@ -100,6 +103,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         personType = consumerTypeCurator.create(new ConsumerType(
             ConsumerTypeEnum.PERSON));
         owner = ownerCurator.create(new Owner("test-owner"));
+        owner.setDefaultServiceLevel(DEFAULT_SERVICE_LEVEL);
         ownerCurator.create(owner);
 
         someuser = userCurator.create(new User(USER_NAME, "dontcare"));
@@ -116,11 +120,12 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         consumerCurator.create(consumer);
 
         product = TestUtil.createProduct();
+        product.addAttribute(new ProductAttribute("support_level", DEFAULT_SERVICE_LEVEL));
         productCurator.create(product);
 
         pool = createPoolAndSub(owner, product, 10L,
             TestDateUtil.date(2010, 1, 1), TestDateUtil.date(2020, 12, 31));
-        poolCurator.create(pool);
+
     }
 
     @Test
@@ -176,6 +181,21 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         assertEquals(standardSystemType.getLabel(), submitted.getType()
             .getLabel());
         assertEquals(METADATA_VALUE, submitted.getFact(METADATA_NAME));
+    }
+
+    @Test
+    public void testCreateConsumerVsDefaultServiceLevelForOwner() {
+        Consumer toSubmit = new Consumer(CONSUMER_NAME, USER_NAME, null,
+            standardSystemType);
+        Consumer submitted = consumerResource.create(
+            toSubmit,
+            new UserPrincipal(someuser.getUsername(), Arrays.asList(new Permission [] {
+                new OwnerPermission(owner, Access.ALL) }), false),
+            someuser.getUsername(),
+            owner.getKey(), null);
+
+        assertEquals(DEFAULT_SERVICE_LEVEL, submitted.getServiceLevel());
+
     }
 
     @Test(expected = BadRequestException.class)

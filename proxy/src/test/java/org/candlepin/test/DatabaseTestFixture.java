@@ -56,9 +56,11 @@ import org.candlepin.model.OwnerPermissionCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductAttributeCurator;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.model.ProductPoolAttribute;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Role;
 import org.candlepin.model.RoleCurator;
@@ -270,6 +272,10 @@ public class DatabaseTestFixture {
             TestUtil.createDate(2010, 2, 12));
         subCurator.create(sub);
         p.setSubscriptionId(sub.getId());
+        for (ProductAttribute pa : product.getAttributes()) {
+            p.addProductAttribute(new ProductPoolAttribute(pa.getName(),
+                pa.getValue(), product.getId()));
+        }
         return poolCurator.create(p);
     }
 

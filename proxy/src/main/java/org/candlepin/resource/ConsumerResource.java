@@ -331,6 +331,12 @@ public class ConsumerResource {
             consumer.setServiceLevel("");
         }
 
+        // If no service level was specified, and the owner has a default set, use it:
+        if (consumer.getServiceLevel().equals("") &&
+            owner.getDefaultServiceLevel() != null) {
+            consumer.setServiceLevel(owner.getDefaultServiceLevel());
+        }
+
         logNewConsumerDebugInfo(consumer, keys, type);
 
         if (consumer.getInstalledProducts() != null) {
