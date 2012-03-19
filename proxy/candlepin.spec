@@ -77,6 +77,7 @@ Requires: oauth
 Requires: rhino
 Requires: quartz
 Requires: log4j
+Requires: jaxb_api
 #Requires: bouncycastle
 %define __jar_repack %{nil}
 
