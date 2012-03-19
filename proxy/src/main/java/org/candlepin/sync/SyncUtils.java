@@ -22,6 +22,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
+import org.codehaus.jackson.map.ser.impl.SimpleFilterProvider;
 import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
@@ -49,11 +50,12 @@ class SyncUtils {
         AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
         AnnotationIntrospector pair = new AnnotationIntrospector.Pair(primary, secondary);
 
-        mapper.getSerializationConfig().setAnnotationIntrospector(pair);
-        mapper.getDeserializationConfig().setAnnotationIntrospector(pair);
-        mapper.getSerializationConfig().set(
-            SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS,
-            false);
+        mapper.setAnnotationIntrospector(pair);
+        mapper.configure(SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS, false);
+
+        SimpleFilterProvider filterProvider = new SimpleFilterProvider();
+        filterProvider.setFailOnUnknownId(false);
+        mapper.setFilters(filterProvider);
 
         if (config != null) {
             mapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES,

@@ -32,6 +32,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.candlepin.jackson.HateoasField;
+import org.codehaus.jackson.map.annotate.JsonFilter;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
@@ -58,6 +60,7 @@ import org.hibernate.annotations.Index;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_entitlement")
+@JsonFilter("ApiHateoas")
 public class Entitlement extends AbstractHibernateObject implements Linkable, Owned {
 
     private static final long serialVersionUID = 1L;
@@ -110,6 +113,7 @@ public class Entitlement extends AbstractHibernateObject implements Linkable, Ow
      * @return the id
      */
     @Override
+    @HateoasField
     public String getId() {
         return id;
     }
@@ -209,7 +213,6 @@ public class Entitlement extends AbstractHibernateObject implements Linkable, Ow
     /**
      * @return return the associated Consumer
      */
-    @XmlTransient
     public Consumer getConsumer() {
         return consumer;
     }
@@ -248,6 +251,7 @@ public class Entitlement extends AbstractHibernateObject implements Linkable, Ow
             ", consumer= " + (consumer == null ? "null" : consumer.getUuid()) + "]";
     }
 
+    @HateoasField
     public String getHref() {
         return "/entitlements/" + getId();
     }

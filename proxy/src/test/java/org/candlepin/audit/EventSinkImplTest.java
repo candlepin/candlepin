@@ -18,15 +18,16 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
-import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.doReturn;
+import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import org.mockito.ArgumentCaptor;
 
 import java.util.ArrayList;
 
@@ -48,7 +49,6 @@ import org.hornetq.api.core.client.ClientSessionFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
@@ -123,6 +123,17 @@ public class EventSinkImplTest {
         fail("Runtime exception should have been thrown.");
     }
 
+    @Test
+    public void sendEventShouldSendMessageOnProperEventInput() throws Exception {
+        final String content = "Simple String";
+        doReturn(content).when(mapper).writeValueAsString(anyObject());
+        ArgumentCaptor<ClientMessage> argumentCaptor = ArgumentCaptor
+            .forClass(ClientMessage.class);
+        eventSinkImpl.sendEvent(mock(Event.class));
+        verify(mockClientProducer).send(argumentCaptor.capture());
+        assertEquals(content, argumentCaptor.getValue().getBodyBuffer()
+            .readString());
+    }
 
     @Test
     public void sendEventShouldNotFailWhenObjectMapperThrowsException()
@@ -133,19 +144,6 @@ public class EventSinkImplTest {
 
         eventSinkImpl.sendEvent(event);
         verify(mockClientProducer, never()).send(any(ClientMessage.class));
-    }
-
-    @Test
-    public void sendEventShouldSendMessageOnProperEventInput()
-        throws Exception {
-        final String content = "Simple String";
-        doReturn(content).when(mapper).writeValueAsString(anyObject());
-        ArgumentCaptor<ClientMessage> argumentCaptor = ArgumentCaptor
-            .forClass(ClientMessage.class);
-        eventSinkImpl.sendEvent(mock(Event.class));
-        verify(mockClientProducer).send(argumentCaptor.capture());
-        assertEquals(content, argumentCaptor.getValue().getBodyBuffer()
-            .readString());
     }
 
     @Test
