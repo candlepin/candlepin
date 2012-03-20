@@ -97,14 +97,6 @@ HORNETQ = [group('hornetq-core',
 
 
 SCHEMASPY = 'net.sourceforge:schemaSpy:jar:4.1.1'
-AMQP  = [group('qpid-common', 'qpid-client',
-             :under => 'org.apache.qpid', :version => '0.9'),
-         group('mina-core', 'mina-filter-ssl',
-             :under => 'org.apache.mina', :version => '1.0.1'),
-         'backport-util-concurrent:backport-util-concurrent:jar:2.2',
-         'commons-digester:commons-digester:jar:1.8.1',
-         'commons-configuration:commons-configuration:jar:1.6',
-         'geronimo-spec:geronimo-spec-jms:jar:1.1-rc4']
 
 RHINO = 'rhino:js:jar:1.7R2'
 
@@ -174,7 +166,7 @@ define "candlepin" do
   #
   compile.options.target = '1.6'
   compile_classpath = [COMMONS, DB, RESTEASY, LOG4J, HIBERNATE, BOUNCYCASTLE, JDOM,
-    GUICE, DOM4J, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ, SUN_JAXB, MIME4J, AMQP, LDAP, OAUTH, RHINO]
+    GUICE, DOM4J, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ, SUN_JAXB, MIME4J, LDAP, OAUTH, RHINO]
   compile.with compile_classpath
   compile.with LOGDRIVER if Buildr.environment == 'logdriver'
 

@@ -112,13 +112,8 @@ public class HornetqContextListener {
 
         cleanupOldQueues();
 
-        //AMQP integration here - If it is disabled, don't add it to listeners.
         List<String> listeners = Lists.newArrayList(candlepinConfig
             .getStringArray(ConfigProperties.AUDIT_LISTENERS));
-        if (candlepinConfig
-            .getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {
-            listeners.add(AMQPBusPublisher.class.getName());
-        }
 
         eventSource = injector.getInstance(EventSource.class);
         for (int i = 0; i < listeners.size(); i++) {
