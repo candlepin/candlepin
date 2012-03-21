@@ -22,8 +22,6 @@ import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
 import com.google.inject.persist.jpa.JpaPersistModule;
 
-import org.candlepin.audit.AMQPBusEventAdapter;
-import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.EventSink;
 import org.candlepin.audit.EventSinkImpl;
 import org.candlepin.auth.Principal;
@@ -214,13 +212,6 @@ public class CandlepinModule extends AbstractModule {
         requestInjection(securityEnforcer);
         bindInterceptor(resourcePkgMatcher,
                 Matchers.any(), securityEnforcer);
-
-        // AMQP stuff:
-        bind(Function.class).annotatedWith(Names.named("abc"))
-                .to(AMQPBusEventAdapter.class).in(Singleton.class);
-      // for lazy loading:
-        bind(AMQPBusPublisher.class).toProvider(AMQPBusPubProvider.class)
-                .in(Singleton.class);
 
         // flexible end date for identity certificates
         bind(Function.class).annotatedWith(Names.named("endDateGenerator"))

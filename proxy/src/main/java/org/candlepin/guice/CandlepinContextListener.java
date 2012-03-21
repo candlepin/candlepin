@@ -37,12 +37,8 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
 
-import org.candlepin.audit.AMQPBusPublisher;
 import org.candlepin.audit.HornetqContextListener;
-import org.candlepin.config.Config;
-import org.candlepin.config.ConfigProperties;
 import org.candlepin.pinsetter.core.PinsetterContextListener;
-import org.candlepin.util.Util;
 
 /**
  * Customized Candlepin version of
@@ -92,14 +88,6 @@ public class CandlepinContextListener extends
     public void contextDestroyed(ServletContextEvent event) {
         hornetqListener.contextDestroyed();
         pinsetterListener.contextDestroyed();
-        Config config = injector.getInstance(Config.class);
-        //if amqp is enabled, close all connections.
-        if (config.getBoolean(ConfigProperties.AMQP_INTEGRATION_ENABLED)) {
-            Util.closeSafely(injector.getInstance(AMQPBusPublisher.class),
-                "AMQPBusPublisher");
-            Util.closeSafely(injector.getInstance(AMQPBusPubProvider.class),
-                "AMQPBusPubProvider");
-        }
     }
 
     /**

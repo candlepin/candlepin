@@ -14,22 +14,14 @@
  */
 package org.candlepin.audit;
 
-import java.util.List;
-
-import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.AnnotationIntrospector;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.ObjectWriter;
-import org.codehaus.jackson.map.SerializationConfig;
-import org.codehaus.jackson.map.SerializerProvider;
-import org.codehaus.jackson.map.introspect.BasicBeanDescription;
 import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
-import org.codehaus.jackson.map.ser.BeanPropertyWriter;
-import org.codehaus.jackson.map.ser.BeanSerializer;
-import org.codehaus.jackson.map.ser.CustomSerializerFactory;
+import org.codehaus.jackson.map.ser.impl.SimpleFilterProvider;
 import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
 import org.candlepin.auth.Principal;
 import org.candlepin.guice.PrincipalProvider;
+import org.candlepin.jackson.HateoasBeanPropertyFilter;
 import org.candlepin.model.ActivationKey;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
@@ -48,23 +40,29 @@ import com.google.inject.Inject;
 public class EventFactory {
     private final PrincipalProvider principalProvider;
     private final ObjectMapper mapper;
-    private final ObjectWriter entitlementWriter;
     private static Logger logger = LoggerFactory.getLogger(EventFactory.class);
 
     @Inject
     public EventFactory(PrincipalProvider principalProvider) {
         this.principalProvider = principalProvider;
 
+        mapper = new ObjectMapper();
+
+        // When serializing entity JSON for events, we want to use a reduced number
+        // of fields nested objects, so enable the event and API HATEOAS filters:
+        SimpleFilterProvider filterProvider = new SimpleFilterProvider();
+        filterProvider.setFailOnUnknownId(false);
+        filterProvider = filterProvider.addFilter("EventHateoas",
+            new HateoasBeanPropertyFilter());
+        filterProvider = filterProvider.addFilter("ApiHateoas",
+            new HateoasBeanPropertyFilter());
+        mapper.setFilters(filterProvider);
+
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
         AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
         AnnotationIntrospector pair = new AnnotationIntrospector.Pair(primary,
             secondary);
-        mapper = new ObjectMapper();
-        mapper.setSerializerFactory(new CandlepinSerializerFactory());
-        mapper.getSerializationConfig().setAnnotationIntrospector(pair);
-        mapper.getDeserializationConfig().setAnnotationIntrospector(pair);
-        this.entitlementWriter = mapper.viewWriter(Event.Target.ENTITLEMENT
-            .getClass());
+        mapper.setAnnotationIntrospector(pair);
     }
 
     public Event consumerCreated(Consumer newConsumer) {
@@ -132,7 +130,7 @@ public class EventFactory {
     }
 
     private Event entitlementEvent(Entitlement e, Event.Type type) {
-        String json = serializeEntitlement(e);
+        String json = entityToJson(e);
         String old = null, latest = null;
         Owner owner = e.getOwner();
         if (type == Event.Type.DELETED) {
@@ -145,21 +143,6 @@ public class EventFactory {
             .getProductName(), principalProvider.get(), owner.getId(), e
             .getConsumer().getId(), e.getId(), old, latest,
             e.getPool().getId(), Event.ReferenceType.POOL);
-    }
-
-    /**
-     * @param e
-     * @return
-     */
-    private String serializeEntitlement(Entitlement e) {
-        try {
-            return this.entitlementWriter.writeValueAsString(e);
-        }
-        catch (Exception e1) {
-            logger.warn("Unable to jsonify: {}", e);
-            logger.error("jsonification failed!", e1);
-            return "";
-        }
     }
 
     public Event ownerCreated(Owner newOwner) {
@@ -291,52 +274,9 @@ public class EventFactory {
             newEntityJson = mapper.writeValueAsString(entity);
         }
         catch (Exception e) {
-            e.printStackTrace();
             logger.warn("Unable to jsonify: {}", entity);
             logger.error("jsonification failed!", e);
         }
         return newEntityJson;
-    }
-
-    /**
-     * ConsumerWriter
-     */
-    private static class ConsumerWriter extends BeanPropertyWriter {
-        public ConsumerWriter() {
-            // ignore other nulls for now - we are not using it internally.
-            super("consumerWriter", null, null, null, null, null, false, null);
-        }
-
-        @Override
-        public void serializeAsField(Object bean, JsonGenerator jgen,
-            SerializerProvider prov) throws Exception {
-            if (prov.getSerializationView().equals(
-                Event.Target.ENTITLEMENT.getClass())) {
-                Consumer consumer = ((Entitlement) bean).getConsumer();
-                jgen.writeObjectFieldStart("consumer");
-                jgen.writeStringField("uuid", consumer.getUuid());
-                jgen.writeObjectField("facts", consumer.getFacts());
-                jgen.writeEndObject();
-            }
-        }
-    }
-
-    private static class CandlepinSerializerFactory extends
-        CustomSerializerFactory {
-
-        @Override
-        protected BeanSerializer processViews(SerializationConfig config,
-            BasicBeanDescription beanDesc, BeanSerializer ser,
-            List<BeanPropertyWriter> props) {
-            ser = super.processViews(config, beanDesc, ser, props);
-            // serialize consumer for entitlement objects.
-            if (beanDesc.getBeanClass() == Entitlement.class) {
-                BeanPropertyWriter[] writers = props
-                    .toArray(new BeanPropertyWriter[props.size() + 1]);
-                writers[writers.length - 1] = new ConsumerWriter();
-                ser = ser.withFiltered(writers);
-            }
-            return ser;
-        }
     }
 }

@@ -14,8 +14,10 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.jackson.HateoasField;
 import org.candlepin.util.DateSource;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import org.codehaus.jackson.map.annotate.JsonFilter;
 
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ForeignKey;
@@ -55,6 +57,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @Table(name = "cp_pool", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"subscriptionid", "subscriptionsubkey"})})
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonFilter("EventHateoas")
 public class Pool extends AbstractHibernateObject implements Persisted, Owned {
 
     @Id
@@ -170,6 +173,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
 
     /** {@inheritDoc} */
     @Override
+    @HateoasField
     public String getId() {
         return id;
     }
@@ -276,6 +280,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
      *
      * @return the productName
      */
+    @HateoasField
     public String getProductName() {
         return productName;
     }
@@ -498,6 +503,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
      * See getProvidedProductIds().
      * @return Top level product ID.
      */
+    @HateoasField
     public String getProductId() {
         return productId;
     }
@@ -543,6 +549,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
         return getConsumed() > this.quantity;
     }
 
+    @HateoasField
     public String getHref() {
         return "/pools/" + getId();
     }

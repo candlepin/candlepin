@@ -40,8 +40,10 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.candlepin.jackson.HateoasField;
 import org.candlepin.util.Util;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import org.codehaus.jackson.map.annotate.JsonFilter;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CollectionOfElements;
 import org.hibernate.annotations.ForeignKey;
@@ -64,6 +66,7 @@ import org.hibernate.annotations.MapKeyManyToMany;
 @Entity
 @Table(name = "cp_consumer")
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonFilter("ApiHateoas")
 public class Consumer extends AbstractHibernateObject implements Linkable, Owned {
 
     public static final String UEBER_CERT_CONSUMER = "ueber_cert_consumer";
@@ -182,6 +185,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     /**
      * @return the Consumer's uuid
      */
+    @HateoasField
     public String getUuid() {
         return uuid;
     }
@@ -203,6 +207,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
      * {@inheritDoc}
      */
     @Override
+    @HateoasField
     public String getId() {
         return id;
     }
@@ -225,6 +230,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     /**
      * @return the name of this consumer.
      */
+    @HateoasField
     public String getName() {
         return name;
     }
@@ -430,6 +436,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     }
 
     @Override
+    @HateoasField
     public String getHref() {
         return "/consumers/" + getUuid();
     }

@@ -45,8 +45,7 @@ public class ActivationListener implements EventListener {
         AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
         AnnotationIntrospector pair = new AnnotationIntrospector.Pair(primary, secondary);
         mapper = new ObjectMapper();
-        mapper.getSerializationConfig().setAnnotationIntrospector(pair);
-        mapper.getDeserializationConfig().setAnnotationIntrospector(pair);
+        mapper.setAnnotationIntrospector(pair);
     }
 
     @Override

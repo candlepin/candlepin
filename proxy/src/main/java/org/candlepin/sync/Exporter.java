@@ -122,6 +122,7 @@ public class Exporter {
             return makeArchive(consumer, tmpDir, baseDir);
         }
         catch (IOException e) {
+            log.error("Error generating entitlement export", e);
             throw new ExportCreationException("Unable to create export archive", e);
         }
     }
@@ -140,6 +141,7 @@ public class Exporter {
             return makeArchive(consumer, tmpDir, baseDir);
         }
         catch (IOException e) {
+            log.error("Error generating entitlement export", e);
             throw new ExportCreationException("Unable to create export archive", e);
         }
     }

@@ -25,12 +25,10 @@ import org.codehaus.jackson.map.AnnotationIntrospector;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
 import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
+import org.codehaus.jackson.map.ser.impl.SimpleFilterProvider;
 import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
 import org.candlepin.config.Config;
-import org.candlepin.model.Consumer;
-import org.candlepin.model.Entitlement;
-import org.candlepin.model.Linkable;
-import org.candlepin.model.Owner;
+import org.candlepin.jackson.HateoasBeanPropertyFilter;
 
 /**
  * JsonProvider
@@ -60,24 +58,15 @@ public class JsonProvider extends JacksonJsonProvider {
             mapper.configure(SerializationConfig.Feature.INDENT_OUTPUT, true);
         }
 
-        CandlepinSerializerProvider csp = new CandlepinSerializerProvider();
-        CandlepinSerializerFactory factory = new CandlepinSerializerFactory();
-        Class [] serializeThese = {
-            Consumer.class,
-            Entitlement.class,
-            Owner.class,
-        };
-        for (Class<Linkable> c : serializeThese) {
-            factory.addSpecificMapping(c, new CandlepinSerializer());
-        }
-        mapper.setSerializerFactory(factory);
-        mapper.setSerializerProvider(csp);
+        SimpleFilterProvider filterProvider = new SimpleFilterProvider();
+        filterProvider = filterProvider.addFilter("ApiHateoas",
+            new HateoasBeanPropertyFilter());
+        filterProvider.setFailOnUnknownId(false);
+        mapper.setFilters(filterProvider);
 
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
         AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
         AnnotationIntrospector pair = new AnnotationIntrospector.Pair(primary, secondary);
-
-        mapper.getSerializationConfig().setAnnotationIntrospector(pair);
-        mapper.getDeserializationConfig().setAnnotationIntrospector(pair);
+        mapper.setAnnotationIntrospector(pair);
     }
 }
