@@ -81,6 +81,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
+import org.candlepin.model.Release;
 import org.candlepin.model.User;
 import org.candlepin.pinsetter.tasks.EntitlerJob;
 import org.candlepin.policy.js.compliance.ComplianceRules;
@@ -1543,10 +1544,13 @@ public class ConsumerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{consumer_uuid}/release")
-    public String getRelease(
+    public Release getRelease(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
-        return new String(consumer.getReleaseVer().toString());
+        if (consumer.getReleaseVer() != null) {
+            return consumer.getReleaseVer();
+        }
+        return new Release("");
     }
 
     /**
