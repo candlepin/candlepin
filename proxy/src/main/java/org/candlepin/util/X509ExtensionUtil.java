@@ -39,13 +39,11 @@ import com.google.inject.Inject;
 public class X509ExtensionUtil {
 
     private static Logger log = Logger.getLogger(X509ExtensionUtil.class);
-    private SimpleDateFormat iso8601DateFormat;
     private Config config;
 
     @Inject
     public X509ExtensionUtil(Config config) {
         // Output everything in UTC
-        this.iso8601DateFormat = Util.getUTCDateFormat();
         this.config = config;
     }
 
@@ -65,6 +63,7 @@ public class X509ExtensionUtil {
 
     public Set<X509ExtensionWrapper> subscriptionExtensions(Subscription sub,
         Entitlement ent) {
+        SimpleDateFormat iso8601DateFormat = Util.getUTCDateFormat();
         Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<X509ExtensionWrapper>();
         // Subscription/order info
         // need the sub product name, not id here
