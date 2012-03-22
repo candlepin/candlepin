@@ -42,7 +42,7 @@ BuildRequires: log4j
 BuildRequires: jakarta-commons-lang
 BuildRequires: jakarta-commons-io
 BuildRequires: jakarta-commons-codec
-BuildRequires: codehaus-jackson
+BuildRequires: codehaus-jackson >= 0:1.9.2
 BuildRequires: codehaus-jackson-core-lgpl
 BuildRequires: codehaus-jackson-mapper-lgpl
 BuildRequires: codehaus-jackson-xc
@@ -66,6 +66,7 @@ Requires: hibernate3-entitymanager >= 0:3.4.0
 Requires: c3p0
 Requires: resteasy
 Requires: google-guice
+Requires: codehaus-jackson >= 0:1.9.2
 Requires: codehaus-jackson-xc
 Requires: codehaus-jackson-core-lgpl
 Requires: codehaus-jackson-mapper-lgpl
