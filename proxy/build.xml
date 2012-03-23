@@ -160,11 +160,6 @@
             <include name="**/netty.jar"/>
             <include name="**/jaxb-impl-*.jar"/>
             <include name="**/apache-mime4j-*.jar"/>
-            <include name="**/qpid-common-0.14.jar"/>
-            <include name="**/qpid-client-0.14.jar"/>
-            <!-- not required for qpid 0.14 include name="**/mina-core-*.jar"/ -->
-            <!-- include name="**/mina-filter-ssl-*.jar"/ -->
-            <!-- include name="**/backport-util-concurrent-*.jar"/ -->
             <include name="**/bcprov-jdk16.jar"/>
             <include name="**/commons-digester-*.jar"/>
             <include name="**/commons-configuration-*.jar"/>
@@ -277,8 +272,6 @@
         <include name="**/netty-*.jar"/>
         <include name="**/jaxb-impl-*.jar"/>
         <include name="**/apache-mime4j-*.jar"/>
-        <include name="**/qpid-common-*.jar"/>
-        <include name="**/qpid-client-*.jar"/>
         <include name="**/mina-core-*.jar"/>
         <include name="**/mina-filter-ssl-*.jar"/>
         <include name="**/backport-util-concurrent-*.jar"/>
