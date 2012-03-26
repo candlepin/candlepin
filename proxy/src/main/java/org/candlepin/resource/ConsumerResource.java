@@ -260,6 +260,7 @@ public class ConsumerResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @SecurityHole(noAuth = true)
+    @Transactional
     public Consumer create(Consumer consumer, @Context Principal principal,
         @QueryParam("username") String userName,
         @QueryParam("owner") String ownerKey,
@@ -360,7 +361,7 @@ public class ConsumerResource {
 
             sink.emitConsumerCreated(consumer);
 
-            // TODO: Process activation keys.
+            // Process activation keys.
             for (ActivationKey ak : keys) {
                 for (ActivationKeyPool akp : ak.getPools()) {
                     List<Entitlement> entitlements = null;
@@ -372,7 +373,6 @@ public class ConsumerResource {
 
                     // Trigger events:
                     entitler.sendEvents(entitlements);
-
                 }
             }
 
