@@ -58,6 +58,7 @@ Requires: java >= 0:1.6.0
 Requires: wget
 #Requires: antlr >= 0:2.7.6
 #Requires: aopalliance >= 0:1.0
+Requires: bouncycastle
 Requires: hibernate3 >= 3.3.2
 Requires: hibernate3-annotations >= 0:3.4.0
 Requires: hibernate3-entitymanager >= 0:3.4.0
@@ -76,7 +77,7 @@ Requires: rhino
 Requires: quartz
 Requires: log4j
 Requires: jaxb_api
-#Requires: bouncycastle
+Requires: scannotation
 %define __jar_repack %{nil}
 
 %description
