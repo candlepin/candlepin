@@ -199,7 +199,8 @@ define "candlepin" do
 
     # Join compile classpath with the package jar:
     cp = [project('candlepin').package(:jar)] | compile_classpath
-    Java::Commands.java('org.candlepin.util.ApiCrawler', {:classpath => cp})
+    Java::Commands.java('org.candlepin.util.apicrawl.ApiCrawler',
+                        {:classpath => cp})
 
     classes = artifacts(cp).collect do |a|
       task(a.to_s).invoke
@@ -214,7 +215,7 @@ define "candlepin" do
     # Add in the options as the last arg
     sources << {:name => 'Candlepin API',
                 :classpath => classes,
-                :doclet => 'org.candlepin.util.ApiDoclet',
+                :doclet => 'org.candlepin.util.apicrawl.ApiDoclet',
                 :docletpath => ['target/classes', classes].flatten.join(File::PATH_SEPARATOR),
                 :output => 'target'}
 

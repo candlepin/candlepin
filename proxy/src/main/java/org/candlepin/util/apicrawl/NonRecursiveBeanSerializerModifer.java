@@ -12,11 +12,12 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.util;
+package org.candlepin.util.apicrawl;
 
 import java.lang.reflect.Type;
 import java.util.Set;
 
+import org.candlepin.util.Util;
 import org.codehaus.jackson.map.JsonSerializer;
 import org.codehaus.jackson.map.SerializationConfig;
 import org.codehaus.jackson.map.introspect.BasicBeanDescription;
