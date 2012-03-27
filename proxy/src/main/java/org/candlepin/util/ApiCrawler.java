@@ -30,7 +30,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-import org.codehaus.jackson.JsonNode;
+
 import org.codehaus.jackson.map.JsonMappingException;
 
 import org.codehaus.jackson.map.ObjectMapper;
@@ -49,6 +49,7 @@ public class ApiCrawler {
             .locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
     private List<Class> httpClasses;
     private static final String API_FILE = "target/candlepin_api.json";
+    private NonRecursiveModule dontRecurse;
 
     public ApiCrawler() {
         httpClasses = new LinkedList<Class>();
@@ -56,6 +57,19 @@ public class ApiCrawler {
         httpClasses.add(POST.class);
         httpClasses.add(PUT.class);
         httpClasses.add(DELETE.class);
+
+        // jackson schema generation in the 1.x series breaks when you have a cycle in your
+        // schema graph (ie, owner defines a parent owner. even though they aren't the same instance
+        // in an instantiated object, the class refers to itself).
+        //
+        // This bug isn't likely to get fixed in 1.x, so we work around it by defining this module
+        // that keeps track of seen classes, and when it sees one again, just outputs an empty schema.
+        // We have to reset the seen classes between method generation, so that each REST API
+        // definition will still have a proper toplevel return type.
+        //
+        // for more info, see http://jira.codehaus.org/browse/JACKSON-439
+        dontRecurse = new NonRecursiveModule();
+        mapper.registerModule(dontRecurse);
     }
 
     public void run() throws IOException {
@@ -64,6 +78,10 @@ public class ApiCrawler {
             allApiCalls.addAll(processClass(c));
         }
 
+        // we need a different mapper to write the output, one without our
+        // schema hack module installed.
+        ObjectMapper mapper = new JsonProvider(new Config())
+            .locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
         FileWriter jsonFile = new FileWriter(API_FILE);
         mapper.writeValue(jsonFile, allApiCalls);
         jsonFile.close();
@@ -89,8 +107,9 @@ public class ApiCrawler {
         processQueryParams(m, apiCall);
         processVerifiedParams(m, apiCall);
 
+        dontRecurse.resetSeen();
         try {
-            apiCall.setReturnType(getReturnType(m).getSchemaNode());
+            apiCall.setReturnType(getReturnType(m));
         }
         catch (JsonMappingException e) {
             apiCall.setReturnType(null);
@@ -162,6 +181,10 @@ public class ApiCrawler {
     }
 
     private JsonSchema getReturnType(Method method) throws JsonMappingException {
+        Class<?> returnType = method.getReturnType();
+        if (returnType.equals(Void.TYPE)) {
+            return null;
+        }
         return mapper.generateJsonSchema(method.getReturnType());
     }
 
@@ -178,7 +201,7 @@ public class ApiCrawler {
         private List<String> verifiedParams;
         private List<String> httpVerbs;
         private List<ApiParam> queryParams;
-        private JsonNode returnType;
+        private JsonSchema returnType;
 
         public RestApiCall() {
             httpVerbs = new LinkedList<String>();
@@ -204,11 +227,11 @@ public class ApiCrawler {
             queryParams.add(new ApiParam(name, type));
         }
 
-        public void setReturnType(JsonNode type) {
+        public void setReturnType(JsonSchema type) {
             returnType = type;
         }
 
-        public JsonNode getReturnType() {
+        public JsonSchema getReturnType() {
             return returnType;
         }
 
