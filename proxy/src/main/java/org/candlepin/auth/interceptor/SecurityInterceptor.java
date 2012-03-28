@@ -204,7 +204,7 @@ public class SecurityInterceptor implements MethodInterceptor {
                         log.info("No such entity: " + typeName + " id: " + verifyParam);
 
                         throw new NotFoundException(
-                            i18n.tr("{0} with id {1} could not be found",
+                            i18n.tr("{0} with id {1} could not be found.",
                                 typeName, verifyParam));
                     }
 

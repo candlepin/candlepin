@@ -179,7 +179,7 @@ public class SubscriptionResource {
 
         if (subscription == null) {
             throw new BadRequestException(
-                i18n.tr("Subscription with id {0} could not be found", subscriptionId));
+                i18n.tr("Subscription with id {0} could not be found.", subscriptionId));
         }
         return subscription;
     }

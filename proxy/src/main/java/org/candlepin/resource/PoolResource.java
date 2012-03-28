@@ -189,7 +189,7 @@ public class PoolResource {
         }
 
         throw new NotFoundException(i18n.tr(
-            "Entitlement Pool with ID ''{0}'' could not be found", id));
+            "Entitlement Pool with ID ''{0}'' could not be found.", id));
     }
 
     /**
@@ -206,7 +206,7 @@ public class PoolResource {
         Pool pool = poolCurator.find(id);
         if (pool == null) {
             throw new NotFoundException(i18n.tr(
-                "Entitlement Pool with ID ''{0}'' could not be found", id));
+                "Entitlement Pool with ID ''{0}'' could not be found.", id));
         }
 
         poolManager.deletePool(pool);

@@ -77,7 +77,7 @@ public class ContentResource {
 
         if (content == null) {
             throw new BadRequestException(
-                i18n.tr("Content with id {0} could not be found", contentId));
+                i18n.tr("Content with id {0} could not be found.", contentId));
         }
 
         return content;

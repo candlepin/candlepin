@@ -143,7 +143,7 @@ public class EntitlementResource {
             return toReturn;
         }
         throw new NotFoundException(
-            i18n.tr("Entitlement with ID ''{0}'' could not be found", dbid));
+            i18n.tr("Entitlement with ID ''{0}'' could not be found.", dbid));
     }
 
     /**
@@ -163,7 +163,7 @@ public class EntitlementResource {
             return;
         }
         throw new NotFoundException(
-            i18n.tr("Entitlement with ID ''{0}'' could not be found", dbid));
+            i18n.tr("Entitlement with ID ''{0}'' could not be found.", dbid));
     }
 
     /**
