@@ -59,13 +59,14 @@ public class ApiCrawler {
         httpClasses.add(DELETE.class);
 
         // jackson schema generation in the 1.x series breaks when you have a cycle in your
-        // schema graph (ie, owner defines a parent owner. even though they aren't the same instance
-        // in an instantiated object, the class refers to itself).
+        // schema graph (ie, owner defines a parent owner. even though they aren't the same
+        // instance in an instantiated object, the class refers to itself).
         //
-        // This bug isn't likely to get fixed in 1.x, so we work around it by defining this module
-        // that keeps track of seen classes, and when it sees one again, just outputs an empty schema.
-        // We have to reset the seen classes between method generation, so that each REST API
-        // definition will still have a proper toplevel return type.
+        // This bug isn't likely to get fixed in 1.x, so we work around it by defining this
+        // module that keeps track of seen classes, and when it sees one again, just
+        // outputs an empty schema. We have to reset the seen classes between method
+        // generation, so that each REST API definition will still have a proper toplevel
+        // return type.
         //
         // for more info, see http://jira.codehaus.org/browse/JACKSON-439
         dontRecurse = new NonRecursiveModule();
