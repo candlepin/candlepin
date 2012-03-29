@@ -53,6 +53,11 @@ BuildRequires: jms >= 0:1.1
 BuildRequires: oauth
 BuildRequires: rhino
 BuildRequires: quartz
+# needed to setup runtime deps, not for compilation
+BuildRequires: c3p0
+BuildRequires: hibernate-validator
+BuildRequires: scannotation
+BuildRequires: postgresql-jdbc
 Requires: java >= 0:1.6.0
 #until cpsetup is removed
 Requires: wget
@@ -77,6 +82,7 @@ Requires: rhino
 Requires: quartz
 Requires: log4j
 Requires: jaxb_api
+Requires: postgresql-jdbc
 Requires: scannotation
 %define __jar_repack %{nil}
 
@@ -130,9 +136,10 @@ SELinux policy module supporting candlepin
 
 %prep
 %setup -q
+mkdir -p /tmp/distlibdir/
 
 %build
-ant -Dlibdir=/usr/share/java/ clean package genschema
+ant -Dlibdir=/usr/share/java/ -Ddistlibdir=/tmp/distlibdir/ clean package genschema
 
 cd selinux
 for selinuxvariant in %{selinux_variants}
