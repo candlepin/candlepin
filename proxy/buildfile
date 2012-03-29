@@ -62,7 +62,6 @@ HIBERNATE = ['org.hibernate:hibernate-core:jar:3.3.2.GA',
 DB = 'postgresql:postgresql:jar:9.0-801.jdbc4'
 COMMONS = ['commons-beanutils:commons-beanutils:jar:1.7.0',
            'commons-codec:commons-codec:jar:1.4',
-           'commons-cli:commons-cli:jar:1.2',
            'commons-pool:commons-pool:jar:1.2',
            'commons-dbcp:commons-dbcp:jar:1.2.1',
            'commons-collections:commons-collections:jar:3.1',
