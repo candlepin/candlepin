@@ -55,7 +55,6 @@ BuildRequires: rhino
 BuildRequires: quartz
 # needed to setup runtime deps, not for compilation
 BuildRequires: c3p0
-BuildRequires: hibernate-validator
 BuildRequires: scannotation
 BuildRequires: postgresql-jdbc
 Requires: java >= 0:1.6.0
@@ -136,10 +135,10 @@ SELinux policy module supporting candlepin
 
 %prep
 %setup -q
-mkdir -p /tmp/distlibdir/
+mkdir -p %{_tmppath}/distlibdir/
 
 %build
-ant -Dlibdir=/usr/share/java/ -Ddistlibdir=/tmp/distlibdir/ clean package genschema
+ant -Dlibdir=/usr/share/java/ -Ddistlibdir=%{_tmppath}/distlibdir/ clean package genschema
 
 cd selinux
 for selinuxvariant in %{selinux_variants}
@@ -202,6 +201,7 @@ cd -
 
 %clean
 rm -rf $RPM_BUILD_ROOT
+rm -rf %{_tmppath}/distlibdir
 
 %post selinux
 for selinuxvariant in %{selinux_variants}
