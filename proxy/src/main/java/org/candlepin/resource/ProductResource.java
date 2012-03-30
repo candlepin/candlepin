@@ -107,7 +107,7 @@ public class ProductResource {
         }
 
         throw new NotFoundException(
-            i18n.tr("Product with UUID ''{0}'' could not be found", pid));
+            i18n.tr("Product with UUID ''{0}'' could not be found.", pid));
     }
 
     /**
@@ -126,7 +126,7 @@ public class ProductResource {
 
         if (product == null) {
             throw new NotFoundException(
-                i18n.tr("Product with UUID ''{0}'' could not be found", productId));
+                i18n.tr("Product with UUID ''{0}'' could not be found.", productId));
         }
 
         return prodAdapter.getProductCertificate(product);
@@ -186,7 +186,7 @@ public class ProductResource {
         Product product = prodAdapter.getProductById(pid);
         if (product == null) {
             throw new NotFoundException(
-                i18n.tr("Product with UUID ''{0}'' could not be found", pid));
+                i18n.tr("Product with UUID ''{0}'' could not be found.", pid));
         }
         if (prodAdapter.productHasSubscriptions(product)) {
             throw new BadRequestException(

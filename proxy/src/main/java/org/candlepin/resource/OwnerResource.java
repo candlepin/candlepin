@@ -849,8 +849,10 @@ public class OwnerResource {
 
         ExporterMetadata metadata = exportCurator.lookupByTypeAndOwner(
             ExporterMetadata.TYPE_PER_USER, owner);
+        if (metadata == null) {
+            throw new NotFoundException("No import found for owner " + ownerKey);
+        }
         exportCurator.delete(metadata);
-
 
         // Refresh pools to cleanup entitlements:
         return RefreshPoolsJob.forOwner(owner);
@@ -869,13 +871,15 @@ public class OwnerResource {
     public void importData(@PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @QueryParam("force") @DefaultValue("false") boolean force,
         MultipartInput input) {
+
         Owner owner = findOwner(ownerKey);
 
         try {
             InputPart part = input.getParts().get(0);
             File archive = part.getBody(new GenericType<File>() {
             });
-            log.info("Importing archive: " + archive.getAbsolutePath());
+            log.info("Importing archive " + archive.getAbsolutePath() + " for owner " +
+                       owner.getDisplayName());
             importer.loadExport(owner, archive, force);
 
             sink.emitImportCreated(owner);
@@ -899,6 +903,9 @@ public class OwnerResource {
         catch (CandlepinException e) {
             recordImportFailure(owner, e);
             throw e;
+        }
+        finally {
+            log.info("Import attempt completed for owner " + owner.getDisplayName());
         }
     }
 

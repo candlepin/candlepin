@@ -82,7 +82,7 @@ public class ConsumerTypeResource {
         }
 
         throw new NotFoundException(
-            i18n.tr("ConsumerType with id '" + id + "' could not be found"));
+            i18n.tr("ConsumerType with id '" + id + "' could not be found."));
     }
 
     /**
@@ -125,7 +125,7 @@ public class ConsumerTypeResource {
 
         if (type == null) {
             throw new BadRequestException(
-                i18n.tr("Consumer Type with label {0} could not be found", in.getId()));
+                i18n.tr("Consumer Type with label {0} could not be found.", in.getId()));
         }
 
         consumerTypeCurator.merge(in);
@@ -146,7 +146,7 @@ public class ConsumerTypeResource {
 
         if (type == null) {
             throw new BadRequestException(
-                i18n.tr("Consumer Type with id {0} could not be found", id));
+                i18n.tr("Consumer Type with id {0} could not be found.", id));
         }
 
         consumerTypeCurator.delete(type);

@@ -31,6 +31,7 @@ import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ForbiddenException;
+import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.ActivationKey;
 import org.candlepin.model.ActivationKeyCurator;
 import org.candlepin.model.Consumer;
@@ -575,6 +576,13 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         r.addPermission(p);
         roleCurator.create(r);
         ownerResource.deleteOwner(owner.getKey(), false);
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void undoImportforOwnerWithNoImports() {
+        Owner owner1 = new Owner("owner-with-no-imports", "foo");
+        ownerResource.createOwner(owner1);
+        ownerResource.undoImports(owner1.getKey());
     }
 
     @Test(expected = BadRequestException.class)

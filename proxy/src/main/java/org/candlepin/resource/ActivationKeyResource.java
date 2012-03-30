@@ -219,7 +219,7 @@ public class ActivationKeyResource {
 
         if (key == null) {
             throw new BadRequestException(
-                i18n.tr("ActivationKey with id {0} could not be found",
+                i18n.tr("ActivationKey with id {0} could not be found.",
                     activationKeyId));
         }
         return key;
@@ -230,7 +230,7 @@ public class ActivationKeyResource {
 
         if (pool == null) {
             throw new BadRequestException(i18n.tr(
-                "Pool with id {0} could not be found", poolId));
+                "Pool with id {0} could not be found.", poolId));
         }
         return pool;
     }
