@@ -65,19 +65,19 @@ describe 'Activation Keys' do
 
   it 'should allow pools to be added and removed to activation keys' do
     @cp.add_pool_to_key(@activation_key['id'], @pool['id'])
-	key = @cp.get_activation_key(@activation_key['id'])
-	key['pools'].length.should == 1
+    key = @cp.get_activation_key(@activation_key['id'])
+    key['pools'].length.should == 1
     @cp.remove_pool_from_key(@activation_key['id'], @pool['id'])
-	key = @cp.get_activation_key(@activation_key['id'])
-	key['pools'].length.should == 0
+    key = @cp.get_activation_key(@activation_key['id'])
+    key['pools'].length.should == 0
 
     owner_client = user_client(@owner, random_string('testuser'))
     owner_client.add_pool_to_key(@activation_key['id'], @pool['id'])
-	key = owner_client.get_activation_key(@activation_key['id'])
-	key['pools'].length.should == 1
+    key = owner_client.get_activation_key(@activation_key['id'])
+    key['pools'].length.should == 1
     owner_client.remove_pool_from_key(@activation_key['id'], @pool['id'])
-	key = owner_client.get_activation_key(@activation_key['id'])
-	key['pools'].length.should == 0
+    key = owner_client.get_activation_key(@activation_key['id'])
+    key['pools'].length.should == 0
 
     lambda {
       @mallory_client.add_pool_to_key(@activation_key['id'], @pool['id'])

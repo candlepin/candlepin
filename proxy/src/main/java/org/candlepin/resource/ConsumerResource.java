@@ -84,6 +84,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
+import org.candlepin.model.Release;
 import org.candlepin.model.User;
 import org.candlepin.pinsetter.tasks.EntitlerJob;
 import org.candlepin.policy.js.compliance.ComplianceRules;
@@ -259,6 +260,7 @@ public class ConsumerResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @SecurityHole(noAuth = true)
+    @Transactional
     public Consumer create(Consumer consumer, @Context Principal principal,
         @QueryParam("username") String userName,
         @QueryParam("owner") String ownerKey,
@@ -331,6 +333,12 @@ public class ConsumerResource {
             consumer.setServiceLevel("");
         }
 
+        // If no service level was specified, and the owner has a default set, use it:
+        if (consumer.getServiceLevel().equals("") &&
+            owner.getDefaultServiceLevel() != null) {
+            consumer.setServiceLevel(owner.getDefaultServiceLevel());
+        }
+
         logNewConsumerDebugInfo(consumer, keys, type);
 
         if (consumer.getInstalledProducts() != null) {
@@ -353,7 +361,7 @@ public class ConsumerResource {
 
             sink.emitConsumerCreated(consumer);
 
-            // TODO: Process activation keys.
+            // Process activation keys.
             for (ActivationKey ak : keys) {
                 for (ActivationKeyPool akp : ak.getPools()) {
                     List<Entitlement> entitlements = null;
@@ -365,7 +373,6 @@ public class ConsumerResource {
 
                     // Trigger events:
                     entitler.sendEvents(entitlements);
-
                 }
             }
 
@@ -1537,10 +1544,13 @@ public class ConsumerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{consumer_uuid}/release")
-    public String getRelease(
+    public Release getRelease(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
-        return new String(consumer.getReleaseVer().toString());
+        if (consumer.getReleaseVer() != null) {
+            return consumer.getReleaseVer();
+        }
+        return new Release("");
     }
 
     /**

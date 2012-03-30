@@ -94,7 +94,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     private String serviceLevel;
     // for selecting Y/Z strean
     @Column(nullable =  true)
-    private String releaseVer;
+    private Release releaseVer;
 
     /*
      * Because this object is used both as a Hibernate object, as well as a DTO to be
@@ -538,14 +538,14 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     /**
      * @param releaseVer the releaseVer to set
      */
-    public void setReleaseVer(String releaseVer) {
+    public void setReleaseVer(Release releaseVer) {
         this.releaseVer = releaseVer;
     }
 
     /**
      * @return the releaseVer
      */
-    public String getReleaseVer() {
+    public Release getReleaseVer() {
         return releaseVer;
     }
 

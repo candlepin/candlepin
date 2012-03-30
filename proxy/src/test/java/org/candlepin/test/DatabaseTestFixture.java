@@ -55,10 +55,14 @@ import org.candlepin.model.OwnerPermission;
 import org.candlepin.model.OwnerPermissionCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
+import org.candlepin.model.PoolAttributeCurator;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductAttributeCurator;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.model.ProductPoolAttribute;
+import org.candlepin.model.ProductPoolAttributeCurator;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Role;
 import org.candlepin.model.RoleCurator;
@@ -108,6 +112,8 @@ public class DatabaseTestFixture {
     protected ConsumerTypeCurator consumerTypeCurator;
     protected SubscriptionsCertificateCurator certificateCurator;
     protected PoolCurator poolCurator;
+    protected PoolAttributeCurator poolAttributeCurator;
+    protected ProductPoolAttributeCurator productPoolAttributeCurator;
     protected DateSourceForTesting dateSource;
     protected EntitlementCurator entitlementCurator;
     protected EnvironmentContentCurator envContentCurator;
@@ -169,6 +175,9 @@ public class DatabaseTestFixture {
         certificateCurator = injector
             .getInstance(SubscriptionsCertificateCurator.class);
         poolCurator = injector.getInstance(PoolCurator.class);
+        poolAttributeCurator = injector.getInstance(PoolAttributeCurator.class);
+        productPoolAttributeCurator = injector
+            .getInstance(ProductPoolAttributeCurator.class);
         entitlementCurator = injector.getInstance(EntitlementCurator.class);
         attributeCurator = injector.getInstance(ProductAttributeCurator.class);
         rulesCurator = injector.getInstance(RulesCurator.class);
@@ -259,6 +268,10 @@ public class DatabaseTestFixture {
             TestUtil.createDate(2010, 2, 12));
         subCurator.create(sub);
         p.setSubscriptionId(sub.getId());
+        for (ProductAttribute pa : product.getAttributes()) {
+            p.addProductAttribute(new ProductPoolAttribute(pa.getName(),
+                pa.getValue(), product.getId()));
+        }
         return poolCurator.create(p);
     }
 

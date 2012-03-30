@@ -17,12 +17,6 @@ package org.candlepin.model.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.model.ActivationKey;
 import org.candlepin.model.Consumer;
@@ -31,13 +25,21 @@ import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductPoolAttribute;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Subscription;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 
 public class PoolCuratorTest extends DatabaseTestFixture {
@@ -277,5 +279,39 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         // test the pool and its inverse
         assertEquals(1, ak.getPools().size());
         assertEquals(1, poolCurator.getActivationKeysForPool(pool).size());
+    }
+
+    /* Works outside of the normal attribute usage. Ensures that all attributes
+     *  for a pool are deleted even if they are not in the pools data structure
+     *  in memory.
+     */
+
+    @Test
+    public void testDuplicateAttributes() {
+        Pool pool = TestUtil.createPool(owner, product);
+        PoolAttribute pa = new PoolAttribute("name", "value");
+        pool.addAttribute(pa);
+        poolCurator.create(pool);
+        PoolAttribute duplicatePa = new PoolAttribute("name", "value");
+        duplicatePa.setPool(pool);
+        poolAttributeCurator.create(duplicatePa);
+        poolCurator.delete(pool);
+        assertEquals(poolAttributeCurator.find(pa.getId()), null);
+        assertEquals(poolAttributeCurator.find(duplicatePa.getId()), null);
+
+        Product product = TestUtil.createProduct();
+        productCurator.create(product);
+        Pool pool2 = TestUtil.createPool(owner, product);
+        ProductPoolAttribute ppa = new ProductPoolAttribute("name", "value",
+            product.getId());
+        pool2.addProductAttribute(ppa);
+        poolCurator.create(pool2);
+        ProductPoolAttribute duplicatePpa = new ProductPoolAttribute("name", "value",
+            product.getId());
+        duplicatePpa.setPool(pool2);
+        productPoolAttributeCurator.create(duplicatePpa);
+        poolCurator.delete(pool2);
+        assertEquals(poolAttributeCurator.find(ppa.getId()), null);
+        assertEquals(poolAttributeCurator.find(duplicatePpa.getId()), null);
     }
 }

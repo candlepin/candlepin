@@ -76,6 +76,9 @@ public class Owner extends AbstractHibernateObject implements Serializable,
     @OneToMany(mappedBy = "owner", targetEntity = Environment.class)
     private Set<Environment> environments;
 
+    @Column(nullable = true)
+    private String defaultServiceLevel;
+
     // EntitlementPool is the owning side of this relationship.
     @OneToMany(mappedBy = "owner", targetEntity = Pool.class)
     private Set<Pool> pools;
@@ -351,5 +354,13 @@ public class Owner extends AbstractHibernateObject implements Serializable,
 
     public void setEnvironments(Set<Environment> environments) {
         this.environments = environments;
+    }
+
+    public String getDefaultServiceLevel() {
+        return defaultServiceLevel;
+    }
+
+    public void setDefaultServiceLevel(String defaultServiceLevel) {
+        this.defaultServiceLevel = defaultServiceLevel;
     }
 }

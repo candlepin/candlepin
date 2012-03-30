@@ -15,7 +15,8 @@
 package org.candlepin.model;
 
 import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
+import com.google.inject.Injector;
+import com.wideplay.warp.persist.Transactional;
 
 import org.apache.log4j.Logger;
 import org.candlepin.auth.interceptor.EnforceAccessControl;
@@ -46,6 +47,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     private static Logger log = Logger.getLogger(PoolCurator.class);
     private Enforcer enforcer;
+    @Inject
+    protected Injector injector;
 
     @Inject
     protected PoolCurator(Enforcer enforcer) {
@@ -415,4 +418,40 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return result;
     }
 
+    /**
+     * There is an issue with attributes in the database. Duplicate attribute
+     *  name/value pairs were showing up from outside the Candlepin code.
+     *  Only one was getting pulled into the HashSet and the other ignored.
+     *  Uses explicit lookup and deletion instead of the Hibernate cascade which
+     *  relies on the data structure in memory.
+     *
+     * @param entity pool to be deleted.
+     */
+    @Transactional
+    @EnforceAccessControl
+    public void delete(Pool entity) {
+        Pool toDelete = find(entity.getId());
+
+        ProductPoolAttributeCurator ppac = injector
+                                   .getInstance(ProductPoolAttributeCurator.class);
+        List<ProductPoolAttribute> ppa = currentSession()
+                                          .createCriteria(ProductPoolAttribute.class)
+                                          .add(Restrictions.eq("pool", entity)).list();
+        for (ProductPoolAttribute att : ppa) {
+            ppac.delete(att);
+
+        }
+        entity.getProductAttributes().clear();
+
+        PoolAttributeCurator pac = injector.getInstance(PoolAttributeCurator.class);
+        List<PoolAttribute> pa = currentSession()
+                                          .createCriteria(PoolAttribute.class)
+                                          .add(Restrictions.eq("pool", entity)).list();
+        for (PoolAttribute att : pa) {
+            pac.delete(att);
+        }
+        entity.getAttributes().clear();
+
+        currentSession().delete(toDelete);
+    }
 }
