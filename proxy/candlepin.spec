@@ -52,7 +52,7 @@ BuildRequires: jpa_1_0_api
 BuildRequires: jms >= 0:1.1
 BuildRequires: oauth
 BuildRequires: rhino
-BuildRequires: quartz
+BuildRequires: quartz >= 0:1.7.3
 # needed to setup runtime deps, not for compilation
 BuildRequires: c3p0
 BuildRequires: scannotation
@@ -78,7 +78,7 @@ Requires: hornetq
 Requires: netty
 Requires: oauth
 Requires: rhino
-Requires: quartz
+Requires: quartz >= 0:1.7.3
 Requires: log4j
 Requires: jaxb_api
 Requires: postgresql-jdbc
