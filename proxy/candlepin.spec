@@ -8,7 +8,7 @@
 %global modulename candlepin
 
 Name: candlepin
-Summary: Candlepin is an open source entitlement management system.
+Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
 Version: 0.5.26
