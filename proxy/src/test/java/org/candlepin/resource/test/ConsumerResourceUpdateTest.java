@@ -26,6 +26,7 @@ import static org.mockito.Mockito.when;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
+import org.candlepin.config.Config;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.ActivationKeyCurator;
@@ -87,7 +88,8 @@ public class ConsumerResourceUpdateTest {
             this.idCertService, null, this.i18n, this.sink, this.eventFactory, null, null,
             this.userService, null, poolManager, null, null, null, null,
             this.activationKeyCurator, this.entitler, this.complianceRules,
-            this.deletedConsumerCurator);
+            this.deletedConsumerCurator,
+            new Config());
 
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class)))
             .thenReturn(new ComplianceStatus(new Date()));

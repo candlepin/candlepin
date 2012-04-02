@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 require 'candlepin_scenarios'
 
 describe 'Consumer Resource' do
@@ -109,6 +110,31 @@ describe 'Consumer Resource' do
       consumer_client(user2, random_string("consumer1"), 'person',
                       username)
     end.should raise_exception(RestClient::Forbidden)
+  end
+
+
+  # note all of this consumer names fail with the current defauly
+  # consumer_name_pattern, but should be okay with a more open one
+  it 'does not let a super admin create consumer with invalid name' do
+    owner1 = create_owner random_string('test_owner1')
+    username = random_string "user1"
+    user1 = user_client(owner1, username)
+
+    lambda do
+      consumer_client(user1, "")
+    end.should raise_exception(RestClient::BadRequest)
+
+    lambda do
+      consumer_client(user1, "#something")
+    end.should raise_exception(RestClient::BadRequest)
+
+    lambda do
+      consumer_client(user1, "bar$%camp")
+    end.should raise_exception(RestClient::BadRequest)
+
+    lambda do
+      consumer_client(user1, "문자열이 아님 ")
+    end.should raise_exception(RestClient::BadRequest)
   end
 
   it 'returns a 404 for a non-existant consumer' do

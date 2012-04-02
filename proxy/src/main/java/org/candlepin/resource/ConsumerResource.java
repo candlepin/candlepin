@@ -24,6 +24,7 @@ import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.interceptor.SecurityHole;
 import org.candlepin.auth.interceptor.Verify;
+import org.candlepin.config.Config;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.exceptions.BadRequestException;
@@ -113,8 +114,8 @@ import javax.ws.rs.core.Response;
  */
 @Path("/consumers")
 public class ConsumerResource {
-    private static final Pattern CONSUMER_NAME_PATTERN = Pattern
-        .compile("[\\#\\?\\'\\`\\!@{}()\\[\\]\\?&\\w-\\.]+");
+    private static Pattern consumerSystemNamePattern;
+    private static Pattern consumerPersonNamePattern;
 
     private static Logger log = Logger.getLogger(ConsumerResource.class);
     private ConsumerCurator consumerCurator;
@@ -156,7 +157,8 @@ public class ConsumerResource {
         ConsumerRules consumerRules, ConsumerDeleteHelper consumerDeleteHelper,
         OwnerCurator ownerCurator, ActivationKeyCurator activationKeyCurator,
         Entitler entitler, ComplianceRules complianceRules,
-        DeletedConsumerCurator deletedConsumerCurator) {
+        DeletedConsumerCurator deletedConsumerCurator,
+        Config config) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -181,8 +183,11 @@ public class ConsumerResource {
         this.entitler = entitler;
         this.complianceRules = complianceRules;
         this.deletedConsumerCurator = deletedConsumerCurator;
+        this.consumerPersonNamePattern =
+            Pattern.compile(config.getString("candlepin.consumer_person_name_pattern"));
+        this.consumerSystemNamePattern =
+            Pattern.compile(config.getString("candlepin.consumer_system_name_pattern"));
     }
-
     /**
      * List available Consumers
      *
@@ -292,21 +297,6 @@ public class ConsumerResource {
             }
         }
 
-        if (!isConsumerNameValid(consumer.getName())) {
-            throw new BadRequestException(
-                i18n.tr("System name cannot contain most special characters."));
-        }
-
-        if (consumer.getName().indexOf('#') == 0) {
-            // this is a bouncycastle restriction
-            throw new BadRequestException(
-                i18n.tr("System name cannot begin with # character"));
-        }
-
-        if (userName == null) {
-            userName = principal.getUsername();
-        }
-
         Owner owner = setupOwner(principal, ownerKey);
         // Raise an exception if any keys were specified which do not exist
         // for this owner.
@@ -318,6 +308,8 @@ public class ConsumerResource {
             }
         }
 
+        userName = checkConsumerName(consumer, principal, userName);
+
         ConsumerType type = lookupConsumerType(consumer.getType().getLabel());
         if (type.isType(ConsumerTypeEnum.PERSON)) {
             if (keys.size() > 0) {
@@ -325,11 +317,19 @@ public class ConsumerResource {
                     i18n.tr("A consumer type of 'person' cannot be" +
                         " used with activation keys"));
             }
+            if (!isConsumerPersonNameValid(consumer.getName())) {
+                throw new BadRequestException(
+                    i18n.tr("System name cannot contain most special characters."));
+            }
+
             verifyPersonConsumer(consumer, type, owner, userName);
         }
 
-        if (userName != null) {
-            consumer.setUsername(userName);
+        if (type.isType(ConsumerTypeEnum.SYSTEM)) {
+            if (!isConsumerSystemNameValid(consumer.getName())) {
+                throw new BadRequestException(
+                    i18n.tr("System name cannot contain most special characters."));
+            }
         }
         consumer.setOwner(owner);
         consumer.setType(type);
@@ -399,6 +399,35 @@ public class ConsumerResource {
             throw new BadRequestException(i18n.tr(
                 "Problem creating consumer {0}", consumer));
         }
+    }
+    /**
+     * @param consumer
+     * @param principal
+     * @param userName
+     * @return
+     */
+    private String checkConsumerName(Consumer consumer, Principal principal,
+        String userName) {
+        if (userName == null) {
+            userName = principal.getUsername();
+        }
+
+        if (userName != null) {
+            consumer.setUsername(userName);
+        }
+
+        if (consumer.getName() == null) {
+            throw new BadRequestException(
+                i18n.tr("System name cannot be null."));
+        }
+
+        // for now this applies to both types consumer
+        if (consumer.getName().indexOf('#') == 0) {
+            // this is a bouncycastle restriction
+            throw new BadRequestException(
+                i18n.tr("System name cannot begin with # character"));
+        }
+        return userName;
     }
 
     private void checkServiceLevel(Owner owner, String serviceLevel)
@@ -519,12 +548,27 @@ public class ConsumerResource {
         return owner;
     }
 
-    private boolean isConsumerNameValid(String name) {
+    /*
+     * verify that the consumer name is approriate for system
+     * consumers
+     */
+    private boolean isConsumerSystemNameValid(String name) {
         if (name == null) {
             return false;
         }
 
-        return CONSUMER_NAME_PATTERN.matcher(name).matches();
+        return consumerSystemNamePattern.matcher(name).matches();
+    }
+
+    /*
+     * verify the consumer name is approariate for person consumers
+     */
+    private boolean isConsumerPersonNameValid(String name) {
+        if (name == null) {
+            return false;
+        }
+
+        return consumerPersonNamePattern.matcher(name).matches();
     }
 
     /*
