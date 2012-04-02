@@ -19,21 +19,23 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductPoolAttribute;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class PoolTest extends DatabaseTestFixture {
 
@@ -252,4 +254,13 @@ public class PoolTest extends DatabaseTestFixture {
         assertEquals(2, pool.getProvidedProducts().size());
     }
 
+    @Test
+    public void nullAttributeValue() {
+        ProductPoolAttribute ppa = new ProductPoolAttribute("Name", null, "Product");
+        PoolAttribute pa = new PoolAttribute("Name", null);
+        ppa.toString();
+        pa.toString();
+        ppa.hashCode();
+        pa.hashCode();
+    }
 }

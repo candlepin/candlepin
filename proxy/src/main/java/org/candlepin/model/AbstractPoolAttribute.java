@@ -109,7 +109,7 @@ public abstract class AbstractPoolAttribute extends AbstractHibernateObject
 
     @Override
     public int hashCode() {
-        return name.hashCode() * 31 + value.hashCode();
+        return name.hashCode() * 31 + (value != null ? value.hashCode() : 0);
     }
 
 }
