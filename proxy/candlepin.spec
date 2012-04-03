@@ -65,14 +65,14 @@ Requires: hibernate3 >= 3.3.2
 Requires: hibernate3-annotations >= 0:3.4.0
 Requires: hibernate3-entitymanager >= 0:3.4.0
 Requires: c3p0
-Requires: resteasy
-Requires: google-guice
+Requires: resteasy >= 0:2.3.1
+Requires: google-guice >= 0:3.0
 Requires: codehaus-jackson >= 0:1.9.2
 Requires: codehaus-jackson-xc
 Requires: codehaus-jackson-core-lgpl
 Requires: codehaus-jackson-mapper-lgpl
 Requires: codehaus-jackson-jaxrs
-Requires: hornetq
+Requires: hornetq >= 0:2.2.11
 Requires: netty
 Requires: oauth
 Requires: rhino
