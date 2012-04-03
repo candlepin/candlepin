@@ -35,7 +35,7 @@ BuildRequires: hibernate3-commons-annotations
 BuildRequires: google-collections >= 0:1.0
 BuildRequires: resteasy >= 0:2.3.1
 BuildRequires: hornetq >= 0:2.2.11
-BuildRequires: mockito
+#BuildRequires: mockito
 BuildRequires: google-guice >= 0:3.0
 BuildRequires: log4j
 BuildRequires: jakarta-commons-lang
