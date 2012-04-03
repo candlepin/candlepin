@@ -11,7 +11,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.5.26
+Version: 0.5.27
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -202,6 +202,26 @@ fi
 
 
 %changelog
+* Tue Apr 03 2012 Chris Duryee (beav) <cduryee@redhat.com>
+- bump candlepin-deps version for new jackson (cduryee@redhat.com)
+- 807452: Null pointer check added on attribute value. Was causing NPE in hash
+  code. (wpoteat@redhat.com)
+- 796468: Owner with id FOO could not be found. (wpoteat@redhat.com)
+- Pools with Duplicate ProductPoolAttributes cannot be deleted
+  (wpoteat@redhat.com)
+- Move apicrawl code to its own java package (jbowes@redhat.com)
+- Fix apicrawl json schema generation for output types (jbowes@redhat.com)
+- 807009: rpmdiff warning for Vendor name (cduryee@redhat.com)
+- 803814: Make registration transactional. (dgoodwin@redhat.com)
+- 804227: add simple model for Release (alikins@redhat.com)
+- Defer the creation of the simple date format until it is used.
+  (bkearney@redhat.com)
+- Add default service level for an org. (dgoodwin@redhat.com)
+- 805608: Enhance cpsetup so that different usernames and passwords can be used
+  (bkearney@redhat.com)
+- New implementation of HATEOAS serialization. (dgoodwin@redhat.com)
+- Add API call to "undo" all imports for an org (dgoodwin@redhat.com)
+
 * Wed Mar 14 2012 jesus m. rodriguez <jesusr@redhat.com> 0.5.26-1
 - latest strings from zanata (alikins@redhat.com)
 - add releasever (alikins@redhat.com)
