@@ -25,7 +25,7 @@ BuildRequires: ant >= 0:1.7.0
 BuildRequires: gettext
 BuildRequires: selinux-policy-doc
 #BuildRequires: bouncycastle
-BuildRequires: candlepin-deps >= 0:0.0.21
+BuildRequires: candlepin-deps >= 0:0.0.24
 Requires: java >= 0:1.6.0
 #until cpsetup is removed
 Requires: wget
