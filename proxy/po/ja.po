@@ -2,6 +2,7 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# htaira <htaira@redhat.com>, 2012. #zanata
 # nnakakit <nnakakit@fedoraproject.org>, 2012. #zanata
 # noriko <noriko@fedoraproject.org>, 2012. #zanata
 msgid ""
@@ -39,7 +40,7 @@ msgstr "無効な所有者"
 
 #: src/main/java/org/candlepin/sync/Importer.java:165
 msgid "Import is older than existing data"
-msgstr "インポートは既存データよりも古いものです"
+msgstr "インポートしたものは既存データよりも古いものです"
 
 #: src/main/java/org/candlepin/sync/Importer.java:210
 #: src/main/java/org/candlepin/sync/Importer.java:219
@@ -78,7 +79,7 @@ msgstr "このコンシューマーは id ''{0}'' のプールに一致する製
 #: src/main/java/org/candlepin/controller/Entitler.java:112
 #, java-format
 msgid "No entitlements are available from the pool with id ''{0}''."
-msgstr ""
+msgstr "ID ''{0}'' のプールには利用できるエンタイトルメントはありません。"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:117
 #, java-format
@@ -180,7 +181,7 @@ msgstr "そのようなユーザーはいません: {0}"
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:135
 msgid "The quantity must be greater than 0"
 msgstr ""
-"数量はゼロ以上の数値にして下さい\n"
+"数量は0以上の数値にして下さい\n"
 "\t"
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:145
@@ -202,13 +203,13 @@ msgstr "数量はプールに許可されている合計以上になることは
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:222
 #, java-format
-msgid "ActivationKey with id {0} could not be found"
-msgstr "id {0} を持つアクティベーションキーは見つかりません"
+msgid "ActivationKey with id {0} could not be found."
+msgstr ""
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:233
 #, java-format
-msgid "Pool with id {0} could not be found"
-msgstr "id {0} を持つプールは見つかりません"
+msgid "Pool with id {0} could not be found."
+msgstr ""
 
 #: src/main/java/org/candlepin/resource/SubscriptionResource.java:122
 #, java-format
@@ -217,15 +218,15 @@ msgstr "サブスクリプション {0} の証明書はありません"
 
 #: src/main/java/org/candlepin/resource/SubscriptionResource.java:141
 msgid "email is required for notification"
-msgstr "通知用の電子メールが必要です"
+msgstr "通知用のメールアドレスが必要です"
 
 #: src/main/java/org/candlepin/resource/SubscriptionResource.java:146
 msgid "email locale is required for notification"
-msgstr "通知用の電子メール言語が必要です"
+msgstr "通知用のメールの言語設定が必要です"
 
 #: src/main/java/org/candlepin/resource/SubscriptionResource.java:152
 #: src/main/java/org/candlepin/resource/OwnerResource.java:697
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1218
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1225
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:120
 #, java-format
 msgid "No such consumer: {0}"
@@ -233,15 +234,15 @@ msgstr "そのコンシューマーは存在しません: {0}"
 
 #: src/main/java/org/candlepin/resource/SubscriptionResource.java:182
 #, java-format
-msgid "Subscription with id {0} could not be found"
-msgstr "id {0} のサブスクリプションは見付かりません"
+msgid "Subscription with id {0} could not be found."
+msgstr ""
 
 #: src/main/java/org/candlepin/resource/ProductResource.java:110
 #: src/main/java/org/candlepin/resource/ProductResource.java:129
 #: src/main/java/org/candlepin/resource/ProductResource.java:189
 #, java-format
-msgid "Product with UUID ''{0}'' could not be found"
-msgstr "UUID ''{0}'' を持つ製品は見つかりません"
+msgid "Product with UUID ''{0}'' could not be found."
+msgstr ""
 
 #: src/main/java/org/candlepin/resource/ProductResource.java:193
 #, java-format
@@ -272,7 +273,7 @@ msgid "Activation key name ["
 msgstr "アクティベーションキー名 ["
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:545
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:547
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:554
 #: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:122
 #, java-format
 msgid "No such consumer type: {0}"
@@ -285,41 +286,47 @@ msgid "consumer: {0} not found"
 msgstr "コンシューマー: {0} は見つかりません"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:687
-#: src/main/java/org/candlepin/resource/OwnerResource.java:752
-#: src/main/java/org/candlepin/resource/OwnerResource.java:857
-#: src/main/java/org/candlepin/resource/OwnerResource.java:887
-#: src/main/java/org/candlepin/resource/OwnerResource.java:916
-#: src/main/java/org/candlepin/resource/OwnerResource.java:942
-#: src/main/java/org/candlepin/resource/OwnerResource.java:980
+#: src/main/java/org/candlepin/resource/OwnerResource.java:783
+#: src/main/java/org/candlepin/resource/OwnerResource.java:947
+#: src/main/java/org/candlepin/resource/OwnerResource.java:977
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1006
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1032
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1070
 #, java-format
 msgid "owner with key: {0} was not found."
 msgstr "キー: {0} を持つ所有者は見付かりません"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:771
+#: src/main/java/org/candlepin/resource/OwnerResource.java:752
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:406
+#, java-format
+msgid "Service level {0} is not available to consumers of organization {1}."
+msgstr "組織 {1} のコンシューマーが利用できるサービスレベル {0} はありません。"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:802
 #, java-format
 msgid "subscription with id: {0} not found."
 msgstr "id: {0} のサブスクリプションは見付かりません"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:803
+#: src/main/java/org/candlepin/resource/OwnerResource.java:890
 msgid "Error reading export archive"
 msgstr "エキスポートアーカイブの読み込みでエラー"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:962
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1052
 #, java-format
 msgid "Problem generating ueber cert for owner {0}"
 msgstr "所有者 {0} の ueber 証明書の生成で問題発生"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:988
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1078
 #, java-format
 msgid "ueber certificate for owner {0} was not found. Please generate one."
 msgstr "所有者 {0} の ueber 証明書は見つかりません。生成してください。"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1002
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1092
 #, java-format
 msgid "{0} file imported successfully."
 msgstr "{0} ファイルは正常にインポートされました"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1004
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1094
 #, java-format
 msgid "{0} file imported forcibly"
 msgstr "{0} ファイルは強制的にインポートされました"
@@ -364,147 +371,142 @@ msgstr "ユーザー {0} は全てのプールにアクセス出来ません"
 #: src/main/java/org/candlepin/resource/PoolResource.java:192
 #: src/main/java/org/candlepin/resource/PoolResource.java:209
 #, java-format
-msgid "Entitlement Pool with ID ''{0}'' could not be found"
+msgid "Entitlement Pool with ID ''{0}'' could not be found."
 msgstr ""
-"ID ''{0}'' のエンタイトルメントプールは見つかりません\n"
-"\t"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:205
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:206
 #, java-format
 msgid "Organization with key: {0} was not found."
 msgstr "キー: {0} を持つ組織は見つかりません"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:273
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:275
 msgid "Insufficient permissions"
 msgstr "パーミッションがありません"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:279
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:281
 msgid "Must specify an org to register with activation keys."
 msgstr "アクティベーションキーで登録する組織を指定してください。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:283
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:285
 msgid "Cannot specify username with activation keys."
 msgstr "アクティベーションキーではユーザー名は指定できません。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:289
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:291
 msgid "System name cannot contain most special characters."
 msgstr "システム名はほとんどの特殊記号を含むことができません。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:295
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:297
 msgid "System name cannot begin with # character"
 msgstr "システム名は # 文字で開始できません"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:317
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:319
 msgid "A consumer type of 'person' cannot be used with activation keys"
 msgstr "コンシューマータイプ「ユーザー」はアクティベーションキーと使用できません"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:362
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:370
 msgid "Pool ID must be provided"
 msgstr "プール ID が必要です"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:387
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:394
 #, java-format
 msgid "Problem creating consumer {0}"
 msgstr "コンシューマー {0} の作成に問題があります"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:399
-#, java-format
-msgid "Service level {0} is not available to consumers of organization {1}."
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:431
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:438
 #, java-format
 msgid "Activation key ''{0}'' not found for organization ''{1}''."
 msgstr "組織 ''{1}'' 用のアクティベーションキー ''{0}'' は見つかりません"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:453
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:460
 #, java-format
 msgid "User {0} has no roles for organization {1}"
 msgstr "ユーザー {0} は組織 {1} でのロールがありません"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:465
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:472
 #, java-format
 msgid "User {0} has already registered a personal consumer"
 msgstr "ユーザー {0} は既に個人コンシューマーを登録してあります"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:482
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:489
 msgid "You must specify an organization for new consumers."
 msgstr "新しいコンシューマー用の組織を指定して下さい。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:493
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:500
 #, java-format
 msgid "Organization {0} does not exist."
 msgstr "組織 {0} は存在しません"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:500
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:507
 #, java-format
 msgid "User {0} cannot access organization {1}"
 msgstr "ユーザー {0} は組織 {1} にアクセスできません"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:887
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:894
 #, java-format
 msgid "Cannot unregister {0} consumer {1} because: {2}"
 msgstr "次の理由で {0} コンシューマー {1} を登録解除できません: {2} "
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:970
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:977
 msgid "Unable to create entitlement archive"
 msgstr "エンタイトルメントアーカイブを作成できません"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1079
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1090
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1086
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1097
 msgid "Cannot bind by multiple parameters."
 msgstr "複数のパラメーターでバインドできません。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1084
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1091
 msgid "Cannot specify a quantity when auto-binding."
 msgstr "自動バインドの時は数量を指定できません。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1153
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1160
 #, java-format
 msgid "Asked to be subscribed to a product that has no pool: {0} "
 msgstr "プールの無い製品へのサブスクリプションを依頼されました: {0} "
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1228
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1235
 #, java-format
 msgid "No such entitlement: {0}"
 msgstr "そのエンタイトルメントはありません: {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1251
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1258
 #, java-format
 msgid "No such product: {0}"
 msgstr "その製品はありません: {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1294
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1301
 msgid "Consumer with ID "
 msgstr "ID を持つコンシューマー"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1331
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1338
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:146
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:166
 #, java-format
 msgid "Entitlement with ID ''{0}'' could not be found."
 msgstr "ID ''{0}'' を持つエンタイトルメントは見つかりません"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1355
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1362
 #, java-format
 msgid "Entitlement Certificate with serial number {0} could not be found."
 msgstr "シリアル番号 {0} のエンタイトルメント証明書は見付かりませんでした"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1416
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1423
 #, java-format
 msgid ""
 "Consumer {0} cannot be exported. A manifest cannot be made for consumer of "
 "type ''{1}''."
 msgstr "コンシューマー {0} はエキスポートできません。タイプ ''{1}'' のコンシューマーにはマニフェストを作成できません。"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1431
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1438
 msgid "Unable to create export archive"
 msgstr "エキスポートアーカイブを作成できません"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1464
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1471
 #, java-format
 msgid "Problem regenerating id cert for consumer {0}"
 msgstr "コンシューマー {0} の id 証明書の再生成に問題があります"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1531
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1538
 #, java-format
 msgid "The consumer with UUID {0} is not a virtual guest."
 msgstr "UUID {0} のコンシューマーは仮想ゲストではありません"
@@ -513,12 +515,6 @@ msgstr "UUID {0} のコンシューマーは仮想ゲストではありません
 #, java-format
 msgid "Consumer: {0} has no entitlement for product {1}"
 msgstr "コンシューマー: {0} に製品 {1} 用のエンタイトルメントはありません"
-
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:146
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:166
-#, java-format
-msgid "Entitlement with ID ''{0}'' could not be found"
-msgstr "ID ''{0}'' を持つエンタイトルメントは見つかりません"
 
 #: src/main/java/org/candlepin/resource/RulesResource.java:81
 msgid "Error decoding the rules. The text should be base 64 encoded"
@@ -530,8 +526,8 @@ msgstr "規則のファイルを読み込めません"
 
 #: src/main/java/org/candlepin/resource/ContentResource.java:80
 #, java-format
-msgid "Content with id {0} could not be found"
-msgstr "id {0} を持つコンテンツは見付かりません"
+msgid "Content with id {0} could not be found."
+msgstr ""
 
 #: src/main/java/org/candlepin/resource/JobResource.java:108
 msgid "You must specify an owner key, consumer uuid, or principal name."
@@ -570,13 +566,13 @@ msgstr "consumertype の作成で問題: {0}"
 
 #: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:128
 #, java-format
-msgid "Consumer Type with label {0} could not be found"
-msgstr "ラベル {0} のコンシューマータイプは見付かりませんでした"
+msgid "Consumer Type with label {0} could not be found."
+msgstr ""
 
 #: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:149
 #, java-format
-msgid "Consumer Type with id {0} could not be found"
-msgstr "id {0} のコンシューマータイプは見付かりませんでした"
+msgid "Consumer Type with id {0} could not be found."
+msgstr ""
 
 #: src/main/java/org/candlepin/guice/I18nProvider.java:87
 #: src/main/java/org/candlepin/exceptions/mappers/BadRequestExceptionMapper.java:70
@@ -604,14 +600,13 @@ msgid "Unable to verify request."
 msgstr "要求を確認できません。"
 
 #: src/main/java/org/candlepin/auth/interceptor/SecurityInterceptor.java:202
-#, 
 msgid "Organization"
-msgstr ""
+msgstr "組織"
 
 #: src/main/java/org/candlepin/auth/interceptor/SecurityInterceptor.java:207
 #, java-format
-msgid "{0} with id {1} could not be found"
-msgstr "id {1} を持つ {0} は見つかりません"
+msgid "{0} with id {1} could not be found."
+msgstr ""
 
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:113
 #, java-format
