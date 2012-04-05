@@ -10,19 +10,12 @@ function evalrc ()
 function gendb ()
 {
 	echo "============ generating a new db =============="
-    buildr candlepin:genschema
-    evalrc $? "schema generation failed"
-
     dropdb -U candlepin candlepin
-
     createdb -U candlepin candlepin
     evalrc $? "createdb failed"
 
-    psql -U candlepin candlepin < target/schema/candlepin-proxy.sql
+    liquibase --driver=org.postgresql.Driver --classpath=src/main/resources/:target/classes/:/usr/share/java/postgresql-jdbc.jar --changeLogFile=db/changelog/changelog-create.xml --url="jdbc:postgresql:candlepin" --username=candlepin --password="" migrate
     evalrc $? "schema creation failed"
-
-    psql -U candlepin < target/schema/quartz/tables_postgres.sql
-    evalrc $? "quartz schema failed"
 }
 
 function deploy ()
@@ -173,7 +166,7 @@ if [ "$?" -ne "0" ]; then
 fi
 
 if [ "$GENDB" == "1" ]; then
-	gendb	
+	gendb
 fi
 
 if [ "$FORCECERT" == "1" ]; then
