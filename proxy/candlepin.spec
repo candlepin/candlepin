@@ -103,6 +103,7 @@ install -d -m 755 $RPM_BUILD_ROOT/%{_sysconfdir}/%{name}/certs/
 install -d -m 755 $RPM_BUILD_ROOT/%{_sysconfdir}/%{name}/
 install -d -m 755 $RPM_BUILD_ROOT/%{_datadir}/%{name}/
 install -m 755 code/setup/cpsetup $RPM_BUILD_ROOT/%{_datadir}/%{name}/cpsetup
+install -m 755 code/setup/cpdb $RPM_BUILD_ROOT/%{_datadir}/%{name}/cpdb
 touch $RPM_BUILD_ROOT/%{_sysconfdir}/%{name}/%{name}.conf
 
 # tomcat6
@@ -168,6 +169,7 @@ fi
 %files
 %dir %{_datadir}/%{name}/
 %{_datadir}/%{name}/cpsetup
+%{_datadir}/%{name}/cpdb
 %{_datadir}/%{name}/schema/
 %{_sysconfdir}/%{name}/certs/
 

@@ -14,6 +14,13 @@
 # in this software or its documentation.
 #
 
+"""
+Script to set up a Candlepin server.
+
+This script should be idempotent, as puppet will re-run this to keep
+the server functional.
+"""
+
 import sys
 import commands
 import os.path, os
@@ -23,11 +30,9 @@ import time
 import httplib
 from optparse import OptionParser
 
-TOMCAT_CLASSPATH = "/var/lib/jbossas/server/production/deploy/candlepin.war/WEB-INF/classes/"
-JBOSS_CLASSPATH = "/var/lib/tomcat6/webapps/candlepin/WEB-INF/classes/"
+CANDLEPIN_CONF = '/etc/candlepin/candlepin.conf'
 
 def run_command(command):
-    #debug(command)
     (status, output) = commands.getstatusoutput(command)
     if status > 0:
         sys.stderr.write("\n########## ERROR ############\n")
@@ -127,7 +132,7 @@ class CertSetup(object):
             run_command('sudo mkdir -p %s' % self.cert_home)
 
         if os.path.exists(self.ca_key) and os.path.exists(self.ca_cert):
-            print("Certificates are already present.")
+            print("Cerficiates already exist, skipping...")
             return
 
         print("Creating CA private key password")
@@ -142,72 +147,27 @@ class CertSetup(object):
         run_command('sudo cp %s %s' % (self.ca_cert, self.ca_upstream_cert))
         run_command('sudo chmod a+r %s' % self.keystore)
 
-class DbSetup(object):
 
-    def __init__(self, username, db):
-        self.username = username
-        self.db = db
+def write_candlepin_conf(username, database):
+    """
+    Write database configuration to candlepin.conf.
+    """
+    # If the file exists and it's size is not 0 (it will be empty after
+    # fresh rpm install), write out a default with database configuration:
+    if os.path.exists(CANDLEPIN_CONF) and os.stat(CANDLEPIN_CONF).st_size > 0:
+        print("candlepin.conf already exists, skipping...")
+        return
 
-    def initdb(self):
-        """
-        Drops the existing candlepin database if necessary, re-creates it,
-        and loads the schema.
-        """
-        self._dropdb()
-        self._createdb()
+    print("Writing configuration file")
+    f = open(CANDLEPIN_CONF, 'w')
+    f.write('jpa.config.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect\n')
+    f.write('jpa.config.hibernate.connection.driver_class=org.postgresql.Driver\n')
+    f.write('jpa.config.hibernate.connection.url=jdbc:postgresql:%s\n' % database)
+    f.write('jpa.config.hibernate.hbm2ddl.auto=validate\n')
+    f.write('jpa.config.hibernate.connection.username=%s\n' % username)
+    f.write('jpa.config.hibernate.connection.password=candlepin\n')
+    f.close()
 
-    def _dropdb(self):
-        print("Dropping candlepin database")
-        command = "dropdb -U %s %s" % (self.username, self.db)
-        (status, output) = commands.getstatusoutput(command)
-        if status > 0 and output.find('does not exist') > 0:
-            return output
-        elif status > 0:
-            sys.stderr.write("\n########## ERROR ############\n")
-            sys.stderr.write("Error running command: %s\n" % command)
-            sys.stderr.write("Status code: %s\n" % status)
-            sys.stderr.write("Command output: %s\n" % output)
-            raise Exception("Error running command")
-
-    def _run_liquibase(self, changelog_path):
-        # Figure out what to append to the classpath for liquibase:
-        classpath = "/usr/share/java/postgresql-jdbc.jar"
-        if os.path.exists(TOMCAT_CLASSPATH):
-            classpath = "%s:%s" % (classpath, TOMCAT_CLASSPATH)
-        if os.path.exists(JBOSS_CLASSPATH):
-            classpath = "%s:%s" % (classpath, JBOSS_CLASSPATH)
-        output = run_command("liquibase --driver=org.postgresql.Driver --classpath=%s "
-                "--changeLogFile=%s "
-                "--url=jdbc:postgresql:%s --username=%s migrate" % (
-            classpath,
-            changelog_path,
-            self.db,
-            self.username,
-        ))
-        print output
-
-    def _createdb(self):
-        print("Creating candlepin database")
-        run_command("createdb -U %s %s" % (self.username, self.db))
-        print("Loading candlepin schema")
-        self._run_liquibase("db/changelog/changelog-create.xml")
-
-    def migratedb(self):
-        """ Upgrades an existing candlepin database. """
-        print("Migrating candlepin database")
-        self._run_liquibase("db/changelog/changelog-update.xml")
-
-    def configurecp(self):
-        """ Write database configuration to candlepin.conf. """
-        print("Writing configuration file")
-        f = open('/etc/candlepin/candlepin.conf', 'w')
-        f.write('jpa.config.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect\n')
-        f.write('jpa.config.hibernate.connection.driver_class=org.postgresql.Driver\n')
-        f.write('jpa.config.hibernate.connection.url=jdbc:postgresql:candlepin\n')
-        f.write('jpa.config.hibernate.hbm2ddl.auto=validate\n')
-        f.write('jpa.config.hibernate.connection.username=candlepin\n')
-        f.write('jpa.config.hibernate.connection.password=candlepin\n')
-        f.close()
 
 def main(argv):
 
@@ -221,9 +181,6 @@ def main(argv):
     parser.add_option("-d", "--database",
                   dest="db", default="candlepin",
                   help="the database to use")
-    parser.add_option("--create-db",
-                  dest="create_db", action="store_true", default=False,
-                  help="drop and re-create the database")
 
     (options, args) = parser.parse_args()
 
@@ -232,15 +189,16 @@ def main(argv):
     tsetup.fix_perms()
     tsetup.stop()
 
-    dbsetup = DbSetup(options.dbuser, options.db)
-    # Upgrade is the default behavior:
-    if options.create_db:
-        dbsetup.initdb()
-    else:
-        dbsetup.migratedb()
+    # Call the cpdb script to create the candlepin database. This will fail
+    # if the database already exists, protecting us from accidentally wiping
+    # it out if cpsetup is re-run.
+    script_dir = os.path.dirname(__file__)
+    cpdb_script = os.path.join(script_dir, "cpdb")
+    run_command("%s --create -u %s --database %s" % (cpdb_script,
+        options.dbuser, options.db))
 
     if not options.skipdbcfg:
-        dbsetup.configurecp()
+        write_candlepin_conf(options.dbuser, options.db)
     else:
         print "** Skipping configuration file setup"
 
@@ -256,8 +214,5 @@ def main(argv):
 
     print("Candlepin has been configured.")
 
-#
-# MAIN
-#
 if __name__ == "__main__":
     main(sys.argv[1:])

@@ -1,0 +1,128 @@
+#!/usr/bin/python
+#
+# Copyright (c) 2012 Red Hat, Inc.
+#
+# This software is licensed to you under the GNU General Public License,
+# version 2 (GPLv2). There is NO WARRANTY for this software, express or
+# implied, including the implied warranties of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. You should have received a copy of GPLv2
+# along with this software; if not, see
+# http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
+#
+# Red Hat trademarks are not licensed under GPLv2. No permission is
+# granted to use or replicate Red Hat trademarks that are incorporated
+# in this software or its documentation.
+#
+
+""" A CLI utility for managing the Candlepin database. """
+
+
+import commands
+import sys
+import os
+
+from optparse import OptionParser
+
+TOMCAT_CLASSPATH = "/var/lib/jbossas/server/production/deploy/candlepin.war/WEB-INF/classes/"
+JBOSS_CLASSPATH = "/var/lib/tomcat6/webapps/candlepin/WEB-INF/classes/"
+
+def run_command(command):
+    (status, output) = commands.getstatusoutput(command)
+    if status > 0:
+        error_out(command, status, output)
+    return output
+
+def error_out(command, status, output):
+    sys.stderr.write("\n########## ERROR ############\n")
+    sys.stderr.write("Error running command: %s\n" % command)
+    sys.stderr.write("Status code: %s\n" % status)
+    sys.stderr.write("Command output: %s\n" % output)
+    raise Exception("Error running command")
+
+
+class DbSetup(object):
+
+    def __init__(self, username, db):
+        self.username = username
+        self.db = db
+
+    def create(self):
+        print("Creating candlepin database")
+        command = "createdb -U %s %s" % (self.username, self.db)
+        (status, output) = commands.getstatusoutput(command)
+
+        if status > 0 and output.find("already exists") > 0:
+            print("Candlepin database already exists, skipping...")
+            return
+        elif status > 0:
+            error_out(command, status, output)
+
+        print("Loading candlepin schema")
+        self._run_liquibase("db/changelog/changelog-create.xml")
+
+
+    def drop(self):
+        print("Dropping candlepin database")
+        command = "dropdb -U %s %s" % (self.username, self.db)
+        (status, output) = commands.getstatusoutput(command)
+        if status > 0 and output.find('does not exist') > 0:
+            return
+        elif status > 0:
+            error_out(command, status, output)
+
+    def update(self):
+        """ Upgrades an existing candlepin database. """
+        print("Migrating candlepin database")
+        self._run_liquibase("db/changelog/changelog-update.xml")
+
+    def _run_liquibase(self, changelog_path):
+        # Figure out what to append to the classpath for liquibase:
+        classpath = "/usr/share/java/postgresql-jdbc.jar"
+        if os.path.exists(TOMCAT_CLASSPATH):
+            classpath = "%s:%s" % (classpath, TOMCAT_CLASSPATH)
+        if os.path.exists(JBOSS_CLASSPATH):
+            classpath = "%s:%s" % (classpath, JBOSS_CLASSPATH)
+        output = run_command("liquibase --driver=org.postgresql.Driver --classpath=%s "
+                "--changeLogFile=%s "
+                "--url=jdbc:postgresql:%s --username=%s migrate" % (
+            classpath,
+            changelog_path,
+            self.db,
+            self.username,
+        ))
+        print output
+
+
+if __name__ == "__main__":
+    parser = OptionParser()
+    parser.add_option("--create",
+            dest="create", action="store_true", default=False,
+            help="create the Candlepin database")
+    parser.add_option("--update",
+            dest="update", action="store_true", default=False,
+            help="update the Candlepin database")
+
+    parser.add_option("--drop",
+            dest="drop", action="store_true", default=False,
+            help="drop the existing Candlepin database before creating")
+    parser.add_option("-u", "--user",
+            dest="dbuser", default="candlepin",
+            help="database user to use")
+    parser.add_option("-d", "--database",
+            dest="db", default="candlepin",
+            help="database name to use")
+
+    (options, args) = parser.parse_args()
+
+    if (not options.create and not options.update) or \
+        (options.create and options.update):
+        print("ERROR: Please specify --create or --update.")
+        sys.exit(1)
+
+    dbsetup = DbSetup(options.dbuser, options.db)
+    if options.create:
+        if options.drop:
+            dbsetup.drop()
+        dbsetup.create()
+    if options.update:
+        dbsetup.update()
