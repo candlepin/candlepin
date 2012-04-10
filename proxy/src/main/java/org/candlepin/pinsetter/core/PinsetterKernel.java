@@ -134,24 +134,12 @@ public class PinsetterKernel {
         Set<String> jobImpls = new HashSet<String>();
 
         try {
-
             if (config.getBoolean(ConfigProperties.ENABLE_PINSETTER)) {
-                /*
-                 * if it's clustered we want to see if there are any jobs already
-                 * in the cluster. We don't want to reschedule any of them.
-                 */
-                String[] jobs = scheduler.getJobNames(CRON_GROUP);
-                if (isClustered() && jobs.length > 0) {
-                    log.info("There are [" + jobs.length +
-                        "] jobs defined in the cluster.");
-                }
-                else {
-                    // get the default tasks first
-                    addToList(jobImpls, ConfigProperties.DEFAULT_TASKS);
+                // get the default tasks first
+                addToList(jobImpls, ConfigProperties.DEFAULT_TASKS);
 
-                    // get other tasks
-                    addToList(jobImpls, ConfigProperties.TASKS);
-                }
+                // get other tasks
+                addToList(jobImpls, ConfigProperties.TASKS);
             }
             else if (!isClustered()) {
                 // Since pinsetter is disabled, we only want to allow
@@ -164,12 +152,24 @@ public class PinsetterKernel {
                 log.warn("No tasks to schedule");
                 return;
             }
+            log.warn("jobImpls:" + jobImpls);
+            String[] jobs = scheduler.getJobNames(CRON_GROUP);
 
             for (String jobImpl : jobImpls) {
                 if (log.isDebugEnabled()) {
                     log.debug("Scheduling " + jobImpl);
                 }
-
+                CronTrigger trigger = null;
+                if (jobs != null) {
+                    for (String s : jobs) {
+                        JobDetail jd = scheduler.getJobDetail(s, CRON_GROUP);
+                        if (jd != null &&
+                            jd.getJobClass().getName().equals(jobImpl)) {
+                            trigger = (CronTrigger) scheduler.getTrigger(s, CRON_GROUP);
+                            break;
+                        }
+                    }
+                }
                 // get the default schedule from the job class in case one
                 // is not found in the configuration.
                 String defvalue = PropertyUtil.getStaticPropertyAsString(jobImpl,
@@ -183,7 +183,16 @@ public class PinsetterKernel {
                         log.debug("Scheduler entry for " + jobImpl + ": " +
                             schedule);
                     }
-                    pendingJobs.add(new JobEntry(jobImpl, schedule));
+                    /*
+                     * Ensure no duplicate jobs get created as well as allow job
+                     * schedules to be replaced by configuration changes.
+                     */
+                    if (trigger == null || !trigger.getCronExpression().equals(schedule)) {
+                        if (trigger != null) {
+                            scheduler.deleteJob(jobImpl, CRON_GROUP);
+                        }
+                        pendingJobs.add(new JobEntry(jobImpl, schedule));
+                    }
                 }
                 else {
                     log.warn("No schedule found for " + jobImpl + ". Skipping...");
@@ -196,7 +205,6 @@ public class PinsetterKernel {
         catch (Exception e) {
             throw new RuntimeException(e.getLocalizedMessage(), e);
         }
-
         scheduleJobs(pendingJobs);
     }
 
@@ -217,11 +225,8 @@ public class PinsetterKernel {
     }
 
     private void scheduleJobs(List<JobEntry> pendingJobs) {
-       // No jobs to schedule
-       // This would be quite odd, but it could happen
-        if (pendingJobs == null || pendingJobs.size() == 0) {
-            log.error("No tasks scheduled");
-            throw new RuntimeException("No tasks scheduled");
+        if (pendingJobs.size() == 0) {
+            return;
         }
         try {
             for (JobEntry jobentry : pendingJobs) {
