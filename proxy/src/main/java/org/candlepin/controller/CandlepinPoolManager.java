@@ -732,11 +732,23 @@ public class CandlepinPoolManager implements PoolManager {
 
         // Look for pools referencing this entitlement as their source
         // entitlement and clean them up as well
+
+        // we need to create a list of pools and entitlements to delete,
+        // otherwise we are tampering with the loop iterator from inside
+        // the loop (#811581)
+        Set<Pool> deletablePools = new HashSet<Pool>();
         for (Pool p : poolCurator.listBySourceEntitlement(entitlement)) {
+            Set<Entitlement> deletableEntitlements = new HashSet<Entitlement>();
             for (Entitlement e : p.getEntitlements()) {
-                this.revokeEntitlement(e);
+                deletableEntitlements.add(e);
             }
-            deletePool(p);
+            for (Entitlement de : deletableEntitlements) {
+                this.revokeEntitlement(de);
+            }
+            deletablePools.add(p);
+        }
+        for (Pool dp : deletablePools) {
+            deletePool(dp);
         }
 
         poolCurator.merge(pool);
