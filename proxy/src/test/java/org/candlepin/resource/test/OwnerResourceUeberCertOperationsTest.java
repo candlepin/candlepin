@@ -64,8 +64,8 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
             new ArrayList<Permission>(ownerAdminRole.getPermissions()), false);
         setupPrincipal(principal);
 
-        ConsumerType systemType = new ConsumerType(ConsumerTypeEnum.SYSTEM);
-        consumerTypeCurator.create(systemType);
+        ConsumerType ueberCertType = new ConsumerType(ConsumerTypeEnum.UEBER_CERT);
+        consumerTypeCurator.create(ueberCertType);
 
         or = new OwnerResource(ownerCurator, poolCurator,
             null, null, consumerCurator, null, i18n, null, null, null,

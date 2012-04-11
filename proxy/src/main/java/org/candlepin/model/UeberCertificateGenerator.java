@@ -100,7 +100,7 @@ public class UeberCertificateGenerator {
     }
 
     public Consumer createUeberConsumer(Principal principal, Owner o) {
-        ConsumerType type = lookupConsumerType(ConsumerTypeEnum.SYSTEM.toString());
+        ConsumerType type = lookupConsumerType(ConsumerTypeEnum.UEBER_CERT.toString());
         Consumer consumer = consumerCurator.create(new Consumer(
             Consumer.UEBER_CERT_CONSUMER,
             principal.getUsername(),

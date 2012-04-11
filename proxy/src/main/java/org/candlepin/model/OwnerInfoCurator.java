@@ -218,10 +218,17 @@ public class OwnerInfoCurator {
 
     private void setConsumerCountsByComplianceStatus(Owner owner, OwnerInfo info) {
         String queryStr = "select c.entitlementStatus, count(c) from Consumer c where " +
-            "c.owner = :owner and c.entitlementStatus is not null group by " +
-            "c.entitlementStatus";
+            "c.owner = :owner and c.entitlementStatus is not null " +
+            "and c.type.label not in (:typesToFilter) " +
+            "group by c.entitlementStatus";
+
+        // We exclude the following types since they are fake/transparent consumers
+        // and we do not want them included in the totals.
+        String[] typesToFilter = new String[]{"uebercert"};
         Query consumerQuery = currentSession().createQuery(queryStr)
             .setEntity("owner", owner);
+        consumerQuery.setParameterList("typesToFilter", typesToFilter);
+
         Iterator iter = consumerQuery.iterate();
         while (iter.hasNext()) {
             Object[] object = (Object[]) iter.next();
