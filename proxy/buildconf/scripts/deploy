@@ -14,9 +14,18 @@ function gendb ()
     createdb -U candlepin candlepin
     evalrc $? "createdb failed"
 
-    liquibase --driver=org.postgresql.Driver --classpath=src/main/resources/:target/classes/:/usr/share/java/postgresql-jdbc.jar --changeLogFile=db/changelog/changelog-create.xml --url="jdbc:postgresql:candlepin" --username=candlepin --password="" migrate
+    liquibase --driver=org.postgresql.Driver --classpath=src/main/resources/:target/classes/:/usr/share/java/postgresql-jdbc.jar --changeLogFile=db/changelog/changelog-create.xml --url="jdbc:postgresql:candlepin" --username=candlepin --password="" update
     evalrc $? "schema creation failed"
 }
+
+function updatedb ()
+{
+	echo "============ updating db =============="
+
+    liquibase --driver=org.postgresql.Driver --classpath=src/main/resources/:target/classes/:/usr/share/java/postgresql-jdbc.jar --changeLogFile=db/changelog/changelog-update.xml --url="jdbc:postgresql:candlepin" --username=candlepin --password="" update
+    evalrc $? "schema update failed"
+}
+
 
 function deploy ()
 {
@@ -167,6 +176,8 @@ fi
 
 if [ "$GENDB" == "1" ]; then
 	gendb
+else
+    updatedb
 fi
 
 if [ "$FORCECERT" == "1" ]; then
