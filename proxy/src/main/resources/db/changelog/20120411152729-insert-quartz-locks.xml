@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <changeSet id="20120411152729" author="dgoodwin">
+        <comment>Add the default quartz lock columns.</comment>
+        <insert tableName="qrtz_locks">
+            <column name="LOCK_NAME" value="TRIGGER_ACCESS"/>
+            <column name="LOCK_NAME" value="JOB_ACCESS"/>
+            <column name="LOCK_NAME" value="CALENDAR_ACCESS"/>
+            <column name="LOCK_NAME" value="STATE_ACCESS"/>
+            <column name="LOCK_NAME" value="MISFIRE_ACCESS"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

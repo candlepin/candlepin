@@ -1,0 +1,1095 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+    <changeSet author="dgoodwin" id="1332854949306-1000">
+        <createTable tableName="cp_activation_key">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_activation_key_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP "/>
+            <column name="updated" type="TIMESTAMP "/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="owner_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-1">
+        <createTable tableName="cp_activationkey_pool">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_activationkey_pool_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="quantity" type="int8">
+                <constraints nullable="false"/>
+            </column>
+            <column name="key_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pool_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-2">
+        <createTable tableName="cp_cert_serial">
+            <column name="id" type="int8">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_cert_serial_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="collected" type="bool">
+                <constraints nullable="false"/>
+            </column>
+            <column name="expiration" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="revoked" type="bool">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-3">
+        <createTable tableName="cp_certificate">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_certificate_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="cert" type="bytea">
+                <constraints nullable="false"/>
+            </column>
+            <column name="privatekey" type="bytea">
+                <constraints nullable="false"/>
+            </column>
+            <column name="serial_id" type="int8"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-4">
+        <createTable tableName="cp_consumer">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_consumer_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="autoheal" type="bool"/>
+            <column name="entitlementstatus" type="VARCHAR(32)"/>
+            <column name="lastcheckin" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="releasever" type="bytea"/>
+            <column name="servicelevel" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="username" type="VARCHAR(255)"/>
+            <column name="uuid" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="environment_id" type="VARCHAR(32)"/>
+            <column name="consumer_idcert_id" type="VARCHAR(32)"/>
+            <column name="keypair_id" type="VARCHAR(32)"/>
+            <column name="owner_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-5">
+        <createTable tableName="cp_consumer_facts">
+            <column name="cp_consumer_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="element" type="VARCHAR(255)"/>
+            <column name="mapkey" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-6">
+        <createTable tableName="cp_consumer_guests">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_consumer_guests_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="guest_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="consumer_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-7">
+        <createTable tableName="cp_consumer_installed_products">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_consumer_installed_products_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="product_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_name" type="VARCHAR(255)"/>
+            <column name="consumer_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-8">
+        <createTable tableName="cp_consumer_type">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_consumer_type_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="label" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="manifest" type="char(1)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-9">
+        <createTable tableName="cp_content">
+            <column name="id" type="VARCHAR(255)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_content_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="contenturl" type="VARCHAR(255)"/>
+            <column name="gpgurl" type="VARCHAR(255)"/>
+            <column name="label" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="metadataexpire" type="int8"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="releasever" type="VARCHAR(255)"/>
+            <column name="requiredtags" type="VARCHAR(255)"/>
+            <column name="type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="vendor" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-10">
+        <createTable tableName="cp_content_modified_products">
+            <column name="cp_content_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="element" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-11">
+        <createTable tableName="cp_deleted_consumers">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_deleted_consumers_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="consumer_uuid" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="owner_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-12">
+        <createTable tableName="cp_ent_certificate">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_ent_certificate_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="cert" type="bytea">
+                <constraints nullable="false"/>
+            </column>
+            <column name="privatekey" type="bytea">
+                <constraints nullable="false"/>
+            </column>
+            <column name="entitlement_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="serial_id" type="int8"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-13">
+        <createTable tableName="cp_entitlement">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_entitlement_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="accountnumber" type="VARCHAR(255)"/>
+            <column name="contractnumber" type="VARCHAR(255)"/>
+            <column name="enddate" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="quantity" type="int4"/>
+            <column name="startdate" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="consumer_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="owner_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pool_id" type="VARCHAR(32)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-14">
+        <createTable tableName="cp_env_content">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_env_content_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="contentid" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="enabled" type="bool"/>
+            <column name="environment_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-15">
+        <createTable tableName="cp_environment">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_environment_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="description" type="VARCHAR(255)"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="owner_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-16">
+        <createTable tableName="cp_event">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_event_pkey"/>
+            </column>
+            <column name="consumerid" type="VARCHAR(255)"/>
+            <column name="entityid" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ownerid" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="principal" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="referenceid" type="VARCHAR(255)"/>
+            <column name="referencetype" type="VARCHAR(255)"/>
+            <column name="target" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="targetname" type="VARCHAR(255)"/>
+            <column name="timestamp" type="TIMESTAMP WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-17">
+        <createTable tableName="cp_export_metadata">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_export_metadata_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="exported" type="TIMESTAMP WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="owner_id" type="VARCHAR(32)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-18">
+        <createTable tableName="cp_id_cert">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_id_cert_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="cert" type="bytea">
+                <constraints nullable="false"/>
+            </column>
+            <column name="privatekey" type="bytea">
+                <constraints nullable="false"/>
+            </column>
+            <column name="serial_id" type="int8"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-19">
+        <createTable tableName="cp_import_record">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_import_record_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="status" type="int4"/>
+            <column name="statusmessage" type="VARCHAR(255)"/>
+            <column name="owner_id" type="VARCHAR(32)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-20">
+        <createTable tableName="cp_job">
+            <column name="id" type="VARCHAR(255)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_job_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="finishtime" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="jobgroup" type="VARCHAR(15)"/>
+            <column name="principalname" type="VARCHAR(255)"/>
+            <column name="result" type="VARCHAR(255)"/>
+            <column name="starttime" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="state" type="int4"/>
+            <column name="targetid" type="VARCHAR(255)"/>
+            <column name="targettype" type="int4"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-21">
+        <createTable tableName="cp_key_pair">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_key_pair_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="privatekey" type="bytea"/>
+            <column name="publickey" type="bytea"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-22">
+        <createTable tableName="cp_owner">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_owner_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="contentprefix" type="VARCHAR(255)"/>
+            <column name="defaultservicelevel" type="VARCHAR(255)"/>
+            <column name="displayname" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="account" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="upstream_uuid" type="VARCHAR(255)"/>
+            <column name="parent_owner" type="VARCHAR(32)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-23">
+        <createTable tableName="cp_owner_permission">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_owner_permission_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="access" type="int4"/>
+            <column name="owner_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="role_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-24">
+        <createTable tableName="cp_pool">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_pool_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="accountnumber" type="VARCHAR(255)"/>
+            <column name="activesubscription" type="bool"/>
+            <column name="contractnumber" type="VARCHAR(255)"/>
+            <column name="enddate" type="TIMESTAMP WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="productid" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="productname" type="VARCHAR(255)"/>
+            <column name="quantity" type="int8">
+                <constraints nullable="false"/>
+            </column>
+            <column name="restrictedtousername" type="VARCHAR(255)"/>
+            <column name="startdate" type="TIMESTAMP WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="subscriptionid" type="VARCHAR(255)"/>
+            <column name="subscriptionsubkey" type="VARCHAR(255)"/>
+            <column name="version" type="int4">
+                <constraints nullable="false"/>
+            </column>
+            <column name="owner_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sourceentitlement_id" type="VARCHAR(32)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-25">
+        <createTable tableName="cp_pool_attribute">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_pool_attribute_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="value" type="VARCHAR(255)"/>
+            <column name="pool_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-26">
+        <createTable tableName="cp_pool_products">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_pool_products_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="product_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_name" type="VARCHAR(255)"/>
+            <column name="pool_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-27">
+        <createTable tableName="cp_product">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_product_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="multiplier" type="int8"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-28">
+        <createTable tableName="cp_product_attribute">
+            <column name="id" type="VARCHAR(255)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_product_attribute_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="value" type="VARCHAR(255)"/>
+            <column name="product_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-29">
+        <createTable tableName="cp_product_certificate">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_product_certificate_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="cert" type="bytea">
+                <constraints nullable="false"/>
+            </column>
+            <column name="privatekey" type="bytea">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-30">
+        <createTable tableName="cp_product_content">
+            <column name="product_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="enabled" type="bool"/>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-31">
+        <createTable tableName="cp_product_dependent_products">
+            <column name="cp_product_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="element" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-32">
+        <createTable tableName="cp_product_pool_attribute">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_product_pool_attribute_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="value" type="VARCHAR(255)"/>
+            <column name="productid" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pool_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-33">
+        <createTable tableName="cp_role">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_role_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-34">
+        <createTable tableName="cp_role_users">
+            <column name="role_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-35">
+        <createTable tableName="cp_rules">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_rules_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="rules_blob" type="TEXT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-36">
+        <createTable tableName="cp_stat_history">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_stat_history_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="entry_type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="owner_id" type="VARCHAR(255)"/>
+            <column name="value" type="int4">
+                <constraints nullable="false"/>
+            </column>
+            <column name="value_reference" type="VARCHAR(255)"/>
+            <column name="value_type" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-37">
+        <createTable tableName="cp_subscription">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_subscription_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="accountnumber" type="VARCHAR(255)"/>
+            <column name="contractnumber" type="VARCHAR(255)"/>
+            <column name="enddate" type="TIMESTAMP WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="quantity" type="int8">
+                <constraints nullable="false"/>
+            </column>
+            <column name="startdate" type="TIMESTAMP WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="upstream_pool_id" type="VARCHAR(255)"/>
+            <column name="certificate_id" type="VARCHAR(32)"/>
+            <column name="owner_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-38">
+        <createTable tableName="cp_subscription_products">
+            <column name="subscription_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-39">
+        <createTable tableName="cp_user">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_user_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="hashedpassword" type="VARCHAR(255)"/>
+            <column name="superadmin" type="bool">
+                <constraints nullable="false"/>
+            </column>
+            <column name="username" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-42">
+        <createTable tableName="qrtz_blob_triggers">
+            <column name="trigger_name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trigger_group" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="blob_data" type="bytea"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-43">
+        <createTable tableName="qrtz_calendars">
+            <column name="calendar_name" type="VARCHAR(200)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="qrtz_calendars_pkey"/>
+            </column>
+            <column name="calendar" type="bytea">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-44">
+        <createTable tableName="qrtz_cron_triggers">
+            <column name="trigger_name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trigger_group" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="cron_expression" type="VARCHAR(120)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="time_zone_id" type="VARCHAR(80)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-45">
+        <createTable tableName="qrtz_fired_triggers">
+            <column name="entry_id" type="VARCHAR(95)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="qrtz_fired_triggers_pkey"/>
+            </column>
+            <column name="trigger_name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trigger_group" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_volatile" type="bool">
+                <constraints nullable="false"/>
+            </column>
+            <column name="instance_name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="fired_time" type="int8">
+                <constraints nullable="false"/>
+            </column>
+            <column name="priority" type="int4">
+                <constraints nullable="false"/>
+            </column>
+            <column name="state" type="VARCHAR(16)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="job_name" type="VARCHAR(200)"/>
+            <column name="job_group" type="VARCHAR(200)"/>
+            <column name="is_stateful" type="bool"/>
+            <column name="requests_recovery" type="bool"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-46">
+        <createTable tableName="qrtz_job_details">
+            <column name="job_name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="job_group" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="VARCHAR(250)"/>
+            <column name="job_class_name" type="VARCHAR(250)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_durable" type="bool">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_volatile" type="bool">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_stateful" type="bool">
+                <constraints nullable="false"/>
+            </column>
+            <column name="requests_recovery" type="bool">
+                <constraints nullable="false"/>
+            </column>
+            <column name="job_data" type="bytea"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-47">
+        <createTable tableName="qrtz_job_listeners">
+            <column name="job_name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="job_group" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="job_listener" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-48">
+        <createTable tableName="qrtz_locks">
+            <column name="lock_name" type="VARCHAR(40)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="qrtz_locks_pkey"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-49">
+        <createTable tableName="qrtz_paused_trigger_grps">
+            <column name="trigger_group" type="VARCHAR(200)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="qrtz_paused_trigger_grps_pkey"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-50">
+        <createTable tableName="qrtz_scheduler_state">
+            <column name="instance_name" type="VARCHAR(200)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="qrtz_scheduler_state_pkey"/>
+            </column>
+            <column name="last_checkin_time" type="int8">
+                <constraints nullable="false"/>
+            </column>
+            <column name="checkin_interval" type="int8">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-51">
+        <createTable tableName="qrtz_simple_triggers">
+            <column name="trigger_name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trigger_group" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="repeat_count" type="int8">
+                <constraints nullable="false"/>
+            </column>
+            <column name="repeat_interval" type="int8">
+                <constraints nullable="false"/>
+            </column>
+            <column name="times_triggered" type="int8">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-52">
+        <createTable tableName="qrtz_trigger_listeners">
+            <column name="trigger_name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trigger_group" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trigger_listener" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-53">
+        <createTable tableName="qrtz_triggers">
+            <column name="trigger_name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trigger_group" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="job_name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="job_group" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_volatile" type="bool">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="VARCHAR(250)"/>
+            <column name="next_fire_time" type="int8"/>
+            <column name="prev_fire_time" type="int8"/>
+            <column name="priority" type="int4"/>
+            <column name="trigger_state" type="VARCHAR(16)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trigger_type" type="VARCHAR(8)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="start_time" type="int8">
+                <constraints nullable="false"/>
+            </column>
+            <column name="end_time" type="int8"/>
+            <column name="calendar_name" type="VARCHAR(200)"/>
+            <column name="misfire_instr" type="int2"/>
+            <column name="job_data" type="bytea"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-54">
+        <addPrimaryKey columnNames="cp_consumer_id, mapkey" constraintName="cp_consumer_facts_pkey" tableName="cp_consumer_facts"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-55">
+        <addPrimaryKey columnNames="product_id, content_id" constraintName="cp_product_content_pkey" tableName="cp_product_content"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-56">
+        <addPrimaryKey columnNames="role_id, user_id" constraintName="cp_role_users_pkey" tableName="cp_role_users"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-57">
+        <addPrimaryKey columnNames="subscription_id, product_id" constraintName="cp_subscription_products_pkey" tableName="cp_subscription_products"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-58">
+        <addPrimaryKey columnNames="trigger_name, trigger_group" constraintName="qrtz_blob_triggers_pkey" tableName="qrtz_blob_triggers"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-59">
+        <addPrimaryKey columnNames="trigger_name, trigger_group" constraintName="qrtz_cron_triggers_pkey" tableName="qrtz_cron_triggers"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-60">
+        <addPrimaryKey columnNames="job_name, job_group" constraintName="qrtz_job_details_pkey" tableName="qrtz_job_details"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-61">
+        <addPrimaryKey columnNames="job_name, job_group, job_listener" constraintName="qrtz_job_listeners_pkey" tableName="qrtz_job_listeners"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-62">
+        <addPrimaryKey columnNames="trigger_name, trigger_group" constraintName="qrtz_simple_triggers_pkey" tableName="qrtz_simple_triggers"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-63">
+        <addPrimaryKey columnNames="trigger_name, trigger_group, trigger_listener" constraintName="qrtz_trigger_listeners_pkey" tableName="qrtz_trigger_listeners"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-64">
+        <addPrimaryKey columnNames="trigger_name, trigger_group" constraintName="qrtz_triggers_pkey" tableName="qrtz_triggers"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-65-1">
+        <addUniqueConstraint columnNames="name, owner_id" constraintName="cp_activation_key_name_owner_id_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_activation_key"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-65">
+        <addUniqueConstraint columnNames="key_id, pool_id" constraintName="cp_activationkey_pool_key_id_pool_id_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_activationkey_pool"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-66">
+        <addUniqueConstraint columnNames="uuid" constraintName="cp_consumer_uuid_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_consumer"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-67">
+        <addUniqueConstraint columnNames="label" constraintName="cp_consumer_type_label_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_consumer_type"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-68">
+        <addUniqueConstraint columnNames="label" constraintName="cp_content_label_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_content"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-69">
+        <addUniqueConstraint columnNames="consumer_uuid" constraintName="cp_deleted_consumers_consumer_uuid_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_deleted_consumers"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-70">
+        <addUniqueConstraint columnNames="environment_id, contentid" constraintName="cp_env_content_environment_id_contentid_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_env_content"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-71">
+        <addUniqueConstraint columnNames="owner_id, name" constraintName="cp_environment_owner_id_name_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_environment"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-72">
+        <addUniqueConstraint columnNames="account" constraintName="cp_owner_account_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_owner"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-73">
+        <addUniqueConstraint columnNames="upstream_uuid" constraintName="cp_owner_upstream_uuid_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_owner"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-74">
+        <addUniqueConstraint columnNames="subscriptionid, subscriptionsubkey" constraintName="cp_pool_subscriptionid_subscriptionsubkey_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_pool"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-75">
+        <addUniqueConstraint columnNames="name" constraintName="cp_role_name_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_role"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-76">
+        <addUniqueConstraint columnNames="username" constraintName="cp_user_username_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_user"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-77-1">
+        <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_activation_key" baseTableSchemaName="public" constraintName="fk_activation_key_owner" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-77">
+        <addForeignKeyConstraint baseColumnNames="key_id" baseTableName="cp_activationkey_pool" baseTableSchemaName="public" constraintName="fk_activation_key_pool_k" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_activation_key" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-78">
+        <addForeignKeyConstraint baseColumnNames="pool_id" baseTableName="cp_activationkey_pool" baseTableSchemaName="public" constraintName="fk_activation_key_pool_p" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_pool" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-79">
+        <addForeignKeyConstraint baseColumnNames="serial_id" baseTableName="cp_certificate" baseTableSchemaName="public" constraintName="fk16370c54b9410fc" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_cert_serial" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-80">
+        <addForeignKeyConstraint baseColumnNames="consumer_idcert_id" baseTableName="cp_consumer" baseTableSchemaName="public" constraintName="fk58205388a0b39916" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_id_cert" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-81">
+        <addForeignKeyConstraint baseColumnNames="environment_id" baseTableName="cp_consumer" baseTableSchemaName="public" constraintName="fk_consumer_env" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_environment" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-82">
+        <addForeignKeyConstraint baseColumnNames="keypair_id" baseTableName="cp_consumer" baseTableSchemaName="public" constraintName="fk5820538861936445" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_key_pair" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-83">
+        <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_consumer" baseTableSchemaName="public" constraintName="fk_consumer_owner" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-84">
+        <addForeignKeyConstraint baseColumnNames="type_id" baseTableName="cp_consumer" baseTableSchemaName="public" constraintName="fk_consumer_consumer_type" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer_type" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-85">
+        <addForeignKeyConstraint baseColumnNames="cp_consumer_id" baseTableName="cp_consumer_facts" baseTableSchemaName="public" constraintName="fk278ce810390317d" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-86">
+        <addForeignKeyConstraint baseColumnNames="consumer_id" baseTableName="cp_consumer_guests" baseTableSchemaName="public" constraintName="fk_consumer_guests" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-87">
+        <addForeignKeyConstraint baseColumnNames="consumer_id" baseTableName="cp_consumer_installed_products" baseTableSchemaName="public" constraintName="fk_consumer_installed_product" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-88">
+        <addForeignKeyConstraint baseColumnNames="cp_content_id" baseTableName="cp_content_modified_products" baseTableSchemaName="public" constraintName="fkc93d6a8232912b37" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_content" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-89">
+        <addForeignKeyConstraint baseColumnNames="entitlement_id" baseTableName="cp_ent_certificate" baseTableSchemaName="public" constraintName="fk_cert_entitlement" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_entitlement" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-90">
+        <addForeignKeyConstraint baseColumnNames="serial_id" baseTableName="cp_ent_certificate" baseTableSchemaName="public" constraintName="fke76508714b9410fc" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_cert_serial" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-91">
+        <addForeignKeyConstraint baseColumnNames="consumer_id" baseTableName="cp_entitlement" baseTableSchemaName="public" constraintName="fk_entitlement_consumer" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-92">
+        <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_entitlement" baseTableSchemaName="public" constraintName="fk_entitlement_owner" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-93">
+        <addForeignKeyConstraint baseColumnNames="pool_id" baseTableName="cp_entitlement" baseTableSchemaName="public" constraintName="fk_entitlement_pool" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_pool" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-94">
+        <addForeignKeyConstraint baseColumnNames="environment_id" baseTableName="cp_env_content" baseTableSchemaName="public" constraintName="fk_env_content_env" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_environment" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-95">
+        <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_environment" baseTableSchemaName="public" constraintName="fk_env_owner" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-96">
+        <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_export_metadata" baseTableSchemaName="public" constraintName="fkf06f6b8872cc5ca5" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-97">
+        <addForeignKeyConstraint baseColumnNames="serial_id" baseTableName="cp_id_cert" baseTableSchemaName="public" constraintName="fk456324f64b9410fc" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_cert_serial" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-98">
+        <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_import_record" baseTableSchemaName="public" constraintName="fk9349dd972cc5ca5" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-99">
+        <addForeignKeyConstraint baseColumnNames="parent_owner" baseTableName="cp_owner" baseTableSchemaName="public" constraintName="fkf93e9c616343755c" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-100">
+        <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_owner_permission" baseTableSchemaName="public" constraintName="fk_permission_owner" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-101">
+        <addForeignKeyConstraint baseColumnNames="role_id" baseTableName="cp_owner_permission" baseTableSchemaName="public" constraintName="fk_permission_role" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_role" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-102">
+        <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_pool" baseTableSchemaName="public" constraintName="fk_pool_owner" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-103">
+        <addForeignKeyConstraint baseColumnNames="sourceentitlement_id" baseTableName="cp_pool" baseTableSchemaName="public" constraintName="fk_pool_source_entitlement" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_entitlement" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-104">
+        <addForeignKeyConstraint baseColumnNames="pool_id" baseTableName="cp_pool_attribute" baseTableSchemaName="public" constraintName="fk_pool_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_pool" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-105">
+        <addForeignKeyConstraint baseColumnNames="pool_id" baseTableName="cp_pool_products" baseTableSchemaName="public" constraintName="fk_pool_provided_product" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_pool" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-106">
+        <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="cp_product_attribute" baseTableSchemaName="public" constraintName="fk_product_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-107">
+        <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="cp_product_certificate" baseTableSchemaName="public" constraintName="fk_cert_product" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-108">
+        <addForeignKeyConstraint baseColumnNames="content_id" baseTableName="cp_product_content" baseTableSchemaName="public" constraintName="fkce093157574ef825" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_content" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-109">
+        <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="cp_product_content" baseTableSchemaName="public" constraintName="fkce09315764dd9c65" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-110">
+        <addForeignKeyConstraint baseColumnNames="cp_product_id" baseTableName="cp_product_dependent_products" baseTableSchemaName="public" constraintName="fk9ef75306401fcf77" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-111">
+        <addForeignKeyConstraint baseColumnNames="pool_id" baseTableName="cp_product_pool_attribute" baseTableSchemaName="public" constraintName="fk_pool_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_pool" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-112">
+        <addForeignKeyConstraint baseColumnNames="role_id" baseTableName="cp_role_users" baseTableSchemaName="public" constraintName="fk_user_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_role" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-113">
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="cp_role_users" baseTableSchemaName="public" constraintName="fk_role_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_user" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-114">
+        <addForeignKeyConstraint baseColumnNames="certificate_id" baseTableName="cp_subscription" baseTableSchemaName="public" constraintName="fk27d80fafd8564fd9" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_certificate" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-115">
+        <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_subscription" baseTableSchemaName="public" constraintName="fk_subscription_owner" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-116">
+        <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="cp_subscription" baseTableSchemaName="public" constraintName="fk_subscription_product" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-117">
+        <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="cp_subscription_products" baseTableSchemaName="public" constraintName="fk_subscription_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-118">
+        <addForeignKeyConstraint baseColumnNames="subscription_id" baseTableName="cp_subscription_products" baseTableSchemaName="public" constraintName="fk_product_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_subscription" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-119">
+        <addForeignKeyConstraint baseColumnNames="trigger_name, trigger_group" baseTableName="qrtz_blob_triggers" baseTableSchemaName="public" constraintName="qrtz_blob_triggers_trigger_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="trigger_name, trigger_group" referencedTableName="qrtz_triggers" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-120">
+        <addForeignKeyConstraint baseColumnNames="trigger_name, trigger_group" baseTableName="qrtz_cron_triggers" baseTableSchemaName="public" constraintName="qrtz_cron_triggers_trigger_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="trigger_name, trigger_group" referencedTableName="qrtz_triggers" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-121">
+        <addForeignKeyConstraint baseColumnNames="job_name, job_group" baseTableName="qrtz_job_listeners" baseTableSchemaName="public" constraintName="qrtz_job_listeners_job_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="job_name, job_group" referencedTableName="qrtz_job_details" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-122">
+        <addForeignKeyConstraint baseColumnNames="trigger_name, trigger_group" baseTableName="qrtz_simple_triggers" baseTableSchemaName="public" constraintName="qrtz_simple_triggers_trigger_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="trigger_name, trigger_group" referencedTableName="qrtz_triggers" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-123">
+        <addForeignKeyConstraint baseColumnNames="trigger_name, trigger_group" baseTableName="qrtz_trigger_listeners" baseTableSchemaName="public" constraintName="qrtz_trigger_listeners_trigger_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="trigger_name, trigger_group" referencedTableName="qrtz_triggers" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="dgoodwin" id="1332854949306-124">
+        <addForeignKeyConstraint baseColumnNames="job_name, job_group" baseTableName="qrtz_triggers" baseTableSchemaName="public" constraintName="qrtz_triggers_job_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="job_name, job_group" referencedTableName="qrtz_job_details" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    <include file="db/changelog/20120411152729-insert-quartz-locks.xml" />
+</databaseChangeLog>
