@@ -24,6 +24,12 @@ BuildRequires: java >= 0:1.6.0
 BuildRequires: ant >= 0:1.7.0
 BuildRequires: gettext
 BuildRequires: selinux-policy-doc
+
+%if 0%{?fedora}
+BuildRequires: candlepin-deps
+%endif
+
+%if 0%{?rhel}
 BuildRequires: bouncycastle
 BuildRequires: hibernate3 >= 3.3.2
 BuildRequires: hibernate3-annotations >= 0:3.4.0
@@ -35,7 +41,6 @@ BuildRequires: hibernate3-commons-annotations
 BuildRequires: google-collections >= 0:1.0
 BuildRequires: resteasy >= 0:2.3.1
 BuildRequires: hornetq >= 0:2.2.11
-#BuildRequires: mockito
 BuildRequires: google-guice >= 0:3.0
 BuildRequires: log4j
 BuildRequires: jakarta-commons-lang
@@ -56,9 +61,11 @@ BuildRequires: quartz >= 0:1.7.3
 BuildRequires: c3p0
 BuildRequires: scannotation
 BuildRequires: postgresql-jdbc
+%endif
 Requires: java >= 0:1.6.0
 #until cpsetup is removed
 Requires: wget
+%if 0%{?rhel}
 # candlepin webapp requires
 Requires: bouncycastle
 Requires: hibernate3 >= 3.3.2
@@ -82,6 +89,8 @@ Requires: jaxb_api
 Requires: postgresql-jdbc
 Requires: scannotation
 Requires: liquibase >= 2.0.3
+%endif
+
 %define __jar_repack %{nil}
 
 %description
