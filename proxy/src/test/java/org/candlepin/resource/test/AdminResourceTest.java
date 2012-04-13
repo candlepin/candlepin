@@ -17,16 +17,14 @@ package org.candlepin.resource.test;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.model.ConsumerType;
-import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.User;
-import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.UserCurator;
 import org.candlepin.resource.AdminResource;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.service.impl.DefaultUserServiceAdapter;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -37,38 +35,33 @@ import org.junit.Test;
  */
 public class AdminResourceTest {
 
-    private ConsumerTypeCurator ctc;
     private UserServiceAdapter usa;
     private AdminResource ar;
+    private UserCurator uc;
 
     @Before
     public void init() {
-        ctc = mock(ConsumerTypeCurator.class);
-        usa = mock(UserServiceAdapter.class);
-        ar = new AdminResource(ctc, usa);
+        usa = mock(DefaultUserServiceAdapter.class);
+        uc = mock(UserCurator.class);
+        ar = new AdminResource(usa, uc);
     }
 
     @Test
     public void initialize() {
-        when(ctc.lookupByLabel(ConsumerTypeEnum.SYSTEM.getLabel())).thenReturn(null);
+        when(uc.getUserCount()).thenReturn(new Long(0));
         assertEquals("Initialized!", ar.initialize());
-        verify(ctc, times(ConsumerTypeEnum.values().length)).create(
-            any(ConsumerType.class));
         verify(usa).createUser(any(User.class));
     }
 
     @Test
-    public void initWithException() {
-        when(ctc.lookupByLabel(ConsumerTypeEnum.SYSTEM.getLabel())).thenReturn(null);
-        when(usa.createUser(any(User.class))).thenThrow(
-            new UnsupportedOperationException());
-        assertEquals("Initialized!", ar.initialize());
+    public void initWithNonDefaultUserService() {
+        ar = new AdminResource(mock(UserServiceAdapter.class), uc);
+        assertEquals("Already initialized.", ar.initialize());
     }
 
     @Test
     public void alreadyInitialized() {
-        ConsumerType ct = mock(ConsumerType.class);
-        when(ctc.lookupByLabel(ConsumerTypeEnum.SYSTEM.getLabel())).thenReturn(ct);
+        when(uc.getUserCount()).thenReturn(new Long(1000));
         assertEquals("Already initialized.", ar.initialize());
     }
 }

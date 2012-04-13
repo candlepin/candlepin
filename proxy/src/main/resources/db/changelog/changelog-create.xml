@@ -1092,4 +1092,5 @@
         <addForeignKeyConstraint baseColumnNames="job_name, job_group" baseTableName="qrtz_triggers" baseTableSchemaName="public" constraintName="qrtz_triggers_job_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="job_name, job_group" referencedTableName="qrtz_job_details" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
     <include file="db/changelog/20120411152729-insert-quartz-locks.xml" />
+    <include file="db/changelog/20120413094334-insert-default-consumer-types.xml" />
 </databaseChangeLog>
