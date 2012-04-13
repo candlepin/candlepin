@@ -19,14 +19,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
@@ -38,6 +30,7 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
@@ -58,6 +51,14 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
+
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 @RunWith(MockitoJUnitRunner.class)
 public class HypervisorResourceTest {
@@ -98,6 +99,9 @@ public class HypervisorResourceTest {
     @Mock
     private ComplianceRules complianceRules;
 
+    @Mock
+    private DeletedConsumerCurator deletedConsumerCurator;
+
     private ConsumerResource consumerResource;
 
     private I18n i18n;
@@ -114,9 +118,10 @@ public class HypervisorResourceTest {
             this.consumerTypeCurator, null, this.subscriptionService, null,
             this.idCertService, null, this.i18n, this.sink, this.eventFactory, null, null,
             this.userService, null, null, null, null, null, this.ownerCurator,
-            this.activationKeyCurator, null, this.complianceRules);
+            this.activationKeyCurator, null, this.complianceRules,
+            this.deletedConsumerCurator);
         hypervisorResource = new HypervisorResource(consumerResource, poolManager,
-            consumerCurator);
+            consumerCurator, this.deletedConsumerCurator);
 
         // Ensure that we get the consumer that was passed in back from the create call.
         when(consumerCurator.create(any(Consumer.class))).thenAnswer(new Answer<Object>() {

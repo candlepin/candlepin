@@ -14,6 +14,24 @@
  */
 package org.candlepin.resource;
 
+import org.candlepin.auth.Principal;
+import org.candlepin.auth.interceptor.SecurityHole;
+import org.candlepin.controller.PoolManager;
+import org.candlepin.exceptions.GoneException;
+import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.DeletedConsumer;
+import org.candlepin.model.DeletedConsumerCurator;
+import org.candlepin.model.GuestId;
+import org.candlepin.resource.dto.HypervisorCheckInResult;
+
+import com.google.inject.Inject;
+import com.wideplay.warp.persist.Transactional;
+
+import org.apache.log4j.Logger;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -26,19 +44,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
-import org.apache.log4j.Logger;
-import org.candlepin.auth.Principal;
-import org.candlepin.auth.interceptor.SecurityHole;
-import org.candlepin.controller.PoolManager;
-import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerCurator;
-import org.candlepin.model.ConsumerType;
-import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
-import org.candlepin.model.GuestId;
-import org.candlepin.resource.dto.HypervisorCheckInResult;
-
-import com.google.inject.Inject;
-
 /**
  * HypervisorResource
  */
@@ -48,13 +53,15 @@ public class HypervisorResource {
     private ConsumerCurator consumerCurator;
     private PoolManager poolManager;
     private ConsumerResource consumerResource;
+    private DeletedConsumerCurator deletedConsumerCurator;
 
     @Inject
     public HypervisorResource(ConsumerResource consumerResource, PoolManager poolManager,
-        ConsumerCurator consumerCurator) {
+        ConsumerCurator consumerCurator, DeletedConsumerCurator deletedConsumerCurator) {
         this.consumerResource = consumerResource;
         this.poolManager = poolManager;
         this.consumerCurator = consumerCurator;
+        this.deletedConsumerCurator = deletedConsumerCurator;
     }
 
     /**
@@ -77,6 +84,7 @@ public class HypervisorResource {
     @Produces(MediaType.APPLICATION_JSON)
     // FIXME Temporarily open up until auth is figured out.
     @SecurityHole(noAuth = true)
+    @Transactional
     public HypervisorCheckInResult hypervisorCheckIn(
         Map<String, List<GuestId>> hostGuestMap, @Context Principal principal,
         @QueryParam("owner") String ownerKey) {
@@ -85,6 +93,12 @@ public class HypervisorResource {
             try {
                 log.info("Attempting to register host: " + hostEntry.getKey());
                 List<GuestId> guestIds = hostEntry.getValue();
+                DeletedConsumer deletedHypervisor =
+                    deletedConsumerCurator.findByConsumerUuid(hostEntry.getKey());
+                if (deletedHypervisor != null) {
+                    throw new GoneException("Hypervisor " + hostEntry.getKey() +
+                                                " has been deleted previously");
+                }
                 Consumer consumer = consumerCurator.findByUuid(hostEntry.getKey());
                 if (consumer == null) {
                     // Create new consumer
@@ -117,5 +131,4 @@ public class HypervisorResource {
         }
         return result;
     }
-
 }

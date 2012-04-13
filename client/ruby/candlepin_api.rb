@@ -96,6 +96,11 @@ class Candlepin
     return consumers
   end
 
+  def remove_deletion_record(deleted_uuid)
+    path = get_path("consumers") + "/#{deleted_uuid}/deletionrecord"
+    result = delete(path)
+    return result
+  end
 
   def update_consumer(params)
     uuid = params[:uuid] || @uuid
@@ -837,7 +842,7 @@ class Candlepin
     data = data.to_json if not data.nil?
     response = get_client(uri, Net::HTTP::Post, :post)[URI.escape(uri)].post(
       data, :content_type => :json, :accept => :json)
-    return JSON.parse(response.body)
+    return JSON.parse(response.body) unless response.body.empty?
   end
 
   def post_file(uri, file=nil)
@@ -860,6 +865,7 @@ class Candlepin
   end
 
   def delete(uri)
+    puts ("DELETE #{uri}") if @verbose
     response = get_client(uri, Net::HTTP::Delete, :delete)[URI.escape(uri)].delete
     return JSON.parse(response.body) unless response.body.empty?
   end

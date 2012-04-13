@@ -14,34 +14,6 @@
  */
 package org.candlepin.resource;
 
-import java.io.File;
-import java.io.IOException;
-import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-
-import org.apache.log4j.Logger;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventAdapter;
 import org.candlepin.audit.EventFactory;
@@ -69,6 +41,8 @@ import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.DeletedConsumer;
+import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCurator;
@@ -98,12 +72,41 @@ import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.sync.ExportCreationException;
 import org.candlepin.sync.Exporter;
 import org.candlepin.util.Util;
+
+import com.google.inject.Inject;
+import com.wideplay.warp.persist.Transactional;
+
+import org.apache.log4j.Logger;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
 
-import com.google.inject.Inject;
-import com.wideplay.warp.persist.Transactional;
+import java.io.File;
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 /**
  * API Gateway for Consumers
@@ -137,6 +140,7 @@ public class ConsumerResource {
     private ActivationKeyCurator activationKeyCurator;
     private Entitler entitler;
     private ComplianceRules complianceRules;
+    private DeletedConsumerCurator deletedConsumerCurator;
 
     @Inject
     public ConsumerResource(ConsumerCurator consumerCurator,
@@ -151,7 +155,8 @@ public class ConsumerResource {
         Exporter exporter, PoolManager poolManager, PoolCurator poolCurator,
         ConsumerRules consumerRules, ConsumerDeleteHelper consumerDeleteHelper,
         OwnerCurator ownerCurator, ActivationKeyCurator activationKeyCurator,
-        Entitler entitler, ComplianceRules complianceRules) {
+        Entitler entitler, ComplianceRules complianceRules,
+        DeletedConsumerCurator deletedConsumerCurator) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -175,6 +180,7 @@ public class ConsumerResource {
         this.activationKeyCurator = activationKeyCurator;
         this.entitler = entitler;
         this.complianceRules = complianceRules;
+        this.deletedConsumerCurator = deletedConsumerCurator;
     }
 
     /**
@@ -1593,5 +1599,28 @@ public class ConsumerResource {
                 enricher.enrich(cip, prod);
             }
         }
+    }
+    /*
+     *
+     * Allows the superadmin to remove a deletion record for a consumer. The
+     * main use case for this would be if a user accidently deleted a non-RHEL
+     * hypervisor, causing it to no longer be auto-detected via virt-who.
+     *
+     * @param uuid
+     *
+     * @httpcode 404
+     * @httpcode 200
+     */
+    @DELETE
+    @Path("{consumer_uuid}/deletionrecord")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Transactional
+    public void removeDeletionRecord(@PathParam("consumer_uuid") String uuid) {
+        DeletedConsumer dc = deletedConsumerCurator.findByConsumerUuid(uuid);
+        if (dc == null) {
+            throw new NotFoundException("Deletion record for hypervisor " +
+                            uuid + " not found.");
+        }
+        deletedConsumerCurator.delete(dc);
     }
 }

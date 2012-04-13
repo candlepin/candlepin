@@ -23,12 +23,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Locale;
-
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
@@ -39,6 +33,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.GuestId;
 import org.candlepin.policy.js.compliance.ComplianceRules;
@@ -48,6 +43,7 @@ import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.TestUtil;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -55,6 +51,12 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Locale;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ConsumerResourceUpdateTest {
@@ -70,6 +72,8 @@ public class ConsumerResourceUpdateTest {
     @Mock private PoolManager poolManager;
     @Mock private ComplianceRules complianceRules;
     @Mock private Entitler entitler;
+    @Mock private DeletedConsumerCurator deletedConsumerCurator;
+
     private I18n i18n;
 
     private ConsumerResource resource;
@@ -82,7 +86,8 @@ public class ConsumerResourceUpdateTest {
             this.consumerTypeCurator, null, this.subscriptionService, null,
             this.idCertService, null, this.i18n, this.sink, this.eventFactory, null, null,
             this.userService, null, poolManager, null, null, null, null,
-            this.activationKeyCurator, this.entitler, this.complianceRules);
+            this.activationKeyCurator, this.entitler, this.complianceRules,
+            this.deletedConsumerCurator);
 
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class)))
             .thenReturn(new ComplianceStatus(new Date()));

@@ -539,7 +539,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         ConsumerResource cr = new ConsumerResource(this.consumerCurator, null,
             null, null, this.entitlementCurator, null, null, null, null, null,
             null, null, null, null, this.poolManager, null, null, null, null,
-            null, null, null);
+            null, null, null, null);
 
         Response rsp = consumerResource.bind(
             consumer.getUuid(), pool.getId().toString(), null, 1, null,
