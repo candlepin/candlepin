@@ -10,9 +10,17 @@
         <comment>Add the default quartz lock columns.</comment>
         <insert tableName="qrtz_locks">
             <column name="LOCK_NAME" value="TRIGGER_ACCESS"/>
+        </insert>
+        <insert tableName="qrtz_locks">
             <column name="LOCK_NAME" value="JOB_ACCESS"/>
+        </insert>
+        <insert tableName="qrtz_locks">
             <column name="LOCK_NAME" value="CALENDAR_ACCESS"/>
+        </insert>
+        <insert tableName="qrtz_locks">
             <column name="LOCK_NAME" value="STATE_ACCESS"/>
+        </insert>
+        <insert tableName="qrtz_locks">
             <column name="LOCK_NAME" value="MISFIRE_ACCESS"/>
         </insert>
     </changeSet>
