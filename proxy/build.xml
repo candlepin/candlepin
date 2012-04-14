@@ -21,8 +21,7 @@
     commons-httpclient commons-io commons-lang commons-logging commons-pool
     dom4j freemarker gettext-commons google-collections guice
     guice-assistedinject guice-multibindings guice-persist guice-servlet
-    guice-throwingproviders hibernate-annotations
-    hibernate3-commons-annotations/hibernate-commons-annotations
+    guice-throwingproviders hibernate-annotations hibernate-commons-annotations
     hibernate-core hibernate-entitymanager hornetq/hornetq-core
     hornetq/hornetq-core-client javassist javax.inject jaxb-impl
     jboss-logging jpa_1_0_api js jta log4j netty oauth oauth-provider
