@@ -145,7 +145,7 @@ SELinux policy module supporting candlepin
 mkdir -p %{_tmppath}/distlibdir/
 
 %build
-ant -Dlibdir=/usr/share/java/ -Ddistlibdir=%{_tmppath}/distlibdir/ clean package genschema
+ant -Dlibdir=/usr/share/java/ -Ddistlibdir=%{_tmppath}/distlibdir/ clean package
 
 cd selinux
 for selinuxvariant in %{selinux_variants}
@@ -193,10 +193,6 @@ install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/%{name}
 install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/log/%{name}
 install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/cache/%{name}
 
-# schema
-install -d -m 755 $RPM_BUILD_ROOT/%{_datadir}/%{name}/schema/
-cp -r target/schema/* $RPM_BUILD_ROOT/%{_datadir}/%{name}/schema/
-
 cd selinux
 for selinuxvariant in %{selinux_variants}
 do
@@ -232,7 +228,6 @@ fi
 %dir %{_datadir}/%{name}/
 %{_datadir}/%{name}/cpsetup
 %{_datadir}/%{name}/cpdb
-%{_datadir}/%{name}/schema/
 %{_sysconfdir}/%{name}/certs/
 
 %files jboss
