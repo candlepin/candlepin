@@ -142,6 +142,7 @@ SELinux policy module supporting candlepin
 
 %prep
 %setup -q
+rm -rf %{_tmppath}/distlibdir/
 mkdir -p %{_tmppath}/distlibdir/
 
 %build
