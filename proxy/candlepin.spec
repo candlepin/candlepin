@@ -6,6 +6,7 @@
 %global selinux_variants mls strict targeted
 %global selinux_policyver %(%{__sed} -e 's,.*selinux-policy-\\([^/]*\\)/.*,\\1,' /usr/share/selinux/devel/policyhelp || echo 0.0.0)
 %global modulename candlepin
+%define distlibdir %{_tmppath}/distlibdir/
 
 Name: candlepin
 Summary: Candlepin is an open source entitlement management system
@@ -26,6 +27,7 @@ BuildRequires: gettext
 BuildRequires: selinux-policy-doc
 
 %if 0%{?fedora}
+%define distlibdir %{_datadir}/%{name}/lib/
 BuildRequires: candlepin-deps
 %endif
 
