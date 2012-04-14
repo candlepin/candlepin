@@ -28,7 +28,7 @@ import org.candlepin.model.GuestId;
 import org.candlepin.resource.dto.HypervisorCheckInResult;
 
 import com.google.inject.Inject;
-import com.wideplay.warp.persist.Transactional;
+import com.google.inject.persist.Transactional;
 
 import org.apache.log4j.Logger;
 
