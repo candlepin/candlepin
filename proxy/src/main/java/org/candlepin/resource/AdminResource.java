@@ -20,11 +20,10 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
-import org.candlepin.model.ConsumerType;
-import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.User;
-import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.UserCurator;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.service.impl.DefaultUserServiceAdapter;
 
 import com.google.inject.Inject;
 
@@ -41,22 +40,21 @@ public class AdminResource {
 
     private static Logger log = Logger.getLogger(AdminResource.class);
 
-    private ConsumerTypeCurator consumerTypeCurator;
     private UserServiceAdapter userService;
+    private UserCurator userCurator;
 
     @Inject
-    public AdminResource(ConsumerTypeCurator consumerTypeCurator,
-            UserServiceAdapter userService) {
-        this.consumerTypeCurator = consumerTypeCurator;
+    public AdminResource(UserServiceAdapter userService, UserCurator userCurator) {
         this.userService = userService;
+        this.userCurator = userCurator;
     }
 
     /**
      * Initialize the Candlepin database.
      *
-     * Currently this just creates static'ish database entries for things like
-     * consumer types. This call needs to happen once after a database is created.
-     * Repeated calls are not required, but will be harmless.
+     * Currently this just creates the admin user for standalone deployments using the
+     * default user service adapter. It must be called once after candlepin is installed,
+     * repeat calls are not required, but will be harmless.
      *
      * @return Description if db was or already is initialized.
      * @httpcode 200
@@ -68,33 +66,24 @@ public class AdminResource {
     public String initialize() {
         log.debug("Called initialize()");
 
-        // First, determine if we've already setup the DB and if so, do *nothing*!
-        ConsumerType systemType = consumerTypeCurator.lookupByLabel(
-            ConsumerTypeEnum.SYSTEM.getLabel());
-        if (systemType != null) {
-            log.info("Database already initialized.");
-            return "Already initialized.";
-        }
         log.info("Initializing Candlepin database.");
 
-        // Push the system principal so we can create all these entries as a superuser
-        ResteasyProviderFactory.pushContext(Principal.class, new SystemPrincipal());
+        // All we really need to do here is create the initial admin user, if we're using
+        // the default user service adapter, and no other users exist already:
+        if (userService instanceof DefaultUserServiceAdapter &&
+            userCurator.getUserCount() == 0) {
+            // Push the system principal so we can create all these entries as a
+            // superuser:
+            ResteasyProviderFactory.pushContext(Principal.class, new SystemPrincipal());
 
-        for (ConsumerTypeEnum type : ConsumerTypeEnum.values()) {
-            ConsumerType created = new ConsumerType(type);
-            consumerTypeCurator.create(created);
-            log.debug("Created: " + created);
-        }
-
-        log.info("Creating default super admin.");
-        try {
+            log.info("Creating default super admin.");
             User defaultAdmin = new User("admin", "admin", true);
             userService.createUser(defaultAdmin);
+            return "Initialized!";
         }
-        catch (UnsupportedOperationException e) {
-            log.info("Admin creation is not supported!");
+        else {
+            // Any other user service adapter and we really have nothing to do:
+            return "Already initialized.";
         }
-
-        return "Initialized!";
     }
 }

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+
+    <changeSet id="20120413094334" author="dgoodwin">
+        <comment>Insert the default consumer types.</comment>
+        <insert tableName="cp_consumer_type">
+            <column name="id" value="1000"/>
+            <column name="label" value="system"/>
+            <column name="manifest" value="N"/>
+        </insert>
+        <insert tableName="cp_consumer_type">
+            <column name="id" value="1001"/>
+            <column name="label" value="person"/>
+            <column name="manifest" value="N"/>
+        </insert>
+        <insert tableName="cp_consumer_type">
+            <column name="id" value="1002"/>
+            <column name="label" value="domain"/>
+            <column name="manifest" value="N"/>
+        </insert>
+        <insert tableName="cp_consumer_type">
+            <column name="id" value="1003"/>
+            <column name="label" value="candlepin"/>
+            <column name="manifest" value="Y"/>
+        </insert>
+        <insert tableName="cp_consumer_type">
+            <column name="id" value="1004"/>
+            <column name="label" value="hypervisor"/>
+            <column name="manifest" value="N"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

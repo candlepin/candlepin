@@ -14,20 +14,15 @@
  */
 package org.candlepin.resource.test;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-import static org.mockito.Mockito.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import org.apache.commons.lang.StringUtils;
 import org.candlepin.audit.EventSink;
+import org.candlepin.auth.Access;
 import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.auth.Principal;
-import org.candlepin.auth.Access;
 import org.candlepin.auth.TrustedUserPrincipal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.Permission;
@@ -40,11 +35,12 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.IdentityCertificate;
-import org.candlepin.model.Role;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerPermission;
+import org.candlepin.model.Role;
 import org.candlepin.model.User;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -53,6 +49,7 @@ import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 
+import org.apache.commons.lang.StringUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -63,6 +60,14 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
 
 /**
  *
@@ -81,6 +86,8 @@ public class ConsumerResourceCreationTest {
     @Mock private EventSink sink;
     @Mock private ActivationKeyCurator activationKeyCurator;
     @Mock private ComplianceRules complianceRules;
+    @Mock private DeletedConsumerCurator deletedConsumerCurator;
+
     private I18n i18n;
 
     private ConsumerResource resource;
@@ -96,7 +103,8 @@ public class ConsumerResourceCreationTest {
             this.consumerTypeCurator, null, this.subscriptionService, null,
             this.idCertService, null, this.i18n, this.sink, null, null, null,
             this.userService, null, null, null, null, null, this.ownerCurator,
-            this.activationKeyCurator, null, this.complianceRules);
+            this.activationKeyCurator, null, this.complianceRules,
+            this.deletedConsumerCurator);
 
         this.system = new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
 

@@ -35,6 +35,15 @@ public class UserCurator extends AbstractHibernateCurator<User> {
         .uniqueResult();
     }
 
+    /**
+     * Fetch the number of users without loading them all.
+     * @return number of user accounts in our database
+     */
+    public Long getUserCount() {
+        return (Long) currentSession().createQuery("select count(*) from User").
+            iterate().next();
+    }
+
     @Transactional
     @EnforceAccessControl
     public User update(User user) {

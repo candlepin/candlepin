@@ -90,6 +90,41 @@ describe 'Hypervisor Resource' do
     @host_client.list_entitlements.length.should == 1
   end
 
+  it 'should be able to delete and recreate a hypervisor' do
+
+    chuck_owner = create_owner(random_string('chuck'))
+    chuck_username = random_string 'chuck'
+    alice_username = random_string 'alice'
+    chuck_cp = user_client(chuck_owner, chuck_username)
+    alice_cp = user_client(@owner, alice_username)
+
+
+    deletable_uuid = random_string("string-used-as-a-mock-uuid")
+    host_guest_mapping = get_host_guest_mapping(deletable_uuid, [])
+    results = @user.hypervisor_check_in(@owner.key,  host_guest_mapping)
+    @cp.unregister(deletable_uuid)
+    results = @user.hypervisor_check_in(@owner.key,  host_guest_mapping)
+    # the update should fail since the consumer got deleted
+    results.failedUpdate.size.should == 1
+    lambda do
+      @cp.get_consumer(deletable_uuid)
+    end.should raise_exception(RestClient::Gone)
+
+    # ensure that the owner cannot undo the delete record
+    lambda do
+      alice_cp.remove_deletion_record(deletable_uuid)
+    end.should raise_exception(RestClient::Forbidden)
+
+    # ensure that a random user cannot undo the delete record
+    lambda do
+      chuck_cp.remove_deletion_record(deletable_uuid)
+    end.should raise_exception(RestClient::Forbidden)
+
+    @cp.remove_deletion_record(deletable_uuid)
+    results = @user.hypervisor_check_in(@owner.key,  host_guest_mapping)
+    results.failedUpdate.size.should == 0
+  end
+
   def get_host_guest_mapping(host_uuid, guest_id_list)
     return { host_uuid => guest_id_list }
   end
