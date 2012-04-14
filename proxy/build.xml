@@ -19,7 +19,7 @@
     codehaus-jackson/jackson-mapper-lgpl codehaus-jackson/jackson-xc
     commons-beanutils commons-codec commons-collections commons-dbcp
     commons-httpclient commons-io commons-lang commons-logging commons-pool
-    dom4j freemarker gettext-commons google-collections guice
+    dom4j gettext-commons google-collections guice
     guice-assistedinject guice-multibindings guice-persist guice-servlet
     guice-throwingproviders hibernate-annotations hibernate-commons-annotations
     hibernate-core hibernate-entitymanager hornetq/hornetq-core
