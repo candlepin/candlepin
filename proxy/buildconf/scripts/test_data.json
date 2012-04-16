@@ -40,6 +40,25 @@
             "gpg_url": "/foo/path/gpg/",
             "metadata_expire": 0
         },
+       {
+            "name": "content-nogpg",
+            "id": 234,
+            "label": "content-label-no-gpg",
+            "type": "yum",
+            "vendor": "test-vendor",
+            "content_url": "/foo/path",
+            "metadata_expire": 0
+        },
+      {
+            "name": "content-emptygpg",
+            "id": 235,
+            "label": "content-label-empty-gpg",
+            "type": "yum",
+            "vendor": "test-vendor",
+            "content_url": "/foo/path",
+            "gpg_url": "",
+            "metadata_expire": 0
+        },
         {
             "name": "awesomeos-modifier",
             "id": 1112,
@@ -450,7 +469,9 @@
                 [1111, true],
                 [0, false],
                 [1, true],
-                [2, true]
+                [2, true],
+                [234, true],
+                [235, true]
             ]
         },
         {
