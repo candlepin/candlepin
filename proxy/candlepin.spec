@@ -11,7 +11,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.5.26.0
+Version: 0.5.26.1
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -202,6 +202,9 @@ fi
 
 
 %changelog
+* Tue Apr 17 2012 Chris Duryee (beav) <cduryee@redhat.com>
+- 804227: add simple model for Release (alikins@redhat.com)
+
 * Wed Mar 14 2012 jesus m. rodriguez <jesusr@redhat.com> 0.5.26-1
 - latest strings from zanata (alikins@redhat.com)
 - add releasever (alikins@redhat.com)
