@@ -167,7 +167,11 @@
     </copy>
   </target>
 
-  <target name="initjars">
+  <target name="usecpdeps">
+    <property name="usecpdeps" value="true" />
+  </target>
+
+  <target name="initjars" unless="usecpdeps">
     <jpackage-deps jars="${jar.deps}" dir="${dist.lib.dir}" />
   </target>
 
@@ -205,7 +209,15 @@
         <include name="**/*.xml" />
       </classes>
       <classes dir="${target.dir}/generated-source" />
-      <lib dir="${dist.lib.dir}" />
+      <lib dir="${dist.lib.dir}">
+        <!-- can be removed once candlepin-deps is dead -->
+        <exclude name="**/emma*.jar" />
+        <exclude name="**/hamcrest*.jar" />
+        <exclude name="**/jmock*.jar" />
+        <exclude name="**/junit*.jar" />
+        <exclude name="**/mockito*.jar" />
+        <exclude name="**/schemaSpy*.jar" />
+      </lib>
     </war>
   </target>
 
