@@ -20,6 +20,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.policy.Enforcer;
@@ -60,6 +61,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
     protected JsRules jsRules;
     protected Config config;
     protected ConsumerCurator consumerCurator;
+    protected PoolCurator poolCurator;
 
     protected static final String PROD_ARCHITECTURE_SEPARATOR = ",";
     protected static final String PRE_PREFIX = "pre_";
@@ -423,7 +425,8 @@ public abstract class AbstractEntitlementRules implements Enforcer {
     }
 
     public List<PoolQuantity> selectBestPools(Consumer consumer, String[] productIds,
-        List<Pool> pools, ComplianceStatus compliance, String serviceLevelOverride)
+        List<Pool> pools, ComplianceStatus compliance, String serviceLevelOverride,
+        Set<String> exemptList)
         throws RuleExecutionException {
 
         jsRules.reinitTo("entitlement_name_space");

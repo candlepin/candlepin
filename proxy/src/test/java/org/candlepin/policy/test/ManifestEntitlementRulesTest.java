@@ -152,14 +152,15 @@ public class ManifestEntitlementRulesTest extends DatabaseTestFixture {
 
     @Test(expected = NullPointerException.class)
     public void bestPoolsNull() {
-        enforcer.selectBestPools(null, null, null, compliance, null);
+        enforcer.selectBestPools(null, null, null, compliance, null,
+            new HashSet<String>());
     }
 
     @Test
     public void bestPoolEmpty() {
         assertEquals(null,
             enforcer.selectBestPools(null, null, new ArrayList<Pool>(),
-                compliance, null));
+                compliance, null, new HashSet<String>()));
     }
 
     @Test
@@ -169,7 +170,7 @@ public class ManifestEntitlementRulesTest extends DatabaseTestFixture {
         allPools.add(mock(Pool.class));
         pools.add(new PoolQuantity(allPools.get(0), 1));
         assertEquals(pools.get(0), enforcer.selectBestPools(null, null, allPools,
-            compliance, null).get(0));
+            compliance, null, new HashSet<String>()).get(0));
     }
 
 }

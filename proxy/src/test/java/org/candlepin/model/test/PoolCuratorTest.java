@@ -27,6 +27,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductPoolAttribute;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Subscription;
@@ -317,4 +318,81 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertEquals(poolAttributeCurator.find(ppa.getId()), null);
         assertEquals(poolAttributeCurator.find(duplicatePpa.getId()), null);
     }
+
+    @Test
+    public void testExempt() {
+        Product product1 = TestUtil.createProduct();
+        product1.addAttribute(new ProductAttribute("support_level", "premium"));
+        product1.addAttribute(new ProductAttribute("support_level_exempt", "true"));
+        productCurator.create(product1);
+        Product product2 = TestUtil.createProduct();
+        product2.addAttribute(new ProductAttribute("support_level", "Premium"));
+        productCurator.create(product2);
+        Product product3 = TestUtil.createProduct();
+        product3.addAttribute(new ProductAttribute("support_level", "super"));
+        productCurator.create(product3);
+        Product product4 = TestUtil.createProduct();
+        product4.addAttribute(new ProductAttribute("support_level", "high"));
+        product4.addAttribute(new ProductAttribute("support_level_exempt", "false"));
+        productCurator.create(product4);
+        Product product5 = TestUtil.createProduct();
+        product5.addAttribute(new ProductAttribute("support_level", "HIGH"));
+        productCurator.create(product5);
+
+        Pool pool1 = createPoolAndSub(owner, product1, 100L,
+            TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2055, 3, 2));
+        poolCurator.create(pool1);
+        Pool pool2 = createPoolAndSub(owner, product2, 100L,
+            TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2055, 3, 2));
+        poolCurator.create(pool2);
+        Pool pool3 = createPoolAndSub(owner, product3, 100L,
+            TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2055, 3, 2));
+        poolCurator.create(pool3);
+        Pool pool4 = createPoolAndSub(owner, product4, 100L,
+            TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2055, 3, 2));
+        poolCurator.create(pool4);
+        Pool pool5 = createPoolAndSub(owner, product5, 100L,
+            TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2055, 3, 2));
+        poolCurator.create(pool5);
+
+        // list includes levels that are exempt false or not specified.
+        // different casings will all appear on available list.
+        Set<String> levels = poolCurator.retrieveServiceLevelsForOwner(owner, false);
+        assertEquals(3, levels.size());
+        // list includes on only those levels that have exempt attribute set.
+        // The others that have that level but not the attribute do not appear on
+        // the available level list but also do not appear on the exempt list. Pool
+        // selection will use the exempt list to ensure that equivalent levels will
+        // be treated as exempt.
+        levels = poolCurator.retrieveServiceLevelsForOwner(owner, true);
+        assertEquals(1, levels.size());
+        assertEquals("premium", levels.toArray()[0]);
+    }
+
+    @Test
+    public void testSupportCasing() {
+        Product product1 = TestUtil.createProduct();
+        product1.addAttribute(new ProductAttribute("support_level", "premium"));
+        productCurator.create(product1);
+        Product product2 = TestUtil.createProduct();
+        product2.addAttribute(new ProductAttribute("support_level", "Premium"));
+        productCurator.create(product2);
+        Product product3 = TestUtil.createProduct();
+        product3.addAttribute(new ProductAttribute("support_level", "Premiums"));
+        productCurator.create(product3);
+
+        Pool pool1 = createPoolAndSub(owner, product1, 100L,
+            TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2055, 3, 2));
+        poolCurator.create(pool1);
+        Pool pool2 = createPoolAndSub(owner, product2, 100L,
+            TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2055, 3, 2));
+        poolCurator.create(pool2);
+        Pool pool3 = createPoolAndSub(owner, product3, 100L,
+            TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2055, 3, 2));
+        poolCurator.create(pool3);
+
+        Set<String> levels = poolCurator.retrieveServiceLevelsForOwner(owner, false);
+        assertEquals(3, levels.size());
+    }
+
 }

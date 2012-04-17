@@ -400,7 +400,7 @@ public class OwnerResource {
             require = Access.READ_SERVICE_LEVELS) String ownerKey) {
         Owner owner = findOwner(ownerKey);
 
-        return poolCurator.retrieveServiceLevelsForOwner(owner);
+        return poolCurator.retrieveServiceLevelsForOwner(owner, false);
     }
 
     /**
@@ -745,8 +745,13 @@ public class OwnerResource {
 
     private void checkServiceLevel(Owner owner, String serviceLevel)
         throws BadRequestException {
-        if (!poolCurator.retrieveServiceLevelsForOwner(owner)
-             .contains(serviceLevel)) {
+        if (serviceLevel != null &&
+            !serviceLevel.trim().equals("")) {
+            for (String level : poolCurator.retrieveServiceLevelsForOwner(owner, false)) {
+                if (serviceLevel.equalsIgnoreCase(level)) {
+                    return;
+                }
+            }
             throw new BadRequestException(
                 i18n.tr(
                     "Service level {0} is not available " +

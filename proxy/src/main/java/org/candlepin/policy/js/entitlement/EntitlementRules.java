@@ -131,7 +131,8 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
 
     @Override
     public List<PoolQuantity> selectBestPools(Consumer consumer, String[] productIds,
-        List<Pool> pools, ComplianceStatus compliance, String serviceLevelOverride) {
+        List<Pool> pools, ComplianceStatus compliance, String serviceLevelOverride,
+        Set<String> exemptLevels) {
 
         jsRules.reinitTo("entitlement_name_space");
         rulesInit();
@@ -168,6 +169,7 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         args.put("prodAttrSeparator", PROD_ARCHITECTURE_SEPARATOR);
         args.put("log", rulesLogger);
         args.put("compliance", compliance);
+        args.put("exemptList", exemptLevels);
 
         Map<ReadOnlyPool, Integer> result = null;
         boolean foundMatchingRule = false;

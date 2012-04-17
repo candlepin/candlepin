@@ -30,12 +30,13 @@ import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.policy.js.entitlement.ManifestEntitlementRules;
 import org.candlepin.policy.js.pool.PoolHelper;
-
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * EnforcerDispatcherTest
@@ -124,11 +125,12 @@ public class EnforcerDispatcherTest {
         when(type.isManifest()).thenReturn(true);
 
         String test = null;
-        ed.selectBestPools(c, pids, pools, compliance, test);
+        Set<String> exempt = new HashSet<String>();
+        ed.selectBestPools(c, pids, pools, compliance, test, exempt);
         verify(rules, never()).selectBestPools(eq(c), eq(pids), eq(pools),
-            eq(compliance), eq(test));
+            eq(compliance), eq(test), eq(exempt));
         verify(ce, atLeastOnce()).selectBestPools(eq(c), eq(pids), eq(pools),
-            eq(compliance), eq(test));
+            eq(compliance), eq(test), eq(exempt));
     }
 
     @Test
@@ -143,10 +145,11 @@ public class EnforcerDispatcherTest {
         when(type.isManifest()).thenReturn(false);
 
         String test = null;
-        ed.selectBestPools(c, pids, pools, compliance, test);
+        Set<String> exempt = new HashSet<String>();
+        ed.selectBestPools(c, pids, pools, compliance, test, exempt);
         verify(rules, atLeastOnce()).selectBestPools(eq(c), eq(pids), eq(pools),
-            eq(compliance), eq(test));
+            eq(compliance), eq(test), eq(exempt));
         verify(ce, never()).selectBestPools(eq(c), eq(pids), eq(pools),
-            eq(compliance), eq(test));
+            eq(compliance), eq(test), eq(exempt));
     }
 }

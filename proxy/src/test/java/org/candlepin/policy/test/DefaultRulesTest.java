@@ -916,7 +916,7 @@ public class DefaultRulesTest {
         pools.add(pool);
 
         List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null);
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>());
 
         assertEquals(1, bestPools.size());
     }
@@ -936,7 +936,7 @@ public class DefaultRulesTest {
         pools.add(pool);
 
         List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null);
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>());
 
         assertEquals(1, bestPools.size());
         assertTrue(bestPools.contains(new PoolQuantity(pool, 1)));
@@ -989,7 +989,7 @@ public class DefaultRulesTest {
 
         List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
             new String[]{ productId, slaPremiumProdId, slaStandardProdId},
-            pools, compliance, null);
+            pools, compliance, null, new HashSet<String>());
 
         assertEquals(1, bestPools.size());
         assertTrue(bestPools.contains(new PoolQuantity(slaPremiumPool, 1)));
@@ -1035,7 +1035,7 @@ public class DefaultRulesTest {
         pools.add(pool2);
 
         List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null);
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>());
 
         assertEquals(1, bestPools.size());
         assertTrue(bestPools.contains(new PoolQuantity(pool, 4)));
@@ -1065,7 +1065,7 @@ public class DefaultRulesTest {
         pools.add(pool3);
 
         List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null);
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>());
 
         assertTrue(bestPools.contains(new PoolQuantity(pool, 4)));
     }
@@ -1096,7 +1096,7 @@ public class DefaultRulesTest {
         pools.add(pool2);
 
         List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId1 }, pools, compliance, null);
+            new String[]{ productId1 }, pools, compliance, null, new HashSet<String>());
 
         assertEquals(1, bestPools.size());
         assertTrue(bestPools.contains(new PoolQuantity(pool2, 1)));
@@ -1126,7 +1126,8 @@ public class DefaultRulesTest {
         // System has both the stacked product, as well as another non-stacked product,
         // we should be able to auto-subscribe to both:
         List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId2, productId }, pools, compliance, null);
+            new String[]{ productId2, productId }, pools, compliance, null,
+            new HashSet<String>());
 
         assertTrue(bestPools.contains(new PoolQuantity(nonStackedPool, 1)));
         assertTrue(bestPools.contains(new PoolQuantity(stackedPool, 4)));
@@ -1159,7 +1160,8 @@ public class DefaultRulesTest {
         // System has both the stacked product, as well as another non-stacked product,
         // we should be able to auto-subscribe to both:
         List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ providedProductId }, pools, compliance, null);
+            new String[]{ providedProductId }, pools, compliance, null,
+            new HashSet<String>());
 
         assertTrue(bestPools.contains(new PoolQuantity(pool, 4)));
     }
@@ -1189,7 +1191,8 @@ public class DefaultRulesTest {
         // System has both the stacked product, as well as another non-stacked product,
         // we should be able to auto-subscribe to both:
         List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null);
+            new String[]{ productId }, pools, compliance, null,
+            new HashSet<String>());
 
         assertEquals(2, bestPools.size());
         assertTrue(bestPools.contains(new PoolQuantity(pool2, 1)));
@@ -1209,7 +1212,7 @@ public class DefaultRulesTest {
         pools.add(pool);
 
         List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null);
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>());
 
         assertEquals(1, bestPools.size());
         assertTrue(bestPools.contains(new PoolQuantity(pool, 4)));
@@ -1228,7 +1231,7 @@ public class DefaultRulesTest {
         pools.add(pool);
 
         List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null);
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>());
 
         // we should consume as many as possible, even if this doesnt fully entitle
         assertEquals(1, bestPools.size());
@@ -1248,7 +1251,7 @@ public class DefaultRulesTest {
         pools.add(pool);
 
         List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null);
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>());
 
         assertEquals(1, bestPools.size());
         assertTrue(bestPools.contains(new PoolQuantity(pool, 11)));
@@ -1274,7 +1277,7 @@ public class DefaultRulesTest {
         pools.add(pool2);
 
         List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null);
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>());
 
         assertEquals(1, bestPools.size());
         assertTrue(bestPools.contains(new PoolQuantity(pool, 10)));
@@ -1300,7 +1303,7 @@ public class DefaultRulesTest {
         pools.add(pool2);
 
         List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null);
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>());
 
         assertEquals(1, bestPools.size());
         assertTrue(bestPools.contains(new PoolQuantity(pool2, 3)));
@@ -1320,7 +1323,7 @@ public class DefaultRulesTest {
         pools.add(pool);
 
         List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null);
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>());
 
         assertEquals(1, bestPools.size());
     }
@@ -1343,7 +1346,7 @@ public class DefaultRulesTest {
         try {
             enforcer
                 .selectBestPools(consumer, new String[]{ productId },
-                    pools, compliance, null);
+                    pools, compliance, null, new HashSet<String>());
         }
         catch (Exception e) {
             // eatit
@@ -1370,7 +1373,7 @@ public class DefaultRulesTest {
         try {
             enforcer
                 .selectBestPools(consumer, new String[]{ productId },
-                    pools, compliance, null);
+                    pools, compliance, null, new HashSet<String>());
         }
         catch (Exception e) {
             // eatit
@@ -1393,7 +1396,7 @@ public class DefaultRulesTest {
         pools.add(pool2);
 
         List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null);
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>());
 
         assertEquals(1, bestPools.size());
     }
@@ -1415,7 +1418,7 @@ public class DefaultRulesTest {
         pools.add(pool2);
 
         List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null);
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>());
 
         assertEquals(1, bestPools.size());
         assertTrue(bestPools.contains(new PoolQuantity(pool2, 1)));
@@ -1438,7 +1441,7 @@ public class DefaultRulesTest {
         pools.add(pool1);
 
         List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer, new String[]{
-            productId1, productId2 }, pools, compliance, null);
+            productId1, productId2 }, pools, compliance, null, new HashSet<String>());
 
         assertEquals(1, bestPools.size());
         assertTrue(bestPools.contains(new PoolQuantity(pool1, 1)));
@@ -1466,7 +1469,7 @@ public class DefaultRulesTest {
         pools.add(pool1);
 
         List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer, new String[]{
-            productId1, productId2 }, pools, compliance, null);
+            productId1, productId2 }, pools, compliance, null, new HashSet<String>());
 
         assertEquals(1, bestPools.size());
         assertTrue(bestPools.contains(new PoolQuantity(pool1, 1)));
@@ -1500,7 +1503,7 @@ public class DefaultRulesTest {
         pools.add(pool2);
 
         List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer, new String[]{
-            productId1, productId2 }, pools, compliance, null);
+            productId1, productId2 }, pools, compliance, null, new HashSet<String>());
 
         assertEquals(1, bestPools.size());
         assertTrue(bestPools.contains(new PoolQuantity(pool2, 1)));
@@ -1536,7 +1539,7 @@ public class DefaultRulesTest {
         pools.add(pool3);
 
         List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer, new String[]{
-            productId1, productId2 }, pools, compliance, null);
+            productId1, productId2 }, pools, compliance, null, new HashSet<String>());
 
         assertEquals(1, bestPools.size());
         assertTrue(bestPools.contains(new PoolQuantity(pool3, 1)));
@@ -1573,7 +1576,8 @@ public class DefaultRulesTest {
         pools.add(pool2);
 
         List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer, new String[]{
-            productId1, productId2, productId3 }, pools, compliance, null);
+            productId1, productId2, productId3 }, pools, compliance, null,
+            new HashSet<String>());
 
         assertEquals(1, bestPools.size());
         assertTrue(bestPools.contains(new PoolQuantity(pool2, 1)));
@@ -1612,7 +1616,8 @@ public class DefaultRulesTest {
         pools.add(pool2);
 
         List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer, new String[]{
-            productId1, productId2, productId3 }, pools, compliance, null);
+            productId1, productId2, productId3 }, pools, compliance, null,
+            new HashSet<String>());
 
         assertEquals(2, bestPools.size());
     }
@@ -1637,7 +1642,7 @@ public class DefaultRulesTest {
         pools.add(pool2);
 
         List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId1 }, pools, compliance, null);
+            new String[]{ productId1 }, pools, compliance, null, new HashSet<String>());
 
         assertEquals(1, bestPools.size());
         assertTrue(bestPools.contains(new PoolQuantity(pool2, 1)));
@@ -1665,7 +1670,7 @@ public class DefaultRulesTest {
         pools.add(pool2);
 
         List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId1 }, pools, compliance, null);
+            new String[]{ productId1 }, pools, compliance, null, new HashSet<String>());
 
         assertEquals(1, bestPools.size());
         assertTrue(bestPools.contains(new PoolQuantity(pool1, 1)));
@@ -1695,7 +1700,7 @@ public class DefaultRulesTest {
 
         // will raise the RuleExecutionException, for 0 pools
         enforcer.selectBestPools(consumer, new String[]{ productId1 },
-            pools, compliance, null);
+            pools, compliance, null, new HashSet<String>());
     }
 
     // With two pools available, selectBestPools will give us the pool that doesn't
@@ -1733,7 +1738,8 @@ public class DefaultRulesTest {
         when(compliance.getCompliantProducts()).thenReturn(fakeCompliantProducts);
 
         List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId2, productId3 }, pools, compliance, null);
+            new String[]{ productId2, productId3 }, pools, compliance, null,
+            new HashSet<String>());
 
         assertEquals(1, bestPools.size());
         assertTrue(bestPools.contains(new PoolQuantity(pool2, 1)));
@@ -1773,7 +1779,7 @@ public class DefaultRulesTest {
         when(compliance.getPartialStacks()).thenReturn(fakePartial);
 
         List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId3 }, pools, compliance, null);
+            new String[]{ productId3 }, pools, compliance, null, new HashSet<String>());
         assertEquals(1, bestPools.size());
         assertTrue(bestPools.contains(new PoolQuantity(pool1, 2)));
     }
@@ -1820,7 +1826,8 @@ public class DefaultRulesTest {
         when(compliance.getPartialStacks()).thenReturn(fakePartial);
 
         List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId2, productId3 }, pools, compliance, null);
+            new String[]{ productId2, productId3 }, pools, compliance, null,
+            new HashSet<String>());
         assertEquals(1, bestPools.size());
         assertTrue(bestPools.contains(new PoolQuantity(pool1, 2)));
     }
@@ -1867,7 +1874,7 @@ public class DefaultRulesTest {
         when(compliance.getPartialStacks()).thenReturn(fakePartial);
 
         enforcer.selectBestPools(consumer, new String[]{ productId2, productId3 },
-            pools, compliance, null);
+            pools, compliance, null, new HashSet<String>());
     }
 
     @Test(expected = RuleExecutionException.class)
@@ -1881,7 +1888,7 @@ public class DefaultRulesTest {
         List<Pool> pools = new LinkedList<Pool>();
         pools.add(pool);
         enforcer.selectBestPools(consumer, new String[]{ "productId" },
-            pools, compliance, null);
+            pools, compliance, null, new HashSet<String>());
     }
 
     private Product mockProductSockets(String pid, String productName, String sockets) {
