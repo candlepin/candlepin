@@ -7,6 +7,7 @@
 %global selinux_policyver %(%{__sed} -e 's,.*selinux-policy-\\([^/]*\\)/.*,\\1,' /usr/share/selinux/devel/policyhelp || echo 0.0.0)
 %global modulename candlepin
 %define distlibdir %{_tmppath}/distlibdir/
+%define libdir %{_datadir}/java/
 %define usecpdeps ""
 
 Name: candlepin
@@ -29,6 +30,7 @@ BuildRequires: selinux-policy-doc
 
 %if 0%{?fedora}
 %define distlibdir %{_datadir}/%{name}/lib/
+%define libdir %{_datadir}/%{name}/lib/
 %define usecpdeps "usecpdeps"
 BuildRequires: candlepin-deps
 %endif
@@ -150,7 +152,7 @@ SELinux policy module supporting candlepin
 mkdir -p %{distlibdir}
 
 %build
-ant -Dlibdir=/usr/share/java/ -Ddistlibdir=%{distlibdir} clean %{usecpdeps} package
+ant -Dlibdir=%{libdir} -Ddistlibdir=%{distlibdir} clean %{usecpdeps} package
 
 cd selinux
 for selinuxvariant in %{selinux_variants}
