@@ -70,7 +70,36 @@
 
   <target name="init" depends="setvr, da_popo" />
 
-  <target name="compile" depends="init">
+  <target name="compile_withcpdeps" depends="init" if="usecpdeps">
+    <mkdir dir="${target.dir}/classes" />
+    <mkdir dir="${target.dir}/resources" />
+    <javac destdir="${target.dir}/classes"
+           optimize="off"
+           debug="on"
+           source="1.6"
+           target="1.6"
+           encoding="utf-8"
+           fork="yes">
+      <src>
+        <path location="${src.main.dir}" />
+        <path location="${res.main.dir}" />
+      </src>
+      <classpath>
+        <fileset dir="${lib.dir}">
+          <include name="**/*.jar" />
+        </fileset>
+      </classpath>
+    </javac>
+    <copy todir="${target.dir}/resources">
+      <fileset dir="${res.main.dir}" />
+      <filterset begintoken="$${" endtoken="}">
+         <filter token="version" value="${version}" />
+         <filter token="release" value="${release}" />
+      </filterset>
+    </copy>
+  </target>
+
+  <target name="compile" depends="init" unless="usecpdeps">
     <mkdir dir="${target.dir}/classes" />
     <mkdir dir="${target.dir}/resources" />
     <javac destdir="${target.dir}/classes"
@@ -175,7 +204,7 @@
     <jpackage-deps jars="${jar.deps}" dir="${dist.lib.dir}" />
   </target>
 
-  <target name="package" depends="initjars,compile">
+  <target name="package" depends="initjars,compile,compile_withcpdeps">
     <jar destfile="${api.jar}">
       <fileset dir="${target.dir}/classes">
         <exclude name="**/pinsetter/**" />
