@@ -17,6 +17,7 @@ package org.candlepin.sync;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -107,6 +108,23 @@ public class ConsumerImporterTest {
         importer.store(owner, consumer);
 
         assertEquals("test-uuid", owner.getUpstreamUuid());
+    }
+
+    @Test(expected = SyncDataFormatException.class)
+    public void importConsumerWithSameUuidOnAnotherOwnerShouldThrowException()
+        throws ImporterException {
+        Owner owner = new Owner();
+        String upstreamUuid = "test-uuid";
+        owner.setUpstreamUuid(upstreamUuid);
+        ConsumerDto consumer = new ConsumerDto();
+        consumer.setUuid("test-uuid");
+
+        Owner anotherOwner = new Owner("other", "Other");
+        anotherOwner.setId("blah");
+        anotherOwner.setUpstreamUuid(upstreamUuid);
+        when(curator.lookupWithUpstreamUuid(consumer.getUuid())).thenReturn(anotherOwner);
+
+        importer.store(owner, consumer);
     }
 
     @Test(expected = ImporterException.class)

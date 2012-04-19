@@ -48,7 +48,13 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
     @Transactional
     public Owner lookupByKey(String key) {
         return (Owner) currentSession().createCriteria(Owner.class)
-        .add(Restrictions.eq("key", key))
-        .uniqueResult();
+            .add(Restrictions.eq("key", key))
+            .uniqueResult();
+    }
+
+    public Owner lookupWithUpstreamUuid(String upstreamUuid) {
+        return (Owner) currentSession().createCriteria(Owner.class)
+            .add(Restrictions.eq("upstreamUuid", upstreamUuid))
+            .uniqueResult();
     }
 }

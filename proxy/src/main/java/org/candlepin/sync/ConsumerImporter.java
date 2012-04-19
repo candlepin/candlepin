@@ -44,6 +44,13 @@ public class ConsumerImporter {
             throw new SyncDataFormatException(i18n.tr("No ID for upstream distributor"));
         }
 
+        // Make sure no other owner is already using this upstream UUID:
+        Owner alreadyUsing = curator.lookupWithUpstreamUuid(consumer.getUuid());
+        if (alreadyUsing != null && alreadyUsing.getKey() != owner.getKey()) {
+            throw new SyncDataFormatException(
+                i18n.tr("This distributor has already been imported by another owner"));
+        }
+
         if (owner.getUpstreamUuid() != null &&
             !owner.getUpstreamUuid().equals(consumer.getUuid())) {
             throw new SyncDataFormatException(
