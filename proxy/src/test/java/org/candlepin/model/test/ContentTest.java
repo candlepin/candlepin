@@ -50,4 +50,23 @@ public class ContentTest extends DatabaseTestFixture {
         assertThat(lookedUp.getModifiedProductIds(), hasItem("ProductB"));
         assertEquals(metadataExpire, lookedUp.getMetadataExpire());
     }
+
+    @Test
+    public void testCreateOrUpdateWithNewLabel() {
+        Content content = new Content("Test Content", "100",
+            "test-content-label", "yum", "test-vendor",
+             "test-content-url", "test-gpg-url");
+        contentCurator.create(content);
+
+        // Same ID, but label changed:
+        String newLabel = "test-content-label-new";
+        String newName = "Test Content Updated";
+        Content modifiedContent = new Content(newName, "100",
+            newLabel, "yum", "test-vendor", "test-content-url", "test-gpg-url");
+        contentCurator.createOrUpdate(modifiedContent);
+
+        content = contentCurator.find("100");
+        assertEquals(newLabel, content.getLabel());
+        assertEquals(newName, content.getName());
+    }
 }
