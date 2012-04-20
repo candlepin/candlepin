@@ -28,15 +28,8 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
     }
 
     @Transactional
-    public Content findByLabel(String label) {
-        return (Content) currentSession().createCriteria(Content.class)
-            .add(Restrictions.eq("label", label))
-            .uniqueResult();
-    }
-
-    @Transactional
     public void createOrUpdate(Content c) {
-        Content existing = findByLabel(c.getLabel());
+        Content existing = find(c.getId());
         if (existing == null) {
             create(c);
             return;

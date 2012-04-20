@@ -71,6 +71,9 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
 
         consumerType = new ConsumerType("domain");
         consumerTypeCurator.create(consumerType);
+
+        consumerType = new ConsumerType("uebercert");
+        consumerTypeCurator.create(consumerType);
     }
 
     @Test
@@ -81,12 +84,14 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
             {
                 put("system", 0);
                 put("domain", 0);
+                put("uebercert", 0);
             }
         };
         Map<String, Integer> expectedEntitlementsConsumed = new HashMap<String, Integer>() {
             {
                 put("system", 0);
                 put("domain", 0);
+                put("uebercert", 0);
             }
         };
 
@@ -106,12 +111,14 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
             {
                 put("system", 1);
                 put("domain", 0);
+                put("uebercert", 0);
             }
         };
         Map<String, Integer> expectedEntitlementsConsumed = new HashMap<String, Integer>() {
             {
                 put("system", 0);
                 put("domain", 0);
+                put("uebercert", 0);
             }
         };
 
@@ -136,12 +143,14 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
             {
                 put("system", 1);
                 put("domain", 0);
+                put("uebercert", 0);
             }
         };
         Map<String, Integer> expectedEntitlementsConsumed = new HashMap<String, Integer>() {
             {
                 put("system", 1);
                 put("domain", 0);
+                put("uebercert", 0);
             }
         };
 
@@ -166,12 +175,14 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
             {
                 put("system", 1);
                 put("domain", 0);
+                put("uebercert", 0);
             }
         };
         Map<String, Integer> expectedEntitlementsConsumed = new HashMap<String, Integer>() {
             {
                 put("system", 2);
                 put("domain", 0);
+                put("uebercert", 0);
             }
         };
 
@@ -204,12 +215,14 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
             {
                 put("system", 1);
                 put("domain", 1);
+                put("uebercert", 0);
             }
         };
         Map<String, Integer> expectedEntitlementsConsumed = new HashMap<String, Integer>() {
             {
                 put("system", 1);
                 put("domain", 1);
+                put("uebercert", 0);
             }
         };
 
@@ -229,6 +242,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
             {
                 put("system", 0);
                 put("domain", 1);
+                put("uebercert", 0);
             }
         };
 
@@ -250,6 +264,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
             {
                 put("system", 1);
                 put("domain", 0);
+                put("uebercert", 0);
             }
         };
 
@@ -271,6 +286,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
             {
                 put("system", 0);
                 put("domain", 1);
+                put("uebercert", 0);
             }
         };
 
@@ -290,6 +306,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
             {
                 put("system", 0);
                 put("domain", 0);
+                put("uebercert", 0);
             }
         };
 
@@ -309,6 +326,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
             {
                 put("system", 0);
                 put("domain", 0);
+                put("uebercert", 0);
             }
         };
 
@@ -552,24 +570,49 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testConsumerCountsByEntitlementStatus() {
-        ConsumerType type = consumerTypeCurator.lookupByLabel("system");
-        Consumer consumer1 = new Consumer("test-consumer1", "test-user", owner, type);
+        setupConsumerCountTest();
+
+        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+        assertConsumerCountsByEntitlementStatus(info);
+    }
+
+    @Test
+    public void testConsumerCountsByEntitlementStatusExcludesUebercertConsumers() {
+        setupConsumerCountTest();
+
+        ConsumerType ueberType = consumerTypeCurator.lookupByLabel("uebercert");
+        Consumer ueberConsumer = new Consumer("test-ueber", "test-user", owner,
+            ueberType);
+        ueberConsumer.setEntitlementStatus(ComplianceStatus.GREEN);
+        consumerCurator.create(ueberConsumer);
+
+        // Even though we've added an ubercert consumer, the counts should remain
+        // as expected.
+        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+        assertConsumerCountsByEntitlementStatus(info);
+    }
+
+    private void setupConsumerCountTest() {
+        ConsumerType systemType = consumerTypeCurator.lookupByLabel("system");
+        Consumer consumer1 = new Consumer("test-consumer1", "test-user", owner, systemType);
         consumer1.setEntitlementStatus(ComplianceStatus.GREEN);
         consumerCurator.create(consumer1);
 
-        Consumer consumer2 = new Consumer("test-consumer2", "test-user", owner, type);
+        Consumer consumer2 = new Consumer("test-consumer2", "test-user", owner, systemType);
         consumer2.setEntitlementStatus(ComplianceStatus.RED);
         consumerCurator.create(consumer2);
 
-        Consumer consumer3 = new Consumer("test-consumer3", "test-user", owner, type);
+        Consumer consumer3 = new Consumer("test-consumer3", "test-user", owner, systemType);
         consumer3.setEntitlementStatus(ComplianceStatus.GREEN);
         consumerCurator.create(consumer3);
 
-        Consumer consumer4 = new Consumer("test-consumer3", "test-user", owner, type);
+        Consumer consumer4 = new Consumer("test-consumer3", "test-user", owner, systemType);
         consumer4.setEntitlementStatus(ComplianceStatus.YELLOW);
         consumerCurator.create(consumer4);
 
-        OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
+    }
+
+    private void assertConsumerCountsByEntitlementStatus(OwnerInfo info) {
         assertEquals((Integer) 2, info.getConsumerCountByStatus(ComplianceStatus.GREEN));
         assertEquals((Integer) 1, info.getConsumerCountByStatus(ComplianceStatus.RED));
         assertEquals((Integer) 1, info.getConsumerCountByStatus(ComplianceStatus.YELLOW));

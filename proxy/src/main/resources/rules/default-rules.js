@@ -421,7 +421,8 @@ var Entitlement = {
     },
 
     pre_requires_consumer_type: function() {
-        if (!attributes.get("requires_consumer_type").equals(consumer.getType())) {
+        if (!attributes.get("requires_consumer_type").equals(consumer.getType()) &&
+        		!consumer.getType().equals("uebercert")) {
             pre.addError("rulefailed.consumer.type.mismatch");
         }
     },
@@ -513,9 +514,11 @@ var Entitlement = {
                 pre.addError("rulefailed.pool.does.not.support.multi-entitlement");
             }
 
-            // If the product has no required consumer type, assume it is restricted to "system":
+            // If the product has no required consumer type, assume it is restricted to "system".
+            // "hypervisor"/"uebercert" type are essentially the same as "system".
             if (!product.hasAttribute("requires_consumer_type")) {
-                if (!consumer.getType().equals("system") && !consumer.getType().equals("hypervisor")) {
+                if (!consumer.getType().equals("system") && !consumer.getType().equals("hypervisor") &&
+                		!consumer.getType().equals("uebercert")) {
                     pre.addError("rulefailed.consumer.type.mismatch");
                 }
 
