@@ -402,20 +402,71 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
         return activationKeys;
     }
-    public Set<String> retrieveServiceLevelsForOwner(Owner owner) {
-        Set<String> result = new HashSet<String>();
+
+    /**
+     * Method to compile service/support level lists. One is the available levels for
+     *  consumers for this owner. The second is the level names that are exempt. Exempt
+     *  means that a product pool with this level can be used with a consumer of any
+     *  service level.
+     *
+     * @param owner The owner that has the list of available service levels for
+     *              its consumers
+     * @param exempt boolean to show if the desired list is the levels that are
+     *               explicitly marked with the support_level_exempt attribute.
+     * @return Set of levels based on exempt flag.
+     */
+    public Set<String> retrieveServiceLevelsForOwner(Owner owner, boolean exempt) {
         List<ProductPoolAttribute> items =  currentSession()
             .createCriteria(ProductPoolAttribute.class)
-            .add(Restrictions.eq("name", "support_level"))
+            .add(Restrictions.or(
+                Restrictions.eq("name", "support_level"),
+                Restrictions.eq("name", "support_level_exempt")))
+            .addOrder(Order.desc("name"))
             .createCriteria("pool")
             .add(Restrictions.eq("owner", owner))
             .list();
+        Set<Pool> exemptPoolSla = new HashSet<Pool>();
+        Set<String> slaSet = new HashSet<String>();
+        Set<String> exemptSlaSet = new HashSet<String>();
+
+        // make collection of sla's that are exempt
+        // first part of list is exempt attr's
         for (ProductPoolAttribute item : items) {
-            if (item.getValue() != null) {
-                result.add(item.getValue());
+            if ("support_level_exempt".equals(item.getName())) {
+                if ("true".equalsIgnoreCase(item.getValue())) {
+                    exemptPoolSla.add(item.getPool());
+                }
+            }
+            // second part of list is levels, add to list if pool
+            // has exempt attr
+            else if (item.getValue() != null &&
+                    !item.getValue().trim().equals("")) {
+                if (exemptPoolSla.contains(item.getPool())) {
+                    exemptSlaSet.add(item.getValue());
+                }
             }
         }
-        return result;
+
+        // since we have to take casing into account, iterate levels
+        // and exempt matches.
+        for (ProductPoolAttribute item : items) {
+            if (!"support_level_exempt".equals(item.getName())) {
+                String value = item.getValue();
+                boolean found = false;
+                for (String sla : exemptSlaSet) {
+                    if (sla.equalsIgnoreCase(value)) {
+                        found = true;
+                    }
+                }
+                if (!found) {
+                    slaSet.add(value);
+                }
+            }
+        }
+        if (exempt) {
+            return exemptSlaSet;
+        }
+        return slaSet;
     }
 
     /**

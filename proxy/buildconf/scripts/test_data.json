@@ -458,6 +458,14 @@
 ]
         },
         {
+            "name": "Shared File System Bits",
+            "id": "88888",
+            "attributes": {
+                "sockets": 1
+            },
+            "content": []
+        },
+        {
             "name": "Awesome OS Server Bits",
             "id": "37060",
             "version": "6.1",
@@ -1018,6 +1026,17 @@
                 "multi-entitlement": "no",
                 "warning_period": 90,
                 "management_enabled" : 1
+            }
+        },
+        {
+            "name": "Shared File System",
+            "id": "sfs",
+            "provided_products": [
+                "88888"
+            ],
+            "attributes": {
+                "support_level": "Layered",
+                "support_level_exempt": "true"
             }
         }
     ]

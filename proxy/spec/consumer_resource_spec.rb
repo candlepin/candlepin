@@ -372,7 +372,12 @@ describe 'Consumer Resource' do
     product1 = create_product(random_string('product'),
                               random_string('product'),
                               {:attributes => {:support_level => 'VIP'}})
-    subs = @cp.create_subscription(@owner1.key, product1.id)
+    product2 = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:support_level => 'Layered',
+                                               :support_level_exempt => 'true'}})
+    subs1 = @cp.create_subscription(@owner1.key, product1.id)
+    subs2 = @cp.create_subscription(@owner1.key, product2.id)
     @cp.refresh_pools(@owner1.key)
 
     user_cp = user_client(@owner1, random_string('billy'))
@@ -406,6 +411,20 @@ describe 'Consumer Resource' do
     # Should not be able to set service level to one not available by org
     lambda do
         consumer_client.update_consumer({:serviceLevel => 'Ultra-VIP'})
+    end.should raise_exception(RestClient::BadRequest)
+
+    # The service level should be case insensitive
+    consumer_client.update_consumer({:serviceLevel => ''})
+    consumer = @cp.get_consumer(consumer['uuid'])
+    consumer['serviceLevel'].should == ''
+
+    consumer_client.update_consumer({:serviceLevel => 'vip'})
+    consumer = @cp.get_consumer(consumer['uuid'])
+    consumer['serviceLevel'].should == 'vip'
+
+   # Cannot assign exempt level to consumer
+    lambda do
+        consumer_client.update_consumer({:serviceLevel => 'Layered'})
     end.should raise_exception(RestClient::BadRequest)
 
   end
@@ -459,6 +478,71 @@ describe 'Consumer Resource' do
     lambda do
         @cp.autobind_dryrun(consumer['uuid'], 'Standard').length.should == 0
     end.should raise_exception(RestClient::BadRequest)
+
+    # dry run against the override service level should be case insensitive
+    pools = @cp.autobind_dryrun(consumer['uuid'], 'Ultra-vip')
+    pools.length.should == 1
+    pool_id = pools.first.pool.id
+    pool = @cp.get_pool(pool_id)
+    pool.subscriptionId.should == subs2.id
+  end
+
+  it 'should recognize support level exempt attribute' do
+    product1 = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:support_level => 'Layered',
+                                               :support_level_exempt => 'true'}})
+    product2 = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:support_level => 'VIP'}})
+    product3 = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:support_level => 'Ultra-VIP'}})
+    product4 = create_product(random_string('product'),
+                              random_string('product'),
+                              {:attributes => {:support_level => 'LAYered'}})
+    subs1 = @cp.create_subscription(@owner1.key, product1.id)
+    subs2 = @cp.create_subscription(@owner1.key, product2.id)
+    subs3 = @cp.create_subscription(@owner1.key, product3.id)
+    @cp.refresh_pools(@owner1.key)
+
+    user_cp = user_client(@owner1, random_string('billy'))
+    consumer = user_cp.register(random_string('system'), :system, nil,
+      {}, nil, nil, [], [])
+    consumer_client = Candlepin.new(username=nil, password=nil,
+        cert=consumer['idCert']['cert'],
+        key=consumer['idCert']['key'])
+
+    installed = [
+        {'productId' => product1.id, 'productName' => product1.name},
+        {'productId' => product2.id, 'productName' => product2.name},
+        {'productId' => product4.id, 'productName' => product4.name}]
+
+    consumer_client.update_consumer({:serviceLevel => 'Ultra-VIP',
+                                     :installedProducts => installed})
+    consumer = @cp.get_consumer(consumer['uuid'])
+    consumer['serviceLevel'].should == 'Ultra-VIP'
+
+    # dry run against the set service level
+    # should get only the exempt product that has subscription
+    pools = @cp.autobind_dryrun(consumer['uuid'])
+    pools.length.should == 1
+    pool_id = pools.first.pool.id
+    pool = @cp.get_pool(pool_id)
+    pool.subscriptionId.should == subs1.id
+
+    # this product should also get pulled, exempt overrides
+    # based on name match
+    subs4 = @cp.create_subscription(@owner1.key, product4.id)
+    @cp.refresh_pools(@owner1.key)
+    pools = @cp.autobind_dryrun(consumer['uuid'])
+    pools.length.should == 2
+
+    # change service level to one that matches installed
+    # should get 3 pools
+    consumer_client.update_consumer({:serviceLevel => 'VIP'})
+    pools = @cp.autobind_dryrun(consumer['uuid'])
+    pools.length.should == 3
   end
 
   it 'should return empty list for dry run where all pools are blocked because of consumer type' do

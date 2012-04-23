@@ -421,7 +421,8 @@ public class PoolManagerTest {
         List<PoolQuantity> bestPools = new ArrayList<PoolQuantity>();
         bestPools.add(new PoolQuantity(pool1, 1));
         when(enforcerMock.selectBestPools(any(Consumer.class), any(String[].class),
-            any(List.class), any(ComplianceStatus.class), any(String.class)))
+            any(List.class), any(ComplianceStatus.class), any(String.class),
+            any(Set.class)))
             .thenReturn(bestPools);
 
         Entitlement e = manager.entitleByProduct(TestUtil.createConsumer(o),
@@ -457,7 +458,8 @@ public class PoolManagerTest {
         List<PoolQuantity> bestPools = new ArrayList<PoolQuantity>();
         bestPools.add(new PoolQuantity(pool1, 1));
         when(enforcerMock.selectBestPools(any(Consumer.class), any(String[].class),
-            any(List.class), any(ComplianceStatus.class), any(String.class)))
+            any(List.class), any(ComplianceStatus.class), any(String.class),
+            any(Set.class)))
             .thenReturn(bestPools);
 
         List<Entitlement> e = manager.entitleByProducts(TestUtil.createConsumer(o),
@@ -599,7 +601,8 @@ public class PoolManagerTest {
         List<PoolQuantity> bestPools = new ArrayList<PoolQuantity>();
         bestPools.add(new PoolQuantity(pool1, 1));
         when(enforcerMock.selectBestPools(any(Consumer.class), any(String[].class),
-            any(List.class), any(ComplianceStatus.class), any(String.class)))
+            any(List.class), any(ComplianceStatus.class), any(String.class),
+            any(Set.class)))
             .thenReturn(bestPools);
 
         // Make the call but provide a null array of product IDs (simulates healing):
@@ -607,7 +610,8 @@ public class PoolManagerTest {
             null, now);
 
         verify(enforcerMock).selectBestPools(any(Consumer.class), eq(installedPids),
-            any(List.class), eq(mockCompliance), any(String.class));
+            any(List.class), eq(mockCompliance), any(String.class),
+            any(Set.class));
 
 
     }

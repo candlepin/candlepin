@@ -25,6 +25,7 @@ import org.candlepin.policy.js.entitlement.PreUnbindHelper;
 import org.candlepin.policy.js.pool.PoolHelper;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Enforces the entitlement rules definitions.
@@ -72,7 +73,8 @@ public interface Enforcer {
      * pool is returned.
      */
     List<PoolQuantity> selectBestPools(Consumer consumer, String[] productIds,
-        List<Pool> pools, ComplianceStatus compliance, String serviceLevelOverride)
+        List<Pool> pools, ComplianceStatus compliance, String serviceLevelOverride,
+        Set<String> exemptList)
         throws RuleExecutionException;
 
     /**

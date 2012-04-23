@@ -313,7 +313,8 @@ public class EnforcerTest extends DatabaseTestFixture {
             = Arrays.asList(new Pool[] {pool1, pool2, desired, pool3});
 
         List<PoolQuantity> result = enforcer.selectBestPools(consumer,
-            new String[] {"a-product"}, availablePools, compliance, null);
+            new String[] {"a-product"}, availablePools, compliance, null,
+            new HashSet<String>());
         assertTrue(result.contains(new PoolQuantity(desired, 1)));
     }
 
@@ -340,7 +341,8 @@ public class EnforcerTest extends DatabaseTestFixture {
             = Arrays.asList(new Pool[] {pool1, pool2, desired});
 
         List<PoolQuantity> result = enforcer.selectBestPools(consumer,
-            new String[] {"a-product"}, availablePools, compliance, null);
+            new String[] {"a-product"}, availablePools, compliance, null,
+            new HashSet<String>());
         assertTrue(result.contains(new PoolQuantity(desired, 1)));
     }
 
@@ -363,7 +365,8 @@ public class EnforcerTest extends DatabaseTestFixture {
         List<Pool> availablePools = Arrays.asList(new Pool[] {pool1, pool2, desired});
 
         List<PoolQuantity> result = enforcer.selectBestPools(consumer,
-            new String[] {"a-product"}, availablePools, compliance, null);
+            new String[] {"a-product"}, availablePools, compliance, null,
+            new HashSet<String>());
         assertTrue(result.contains(new PoolQuantity(desired, 1)));
     }
 
@@ -375,7 +378,7 @@ public class EnforcerTest extends DatabaseTestFixture {
         // There are no pools for the product in this case:
         List<PoolQuantity> result = enforcer.selectBestPools(consumer,
             new String[] {HIGHEST_QUANTITY_PRODUCT}, new LinkedList<Pool>(), compliance,
-            null);
+            null, new HashSet<String>());
         assertNull(result);
     }
 
@@ -393,7 +396,7 @@ public class EnforcerTest extends DatabaseTestFixture {
             .thenReturn(product);
 
         enforcer.selectBestPools(consumer, new String[] {"a-product"},
-            Collections.singletonList(pool1), compliance, null);
+            Collections.singletonList(pool1), compliance, null, new HashSet<String>());
     }
 
     @Test
@@ -413,7 +416,8 @@ public class EnforcerTest extends DatabaseTestFixture {
             = Arrays.asList(new Pool[] {pool1, pool2});
 
         List<PoolQuantity> result = enforcer.selectBestPools(consumer,
-            new String[] {product.getId()}, availablePools, compliance, null);
+            new String[] {product.getId()}, availablePools, compliance, null,
+            new HashSet<String>());
         assertTrue(result.contains(new PoolQuantity(pool1, 1)));
     }
 

@@ -29,6 +29,7 @@ import org.candlepin.policy.js.entitlement.PreUnbindHelper;
 import org.candlepin.policy.js.pool.PoolHelper;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * EnforcerDispatcher
@@ -67,14 +68,15 @@ public class EnforcerDispatcher implements Enforcer {
 
     @Override
     public List<PoolQuantity> selectBestPools(Consumer consumer, String[] productIds,
-        List<Pool> pools, ComplianceStatus compliance, String serviceLevelOverride)
+        List<Pool> pools, ComplianceStatus compliance, String serviceLevelOverride,
+        Set<String> exemptList)
         throws RuleExecutionException {
         if (consumer.getType().isManifest()) {
             return manifestEnforcer.selectBestPools(consumer, productIds, pools,
-                compliance, serviceLevelOverride);
+                compliance, serviceLevelOverride, exemptList);
         }
         return jsEnforcer.selectBestPools(consumer, productIds, pools,
-            compliance, serviceLevelOverride);
+            compliance, serviceLevelOverride, exemptList);
     }
 
     public PreUnbindHelper preUnbind(Consumer consumer, Pool entitlementPool) {

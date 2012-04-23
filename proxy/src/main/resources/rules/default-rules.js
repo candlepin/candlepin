@@ -360,6 +360,15 @@ function comparePools(pool1, pool2) {
 
 }
 
+function isLevelExempt (level, exemptList) {
+    for each (var exemptLevel in exemptList.toArray()) {
+        if (exemptLevel.equalsIgnoreCase(level)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 var Entitlement = {
 
     // defines mapping of product attributes to functions
@@ -575,9 +584,12 @@ var Entitlement = {
             var pool = pools[i];
 
             // If the SLA of the consumer does not match that of the pool
-            // we do not consider the pool.
+            // we do not consider the pool unless the level is exempt
             var poolSLA = pool.getProductAttribute('support_level');
-            if (consumerSLA  && !consumerSLA.equals("") && consumerSLA != poolSLA) {
+            var poolSLAExempt = isLevelExempt(pool.getProductAttribute('support_level'), exemptList);
+
+            if (!poolSLAExempt && consumerSLA &&
+                !consumerSLA.equals("") && !consumerSLA.equalsIgnoreCase(poolSLA)) {
                 log.debug("Skipping pool " + pool.getId() +
                         " since SLA does not match that of the consumer.");
                 continue;

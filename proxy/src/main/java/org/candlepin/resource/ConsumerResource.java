@@ -404,16 +404,17 @@ public class ConsumerResource {
         throws BadRequestException {
         if (serviceLevel != null &&
             !serviceLevel.trim().equals("")) {
-            if (!poolCurator.retrieveServiceLevelsForOwner(owner)
-                 .contains(serviceLevel)) {
-                throw new BadRequestException(
-                    i18n.tr(
-                        "Service level {0} is not available " +
-                        "to consumers of organization {1}.",
-                        serviceLevel, owner.getKey()));
+            for (String level : poolCurator.retrieveServiceLevelsForOwner(owner, false)) {
+                if (serviceLevel.equalsIgnoreCase(level)) {
+                    return;
+                }
             }
+            throw new BadRequestException(
+                i18n.tr(
+                    "Service level {0} is not available " +
+                    "to consumers of organization {1}.",
+                    serviceLevel, owner.getKey()));
         }
-
     }
 
     private void logNewConsumerDebugInfo(Consumer consumer,

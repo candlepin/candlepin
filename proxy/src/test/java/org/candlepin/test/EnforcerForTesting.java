@@ -27,6 +27,7 @@ import org.candlepin.policy.js.pool.PoolHelper;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * EnforcerForTesting
@@ -47,7 +48,8 @@ public class EnforcerForTesting implements Enforcer {
 
     @Override
     public List<PoolQuantity> selectBestPools(Consumer consumer, String[] productIds,
-        List<Pool> pools, ComplianceStatus compliance, String serviceLevelOverride)
+        List<Pool> pools, ComplianceStatus compliance, String serviceLevelOverride,
+        Set<String> exemptList)
         throws RuleExecutionException {
         if (pools.isEmpty()) {
             return null;

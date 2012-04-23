@@ -122,7 +122,12 @@ describe 'Owner Resource' do
     product1 = create_product(random_string("test_id"),
       random_string("test_name"),
       {:attributes => {:support_level => 'VIP'}})
+    product2 = create_product(random_string("test_id"),
+      random_string("test_name"),
+      {:attributes => {:support_level => 'Layered',
+                       :support_level_exempt => 'true'}})
     @cp.create_subscription(owner['key'], product1.id, 10)
+    @cp.create_subscription(owner['key'], product2.id, 10)
     @cp.refresh_pools(owner['key'])
 
     # Set an initial service level:
@@ -142,6 +147,19 @@ describe 'Owner Resource' do
     @cp.update_owner(owner_key, owner)
     new_owner = @cp.get_owner(owner_key)
     new_owner['defaultServiceLevel'].should be_nil
+
+    # Set an initial service level different casing:
+    owner['defaultServiceLevel'] = 'vip'
+    @cp.update_owner(owner_key, owner)
+    new_owner = @cp.get_owner(owner_key)
+    new_owner['defaultServiceLevel'].should == 'vip'
+
+    # Cannot set exempt level:
+    owner['defaultServiceLevel'] = 'Layered'
+    lambda do
+      @cp.update_owner(owner_key, owner)
+    end.should raise_exception(RestClient::BadRequest)
+
   end
 
   it "updates consumed entitlement count" do
@@ -232,6 +250,38 @@ describe 'Owner Resource' do
     @cp.refresh_pools(owner['key'])
     levels = @cp.list_owner_service_levels(owner['key'])
     levels.length.should == 2
+  end
+
+  it 'allows service level exempt service levels to be filtered out' do
+    owner = create_owner random_string('owner1')
+    owner_admin = user_client(owner, 'bill')
+
+    consumer = owner_admin.register('somesystem')
+    consumer_client = Candlepin.new(username=nil, password=nil,
+        cert=consumer['idCert']['cert'],
+        key=consumer['idCert']['key'])
+
+    product1 = create_product(random_string("test_id"),
+      random_string("test_name"),
+      {:attributes => {:support_level => 'VIP'}})
+    product2 = create_product(random_string("test_id"),
+      random_string("test_name"),
+      {:attributes => {:support_level => 'Layered',
+                       :support_level_exempt => 'true'}})
+    # the exempt attribute will cover here as well
+    # despite the casing
+    product3 = create_product(random_string("test_id"),
+      random_string("test_name"),
+      {:attributes => {:support_level => 'LAYered'}})
+
+    @cp.create_subscription(owner['key'], product1.id, 10)
+    @cp.create_subscription(owner['key'], product2.id, 10)
+    @cp.create_subscription(owner['key'], product3.id, 10)
+
+    @cp.refresh_pools(owner['key'])
+    levels = consumer_client.list_owner_service_levels(owner['key'])
+    levels.size.should == 1
+    levels[0].should == 'VIP'
   end
 
 end

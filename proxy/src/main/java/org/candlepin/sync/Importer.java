@@ -204,23 +204,14 @@ public class Importer {
             throw new ImportExtractionException("unable to extract export archive", e);
         }
         catch (ConstraintViolationException cve) {
-            // sometimes the violation comes up as a direct exception
             log.error("Failed to import archive", cve);
-            throw new SyncDataFormatException(
-                i18n.tr("This distributor has already been imported by another owner"));
+            throw new ImporterException(i18n.tr("Failed to import archive"),
+                cve);
         }
         catch (PersistenceException pe) {
-            // other times the violation comes up wrapped in a
-            // PersistenceException
             log.error("Failed to import archive", pe);
-            Throwable cause = pe.getCause();
-            if (cause != null && cause instanceof ConstraintViolationException) {
-                throw new SyncDataFormatException(
-                    i18n.tr("This distributor has already been imported by another owner"));
-            }
-            else {
-                throw new ImportExtractionException(i18n.tr("Failed to import archive"), pe);
-            }
+            throw new ImporterException(i18n.tr("Failed to import archive"),
+                pe);
         }
         catch (IOException e) {
             log.error("Exception caught importing archive", e);

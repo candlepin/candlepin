@@ -452,7 +452,8 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         return enforcer.selectBestPools(consumer,
-            productIds, filteredPools, compliance, serviceLevelOverride);
+            productIds, filteredPools, compliance, serviceLevelOverride,
+            poolCurator.retrieveServiceLevelsForOwner(owner, true));
     }
 
     public Entitlement entitleByProduct(Consumer consumer, String productId)
