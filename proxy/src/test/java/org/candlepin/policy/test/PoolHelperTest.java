@@ -171,6 +171,57 @@ public class PoolHelperTest {
     }
 
     @Test
+    public void copyProductAttributesOntoPoolWithNulls() {
+        Product targetProduct = TestUtil.createProduct();
+        targetProduct.getAttributes().clear();
+        targetProduct.setAttribute("A1", "V-updated");
+        Subscription sourceSub = TestUtil.createSubscription(targetProduct);
+
+        Pool targetPool = TestUtil.createPool(targetProduct);
+        targetPool.setProductAttribute("A1", null, targetProduct.getId());
+
+        PoolHelper ph = new PoolHelper(pm, psa, null);
+        when(psa.getProductById(targetProduct.getId())).thenReturn(targetProduct);
+        assertTrue("Update expected.",
+            ph.copyProductAttributesOntoPool(sourceSub, targetPool));
+        assertEquals(1, targetPool.getProductAttributes().size());
+        assertTrue(targetPool.hasProductAttribute("A1"));
+        assertEquals("V-updated", targetPool.getProductAttribute("A1").getValue());
+
+        targetProduct = TestUtil.createProduct();
+        targetProduct.getAttributes().clear();
+        targetProduct.setAttribute("A1", null);
+        sourceSub = TestUtil.createSubscription(targetProduct);
+
+        targetPool = TestUtil.createPool(targetProduct);
+        targetPool.setProductAttribute("A1", "V-updated-new", targetProduct.getId());
+
+        ph = new PoolHelper(pm, psa, null);
+        when(psa.getProductById(targetProduct.getId())).thenReturn(targetProduct);
+        assertTrue("Update expected.",
+            ph.copyProductAttributesOntoPool(sourceSub, targetPool));
+        assertEquals(1, targetPool.getProductAttributes().size());
+        assertTrue(targetPool.hasProductAttribute("A1"));
+        assertEquals(null, targetPool.getProductAttribute("A1").getValue());
+
+        targetProduct = TestUtil.createProduct();
+        targetProduct.getAttributes().clear();
+        targetProduct.setAttribute("A1", null);
+        sourceSub = TestUtil.createSubscription(targetProduct);
+
+        targetPool = TestUtil.createPool(targetProduct);
+        targetPool.setProductAttribute("A1", null, targetProduct.getId());
+
+        ph = new PoolHelper(pm, psa, null);
+        when(psa.getProductById(targetProduct.getId())).thenReturn(targetProduct);
+        assertTrue("Update expected.",
+            ph.copyProductAttributesOntoPool(sourceSub, targetPool));
+        assertEquals(1, targetPool.getProductAttributes().size());
+        assertTrue(targetPool.hasProductAttribute("A1"));
+        assertEquals(null, targetPool.getProductAttribute("A1").getValue());
+    }
+
+    @Test
     public void copyProductAttributesOntoPoolRemovesNonExistingAttribute() {
         Product targetProduct = TestUtil.createProduct();
         targetProduct.getAttributes().clear();
