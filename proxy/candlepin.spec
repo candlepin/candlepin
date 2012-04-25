@@ -11,7 +11,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.5.27
+Version: 0.5.28
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -205,6 +205,34 @@ fi
 
 
 %changelog
+* Wed Apr 25 2012 jesus m. rodriguez <jesusr@redhat.com> 0.5.28-1
+- support_level_exempt attribute allows products to be service level agnostic.
+  service level is case insensitive in all scenarios. (wpoteat@redhat.com)
+- Fix bad assumption on constraint exceptions. (dgoodwin@redhat.com)
+- 807468: Fix content import error if label has changed. (dgoodwin@redhat.com)
+- 805027: Do not include uebercert consumers in ownerinfo compliance counts.
+  (mstead@redhat.com)
+- 805690: add some content with empty/null gpgkeys (alikins@redhat.com)
+- 802263: autodetection of deleted hypervisor cleanup (cduryee@redhat.com)
+- Load default consumer types via database instead of init URL.
+  (dgoodwin@redhat.com)
+- Fix quartz locks db error. (dgoodwin@redhat.com)
+- 804071: CRL Revocation Task was not running in hosted. (wpoteat@redhat.com)
+- Add the missing quartz lock rows for new databases. (dgoodwin@redhat.com)
+- Remove the changeset template, not used. (dgoodwin@redhat.com)
+- Remove changelog-create inclusion in changelog-update. (dgoodwin@redhat.com)
+- Add script for devs to generate db changelog templates. (dgoodwin@redhat.com)
+- Update database during dev deploy if GENDB not set. (dgoodwin@redhat.com)
+- Add a small changeset template. (dgoodwin@redhat.com)
+- Add rpm dependency on liquibase. (dgoodwin@redhat.com)
+- Add cpdb database create/update utility. (dgoodwin@redhat.com)
+- Integrate liquibase with dev deploy script. (dgoodwin@redhat.com)
+- Integrate liquibase with cpsetup. (dgoodwin@redhat.com)
+- Add initial liquibase schema XML. (dgoodwin@redhat.com)
+- 811581: cannot unregister hypervisor when >1 guests are consuming bonus subs
+  (cduryee@redhat.com)
+- latest strings from zanata (alikins@redhat.com)
+
 * Tue Apr 03 2012 Chris Duryee (beav) <cduryee@redhat.com>
 - bump candlepin-deps version for new jackson (cduryee@redhat.com)
 - 807452: Null pointer check added on attribute value. Was causing NPE in hash
