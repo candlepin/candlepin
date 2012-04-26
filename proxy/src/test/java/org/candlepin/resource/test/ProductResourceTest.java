@@ -15,10 +15,14 @@
 package org.candlepin.resource.test;
 
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Set;
 
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.Content;
@@ -33,10 +37,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
-
-import java.util.HashSet;
-import java.util.Locale;
-import java.util.Set;
 
 
 /**
