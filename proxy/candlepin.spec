@@ -59,7 +59,7 @@ BuildRequires: codehaus-jackson-jaxrs
 BuildRequires: jakarta-commons-httpclient
 BuildRequires: jpa_1_0_api
 BuildRequires: netty
-BuildRequires: jaxb_api
+BuildRequires: glassfish-jaxb
 BuildRequires: jms >= 0:1.1
 BuildRequires: oauth
 BuildRequires: rhino
@@ -92,7 +92,7 @@ Requires: oauth
 Requires: rhino
 Requires: quartz >= 0:1.7.3
 Requires: log4j
-Requires: jaxb_api
+Requires: glassfish-jaxb
 Requires: postgresql-jdbc
 Requires: scannotation
 Requires: liquibase >= 2.0.3
