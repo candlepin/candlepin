@@ -58,6 +58,8 @@ BuildRequires: codehaus-jackson-xc
 BuildRequires: codehaus-jackson-jaxrs
 BuildRequires: jakarta-commons-httpclient
 BuildRequires: jpa_1_0_api
+BuildRequires: netty
+BuildRequires: jaxb_api
 BuildRequires: jms >= 0:1.1
 BuildRequires: oauth
 BuildRequires: rhino
