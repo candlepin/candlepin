@@ -17,8 +17,8 @@
   <property name="jar.deps" value="antlr aopalliance bcprov-jdk16 c3p0
     cglib codehaus-jackson/jackson-core-lgpl codehaus-jackson/jackson-jaxrs
     codehaus-jackson/jackson-mapper-lgpl codehaus-jackson/jackson-xc
-    commons-codec commons-collections commons-dbcp
-    commons-httpclient commons-io commons-lang commons-logging commons-pool
+    commons-codec commons-collections
+    commons-httpclient commons-io commons-lang commons-logging
     dom4j gettext-commons google-collections guice
     guice-assistedinject guice-multibindings guice-persist guice-servlet
     guice-throwingproviders hibernate-annotations hibernate-commons-annotations
@@ -29,7 +29,7 @@
     resteasy/resteasy-guice resteasy/resteasy-jaxb-provider
     resteasy/resteasy-jaxrs resteasy/jaxrs-api
     resteasy/resteasy-multipart-provider scannotation servlet_api
-    slf4j-api slf4j-log4j12" />
+    slf4j/api slf4j/log4j12" />
 
   <macrodef name="grepfromspec">
     <attribute name="text" />
