@@ -17,7 +17,7 @@
   <property name="jar.deps" value="antlr aopalliance bcprov-jdk16 c3p0
     cglib codehaus-jackson/jackson-core-lgpl codehaus-jackson/jackson-jaxrs
     codehaus-jackson/jackson-mapper-lgpl codehaus-jackson/jackson-xc
-    commons-beanutils commons-codec commons-collections commons-dbcp
+    commons-codec commons-collections commons-dbcp
     commons-httpclient commons-io commons-lang commons-logging commons-pool
     dom4j gettext-commons google-collections guice
     guice-assistedinject guice-multibindings guice-persist guice-servlet
@@ -25,7 +25,7 @@
     hibernate-core hibernate-entitymanager hornetq/hornetq-core
     hornetq/hornetq-core-client javassist javax.inject jaxb-impl
     jboss-logging jpa_1_0_api js jta log4j netty oauth oauth-provider
-    postgresql quartz resteasy/resteasy-atom-provider
+    postgresql-jdbc quartz resteasy/resteasy-atom-provider
     resteasy/resteasy-guice resteasy/resteasy-jaxb-provider
     resteasy/resteasy-jaxrs resteasy/jaxrs-api
     resteasy/resteasy-multipart-provider scannotation servlet_api
@@ -119,7 +119,6 @@
             <include name="**/jaxrs-api-*.jar"/>
             <!-- supposedly for resteasy include name="**/scannotation-*.jar"/ -->
             <!-- not sure what needs this: include name="**/hibernate-commons-annotations-*.jar"/ -->
-            <include name="**/commons-beanutils.jar"/>
             <include name="**/commons-codec.jar"/>
             <include name="**/commons-collections.jar"/>
             <include name="**/commons-dbcp.jar"/>
