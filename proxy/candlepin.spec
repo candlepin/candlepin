@@ -50,7 +50,7 @@ BuildRequires: google-guice >= 0:3.0
 BuildRequires: log4j
 BuildRequires: jakarta-commons-lang
 BuildRequires: jakarta-commons-io
-BuildRequires: jakarta-commons-codec
+BuildRequires: apache-commons-codec
 BuildRequires: codehaus-jackson >= 0:1.9.2
 BuildRequires: codehaus-jackson-core-lgpl
 BuildRequires: codehaus-jackson-mapper-lgpl
