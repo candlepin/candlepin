@@ -14,6 +14,7 @@
  */
 package org.candlepin.audit;
 
+import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.AnnotationIntrospector;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
@@ -29,8 +30,6 @@ import org.candlepin.model.GuestId;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Subscription;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.inject.Inject;
 
@@ -40,7 +39,7 @@ import com.google.inject.Inject;
 public class EventFactory {
     private final PrincipalProvider principalProvider;
     private final ObjectMapper mapper;
-    private static Logger logger = LoggerFactory.getLogger(EventFactory.class);
+    private static Logger logger = Logger.getLogger(EventFactory.class);
 
     @Inject
     public EventFactory(PrincipalProvider principalProvider) {
@@ -274,7 +273,7 @@ public class EventFactory {
             newEntityJson = mapper.writeValueAsString(entity);
         }
         catch (Exception e) {
-            logger.warn("Unable to jsonify: {}", entity);
+            logger.warn("Unable to jsonify: " + entity);
             logger.error("jsonification failed!", e);
         }
         return newEntityJson;
