@@ -14,15 +14,16 @@
  */
 package org.candlepin.sync;
 
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import java.io.IOException;
 import java.io.StringWriter;
 
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.junit.Test;
-import static org.mockito.Mockito.*;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * RulesExporterTest

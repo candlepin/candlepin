@@ -87,6 +87,11 @@ public class ConfigProperties {
     public static final String ENV_CONTENT_FILTERING =
         "candlepin.environment_content_filtering";
 
+    public static final String CONSUMER_SYSTEM_NAME_PATTERN =
+         "candlepin.consumer_system_name_pattern";
+    public static final String CONSUMER_PERSON_NAME_PATTERN =
+         "candlepin.consumer_person_name_pattern";
+
     public static final Map<String, String> DEFAULT_PROPERTIES =
         new HashMap<String, String>() {
 
@@ -144,6 +149,13 @@ public class ConfigProperties {
                 this.put(STANDALONE, "true");
 
                 this.put(ENV_CONTENT_FILTERING, "true");
+
+                // what constitutes a valid consumer name
+                this.put(CONSUMER_SYSTEM_NAME_PATTERN,
+                    "[\\#\\?\\'\\`\\!@{}()\\[\\]\\?&\\w-\\.]+");
+                this.put(CONSUMER_PERSON_NAME_PATTERN,
+                    "[\\#\\?\\'\\`\\!@{}()\\[\\]\\?&\\w-\\.]+");
+
             }
         };
     public static final String CRL_FILE_PATH = "candlepin.crl.file";

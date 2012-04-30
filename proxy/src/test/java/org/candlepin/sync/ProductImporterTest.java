@@ -14,31 +14,34 @@
  */
 package org.candlepin.sync;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.codehaus.jackson.map.ObjectMapper;
 import org.candlepin.config.Config;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
+import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.test.TestUtil;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
-import java.util.ArrayList;
-import org.candlepin.model.Pool;
 /**
  * ProductImporterTest
  */

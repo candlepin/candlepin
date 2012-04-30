@@ -253,6 +253,10 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
             when(config.standalone()).thenReturn(false);
             when(config.getString(eq(ConfigProperties.CONSUMER_FACTS_MATCHER)))
                 .thenReturn("^virt.*");
+            when(config.getString(eq(ConfigProperties.CONSUMER_SYSTEM_NAME_PATTERN)))
+                .thenReturn("[\\#\\?\\'\\`\\!@{}()\\[\\]\\?&\\w-\\.]+");
+            when(config.getString(eq(ConfigProperties.CONSUMER_PERSON_NAME_PATTERN)))
+                .thenReturn("[\\#\\?\\'\\`\\!@{}()\\[\\]\\?&\\w-\\.]+");
             bind(Config.class).toInstance(config);
             bind(Enforcer.class).to(EnforcerDispatcher.class);
         }

@@ -14,7 +14,7 @@
  */
 package org.candlepin.model.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.ConsumerPrincipal;

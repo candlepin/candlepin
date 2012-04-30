@@ -26,6 +26,8 @@ import org.candlepin.auth.Principal;
 import org.candlepin.auth.TrustedUserPrincipal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.Permission;
+import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.NotFoundException;
@@ -64,20 +66,26 @@ import org.xnap.commons.i18n.I18nFactory;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 
+
 /**
  *
  */
 @RunWith(MockitoJUnitRunner.class)
+/*
+ * FIXME: this seems to only test creating
+ * system consumers.
+ */
 public class ConsumerResourceCreationTest {
 
     private static final String USER = "testuser";
 
-    @Mock private UserServiceAdapter userService;
+    @Mock protected UserServiceAdapter userService;
     @Mock private IdentityCertServiceAdapter idCertService;
     @Mock private SubscriptionServiceAdapter subscriptionService;
     @Mock private ConsumerCurator consumerCurator;
@@ -92,24 +100,27 @@ public class ConsumerResourceCreationTest {
 
     private ConsumerResource resource;
     private ConsumerType system;
-    private Owner owner;
-    private Role role;
+    protected Config config;
+    protected Owner owner;
+    protected Role role;
+    private User user;
 
     @Before
     public void init() throws Exception {
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 
+        this.config = initConfig();
         this.resource = new ConsumerResource(this.consumerCurator,
             this.consumerTypeCurator, null, this.subscriptionService, null,
             this.idCertService, null, this.i18n, this.sink, null, null, null,
             this.userService, null, null, null, null, null, this.ownerCurator,
             this.activationKeyCurator, null, this.complianceRules,
-            this.deletedConsumerCurator);
+            this.deletedConsumerCurator, this.config);
 
-        this.system = new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
+        this.system = initSystem();
 
         owner = new Owner("test_owner");
-        User user = new User(USER, "");
+        user = new User(USER, "");
         OwnerPermission p = new OwnerPermission(owner, Access.ALL);
         role = new Role();
         role.addPermission(p);
@@ -130,7 +141,32 @@ public class ConsumerResourceCreationTest {
                 .thenReturn(new ComplianceStatus(new Date()));
     }
 
-    private Consumer createConsumer(String consumerName) {
+    public ConsumerType initSystem() {
+        ConsumerType systemtype = new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
+        return systemtype;
+    }
+
+    private static class ConfigForTesting extends Config {
+        @SuppressWarnings("serial")
+        public ConfigForTesting() {
+            super(new HashMap<String, String>() {
+                {
+                    this.put(ConfigProperties.CONSUMER_SYSTEM_NAME_PATTERN,
+                        "[\\#\\?\\'\\`\\!@{}()\\[\\]\\?&\\w-\\.]+");
+                    this.put(ConfigProperties.CONSUMER_PERSON_NAME_PATTERN,
+                        "[\\#\\?\\'\\`\\!@{}()\\[\\]\\?&\\w-\\.]+");
+                }
+            });
+        }
+    }
+
+    public Config initConfig() {
+        Config config = new ConfigForTesting();
+        return config;
+    }
+
+
+    protected Consumer createConsumer(String consumerName) {
         Collection<Permission> perms = new HashSet<Permission>();
         perms.addAll(role.getPermissions());
         Principal principal = new UserPrincipal(USER, perms, false);
@@ -184,6 +220,17 @@ public class ConsumerResourceCreationTest {
     @Test
     public void containsUserServiceChars() {
         Assert.assertNotNull(createConsumer("{bob}'s_b!g_#boi.`?uestlove!x"));
+    }
+
+    // These fail with the default consumer name pattern
+    @Test(expected = BadRequestException.class)
+    public void containsMultibyteKorean() {
+        createConsumer("서브스크립션 ");
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void containsMultibyteOriya() {
+        createConsumer("ପରିବେଶ");
     }
 
     @Test(expected = BadRequestException.class)

@@ -14,7 +14,7 @@
  */
 package org.candlepin.model.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.candlepin.model.User;
 import org.candlepin.test.DatabaseTestFixture;

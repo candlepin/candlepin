@@ -212,15 +212,18 @@ public class PoolHelper {
                 // be removed later.
                 processed.add(attributeName);
 
-                if (pool.hasProductAttribute(attributeName)) {
-
+                if (pool.hasProductAttribute(attributeName) &&
+                    attributeValue != null) {
                     ProductPoolAttribute provided =
                         pool.getProductAttribute(attributeName);
-                    boolean productsAreSame =
-                        product.getId().equals(provided.getProductId());
-                    boolean attrValueSame = provided.getValue().equals(attributeValue);
-                    if (productsAreSame && attrValueSame) {
-                        continue;
+                    String providedValue = provided.getValue();
+                    if (providedValue != null) {
+                        boolean productsAreSame =
+                            product.getId().equals(provided.getProductId());
+                        boolean attrValueSame = attributeValue.equals(providedValue);
+                        if (productsAreSame && attrValueSame) {
+                            continue;
+                        }
                     }
                 }
 
