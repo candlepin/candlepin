@@ -28,7 +28,7 @@
     postgresql-jdbc quartz resteasy/resteasy-atom-provider
     resteasy/resteasy-guice resteasy/resteasy-jaxb-provider
     resteasy/resteasy-jaxrs resteasy/jaxrs-api
-    resteasy/resteasy-multipart-provider scannotation servlet_api
+    resteasy/resteasy-multipart-provider scannotation servlet
     slf4j/api slf4j/log4j12" />
 
   <macrodef name="grepfromspec">
@@ -180,7 +180,7 @@
             <include name="**/js.jar"/>
             <include name="**/google-collections.jar"/>
             <include name="**/log4j.jar"/>
-            <include name="**/servlet_api.jar"/>
+            <include name="**/servlet.jar"/>
             <include name="**/jms.jar"/>
             <exclude name="**/*-sources.jar" />
         </fileset>
