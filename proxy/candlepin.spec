@@ -69,6 +69,7 @@ BuildRequires: c3p0
 BuildRequires: scannotation
 BuildRequires: postgresql-jdbc
 BuildRequires: servlet
+BuildRequires: gettext-commons
 %endif
 Requires: java >= 0:1.6.0
 #until cpsetup is removed
