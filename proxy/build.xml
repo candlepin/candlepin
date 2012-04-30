@@ -114,75 +114,8 @@
         <path location="${res.main.dir}" />
       </src>
       <classpath>
-        <fileset dir="${lib.dir}">
-            <!-- not a build dependency include name="**/postgresql-9.0-*.jar"/ -->
-            <include name="**/jaxrs-api-*.jar"/>
-            <!-- supposedly for resteasy include name="**/scannotation-*.jar"/ -->
-            <!-- not sure what needs this: include name="**/hibernate-commons-annotations-*.jar"/ -->
-            <include name="**/commons-codec.jar"/>
-            <include name="**/commons-collections.jar"/>
-            <include name="**/commons-dbcp.jar"/>
-            <include name="**/commons-httpclient.jar"/>
-            <include name="**/commons-io.jar"/>
-            <include name="**/commons-lang.jar"/>
-            <include name="**/commons-logging.jar"/>
-            <include name="**/commons-pool.jar"/>
-            <!-- RESTEASY -->
-            <include name="**/resteasy-jaxrs.jar"/>
-            <include name="**/resteasy-jaxb-provider.jar"/>
-            <include name="**/resteasy-guice.jar"/>
-            <include name="**/resteasy-atom-provider.jar"/>
-            <include name="**/resteasy-multipart-provider.jar"/>
-            <!-- HIBERNATE -->
-            <include name="**/hibernate-core.jar"/>
-            <include name="**/hibernate-annotations.jar"/>
-            <!-- RUNTIME include name="**/hibernate-entitymanager-*.jar"/ -->
-            <!-- RUNTIME include name="**/c3p0-*.jar"/ -->
-            <!-- include name="**/hibernate-validator-*.jar"/ -->
-            <include name="**/antlr.jar"/>
-            <!-- include name="**/asm-*.jar"/ -->
-            <include name="**/cglib.jar"/>
-            <include name="**/javassist.jar"/>
-            <include name="**/jta.jar"/>
-            <include name="**/slf4j-api.jar"/>
-            <include name="**/slf4j-log4j12.jar"/>
-            <include name="**/dom4j.jar"/>
-            <include name="**/jpa_1_0_api.jar"/>
-            <!-- GUICE -->
-            <include name="**/guice-assistedinject.jar"/>
-            <include name="**/guice-multibindings.jar"/>
-            <include name="**/guice-servlet.jar"/>
-            <include name="**/guice-throwingproviders.jar"/>
-            <include name="**/guice-persist.jar"/>
-            <include name="**/guice.jar"/>
-            <include name="**/aopalliance.jar"/>
-            <include name="**/javax.inject.jar"/>
-            <!-- JACKSON -->
-            <include name="**/jackson-core-lgpl.jar"/>
-            <include name="**/jackson-mapper-lgpl.jar"/>
-            <include name="**/jackson-jaxrs.jar"/>
-            <include name="**/jackson-xc.jar"/>
-            <!-- QUARTZ -->
-            <include name="**/quartz.jar"/>
-            <!-- I18n -->
-            <include name="**/gettext-commons.jar"/>
-            <!-- HORNETQ -->
-            <include name="**/hornetq-core.jar"/>
-            <include name="**/hornetq-core-client.jar"/>
-            <include name="**/netty.jar"/>
-            <include name="**/jaxb-impl-*.jar"/>
-            <include name="**/apache-mime4j-*.jar"/>
-            <include name="**/bcprov-jdk16.jar"/>
-            <!-- include name="**/commons-digester-*.jar"/ -->
-            <include name="**/commons-configuration-*.jar"/>
-            <include name="**/oauth.jar"/>
-            <include name="**/oauth-provider.jar"/>
-            <include name="**/js.jar"/>
-            <include name="**/google-collections.jar"/>
-            <include name="**/log4j.jar"/>
-            <include name="**/servlet.jar"/>
-            <include name="**/jms.jar"/>
-            <exclude name="**/*-sources.jar" />
+        <fileset dir="${dist.lib.dir}">
+          <include name="**/*.jar" />
         </fileset>
       </classpath>
     </javac>
