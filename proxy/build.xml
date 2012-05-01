@@ -29,7 +29,7 @@
     resteasy/resteasy-guice resteasy/resteasy-jaxb-provider
     resteasy/resteasy-jaxrs resteasy/jaxrs-api
     resteasy/resteasy-multipart-provider scannotation servlet
-    slf4j/api slf4j/log4j12" />
+    slf4j-api slf4j-log4j12" />
 
   <macrodef name="grepfromspec">
     <attribute name="text" />
