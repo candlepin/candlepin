@@ -11,7 +11,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.5.28
+Version: 0.5.29
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -205,6 +205,16 @@ fi
 
 
 %changelog
+* Tue May 01 2012 jesus m. rodriguez <jesusr@redhat.com> 0.5.29-1
+- 799979: allow katello to set the allow consumer name pattern
+  (alikins@redhat.com)
+- 814385: fix releasever schema to be varchar instead of bytea
+  (alikins@redhat.com)
+- remove use of * imports, and some import sorting (alikins@redhat.com)
+- 813529: Refresh pool failure for null pointer exception caused by null
+  attribute value. (wpoteat@redhat.com)
+- latest strings from zanata (alikins@redhat.com)
+
 * Wed Apr 25 2012 jesus m. rodriguez <jesusr@redhat.com> 0.5.28-1
 - support_level_exempt attribute allows products to be service level agnostic.
   service level is case insensitive in all scenarios. (wpoteat@redhat.com)
