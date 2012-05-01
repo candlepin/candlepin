@@ -11,7 +11,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.5.29
+Version: 0.5.30
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -206,6 +206,10 @@ fi
 
 
 %changelog
+* Tue May 01 2012 jesus m. rodriguez <jesusr@redhat.com> 0.5.30-1
+- Add postgresql-jdbc driver to the requires. (bkearney@redhat.com)
+- Only update releasever if it's changed. (alikins@redhat.com)
+
 * Tue May 01 2012 jesus m. rodriguez <jesusr@redhat.com> 0.5.29-1
 - 799979: allow katello to set the allow consumer name pattern
   (alikins@redhat.com)
