@@ -98,6 +98,7 @@ Requires: glassfish-jaxb
 Requires: postgresql-jdbc
 Requires: scannotation
 Requires: liquibase >= 2.0.3
+%endif
 %define __jar_repack %{nil}
 
 %description
