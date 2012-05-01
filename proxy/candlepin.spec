@@ -30,6 +30,7 @@ Requires: java >= 0:1.6.0
 #until cpsetup is removed
 Requires: wget
 Requires: liquibase >= 2.0.3
+Requires: postgresql-jdbc
 #Requires: bouncycastle
 %define __jar_repack %{nil}
 
