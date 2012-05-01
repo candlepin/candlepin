@@ -63,6 +63,7 @@ BuildRequires: glassfish-jaxb
 BuildRequires: jms >= 0:1.1
 BuildRequires: oauth
 BuildRequires: rhino
+BuildRequires: slf4j >= 0:1.6.1
 BuildRequires: quartz >= 0:1.7.3
 # needed to setup runtime deps, not for compilation
 BuildRequires: c3p0
@@ -98,6 +99,7 @@ Requires: glassfish-jaxb
 Requires: postgresql-jdbc
 Requires: scannotation
 Requires: liquibase >= 2.0.3
+Requires: slf4j >= 0:1.6.1
 %endif
 %define __jar_repack %{nil}
 
