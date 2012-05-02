@@ -540,6 +540,9 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
      * @param releaseVer the releaseVer to set
      */
     public void setReleaseVer(Release releaseVer) {
+        if (releaseVer == null) {
+            releaseVer = new Release();
+        }
         this.releaseVer = releaseVer.getReleaseVer();
     }
 

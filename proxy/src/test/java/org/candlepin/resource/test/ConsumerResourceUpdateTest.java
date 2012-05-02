@@ -112,6 +112,25 @@ public class ConsumerResourceUpdateTest {
         return consumer;
     }
 
+
+    @Test
+    public void nullReleaseVer() {
+        Consumer consumer = getFakeConsumer();
+        consumer.setReleaseVer(null);
+
+        Consumer incoming = new Consumer();
+        incoming.setReleaseVer(new Release("not null"));
+        this.resource.updateConsumer(consumer.getUuid(), incoming);
+
+        Consumer consumer2 = getFakeConsumer();
+        consumer2.setReleaseVer(new Release("foo"));
+        Consumer incoming2 = new Consumer();
+        incoming2.setReleaseVer(null);
+        this.resource.updateConsumer(consumer2.getUuid(), incoming2);
+
+    }
+
+
     public void compareConsumerRelease(String release1, String release2, Boolean verify) {
         Consumer consumer = getFakeConsumer();
         consumer.setReleaseVer(new Release(release1));
