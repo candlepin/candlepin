@@ -358,7 +358,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         // list includes levels that are exempt false or not specified.
         // different casings will all appear on available list.
         Set<String> levels = poolCurator.retrieveServiceLevelsForOwner(owner, false);
-        assertEquals(3, levels.size());
+        assertEquals(2, levels.size());
         // list includes on only those levels that have exempt attribute set.
         // The others that have that level but not the attribute do not appear on
         // the available level list but also do not appear on the exempt list. Pool
@@ -392,7 +392,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         poolCurator.create(pool3);
 
         Set<String> levels = poolCurator.retrieveServiceLevelsForOwner(owner, false);
-        assertEquals(3, levels.size());
+        assertEquals(2, levels.size());
     }
 
 }

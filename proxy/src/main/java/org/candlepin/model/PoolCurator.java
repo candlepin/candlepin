@@ -459,7 +459,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                     }
                 }
                 if (!found) {
-                    slaSet.add(value);
+                    slaSet.add(value.toUpperCase());
                 }
             }
         }
