@@ -654,7 +654,8 @@ public class ConsumerResource {
         }
 
         if (updated.getReleaseVer() != null &&
-            toUpdate.getReleaseVer() != updated.getReleaseVer()) {
+            (updated.getReleaseVer().getReleaseVer() != null) &&
+            !updated.getReleaseVer().equals(toUpdate.getReleaseVer())) {
             if (log.isDebugEnabled()) {
                 log.debug("   Updating consumer releaseVer setting.");
             }
