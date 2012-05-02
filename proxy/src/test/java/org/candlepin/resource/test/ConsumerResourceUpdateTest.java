@@ -37,6 +37,7 @@ import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.GuestId;
+import org.candlepin.model.Release;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.resource.ConsumerResource;
@@ -97,12 +98,53 @@ public class ConsumerResourceUpdateTest {
 
     @Test
     public void nothingChanged() throws Exception {
+        Consumer consumer = getFakeConsumer();
+        this.resource.updateConsumer(consumer.getUuid(), consumer);
+        verify(sink, never()).sendEvent((Event) any());
+    }
+
+    public Consumer getFakeConsumer() {
         Consumer consumer = new Consumer();
         String uuid = "FAKEUUID";
         consumer.setUuid(uuid);
+        // go ahead and patch the curator to match it
         when(this.consumerCurator.findByUuid(uuid)).thenReturn(consumer);
-        this.resource.updateConsumer(consumer.getUuid(), consumer);
-        verify(sink, never()).sendEvent((Event) any());
+        return consumer;
+    }
+
+    public void compareConsumerRelease(String release1, String release2, Boolean verify) {
+        Consumer consumer = getFakeConsumer();
+        consumer.setReleaseVer(new Release(release1));
+
+        Consumer incoming = new Consumer();
+        incoming.setReleaseVer(new Release(release2));
+
+        this.resource.updateConsumer(consumer.getUuid(), incoming);
+        if (verify) {
+            verify(sink).sendEvent((Event) any());
+        }
+        assertEquals(consumer.getReleaseVer().getReleaseVer(),
+            incoming.getReleaseVer().getReleaseVer());
+    }
+
+    @Test
+    public void releaseVerChanged() {
+        compareConsumerRelease("6.2", "6.2.1", true);
+    }
+
+    @Test
+    public void releaseVerChangedEmpty() {
+        compareConsumerRelease("", "6.2.1", true);
+    }
+
+    @Test
+    public void releaseVerChangedNull() {
+        compareConsumerRelease(null, "6.2.1", true);
+    }
+
+    @Test
+    public void releaseVerNothingChangedEmpty() {
+        compareConsumerRelease("", "", false);
     }
 
     @Test
@@ -111,13 +153,9 @@ public class ConsumerResourceUpdateTest {
         ConsumerInstalledProduct b = new ConsumerInstalledProduct("b", "Product B");
         ConsumerInstalledProduct c = new ConsumerInstalledProduct("c", "Product C");
 
-        Consumer consumer = new Consumer();
-        String uuid = "FAKEUUID";
-        consumer.setUuid(uuid);
+        Consumer consumer = getFakeConsumer();
         consumer.addInstalledProduct(a);
         consumer.addInstalledProduct(b);
-
-        when(this.consumerCurator.findByUuid(uuid)).thenReturn(consumer);
 
         Consumer incoming = new Consumer();
         incoming.addInstalledProduct(b);
@@ -133,13 +171,9 @@ public class ConsumerResourceUpdateTest {
         ConsumerInstalledProduct b = new ConsumerInstalledProduct("b", "Product B");
         ConsumerInstalledProduct c = new ConsumerInstalledProduct("c", "Product C");
 
-        Consumer consumer = new Consumer();
-        String uuid = "FAKEUUID";
-        consumer.setUuid(uuid);
+        Consumer consumer = getFakeConsumer();
         consumer.addInstalledProduct(a);
         consumer.addInstalledProduct(b);
-
-        when(this.consumerCurator.findByUuid(uuid)).thenReturn(consumer);
 
         Consumer incoming = new Consumer();
         incoming.addInstalledProduct(b);

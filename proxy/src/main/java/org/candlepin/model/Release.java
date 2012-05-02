@@ -42,4 +42,27 @@ public class Release extends AbstractHibernateObject {
         return null;
     }
 
+
+    @Override
+    public boolean equals(Object anObject) {
+        if (this == anObject) {
+            return true;
+        }
+        if (!(anObject instanceof Release)) {
+            return false;
+        }
+
+        Release another = (Release) anObject;
+        if ((releaseVer == null) && (another.getReleaseVer() == null)) {
+            return true;
+        }
+
+        return releaseVer.equals(another.getReleaseVer());
+    }
+
+    @Override
+    public int hashCode() {
+        return releaseVer.hashCode();
+    }
+
 }
