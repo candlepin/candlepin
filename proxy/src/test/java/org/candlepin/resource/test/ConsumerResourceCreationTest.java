@@ -42,6 +42,7 @@ import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerPermission;
+import org.candlepin.model.Release;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
 import org.candlepin.policy.js.compliance.ComplianceRules;
@@ -330,6 +331,36 @@ public class ConsumerResourceCreationTest {
 
     @Test
     public void registerWithNoInstalledProducts() {
+        Principal p = new TrustedUserPrincipal("anyuser");
+        Consumer consumer = new Consumer();
+        consumer.setType(system);
+        consumer.setName("consumername");
+        resource.create(consumer, p, USER, owner.getKey(), "");
+    }
+
+    @Test
+    public void registerWithNullReleaseVer() {
+        Principal p = new TrustedUserPrincipal("anyuser");
+        Consumer consumer = new Consumer();
+        consumer.setType(system);
+        consumer.setName("consumername");
+        consumer.setReleaseVer(null);
+        resource.create(consumer, p, USER, owner.getKey(), "");
+
+    }
+
+    @Test
+    public void registerWithEmptyReleaseVer() {
+        Principal p = new TrustedUserPrincipal("anyuser");
+        Consumer consumer = new Consumer();
+        consumer.setType(system);
+        consumer.setName("consumername");
+        consumer.setReleaseVer(new Release(""));
+        resource.create(consumer, p, USER, owner.getKey(), "");
+    }
+
+    @Test
+    public void registerWithNoReleaseVer() {
         Principal p = new TrustedUserPrincipal("anyuser");
         Consumer consumer = new Consumer();
         consumer.setType(system);

@@ -27,10 +27,15 @@ public class Release extends AbstractHibernateObject {
         this.releaseVer = releaseVer;
     }
 
+    public Release() {
+        this.releaseVer = "";
+    }
+
     public String getReleaseVer() {
         return releaseVer;
     }
-    public void setReleasever(String releaseVer) {
+
+    public void setReleaseVer(String releaseVer) {
         this.releaseVer = releaseVer;
     }
     /* (non-Javadoc)
