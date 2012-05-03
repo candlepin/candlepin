@@ -717,6 +717,12 @@ public class CandlepinPoolManager implements PoolManager {
     public void removeEntitlement(Entitlement entitlement) {
         Consumer consumer = entitlement.getConsumer();
         Pool pool = entitlement.getPool();
+
+        // Similarly to when we add an entitlement, lock the pool when we remove one, too.
+        // This won't do anything for over/under consumption, but it will prevent
+        // concurrency issues if someone else is operating on the pool.
+        pool = poolCurator.lockAndLoad(pool);
+
         PreUnbindHelper preHelper = enforcer.preUnbind(consumer,
             pool);
         ValidationResult result = preHelper.getResult();
@@ -752,6 +758,7 @@ public class CandlepinPoolManager implements PoolManager {
             deletePool(dp);
         }
 
+        pool.getEntitlements().remove(entitlement);
         poolCurator.merge(pool);
         entitlementCurator.delete(entitlement);
         Event event = eventFactory.entitlementDeleted(entitlement);
