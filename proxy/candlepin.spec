@@ -14,7 +14,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.5.31
+Version: 0.5.32
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -273,6 +273,10 @@ fi
 
 
 %changelog
+* Thu May 03 2012 jesus m. rodriguez <jesusr@redhat.com> 0.5.32-1
+- Add a null check for consumer.setReleaseVer (alikins@redhat.com)
+- 818040: rhsm release combobox doesn't reset release now (alikins@redhat.com)
+
 * Wed May 02 2012 Bryan Kearney <bkearney@redhat.com> 0.5.31-1
 - Allow the keystore password to be passed in (bkearney@redhat.com)
 
