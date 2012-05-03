@@ -346,6 +346,8 @@ public class PoolManagerTest {
         when(this.mockPoolCurator.retrieveFreeEntitlementsOfPool(any(Pool.class),
             anyBoolean())).thenReturn(mockedEntitlements);
 
+        when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(p);
+
         List<PoolUpdate> updatedPools = new LinkedList<PoolUpdate>();
         updatedPools.add(new PoolUpdate(p, true, true, false));
         when(poolRulesMock.updatePools(any(Subscription.class), any(List.class)))
@@ -383,6 +385,8 @@ public class PoolManagerTest {
         ValidationResult result = new ValidationResult();
         when(preHelper.getResult()).thenReturn(result);
         when(mockConfig.standalone()).thenReturn(true);
+
+        when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(pool);
 
         manager.revokeEntitlement(e);
 
@@ -496,6 +500,8 @@ public class PoolManagerTest {
         p.setConsumed(1L);
         pools.add(p);
 
+        when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(p);
+
         when(mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
             any(Owner.class), anyString(), any(Date.class),
             anyBoolean(), anyBoolean())).thenReturn(pools);
@@ -536,6 +542,7 @@ public class PoolManagerTest {
     public void testCleanup() throws Exception {
         Pool p = createPoolWithEntitlements();
 
+        when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(p);
         when(mockPoolCurator.entitlementsIn(p)).thenReturn(
                 new ArrayList<Entitlement>(p.getEntitlements()));
         PreUnbindHelper preHelper =  mock(PreUnbindHelper.class);
