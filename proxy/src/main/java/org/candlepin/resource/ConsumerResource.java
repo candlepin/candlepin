@@ -1337,12 +1337,14 @@ public class ConsumerResource {
      * Unbind all entitlements.
      *
      * @param consumerUuid Unique id for the Consumer.
+     * @return the total number of entitlements unbound.
      * @httpcode 404
      * @httpcode 200
      */
     @DELETE
+    @Produces(MediaType.APPLICATION_JSON)
     @Path("/{consumer_uuid}/entitlements")
-    public void unbindAll(
+    public int unbindAll(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
 
         // FIXME: just a stub, needs CertifcateService (and/or a
@@ -1354,14 +1356,15 @@ public class ConsumerResource {
                 consumerUuid + " could not be found."));
         }
 
-        poolManager.revokeAllEntitlements(consumer);
+        int total = poolManager.revokeAllEntitlements(consumer);
+        log.debug("Revoked " + total + " entitlements from " + consumerUuid);
+        return total;
 
         // Need to parse off the value of subscriptionNumberArgs, probably
         // use comma separated see IntergerList in sparklines example in
         // jersey examples find all entitlements for this consumer and
         // subscription numbers delete all of those (and/or return them to
         // entitlement pool)
-
     }
 
     /**

@@ -795,18 +795,24 @@ public class CandlepinPoolManager implements PoolManager {
 
     @Override
     @Transactional
-    public void revokeAllEntitlements(Consumer consumer) {
+    public int revokeAllEntitlements(Consumer consumer) {
+        int count = 0;
         for (Entitlement e : entitlementCurator.listByConsumer(consumer)) {
             revokeEntitlement(e);
+            count++;
         }
+        return count;
     }
 
     @Override
     @Transactional
-    public void removeAllEntitlements(Consumer consumer) {
+    public int removeAllEntitlements(Consumer consumer) {
+        int count = 0;
         for (Entitlement e : entitlementCurator.listByConsumer(consumer)) {
             removeEntitlement(e);
+            count++;
         }
+        return count;
     }
 
     /**

@@ -126,9 +126,9 @@ public interface PoolManager {
 
     void regenerateEntitlementCertificates(Consumer consumer);
 
-    void revokeAllEntitlements(Consumer consumer);
+    int revokeAllEntitlements(Consumer consumer);
 
-    void removeAllEntitlements(Consumer consumer);
+    int removeAllEntitlements(Consumer consumer);
 
     void revokeEntitlement(Entitlement entitlement);
 

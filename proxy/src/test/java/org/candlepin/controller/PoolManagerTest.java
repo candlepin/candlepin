@@ -37,6 +37,7 @@ import org.candlepin.auth.UserPrincipal;
 import org.candlepin.config.Config;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
@@ -371,6 +372,32 @@ public class PoolManagerTest {
 
         this.manager.createPoolsForSubscription(s);
         verify(this.mockPoolCurator, times(1)).create(any(Pool.class));
+    }
+
+    @Test
+    public void testRevokeAllEntitlements() {
+        Consumer c = TestUtil.createConsumer(o);
+
+        Entitlement e1 = new Entitlement(pool, c,
+            pool.getStartDate(), pool.getEndDate(), 1);
+        Entitlement e2 = new Entitlement(pool, c,
+            pool.getStartDate(), pool.getEndDate(), 1);
+        List<Entitlement> entitlementList = new ArrayList<Entitlement>();
+        entitlementList.add(e1);
+        entitlementList.add(e2);
+
+        when(entitlementCurator.listByConsumer(eq(c))).thenReturn(entitlementList);
+        when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(pool);
+
+        PreUnbindHelper preHelper =  mock(PreUnbindHelper.class);
+        when(enforcerMock.preUnbind(eq(c), eq(pool)))
+            .thenReturn(preHelper);
+        ValidationResult result = new ValidationResult();
+        when(preHelper.getResult()).thenReturn(result);
+
+        int total = manager.revokeAllEntitlements(c);
+
+        assertEquals(2, total);
     }
 
     @Test
