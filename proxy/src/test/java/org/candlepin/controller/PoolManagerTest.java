@@ -37,7 +37,6 @@ import org.candlepin.auth.UserPrincipal;
 import org.candlepin.config.Config;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
-import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
