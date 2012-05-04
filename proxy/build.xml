@@ -14,7 +14,7 @@
   <property name="dist.lib.dir" location="${distlibdir}" />
   <property name="pkgname" value="org.candlepin" />
   <!-- jpackage format -->
-  <property name="jar.deps" value="antlr aopalliance bcprov-jdk16 c3p0
+  <property name="jar.deps" value="antlr aopalliance apache-mime4j bcprov-jdk16 c3p0
     cglib codehaus-jackson/jackson-core-lgpl codehaus-jackson/jackson-jaxrs
     codehaus-jackson/jackson-mapper-lgpl codehaus-jackson/jackson-xc
     commons-codec commons-collections

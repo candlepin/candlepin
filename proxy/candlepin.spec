@@ -71,6 +71,8 @@ BuildRequires: scannotation
 BuildRequires: postgresql-jdbc
 BuildRequires: servlet
 BuildRequires: gettext-commons
+# resteasy multipart requires this at runtime
+BuildRequires: apache-mime4j
 %endif
 Requires: java >= 0:1.6.0
 #until cpsetup is removed
