@@ -14,7 +14,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.6.1
+Version: 0.6.2
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -275,6 +275,12 @@ fi
 
 
 %changelog
+* Fri May 04 2012 jesus m. rodriguez <jesusr@redhat.com> 0.6.2-1
+- require apache-mime4j (jesusr@redhat.com)
+- Remove unused import to silence Checkstyle. (awood@redhat.com)
+- 812388: Return the number of entitlements removed or revoked.
+  (awood@redhat.com)
+
 * Thu May 03 2012 jesus m. rodriguez <jesusr@redhat.com> 0.6.1-1
 - remove wideplay persist (jesusr@redhat.com)
 - bump version and use correct dist-git branch (jesusr@redhat.com)
