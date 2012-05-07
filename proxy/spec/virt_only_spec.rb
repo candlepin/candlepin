@@ -66,8 +66,8 @@ describe 'Virt Only Pools' do
       }
     })
 
-    @cp.create_subscription(@owner.key, product.id, 10)
-    @cp.refresh_pools(@owner.key)
+    @cp.create_subscription(@owner['key'], product.id, 10)
+    @cp.refresh_pools(@owner['key'])
 
     product
   end

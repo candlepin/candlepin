@@ -30,8 +30,8 @@ describe 'Pool serialization' do
     @owner_client = user_client(@owner, random_string('testuser'))
     product1 = create_product()
 
-    @sub = @cp.create_subscription(@owner.key, product1.id, 2)
-    @cp.refresh_pools(@owner.key)
+    @sub = @cp.create_subscription(@owner['key'], product1.id, 2)
+    @cp.refresh_pools(@owner['key'])
 
     @pool = @cp.list_pools(:owner => @owner.id,
                            :product => product1.id)[0]
@@ -58,8 +58,8 @@ describe 'Entitlement serialization' do
     @owner_client = user_client(@owner, random_string('testuser'))
     product1 = create_product()
 
-    @sub = @cp.create_subscription(@owner.key, product1.id, 2)
-    @cp.refresh_pools(@owner.key)
+    @sub = @cp.create_subscription(@owner['key'], product1.id, 2)
+    @cp.refresh_pools(@owner['key'])
 
     @pool = @cp.list_pools(:owner => @owner.id,
                            :product => product1.id)[0]

@@ -204,6 +204,6 @@ eval $START
 
 sleep 10
 echo "Initializing Candlepin..."
-wget -qO- http://localhost:8080/candlepin/admin/init
+wget --no-check-certificate -qO- https://localhost:8443/candlepin/admin/init
 
 upload_products

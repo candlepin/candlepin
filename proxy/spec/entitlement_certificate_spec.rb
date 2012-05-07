@@ -11,13 +11,13 @@ describe 'Entitlement Certificate' do
   end
 
   def change_dt_and_qty
-      sub = @cp.list_subscriptions(@owner.key)[0]
+      sub = @cp.list_subscriptions(@owner['key'])[0]
       sub.endDate = sub.endDate.to_date + 10
       sub.startDate = sub.startDate.to_date - 10
       sub.quantity = sub.quantity + 10
 
       @cp.update_subscription(sub)
-      @cp.refresh_pools(@owner.key)
+      @cp.refresh_pools(@owner['key'])
       return sub
   end
 
@@ -25,8 +25,8 @@ describe 'Entitlement Certificate' do
     @owner = create_owner random_string('test_owner')
     monitoring = create_product()
 
-    @cp.create_subscription(@owner.key, monitoring.id, 10)
-    @cp.refresh_pools(@owner.key)
+    @cp.create_subscription(@owner['key'], monitoring.id, 10)
+    @cp.refresh_pools(@owner['key'])
 
     @user = user_client(@owner, random_string('billy'))
 
@@ -65,8 +65,8 @@ describe 'Entitlement Certificate' do
 
   it 'can be manually regenerated for a product' do
     coolapp = create_product
-    @cp.create_subscription(@owner.key, coolapp.id, 10)
-    @cp.refresh_pools(@owner.key)
+    @cp.create_subscription(@owner['key'], coolapp.id, 10)
+    @cp.refresh_pools(@owner['key'])
     @system.consume_product coolapp.id
 
     @cp.regenerate_entitlement_certificates_for_product(coolapp.id)
@@ -83,12 +83,12 @@ describe 'Entitlement Certificate' do
   end
 
   it 'will be regenerated when changing existing subscription\'s end date' do
-    sub = @cp.list_subscriptions(@owner.key)[0]
+    sub = @cp.list_subscriptions(@owner['key'])[0]
     sub.endDate = sub.endDate.to_date + 2
     old_cert = @system.list_certificates()[0]
     @cp.update_subscription(sub)
 
-    @cp.refresh_pools(@owner.key)
+    @cp.refresh_pools(@owner['key'])
 
     new_cert = @system.list_certificates()[0]
     old_cert.serial.id.should_not == new_cert.serial.id
@@ -99,7 +99,7 @@ describe 'Entitlement Certificate' do
 
   it 'those in excess will be deleted when existing subscription quantity is decreased' do
       prod = create_product(nil, nil, {:attributes => {"multi-entitlement" => "yes"}})
-      sub = @cp.create_subscription(@owner.key, prod.id, 10)
+      sub = @cp.create_subscription(@owner['key'], prod.id, 10)
       @cp.refresh_pools(@owner['key'])
       pool = @cp.list_pools({:owner => @owner['id'], :product => prod['id']})[0]
 
@@ -107,7 +107,7 @@ describe 'Entitlement Certificate' do
       sub.quantity = sub.quantity.to_i - 5
       @cp.update_subscription(sub)
 
-      @cp.refresh_pools(@owner.key)
+      @cp.refresh_pools(@owner['key'])
 
       @system.list_certificates().size.should == 1
   end

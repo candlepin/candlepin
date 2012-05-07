@@ -18,9 +18,9 @@ describe 'Sub-Pool' do
     @provided_product2 = create_product()
 
     # Create a subscription
-    @subscription = @cp.create_subscription(@owner.key, @parent_product.id, 5,
+    @subscription = @cp.create_subscription(@owner['key'], @parent_product.id, 5,
       [@provided_product1.id, @provided_product2.id])
-    @cp.refresh_pools(@owner.key)
+    @cp.refresh_pools(@owner['key'])
 
     # Set up user
     @user_client = user_client(@owner, 'billy')

@@ -17,8 +17,8 @@ describe 'Products with "user-license" attributes' do
       }
     })
 
-    @cp.create_subscription(@owner.key, @tooling.id, 15)
-    @cp.refresh_pools @owner.key
+    @cp.create_subscription(@owner['key'], @tooling.id, 15)
+    @cp.refresh_pools @owner['key']
   end
 
   it 'should revoke entitlements of consumers of sub-pools when pool is deleted' do

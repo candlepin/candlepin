@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require 'candlepin_scenarios'
 
 require 'rubygems'
@@ -65,7 +67,7 @@ describe 'Owner Resource' do
     owner_key = random_string("new_owner1")
     @cp.refresh_pools(owner_key, false, true)
     new_owner = @cp.get_owner(owner_key)
-    new_owner.key.should == owner_key
+    new_owner['key'].should == owner_key
     pools = @cp.list_owner_pools(owner_key)
     pools.length.should == 0
   end
@@ -75,16 +77,16 @@ describe 'Owner Resource' do
     ro_owner_client = user_client(owner, random_string('testuser'), true)
     rw_owner_client = user_client(owner, random_string('testuser'), true)
     product = create_product
-    @cp.create_subscription(owner.key, product.id, 10)
+    @cp.create_subscription(owner['key'], product.id, 10)
 
 
     #these should both fail, only superadmin can refresh pools
     lambda do
-      ro_owner_client.refresh_pools(owner.key)
+      ro_owner_client.refresh_pools(owner['key'])
     end.should raise_exception(RestClient::Forbidden)
 
     lambda do
-      rw_owner_client.refresh_pools(owner.key)
+      rw_owner_client.refresh_pools(owner['key'])
     end.should raise_exception(RestClient::Forbidden)
 
   end
@@ -104,12 +106,12 @@ describe 'Owner Resource' do
 
   it "lets owners be updated" do
     owner = create_owner random_string("test_owner2")
-    original_key = owner.key
-    owner.key= random_string("test_owner4")
+    original_key = owner['key']
+    owner['key']= random_string("test_owner4")
 
     @cp.update_owner(original_key, owner)
-    new_owner = @cp.get_owner(owner.key)
-    new_owner.key.should == owner.key
+    new_owner = @cp.get_owner(owner['key'])
+    new_owner['key'].should == owner['key']
   end
 
   it "lets owners update their default service level" do
@@ -165,10 +167,10 @@ describe 'Owner Resource' do
   it "updates consumed entitlement count" do
     #TODO put this into candlepin_api.rb if others want to use it
     def stats_helper(owner, expected_available, expected_consumed)
-        @cp.refresh_pools owner.key
+        @cp.refresh_pools owner['key']
         @cp.generate_statistics
 
-        info = @cp.get_owner_info(owner.key)
+        info = @cp.get_owner_info(owner['key'])
         info.totalSubscriptionCount.first.value.should == expected_available
 
         stat = info.totalSubscriptionsConsumed.select {|stat| stat.valueType == 'RAW' && stat.entryType == 'TOTALSUBSCRIPTIONCONSUMED' }
@@ -182,9 +184,9 @@ describe 'Owner Resource' do
     user = user_client(owner, random_string('guy'))
     product = create_product(nil, random_string('consume-me'))
 
-    @cp.create_subscription(owner.key, product.id, 4)
-    @cp.create_subscription(owner.key, product.id, 4)
-    @cp.refresh_pools owner.key
+    @cp.create_subscription(owner['key'], product.id, 4)
+    @cp.create_subscription(owner['key'], product.id, 4)
+    @cp.refresh_pools owner['key']
 
     consumer = consumer_client(user, random_string('consumer'))
     pool = consumer.list_pools(
@@ -203,17 +205,17 @@ describe 'Owner Resource' do
     product = create_product(nil, random_string('consume-me'))
     consumer = consumer_client(user, random_string('consumer'))
 
-    @cp.create_subscription(owner.key, product.id, 1, [], nil, '432', nil, end_date=Date.today + 10)
-    @cp.refresh_pools owner.key
-    info = @cp.get_owner_info(owner.key)
+    @cp.create_subscription(owner['key'], product.id, 1, [], nil, '432', nil, end_date=Date.today + 10)
+    @cp.refresh_pools owner['key']
+    info = @cp.get_owner_info(owner['key'])
     pool = consumer.list_pools(
       :product => product.id,
       :consumer => consumer.uuid)
     pool1 = info['poolNearestToExpiry']
 
-    @cp.create_subscription(owner.key, product.id, 1, [], nil, '43', nil, end_date=Date.today + 5)
-    @cp.refresh_pools owner.key
-    info = @cp.get_owner_info(owner.key)
+    @cp.create_subscription(owner['key'], product.id, 1, [], nil, '43', nil, end_date=Date.today + 5)
+    @cp.refresh_pools owner['key']
+    info = @cp.get_owner_info(owner['key'])
     pool = consumer.list_pools(
       :product => product.id,
       :consumer => consumer.uuid)

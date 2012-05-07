@@ -16,12 +16,12 @@ describe 'Entitlements' do
       {:attributes => {"virt_limit" => "10"}})
 
     #entitle owner for the virt and monitoring products.
-    @cp.create_subscription(@owner.key, @virt.id, 20)
-    @cp.create_subscription(@owner.key, @monitoring.id, 4)
-    @cp.create_subscription(@owner.key, @super_awesome.id, 4)
-    @cp.create_subscription(@owner.key, @virt_limit.id, 5)
+    @cp.create_subscription(@owner['key'], @virt.id, 20)
+    @cp.create_subscription(@owner['key'], @monitoring.id, 4)
+    @cp.create_subscription(@owner['key'], @super_awesome.id, 4)
+    @cp.create_subscription(@owner['key'], @virt_limit.id, 5)
 
-    @cp.refresh_pools(@owner.key)
+    @cp.refresh_pools(@owner['key'])
 
     #create consumer
     @user = user_client(@owner, random_string('billy'))

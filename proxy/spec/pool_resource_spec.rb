@@ -10,8 +10,8 @@ describe 'Pool Resource' do
     owner1_client = user_client(owner1, random_string('testuser'))
 
     product = create_product
-    @cp.create_subscription(owner1.key, product.id, 10)
-    @cp.refresh_pools(owner1.key)
+    @cp.create_subscription(owner1['key'], product.id, 10)
+    @cp.refresh_pools(owner1['key'])
 
     pool = owner1_client.list_pools(:owner => owner1.id).first
 
@@ -27,8 +27,8 @@ describe 'Pool Resource' do
     owner2_client = user_client(owner2, random_string('testuser'))
 
     product = create_product
-    @cp.create_subscription(owner2.key, product.id, 10)
-    @cp.refresh_pools(owner2.key)
+    @cp.create_subscription(owner2['key'], product.id, 10)
+    @cp.refresh_pools(owner2['key'])
 
     pool = owner2_client.list_pools(:owner => owner2.id).first
 
@@ -45,8 +45,8 @@ describe 'Pool Resource' do
     owner2_client = user_client(owner2, random_string('testuser'))
 
     product = create_product(random_string 'buskers')
-    @cp.create_subscription(owner2.key, product.id, 10)
-    @cp.refresh_pools(owner2.key)
+    @cp.create_subscription(owner2['key'], product.id, 10)
+    @cp.refresh_pools(owner2['key'])
 
     pool = owner2_client.list_pools(:owner => owner2.id).first
 
@@ -59,9 +59,9 @@ describe 'Pool Resource' do
     owner = create_owner random_string('donaldduck')
     client = user_client(owner, random_string('testusr'))
     product = create_product()
-    @cp.create_subscription(owner.key, product.id, 5,
+    @cp.create_subscription(owner['key'], product.id, 5,
       [], '', '', Date.today - 60, Date.today - 1)
-    @cp.refresh_pools(owner.key)
+    @cp.refresh_pools(owner['key'])
     (@cp.list_pools :owner => owner.id).size.should == 0
   end
 
@@ -71,8 +71,8 @@ describe 'Pool Resource' do
 
     product = create_product()
     # Pool with just one entitlement available:
-    @cp.create_subscription(owner.key, product.id, 1)
-    @cp.refresh_pools(owner.key)
+    @cp.create_subscription(owner['key'], product.id, 1)
+    @cp.refresh_pools(owner['key'])
     pool = admin_cp.list_pools({:owner => owner.id})[0]
 
     consumer1_cp = consumer_client(admin_cp, random_string('testsystem'))
@@ -96,8 +96,8 @@ describe 'Pool Resource' do
     product = create_product(nil, nil, {:attributes => {:arch => "X86"}})
 
     # Pool with just one entitlement available:
-    @cp.create_subscription(owner.key, product.id, 1)
-    @cp.refresh_pools(owner.key)
+    @cp.create_subscription(owner['key'], product.id, 1)
+    @cp.refresh_pools(owner['key'])
     pool = admin_cp.list_pools({:owner => owner.id})[0]
 
     consumer1_cp = consumer_client(admin_cp, random_string('testsystem'),
@@ -115,8 +115,8 @@ describe 'Pool Resource' do
     owner1_client = user_client(owner1, random_string('testuser'))
 
     product = create_product
-    @cp.create_subscription(owner1.key, product.id, 10)
-    @cp.refresh_pools(owner1.key)
+    @cp.create_subscription(owner1['key'], product.id, 10)
+    @cp.refresh_pools(owner1['key'])
 
     pool = owner1_client.list_pools(:owner => owner1.id).first
 

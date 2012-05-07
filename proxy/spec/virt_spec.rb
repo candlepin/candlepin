@@ -136,8 +136,8 @@ describe 'Standalone Virt-Limit Subscriptions' do
     # create a second product in order to test bz #786730
 
     @second_product = create_product()
-    @cp.create_subscription(@owner.key, @second_product.id, 1)
-    @cp.refresh_pools(@owner.key)
+    @cp.create_subscription(@owner['key'], @second_product.id, 1)
+    @cp.refresh_pools(@owner['key'])
 
     @installed_product_list = [
     {'productId' => @virt_limit_product.id, 'productName' => @virt_limit_product.name},

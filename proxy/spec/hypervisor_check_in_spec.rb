@@ -14,7 +14,7 @@ describe 'Hypervisor Resource' do
 
     # Check in with initial hypervisor to create host consumer and associate guests.
     host_guest_mapping = get_host_guest_mapping(@expected_host, @expected_guest_ids)
-    results = @user.hypervisor_check_in(@owner.key,  host_guest_mapping)
+    results = @user.hypervisor_check_in(@owner['key'],  host_guest_mapping)
     results.created.size.should == 1
 
     consumer = results.created[0]
@@ -35,7 +35,7 @@ describe 'Hypervisor Resource' do
     new_guest_id = 'Guest3'
     updated_guest_ids = [@uuid2, new_guest_id]
     updated_host_guest_mapping = get_host_guest_mapping(@expected_host, updated_guest_ids)
-    results = @user.hypervisor_check_in(@owner.key, updated_host_guest_mapping)
+    results = @user.hypervisor_check_in(@owner['key'], updated_host_guest_mapping)
     # Host consumer already existed, no creation occurred.
     results.created.size.should == 0
     # Check updates.
@@ -55,7 +55,7 @@ describe 'Hypervisor Resource' do
 
     # Host stops reporting guest:
     updated_host_guest_mapping = get_host_guest_mapping(@expected_host, [@uuid2])
-    results = @user.hypervisor_check_in(@owner.key,  updated_host_guest_mapping)
+    results = @user.hypervisor_check_in(@owner['key'],  updated_host_guest_mapping)
     results.created.size.should == 0
     results.updated.size.should == 1
 
@@ -67,7 +67,7 @@ describe 'Hypervisor Resource' do
     @host_client.list_entitlements.length.should == 1
     # Host reports no guests.
     host_mapping_no_guests = get_host_guest_mapping(@expected_host, [])
-    results = @user.hypervisor_check_in(@owner.key,  host_mapping_no_guests)
+    results = @user.hypervisor_check_in(@owner['key'],  host_mapping_no_guests)
     results.created.size.should == 0
     results.updated.size.should == 1
     @host_client.list_entitlements.length.should == 1
@@ -81,7 +81,7 @@ describe 'Hypervisor Resource' do
 
     # Host stops reporting guest:
     updated_host_guest_mapping = get_host_guest_mapping(@expected_host, [])
-    results = @user.hypervisor_check_in(@owner.key,  updated_host_guest_mapping)
+    results = @user.hypervisor_check_in(@owner['key'],  updated_host_guest_mapping)
     results.created.size.should == 0
     results.updated.size.should == 1
 
@@ -101,9 +101,9 @@ describe 'Hypervisor Resource' do
 
     deletable_uuid = random_string("string-used-as-a-mock-uuid")
     host_guest_mapping = get_host_guest_mapping(deletable_uuid, [])
-    results = @user.hypervisor_check_in(@owner.key,  host_guest_mapping)
+    results = @user.hypervisor_check_in(@owner['key'],  host_guest_mapping)
     @cp.unregister(deletable_uuid)
-    results = @user.hypervisor_check_in(@owner.key,  host_guest_mapping)
+    results = @user.hypervisor_check_in(@owner['key'],  host_guest_mapping)
     # the update should fail since the consumer got deleted
     results.failedUpdate.size.should == 1
     lambda do
@@ -121,7 +121,7 @@ describe 'Hypervisor Resource' do
     end.should raise_exception(RestClient::Forbidden)
 
     @cp.remove_deletion_record(deletable_uuid)
-    results = @user.hypervisor_check_in(@owner.key,  host_guest_mapping)
+    results = @user.hypervisor_check_in(@owner['key'],  host_guest_mapping)
     results.failedUpdate.size.should == 0
   end
 

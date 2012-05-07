@@ -10,7 +10,7 @@ describe 'Refresh Pools' do
   it 'creates a valid job' do
     owner = create_owner random_string('test_owner')
 
-    status = @cp.refresh_pools(owner.key, true)
+    status = @cp.refresh_pools(owner['key'], true)
     status.state.should == 'CREATED'
 
     # URI returned is valid - use post to clean up
@@ -20,7 +20,7 @@ describe 'Refresh Pools' do
   it 'contains the proper return value' do
     test_owner = random_string('test_owner')
     owner = create_owner test_owner
-    result = @cp.refresh_pools(owner.key)
+    result = @cp.refresh_pools(owner['key'])
 
     result.should == "Pools refreshed for owner #{test_owner}"
   end
@@ -34,11 +34,11 @@ describe 'Refresh Pools' do
       name = random_string("product-#{i}")
       product = create_product(name, name)
 
-      @cp.create_subscription(owner.key, product.id)
+      @cp.create_subscription(owner['key'], product.id)
     end
 
     # -------- When ----------
-    @cp.refresh_pools(owner.key)
+    @cp.refresh_pools(owner['key'])
 
     # -------- Then ----------
     @cp.list_pools({:owner => owner.id}).length.should == 6
@@ -50,9 +50,9 @@ describe 'Refresh Pools' do
     provided1 = create_product(random_string, random_string)
     provided2 = create_product(random_string, random_string)
     provided3 = create_product(random_string, random_string)
-    sub = @cp.create_subscription(owner.key, product.id, 500,
+    sub = @cp.create_subscription(owner['key'], product.id, 500,
       [provided1.id, provided2.id])
-    @cp.refresh_pools(owner.key)
+    @cp.refresh_pools(owner['key'])
     pools = @cp.list_pools({:owner => owner.id})
     pools.length.should == 1
     pools[0].providedProducts.length.should == 2
@@ -61,7 +61,7 @@ describe 'Refresh Pools' do
     sub.providedProducts = [@cp.get_product(provided3.id)]
     @cp.update_subscription(sub)
     sub2 = @cp.get_subscription(sub.id)
-    @cp.refresh_pools(owner.key)
+    @cp.refresh_pools(owner['key'])
     pools = @cp.list_pools({:owner => owner.id})
     pools[0].providedProducts.length.should == 1
   end
@@ -69,9 +69,9 @@ describe 'Refresh Pools' do
   it 'deletes expired subscriptions along with pools and entitlements' do
     owner = create_owner random_string
     product = create_product(random_string, random_string)
-    sub = @cp.create_subscription(owner.key, product.id, 500,
+    sub = @cp.create_subscription(owner['key'], product.id, 500,
       [])
-    @cp.refresh_pools(owner.key)
+    @cp.refresh_pools(owner['key'])
     pools = @cp.list_pools({:owner => owner.id})
     pools.length.should == 1
 
@@ -86,9 +86,9 @@ describe 'Refresh Pools' do
     sub.startDate = Date.today - 20
     sub.endDate = Date.today - 10
     @cp.update_subscription(sub)
-    @cp.refresh_pools(owner.key)
+    @cp.refresh_pools(owner['key'])
 
-    @cp.list_subscriptions(owner.key).size.should == 0
+    @cp.list_subscriptions(owner['key']).size.should == 0
     @cp.list_pools({:owner => owner.id}).size.should == 0
     @cp.get_consumer(consumer.uuid).entitlementCount.should == 0
   end

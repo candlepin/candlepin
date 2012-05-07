@@ -159,7 +159,7 @@ data['products'].each do |product|
 
   # If product ID is non-numeric, we assume it's a marketing product
   # and create subscriptions for it:
-  if id.to_i.to_s != id:
+  if id.to_i.to_s != id
     # Create a SMALL and a LARGE with the slightly similar begin/end dates.
     owner_keys.each do |owner_key|
       subscription = cp.create_subscription(owner_key,
@@ -186,7 +186,7 @@ data['products'].each do |product|
   end
 
   # TODO: not sure what's going on here?
-  if id.to_i.to_s == id:
+  if id.to_i.to_s == id
     product_cert = cp.get_product_cert(product_ret['id'])
     cert_file = File.new(CERT_DIR + '/' + product_ret['id'] + '.pem', 'w+')
     cert_file.puts(product_cert['cert'])

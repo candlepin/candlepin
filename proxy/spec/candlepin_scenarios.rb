@@ -20,7 +20,7 @@ module CandlepinScenarios
 
       after do
         @roles.reverse_each { |r| @cp.delete_role r['id'] }
-        @owners.reverse_each { |owner| @cp.delete_owner owner.key }
+        @owners.reverse_each { |owner| @cp.delete_owner owner['key'] }
         @users.reverse_each { |user| @cp.delete_user user['username'] }
         @products.reverse_each { |product| @cp.delete_product product['id'] }
 
@@ -47,7 +47,7 @@ module CandlepinMethods
   end
 
   def delete_owner(owner, revoke=true)
-    @cp.delete_owner(owner.key, revoke)
+    @cp.delete_owner(owner['key'], revoke)
     @owners.delete owner
   end
 
@@ -128,11 +128,11 @@ module CandlepinMethods
 
   def consumer_client(cp_client, consumer_name, type=:system, username=nil, facts= {}, owner_key=nil)
     consumer = cp_client.register(consumer_name, type, nil, facts, username, owner_key)
-    Candlepin.new(nil, nil, consumer.idCert.cert, consumer.idCert.key)
+    Candlepin.new(nil, nil, consumer.idCert.cert, consumer.idCert['key'])
   end
 
   def registered_consumer_client(consumer)
-    Candlepin.new(nil, nil, consumer.idCert.cert, consumer.idCert.key)
+    Candlepin.new(nil, nil, consumer.idCert.cert, consumer.idCert['key'])
   end
 
   # List all the pools for the given owner, and find one that matches
@@ -222,10 +222,10 @@ module ExportMethods
     @cp.add_content_to_product(product2.id, content.id)
     @end_date = Date.new(2025, 5, 29)
 
-    sub1 = @cp.create_subscription(@owner.key, product1.id, 2, [], '', '12345', nil, @end_date)
-    sub2 = @cp.create_subscription(@owner.key, product2.id, 4, [], '', '12345', nil, @end_date)
-    sub3 = @cp.create_subscription(@owner.key, virt_product.id, 10, [], '', '12345', nil, @end_date)
-    @cp.refresh_pools(@owner.key)
+    sub1 = @cp.create_subscription(@owner['key'], product1.id, 2, [], '', '12345', nil, @end_date)
+    sub2 = @cp.create_subscription(@owner['key'], product2.id, 4, [], '', '12345', nil, @end_date)
+    sub3 = @cp.create_subscription(@owner['key'], virt_product.id, 10, [], '', '12345', nil, @end_date)
+    @cp.refresh_pools(@owner['key'])
 
     pool1 = @cp.list_pools(:owner => @owner.id, :product => product1.id)[0]
     pool2 = @cp.list_pools(:owner => @owner.id, :product => product2.id)[0]
@@ -280,9 +280,9 @@ module ExportMethods
     @cp.add_content_to_product(product2.id, content.id)
     @end_date = Date.new(2025, 5, 29)
 
-    sub1 = @cp.create_subscription(@owner.key, product1.id, 12, [], '', '12345', nil, @end_date)
-    sub2 = @cp.create_subscription(@owner.key, product2.id, 14, [], '', '12345', nil, @end_date)
-    @cp.refresh_pools(@owner.key)
+    sub1 = @cp.create_subscription(@owner['key'], product1.id, 12, [], '', '12345', nil, @end_date)
+    sub2 = @cp.create_subscription(@owner['key'], product2.id, 14, [], '', '12345', nil, @end_date)
+    @cp.refresh_pools(@owner['key'])
 
     pool1 = @cp.list_pools(:owner => @owner.id, :product => product1.id)[0]
     pool2 = @cp.list_pools(:owner => @owner.id, :product => product2.id)[0]
@@ -308,7 +308,7 @@ module ExportMethods
     Dir.chdir(@orig_working_dir)
     FileUtils.rm_rf(@tmp_dir)
     #this will also delete the owner's users
-    @cp.delete_owner(@owner.key)
+    @cp.delete_owner(@owner['key'])
   end
 
   def cleanup_certificate_export
@@ -320,7 +320,7 @@ module ExportMethods
     Dir.chdir(@orig_working_dir)
     FileUtils.rm_rf(@tmp_dir)
     FileUtils.rm_rf(@tmp_dir_update)
-    @cp.delete_owner(@owner.key)
+    @cp.delete_owner(@owner['key'])
   end
 
 

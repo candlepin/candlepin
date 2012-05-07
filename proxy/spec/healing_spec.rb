@@ -20,7 +20,7 @@ describe 'Healing' do
 
     @consumer = @user_cp.register(consumername1, :system, nil,
       {'cpu.cpu_socket(s)' => '8'}, nil, @owner['key'], [], installed)
-    @consumer_cp = Candlepin.new(nil, nil, @consumer.idCert.cert, @consumer.idCert.key)
+    @consumer_cp = Candlepin.new(nil, nil, @consumer.idCert.cert, @consumer.idCert['key'])
   end
 
   it 'entitles non-compliant products' do

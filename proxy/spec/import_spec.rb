@@ -12,12 +12,12 @@ describe 'Candlepin Import' do
     create_candlepin_export()
     @import_owner = @cp.create_owner(random_string("test_owner"))
     @import_owner_client = user_client(@import_owner, random_string('testuser'))
-    @cp.import(@import_owner.key, @export_filename)
+    @cp.import(@import_owner['key'], @export_filename)
   end
 
   after(:all) do
     cleanup_candlepin_export()
-    @cp.delete_owner(@import_owner.key)
+    @cp.delete_owner(@import_owner['key'])
   end
 
   it 'creates pools' do
@@ -37,7 +37,7 @@ describe 'Candlepin Import' do
   end
 
   it 'modifies owner to reference upstream consumer' do
-    o = @cp.get_owner(@import_owner.key)
+    o = @cp.get_owner(@import_owner['key'])
     o.upstreamUuid.should == @candlepin_client.uuid
   end
 
@@ -52,53 +52,53 @@ describe 'Candlepin Import' do
     pools = @import_owner_client.list_pools({:owner => @import_owner['id']})
     pools.length.should == 1 # this is our custom pool
     pools[0]['subscriptionId'].should == custom_sub['id']
-    o = @cp.get_owner(@import_owner.key)
+    o = @cp.get_owner(@import_owner['key'])
     o['upstreamUuid'].should be_nil
 
     # Make sure this still exists:
     custom_sub = @cp.get_subscription(custom_sub['id'])
 
     # should be able to re-import without an "older than existing" error:
-    @cp.import(@import_owner.key, @export_filename)
-    o = @cp.get_owner(@import_owner.key)
+    @cp.import(@import_owner['key'], @export_filename)
+    o = @cp.get_owner(@import_owner['key'])
     o['upstreamUuid'].should == @candlepin_client.uuid
 
     # Delete again and make sure another owner is clear to import the
     # same manifest:
     @import_owner_client.undo_import(@import_owner['key'])
     another_owner = @cp.create_owner(random_string('testowner'))
-    @cp.import(another_owner.key, @export_filename)
+    @cp.import(another_owner['key'], @export_filename)
     @cp.delete_owner(another_owner['key'])
     @cp.delete_subscription(custom_sub['id'])
 
     # Re-import so the rest of the tests can pass:
-    @cp.import(@import_owner.key, @export_filename)
+    @cp.import(@import_owner['key'], @export_filename)
   end
 
   it 'should create a SUCCESS record of the import' do
     # Look for at least one valid entry
-    @import_owner_client.list_imports(@import_owner.key).find_all do |import|
+    @import_owner_client.list_imports(@import_owner['key']).find_all do |import|
       import.status == 'SUCCESS'
     end.should_not be_empty
   end
 
   it 'should return a 409 on a duplicate import' do
     lambda do
-      @cp.import(@import_owner.key, @export_filename)
+      @cp.import(@import_owner['key'], @export_filename)
     end.should raise_exception RestClient::Conflict
   end
 
   it 'should create a FAILURE record on a duplicate import' do
     # This is probably bad - relying on the previous test
     # to actually generate this record
-    @import_owner_client.list_imports(@import_owner.key).find_all do |import|
+    @import_owner_client.list_imports(@import_owner['key']).find_all do |import|
       import.status == 'FAILURE'
     end.should_not be_empty
   end
 
   it 'should set the correct error status message' do
     # Again - relying on the 409 test to set this - BAD!
-    error = @import_owner_client.list_imports(@import_owner.key).find do |import|
+    error = @import_owner_client.list_imports(@import_owner['key']).find do |import|
       import.status == 'FAILURE'
     end
 
@@ -107,7 +107,7 @@ describe 'Candlepin Import' do
 
   it 'should return a success on a force import' do
     # This test must run after a successful import has already occurred.
-    @cp.import(@import_owner.key, @export_filename, {:force => true})
+    @cp.import(@import_owner['key'], @export_filename, {:force => true})
   end
 
   it 'should allow importing older manifests into another owner' do
@@ -137,7 +137,7 @@ describe 'Candlepin Import' do
   end
 
   it "should store the subscription's upstream entitlement cert" do
-    sublist = @cp.list_subscriptions(@import_owner.key)
+    sublist = @cp.list_subscriptions(@import_owner['key'])
     cert = @cp.get_subscription_cert sublist.first.id
     cert[0..26].should == "-----BEGIN CERTIFICATE-----"
     cert.include?("-----BEGIN RSA PRIVATE KEY-----").should == true

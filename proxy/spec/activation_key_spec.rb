@@ -15,7 +15,7 @@ describe 'Activation Keys' do
     @mallory_client = user_client(mallory, random_string('testuser'))
 
     @sub = @cp.create_subscription(@owner['key'], @some_product['id'], 37)
-    @cp.refresh_pools(@owner.key)
+    @cp.refresh_pools(@owner['key'])
 
     pools = @cp.list_pools
     @pool = pools.select { |p| p['owner']['key'] == @owner['key'] }.first

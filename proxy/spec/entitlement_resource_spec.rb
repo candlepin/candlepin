@@ -11,10 +11,10 @@ describe 'Entitlement Resource' do
     @virt_prod= create_product(name='virtualization')
 
     #entitle owner for the virt and monitoring products.
-    @cp.create_subscription(@owner.key, @monitoring_prod.id, 6)
-    @cp.create_subscription(@owner.key, @virt_prod.id, 6)
+    @cp.create_subscription(@owner['key'], @monitoring_prod.id, 6)
+    @cp.create_subscription(@owner['key'], @virt_prod.id, 6)
 
-    @cp.refresh_pools(@owner.key)
+    @cp.refresh_pools(@owner['key'])
 
     #create consumer
     user = user_client(@owner, 'billy')

@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 require 'candlepin_scenarios'
 require 'json'
 

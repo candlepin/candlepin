@@ -9,8 +9,8 @@ describe 'Unsubscribe' do
     @user = user_client(@owner, 'guy')
     @monitoring = create_product(nil, random_string('monitoring'))
 
-    @cp.create_subscription(@owner.key, @monitoring.id, 4)
-    @cp.refresh_pools @owner.key
+    @cp.create_subscription(@owner['key'], @monitoring.id, 4)
+    @cp.refresh_pools @owner['key']
   end
 
   it 'should remove a single entitlement' do
@@ -56,8 +56,8 @@ describe 'Unsubscribe' do
 
   it 'should leave other entitlements in tact' do
     virt_host = create_product(nil, random_string('virt_host'))
-    @cp.create_subscription(@owner.key, virt_host.id, 5)
-    @cp.refresh_pools @owner.key
+    @cp.create_subscription(@owner['key'], virt_host.id, 5)
+    @cp.refresh_pools @owner['key']
 
     consumer = consumer_client(@user, 'consumer')
     pool = consumer.list_pools(

@@ -114,7 +114,7 @@ repositories.remote << "http://oauth.googlecode.com/svn/code/maven/"
 
 nocstyle = ENV['nocheckstyle']
 if nocstyle.nil?
-   require 'buildr/checkstyle'
+   require './buildr/checkstyle'
 end
 
 #############################################################################
@@ -163,6 +163,7 @@ define "candlepin" do
   # building
   #
   compile.options.target = '1.6'
+  compile.options.source = '1.6'
   compile_classpath = [COMMONS, DB, RESTEASY, LOG4J, HIBERNATE, BOUNCYCASTLE,
     GUICE, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ, SUN_JAXB, MIME4J, OAUTH, RHINO, COLLECTIONS]
   compile.with compile_classpath
@@ -354,7 +355,7 @@ end
 
 task :deploy_check do
   begin
-    Net::HTTP.get_response('localhost', '/candlepin/admin/init', 8080) do |http|
+    Net::HTTP.get_response('localhost', '/candlepin/admin/init', 8443) do |http|
       Rake::Task[:deploy].invoke if http.code != '200'
     end
   rescue

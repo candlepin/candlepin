@@ -55,7 +55,7 @@ describe 'Authorization' do
     username = random_string("user1")
     user1 = user_client(owner1, username)
     trusted_user_cp = trusted_user_client(username)
-    trusted_user_cp.list_consumers :owner => owner1.key
+    trusted_user_cp.list_consumers :owner => owner1['key']
   end
 
 end
