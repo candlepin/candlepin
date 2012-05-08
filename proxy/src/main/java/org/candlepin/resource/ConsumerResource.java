@@ -75,6 +75,7 @@ import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.DeletedConsumer;
 import org.candlepin.model.DeletedConsumerCurator;
+import org.candlepin.model.DeleteResult;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCurator;
@@ -1344,7 +1345,7 @@ public class ConsumerResource {
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{consumer_uuid}/entitlements")
-    public int unbindAll(
+    public DeleteResult unbindAll(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
 
         // FIXME: just a stub, needs CertifcateService (and/or a
@@ -1358,7 +1359,7 @@ public class ConsumerResource {
 
         int total = poolManager.revokeAllEntitlements(consumer);
         log.debug("Revoked " + total + " entitlements from " + consumerUuid);
-        return total;
+        return new DeleteResult(total);
 
         // Need to parse off the value of subscriptionNumberArgs, probably
         // use comma separated see IntergerList in sparklines example in
