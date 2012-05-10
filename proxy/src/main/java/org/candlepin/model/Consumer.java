@@ -339,6 +339,10 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
             return true;
         }
 
+        if (myFacts == null || otherFacts == null) {
+            return false;
+        }
+
         if (myFacts.size() != otherFacts.size()) {
             return false;
         }

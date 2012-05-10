@@ -357,6 +357,28 @@ public class ConsumerTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void findbugsNullDereferenceNullFacts() {
+        Consumer first = new Consumer();
+        first.setFacts(null);
+
+        Consumer second = new Consumer();
+        second.setFact("key1", "1");
+
+        assertFalse(first.factsAreEqual(second));
+    }
+
+    @Test
+    public void findbugsSecondListIsNull() {
+        Consumer first = new Consumer();
+        first.setFact("key1", "1");
+
+        Consumer second = new Consumer();
+        second.setFacts(null);
+
+        assertFalse(first.factsAreEqual(second));
+    }
+
+    @Test
     public void factsSecondNull() {
         Consumer first = new Consumer();
         first.setFact("key1", "1");
@@ -365,6 +387,17 @@ public class ConsumerTest extends DatabaseTestFixture {
         second.setFact("key1", null);
 
         assertFalse(first.factsAreEqual(second));
+    }
+
+    @Test
+    public void factsBothNull() {
+        Consumer first = new Consumer();
+        first.setFacts(null);
+
+        Consumer second = new Consumer();
+        second.setFacts(null);
+
+        assertTrue(first.factsAreEqual(second));
     }
 
     @Test
