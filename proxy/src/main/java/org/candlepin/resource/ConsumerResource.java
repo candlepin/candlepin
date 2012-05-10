@@ -646,7 +646,7 @@ public class ConsumerResource {
 
         // Allow optional setting of the autoheal attribute:
         if (updated.isAutoheal() != null &&
-            toUpdate.isAutoheal() != updated.isAutoheal()) {
+             !updated.isAutoheal().equals(toUpdate.isAutoheal())) {
             if (log.isDebugEnabled()) {
                 log.debug("   Updating consumer autoheal setting.");
             }
