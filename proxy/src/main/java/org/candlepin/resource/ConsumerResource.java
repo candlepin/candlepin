@@ -498,7 +498,7 @@ public class ConsumerResource {
         }
 
         // TODO: Refactor out type specific checks?
-        if (type.isType(ConsumerTypeEnum.PERSON) && user != null) {
+        if (type.isType(ConsumerTypeEnum.PERSON)) {
             Consumer existing = consumerCurator.findByUser(user);
 
             if (existing != null &&
