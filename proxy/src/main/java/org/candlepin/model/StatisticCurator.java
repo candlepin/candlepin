@@ -116,7 +116,7 @@ public class StatisticCurator extends AbstractHibernateCurator<Statistic> {
             String sockets = c.getFact("cpu.cpu_socket(s)");
             Integer count = map.get(sockets);
             if (count == null) {
-                count = new Integer(0);
+                count = Integer.valueOf(0);
             }
             count++;
             map.put(sockets, count);
