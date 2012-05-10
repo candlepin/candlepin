@@ -85,7 +85,7 @@ import com.google.inject.Inject;
  * about not using bouncycastle as the JSSE provider.
  */
 public class BouncyCastlePKIUtility extends PKIUtility {
-    protected static Logger log = Logger.getLogger(BouncyCastlePKIUtility.class);
+    private static Logger log = Logger.getLogger(BouncyCastlePKIUtility.class);
 
     @Inject
     public BouncyCastlePKIUtility(PKIReader reader,
