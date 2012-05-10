@@ -34,9 +34,9 @@ import org.candlepin.policy.js.compliance.ComplianceStatus;
  */
 public class ConsumerInstalledProductEnricher {
 
-    private final String RED_STATUS = "red";
-    private final String YELLOW_STATUS = "yellow";
-    private final String GREEN_STATUS = "green";
+    private static final String RED_STATUS = "red";
+    private static final String YELLOW_STATUS = "yellow";
+    private static final String GREEN_STATUS = "green";
 
     private ComplianceStatus status;
     private Consumer consumer;
