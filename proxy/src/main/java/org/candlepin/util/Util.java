@@ -291,7 +291,7 @@ public class Util {
         catch (NoSuchAlgorithmException nsae) {
             throw new RuntimeException(nsae);
         }
-        byte[] sha1hash = new byte[40];
+
         try {
             md.update(combined.getBytes("UTF-8"), 0, combined.length());
         }
@@ -299,7 +299,7 @@ public class Util {
             throw new RuntimeException(uee);
         }
 
-        sha1hash = md.digest();
+        byte[] sha1hash = md.digest();
         return new String(Hex.encodeHex(sha1hash));
     }
 

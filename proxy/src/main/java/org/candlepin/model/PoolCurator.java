@@ -391,10 +391,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     public List<ActivationKey> getActivationKeysForPool(Pool p) {
         List<ActivationKey> activationKeys = new ArrayList<ActivationKey>();
-        List<ActivationKeyPool> activationKeyPools = new ArrayList<ActivationKeyPool>();
-
-        activationKeyPools = currentSession().createCriteria(ActivationKeyPool.class)
-            .add(Restrictions.eq("pool", p)).list();
+        List<ActivationKeyPool> activationKeyPools = currentSession().createCriteria(
+            ActivationKeyPool.class).add(Restrictions.eq("pool", p)).list();
 
         for (ActivationKeyPool akp : activationKeyPools) {
             activationKeys.add(akp.getKey());
