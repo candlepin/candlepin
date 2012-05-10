@@ -114,8 +114,8 @@ import org.xnap.commons.i18n.I18n;
  */
 @Path("/consumers")
 public class ConsumerResource {
-    private static Pattern consumerSystemNamePattern;
-    private static Pattern consumerPersonNamePattern;
+    private Pattern consumerSystemNamePattern;
+    private Pattern consumerPersonNamePattern;
 
     private static Logger log = Logger.getLogger(ConsumerResource.class);
     private ConsumerCurator consumerCurator;
