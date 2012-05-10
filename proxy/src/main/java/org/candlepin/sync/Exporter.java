@@ -307,7 +307,7 @@ public class Exporter {
                 continue;
             }
 
-            if ((serials == null) || (serials.contains(cert.getSerial()))) {
+            if ((serials == null) || (serials.contains(cert.getSerial().getId()))) {
                 log.debug("Exporting entitlement certificate: " + cert.getSerial());
                 File file = new File(entCertDir.getCanonicalPath(),
                     cert.getSerial().getId() + ".pem");
