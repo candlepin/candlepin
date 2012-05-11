@@ -17,6 +17,7 @@ package org.candlepin.sync;
 import java.io.IOException;
 import java.io.Reader;
 
+import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
@@ -26,6 +27,8 @@ import org.xnap.commons.i18n.I18n;
  * ConsumerImporter
  */
 public class ConsumerImporter {
+    private static Logger log = Logger.getLogger(ConsumerImporter.class);
+
     private OwnerCurator curator;
     private I18n i18n;
 
@@ -46,7 +49,10 @@ public class ConsumerImporter {
 
         // Make sure no other owner is already using this upstream UUID:
         Owner alreadyUsing = curator.lookupWithUpstreamUuid(consumer.getUuid());
-        if (alreadyUsing != null && alreadyUsing.getKey() != owner.getKey()) {
+        if (alreadyUsing != null && !alreadyUsing.getKey().equals(owner.getKey())) {
+            log.error("Cannot import manifest for org: " + owner.getKey());
+            log.error("Upstream distributor " + consumer.getUuid() +
+                " already in use by org: " + alreadyUsing.getKey());
             throw new SyncDataFormatException(
                 i18n.tr("This distributor has already been imported by another owner"));
         }
