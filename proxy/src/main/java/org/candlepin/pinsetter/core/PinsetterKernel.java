@@ -214,9 +214,12 @@ public class PinsetterKernel {
      */
     public void shutdown() throws PinsetterException {
         try {
-            scheduler.standby();
-            deleteAllJobs();
-            scheduler.shutdown();
+            log.info("shutting down pinsetter kernel");
+            scheduler.standby(); // do not allow any new jobs to be scheduled
+            deleteAllJobs(); // delete all jobs if we are not clustered
+            log.info("allowing running jobs to finish..");
+            scheduler.shutdown(true);
+            log.info("pinsetter kernel is shut down");
         }
         catch (SchedulerException e) {
             throw new PinsetterException("Error shutting down Pinsetter.", e);
