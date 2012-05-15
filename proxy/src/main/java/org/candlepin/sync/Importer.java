@@ -21,7 +21,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
-import java.security.cert.CertificateException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -53,7 +52,6 @@ import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.util.Util;
 import org.candlepin.util.VersionUtil;
-
 import org.codehaus.jackson.map.ObjectMapper;
 import org.hibernate.exception.ConstraintViolationException;
 import org.xnap.commons.i18n.I18n;
@@ -181,13 +179,6 @@ public class Importer {
             extractArchive(tmpDir, exportFile);
 
             exportStream = new FileInputStream(new File(tmpDir, "consumer_export.zip"));
-            boolean verifiedSignature = pki.verifySHA256WithRSAHashWithUpstreamCACert(
-                exportStream,
-                loadSignature(new File(tmpDir, "signature")));
-        /*
-            if (!verifiedSignature) {
-                throw new ImporterException(i18n.tr("Failed import file hash check."));
-            }*/
 
             File exportDir
                 = extractArchive(tmpDir, new File(tmpDir, "consumer_export.zip"));
@@ -199,10 +190,7 @@ public class Importer {
 
             importObjects(owner, importFiles, force);
         }
-        catch (CertificateException e) {
-            log.error("Exception caught importing archive", e);
-            throw new ImportExtractionException("unable to extract export archive", e);
-        }
+
         catch (ConstraintViolationException cve) {
             log.error("Failed to import archive", cve);
             throw new ImporterException(i18n.tr("Failed to import archive"),
