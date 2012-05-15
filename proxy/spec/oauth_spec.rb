@@ -4,16 +4,6 @@ require 'rubygems'
 require 'rest_client'
 require 'oauth'
 
-# silence the peer certificate won't be verified message
-class Net::HTTP
-  alias_method :old_initialize, :initialize
-  def initialize(*args)
-    old_initialize(*args)
-    @ssl_context = OpenSSL::SSL::SSLContext.new
-    @ssl_context.verify_mode = OpenSSL::SSL::VERIFY_NONE
-  end
-end
-
 describe 'OAuth' do
   include CandlepinMethods
   include CandlepinScenarios
@@ -51,6 +41,7 @@ describe 'OAuth' do
 
     req = Net::HTTP.new(url.host, url.port)
     req.use_ssl = true
+    req.verify_mode = OpenSSL::SSL::VERIFY_NONE
     req.request(request)
   end
 
