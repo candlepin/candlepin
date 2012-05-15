@@ -2,7 +2,7 @@
 $VERBOSE = nil
 
 require 'pp'
-require 'candlepin_api'
+require './candlepin_api'
 require 'optparse'
 
 # Wrapper class for the base Candlepin lib that
@@ -92,7 +92,7 @@ optparse = OptionParser.new do|opts|
         puts
 
         CandlepinCLI.commands do |command|
-          puts "\t" + command
+          puts "\t" + command.to_s
         end
         exit
     end
