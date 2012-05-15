@@ -355,8 +355,12 @@ end
 
 task :deploy_check do
   begin
-    Net::HTTP.get_response('localhost', '/candlepin/admin/init', 8443) do |http|
-      Rake::Task[:deploy].invoke if http.code != '200'
+    http = Net::HTTP.new('localhost', 8443)
+    http.use_ssl = true
+    http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    http.start do |http|
+      response = http.request Net::HTTP::Get.new "/candlepin/admin/init"
+      Rake::Task[:deploy].invoke if response.code != '200'
     end
   rescue
     # Http request failed
