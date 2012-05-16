@@ -315,7 +315,7 @@ public class SecurityInterceptor implements MethodInterceptor {
     }
 
 
-    private class UserStore implements EntityStore {
+    private static class UserStore implements EntityStore {
         @Override
         public Object lookup(String username) {
 
