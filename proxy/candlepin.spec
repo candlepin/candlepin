@@ -14,7 +14,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.6.2
+Version: 0.6.3
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -275,6 +275,30 @@ fi
 
 
 %changelog
+* Wed May 16 2012 jesus m. rodriguez <jesusr@redhat.com> 0.6.3-1
+- remove unused signature verification call for now (cduryee@redhat.com)
+- findbugs: Field isn't final but should be, made private instead.
+  (jesusr@redhat.com)
+- findbugs: Write to static field from instance method (jesusr@redhat.com)
+- findbugs: Suspicious reference comparison of Boolean values
+  (jesusr@redhat.com)
+- findbugs: Method invokes inefficient Number ctor; use valueOf instead
+  (jesusr@redhat.com)
+- findbugs: Unread field should be static (jesusr@redhat.com)
+- findbugs: Dead store to local variable (jesusr@redhat.com)
+- findbugs: No relationship between generic parameter and method argument
+  (jesusr@redhat.com)
+- findbugs: redundant comparison to null (jesusr@redhat.com)
+- findbugs: possible null pointer dereference (jesusr@redhat.com)
+- Fix deploy check in buildfile for f17 (jbowes@redhat.com)
+- F17 fixup: disable cert verification differently (cduryee@redhat.com)
+- Let running jobs finish before shutting down pinsetter (cduryee@redhat.com)
+- Fix an equals issue with manifest import distributor check.
+  (dgoodwin@redhat.com)
+- unbindAll should return a JSON object. (awood@redhat.com)
+- Fixups for F17/ruby 1.9 (jbowes@redhat.com)
+- Make return list of service levels by owner all caps. (wpoteat@redhat.com)
+
 * Fri May 04 2012 jesus m. rodriguez <jesusr@redhat.com> 0.6.2-1
 - require apache-mime4j (jesusr@redhat.com)
 - Remove unused import to silence Checkstyle. (awood@redhat.com)
