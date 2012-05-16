@@ -46,6 +46,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 /**
@@ -216,11 +217,11 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
 
         List<PoolQuantity> bestPools = new ArrayList<PoolQuantity>();
         for (Pool p : pools) {
-            for (ReadOnlyPool rp : result.keySet()) {
-                if (p.getId().equals(rp.getId())) {
+            for (Entry<ReadOnlyPool, Integer> entry : result.entrySet()) {
+                if (p.getId().equals(entry.getKey().getId())) {
                     log.debug("Best pool: " + p);
 
-                    int quantity = result.get(rp);
+                    int quantity = entry.getValue();
                     bestPools.add(new PoolQuantity(p, quantity));
                 }
             }
