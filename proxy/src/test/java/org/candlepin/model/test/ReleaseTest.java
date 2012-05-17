@@ -18,13 +18,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.candlepin.model.Release;
-import org.candlepin.test.DatabaseTestFixture;
 import org.junit.Test;
 
 /**
  * ReleaseTest
  */
-public class ReleaseTest extends DatabaseTestFixture {
+public class ReleaseTest {
     @Test
     public void testEquals() {
         Release rl = new Release("24.1");
