@@ -547,7 +547,7 @@ public class CandlepinPoolManager implements PoolManager {
      */
     private void checkBonusPoolQuantities(Consumer consumer, Pool pool) {
         for (Pool derivedPool : lookupBySubscriptionId(pool.getSubscriptionId())) {
-            if (derivedPool.getId() != pool.getId() &&
+            if (!derivedPool.getId().equals(pool.getId()) &&
                 derivedPool.getQuantity() != -1) {
                 deleteExcessEntitlements(derivedPool);
             }
