@@ -87,6 +87,21 @@ public class RpmVersionComparatorTest {
 
     }
 
+    @Test
+    public void nullStringFirstArg() {
+        assertCompare(1, null, "str2");
+    }
+
+    @Test
+    public void nullStringSecondArg() {
+        assertCompare(1, "str1", null);
+    }
+
+    @Test
+    public void bothNull() {
+        assertCompare(0, null, null);
+    }
+
     private void assertCompareAsym(int exp, String v1, String v2) {
         assertCompare(exp, v1, v2);
         assertCompare(exp, v2, v1);

@@ -32,7 +32,17 @@ public class RpmVersionComparator implements Comparator<String>, Serializable {
      * {@inheritDoc}
      */
     public int compare(String str1, String str2) {
-        // This method tries to mimick rpmvercmp.c as
+
+        if (str1 == null && str2 == null) {
+            return 0;
+        }
+
+        // relies on the check above
+        if (str1 == null || str2 == null) {
+            return 1;
+        }
+
+        // This method tries to mimic rpmvercmp.c as
         // closely as possible; it is deliberately doing things
         // in a more C-like manner
         if (str1 != null && str1.equals(str2)) {
@@ -94,7 +104,7 @@ public class RpmVersionComparator implements Comparator<String>, Serializable {
             if (rc != 0) {
                 return  (rc < 0) ? -1 : 1;
             }
-            //  Reinitilize
+            //  Reinitialize
             b1 = e1;
             b2 = e2;
         }
