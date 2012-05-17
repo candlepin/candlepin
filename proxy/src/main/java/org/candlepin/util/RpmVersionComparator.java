@@ -14,6 +14,7 @@
  */
 package org.candlepin.util;
 
+import java.io.Serializable;
 import java.util.Comparator;
 
 /**
@@ -25,7 +26,7 @@ import java.util.Comparator;
  * but close enough to warrant being a comparator. For examples of asymmetry,
  * check the test.
  */
-public class RpmVersionComparator implements Comparator<String> {
+public class RpmVersionComparator implements Comparator<String>, Serializable {
 
     /**
      * {@inheritDoc}
