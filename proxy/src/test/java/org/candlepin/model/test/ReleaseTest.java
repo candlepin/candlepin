@@ -41,4 +41,15 @@ public class ReleaseTest {
         assertTrue(rl.equals(rl));
         assertFalse(rl.equals(rlE));
     }
+
+    @Test
+    public void testNullEquals() {
+        Release r = new Release(null);
+        Release r1 = new Release("2.0");
+
+        assertFalse(r.equals(r1));
+        assertFalse(r1.equals(r));
+        assertTrue(r.equals(r));
+        assertTrue(r1.equals(r1));
+    }
 }

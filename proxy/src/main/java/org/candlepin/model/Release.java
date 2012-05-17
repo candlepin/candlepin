@@ -58,8 +58,8 @@ public class Release extends AbstractHibernateObject {
         }
 
         Release another = (Release) anObject;
-        if ((releaseVer == null) && (another.getReleaseVer() == null)) {
-            return true;
+        if (releaseVer == null) {
+            return releaseVer == another.getReleaseVer();
         }
 
         return releaseVer.equals(another.getReleaseVer());
