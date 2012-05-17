@@ -84,8 +84,12 @@ public class ApiCrawler {
         ObjectMapper mapper = new JsonProvider(new Config())
             .locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
         FileWriter jsonFile = new FileWriter(API_FILE);
-        mapper.writeValue(jsonFile, allApiCalls);
-        jsonFile.close();
+        try {
+            mapper.writeValue(jsonFile, allApiCalls);
+        }
+        finally {
+            jsonFile.close();
+        }
     }
 
     private List<RestApiCall> processClass(Class c) {
