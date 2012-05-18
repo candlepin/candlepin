@@ -720,11 +720,12 @@ public class OwnerResource {
         Owner toUpdate = findOwner(key);
         log.debug("Updating owner: " + key);
 
-        // TODO: support requests that do not specify all properties, only those to be
-        // modified.
-        toUpdate.setDisplayName(owner.getDisplayName());
-        toUpdate.setKey(owner.getKey());
-        toUpdate.setParentOwner(owner.getParentOwner());
+        if (owner.getDisplayName() != null) {
+            toUpdate.setDisplayName(owner.getDisplayName());
+        }
+        if (owner.getParentOwner() != null) {
+            toUpdate.setParentOwner(owner.getParentOwner());
+        }
 
         // Make sure we don't wipe out the service level if none was included in the
         // request. Interpret empty string as a signal to clear the default service
@@ -740,6 +741,8 @@ public class OwnerResource {
         }
 
         ownerCurator.merge(toUpdate);
+        Event e = eventFactory.ownerModified(owner);
+        sink.sendEvent(e);
         return toUpdate;
     }
 

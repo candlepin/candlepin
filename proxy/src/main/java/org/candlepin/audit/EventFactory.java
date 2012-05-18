@@ -153,6 +153,15 @@ public class EventFactory {
         return e;
     }
 
+    public Event ownerModified(Owner newOwner) {
+        String newEntityJson = entityToJson(newOwner);
+        return new Event(Event.Type.MODIFIED, Event.Target.OWNER,
+            newOwner.getDisplayName(), principalProvider.get(),
+            newOwner.getId(), null, newOwner.getId(), null, newEntityJson,
+            null, null);
+    }
+
+
     public Event ownerDeleted(Owner owner) {
         Event e = new Event(Event.Type.DELETED, Event.Target.OWNER,
             owner.getDisplayName(), principalProvider.get(), owner.getId(),

@@ -104,14 +104,45 @@ describe 'Owner Resource' do
     end.should raise_exception(RestClient::Forbidden)
   end
 
-  it "lets owners be updated" do
+  it "does not let the owner key get updated" do
     owner = create_owner random_string("test_owner2")
     original_key = owner['key']
     owner['key']= random_string("test_owner4")
 
     @cp.update_owner(original_key, owner)
-    new_owner = @cp.get_owner(owner['key'])
-    new_owner['key'].should == owner['key']
+    lambda do
+      new_owner = @cp.get_owner(owner['key'])
+    end.should raise_exception(RestClient::ResourceNotFound)
+    ## set back local key for delete
+    owner['key'] = original_key
+  end
+
+  it "does allow the parent owner only to get updated" do
+    # information passed had no other data elements
+    parent_owner1 = create_owner random_string('test_owner')
+    parent_owner2 = create_owner random_string('test_owner')
+    child_owner = create_owner(random_string('test_owner'), parent_owner1)
+    child_owner.parentOwner.id.should == parent_owner1.id
+
+    @cp.update_owner(child_owner['key'], {:parentOwner => parent_owner2})
+    child_owner = @cp.get_owner(child_owner['key'])
+    child_owner.parentOwner.id.should == parent_owner2.id
+  end
+
+  it "does allow the default service level only to get updated" do
+    # information passed has no other data elements
+    owner = create_owner random_string("test_owner")
+    product1 = create_product(random_string("test_id"),
+      random_string("test_name"),
+      {:attributes => {:support_level => 'VIP'}})
+    @cp.create_subscription(owner['key'], product1.id, 10)
+    @cp.refresh_pools(owner['key'])
+    owner = @cp.get_owner(owner['key'])
+    owner['defaultServiceLevel'].should be_nil
+
+    @cp.update_owner(owner['key'], {:defaultServiceLevel => 'VIP'})
+    owner = @cp.get_owner(owner['key'])
+    owner['defaultServiceLevel'].should == 'VIP'
   end
 
   it "lets owners update their default service level" do

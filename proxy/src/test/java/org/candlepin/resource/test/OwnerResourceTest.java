@@ -603,4 +603,69 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             null, null, null, null, null, null, null, null, null);
         or.createActivationKey("testOwner", ak);
     }
+
+    @Test
+    public void testUpdateOwner() {
+        Owner owner = new Owner("Test Owner", "test");
+        ownerCurator.create(owner);
+
+        Product prod1 = TestUtil.createProduct();
+        prod1.setAttribute("support_level", "premium");
+        productCurator.create(prod1);
+        Product prod2 = TestUtil.createProduct();
+        prod2.setAttribute("support_level", "standard");
+        productCurator.create(prod2);
+
+        Subscription sub1 = new Subscription(owner, prod1,
+            new HashSet<Product>(), 2000L, TestUtil.createDate(2010, 2, 9),
+            TestUtil.createDate(3000, 2, 9), TestUtil.createDate(2010, 2, 12));
+        subCurator.create(sub1);
+        Subscription sub2 = new Subscription(owner, prod2,
+            new HashSet<Product>(), 2000L, TestUtil.createDate(2010, 2, 9),
+            TestUtil.createDate(3000, 2, 9), TestUtil.createDate(2010, 2, 12));
+        subCurator.create(sub2);
+
+        // Trigger the refresh:
+        poolManager.refreshPools(owner);
+
+        owner.setDefaultServiceLevel("premium");
+        Owner parentOwner1 = new Owner("Paren Owner 1", "parentTest1");
+        ownerResource.createOwner(parentOwner1);
+        Owner parentOwner2 = new Owner("Paren Owner 2", "parentTest2");
+        ownerResource.createOwner(parentOwner2);
+        owner.setParentOwner(parentOwner1);
+        ownerResource.createOwner(owner);
+
+        // Update with Display Name Only
+        Owner upOwner1 = mock(Owner.class);
+        when(upOwner1.getDisplayName()).thenReturn("New Name");
+        ownerResource.updateOwner(owner.getKey(), upOwner1);
+        assertEquals("New Name", owner.getDisplayName());
+        assertEquals(parentOwner1, owner.getParentOwner());
+        assertEquals("premium", owner.getDefaultServiceLevel());
+
+        // Update with Default Service Level only
+        Owner upOwner2 = mock(Owner.class);
+        when(upOwner2.getDefaultServiceLevel()).thenReturn("standard");
+        ownerResource.updateOwner(owner.getKey(), upOwner2);
+        assertEquals("standard", owner.getDefaultServiceLevel());
+        assertEquals("New Name", owner.getDisplayName());
+        assertEquals(parentOwner1, owner.getParentOwner());
+
+        // Update with Parent Owner only
+        Owner upOwner3 = mock(Owner.class);
+        when(upOwner3.getParentOwner()).thenReturn(parentOwner2);
+        ownerResource.updateOwner(owner.getKey(), upOwner3);
+        assertEquals(parentOwner2, owner.getParentOwner());
+        assertEquals("standard", owner.getDefaultServiceLevel());
+        assertEquals("New Name", owner.getDisplayName());
+
+        // Update with empty Service Level only
+        Owner upOwner4 = mock(Owner.class);
+        when(upOwner4.getDefaultServiceLevel()).thenReturn("");
+        ownerResource.updateOwner(owner.getKey(), upOwner4);
+        assertNull(owner.getDefaultServiceLevel());
+        assertEquals("New Name", owner.getDisplayName());
+        assertEquals(parentOwner2, owner.getParentOwner());
+    }
 }
