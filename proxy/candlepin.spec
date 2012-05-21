@@ -74,9 +74,15 @@ BuildRequires: gettext-commons
 # resteasy multipart requires this at runtime
 BuildRequires: apache-mime4j
 %endif
+
+# Common requires go here
 Requires: java >= 0:1.6.0
 #until cpsetup is removed
 Requires: wget
+Requires: liquibase >= 2.0.3
+Requires: postgresql-jdbc
+
+# specific requires
 %if 0%{?rhel}
 # candlepin webapp requires
 Requires: bouncycastle
@@ -98,9 +104,7 @@ Requires: rhino
 Requires: quartz >= 0:1.7.3
 Requires: log4j
 Requires: glassfish-jaxb
-Requires: postgresql-jdbc
 Requires: scannotation
-Requires: liquibase >= 2.0.3
 Requires: slf4j >= 0:1.6.1
 %endif
 %define __jar_repack %{nil}
