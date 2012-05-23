@@ -8,7 +8,12 @@
 
 
     <changeSet id="20120523102544" author="dgoodwin">
-        <comment>This was missed from way back in 0.5.27.</comment>
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists columnName="defaultservicelevel" tableName="cp_owner"/>
+            </not>
+        </preConditions>
+        <comment>This was missed from way back in 0.5.27. Because the column was in the create changelog, we need this precondition to prevent any duplicate attempts to create it.</comment>
         <addColumn tableName="cp_owner">
             <column name="defaultservicelevel" type="VARCHAR(255)"/>
         </addColumn>
