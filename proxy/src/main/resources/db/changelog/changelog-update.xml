@@ -2,4 +2,5 @@
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
     <include file="db/changelog/20120416134048-insert-uebercert-consumer-type.xml" />
     <include file="db/changelog/20120420143629-consumer-release-to-varchar.xml" />
+    <include file="db/changelog/20120523102544-add-owner-default-sla.xml" />
 </databaseChangeLog>
