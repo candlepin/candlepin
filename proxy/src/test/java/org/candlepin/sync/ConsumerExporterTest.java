@@ -40,9 +40,11 @@ public class ConsumerExporterTest {
 
         Consumer consumer = new Consumer();
         consumer.setUuid("test-uuid");
+        consumer.setName("testy consumer");
 
         exporter.export(mapper, writer, consumer);
 
-        assertEquals("{\"uuid\":\"test-uuid\"}", writer.toString());
+        assertEquals("{\"uuid\":\"test-uuid\",\"name\":\"testy consumer\"}",
+            writer.toString());
     }
 }

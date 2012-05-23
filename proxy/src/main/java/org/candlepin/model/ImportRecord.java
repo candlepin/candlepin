@@ -14,7 +14,11 @@
  */
 package org.candlepin.model;
 
+import org.hibernate.annotations.GenericGenerator;
+
 import java.io.Serializable;
+import java.util.Date;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -26,7 +30,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-import org.hibernate.annotations.GenericGenerator;
 
 /**
  *
@@ -57,6 +60,14 @@ public class ImportRecord extends AbstractHibernateObject {
 
     private Status status;
     private String statusMessage;
+    @Column(name = "generated_by", nullable = true)
+    private String generatedBy;
+    @Column(name = "generated_date", nullable = true)
+    private Date generatedDate;
+    @Column(name = "upstream_name", nullable = true)
+    private String upstreamName;
+    @Column(name = "upstream_id", nullable = true)
+    private String upstreamId;
 
     @SuppressWarnings("unused")
     private ImportRecord() {
@@ -100,5 +111,38 @@ public class ImportRecord extends AbstractHibernateObject {
         this.status = status;
         this.statusMessage = message;
     }
+
+    public String getGeneratedBy() {
+        return generatedBy;
+    }
+
+    public void setGeneratedBy(String generatedBy) {
+        this.generatedBy = generatedBy;
+    }
+
+    public Date getGeneratedDate() {
+        return generatedDate;
+    }
+
+    public void setGeneratedDate(Date generatedDate) {
+        this.generatedDate = generatedDate;
+    }
+
+    public String getUpstreamName() {
+        return upstreamName;
+    }
+
+    public void setUpstreamName(String upstreamName) {
+        this.upstreamName = upstreamName;
+    }
+
+    public String getUpstreamId() {
+        return upstreamId;
+    }
+
+    public void setUpstreamId(String upstreamId) {
+        this.upstreamId = upstreamId;
+    }
+
 
 }

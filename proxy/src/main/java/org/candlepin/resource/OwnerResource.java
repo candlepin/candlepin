@@ -66,8 +66,10 @@ import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UniqueIdGenerator;
+import org.candlepin.sync.ConsumerDto;
 import org.candlepin.sync.Importer;
 import org.candlepin.sync.ImporterException;
+import org.candlepin.sync.Meta;
 import org.candlepin.sync.SyncDataFormatException;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
@@ -80,8 +82,10 @@ import org.xnap.commons.i18n.I18n;
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.Consumes;
@@ -881,35 +885,35 @@ public class OwnerResource {
         MultipartInput input) {
 
         Owner owner = findOwner(ownerKey);
-
+        Map<String, Object> data = new HashMap<String, Object>();
         try {
             InputPart part = input.getParts().get(0);
             File archive = part.getBody(new GenericType<File>() {
             });
             log.info("Importing archive " + archive.getAbsolutePath() + " for owner " +
                        owner.getDisplayName());
-            importer.loadExport(owner, archive, force);
+            data = importer.loadExport(owner, archive, force);
 
             sink.emitImportCreated(owner);
-            recordImportSuccess(owner, force);
+            recordImportSuccess(owner, data, force);
         }
         catch (IOException e) {
-            recordImportFailure(owner, e);
+            recordImportFailure(owner, data, e);
             throw new IseException(i18n.tr("Error reading export archive"), e);
         }
         // These come back with internationalized messages, so we can transfer:
         catch (SyncDataFormatException e) {
-            recordImportFailure(owner, e);
+            recordImportFailure(owner, data, e);
             throw new BadRequestException(e.getMessage(), e);
         }
         catch (ImporterException e) {
-            recordImportFailure(owner, e);
+            recordImportFailure(owner, data, e);
             throw new IseException(e.getMessage(), e);
         }
         // Grab candlepin exceptions to record the error and then rethrow
         // to pass on the http return code
         catch (CandlepinException e) {
-            recordImportFailure(owner, e);
+            recordImportFailure(owner, data, e);
             throw e;
         }
         finally {
@@ -1094,8 +1098,18 @@ public class OwnerResource {
         return ueberCertificate.get(0);
     }
 
-    private void recordImportSuccess(Owner owner, boolean force) {
+    private void recordImportSuccess(Owner owner, Map data, boolean force) {
         ImportRecord record = new ImportRecord(owner);
+        Meta meta = (Meta) data.get("meta");
+        ConsumerDto consumer = (ConsumerDto) data.get("consumer");
+        if (meta != null) {
+            record.setGeneratedBy(meta.getPrincipalName());
+            record.setGeneratedDate(meta.getCreated());
+        }
+        if (consumer != null) {
+            record.setUpstreamName(consumer.getName());
+            record.setUpstreamId(consumer.getUuid());
+        }
 
         String msg = i18n.tr("{0} file imported successfully.", owner.getKey());
         if (force) {
@@ -1107,8 +1121,19 @@ public class OwnerResource {
         this.importRecordCurator.create(record);
     }
 
-    private void recordImportFailure(Owner owner, Throwable error) {
+    private void recordImportFailure(Owner owner, Map data, Throwable error) {
         ImportRecord record = new ImportRecord(owner);
+        Meta meta = (Meta) data.get("meta");
+        ConsumerDto consumer = (ConsumerDto) data.get("consumer");
+        if (meta != null) {
+            record.setGeneratedBy(meta.getPrincipalName());
+            record.setGeneratedDate(meta.getCreated());
+        }
+        if (consumer != null) {
+            record.setUpstreamName(consumer.getName());
+            record.setUpstreamId(consumer.getUuid());
+        }
+
         record.recordStatus(ImportRecord.Status.FAILURE, error.getMessage());
 
         this.importRecordCurator.create(record);

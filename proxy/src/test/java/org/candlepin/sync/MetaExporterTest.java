@@ -14,15 +14,16 @@
  */
 package org.candlepin.sync;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.HashMap;
+import static org.junit.Assert.assertEquals;
 
-import org.codehaus.jackson.map.ObjectMapper;
 import org.candlepin.config.Config;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 
-import static org.junit.Assert.assertTrue;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.Date;
+import java.util.HashMap;
 
 /**
  * MetaExporterTest
@@ -34,12 +35,20 @@ public class MetaExporterTest {
         ObjectMapper mapper = SyncUtils.getObjectMapper(
             new Config(new HashMap<String, String>()));
 
-        MetaExporter meta = new MetaExporter();
-
+        MetaExporter metaEx = new MetaExporter();
         StringWriter writer = new StringWriter();
+        Meta meta = new Meta();
+        Date now = new Date();
+        String nowString = mapper.convertValue(now, String.class);
+        meta.setVersion("0.1.0");
+        meta.setCreated(now);
+        meta.setPrincipalName("myUsername");
 
-        meta.export(mapper, writer, new Meta());
-        assertTrue(writer.toString().contains("\"version\":\"0.0.0\""));
+        metaEx.export(mapper, writer, meta);
+
+        assertEquals("{\"version\":\"0.1.0\",\"created\":\"" + nowString +
+            "\",\"principalName\":\"myUsername\"}",
+            writer.toString());
     }
 
 }

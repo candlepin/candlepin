@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+
+    <changeSet id="20120522140529" author="wpoteat">
+        <comment>More information from impored manifest</comment>
+        <addColumn tableName="cp_import_record">
+            <column name="generated_by" type="varchar(255)"/>
+            <column name="generated_date" type="timestamp"/>
+            <column name="upstream_name" type="varchar(255)"/>
+            <column name="upstream_id" type="varchar(255)"/>
+        </addColumn>
+        <!-- See http://www.liquibase.org/manual/refactoring_commands -->
+    </changeSet>
+
+</databaseChangeLog>

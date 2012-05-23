@@ -14,7 +14,12 @@
  */
 package org.candlepin.sync;
 
+import com.google.inject.Inject;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.candlepin.config.Config;
+import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
@@ -29,11 +34,6 @@ import org.candlepin.policy.js.export.JsExportRules;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.util.VersionUtil;
-
-import com.google.inject.Inject;
-
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.File;
@@ -74,6 +74,7 @@ public class Exporter {
     private PKIUtility pki;
     private Config config;
     private JsExportRules exportRules;
+    private PrincipalProvider principalProvider;
 
     @Inject
     public Exporter(ConsumerTypeCurator consumerTypeCurator, MetaExporter meta,
@@ -82,7 +83,8 @@ public class Exporter {
         EntitlementCertServiceAdapter entCertAdapter, ProductExporter productExporter,
         ProductServiceAdapter productAdapter, ProductCertExporter productCertExporter,
         EntitlementCurator entitlementCurator, EntitlementExporter entExporter,
-        PKIUtility pki, Config config, JsExportRules exportRules) {
+        PKIUtility pki, Config config, JsExportRules exportRules,
+        PrincipalProvider principalProvider) {
 
         this.consumerTypeCurator = consumerTypeCurator;
 
@@ -100,6 +102,7 @@ public class Exporter {
         this.pki = pki;
         this.config = config;
         this.exportRules = exportRules;
+        this.principalProvider = principalProvider;
 
         mapper = SyncUtils.getObjectMapper(this.config);
     }
@@ -272,7 +275,8 @@ public class Exporter {
     private void exportMeta(File baseDir) throws IOException {
         File file = new File(baseDir.getCanonicalPath(), "meta.json");
         FileWriter writer = new FileWriter(file);
-        Meta m = new Meta(getVersion(), new Date());
+        Meta m = new Meta(getVersion(), new Date(),
+            principalProvider.get().getPrincipalName());
         meta.export(mapper, writer, m);
         writer.close();
     }

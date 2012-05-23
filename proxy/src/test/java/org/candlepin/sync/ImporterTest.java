@@ -78,9 +78,11 @@ public class ImporterTest {
          * make sure created date is XYZ
          * make sure version is > ABC
          */
-
-        File f = createFile("/tmp/meta", "0.0.3", new Date());
-        File actualmeta = createFile("/tmp/meta.json", "0.0.3", new Date());
+        Date now = new Date();
+        File file = createFile("/tmp/meta", "0.0.3", now,
+            "test_user");
+        File actual = createFile("/tmp/meta.json", "0.0.3", now,
+            "test_user");
         ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
         ExporterMetadata em = new ExporterMetadata();
         Date daybefore = getDateBeforeDays(1);
@@ -90,17 +92,24 @@ public class ImporterTest {
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
         Importer i = new Importer(null, null, null, null, null, null, null,
             null, null, emc, null, null, i18n);
-        i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta, false);
+        i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actual, false);
 
-        assertTrue(f.delete());
-        assertTrue(actualmeta.delete());
+        Meta fileMeta = mapper.readValue(file, Meta.class);
+        Meta actualMeta = mapper.readValue(actual, Meta.class);
+        assertEquals(fileMeta.getPrincipalName(), actualMeta.getPrincipalName());
+        assertEquals(fileMeta.getCreated().getTime(), actualMeta.getCreated().getTime());
+
+        assertTrue(file.delete());
+        assertTrue(actual.delete());
         assertTrue(daybefore.compareTo(em.getExported()) < 0);
     }
 
     @Test
     public void firstRun() throws Exception {
-        File f = createFile("/tmp/meta", "0.0.3", new Date());
-        File actualmeta = createFile("/tmp/meta.json", "0.0.3", new Date());
+        File f = createFile("/tmp/meta", "0.0.3", new Date(),
+            "test_user");
+        File actualmeta = createFile("/tmp/meta.json", "0.0.3", new Date(),
+            "test_user");
         ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(null);
         Importer i = new Importer(null, null, null, null, null, null, null,
@@ -114,7 +123,8 @@ public class ImporterTest {
     @Test(expected = ConflictException.class)
     public void oldImport() throws Exception {
         // actualmeta is the mock for the import itself
-        File actualmeta = createFile("/tmp/meta.json", "0.0.3", getDateBeforeDays(10));
+        File actualmeta = createFile("/tmp/meta.json", "0.0.3", getDateBeforeDays(10),
+            "test_user");
         ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
         // emc is the mock for lastrun (i.e., the most recent import in CP)
         ExporterMetadata em = new ExporterMetadata();
@@ -131,7 +141,8 @@ public class ImporterTest {
         // this tests bz #790751
         Date importDate = getDateBeforeDays(10);
         // actualmeta is the mock for the import itself
-        File actualmeta = createFile("/tmp/meta.json", "0.0.3", importDate);
+        File actualmeta = createFile("/tmp/meta.json", "0.0.3", importDate,
+            "test_user");
         ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
         // em is the mock for lastrun (i.e., the most recent import in CP)
         ExporterMetadata em = new ExporterMetadata();
@@ -150,7 +161,8 @@ public class ImporterTest {
         // if we do are importing candlepin 0.0.10 data into candlepin 0.0.3,
         // import the rules.
 
-        File actualmeta = createFile("/tmp/meta.json", "0.0.10", new Date());
+        File actualmeta = createFile("/tmp/meta.json", "0.0.10", new Date(),
+            "test_user");
         File[] jsArray = createMockJsFile(MOCK_JS_PATH);
         ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
         RulesImporter ri = mock(RulesImporter.class);
@@ -167,7 +179,8 @@ public class ImporterTest {
     public void olderVersionImport() throws Exception {
         // if we are importing candlepin 0.0.1 data into
         // candlepin 0.0.3, do not import the rules
-        File actualmeta = createFile("/tmp/meta.json", "0.0.1", new Date());
+        File actualmeta = createFile("/tmp/meta.json", "0.0.1", new Date(),
+            "test_user");
         ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
         RulesImporter ri = mock(RulesImporter.class);
 
@@ -181,7 +194,8 @@ public class ImporterTest {
 
     @Test(expected = ImporterException.class)
     public void nullType() throws ImporterException, IOException {
-        File actualmeta = createFile("/tmp/meta.json", "0.0.3", new Date());
+        File actualmeta = createFile("/tmp/meta.json", "0.0.3", new Date(),
+            "test_user");
         try {
             Importer i = new Importer(null, null, null, null, null, null, null,
                 null, null, null, null, null, i18n);
@@ -196,7 +210,8 @@ public class ImporterTest {
 
     @Test(expected = ImporterException.class)
     public void expectOwner() throws ImporterException, IOException {
-        File actualmeta = createFile("/tmp/meta.json", "0.0.3", new Date());
+        File actualmeta = createFile("/tmp/meta.json", "0.0.3", new Date(),
+            "test_user");
         ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
         when(emc.lookupByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, null))
             .thenReturn(null);
@@ -220,11 +235,12 @@ public class ImporterTest {
         mockJs.delete();
     }
 
-    private File createFile(String filename, String version, Date date)
+    private File createFile(String filename, String version, Date date,
+                 String username)
         throws JsonGenerationException, JsonMappingException, IOException {
 
         File f = new File(filename);
-        Meta meta = new Meta(version, date);
+        Meta meta = new Meta(version, date, username);
         mapper.writeValue(f, meta);
         return f;
     }

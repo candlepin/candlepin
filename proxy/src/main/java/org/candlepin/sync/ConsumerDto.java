@@ -21,12 +21,14 @@ import org.candlepin.model.Consumer;
  */
 public class ConsumerDto {
     private String uuid;
+    private String name;
 
     public ConsumerDto() {
     }
 
-    ConsumerDto(String uuid) {
+    ConsumerDto(String uuid, String name) {
         this.uuid = uuid;
+        this.name = name;
     }
 
     public String getUuid() {
@@ -37,9 +39,18 @@ public class ConsumerDto {
         this.uuid = uuid;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public Consumer consumer() {
         Consumer toReturn = new Consumer();
         toReturn.setUuid(uuid);
+        toReturn.setName(name);
         return toReturn;
     }
 }

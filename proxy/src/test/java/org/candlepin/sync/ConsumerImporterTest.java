@@ -57,9 +57,10 @@ public class ConsumerImporterTest {
     @Test
     public void importShouldCreateAValidConsumer() throws IOException, ImporterException {
         ConsumerDto consumer =
-            importer.createObject(mapper, new StringReader("{\"uuid\":\"test-uuid\"}"));
+            importer.createObject(mapper, new StringReader("{\"uuid\":\"test-uuid\",\"name\":\"test-name\"}"));
 
         assertEquals("test-uuid", consumer.getUuid());
+        assertEquals("test-name", consumer.getName());
     }
 
     @Test

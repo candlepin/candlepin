@@ -14,21 +14,8 @@
  */
 package org.candlepin.sync;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Reader;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-
-import javax.persistence.PersistenceException;
+import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
@@ -56,8 +43,21 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.hibernate.exception.ConstraintViolationException;
 import org.xnap.commons.i18n.I18n;
 
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
+import javax.persistence.PersistenceException;
 
 /**
  * Importer
@@ -169,10 +169,11 @@ public class Importer {
         }
     }
 
-    public void loadExport(Owner owner, File exportFile, boolean force)
+    public Map<String, Object> loadExport(Owner owner, File exportFile, boolean force)
         throws ImporterException {
         File tmpDir = null;
         InputStream exportStream = null;
+        Map<String, Object> result = new HashMap<String, Object>();
         try {
             tmpDir = new SyncUtils(config).makeTempDir("import");
 
@@ -188,7 +189,12 @@ public class Importer {
                 importFiles.put(file.getName(), file);
             }
 
-            importObjects(owner, importFiles, force);
+            ConsumerDto consumer = importObjects(owner, importFiles, force);
+            Meta m = mapper.readValue(importFiles.get(ImportFile.META.fileName()),
+                Meta.class);
+            result.put("consumer", consumer);
+            result.put("meta", m);
+            return result;
         }
 
         catch (ConstraintViolationException cve) {
@@ -228,7 +234,7 @@ public class Importer {
 
     @Transactional(rollbackOn = {IOException.class,
             ImporterException.class, RuntimeException.class})
-    public void importObjects(Owner owner, Map<String, File> importFiles, boolean force)
+    public ConsumerDto importObjects(Owner owner, Map<String, File> importFiles, boolean force)
         throws IOException, ImporterException {
 
         File metadata = importFiles.get(ImportFile.META.fileName());
@@ -249,7 +255,7 @@ public class Importer {
 
         // per user elements
         validateMetadata(ExporterMetadata.TYPE_PER_USER, owner, metadata, force);
-        importConsumer(owner, importFiles.get(ImportFile.CONSUMER.fileName()));
+        ConsumerDto consumer = importConsumer(owner, importFiles.get(ImportFile.CONSUMER.fileName()));
 
         Set<Entitlement> entitlementsToRegen = Util.newSet();
 
@@ -273,6 +279,7 @@ public class Importer {
 
         entitlementsToRegen.addAll(poolManager.refreshPoolsWithoutRegeneration(owner));
         poolManager.regenerateCertificatesOf(entitlementsToRegen);
+        return consumer;
     }
 
     public void importRules(File[] rulesFiles, File metadata) throws IOException {
@@ -321,13 +328,14 @@ public class Importer {
         importer.store(consumerTypeObjs);
     }
 
-    public void importConsumer(Owner owner, File consumerFile) throws IOException,
+    public ConsumerDto importConsumer(Owner owner, File consumerFile) throws IOException,
         SyncDataFormatException {
         ConsumerImporter importer = new ConsumerImporter(ownerCurator, i18n);
         Reader reader = null;
+        ConsumerDto consumer = null;
         try {
             reader = new FileReader(consumerFile);
-            ConsumerDto consumer = importer.createObject(mapper, reader);
+            consumer = importer.createObject(mapper, reader);
             importer.store(owner, consumer);
         }
         finally {
@@ -335,6 +343,7 @@ public class Importer {
                 reader.close();
             }
         }
+        return consumer;
     }
 
     public Set<Product> importProducts(File[] products, ProductImporter importer)

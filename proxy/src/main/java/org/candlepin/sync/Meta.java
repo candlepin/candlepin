@@ -22,12 +22,14 @@ import java.util.Date;
 public class Meta {
     private String version;
     private Date created;
+    private String principalName;
 
     public Meta() {
-        this("0.0.0", new Date());
+        this("0.0.0", new Date(), "");
     }
 
-    public Meta(String version, Date creation) {
+    public Meta(String version, Date creation,
+                String userName) {
         this.version = version;
         this.created = creation;
 
@@ -38,6 +40,8 @@ public class Meta {
         if (creation == null) {
             this.created = new Date();
         }
+
+        this.principalName = userName;
     }
 
     public String getVersion() {
@@ -48,11 +52,19 @@ public class Meta {
         return created;
     }
 
+    public String getPrincipalName() {
+        return principalName;
+    }
+
     public void setVersion(String version) {
         this.version = version;
     }
 
     public void setCreated(Date created) {
         this.created = created;
+    }
+
+    public void setPrincipalName(String name) {
+        this.principalName = name;
     }
 }

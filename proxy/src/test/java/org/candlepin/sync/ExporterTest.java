@@ -22,9 +22,12 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.apache.commons.io.FileUtils;
+import org.candlepin.auth.Principal;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
@@ -39,8 +42,6 @@ import org.candlepin.pki.PKIUtility;
 import org.candlepin.policy.js.export.JsExportRules;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
-
-import org.apache.commons.io.FileUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
@@ -84,6 +85,7 @@ public class ExporterTest {
     private PKIUtility pki;
     private CandlepinCommonTestConfig config;
     private JsExportRules exportRules;
+    private PrincipalProvider pprov;
 
     @Before
     public void setUp() {
@@ -103,6 +105,7 @@ public class ExporterTest {
         pki = mock(PKIUtility.class);
         config = new CandlepinCommonTestConfig();
         exportRules = mock(JsExportRules.class);
+        pprov = mock(PrincipalProvider.class);
 
         when(exportRules.canExport(any(Entitlement.class))).thenReturn(Boolean.TRUE);
     }
@@ -115,6 +118,7 @@ public class ExporterTest {
         ProvidedProduct pp = mock(ProvidedProduct.class);
         Pool pool = mock(Pool.class);
         Rules mrules = mock(Rules.class);
+        Principal principal = mock(Principal.class);
 
         Set<ProvidedProduct> ppset = new HashSet<ProvidedProduct>();
         ppset.add(pp);
@@ -154,10 +158,12 @@ public class ExporterTest {
         when(psa.getProductById("12345")).thenReturn(prod);
         when(psa.getProductById("MKT-prod")).thenReturn(prod1);
         when(psa.getProductCertificate(any(Product.class))).thenReturn(pcert);
+        when(pprov.get()).thenReturn(principal);
+        when(principal.getUsername()).thenReturn("testUser");
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules);
+            pce, ec, ee, pki, config, exportRules, pprov);
 
         File export = e.getFullExport(consumer);
 
@@ -177,15 +183,18 @@ public class ExporterTest {
         Date start = new Date();
         Rules mrules = mock(Rules.class);
         Consumer consumer = mock(Consumer.class);
+        Principal principal = mock(Principal.class);
 
         when(mrules.getRules()).thenReturn("foobar");
         when(pki.getSHA256WithRSAHash(any(InputStream.class))).thenReturn(
             "signature".getBytes());
         when(rc.getRules()).thenReturn(mrules);
+        when(pprov.get()).thenReturn(principal);
+        when(principal.getUsername()).thenReturn("testUser");
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules);
+            pce, ec, ee, pki, config, exportRules, pprov);
         File export = e.getFullExport(consumer);
 
         // VERIFY

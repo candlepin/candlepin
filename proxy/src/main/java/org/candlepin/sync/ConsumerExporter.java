@@ -33,7 +33,7 @@ public class ConsumerExporter {
 
     void export(ObjectMapper mapper, Writer writer, Consumer consumer)
         throws IOException {
-        ConsumerDto dto = new ConsumerDto(consumer.getUuid());
+        ConsumerDto dto = new ConsumerDto(consumer.getUuid(), consumer.getName());
 
         mapper.writeValue(writer, dto);
     }

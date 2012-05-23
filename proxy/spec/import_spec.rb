@@ -41,6 +41,16 @@ describe 'Candlepin Import' do
     o.upstreamUuid.should == @candlepin_client.uuid
   end
 
+  it "originating information should be populted in the import" do
+    @import_owner_client.list_imports(@import_owner['key']).find_all do |import|
+      consumer = @candlepin_client.get_consumer()
+      import['generatedBy'].should == consumer['name']
+      import['generatedDate'].should_not be_nil
+      import['upstreamName'].should == consumer['name']
+      import['upstreamId'].should == consumer['uuid']
+    end
+  end
+
   it 'can be undone' do
     # Make a custom subscription so we can be sure it does not get wiped
     # out during either the undo or a subsequent re-import:
@@ -142,5 +152,4 @@ describe 'Candlepin Import' do
     cert[0..26].should == "-----BEGIN CERTIFICATE-----"
     cert.include?("-----BEGIN RSA PRIVATE KEY-----").should == true
   end
-
 end

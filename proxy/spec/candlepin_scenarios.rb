@@ -201,7 +201,7 @@ module ExportMethods
     @cp = Candlepin.new('admin', 'admin')
     @owner = @cp.create_owner(random_string('test_owner'))
 
-    @user = @cp.create_user(random_string('testuser'), 'password')
+    @user = @cp.create_user(random_string('test_user'), 'password')
     Candlepin.new(@user['username'], 'password')
     # Create a role for user to administer the given owner:
     role = create_role(nil, @owner['key'], 'ALL')
@@ -231,8 +231,8 @@ module ExportMethods
     pool2 = @cp.list_pools(:owner => @owner.id, :product => product2.id)[0]
     pool3 = @cp.list_pools(:owner => @owner.id, :product => virt_product.id)[0]
 
-    @candlepin_client = consumer_client(owner_client, random_string(),
-        "candlepin")
+    @candlepin_client = consumer_client(owner_client, random_string('test_client'),
+        "candlepin", @user['username'])
     @entitlement1 = @candlepin_client.consume_pool(pool1.id)[0]
     @entitlement2 = @candlepin_client.consume_pool(pool2.id)[0]
     @candlepin_client.consume_pool(pool3.id)
