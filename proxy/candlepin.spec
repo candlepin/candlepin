@@ -263,7 +263,7 @@ fi
 %{_localstatedir}/lib/%{name}/
 %{_localstatedir}/log/%{name}
 %{_localstatedir}/cache/%{name}
-%{_sysconfdir}/tomcat6/keystore
+%config(noreplace) %{_sysconfdir}/tomcat6/keystore
 %defattr(600,tomcat,tomcat,-)
 %config(noreplace) %{_sysconfdir}/%{name}/%{name}.conf
 
