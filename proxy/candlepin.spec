@@ -14,7 +14,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.6.4
+Version: 0.6.5
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -279,6 +279,9 @@ fi
 
 
 %changelog
+* Wed May 23 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.6.5-1
+- 821532: Fix db create error from previous upgrade fix. (dgoodwin@redhat.com)
+
 * Wed May 23 2012 Chris Duryee (beav) <cduryee@redhat.com>
 - 821532: if keystore already exists, do not overwrite (cduryee@redhat.com)
 - 821532: Add db upgrade script for owner default SLA. (dgoodwin@redhat.com)
