@@ -14,7 +14,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.6.3
+Version: 0.6.4
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -279,6 +279,12 @@ fi
 
 
 %changelog
+* Wed May 23 2012 Chris Duryee (beav) <cduryee@redhat.com>
+- 821532: if keystore already exists, do not overwrite (cduryee@redhat.com)
+- 821532: Add db upgrade script for owner default SLA. (dgoodwin@redhat.com)
+- 818473: Fedora releases require liquibase and postgresl-jdbc
+  (jesusr@redhat.com)
+- various findbugs fixes (jesusr@redhat.com)
 * Wed May 16 2012 jesus m. rodriguez <jesusr@redhat.com> 0.6.3-1
 - remove unused signature verification call for now (cduryee@redhat.com)
 - findbugs: Field isn't final but should be, made private instead.
