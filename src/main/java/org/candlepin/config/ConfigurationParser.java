@@ -35,6 +35,7 @@ abstract class ConfigurationParser {
         Properties toReturn = new Properties();
         toReturn.putAll(stripPrefixFromConfigKeys(inputConfiguration));
         return toReturn;
+
     }
 
     /**

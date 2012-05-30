@@ -14,12 +14,22 @@
  */
 package org.candlepin.config;
 
+import java.util.HashSet;
+import java.util.Set;
+
 
 /**
  * JPAConfiguration
  * @version $Rev$
  */
-class JPAConfigParser extends ConfigurationParser {
+class JPAConfigParser extends EncryptedValueConfigurationParser {
+    /**
+     * @param config
+     */
+    public JPAConfigParser(Config config) {
+        super(config);
+    }
+
     /** JPA configuration prefix */
     public static final String JPA_CONFIG_PREFIX = "jpa.config";
 
@@ -32,5 +42,17 @@ class JPAConfigParser extends ConfigurationParser {
 
     public String getPrefix() {
         return JPA_CONFIG_PREFIX;
+    }
+
+    /* returns a list of config keys to check if they are encrypted */
+    public Set<String> encryptedConfigKeys() {
+        Set<String> encKeys = new HashSet<String>();
+        encKeys.add("hibernate.connection.password");
+        return encKeys;
+    }
+
+    // FIXME
+    public String encryptValue(String toEnc) {
+        throw new RuntimeException("encryptValue is not implemented");
     }
 }
