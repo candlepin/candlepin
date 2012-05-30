@@ -127,8 +127,8 @@ public class Config {
      *
      * @return the JPA Configuration properties.
      */
-    public Properties jpaConfiguration() {
-        return new JPAConfigParser().parseConfig(configuration);
+    public Properties jpaConfiguration(Config config) {
+        return new JPAConfigParser(config).parseConfig(configuration);
     }
 
     /**
@@ -136,8 +136,8 @@ public class Config {
      *
      * @return the Database Basic Authentication Configuration properties
      */
-    public Properties dbBasicAuthConfiguration() {
-        return new DbBasicAuthConfigParser().parseConfig(configuration);
+    public Properties dbBasicAuthConfiguration(Config config) {
+        return new DbBasicAuthConfigParser(config).parseConfig(configuration);
     }
 
     /**

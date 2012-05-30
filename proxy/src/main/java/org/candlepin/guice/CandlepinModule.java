@@ -118,11 +118,11 @@ public class CandlepinModule extends AbstractModule {
     @Override
     public void configure() {
 
-        install(new JpaPersistModule("default").properties(
-            new Config().jpaConfiguration()));
+        Config config = new Config();
+        bind(Config.class).asEagerSingleton();
+        install(new JpaPersistModule("default").properties(config.jpaConfiguration(config)));
         bind(JPAInitializer.class).asEagerSingleton();
 
-        bind(Config.class).asEagerSingleton();
         bind(PKIUtility.class).to(BouncyCastlePKIUtility.class).asEagerSingleton();
         bind(PKIReader.class).to(BouncyCastlePKIReader.class).asEagerSingleton();
         bind(X509ExtensionUtil.class);

@@ -14,12 +14,22 @@
  */
 package org.candlepin.config;
 
+import java.util.HashSet;
+import java.util.Set;
+
 
 /**
  * DatabaseBasicAuthConfiguration
  * @version $Rev$
  */
-class DbBasicAuthConfigParser extends ConfigurationParser {
+class DbBasicAuthConfigParser extends EncryptedValueConfigurationParser {
+    /**
+     * @param config
+     */
+    public DbBasicAuthConfigParser(Config config) {
+        super(config);
+    }
+
     /** Basic auth configuration prefix */
     public static final String BASIC_AUTH_CONFIG_PREFIX = "basic.auth.config";
 
@@ -38,5 +48,12 @@ class DbBasicAuthConfigParser extends ConfigurationParser {
 
     public String getPrefix() {
         return BASIC_AUTH_CONFIG_PREFIX;
+    }
+
+    /* returns a list of config keys to check if they are encrypted */
+    public Set<String> encryptedConfigKeys() {
+        Set<String> encKeys = new HashSet<String>();
+        encKeys.add("database.connection.password");
+        return encKeys;
     }
 }
