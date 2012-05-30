@@ -32,6 +32,7 @@ public class DateSourceForTesting implements DateSource {
 
     public DateSourceForTesting(int year, int month, int day) {
         Calendar calendar = Calendar.getInstance();
+        calendar.clear();
         calendar.set(year, month - 1, day, 0, 0, 0);
         currentDate = calendar.getTime();
     }
