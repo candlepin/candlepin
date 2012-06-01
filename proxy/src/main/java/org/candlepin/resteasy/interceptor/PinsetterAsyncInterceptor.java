@@ -14,20 +14,24 @@
  */
 package org.candlepin.resteasy.interceptor;
 
-import com.google.inject.Inject;
-import javax.ws.rs.ext.Provider;
 import org.candlepin.auth.Principal;
 import org.candlepin.exceptions.ServiceUnavailableException;
 import org.candlepin.pinsetter.core.PinsetterException;
 import org.candlepin.pinsetter.core.PinsetterJobListener;
 import org.candlepin.pinsetter.core.PinsetterKernel;
 import org.candlepin.pinsetter.core.model.JobStatus;
+
+import com.google.inject.Inject;
+
 import org.jboss.resteasy.annotations.interception.ServerInterceptor;
 import org.jboss.resteasy.core.ServerResponse;
 import org.jboss.resteasy.spi.interception.PostProcessInterceptor;
 import org.jboss.resteasy.util.HttpResponseCodes;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
+import org.quartz.impl.JobDetailImpl;
+
+import javax.ws.rs.ext.Provider;
 
 /**
  * Resteasy interceptor that handles scheduling a one-time pinsetter job if the
@@ -82,7 +86,8 @@ public class PinsetterAsyncInterceptor implements PostProcessInterceptor {
         }
 
         map.put(PinsetterJobListener.PRINCIPAL_KEY, this.principalProvider.get());
-        jobDetail.setJobDataMap(map);
+        JobDetailImpl impl = (JobDetailImpl) jobDetail;
+        impl.setJobDataMap(map);
     }
 
 }

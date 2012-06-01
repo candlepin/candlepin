@@ -18,6 +18,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.never;
+import static org.quartz.JobBuilder.newJob;
 
 import com.google.inject.Provider;
 import java.util.Arrays;
@@ -69,7 +70,7 @@ public class PinsetterAsyncInterceptorTest {
         Principal principal = new UserPrincipal("testing", permissions, false);
         when(this.principalProvider.get()).thenReturn(principal);
 
-        JobDetail detail = new JobDetail();
+        JobDetail detail = newJob().build();
         when(response.getEntity()).thenReturn(detail);
 
         this.interceptor.postProcess(response);
@@ -87,10 +88,10 @@ public class PinsetterAsyncInterceptorTest {
 
         when(this.principalProvider.get()).thenReturn(principal);
 
-        JobDetail detail = new JobDetail();
         JobDataMap map = new JobDataMap();
         map.put("Temp", "something");
-        detail.setJobDataMap(map);
+
+        JobDetail detail = newJob().usingJobData(map).build();
         when(response.getEntity()).thenReturn(detail);
 
         this.interceptor.postProcess(response);
@@ -101,7 +102,7 @@ public class PinsetterAsyncInterceptorTest {
 
     @Test
     public void checkStatusCode() {
-        when(response.getEntity()).thenReturn(new JobDetail());
+        when(response.getEntity()).thenReturn(newJob().build());
         this.interceptor.postProcess(response);
 
         // Should we use the resteasy static variable for this?
@@ -124,7 +125,7 @@ public class PinsetterAsyncInterceptorTest {
 
     @Test
     public void jobScheduled() throws PinsetterException {
-        JobDetail detail = new JobDetail();
+        JobDetail detail = newJob().build();
         when(response.getEntity()).thenReturn(detail);
 
         this.interceptor.postProcess(response);
@@ -134,7 +135,7 @@ public class PinsetterAsyncInterceptorTest {
 
     @Test
     public void jobStatusSet() throws PinsetterException {
-        JobDetail detail = new JobDetail();
+        JobDetail detail = newJob().build();
         JobStatus status = new JobStatus();
 
         when(response.getEntity()).thenReturn(detail);
@@ -147,7 +148,7 @@ public class PinsetterAsyncInterceptorTest {
 
     @Test(expected = ServiceUnavailableException.class)
     public void schedulingError() throws PinsetterException {
-        JobDetail detail = new JobDetail();
+        JobDetail detail = newJob().build();
         when(response.getEntity()).thenReturn(detail);
         when(this.pinsetterKernel.scheduleSingleJob(detail))
                 .thenThrow(new PinsetterException("Error scheduling job!"));

@@ -1,0 +1,550 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <!-- drop tables that are no longer used -->
+    <changeSet id="20120426124534-0" author="awood">
+        <!-- drop table qrtz_job_listeners; -->
+        <dropTable tableName="qrtz_job_listeners"/>
+    </changeSet>        
+    <changeSet id="20120426124534-1" author="awood">
+        <!-- drop table qrtz_trigger_listeners; -->
+        <dropTable tableName="qrtz_trigger_listeners"/> 
+    </changeSet>        
+
+    <!-- drop columns that are no longer used -->
+    <changeSet id="20120426124534-2" author="awood">
+        <!-- alter table qrtz_job_details drop column is_volatile; -->
+        <dropColumn tableName="qrtz_job_details" columnName="is_volatile"/> 
+    </changeSet>        
+    <changeSet id="20120426124534-3" author="awood">
+        <!-- alter table qrtz_triggers drop column is_volatile; -->
+        <dropColumn tableName="qrtz_triggers" columnName="is_volatile"/>
+    </changeSet>        
+    <changeSet id="20120426124534-4" author="awood">
+        <!-- alter table qrtz_fired_triggers drop column is_volatile; -->
+        <dropColumn tableName="qrtz_fired_triggers" columnName="is_volatile"/>
+    </changeSet>        
+
+    <!-- add new columns that replace the 'is_stateful' column -->
+    <changeSet id="20120426124534-5" author="awood">
+        <!-- alter table qrtz_job_details add column is_nonconcurrent bool; -->
+        <addColumn tableName="qrtz_job_details">
+            <column name="is_nonconcurrent" type="BOOLEAN"/>
+        </addColumn>
+    </changeSet>        
+    <changeSet id="20120426124534-6" author="awood">
+        <!-- alter table qrtz_job_details add column is_update_data bool; -->
+        <addColumn tableName="qrtz_job_details">
+            <column name="is_update_data" type="BOOLEAN"/>
+        </addColumn>
+    </changeSet>        
+    <changeSet id="20120426124534-7" author="awood">
+        <!-- update qrtz_job_details set is_nonconcurrent = is_stateful; -->
+        <update tableName="qrtz_job_details">
+            <column name="is_nonconcurrent" valueComputed="is_stateful"/>
+        </update>
+    </changeSet>        
+    <changeSet id="20120426124534-8" author="awood">
+        <!-- update qrtz_job_details set is_update_data = is_stateful; -->
+        <update tableName="qrtz_job_details">
+            <column name="is_update_data" valueComputed="is_stateful"/>
+        </update>
+    </changeSet>        
+    <changeSet id="20120426124534-9" author="awood">
+        <!-- alter table qrtz_job_details drop column is_stateful; -->
+        <dropColumn tableName="qrtz_job_details" columnName="is_stateful"/>
+    </changeSet>        
+    <changeSet id="20120426124534-10" author="awood">
+        <!-- alter table qrtz_fired_triggers add column is_nonconcurrent bool; -->
+        <addColumn tableName="qrtz_fired_triggers">
+            <column name="is_nonconcurrent" type="BOOLEAN"/>
+        </addColumn>
+    </changeSet>        
+    <changeSet id="20120426124534-11" author="awood">
+        <!-- alter table qrtz_fired_triggers add column is_update_data bool; -->
+        <addColumn tableName="qrtz_fired_triggers">
+            <column name="is_update_data" type="BOOLEAN"/>
+        </addColumn>
+    </changeSet>        
+    <changeSet id="20120426124534-12" author="awood">
+        <!-- update qrtz_fired_triggers set is_nonconcurrent = is_stateful; -->
+        <update tableName="qrtz_fired_triggers">
+            <column name="is_nonconcurrent" valueComputed="is_stateful"/>
+        </update>
+    </changeSet>        
+    <changeSet id="20120426124534-13" author="awood">
+        <!-- update qrtz_fired_triggers set is_update_data = is_stateful; -->
+        <update tableName="qrtz_fired_triggers">
+            <column name="is_update_data" valueComputed="is_stateful"/>
+        </update>
+    </changeSet>        
+    <changeSet id="20120426124534-14" author="awood">
+        <!-- alter table qrtz_fired_triggers drop column is_stateful; -->
+        <dropColumn tableName="qrtz_fired_triggers" columnName="is_stateful"/>
+    </changeSet>        
+
+    <!-- add new 'sched_name' column to all tables -->
+    <changeSet id="20120426124534-15" author="awood">
+        <!-- alter table qrtz_blob_triggers add column sched_name varchar(120) not null DEFAULT 'TestScheduler'; -->
+        <addColumn tableName="qrtz_blob_triggers">
+            <column name="sched_name" type="varchar(120)" defaultValue="TestScheduler">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>        
+    <changeSet id="20120426124534-16" author="awood">
+        <!-- alter table qrtz_calendars add column sched_name varchar(120) not null DEFAULT 'TestScheduler'; -->
+        <addColumn tableName="qrtz_calendars">
+            <column name="sched_name" type="varchar(120)" defaultValue="TestScheduler">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>        
+    <changeSet id="20120426124534-17" author="awood">
+        <!-- alter table qrtz_cron_triggers add column sched_name varchar(120) not null DEFAULT 'TestScheduler'; -->
+        <addColumn tableName="qrtz_cron_triggers">
+            <column name="sched_name" type="varchar(120)" defaultValue="TestScheduler">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>        
+    <changeSet id="20120426124534-18" author="awood">
+        <!-- alter table qrtz_fired_triggers add column sched_name varchar(120) not null DEFAULT 'TestScheduler'; -->
+        <addColumn tableName="qrtz_fired_triggers">
+            <column name="sched_name" type="varchar(120)" defaultValue="TestScheduler">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>        
+    <changeSet id="20120426124534-19" author="awood">
+        <!-- alter table qrtz_job_details add column sched_name varchar(120) not null DEFAULT 'TestScheduler'; -->
+        <addColumn tableName="qrtz_job_details">
+            <column name="sched_name" type="varchar(120)" defaultValue="TestScheduler">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>        
+    <changeSet id="20120426124534-20" author="awood">
+        <!-- alter table qrtz_locks add column sched_name varchar(120) not null DEFAULT 'TestScheduler'; -->
+        <addColumn tableName="qrtz_locks">
+            <column name="sched_name" type="varchar(120)" defaultValue="TestScheduler">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>        
+    <changeSet id="20120426124534-21" author="awood">
+        <!-- alter table qrtz_paused_trigger_grps add column sched_name varchar(120) not null DEFAULT 'TestScheduler'; -->
+        <addColumn tableName="qrtz_paused_trigger_grps">
+            <column name="sched_name" type="varchar(120)" defaultValue="TestScheduler">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>        
+    <changeSet id="20120426124534-22" author="awood">
+        <!-- alter table qrtz_scheduler_state add column sched_name varchar(120) not null DEFAULT 'TestScheduler'; -->
+        <addColumn tableName="qrtz_scheduler_state">
+            <column name="sched_name" type="varchar(120)" defaultValue="TestScheduler">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>        
+    <changeSet id="20120426124534-23" author="awood">
+        <!-- alter table qrtz_simple_triggers add column sched_name varchar(120) not null DEFAULT 'TestScheduler'; -->
+        <addColumn tableName="qrtz_simple_triggers">
+            <column name="sched_name" type="varchar(120)" defaultValue="TestScheduler">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>        
+    <changeSet id="20120426124534-24" author="awood">
+        <!-- alter table qrtz_triggers add column sched_name varchar(120) not null DEFAULT 'TestScheduler'; -->
+        <addColumn tableName="qrtz_triggers">
+            <column name="sched_name" type="varchar(120)" defaultValue="TestScheduler">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>        
+
+    <!-- drop all primary and foreign key constraints, so that we can define new ones -->
+    <changeSet id="20120426124534-25" author="awood">
+        <!-- alter table qrtz_triggers drop constraint qrtz_triggers_job_name_fkey; -->
+        <dropForeignKeyConstraint baseTableName="qrtz_triggers"
+            constraintName="qrtz_triggers_job_name_fkey"/>
+    </changeSet>        
+    <changeSet id="20120426124534-26" author="awood">
+        <!-- alter table qrtz_blob_triggers drop constraint qrtz_blob_triggers_pkey; -->
+        <dropPrimaryKey tableName="qrtz_blob_triggers" constraintName="qrtz_blob_triggers_pkey"/>
+    </changeSet>        
+    <changeSet id="20120426124534-27" author="awood">
+        <!-- alter table qrtz_blob_triggers drop constraint qrtz_blob_triggers_trigger_name_fkey; -->
+        <dropForeignKeyConstraint baseTableName="qrtz_blob_triggers"
+            constraintName="qrtz_blob_triggers_trigger_name_fkey"/>
+    </changeSet>        
+    <changeSet id="20120426124534-28" author="awood">
+        <!-- alter table qrtz_simple_triggers drop constraint qrtz_simple_triggers_pkey; -->
+        <dropPrimaryKey tableName="qrtz_simple_triggers" constraintName="qrtz_simple_triggers_pkey"/>
+    </changeSet>        
+    <changeSet id="20120426124534-29" author="awood">
+        <!-- alter table qrtz_simple_triggers drop constraint qrtz_simple_triggers_trigger_name_fkey; -->
+        <dropForeignKeyConstraint baseTableName="qrtz_simple_triggers"
+            constraintName="qrtz_simple_triggers_trigger_name_fkey"/>
+    </changeSet>        
+    <changeSet id="20120426124534-30" author="awood">
+        <!-- alter table qrtz_cron_triggers drop constraint qrtz_cron_triggers_pkey; -->
+        <dropPrimaryKey tableName="qrtz_cron_triggers" constraintName="qrtz_cron_triggers_pkey"/>
+    </changeSet>        
+    <changeSet id="20120426124534-31" author="awood">
+        <!-- alter table qrtz_cron_triggers drop constraint qrtz_cron_triggers_trigger_name_fkey; -->
+        <dropForeignKeyConstraint baseTableName="qrtz_cron_triggers"
+            constraintName="qrtz_cron_triggers_trigger_name_fkey"/>
+    </changeSet>        
+    <changeSet id="20120426124534-32" author="awood">
+        <!-- alter table qrtz_job_details drop constraint qrtz_job_details_pkey; -->
+        <dropPrimaryKey tableName="qrtz_job_details" constraintName="qrtz_job_details_pkey"/>
+    </changeSet>        
+    <changeSet id="20120426124534-33" author="awood">
+        <!-- alter table qrtz_job_details add primary key (sched_name, job_name, job_group); -->
+        <addPrimaryKey tableName="qrtz_job_details" columnNames="sched_name, job_name, job_group"
+            constraintName="qrtz_job_details_pkey"/>
+    </changeSet>        
+    <changeSet id="20120426124534-34" author="awood">
+        <!-- alter table qrtz_triggers drop constraint qrtz_triggers_pkey; -->
+        <dropPrimaryKey tableName="qrtz_triggers" constraintName="qrtz_triggers_pkey"/>
+    </changeSet>        
+
+    <!-- add all primary and foreign key constraints, based on new columns -->
+    <changeSet id="20120426124534-35" author="awood">
+        <!-- alter table qrtz_triggers add primary key (sched_name, trigger_name, trigger_group); -->
+        <addPrimaryKey tableName="qrtz_triggers" columnNames="sched_name, trigger_name, trigger_group"
+            constraintName="qrtz_triggers_pkey"/>
+    </changeSet>        
+    <changeSet id="20120426124534-36" author="awood">
+        <!-- alter table qrtz_triggers add foreign key (sched_name, job_name, job_group) references qrtz_job_details(sched_name, job_name, job_group); -->
+        <addForeignKeyConstraint
+            baseTableName="qrtz_triggers" baseColumnNames="sched_name, job_name, job_group"
+            referencedTableName="qrtz_job_details" referencedColumnNames="sched_name, job_name, job_group"
+            constraintName="qrtz_triggers_job_name_fkey"/>
+    </changeSet>        
+    <changeSet id="20120426124534-37" author="awood">
+        <!-- alter table qrtz_blob_triggers add primary key (sched_name, trigger_name, trigger_group); -->
+        <addPrimaryKey tableName="qrtz_blob_triggers" columnNames="sched_name, trigger_name, trigger_group"
+            constraintName="qrtz_blob_triggers_pkey"/>
+    </changeSet>        
+    <changeSet id="20120426124534-38" author="awood">
+        <!-- alter table qrtz_blob_triggers add foreign key (sched_name, trigger_name, trigger_group) references qrtz_triggers(sched_name, trigger_name, trigger_group); -->
+        <addForeignKeyConstraint
+            baseTableName="qrtz_blob_triggers" baseColumnNames="sched_name, trigger_name, trigger_group"
+            referencedTableName="qrtz_triggers" referencedColumnNames="sched_name, trigger_name, trigger_group"
+            constraintName="qrtz_blob_triggers_trigger_name_fkey"/>
+    </changeSet>        
+    <changeSet id="20120426124534-39" author="awood">
+        <!-- alter table qrtz_cron_triggers add primary key (sched_name, trigger_name, trigger_group); -->
+        <addPrimaryKey tableName="qrtz_cron_triggers" columnNames="sched_name, trigger_name, trigger_group"
+            constraintName="qrtz_cron_triggers_pkey"/>
+    </changeSet>        
+    <changeSet id="20120426124534-40" author="awood">
+        <!-- alter table qrtz_cron_triggers add foreign key (sched_name, trigger_name, trigger_group) references qrtz_triggers(sched_name, trigger_name, trigger_group); -->
+        <addForeignKeyConstraint
+            baseTableName="qrtz_cron_triggers" baseColumnNames="sched_name, trigger_name, trigger_group"
+            referencedTableName="qrtz_triggers" referencedColumnNames="sched_name, trigger_name, trigger_group"
+            constraintName="qrtz_cron_triggers_trigger_name_fkey"/>
+    </changeSet>        
+    <changeSet id="20120426124534-41" author="awood">
+        <!-- alter table qrtz_simple_triggers add primary key (sched_name, trigger_name, trigger_group); -->
+        <addPrimaryKey tableName="qrtz_simple_triggers" columnNames="sched_name, trigger_name, trigger_group"
+            constraintName="qrtz_simple_triggers_pkey"/>
+    </changeSet>        
+    <changeSet id="20120426124534-42" author="awood">
+        <!-- alter table qrtz_simple_triggers add foreign key (sched_name, trigger_name, trigger_group) references qrtz_triggers(sched_name, trigger_name, trigger_group); -->
+        <addForeignKeyConstraint
+            baseTableName="qrtz_simple_triggers" baseColumnNames="sched_name, trigger_name, trigger_group"
+            referencedTableName="qrtz_triggers" referencedColumnNames="sched_name, trigger_name, trigger_group"
+            constraintName="qrtz_simple_triggers_trigger_name_fkey"/>
+    </changeSet>        
+    <changeSet id="20120426124534-43" author="awood">
+        <!-- alter table qrtz_fired_triggers drop constraint qrtz_fired_triggers_pkey; -->
+        <dropPrimaryKey tableName="qrtz_fired_triggers" constraintName="qrtz_fired_triggers_pkey"/>
+    </changeSet>        
+    <changeSet id="20120426124534-44" author="awood">
+        <!-- alter table qrtz_fired_triggers add primary key (sched_name, entry_id); -->
+        <addPrimaryKey tableName="qrtz_fired_triggers" columnNames="sched_name, entry_id"
+            constraintName="qrtz_fired_triggers_pkey"/>
+    </changeSet>        
+    <changeSet id="20120426124534-45" author="awood">
+        <!-- alter table qrtz_calendars drop constraint qrtz_calendars_pkey; -->
+        <dropPrimaryKey tableName="qrtz_calendars" constraintName="qrtz_calendars_pkey"/>
+    </changeSet>        
+    <changeSet id="20120426124534-46" author="awood">
+        <!-- alter table qrtz_calendars add primary key (sched_name, calendar_name); -->
+        <addPrimaryKey tableName="qrtz_calendars" columnNames="sched_name, calendar_name"
+            constraintName="qrtz_calendars_pkey"/>
+    </changeSet>        
+    <changeSet id="20120426124534-47" author="awood">
+        <!-- alter table qrtz_locks drop constraint qrtz_locks_pkey; -->
+        <dropPrimaryKey tableName="qrtz_locks" constraintName="qrtz_locks_pkey"/>
+    </changeSet>        
+    <changeSet id="20120426124534-48" author="awood">
+        <!-- alter table qrtz_locks add primary key (sched_name, lock_name); -->
+        <addPrimaryKey tableName="qrtz_locks" columnNames="sched_name, lock_name"
+            constraintName="qrtz_locks_pkey"/>
+    </changeSet>        
+    <changeSet id="20120426124534-49" author="awood">
+        <!-- alter table qrtz_paused_trigger_grps drop constraint qrtz_paused_trigger_grps_pkey; -->
+        <dropPrimaryKey tableName="qrtz_paused_trigger_grps" constraintName="qrtz_paused_trigger_grps_pkey"/>
+    </changeSet>        
+    <changeSet id="20120426124534-50" author="awood">
+        <!-- alter table qrtz_paused_trigger_grps add primary key (sched_name, trigger_group); -->
+        <addPrimaryKey tableName="qrtz_paused_trigger_grps" columnNames="sched_name, trigger_group"
+            constraintName="qrtz_paused_trigger_grps_pkey"/>
+    </changeSet>        
+    <changeSet id="20120426124534-51" author="awood">
+        <!-- alter table qrtz_scheduler_state drop constraint qrtz_scheduler_state_pkey; -->
+        <dropPrimaryKey tableName="qrtz_scheduler_state" constraintName="qrtz_scheduler_state_pkey"/>
+    </changeSet>        
+    <changeSet id="20120426124534-52" author="awood">
+        <!-- alter table qrtz_scheduler_state add primary key (sched_name, instance_name); -->
+        <addPrimaryKey tableName="qrtz_scheduler_state" columnNames="sched_name, instance_name"
+            constraintName="qrtz_scheduler_state_pkey"/>
+    </changeSet>        
+
+    <!-- add new simprop_triggers table -->
+    <changeSet id="20120426124534-53" author="awood">
+        <!--
+        CREATE TABLE qrtz_simprop_triggers
+         (          
+            SCHED_NAME VARCHAR(120) NOT NULL,
+            TRIGGER_NAME VARCHAR(200) NOT NULL,
+            TRIGGER_GROUP VARCHAR(200) NOT NULL,
+            STR_PROP_1 VARCHAR(512) NULL,
+            STR_PROP_2 VARCHAR(512) NULL,
+            STR_PROP_3 VARCHAR(512) NULL,
+            INT_PROP_1 INT NULL,
+            INT_PROP_2 INT NULL,
+            LONG_PROP_1 BIGINT NULL,
+            LONG_PROP_2 BIGINT NULL,
+            DEC_PROP_1 NUMERIC(13,4) NULL,
+            DEC_PROP_2 NUMERIC(13,4) NULL,
+            BOOL_PROP_1 BOOL NULL,
+            BOOL_PROP_2 BOOL NULL,
+            PRIMARY KEY (SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP),
+            FOREIGN KEY (SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP)
+            REFERENCES QRTZ_TRIGGERS(SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP)
+        );
+        -->
+        <createTable tableName="qrtz_simprop_triggers">
+            <column name="SCHED_NAME" type="VARCHAR(120)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="TRIGGER_NAME" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="TRIGGER_GROUP" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="STR_PROP_1" type="VARCHAR(512)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="STR_PROP_2" type="VARCHAR(512)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="STR_PROP_3" type="VARCHAR(512)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="INT_PROP_1" type="INT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="INT_PROP_2" type="INT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="LONG_PROP_1" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="LONG_PROP_2" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+            <column name="DEC_PROP_1" type="NUMERIC(13,4)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="DEC_PROP_2" type="NUMERIC(13,4)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="BOOL_PROP_1" type="BOOLEAN">
+                <constraints nullable="true"/>
+            </column>
+            <column name="BOOL_PROP_2" type="BOOLEAN">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+    </changeSet>        
+    <changeSet id="20120426124534-54" author="awood">
+        <addPrimaryKey tableName="qrtz_simprop_triggers" columnNames="SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP"
+            constraintName="qrtz_simprop_triggers_pkey"/>
+        </changeSet>        
+    <changeSet id="20120426124534-55" author="awood">
+        <addForeignKeyConstraint
+            baseTableName="qrtz_simprop_triggers" baseColumnNames="SCHED_NAME, TRIGGER_NAME, TRIGGER_GROUP"
+            referencedTableName="qrtz_triggers" referencedColumnNames="SCHED_NAME, TRIGGER_NAME, TRIGGER_GROUP"
+            constraintName="qrtz_simprop_triggers_trigger_name_fkey"/>
+    </changeSet>        
+
+    <!-- create indexes for faster queries -->  
+    <changeSet id="20120426124534-56" author="awood">
+        <!-- create index idx_qrtz_j_req_recovery on qrtz_job_details(SCHED_NAME,REQUESTS_RECOVERY); -->
+        <createIndex indexName="idx_qrtz_j_req_recovery" tableName="qrtz_job_details">
+            <column name="SCHED_NAME"/>
+            <column name="REQUESTS_RECOVERY"/>
+        </createIndex>
+    </changeSet>        
+    <changeSet id="20120426124534-57" author="awood">
+        <!-- create index idx_qrtz_j_grp on qrtz_job_details(SCHED_NAME,JOB_GROUP); -->
+        <createIndex indexName="idx_qrtz_j_grp" tableName="qrtz_job_details">
+            <column name="SCHED_NAME"/>
+            <column name="JOB_GROUP"/>
+        </createIndex>
+    </changeSet>        
+    <changeSet id="20120426124534-58" author="awood">
+        <!-- create index idx_qrtz_t_j on qrtz_triggers(SCHED_NAME,JOB_NAME,JOB_GROUP); -->
+        <createIndex indexName="idx_qrtz_t_j" tableName="qrtz_triggers">
+            <column name="SCHED_NAME"/>
+            <column name="JOB_NAME"/>
+            <column name="JOB_GROUP"/>
+        </createIndex>
+    </changeSet>        
+    <changeSet id="20120426124534-59" author="awood">
+        <!-- create index idx_qrtz_t_jg on qrtz_triggers(SCHED_NAME,JOB_GROUP); -->
+        <createIndex indexName="idx_qrtz_t_jg" tableName="qrtz_triggers">
+            <column name="SCHED_NAME"/>
+            <column name="JOB_GROUP"/>
+        </createIndex>
+    </changeSet>        
+    <changeSet id="20120426124534-60" author="awood">
+        <!-- create index idx_qrtz_t_c on qrtz_triggers(SCHED_NAME,CALENDAR_NAME); -->
+        <createIndex indexName="idx_qrtz_t_c" tableName="qrtz_triggers">
+            <column name="SCHED_NAME"/>
+            <column name="CALENDAR_NAME"/>
+        </createIndex>
+    </changeSet>        
+    <changeSet id="20120426124534-61" author="awood">
+        <!-- create index idx_qrtz_t_g on qrtz_triggers(SCHED_NAME,TRIGGER_GROUP); -->
+        <createIndex indexName="idx_qrtz_t_g" tableName="qrtz_triggers">
+            <column name="SCHED_NAME"/>
+            <column name="TRIGGER_GROUP"/>
+        </createIndex>
+    </changeSet>        
+    <changeSet id="20120426124534-62" author="awood">
+        <!-- create index idx_qrtz_t_state on qrtz_triggers(SCHED_NAME,TRIGGER_STATE); -->
+        <createIndex indexName="idx_qrtz_t_state" tableName="qrtz_triggers">
+            <column name="SCHED_NAME"/>
+            <column name="TRIGGER_STATE"/>
+        </createIndex>
+    </changeSet>        
+    <changeSet id="20120426124534-63" author="awood">
+        <!-- create index idx_qrtz_t_n_state on qrtz_triggers(SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP,TRIGGER_STATE); -->
+        <createIndex indexName="idx_qrtz_t_n_state" tableName="qrtz_triggers">
+            <column name="SCHED_NAME"/>
+            <column name="TRIGGER_NAME"/>
+            <column name="TRIGGER_GROUP"/>
+            <column name="TRIGGER_STATE"/>
+        </createIndex>
+    </changeSet>        
+    <changeSet id="20120426124534-65" author="awood">
+        <!-- create index idx_qrtz_t_n_g_state on qrtz_triggers(SCHED_NAME,TRIGGER_GROUP,TRIGGER_STATE); -->
+        <createIndex indexName="idx_qrtz_t_n_g_state" tableName="qrtz_triggers">
+            <column name="SCHED_NAME"/>
+            <column name="TRIGGER_GROUP"/>
+            <column name="TRIGGER_STATE"/>
+        </createIndex>
+    </changeSet>        
+    <changeSet id="20120426124534-66" author="awood">
+        <!-- create index idx_qrtz_t_next_fire_time on qrtz_triggers(SCHED_NAME,NEXT_FIRE_TIME); -->
+        <createIndex indexName="idx_qrtz_t_next_fire_time" tableName="qrtz_triggers">
+            <column name="SCHED_NAME"/>
+            <column name="NEXT_FIRE_TIME"/>
+        </createIndex>
+    </changeSet>        
+    <changeSet id="20120426124534-67" author="awood">
+        <!-- create index idx_qrtz_t_nft_st on qrtz_triggers(SCHED_NAME,TRIGGER_STATE,NEXT_FIRE_TIME); -->
+        <createIndex indexName="idx_qrtz_t_nft_st" tableName="qrtz_triggers">
+            <column name="SCHED_NAME"/>
+            <column name="TRIGGER_STATE"/>
+            <column name="NEXT_FIRE_TIME"/>
+        </createIndex>
+    </changeSet>        
+    <changeSet id="20120426124534-68" author="awood">
+        <!-- create index idx_qrtz_t_nft_misfire on qrtz_triggers(SCHED_NAME,MISFIRE_INSTR,NEXT_FIRE_TIME); -->
+        <createIndex indexName="idx_qrtz_t_nft_misfire" tableName="qrtz_triggers">
+            <column name="SCHED_NAME"/>
+            <column name="MISFIRE_INSTR"/>
+            <column name="NEXT_FIRE_TIME"/>
+        </createIndex>
+    </changeSet>        
+    <changeSet id="20120426124534-69" author="awood">
+        <!-- create index idx_qrtz_t_nft_st_misfire on qrtz_triggers(SCHED_NAME,MISFIRE_INSTR,NEXT_FIRE_TIME,TRIGGER_STATE); -->
+        <createIndex indexName="idx_qrtz_t_nft_st_misfire" tableName="qrtz_triggers">
+            <column name="SCHED_NAME"/>
+            <column name="MISFIRE_INSTR"/>
+            <column name="NEXT_FIRE_TIME"/>
+            <column name="TRIGGER_STATE"/>
+        </createIndex>
+    </changeSet>        
+    <changeSet id="20120426124534-70" author="awood">
+        <!-- create index idx_qrtz_t_nft_st_misfire_grp on qrtz_triggers(SCHED_NAME,MISFIRE_INSTR,NEXT_FIRE_TIME,TRIGGER_GROUP,TRIGGER_STATE); -->
+        <createIndex indexName="idx_qrtz_t_nft_st_misfire_grp" tableName="qrtz_triggers">
+            <column name="SCHED_NAME"/>
+            <column name="MISFIRE_INSTR"/>
+            <column name="NEXT_FIRE_TIME"/>
+            <column name="TRIGGER_GROUP"/>
+            <column name="TRIGGER_STATE"/>
+        </createIndex>
+    </changeSet>        
+    <changeSet id="20120426124534-71" author="awood">
+        <!-- create index idx_qrtz_ft_trig_inst_name on qrtz_fired_triggers(SCHED_NAME,INSTANCE_NAME); -->
+        <createIndex indexName="idx_qrtz_ft_trig_inst_name" tableName="qrtz_fired_triggers">
+            <column name="SCHED_NAME"/>
+            <column name="INSTANCE_NAME"/>
+        </createIndex>
+    </changeSet>        
+    <changeSet id="20120426124534-72" author="awood">
+        <!-- create index idx_qrtz_ft_inst_job_req_rcvry on qrtz_fired_triggers(SCHED_NAME,INSTANCE_NAME,REQUESTS_RECOVERY); -->
+        <createIndex indexName="idx_qrtz_ft_inst_job_req_rcvry" tableName="qrtz_fired_triggers">
+            <column name="SCHED_NAME"/>
+            <column name="INSTANCE_NAME"/>
+            <column name="REQUESTS_RECOVERY"/>
+        </createIndex>
+    </changeSet>        
+    <changeSet id="20120426124534-73" author="awood">
+        <!-- create index idx_qrtz_ft_j_g on qrtz_fired_triggers(SCHED_NAME,JOB_NAME,JOB_GROUP); -->
+        <createIndex indexName="idx_qrtz_ft_j_g" tableName="qrtz_fired_triggers">
+            <column name="SCHED_NAME"/>
+            <column name="JOB_NAME"/>
+            <column name="JOB_GROUP"/>
+        </createIndex>
+    </changeSet>        
+    <changeSet id="20120426124534-74" author="awood">
+        <!-- create index idx_qrtz_ft_jg on qrtz_fired_triggers(SCHED_NAME,JOB_GROUP); -->
+        <createIndex indexName="idx_qrtz_ft_jg" tableName="qrtz_fired_triggers">
+            <column name="SCHED_NAME"/>
+            <column name="JOB_GROUP"/>
+        </createIndex>
+    </changeSet>        
+    <changeSet id="20120426124534-75" author="awood">
+        <!-- create index idx_qrtz_ft_t_g on qrtz_fired_triggers(SCHED_NAME,TRIGGER_NAME,TRIGGER_GROUP); -->
+        <createIndex indexName="idx_qrtz_ft_t_g" tableName="qrtz_fired_triggers">
+            <column name="SCHED_NAME"/>
+            <column name="TRIGGER_NAME"/>
+            <column name="TRIGGER_GROUP"/>
+        </createIndex>
+    </changeSet>        
+    <changeSet id="20120426124534-76" author="awood">
+        <!-- create index idx_qrtz_ft_tg on qrtz_fired_triggers(SCHED_NAME,TRIGGER_GROUP); -->
+        <createIndex indexName="idx_qrtz_ft_tg" tableName="qrtz_fired_triggers">
+            <column name="SCHED_NAME"/>
+            <column name="TRIGGER_GROUP"/>
+        </createIndex>
+    </changeSet>        
+</databaseChangeLog>

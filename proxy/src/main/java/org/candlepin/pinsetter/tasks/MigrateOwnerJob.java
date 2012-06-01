@@ -14,6 +14,8 @@
  */
 package org.candlepin.pinsetter.tasks;
 
+import static org.quartz.JobBuilder.newJob;
+
 import org.candlepin.audit.EventSink;
 import org.candlepin.client.CandlepinConnection;
 import org.candlepin.client.ConsumerClient;
@@ -351,16 +353,17 @@ public class MigrateOwnerJob implements Job {
         uri = buildUri(uri);
         validateInput(key, uri);
 
-        JobDetail detail = new JobDetail("migrate_owner_" + Util.generateUUID(),
-            MigrateOwnerJob.class);
-        // recover the job upon restarts
-        detail.setRequestsRecovery(true);
         JobDataMap map = new JobDataMap();
         map.put("owner_key", key);
         map.put("uri", uri);
         map.put("delete", delete);
 
-        detail.setJobDataMap(map);
+        JobDetail detail = newJob(MigrateOwnerJob.class)
+            .withIdentity("migrate_owner_" + Util.generateUUID())
+            .requestRecovery(true) // recover the job upon restarts
+            .usingJobData(map)
+            .build();
+
         return detail;
     }
 

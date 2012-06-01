@@ -14,6 +14,8 @@
  */
 package org.candlepin.resource;
 
+import static org.quartz.JobBuilder.newJob;
+
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.interceptor.SecurityHole;
 import org.candlepin.auth.interceptor.Verify;
@@ -174,13 +176,15 @@ public class EnvironmentResource {
             contentIds.add(promoteMe.getContentId());
         }
 
-
-        JobDetail detail = new JobDetail("regen_entitlement_cert_of_env" +
-            Util.generateUUID(), RegenEnvEntitlementCertsJob.class);
         JobDataMap map = new JobDataMap();
         map.put(RegenEnvEntitlementCertsJob.ENV, env);
         map.put(RegenEnvEntitlementCertsJob.CONTENT, contentIds);
-        detail.setJobDataMap(map);
+
+        JobDetail detail = newJob(RegenEnvEntitlementCertsJob.class)
+            .withIdentity("regen_entitlement_cert_of_env" + Util.generateUUID())
+            .usingJobData(map)
+            .build();
+
         return detail;
     }
 
@@ -218,12 +222,15 @@ public class EnvironmentResource {
             demotedContentIds.add(contentId);
         }
 
-        JobDetail detail = new JobDetail("regen_entitlement_cert_of_env" +
-            Util.generateUUID(), RegenEnvEntitlementCertsJob.class);
         JobDataMap map = new JobDataMap();
         map.put(RegenEnvEntitlementCertsJob.ENV, e);
         map.put(RegenEnvEntitlementCertsJob.CONTENT, demotedContentIds);
-        detail.setJobDataMap(map);
+
+        JobDetail detail = newJob(RegenEnvEntitlementCertsJob.class)
+            .withIdentity("regen_entitlement_cert_of_env" + Util.generateUUID())
+            .usingJobData(map)
+            .build();
+
         return detail;
 
     }

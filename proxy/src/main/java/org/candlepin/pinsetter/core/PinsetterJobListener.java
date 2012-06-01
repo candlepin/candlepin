@@ -88,7 +88,7 @@ public class PinsetterJobListener implements JobListener {
 
     @Transactional
     private void updateJob(JobExecutionContext ctx, JobExecutionException exc) {
-        JobStatus status = curator.find(ctx.getJobDetail().getName());
+        JobStatus status = curator.find(ctx.getJobDetail().getKey().getName());
         if (status != null) {
             if (exc != null) {
                 status.setState(JobState.FAILED);

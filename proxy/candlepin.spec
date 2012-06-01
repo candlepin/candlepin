@@ -14,7 +14,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.6.5
+Version: 0.7.0
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -64,7 +64,7 @@ BuildRequires: jms >= 0:1.1
 BuildRequires: oauth
 BuildRequires: rhino
 BuildRequires: slf4j >= 0:1.6.1
-BuildRequires: quartz >= 0:1.7.3
+BuildRequires: quartz >= 0:2.1.5
 # needed to setup runtime deps, not for compilation
 BuildRequires: c3p0
 BuildRequires: scannotation
@@ -101,7 +101,7 @@ Requires: hornetq >= 0:2.2.11
 Requires: netty
 Requires: oauth
 Requires: rhino
-Requires: quartz >= 0:1.7.3
+Requires: quartz >= 0:2.1.5
 Requires: log4j
 Requires: glassfish-jaxb
 Requires: scannotation

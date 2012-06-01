@@ -14,6 +14,8 @@
  */
 package org.candlepin.pinsetter.tasks;
 
+import static org.quartz.JobBuilder.newJob;
+
 import org.candlepin.controller.Entitler;
 import org.candlepin.exceptions.CandlepinException;
 import org.candlepin.model.Entitlement;
@@ -72,28 +74,23 @@ public class EntitlerJob implements Job {
     }
 
     public static JobDetail bindByPool(String poolId, String uuid, Integer qty) {
-
-        JobDetail detail = new JobDetail("bind_by_pool_" + Util.generateUUID(),
-            EntitlerJob.class);
-        // do not recover the job upon restarts
-        detail.setRequestsRecovery(false);
         JobDataMap map = new JobDataMap();
         map.put("pool_id", poolId);
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.CONSUMER);
         map.put(JobStatus.TARGET_ID, uuid);
         map.put("quantity", qty);
 
-        detail.setJobDataMap(map);
+        JobDetail detail = newJob(EntitlerJob.class)
+            .withIdentity("bind_by_pool_" + Util.generateUUID())
+            .requestRecovery(false) // do not recover the job upon restarts
+            .usingJobData(map)
+            .build();
 
         return detail;
     }
 
     public static JobDetail bindByProducts(String[] prodIds, String uuid,
         Date entitleDate) {
-
-        JobDetail detail = new JobDetail("bind_by_products_" +
-            Util.generateUUID(), EntitlerJob.class);
-
         JobDataMap map = new JobDataMap();
         map.put("product_ids", prodIds);
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.CONSUMER);
@@ -101,7 +98,10 @@ public class EntitlerJob implements Job {
         map.put("quantity", 1);
         map.put("entitle_date", entitleDate);
 
-        detail.setJobDataMap(map);
+        JobDetail detail = newJob(EntitlerJob.class)
+            .withIdentity("bind_by_products_" + Util.generateUUID())
+            .usingJobData(map)
+            .build();
 
         return detail;
     }

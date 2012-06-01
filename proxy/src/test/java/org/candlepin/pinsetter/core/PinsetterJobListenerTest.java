@@ -21,6 +21,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
+import static org.quartz.JobKey.jobKey;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.model.JobCurator;
@@ -69,7 +70,7 @@ public class PinsetterJobListenerTest {
         map.put(PinsetterJobListener.PRINCIPAL_KEY, principal);
 
         when(ctx.getMergedJobDataMap()).thenReturn(map);
-        when(detail.getName()).thenReturn("foo");
+        when(detail.getKey()).thenReturn(jobKey("foo"));
         when(ctx.getJobDetail()).thenReturn(detail);
         when(jcurator.find(eq("foo"))).thenReturn(status);
 
@@ -91,7 +92,7 @@ public class PinsetterJobListenerTest {
         JobDetail detail = mock(JobDetail.class);
         JobStatus status = mock(JobStatus.class);
 
-        when(detail.getName()).thenReturn("foo");
+        when(detail.getKey()).thenReturn(jobKey("foo"));
         when(ctx.getJobDetail()).thenReturn(detail);
         when(jcurator.find(eq("foo"))).thenReturn(status);
 
@@ -107,7 +108,7 @@ public class PinsetterJobListenerTest {
         JobDetail detail = mock(JobDetail.class);
         JobStatus status = mock(JobStatus.class);
 
-        when(detail.getName()).thenReturn("foo");
+        when(detail.getKey()).thenReturn(jobKey("foo"));
         when(ctx.getJobDetail()).thenReturn(detail);
         when(jcurator.find(eq("foo"))).thenReturn(null);
 
@@ -128,7 +129,7 @@ public class PinsetterJobListenerTest {
         map.put(PinsetterJobListener.PRINCIPAL_KEY, principal);
 
         when(ctx.getMergedJobDataMap()).thenReturn(map);
-        when(detail.getName()).thenReturn("foo");
+        when(detail.getKey()).thenReturn(jobKey("foo"));
         when(ctx.getJobDetail()).thenReturn(detail);
         when(jcurator.find(eq("foo"))).thenReturn(null);
 
@@ -143,7 +144,7 @@ public class PinsetterJobListenerTest {
         JobStatus status = mock(JobStatus.class);
         JobDetail detail = mock(JobDetail.class);
 
-        when(detail.getName()).thenReturn("foo");
+        when(detail.getKey()).thenReturn(jobKey("foo"));
         when(ctx.getJobDetail()).thenReturn(detail);
         when(jcurator.find(eq("foo"))).thenReturn(status);
 
@@ -159,7 +160,7 @@ public class PinsetterJobListenerTest {
         JobDetail detail = mock(JobDetail.class);
         JobStatus status = mock(JobStatus.class);
 
-        when(detail.getName()).thenReturn("foo");
+        when(detail.getKey()).thenReturn(jobKey("foo"));
         when(ctx.getJobDetail()).thenReturn(detail);
         when(jcurator.find(eq("foo"))).thenReturn(status);
         when(e.getMessage()).thenReturn("job errored");

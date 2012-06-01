@@ -14,6 +14,8 @@
  */
 package org.candlepin.pinsetter.tasks;
 
+import static org.quartz.JobBuilder.newJob;
+
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
@@ -75,17 +77,17 @@ public class RefreshPoolsJob implements Job {
      * @return a {@link JobDetail} that describes the job run
      */
     public static JobDetail forOwner(Owner owner) {
-        // Not sure if this is the best way to go:
-        // Give each job a UUID to ensure that it is unique
-        JobDetail detail = new JobDetail("refresh_pools_" + Util.generateUUID(),
-                RefreshPoolsJob.class);
-        // recover the job upon restarts
-        detail.setRequestsRecovery(true);
         JobDataMap map = new JobDataMap();
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.OWNER);
         map.put(JobStatus.TARGET_ID, owner.getKey());
 
-        detail.setJobDataMap(map);
+        // Not sure if this is the best way to go:
+        // Give each job a UUID to ensure that it is unique
+        JobDetail detail = newJob(RefreshPoolsJob.class)
+            .withIdentity("refresh_pools_" + Util.generateUUID())
+            .requestRecovery(true) // recover the job upon restarts
+            .usingJobData(map)
+            .build();
 
         return detail;
     }

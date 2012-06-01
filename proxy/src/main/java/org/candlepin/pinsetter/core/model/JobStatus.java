@@ -78,8 +78,8 @@ public class JobStatus extends AbstractHibernateObject {
     public JobStatus() { }
 
     public JobStatus(JobDetail jobDetail) {
-        this.id = jobDetail.getName();
-        this.jobGroup = jobDetail.getGroup();
+        this.id = jobDetail.getKey().getName();
+        this.jobGroup = jobDetail.getKey().getGroup();
         this.state = JobState.CREATED;
         this.targetType = getTargetType(jobDetail);
         this.targetId = getTargetId(jobDetail);

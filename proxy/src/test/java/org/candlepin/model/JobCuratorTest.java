@@ -18,6 +18,7 @@ import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.quartz.JobBuilder.newJob;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.exceptions.NotFoundException;
@@ -30,7 +31,6 @@ import org.candlepin.util.Util;
 import org.junit.Before;
 import org.junit.Test;
 import org.quartz.JobDataMap;
-import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 
 import java.util.Date;
@@ -192,15 +192,8 @@ public class JobCuratorTest extends DatabaseTestFixture{
             map.put(PinsetterJobListener.PRINCIPAL_KEY, p);
             map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.OWNER);
             map.put(JobStatus.TARGET_ID, ownerkey);
-            JobStatus status = new JobStatus(new JobDetail() {
-                public String getName() {
-                    return id;
-                }
-
-                public JobDataMap getJobDataMap() {
-                    return map;
-                }
-            });
+            JobStatus status = new JobStatus(
+                newJob().withIdentity(id).usingJobData(map).build());
             JobExecutionContext context = mock(JobExecutionContext.class);
             when(context.getFireTime()).thenReturn(startDt);
             long time = -1;

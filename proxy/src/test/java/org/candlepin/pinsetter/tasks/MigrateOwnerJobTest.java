@@ -51,7 +51,8 @@ import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.quartz.Scheduler;
-import org.quartz.Trigger;
+import org.quartz.impl.JobExecutionContextImpl;
+import org.quartz.spi.OperableTrigger;
 import org.quartz.spi.TriggerFiredBundle;
 
 import java.util.ArrayList;
@@ -99,8 +100,6 @@ public class MigrateOwnerJobTest {
             jd.getJobDataMap().get("uri"));
         assertTrue(jd.requestsRecovery());
         assertFalse(jd.isDurable());
-        assertFalse(jd.isStateful());
-        assertFalse(jd.isVolatile());
         assertEquals(false, jd.getJobDataMap().get("delete"));
     }
 
@@ -125,13 +124,13 @@ public class MigrateOwnerJobTest {
         Scheduler s = mock(Scheduler.class);
         TriggerFiredBundle bundle = mock(TriggerFiredBundle.class);
         JobDetail detail = mock(JobDetail.class);
-        Trigger trig = mock(Trigger.class);
+        OperableTrigger trig = mock(OperableTrigger.class);
         when(detail.getJobDataMap()).thenReturn(map);
         when(bundle.getJobDetail()).thenReturn(detail);
         when(bundle.getTrigger()).thenReturn(trig);
         when(trig.getJobDataMap()).thenReturn(new JobDataMap());
 
-        return new JobExecutionContext(s, bundle, null);
+        return new JobExecutionContextImpl(s, bundle, null);
     }
 
     @Test
