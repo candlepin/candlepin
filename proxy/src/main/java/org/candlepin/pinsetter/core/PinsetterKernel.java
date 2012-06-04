@@ -14,6 +14,15 @@
  */
 package org.candlepin.pinsetter.core;
 
+
+import static org.quartz.CronScheduleBuilder.cronSchedule;
+import static org.quartz.JobBuilder.newJob;
+import static org.quartz.JobKey.jobKey;
+import static org.quartz.TriggerBuilder.newTrigger;
+import static org.quartz.TriggerKey.triggerKey;
+import static org.quartz.impl.matchers.GroupMatcher.jobGroupEquals;
+import static org.quartz.impl.matchers.NameMatcher.jobNameEquals;
+
 import org.candlepin.auth.SystemPrincipal;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
@@ -31,16 +40,16 @@ import org.quartz.CronTrigger;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionException;
+import org.quartz.JobKey;
 import org.quartz.JobListener;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
-import org.quartz.SimpleTrigger;
 import org.quartz.Trigger;
+import org.quartz.impl.JobDetailImpl;
 import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.spi.JobFactory;
 
 import java.io.Serializable;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -87,7 +96,7 @@ public class PinsetterKernel {
             scheduler.setJobFactory(jobFactory);
 
             if (listener != null) {
-                scheduler.addJobListener(listener);
+                scheduler.getListenerManager().addJobListener(listener);
             }
         }
         catch (SchedulerException e) {
@@ -152,19 +161,20 @@ public class PinsetterKernel {
                 return;
             }
             log.warn("jobImpls:" + jobImpls);
-            String[] jobs = scheduler.getJobNames(CRON_GROUP);
+            Set<JobKey> jobKeys = scheduler.getJobKeys(jobGroupEquals(CRON_GROUP));
 
             for (String jobImpl : jobImpls) {
                 if (log.isDebugEnabled()) {
                     log.debug("Scheduling " + jobImpl);
                 }
                 CronTrigger trigger = null;
-                if (jobs != null) {
-                    for (String s : jobs) {
-                        JobDetail jd = scheduler.getJobDetail(s, CRON_GROUP);
+                if (jobKeys != null) {
+                    for (JobKey key : jobKeys) {
+                        JobDetail jd = scheduler.getJobDetail(key);
                         if (jd != null &&
                             jd.getJobClass().getName().equals(jobImpl)) {
-                            trigger = (CronTrigger) scheduler.getTrigger(s, CRON_GROUP);
+                            trigger = (CronTrigger) scheduler.getTrigger(
+                                triggerKey(key.getName(), CRON_GROUP));
                             break;
                         }
                     }
@@ -188,7 +198,8 @@ public class PinsetterKernel {
                      */
                     if (trigger == null || !trigger.getCronExpression().equals(schedule)) {
                         if (trigger != null) {
-                            scheduler.deleteJob(jobImpl, CRON_GROUP);
+                            scheduler.deleteJob(
+                                jobKey(jobImpl, CRON_GROUP));
                         }
                         pendingJobs.add(new JobEntry(jobImpl, schedule));
                     }
@@ -232,10 +243,11 @@ public class PinsetterKernel {
         }
         try {
             for (JobEntry jobentry : pendingJobs) {
-                Trigger trigger = new CronTrigger(jobentry.getJobName(),
-                    CRON_GROUP, jobentry.getSchedule());
-                trigger.setMisfireInstruction(
-                    CronTrigger.MISFIRE_INSTRUCTION_DO_NOTHING);
+                Trigger trigger = newTrigger()
+                    .withIdentity(jobentry.getJobName(), CRON_GROUP)
+                    .withSchedule(cronSchedule(jobentry.getSchedule())
+                        .withMisfireHandlingInstructionDoNothing())
+                    .build();
 
                 scheduleJob(
                     this.getClass().getClassLoader().loadClass(
@@ -252,46 +264,57 @@ public class PinsetterKernel {
         throws PinsetterException {
 
         try {
-            Trigger trigger = new CronTrigger(job.getName(), CRON_GROUP, crontab);
-            trigger.setMisfireInstruction(CronTrigger.MISFIRE_INSTRUCTION_DO_NOTHING);
+            Trigger trigger = newTrigger()
+                .withIdentity(job.getName(), CRON_GROUP)
+                .withSchedule(cronSchedule(crontab)
+                    .withMisfireHandlingInstructionDoNothing())
+                .build();
 
             scheduleJob(job, jobName, trigger);
         }
-        catch (ParseException pe) {
+        catch (Exception pe) {
             throw new PinsetterException("problem parsing schedule", pe);
         }
     }
 
     public void scheduleJob(Class job, String jobName, Trigger trigger)
         throws PinsetterException {
-        JobDetail detail = new JobDetail(jobName, CRON_GROUP, job);
-        JobDataMap map = detail.getJobDataMap();
+        JobDataMap map = new JobDataMap();
         map.put(PinsetterJobListener.PRINCIPAL_KEY, new SystemPrincipal());
+
+        JobDetail detail = newJob(job)
+            .withIdentity(jobName, CRON_GROUP)
+            .usingJobData(map)
+            .build();
         scheduleJob(detail, CRON_GROUP, trigger);
     }
 
     private JobStatus scheduleJob(JobDetail detail, String grpName, Trigger trigger)
         throws PinsetterException {
 
-        detail.setGroup(grpName);
-        detail.addJobListener(PinsetterJobListener.LISTENER_NAME);
+        JobDetailImpl detailImpl = (JobDetailImpl) detail;
+        detailImpl.setGroup(grpName);
 
         try {
-            JobStatus status = jobCurator.find(detail.getName());
+            scheduler.getListenerManager()
+                .addJobListenerMatcher(PinsetterJobListener.LISTENER_NAME
+                    , jobNameEquals(detail.getKey().getName()));
+
+            JobStatus status = jobCurator.find(detail.getKey().getName());
             if (status == null) {
                 status = jobCurator.create(new JobStatus(detail));
             }
 
             scheduler.scheduleJob(detail, trigger);
             if (log.isDebugEnabled()) {
-                log.debug("Scheduled " + detail.getFullName());
+                log.debug("Scheduled " + detailImpl.getFullName());
             }
 
             return status;
         }
         catch (SchedulerException e) {
             throw new PinsetterException("There was a problem scheduling " +
-                detail.getName(), e);
+                detail.getKey().getName(), e);
         }
     }
 
@@ -300,7 +323,7 @@ public class PinsetterKernel {
         try {
             // this deletes from the scheduler, it's already marked as
             // canceled in the JobStatus table
-            if (scheduler.deleteJob((String) id, group)) {
+            if (scheduler.deleteJob(jobKey((String) id, group))) {
                 log.info("cancelled job " + group + ":" + id + " in scheduler");
             }
         }
@@ -318,8 +341,11 @@ public class PinsetterKernel {
      * @throws PinsetterException if there is an error scheduling the job
      */
     public JobStatus scheduleSingleJob(JobDetail jobDetail) throws PinsetterException {
-        return scheduleJob(jobDetail, SINGLE_JOB_GROUP, new SimpleTrigger(
-            jobDetail.getName() + " trigger", SINGLE_JOB_GROUP));
+        Trigger trigger = newTrigger()
+            .withIdentity(jobDetail.getKey().getName() + " trigger", SINGLE_JOB_GROUP)
+            .build();
+
+        return scheduleJob(jobDetail, SINGLE_JOB_GROUP, trigger);
     }
 
     public boolean getSchedulerStatus() throws PinsetterException {
@@ -363,10 +389,10 @@ public class PinsetterKernel {
 
     private void deleteJobs(String groupName) {
         try {
-            String[] jobs = this.scheduler.getJobNames(groupName);
+            Set<JobKey> jobs = this.scheduler.getJobKeys(jobGroupEquals(groupName));
 
-            for (String job : jobs) {
-                this.scheduler.deleteJob(job, groupName);
+            for (JobKey jobKey : jobs) {
+                this.scheduler.deleteJob(jobKey);
             }
         }
         catch (SchedulerException e) {

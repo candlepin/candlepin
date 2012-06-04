@@ -70,8 +70,6 @@ public class RefreshPoolsJobTest {
         assertNotNull(detail.getJobDataMap());
         assertTrue(detail.requestsRecovery());
         assertFalse(detail.isDurable());
-        assertFalse(detail.isStateful());
-        assertFalse(detail.isVolatile());
         assertEquals("owner key", detail.getJobDataMap().get(JobStatus.TARGET_ID));
     }
 }

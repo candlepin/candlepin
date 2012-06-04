@@ -15,6 +15,7 @@
 package org.candlepin.pinsetter.tasks;
 
 import static org.mockito.Mockito.when;
+import static org.quartz.JobBuilder.newJob;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -61,7 +62,10 @@ public class CancelJobJobTest {
 
     @Test
     public void cancelTest() throws JobExecutionException, PinsetterException {
-        JobDetail jd = new JobDetail("Kayfabe", "Deluxe", Job.class);
+        JobDetail jd = newJob(Job.class)
+            .withIdentity("Kayfabe", "Deluxe")
+            .build();
+
         JobStatus js = new JobStatus(jd);
         List<JobStatus> jl = new ArrayList<JobStatus>();
         jl.add(js);

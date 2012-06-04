@@ -15,6 +15,7 @@
 package org.candlepin.pinsetter.core;
 
 import org.quartz.Job;
+import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.spi.JobFactory;
 import org.quartz.spi.TriggerFiredBundle;
@@ -40,8 +41,9 @@ public class GuiceJobFactory implements JobFactory {
      * {@inheritDoc}
      */
     @Override
-    public Job newJob(TriggerFiredBundle trigger) throws SchedulerException {
-        Class<Job> jobClass = trigger.getJobDetail().getJobClass();
+    public Job newJob(TriggerFiredBundle bundle, Scheduler scheduler)
+        throws SchedulerException {
+        Class<Job> jobClass = (Class<Job>) bundle.getJobDetail().getJobClass();
         return new TransactionalPinsetterJob(injector.getInstance(jobClass),
             injector.getInstance(UnitOfWork.class));
     }

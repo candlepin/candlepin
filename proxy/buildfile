@@ -86,7 +86,7 @@ OAUTH= [group('oauth',
               :under => 'net.oauth.core',
               :version => '20100527')]
 
-QUARTZ = 'org.quartz-scheduler:quartz:jar:1.8.4'
+QUARTZ = 'org.quartz-scheduler:quartz:jar:2.1.5'
 HORNETQ = [group('hornetq-core',
                  'hornetq-core-client',
 #                 'hornetq-resources', #Native libs for libaio

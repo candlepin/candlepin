@@ -14,6 +14,8 @@
  */
 package org.candlepin.resource;
 
+import static org.quartz.JobBuilder.newJob;
+
 import org.candlepin.auth.interceptor.Verify;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.exceptions.BadRequestException;
@@ -175,11 +177,14 @@ public class EntitlementResource {
     public JobDetail regenerateEntitlementCertificatesForProduct(
             @PathParam("product_id") String productId) {
         prodAdapter.purgeCache();
-        JobDetail detail = new JobDetail("regen_entitlement_cert_of_prod" +
-            Util.generateUUID(), RegenProductEntitlementCertsJob.class);
         JobDataMap map = new JobDataMap();
         map.put(RegenProductEntitlementCertsJob.PROD_ID, productId);
-        detail.setJobDataMap(map);
+
+        JobDetail detail = newJob(RegenProductEntitlementCertsJob.class)
+            .withIdentity("regen_entitlement_cert_of_prod" + Util.generateUUID())
+            .usingJobData(map)
+            .build();
+
         return detail;
     }
 

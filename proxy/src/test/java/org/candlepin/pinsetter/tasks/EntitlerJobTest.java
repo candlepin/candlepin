@@ -67,7 +67,7 @@ public class EntitlerJobTest {
         String[] resultpids = (String[]) detail.getJobDataMap().get("product_ids");
         assertEquals("pid2", resultpids[1]);
         assertEquals(consumerUuid, detail.getJobDataMap().get(JobStatus.TARGET_ID));
-        assertTrue(detail.getName().startsWith("bind_by_products_"));
+        assertTrue(detail.getKey().getName().startsWith("bind_by_products_"));
     }
 
     @Test
@@ -79,7 +79,7 @@ public class EntitlerJobTest {
         String resultpool = (String) detail.getJobDataMap().get("pool_id");
         assertEquals("pool10", resultpool);
         assertEquals(consumerUuid, detail.getJobDataMap().get(JobStatus.TARGET_ID));
-        assertTrue(detail.getName().startsWith("bind_by_pool_"));
+        assertTrue(detail.getKey().getName().startsWith("bind_by_pool_"));
     }
 
     @Test
@@ -149,8 +149,6 @@ public class EntitlerJobTest {
         JobDetail detail = EntitlerJob.bindByPool("pool10", consumerUuid, 1);
         assertFalse(detail.requestsRecovery());
         assertFalse(detail.isDurable());
-        assertFalse(detail.isStateful());
-        assertFalse(detail.isVolatile());
     }
 
     private void serialize(Object obj) throws IOException {

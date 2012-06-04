@@ -18,17 +18,21 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-
-import java.text.ParseException;
+import static org.quartz.CronScheduleBuilder.cronSchedule;
+import static org.quartz.JobBuilder.newJob;
+import static org.quartz.TriggerBuilder.newTrigger;
 
 import org.candlepin.test.DatabaseTestFixture;
+
 import org.junit.Test;
-import org.quartz.CronTrigger;
 import org.quartz.Job;
 import org.quartz.JobDetail;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
+import org.quartz.spi.OperableTrigger;
 import org.quartz.spi.TriggerFiredBundle;
+
+import java.text.ParseException;
 
 /**
  * HighlanderFactoryTest
@@ -41,7 +45,7 @@ public class HighlanderFactoryTest extends DatabaseTestFixture{
         GuiceJobFactory hf = new GuiceJobFactory(injector);
         assertNotNull(hf);
         try {
-            hf.newJob(null);
+            hf.newJob(null, null);
             fail("should've died with npe");
         }
         catch (NullPointerException npe) {
@@ -49,12 +53,18 @@ public class HighlanderFactoryTest extends DatabaseTestFixture{
         }
 
         String crontab = "0 0 12 * * ?";
-        JobDetail jd = new JobDetail("testjob", "group", TestJob.class);
-        Trigger trigger = new CronTrigger("testjob", "group", crontab);
+        JobDetail jd = newJob(TestJob.class)
+            .withIdentity("testjob", "group")
+            .build();
 
-        TriggerFiredBundle tfb = new TriggerFiredBundle(jd, trigger, null,
+        Trigger trigger = newTrigger()
+            .withIdentity("testjob", "group")
+            .withSchedule(cronSchedule(crontab))
+            .build();
+
+        TriggerFiredBundle tfb = new TriggerFiredBundle(jd, (OperableTrigger) trigger, null,
             false, null, null, null, null);
-        Job j = hf.newJob(tfb);
+        Job j = hf.newJob(tfb, null);
         assertNotNull(j);
         assertEquals(TransactionalPinsetterJob.class, j.getClass());
         assertEquals(TestJob.class,
