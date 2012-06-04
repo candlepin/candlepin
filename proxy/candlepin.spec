@@ -14,7 +14,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.7.0
+Version: 0.7.1
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -279,6 +279,16 @@ fi
 
 
 %changelog
+* Mon Jun 04 2012 Chris Duryee (beav) <cduryee@redhat.com>
+- Capture additional data in manifest files from originating Candlepin
+  (wpoteat@redhat.com)
+- Support for partial owner updates. (wpoteat@redhat.com)
+- Quartz 2 merge (cduryee@redhat.com)
+- clear the values of Calender before creating a Date. (jesusr@redhat.com)
+- unit test DateRange (jesusr@redhat.com)
+- unit testing utility class (jesusr@redhat.com)
+- unit test filter (jesusr@redhat.com)
+
 * Wed May 23 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.6.5-1
 - 821532: Fix db create error from previous upgrade fix. (dgoodwin@redhat.com)
 
