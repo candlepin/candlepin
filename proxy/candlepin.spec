@@ -14,7 +14,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.7.1
+Version: 0.7.2
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -279,6 +279,11 @@ fi
 
 
 %changelog
+* Wed Jun 06 2012 Chris Duryee (beav) <cduryee@redhat.com>
+- latest strings from zanata (cduryee@redhat.com)
+- remove unused class. dgoodwin removed references in a previous commit.
+  (jesusr@redhat.com)
+
 * Mon Jun 04 2012 Chris Duryee (beav) <cduryee@redhat.com>
 - Capture additional data in manifest files from originating Candlepin
   (wpoteat@redhat.com)
