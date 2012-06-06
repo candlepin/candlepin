@@ -10,11 +10,18 @@ function evalrc ()
 function gendb ()
 {
 	echo "============ generating a new db =============="
-    dropdb -U candlepin candlepin
-    createdb -U candlepin candlepin
+
+
+    # need to setup .pgpass for this to use passwds
+    # something like:
+    #   *:*:candlepin:candlepin:candlepinpasswd
+    #   *:*:postgres:candlepin:candlepinpasswd
+
+    dropdb -w -U "$DBUSER" candlepin
+    createdb -w -U "$DBUSER" candlepin
     evalrc $? "createdb failed"
 
-    liquibase --driver=org.postgresql.Driver --classpath=src/main/resources/:target/classes/:/usr/share/java/postgresql-jdbc.jar --changeLogFile=db/changelog/changelog-create.xml --url="jdbc:postgresql:candlepin" --username=candlepin --password="" update
+    liquibase --driver=org.postgresql.Driver --classpath=src/main/resources/:target/classes/:/usr/share/java/postgresql-jdbc.jar --changeLogFile=db/changelog/changelog-create.xml --url="jdbc:postgresql:candlepin" --username=candlepin "$DBOPTS" update
     evalrc $? "schema creation failed"
 }
 
@@ -22,9 +29,10 @@ function updatedb ()
 {
 	echo "============ updating db =============="
 
-    liquibase --driver=org.postgresql.Driver --classpath=src/main/resources/:target/classes/:/usr/share/java/postgresql-jdbc.jar --changeLogFile=db/changelog/changelog-update.xml --url="jdbc:postgresql:candlepin" --username=candlepin --password="" update
+    liquibase  --driver=org.postgresql.Driver --classpath=src/main/resources/:target/classes/:/usr/share/java/postgresql-jdbc.jar --changeLogFile=db/changelog/changelog-update.xml --url="jdbc:postgresql:candlepin" --username=candlepin "$DBOPTS" update
     evalrc $? "schema update failed"
 }
+
 
 
 function deploy ()
@@ -105,6 +113,8 @@ if [ -f $HOME/.candlepinrc ] ; then
     source $HOME/.candlepinrc
 fi
 
+DBUSER="candlepin"
+
 while getopts ":fgt" opt; do
     case $opt in
         f  ) FORCECERT="1" ;;
@@ -172,6 +182,11 @@ fi
 if [ "$?" -ne "0" ]; then
   echo "ERROR: Compile failed."
   exit 1
+fi
+
+DBOPTS=""
+if [ -n "$DBPASSWORD" ] ; then
+   DBOPTS="--password=$DBPASSWORD"
 fi
 
 if [ "$GENDB" == "1" ]; then
