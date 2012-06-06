@@ -1,522 +1,19 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 # kkrothap <kkrothap@fedoraproject.org>, 2012. #zanata
+# mospina <mospina@redhat.com>, 2012. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: 0.5.X\n"
+"Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2011-12-02 08:12-0500\n"
-"PO-Revision-Date: 2012-03-01 03:53-0500\n"
+"POT-Creation-Date: 2012-06-06 09:58-0400\n"
+"PO-Revision-Date: 2012-06-06 11:01-0400\n"
 "Last-Translator: kkrothap <kkrothap@fedoraproject.org>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language-Team: Telugu\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: te\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "X-Generator: Zanata 1.5.0\n"
-
-#: src/main/java/org/candlepin/sync/EntitlementImporter.java:119
-msgid "Unable to find product with ID: "
-msgstr "ఈ ఐడి తో వుత్పత్తిని కనుగొనలేక పోయింది:"
-
-#: src/main/java/org/candlepin/sync/Importer.java:142
-msgid "Wrong metadata type"
-msgstr "సరికాని మెటాడాటా రకము"
-
-#: src/main/java/org/candlepin/sync/Importer.java:151
-msgid "Invalid owner"
-msgstr "చెల్లని యజమాని"
-
-#: src/main/java/org/candlepin/sync/Importer.java:163
-msgid "Import is older than existing data"
-msgstr "ఉన్న దత్తాంశం కన్నా దిగుమతి పాతది"
-
-#: src/main/java/org/candlepin/sync/Importer.java:196
-#: src/main/java/org/candlepin/sync/Importer.java:201
-msgid "Failed to import archive"
-msgstr "ఆర్కైవ్ దిగుమతిచేయుటకు విఫలమైంది"
-
-#: src/main/java/org/candlepin/sync/Importer.java:298
-#, java-format
-msgid "Incompatible rules: import version {0} older than our version {1}."
-msgstr "సారూప్యతకాని నియమాలు: దిగుమతి వర్షన్ {0} మన వర్షన్ {1} కన్నా పాతది."
-
-#: src/main/java/org/candlepin/sync/Importer.java:301
-msgid "Manifest data will be imported without rules import."
-msgstr "నియమాలు దిగుమతి కాకుండా మేనిఫెస్ట్ డాటా దిగుమతగును"
-
-#: src/main/java/org/candlepin/sync/ConsumerImporter.java:47
-msgid "No ID for upstream distributor"
-msgstr "అప్‌స్ట్రీమ్ పంపిణీదారు కొరకు యే ఐడి లేదు"
-
-#: src/main/java/org/candlepin/sync/ConsumerImporter.java:57
-msgid "This distributor has already been imported by another owner"
-msgstr "ఈ పంపిణీదారు యిప్పటికే వేరే వాడుకరిచేత దిగుమతైను"
-
-#: src/main/java/org/candlepin/sync/ConsumerImporter.java:63
-msgid "Owner has already imported from another distributor"
-msgstr "వేరే పంపిణీదారు నుండి యజమాని యిప్పటికే దిగుమతైను"
-
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:101
-#, java-format
-msgid "Consumer: {0} has no entitlement for product {1}"
-msgstr ""
-"వినియోగదారి: {0} యెటువంటి యెన్‌టైటిల్‌మెంట్స్ వుత్పత్తి {1} కొరకు కలిగిలేదు"
-
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:120
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:152
-#: src/main/java/org/candlepin/resource/OwnerResource.java:697
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1278
-#, java-format
-msgid "No such consumer: {0}"
-msgstr "అటువంటి వినియోగదారి లేరు: {0}"
-
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:146
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:166
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1394
-#, java-format
-msgid "Entitlement with ID ''{0}'' could not be found."
-msgstr "ఐడి ''{0}'' తో యెన్టైటిల్మెంట్ కనుగొనబడలేకపోయింది."
-
-#: src/main/java/org/candlepin/resource/RoleResource.java:82
-#, java-format
-msgid "No such owner: {0}"
-msgstr "యజమాని లేదు: {0}"
-
-#: src/main/java/org/candlepin/resource/RoleResource.java:112
-msgid "Role ID does not match path."
-msgstr "పాత్ర ఐడి పాత్‌తో సరిపోలలేదు"
-
-#: src/main/java/org/candlepin/resource/RoleResource.java:138
-msgid "Access type NONE not supported."
-msgstr "NONE యాక్సెస్ రకం తోడ్పాటనీయదు."
-
-#: src/main/java/org/candlepin/resource/RoleResource.java:177
-#, java-format
-msgid "No such permission: {0} in role: {1}"
-msgstr "అనుమతి: {0} పాత్ర: {1} నందు లేదు "
-
-#: src/main/java/org/candlepin/resource/RoleResource.java:191
-#, java-format
-msgid "No such role: {0}"
-msgstr "పాత్ర లేదు: {0}"
-
-#: src/main/java/org/candlepin/resource/RoleResource.java:199
-#, java-format
-msgid "No such user: {0}"
-msgstr "వాడుకరి లేదు: {0}"
-
-#: src/main/java/org/candlepin/resource/JobResource.java:108
-msgid "You must specify an owner key, consumer uuid, or principal name."
-msgstr ""
-"మీరు తప్పక వొక యజమాని కీ, వినియోగదారి uuid, లేదా ప్రిన్సిపల్ పేరు తెలపాలి."
-
-#: src/main/java/org/candlepin/resource/JobResource.java:114
-msgid ""
-"You must specify one of owner key, consumer uuid, or principal name, but not"
-" all."
-msgstr ""
-"మీరు యజమాని కీ, వినియోగదారి uuid, లేదా పిన్సిపల్ పేరు వీటిలో యేదోవొకటి "
-"తెలపాలి, అన్నీ కాదు."
-
-#: src/main/java/org/candlepin/resource/JobResource.java:173
-msgid "Error setting scheduler status"
-msgstr "షెడ్యీలర్ స్థితి అమర్చుటలో దోషం."
-
-#: src/main/java/org/candlepin/resource/JobResource.java:201
-msgid "job already cancelled"
-msgstr "జాబ్ యిప్పటికే రద్దైంది"
-
-#: src/main/java/org/candlepin/resource/JobResource.java:204
-msgid "cannot cancel a job that is not in CREATED state"
-msgstr "CREATED స్థితి నందు లేని జాబ్‌ను రద్దుచేయలేదు"
-
-#: src/main/java/org/candlepin/resource/EnvironmentResource.java:95
-#: src/main/java/org/candlepin/resource/EnvironmentResource.java:114
-#, java-format
-msgid "No such environment: {0}"
-msgstr "అటువంటి యెన్విరాన్మెంట్ లేదు: {0}"
-
-#: src/main/java/org/candlepin/resource/EnvironmentResource.java:235
-#, java-format
-msgid "No such environment : {0}"
-msgstr "అటువంటి యెన్విరాన్మెంట్ లేదు: {0}"
-
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:135
-msgid "The quantity must be greater than 0"
-msgstr "పరిమాణం తప్పక 0 కన్నా యెక్కువ వుండవలె"
-
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:145
-msgid ""
-"Pools requiring a 'person' consumer should not be added to an activation key"
-" since a consumer type of 'person' cannot be used with activation keys"
-msgstr ""
-"'person' వినియోగదారి అవసరమైన పూల్సు క్రియాశీల కీను జతచేయకూడదు యెంచేతంటే "
-"'person' రకమైన వినియోగదారి క్రియాశీల కీలతో వుపయోగించబడలేదు"
-
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:154
-msgid ""
-"Error: Only pools with multi-entitlement product subscriptions can be added "
-"to the activation key with a quantity greater than one."
-msgstr ""
-"దోషం: ఒకటి కన్నా యెక్కువ పరిమాణంతో బహుళ-యెన్టైటిల్మెంట్ వుత్పత్తి "
-"సబ్‌స్క్రిప్షన్సుతో వున్న పూల్సు మాత్రమే క్రియాశీల కీకు జతచేయబడును."
-
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:161
-msgid "The quantity must not be greater than the total allowed for the pool"
-msgstr "పూల్‌కు అనుమతించబడిన మొత్తం కన్నా పరిమాణం పెద్దదై వుండకూడదు"
-
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:222
-#, java-format
-msgid "ActivationKey with id {0} could not be found."
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:233
-#, java-format
-msgid "Pool with id {0} could not be found."
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/RulesResource.java:81
-msgid "Error decoding the rules. The text should be base 64 encoded"
-msgstr "నియమాలను డీకోడ్ చేయుటలో దోషము. పాఠము బేస్ 64 యెన్కోడెడ్ కావలెను"
-
-#: src/main/java/org/candlepin/resource/RulesResource.java:105
-msgid "couldn't read rules file"
-msgstr "నియమాల ఫైల్‌ను చదువలేకపోయెను"
-
-#: src/main/java/org/candlepin/resource/ProductResource.java:110
-#: src/main/java/org/candlepin/resource/ProductResource.java:129
-#: src/main/java/org/candlepin/resource/ProductResource.java:189
-#, java-format
-msgid "Product with UUID ''{0}'' could not be found."
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/ProductResource.java:193
-#, java-format
-msgid "Product with UUID ''{0}'' cannot be deleted while subscriptions exist."
-msgstr ""
-"UUID ''{0}'' తో వుత్పత్తి తొలగించబడలేదు సబ్‌స్క్రిప్షన్లు వున్నప్పుడు."
-
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:122
-#, java-format
-msgid "no certificate for subscription {0}"
-msgstr "సబ్‌స్క్రిప్షన్ {0} కొరకు యే ధృవీకరణపత్రం లేదు"
-
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:141
-msgid "email is required for notification"
-msgstr "నోటిఫికేషన్ కొరకు ఈమెయిల్ అవసరం"
-
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:146
-msgid "email locale is required for notification"
-msgstr "నోటిఫికేషన్ కొరకు ఈమెయిల్ లోకల్ అవసరం"
-
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:182
-#, java-format
-msgid "Subscription with id {0} could not be found."
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/EventResource.java:85
-#, java-format
-msgid "Event with ID ''{0}'' could not be found."
-msgstr "ఐడి \"{0}\"తో ఘటన కనుగొనబడలేదు"
-
-#: src/main/java/org/candlepin/resource/MigrationResource.java:64
-msgid "Bad entity value."
-msgstr "చెడ్డ మూలకం విలువ"
-
-#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:85
-msgid "ConsumerType with id '"
-msgstr "ఐడి ' తో వినియోగదారిరకము"
-
-#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:107
-#, java-format
-msgid "Problem creating consumertype: {0}"
-msgstr "వినియోగదారిరకము సృష్టించుటలో సమస్య: {0}"
-
-#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:128
-#, java-format
-msgid "Consumer Type with label {0} could not be found."
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:149
-#, java-format
-msgid "Consumer Type with id {0} could not be found."
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:249
-#, java-format
-msgid "Cound not create the Owner: {0}. Parent {1} does not exist."
-msgstr "యజమానిని సృష్టించలేక పోయింది: {0}. మాత్రుక {1} లేదు."
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:261
-#, java-format
-msgid "Cound not create the Owner: {0}"
-msgstr "యజమానిని సృష్టించలేక పోయింది: {0}"
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:445
-msgid "Must provide a name for activation key."
-msgstr "క్రియాశీల కీ కొరకు వొక పేరు తెలుపవలెను."
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:452
-msgid ""
-"Activation key names must be alphanumeric or the characters '-' or '_'. ["
-msgstr ""
-"క్రియాశీల కీ పేరులు తప్పక ఆల్ఫాన్యూమరిక్ లేదా అక్షరములు '-' లేదా '_'. [ "
-"అయివుండాలి"
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:459
-msgid "Activation key name ["
-msgstr "క్రియాశీల కీ పేరు ["
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:545
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:605
-#: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:122
-#, java-format
-msgid "No such consumer type: {0}"
-msgstr "అటువంటి వినియోగదారి రకము లేదు: {0}"
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:583
-#: src/main/java/org/candlepin/resource/PoolResource.java:134
-#, java-format
-msgid "consumer: {0} not found"
-msgstr "వినియోగదారి: {0} కనుగొనబడలేదు"
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:687
-#: src/main/java/org/candlepin/resource/OwnerResource.java:788
-#: src/main/java/org/candlepin/resource/OwnerResource.java:952
-#: src/main/java/org/candlepin/resource/OwnerResource.java:982
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1011
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1037
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1075
-#, java-format
-msgid "owner with key: {0} was not found."
-msgstr "కీ: {0}తో యజమాని కనుగొనబడలేదు."
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:757
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:444
-#, java-format
-msgid "Service level {0} is not available to consumers of organization {1}."
-msgstr "సేవా స్థాయి {0} అనునది {1} సంస్థ వినియోగదారులకు అందుబాటులో లేదు."
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:807
-#, java-format
-msgid "subscription with id: {0} not found."
-msgstr "ఐడి: {0}తొ సబ్‌స్క్రిప్షన్ కనబడలేదు."
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:895
-msgid "Error reading export archive"
-msgstr "ఎగుమతి ఆర్కైవ్‌ను చదువుటలో దోషము"
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1057
-#, java-format
-msgid "Problem generating ueber cert for owner {0}"
-msgstr "యజమాని {0} కొరకు ueber cert జనియింపచేయుటలో సమస్య"
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1083
-#, java-format
-msgid "ueber certificate for owner {0} was not found. Please generate one."
-msgstr "యజమాని {0} కొరకు ueber ధవీకరణపత్రం కనబడలేదు. ఒకటి జనియింపచేయండి."
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1097
-#, java-format
-msgid "{0} file imported successfully."
-msgstr "{0} ఫైలు విజయవంతంగా దిగుమతికాబడెను."
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1099
-#, java-format
-msgid "{0} file imported forcibly"
-msgstr "{0} ఫైలు బలవంతంగా దిగుమతిచేయబడెను"
-
-#: src/main/java/org/candlepin/resource/StatisticResource.java:61
-msgid "couldn't generate statistics"
-msgstr "గణాంకాలను జనియింపచేయలేదు"
-
-#: src/main/java/org/candlepin/resource/ContentResource.java:80
-#, java-format
-msgid "Content with id {0} could not be found."
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:217
-#, java-format
-msgid "Organization with key: {0} was not found."
-msgstr "కీ: {0} తో సంస్థ కనుగొనబడలేదు."
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:286
-msgid "Insufficient permissions"
-msgstr "చాలని అనుమతులు"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:292
-msgid "Must specify an org to register with activation keys."
-msgstr "క్రియాశీల కీలతో నమోదు అగుటకు తప్పక సంస్థను తెలుపము."
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:296
-msgid "Cannot specify username with activation keys."
-msgstr "క్రియాశీల కీలతో వాడుకరిపేరు తెలుపలేదు"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:317
-msgid "A consumer type of 'person' cannot be used with activation keys"
-msgstr "క్రియాశీల కీలతో వినియోగదారి రకం 'person'  వుపయోగించబడలేదు"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:322
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:331
-msgid "System name cannot contain most special characters."
-msgstr "సిస్టమ్ పేరు మరింత ప్రత్యేక అక్షరములను కలిగివుండలేదు."
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:376
-msgid "Pool ID must be provided"
-msgstr "పూల్ ఐడి తప్పక అందివ్వవలెను"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:400
-#, java-format
-msgid "Problem creating consumer {0}"
-msgstr "వినియోగదారి {0}ను సృష్టించుటలో సమస్య"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:421
-msgid "System name cannot be null."
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:428
-msgid "System name cannot begin with # character"
-msgstr "సిస్టమ్ పేరు # అక్షరంతో ప్రారంభం కాలేదు"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:474
-#, java-format
-msgid "Activation key ''{0}'' not found for organization ''{1}''."
-msgstr "క్రియాశీల కీ ''{0}'' సంస్థ ''{1}'' కొరకు కనబడలేదు."
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:496
-#, java-format
-msgid "User {0} has no roles for organization {1}"
-msgstr "వాడుకరి {0} యెటువంటి పాత్రలను సంస్థ {1} కొరకు కలిగిలేదు"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:508
-#, java-format
-msgid "User {0} has already registered a personal consumer"
-msgstr "వాడుకరి {0} యిప్పటికే వొక వ్యక్తిగత వినియోగదారుని నమోదుచేసినారు"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:525
-msgid "You must specify an organization for new consumers."
-msgstr "కొత్త వినియోగదారుల కొరకు మీరు తప్పక వొక సంస్థను తెలుపవలెను."
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:536
-#, java-format
-msgid "Organization {0} does not exist."
-msgstr "సంస్థ {0} లేదు."
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:543
-#, java-format
-msgid "User {0} cannot access organization {1}"
-msgstr "వాడుకరి {0} సంస్థ {1} ను యాక్సెస్ చేయలేదు"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:947
-#, java-format
-msgid "Cannot unregister {0} consumer {1} because: {2}"
-msgstr "{0} వినియోగదారి {1} నమోదీకరణ తీసివేయలేము యెంచేతంటే: {2}"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1030
-msgid "Unable to create entitlement archive"
-msgstr "ఎన్టైటిల్మెంట్ ఆర్కైవ్‌ను సృష్టించలేక పోయింది"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1139
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1150
-msgid "Cannot bind by multiple parameters."
-msgstr "బహుళ పారామితుల ద్వారా బందనం కాలేదు."
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1144
-msgid "Cannot specify a quantity when auto-binding."
-msgstr "ఆటో-బైండింగ్ అప్పుడు పరిమాణం తెలుపలేదు"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1213
-#, java-format
-msgid "Asked to be subscribed to a product that has no pool: {0} "
-msgstr "ఎటువంటి పూల్ లేని వుత్పత్తినకు సబ్‌స్క్రైబ్ అవమని అడుగబడెను: {0}"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1288
-#, java-format
-msgid "No such entitlement: {0}"
-msgstr "అటువంటి యెంటైటిల్‌మెంట్ లేదు: {0}"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1311
-#, java-format
-msgid "No such product: {0}"
-msgstr "అటువంటి ప్రొడక్ట్ లేదు: {0}"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1356
-msgid "Consumer with ID "
-msgstr "ఐడి తో వినియోగదారి"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1418
-#, java-format
-msgid "Entitlement Certificate with serial number {0} could not be found."
-msgstr "వరుస సంఖ్య {0}తో యెన్‌టైటిల్‌మెంట్ ధృవీకరణపత్రం కనుగొలబడలేక పోయింది."
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1479
-#, java-format
-msgid ""
-"Consumer {0} cannot be exported. A manifest cannot be made for consumer of "
-"type ''{1}''."
-msgstr ""
-"వినియోగదారి {0} యెగుమతికాలేదు. ''{1}'' రకమైన వినియోగదారి కొరకు మానిఫెస్ట్ "
-"చేయబడలేదు."
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1494
-msgid "Unable to create export archive"
-msgstr "ఎగుమతి ఆర్కైవ్‌ను సృష్టించలేదు"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1527
-#, java-format
-msgid "Problem regenerating id cert for consumer {0}"
-msgstr "వినియోగదారి {0} కొరకు ఐడి ధృవీకరణపత్రం తిరిగివుద్భవింప చేయుటలో సమస్య"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1594
-#, java-format
-msgid "The consumer with UUID {0} is not a virtual guest."
-msgstr "UUID {0} తో వినియోగదారి వర్చ్యువల్ గెస్టు కాదు."
-
-#: src/main/java/org/candlepin/resource/PoolResource.java:117
-msgid "Cannot filter on both owner and consumer"
-msgstr "యజమాని మరియు వినియోగదారి రెంటిపైన వడపోయలేదు"
-
-#: src/main/java/org/candlepin/resource/PoolResource.java:121
-msgid "A consumer or owner is needed to filter on product"
-msgstr "ఉత్పత్తిపై వడపోయుటకు వినియోగదారి లేదా యజమాని అవసరము"
-
-#: src/main/java/org/candlepin/resource/PoolResource.java:140
-#, java-format
-msgid "User {0} cannot access consumer {1}"
-msgstr "వాడుకరి {0} వినియోగదారి {1} ను యాక్సెస్ చేయలేదు"
-
-#: src/main/java/org/candlepin/resource/PoolResource.java:151
-#, java-format
-msgid "owner: {0}"
-msgstr "యజమాని: {0}"
-
-#: src/main/java/org/candlepin/resource/PoolResource.java:155
-#, java-format
-msgid "User {0} cannot access owner {1}"
-msgstr "వాడుకరి {0} యజమాని {1} యాక్సెస్ చేయలేదు"
-
-#: src/main/java/org/candlepin/resource/PoolResource.java:164
-#, java-format
-msgid "User {0} cannot access all pools."
-msgstr "వాడుకరి {0}  అన్ని పూల్సును యాక్సెస్ చేయలేదు."
-
-#: src/main/java/org/candlepin/resource/PoolResource.java:192
-#: src/main/java/org/candlepin/resource/PoolResource.java:209
-#, java-format
-msgid "Entitlement Pool with ID ''{0}'' could not be found."
-msgstr ""
-
-#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:71
-msgid "Invalid Credentials"
-msgstr "చెల్లని ప్రమాణాలు"
-
-#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:86
-msgid "Error contacting user service"
-msgstr "వాడుకరి సేవను సంప్రదించుటలో దోషం"
 
 #: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:119
 #: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:155
@@ -537,85 +34,18 @@ msgstr "OAuth దోషం యెదురైంది. అంతర్గత �
 msgid "Error getting oauth consumer Key"
 msgstr "ఓత్ వినియోగదారి కీను పొందుటలో దోషము"
 
-#: src/main/java/org/candlepin/controller/Entitler.java:80
-#, java-format
-msgid "Subscription pool {0} does not exist."
-msgstr "సబ్‌స్క్రిప్షన్ పూల్ {0} లేదు."
+#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:71
+msgid "Invalid Credentials"
+msgstr "చెల్లని ప్రమాణాలు"
 
-#: src/main/java/org/candlepin/controller/Entitler.java:107
-#, java-format
-msgid ""
-"This consumer is already subscribed to the product matching pool with id "
-"''{0}''."
-msgstr ""
-"ఐడి ''{0}'' తో వుత్పత్తి సరిజోడీ పూల్‌కు యీ వినియోగదారి యిప్పటికే "
-"సబ్‌స్క్రైబ్ అయెను."
+#: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:86
+msgid "Error contacting user service"
+msgstr "వాడుకరి సేవను సంప్రదించుటలో దోషం"
 
-#: src/main/java/org/candlepin/controller/Entitler.java:112
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:88
 #, java-format
-msgid "No entitlements are available from the pool with id ''{0}''."
-msgstr "పూల్ నుండి ''{0}'' ఐడితో యే యెన్టైటిల్మెంట్సు అందుబాటులో లేవు."
-
-#: src/main/java/org/candlepin/controller/Entitler.java:117
-#, java-format
-msgid ""
-"Consumers of this type are not allowed to subscribe to the pool with id "
-"''{0}''."
-msgstr ""
-"ఐడి ''{0}'' తో వున్న పూల్‌కు సబ్‌స్క్రైబ్ అగుటకు యీ రకమైన వినియోగదారులు "
-"అనుమతించబడరు."
-
-#: src/main/java/org/candlepin/controller/Entitler.java:121
-#, java-format
-msgid "Multi-entitlement not supported for pool with id ''{0}''."
-msgstr "ఐడి ''{0}'' తో వున్న పూల్‌నకు బహుళ-యెన్టైటిల్మెంట్ తోడ్పాటునీయదు."
-
-#: src/main/java/org/candlepin/controller/Entitler.java:125
-#, java-format
-msgid "Guest''s host does not match owner of pool: ''{0}''."
-msgstr "Guest''s  హోస్ట్ పూల్ యజమానితో పోలడంలేదు: ''{0}''."
-
-#: src/main/java/org/candlepin/controller/Entitler.java:129
-#, java-format
-msgid "Pool not available to manifest consumers: ''{0}''."
-msgstr "మేనిఫెస్ట్ వినియోగదారులకు పూల్ అందుబాటులోలేదు: ''{0}''."
-
-#: src/main/java/org/candlepin/controller/Entitler.java:133
-#, java-format
-msgid "Pool is restricted to virtual guests: ''{0}''."
-msgstr "పూల్ వర్చ్యువల్ గెస్టులకు నిరోధించబడెను: ''{0}''."
-
-#: src/main/java/org/candlepin/controller/Entitler.java:137
-#, java-format
-msgid "Unable to entitle consumer to the pool with id ''{0}''.: {1}"
-msgstr "ఐడి ''{0}'' తో వున్న పూల్‌నకు వినియోగదారిని యెన్టైటిల్ చేయలేదు: {1}"
-
-#: src/main/java/org/candlepin/controller/Entitler.java:179
-#, java-format
-msgid "This consumer is already subscribed to the product ''{0}''"
-msgstr "ఈ వినియోగదారి యిప్పిటికే వుత్పత్తి ''{0}'' కి సబ్‌స్క్రైబ్ అయినారు"
-
-#: src/main/java/org/candlepin/controller/Entitler.java:183
-#, java-format
-msgid ""
-"There are not enough free entitlements available for the product ''{0}''"
-msgstr ""
-"ఉత్పత్తి ''{0}'' కొరకు సరిపోయినన్ని వుచిత యెన్టైటిల్మెంట్సు అందుబాటులో లేవు."
-
-#: src/main/java/org/candlepin/controller/Entitler.java:187
-#, java-format
-msgid "Consumers of this type are not allowed to the product ''{0}''"
-msgstr "ఈ రకమైన వినియోగదారులు వుత్పత్తి ''{0}'' కి అనుమతించబడరు"
-
-#: src/main/java/org/candlepin/controller/Entitler.java:192
-#, java-format
-msgid "Only virtual systems can consume the product ''{0}''"
-msgstr "వర్చువల్ సిస్టమ్స్ మాత్రమే వుత్పత్తి ''{0}'' ను వినియోగించగలవు"
-
-#: src/main/java/org/candlepin/controller/Entitler.java:197
-#, java-format
-msgid "Unable to entitle consumer to the product ''{0}'': {1}"
-msgstr "వినియోగదారిని వుత్పత్తి ''{0}'' కి యెన్‌టైటిల్ చేయలేము: {1}"
+msgid "Entitlements for {0} expired on: {1}"
+msgstr "{0} కొరకు యెన్‌టైటిల్‌మెంట్స్ దీనికి కాలముతీరినవి: {1}"
 
 #: src/main/java/org/candlepin/policy/js/entitlement/AbstractEntitlementRules.java:161
 #, java-format
@@ -626,15 +56,48 @@ msgstr "\"{0}\" పేరు, లక్షణం మరియు కనీసం
 msgid "second parameter should be the priority number."
 msgstr "రెండవ పారామితి ప్రాముఖ్యత సంఖ్య అయివుండాలి."
 
-#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:87
+#: src/main/java/org/candlepin/exceptions/mappers/BadRequestExceptionMapper.java:66
 #, java-format
-msgid "Entitlements for {0} expired on: {1}"
-msgstr "{0} కొరకు యెన్‌టైటిల్‌మెంట్స్ దీనికి కాలముతీరినవి: {1}"
+msgid "{0} is not a valid value for {1}"
+msgstr "{0} అనునది {1} కొరకు చెల్లని విలువ"
 
-#: src/main/java/org/candlepin/guice/I18nProvider.java:87
 #: src/main/java/org/candlepin/exceptions/mappers/BadRequestExceptionMapper.java:70
+#: src/main/java/org/candlepin/guice/I18nProvider.java:87
 msgid "Bad Request"
 msgstr "చెడ్డ అభ్యర్ధన"
+
+#: src/main/java/org/candlepin/exceptions/mappers/CandlepinExceptionMapper.java:99
+#, java-format
+msgid "Runtime Error {0} at {1}.{2}:{3}"
+msgstr "రన్‌టైమ్ దోషము {0} దీనివద్ద {1}.{2}:{3}"
+
+#: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:122
+#: src/main/java/org/candlepin/resource/OwnerResource.java:549
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:605
+#, java-format
+msgid "No such consumer type: {0}"
+msgstr "అటువంటి వినియోగదారి రకము లేదు: {0}"
+
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:96
+#, java-format
+msgid "Name of the consumer should be shorter than {0} characters."
+msgstr "వినియోగదారుని పేరు {0} అక్షరముల కన్నా తక్కువగా వుండాలి."
+
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:353
+#, java-format
+msgid ""
+"The consumer with UUID {0} is a virtual guest. It does not have guests."
+msgstr "UUID {0} తో వినియోగదారి వర్చ్యువల్ గెస్టు. అది గెస్టులను కలిగిలేదు."
+
+#: src/main/java/org/candlepin/model/EntitlementCurator.java:247
+#, java-format
+msgid "No product found for product id {0}"
+msgstr "ఉత్పత్తి ఐడి {0} కొరకు యెటువంటి వుత్పత్తి కనుగొనబడలేదు"
+
+#: src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java:145
+msgid "Standalone candlepin does not support redeeming a subscription."
+msgstr ""
+"సబ్‌స్క్రిప్షన్‌ను వెచ్చించుటకు స్టాండెలోన్ కాండిల్‌పిన్ తోడ్పాటునీయదు."
 
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:113
 #, java-format
@@ -765,43 +228,54 @@ msgstr "{0} క్రియాశీల కీ {1} తొలగించెన�
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:159
 #, java-format
 msgid "{0} created the guest id {1}"
-msgstr "{0} గెస్టు ఐడి {1} సృష్టించెను"
+msgstr "{0} గెస్టు ఐడి సృష్టించెను {1}"
 
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:160
 #, java-format
 msgid "{0} deleted the guest id {1}"
-msgstr "{0} గెస్టు ఐడి {1} సృష్టించెను"
+msgstr "{0} గెస్టు ఐడి {1} తొలగించెను"
 
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:96
+#: src/main/java/org/candlepin/sync/ConsumerImporter.java:47
+msgid "No ID for upstream distributor"
+msgstr "అప్‌స్ట్రీమ్ పంపిణీదారు కొరకు యే ఐడి లేదు"
+
+#: src/main/java/org/candlepin/sync/ConsumerImporter.java:57
+msgid "This distributor has already been imported by another owner"
+msgstr "ఈ పంపిణీదారు యిప్పటికే వేరే వాడుకరిచేత దిగుమతైను"
+
+#: src/main/java/org/candlepin/sync/ConsumerImporter.java:63
+msgid "Owner has already imported from another distributor"
+msgstr "వేరే పంపిణీదారు నుండి యజమాని యిప్పటికే దిగుమతైను"
+
+#: src/main/java/org/candlepin/sync/Importer.java:142
+msgid "Wrong metadata type"
+msgstr "సరికాని మెటాడాటా రకము"
+
+#: src/main/java/org/candlepin/sync/Importer.java:151
+msgid "Invalid owner"
+msgstr "చెల్లని యజమాని"
+
+#: src/main/java/org/candlepin/sync/Importer.java:163
+msgid "Import is older than existing data"
+msgstr "ఉన్న దత్తాంశం కన్నా దిగుమతి పాతది"
+
+#: src/main/java/org/candlepin/sync/Importer.java:202
+#: src/main/java/org/candlepin/sync/Importer.java:207
+msgid "Failed to import archive"
+msgstr "ఆర్కైవ్ దిగుమతిచేయుటకు విఫలమైంది"
+
+#: src/main/java/org/candlepin/sync/Importer.java:305
 #, java-format
-msgid "Name of the consumer should be shorter than {0} characters."
-msgstr "వినియోగదారుని పేరు {0} అక్షరముల కన్నా తక్కువగా వుండాలి."
+msgid "Incompatible rules: import version {0} older than our version {1}."
+msgstr "సారూప్యతకాని నియమాలు: దిగుమతి వర్షన్ {0} మన వర్షన్ {1} కన్నా పాతది."
 
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:353
-#, java-format
-msgid ""
-"The consumer with UUID {0} is a virtual guest. It does not have guests."
-msgstr "UUID {0} తో వినియోగదారి వర్చ్యువల్ గెస్టు. అది గెస్టులను కలిగిలేదు."
+#: src/main/java/org/candlepin/sync/Importer.java:308
+msgid "Manifest data will be imported without rules import."
+msgstr "నియమాలు దిగుమతి కాకుండా మేనిఫెస్ట్ డాటా దిగుమతగును"
 
-#: src/main/java/org/candlepin/model/EntitlementCurator.java:247
-#, java-format
-msgid "No product found for product id {0}"
-msgstr "ఉత్పత్తి ఐడి {0} కొరకు యెటువంటి వుత్పత్తి కనుగొనబడలేదు"
-
-#: src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java:145
-msgid "Standalone candlepin does not support redeeming a subscription."
-msgstr ""
-"సబ్‌స్క్రిప్షన్‌ను వెచ్చించుటకు స్టాండెలోన్ కాండిల్‌పిన్ తోడ్పాటునీయదు."
-
-#: src/main/java/org/candlepin/exceptions/mappers/BadRequestExceptionMapper.java:66
-#, java-format
-msgid "{0} is not a valid value for {1}"
-msgstr "{0} అనునది {1} కొరకు చెల్లని విలువ"
-
-#: src/main/java/org/candlepin/exceptions/mappers/CandlepinExceptionMapper.java:99
-#, java-format
-msgid "Runtime Error {0} at {1}.{2}:{3}"
-msgstr "రన్‌టైమ్ దోషము {0} దీనివద్ద {1}.{2}:{3}"
+#: src/main/java/org/candlepin/sync/EntitlementImporter.java:119
+msgid "Unable to find product with ID: "
+msgstr "ఈ ఐడి తో వుత్పత్తిని కనుగొనలేక పోయింది:"
 
 #: src/main/java/org/candlepin/auth/interceptor/SecurityInterceptor.java:193
 msgid "Unable to verify request."
@@ -815,3 +289,526 @@ msgstr "సంస్థ"
 #, java-format
 msgid "{0} with id {1} could not be found."
 msgstr ""
+
+#: src/main/java/org/candlepin/controller/Entitler.java:80
+#, java-format
+msgid "Subscription pool {0} does not exist."
+msgstr "సబ్‌స్క్రిప్షన్ పూల్ {0} లేదు."
+
+#: src/main/java/org/candlepin/controller/Entitler.java:107
+#, java-format
+msgid ""
+"This consumer is already subscribed to the product matching pool with id "
+"''{0}''."
+msgstr ""
+"ఐడి ''{0}'' తో వుత్పత్తి సరిజోడీ పూల్‌కు యీ వినియోగదారి యిప్పటికే "
+"సబ్‌స్క్రైబ్ అయెను."
+
+#: src/main/java/org/candlepin/controller/Entitler.java:112
+#, java-format
+msgid "No entitlements are available from the pool with id ''{0}''."
+msgstr "పూల్ నుండి ''{0}'' ఐడితో యే యెన్టైటిల్మెంట్సు అందుబాటులో లేవు."
+
+#: src/main/java/org/candlepin/controller/Entitler.java:117
+#, java-format
+msgid ""
+"Consumers of this type are not allowed to subscribe to the pool with id "
+"''{0}''."
+msgstr ""
+"ఐడి ''{0}'' తో వున్న పూల్‌కు సబ్‌స్క్రైబ్ అగుటకు యీ రకమైన వినియోగదారులు "
+"అనుమతించబడరు."
+
+#: src/main/java/org/candlepin/controller/Entitler.java:121
+#, java-format
+msgid "Multi-entitlement not supported for pool with id ''{0}''."
+msgstr "ఐడి ''{0}'' తో వున్న పూల్‌నకు బహుళ-యెన్టైటిల్మెంట్ తోడ్పాటునీయదు."
+
+#: src/main/java/org/candlepin/controller/Entitler.java:125
+#, java-format
+msgid "Guest''s host does not match owner of pool: ''{0}''."
+msgstr "Guest''s  హోస్ట్ పూల్ యజమానితో పోలడంలేదు: ''{0}''."
+
+#: src/main/java/org/candlepin/controller/Entitler.java:129
+#, java-format
+msgid "Pool not available to manifest consumers: ''{0}''."
+msgstr "మేనిఫెస్ట్ వినియోగదారులకు పూల్ అందుబాటులోలేదు: ''{0}''."
+
+#: src/main/java/org/candlepin/controller/Entitler.java:133
+#, java-format
+msgid "Pool is restricted to virtual guests: ''{0}''."
+msgstr "పూల్ వర్చ్యువల్ గెస్టులకు నిరోధించబడెను: ''{0}''."
+
+#: src/main/java/org/candlepin/controller/Entitler.java:137
+#, java-format
+msgid "Unable to entitle consumer to the pool with id ''{0}''.: {1}"
+msgstr "ఐడి ''{0}'' తో వున్న పూల్‌నకు వినియోగదారిని యెన్టైటిల్ చేయలేదు: {1}"
+
+#: src/main/java/org/candlepin/controller/Entitler.java:179
+#, java-format
+msgid "This consumer is already subscribed to the product ''{0}''"
+msgstr "ఈ వినియోగదారి యిప్పిటికే వుత్పత్తి ''{0}'' కి సబ్‌స్క్రైబ్ అయినారు"
+
+#: src/main/java/org/candlepin/controller/Entitler.java:183
+#, java-format
+msgid ""
+"There are not enough free entitlements available for the product ''{0}''"
+msgstr ""
+"ఉత్పత్తి ''{0}'' కొరకు సరిపోయినన్ని వుచిత యెన్టైటిల్మెంట్సు అందుబాటులో లేవు."
+
+#: src/main/java/org/candlepin/controller/Entitler.java:187
+#, java-format
+msgid "Consumers of this type are not allowed to the product ''{0}''"
+msgstr "ఈ రకమైన వినియోగదారులు వుత్పత్తి ''{0}'' కి అనుమతించబడరు"
+
+#: src/main/java/org/candlepin/controller/Entitler.java:192
+#, java-format
+msgid "Only virtual systems can consume the product ''{0}''"
+msgstr "వర్చువల్ సిస్టమ్స్ మాత్రమే వుత్పత్తి ''{0}'' ను వినియోగించగలవు"
+
+#: src/main/java/org/candlepin/controller/Entitler.java:197
+#, java-format
+msgid "Unable to entitle consumer to the product ''{0}'': {1}"
+msgstr "వినియోగదారిని వుత్పత్తి ''{0}'' కి యెన్‌టైటిల్ చేయలేము: {1}"
+
+#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:85
+msgid "ConsumerType with id '"
+msgstr "ఐడి ' తో వినియోగదారిరకము"
+
+#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:107
+#, java-format
+msgid "Problem creating consumertype: {0}"
+msgstr "వినియోగదారిరకము సృష్టించుటలో సమస్య: {0}"
+
+#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:128
+#, java-format
+msgid "Consumer Type with label {0} could not be found."
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:149
+#, java-format
+msgid "Consumer Type with id {0} could not be found."
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:253
+#, java-format
+msgid "Cound not create the Owner: {0}. Parent {1} does not exist."
+msgstr "యజమానిని సృష్టించలేక పోయింది: {0}. మాత్రుక {1} లేదు."
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:265
+#, java-format
+msgid "Cound not create the Owner: {0}"
+msgstr "యజమానిని సృష్టించలేక పోయింది: {0}"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:449
+msgid "Must provide a name for activation key."
+msgstr "క్రియాశీల కీ కొరకు వొక పేరు తెలుపవలెను."
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:456
+msgid ""
+"Activation key names must be alphanumeric or the characters '-' or '_'. ["
+msgstr ""
+"క్రియాశీల కీ పేరులు తప్పక ఆల్ఫాన్యూమరిక్ లేదా అక్షరములు '-' లేదా '_'. [ "
+"అయివుండాలి"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:463
+msgid "Activation key name ["
+msgstr "క్రియాశీల కీ పేరు ["
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:587
+#: src/main/java/org/candlepin/resource/PoolResource.java:134
+#, java-format
+msgid "consumer: {0} not found"
+msgstr "వినియోగదారి: {0} కనుగొనబడలేదు"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:691
+#: src/main/java/org/candlepin/resource/OwnerResource.java:795
+#: src/main/java/org/candlepin/resource/OwnerResource.java:959
+#: src/main/java/org/candlepin/resource/OwnerResource.java:989
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1018
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1044
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1082
+#, java-format
+msgid "owner with key: {0} was not found."
+msgstr "కీ: {0}తో యజమాని కనుగొనబడలేదు."
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:701
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1278
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:122
+#: src/main/java/org/candlepin/resource/SubscriptionResource.java:152
+#, java-format
+msgid "No such consumer: {0}"
+msgstr "అటువంటి వినియోగదారి లేరు: {0}"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:764
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:444
+#, java-format
+msgid "Service level {0} is not available to consumers of organization {1}."
+msgstr "సేవా స్థాయి {0} అనునది {1} సంస్థ వినియోగదారులకు అందుబాటులో లేదు."
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:814
+#, java-format
+msgid "subscription with id: {0} not found."
+msgstr "ఐడి: {0}తొ సబ్‌స్క్రిప్షన్ కనబడలేదు."
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:902
+msgid "Error reading export archive"
+msgstr "ఎగుమతి ఆర్కైవ్‌ను చదువుటలో దోషము"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1064
+#, java-format
+msgid "Problem generating ueber cert for owner {0}"
+msgstr "యజమాని {0} కొరకు ueber cert జనియింపచేయుటలో సమస్య"
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1090
+#, java-format
+msgid "ueber certificate for owner {0} was not found. Please generate one."
+msgstr "యజమాని {0} కొరకు ueber ధవీకరణపత్రం కనబడలేదు. ఒకటి జనియింపచేయండి."
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1114
+#, java-format
+msgid "{0} file imported successfully."
+msgstr "{0} ఫైలు విజయవంతంగా దిగుమతికాబడెను."
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1116
+#, java-format
+msgid "{0} file imported forcibly"
+msgstr "{0} ఫైలు బలవంతంగా దిగుమతిచేయబడెను"
+
+#: src/main/java/org/candlepin/resource/JobResource.java:108
+msgid "You must specify an owner key, consumer uuid, or principal name."
+msgstr ""
+"మీరు తప్పక వొక యజమాని కీ, వినియోగదారి uuid, లేదా ప్రిన్సిపల్ పేరు తెలపాలి."
+
+#: src/main/java/org/candlepin/resource/JobResource.java:114
+msgid ""
+"You must specify one of owner key, consumer uuid, or principal name, but not"
+" all."
+msgstr ""
+"మీరు యజమాని కీ, వినియోగదారి uuid, లేదా పిన్సిపల్ పేరు వీటిలో యేదోవొకటి "
+"తెలపాలి, అన్నీ కాదు."
+
+#: src/main/java/org/candlepin/resource/JobResource.java:173
+msgid "Error setting scheduler status"
+msgstr "షెడ్యీలర్ స్థితి అమర్చుటలో దోషం."
+
+#: src/main/java/org/candlepin/resource/JobResource.java:201
+msgid "job already cancelled"
+msgstr "జాబ్ యిప్పటికే రద్దైంది"
+
+#: src/main/java/org/candlepin/resource/JobResource.java:204
+msgid "cannot cancel a job that is not in CREATED state"
+msgstr "CREATED స్థితి నందు లేని జాబ్‌ను రద్దుచేయలేదు"
+
+#: src/main/java/org/candlepin/resource/PoolResource.java:117
+msgid "Cannot filter on both owner and consumer"
+msgstr "యజమాని మరియు వినియోగదారి రెంటిపైన వడపోయలేదు"
+
+#: src/main/java/org/candlepin/resource/PoolResource.java:121
+msgid "A consumer or owner is needed to filter on product"
+msgstr "ఉత్పత్తిపై వడపోయుటకు వినియోగదారి లేదా యజమాని అవసరము"
+
+#: src/main/java/org/candlepin/resource/PoolResource.java:140
+#, java-format
+msgid "User {0} cannot access consumer {1}"
+msgstr "వాడుకరి {0} వినియోగదారి {1} ను యాక్సెస్ చేయలేదు"
+
+#: src/main/java/org/candlepin/resource/PoolResource.java:151
+#, java-format
+msgid "owner: {0}"
+msgstr "యజమాని: {0}"
+
+#: src/main/java/org/candlepin/resource/PoolResource.java:155
+#, java-format
+msgid "User {0} cannot access owner {1}"
+msgstr "వాడుకరి {0} యజమాని {1} యాక్సెస్ చేయలేదు"
+
+#: src/main/java/org/candlepin/resource/PoolResource.java:164
+#, java-format
+msgid "User {0} cannot access all pools."
+msgstr "వాడుకరి {0}  అన్ని పూల్సును యాక్సెస్ చేయలేదు."
+
+#: src/main/java/org/candlepin/resource/PoolResource.java:192
+#: src/main/java/org/candlepin/resource/PoolResource.java:209
+#, java-format
+msgid "Entitlement Pool with ID ''{0}'' could not be found."
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/MigrationResource.java:64
+msgid "Bad entity value."
+msgstr "చెడ్డ మూలకం విలువ"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:217
+#, java-format
+msgid "Organization with key: {0} was not found."
+msgstr "కీ: {0} తో సంస్థ కనుగొనబడలేదు."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:286
+msgid "Insufficient permissions"
+msgstr "చాలని అనుమతులు"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:292
+msgid "Must specify an org to register with activation keys."
+msgstr "క్రియాశీల కీలతో నమోదు అగుటకు తప్పక సంస్థను తెలుపము."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:296
+msgid "Cannot specify username with activation keys."
+msgstr "క్రియాశీల కీలతో వాడుకరిపేరు తెలుపలేదు"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:317
+msgid "A consumer type of 'person' cannot be used with activation keys"
+msgstr "క్రియాశీల కీలతో వినియోగదారి రకం 'person'  వుపయోగించబడలేదు"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:322
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:331
+msgid "System name cannot contain most special characters."
+msgstr "సిస్టమ్ పేరు మరింత ప్రత్యేక అక్షరములను కలిగివుండలేదు."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:376
+msgid "Pool ID must be provided"
+msgstr "పూల్ ఐడి తప్పక అందివ్వవలెను"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:400
+#, java-format
+msgid "Problem creating consumer {0}"
+msgstr "వినియోగదారి {0}ను సృష్టించుటలో సమస్య"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:421
+msgid "System name cannot be null."
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:428
+msgid "System name cannot begin with # character"
+msgstr "సిస్టమ్ పేరు # అక్షరంతో ప్రారంభం కాలేదు"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:474
+#, java-format
+msgid "Activation key ''{0}'' not found for organization ''{1}''."
+msgstr "క్రియాశీల కీ ''{0}'' సంస్థ ''{1}'' కొరకు కనబడలేదు."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:496
+#, java-format
+msgid "User {0} has no roles for organization {1}"
+msgstr "వాడుకరి {0} యెటువంటి పాత్రలను సంస్థ {1} కొరకు కలిగిలేదు"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:508
+#, java-format
+msgid "User {0} has already registered a personal consumer"
+msgstr "వాడుకరి {0} యిప్పటికే వొక వ్యక్తిగత వినియోగదారుని నమోదుచేసినారు"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:525
+msgid "You must specify an organization for new consumers."
+msgstr "కొత్త వినియోగదారుల కొరకు మీరు తప్పక వొక సంస్థను తెలుపవలెను."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:536
+#, java-format
+msgid "Organization {0} does not exist."
+msgstr "సంస్థ {0} లేదు."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:543
+#, java-format
+msgid "User {0} cannot access organization {1}"
+msgstr "వాడుకరి {0} సంస్థ {1} ను యాక్సెస్ చేయలేదు"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:947
+#, java-format
+msgid "Cannot unregister {0} consumer {1} because: {2}"
+msgstr "{0} వినియోగదారి {1} నమోదీకరణ తీసివేయలేము యెంచేతంటే: {2}"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1030
+msgid "Unable to create entitlement archive"
+msgstr "ఎన్టైటిల్మెంట్ ఆర్కైవ్‌ను సృష్టించలేక పోయింది"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1139
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1150
+msgid "Cannot bind by multiple parameters."
+msgstr "బహుళ పారామితుల ద్వారా బందనం కాలేదు."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1144
+msgid "Cannot specify a quantity when auto-binding."
+msgstr "ఆటో-బైండింగ్ అప్పుడు పరిమాణం తెలుపలేదు"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1213
+#, java-format
+msgid "Asked to be subscribed to a product that has no pool: {0} "
+msgstr "ఎటువంటి పూల్ లేని వుత్పత్తినకు సబ్‌స్క్రైబ్ అవమని అడుగబడెను: {0}"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1288
+#, java-format
+msgid "No such entitlement: {0}"
+msgstr "అటువంటి యెంటైటిల్‌మెంట్ లేదు: {0}"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1311
+#, java-format
+msgid "No such product: {0}"
+msgstr "అటువంటి ప్రొడక్ట్ లేదు: {0}"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1356
+msgid "Consumer with ID "
+msgstr "ఐడి తో వినియోగదారి"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1394
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:148
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:168
+#, java-format
+msgid "Entitlement with ID ''{0}'' could not be found."
+msgstr "ఐడి ''{0}'' తో యెన్టైటిల్మెంట్ కనుగొనబడలేకపోయింది."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1418
+#, java-format
+msgid "Entitlement Certificate with serial number {0} could not be found."
+msgstr "వరుస సంఖ్య {0}తో యెన్‌టైటిల్‌మెంట్ ధృవీకరణపత్రం కనుగొలబడలేక పోయింది."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1479
+#, java-format
+msgid ""
+"Consumer {0} cannot be exported. A manifest cannot be made for consumer of "
+"type ''{1}''."
+msgstr ""
+"వినియోగదారి {0} యెగుమతికాలేదు. ''{1}'' రకమైన వినియోగదారి కొరకు మానిఫెస్ట్ "
+"చేయబడలేదు."
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1494
+msgid "Unable to create export archive"
+msgstr "ఎగుమతి ఆర్కైవ్‌ను సృష్టించలేదు"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1527
+#, java-format
+msgid "Problem regenerating id cert for consumer {0}"
+msgstr "వినియోగదారి {0} కొరకు ఐడి ధృవీకరణపత్రం తిరిగివుద్భవింప చేయుటలో సమస్య"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1594
+#, java-format
+msgid "The consumer with UUID {0} is not a virtual guest."
+msgstr " UUID {0} తో వినియోగదారి వర్చ్యువల్ గెస్టు కాదు."
+
+#: src/main/java/org/candlepin/resource/RoleResource.java:82
+#, java-format
+msgid "No such owner: {0}"
+msgstr "యజమాని లేదు: {0}"
+
+#: src/main/java/org/candlepin/resource/RoleResource.java:112
+msgid "Role ID does not match path."
+msgstr "పాత్ర ఐడి పాత్‌తో సరిపోలలేదు"
+
+#: src/main/java/org/candlepin/resource/RoleResource.java:138
+msgid "Access type NONE not supported."
+msgstr "NONE యాక్సెస్ రకం తోడ్పాటనీయదు."
+
+#: src/main/java/org/candlepin/resource/RoleResource.java:177
+#, java-format
+msgid "No such permission: {0} in role: {1}"
+msgstr "అనుమతి: {0} పాత్ర: {1} నందు లేదు "
+
+#: src/main/java/org/candlepin/resource/RoleResource.java:191
+#, java-format
+msgid "No such role: {0}"
+msgstr "పాత్ర లేదు: {0}"
+
+#: src/main/java/org/candlepin/resource/RoleResource.java:199
+#, java-format
+msgid "No such user: {0}"
+msgstr "వాడుకరి లేదు: {0}"
+
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:97
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:116
+#, java-format
+msgid "No such environment: {0}"
+msgstr "అటువంటి యెన్విరాన్మెంట్ లేదు: {0}"
+
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:242
+#, java-format
+msgid "No such environment : {0}"
+msgstr "అటువంటి యెన్విరాన్మెంట్ లేదు: {0}"
+
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:135
+msgid "The quantity must be greater than 0"
+msgstr "పరిమాణం తప్పక 0 కన్నా యెక్కువ వుండవలె"
+
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:145
+msgid ""
+"Pools requiring a 'person' consumer should not be added to an activation key"
+" since a consumer type of 'person' cannot be used with activation keys"
+msgstr ""
+"'person' వినియోగదారి అవసరమైన పూల్సు క్రియాశీల కీను జతచేయకూడదు యెంచేతంటే "
+"'person' రకమైన వినియోగదారి క్రియాశీల కీలతో వుపయోగించబడలేదు"
+
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:154
+msgid ""
+"Error: Only pools with multi-entitlement product subscriptions can be added "
+"to the activation key with a quantity greater than one."
+msgstr ""
+"దోషం: ఒకటి కన్నా యెక్కువ పరిమాణంతో బహుళ-యెన్టైటిల్మెంట్ వుత్పత్తి "
+"సబ్‌స్క్రిప్షన్సుతో వున్న పూల్సు మాత్రమే క్రియాశీల కీకు జతచేయబడును."
+
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:161
+msgid "The quantity must not be greater than the total allowed for the pool"
+msgstr "పూల్‌కు అనుమతించబడిన మొత్తం కన్నా పరిమాణం పెద్దదై వుండకూడదు"
+
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:222
+#, java-format
+msgid "ActivationKey with id {0} could not be found."
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:233
+#, java-format
+msgid "Pool with id {0} could not be found."
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/ContentResource.java:80
+#, java-format
+msgid "Content with id {0} could not be found."
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/RulesResource.java:81
+msgid "Error decoding the rules. The text should be base 64 encoded"
+msgstr "నియమాలను డీకోడ్ చేయుటలో దోషము. పాఠము బేస్ 64 యెన్కోడెడ్ కావలెను"
+
+#: src/main/java/org/candlepin/resource/RulesResource.java:105
+msgid "couldn't read rules file"
+msgstr "నియమాల ఫైల్‌ను చదువలేకపోయెను"
+
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:103
+#, java-format
+msgid "Consumer: {0} has no entitlement for product {1}"
+msgstr ""
+"వినియోగదారి: {0} యెటువంటి యెన్‌టైటిల్‌మెంట్స్ వుత్పత్తి {1} కొరకు కలిగిలేదు"
+
+#: src/main/java/org/candlepin/resource/EventResource.java:85
+#, java-format
+msgid "Event with ID ''{0}'' could not be found."
+msgstr "ఐడి \"{0}\"తో ఘటన కనుగొనబడలేదు"
+
+#: src/main/java/org/candlepin/resource/SubscriptionResource.java:122
+#, java-format
+msgid "no certificate for subscription {0}"
+msgstr "సబ్‌స్క్రిప్షన్ {0} కొరకు యే ధృవీకరణపత్రం లేదు"
+
+#: src/main/java/org/candlepin/resource/SubscriptionResource.java:141
+msgid "email is required for notification"
+msgstr "నోటిఫికేషన్ కొరకు ఈమెయిల్ అవసరం"
+
+#: src/main/java/org/candlepin/resource/SubscriptionResource.java:146
+msgid "email locale is required for notification"
+msgstr "నోటిఫికేషన్ కొరకు ఈమెయిల్ లోకల్ అవసరం"
+
+#: src/main/java/org/candlepin/resource/SubscriptionResource.java:182
+#, java-format
+msgid "Subscription with id {0} could not be found."
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/StatisticResource.java:61
+msgid "couldn't generate statistics"
+msgstr "గణాంకాలను జనియింపచేయలేదు"
+
+#: src/main/java/org/candlepin/resource/ProductResource.java:110
+#: src/main/java/org/candlepin/resource/ProductResource.java:129
+#: src/main/java/org/candlepin/resource/ProductResource.java:189
+#, java-format
+msgid "Product with UUID ''{0}'' could not be found."
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/ProductResource.java:193
+#, java-format
+msgid "Product with UUID ''{0}'' cannot be deleted while subscriptions exist."
+msgstr ""
+"UUID ''{0}'' తో వుత్పత్తి తొలగించబడలేదు సబ్‌స్క్రిప్షన్లు వున్నప్పుడు."
