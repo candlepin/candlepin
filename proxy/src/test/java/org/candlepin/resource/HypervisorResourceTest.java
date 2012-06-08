@@ -120,7 +120,7 @@ public class HypervisorResourceTest {
             this.idCertService, null, this.i18n, this.sink, this.eventFactory, null, null,
             this.userService, null, null, null, null, null, this.ownerCurator,
             this.activationKeyCurator, null, this.complianceRules,
-            this.deletedConsumerCurator, new Config());
+            this.deletedConsumerCurator, null, new Config());
         hypervisorResource = new HypervisorResource(consumerResource, poolManager,
             consumerCurator, this.deletedConsumerCurator);
 

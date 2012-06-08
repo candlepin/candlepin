@@ -79,6 +79,8 @@ import org.candlepin.model.DeleteResult;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.Environment;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.EventCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.IdentityCertificate;
@@ -142,6 +144,7 @@ public class ConsumerResource {
     private Entitler entitler;
     private ComplianceRules complianceRules;
     private DeletedConsumerCurator deletedConsumerCurator;
+    private EnvironmentCurator environmentCurator;
 
     @Inject
     public ConsumerResource(ConsumerCurator consumerCurator,
@@ -157,7 +160,7 @@ public class ConsumerResource {
         ConsumerRules consumerRules, ConsumerDeleteHelper consumerDeleteHelper,
         OwnerCurator ownerCurator, ActivationKeyCurator activationKeyCurator,
         Entitler entitler, ComplianceRules complianceRules,
-        DeletedConsumerCurator deletedConsumerCurator,
+        DeletedConsumerCurator deletedConsumerCurator, EnvironmentCurator environmentCurator, 
         Config config) {
 
         this.consumerCurator = consumerCurator;
@@ -183,6 +186,7 @@ public class ConsumerResource {
         this.entitler = entitler;
         this.complianceRules = complianceRules;
         this.deletedConsumerCurator = deletedConsumerCurator;
+        this.environmentCurator = environmentCurator;
         this.consumerPersonNamePattern =
             Pattern.compile(config.getString("candlepin.consumer_person_name_pattern"));
         this.consumerSystemNamePattern =
@@ -675,6 +679,19 @@ public class ConsumerResource {
             toUpdate.setServiceLevel(level);
             changesMade = true;
         }
+        
+        String environmentId = updated.getEnvironment() == null ? null : updated.getEnvironment().getId();
+        if (environmentId != null && (toUpdate.getEnvironment() == null || !toUpdate.getEnvironment().getId().equals(environmentId))) {
+            Environment e = environmentCurator.find(environmentId);
+            if (e == null) {
+                throw new NotFoundException(i18n.tr("No such environment: {0}", environmentId));
+            }
+            toUpdate.setEnvironment(e);
+            
+            poolManager.regenerateEntitlementCertificates(toUpdate);
+            changesMade = true;            
+        }
+            
 
         if (changesMade) {
             log.info("Consumer " + toUpdate.getUuid() + " updated.");
