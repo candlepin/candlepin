@@ -16,14 +16,15 @@ package org.candlepin.sync;
 
 import static org.junit.Assert.assertEquals;
 
+import org.candlepin.config.Config;
+import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerType;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.junit.Test;
+
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.HashMap;
-
-import org.codehaus.jackson.map.ObjectMapper;
-import org.candlepin.config.Config;
-import org.candlepin.model.Consumer;
-import org.junit.Test;
 
 /**
  * ConsumerExporterTest
@@ -35,16 +36,25 @@ public class ConsumerExporterTest {
             new Config(new HashMap<String, String>()));
 
         ConsumerExporter exporter = new ConsumerExporter();
+        ConsumerType ctype = new ConsumerType("candlepin");
+        ctype.setId("8888");
+        ctype.setManifest(true);
 
         StringWriter writer = new StringWriter();
 
         Consumer consumer = new Consumer();
         consumer.setUuid("test-uuid");
         consumer.setName("testy consumer");
+        consumer.setType(ctype);
 
         exporter.export(mapper, writer, consumer);
 
-        assertEquals("{\"uuid\":\"test-uuid\",\"name\":\"testy consumer\"}",
+        assertEquals("{\"uuid\":\"" + consumer.getUuid() + "\"," +
+                     "\"name\":\"" + consumer.getName() + "\"," +
+                     "\"type\":" +
+                     "{\"id\":\"" + ctype.getId() + "\"," +
+                     "\"label\":\"" + ctype.getLabel() + "\"," +
+                     "\"manifest\":" + ctype.isManifest() + "}}",
             writer.toString());
     }
 }

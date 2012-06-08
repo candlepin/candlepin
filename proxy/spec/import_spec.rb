@@ -48,6 +48,8 @@ describe 'Candlepin Import' do
       import['generatedDate'].should_not be_nil
       import['upstreamName'].should == consumer['name']
       import['upstreamId'].should == consumer['uuid']
+      import['upstreamType'].should == consumer['type']['label'] 
+      import.include?('webAppPrefix').should be_true
     end
   end
 

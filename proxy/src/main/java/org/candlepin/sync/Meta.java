@@ -23,13 +23,14 @@ public class Meta {
     private String version;
     private Date created;
     private String principalName;
+    private String webAppPrefix;
 
     public Meta() {
-        this("0.0.0", new Date(), "");
+        this("0.0.0", new Date(), "", null);
     }
 
     public Meta(String version, Date creation,
-                String userName) {
+                String userName, String webAppPrefix) {
         this.version = version;
         this.created = creation;
 
@@ -42,6 +43,7 @@ public class Meta {
         }
 
         this.principalName = userName;
+        this.webAppPrefix = webAppPrefix;
     }
 
     public String getVersion() {
@@ -56,6 +58,10 @@ public class Meta {
         return principalName;
     }
 
+    public String getWebAppPrefix() {
+        return webAppPrefix;
+    }
+
     public void setVersion(String version) {
         this.version = version;
     }
@@ -67,4 +73,9 @@ public class Meta {
     public void setPrincipalName(String name) {
         this.principalName = name;
     }
+
+    public void setWebAppPrefix(String prefix) {
+        this.webAppPrefix = prefix;
+    }
+
 }
