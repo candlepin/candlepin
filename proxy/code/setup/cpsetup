@@ -148,10 +148,11 @@ class CertSetup(object):
         run_command('sudo chmod a+r %s' % self.keystore)
 
 
-def write_candlepin_conf(username, database):
+def write_candlepin_conf(options):
     """
-    Write database configuration to candlepin.conf.
+    Write configuration to candlepin.conf.
     """
+
     # If the file exists and it's size is not 0 (it will be empty after
     # fresh rpm install), write out a default with database configuration:
     if os.path.exists(CANDLEPIN_CONF) and os.stat(CANDLEPIN_CONF).st_size > 0:
@@ -162,10 +163,12 @@ def write_candlepin_conf(username, database):
     f = open(CANDLEPIN_CONF, 'w')
     f.write('jpa.config.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect\n')
     f.write('jpa.config.hibernate.connection.driver_class=org.postgresql.Driver\n')
-    f.write('jpa.config.hibernate.connection.url=jdbc:postgresql:%s\n' % database)
+    f.write('jpa.config.hibernate.connection.url=jdbc:postgresql:%s\n' % options.db)
     f.write('jpa.config.hibernate.hbm2ddl.auto=validate\n')
-    f.write('jpa.config.hibernate.connection.username=%s\n' % username)
+    f.write('jpa.config.hibernate.connection.username=%s\n' % options.dbuser)
     f.write('jpa.config.hibernate.connection.password=candlepin\n')
+    if options.webapp_prefix:
+        f.write('\ncandlepin.export.webapp.prefix=%s\n' % options.webapp_prefix)
     f.close()
 
 
@@ -181,6 +184,9 @@ def main(argv):
     parser.add_option("-d", "--database",
                   dest="db", default="candlepin",
                   help="the database to use")
+    parser.add_option("-w", "--webapp-prefix",
+                  dest="webapp_prefix",
+                  help="the web application prefix to use for export origin [host:port/prefix]")
     parser.add_option("-k", "--keystorepwd",
                   dest="keystorepwd", default="password",
                   help="the keystore password to use for the tomcat configuration")
@@ -201,7 +207,7 @@ def main(argv):
         options.dbuser, options.db))
 
     if not options.skipdbcfg:
-        write_candlepin_conf(options.dbuser, options.db)
+        write_candlepin_conf(options)
     else:
         print "** Skipping configuration file setup"
 
