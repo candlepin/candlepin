@@ -1105,10 +1105,12 @@ public class OwnerResource {
         if (meta != null) {
             record.setGeneratedBy(meta.getPrincipalName());
             record.setGeneratedDate(meta.getCreated());
+            record.setWebAppPrefix(meta.getWebAppPrefix());
         }
         if (consumer != null) {
             record.setUpstreamName(consumer.getName());
             record.setUpstreamId(consumer.getUuid());
+            record.setUpstreamType(consumer.getType().getLabel());
         }
 
         String msg = i18n.tr("{0} file imported successfully.", owner.getKey());
@@ -1128,10 +1130,12 @@ public class OwnerResource {
         if (meta != null) {
             record.setGeneratedBy(meta.getPrincipalName());
             record.setGeneratedDate(meta.getCreated());
+            record.setWebAppPrefix(meta.getWebAppPrefix());
         }
         if (consumer != null) {
             record.setUpstreamName(consumer.getName());
             record.setUpstreamId(consumer.getUuid());
+            record.setUpstreamType(consumer.getType().getLabel());
         }
 
         record.recordStatus(ImportRecord.Status.FAILURE, error.getMessage());
