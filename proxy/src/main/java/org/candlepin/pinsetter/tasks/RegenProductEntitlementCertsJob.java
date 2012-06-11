@@ -37,6 +37,6 @@ public class RegenProductEntitlementCertsJob implements Job {
     public void execute(JobExecutionContext arg0) throws JobExecutionException {
         String prodId = arg0.getJobDetail().getJobDataMap().getString(
             PROD_ID);
-        this.poolManager.regenerateCertificatesOf(prodId);
+        this.poolManager.regenerateCertificatesOf(prodId, true);
     }
 }

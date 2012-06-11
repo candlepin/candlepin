@@ -1051,7 +1051,7 @@ public class OwnerResource {
         if (ueberConsumer != null) {
             List<Entitlement> ueberEntitlement
                 = entitlementCurator.listByConsumer(ueberConsumer);
-            poolManager.regenerateCertificatesOf(ueberEntitlement.get(0), true);
+            poolManager.regenerateCertificatesOf(ueberEntitlement.get(0), true, false);
             return entitlementCertCurator.listForConsumer(ueberConsumer).get(0);
         }
 

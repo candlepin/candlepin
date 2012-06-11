@@ -199,7 +199,7 @@ public class CandlepinPoolManager implements PoolManager {
         Set<Entitlement> entitlementsToRegen = refreshPoolsWithoutRegeneration(owner);
 
         // now regenerate all pending entitlements
-        regenerateCertificatesOf(entitlementsToRegen);
+        regenerateCertificatesOf(entitlementsToRegen, true);
     }
 
     private boolean isExpired(Subscription subscription) {
@@ -293,7 +293,7 @@ public class CandlepinPoolManager implements PoolManager {
         List<Pool> tempList = new LinkedList<Pool>();
         tempList.add(existingPool);
         Set<Entitlement> entitlementsToUpdate = updatePoolsForSubscription(tempList, sub);
-        regenerateCertificatesOf(entitlementsToUpdate);
+        regenerateCertificatesOf(entitlementsToUpdate, true);
     }
 
     private boolean poolExistsForSubscription(
@@ -529,7 +529,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         generateEntitlementCertificate(consumer, pool, e, generateUeberCert);
         for (Entitlement regenEnt : entitlementCurator.listModifying(e)) {
-            this.regenerateCertificatesOf(regenEnt, generateUeberCert);
+            this.regenerateCertificatesOf(regenEnt, generateUeberCert, true);
         }
 
         // we might have changed the bonus pool quantities, lets find out.
@@ -613,20 +613,20 @@ public class CandlepinPoolManager implements PoolManager {
         return null;
     }
 
-    public void regenerateEntitlementCertificates(Consumer consumer) {
+    public void regenerateEntitlementCertificates(Consumer consumer, boolean lazy) {
         log.info("Regenerating #" + consumer.getEntitlements().size() +
             " entitlement's certificates for consumer :" + consumer);
         // TODO - Assumes only 1 entitlement certificate exists per entitlement
-        this.regenerateCertificatesOf(consumer.getEntitlements());
+        this.regenerateCertificatesOf(consumer.getEntitlements(), lazy);
         log.info("Completed Regenerating #" +
             consumer.getEntitlements().size() +
             " entitlement's certificates for consumer: " + consumer);
     }
 
     @Transactional
-    public void regenerateCertificatesOf(Iterable<Entitlement> iterable) {
+    public void regenerateCertificatesOf(Iterable<Entitlement> iterable, boolean lazy) {
         for (Entitlement e : iterable) {
-            regenerateCertificatesOf(e, false);
+            regenerateCertificatesOf(e, false, lazy);
         }
     }
 
@@ -641,7 +641,8 @@ public class CandlepinPoolManager implements PoolManager {
      * @param affectedContent List of content set IDs promoted/demoted.
      */
     @Transactional
-    public void regenerateCertificatesOf(Environment e, Set<String> affectedContent) {
+    public void regenerateCertificatesOf(Environment e, Set<String> affectedContent,
+        boolean lazy) {
         log.info("Regenerating relevant certificates in environment: " + e.getId());
         List<Entitlement> allEnvEnts = entitlementCurator.listByEnvironment(e);
         Set<Entitlement> entsToRegen = new HashSet<Entitlement>();
@@ -666,14 +667,24 @@ public class CandlepinPoolManager implements PoolManager {
         }
         log.info("Found " + entsToRegen.size() + " certificates to regenerate.");
 
-        regenerateCertificatesOf(entsToRegen);
+        regenerateCertificatesOf(entsToRegen, lazy);
     }
 
     /**
      * @param e
      */
     @Transactional
-    public void regenerateCertificatesOf(Entitlement e, boolean ueberCertificate) {
+    public void regenerateCertificatesOf(Entitlement e, boolean ueberCertificate,
+        boolean lazy) {
+
+//        if (lazy) {
+//            if (log.isDebugEnabled()) {
+//                log.debug("Marking certificates dirty for entitlement: " + e);
+//            }
+//            e.setDirty(true);
+//            return;
+//        }
+
         if (log.isDebugEnabled()) {
             log.debug("Revoking entitlementCertificates of : " + e);
         }
@@ -698,12 +709,12 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Transactional
-    public void regenerateCertificatesOf(String productId) {
+    public void regenerateCertificatesOf(String productId, boolean lazy) {
         List<Pool> poolsForProduct = this.poolCurator
             .listAvailableEntitlementPools(null, null, productId, new Date(),
                 false, false);
         for (Pool pool : poolsForProduct) {
-            regenerateCertificatesOf(pool.getEntitlements());
+            regenerateCertificatesOf(pool.getEntitlements(), lazy);
         }
     }
 
@@ -776,7 +787,7 @@ public class CandlepinPoolManager implements PoolManager {
         // Find all of the entitlements that modified the original entitlement,
         // and regenerate those to remove the content sets.
         this.regenerateCertificatesOf(entitlementCurator
-            .listModifying(entitlement));
+            .listModifying(entitlement), true);
 
         // Check consumer's new compliance status and save:
         ComplianceStatus compliance = complianceRules.getStatus(consumer, new Date());

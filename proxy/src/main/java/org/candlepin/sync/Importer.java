@@ -278,7 +278,7 @@ public class Importer {
         }
 
         entitlementsToRegen.addAll(poolManager.refreshPoolsWithoutRegeneration(owner));
-        poolManager.regenerateCertificatesOf(entitlementsToRegen);
+        poolManager.regenerateCertificatesOf(entitlementsToRegen, true);
         return consumer;
     }
 

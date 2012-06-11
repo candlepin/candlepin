@@ -112,19 +112,19 @@ public interface PoolManager {
 
     Set<Entitlement> refreshPoolsWithoutRegeneration(Owner owner);
 
-    void regenerateCertificatesOf(Iterable<Entitlement> iterable);
+    void regenerateCertificatesOf(Iterable<Entitlement> iterable, boolean lazy);
 
     /**
      * @param e
      * @param ueberCertificate TODO
      */
-    void regenerateCertificatesOf(Entitlement e, boolean ueberCertificate);
+    void regenerateCertificatesOf(Entitlement e, boolean ueberCertificate, boolean lazy);
 
-    void regenerateCertificatesOf(Environment env, Set<String> contentIds);
+    void regenerateCertificatesOf(Environment env, Set<String> contentIds, boolean lazy);
 
-    void regenerateCertificatesOf(String productId);
+    void regenerateCertificatesOf(String productId, boolean lazy);
 
-    void regenerateEntitlementCertificates(Consumer consumer);
+    void regenerateEntitlementCertificates(Consumer consumer, boolean lazy);
 
     int revokeAllEntitlements(Consumer consumer);
 

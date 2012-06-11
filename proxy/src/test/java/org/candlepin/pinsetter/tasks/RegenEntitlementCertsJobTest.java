@@ -49,6 +49,6 @@ public class RegenEntitlementCertsJobTest {
         recj.execute(jec);
 
         // verification
-        verify(pm).regenerateCertificatesOf(eq("foobarbaz"));
+        verify(pm).regenerateCertificatesOf(eq("foobarbaz"), eq(true));
     }
 }

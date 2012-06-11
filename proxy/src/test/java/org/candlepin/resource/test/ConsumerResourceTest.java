@@ -148,7 +148,7 @@ public class ConsumerResourceTest {
             new Config());
         cr.regenerateEntitlementCertificates(consumer.getUuid(), null);
         Mockito.verify(mgr, Mockito.times(1))
-            .regenerateEntitlementCertificates(eq(consumer));
+            .regenerateEntitlementCertificates(eq(consumer), eq(true));
     }
 
     @Test

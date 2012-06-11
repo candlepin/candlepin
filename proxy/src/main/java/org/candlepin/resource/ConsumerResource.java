@@ -1449,11 +1449,11 @@ public class ConsumerResource {
         @QueryParam("entitlement") String entitlementId) {
         if (entitlementId != null) {
             Entitlement e = verifyAndLookupEntitlement(entitlementId);
-            poolManager.regenerateCertificatesOf(e, false);
+            poolManager.regenerateCertificatesOf(e, false, true);
         }
         else {
             Consumer c = verifyAndLookupConsumer(consumerUuid);
-            poolManager.regenerateEntitlementCertificates(c);
+            poolManager.regenerateEntitlementCertificates(c, true);
         }
     }
 

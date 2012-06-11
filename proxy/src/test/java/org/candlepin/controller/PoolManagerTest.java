@@ -200,7 +200,7 @@ public class PoolManagerTest {
         this.manager.updatePoolForSubscription(p, s);
         verify(mockPoolCurator).retrieveFreeEntitlementsOfPool(any(Pool.class),
             eq(true));
-        verify(manager).regenerateCertificatesOf(anySet());
+        verify(manager).regenerateCertificatesOf(anySet(), eq(true));
         verify(mockEventSink, times(1)).sendEvent(any(Event.class));
     }
 
@@ -225,7 +225,7 @@ public class PoolManagerTest {
         this.manager.updatePoolForSubscription(p, s);
         verify(mockPoolCurator).retrieveFreeEntitlementsOfPool(any(Pool.class),
             eq(true));
-        verify(manager).regenerateCertificatesOf(anySet());
+        verify(manager).regenerateCertificatesOf(anySet(), eq(true));
         verify(mockEventSink, times(1)).sendEvent(any(Event.class));
     }
 
@@ -289,7 +289,7 @@ public class PoolManagerTest {
         this.manager.updatePoolForSubscription(p, s);
         verify(mockPoolCurator).retrieveFreeEntitlementsOfPool(any(Pool.class),
             eq(true));
-        verify(manager).regenerateCertificatesOf(anySet());
+        verify(manager).regenerateCertificatesOf(anySet(), eq(true));
         verify(mockEventSink, times(1)).sendEvent(any(Event.class));
     }
 
@@ -308,7 +308,7 @@ public class PoolManagerTest {
             .thenReturn(updatedPools);
 
         this.manager.updatePoolForSubscription(p, s);
-        verify(manager).regenerateCertificatesOf(anySet());
+        verify(manager).regenerateCertificatesOf(anySet(), eq(true));
         verifyAndAssertForAllChanges(s, p, 1);
     }
 
@@ -354,7 +354,7 @@ public class PoolManagerTest {
             .thenReturn(updatedPools);
 
         this.manager.updatePoolForSubscription(p, s);
-        verify(manager, times(1)).regenerateCertificatesOf(any(Iterable.class));
+        verify(manager, times(1)).regenerateCertificatesOf(any(Iterable.class), eq(true));
         verifyAndAssertForAllChanges(s, p, 5);
     }
 

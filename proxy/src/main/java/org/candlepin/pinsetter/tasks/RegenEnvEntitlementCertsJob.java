@@ -48,6 +48,6 @@ public class RegenEnvEntitlementCertsJob implements Job {
         Set<String> contentIds = (Set<String>)
             arg0.getJobDetail().getJobDataMap().get(CONTENT);
 
-        this.poolManager.regenerateCertificatesOf(env, contentIds);
+        this.poolManager.regenerateCertificatesOf(env, contentIds, true);
     }
 }
