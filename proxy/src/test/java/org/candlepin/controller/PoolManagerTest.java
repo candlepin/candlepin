@@ -15,6 +15,8 @@
 package org.candlepin.controller;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -196,11 +198,39 @@ public class PoolManagerTest {
         when(poolRulesMock.updatePools(any(Subscription.class), any(List.class)))
             .thenReturn(updatedPools);
 
-
         this.manager.updatePoolForSubscription(p, s);
         verify(mockPoolCurator).retrieveFreeEntitlementsOfPool(any(Pool.class),
             eq(true));
         verify(manager).regenerateCertificatesOf(anySet(), eq(true));
+        verify(mockEventSink, times(1)).sendEvent(any(Event.class));
+    }
+
+    @Test
+    public void testLazyRegenerate() {
+        Entitlement e = new Entitlement();
+        manager.regenerateCertificatesOf(e, false, true);
+        assertTrue(e.getDirty());
+        verifyZeroInteractions(entCertAdapterMock);
+    }
+
+    @Test
+    public void testNonLazyRegenerate() throws Exception {
+        Subscription s = TestUtil.createSubscription(getOwner(),
+            product);
+        s.setId("testSubId");
+        pool.setSubscriptionId(s.getId());
+        Entitlement e = new Entitlement(pool, TestUtil.createConsumer(o),
+            pool.getStartDate(), pool.getEndDate(), 1);
+        e.setDirty(true);
+
+        when(mockSubAdapter.getSubscription(pool.getSubscriptionId())).thenReturn(s);
+
+        manager.regenerateCertificatesOf(e, false, false);
+        assertFalse(e.getDirty());
+
+        verify(entCertAdapterMock).revokeEntitlementCertificates(e);
+        verify(entCertAdapterMock).generateEntitlementCert(eq(e), eq(s),
+            eq(product));
         verify(mockEventSink, times(1)).sendEvent(any(Event.class));
     }
 
@@ -355,7 +385,10 @@ public class PoolManagerTest {
 
         this.manager.updatePoolForSubscription(p, s);
         verify(manager, times(1)).regenerateCertificatesOf(any(Iterable.class), eq(true));
-        verifyAndAssertForAllChanges(s, p, 5);
+
+        // One event for pool changes, but the entitlement regens are lazy so the event for
+        // each of those is not sent at this time:
+        verifyAndAssertForAllChanges(s, p, 1);
     }
 
     @Test

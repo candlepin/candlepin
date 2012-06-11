@@ -583,9 +583,6 @@ public class CandlepinPoolManager implements PoolManager {
             sub = findSubscription(e);
         }
 
-        // TODO: Assuming every entitlement = generate a cert, most likely we'll
-        // want
-        // to know if this product entails granting a cert someday.
         try {
             return generateUeberCert ?
                 entCertAdapter.generateUeberCert(e, sub, product) :
@@ -677,13 +674,13 @@ public class CandlepinPoolManager implements PoolManager {
     public void regenerateCertificatesOf(Entitlement e, boolean ueberCertificate,
         boolean lazy) {
 
-//        if (lazy) {
-//            if (log.isDebugEnabled()) {
-//                log.debug("Marking certificates dirty for entitlement: " + e);
-//            }
-//            e.setDirty(true);
-//            return;
-//        }
+        if (lazy) {
+            if (log.isDebugEnabled()) {
+                log.debug("Marking certificates dirty for entitlement: " + e);
+            }
+            e.setDirty(true);
+            return;
+        }
 
         if (log.isDebugEnabled()) {
             log.debug("Revoking entitlementCertificates of : " + e);
@@ -699,6 +696,7 @@ public class CandlepinPoolManager implements PoolManager {
         // below call creates new certificates and saves it to the backend.
         EntitlementCertificate generated = this.generateEntitlementCertificate(
             e.getConsumer(), e.getPool(), e, ueberCertificate);
+        e.setDirty(false);
         this.entitlementCurator.refresh(e);
 
         // send entitlement changed event.

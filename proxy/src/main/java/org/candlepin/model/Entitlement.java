@@ -103,7 +103,7 @@ public class Entitlement extends AbstractHibernateObject implements Linkable, Ow
     private String accountNumber;
     private String contractNumber;
 
-    private Boolean dirty;
+    private Boolean dirty = Boolean.FALSE;
 
     /**
      * default ctor
