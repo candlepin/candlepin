@@ -22,6 +22,7 @@ import org.junit.Test;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 
 /**
  * ResourceDateParserTest
@@ -95,9 +96,9 @@ public class ResourceDateParserTest {
     @Test
     public void parseDateTime() {
         Date parsed = ResourceDateParser.parseDateString(
-            "1997-07-16T19:20:30-04:00");
+            "1997-07-16T19:20:30-00:00");
 
-        Calendar cal = Calendar.getInstance();
+        Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
         cal.setTime(parsed);
         // adding one because get returns 0 based month's which to me
         // is confusing, January should always be 1 not 0 :)
