@@ -22,11 +22,11 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.apache.commons.io.FileUtils;
 import org.candlepin.auth.Principal;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.controller.PoolManager;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerTypeCurator;
@@ -42,6 +42,8 @@ import org.candlepin.pki.PKIUtility;
 import org.candlepin.policy.js.export.JsExportRules;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
+
+import org.apache.commons.io.FileUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
@@ -86,6 +88,7 @@ public class ExporterTest {
     private CandlepinCommonTestConfig config;
     private JsExportRules exportRules;
     private PrincipalProvider pprov;
+    private PoolManager poolManager;
 
     @Before
     public void setUp() {
@@ -106,6 +109,7 @@ public class ExporterTest {
         config = new CandlepinCommonTestConfig();
         exportRules = mock(JsExportRules.class);
         pprov = mock(PrincipalProvider.class);
+        poolManager = mock(PoolManager.class);
 
         when(exportRules.canExport(any(Entitlement.class))).thenReturn(Boolean.TRUE);
     }
@@ -163,7 +167,7 @@ public class ExporterTest {
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov);
+            pce, ec, ee, pki, config, exportRules, pprov, poolManager);
 
         File export = e.getFullExport(consumer);
 
@@ -194,7 +198,7 @@ public class ExporterTest {
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov);
+            pce, ec, ee, pki, config, exportRules, pprov, poolManager);
         File export = e.getFullExport(consumer);
 
         // VERIFY

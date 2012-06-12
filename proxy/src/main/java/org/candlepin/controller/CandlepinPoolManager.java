@@ -55,6 +55,7 @@ import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.Util;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -879,5 +880,16 @@ public class CandlepinPoolManager implements PoolManager {
         pool = poolCurator.lockAndLoad(pool);
         pool.setQuantity(set);
         return poolCurator.merge(pool);
+    }
+
+    public void regenerateDirtyEntitlements(List<Entitlement> entitlements) {
+        List<Entitlement> dirtyEntitlements = new ArrayList<Entitlement>();
+        for (Entitlement e : entitlements) {
+            if (e.getDirty()) {
+                dirtyEntitlements.add(e);
+            }
+        }
+
+        regenerateCertificatesOf(dirtyEntitlements, false);
     }
 }

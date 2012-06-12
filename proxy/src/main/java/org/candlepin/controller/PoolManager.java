@@ -147,4 +147,6 @@ public interface PoolManager {
     Pool updatePoolQuantity(Pool pool, long adjust);
 
     Pool setPoolQuantity(Pool pool, long set);
+
+    void regenerateDirtyEntitlements(List<Entitlement> entitlements);
 }

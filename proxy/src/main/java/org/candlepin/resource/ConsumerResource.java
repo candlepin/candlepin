@@ -975,6 +975,8 @@ public class ConsumerResource {
             log.debug("Getting client certificates for consumer: " + consumerUuid);
         }
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        poolManager.regenerateDirtyEntitlements(
+            entitlementCurator.listByConsumer(consumer));
 
         Set<Long> serialSet = this.extractSerials(serials);
 
@@ -1009,6 +1011,8 @@ public class ConsumerResource {
                 consumerUuid);
         }
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        poolManager.regenerateDirtyEntitlements(
+            entitlementCurator.listByConsumer(consumer));
 
         Set<Long> serialSet = this.extractSerials(serials);
         // filtering requires a null set, so make this null if it is
@@ -1080,6 +1084,8 @@ public class ConsumerResource {
                 consumerUuid);
         }
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        poolManager.regenerateDirtyEntitlements(
+            entitlementCurator.listByConsumer(consumer));
 
         List<CertificateSerialDto> allCerts = new LinkedList<CertificateSerialDto>();
         for (EntitlementCertificate cert : entCertService
@@ -1305,18 +1311,22 @@ public class ConsumerResource {
         @QueryParam("product") String productId) {
 
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        List<Entitlement> returnedEntitlements;
         if (productId != null) {
             Product p = productAdapter.getProductById(productId);
             if (p == null) {
                 throw new BadRequestException(i18n.tr("No such product: {0}",
                     productId));
             }
-            return entitlementCurator.listByConsumerAndProduct(consumer,
+            returnedEntitlements = entitlementCurator.listByConsumerAndProduct(consumer,
                 productId);
         }
+        else {
+            returnedEntitlements = entitlementCurator.listByConsumer(consumer);
+        }
 
-        return entitlementCurator.listByConsumer(consumer);
-
+        poolManager.regenerateDirtyEntitlements(returnedEntitlements);
+        return returnedEntitlements;
     }
 
     /**
@@ -1483,6 +1493,7 @@ public class ConsumerResource {
 
         File archive;
         try {
+            // Dirty entitlements are regenerated inside the exporter.
             archive = exporter.getFullExport(consumer);
             response.addHeader("Content-Disposition", "attachment; filename=" +
                 archive.getName());
