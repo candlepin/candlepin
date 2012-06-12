@@ -107,8 +107,9 @@ public interface PoolManager {
      * with separately from this event.
      *
      * @param owner Owner to be refreshed.
+     * @param lazy Should certificates be generated lazily. (normally yes)
      */
-    void refreshPools(Owner owner);
+    void refreshPools(Owner owner, boolean lazy);
 
     Set<Entitlement> refreshPoolsWithoutRegeneration(Owner owner);
 

@@ -322,10 +322,12 @@ class Candlepin
     return results
   end
 
-  def refresh_pools(owner_key, immediate=false, create_owner=false)
+  def refresh_pools(owner_key, immediate=false, create_owner=false,
+    lazy_regen=true)
     return async_call(immediate) do
-      url = "/owners/#{owner_key}/subscriptions"
-      url += "?auto_create_owner=true" if create_owner
+      url = "/owners/#{owner_key}/subscriptions?"
+      url += "auto_create_owner=true&" if create_owner
+      url += "lazy_regen=false&" if !lazy_regen
       put(url)
     end
   end

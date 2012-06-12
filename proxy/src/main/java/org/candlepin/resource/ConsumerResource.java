@@ -593,7 +593,7 @@ public class ConsumerResource {
                 log.info("Principal carries permission for owner that does not exist.");
                 log.info("Creating new owner: " + owner.getKey());
                 existingOwner = ownerCurator.create(owner);
-                poolManager.refreshPools(existingOwner);
+                poolManager.refreshPools(existingOwner, true);
             }
         }
     }

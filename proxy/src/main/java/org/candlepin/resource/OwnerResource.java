@@ -783,7 +783,8 @@ public class OwnerResource {
     public JobDetail refreshPools(
         // TODO: Can we verify with autocreate?
         @PathParam("owner_key") String ownerKey,
-        @QueryParam("auto_create_owner") @DefaultValue("false") Boolean autoCreateOwner) {
+        @QueryParam("auto_create_owner") @DefaultValue("false") Boolean autoCreateOwner,
+        @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
 
         Owner owner = ownerCurator.lookupByKey(ownerKey);
         if (owner == null) {
@@ -796,7 +797,7 @@ public class OwnerResource {
             }
         }
 
-        return RefreshPoolsJob.forOwner(owner);
+        return RefreshPoolsJob.forOwner(owner, lazyRegen);
     }
 
     /**
@@ -867,7 +868,7 @@ public class OwnerResource {
         exportCurator.delete(metadata);
 
         // Refresh pools to cleanup entitlements:
-        return RefreshPoolsJob.forOwner(owner);
+        return RefreshPoolsJob.forOwner(owner, false);
     }
 
     /**

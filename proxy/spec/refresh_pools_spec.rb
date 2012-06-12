@@ -92,4 +92,40 @@ describe 'Refresh Pools' do
     @cp.list_pools({:owner => owner.id}).size.should == 0
     @cp.get_consumer(consumer.uuid).entitlementCount.should == 0
   end
+
+  it 'regenerates entitlements' do
+    owner = create_owner random_string
+    product = create_product(random_string, random_string)
+    new_product = create_product(random_string, random_string)
+    sub = @cp.create_subscription(owner['key'], product.id, 500,
+      [])
+    @cp.refresh_pools(owner['key'])
+    pools = @cp.list_pools({:owner => owner.id})
+    pools.length.should == 1
+
+    user = user_client(owner, random_string("user"))
+
+    consumer_id = random_string("consumer")
+    consumer = consumer_client(user, consumer_id)
+    ents = consumer.consume_pool(pools.first.id)
+    ents.size.should == 1
+    ent = ents[0]
+    old_cert = ent['certificates'][0]
+    old_serial = old_cert['serial']['serial']
+    pp old_serial
+
+    # Change the product on subscription to trigger a regenerate:
+    sub['product'] = {'id' => new_product['id']}
+    @cp.update_subscription(sub)
+    @cp.refresh_pools(owner['key'], false, false, true)
+    ent = @cp.get_entitlement(ent['id'])
+    new_cert = ent['certificates'][0]
+    new_serial = new_cert['serial']['serial']
+    pp new_serial
+    new_serial.should_not == old_serial
+
+    @cp.get_consumer(consumer.uuid).entitlementCount.should == 1
+  end
+
+
 end

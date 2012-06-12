@@ -40,6 +40,8 @@ public class RefreshPoolsJob implements Job {
     private OwnerCurator ownerCurator;
     private PoolManager poolManager;
 
+    public static final String LAZY_REGEN = "lazy_regen";
+
     @Inject
     public RefreshPoolsJob(OwnerCurator ownerCurator, PoolManager poolManager) {
         this.ownerCurator = ownerCurator;
@@ -58,6 +60,7 @@ public class RefreshPoolsJob implements Job {
     @Transactional
     public void execute(JobExecutionContext context) throws JobExecutionException {
         String ownerKey = context.getMergedJobDataMap().getString(JobStatus.TARGET_ID);
+        Boolean lazy = context.getMergedJobDataMap().getBoolean(LAZY_REGEN);
         Owner owner = ownerCurator.lookupByKey(ownerKey);
         if (owner == null) {
             context.setResult("Nothing to do. Owner no longer exists");
@@ -65,7 +68,7 @@ public class RefreshPoolsJob implements Job {
         }
 
         // Assume that we verified the request in the resource layer:
-        poolManager.refreshPools(owner);
+        poolManager.refreshPools(owner, lazy);
 
         context.setResult("Pools refreshed for owner " + owner.getDisplayName());
     }
@@ -76,10 +79,11 @@ public class RefreshPoolsJob implements Job {
      * @param owner the owner to refresh
      * @return a {@link JobDetail} that describes the job run
      */
-    public static JobDetail forOwner(Owner owner) {
+    public static JobDetail forOwner(Owner owner, Boolean lazy) {
         JobDataMap map = new JobDataMap();
         map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.OWNER);
         map.put(JobStatus.TARGET_ID, owner.getKey());
+        map.put(LAZY_REGEN, lazy);
 
         // Not sure if this is the best way to go:
         // Give each job a UUID to ensure that it is unique

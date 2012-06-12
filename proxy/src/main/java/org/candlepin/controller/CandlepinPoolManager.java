@@ -188,19 +188,11 @@ public class CandlepinPoolManager implements PoolManager {
         return entitlementsToRegen;
     }
 
-    /**
-     * Check our underlying subscription service and update the pool data. Note
-     * that refreshing the pools doesn't actually take any action, should a
-     * subscription be reduced, expired, or revoked. Pre-existing entitlements
-     * will need to be dealt with separately from this event.
-     *
-     * @param owner Owner to be refreshed.
-     */
-    public void refreshPools(Owner owner) {
+    public void refreshPools(Owner owner, boolean lazy) {
         Set<Entitlement> entitlementsToRegen = refreshPoolsWithoutRegeneration(owner);
 
         // now regenerate all pending entitlements
-        regenerateCertificatesOf(entitlementsToRegen, true);
+        regenerateCertificatesOf(entitlementsToRegen, lazy);
     }
 
     private boolean isExpired(Subscription subscription) {
