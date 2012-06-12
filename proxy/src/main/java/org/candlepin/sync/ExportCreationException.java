@@ -27,4 +27,8 @@ public class ExportCreationException extends SyncException {
         super(msg, e);
     }
 
+    public ExportCreationException(String msg) {
+        super(msg);
+    }
+
 }
