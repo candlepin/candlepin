@@ -19,7 +19,6 @@ import com.google.inject.Inject;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.candlepin.config.Config;
-import org.candlepin.controller.PoolManager;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
@@ -76,7 +75,6 @@ public class Exporter {
     private Config config;
     private JsExportRules exportRules;
     private PrincipalProvider principalProvider;
-    private PoolManager poolManager;
 
     @Inject
     public Exporter(ConsumerTypeCurator consumerTypeCurator, MetaExporter meta,
@@ -86,7 +84,7 @@ public class Exporter {
         ProductServiceAdapter productAdapter, ProductCertExporter productCertExporter,
         EntitlementCurator entitlementCurator, EntitlementExporter entExporter,
         PKIUtility pki, Config config, JsExportRules exportRules,
-        PrincipalProvider principalProvider, PoolManager poolManager) {
+        PrincipalProvider principalProvider) {
 
         this.consumerTypeCurator = consumerTypeCurator;
 
@@ -105,7 +103,6 @@ public class Exporter {
         this.config = config;
         this.exportRules = exportRules;
         this.principalProvider = principalProvider;
-        this.poolManager = poolManager;
 
         mapper = SyncUtils.getObjectMapper(this.config);
     }
@@ -117,9 +114,6 @@ public class Exporter {
             File tmpDir = new SyncUtils(config).makeTempDir("export");
             File baseDir = new File(tmpDir.getAbsolutePath(), "export");
             baseDir.mkdir();
-
-            poolManager.regenerateDirtyEntitlements(
-                entitlementCurator.listByConsumer(consumer));
 
             exportMeta(baseDir);
             exportConsumer(baseDir, consumer);

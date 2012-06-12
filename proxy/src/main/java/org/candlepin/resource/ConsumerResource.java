@@ -1491,9 +1491,11 @@ public class ConsumerResource {
                     consumerUuid, consumer.getType().getLabel()));
         }
 
+        poolManager.regenerateDirtyEntitlements(
+            entitlementCurator.listByConsumer(consumer));
+
         File archive;
         try {
-            // Dirty entitlements are regenerated inside the exporter.
             archive = exporter.getFullExport(consumer);
             response.addHeader("Content-Disposition", "attachment; filename=" +
                 archive.getName());

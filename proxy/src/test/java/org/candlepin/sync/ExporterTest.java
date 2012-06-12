@@ -109,7 +109,6 @@ public class ExporterTest {
         config = new CandlepinCommonTestConfig();
         exportRules = mock(JsExportRules.class);
         pprov = mock(PrincipalProvider.class);
-        poolManager = mock(PoolManager.class);
 
         when(exportRules.canExport(any(Entitlement.class))).thenReturn(Boolean.TRUE);
     }
@@ -167,7 +166,7 @@ public class ExporterTest {
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, poolManager);
+            pce, ec, ee, pki, config, exportRules, pprov);
 
         File export = e.getFullExport(consumer);
 
@@ -198,7 +197,7 @@ public class ExporterTest {
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, poolManager);
+            pce, ec, ee, pki, config, exportRules, pprov);
         File export = e.getFullExport(consumer);
 
         // VERIFY
