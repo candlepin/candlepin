@@ -1456,14 +1456,15 @@ public class ConsumerResource {
     @Path("/{consumer_uuid}/certificates")
     public void regenerateEntitlementCertificates(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-        @QueryParam("entitlement") String entitlementId) {
+        @QueryParam("entitlement") String entitlementId,
+        @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
         if (entitlementId != null) {
             Entitlement e = verifyAndLookupEntitlement(entitlementId);
-            poolManager.regenerateCertificatesOf(e, false, true);
+            poolManager.regenerateCertificatesOf(e, false, lazyRegen);
         }
         else {
             Consumer c = verifyAndLookupConsumer(consumerUuid);
-            poolManager.regenerateEntitlementCertificates(c, true);
+            poolManager.regenerateEntitlementCertificates(c, lazyRegen);
         }
     }
 

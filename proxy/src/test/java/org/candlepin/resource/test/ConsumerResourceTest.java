@@ -155,7 +155,7 @@ public class ConsumerResourceTest {
             null, null, null, null, null, null, null, null, null, null, null,
             null, mgr, null, null, null, null, null, null, null, null,
             new Config());
-        cr.regenerateEntitlementCertificates(consumer.getUuid(), null);
+        cr.regenerateEntitlementCertificates(consumer.getUuid(), null, true);
         Mockito.verify(mgr, Mockito.times(1))
             .regenerateEntitlementCertificates(eq(consumer), eq(true));
     }
@@ -343,7 +343,7 @@ public class ConsumerResourceTest {
             null, null, null, null, null, null, null, null, null, null, null,
             new Config());
 
-        consumerResource.regenerateEntitlementCertificates("xyz", null);
+        consumerResource.regenerateEntitlementCertificates("xyz", null, true);
     }
 
     private Consumer createConsumer() {

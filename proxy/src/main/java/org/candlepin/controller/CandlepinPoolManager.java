@@ -605,12 +605,11 @@ public class CandlepinPoolManager implements PoolManager {
 
     public void regenerateEntitlementCertificates(Consumer consumer, boolean lazy) {
         log.info("Regenerating #" + consumer.getEntitlements().size() +
-            " entitlement's certificates for consumer :" + consumer);
+            " entitlement certificates for consumer: " + consumer);
         // TODO - Assumes only 1 entitlement certificate exists per entitlement
         this.regenerateCertificatesOf(consumer.getEntitlements(), lazy);
-        log.info("Completed Regenerating #" +
-            consumer.getEntitlements().size() +
-            " entitlement's certificates for consumer: " + consumer);
+        log.info("Finished regenerating entitlement certificates for consumer: " +
+            consumer);
     }
 
     @Transactional

@@ -214,6 +214,16 @@ public class PoolManagerTest {
     }
 
     @Test
+    public void testLazyRegenerateForConsumer() {
+        Entitlement e = new Entitlement();
+        Consumer c = new Consumer();
+        c.addEntitlement(e);
+        manager.regenerateEntitlementCertificates(c, true);
+        assertTrue(e.getDirty());
+        verifyZeroInteractions(entCertAdapterMock);
+    }
+
+    @Test
     public void testNonLazyRegenerate() throws Exception {
         Subscription s = TestUtil.createSubscription(getOwner(),
             product);

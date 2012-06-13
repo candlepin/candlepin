@@ -691,8 +691,8 @@ class Candlepin
     end
   end
 
-  def regenerate_entitlement_certificates
-    return put("/consumers/#{@uuid}/certificates")
+  def regenerate_entitlement_certificates(lazy_regen=true)
+    return put("/consumers/#{@uuid}/certificates?lazy_regen=#{lazy_regen}")
   end
 
   def regenerate_entitlement_certificates_for_product(product_id, immediate=false, lazy_regen=true)
