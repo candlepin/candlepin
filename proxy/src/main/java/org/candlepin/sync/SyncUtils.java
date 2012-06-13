@@ -27,6 +27,7 @@ import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.exceptions.IseException;
+import org.candlepin.jackson.ExportBeanPropertyFilter;
 
 /**
  * SyncUtils
@@ -53,8 +54,10 @@ class SyncUtils {
         mapper.setAnnotationIntrospector(pair);
         mapper.configure(SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS, false);
 
+        // Since each class can only have one @JsonFilter annotation, and most have
+        // ApiHateoas, We just default here to using the Export filter.
         SimpleFilterProvider filterProvider = new SimpleFilterProvider();
-        filterProvider.setFailOnUnknownId(false);
+        filterProvider.setDefaultFilter(new ExportBeanPropertyFilter());
         mapper.setFilters(filterProvider);
 
         if (config != null) {
