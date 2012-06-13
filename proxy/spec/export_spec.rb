@@ -60,6 +60,13 @@ describe 'Candlepin Export' do
     end
   end
 
+  it 'should not include consumer json in entitlements' do
+    Dir["#{@export_dir}/entitlements/*.json"].find_all do |ent|
+      JSON.parse(File.read(ent)).has_key? 'consumer'
+    end.should be_empty
+  end
+
+
   it 'should not export any virt product entitlements' do
     Dir["#{@export_dir}/entitlements/*.json"].find_all do |ent|
       JSON.parse(File.read(ent)).pool['productName'].include? 'virt_product'
