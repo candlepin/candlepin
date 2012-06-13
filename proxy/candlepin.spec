@@ -11,7 +11,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.5.33
+Version: 0.5.34
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -206,6 +206,9 @@ fi
 
 
 %changelog
+* Wed Jun 13 2012 James Bowes <jbowes@redhat.com> 0.5.34-1
+- sync: keep recursed consumer json out of entitlements (jbowes@redhat.com)
+
 * Wed May 30 2012 Alex Wood <awood@redhat.com> 0.5.33-1
 - 826602: Upgrade to newer version of c3p0. (awood@redhat.com)
 - 817323: Fix race condition on pools for entitlement deletion
