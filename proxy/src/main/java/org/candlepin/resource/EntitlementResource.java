@@ -38,6 +38,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -178,10 +179,12 @@ public class EntitlementResource {
     @PUT
     @Path("product/{product_id}")
     public JobDetail regenerateEntitlementCertificatesForProduct(
-            @PathParam("product_id") String productId) {
+            @PathParam("product_id") String productId,
+            @QueryParam("lazy_regen") @DefaultValue("true") boolean lazyRegen) {
         prodAdapter.purgeCache();
         JobDataMap map = new JobDataMap();
         map.put(RegenProductEntitlementCertsJob.PROD_ID, productId);
+        map.put(RegenProductEntitlementCertsJob.LAZY_REGEN, lazyRegen);
 
         JobDetail detail = newJob(RegenProductEntitlementCertsJob.class)
             .withIdentity("regen_entitlement_cert_of_prod" + Util.generateUUID())

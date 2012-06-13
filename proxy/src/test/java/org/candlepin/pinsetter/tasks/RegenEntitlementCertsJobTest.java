@@ -41,6 +41,7 @@ public class RegenEntitlementCertsJobTest {
         JobDataMap jdm = mock(JobDataMap.class);
 
         when(jdm.getString(eq("product_id"))).thenReturn("foobarbaz");
+        when(jdm.getBoolean(eq("lazy_regen"))).thenReturn(true);
         when(detail.getJobDataMap()).thenReturn(jdm);
         when(jec.getJobDetail()).thenReturn(detail);
 
