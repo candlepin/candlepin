@@ -44,6 +44,7 @@ import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -162,7 +163,8 @@ public class EnvironmentResource {
     @Path("/{env_id}/content")
     public JobDetail promoteContent(
             @PathParam("env_id") @Verify(Environment.class) String envId,
-            List<EnvironmentContent> contentToPromote) {
+            List<EnvironmentContent> contentToPromote,
+            @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
 
         Environment env = lookupEnvironment(envId);
 
@@ -179,6 +181,7 @@ public class EnvironmentResource {
         JobDataMap map = new JobDataMap();
         map.put(RegenEnvEntitlementCertsJob.ENV, env);
         map.put(RegenEnvEntitlementCertsJob.CONTENT, contentIds);
+        map.put(RegenEnvEntitlementCertsJob.LAZY_REGEN, lazyRegen);
 
         JobDetail detail = newJob(RegenEnvEntitlementCertsJob.class)
             .withIdentity("regen_entitlement_cert_of_env" + Util.generateUUID())
@@ -211,7 +214,8 @@ public class EnvironmentResource {
     @Path("/{env_id}/content")
     public JobDetail demoteContent(
         @PathParam("env_id") @Verify(Environment.class) String envId,
-        @QueryParam("content") String[] contentIds) {
+        @QueryParam("content") String[] contentIds,
+        @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
 
         Environment e = lookupEnvironment(envId);
         Set<String> demotedContentIds = new HashSet<String>();
@@ -225,6 +229,7 @@ public class EnvironmentResource {
         JobDataMap map = new JobDataMap();
         map.put(RegenEnvEntitlementCertsJob.ENV, e);
         map.put(RegenEnvEntitlementCertsJob.CONTENT, demotedContentIds);
+        map.put(RegenEnvEntitlementCertsJob.LAZY_REGEN, lazyRegen);
 
         JobDetail detail = newJob(RegenEnvEntitlementCertsJob.class)
             .withIdentity("regen_entitlement_cert_of_env" + Util.generateUUID())
