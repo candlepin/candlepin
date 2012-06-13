@@ -14,35 +14,23 @@
  */
 package org.candlepin.jackson;
 
+
 import org.codehaus.jackson.JsonGenerator;
-import org.codehaus.jackson.JsonStreamContext;
 import org.codehaus.jackson.map.SerializerProvider;
 import org.codehaus.jackson.map.ser.BeanPropertyWriter;
 
 /**
- * HateoasBeanPropertyFilter: This is a Jackson filter which first checks if we
- * are serializing a nested object, and if so switches to HATEOAS style
- * serialization. Only properties whose getters have the HateoasField annotation
- * will be included in the resulting JSON. Otherwise we will serialize the
- * object normally.
+ * ExportBeanPropertyFilter: A jackson filter used during creation of exports.
+ * It looks for any fields on objects with the @SkipOnExport annotation, and skips them.
  */
-public class HateoasBeanPropertyFilter extends JsonBeanPropertyFilter {
+public class ExportBeanPropertyFilter extends JsonBeanPropertyFilter {
 
     @Override
     public void serializeAsField(Object obj, JsonGenerator jsonGenerator,
         SerializerProvider serializerProvider, BeanPropertyWriter writer) throws Exception {
-        JsonStreamContext context = jsonGenerator.getOutputContext();
-
-        if ((context.getParent() == null) || (!context.getParent().inObject())) {
-            // Not serializing a nested object, so we'll write normally:
+        if (!annotationPresent(obj, writer.getName(), SkipExport.class)) {
             writer.serializeAsField(obj, jsonGenerator, serializerProvider);
         }
-        else {
-            // We are doing HATEOAS serialization at this point, check if the getter
-            // for this property has the annotation, serialize if so, skip it if not:
-            if (annotationPresent(obj, writer.getName(), HateoasField.class)) {
-                writer.serializeAsField(obj, jsonGenerator, serializerProvider);
-            }
-        }
     }
+
 }
