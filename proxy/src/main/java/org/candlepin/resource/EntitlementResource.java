@@ -34,6 +34,7 @@ import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
 
+import java.util.Arrays;
 import java.util.List;
 
 import javax.ws.rs.DELETE;
@@ -141,6 +142,8 @@ public class EntitlementResource {
     public Entitlement getEntitlement(
         @PathParam("dbid") @Verify(Entitlement.class) String dbid) {
         Entitlement toReturn = entitlementCurator.find(dbid);
+        List<Entitlement> tempList = Arrays.asList(toReturn);
+        poolManager.regenerateDirtyEntitlements(tempList);
         if (toReturn != null) {
             return toReturn;
         }

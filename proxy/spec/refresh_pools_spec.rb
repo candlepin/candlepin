@@ -112,7 +112,6 @@ describe 'Refresh Pools' do
     ent = ents[0]
     old_cert = ent['certificates'][0]
     old_serial = old_cert['serial']['serial']
-    pp old_serial
 
     # Change the product on subscription to trigger a regenerate:
     sub['product'] = {'id' => new_product['id']}
@@ -121,8 +120,8 @@ describe 'Refresh Pools' do
     ent = @cp.get_entitlement(ent['id'])
     new_cert = ent['certificates'][0]
     new_serial = new_cert['serial']['serial']
-    pp new_serial
     new_serial.should_not == old_serial
+    ent['dirty'].should be_false
 
     @cp.get_consumer(consumer.uuid).entitlementCount.should == 1
   end

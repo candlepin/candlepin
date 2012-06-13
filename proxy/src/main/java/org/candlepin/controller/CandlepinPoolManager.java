@@ -690,7 +690,7 @@ public class CandlepinPoolManager implements PoolManager {
         EntitlementCertificate generated = this.generateEntitlementCertificate(
             e.getConsumer(), e.getPool(), e, ueberCertificate);
         e.setDirty(false);
-        this.entitlementCurator.refresh(e);
+        entitlementCurator.merge(e);
 
         // send entitlement changed event.
         this.sink.sendEvent(this.eventFactory.entitlementChanged(e));
@@ -878,6 +878,7 @@ public class CandlepinPoolManager implements PoolManager {
         List<Entitlement> dirtyEntitlements = new ArrayList<Entitlement>();
         for (Entitlement e : entitlements) {
             if (e.getDirty()) {
+                log.info("Found dirty entitlement to regenerate: " + e);
                 dirtyEntitlements.add(e);
             }
         }
