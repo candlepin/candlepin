@@ -15,6 +15,7 @@
 package org.candlepin.sync;
 
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerType;
 
 /**
  * ConsumerDTO
@@ -22,13 +23,15 @@ import org.candlepin.model.Consumer;
 public class ConsumerDto {
     private String uuid;
     private String name;
+    private ConsumerType type;
 
     public ConsumerDto() {
     }
 
-    ConsumerDto(String uuid, String name) {
+    ConsumerDto(String uuid, String name, ConsumerType type) {
         this.uuid = uuid;
         this.name = name;
+        this.type = type;
     }
 
     public String getUuid() {
@@ -47,10 +50,19 @@ public class ConsumerDto {
         this.name = name;
     }
 
+    public ConsumerType getType() {
+        return type;
+    }
+
+    public void setType(ConsumerType type) {
+        this.type = type;
+    }
+
     public Consumer consumer() {
         Consumer toReturn = new Consumer();
         toReturn.setUuid(uuid);
         toReturn.setName(name);
+        toReturn.setType(type);
         return toReturn;
     }
 }

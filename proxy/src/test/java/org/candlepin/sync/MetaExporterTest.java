@@ -43,11 +43,12 @@ public class MetaExporterTest {
         meta.setVersion("0.1.0");
         meta.setCreated(now);
         meta.setPrincipalName("myUsername");
+        meta.setWebAppPrefix("webapp_prefix");
 
         metaEx.export(mapper, writer, meta);
 
         assertEquals("{\"version\":\"0.1.0\",\"created\":\"" + nowString +
-            "\",\"principalName\":\"myUsername\"}",
+            "\",\"principalName\":\"myUsername\",\"webAppPrefix\":\"webapp_prefix\"}",
             writer.toString());
     }
 

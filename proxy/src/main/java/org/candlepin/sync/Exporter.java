@@ -276,9 +276,18 @@ public class Exporter {
         File file = new File(baseDir.getCanonicalPath(), "meta.json");
         FileWriter writer = new FileWriter(file);
         Meta m = new Meta(getVersion(), new Date(),
-            principalProvider.get().getPrincipalName());
+            principalProvider.get().getPrincipalName(),
+            getWebAppPrefix());
         meta.export(mapper, writer, m);
         writer.close();
+    }
+
+    private String getWebAppPrefix() {
+        String webAppPrefix = config.getString("candlepin.export.webapp.prefix");
+        if (webAppPrefix != null && webAppPrefix.trim().equals("")) {
+            webAppPrefix = null;
+        }
+        return webAppPrefix;
     }
 
     private String getVersion() throws IOException {
