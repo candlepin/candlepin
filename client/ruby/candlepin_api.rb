@@ -692,7 +692,9 @@ class Candlepin
   end
 
   def regenerate_entitlement_certificates(lazy_regen=true)
-    return put("/consumers/#{@uuid}/certificates?lazy_regen=#{lazy_regen}")
+    url = "/consumers/#{@uuid}/certificates?"
+    url += "?lazy_regen=false" if !lazy_regen
+    return put(url)
   end
 
   def regenerate_entitlement_certificates_for_product(product_id, immediate=false, lazy_regen=true)
