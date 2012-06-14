@@ -14,14 +14,15 @@
  */
 package org.candlepin.resource.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Locale;
 
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
@@ -29,6 +30,7 @@ import org.candlepin.audit.EventSink;
 import org.candlepin.config.Config;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.ActivationKeyCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -36,6 +38,8 @@ import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.Environment;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.Release;
 import org.candlepin.policy.js.compliance.ComplianceRules;
@@ -45,7 +49,6 @@ import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.TestUtil;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -53,12 +56,6 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
-
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Locale;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ConsumerResourceUpdateTest {
@@ -75,6 +72,7 @@ public class ConsumerResourceUpdateTest {
     @Mock private ComplianceRules complianceRules;
     @Mock private Entitler entitler;
     @Mock private DeletedConsumerCurator deletedConsumerCurator;
+    @Mock private EnvironmentCurator environmentCurator;
 
     private I18n i18n;
 
@@ -89,7 +87,7 @@ public class ConsumerResourceUpdateTest {
             this.idCertService, null, this.i18n, this.sink, this.eventFactory, null, null,
             this.userService, null, poolManager, null, null, null, null,
             this.activationKeyCurator, this.entitler, this.complianceRules,
-            this.deletedConsumerCurator,
+            this.deletedConsumerCurator, this.environmentCurator,
             new Config());
 
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class)))
@@ -589,6 +587,45 @@ public class ConsumerResourceUpdateTest {
         assertTrue(existing.getInstalledProducts().contains(expectedInstalledProduct));
         assertEquals(1, existing.getGuestIds().size());
         assertTrue(existing.getGuestIds().contains(expectedGuestId));
+    }
+    
+    @Test
+    public void canUpdateConsumerEnvironment() {
+        String uuid = "A Consumer";
+        Environment changedEnvironment = new Environment("42", "environment", null);
+
+        Consumer updated = new Consumer();
+        updated.setUuid(uuid);
+        updated.setEnvironment(changedEnvironment);
+
+        Consumer existing = new Consumer();
+        existing.setUuid(updated.getUuid());
+        
+        when(consumerCurator.findByUuid(existing.getUuid())).thenReturn(existing);
+        when(environmentCurator.find(changedEnvironment.getId())).thenReturn(changedEnvironment);
+        
+        resource.updateConsumer(existing.getUuid(), updated);
+        
+        verify(poolManager, atMost(1)).regenerateEntitlementCertificates(existing);
+        verify(sink).sendEvent((Event) any());
+    }
+    
+    @Test(expected = NotFoundException.class)
+    public void throwsAnExceptionWhenEnvironmentNotFound() {
+        String uuid = "A Consumer";
+        Environment changedEnvironment = new Environment("42", "environment", null);
+
+        Consumer updated = new Consumer();
+        updated.setUuid(uuid);
+        updated.setEnvironment(changedEnvironment);
+
+        Consumer existing = new Consumer();
+        existing.setUuid(updated.getUuid());
+        
+        when(consumerCurator.findByUuid(existing.getUuid())).thenReturn(existing);
+        when(environmentCurator.find(changedEnvironment.getId())).thenReturn(null);
+        
+        resource.updateConsumer(existing.getUuid(), updated);        
     }
 
     private Consumer createConsumerWithGuests(String ... guestIds) {
