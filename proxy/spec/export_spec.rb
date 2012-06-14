@@ -92,6 +92,26 @@ describe 'Candlepin Export' do
     end
   end
 
+  it 'exports regenerated entitlement certificates' do
+    entitlement_certs_dir = File.join(@export_dir, 'entitlement_certificates')
+
+    exported_entitlement_certs = files_in_dir(entitlement_certs_dir)
+
+    # Regenerate some entitlement certificates, and generate a new manifest:
+    @candlepin_client.regenerate_entitlement_certificates()
+    new_tmp_dir = File.join(Dir.tmpdir, random_string('candlepin-rspec'))
+    new_export_dir = File.join(new_tmp_dir, "export")
+    Dir.mkdir(new_tmp_dir)
+    new_export_filename = @candlepin_client.export_consumer(new_tmp_dir)
+    unzip_export_file(new_export_filename, new_tmp_dir)
+    unzip_export_file(File.join(new_tmp_dir, "consumer_export.zip"), new_tmp_dir)
+    new_entitlement_certs_dir = File.join(new_export_dir, 'entitlement_certificates')
+    new_exported_entitlement_certs = files_in_dir(new_entitlement_certs_dir)
+
+    # Cert filenames should be completely different now:
+    (exported_entitlement_certs & new_exported_entitlement_certs).size.should == 0
+  end
+
   it 'should support only exporting certificates' do
     entitlement_certs_dir = File.join(@export_dir_certs, 'entitlement_certificates')
 
