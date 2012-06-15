@@ -250,7 +250,7 @@ public class OwnerResource {
         Owner parent = owner.getParentOwner();
         if (parent != null && ownerCurator.find(parent.getId()) == null) {
             throw new BadRequestException(i18n.tr(
-                "Cound not create the Owner: {0}. Parent {1} does not exist.",
+                "Could not create the Owner: {0}. Parent {1} does not exist.",
                 owner, parent));
         }
         Owner toReturn = ownerCurator.create(owner);
@@ -262,7 +262,7 @@ public class OwnerResource {
         }
 
         throw new BadRequestException(i18n.tr(
-            "Cound not create the Owner: {0}", owner));
+            "Could not create the Owner: {0}", owner));
     }
 
     /**

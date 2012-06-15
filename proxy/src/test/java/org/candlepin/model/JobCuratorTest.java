@@ -125,7 +125,7 @@ public class JobCuratorTest extends DatabaseTestFixture{
         JobStatus job = curator.cancel(jobid);
         assertNotNull(job);
         assertEquals(jobid, job.getId());
-        assertEquals(JobStatus.JobState.CANCELLED, job.getState());
+        assertEquals(JobStatus.JobState.CANCELED, job.getState());
     }
 
     private JobStatusBuilder newJobStatus() {

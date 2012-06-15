@@ -38,7 +38,7 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
         if (j == null) {
             throw new NotFoundException("job not found");
         }
-        j.setState(JobState.CANCELLED);
+        j.setState(JobState.CANCELED);
         merge(j);
         return j;
     }
@@ -55,10 +55,10 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
     public int cleanUpOldJobs(Date deadLineDt) {
         return this.currentSession().createQuery(
             "delete from JobStatus where finishTime <= :date and " +
-            "(state = :completed or state = :cancelled)")
+            "(state = :completed or state = :canceled)")
                .setDate("date", deadLineDt)
                .setInteger("completed", JobState.FINISHED.ordinal())
-               .setInteger("cancelled", JobState.CANCELLED.ordinal())
+               .setInteger("canceled", JobState.CANCELED.ordinal())
                .executeUpdate();
     }
 
@@ -86,6 +86,6 @@ public class JobCurator extends AbstractHibernateCurator<JobStatus> {
     @SuppressWarnings("unchecked")
     public List<JobStatus> findCanceledJobs() {
         return this.currentSession().createCriteria(JobStatus.class)
-        .add(Restrictions.eq("state", JobState.CANCELLED)).list();
+        .add(Restrictions.eq("state", JobState.CANCELED)).list();
     }
 }

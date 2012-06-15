@@ -48,16 +48,16 @@ public class CancelJobJob implements Job {
 
     @Override
     public void execute(JobExecutionContext ctx) throws JobExecutionException {
-        List<JobStatus> cancelledJobs;
+        List<JobStatus> canceledJobs;
 
         try {
-            cancelledJobs = jobCurator.findCanceledJobs();
+            canceledJobs = jobCurator.findCanceledJobs();
         }
         catch (HibernateException e) {
             log.error("Cannot execute query: ", e);
             throw new JobExecutionException(e);
         }
-        for (JobStatus j : cancelledJobs) {
+        for (JobStatus j : canceledJobs) {
             try {
                 pinsetterKernel.cancelJob(j.getId(), j.getGroup());
             }
