@@ -515,6 +515,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         generateEntitlementCertificate(consumer, pool, e, generateUeberCert);
         for (Entitlement regenEnt : entitlementCurator.listModifying(e)) {
+            // Lazily regenerate modified certificates:
             this.regenerateCertificatesOf(regenEnt, generateUeberCert, true);
         }
 
@@ -769,6 +770,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         // Find all of the entitlements that modified the original entitlement,
         // and regenerate those to remove the content sets.
+        // Lazy regeneration is ok here.
         this.regenerateCertificatesOf(entitlementCurator
             .listModifying(entitlement), true);
 
