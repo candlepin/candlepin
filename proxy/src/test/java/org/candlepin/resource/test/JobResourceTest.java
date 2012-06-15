@@ -105,11 +105,11 @@ public class JobResourceTest {
         //we are just testing that the cancellation gets into the db
         JobStatus createdJobStatus = new JobStatus();
         createdJobStatus.setState(JobState.CREATED);
-        JobStatus cancelledJobStatus = new JobStatus();
-        cancelledJobStatus.setState(JobState.CANCELLED);
+        JobStatus canceledJobStatus = new JobStatus();
+        canceledJobStatus.setState(JobState.CANCELED);
 
         when(jobCurator.find("cancel_id")).thenReturn(createdJobStatus);
-        when(jobCurator.cancel("cancel_id")).thenReturn(cancelledJobStatus);
+        when(jobCurator.cancel("cancel_id")).thenReturn(canceledJobStatus);
         jobResource.cancel("cancel_id");
         verify(jobCurator, atLeastOnce()).cancel("cancel_id");
     }

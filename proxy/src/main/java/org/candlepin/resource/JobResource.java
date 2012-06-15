@@ -106,7 +106,7 @@ public class JobResource {
             StringUtils.isEmpty(principalName)) {
 
             throw new BadRequestException(i18n.tr("You must specify an owner " +
-                "key, consumer uuid, or principal name."));
+                "key, consumer UUID, or principal name."));
         }
 
         // make sure we didn't specify them all
@@ -197,8 +197,8 @@ public class JobResource {
     @Produces(MediaType.APPLICATION_JSON)
     public JobStatus cancel(@PathParam("job_id") String jobId) {
         JobStatus j = curator.find(jobId);
-        if (j.getState().equals(JobState.CANCELLED)) {
-            throw new BadRequestException(i18n.tr("job already cancelled"));
+        if (j.getState().equals(JobState.CANCELED)) {
+            throw new BadRequestException(i18n.tr("job already canceled"));
         }
         if (j.getState() != JobState.CREATED) {
             throw new BadRequestException(i18n.tr("cannot cancel a job that " +

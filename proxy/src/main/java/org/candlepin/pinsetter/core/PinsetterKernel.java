@@ -324,11 +324,11 @@ public class PinsetterKernel {
             // this deletes from the scheduler, it's already marked as
             // canceled in the JobStatus table
             if (scheduler.deleteJob(jobKey((String) id, group))) {
-                log.info("cancelled job " + group + ":" + id + " in scheduler");
+                log.info("canceled job " + group + ":" + id + " in scheduler");
             }
         }
         catch (SchedulerException e) {
-            throw new PinsetterException("problem cancelling " + group + ":" + id, e);
+            throw new PinsetterException("problem canceling " + group + ":" + id, e);
         }
     }
 
@@ -370,13 +370,13 @@ public class PinsetterKernel {
     }
 
     public void unpauseScheduler() throws PinsetterException {
-        log.debug("looking for cancelled jobs since scheduler was paused");
+        log.debug("looking for canceled jobs since scheduler was paused");
         CancelJobJob cjj = new CancelJobJob(jobCurator, this);
         try {
             cjj.execute(null);
         }
         catch (JobExecutionException e1) {
-            throw new PinsetterException("Could not clear cancelled jobs before starting");
+            throw new PinsetterException("Could not clear canceled jobs before starting");
         }
         log.debug("restarting scheduler");
         try {

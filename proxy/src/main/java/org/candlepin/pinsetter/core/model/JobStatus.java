@@ -50,7 +50,7 @@ public class JobStatus extends AbstractHibernateObject {
         PENDING,
         RUNNING,
         FINISHED,
-        CANCELLED,
+        CANCELED,
         FAILED;
     }
 
