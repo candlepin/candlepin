@@ -282,13 +282,6 @@ public class CandlepinPoolManager implements PoolManager {
         return entitlementsToRegen;
     }
 
-    public void updatePoolForSubscription(Pool existingPool, Subscription sub) {
-        List<Pool> tempList = new LinkedList<Pool>();
-        tempList.add(existingPool);
-        Set<Entitlement> entitlementsToUpdate = updatePoolsForSubscription(tempList, sub);
-        regenerateCertificatesOf(entitlementsToUpdate, true);
-    }
-
     private boolean poolExistsForSubscription(
         Map<String, List<Pool>> subToPoolMap, String id) {
         return subToPoolMap.containsKey(id);

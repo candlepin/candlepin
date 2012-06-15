@@ -135,16 +135,6 @@ public interface PoolManager {
 
     void removeEntitlement(Entitlement entitlement);
 
-    /**
-     * Update the given pool for a subscription.
-     *
-     * This method checks for change in quantity, dates, and products.
-     *
-     * @param existingPool an existing pool referencing this subscription
-     * @param sub the subscription
-     */
-    void updatePoolForSubscription(Pool existingPool, Subscription sub);
-
     Pool updatePoolQuantity(Pool pool, long adjust);
 
     Pool setPoolQuantity(Pool pool, long set);
