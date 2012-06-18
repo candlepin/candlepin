@@ -274,4 +274,13 @@ public class Config {
     public int getInt(String s) {
         return new Integer(getString(s));
     }
+
+    public int getInt(String s, int defValue) {
+        String ret = getString(s);
+        if (ret == null) {
+            return defValue;
+        }
+
+        return Integer.valueOf(ret);
+    }
 }
