@@ -72,6 +72,7 @@ import java.io.Serializable;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -85,7 +86,6 @@ import java.util.Set;
 public class ConsumerResourceTest {
 
     private I18n i18n;
-    private Config config;
 
     @Mock
     private ConsumerCurator mockedConsumerCurator;

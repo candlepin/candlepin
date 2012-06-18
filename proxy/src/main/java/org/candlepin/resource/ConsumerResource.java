@@ -257,7 +257,7 @@ public class ConsumerResource {
                     "] futureExpire [" + futureExpire + "]");
             }
 
-            if (expire.compareTo(futureExpire) < 0) {
+            if (expire.before(futureExpire)) {
                 log.warn("regenerating certificate for [" + uuid + "]");
                 consumer = this.regenerateIdentityCertificates(uuid);
             }
