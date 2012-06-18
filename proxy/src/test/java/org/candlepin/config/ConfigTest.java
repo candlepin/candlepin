@@ -294,4 +294,21 @@ public class ConfigTest {
         assertFalse(config.containsKey("notthere"));
         assertTrue(config.containsKey("there"));
     }
+
+    @Test
+    public void getIntDefValue() {
+        TreeMap<String, String> testdata = new TreeMap<String, String>();
+        testdata.put("threshold", "10");
+        Config config = new Config(testdata);
+        assertEquals(5, config.getInt("nothere", 5));
+        assertEquals(10, config.getInt("threshold", 5));
+    }
+
+    @Test(expected = NumberFormatException.class)
+    public void notanint() {
+        TreeMap<String, String> testdata = new TreeMap<String, String>();
+        testdata.put("notint", "");
+        Config config = new Config(testdata);
+        assertEquals(5, config.getInt("notint", 5));
+    }
 }

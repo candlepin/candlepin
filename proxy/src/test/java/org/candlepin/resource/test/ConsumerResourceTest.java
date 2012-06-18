@@ -20,22 +20,11 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Matchers.any;
-
-import java.io.IOException;
-import java.io.Serializable;
-import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
 
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
@@ -62,11 +51,13 @@ import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.resource.ConsumerResource;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
+import org.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -76,6 +67,18 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
+import java.io.IOException;
+import java.io.Serializable;
+import java.math.BigInteger;
+import java.security.GeneralSecurityException;
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+
 /**
  * ConsumerResourceTest
  */
@@ -83,7 +86,6 @@ import org.xnap.commons.i18n.I18nFactory;
 public class ConsumerResourceTest {
 
     private I18n i18n;
-    private Config config;
 
     @Mock
     private ConsumerCurator mockedConsumerCurator;
@@ -193,6 +195,61 @@ public class ConsumerResourceTest {
         IdentityCertificate ic1 = fooc.getIdCert();
         assertNotNull(ic1);
         assertFalse(ic.equals(ic1));
+    }
+
+    @Test
+    public void testIdCertGetsRegenerated() throws Exception {
+        // using lconsumer simply to avoid hiding consumer. This should
+        // get renamed once we refactor this test suite.
+        IdentityCertServiceAdapter mockedIdSvc = Mockito
+            .mock(IdentityCertServiceAdapter.class);
+
+        EventSink sink = Mockito.mock(EventSink.class);
+        EventFactory factory = Mockito.mock(EventFactory.class);
+
+        SubscriptionServiceAdapter ssa = Mockito.mock(SubscriptionServiceAdapter.class);
+        ComplianceRules rules = Mockito.mock(ComplianceRules.class);
+
+        Consumer consumer = createConsumer();
+        // cert expires today which will trigger regen
+        consumer.setIdCert(createIdCert());
+        BigInteger origserial = consumer.getIdCert().getSerial().getSerial();
+
+        when(mockedConsumerCurator.findByUuid(consumer.getUuid())).thenReturn(
+            consumer);
+        when(mockedIdSvc.regenerateIdentityCert(consumer)).thenReturn(
+            createIdCert());
+
+        ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
+            null, ssa, null, mockedIdSvc, null, null, sink, factory, null, null,
+            null, null, null, null, null, null, mockedOwnerCurator, null, null,
+            rules, null, null, new Config());
+
+        Consumer c = cr.getConsumer(consumer.getUuid());
+
+        assertFalse(origserial.equals(c.getIdCert().getSerial().getSerial()));
+    }
+
+    @Test
+    public void testIdCertDoesNotRegenerate() throws Exception {
+        SubscriptionServiceAdapter ssa = Mockito.mock(SubscriptionServiceAdapter.class);
+        ComplianceRules rules = Mockito.mock(ComplianceRules.class);
+
+        Consumer consumer = createConsumer();
+        consumer.setIdCert(createIdCert(TestUtil.createDate(2025, 6, 9)));
+        BigInteger origserial = consumer.getIdCert().getSerial().getSerial();
+
+        when(mockedConsumerCurator.findByUuid(consumer.getUuid())).thenReturn(
+            consumer);
+
+        ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
+            null, ssa, null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, mockedOwnerCurator, null, null,
+            rules, null, null, new Config());
+
+        Consumer c = cr.getConsumer(consumer.getUuid());
+
+        assertEquals(origserial, c.getIdCert().getSerial().getSerial());
     }
 
     @Test(expected = BadRequestException.class)

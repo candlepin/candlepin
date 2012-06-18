@@ -141,7 +141,8 @@ public class ConfigProperties {
                 this.put("org.quartz.threadPool.threadPriority", "5");
                 this.put(DEFAULT_TASKS, StringUtils.join(DEFAULT_TASK_LIST, ","));
 
-                this.put(IDENTITY_CERT_YEAR_ADDENDUM, "1");
+                this.put(IDENTITY_CERT_YEAR_ADDENDUM, "16");
+                this.put(IDENTITY_CERT_EXPIRY_THRESHOLD, "90");
                 this.put(SHARD_WEBAPP, "candlepin");
                 this.put(ENABLE_PINSETTER, "true");
 
@@ -165,4 +166,9 @@ public class ConfigProperties {
     public static final String CRL_FILE_PATH = "candlepin.crl.file";
     public static final String IDENTITY_CERT_YEAR_ADDENDUM =
                                "candlepin.identityCert.yr.addendum";
+    /**
+     * Identity certificate expiry threshold in days
+     */
+    public static final String IDENTITY_CERT_EXPIRY_THRESHOLD =
+                               "candlepin.identityCert.expiry.threshold";
 }
