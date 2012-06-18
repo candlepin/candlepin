@@ -121,7 +121,6 @@ describe 'Refresh Pools' do
     new_cert = ent['certificates'][0]
     new_serial = new_cert['serial']['serial']
     new_serial.should_not == old_serial
-    ent['dirty'].should be_false
 
     @cp.get_consumer(consumer.uuid).entitlementCount.should == 1
   end

@@ -306,6 +306,7 @@ public class Entitlement extends AbstractHibernateObject implements Linkable, Ow
         return result;
     }
 
+    @XmlTransient
     public boolean getDirty() {
         return dirty;
     }
