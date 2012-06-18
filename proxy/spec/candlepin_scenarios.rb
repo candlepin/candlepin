@@ -53,7 +53,7 @@ module CandlepinMethods
 
   # Loop to wait for the given job ID to complete, with timeout.
   def wait_for_job(job_id, timeout_seconds)
-    states = ['FINISHED', 'CANCELLED', 'FAILED']
+    states = ['FINISHED', 'CANCELED', 'FAILED']
     wait_interval = 2 # seconds
     total_taken = 0
     while total_taken < timeout_seconds

@@ -58,15 +58,15 @@ describe 'Job Status' do
     joblist.find { |j| j['id'] == job['id'] }['state'].should == 'CREATED'
 
     @cp.cancel_job(job['id'])
-    #make sure we see a job cancelled
+    #make sure we see a job canceled
     joblist = @cp.list_jobs(@owner['key'])
-    joblist.find { |j| j['id'] == job['id'] }['state'].should == 'CANCELLED'
+    joblist.find { |j| j['id'] == job['id'] }['state'].should == 'CANCELED'
 
     @cp.set_scheduler_status(true)
     sleep 1 #let the job queue drain..
     #make sure job didn't flip to FINISHED
     joblist = @cp.list_jobs(@owner['key'])
-    joblist.find { |j| j['id'] == job['id'] }['state'].should == 'CANCELLED'
+    joblist.find { |j| j['id'] == job['id'] }['state'].should == 'CANCELED'
   end
 
   it 'should contain the system target type and id for async binds' do
