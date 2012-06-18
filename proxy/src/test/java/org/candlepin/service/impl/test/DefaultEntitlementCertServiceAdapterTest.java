@@ -258,6 +258,25 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
 
     @Test
+    public void testURLEncoding() throws Exception {
+        owner.setContentPrefix("/some org/$env/");
+
+        // Setup an environment for the consumer:
+        Environment e = new Environment("env1", "Awesome Environment #1", owner);
+        e.getEnvironmentContent().add(new EnvironmentContent(e, content.getId(), true));
+        when(entitlement.getConsumer().getEnvironment()).thenReturn(e);
+
+        certServiceAdapter.createX509Certificate(entitlement, subscription,
+            product, new BigInteger("1234"), keyPair(), true);
+
+        verify(mockedPKI).createX509Certificate(
+            any(String.class),
+            argThat(new ListContainsContentUrl("/some+org/Awesome+Environment+%231/" +
+                CONTENT_URL, CONTENT_ID)), any(Date.class), any(Date.class),
+                any(KeyPair.class), any(BigInteger.class), any(String.class));
+    }
+
+    @Test
     public void testPrefixIgnoresEnvIfConsumerHasNone() throws Exception {
         owner.setContentPrefix("/someorg/$env/");
 
@@ -475,6 +494,19 @@ public class DefaultEntitlementCertServiceAdapterTest {
             argThat(new ListDoesNotContainSupportType()), any(Date.class),
             any(Date.class), any(KeyPair.class), any(BigInteger.class),
             any(String.class));
+    }
+
+    @Test
+    public void testCleanUpPrefixNoChange() throws Exception {
+        String[] prefixes = {"/",
+                             "/some_prefix/",
+                             "/some-prefix/",
+                             "/some.prefix/",
+                             "/Some1Prefix2/"};
+
+        for (String prefix : prefixes) {
+            assertEquals(prefix, certServiceAdapter.cleanUpPrefix(prefix));
+        }
     }
 
     private Map<String, X509ExtensionWrapper> getEncodedContent(
