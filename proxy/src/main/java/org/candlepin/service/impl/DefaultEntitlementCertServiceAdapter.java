@@ -201,9 +201,12 @@ public class DefaultEntitlementCertServiceAdapter extends
         if (useContentPrefix) {
             contentPrefix = ent.getOwner().getContentPrefix();
             Environment env = ent.getConsumer().getEnvironment();
-            if (contentPrefix != null && env != null) {
-                String encodedEnvName = URLEncoder.encode(env.getName(), "UTF-8");
-                contentPrefix = contentPrefix.replaceAll("\\$env", encodedEnvName);
+            if (contentPrefix != null && !contentPrefix.equals("")) {
+                if (env != null) {
+                    contentPrefix = contentPrefix.replaceAll("\\$env", env.getName());
+                }
+
+                contentPrefix = this.cleanUpPrefix(contentPrefix);
             }
         }
 
@@ -233,6 +236,22 @@ public class DefaultEntitlementCertServiceAdapter extends
             keyPair, serialNumber, null);
 
         return x509Cert;
+    }
+
+    // Encode the entire prefix in case any part of it is not
+    // URL friendly. Any $ is put back in order to preseve
+    // the ability to pass $env to the client
+    public String cleanUpPrefix(String contentPrefix) throws IOException {
+
+
+        StringBuffer output = new StringBuffer("/");
+        for (String part : contentPrefix.split("/")) {
+            if (!part.equals("")) {
+                output.append(URLEncoder.encode(part, "UTF-8"));
+                output.append("/");
+            }
+        }
+        return output.toString().replace("%24", "$");
     }
 
     private EntitlementCertificate generateEntitlementCert(Entitlement entitlement,
