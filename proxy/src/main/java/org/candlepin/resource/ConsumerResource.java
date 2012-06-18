@@ -25,6 +25,7 @@ import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.interceptor.SecurityHole;
 import org.candlepin.auth.interceptor.Verify;
 import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.exceptions.BadRequestException;
@@ -142,6 +143,7 @@ public class ConsumerResource {
     private Entitler entitler;
     private ComplianceRules complianceRules;
     private DeletedConsumerCurator deletedConsumerCurator;
+    private Config config;
 
     @Inject
     public ConsumerResource(ConsumerCurator consumerCurator,
@@ -187,6 +189,7 @@ public class ConsumerResource {
             Pattern.compile(config.getString("candlepin.consumer_person_name_pattern"));
         this.consumerSystemNamePattern =
             Pattern.compile(config.getString("candlepin.consumer_system_name_pattern"));
+        this.config = config;
     }
     /**
      * List available Consumers
@@ -240,6 +243,21 @@ public class ConsumerResource {
         Consumer consumer = verifyAndLookupConsumer(uuid);
 
         if (consumer != null) {
+            IdentityCertificate idcert = consumer.getIdCert();
+            Date expire = idcert.getSerial().getExpiration();
+            int days = config.getInt(ConfigProperties.IDENTITY_CERT_EXPIRY_THRESHOLD, 90);
+            Date futureExpire = Util.addDaysToDt(days);
+            // if expiration is within 90 days, regenerate it
+            if (log.isDebugEnabled()) {
+                log.debug("Threshold [" + days + "] expires on [" + expire +
+                    "] futureExpire [" + futureExpire + "]");
+            }
+
+            if (expire.compareTo(futureExpire) < 0) {
+                log.warn("regenerating certificate for [" + uuid + "]");
+                consumer = this.regenerateIdentityCertificates(uuid);
+            }
+
             // enrich with subscription data
             consumer.setCanActivate(subAdapter
                 .canActivateSubscription(consumer));
