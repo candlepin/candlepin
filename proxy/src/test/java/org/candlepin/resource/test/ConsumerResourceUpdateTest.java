@@ -607,7 +607,7 @@ public class ConsumerResourceUpdateTest {
 
         resource.updateConsumer(existing.getUuid(), updated);
 
-        verify(poolManager, atMost(1)).regenerateEntitlementCertificates(existing);
+        verify(poolManager, atMost(1)).regenerateEntitlementCertificates(existing, true);
         verify(sink).sendEvent((Event) any());
     }
 

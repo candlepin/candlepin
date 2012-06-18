@@ -551,7 +551,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         Set<EntitlementCertificate> entCertsBefore = ent.getCertificates();
 
         cr.regenerateEntitlementCertificates(this.consumer.getUuid(),
-            ent.getId());
+            ent.getId(), true);
         Set<EntitlementCertificate> entCertsAfter = ent.getCertificates();
 
         assertFalse(entCertsBefore.equals(entCertsAfter));

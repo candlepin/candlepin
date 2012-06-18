@@ -28,6 +28,8 @@ public class RegenProductEntitlementCertsJob implements Job {
 
     private PoolManager poolManager;
     public static final String PROD_ID = "product_id";
+    public static final String LAZY_REGEN = "lazy_regen";
+
     @Inject
     public RegenProductEntitlementCertsJob(PoolManager poolManager) {
         this.poolManager = poolManager;
@@ -37,6 +39,7 @@ public class RegenProductEntitlementCertsJob implements Job {
     public void execute(JobExecutionContext arg0) throws JobExecutionException {
         String prodId = arg0.getJobDetail().getJobDataMap().getString(
             PROD_ID);
-        this.poolManager.regenerateCertificatesOf(prodId);
+        boolean lazy = arg0.getJobDetail().getJobDataMap().getBoolean(LAZY_REGEN);
+        this.poolManager.regenerateCertificatesOf(prodId, lazy);
     }
 }

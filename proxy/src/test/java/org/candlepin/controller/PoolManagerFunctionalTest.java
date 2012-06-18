@@ -119,7 +119,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         subCurator.create(new Subscription(o, provisioning, new HashSet<Product>(),
             5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date()));
 
-        poolManager.refreshPools(o);
+        poolManager.refreshPools(o, true);
 
         this.systemType = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         consumerTypeCurator.create(systemType);
@@ -238,7 +238,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     @Test
     public void testRegenerateEntitlementCertificatesWithNoEntitlement() {
         reset(this.eventSink); // pool creation events went out from setup
-        poolManager.regenerateEntitlementCertificates(childVirtSystem);
+        poolManager.regenerateEntitlementCertificates(childVirtSystem, true);
         assertEquals(0, collectEntitlementCertIds(this.childVirtSystem).size());
         Mockito.verifyZeroInteractions(this.eventSink);
     }
@@ -261,7 +261,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         subCurator.create(new Subscription(o, modifier, new HashSet<Product>(),
             5L, new Date(), TestUtil.createDate(3020, 12, 12), new Date()));
 
-        poolManager.refreshPools(o);
+        poolManager.refreshPools(o, true);
 
 
         // This test simulates https://bugzilla.redhat.com/show_bug.cgi?id=676870
@@ -296,7 +296,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         subCurator.create(subscription);
 
         // set up initial pool
-        poolManager.refreshPools(o);
+        poolManager.refreshPools(o, true);
 
         List<Pool> pools = poolCurator.listByOwnerAndProduct(o, product1.getId());
         assertEquals(1, pools.size());
@@ -306,7 +306,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         subCurator.merge(subscription);
 
         // set up initial pool
-        poolManager.refreshPools(o);
+        poolManager.refreshPools(o, true);
 
         pools = poolCurator.listByOwnerAndProduct(o, product2.getId());
         assertEquals(1, pools.size());
@@ -318,7 +318,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     private void regenerateECAndAssertNotSameCertificates() {
         Set<EntitlementCertificate> oldsIds =
             collectEntitlementCertIds(this.childVirtSystem);
-        poolManager.regenerateEntitlementCertificates(childVirtSystem);
+        poolManager.regenerateEntitlementCertificates(childVirtSystem, false);
         Mockito.verify(this.eventSink, Mockito.times(oldsIds.size()))
             .sendEvent(any(Event.class));
         Set<EntitlementCertificate> newIds =

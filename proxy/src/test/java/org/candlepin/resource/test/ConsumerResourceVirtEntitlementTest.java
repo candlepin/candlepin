@@ -116,7 +116,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
 
         unlimitPools = poolManager.createPoolsForSubscription(unlimitSub);
 
-        poolManager.refreshPools(owner);
+        poolManager.refreshPools(owner, false);
     }
 
     /**
@@ -143,7 +143,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
                 // ensure the correct # consumed from the bonus pool
                 assertTrue(p.getConsumed() == 20);
                 assertTrue(p.getQuantity() == 100);
-                poolManager.refreshPools(owner);
+                poolManager.refreshPools(owner, true);
                 // double check after pools refresh
                 assertTrue(p.getConsumed() == 20);
                 assertTrue(p.getQuantity() == 100);
@@ -160,7 +160,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         for (Pool p : subscribedTo) {
             assertTrue(p.getConsumed() == 20);
             assertTrue(p.getQuantity() == 30);
-            poolManager.refreshPools(owner);
+            poolManager.refreshPools(owner, true);
             // double check after pools refresh
             assertTrue(p.getConsumed() == 20);
             assertTrue(p.getQuantity() == 30);
@@ -172,7 +172,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         for (Pool p : subscribedTo) {
             assertTrue(p.getConsumed() == 10);
             assertTrue(p.getQuantity() == 10);
-            poolManager.refreshPools(owner);
+            poolManager.refreshPools(owner, true);
             // double check after pools refresh
             assertTrue(p.getConsumed() == 10);
             assertTrue(p.getQuantity() == 10);
@@ -184,7 +184,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         for (Pool p : subscribedTo) {
             assertTrue(p.getConsumed() == 10);
             assertTrue(p.getQuantity() == 10);
-            poolManager.refreshPools(owner);
+            poolManager.refreshPools(owner, true);
             // double check after pools refresh
             assertTrue(p.getConsumed() == 10);
             assertTrue(p.getQuantity() == 10);
@@ -211,7 +211,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
                     10, null, null, false, null);
                 assertTrue(p.getConsumed() == 20);
                 assertTrue(p.getQuantity() == -1);
-                poolManager.refreshPools(owner);
+                poolManager.refreshPools(owner, true);
                 // double check after pools refresh
                 assertTrue(p.getConsumed() == 20);
                 assertTrue(p.getQuantity() == -1);
@@ -227,7 +227,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         for (Pool p : subscribedTo) {
             assertTrue(p.getConsumed() == 20);
             assertTrue(p.getQuantity() == -1);
-            poolManager.refreshPools(owner);
+            poolManager.refreshPools(owner, true);
             // double check after pools refresh
             assertTrue(p.getConsumed() == 20);
             assertTrue(p.getQuantity() == -1);
@@ -239,7 +239,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         for (Pool p : subscribedTo) {
             assertTrue(p.getConsumed() == 0);
             assertTrue(p.getQuantity() == 0);
-            poolManager.refreshPools(owner);
+            poolManager.refreshPools(owner, true);
             // double check after pools refresh
             assertTrue(p.getConsumed() == 0);
             assertTrue(p.getQuantity() == 0);

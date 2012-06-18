@@ -104,6 +104,8 @@ public class Entitlement extends AbstractHibernateObject implements Linkable, Ow
     private String accountNumber;
     private String contractNumber;
 
+    private boolean dirty = false;
+
     /**
      * default ctor
      */
@@ -304,6 +306,15 @@ public class Entitlement extends AbstractHibernateObject implements Linkable, Ow
             result = 37 * result + id.hashCode();
         }
         return result;
+    }
+
+    @XmlTransient
+    public boolean getDirty() {
+        return dirty;
+    }
+
+    public void setDirty(boolean dirty) {
+        this.dirty = dirty;
     }
 
 }

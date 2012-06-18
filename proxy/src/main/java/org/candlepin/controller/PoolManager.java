@@ -107,24 +107,25 @@ public interface PoolManager {
      * with separately from this event.
      *
      * @param owner Owner to be refreshed.
+     * @param lazy Should certificates be generated lazily. (normally yes)
      */
-    void refreshPools(Owner owner);
+    void refreshPools(Owner owner, boolean lazy);
 
     Set<Entitlement> refreshPoolsWithoutRegeneration(Owner owner);
 
-    void regenerateCertificatesOf(Iterable<Entitlement> iterable);
+    void regenerateCertificatesOf(Iterable<Entitlement> iterable, boolean lazy);
 
     /**
      * @param e
      * @param ueberCertificate TODO
      */
-    void regenerateCertificatesOf(Entitlement e, boolean ueberCertificate);
+    void regenerateCertificatesOf(Entitlement e, boolean ueberCertificate, boolean lazy);
 
-    void regenerateCertificatesOf(Environment env, Set<String> contentIds);
+    void regenerateCertificatesOf(Environment env, Set<String> contentIds, boolean lazy);
 
-    void regenerateCertificatesOf(String productId);
+    void regenerateCertificatesOf(String productId, boolean lazy);
 
-    void regenerateEntitlementCertificates(Consumer consumer);
+    void regenerateEntitlementCertificates(Consumer consumer, boolean lazy);
 
     int revokeAllEntitlements(Consumer consumer);
 
@@ -134,17 +135,9 @@ public interface PoolManager {
 
     void removeEntitlement(Entitlement entitlement);
 
-    /**
-     * Update the given pool for a subscription.
-     *
-     * This method checks for change in quantity, dates, and products.
-     *
-     * @param existingPool an existing pool referencing this subscription
-     * @param sub the subscription
-     */
-    void updatePoolForSubscription(Pool existingPool, Subscription sub);
-
     Pool updatePoolQuantity(Pool pool, long adjust);
 
     Pool setPoolQuantity(Pool pool, long set);
+
+    void regenerateDirtyEntitlements(List<Entitlement> entitlements);
 }

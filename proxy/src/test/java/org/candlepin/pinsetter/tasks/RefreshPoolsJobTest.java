@@ -48,6 +48,7 @@ public class RefreshPoolsJobTest {
 
         when(ctx.getMergedJobDataMap()).thenReturn(jdm);
         when(jdm.getString(eq(JobStatus.TARGET_ID))).thenReturn("someownerkey");
+        when(jdm.getBoolean(eq(RefreshPoolsJob.LAZY_REGEN))).thenReturn(true);
         when(oc.lookupByKey(eq("someownerkey"))).thenReturn(owner);
         when(owner.getDisplayName()).thenReturn("test owner");
 
@@ -56,7 +57,7 @@ public class RefreshPoolsJobTest {
         rpj.execute(ctx);
 
         // verification
-        verify(pm).refreshPools(owner);
+        verify(pm).refreshPools(owner, true);
         verify(ctx).setResult(eq("Pools refreshed for owner test owner"));
     }
 
@@ -65,7 +66,7 @@ public class RefreshPoolsJobTest {
         Owner owner = mock(Owner.class);
         when(owner.getKey()).thenReturn("owner key");
 
-        JobDetail detail = RefreshPoolsJob.forOwner(owner);
+        JobDetail detail = RefreshPoolsJob.forOwner(owner, true);
         assertNotNull(detail);
         assertNotNull(detail.getJobDataMap());
         assertTrue(detail.requestsRecovery());

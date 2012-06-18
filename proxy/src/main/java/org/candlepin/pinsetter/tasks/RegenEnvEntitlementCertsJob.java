@@ -35,6 +35,7 @@ public class RegenEnvEntitlementCertsJob implements Job {
     private PoolManager poolManager;
     public static final String ENV = "env_id";
     public static final String CONTENT = "content_ids";
+    public static final String LAZY_REGEN = "lazy_regen";
 
     @Inject
     public RegenEnvEntitlementCertsJob(PoolManager poolManager) {
@@ -47,7 +48,8 @@ public class RegenEnvEntitlementCertsJob implements Job {
             ENV);
         Set<String> contentIds = (Set<String>)
             arg0.getJobDetail().getJobDataMap().get(CONTENT);
+        Boolean lazy = arg0.getMergedJobDataMap().getBoolean(LAZY_REGEN);
 
-        this.poolManager.regenerateCertificatesOf(env, contentIds);
+        this.poolManager.regenerateCertificatesOf(env, contentIds, lazy);
     }
 }

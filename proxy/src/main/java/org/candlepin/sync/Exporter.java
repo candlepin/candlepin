@@ -331,11 +331,17 @@ public class Exporter {
         }
     }
 
-    private void exportEntitlements(File baseDir, Consumer consumer) throws IOException {
+    private void exportEntitlements(File baseDir, Consumer consumer)
+        throws IOException, ExportCreationException {
         File entCertDir = new File(baseDir.getCanonicalPath(), "entitlements");
         entCertDir.mkdir();
 
         for (Entitlement ent : entitlementCurator.listByConsumer(consumer)) {
+            if (ent.getDirty()) {
+                log.error("Entitlement " + ent.getId() + " is marked as dirty.");
+                throw new ExportCreationException("Attempted to export dirty entitlements");
+            }
+
             if (!this.exportRules.canExport(ent)) {
                 if (log.isDebugEnabled()) {
                     log.debug("Skipping export of entitlement with product:  " +

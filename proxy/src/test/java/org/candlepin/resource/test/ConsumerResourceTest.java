@@ -29,6 +29,7 @@ import static org.mockito.Matchers.any;
 import java.io.IOException;
 import java.io.Serializable;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
@@ -42,6 +43,7 @@ import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.config.Config;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.Entitler;
+import org.candlepin.controller.PoolManager;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.ActivationKey;
@@ -54,6 +56,7 @@ import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.IdentityCertificate;
@@ -88,6 +91,10 @@ public class ConsumerResourceTest {
     private OwnerCurator mockedOwnerCurator;
     @Mock
     private EntitlementCertServiceAdapter mockedEntitlementCertServiceAdapter;
+    @Mock
+    private PoolManager mockedPoolManager;
+    @Mock
+    private EntitlementCurator mockedEntitlementCurator;
 
     @Before
     public void setUp() {
@@ -103,12 +110,14 @@ public class ConsumerResourceTest {
             .thenReturn(certificates);
         when(mockedConsumerCurator.findByUuid(consumer.getUuid())).thenReturn(
             consumer);
+        when(mockedEntitlementCurator.listByConsumer(consumer)).thenReturn(
+            new ArrayList<Entitlement>());
 
         ConsumerResource consumerResource = new ConsumerResource(
-            mockedConsumerCurator, null, null, null, null, null,
+            mockedConsumerCurator, null, null, null, mockedEntitlementCurator, null,
             mockedEntitlementCertServiceAdapter, null, null, null, null, null,
-            null, null, null, null, null, null, null, null, null, null, null, null,
-            new Config());
+            null, null, mockedPoolManager, null, null, null, null, null, null,
+            null, null, null, new Config());
 
         List<CertificateSerialDto> serials = consumerResource
             .getEntitlementCertificateSerials(consumer.getUuid());
@@ -146,9 +155,9 @@ public class ConsumerResourceTest {
             null, null, null, null, null, null, null, null, null, null, null,
             null, mgr, null, null, null, null, null, null, null, null, null,
             new Config());
-        cr.regenerateEntitlementCertificates(consumer.getUuid(), null);
+        cr.regenerateEntitlementCertificates(consumer.getUuid(), null, true);
         Mockito.verify(mgr, Mockito.times(1))
-            .regenerateEntitlementCertificates(eq(consumer));
+            .regenerateEntitlementCertificates(eq(consumer), eq(true));
     }
 
     @Test
@@ -334,7 +343,7 @@ public class ConsumerResourceTest {
             null, null, null, null, null, null, null, null, null, null, null, null,
             new Config());
 
-        consumerResource.regenerateEntitlementCertificates("xyz", null);
+        consumerResource.regenerateEntitlementCertificates("xyz", null, true);
     }
 
     private Consumer createConsumer() {

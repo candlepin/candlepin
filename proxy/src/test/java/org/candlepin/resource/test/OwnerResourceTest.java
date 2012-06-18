@@ -111,7 +111,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         subCurator.create(sub);
 
         // Trigger the refresh:
-        poolManager.refreshPools(owner);
+        poolManager.refreshPools(owner, true);
         List<Pool> pools = poolCurator.listByOwnerAndProduct(owner,
             prod.getId());
         assertEquals(1, pools.size());
@@ -143,7 +143,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         pool.setSubscriptionId(sub.getId());
         poolCurator.merge(pool);
 
-        poolManager.refreshPools(owner);
+        poolManager.refreshPools(owner, true);
 
         pool = poolCurator.find(pool.getId());
         assertEquals(sub.getId(), pool.getSubscriptionId());
@@ -163,7 +163,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         subCurator.create(sub);
 
         // Trigger the refresh:
-        poolManager.refreshPools(owner);
+        poolManager.refreshPools(owner, true);
 
         List<Pool> pools = poolCurator.listByOwnerAndProduct(owner,
             prod.getId());
@@ -174,7 +174,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         subCurator.delete(sub);
 
         // Trigger the refresh:
-        poolManager.refreshPools(owner);
+        poolManager.refreshPools(owner, true);
         assertNull("Pool not having subscription should have been deleted",
             poolCurator.find(poolId));
     }
@@ -197,7 +197,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         subCurator.create(sub2);
 
         // Trigger the refresh:
-        poolManager.refreshPools(owner);
+        poolManager.refreshPools(owner, true);
 
         List<Pool> pools = poolCurator.listByOwner(owner);
         assertEquals(2, pools.size());
@@ -510,7 +510,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         this.config.setProperty(
             ConfigProperties.REVOKE_ENTITLEMENT_IN_FIFO_ORDER, fifo ? "true" :
                 "false");
-        poolManager.refreshPools(owner);
+        poolManager.refreshPools(owner, true);
         pool = poolCurator.find(pool.getId());
         return pool;
     }
@@ -626,7 +626,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         subCurator.create(sub2);
 
         // Trigger the refresh:
-        poolManager.refreshPools(owner);
+        poolManager.refreshPools(owner, true);
 
         owner.setDefaultServiceLevel("premium");
         Owner parentOwner1 = new Owner("Paren Owner 1", "parentTest1");

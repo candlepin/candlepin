@@ -22,7 +22,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.apache.commons.io.FileUtils;
 import org.candlepin.auth.Principal;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Config;
@@ -42,6 +41,8 @@ import org.candlepin.pki.PKIUtility;
 import org.candlepin.policy.js.export.JsExportRules;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
+
+import org.apache.commons.io.FileUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
@@ -55,10 +56,12 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -175,6 +178,30 @@ public class ExporterTest {
         FileUtils.deleteDirectory(export.getParentFile());
         assertTrue(new File("/tmp/consumer_export.zip").delete());
         assertTrue(new File("/tmp/12345.pem").delete());
+    }
+
+    @Test(expected = ExportCreationException.class)
+    public void doNotExportDirtyEntitlements() throws Exception {
+        config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+        Consumer consumer = mock(Consumer.class);
+        Entitlement ent = mock(Entitlement.class);
+        Principal principal = mock(Principal.class);
+
+        List<Entitlement> entitlements = new ArrayList<Entitlement>();
+        entitlements.add(ent);
+
+        when(pki.getSHA256WithRSAHash(any(InputStream.class))).thenReturn(
+            "signature".getBytes());
+        when(pprov.get()).thenReturn(principal);
+        when(principal.getUsername()).thenReturn("testUser");
+
+        when(ec.listByConsumer(consumer)).thenReturn(entitlements);
+        when(ent.getDirty()).thenReturn(true);
+
+        Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
+            pce, ec, ee, pki, config, exportRules, pprov);
+
+        File export = e.getFullExport(consumer);
     }
 
     @Test

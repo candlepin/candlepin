@@ -41,6 +41,7 @@ public class RegenEntitlementCertsJobTest {
         JobDataMap jdm = mock(JobDataMap.class);
 
         when(jdm.getString(eq("product_id"))).thenReturn("foobarbaz");
+        when(jdm.getBoolean(eq("lazy_regen"))).thenReturn(true);
         when(detail.getJobDataMap()).thenReturn(jdm);
         when(jec.getJobDetail()).thenReturn(detail);
 
@@ -49,6 +50,6 @@ public class RegenEntitlementCertsJobTest {
         recj.execute(jec);
 
         // verification
-        verify(pm).regenerateCertificatesOf(eq("foobarbaz"));
+        verify(pm).regenerateCertificatesOf(eq("foobarbaz"), eq(true));
     }
 }

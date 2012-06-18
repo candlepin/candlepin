@@ -322,10 +322,12 @@ class Candlepin
     return results
   end
 
-  def refresh_pools(owner_key, immediate=false, create_owner=false)
+  def refresh_pools(owner_key, immediate=false, create_owner=false,
+    lazy_regen=true)
     return async_call(immediate) do
-      url = "/owners/#{owner_key}/subscriptions"
-      url += "?auto_create_owner=true" if create_owner
+      url = "/owners/#{owner_key}/subscriptions?"
+      url += "auto_create_owner=true&" if create_owner
+      url += "lazy_regen=false&" if !lazy_regen
       put(url)
     end
   end
@@ -689,13 +691,17 @@ class Candlepin
     end
   end
 
-  def regenerate_entitlement_certificates
-    return put("/consumers/#{@uuid}/certificates")
+  def regenerate_entitlement_certificates(lazy_regen=true)
+    url = "/consumers/#{@uuid}/certificates?"
+    url += "?lazy_regen=false" if !lazy_regen
+    return put(url)
   end
 
-  def regenerate_entitlement_certificates_for_product(product_id, immediate=false)
+  def regenerate_entitlement_certificates_for_product(product_id, immediate=false, lazy_regen=true)
     return async_call(immediate) do
-      put("/entitlements/product/#{product_id}")
+      url = "/entitlements/product/#{product_id}"
+      url += "?lazy_regen=false" if !lazy_regen
+      put(url)
     end
   end
 

@@ -597,7 +597,7 @@ public class ConsumerResource {
                 log.info("Principal carries permission for owner that does not exist.");
                 log.info("Creating new owner: " + owner.getKey());
                 existingOwner = ownerCurator.create(owner);
-                poolManager.refreshPools(existingOwner);
+                poolManager.refreshPools(existingOwner, true);
             }
         }
     }
@@ -691,7 +691,8 @@ public class ConsumerResource {
             }
             toUpdate.setEnvironment(e);
 
-            poolManager.regenerateEntitlementCertificates(toUpdate);
+            // lazily regenerate certs, so the client can still work
+            poolManager.regenerateEntitlementCertificates(toUpdate, true);
             changesMade = true;
         }
 
@@ -994,6 +995,8 @@ public class ConsumerResource {
             log.debug("Getting client certificates for consumer: " + consumerUuid);
         }
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        poolManager.regenerateDirtyEntitlements(
+            entitlementCurator.listByConsumer(consumer));
 
         Set<Long> serialSet = this.extractSerials(serials);
 
@@ -1028,6 +1031,8 @@ public class ConsumerResource {
                 consumerUuid);
         }
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        poolManager.regenerateDirtyEntitlements(
+            entitlementCurator.listByConsumer(consumer));
 
         Set<Long> serialSet = this.extractSerials(serials);
         // filtering requires a null set, so make this null if it is
@@ -1099,6 +1104,8 @@ public class ConsumerResource {
                 consumerUuid);
         }
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        poolManager.regenerateDirtyEntitlements(
+            entitlementCurator.listByConsumer(consumer));
 
         List<CertificateSerialDto> allCerts = new LinkedList<CertificateSerialDto>();
         for (EntitlementCertificate cert : entCertService
@@ -1324,18 +1331,22 @@ public class ConsumerResource {
         @QueryParam("product") String productId) {
 
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
+        List<Entitlement> returnedEntitlements;
         if (productId != null) {
             Product p = productAdapter.getProductById(productId);
             if (p == null) {
                 throw new BadRequestException(i18n.tr("No such product: {0}",
                     productId));
             }
-            return entitlementCurator.listByConsumerAndProduct(consumer,
+            returnedEntitlements = entitlementCurator.listByConsumerAndProduct(consumer,
                 productId);
         }
+        else {
+            returnedEntitlements = entitlementCurator.listByConsumer(consumer);
+        }
 
-        return entitlementCurator.listByConsumer(consumer);
-
+        poolManager.regenerateDirtyEntitlements(returnedEntitlements);
+        return returnedEntitlements;
     }
 
     /**
@@ -1465,14 +1476,15 @@ public class ConsumerResource {
     @Path("/{consumer_uuid}/certificates")
     public void regenerateEntitlementCertificates(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-        @QueryParam("entitlement") String entitlementId) {
+        @QueryParam("entitlement") String entitlementId,
+        @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
         if (entitlementId != null) {
             Entitlement e = verifyAndLookupEntitlement(entitlementId);
-            poolManager.regenerateCertificatesOf(e, false);
+            poolManager.regenerateCertificatesOf(e, false, lazyRegen);
         }
         else {
             Consumer c = verifyAndLookupConsumer(consumerUuid);
-            poolManager.regenerateEntitlementCertificates(c);
+            poolManager.regenerateEntitlementCertificates(c, lazyRegen);
         }
     }
 
@@ -1499,6 +1511,9 @@ public class ConsumerResource {
                     "A manifest cannot be made for consumer of type ''{1}''.",
                     consumerUuid, consumer.getType().getLabel()));
         }
+
+        poolManager.regenerateDirtyEntitlements(
+            entitlementCurator.listByConsumer(consumer));
 
         File archive;
         try {

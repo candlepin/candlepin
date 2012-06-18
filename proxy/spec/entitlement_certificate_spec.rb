@@ -69,17 +69,18 @@ describe 'Entitlement Certificate' do
     @cp.refresh_pools(@owner['key'])
     @system.consume_product coolapp.id
 
-    @cp.regenerate_entitlement_certificates_for_product(coolapp.id)
-
     @system.list_certificates.length.should == 2
     old_certs = @system.list_certificates()
-    @system.regenerate_entitlement_certificates()
+
+    @cp.regenerate_entitlement_certificates_for_product(coolapp.id)
 
     new_certs = @system.list_certificates()
     old_certs.size.should == new_certs.size
     old_ids = old_certs.map { |cert| cert['serial']['id']}
     new_ids = new_certs.map { |cert| cert['serial']['id']}
-    (old_ids & new_ids).size.should == 0
+    # System has two certs, but we only regenerated for one product, so the
+    # other serial should have remained the same:
+    (old_ids & new_ids).size.should == 1
   end
 
   it 'will be regenerated when changing existing subscription\'s end date' do
