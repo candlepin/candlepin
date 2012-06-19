@@ -141,7 +141,7 @@
                prefix="localhost_access_log." suffix=".txt" pattern="common" resolveHosts="false"/>
         -->
 
-      <Context docBase="/Users/wb/sandbox/candlepin/proxy/code/webapp" path="" reloadable="true"/></Host>
+      <Context docBase="/Users/wb/sandbox/candlepin/code/webapp" path="" reloadable="true"/></Host>
     </Engine>
   </Service>
 </Server>
