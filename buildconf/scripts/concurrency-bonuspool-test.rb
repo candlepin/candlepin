@@ -8,7 +8,7 @@
 # watch the progress bar in terminal 2 (green dot for consumed ent, red N for not)
 # watch the details in terminal 1
 
-require "../../../client/ruby/candlepin_api"
+require "../../client/ruby/candlepin_api"
 require 'pp'
 require 'optparse'
 
@@ -34,18 +34,21 @@ def an_ent()
     return "\033[32m.\033[0m"
 end
 
-def reg_and_consume(server, port, user, pass, product)
+def reg_and_consume(server, port, user, pass, pool_id, owner_key)
   cp = Candlepin.new(username=user, password=pass,
     cert=nil, key=nil,
     host=server, port=port)
-  consumer = cp.register("test" << rand(10000).to_s)
+  consumer = cp.register("test" << rand(10000).to_s, :candlepin, nil, {}, nil, owner_key)
 
   cp = Candlepin.new(nil, nil, consumer['idCert']['cert'],
                      consumer['idCert']['key'], server, port)
-  ent = cp.consume_product(product)[0]
+  ent = cp.consume_pool(pool_id)[0]
   pool = cp.get_pool(ent['pool']['id'])
-  debug "Got entitlement #{ent['id']} from pool #{ent['pool']['id']} (#{pool['consumed']} of #{pool['quantity']})"
-  return ent, pool
+
+  # Now unbind it:
+  cp.unbind_entitlement(ent['id'], {:uuid => consumer['uuid']})
+  debug "Got and returned entitlement: #{ent['id']}"
+  return ent
 end
 
 # Create a product and pool to consume:
@@ -53,37 +56,34 @@ product_id = "concurproduct-#{rand(100000)}"
 cp = Candlepin.new(username=CP_ADMIN_USER, password=CP_ADMIN_PASS,
   cert=nil, key=nil,
   host=CP_SERVER, port=CP_PORT)
-cp.create_product(product_id, product_id)
-cp.create_subscription(CP_OWNER_KEY, product_id, 5)
-cp.refresh_pools(CP_OWNER_KEY)
+test_owner = cp.create_owner("testowner-#{rand(100000)}")
+attributes = {:virt_limit => '10'}
+cp.create_product(product_id, product_id, {:attributes => attributes})
+cp.create_subscription(test_owner['key'], product_id, 10)
+cp.refresh_pools(test_owner['key'])
 
-num_threads = ARGV[0].to_i
+pools = cp.list_pools(:owner => test_owner['id'])
+
+phys_pool = pools.find_all { |i| i['quantity'] == 10 }[0]
+bonus_pool = pools.find_all { |i| i['quantity'] == 100 }[0]
+
+num_threads = 10
 if num_threads == 0
   num_threads = 1
 end
-
-queue = Queue.new
 
 threads = []
 for i in 0..num_threads - 1
   threads[i] = Thread.new do
     Thread.current[:name] = "Thread #{i}"
-    begin
       ent = reg_and_consume(CP_SERVER, CP_PORT, CP_ADMIN_USER, CP_ADMIN_PASS,
-                            product_id)
-      queue << (ent.nil? ? no_ent : an_ent)
-    rescue
-      debug "Exception caught / no entitlement"
-      queue << no_ent
-    end
+                            phys_pool['id'], test_owner['key'])
   end
 end
 
 collector = Thread.new do
   res_string = ""
   for i in 0..num_threads - 1
-    res_string << queue.pop
-    STDOUT.print "\r" + res_string
     STDOUT.flush
   end
   STDOUT.print "\n"
@@ -91,3 +91,8 @@ end
 
 collector.join
 threads.each { |thread| thread.join }
+
+bonus_pool = cp.get_pool(bonus_pool['id'])
+print "Bonus pool quantity should be 100: #{bonus_pool['quantity']}\n"
+
+cp.delete_owner(test_owner['key'])

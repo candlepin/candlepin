@@ -8,7 +8,7 @@
 
 require "rubygems"
 require "ruby-debug"
-require  "../client/ruby/candlepin_api"
+require  "client/ruby/candlepin_api"
 require 'pp'
 
 ADMIN_USERNAME = "admin"

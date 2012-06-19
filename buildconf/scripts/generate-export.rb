@@ -6,7 +6,7 @@
 #
 # None of the above will be cleaned up.
 
-require  "../../../client/ruby/candlepin_api"
+require  "../../client/ruby/candlepin_api"
 require 'pp'
 
 ADMIN_USERNAME = "admin"

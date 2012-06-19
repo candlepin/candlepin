@@ -385,7 +385,7 @@ RSpec::Core::RakeTask.new do |task|
     task.pattern = feature_files
   end
 
-  task.rspec_opts = ["-I#{File.expand_path '../client/ruby/'}"]
+  task.rspec_opts = ["-I#{File.expand_path 'client/ruby/'}"]
   task.rspec_opts << '-c'
   skipbundler = ENV['skipbundler']
   if not skipbundler.nil?
