@@ -32,7 +32,8 @@ public class JPAConfigParserTest {
 
     // generated with katello-secure-passphrase and katell-passwd
     // we are going to try to be compatible with this if we can
-    private String passphrase = "QwGhDv4FSnyTbFJf8O6gvWIsmQX7PZtE64ALMCXx4DcS48s5Sum7RkVcefD0vMe5";
+    private String passphrase =
+        "QwGhDv4FSnyTbFJf8O6gvWIsmQX7PZtE64ALMCXx4DcS48s5Sum7RkVcefD0vMe5";
     private String plainPassword = "testpassword";
     private String encPasswordAsStored = "$1$8dg00oV+ZhN74tvxG+kAhw==";
     private Config config;
@@ -84,7 +85,7 @@ public class JPAConfigParserTest {
     public void testEncryptedConfigKeys() {
         JPAConfigParser jpac = new JPAConfigParser(config);
         Set<String> ecks = jpac.encryptedConfigKeys();
-        assertTrue(ecks.contains("jpa.config.hibernate.connection.password"));
+        assertTrue(ecks.contains("hibernate.connection.password"));
     }
 
     @SuppressWarnings("serial")
@@ -93,14 +94,15 @@ public class JPAConfigParserTest {
         Config config = new Config(new HashMap<String, String>() {
 
             {
-                // NOTE: we decrypt at read time, so the in memomory
+                // NOTE: we decrypt at read time, so the in mem
                 // config class is always in plain text
                 put("jpa.config.hibernate.connection.password",
                     plainPassword);
             }
         });
 
-        assertEquals(plainPassword, config.getString("jpa.config.hibernate.connection.password"));
+        assertEquals(plainPassword,
+            config.getString("jpa.config.hibernate.connection.password"));
         assertNull(config.getString("not.exist"));
         assertNull(config.getString("not.exist", null));
         assertNull(config.getStringArray("not.exist"));
