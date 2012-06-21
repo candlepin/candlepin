@@ -39,10 +39,10 @@ public class DbBasicAuthConfigTest {
 
     @Test
     public void testDecryptValue() {
-       DbBasicAuthConfigParser dbac = new DbBasicAuthConfigParser(config);
-       String res = null;
-       res = dbac.decryptValue(encPasswordAsStored, passphrase);
-       assertEquals(plainPassword, res);
+        DbBasicAuthConfigParser dbac = new DbBasicAuthConfigParser(config);
+        String res = null;
+        res = dbac.decryptValue(encPasswordAsStored, passphrase);
+        assertEquals(plainPassword, res);
     }
 
     @Test
