@@ -120,7 +120,8 @@ public class CandlepinModule extends AbstractModule {
 
         Config config = new Config();
         bind(Config.class).asEagerSingleton();
-        install(new JpaPersistModule("default").properties(config.jpaConfiguration(config)));
+        install(new JpaPersistModule("default").properties(
+                config.jpaConfiguration(config)));
         bind(JPAInitializer.class).asEagerSingleton();
 
         bind(PKIUtility.class).to(BouncyCastlePKIUtility.class).asEagerSingleton();

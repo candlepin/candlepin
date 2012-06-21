@@ -66,7 +66,7 @@ public abstract class EncryptedValueConfigurationParser extends
             passphrase = null;
         }
 
-       log.info("Using katello-passwd passphrase: " + passphrase);
+        log.info("Using katello-passwd passphrase: " + passphrase);
     }
 
     /*
@@ -150,7 +150,7 @@ public abstract class EncryptedValueConfigurationParser extends
             return plaintext;
         }
         catch (Exception e) {
-            log.info("Failure trying to decrypt" + toDecrypt ,e);
+            log.info("Failure trying to decrypt" + toDecrypt , e);
             throw new RuntimeException(e);
         }
     }
