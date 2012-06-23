@@ -166,6 +166,31 @@ function architectureMatches(product, consumer) {
    return true;
 }
 
+// get the number of sockets that each entitlement from a pool covers. 
+// if sockets is set to 0 or is not set, it is considered to be unlimited.
+function get_pool_sockets(pool) {
+    if (pool.getProductAttribute("sockets")) {
+        // this can be either a ReadOnlyPool or a Pool, so deal with attributes as appropriate.
+        var attribute = pool.getProductAttribute("sockets");
+        if ("getValue" in attribute) {
+            var sockets = attribute.getValue();
+        }
+        else {
+            var sockets = attribute;
+        }
+
+        if (sockets == 0) {
+            return Infinity;
+        }
+        else {
+            return parseInt(sockets);
+        }
+    }
+    else {
+        return Infinity;
+    }
+}
+
 // assumptions: number of pools consumed from is not considered, so we might not be taking from the smallest amount.
 // we only stack within the same pool_class. if you have stacks that provide different sets of products,
 // you won't be able to stack from them
@@ -200,7 +225,7 @@ function findStackingPools(pool_class, consumer, compliance) {
     for each (stack_id in compliance.getPartialStacks().keySet().toArray()) {
         var covered_sockets = 0;
         for each (entitlement in partialStacks.get(stack_id).toArray()) {
-            covered_sockets += entitlement.getQuantity() * parseInt(entitlement.getPool().getProductAttribute("sockets").getValue());
+            covered_sockets += entitlement.getQuantity() * get_pool_sockets(entitlement.getPool()); 
             productIdToStackId[entitlement.getPool().getProductId()] = stack_id;
             for each (product in entitlement.getPool().getProvidedProducts().toArray()) {
                 productIdToStackId[product.getProductId()] = stack_id;
@@ -212,7 +237,6 @@ function findStackingPools(pool_class, consumer, compliance) {
 
     for each (pool in pool_class) {
         var quantity = 0;
-
         // ignore any pools that clash with installed compliant products
         if (!hasNoInstalledOverlap(pool, compliance)) {
             log.debug("installed overlap found, skipping: " + pool.getId());
@@ -262,8 +286,13 @@ function findStackingPools(pool_class, consumer, compliance) {
                 }
             }
 
+            // if this stack is already done, no need to add more to it.
+	    if (stackToEntitledSockets[stack_id] >= consumer_sockets) {
+                continue;
+            }
+
             var product_sockets = 0;
-            var pool_sockets = parseInt(pool.getProductAttribute("sockets"));
+            var pool_sockets = get_pool_sockets(pool);
 
             while (stackToEntitledSockets[stack_id] + product_sockets < consumer_sockets) {
                 product_sockets += pool_sockets;
@@ -278,11 +307,6 @@ function findStackingPools(pool_class, consumer, compliance) {
             stackToEntitledSockets[stack_id] += quantity * pool_sockets;
 
             stackToPoolMap[stack_id].put(pool, quantity);
-
-            if (stackToEntitledSockets[stack_id] >= consumer_sockets) {
-                // we've just found a stack that will satisfy. no need to keep looping
-                break;
-            }
         } else {
             // not stackable, just take one.
             notStackable.push(pool);
@@ -290,22 +314,34 @@ function findStackingPools(pool_class, consumer, compliance) {
 
     }
 
+    var found_pool = false;
+
+    var not_stacked_sockets = 0;
+    var not_stacked_pool_map = new java.util.HashMap();
     // We have a not stackable pool.
-    // XXX this might not cover all your sockets!
     if (notStackable.length > 0) {
-        poolMap = new java.util.HashMap();
-        poolMap.put(notStackable[0], 1);
-        return poolMap;
+	for each (pool in notStackable) {
+            var covered_sockets = get_pool_sockets(pool);
+            if (covered_sockets > not_stacked_sockets) {
+                found_pool = true;
+                not_stacked_pool_map = new java.util.HashMap();
+                not_stacked_pool_map.put(pool, 1);
+                not_stacked_sockets = covered_sockets;
+            }
+	}
     }
 
+    // if an unstacked pool can cover all our products, take that.
+    if (not_stacked_sockets >= consumer_sockets) {
+        return not_stacked_pool_map;
+    }
 
     // loop over our potential stacks, and just take the first stack that covers all sockets.
     // else take the stack that covers the most sockets.
     var best_sockets = 0;
     var best_stack;
-    var found_stack = false;
     for (stack_id in stackToPoolMap) {
-        found_stack = true;
+        found_pool = true;
         if (stackToEntitledSockets[stack_id] >= consumer_sockets) {
             return stackToPoolMap[stack_id];
         }
@@ -317,11 +353,17 @@ function findStackingPools(pool_class, consumer, compliance) {
 
     // All possible pools may have overlapped with existing products
     // so return nothing!
-    if (!found_stack) {
+    if (!found_pool) {
         return new java.util.HashMap();
     }
 
-    return stackToPoolMap[best_stack];
+    // we can't fully cover the product. either select the best non stacker, or the best stacker.
+    if (not_stacked_sockets >= best_sockets) {
+        return not_stacked_pool_map;
+    }
+    else {
+        return stackToPoolMap[best_stack];
+    }
 }
 
 
@@ -932,7 +974,7 @@ function stack_is_compliant(consumer, stack_id, ents, log) {
         if (is_stacked(ent)) {
             var currentStackId = ent.getPool().getProductAttribute("stacking_id").getValue();
             if (currentStackId.equals(stack_id)) {
-                covered_sockets += parseInt(ent.getPool().getProductAttribute("sockets").getValue()) * ent.getQuantity();
+                covered_sockets += get_pool_sockets(ent.getPool()) * ent.getQuantity();
                 log.debug("Ent " + ent.getId() + " took covered sockets to: " + covered_sockets);
             }
         }
@@ -945,18 +987,13 @@ function stack_is_compliant(consumer, stack_id, ents, log) {
  * Check an entitlement to see if it provides sufficent CPU sockets a consumer.
  */
 function ent_is_compliant(consumer, ent, log) {
-
-    if (!ent.getPool().hasProductAttribute("sockets")) {
-        return true;
-    }
-
     log.debug("Checking entitlement compliance: " + ent.getId());
     var consumer_sockets = 1;
     if (consumer.hasFact(SOCKET_FACT)) {
         consumer_sockets = parseInt(consumer.getFact(SOCKET_FACT));
     }
 
-    var covered_sockets = parseInt(ent.getPool().getProductAttribute("sockets").getValue());
+    var covered_sockets = get_pool_sockets(ent.getPool());
 
     return covered_sockets >= consumer_sockets;
 }
