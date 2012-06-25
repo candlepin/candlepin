@@ -641,6 +641,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         when(upOwner1.getDisplayName()).thenReturn("New Name");
         ownerResource.updateOwner(owner.getKey(), upOwner1);
         assertEquals("New Name", owner.getDisplayName());
+
         assertEquals(parentOwner1, owner.getParentOwner());
         assertEquals("premium", owner.getDefaultServiceLevel());
 
@@ -651,6 +652,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals("standard", owner.getDefaultServiceLevel());
         assertEquals("New Name", owner.getDisplayName());
         assertEquals(parentOwner1, owner.getParentOwner());
+
 
         // Update with Parent Owner only
         Owner upOwner3 = mock(Owner.class);
