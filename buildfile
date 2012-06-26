@@ -12,8 +12,6 @@ require 'rspec/core/rake_task'
 require 'json'
 
 #############################################################################
-# DEPENDENCIES
-#############################################################################
 
 RESTEASY = [group('jaxrs-api',
                   'resteasy-jaxrs',
@@ -114,7 +112,7 @@ repositories.remote << "http://oauth.googlecode.com/svn/code/maven/"
 
 nocstyle = ENV['nocheckstyle']
 if nocstyle.nil?
-   require './buildr/checkstyle'
+   require "./buildr/checkstyle"
 end
 
 #############################################################################
