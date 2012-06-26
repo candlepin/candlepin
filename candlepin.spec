@@ -14,7 +14,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.7.2
+Version: 0.7.3
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -279,6 +279,22 @@ fi
 
 
 %changelog
+* Tue Jun 26 2012 James Bowes <jbowes@redhat.com> 0.7.3-1
+- 834684: minor changes to checkstyle.xml to bring it up to date with
+  Checkstyle 5.5 (dmitri@redhat.com)
+- 834684: updated bundler to version 1.4.7 (dmitri@redhat.com)
+- 834591: 0 or no sockets count as infinite on products (jbowes@redhat.com)
+- 827035: regenerate identity certificate if within threshold
+  (jesusr@redhat.com)
+- 804555: The entire prefix for an owner should be url encoded.
+  (bkearney@redhat.com)
+- 820630: Update some typos which have been found (bkearney@redhat.com)
+- Support for lazy regeneration of entitlement certificates.
+  (dgoodwin@redhat.com, awood@redhat.com)
+- Support for editing of consumer environment (dmitri@appliedlogic.ca)
+- sync: keep recursed consumer json out of entitlements (jbowes@redhat.com)
+  (awood@redhat.com)
+
 * Wed Jun 06 2012 Chris Duryee (beav) <cduryee@redhat.com>
 - latest strings from zanata (cduryee@redhat.com)
 - remove unused class. dgoodwin removed references in a previous commit.
