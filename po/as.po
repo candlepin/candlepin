@@ -842,7 +842,7 @@ msgstr "UUID {0} -ৰ সৈতে উপভোক্তা এজন ভাৰ�
 # keys, author ngoswami
 #: src/main/java/org/candlepin/auth/interceptor/SecurityInterceptor.java:193
 msgid "Unable to verify request."
-msgstr "অনুৰোধ সতাসত্য নিৰূপণ কৰিবলে অক্ষম।\n"
+msgstr "অনুৰোধ সতাসত্য নিৰূপণ কৰিবলে অক্ষম।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ngoswami

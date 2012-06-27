@@ -832,7 +832,7 @@ msgid ""
 "The consumer with UUID {0} is a virtual guest. It does not have guests."
 msgstr ""
 "O consumidor com o UUID {0} é um convidado virtual. Ele não possui "
-"convidados.\n"
+"convidados."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
