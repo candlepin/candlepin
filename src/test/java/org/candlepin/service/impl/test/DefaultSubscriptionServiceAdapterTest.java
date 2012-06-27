@@ -14,7 +14,8 @@
  */
 package org.candlepin.service.impl.test;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
@@ -28,7 +29,7 @@ import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class DefaultSubscriptionServiceAdapterTest extends TestCase {
+public class DefaultSubscriptionServiceAdapterTest {
 
     @Test
     public void activationPrefix() {
