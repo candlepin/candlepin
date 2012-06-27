@@ -1,290 +1,284 @@
-# fvalen <fvalen@fedoraproject.org>, 2012. #zanata
-# mospina <mospina@redhat.com>, 2012. #zanata
+# runab <runab@redhat.com>, 2012. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-06-27 12:35-0400\n"
 "PO-Revision-Date: 2012-06-06 11:01-0400\n"
-"Last-Translator: fvalen <fvalen@fedoraproject.org>\n"
-"Language-Team: Italian\n"
+"Last-Translator: runab <runab@redhat.com>\n"
+"Language-Team: Bengali (India)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: it\n"
+"Language: bn-IN\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "X-Generator: Zanata 1.5.0\n"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java:145
 msgid "Standalone candlepin does not support redeeming a subscription."
-msgstr "Candlepin standalone non supporta il redimere di una sottoscrizione"
+msgstr "স্বতন্ত্র candlepin দ্বারা সাবস্ক্রিপশনের ব্যবহার সমর্থিত হয় না।"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/sync/ConsumerImporter.java:47
 msgid "No ID for upstream distributor"
-msgstr "Nessun ID per il distributore upstream"
+msgstr "মূল বিতরণকারীর কোনো ID উপস্থিত নেই"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/sync/ConsumerImporter.java:57
 msgid "This distributor has already been imported by another owner"
-msgstr "Questo distributore è già stato importato da un altro proprietario"
+msgstr "অন্য এক মালিক দ্বারা এই বিতরণকারীর তথ্য পূর্বেই ইম্পোর্ট করা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/sync/ConsumerImporter.java:63
 msgid "Owner has already imported from another distributor"
-msgstr ""
-"Il proprietario ha già eseguito l'importazione da un altro distributore"
+msgstr "এই মালিক দ্বারা অন্য এক বিতরণকারী থেকে পূর্বেই ইম্পোর্ট করা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/sync/Importer.java:142
 msgid "Wrong metadata type"
-msgstr "Tipo di metadati errato"
+msgstr "ভুল ধরনের মিটাডাটা"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/sync/Importer.java:151
 msgid "Invalid owner"
-msgstr "Proprietario invalido"
+msgstr "অবৈধ মালিকানা"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/sync/Importer.java:163
 msgid "Import is older than existing data"
-msgstr "Il processo d'importazione è più vecchio dei dati esistenti"
+msgstr "ইমপোর্ট করা তথ্য, উপস্থিত তথ্যের তুলনায় পুরোনো"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/sync/Importer.java:202
 #: src/main/java/org/candlepin/sync/Importer.java:207
 msgid "Failed to import archive"
-msgstr "Importazione archivio fallito"
+msgstr "আর্কাইভ ইম্পোর্ট করতে ব্যর্থ"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys
+# keys, author runab
 #: src/main/java/org/candlepin/sync/Importer.java:306
 #, java-format
 msgid "Incompatible rules: import version {0} older than our version {1}."
 msgstr ""
-"Regole incompatibili: versione di importazione {0} più vecchia della nostra "
-"versione {1}."
+"বিসংগত নিয়ম: ইম্পোর্ট করা সংস্করণ {0} উপস্থিত সংস্করণ {1} থেকে পুরোনো।"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys
+# keys, author runab
 #: src/main/java/org/candlepin/sync/Importer.java:309
 msgid "Manifest data will be imported without rules import."
-msgstr "I dati del manifesto saranno importati senza le regole."
+msgstr "নিয়ম ইম্পোর্ট বিনা ম্যানিফেস্টের তথ্য ইম্পোর্ট করা হবে।"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/sync/EntitlementImporter.java:119
 msgid "Unable to find product with ID: "
-msgstr "Impossibile trovare il prodotto con ID:"
+msgstr "চিহ্নিত ID সহ উৎপাদন পাওয়া যায়নি: "
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/controller/Entitler.java:80
 #, java-format
 msgid "Subscription pool {0} does not exist."
-msgstr "Il pool di sottoscrizione {0} non esiste."
+msgstr "সাবস্ক্রিপশন পুল {0} বর্তমানে উপস্থিত নয়।"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/controller/Entitler.java:107
 #, java-format
 msgid ""
 "This consumer is already subscribed to the product matching pool with id "
 "''{0}''."
 msgstr ""
-"Questa utenza è già sottoscritta al pool corrispondente al prodotto con id "
-"''{0}''."
+"এই গ্রাহক ''{0}'' id বিশিষ্ট পুলের জন্য প্রযোজ্য উৎপাদনে সাবস্ক্রাইব করেছেন"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/controller/Entitler.java:112
 #, java-format
 msgid "No entitlements are available from the pool with id ''{0}''."
-msgstr "Nessun entitlement è disponibile dal pool con id ''{0}''."
+msgstr "''{0}'' id সহ পুলের জন্য কোনো এনটাইটেলমেন্ট উপলব্ধ নয়।"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/controller/Entitler.java:117
 #, java-format
 msgid ""
 "Consumers of this type are not allowed to subscribe to the pool with id "
 "''{0}''."
 msgstr ""
-"Le utenze di questo tipo non possono sottoscriversi al pool con id ''{0}''."
+"''{0}'' id সহ পুলের জন্য এই ধরনের গ্রাহকেরা সাবস্ক্রাইব করতে পারবেন না।"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/controller/Entitler.java:121
 #, java-format
 msgid "Multi-entitlement not supported for pool with id ''{0}''."
-msgstr ""
-"Gli entitlement multipli non sono supportati per il pool con id ''{0}''."
+msgstr "''{0}'' id বিশিষ্ট পুলের জন্য একাধিক  এনটাইটেলমেন্ট সমর্থিত নয়।"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys
+# keys, author runab
 #: src/main/java/org/candlepin/controller/Entitler.java:125
 #, java-format
 msgid "Guest''s host does not match owner of pool: ''{0}''."
-msgstr "Host guest non corrisponde al proprietario del pool: ''{0}''."
+msgstr "গেস্টের হোস্ট ও পুলের মালিকের মধ্যে গরমিল: ''{0}''."
 
 # translation auto-copied from project Candlepin, version master, document
-# keys
+# keys, author runab
 #: src/main/java/org/candlepin/controller/Entitler.java:129
 #, java-format
 msgid "Pool not available to manifest consumers: ''{0}''."
-msgstr "Il pool non è disponibile a manifestare le utenze: ''{0}''."
+msgstr "ম্যানিফেস্ট গ্রাহকদের জন্য পুল উপলব্ধ নয়: ''{0}''।"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys
+# keys, author runab
 #: src/main/java/org/candlepin/controller/Entitler.java:133
 #, java-format
 msgid "Pool is restricted to virtual guests: ''{0}''."
-msgstr "Il pool è limitato ai guest virtuali: ''{0}''."
+msgstr ""
+"শুধুমাত্র ভার্চুয়াল গেস্টদের ব্যবহারের জন্য পুলটি সংরক্ষিত হয়েছে: ''{0}''."
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author mospina
+# keys, author runab
 #: src/main/java/org/candlepin/controller/Entitler.java:137
 #, java-format
 msgid "Unable to entitle consumer to the pool with id ''{0}''.: {1}"
-msgstr "Impossibile sottoscrivere l''utenza al pool con id ''{0}''.: {1}"
+msgstr "''{0}'' id সহ পুলের সাথে গ্রাহককে এনটাইটেল করতে ব্যর্থ.: {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/controller/Entitler.java:179
 #, java-format
 msgid "This consumer is already subscribed to the product ''{0}''"
-msgstr "Questo utente risulta già sottoscritto al prodotto ''{0}''"
+msgstr "''{0}'' উৎপাদনের সাথে এই গ্রাহক সাবস্ক্রাইব করা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/controller/Entitler.java:183
 #, java-format
 msgid ""
 "There are not enough free entitlements available for the product ''{0}''"
-msgstr ""
-"Non sono disponibili entitlement gratuiti sufficienti per il prodotto "
-"''{0}''"
+msgstr "''{0}'' উৎপাদনের জন্য পর্যাপ্ত অব্যবহৃত এনটাইটেলমেন্ট উপলব্ধ নেই।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/controller/Entitler.java:187
 #, java-format
 msgid "Consumers of this type are not allowed to the product ''{0}''"
-msgstr ""
-"Gli utenti di questo tipo non sono abilitati a questo prodotto ''{0}''"
+msgstr "এই ধরনের গ্রাহকেরদের ক্ষেত্রে  ''{0}'' উৎপাদন উপলব্ধ নয়"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/controller/Entitler.java:192
 #, java-format
 msgid "Only virtual systems can consume the product ''{0}''"
-msgstr "Solo i sistemi virtuali possono usare il prodotto ''{0}''"
+msgstr "শুধুমাত্র ভার্চুয়াল সিস্টেম দ্বারা ''{0}'' উৎপাদন প্রয়োগ করা যাবে"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author mospina
+# keys
 #: src/main/java/org/candlepin/controller/Entitler.java:197
 #, java-format
 msgid "Unable to entitle consumer to the product ''{0}'': {1}"
-msgstr "Impossibile abilitare l''utente al prodotto ''{0}'': {1}"
+msgstr "গ্রাহককে ''{0}'' উৎপাদনে এনটাইটেল করা যায়নি: {1}"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:98
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:117
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:707
 #, java-format
 msgid "No such environment: {0}"
-msgstr "Ambiente non trovato: {0}"
+msgstr "এই ধরনের কোনো পরিবেশ উপস্থিত নেই: {0}"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:247
 #, java-format
 msgid "No such environment : {0}"
-msgstr "Ambiente non trovato: {0}"
+msgstr "এই ধরনের কোনো পরিবেশ উপস্থিত নেই : {0}"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resource/RoleResource.java:82
 #, java-format
 msgid "No such owner: {0}"
-msgstr "Proprietario non trovato: {0}"
+msgstr "এই ধরনের কোনো মালিক উপস্থিত নেই: {0}"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resource/RoleResource.java:112
 msgid "Role ID does not match path."
-msgstr "l'ID del ruolo non corrisponde al percorso."
+msgstr "ভূমিকার ID-র সাথে পাথের গরমিল"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resource/RoleResource.java:138
 msgid "Access type NONE not supported."
-msgstr "Il tipo di accesso NONE non è supportato."
+msgstr "NONE ব্যবহারের ধরন সমর্থিত নয়।"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resource/RoleResource.java:177
 #, java-format
 msgid "No such permission: {0} in role: {1}"
-msgstr "Permesso non trovato: {0} in ruolo: {1}"
+msgstr "এই ধরনের কোনো অনুমতি উপস্থিত নেই: {0} চিহ্নিত ভূমিকায়: {1}"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resource/RoleResource.java:191
 #, java-format
 msgid "No such role: {0}"
-msgstr "Ruolo non trovato: {0}"
+msgstr "এই ধরনের কোনো ভূমিকা উপস্থিত নেই: {0}"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resource/RoleResource.java:199
 #, java-format
 msgid "No such user: {0}"
-msgstr "Utente non trovato: {0}"
+msgstr "এই ধরনের কোনো ব্যবহারকারী উপস্থিত নেই: {0}"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:135
 msgid "The quantity must be greater than 0"
-msgstr "La quantità deve essere maggiore di 0"
+msgstr "এই মান 0 থেকে বেশি হওয়া আবশ্যক"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:145
 msgid ""
 "Pools requiring a 'person' consumer should not be added to an activation key"
 " since a consumer type of 'person' cannot be used with activation keys"
 msgstr ""
-"I pool che hanno bisogno dell'utenza 'persona' non devono essere aggiunti ad"
-" una chiave di attivazione poichè questo tipo di utenza non può essere usata"
-" con le chiavi di attivazione."
+"যে সমস্ত পুলের ক্ষেত্রে 'person' গ্রাহক প্রয়োজন সেইগুলিকে কোনো "
+"অ্যাক্টিভেশন-কি-র সাথে যোগ করা অনুচিত কারণ 'person' ধরনের গ্রাহকের জন্য "
+"অ্যাক্টিভেশন-কি ব্যবহার করা যাবে না।"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:154
 msgid ""
 "Error: Only pools with multi-entitlement product subscriptions can be added "
 "to the activation key with a quantity greater than one."
 msgstr ""
-"Errore: Solo i pool con sottoscrizioni al prodotto con entitlement multipli "
-"possono essere aggiunti alla chiave di attivazione con una quantità maggiore"
-" di uno."
+"ত্রুটি: একাধিক-এনটাইটেলমেন্ট সহ উৎপাদন সাবস্ক্রিপশন বিশিষ্ট পুল-গুলির "
+"ক্ষেত্রেই শুধুমাত্র এক থেকে বেশি সংখ্যা সহ চিহ্নিত অ্যাক্টিভেশন-কিগুলি "
+"ব্যবহার করা যাবে।"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:161
 msgid "The quantity must not be greater than the total allowed for the pool"
-msgstr "La quantità non deve superare quella permessa al pool"
+msgstr ""
+"পুলের জন্য অনুমোদিত সম্পূর্ণ পরিমানের থেকে বেশি পরিমাণ ধার্য করা যাবে না"
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:222
 #, java-format
@@ -297,23 +291,23 @@ msgid "Pool with id {0} could not be found."
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
-# keys
+# keys, author runab
 #: src/main/java/org/candlepin/resource/SubscriptionResource.java:122
 #, java-format
 msgid "no certificate for subscription {0}"
-msgstr "nessun certificato per la sottoscrizione {0}"
+msgstr "{0} সাবস্ক্রিপশনের কোনো সার্টিফিকেট উপস্থিত নেই"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resource/SubscriptionResource.java:141
 msgid "email is required for notification"
-msgstr "email necessaria per la notifica"
+msgstr "সূচনাপ্রদানের জন্য ই-মেইল উল্লেখ করা আবশ্যক"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resource/SubscriptionResource.java:146
 msgid "email locale is required for notification"
-msgstr "email locale necessaria per la notifica"
+msgstr "সূচনাপ্রদানের জন্য ই-মেইলের লোকেইল উল্লেখ করা আবশ্যক"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -323,7 +317,7 @@ msgstr "email locale necessaria per la notifica"
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:124
 #, java-format
 msgid "No such consumer: {0}"
-msgstr "Utente non trovato: {0}"
+msgstr "এই ধরনের কোনো গ্রাহক উপস্থিত নেই: {0}"
 
 #: src/main/java/org/candlepin/resource/SubscriptionResource.java:182
 #, java-format
@@ -338,13 +332,11 @@ msgid "Product with UUID ''{0}'' could not be found."
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resource/ProductResource.java:193
 #, java-format
 msgid "Product with UUID ''{0}'' cannot be deleted while subscriptions exist."
-msgstr ""
-"Il prodotto con UUID ''{0}'' non può essere rimosso in presenza di "
-"sottoscrizioni."
+msgstr "সাবস্ক্রিপশন উপস্থিত থাকলে, UUID ''{0}'' সহ উৎপাদন মুছে ফেলা যাবে না"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:253
 #, java-format
@@ -357,25 +349,25 @@ msgid "Could not create the Owner: {0}"
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resource/OwnerResource.java:449
 msgid "Must provide a name for activation key."
-msgstr "È necessario fornire un nome per la chiave di attivazione."
+msgstr "অ্যাক্টিভেশন-কি-র জন্য নাম নির্ধারণ করা আবশ্যক।"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resource/OwnerResource.java:456
 msgid ""
 "Activation key names must be alphanumeric or the characters '-' or '_'. ["
 msgstr ""
-"I nomi delle chiavi di attivazione devono essere alfanumerici o con "
-"caratteri '-' o '_'. ["
+"অ্যাক্টিভেশন-কি-র নামের ক্ষেত্রে অক্ষর, সংখ্যা অথবা  '-' অথবা '_' চিহ্ন করা "
+"যাবে। ["
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resource/OwnerResource.java:463
 msgid "Activation key name ["
-msgstr "Nome della chiave di attivazione ["
+msgstr "অ্যাক্টিভেশন-কি-র নাম ["
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -384,15 +376,15 @@ msgstr "Nome della chiave di attivazione ["
 #: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:122
 #, java-format
 msgid "No such consumer type: {0}"
-msgstr "Tipo di utente non trovato: {0}"
+msgstr "এই ধরনের কোনো গ্রাহক উপস্থিত নেই: {0}"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resource/OwnerResource.java:587
 #: src/main/java/org/candlepin/resource/PoolResource.java:134
 #, java-format
 msgid "consumer: {0} not found"
-msgstr "utenza: {0} non trovata"
+msgstr "গ্রাহক: {0}-কে পাওয়া যায়নি"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -405,7 +397,7 @@ msgstr "utenza: {0} non trovata"
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1084
 #, java-format
 msgid "owner with key: {0} was not found."
-msgstr "proprietario con chiave: {0} non è stato trovato."
+msgstr "কি: {0} বিশিষ্ট মালিককে সনাক্ত করা যায়নি।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -414,107 +406,103 @@ msgstr "proprietario con chiave: {0} non è stato trovato."
 #, java-format
 msgid "Service level {0} is not available to consumers of organization {1}."
 msgstr ""
-"Il livello di servizio {0} non è disponibile alle utenze dell'organizzazione"
-" {1}."
+"Service level {0} পরিসেবার স্তরটি {1} প্রতিষ্ঠানের গ্রাহকদের জন্য উপলব্ধ নয়।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/resource/OwnerResource.java:815
 #, java-format
 msgid "subscription with id: {0} not found."
-msgstr "sottoscrizione con id: {0} non è stato trovato"
+msgstr "id: {0} বিশিষ্ট সাবস্ক্রিপশন সনাক্ত করা যায়নি।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/resource/OwnerResource.java:903
 msgid "Error reading export archive"
-msgstr "Errore nella lettura dell'archivio di esportazione"
+msgstr "এক্সপোর্ট আর্কাইভ পড়তে সমস্যা"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1066
 #, java-format
 msgid "Problem generating ueber cert for owner {0}"
-msgstr ""
-"Problemi durante la generazione di un euber cert (certificato master) per il"
-" proprietario {0}"
+msgstr "{0} মালিকের জন্য ueber cert প্রস্তুত করতে সমস্যা"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1092
 #, java-format
 msgid "ueber certificate for owner {0} was not found. Please generate one."
 msgstr ""
-"Il certificato euber per il proprietario {0} non è stato trovato. Generarne "
-"uno nuovo."
+"{0} মালিকের ueber সার্টিফিকেট পাওয়া যায়নি। অনুগ্রহ করে একটি প্রস্তুত করুন।"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1120
 #, java-format
 msgid "{0} file imported successfully."
-msgstr "{0} file importato con successo"
+msgstr "{0}-টি ফাইল সাফল্যের সাথে ইম্পোর্ট করা হয়েছে।"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys
+# keys, author runab
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1122
 #, java-format
 msgid "{0} file imported forcibly"
-msgstr "{0} file importato forzatamente"
+msgstr "{0}-টি ফাইল বলপূর্বক ইম্পোর্ট করা হয়েছে।"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resource/EventResource.java:85
 #, java-format
 msgid "Event with ID ''{0}'' could not be found."
-msgstr "Impossibile trovare Evento con ID ''{0}''."
+msgstr "ID ''{0}'' সহ ইভেন্ট পাওয়া যায়নি।"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resource/StatisticResource.java:61
 msgid "couldn't generate statistics"
-msgstr "impossibile generare le statistiche"
+msgstr "পরিসংখ্যান প্রস্তুত করতে ব্যর্থ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/resource/PoolResource.java:117
 msgid "Cannot filter on both owner and consumer"
-msgstr "Impossibile filtrare con Proprietario ed utente"
+msgstr "মালিক ও গ্রাহক উভয়ের উপর একসাথে ফিল্টার প্রয়োগ করা যাবে না"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/resource/PoolResource.java:121
 msgid "A consumer or owner is needed to filter on product"
 msgstr ""
-"È necessario specificare un utente o proprietario per filtrare col prodotto"
+"উৎপাদনের উপর ফিল্টার প্রয়োগ করার জ্য গ্রাহক অথবা মালিক উল্লেখ করা আবশ্যক"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author mospina
+# keys, author runab
 #: src/main/java/org/candlepin/resource/PoolResource.java:140
 #, java-format
 msgid "User {0} cannot access consumer {1}"
-msgstr "Utente {0} non può accedere all''utenza {1}"
+msgstr "{0} ব্যবহারকারী দ্বারা {1} গ্রাহকের তথ্য দেখা সম্ভব নয়"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/resource/PoolResource.java:151
 #, java-format
 msgid "owner: {0}"
-msgstr "proprietario: {0}"
+msgstr "মালিক: {0}"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resource/PoolResource.java:155
 #, java-format
 msgid "User {0} cannot access owner {1}"
-msgstr "Utente {0} non può accedere al proprietario {1}"
+msgstr "{0} ব্যবহারকারী দ্বারা {1} মালিকের তথ্য দেখা সম্ভব নয়"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resource/PoolResource.java:164
 #, java-format
 msgid "User {0} cannot access all pools."
-msgstr "Utente {0} non può accedere ai pool."
+msgstr "{0} ব্যবহারকারী দ্বারা সর্বধরনের পুল ব্যবহার করা সম্ভব নয়।"
 
 #: src/main/java/org/candlepin/resource/PoolResource.java:192
 #: src/main/java/org/candlepin/resource/PoolResource.java:209
@@ -523,237 +511,227 @@ msgid "Entitlement Pool with ID ''{0}'' could not be found."
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:224
 #, java-format
 msgid "Organization with key: {0} was not found."
-msgstr "Organizzazione con chiave: {0} non trovata."
+msgstr "{0} কি বিশিষ্ট প্রতিষ্ঠান পাওয়া যায়নি।"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:308
 msgid "Insufficient permissions"
-msgstr "Permessi insufficienti"
+msgstr "অপর্যাপ্ত অনুমতি"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:314
 msgid "Must specify an org to register with activation keys."
-msgstr "Specificare una org da registrare con le chiavi di attivazione."
+msgstr ""
+"অ্যাক্টিভেশন-কি সহযোগে নিবন্ধনের জন্য একটি প্রতিষ্ঠা উল্লেখ করা আবশ্যক।"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:318
 msgid "Cannot specify username with activation keys."
-msgstr ""
-"Non è possibile specificare il nome utente con le chiavi di attivazione."
+msgstr "অ্যাক্টিভেশন-কি-র মাধ্যমে ব্যবহারকারীর নাম নির্ধারণ করা যাবে না।"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:339
 msgid "A consumer type of 'person' cannot be used with activation keys"
-msgstr ""
-"Una utenza di tipo 'persona' non può essere usata con le chiavi di "
-"attivazione"
+msgstr "'person' ধরনের কোনো গ্রাহকের জন্য অ্যাক্টিভেশন-কি ব্যবহার করা যাবে না"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:344
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:353
 msgid "System name cannot contain most special characters."
-msgstr ""
-"Il nome del sistema non può contenere gran parte dei caratteri speciali."
+msgstr "সিস্টেমের নামের মধ্যে অধিকাংশ বিশেষ অক্ষরগুলি ব্যবহার করা যাবে না।"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:398
 msgid "Pool ID must be provided"
-msgstr "È necessario fornire un ID del pool"
+msgstr "পুল ID উল্লেখ করা আবশ্যক"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author mospina
+# keys
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:422
 #, java-format
 msgid "Problem creating consumer {0}"
-msgstr "Problemi nella creazione dell''utente {0}"
+msgstr "গ্রাহক {0} নির্মাণ করতে সমস্যা"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:443
 msgid "System name cannot be null."
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:450
 msgid "System name cannot begin with # character"
-msgstr "Il nome del sistema non può iniziare con il carattere #"
+msgstr "সিস্টেমের নামের প্রারম্ভে # চিহ্ন উপস্থিত থাকা চলবে না"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author mospina
+# keys, author runab
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:496
 #, java-format
 msgid "Activation key ''{0}'' not found for organization ''{1}''."
-msgstr ""
-"Chiave di attivazione ''{0}'' non trovata per l''organizzazione ''{1}''."
+msgstr "''{0}'' অ্যাক্টিভেশন-কি-টি ''{1}'' প্রতিষ্ঠানের জন্য পাওয়া যায়নি।"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author mospina
+# keys, author runab
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:518
 #, java-format
 msgid "User {0} has no roles for organization {1}"
-msgstr "Utente {0} non ha alcun ruolo per l''organizzazione {1}"
+msgstr "{1} প্রতিষ্ঠানের মধ্যে {0} ব্যবহারকারীর কোনো ভূমিকা উপস্থিত নেই"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author mospina
+# keys
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:530
 #, java-format
 msgid "User {0} has already registered a personal consumer"
-msgstr "L''utente {0} ha già registrato un utente personale"
+msgstr "{0} ব্যবহারকারী ব্যক্তিগত গ্রাহক রূপে নিবন্ধন করিয়েছেন"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:547
 msgid "You must specify an organization for new consumers."
-msgstr "Specificare una organizzazione per le nuove utenze."
+msgstr "নতুন গ্রাহকদের জন্য একটি প্রতিষ্ঠান উল্লেখ করা আবশ্যক।"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author mospina
+# keys, author runab
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:558
 #, java-format
 msgid "Organization {0} does not exist."
-msgstr "L''organizzazione {0} non esiste."
+msgstr "{0} প্রতিষ্ঠান বর্তমানে উপস্থিত নেই।"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author mospina
+# keys, author runab
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:565
 #, java-format
 msgid "User {0} cannot access organization {1}"
-msgstr "L''utente {0} non può accedere all''organizzazione {1}"
+msgstr "{0} ব্যবহারকারী দ্বারা {1} প্রতিষ্ঠান ব্যবহার করা সম্ভব নয়"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author mospina
+# keys
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:985
 #, java-format
 msgid "Cannot unregister {0} consumer {1} because: {2}"
-msgstr "Impossibile rimuovere registrazione {0} dell''utente {1} perchè: {2}"
+msgstr "{0} নিবন্ধন {1} গ্রাহকের জন্য বাতিল করা যায়নি কারণ: {2}"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1072
 msgid "Unable to create entitlement archive"
-msgstr "Impossibile creare l'archivio per l'entitlement"
+msgstr "এনটাইটেলমেন্টের আর্কাইভ তৈরি করতে ব্যর্থ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1183
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1194
 msgid "Cannot bind by multiple parameters."
-msgstr "Impossibile eseguire una associazione tramite parametri multipli."
+msgstr "একাধিক পরামিতি দ্বারা bind করা সম্ভব নয়।"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1188
 msgid "Cannot specify a quantity when auto-binding."
-msgstr ""
-"Non è possibile specificare una quantità con una associazione automatica."
+msgstr "অটো-বাইন্ডিং করার সময় পরিমান নির্ধারণ করা সম্ভব নয়।"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1257
 #, java-format
 msgid "Asked to be subscribed to a product that has no pool: {0} "
-msgstr ""
-"È stato richiesto di sottoscriversi ad un prodotto che non possiede alcun "
-"gruppo: {0} "
+msgstr "পুল বিহীন উৎপাদনের সাবস্ক্রাইব করার অনুরোধ জানানো হয়েছে: {0} "
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1332
 #, java-format
 msgid "No such entitlement: {0}"
-msgstr "Entitlement non trovato: {0}"
+msgstr "এই ধরনের কোনো এনটাইটেলমেন্ট নেই: {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1356
 #, java-format
 msgid "No such product: {0}"
-msgstr "Prodotto non trovato: {0}"
+msgstr "এই ধরনের কোনো উৎপাদন নেই: {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1404
 msgid "Consumer with ID "
-msgstr "Utente con ID"
+msgstr "চিহ্নিত ID সহ গ্রাহক "
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1442
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:152
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:172
 #, java-format
 msgid "Entitlement with ID ''{0}'' could not be found."
-msgstr "Impossibile trovare un entitlement con ID ''{0}''."
+msgstr "''{0}'' সহ এনটাইটেলমেন্ট পাওয়া যায়নি।"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author mospina
+# keys
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1466
 #, java-format
 msgid "Entitlement Certificate with serial number {0} could not be found."
-msgstr ""
-"Impossibile trovare un Certificato dell''entitlement con numero di serie "
-"{0}."
+msgstr "{0} ক্রমিক সংখ্যা বিশিষ্ট এনটাইটেলমেন্ট সার্টিফিকেট পাওয়া যায়নি।"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author mospina
+# keys, author runab
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1528
 #, java-format
 msgid ""
 "Consumer {0} cannot be exported. A manifest cannot be made for consumer of "
 "type ''{1}''."
 msgstr ""
-"Impossibile esportare l''utenza {0}. Impossibile creare un manifesto per "
-"l''utenza di tipo  ''{1}''."
+"{0} গ্রাহককে এক্সপোর্ট করা সম্ভব নয়। ''{1}'' ধরনের গ্রাহকের জন্য তালিকা "
+"অর্থাৎ ম্যানিফেস্ট প্রস্তুত করা সম্ভব নয়।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1546
 msgid "Unable to create export archive"
-msgstr "Impossibile creare l'archivio di esportazione"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author mospina
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1579
-#, java-format
-msgid "Problem regenerating id cert for consumer {0}"
-msgstr "Problema nella rigenerazione del cert id per l''utente {0}"
+msgstr "এক্সপোর্ট আর্কাইভ নির্মাণ করতে ব্যর্থ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1579
+#, java-format
+msgid "Problem regenerating id cert for consumer {0}"
+msgstr "{0} গ্রাহকের জন্য id cert পুনরায় প্রস্তুত করতে সমস্যা"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author runab
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1646
 #, java-format
 msgid "The consumer with UUID {0} is not a virtual guest."
-msgstr "L'utenza con UUID {0} non è un guest virtuale."
+msgstr "UUID {0} সহ গ্রাহক ভার্চুয়াল গেস্ট নয়।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:105
 #, java-format
 msgid "Consumer: {0} has no entitlement for product {1}"
-msgstr "Utente: {0} non ha alcun entitlement per il prodotto {1}"
+msgstr "গ্রাহক: {0}-র ক্ষেত্রে {1} উৎপাদনের কোনো এনটাইটেলমেন্ট উপস্থিত নেই"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/resource/RulesResource.java:81
 msgid "Error decoding the rules. The text should be base 64 encoded"
 msgstr ""
-"Errore durante la decodifica delle regole. Il testo dovrebbe essere basato "
-"su di una codifica 64"
+"নিয়ম ডিকোড করতে সমস্যা। টেক্সটের ক্ষেত্রে base 64 এনকোডিং প্রয়োগ করা আবশ্যক"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/resource/RulesResource.java:105
 msgid "couldn't read rules file"
-msgstr "impossibile leggere il file delle regole"
+msgstr "নিয়ম বিশিষ্ট ফাইল পড়া যায়নি"
 
 #: src/main/java/org/candlepin/resource/ContentResource.java:80
 #, java-format
@@ -765,49 +743,49 @@ msgid "You must specify an owner key, consumer UUID, or principal name."
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resource/JobResource.java:114
 msgid ""
 "You must specify one of owner key, consumer uuid, or principal name, but not"
 " all."
 msgstr ""
-"Specifica uno tra la chiave del proprietario, uuid dell'utenza o un nome "
-"principale ma non tutti."
+"মালিকের-কি, গ্রাহকের uuid অথবা প্রিন্সিপ্যাল নামের মধ্যে একটি উল্লেখ করা "
+"আবশ্যক। সককটি উল্লেখ করা যাবে না।"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resource/JobResource.java:173
 msgid "Error setting scheduler status"
-msgstr "Errore impostazione stato dello scheduler"
+msgstr "শিডিউলারের অবস্থা নির্ধারণ করতে ব্যর্থ"
 
 #: src/main/java/org/candlepin/resource/JobResource.java:201
 msgid "job already canceled"
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resource/JobResource.java:204
 msgid "cannot cancel a job that is not in CREATED state"
-msgstr "impossibile cancellare un lavoro che non presenta uno stato CREATED"
+msgstr "CREATED অবস্থায় না থাকা কোনো কাজ বাতিল করা যাবে না"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resource/MigrationResource.java:64
 msgid "Bad entity value."
-msgstr "Valore entità incorretto."
+msgstr "এনটিটি-র মান সঠিক নয়।"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys
 #: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:85
 msgid "ConsumerType with id '"
-msgstr "TipoUtente con id '"
+msgstr "id ' বিশিষ্ট ConsumerType"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys
 #: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:107
 #, java-format
 msgid "Problem creating consumertype: {0}"
-msgstr "Problema nella creazione del TipoUtente: {0}"
+msgstr "consumertype: {0} প্রস্তুত করতে সমস্যা"
 
 #: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:128
 #, java-format
@@ -824,42 +802,41 @@ msgstr ""
 #: src/main/java/org/candlepin/guice/I18nProvider.java:87
 #: src/main/java/org/candlepin/exceptions/mappers/BadRequestExceptionMapper.java:70
 msgid "Bad Request"
-msgstr "Richiesta errata"
+msgstr "বেঠিক অনুরোধ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/model/EntitlementCurator.java:247
 #, java-format
 msgid "No product found for product id {0}"
-msgstr "Nessun prodotto trovato con id del prodotto {0}"
+msgstr "উৎপাদন id {0} সহ কোনো উৎপাদন পাওয়া যায়নি"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:96
 #, java-format
 msgid "Name of the consumer should be shorter than {0} characters."
-msgstr "Il nome utente deve avere meno di {0} caratteri."
+msgstr "গ্রাহকের নাম লেখার সময় সর্বাধিক {0}-টি অক্ষার ব্যবহার করা যাবে।"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys
+# keys, author runab
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:353
 #, java-format
 msgid ""
 "The consumer with UUID {0} is a virtual guest. It does not have guests."
-msgstr ""
-"L'utenza con un UUID {0} è un guest virtuale. Non presenta alcun guest"
+msgstr "UUID {0} সহ একটি গ্রাহক ভার্চুয়াল গেস্ট। এর কোনো ভার্চুয়াল গেস্ট নেই।"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/auth/interceptor/SecurityInterceptor.java:193
 msgid "Unable to verify request."
-msgstr "Impossibile verificare la richiesta."
+msgstr "অনুরোধ যাচাই করতে ব্যর্থ।"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/auth/interceptor/SecurityInterceptor.java:202
 msgid "Organization"
-msgstr "Organizzazione"
+msgstr "প্রতিষ্ঠান"
 
 #: src/main/java/org/candlepin/auth/interceptor/SecurityInterceptor.java:207
 #, java-format
@@ -867,264 +844,268 @@ msgid "{0} with id {1} could not be found."
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:113
 #, java-format
 msgid "Unknown event for user {0} and target {1}"
-msgstr "Evento sconosciuto per utente {0} e target {1}"
+msgstr "{0} ব্যবহারকারী ও  and target {1} উদ্দিষ্ট ব্স্তুর জন্য অজানা ইভেন্ট।"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:125
 #, java-format
 msgid "{0} created new consumer {1}"
-msgstr "{0} ha creato una nuova utenza {1}"
+msgstr "{0} দ্বারা নতুন গ্রাহক {1} নির্মিত হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author mospina
+# keys, author runab
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:126
 #, java-format
 msgid "{0} modified the consumer {1}"
-msgstr "{0} ha modificato l''utenza {1}"
+msgstr "{0} দ্বারা {1} গ্রাহকের তথ্য পরিবর্তিত হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author mospina
+# keys, author runab
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:127
 #, java-format
 msgid "{0} deleted the consumer {1}"
-msgstr "{0} ha cancellato l''utenza {1}"
+msgstr "{0} দ্বারা {1} গ্রাহক মুছে ফেলা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:128
 #, java-format
 msgid "{0} created new owner {1}"
-msgstr "{0} ha creato nuovo proprietario {1}"
+msgstr "{0} দ্বারা নতুন মালিক {1} তৈরি করা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:129
 #, java-format
 msgid "{0} modified the owner {1}"
-msgstr "{0} ha modificato il proprietario {1}"
+msgstr "{0} দ্বারা {1} মালিকের তথ্য পরিবর্তন করা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:130
 #, java-format
 msgid "{0} deleted the owner {1}"
-msgstr "{0} ha cancellato il proprietario {1}"
+msgstr "{0} দ্বারা {1} মালিকের তথ্য মুছে ফেলা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:132
 #, java-format
 msgid "{0} consumed a subscription for product {1}"
-msgstr "{0} ha consumato una sottoscrizione per il prodotto {1}"
+msgstr "{0} দ্বারা {1} উৎপাদনের জন্য একটি সাবস্ক্রিপশন ব্যবহার করা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:134
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:152
 #, java-format
 msgid "{0} modified a subscription for product {1}"
-msgstr "{0} ha modificato una sottoscrizione per il prodotto {1}"
+msgstr "{0} দ্বারা {1} উৎপাদনের জন্য সাবস্ক্রিপশন পরিবর্তন করা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:136
 #, java-format
 msgid "{0} returned the subscription for {1}"
-msgstr "{0} ha ritornato la sottoscrizione per {1}"
+msgstr "{0} দ্বারা {1}-র জন্য সাবস্ক্রিপশন ফেরৎ দেওয়া হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:137
 #, java-format
 msgid "{0} created a pool for product {1}"
-msgstr "{0} ha creato un pool per il prodotto {1}"
+msgstr "{0} দ্বারা {1} উৎপাদনের জন্য একটি পুল নির্মিত হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:138
 #, java-format
 msgid "{0} modified a pool for product {1}"
-msgstr "{0} ha modificato un pool per il prodotto {1}"
+msgstr "{0} দ্বারা {1} উৎপাদনের জন্য একটি পুল পরিবর্তিত হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:139
 #, java-format
 msgid "{0} deleted a pool for product {1}"
-msgstr "{0} ha cancellato un pool per il prodotto {1}"
+msgstr "{0} দ্বারা {1} উৎপাদনের জন্য একটি পুল মুছে ফেলা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author mospina
+# keys, author runab
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:141
 #, java-format
 msgid "{0} created an export for consumer {1}"
-msgstr "{0} ha creato una esportazione per l''utenza {1}"
+msgstr "{0} দ্বারা {1} গ্রাহকের জন্য একটি এক্সপোর্ট প্রস্তুত করা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:142
 #, java-format
 msgid "{0} imported a manifest for owner {1}"
-msgstr "{0} ha importato un manifesto per il proprietario {1}"
+msgstr ""
+"{0} দ্বারা {1} মালিকের জন্য একটি তালিকা অর্থাৎ ম্যানিফেস্ট ইম্পোর্ট করা "
+"হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:143
 #, java-format
 msgid "{0} created new user {1}"
-msgstr "{0} ha creato un nuovo utente {1}"
+msgstr "{0} দ্বারা নতুন ব্যবহারকারী {1} তৈরি করা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author mospina
+# keys, author runab
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:144
 #, java-format
 msgid "{0} modified the user {1}"
-msgstr "{0} ha modificato l''utente {1}"
+msgstr "{0} দ্বারা {1} ব্যবহারকারীর তথ্য পরিবর্তন করা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author mospina
+# keys, author runab
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:145
 #, java-format
 msgid "{0} deleted the user {1}"
-msgstr "{0} ha cancellato l''utente {1}"
+msgstr "{0} দ্বারা {1} ব্যবহারকারীর তথ্য পরিবর্তন করা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:146
 #, java-format
 msgid "{0} created new role {1}"
-msgstr "{0} ha creato un nuovo ruolo {1}"
+msgstr "{0} দ্বারা একটি নতুন ভূমিকা {1} তৈরি করা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:147
 #, java-format
 msgid "{0} modified the role {1}"
-msgstr "{0} ha modificato il ruolo {1}"
+msgstr "{0} দ্বারা {1} ভূমিকা পরিবর্তন করা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:148
 #, java-format
 msgid "{0} deleted the role {1}"
-msgstr "{0} ha cancellato il ruolo {1}"
+msgstr "{0} দ্বারা {1} ভূমিকা মুছে ফেলা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:150
 #, java-format
 msgid "{0} created new subscription for product {1}"
-msgstr "{0} ha creato una nuova sottoscrizione per il prodotto {1}"
+msgstr "{0} দ্বারা {1} উৎপাদনের জন্য নতুন সাবস্ক্রিপশন তৈরি করা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:154
 #, java-format
 msgid "{0} deleted a subscription for product {1}"
-msgstr "{0} ha cancellato una sottoscrizione per il prodotto {1}"
+msgstr "{0} দ্বারা {1} উৎপাদনের জন্য সাবস্ক্রিপশন মুছে ফেলা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:156
 #, java-format
 msgid "{0} created the activation key {1}"
-msgstr "{0} ha creato la chiave di attivazione {1}"
+msgstr "{0} দ্বারা নতুন অ্যাক্টিভেশন-কি {1} প্রস্তুত করা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:158
 #, java-format
 msgid "{0} deleted the activation key {1}"
-msgstr "{0} ha cancellato la chiave di attivazione {1}"
+msgstr "{0} দ্বারা অ্যাক্টিভেশন-কি {1} মুছে ফেলা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys
+# keys, author runab
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:159
 #, java-format
 msgid "{0} created the guest id {1}"
-msgstr "{0} ha creato il guest id {1}"
+msgstr "{0} দ্বারা নতুন গেস্ট id {1} তৈরি করা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys
+# keys, author runab
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:160
 #, java-format
 msgid "{0} deleted the guest id {1}"
-msgstr "{0} ha rimosso il guest id {1}"
+msgstr "{0} দ্বারা গেস্ট id {1} মুছে ফেলা হয়েছে"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/policy/js/entitlement/AbstractEntitlementRules.java:161
 #, java-format
 msgid "''{0}'' Should contain name, priority and at least one attribute"
-msgstr "''{0}'' Deve contenere il nome la priorità ed almeno un attributo"
+msgstr ""
+"''{0}''-র মধ্যে নাম, গুরুত্বের মাত্রা ও অন্তত একটি বৈশিষ্ট্য উপস্থিত থাকা "
+"আবশ্যক"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/policy/js/entitlement/AbstractEntitlementRules.java:176
 msgid "second parameter should be the priority number."
-msgstr "il secondo parametro dovrebbe essere il numero relativo alla priorità"
+msgstr "দ্বিতীয় পরামিতি রূপে গুরুত্বের মাত্রা উল্লেখ করা আবশ্যক।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:88
 #, java-format
 msgid "Entitlements for {0} expired on: {1}"
-msgstr "Gli entitlement per {0} sono scaduti il: {1}"
+msgstr "উল্লিখিত তারিখে {0}-র এনটাইটেলমেন্টের মেয়াদ পূর্ণ হয়েছে: {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/exceptions/mappers/CandlepinExceptionMapper.java:99
 #, java-format
 msgid "Runtime Error {0} at {1}.{2}:{3}"
-msgstr "Errore di runtime {0} in {1}.{2}:{3}"
+msgstr "রান-টাইম ত্রুটি {0} ঘটেছে {1}.{2}:{3}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/exceptions/mappers/BadRequestExceptionMapper.java:66
 #, java-format
 msgid "{0} is not a valid value for {1}"
-msgstr "{0} non è un valore valido per {1}"
+msgstr "{0} মানটি {1}-র ক্ষেত্রে বৈধ নয়"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:71
 msgid "Invalid Credentials"
-msgstr "Credenziali invalide"
+msgstr "অবৈধ পরিচয়"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/resteasy/interceptor/BasicAuth.java:86
 msgid "Error contacting user service"
-msgstr "Errore durante il contatto con il servizio dell'utente"
+msgstr "ব্যবহারকারী পরিসেবার সাথে সংযোগ করতে সমস্যা"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:119
 #: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:155
 msgid "Invalid oauth consumer or secret"
-msgstr "Segreto o utenza oauth non validi"
+msgstr "অবৈদ oauth গ্রাহক অথবা গোপনীয় তথ্য"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:123
 #, java-format
 msgid "OAuth problem encountered. Internal message is: {0}"
-msgstr "Si è verificato un problema OAuth. Il messaggio interno è: {0}"
+msgstr "OAuth-র সমস্যা দেখা দিয়েছে। অভ্যন্তরীণ বার্তা হল: {0}"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author fvalen
+# keys, author runab
 #: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:129
 #, java-format
 msgid "OAuth error encountered. Internal message is: {0}"
-msgstr "Si è verificato un errore OAuth. Il messaggio interno è: {0}"
+msgstr "OAuth-র ত্রুটি দেখা দিয়েছে। অভ্যন্তরীণ বার্তা হল: {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:160
 msgid "Error getting oauth consumer Key"
-msgstr "Errore durante l'acquisizione della chiave utente oauth"
+msgstr "oauth গ্রাহক কি প্রাপ্ত করতে ত্রুটি"
