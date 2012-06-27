@@ -22,11 +22,13 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-
+import org.apache.log4j.Logger;
 /**
  * ConfigurationFileLoader
  */
 public class ConfigurationFileLoader {
+
+    private static Logger log = Logger.getLogger(ConfigurationFileLoader.class);
 
     /**
      * @param configurationFile config file to read
