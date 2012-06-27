@@ -21,7 +21,12 @@ function gendb ()
     createdb -w -U "$DBUSER" candlepin
     evalrc $? "createdb failed"
 
-    liquibase --driver=org.postgresql.Driver --classpath=src/main/resources/:target/classes/:/usr/share/java/postgresql-jdbc.jar --changeLogFile=db/changelog/changelog-create.xml --url="jdbc:postgresql:candlepin" --username=candlepin "$DBOPTS" update
+    LQCOMMAND="liquibase --driver=org.postgresql.Driver --classpath=src/main/resources/:target/classes/:/usr/share/java/postgresql-jdbc.jar --changeLogFile=db/changelog/changelog-create.xml --url=jdbc:postgresql:candlepin --username=candlepin"
+    if [ -n "$DBPASSWORD" ] ; then
+        LQCOMMAND="$LQCOMMAND --password=$DBPASSWORD "
+    fi
+    LQCOMMAND="$LQCOMMAND update"
+    $LQCOMMAND
     evalrc $? "schema creation failed"
 }
 
@@ -29,7 +34,12 @@ function updatedb ()
 {
 	echo "============ updating db =============="
 
-    liquibase  --driver=org.postgresql.Driver --classpath=src/main/resources/:target/classes/:/usr/share/java/postgresql-jdbc.jar --changeLogFile=db/changelog/changelog-update.xml --url="jdbc:postgresql:candlepin" --username=candlepin "$DBOPTS" update
+    LQCOMMAND="liquibase  --driver=org.postgresql.Driver --classpath=src/main/resources/:target/classes/:/usr/share/java/postgresql-jdbc.jar --changeLogFile=db/changelog/changelog-update.xml --url=jdbc:postgresql:candlepin --username=candlepin"
+    if [ -n "$DBPASSWORD" ] ; then
+        LQCOMMAND="$LQCOMMAND --password=$DBPASSWORD "
+    fi
+    LQCOMMAND="$LQCOMMAND update"
+    $LQCOMMAND
     evalrc $? "schema update failed"
 }
 
@@ -182,11 +192,6 @@ fi
 if [ "$?" -ne "0" ]; then
   echo "ERROR: Compile failed."
   exit 1
-fi
-
-DBOPTS=""
-if [ -n "$DBPASSWORD" ] ; then
-   DBOPTS="--password=$DBPASSWORD"
 fi
 
 if [ "$GENDB" == "1" ]; then
