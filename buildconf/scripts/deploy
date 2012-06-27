@@ -10,11 +10,23 @@ function evalrc ()
 function gendb ()
 {
 	echo "============ generating a new db =============="
-    dropdb -U candlepin candlepin
-    createdb -U candlepin candlepin
+
+
+    # need to setup .pgpass for this to use passwds
+    # something like:
+    #   *:*:candlepin:candlepin:candlepinpasswd
+    #   *:*:postgres:candlepin:candlepinpasswd
+
+    dropdb -w -U "$DBUSER" candlepin
+    createdb -w -U "$DBUSER" candlepin
     evalrc $? "createdb failed"
 
-    liquibase --driver=org.postgresql.Driver --classpath=src/main/resources/:target/classes/:/usr/share/java/postgresql-jdbc.jar --changeLogFile=db/changelog/changelog-create.xml --url="jdbc:postgresql:candlepin" --username=candlepin --password="" update
+    LQCOMMAND="liquibase --driver=org.postgresql.Driver --classpath=src/main/resources/:target/classes/:/usr/share/java/postgresql-jdbc.jar --changeLogFile=db/changelog/changelog-create.xml --url=jdbc:postgresql:candlepin --username=candlepin"
+    if [ -n "$DBPASSWORD" ] ; then
+        LQCOMMAND="$LQCOMMAND --password=$DBPASSWORD "
+    fi
+    LQCOMMAND="$LQCOMMAND update"
+    $LQCOMMAND
     evalrc $? "schema creation failed"
 }
 
@@ -22,9 +34,15 @@ function updatedb ()
 {
 	echo "============ updating db =============="
 
-    liquibase --driver=org.postgresql.Driver --classpath=src/main/resources/:target/classes/:/usr/share/java/postgresql-jdbc.jar --changeLogFile=db/changelog/changelog-update.xml --url="jdbc:postgresql:candlepin" --username=candlepin --password="" update
+    LQCOMMAND="liquibase  --driver=org.postgresql.Driver --classpath=src/main/resources/:target/classes/:/usr/share/java/postgresql-jdbc.jar --changeLogFile=db/changelog/changelog-update.xml --url=jdbc:postgresql:candlepin --username=candlepin"
+    if [ -n "$DBPASSWORD" ] ; then
+        LQCOMMAND="$LQCOMMAND --password=$DBPASSWORD "
+    fi
+    LQCOMMAND="$LQCOMMAND update"
+    $LQCOMMAND
     evalrc $? "schema update failed"
 }
+
 
 
 function deploy ()
@@ -104,6 +122,8 @@ HELP
 if [ -f $HOME/.candlepinrc ] ; then
     source $HOME/.candlepinrc
 fi
+
+DBUSER="candlepin"
 
 while getopts ":fgt" opt; do
     case $opt in
