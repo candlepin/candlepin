@@ -39,6 +39,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * EntitlementPoolCurator
@@ -424,8 +425,12 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             .add(Restrictions.eq("owner", owner))
             .list();
         Set<Pool> exemptPoolSla = new HashSet<Pool>();
-        Set<String> slaSet = new HashSet<String>();
-        Set<String> exemptSlaSet = new HashSet<String>();
+        // Use case insensitive comparison here, since we treat
+        // Premium the same as PREMIUM or premium, to make it easier for users to specify
+        // a level on the cli. However, use the original case, since Premium is more
+        // attractive than PREMIUM.
+        Set<String> slaSet = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
+        Set<String> exemptSlaSet = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
 
         // make collection of sla's that are exempt
         // first part of list is exempt attr's
@@ -450,14 +455,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         for (ProductPoolAttribute item : items) {
             if (!"support_level_exempt".equals(item.getName())) {
                 String value = item.getValue();
-                boolean found = false;
-                for (String sla : exemptSlaSet) {
-                    if (sla.equalsIgnoreCase(value)) {
-                        found = true;
-                    }
-                }
-                if (!found) {
-                    slaSet.add(value.toUpperCase());
+                if (!exemptSlaSet.contains(value)) {
+                    slaSet.add(value);
                 }
             }
         }
