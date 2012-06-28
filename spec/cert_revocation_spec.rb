@@ -65,6 +65,24 @@ describe 'Certificate Revocation List' do
     revoked_serials.should_not include(serials)
   end
 
+  it 'should regenerate the on-disk crl' do
+    old_time = File.mtime("/var/lib/candlepin/candlepin-crl.crl")
+    # do some stuff
+    @system.consume_product @monitoring_prod.id
+    @system.consume_product @virt_prod.id
+
+    serials = [filter_serial(@monitoring_prod),
+               filter_serial(@virt_prod)]
+
+    # Delete owner without revoking certs
+    delete_owner(@owner, false)
+
+    revoked_serials.should_not include(serials)
+    # ensure that the on-disk crl got updated
+    new_time = File.mtime("/var/lib/candlepin/candlepin-crl.crl")
+    new_time.should_not == old_time 
+  end
+
   def filter_serial(product, consumer=@system)
     entitlement = consumer.list_entitlements.find do |ent|
       @cp.get_pool(ent.pool.id).productId == product.id
