@@ -42,6 +42,13 @@ def run_command(command):
         raise Exception("Error running command")
     return output
 
+# run with 'sudo' if not running as root
+def run_command_with_sudo(command):
+    if os.geteuid()==0:
+        run_command(command)
+    else:
+        run_command('sudo %s' % command)
+
 class TomcatSetup(object):
     def __init__(self, conf_dir, keystorepwd):
         self.conf_dir = conf_dir
@@ -129,23 +136,23 @@ class CertSetup(object):
 
     def generate(self):
         if not os.path.exists(self.cert_home):
-            run_command('sudo mkdir -p %s' % self.cert_home)
+            run_command_with_sudo('mkdir -p %s' % self.cert_home)
 
         if os.path.exists(self.ca_key) and os.path.exists(self.ca_cert):
             print("Cerficiates already exist, skipping...")
             return
 
         print("Creating CA private key password")
-        run_command('sudo su -c "echo $RANDOM > %s"' % self.ca_key_passwd)
+        run_command_with_sudo('su -c "echo $RANDOM > %s"' % self.ca_key_passwd)
         print("Creating CA private key")
-        run_command('sudo openssl genrsa -out %s -passout "file:%s" 1024' % (self.ca_key, self.ca_key_passwd))
+        run_command_with_sudo('openssl genrsa -out %s -passout "file:%s" 1024' % (self.ca_key, self.ca_key_passwd))
         print("Creating CA public key")
-        run_command('sudo openssl rsa -pubout -in %s -out %s' % (self.ca_key, self.ca_pub_key))
+        run_command_with_sudo('openssl rsa -pubout -in %s -out %s' % (self.ca_key, self.ca_pub_key))
         print("Creating CA certificate")
-        run_command('sudo openssl req -new -x509 -days 365 -key %s -out %s -subj "/CN=%s/C=US/L=Raleigh/"' % (self.ca_key, self.ca_cert, socket.gethostname()))
-        run_command('sudo openssl pkcs12 -export -in %s -inkey %s -out %s -name tomcat -CAfile %s -caname root -chain -password pass:password' % (self.ca_cert, self.ca_key, self.keystore, self.ca_cert))
-        run_command('sudo cp %s %s' % (self.ca_cert, self.ca_upstream_cert))
-        run_command('sudo chmod a+r %s' % self.keystore)
+        run_command_with_sudo('openssl req -new -x509 -days 365 -key %s -out %s -subj "/CN=%s/C=US/L=Raleigh/"' % (self.ca_key, self.ca_cert, socket.gethostname()))
+        run_command_with_sudo('openssl pkcs12 -export -in %s -inkey %s -out %s -name tomcat -CAfile %s -caname root -chain -password pass:password' % (self.ca_cert, self.ca_key, self.keystore, self.ca_cert))
+        run_command_with_sudo('cp %s %s' % (self.ca_cert, self.ca_upstream_cert))
+        run_command_with_sudo('chmod a+r %s' % self.keystore)
 
 
 def write_candlepin_conf(options):
