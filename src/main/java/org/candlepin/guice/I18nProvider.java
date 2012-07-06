@@ -65,18 +65,21 @@ public class I18nProvider implements Provider<I18n> {
 
         // If the locale does not exist, xnap is pretty inefficient.
         // This cache will hold the records more efficiently.
-        // The logic below may leak a couple of items, but it
-        // should clear up.
-        i18n = cache.get(locale);
-        if (i18n == null) {
-            i18n = I18nFactory.getI18n(getClass(), BASENAME, locale,
-                I18nFactory.FALLBACK);
+        //
+        // Make sure to keep the access wrapped in synchronized so we can
+        // share accross threads!
+        synchronized (cache) {
+            i18n = cache.get(locale);
+            if (i18n == null) {
+                i18n = I18nFactory.getI18n(getClass(), BASENAME, locale,
+                    I18nFactory.FALLBACK);
 
-            if (log.isDebugEnabled()) {
-                log.debug("Getting i18n engine for locale " + locale);
+                if (log.isDebugEnabled()) {
+                    log.debug("Getting i18n engine for locale " + locale);
+                }
+
+                cache.put(locale, i18n);
             }
-
-            cache.put(locale, i18n);
         }
     }
 
