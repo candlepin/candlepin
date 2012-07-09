@@ -183,7 +183,6 @@ define "candlepin" do
   #
   # javadoc projects
   #
-  doc.classpath << ":#{Java.tools_jar}"
   doc.using :tag => 'httpcode:m:HTTP Code:'
 
   package(:jar, :id=>'candlepin-api').clean.include 'target/classes/org/candlepin/auth','target/classes/org/candlepin/config','target/classes/org/candlepin/service','target/classes/org/candlepin/model','target/classes/org/candlepin/pki', 'target/classes/org/candlepin/exceptions', 'target/classes/org/candlepin/util', :path=>"org/candlepin/"
