@@ -1,0 +1,16 @@
+<html>
+    <head>
+        <title><%= name %></title>
+    </head>
+    <body>
+<h1><%= name %></h1>
+
+<ul>
+    <% resource.each do |method| %>
+        <li> <a href="../<%= method["page"] %>">
+          <%= method['httpVerbs'].join ', ' %> <%= method['url'] %>
+        </a></li>
+    <% end %>
+</ul>
+</body>
+</html>

@@ -1,0 +1,33 @@
+<html>
+    <head>
+        <title><%= method['httpVerbs'][0] %> <%= method['url'] %></title>
+    </head>
+    <body>
+        <h1><%= method['httpVerbs'][0] %> <%= method['url'] %></h1>
+
+        <% if method['deprecated'] %>
+        <p><b>This method is deprecated.</b> <%= method['deprecated'] %></p>
+        <% end %>
+        <p>
+        <%= method['description'] %>
+        </p>
+
+        <h2>Parameters</h2>
+        <table>
+            <% method['queryParams'].each do |param| %>
+                <tr> <td><%= param['name']  %></td>
+                    <td><%= param['type'] %></td> </tr>
+            <% end %>
+        </table>
+
+
+
+        <h2>Return Codes</h2>
+        <table>
+            <% method['httpStatusCodes'].each do |code| %>
+                <tr> <td><%= code['statusCode']  %></td>
+                    <td><%= code['description'] %></td> </tr>
+            <% end %>
+        </table>
+</body>
+</html>

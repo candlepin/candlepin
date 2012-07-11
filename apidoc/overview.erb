@@ -1,0 +1,14 @@
+<html>
+  <head>
+    <title>Candlepin REST API</title>
+  </head>
+  <body>
+    <h1>Candlepin REST API</h1>
+
+    <ul>
+      <% resources.each_key do |name| %>
+          <li><a href=".<%= name %>"><%= name %></a></li>
+      <% end %>
+  </ul>
+  </body>
+</html>
