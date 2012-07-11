@@ -26,6 +26,7 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
@@ -56,7 +57,12 @@ public class OwnerInfoCurator {
         OwnerInfo info = new OwnerInfo();
 
         List<ConsumerType> types = consumerTypeCurator.listAll();
+        HashMap<String, ConsumerType> typeHash = new HashMap<String, ConsumerType>();
         for (ConsumerType type : types) {
+            // Store off the type for later use
+            typeHash.put(type.getLabel(), type);
+
+            // Do the real work
             Criteria c = currentSession().createCriteria(Consumer.class)
                 .add(Restrictions.eq("owner", owner))
                 .add(Restrictions.eq("type", type));
@@ -80,7 +86,7 @@ public class OwnerInfoCurator {
         }
 
         Date now = new Date();
-        info.setConsumerTypesByPool(consumerTypeCurator.listAll());
+        info.setConsumerTypesByPool(types);
         List<Statistic> totalCount = statisticCuratorQueries.getStatisticsByOwner(owner,
             "TOTALSUBSCRIPTIONCOUNT", null, null, null, null);
         info.setTotalSubscriptionCount(totalCount);
@@ -105,13 +111,13 @@ public class OwnerInfoCurator {
             if (consumerType == null || consumerType.trim().equals("")) {
                 consumerType = DEFAULT_CONSUMER_TYPE;
             }
-            ConsumerType ct = consumerTypeCurator.lookupByLabel(consumerType);
+            ConsumerType ct = typeHash.get(consumerType);
             info.addToConsumerTypeCountByPool(ct);
 
             consumerType = getAccumulatedAttribute(pool, "enabled_consumer_types");
             if (consumerType != null && !consumerType.trim().equals("")) {
                 for (String type : consumerType.split(",")) {
-                    ct = consumerTypeCurator.lookupByLabel(type);
+                    ct = typeHash.get(type);
                     if (ct != null) {
                         info.addToEnabledConsumerTypeCountByPool(ct);
                     }
