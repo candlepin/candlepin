@@ -4,13 +4,15 @@ describe 'Product Certificate' do
   include CandlepinMethods
   include CandlepinScenarios
 
-  # Static map of extension labels to OID values
-  @@oid_map = {
-    'name' => '1',
-    'variant' => '2',
-    'arch' => '3',
-    'version' => '4'
-  }
+  before(:all) do
+    # Static map of extension labels to OID values
+    @oid_map = {
+      'name' => '1',
+      'variant' => '2',
+      'arch' => '3',
+      'version' => '4'
+    }
+  end
 
   before(:each) do
     @product = create_product(nil, random_string('test-product'))
@@ -40,7 +42,7 @@ describe 'Product Certificate' do
   private
 
   def get_oid(product, label)
-    oid = @@oid_map[label]
+    oid = @oid_map[label]
 
     "1.3.6.1.4.1.2312.9.1.#{product.id}.#{oid}"
   end
