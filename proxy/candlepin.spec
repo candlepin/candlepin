@@ -11,7 +11,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system.
 Group: Internet/Applications
 License: GPLv2
-Version: 0.5.34
+Version: 0.5.35
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -206,6 +206,10 @@ fi
 
 
 %changelog
+* Thu Jul 12 2012 James Bowes <jbowes@redhat.com> 0.5.35-1
+- 827035: regenerate identity certificate if within threshold
+  (jesusr@redhat.com)
+
 * Wed Jun 13 2012 James Bowes <jbowes@redhat.com> 0.5.34-1
 - sync: keep recursed consumer json out of entitlements (jbowes@redhat.com)
 
