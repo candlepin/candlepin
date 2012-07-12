@@ -46,6 +46,7 @@ import org.candlepin.pki.X509ExtensionWrapper;
 import org.candlepin.service.BaseEntitlementCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.util.X509ExtensionUtil;
+import org.candlepin.util.X509V2ExtensionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,6 +63,7 @@ public class DefaultEntitlementCertServiceAdapter extends
 
     private PKIUtility pki;
     private X509ExtensionUtil extensionUtil;
+    private X509V2ExtensionUtil v2extensionUtil;
     private KeyPairCurator keyPairCurator;
     private CertificateSerialCurator serialCurator;
     private ProductServiceAdapter productAdapter;
@@ -73,6 +75,7 @@ public class DefaultEntitlementCertServiceAdapter extends
     @Inject
     public DefaultEntitlementCertServiceAdapter(PKIUtility pki,
         X509ExtensionUtil extensionUtil,
+        X509V2ExtensionUtil v2extensionUtil,
         EntitlementCertificateCurator entCertCurator,
         KeyPairCurator keyPairCurator,
         CertificateSerialCurator serialCurator,
@@ -81,6 +84,7 @@ public class DefaultEntitlementCertServiceAdapter extends
 
         this.pki = pki;
         this.extensionUtil = extensionUtil;
+        this.v2extensionUtil = v2extensionUtil;
         this.entCertCurator = entCertCurator;
         this.keyPairCurator = keyPairCurator;
         this.serialCurator = serialCurator;
@@ -210,32 +214,56 @@ public class DefaultEntitlementCertServiceAdapter extends
             }
         }
 
+        String entitlementVersion = ent.getConsumer().getFact("system.certificate_version");
+        if (entitlementVersion != null && entitlementVersion.startsWith("2.")) {
+            extensions = prepareV2Extensions(products, ent, contentPrefix,
+                promotedContent, sub);
+        }
+        else {
+            extensions = prepareV1Extensions(products, ent, contentPrefix,
+                promotedContent, sub);
+        }
+
+        X509Certificate x509Cert =  this.pki.createX509Certificate(
+                createDN(ent), extensions, sub.getStartDate(), ent.getEndDate(),
+                keyPair, serialNumber, null);
+        return x509Cert;
+    }
+
+    private Set<X509ExtensionWrapper> prepareV1Extensions(Set<Product> products,
+        Entitlement ent, String contentPrefix,
+        Map<String, EnvironmentContent> promotedContent, Subscription sub) {
+        Set<X509ExtensionWrapper> result =  new LinkedHashSet<X509ExtensionWrapper>();
         for (Product prod : Collections2
             .filter(products, PROD_FILTER_PREDICATE)) {
-            extensions.addAll(extensionUtil.productExtensions(prod));
-            extensions.addAll(extensionUtil.contentExtensions(
+            result.addAll(extensionUtil.productExtensions(prod));
+            result.addAll(extensionUtil.contentExtensions(
                 filterProductContent(prod, ent),
                 contentPrefix, promotedContent, ent.getConsumer()));
         }
 
         if (sub != null) {
-            extensions.addAll(extensionUtil.subscriptionExtensions(sub, ent));
+            result.addAll(extensionUtil.subscriptionExtensions(sub, ent));
         }
 
-        extensions.addAll(extensionUtil.entitlementExtensions(ent));
-        extensions.addAll(extensionUtil.consumerExtensions(ent.getConsumer()));
+        result.addAll(extensionUtil.entitlementExtensions(ent));
+        result.addAll(extensionUtil.consumerExtensions(ent.getConsumer()));
 
         if (log.isDebugEnabled()) {
-            for (X509ExtensionWrapper eWrapper : extensions) {
+            for (X509ExtensionWrapper eWrapper : result) {
                 log.debug(String.format("Extension %s with value %s",
                     eWrapper.getOid(), eWrapper.getValue()));
             }
         }
-        X509Certificate x509Cert = this.pki.createX509Certificate(
-            createDN(ent), extensions, sub.getStartDate(), ent.getEndDate(),
-            keyPair, serialNumber, null);
+        return result;
+    }
 
-        return x509Cert;
+    public Set<X509ExtensionWrapper> prepareV2Extensions(Set<Product> products,
+        Entitlement ent, String contentPrefix,
+        Map<String, EnvironmentContent> promotedContent, Subscription sub) {
+        Set<X509ExtensionWrapper> result =  v2extensionUtil.getExtensionPayload(products,
+            ent, contentPrefix, promotedContent, sub);
+        return result;
     }
 
     // Encode the entire prefix in case any part of it is not
