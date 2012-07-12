@@ -29,6 +29,7 @@ import java.util.StringTokenizer;
 import java.util.zip.DeflaterOutputStream;
 
 import org.apache.commons.codec.binary.Base64OutputStream;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.candlepin.config.Config;
 import org.candlepin.model.Consumer;
@@ -40,6 +41,8 @@ import org.candlepin.model.ProductContent;
 import org.candlepin.model.Subscription;
 import org.candlepin.pki.X509ExtensionWrapper;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
 
 /**
@@ -213,7 +216,8 @@ public class X509V2ExtensionUtil {
         Consumer consumer, Entitlement ent) {
         List<Map<String, Object>> toReturn = new ArrayList<Map<String, Object>>();
 
-        for (Product p : products) {
+        for (Product p : Collections2
+            .filter(products, PROD_FILTER_PREDICATE)) {
             toReturn.add(mapProduct(p, contentPrefix, promotedContent, consumer, ent));
         }
         return toReturn;
@@ -356,4 +360,12 @@ public class X509V2ExtensionUtil {
         }
         return filtered;
     }
+
+    private static final Predicate<Product>
+    PROD_FILTER_PREDICATE = new Predicate<Product>() {
+        @Override
+        public boolean apply(Product product) {
+            return product != null && StringUtils.isNumeric(product.getId());
+        }
+    };
 }
