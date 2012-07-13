@@ -8,8 +8,16 @@
         <% if method['deprecated'] %>
         <p><b>This method is deprecated.</b> <%= method['deprecated'] %></p>
         <% end %>
+        <p> 
+          <%= method['summary'] %>
+        </p>
         <p>
         <%= method['description'] %>
+        </p>
+
+        <h2>Return Type</h2>
+        <p>
+          <%= method['returns'] %>
         </p>
 
         <h2>Parameters</h2>

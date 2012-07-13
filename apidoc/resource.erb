@@ -4,13 +4,14 @@
     </head>
     <body>
 <h1><%= name %></h1>
-
-<ul>
+<table>
     <% resource.each do |method| %>
-        <li> <a href="../<%= method["page"] %>">
+        <tr> <td> <a href="../<%= method["page"] %>">
           <%= method['httpVerbs'].join ', ' %> <%= method['url'] %>
-        </a></li>
+        </a></td>
+        <td><%= method['summary'] %></td> </tr>
     <% end %>
-</ul>
+</table>
+
 </body>
 </html>
