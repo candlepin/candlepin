@@ -30,18 +30,26 @@ def get_method_binding(method)
   return binding
 end
 
+def get_template_binding(title, content)
+  return binding
+end
+
 
 output_dir = "target/apidoc/"
 Dir::mkdir(output_dir) unless File.exists?(output_dir)
 
 template_dir = "apidoc/"
 
+base_template_file = File.open(template_dir + "template.erb", 'r')
+base_template = ERB.new(base_template_file.read)
+
 puts "Writing overview page"
 overview_template_file = File.open(template_dir + "overview.erb", 'r')
 overview_template = ERB.new(overview_template_file.read)
 
 output_file = File.open(output_dir + "index.html", 'w')
-output_file << overview_template.result(get_overview_binding(resources))
+output = overview_template.result(get_overview_binding(resources))
+output_file << base_template.result(get_template_binding("REST API", output))
 
 puts "Writing resources:"
 resource_template_file = File.open(template_dir + "resource.erb", 'r')
@@ -70,11 +78,15 @@ resources.each_key do |name|
     FileUtils.mkdir_p(method_dir) unless File.exists?(method_dir)
 
     method_file = File.open(method_dir + "/index.html", 'w')
-    method_file << method_template.result(get_method_binding(method))
+    output = method_template.result(get_method_binding(method))
+    method_file << base_template.result(get_template_binding(
+        "#{method['httpVerbs'][0]} #{method['url']}", output))
   end
 
 
   resource_file = File.open(resource_dir + "index.html", 'w')
-  resource_file << resource_template.result(
+  output = resource_template.result(
       get_resource_binding(name, resources[name]))
+  resource_file << base_template.result(get_template_binding(
+      name, output))
 end

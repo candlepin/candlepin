@@ -264,6 +264,13 @@ define "candlepin" do
     sh('apidoc/lint.rb target/candlepin_methods.json')
   end
 
+  desc 'Copy the API Docs to the website directory'
+  task :apicopy  => [:apidoc] do
+    options.test = 'no'
+    sh('cp -R target/apidoc website/')
+  end
+
+
 
   #
   # coverity report generation

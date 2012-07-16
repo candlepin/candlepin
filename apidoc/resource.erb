@@ -1,8 +1,3 @@
-<html>
-    <head>
-        <title><%= name %></title>
-    </head>
-    <body>
 <h1><%= name %></h1>
 <table>
     <% resource.each do |method| %>
@@ -12,6 +7,3 @@
         <td><%= method['summary'] %></td> </tr>
     <% end %>
 </table>
-
-</body>
-</html>

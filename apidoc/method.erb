@@ -1,8 +1,3 @@
-<html>
-    <head>
-        <title><%= method['httpVerbs'][0] %> <%= method['url'] %></title>
-    </head>
-    <body>
         <h1><%= method['httpVerbs'][0] %> <%= method['url'] %></h1>
 
         <% if method['deprecated'] %>
@@ -37,5 +32,3 @@
                     <td><%= code['description'] %></td> </tr>
             <% end %>
         </table>
-</body>
-</html>

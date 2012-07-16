@@ -43,3 +43,5 @@ buildconf/scripts/gen_products*
 generated_certs/
 buildconf/scripts/import_products_ipa.json
 buildconf/scripts/import_products.json
+
+website/apidoc
