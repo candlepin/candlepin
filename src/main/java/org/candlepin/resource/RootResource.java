@@ -72,6 +72,7 @@ public class RootResource {
         RESOURCE_CLASSES.add(MigrationResource.class);
         RESOURCE_CLASSES.add(HypervisorResource.class);
         RESOURCE_CLASSES.add(EnvironmentResource.class);
+        RESOURCE_CLASSES.add(RootResource.class);
     }
 
     @Inject

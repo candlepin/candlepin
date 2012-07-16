@@ -252,6 +252,26 @@ define "candlepin" do
 
   end
 
+  desc 'Generate HTML API Documentation'
+  task :apidoc  => [:apicrawl] do
+    options.test = 'no'
+    sh('apidoc/apidoc.rb target/candlepin_methods.json')
+  end
+
+  desc 'Lint the REST API documentation'
+  task :apilint  => [:apicrawl] do
+    options.test = 'no'
+    sh('apidoc/lint.rb target/candlepin_methods.json')
+  end
+
+  desc 'Copy the API Docs to the website directory'
+  task :apicopy  => [:apidoc] do
+    options.test = 'no'
+    sh('cp -R target/apidoc website/')
+  end
+
+
+
   #
   # coverity report generation
   #
