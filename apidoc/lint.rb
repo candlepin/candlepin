@@ -1,5 +1,6 @@
 #!/usr/bin/ruby
 
+require 'rubygems'
 require 'fileutils'
 require 'json'
 require 'pp'
