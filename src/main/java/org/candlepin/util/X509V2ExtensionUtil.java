@@ -101,7 +101,6 @@ public class X509V2ExtensionUtil {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         Base64OutputStream b64os = new Base64OutputStream(baos, true, 0, new byte[0]);
         DeflaterOutputStream dos = new DeflaterOutputStream(b64os);
-
         dos.write(payload.getBytes("UTF-8"));
         dos.finish();
         dos.close();
