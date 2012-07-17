@@ -8,18 +8,20 @@ describe 'OAuth' do
   include CandlepinMethods
   include CandlepinScenarios
 
-  @@site = "https://localhost:8443"
-  @@oauth_params = {
-   :site => @@site,
-   :http_method => :post,
-   :request_token_path => "",
-   :authorize_path => "",
-   :access_token_path => "",
-  }
-
   # XXX you must set these in your candlepin.conf
   oauth_consumer = "rspec"
   oauth_secret = "rspec-oauth-secret"
+
+  before(:all) do
+    @site = "https://localhost:8443"
+    @oauth_params = {
+     :site => @site,
+     :http_method => :post,
+     :request_token_path => "",
+     :authorize_path => "",
+     :access_token_path => "",
+    }
+  end
 
   before(:each) do
     @owner = create_owner "oauth-owner"
@@ -29,11 +31,11 @@ describe 'OAuth' do
   end
 
   def make_request(oauth_consumer, oauth_secret, uri, headers = {})
-    consumer = OAuth::Consumer.new(oauth_consumer, oauth_secret, @@oauth_params)
+    consumer = OAuth::Consumer.new(oauth_consumer, oauth_secret, @oauth_params)
 
-    request = Net::HTTP::Get.new("#{@@site}#{uri}")
+    request = Net::HTTP::Get.new("#{@site}#{uri}")
     consumer.sign!(request)
-    url = URI.parse("#{@@site}#{uri}")
+    url = URI.parse("#{@site}#{uri}")
 
     headers.each_pair do |k, v|
       request[k] = v
