@@ -137,12 +137,12 @@ public class ApiDoclet {
             for (Tag tag : doc.tags(RETURN_TAG)) {
                 this.returns = tag.text();
             }
-            
+
             this.method = doc.qualifiedName();
-            
-            String parts[] = doc.commentText().split("\n\n");
+
+            String[] parts = doc.commentText().split("\n\n");
             this.summary = parts[0];
-            
+
             if (parts.length > 1) {
                 this.description = parts[1];
             }
@@ -159,7 +159,7 @@ public class ApiDoclet {
         public String getSummary() {
             return this.summary;
         }
-        
+
         public String getDeprecated() {
             return this.deprecated;
         }
