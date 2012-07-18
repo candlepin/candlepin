@@ -2,6 +2,6 @@
 
     <ul>
       <% resources.each_key do |name| %>
-          <li><a href=".<%= name %>"><%= name %></a></li>
+          <li><a href=".<%= resources[name][:page] %>"><%= name %></a></li>
       <% end %>
   </ul>
