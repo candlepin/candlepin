@@ -63,9 +63,7 @@ describe 'Sub-Pool' do
     entitlement_cert = @system.list_certificates.first
     cert = OpenSSL::X509::Certificate.new(entitlement_cert.cert)
 
-    # TODO:  This magic OID should be refactored...
-    order_number = get_extension(cert, '1.3.6.1.4.1.2312.9.4.2')
-    order_number = order_number[2, order_number.size - 2]
+    order_number = extension_from_cert(cert, '1.3.6.1.4.1.2312.9.4.2')
     order_number.should == @subscription.id
   end
 
@@ -86,7 +84,7 @@ describe 'Sub-Pool' do
     cert = OpenSSL::X509::Certificate.new(entitlement_cert.cert)
 
     # TODO:  This magic OID should be refactored...
-    order_name = get_extension(cert, '1.3.6.1.4.1.2312.9.4.1')
+    order_name = extension_from_cert(cert, '1.3.6.1.4.1.2312.9.4.1')
     order_name.should == @derived_product.name
   end
 

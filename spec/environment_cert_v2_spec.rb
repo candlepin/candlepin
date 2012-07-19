@@ -38,11 +38,10 @@ describe 'Environments Certificate V2' do
     pools = @cp.list_pools(:owner => @owner['id'], :product => product['id'])
     ent = consumer_cp.consume_pool(pools[0]['id'])[0]
 
-    value = retrieve_from_cert(ent['certificates'][0]['cert'], "1.3.6.1.4.1.2312.9.6")
+    value = extension_from_cert(ent['certificates'][0]['cert'], "1.3.6.1.4.1.2312.9.6")
     value.should == "2.0"
 
-    coded_value = retrieve_from_cert(ent['certificates'][0]['cert'], "1.3.6.1.4.1.2312.9.7")
-    compressed_body = Base64.decode64(coded_value)
+    compressed_body = extension_from_cert(ent['certificates'][0]['cert'], "1.3.6.1.4.1.2312.9.7")
     body = Zlib::Inflate.inflate(compressed_body)
     json_body = JSON.parse(body)
     json_body['products'][0]['content'].size.should == 1
@@ -76,11 +75,10 @@ describe 'Environments Certificate V2' do
     pools = @cp.list_pools(:owner => @owner['id'], :product => product['id'])
     ent = consumer_cp.consume_pool(pools[0]['id'])[0]
 
-    value = retrieve_from_cert(ent['certificates'][0]['cert'], "1.3.6.1.4.1.2312.9.6")
+    value = extension_from_cert(ent['certificates'][0]['cert'], "1.3.6.1.4.1.2312.9.6")
     value.should == "2.0"
 
-    coded_value = retrieve_from_cert(ent['certificates'][0]['cert'], "1.3.6.1.4.1.2312.9.7")
-    compressed_body = Base64.decode64(coded_value)
+    compressed_body = extension_from_cert(ent['certificates'][0]['cert'], "1.3.6.1.4.1.2312.9.7")
     body = Zlib::Inflate.inflate(compressed_body)
     json_body = JSON.parse(body)
     json_body['products'][0]['content'].size.should == 1
@@ -94,8 +92,7 @@ describe 'Environments Certificate V2' do
         }])
     sleep 1
     ent = consumer_cp.list_entitlements()[0]
-    coded_value = retrieve_from_cert(ent['certificates'][0]['cert'], "1.3.6.1.4.1.2312.9.7")
-    compressed_body = Base64.decode64(coded_value)
+    compressed_body = extension_from_cert(ent['certificates'][0]['cert'], "1.3.6.1.4.1.2312.9.7")
     body = Zlib::Inflate.inflate(compressed_body)
     json_body = JSON.parse(body)
     json_body['products'][0]['content'].size.should == 2
@@ -109,37 +106,12 @@ describe 'Environments Certificate V2' do
     @org_admin.demote_content(@env['id'], [content2['id']])
     sleep 1
     ent = consumer_cp.list_entitlements()[0]
-    coded_value = retrieve_from_cert(ent['certificates'][0]['cert'], "1.3.6.1.4.1.2312.9.7")
-    compressed_body = Base64.decode64(coded_value)
+    compressed_body = extension_from_cert(ent['certificates'][0]['cert'], "1.3.6.1.4.1.2312.9.7")
     body = Zlib::Inflate.inflate(compressed_body)
     json_body = JSON.parse(body)
     json_body['products'][0]['content'].size.should == 1
     json_body['products'][0]['content'][0]['id'].should == content['id']
     another_serial = ent['certificates'][0]['serial']['serial']
     another_serial.should_not == new_serial
-  end
-
-  # extension_id is a FULL extension id
-  def retrieve_from_cert(cert, extension_id)
-    cert_text = ''
-    result = '' 
-
-    IO.popen('openssl x509 -text -certopt ext_parse', "w+") do |pipe|
-      pipe.puts(cert)
-      pipe.close_write
-      cert_text = pipe.read
-    end
-
-    itsnext = false
-    cert_text.each do |line|
-      if itsnext
-        result = line
-        return result.split(":").last.strip
-      end
-      if line.include?extension_id+':'
-        itsnext = true
-      end
-    end      
-    result
   end
 end
