@@ -28,7 +28,6 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.zip.DeflaterOutputStream;
 
-import org.apache.commons.codec.binary.Base64OutputStream;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.candlepin.config.Config;
@@ -39,6 +38,7 @@ import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.Subscription;
+import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
 
 import com.google.common.base.Predicate;
@@ -63,17 +63,33 @@ public class X509V2ExtensionUtil {
         this.entCurator = entCurator;
     }
 
-    public Set<X509ExtensionWrapper> getExtensionPayload(Set<Product> products,
+    public Set<X509ExtensionWrapper> getExtensions(Set<Product> products,
         Entitlement ent, String contentPrefix,
         Map<String, EnvironmentContent> promotedContent, Subscription sub) {
         Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<X509ExtensionWrapper>();
+
+        X509ExtensionWrapper versionExtension =
+            new X509ExtensionWrapper(OIDUtil.REDHAT_OID + "." +
+                OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_VERSION_KEY),
+                false, thisVersion);
+
+        toReturn.add(versionExtension);
+
+        return toReturn;
+    }
+
+    public Set<X509ByteExtensionWrapper> getByteExtensions(Set<Product> products,
+        Entitlement ent, String contentPrefix,
+        Map<String, EnvironmentContent> promotedContent, Subscription sub) {
+        Set<X509ByteExtensionWrapper> toReturn =
+            new LinkedHashSet<X509ByteExtensionWrapper>();
 
         Map<String, Object> map = createEntitlementBodyMap(products, ent,
             contentPrefix, promotedContent, sub);
 
         String payload = Util.toJson(map);
         log.debug(payload);
-        String value = "";
+        byte[] value = null;
         try {
             value = processPayload(payload);
         }
@@ -81,30 +97,23 @@ public class X509V2ExtensionUtil {
             //no-op
         }
 
-        X509ExtensionWrapper bodyExtension =
-            new X509ExtensionWrapper(OIDUtil.REDHAT_OID + "." +
+        X509ByteExtensionWrapper bodyExtension =
+            new X509ByteExtensionWrapper(OIDUtil.REDHAT_OID + "." +
                 OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_DATA_KEY),
                 false, value);
-        X509ExtensionWrapper versionExtension =
-            new X509ExtensionWrapper(OIDUtil.REDHAT_OID + "." +
-                OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_VERSION_KEY),
-                false, thisVersion);
-
         toReturn.add(bodyExtension);
-        toReturn.add(versionExtension);
 
         return toReturn;
     }
 
-    private String processPayload(String payload)
+    private byte[] processPayload(String payload)
         throws IOException, UnsupportedEncodingException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        Base64OutputStream b64os = new Base64OutputStream(baos, true, 0, new byte[0]);
-        DeflaterOutputStream dos = new DeflaterOutputStream(b64os);
+        DeflaterOutputStream dos = new DeflaterOutputStream(baos);
         dos.write(payload.getBytes("UTF-8"));
         dos.finish();
         dos.close();
-        return baos.toString();
+        return baos.toByteArray();
     }
 
     public Map<String, Object> createEntitlementBodyMap(Set<Product> products,

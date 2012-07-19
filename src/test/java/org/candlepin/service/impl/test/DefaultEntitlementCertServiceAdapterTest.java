@@ -43,7 +43,6 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.zip.InflaterOutputStream;
 
-import org.apache.commons.codec.binary.Base64OutputStream;
 import org.candlepin.config.Config;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
@@ -60,6 +59,7 @@ import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.Subscription;
 import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.impl.DefaultEntitlementCertServiceAdapter;
@@ -248,7 +248,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         verify(mockedPKI).createX509Certificate(
             any(String.class),
             argThat(new ListContainsContentUrl("/somePrefix/" + CONTENT_URL,
-                CONTENT_ID)), any(Date.class), any(Date.class),
+                CONTENT_ID)), any(Set.class), any(Date.class), any(Date.class),
             any(KeyPair.class), any(BigInteger.class), any(String.class));
     }
 
@@ -267,8 +267,9 @@ public class DefaultEntitlementCertServiceAdapterTest {
         verify(mockedPKI).createX509Certificate(
             any(String.class),
             argThat(new ListContainsContentUrl("/someorg/Awesome+Environment+%231/" +
-                CONTENT_URL, CONTENT_ID)), any(Date.class), any(Date.class),
-                any(KeyPair.class), any(BigInteger.class), any(String.class));
+                CONTENT_URL, CONTENT_ID)), any(Set.class), any(Date.class),
+                any(Date.class), any(KeyPair.class), any(BigInteger.class),
+                any(String.class));
     }
 
     @Test
@@ -286,7 +287,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         verify(mockedPKI).createX509Certificate(
             any(String.class),
             argThat(new ListContainsContentUrl("/some+org/Awesome+Environment+%231/" +
-                CONTENT_URL, CONTENT_ID)), any(Date.class), any(Date.class),
+                CONTENT_URL, CONTENT_ID)), any(Set.class), any(Date.class), any(Date.class),
                 any(KeyPair.class), any(BigInteger.class), any(String.class));
     }
 
@@ -300,7 +301,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         verify(mockedPKI).createX509Certificate(
             any(String.class),
             argThat(new ListContainsContentUrl("/someorg/$env/" + CONTENT_URL,
-                CONTENT_ID)), any(Date.class), any(Date.class),
+                CONTENT_ID)), any(Set.class), any(Date.class), any(Date.class),
             any(KeyPair.class), any(BigInteger.class), any(String.class));
     }
 
@@ -314,7 +315,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         verify(mockedPKI).createX509Certificate(
             any(String.class),
             argThat(new ListContainsContentUrl(CONTENT_URL,
-                CONTENT_ID)), any(Date.class), any(Date.class),
+                CONTENT_ID)), any(Set.class), any(Date.class), any(Date.class),
             any(KeyPair.class), any(BigInteger.class), any(String.class));
     }
 
@@ -327,7 +328,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         verify(mockedPKI).createX509Certificate(any(String.class),
             argThat(new ListContainsContentUrl(CONTENT_URL, CONTENT_ID)),
-            any(Date.class), any(Date.class), any(KeyPair.class),
+            any(Set.class), any(Date.class), any(Date.class), any(KeyPair.class),
             any(BigInteger.class), any(String.class));
     }
 
@@ -340,7 +341,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         verify(mockedPKI).createX509Certificate(any(String.class),
             argThat(new ListContainsContentUrl(CONTENT_URL, CONTENT_ID)),
-            any(Date.class), any(Date.class), any(KeyPair.class),
+            any(Set.class), any(Date.class), any(Date.class), any(KeyPair.class),
             any(BigInteger.class), any(String.class));
     }
 
@@ -401,7 +402,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             product, new BigInteger("1234"), keyPair(), true);
 
         verify(mockedPKI).createX509Certificate(any(String.class),
-            argThat(new ListContainsContentExtensions()), any(Date.class),
+            argThat(new ListContainsContentExtensions()), any(Set.class), any(Date.class),
             any(Date.class), any(KeyPair.class), any(BigInteger.class),
             any(String.class));
     }
@@ -414,8 +415,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
             product, new BigInteger("1234"), keyPair(), true);
 
         verify(mockedPKI).createX509Certificate(any(String.class),
-            argThat(new ListContainsEntitlementExtensions()), any(Date.class),
-            any(Date.class), any(KeyPair.class), any(BigInteger.class),
+            argThat(new ListContainsEntitlementExtensions()), any(Set.class),
+            any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
             any(String.class));
     }
 
@@ -426,8 +427,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
             product, new BigInteger("1234"), keyPair(), true);
 
         verify(mockedPKI).createX509Certificate(any(String.class),
-            argThat(new ListContainsProvidesManagement("0")), any(Date.class),
-            any(Date.class), any(KeyPair.class), any(BigInteger.class),
+            argThat(new ListContainsProvidesManagement("0")), any(Set.class),
+            any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
             any(String.class));
     }
 
@@ -440,8 +441,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
             product, new BigInteger("1234"), keyPair(), true);
 
         verify(mockedPKI).createX509Certificate(any(String.class),
-            argThat(new ListContainsProvidesManagement("1")), any(Date.class),
-            any(Date.class), any(KeyPair.class), any(BigInteger.class),
+            argThat(new ListContainsProvidesManagement("1")), any(Set.class),
+            any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
             any(String.class));
     }
 
@@ -454,7 +455,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             product, new BigInteger("1234"), keyPair(), true);
 
         verify(mockedPKI).createX509Certificate(any(String.class),
-            argThat(new ListContainsStackingId("3456")), any(Date.class),
+            argThat(new ListContainsStackingId("3456")), any(Set.class), any(Date.class),
             any(Date.class), any(KeyPair.class), any(BigInteger.class),
             any(String.class));
     }
@@ -467,7 +468,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             product, new BigInteger("1234"), keyPair(), true);
 
         verify(mockedPKI).createX509Certificate(any(String.class),
-            argThat(new ListContainsVirtOnlyKey("1")), any(Date.class),
+            argThat(new ListContainsVirtOnlyKey("1")), any(Set.class), any(Date.class),
             any(Date.class), any(KeyPair.class), any(BigInteger.class),
             any(String.class));
     }
@@ -484,12 +485,12 @@ public class DefaultEntitlementCertServiceAdapterTest {
             product, new BigInteger("1234"), keyPair(), true);
 
         verify(mockedPKI).createX509Certificate(any(String.class),
-            argThat(new ListContainsSupportLevel("Premium")), any(Date.class),
-            any(Date.class), any(KeyPair.class), any(BigInteger.class),
+            argThat(new ListContainsSupportLevel("Premium")), any(Set.class),
+            any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
             any(String.class));
         verify(mockedPKI).createX509Certificate(any(String.class),
-            argThat(new ListContainsSupportType("Level 3")), any(Date.class),
-            any(Date.class), any(KeyPair.class), any(BigInteger.class),
+            argThat(new ListContainsSupportType("Level 3")), any(Set.class),
+            any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
             any(String.class));
     }
 
@@ -501,11 +502,11 @@ public class DefaultEntitlementCertServiceAdapterTest {
             product, new BigInteger("1234"), keyPair(), true);
 
         verify(mockedPKI).createX509Certificate(any(String.class),
-            argThat(new ListDoesNotContainSupportLevel()), any(Date.class),
+            argThat(new ListDoesNotContainSupportLevel()), any(Set.class), any(Date.class),
             any(Date.class), any(KeyPair.class), any(BigInteger.class),
             any(String.class));
         verify(mockedPKI).createX509Certificate(any(String.class),
-            argThat(new ListDoesNotContainSupportType()), any(Date.class),
+            argThat(new ListDoesNotContainSupportType()), any(Set.class), any(Date.class),
             any(Date.class), any(KeyPair.class), any(BigInteger.class),
             any(String.class));
     }
@@ -547,23 +548,32 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<X509ExtensionWrapper> extensions =
             certServiceAdapter.prepareV2Extensions(products, entitlement, "prefix",
                 null, subscription);
+        Set<X509ByteExtensionWrapper> byteExtensions =
+            certServiceAdapter.prepareV2ByteExtensions(products, entitlement, "prefix",
+                null, subscription);
         Map<String, X509ExtensionWrapper> map =
             new HashMap<String, X509ExtensionWrapper>();
         for (X509ExtensionWrapper ext : extensions) {
             map.put(ext.getOid(), ext);
         }
+        Map<String, X509ByteExtensionWrapper> byteMap =
+            new HashMap<String, X509ByteExtensionWrapper>();
+        for (X509ByteExtensionWrapper ext : byteExtensions) {
+            byteMap.put(ext.getOid(), ext);
+        }
         assertTrue(map.containsKey("1.3.6.1.4.1.2312.9.6"));
         assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("2.0"));
 
-        assertTrue(map.containsKey("1.3.6.1.4.1.2312.9.7"));
-        String value = "";
+        assertTrue(byteMap.containsKey("1.3.6.1.4.1.2312.9.7"));
+        String stringValue = "";
         try {
-            value = processPayload(map.get("1.3.6.1.4.1.2312.9.7").getValue());
+            stringValue = processPayload(byteMap.get("1.3.6.1.4.1.2312.9.7").getValue());
         }
         catch (Exception e) {
             assertTrue(false);
         }
-        Map<String, Object> data = (Map<String, Object>) Util.fromJson(value , Map.class);
+        Map<String, Object> data = (Map<String, Object>)
+            Util.fromJson(stringValue , Map.class);
         assertEquals(data.get("consumer"), "test-consumer");
         assertEquals(data.get("quantity"), 10);
 
@@ -641,22 +651,32 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<X509ExtensionWrapper> extensions =
             certServiceAdapter.prepareV2Extensions(products, entitlement, "prefix",
                 null, subscription);
+        Set<X509ByteExtensionWrapper> byteExtensions =
+            certServiceAdapter.prepareV2ByteExtensions(products, entitlement, "prefix",
+                null, subscription);
         Map<String, X509ExtensionWrapper> map =
             new HashMap<String, X509ExtensionWrapper>();
         for (X509ExtensionWrapper ext : extensions) {
             map.put(ext.getOid(), ext);
         }
+        Map<String, X509ByteExtensionWrapper> byteMap =
+            new HashMap<String, X509ByteExtensionWrapper>();
+        for (X509ByteExtensionWrapper ext : byteExtensions) {
+            byteMap.put(ext.getOid(), ext);
+        }
         assertTrue(map.containsKey("1.3.6.1.4.1.2312.9.6"));
         assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("2.0"));
-        assertTrue(map.containsKey("1.3.6.1.4.1.2312.9.7"));
-        String value = "";
+
+        assertTrue(byteMap.containsKey("1.3.6.1.4.1.2312.9.7"));
+        String stringValue = "";
         try {
-            value = processPayload(map.get("1.3.6.1.4.1.2312.9.7").getValue());
+            stringValue = processPayload(byteMap.get("1.3.6.1.4.1.2312.9.7").getValue());
         }
         catch (Exception e) {
             assertTrue(false);
         }
-        Map<String, Object> data = (Map<String, Object>) Util.fromJson(value , Map.class);
+        Map<String, Object> data = (Map<String, Object>)
+            Util.fromJson(stringValue , Map.class);
         assertEquals(data.get("consumer"), "test-consumer");
 
         // each has been set to the default and should not be populated in the cert
@@ -675,15 +695,13 @@ public class DefaultEntitlementCertServiceAdapterTest {
         }
     }
 
-    private String processPayload(String payload)
+    private String processPayload(byte[] payload)
         throws IOException, UnsupportedEncodingException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         InflaterOutputStream ios = new InflaterOutputStream(baos);
-        Base64OutputStream b64os = new Base64OutputStream(ios, false);
-
-        b64os.write(payload.getBytes("UTF-8"));
+        System.out.print(payload);
+        ios.write(payload);
         ios.finish();
-        b64os.close();
         return baos.toString();
     }
 

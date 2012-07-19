@@ -42,6 +42,7 @@ import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Subscription;
 import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
 import org.candlepin.service.BaseEntitlementCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
@@ -183,6 +184,8 @@ public class DefaultEntitlementCertServiceAdapter extends
 
         // oiduitl is busted at the moment, so do this manually
         Set<X509ExtensionWrapper> extensions = new LinkedHashSet<X509ExtensionWrapper>();
+        Set<X509ByteExtensionWrapper> byteExtensions =
+            new LinkedHashSet<X509ByteExtensionWrapper>();
         Set<Product> products = new HashSet<Product>(getProvidedProducts(ent
             .getPool(), sub));
         products.add(product);
@@ -218,6 +221,8 @@ public class DefaultEntitlementCertServiceAdapter extends
         if (entitlementVersion != null && entitlementVersion.startsWith("2.")) {
             extensions = prepareV2Extensions(products, ent, contentPrefix,
                 promotedContent, sub);
+            byteExtensions = prepareV2ByteExtensions(products, ent, contentPrefix,
+                promotedContent, sub);
         }
         else {
             extensions = prepareV1Extensions(products, ent, contentPrefix,
@@ -225,8 +230,8 @@ public class DefaultEntitlementCertServiceAdapter extends
         }
 
         X509Certificate x509Cert =  this.pki.createX509Certificate(
-                createDN(ent), extensions, sub.getStartDate(), ent.getEndDate(),
-                keyPair, serialNumber, null);
+                createDN(ent), extensions, byteExtensions, sub.getStartDate(),
+                ent.getEndDate(), keyPair, serialNumber, null);
         return x509Cert;
     }
 
@@ -261,7 +266,15 @@ public class DefaultEntitlementCertServiceAdapter extends
     public Set<X509ExtensionWrapper> prepareV2Extensions(Set<Product> products,
         Entitlement ent, String contentPrefix,
         Map<String, EnvironmentContent> promotedContent, Subscription sub) {
-        Set<X509ExtensionWrapper> result =  v2extensionUtil.getExtensionPayload(products,
+        Set<X509ExtensionWrapper> result =  v2extensionUtil.getExtensions(products,
+            ent, contentPrefix, promotedContent, sub);
+        return result;
+    }
+
+    public Set<X509ByteExtensionWrapper> prepareV2ByteExtensions(Set<Product> products,
+        Entitlement ent, String contentPrefix,
+        Map<String, EnvironmentContent> promotedContent, Subscription sub) {
+        Set<X509ByteExtensionWrapper> result =  v2extensionUtil.getByteExtensions(products,
             ent, contentPrefix, promotedContent, sub);
         return result;
     }
