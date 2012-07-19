@@ -158,7 +158,8 @@ public class BouncyCastlePKIUtility extends PKIUtility {
                 // if they are null
                 byte[] value = wrapper.getValue() == null ? new byte[0] :
                     wrapper.getValue();
-                certGen.addExtension(wrapper.getOid(), wrapper.isCritical(), value);
+                certGen.addExtension(wrapper.getOid(), wrapper.isCritical(),
+                    new DEROctetString(value));
             }
         }
 
