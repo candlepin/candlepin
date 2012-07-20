@@ -174,7 +174,8 @@ public class OwnerInfoCurator {
      * @param pool
      * @return
      */
-    private String getAccumulatedAttribute(Pool pool, ReadOnlyProduct product, String aType) {
+    private String getAccumulatedAttribute(Pool pool, ReadOnlyProduct product,
+                                           String aType) {
         // XXX dealing with attributes in java. that's bad!
         String consumerTypes = pool.getAttributeValue(aType);
         if (product != null) {
