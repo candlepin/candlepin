@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-06-27 12:35-0400\n"
+"POT-Creation-Date: 2012-07-18 12:57-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -575,7 +575,7 @@ msgstr ""
 msgid "Consumer Type with id {0} could not be found."
 msgstr ""
 
-#: src/main/java/org/candlepin/guice/I18nProvider.java:87
+#: src/main/java/org/candlepin/guice/I18nProvider.java:92
 #: src/main/java/org/candlepin/exceptions/mappers/BadRequestExceptionMapper.java:70
 msgid "Bad Request"
 msgstr ""
