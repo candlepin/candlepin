@@ -36,7 +36,7 @@ import com.google.inject.Inject;
 /**
  * X509ExtensionUtil
  */
-public class X509ExtensionUtil {
+public class X509ExtensionUtil  extends X509Util{
 
     private static Logger log = Logger.getLogger(X509ExtensionUtil.class);
     private Config config;

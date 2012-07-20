@@ -28,7 +28,6 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.zip.DeflaterOutputStream;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.candlepin.config.Config;
 import org.candlepin.model.Consumer;
@@ -41,14 +40,13 @@ import org.candlepin.model.Subscription;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
 
-import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
 
 /**
  * X509ExtensionUtil
  */
-public class X509V2ExtensionUtil {
+public class X509V2ExtensionUtil extends X509Util{
 
     private static Logger log = Logger.getLogger(X509V2ExtensionUtil.class);
     private Config config;
@@ -94,7 +92,7 @@ public class X509V2ExtensionUtil {
             value = processPayload(payload);
         }
         catch (Exception e) {
-            //no-op
+            log.error("Unable to compile data for entitlement certificate", e);
         }
 
         X509ByteExtensionWrapper bodyExtension =
@@ -153,7 +151,8 @@ public class X509V2ExtensionUtil {
         String management = sub.getProduct().getAttributeValue("management_enabled");
         if (management != null && !management.trim().equals("")) {
             // only included if not the default value of false
-            Boolean m = new Boolean(management);
+            Boolean m = new Boolean(management.equalsIgnoreCase("true") ||
+                management.equalsIgnoreCase("1"));
             if (m) {
                 toReturn.put("management", m);
             }
@@ -167,7 +166,8 @@ public class X509V2ExtensionUtil {
         String virtOnly = ent.getPool().getAttributeValue("virt_only");
         if (virtOnly != null && !virtOnly.trim().equals("")) {
             // only included if not the default value of false
-            Boolean vo = new Boolean(virtOnly);
+            Boolean vo = new Boolean(virtOnly.equalsIgnoreCase("true") ||
+                virtOnly.equalsIgnoreCase("1"));
             if (vo) {
                 toReturn.put("virt_only", vo);
             }
@@ -294,7 +294,6 @@ public class X509V2ExtensionUtil {
             // Check if we should override the enabled flag due to setting on promoted
             // content:
             Boolean enabled = pc.getEnabled();
-            log.debug("default enabled flag = " + enabled);
             if ((consumer.getEnvironment() != null) && enableEnvironmentFiltering) {
                 // we know content has been promoted at this point:
                 Boolean enabledOverride = promotedContent.get(
@@ -368,12 +367,4 @@ public class X509V2ExtensionUtil {
         }
         return filtered;
     }
-
-    private static final Predicate<Product>
-    PROD_FILTER_PREDICATE = new Predicate<Product>() {
-        @Override
-        public boolean apply(Product product) {
-            return product != null && StringUtils.isNumeric(product.getId());
-        }
-    };
 }

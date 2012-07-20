@@ -380,7 +380,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         // the
         // product it modifies:
         assertEquals(1,
-            certServiceAdapter.filterProductContent(modProduct, entitlement)
+            extensionUtil.filterProductContent(modProduct, entitlement, entCurator)
                 .size());
 
         // Now mock that we have an entitlement providing one of the modified
@@ -390,7 +390,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             this.entCurator.listProviding(any(Consumer.class), eq("product2"),
                 any(Date.class), any(Date.class))).thenReturn(successResult);
         assertEquals(2,
-            certServiceAdapter.filterProductContent(modProduct, entitlement)
+            extensionUtil.filterProductContent(modProduct, entitlement, entCurator)
                 .size());
     }
 
@@ -570,7 +570,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             stringValue = processPayload(byteMap.get("1.3.6.1.4.1.2312.9.7").getValue());
         }
         catch (Exception e) {
-            assertTrue(false);
+            throw new RuntimeException(e);
         }
         Map<String, Object> data = (Map<String, Object>)
             Util.fromJson(stringValue , Map.class);
@@ -673,7 +673,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             stringValue = processPayload(byteMap.get("1.3.6.1.4.1.2312.9.7").getValue());
         }
         catch (Exception e) {
-            assertTrue(false);
+            throw new RuntimeException(e);
         }
         Map<String, Object> data = (Map<String, Object>)
             Util.fromJson(stringValue , Map.class);
@@ -693,6 +693,54 @@ public class DefaultEntitlementCertServiceAdapterTest {
                 assertNull(cont.get("enabled"));
             }
         }
+    }
+
+    @Test
+    public void testPrepareV2ExtensionsForBooleans() {
+        Set<Product> products = new HashSet<Product>();
+        products.add(product);
+        when(entitlement.getConsumer().getFact("system.certificate_version"))
+            .thenReturn("2.1");
+        when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
+
+        subscription.getProduct().setAttribute("management_enabled", "1");
+        entitlement.getPool().setAttribute("virt_only", "1");
+
+        Set<X509ExtensionWrapper> extensions =
+            certServiceAdapter.prepareV2Extensions(products, entitlement, "prefix",
+                null, subscription);
+        Set<X509ByteExtensionWrapper> byteExtensions =
+            certServiceAdapter.prepareV2ByteExtensions(products, entitlement, "prefix",
+                null, subscription);
+        Map<String, X509ExtensionWrapper> map =
+            new HashMap<String, X509ExtensionWrapper>();
+        for (X509ExtensionWrapper ext : extensions) {
+            map.put(ext.getOid(), ext);
+        }
+        Map<String, X509ByteExtensionWrapper> byteMap =
+            new HashMap<String, X509ByteExtensionWrapper>();
+        for (X509ByteExtensionWrapper ext : byteExtensions) {
+            byteMap.put(ext.getOid(), ext);
+        }
+        assertTrue(map.containsKey("1.3.6.1.4.1.2312.9.6"));
+        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("2.0"));
+
+        assertTrue(byteMap.containsKey("1.3.6.1.4.1.2312.9.7"));
+        String stringValue = "";
+        try {
+            stringValue = processPayload(byteMap.get("1.3.6.1.4.1.2312.9.7").getValue());
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        Map<String, Object> data = (Map<String, Object>)
+            Util.fromJson(stringValue , Map.class);
+        assertEquals(data.get("consumer"), "test-consumer");
+
+        // each has been set to the default and should not be populated in the cert
+        Map<String, Object> subs = (Map<String, Object>) data.get("subscription");
+        assertTrue((Boolean) subs.get("management"));
+        assertTrue((Boolean) subs.get("virt_only"));
     }
 
     private String processPayload(byte[] payload)

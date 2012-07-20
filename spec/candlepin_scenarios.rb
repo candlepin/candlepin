@@ -167,26 +167,11 @@ module CandlepinMethods
     json.has_key?('id').should be_true
   end
 
-  # TODO:  This might be better if it were added to
-  # the OpenSSL::X509::Certificate class
-  def get_extension(cert, oid)
-    
-    extension = cert.extensions.select { |ext| ext.oid == oid }[0]
-
-    return nil if extension.nil?
-
-    value = extension.value
-    # Weird ssl cert issue - have to strip the leading dots:
-    value = value[2..-1] if value.match(/^\.\./)
-
-    return value
-  end
-
   def extension_from_cert(cert, extension_id)
     x509 = OpenSSL::X509::Certificate.new(cert)
     extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.to_der()] }]
     asn1_body = nil
-    if extensions_hash[extension_id]:
+    if extensions_hash[extension_id]
       asn1 = OpenSSL::ASN1.decode(extensions_hash[extension_id])
       header_len = 0;
       length = 0;

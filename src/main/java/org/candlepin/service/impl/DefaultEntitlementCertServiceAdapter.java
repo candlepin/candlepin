@@ -26,7 +26,6 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang.StringUtils;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Entitlement;
@@ -38,7 +37,6 @@ import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.KeyPairCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Subscription;
 import org.candlepin.pki.PKIUtility;
@@ -47,12 +45,12 @@ import org.candlepin.pki.X509ExtensionWrapper;
 import org.candlepin.service.BaseEntitlementCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.util.X509ExtensionUtil;
+import org.candlepin.util.X509Util;
 import org.candlepin.util.X509V2ExtensionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
 
@@ -137,46 +135,6 @@ public class DefaultEntitlementCertServiceAdapter extends
         return providedProducts;
     }
 
-    /**
-     * Scan the product content looking for any which modify some other product. If found
-     * we must check that this consumer has another entitlement granting them access
-     * to that modified product. If they do not, we should filter out this content.
-     *
-     * @param prod
-     * @param ent
-     * @return ProductContent to include in the certificate.
-     */
-    public Set<ProductContent> filterProductContent(Product prod, Entitlement ent) {
-        Set<ProductContent> filtered = new HashSet<ProductContent>();
-
-        for (ProductContent pc : prod.getProductContent()) {
-            boolean include = true;
-            if (pc.getContent().getModifiedProductIds().size() > 0) {
-                include = false;
-                Set<String> prodIds = pc.getContent().getModifiedProductIds();
-                // If consumer has an entitlement to just one of the modified products,
-                // we will include this content set:
-                for (String prodId : prodIds) {
-                    Set<Entitlement> entsProviding = entCurator.listProviding(
-                        ent.getConsumer(), prodId, ent.getStartDate(), ent.getEndDate());
-                    if (entsProviding.size() > 0) {
-                        include = true;
-                        break;
-                    }
-                }
-            }
-
-            if (include) {
-                filtered.add(pc);
-            }
-            else {
-                log.debug("No entitlements found for modified products.");
-                log.debug("Skipping content set: " + pc.getContent());
-            }
-        }
-        return filtered;
-    }
-
     public X509Certificate createX509Certificate(Entitlement ent,
         Subscription sub, Product product, BigInteger serialNumber,
         KeyPair keyPair, boolean useContentPrefix)
@@ -240,10 +198,10 @@ public class DefaultEntitlementCertServiceAdapter extends
         Map<String, EnvironmentContent> promotedContent, Subscription sub) {
         Set<X509ExtensionWrapper> result =  new LinkedHashSet<X509ExtensionWrapper>();
         for (Product prod : Collections2
-            .filter(products, PROD_FILTER_PREDICATE)) {
+            .filter(products, X509Util.PROD_FILTER_PREDICATE)) {
             result.addAll(extensionUtil.productExtensions(prod));
             result.addAll(extensionUtil.contentExtensions(
-                filterProductContent(prod, ent),
+                extensionUtil.filterProductContent(prod, ent, entCurator),
                 contentPrefix, promotedContent, ent.getConsumer()));
         }
 
@@ -340,12 +298,4 @@ public class DefaultEntitlementCertServiceAdapter extends
         sb.append(ent.getId());
         return sb.toString();
     }
-
-    private static final Predicate<Product>
-    PROD_FILTER_PREDICATE = new Predicate<Product>() {
-        @Override
-        public boolean apply(Product product) {
-            return product != null && StringUtils.isNumeric(product.getId());
-        }
-    };
 }
