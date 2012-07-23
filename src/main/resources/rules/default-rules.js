@@ -448,7 +448,7 @@ var Entitlement = {
             pre.addError("rulefailed.virt.only");
             return;
         }
-        var hostConsumer = pre.getHostConsumer(consumer.getFact("virt.uuid"));
+        var hostConsumer = consumer.getHost();
 
         if (hostConsumer == null || !hostConsumer.getUuid().equals(attributes.get('requires_host'))) {
             pre.addError("virt.guest.host.does.not.match.pool.owner");

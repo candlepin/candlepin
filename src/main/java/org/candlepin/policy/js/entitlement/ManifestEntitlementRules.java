@@ -21,7 +21,6 @@ import org.candlepin.config.Config;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Pool;
-import org.candlepin.model.Product;
 import org.candlepin.policy.Enforcer;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationWarning;
@@ -34,7 +33,9 @@ import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.util.DateSource;
 import org.xnap.commons.i18n.I18n;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -68,10 +69,35 @@ public class ManifestEntitlementRules extends AbstractEntitlementRules implement
 
         jsRules.reinitTo("entitlement_name_space");
         rulesInit();
+        ReadOnlyProductCache productCache = new ReadOnlyProductCache(prodAdapter);
+        Consumer host = consumerCurator.getHost(consumer.getFact("virt.uuid"));
 
-        PreEntHelper preHelper = runPreEntitlement(consumer, entitlementPool, quantity);
+        PreEntHelper preHelper = runPreEntitlement(new ReadOnlyConsumer(consumer, host),
+            entitlementPool, quantity, productCache);
 
         return preHelper;
+    }
+
+    @Override
+    public List<PreEntHelper> preEntitlement(
+        Consumer consumer, List<Pool> pools, Integer quantity) {
+
+        ArrayList<PreEntHelper> helpers = new ArrayList<PreEntHelper>();
+        ReadOnlyProductCache productCache = new ReadOnlyProductCache(prodAdapter);
+        Consumer host = consumerCurator.getHost(consumer.getFact("virt.uuid"));
+        ReadOnlyConsumer roConsumer = new ReadOnlyConsumer(consumer, host);
+
+        for (Pool pool : pools) {
+            jsRules.reinitTo("entitlement_name_space");
+            rulesInit();
+
+            PreEntHelper preHelper = runPreEntitlement(roConsumer,
+                pool, quantity, productCache);
+
+            helpers.add(preHelper);
+        }
+
+        return helpers;
     }
 
     /**
@@ -83,18 +109,19 @@ public class ManifestEntitlementRules extends AbstractEntitlementRules implement
      * @param quantity
      * @return
      */
-    private PreEntHelper runPreEntitlement(Consumer consumer, Pool pool, Integer quantity) {
-        PreEntHelper preHelper = new PreEntHelper(quantity, consumerCurator);
+    private PreEntHelper runPreEntitlement(ReadOnlyConsumer consumer, Pool pool,
+        Integer quantity, ReadOnlyProductCache productCache) {
+        PreEntHelper preHelper = new PreEntHelper(quantity, pool);
 
         // Provide objects for the script:
         String topLevelProductId = pool.getProductId();
-        Product product = prodAdapter.getProductById(topLevelProductId);
+        ReadOnlyProduct product = productCache.getProductById(topLevelProductId);
         Map<String, String> allAttributes = jsRules.getFlattenedAttributes(product, pool);
 
         Map<String, Object> args = new HashMap<String, Object>();
-        args.put("consumer", new ReadOnlyConsumer(consumer));
-        args.put("product", new ReadOnlyProduct(product));
-        args.put("pool", new ReadOnlyPool(pool, new ReadOnlyProductCache(prodAdapter)));
+        args.put("consumer", consumer);
+        args.put("product", product);
+        args.put("pool", new ReadOnlyPool(pool, productCache));
         args.put("pre", preHelper);
         args.put("attributes", allAttributes);
         args.put("prodAttrSeparator", PROD_ARCHITECTURE_SEPARATOR);
