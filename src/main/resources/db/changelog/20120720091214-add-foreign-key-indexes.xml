@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+
+    <changeSet id="20120720091214" author="bkearney">
+        <comment>Add indexes for Foreign Keys</comment>
+
+        <createIndex tableName="cp_activation_key" indexName="cp_activation_key_owner_id_idx">
+            <column name="owner_id"/>
+        </createIndex>
+
+        <createIndex tableName="cp_certificate" indexName="cp_certificate_serial_id_idx">
+            <column name="serial_id"/>
+        </createIndex>
+
+        <createIndex tableName="cp_consumer" indexName="cp_consumer_owner_id_idx">
+            <column name="owner_id"/>
+        </createIndex>
+
+        <createIndex tableName="cp_consumer" indexName="cp_consumer_environment_id_idx">
+            <column name="environment_id"/>
+        </createIndex>
+
+        <createIndex tableName="cp_consumer" indexName="cp_consumer_type_id_idx">
+            <column name="type_id"/>
+        </createIndex>
+
+        <createIndex tableName="cp_consumer" indexName="cp_consumer_keypair_id_idx">
+            <column name="keypair_id"/>
+        </createIndex>
+
+        <createIndex tableName="cp_consumer" indexName="cp_consumer_consumer_idcert_id_idx">
+            <column name="consumer_idcert_id"/>
+        </createIndex>
+
+        <createIndex tableName="cp_consumer_guests" indexName="cp_consumer_guests_guest_id_idx">
+            <column name="guest_id"/>
+        </createIndex>
+
+        <createIndex tableName="cp_consumer_guests" indexName="cp_consumer_guests_consumer_id_idx">
+            <column name="consumer_id"/>
+        </createIndex>
+
+        <createIndex tableName="cp_consumer_installed_products" indexName="cp_consumer_installed_products_consumer_id_idx">
+            <column name="consumer_id"/>
+        </createIndex>
+
+        <createIndex tableName="cp_content_modified_products" indexName="cp_content_modified_products_cp_content_id_idx">
+            <column name="cp_content_id"/>
+        </createIndex>
+
+        <createIndex tableName="cp_deleted_consumers" indexName="cp_deleted_consumers_owner_id_idx">
+            <column name="owner_id"/>
+        </createIndex>
+
+        <createIndex tableName="cp_ent_certificate" indexName="cp_ent_certificate_entitlement_id_idx">
+            <column name="entitlement_id"/>
+        </createIndex>
+
+        <createIndex tableName="cp_ent_certificate" indexName="cp_ent_certificate_serial_id_idx">
+            <column name="serial_id"/>
+        </createIndex>
+
+        <createIndex tableName="cp_entitlement" indexName="cp_entitlement_consumer_id_idx">
+            <column name="consumer_id"/>
+        </createIndex>
+
+        <createIndex tableName="cp_entitlement" indexName="cp_entitlement_owner_id_idx">
+            <column name="owner_id"/>
+        </createIndex>
+
+        <createIndex tableName="cp_entitlement" indexName="cp_entitlement_pool_id_idx">
+            <column name="pool_id"/>
+        </createIndex>
+
+        <createIndex tableName="cp_environment" indexName="cp_environment_owner_id_idx">
+            <column name="owner_id"/>
+        </createIndex>
+
+        <createIndex tableName="cp_event" indexName="cp_event_consumerid_idx">
+            <column name="consumerid"/>
+        </createIndex>
+
+        <createIndex tableName="cp_event" indexName="cp_event_ownerid_idx">
+            <column name="ownerid"/>
+        </createIndex>
+
+        <createIndex tableName="cp_export_metadata" indexName="cp_export_metadata_owner_id_idx">
+            <column name="owner_id"/>
+        </createIndex>
+
+        <createIndex tableName="cp_id_cert" indexName="cp_id_cert_serial_id_idx">
+            <column name="serial_id"/>
+        </createIndex>
+
+        <createIndex tableName="cp_import_record" indexName="cp_import_record_owner_id_idx">
+            <column name="owner_id"/>
+        </createIndex>
+
+        <createIndex tableName="cp_owner" indexName="cp_owner_parent_owner_idx">
+            <column name="parent_owner"/>
+        </createIndex>
+
+        <createIndex tableName="cp_owner_permission" indexName="cp_owner_permission_owner_id_idx">
+            <column name="owner_id"/>
+        </createIndex>
+
+        <createIndex tableName="cp_owner_permission" indexName="cp_owner_permission_role_id_idx">
+            <column name="role_id"/>
+        </createIndex>
+
+        <createIndex tableName="cp_pool" indexName="cp_pool_owner_id_idx">
+            <column name="owner_id"/>
+        </createIndex>
+
+        <createIndex tableName="cp_pool" indexName="cp_pool_sourceentitlement_id_idx">
+            <column name="sourceentitlement_id"/>
+        </createIndex>
+
+        <createIndex tableName="cp_pool" indexName="cp_pool_productid_idx">
+            <column name="productid"/>
+        </createIndex>
+
+        <createIndex tableName="cp_pool" indexName="cp_pool_subscriptionid_idx">
+            <column name="subscriptionid"/>
+        </createIndex>
+
+        <createIndex tableName="cp_pool_attribute" indexName="cp_pool_attribute_pool_id_idx">
+            <column name="pool_id"/>
+        </createIndex>
+
+        <createIndex tableName="cp_pool_products" indexName="cp_pool_products_pool_id_idx">
+            <column name="pool_id"/>
+        </createIndex>
+
+        <createIndex tableName="cp_product_attribute" indexName="cp_product_attribute_product_id_idx">
+            <column name="product_id"/>
+        </createIndex>
+
+        <createIndex tableName="cp_product_certificate" indexName="cp_product_certificate_product_id_idx">
+            <column name="product_id"/>
+        </createIndex>
+
+        <createIndex tableName="cp_product_dependent_products" indexName="cp_product_dependent_products_cp_product_id_idx">
+            <column name="cp_product_id"/>
+        </createIndex>
+
+        <createIndex tableName="cp_product_pool_attribute" indexName="cp_product_pool_attribute_pool_id_idx">
+            <column name="pool_id"/>
+        </createIndex>
+
+        <createIndex tableName="cp_stat_history" indexName="cp_stat_history_owner_id_idx">
+            <column name="owner_id"/>
+        </createIndex>
+
+        <createIndex tableName="cp_subscription" indexName="cp_subscription_owner_id_idx">
+            <column name="owner_id"/>
+        </createIndex>
+
+        <createIndex tableName="cp_subscription" indexName="cp_subscription_certificate_id_idx">
+            <column name="certificate_id"/>
+        </createIndex>
+
+        <createIndex tableName="cp_subscription" indexName="cp_subscription_product_id_idx">
+            <column name="product_id"/>
+        </createIndex>
+
+        <createIndex tableName="cp_subscription" indexName="cp_subscription_upstream_pool_id_idx">
+            <column name="upstream_pool_id"/>
+        </createIndex>
+
+    </changeSet>
+
+</databaseChangeLog>
