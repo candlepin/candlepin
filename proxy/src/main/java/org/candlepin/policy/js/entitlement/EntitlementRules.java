@@ -81,7 +81,11 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         jsRules.reinitTo("entitlement_name_space");
         rulesInit();
 
-        PreEntHelper preHelper = runPreEntitlement(consumer, entitlementPool, quantity);
+        ReadOnlyProductCache productCache = new ReadOnlyProductCache(prodAdapter);
+        Consumer host = consumerCurator.getHost(consumer.getFact("virt.uuid"));
+
+        PreEntHelper preHelper = runPreEntitlement(new ReadOnlyConsumer(consumer, host),
+            entitlementPool, quantity, productCache);
 
         if (entitlementPool.isExpired(dateSource)) {
             preHelper.getResult().addError(
@@ -93,18 +97,41 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         return preHelper;
     }
 
-    private PreEntHelper runPreEntitlement(Consumer consumer, Pool pool, Integer quantity) {
-        PreEntHelper preHelper = new PreEntHelper(quantity, consumerCurator);
+    @Override
+    public List<PreEntHelper> preEntitlement(
+        Consumer consumer, List<Pool> pools, Integer quantity) {
+
+        ArrayList<PreEntHelper> helpers = new ArrayList<PreEntHelper>();
+        ReadOnlyProductCache productCache = new ReadOnlyProductCache(prodAdapter);
+        Consumer host = consumerCurator.getHost(consumer.getFact("virt.uuid"));
+        ReadOnlyConsumer roConsumer = new ReadOnlyConsumer(consumer, host);
+
+        for (Pool pool : pools) {
+            jsRules.reinitTo("entitlement_name_space");
+            rulesInit();
+
+            PreEntHelper preHelper = runPreEntitlement(roConsumer,
+                pool, quantity, productCache);
+
+            helpers.add(preHelper);
+        }
+
+        return helpers;
+    }
+
+    private PreEntHelper runPreEntitlement(ReadOnlyConsumer consumer, Pool pool,
+        Integer quantity, ReadOnlyProductCache productCache) {
+        PreEntHelper preHelper = new PreEntHelper(quantity, pool);
 
         // Provide objects for the script:
         String topLevelProductId = pool.getProductId();
-        Product product = prodAdapter.getProductById(topLevelProductId);
+        ReadOnlyProduct product = productCache.getProductById(topLevelProductId);
         Map<String, String> allAttributes = jsRules.getFlattenedAttributes(product, pool);
 
         Map<String, Object> args = new HashMap<String, Object>();
-        args.put("consumer", new ReadOnlyConsumer(consumer));
-        args.put("product", new ReadOnlyProduct(product));
-        args.put("pool", new ReadOnlyPool(pool, new ReadOnlyProductCache(prodAdapter)));
+        args.put("consumer", consumer);
+        args.put("product", product);
+        args.put("pool", new ReadOnlyPool(pool, productCache));
         args.put("pre", preHelper);
         args.put("attributes", allAttributes);
         args.put("prodAttrSeparator", PROD_ARCHITECTURE_SEPARATOR);

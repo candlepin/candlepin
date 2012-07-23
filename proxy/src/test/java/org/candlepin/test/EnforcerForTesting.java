@@ -47,6 +47,17 @@ public class EnforcerForTesting implements Enforcer {
     }
 
     @Override
+    public List<PreEntHelper> preEntitlement(
+        Consumer consumer, List<Pool> entitlementPools, Integer quantity) {
+
+        ArrayList<PreEntHelper> helpers = new ArrayList<PreEntHelper>();
+        for (Pool pool : entitlementPools) {
+               helpers.add(preEntitlement(consumer, pool, quantity));
+        }
+        return helpers;
+    }
+
+    @Override
     public List<PoolQuantity> selectBestPools(Consumer consumer, String[] productIds,
         List<Pool> pools, ComplianceStatus compliance, String serviceLevelOverride,
         Set<String> exemptList)

@@ -14,8 +14,7 @@
  */
 package org.candlepin.policy.js.entitlement;
 
-import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.Pool;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.ReadOnlyPool;
 
@@ -29,12 +28,16 @@ public class PreEntHelper {
 
     private ValidationResult result;
     private Integer quantityToConsume;
-    private ConsumerCurator consumerCurator;
+    private Pool pool;
 
-    public PreEntHelper(Integer quantityToConsume, ConsumerCurator consumerCurator) {
+    public PreEntHelper(Integer quantityToConsume, Pool pool) {
         this.quantityToConsume = quantityToConsume;
-        this.consumerCurator = consumerCurator;
-        result = new ValidationResult();
+        this.result = new ValidationResult();
+        this.pool = pool;
+    }
+
+    public PreEntHelper(Integer quantityToConsume) {
+        this(quantityToConsume, null);
     }
 
     /**
@@ -65,6 +68,10 @@ public class PreEntHelper {
         return quantityToConsume;
     }
 
+    public Pool getPool() {
+        return pool;
+    }
+
     /**
      * Verify entitlements are available in the given pool.
      *
@@ -81,18 +88,5 @@ public class PreEntHelper {
         if (!entPool.entitlementsAvailable(quantityToConsume)) {
             result.addError("rulefailed.no.entitlements.available");
         }
-    }
-
-
-    /**
-     * Lookup a host consumer for the given guest ID, if one exists. The host may not
-     * be registered to Candlepin.
-     *
-     * @param guestId Virt guest ID to search for a host for.
-     *
-     * @return Consumer
-     */
-    public Consumer getHostConsumer(String guestId) {
-        return consumerCurator.getHost(guestId);
     }
 }
