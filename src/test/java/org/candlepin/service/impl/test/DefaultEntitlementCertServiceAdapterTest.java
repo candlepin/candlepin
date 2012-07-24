@@ -525,7 +525,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
 
     @Test
-    public void testPrepareV2Extensions() {
+    public void testPrepareV2Extensions() throws IOException {
         Set<Product> products = new HashSet<Product>();
         products.add(product);
         when(entitlement.getConsumer().getFact("system.certificate_version"))
@@ -634,7 +634,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
 
     @Test
-    public void testPrepareV2ExtensionsForDefaults() {
+    public void testPrepareV2ExtensionsForDefaults() throws IOException {
         Set<Product> products = new HashSet<Product>();
         products.add(product);
         when(entitlement.getConsumer().getFact("system.certificate_version"))
@@ -696,7 +696,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
 
     @Test
-    public void testPrepareV2ExtensionsForBooleans() {
+    public void testPrepareV2ExtensionsForBooleans() throws IOException {
         Set<Product> products = new HashSet<Product>();
         products.add(product);
         when(entitlement.getConsumer().getFact("system.certificate_version"))

@@ -231,7 +231,8 @@ public class DefaultEntitlementCertServiceAdapter extends
 
     public Set<X509ByteExtensionWrapper> prepareV2ByteExtensions(Set<Product> products,
         Entitlement ent, String contentPrefix,
-        Map<String, EnvironmentContent> promotedContent, Subscription sub) {
+        Map<String, EnvironmentContent> promotedContent, Subscription sub)
+        throws IOException {
         Set<X509ByteExtensionWrapper> result =  v2extensionUtil.getByteExtensions(products,
             ent, contentPrefix, promotedContent, sub);
         return result;

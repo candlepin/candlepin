@@ -78,7 +78,8 @@ public class X509V2ExtensionUtil extends X509Util{
 
     public Set<X509ByteExtensionWrapper> getByteExtensions(Set<Product> products,
         Entitlement ent, String contentPrefix,
-        Map<String, EnvironmentContent> promotedContent, Subscription sub) {
+        Map<String, EnvironmentContent> promotedContent, Subscription sub)
+        throws IOException {
         Set<X509ByteExtensionWrapper> toReturn =
             new LinkedHashSet<X509ByteExtensionWrapper>();
 
@@ -93,6 +94,7 @@ public class X509V2ExtensionUtil extends X509Util{
         }
         catch (Exception e) {
             log.error("Unable to compile data for entitlement certificate", e);
+            throw new IOException(e);
         }
 
         X509ByteExtensionWrapper bodyExtension =
