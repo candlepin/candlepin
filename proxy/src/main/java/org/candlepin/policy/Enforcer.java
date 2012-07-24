@@ -50,6 +50,23 @@ public interface Enforcer {
     PreEntHelper preEntitlement(Consumer consumer, Pool entitlementPool, Integer quantity);
 
     /**
+     * Run pre-entitlement checks on a collection of pools.
+     *
+     * Ensures sufficient entitlements remain, but also verifies all attributes
+     * on the product and relevant entitlement pool pass using the current
+     * policy.
+     *
+     * This is run prior to granting an entitlement.
+     *
+     * @param consumer Consumer who wishes to consume an entitlement.
+     * @param pools Pools to consume from
+     * @param quantity number of entitlements to consume.
+     * @return TODO
+     */
+    List<PreEntHelper> preEntitlement(Consumer consumer, List<Pool> pools,
+        Integer quantity);
+
+    /**
      * Run post-entitlement actions.
      *
      * @param postEntHelper A post entitlement helper.
