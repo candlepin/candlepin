@@ -52,7 +52,7 @@ public class EnforcerForTesting implements Enforcer {
 
         ArrayList<PreEntHelper> helpers = new ArrayList<PreEntHelper>();
         for (Pool pool : entitlementPools) {
-               helpers.add(preEntitlement(consumer, pool, quantity));
+            helpers.add(preEntitlement(consumer, pool, quantity));
         }
         return helpers;
     }
