@@ -67,6 +67,17 @@ public class EnforcerDispatcher implements Enforcer {
     }
 
     @Override
+    public List<PreEntHelper> preEntitlement(
+        Consumer consumer, List<Pool> pools, Integer quantity) {
+
+        if (consumer.getType().isManifest()) {
+            return manifestEnforcer.preEntitlement(consumer, pools, quantity);
+        }
+
+        return jsEnforcer.preEntitlement(consumer, pools, quantity);
+    }
+
+    @Override
     public List<PoolQuantity> selectBestPools(Consumer consumer, String[] productIds,
         List<Pool> pools, ComplianceStatus compliance, String serviceLevelOverride,
         Set<String> exemptList)
