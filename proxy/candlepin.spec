@@ -14,7 +14,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.6.6
+Version: 0.6.7
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -279,6 +279,15 @@ fi
 
 
 %changelog
+* Tue Jul 24 2012 Michael Stead <mstead@redhat.com> 0.6.7-1
+- Reverting unintentional changes. (mstead@redhat.com)
+- Checkstyle fixes (mstead@redhat.com)
+- 840593: Add readonly product cache to OwnerInfoCurator. (mstead@redhat.com)
+- 840593: Improve performance of getting the owner info. (bkearney@redhat.com)
+- 840593: Add indexes for all foreign keys (mstead@redhat.com)
+- 840593: Cache the consumers host and the product data in a given request to get pools
+  (bkearney@redhat.com)
+
 * Fri Jun 29 2012 Chris Duryee (beav) <cduryee@redhat.com>
 - Fix up test case for new buildr (jbowes@redhat.com)
 - 835161: regenerate on-disk CRL on requests to crl resource
