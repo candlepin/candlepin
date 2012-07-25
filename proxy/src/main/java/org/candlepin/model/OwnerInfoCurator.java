@@ -42,16 +42,13 @@ public class OwnerInfoCurator {
     private ConsumerTypeCurator consumerTypeCurator;
     private ProductServiceAdapter productAdapter;
     private static final String DEFAULT_CONSUMER_TYPE = "system";
-    private StatisticCuratorQueries statisticCuratorQueries;
 
     @Inject
     public OwnerInfoCurator(Provider<EntityManager> entityManager,
-        ConsumerTypeCurator consumerTypeCurator, ProductServiceAdapter psa,
-        StatisticCuratorQueries statisticCuratorQueries) {
+        ConsumerTypeCurator consumerTypeCurator, ProductServiceAdapter psa) {
         this.entityManager = entityManager;
         this.consumerTypeCurator = consumerTypeCurator;
         this.productAdapter = psa;
-        this.statisticCuratorQueries = statisticCuratorQueries;
     }
 
     public OwnerInfo lookupByOwner(Owner owner) {
@@ -89,12 +86,6 @@ public class OwnerInfoCurator {
 
         Date now = new Date();
         info.setConsumerTypesByPool(types);
-        List<Statistic> totalCount = statisticCuratorQueries.getStatisticsByOwner(owner,
-            "TOTALSUBSCRIPTIONCOUNT", null, null, null, null);
-        info.setTotalSubscriptionCount(totalCount);
-        info.setTotalSubscriptionsConsumed(statisticCuratorQueries
-            .getStatisticsByOwner(owner, "TOTALSUBSCRIPTIONSCONSUMED",
-                   null, null, null, null));
 
         for (Pool pool : owner.getPools()) {
             String productId = pool.getProductId();
