@@ -33,8 +33,6 @@ public class OwnerInfo {
     private Map<String, Integer> consumerCountsByComplianceStatus;
     private Map<String, ConsumptionTypeCounts> entitlementsConsumedByFamily;
     private Pool poolNearestToExpiry;
-    private List<Statistic> totalSubscriptionCount;
-    private List<Statistic> totalSubscriptionsConsumed;
 
     public static final String GUEST = "guest";
     public static final String PHYSICAL = "physical";
@@ -191,32 +189,4 @@ public class OwnerInfo {
         this.poolNearestToExpiry = poolNearestToExpiry;
     }
 
-    /**
-     * @param totalSubscriptionCount the totalSubscriptionCount to set
-     */
-    public void setTotalSubscriptionCount(List<Statistic> totalSubscriptionCount) {
-        this.totalSubscriptionCount = totalSubscriptionCount;
-    }
-
-    /**
-     * @return the totalSubscriptionCount
-     */
-    public List<Statistic> getTotalSubscriptionCount() {
-        return totalSubscriptionCount;
-    }
-
-    /**
-     * @param totalSubscriptionsConsumed the totalSubscriptionsConsumed to set
-     */
-    public void setTotalSubscriptionsConsumed(
-        List<Statistic> totalSubscriptionsConsumed) {
-        this.totalSubscriptionsConsumed = totalSubscriptionsConsumed;
-    }
-
-    /**
-     * @return the totalSubscriptionsConsumed
-     */
-    public List<Statistic> getTotalSubscriptionsConsumed() {
-        return totalSubscriptionsConsumed;
-    }
 }

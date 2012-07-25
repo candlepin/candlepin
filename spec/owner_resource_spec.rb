@@ -195,40 +195,6 @@ describe 'Owner Resource' do
 
   end
 
-  it "updates consumed entitlement count" do
-    #TODO put this into candlepin_api.rb if others want to use it
-    def stats_helper(owner, expected_available, expected_consumed)
-        @cp.refresh_pools owner['key']
-        @cp.generate_statistics
-
-        info = @cp.get_owner_info(owner['key'])
-        info.totalSubscriptionCount.first.value.should == expected_available
-
-        stat = info.totalSubscriptionsConsumed.select {|stat| stat.valueType == 'RAW' && stat.entryType == 'TOTALSUBSCRIPTIONCONSUMED' }
-        total_consumed = 0
-        stat.each{ |s| total_consumed += s.value}
-        total_consumed == expected_consumed
-    end
-
-    #TODO maybe move to a before(:each)
-    owner = create_owner random_string('test_owner')
-    user = user_client(owner, random_string('guy'))
-    product = create_product(nil, random_string('consume-me'))
-
-    @cp.create_subscription(owner['key'], product.id, 4)
-    @cp.create_subscription(owner['key'], product.id, 4)
-    @cp.refresh_pools owner['key']
-
-    consumer = consumer_client(user, random_string('consumer'))
-    pool = consumer.list_pools(
-      :product => product.id,
-      :consumer => consumer.uuid).first
-    self.stats_helper(owner, 8, 0)
-    consumer.consume_pool(pool.id).first
-    self.stats_helper(owner, 8, 1)
-
-  end
-
   it "finds nearest entitlement to expiration" do
     #TODO maybe move to a before(:each)
     owner = create_owner random_string('test_owner')
