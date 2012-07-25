@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -30,15 +29,23 @@ import java.util.zip.DeflaterOutputStream;
 
 import org.apache.log4j.Logger;
 import org.candlepin.config.Config;
+import org.candlepin.json.model.Content;
+import org.candlepin.json.model.EntitlementBody;
+import org.candlepin.json.model.Order;
+import org.candlepin.json.model.Service;
+import org.candlepin.json.model.Subscription;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
-import org.candlepin.model.Subscription;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
+import org.codehaus.jackson.annotate.JsonMethod;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
+import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 
 import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
@@ -63,7 +70,8 @@ public class X509V2ExtensionUtil extends X509Util{
 
     public Set<X509ExtensionWrapper> getExtensions(Set<Product> products,
         Entitlement ent, String contentPrefix,
-        Map<String, EnvironmentContent> promotedContent, Subscription sub) {
+        Map<String, EnvironmentContent> promotedContent,
+        org.candlepin.model.Subscription sub) {
         Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<X509ExtensionWrapper>();
 
         X509ExtensionWrapper versionExtension =
@@ -78,15 +86,14 @@ public class X509V2ExtensionUtil extends X509Util{
 
     public Set<X509ByteExtensionWrapper> getByteExtensions(Set<Product> products,
         Entitlement ent, String contentPrefix,
-        Map<String, EnvironmentContent> promotedContent, Subscription sub)
-        throws IOException {
+        Map<String, EnvironmentContent> promotedContent,
+        org.candlepin.model.Subscription sub) throws IOException {
         Set<X509ByteExtensionWrapper> toReturn =
             new LinkedHashSet<X509ByteExtensionWrapper>();
 
-        Map<String, Object> map = createEntitlementBodyMap(products, ent,
+        EntitlementBody eb = createEntitlementBody(products, ent,
             contentPrefix, promotedContent, sub);
-
-        String payload = Util.toJson(map);
+        String payload = toJson(eb);
         log.debug(payload);
         byte[] value = null;
         try {
@@ -116,38 +123,40 @@ public class X509V2ExtensionUtil extends X509Util{
         return baos.toByteArray();
     }
 
-    public Map<String, Object> createEntitlementBodyMap(Set<Product> products,
+    public EntitlementBody createEntitlementBody(Set<Product> products,
         Entitlement ent, String contentPrefix,
-        Map<String, EnvironmentContent> promotedContent, Subscription sub) {
-        Map<String, Object> toReturn = new HashMap<String, Object>();
-        toReturn.put("consumer", ent.getConsumer().getUuid());
-        toReturn.put("quantity", ent.getQuantity());
-        toReturn.put("subscription", mapSubscription(sub, ent));
-        toReturn.put("order", mapOrder(sub));
-        toReturn.put("products", mapProducts(products, contentPrefix, promotedContent,
+        Map<String, EnvironmentContent> promotedContent,
+        org.candlepin.model.Subscription sub) {
+
+        EntitlementBody toReturn = new EntitlementBody();
+        toReturn.setConsumer(ent.getConsumer().getUuid());
+        toReturn.setQuantity(ent.getQuantity());
+        toReturn.setSubscription(createSubscription(sub, ent));
+        toReturn.setOrder(createOrder(sub));
+        toReturn.setProducts(createProducts(products, contentPrefix, promotedContent,
             ent.getConsumer(), ent));
 
         return toReturn;
     }
 
-    public Map<String, Object> mapSubscription(Subscription sub, Entitlement ent) {
-        Map<String, Object> toReturn = new HashMap<String, Object>();
-
-        toReturn.put("sku", sub.getProduct().getId().toString());
-        toReturn.put("name", sub.getProduct().getName());
+    public Subscription createSubscription(
+        org.candlepin.model.Subscription sub, Entitlement ent) {
+        Subscription toReturn = new Subscription();
+        toReturn.setSku(sub.getProduct().getId().toString());
+        toReturn.setName(sub.getProduct().getName());
 
         String warningPeriod = sub.getProduct().getAttributeValue(
             "warning_period");
         if (warningPeriod != null && !warningPeriod.trim().equals("")) {
             // only included if not the default value of 0
             if (!warningPeriod.equals("0")) {
-                toReturn.put("warning", new Integer(warningPeriod));
+                toReturn.setWarning(new Integer(warningPeriod));
             }
         }
 
         String socketLimit = sub.getProduct().getAttributeValue("sockets");
         if (socketLimit != null && !socketLimit.trim().equals("")) {
-            toReturn.put("sockets", new Integer(socketLimit));
+            toReturn.setSockets(new Integer(socketLimit));
         }
 
         String management = sub.getProduct().getAttributeValue("management_enabled");
@@ -156,13 +165,13 @@ public class X509V2ExtensionUtil extends X509Util{
             Boolean m = new Boolean(management.equalsIgnoreCase("true") ||
                 management.equalsIgnoreCase("1"));
             if (m) {
-                toReturn.put("management", m);
+                toReturn.setManagement(m);
             }
         }
 
         String stackingId = sub.getProduct().getAttributeValue("stacking_id");
         if (stackingId != null && !stackingId.trim().equals("")) {
-            toReturn.put("stacking_id", stackingId);
+            toReturn.setStackingId(stackingId);
         }
 
         String virtOnly = ent.getPool().getAttributeValue("virt_only");
@@ -171,60 +180,53 @@ public class X509V2ExtensionUtil extends X509Util{
             Boolean vo = new Boolean(virtOnly.equalsIgnoreCase("true") ||
                 virtOnly.equalsIgnoreCase("1"));
             if (vo) {
-                toReturn.put("virt_only", vo);
+                toReturn.setVirtOnly(vo);
             }
         }
 
-        Map<String, Object> service = mapService(sub);
-        if (service.size() > 0) {
-            toReturn.put("service", mapService(sub));
+        toReturn.setService(createService(sub));
+        return toReturn;
+    }
+
+    private Service createService(org.candlepin.model.Subscription sub) {
+        if (sub.getProduct().getAttributeValue("support_level") == null &&
+            sub.getProduct().getAttributeValue("support_type") == null) {
+            return null;
         }
+        Service toReturn = new Service();
+        toReturn.setLevel(sub.getProduct().getAttributeValue("support_level"));
+        toReturn.setType(sub.getProduct().getAttributeValue("support_type"));
 
         return toReturn;
     }
 
-    private Map<String, Object> mapService(Subscription sub) {
-        Map<String, Object> toReturn = new HashMap<String, Object>();
-
-        String supportLevel = sub.getProduct().getAttributeValue("support_level");
-        if (supportLevel != null) {
-            toReturn.put("level", supportLevel);
-        }
-
-        String supportType = sub.getProduct().getAttributeValue("support_type");
-        if (supportType != null) {
-            toReturn.put("type", supportType);
-        }
-
-        return toReturn;
-    }
-
-    public Map<String, Object> mapOrder(Subscription sub) {
+    public Order createOrder(org.candlepin.model.Subscription sub) {
         SimpleDateFormat iso8601DateFormat = Util.getUTCDateFormat();
-        Map<String, Object> toReturn = new HashMap<String, Object>();
+        Order toReturn = new Order();
 
-        toReturn.put("number", sub.getId().toString());
-        toReturn.put("quantity", sub.getQuantity());
-        toReturn.put("start", iso8601DateFormat.format(sub.getStartDate()));
-        toReturn.put("end", iso8601DateFormat.format(sub.getEndDate()));
+        toReturn.setNumber(sub.getId().toString());
+        toReturn.setQuantity(sub.getQuantity());
+        toReturn.setStart(iso8601DateFormat.format(sub.getStartDate()));
+        toReturn.setEnd(iso8601DateFormat.format(sub.getEndDate()));
 
         if (sub.getContractNumber() != null &&
             !sub.getContractNumber().trim().equals("")) {
-            toReturn.put("contract", sub.getContractNumber());
+            toReturn.setContract(sub.getContractNumber());
         }
 
         if (sub.getAccountNumber() != null &&
             !sub.getAccountNumber().trim().equals("")) {
-            toReturn.put("account", sub.getAccountNumber());
+            toReturn.setAccount(sub.getAccountNumber());
         }
 
         return toReturn;
     }
 
-    public List<Map<String, Object>> mapProducts(Set<Product> products,
+    public List<org.candlepin.json.model.Product> createProducts(Set<Product> products,
         String contentPrefix, Map<String, EnvironmentContent> promotedContent,
         Consumer consumer, Entitlement ent) {
-        List<Map<String, Object>> toReturn = new ArrayList<Map<String, Object>>();
+        List<org.candlepin.json.model.Product> toReturn =
+            new ArrayList<org.candlepin.json.model.Product>();
 
         for (Product p : Collections2
             .filter(products, PROD_FILTER_PREDICATE)) {
@@ -233,17 +235,18 @@ public class X509V2ExtensionUtil extends X509Util{
         return toReturn;
     }
 
-    private Map<String, Object> mapProduct(Product product, String contentPrefix,
-        Map<String, EnvironmentContent> promotedContent, Consumer consumer,
-        Entitlement ent) {
-        Map<String, Object> toReturn = new HashMap<String, Object>();
+    private org.candlepin.json.model.Product mapProduct(Product product,
+        String contentPrefix, Map<String, EnvironmentContent> promotedContent,
+        Consumer consumer, Entitlement ent) {
 
-        toReturn.put("id", product.getId());
-        toReturn.put("name", product.getName());
+        org.candlepin.json.model.Product toReturn = new org.candlepin.json.model.Product();
+
+        toReturn.setId(product.getId());
+        toReturn.setName(product.getName());
 
         String version = product.hasAttribute("version") ?
             product.getAttributeValue("version") : "";
-        toReturn.put("version", version);
+        toReturn.setVersion(version);
 
         String arch = product.hasAttribute("arch") ?
             product.getAttributeValue("arch") : "";
@@ -252,24 +255,24 @@ public class X509V2ExtensionUtil extends X509Util{
         while (st.hasMoreElements()) {
             archList.add((String) st.nextElement());
         }
-        toReturn.put("architectures", archList);
+        toReturn.setArchitectures(archList);
 
-        toReturn.put("content", mapContent(filterProductContent(product, ent),
+        toReturn.setContent(createContent(filterProductContent(product, ent),
             contentPrefix, promotedContent, consumer));
 
         return toReturn;
     }
 
-    public List<Map<String, Object>> mapContent(
+    public List<Content> createContent(
         Set<ProductContent> productContent, String contentPrefix,
         Map<String, EnvironmentContent> promotedContent, Consumer consumer) {
 
-        List<Map<String, Object>> toReturn = new ArrayList<Map<String, Object>>();
+        List<Content> toReturn = new ArrayList<Content>();
 
         boolean enableEnvironmentFiltering = config.environmentFileringEnabled();
 
         for (ProductContent pc : productContent) {
-            Map<String, Object> data = new HashMap<String, Object>();
+            Content content = new Content();
             if (enableEnvironmentFiltering) {
                 if (consumer.getEnvironment() != null && !promotedContent.containsKey(
                     pc.getContent().getId())) {
@@ -285,13 +288,13 @@ public class X509V2ExtensionUtil extends X509Util{
                 contentPath = contentPrefix + contentPath;
             }
 
-            data.put("id", pc.getContent().getId());
-            data.put("type", pc.getContent().getType());
-            data.put("name", pc.getContent().getName());
-            data.put("label", pc.getContent().getLabel());
-            data.put("vendor", pc.getContent().getVendor());
-            data.put("path", contentPath);
-            data.put("gpg_url", pc.getContent().getGpgUrl());
+            content.setId(pc.getContent().getId());
+            content.setType(pc.getContent().getType());
+            content.setName(pc.getContent().getName());
+            content.setLabel(pc.getContent().getLabel());
+            content.setVendor(pc.getContent().getVendor());
+            content.setPath(contentPath);
+            content.setGpgUrl(pc.getContent().getGpgUrl());
 
             // Check if we should override the enabled flag due to setting on promoted
             // content:
@@ -307,12 +310,12 @@ public class X509V2ExtensionUtil extends X509Util{
             }
             // only included if not the default value of true
             if (!enabled) {
-                data.put("enabled", enabled);
+                content.setEnabled(enabled);
             }
 
             // Include metadata expiry if specified on the content:
             if (pc.getContent().getMetadataExpire() != null) {
-                data.put("metadata_expire", pc.getContent().getMetadataExpire());
+                content.setMetadataExpire(pc.getContent().getMetadataExpire());
             }
 
             // Include required tags if specified on the content set:
@@ -323,9 +326,9 @@ public class X509V2ExtensionUtil extends X509Util{
                 while (st.hasMoreElements()) {
                     tagList.add((String) st.nextElement());
                 }
-                data.put("required_tags", tagList);
+                content.setRequiredTags(tagList);
             }
-            toReturn.add(data);
+            toReturn.add(content);
         }
         return toReturn;
     }
@@ -368,5 +371,19 @@ public class X509V2ExtensionUtil extends X509Util{
             }
         }
         return filtered;
+    }
+
+    public static String toJson(Object anObject) {
+        String output = "";
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.setSerializationInclusion(JsonSerialize.Inclusion.NON_NULL);
+        mapper.setVisibility(JsonMethod.FIELD, Visibility.ANY);
+        try {
+            output = mapper.writeValueAsString(anObject);
+        }
+        catch (Exception e) {
+            log.error("Could no serialize the object to json " + anObject, e);
+        }
+        return output;
     }
 }
