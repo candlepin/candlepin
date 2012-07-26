@@ -14,16 +14,12 @@
  */
 package org.candlepin.model;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
 import javax.persistence.EntityManager;
 
-import org.candlepin.policy.js.ReadOnlyProduct;
-import org.candlepin.policy.js.ReadOnlyProductCache;
-import org.candlepin.service.ProductServiceAdapter;
 import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.Session;
@@ -40,19 +36,15 @@ import com.google.inject.Provider;
 public class OwnerInfoCurator {
     private Provider<EntityManager> entityManager;
     private ConsumerTypeCurator consumerTypeCurator;
-    private ProductServiceAdapter productAdapter;
-    private static final String DEFAULT_CONSUMER_TYPE = "system";
 
     @Inject
     public OwnerInfoCurator(Provider<EntityManager> entityManager,
-        ConsumerTypeCurator consumerTypeCurator, ProductServiceAdapter psa) {
+        ConsumerTypeCurator consumerTypeCurator) {
         this.entityManager = entityManager;
         this.consumerTypeCurator = consumerTypeCurator;
-        this.productAdapter = psa;
     }
 
     public OwnerInfo lookupByOwner(Owner owner) {
-        ReadOnlyProductCache productCache = new ReadOnlyProductCache(this.productAdapter);
         OwnerInfo info = new OwnerInfo();
 
         List<ConsumerType> types = consumerTypeCurator.listAll();
@@ -84,100 +76,11 @@ public class OwnerInfoCurator {
             info.addTypeTotal(type, consumers, entitlements);
         }
 
-        Date now = new Date();
-        info.setConsumerTypesByPool(types);
-
-        for (Pool pool : owner.getPools()) {
-            String productId = pool.getProductId();
-
-            // clients using the ownerinfo details are only concerned with pools
-            // active *right now*
-            if (now.before(pool.getStartDate()) || now.after(pool.getEndDate())) {
-                continue;
-            }
-
-            if (info.getPoolNearestToExpiry() == null) {
-                info.setPoolNearestToExpiry(pool);
-            }
-            else if (pool.getEndDate().before(info.getPoolNearestToExpiry()
-                             .getEndDate())) {
-                info.setPoolNearestToExpiry(pool);
-            }
-
-            // do consumerTypeCountByPool
-            ReadOnlyProduct product = productCache.getProductById(productId);
-            String consumerType = getAttribute(pool, product, "requires_consumer_type");
-            if (consumerType == null || consumerType.trim().equals("")) {
-                consumerType = DEFAULT_CONSUMER_TYPE;
-            }
-            ConsumerType ct = typeHash.get(consumerType);
-            info.addToConsumerTypeCountByPool(ct);
-
-            consumerType = getAccumulatedAttribute(pool, product, "enabled_consumer_types");
-            if (consumerType != null && !consumerType.trim().equals("")) {
-                for (String type : consumerType.split(",")) {
-                    ct = typeHash.get(type);
-                    if (ct != null) {
-                        info.addToEnabledConsumerTypeCountByPool(ct);
-                    }
-                }
-            }
-
-            // now do entitlementsConsumedByFamily
-            String productFamily = getAttribute(pool, product, "product_family");
-            // default bucket for familyless entitlements
-            if (productFamily == null || productFamily.trim().equals("")) {
-                productFamily = "none";
-            }
-
-            int count = getEntitlementCountForPool(pool);
-
-            if ("true".equals(getAttribute(pool, product, "virt_only"))) {
-                info.addToEntitlementsConsumedByFamily(productFamily, 0, count);
-            }
-            else {
-                info.addToEntitlementsConsumedByFamily(productFamily, count, 0);
-            }
-        }
-
         setConsumerGuestCounts(owner, info);
         setConsumerCountsByComplianceStatus(owner, info);
 
         return info;
     }
-
-    /**
-     * @param pool
-     * @return
-     */
-    private String getAttribute(Pool pool, ReadOnlyProduct product, String attribute) {
-        // XXX dealing with attributes in java. that's bad!
-        String productFamily = pool.getAttributeValue(attribute);
-        if (productFamily == null || productFamily.trim().equals("")) {
-            if (product != null) {
-                productFamily = product.getAttribute(attribute);
-            }
-        }
-        return productFamily;
-    }
-
-    /**
-     * @param pool
-     * @return
-     */
-    private String getAccumulatedAttribute(Pool pool, ReadOnlyProduct product,
-                                           String aType) {
-        // XXX dealing with attributes in java. that's bad!
-        String consumerTypes = pool.getAttributeValue(aType);
-        if (product != null) {
-            if (consumerTypes == null || consumerTypes.length() > 0) {
-                consumerTypes += ",";
-            }
-            consumerTypes += product.getAttribute(aType);
-        }
-        return consumerTypes;
-    }
-
 
     private void setConsumerGuestCounts(Owner owner, OwnerInfo info) {
 
@@ -202,20 +105,6 @@ public class OwnerInfoCurator {
         Integer physicalCount = ((Long) physicalQuery.iterate().next()).intValue() -
             guestCount;
         info.setPhysicalCount(physicalCount);
-    }
-
-    private int getEntitlementCountForPool(Pool pool) {
-        String queryStr = "select sum(e.quantity) from Entitlement e " +
-            "where e.pool = :pool";
-        Query query = currentSession().createQuery(queryStr)
-            .setEntity("pool", pool);
-        Long count = (Long) query.uniqueResult();
-        if (count == null) {
-            return 0;
-        }
-        else {
-            return count.intValue();
-        }
     }
 
     private void setConsumerCountsByComplianceStatus(Owner owner, OwnerInfo info) {

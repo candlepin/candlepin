@@ -164,32 +164,6 @@ describe 'Owner Resource' do
 
   end
 
-  it "finds nearest entitlement to expiration" do
-    #TODO maybe move to a before(:each)
-    owner = create_owner random_string('test_owner')
-    user = user_client(owner, random_string('guy'))
-    product = create_product(nil, random_string('consume-me'))
-    consumer = consumer_client(user, random_string('consumer'))
-
-    @cp.create_subscription(owner['key'], product.id, 1, [], nil, '432', nil, end_date=Date.today + 10)
-    @cp.refresh_pools owner['key']
-    info = @cp.get_owner_info(owner['key'])
-    pool = consumer.list_pools(
-      :product => product.id,
-      :consumer => consumer.uuid)
-    pool1 = info['poolNearestToExpiry']
-
-    @cp.create_subscription(owner['key'], product.id, 1, [], nil, '43', nil, end_date=Date.today + 5)
-    @cp.refresh_pools owner['key']
-    info = @cp.get_owner_info(owner['key'])
-    pool = consumer.list_pools(
-      :product => product.id,
-      :consumer => consumer.uuid)
-    pool2 = info['poolNearestToExpiry']
-
-    pool1.should_not == pool2
-  end
-
   it 'returns a 404 for a non-existant owner' do
     lambda do
       @cp.get_owner('fake-uuid')
