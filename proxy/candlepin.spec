@@ -14,7 +14,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.6.7.0
+Version: 0.6.7.1
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -279,6 +279,12 @@ fi
 
 
 %changelog
+* Thu Jul 26 2012 Michael Stead <mstead@redhat.com> 0.6.7.1-1
+- Remove unecessary owner info. (HOTFIX) (dgoodwin@redhat.com)
+- Remove total sub count and total subs consumed from owner info.
+  (dgoodwin@redhat.com)
+- Reving the version for the hotfix build (mstead@redhat.com)
+
 * Tue Jul 24 2012 Michael Stead <mstead@redhat.com> 0.6.7-1
 - Reverting unintentional changes. (mstead@redhat.com)
 - Checkstyle fixes (mstead@redhat.com)
