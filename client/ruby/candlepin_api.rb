@@ -441,6 +441,14 @@ class Candlepin
     delete(url)
   end
 
+  def get_product_owners(product_ids)
+    url = "/products/owners?"
+    product_ids.each do |pid|
+      url << "product=#{pid}&"
+    end
+    get(url)
+  end
+
   def create_product(id, name, params={}, dependentProductIds=[])
 
     multiplier = params[:multiplier] || 1

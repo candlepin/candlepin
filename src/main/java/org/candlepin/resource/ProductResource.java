@@ -19,6 +19,8 @@ import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
@@ -32,6 +34,7 @@ import com.google.inject.Inject;
 
 import org.xnap.commons.i18n.I18n;
 
+import java.util.Arrays;
 import java.util.List;
 
 import javax.ws.rs.DELETE;
@@ -54,6 +57,7 @@ public class ProductResource {
     private ProductServiceAdapter prodAdapter;
     private ContentCurator contentCurator;
     private StatisticCurator statisticCurator;
+    private OwnerCurator ownerCurator;
     private I18n i18n;
 
     /**
@@ -67,10 +71,12 @@ public class ProductResource {
                            ProductCertificateCurator productCertCurator,
                            StatisticCurator statisticCurator,
                            ContentCurator contentCurator,
+                           OwnerCurator ownerCurator,
                            I18n i18n) {
         this.prodAdapter = prodAdapter;
         this.contentCurator = contentCurator;
         this.statisticCurator = statisticCurator;
+        this.ownerCurator = ownerCurator;
         this.i18n = i18n;
     }
 
@@ -232,5 +238,22 @@ public class ProductResource {
         return statisticCurator.getStatisticsByProduct(id, valueType,
                                 ResourceDateParser.getFromDate(from, to, days),
                                 ResourceDateParser.parseDateString(to));
+    }
+
+    /**
+     * @return a list of owners using the specified product
+     * @httpcode 200
+     * @httpcode 400
+     */
+    @GET
+    @Path("/owners")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Owner> getProductOwners(@QueryParam("product") String[] productIds) {
+        List<String> ids = Arrays.asList(productIds);
+        if (ids.isEmpty()) {
+            throw new BadRequestException(i18n.tr("Must specify product ID."));
+        }
+
+        return ownerCurator.lookupOwnersByProduct(ids);
     }
 }
