@@ -14,10 +14,17 @@
  */
 package org.candlepin.model;
 
-import org.hibernate.criterion.Restrictions;
-
 import com.google.inject.persist.Transactional;
+
 import org.hibernate.ReplicationMode;
+import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Projections;
+import org.hibernate.criterion.Property;
+import org.hibernate.criterion.Restrictions;
+import org.hibernate.criterion.Subqueries;
+
+import java.util.Date;
+import java.util.List;
 
 /**
  * OwnerCurator
@@ -56,5 +63,25 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
         return (Owner) currentSession().createCriteria(Owner.class)
             .add(Restrictions.eq("upstreamUuid", upstreamUuid))
             .uniqueResult();
+    }
+
+    public List<Owner> lookupOwnersByProduct(List<String> productIds) {
+        DetachedCriteria poolIdQuery =
+            DetachedCriteria.forClass(ProvidedProduct.class, "pp");
+        poolIdQuery.add(Restrictions.in("pp.productId", productIds))
+            .setProjection(Property.forName("pp.pool.id"));
+
+        DetachedCriteria ownerIdQuery = DetachedCriteria.forClass(Entitlement.class, "e")
+            .add(Subqueries.propertyIn("e.pool.id", poolIdQuery))
+            .add(Restrictions.gt("e.endDate", new Date()))
+            .setProjection(Property.forName("e.owner.id"));
+
+        DetachedCriteria distinctQuery = DetachedCriteria.forClass(Owner.class, "o2")
+            .add(Subqueries.propertyIn("o2.id", ownerIdQuery))
+            .setProjection(Projections.distinct(Projections.property("o2.key")));
+
+        return (List<Owner>) currentSession().createCriteria(Owner.class, "o")
+            .add(Subqueries.propertyIn("o.key", distinctQuery))
+            .list();
     }
 }
