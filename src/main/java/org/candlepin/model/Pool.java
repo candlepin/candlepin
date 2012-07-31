@@ -14,7 +14,7 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.jackson.HateoasField;
+import org.candlepin.jackson.HateoasInclude;
 import org.candlepin.util.DateSource;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.annotate.JsonFilter;
@@ -173,7 +173,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
 
     /** {@inheritDoc} */
     @Override
-    @HateoasField
+    @HateoasInclude
     public String getId() {
         return id;
     }
@@ -280,7 +280,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
      *
      * @return the productName
      */
-    @HateoasField
+    @HateoasInclude
     public String getProductName() {
         return productName;
     }
@@ -503,7 +503,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
      * See getProvidedProductIds().
      * @return Top level product ID.
      */
-    @HateoasField
+    @HateoasInclude
     public String getProductId() {
         return productId;
     }
@@ -549,7 +549,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
         return getConsumed() > this.quantity;
     }
 
-    @HateoasField
+    @HateoasInclude
     public String getHref() {
         return "/pools/" + getId();
     }

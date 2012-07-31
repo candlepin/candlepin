@@ -40,7 +40,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
-import org.candlepin.jackson.HateoasField;
+import org.candlepin.jackson.HateoasArrayExclude;
+import org.candlepin.jackson.HateoasInclude;
 import org.candlepin.util.Util;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.annotate.JsonFilter;
@@ -186,7 +187,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     /**
      * @return the Consumer's uuid
      */
-    @HateoasField
+    @HateoasInclude
     public String getUuid() {
         return uuid;
     }
@@ -208,7 +209,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
      * {@inheritDoc}
      */
     @Override
-    @HateoasField
+    @HateoasInclude
     public String getId() {
         return id;
     }
@@ -220,6 +221,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         this.id = id;
     }
 
+    @HateoasArrayExclude
     public IdentityCertificate getIdCert() {
         return idCert;
     }
@@ -231,7 +233,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     /**
      * @return the name of this consumer.
      */
-    @HateoasField
+    @HateoasInclude
     public String getName() {
         return name;
     }
@@ -297,6 +299,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     /**
      * @return all facts about this consumer.
      */
+    @HateoasArrayExclude
     public Map<String, String> getFacts() {
         return facts;
     }
@@ -441,7 +444,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     }
 
     @Override
-    @HateoasField
+    @HateoasInclude
     public String getHref() {
         return "/consumers/" + getUuid();
     }
