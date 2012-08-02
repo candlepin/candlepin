@@ -344,7 +344,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         Map<String, String> allAttributes = jsRules.getFlattenedAttributes(product, pool);
 
         Map<String, Object> args = new HashMap<String, Object>();
-        args.put("consumer", new ReadOnlyConsumer(c, null));
+        args.put("consumer", new ReadOnlyConsumer(c));
         args.put("product", new ReadOnlyProduct(product));
         args.put("post", postHelper);
         args.put("pool", pool);
@@ -422,6 +422,16 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         rulesInit();
 
         return new PreEntHelper(1, null);
+    }
+
+    public List<PreEntHelper> preEntitlement(
+        Consumer consumer, List<Pool> entitlementPools, Integer quantity) {
+
+        ArrayList<PreEntHelper> helpers = new ArrayList<PreEntHelper>();
+        for (Pool pool : entitlementPools) {
+            helpers.add(preEntitlement(consumer, pool, quantity));
+        }
+        return helpers;
     }
 
     public List<PoolQuantity> selectBestPools(Consumer consumer, String[] productIds,

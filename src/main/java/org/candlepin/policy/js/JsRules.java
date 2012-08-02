@@ -161,6 +161,28 @@ public class JsRules {
         return allAttributes;
     }
 
+    /**
+     * Both products and pools can carry attributes, we need to trigger rules for each.
+     * In this map, pool attributes will override product attributes, should the same
+     * key be set for both.
+     *
+     * @param product ReadOnlyProduct
+     * @param pool Pool can be null.
+     * @return Map of all attribute names and values. Pool attributes have priority.
+     */
+    public Map<String, String> getFlattenedAttributes(ReadOnlyProduct product, Pool pool) {
+        Map<String, String> allAttributes =
+            new HashMap<String, String>(product.getAttributes());
+        if (pool != null) {
+            for (Attribute a : pool.getAttributes()) {
+                allAttributes.put(a.getName(), a.getValue());
+            }
+
+        }
+        return allAttributes;
+    }
+
+
     public ReadOnlyPool[] convertArray(Object output) {
         return (ReadOnlyPool[]) Context.jsToJava(output, ReadOnlyPool[].class);
     }

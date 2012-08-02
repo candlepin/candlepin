@@ -25,6 +25,7 @@ public class ReadOnlyConsumer {
 
     private final Consumer consumer;
     private String serviceLevelOverride = "";
+    private Consumer host = null;
 
     /**
      * ctor
@@ -37,15 +38,32 @@ public class ReadOnlyConsumer {
     /**
      * ctor
      * @param consumer read-write consumer to be copied.
+     * @param host the host of the consumer
+     */
+    public ReadOnlyConsumer(Consumer consumer, Consumer host) {
+        this.consumer = consumer;
+        this.host = host;
+    }
+
+    /**
+     * ctor
+     * @param consumer read-write consumer to be copied.
      */
     public ReadOnlyConsumer(Consumer consumer, String serviceLevelOverride) {
         this.consumer = consumer;
-        if (serviceLevelOverride == null) {
-            this.serviceLevelOverride = "";
-        }
-        else {
-            this.serviceLevelOverride = serviceLevelOverride;
-        }
+        this.setServiceLevelOverride(serviceLevelOverride);
+    }
+
+    /**
+     * ctor
+     * @param consumer read-write consumer to be copied.
+     * @param host the host of the consumer
+     */
+    public ReadOnlyConsumer(Consumer consumer, Consumer host, String serviceLevelOverride) {
+        this.host = host;
+        this.consumer = consumer;
+        this.setServiceLevelOverride(serviceLevelOverride);
+
     }
 
     /**
@@ -128,6 +146,10 @@ public class ReadOnlyConsumer {
         return consumer.getType().isManifest();
     }
 
+    public Consumer getHost() {
+        return host;
+    }
+
     public String getServiceLevel() {
         if (serviceLevelOverride != null &&
             !serviceLevelOverride.trim().equals("")) {
@@ -135,6 +157,15 @@ public class ReadOnlyConsumer {
         }
         else {
             return consumer.getServiceLevel();
+        }
+    }
+
+    protected void setServiceLevelOverride(String serviceLevelOverride) {
+        if (serviceLevelOverride == null) {
+            this.serviceLevelOverride = "";
+        }
+        else {
+            this.serviceLevelOverride = serviceLevelOverride;
         }
     }
 }
