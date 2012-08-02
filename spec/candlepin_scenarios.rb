@@ -173,10 +173,9 @@ module CandlepinMethods
     asn1_body = nil
     if extensions_hash[extension_id]
       asn1 = OpenSSL::ASN1.decode(extensions_hash[extension_id])
-      header_len = 0;
-      length = 0;
-      OpenSSL::ASN1.traverse(asn1.value[1]) do | depth, offset, header_len, length, constructed, tag_class, tag| end
-      asn1_body = asn1.value[1].value[header_len, length]
+      OpenSSL::ASN1.traverse(asn1.value[1]) do| depth, offset, header_len, length, constructed, tag_class, tag|
+        asn1_body = asn1.value[1].value[header_len, length]
+      end
     end
     asn1_body
   end
