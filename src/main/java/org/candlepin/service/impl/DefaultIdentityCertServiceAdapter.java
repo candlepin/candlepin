@@ -124,7 +124,7 @@ public class DefaultIdentityCertServiceAdapter implements
         String dn = createDN(consumer);
         IdentityCertificate identityCert = new IdentityCertificate();
         KeyPair keyPair = keyPairCurator.getConsumerKeyPair(consumer);
-        X509Certificate x509cert = pki.createX509Certificate(dn, null,
+        X509Certificate x509cert = pki.createX509Certificate(dn, null, null,
             startDate, endDate, keyPair, BigInteger.valueOf(serial.getId()),
             consumer.getName());
 

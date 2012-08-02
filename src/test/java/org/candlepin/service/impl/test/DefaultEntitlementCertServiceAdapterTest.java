@@ -16,6 +16,8 @@ package org.candlepin.service.impl.test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.argThat;
@@ -23,6 +25,9 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.PrivateKey;
@@ -32,8 +37,11 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.zip.InflaterOutputStream;
 
 import org.candlepin.config.Config;
 import org.candlepin.model.CertificateSerialCurator;
@@ -48,12 +56,16 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
+import org.candlepin.model.ProductContent;
 import org.candlepin.model.Subscription;
 import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.impl.DefaultEntitlementCertServiceAdapter;
+import org.candlepin.util.Util;
 import org.candlepin.util.X509ExtensionUtil;
+import org.candlepin.util.X509V2ExtensionUtil;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -90,6 +102,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     @Mock
     private EntitlementCurator entCurator;
     private X509ExtensionUtil extensionUtil;
+    private X509V2ExtensionUtil v2extensionUtil;
     private Product product;
     private Subscription subscription;
     private Entitlement entitlement;
@@ -100,9 +113,10 @@ public class DefaultEntitlementCertServiceAdapterTest {
     @Before
     public void setUp() {
         extensionUtil = new X509ExtensionUtil(new Config());
+        v2extensionUtil = new X509V2ExtensionUtil(new Config(), entCurator);
 
         certServiceAdapter = new DefaultEntitlementCertServiceAdapter(
-            mockedPKI, extensionUtil, null, null, serialCurator,
+            mockedPKI, extensionUtil, v2extensionUtil, null, null, serialCurator,
             productAdapter, entCurator);
 
         product = new Product("12345", "a product", "variant", "version",
@@ -234,7 +248,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         verify(mockedPKI).createX509Certificate(
             any(String.class),
             argThat(new ListContainsContentUrl("/somePrefix/" + CONTENT_URL,
-                CONTENT_ID)), any(Date.class), any(Date.class),
+                CONTENT_ID)), any(Set.class), any(Date.class), any(Date.class),
             any(KeyPair.class), any(BigInteger.class), any(String.class));
     }
 
@@ -253,8 +267,9 @@ public class DefaultEntitlementCertServiceAdapterTest {
         verify(mockedPKI).createX509Certificate(
             any(String.class),
             argThat(new ListContainsContentUrl("/someorg/Awesome+Environment+%231/" +
-                CONTENT_URL, CONTENT_ID)), any(Date.class), any(Date.class),
-                any(KeyPair.class), any(BigInteger.class), any(String.class));
+                CONTENT_URL, CONTENT_ID)), any(Set.class), any(Date.class),
+                any(Date.class), any(KeyPair.class), any(BigInteger.class),
+                any(String.class));
     }
 
     @Test
@@ -272,7 +287,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         verify(mockedPKI).createX509Certificate(
             any(String.class),
             argThat(new ListContainsContentUrl("/some+org/Awesome+Environment+%231/" +
-                CONTENT_URL, CONTENT_ID)), any(Date.class), any(Date.class),
+                CONTENT_URL, CONTENT_ID)), any(Set.class), any(Date.class), any(Date.class),
                 any(KeyPair.class), any(BigInteger.class), any(String.class));
     }
 
@@ -286,7 +301,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         verify(mockedPKI).createX509Certificate(
             any(String.class),
             argThat(new ListContainsContentUrl("/someorg/$env/" + CONTENT_URL,
-                CONTENT_ID)), any(Date.class), any(Date.class),
+                CONTENT_ID)), any(Set.class), any(Date.class), any(Date.class),
             any(KeyPair.class), any(BigInteger.class), any(String.class));
     }
 
@@ -300,7 +315,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         verify(mockedPKI).createX509Certificate(
             any(String.class),
             argThat(new ListContainsContentUrl(CONTENT_URL,
-                CONTENT_ID)), any(Date.class), any(Date.class),
+                CONTENT_ID)), any(Set.class), any(Date.class), any(Date.class),
             any(KeyPair.class), any(BigInteger.class), any(String.class));
     }
 
@@ -313,7 +328,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         verify(mockedPKI).createX509Certificate(any(String.class),
             argThat(new ListContainsContentUrl(CONTENT_URL, CONTENT_ID)),
-            any(Date.class), any(Date.class), any(KeyPair.class),
+            any(Set.class), any(Date.class), any(Date.class), any(KeyPair.class),
             any(BigInteger.class), any(String.class));
     }
 
@@ -326,7 +341,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         verify(mockedPKI).createX509Certificate(any(String.class),
             argThat(new ListContainsContentUrl(CONTENT_URL, CONTENT_ID)),
-            any(Date.class), any(Date.class), any(KeyPair.class),
+            any(Set.class), any(Date.class), any(Date.class), any(KeyPair.class),
             any(BigInteger.class), any(String.class));
     }
 
@@ -365,7 +380,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         // the
         // product it modifies:
         assertEquals(1,
-            certServiceAdapter.filterProductContent(modProduct, entitlement)
+            extensionUtil.filterProductContent(modProduct, entitlement, entCurator)
                 .size());
 
         // Now mock that we have an entitlement providing one of the modified
@@ -375,7 +390,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             this.entCurator.listProviding(any(Consumer.class), eq("product2"),
                 any(Date.class), any(Date.class))).thenReturn(successResult);
         assertEquals(2,
-            certServiceAdapter.filterProductContent(modProduct, entitlement)
+            extensionUtil.filterProductContent(modProduct, entitlement, entCurator)
                 .size());
     }
 
@@ -387,7 +402,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             product, new BigInteger("1234"), keyPair(), true);
 
         verify(mockedPKI).createX509Certificate(any(String.class),
-            argThat(new ListContainsContentExtensions()), any(Date.class),
+            argThat(new ListContainsContentExtensions()), any(Set.class), any(Date.class),
             any(Date.class), any(KeyPair.class), any(BigInteger.class),
             any(String.class));
     }
@@ -400,8 +415,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
             product, new BigInteger("1234"), keyPair(), true);
 
         verify(mockedPKI).createX509Certificate(any(String.class),
-            argThat(new ListContainsEntitlementExtensions()), any(Date.class),
-            any(Date.class), any(KeyPair.class), any(BigInteger.class),
+            argThat(new ListContainsEntitlementExtensions()), any(Set.class),
+            any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
             any(String.class));
     }
 
@@ -412,8 +427,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
             product, new BigInteger("1234"), keyPair(), true);
 
         verify(mockedPKI).createX509Certificate(any(String.class),
-            argThat(new ListContainsProvidesManagement("0")), any(Date.class),
-            any(Date.class), any(KeyPair.class), any(BigInteger.class),
+            argThat(new ListContainsProvidesManagement("0")), any(Set.class),
+            any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
             any(String.class));
     }
 
@@ -426,8 +441,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
             product, new BigInteger("1234"), keyPair(), true);
 
         verify(mockedPKI).createX509Certificate(any(String.class),
-            argThat(new ListContainsProvidesManagement("1")), any(Date.class),
-            any(Date.class), any(KeyPair.class), any(BigInteger.class),
+            argThat(new ListContainsProvidesManagement("1")), any(Set.class),
+            any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
             any(String.class));
     }
 
@@ -440,7 +455,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             product, new BigInteger("1234"), keyPair(), true);
 
         verify(mockedPKI).createX509Certificate(any(String.class),
-            argThat(new ListContainsStackingId("3456")), any(Date.class),
+            argThat(new ListContainsStackingId("3456")), any(Set.class), any(Date.class),
             any(Date.class), any(KeyPair.class), any(BigInteger.class),
             any(String.class));
     }
@@ -453,7 +468,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             product, new BigInteger("1234"), keyPair(), true);
 
         verify(mockedPKI).createX509Certificate(any(String.class),
-            argThat(new ListContainsVirtOnlyKey("1")), any(Date.class),
+            argThat(new ListContainsVirtOnlyKey("1")), any(Set.class), any(Date.class),
             any(Date.class), any(KeyPair.class), any(BigInteger.class),
             any(String.class));
     }
@@ -470,12 +485,12 @@ public class DefaultEntitlementCertServiceAdapterTest {
             product, new BigInteger("1234"), keyPair(), true);
 
         verify(mockedPKI).createX509Certificate(any(String.class),
-            argThat(new ListContainsSupportLevel("Premium")), any(Date.class),
-            any(Date.class), any(KeyPair.class), any(BigInteger.class),
+            argThat(new ListContainsSupportLevel("Premium")), any(Set.class),
+            any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
             any(String.class));
         verify(mockedPKI).createX509Certificate(any(String.class),
-            argThat(new ListContainsSupportType("Level 3")), any(Date.class),
-            any(Date.class), any(KeyPair.class), any(BigInteger.class),
+            argThat(new ListContainsSupportType("Level 3")), any(Set.class),
+            any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
             any(String.class));
     }
 
@@ -487,11 +502,11 @@ public class DefaultEntitlementCertServiceAdapterTest {
             product, new BigInteger("1234"), keyPair(), true);
 
         verify(mockedPKI).createX509Certificate(any(String.class),
-            argThat(new ListDoesNotContainSupportLevel()), any(Date.class),
+            argThat(new ListDoesNotContainSupportLevel()), any(Set.class), any(Date.class),
             any(Date.class), any(KeyPair.class), any(BigInteger.class),
             any(String.class));
         verify(mockedPKI).createX509Certificate(any(String.class),
-            argThat(new ListDoesNotContainSupportType()), any(Date.class),
+            argThat(new ListDoesNotContainSupportType()), any(Set.class), any(Date.class),
             any(Date.class), any(KeyPair.class), any(BigInteger.class),
             any(String.class));
     }
@@ -507,6 +522,235 @@ public class DefaultEntitlementCertServiceAdapterTest {
         for (String prefix : prefixes) {
             assertEquals(prefix, certServiceAdapter.cleanUpPrefix(prefix));
         }
+    }
+
+    @Test
+    public void testPrepareV2Extensions() throws IOException {
+        Set<Product> products = new HashSet<Product>();
+        products.add(product);
+        when(entitlement.getConsumer().getFact("system.certificate_version"))
+            .thenReturn("2.1");
+        when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
+
+        subscription.getProduct().setAttribute("warning_period", "20");
+        subscription.getProduct().setAttribute("sockets", "4");
+        subscription.getProduct().setAttribute("management_enabled", "true");
+        subscription.getProduct().setAttribute("stacking_id", "45678");
+        entitlement.getPool().setAttribute("virt_only", "true");
+        subscription.getProduct().setAttribute("support_level", "slevel");
+        subscription.getProduct().setAttribute("support_type", "stype");
+        subscription.setAccountNumber("account1");
+        subscription.setContractNumber("contract1");
+        for (ProductContent pc : product.getProductContent()) {
+            pc.setEnabled(false);
+        }
+
+        Set<X509ExtensionWrapper> extensions =
+            certServiceAdapter.prepareV2Extensions(products, entitlement, "prefix",
+                null, subscription);
+        Set<X509ByteExtensionWrapper> byteExtensions =
+            certServiceAdapter.prepareV2ByteExtensions(products, entitlement, "prefix",
+                null, subscription);
+        Map<String, X509ExtensionWrapper> map =
+            new HashMap<String, X509ExtensionWrapper>();
+        for (X509ExtensionWrapper ext : extensions) {
+            map.put(ext.getOid(), ext);
+        }
+        Map<String, X509ByteExtensionWrapper> byteMap =
+            new HashMap<String, X509ByteExtensionWrapper>();
+        for (X509ByteExtensionWrapper ext : byteExtensions) {
+            byteMap.put(ext.getOid(), ext);
+        }
+        assertTrue(map.containsKey("1.3.6.1.4.1.2312.9.6"));
+        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("2.0"));
+
+        assertTrue(byteMap.containsKey("1.3.6.1.4.1.2312.9.7"));
+        String stringValue = "";
+        try {
+            stringValue = processPayload(byteMap.get("1.3.6.1.4.1.2312.9.7").getValue());
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        Map<String, Object> data = (Map<String, Object>)
+            Util.fromJson(stringValue , Map.class);
+        assertEquals(data.get("consumer"), "test-consumer");
+        assertEquals(data.get("quantity"), 10);
+
+        Map<String, Object> subs = (Map<String, Object>) data.get("subscription");
+        assertEquals(subs.get("sku"), subscription.getProduct().getId());
+        assertEquals(subs.get("name"), subscription.getProduct().getName());
+        assertEquals(subs.get("warning"), 20);
+        assertEquals(subs.get("sockets"), 4);
+        assertTrue((Boolean) subs.get("management"));
+        assertEquals(subs.get("stacking_id"), "45678");
+        assertTrue((Boolean) subs.get("virt_only"));
+
+        Map<String, Object> service = (Map<String, Object>) subs.get("service");
+        assertEquals(service.get("level"), "slevel");
+        assertEquals(service.get("type"), "stype");
+
+        Map<String, Object> order = (Map<String, Object>) data.get("order");
+        assertEquals(order.get("number"), subscription.getId());
+        assertTrue(((Integer) order.get("quantity")).intValue() ==
+            subscription.getQuantity());
+        assertNotNull(order.get("start"));
+        assertNotNull(order.get("end"));
+        assertEquals(order.get("contract"), subscription.getContractNumber());
+        assertEquals(order.get("account"), subscription.getAccountNumber());
+
+        List<Map<String, Object>> prods = (List<Map<String, Object>>) data.get("products");
+        List<Map<String, Object>> contents = null;
+        for (Map<String, Object> prod : prods) {
+            assertEquals(prod.get("id"), product.getId());
+            assertEquals(prod.get("name"), product.getName());
+            assertEquals(prod.get("version"), product.getAttributeValue("version"));
+            String arch = product.hasAttribute("arch") ?
+                product.getAttributeValue("arch") : "";
+            StringTokenizer st = new StringTokenizer(arch, ",");
+            while (st.hasMoreElements()) {
+                assertTrue(((List) prod.get("architectures")).contains(st.nextElement()));
+            }
+            contents = (List<Map<String, Object>>) prod.get("content");
+            for (Map<String, Object> cont : contents) {
+                assertEquals(cont.get("id"), CONTENT_ID);
+                assertEquals(cont.get("name"), CONTENT_NAME);
+                assertEquals(cont.get("type"), CONTENT_TYPE);
+                assertEquals(cont.get("label"), CONTENT_LABEL);
+                assertEquals(cont.get("vendor"), CONTENT_VENDOR);
+                assertEquals(cont.get("gpg_url"), CONTENT_GPG_URL);
+                assertEquals(cont.get("path"), "prefix" + CONTENT_URL);
+                assertFalse((Boolean) cont.get("enabled"));
+                assertEquals(cont.get("metadata_expire"), 3200);
+
+                String rTags = content.getRequiredTags();
+                st = new StringTokenizer(rTags, ",");
+                while (st.hasMoreElements()) {
+                    assertTrue(((List) cont.get("required_tags"))
+                        .contains(st.nextElement()));
+                }
+            }
+        }
+    }
+
+    @Test
+    public void testPrepareV2ExtensionsForDefaults() throws IOException {
+        Set<Product> products = new HashSet<Product>();
+        products.add(product);
+        when(entitlement.getConsumer().getFact("system.certificate_version"))
+            .thenReturn("2.1");
+        when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
+
+        subscription.getProduct().setAttribute("warning_period", "0");
+        subscription.getProduct().setAttribute("management_enabled", "false");
+        entitlement.getPool().setAttribute("virt_only", "false");
+        for (ProductContent pc : product.getProductContent()) {
+            pc.setEnabled(true);
+        }
+
+        Set<X509ExtensionWrapper> extensions =
+            certServiceAdapter.prepareV2Extensions(products, entitlement, "prefix",
+                null, subscription);
+        Set<X509ByteExtensionWrapper> byteExtensions =
+            certServiceAdapter.prepareV2ByteExtensions(products, entitlement, "prefix",
+                null, subscription);
+        Map<String, X509ExtensionWrapper> map =
+            new HashMap<String, X509ExtensionWrapper>();
+        for (X509ExtensionWrapper ext : extensions) {
+            map.put(ext.getOid(), ext);
+        }
+        Map<String, X509ByteExtensionWrapper> byteMap =
+            new HashMap<String, X509ByteExtensionWrapper>();
+        for (X509ByteExtensionWrapper ext : byteExtensions) {
+            byteMap.put(ext.getOid(), ext);
+        }
+        assertTrue(map.containsKey("1.3.6.1.4.1.2312.9.6"));
+        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("2.0"));
+
+        assertTrue(byteMap.containsKey("1.3.6.1.4.1.2312.9.7"));
+        String stringValue = "";
+        try {
+            stringValue = processPayload(byteMap.get("1.3.6.1.4.1.2312.9.7").getValue());
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        Map<String, Object> data = (Map<String, Object>)
+            Util.fromJson(stringValue , Map.class);
+        assertEquals(data.get("consumer"), "test-consumer");
+
+        // each has been set to the default and should not be populated in the cert
+        Map<String, Object> subs = (Map<String, Object>) data.get("subscription");
+        assertNull(subs.get("warning"));
+        assertNull(subs.get("management"));
+        assertNull(subs.get("virt_only"));
+
+        List<Map<String, Object>> prods = (List<Map<String, Object>>) data.get("products");
+        for (Map<String, Object> prod : prods) {
+            List<Map<String, Object>> contents =
+                (List<Map<String, Object>>) prod.get("content");
+            for (Map<String, Object> cont : contents) {
+                assertNull(cont.get("enabled"));
+            }
+        }
+    }
+
+    @Test
+    public void testPrepareV2ExtensionsForBooleans() throws IOException {
+        Set<Product> products = new HashSet<Product>();
+        products.add(product);
+        when(entitlement.getConsumer().getFact("system.certificate_version"))
+            .thenReturn("2.1");
+        when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
+
+        subscription.getProduct().setAttribute("management_enabled", "1");
+        entitlement.getPool().setAttribute("virt_only", "1");
+
+        Set<X509ExtensionWrapper> extensions =
+            certServiceAdapter.prepareV2Extensions(products, entitlement, "prefix",
+                null, subscription);
+        Set<X509ByteExtensionWrapper> byteExtensions =
+            certServiceAdapter.prepareV2ByteExtensions(products, entitlement, "prefix",
+                null, subscription);
+        Map<String, X509ExtensionWrapper> map =
+            new HashMap<String, X509ExtensionWrapper>();
+        for (X509ExtensionWrapper ext : extensions) {
+            map.put(ext.getOid(), ext);
+        }
+        Map<String, X509ByteExtensionWrapper> byteMap =
+            new HashMap<String, X509ByteExtensionWrapper>();
+        for (X509ByteExtensionWrapper ext : byteExtensions) {
+            byteMap.put(ext.getOid(), ext);
+        }
+        assertTrue(map.containsKey("1.3.6.1.4.1.2312.9.6"));
+        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("2.0"));
+
+        assertTrue(byteMap.containsKey("1.3.6.1.4.1.2312.9.7"));
+        String stringValue = "";
+        try {
+            stringValue = processPayload(byteMap.get("1.3.6.1.4.1.2312.9.7").getValue());
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        Map<String, Object> data = (Map<String, Object>)
+            Util.fromJson(stringValue , Map.class);
+        assertEquals(data.get("consumer"), "test-consumer");
+
+        // each has been set to the default and should not be populated in the cert
+        Map<String, Object> subs = (Map<String, Object>) data.get("subscription");
+        assertTrue((Boolean) subs.get("management"));
+        assertTrue((Boolean) subs.get("virt_only"));
+    }
+
+    private String processPayload(byte[] payload)
+        throws IOException, UnsupportedEncodingException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        InflaterOutputStream ios = new InflaterOutputStream(baos);
+        System.out.print(payload);
+        ios.write(payload);
+        ios.finish();
+        return baos.toString();
     }
 
     private Map<String, X509ExtensionWrapper> getEncodedContent(

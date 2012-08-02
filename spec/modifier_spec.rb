@@ -95,7 +95,7 @@ describe 'Modifier Entitlement' do
 
     # Resulting modifier cert should not contain modifier content set:
     modifier_cert = OpenSSL::X509::Certificate.new(ent[0]['certificates'][0]['cert'])
-    content_ext = get_extension(modifier_cert, "1.3.6.1.4.1.2312.9.2." +
+    content_ext = extension_from_cert(modifier_cert, "1.3.6.1.4.1.2312.9.2." +
       @modifier_content_1.id + ".1")
     content_ext.should be_nil
 
@@ -169,7 +169,7 @@ describe 'Modifier Entitlement' do
   end
 
   def content_repo_type(cert, content_id)
-    get_extension(cert, "1.3.6.1.4.1.2312.9.2.#{content_id}.1")
+    extension_from_cert(cert, "1.3.6.1.4.1.2312.9.2.#{content_id}.1")
   end
 
 end

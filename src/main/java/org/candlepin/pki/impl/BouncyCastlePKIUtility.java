@@ -50,6 +50,7 @@ import org.bouncycastle.x509.extension.AuthorityKeyIdentifierStructure;
 import org.candlepin.pki.PKIReader;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
+import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509CRLEntryWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
 import org.candlepin.util.Util;
@@ -95,7 +96,8 @@ public class BouncyCastlePKIUtility extends PKIUtility {
 
     @Override
     public X509Certificate createX509Certificate(String dn,
-        Set<X509ExtensionWrapper> extensions, Date startDate, Date endDate,
+        Set<X509ExtensionWrapper> extensions, Set<X509ByteExtensionWrapper> byteExtensions,
+        Date startDate, Date endDate,
         KeyPair clientKeyPair, BigInteger serialNumber, String alternateName)
         throws GeneralSecurityException, IOException {
 
@@ -147,6 +149,17 @@ public class BouncyCastlePKIUtility extends PKIUtility {
                 String value = wrapper.getValue() == null ? "" :  wrapper.getValue();
                 certGen.addExtension(wrapper.getOid(), wrapper.isCritical(),
                     new DERUTF8String(value));
+            }
+        }
+
+        if (byteExtensions != null) {
+            for (X509ByteExtensionWrapper wrapper : byteExtensions) {
+                // Bounceycastle hates null values. So, set them to blank
+                // if they are null
+                byte[] value = wrapper.getValue() == null ? new byte[0] :
+                    wrapper.getValue();
+                certGen.addExtension(wrapper.getOid(), wrapper.isCritical(),
+                    new DEROctetString(value));
             }
         }
 
