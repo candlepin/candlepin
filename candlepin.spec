@@ -14,7 +14,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.7.3
+Version: 0.7.4
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -279,6 +279,32 @@ fi
 
 
 %changelog
+* Fri Jul 27 2012 jesus m. rodriguez <jesusr@redhat.com> 0.7.4-1
+- add f17 to releasers (jesusr@redhat.com)
+- Add indexes for all foreign keys (bkearney@redhat.com)
+- apidoc: add options for template selection, and offline mode (jbowes@redhat.com)
+- Update string catalog (alikins@redhat.com)
+- Added requirement of rubygems to lint.rb & apidoc.rb (mstead@redhat.com)
+- apidoc: add a base template like the website (jbowes@redhat.com)
+- Add buildr targets for api doc and lint (jbowes@redhat.com)
+- Add an apidoc lint script (jbowes@redhat.com)
+- Add summary and return description to apidoc (jbowes@redhat.com)
+- Add apidoc/apidoc.rb script to generate (ugly) html apidocs (jbowes@redhat.com)
+- Fix 'class variable access from toplevel' spec warning (jbowes@redhat.com)
+- Improve performance of getting the owner info. (bkearney@redhat.com)
+- tools.jar not needed for 'doc' after client split (alikins@redhat.com)
+- Make i18nProvider share its cache across threads (jbowes@redhat.com)
+- Remove the java client code. It has its own repo now. (jbowes@redhat.com)
+- Utility cpsetup now runs also without sudo (lzap+git@redhat.com) (cduryee@redhat.com)
+- 835161: regenerate on-disk CRL on requests to crl resource (cduryee@redhat.com)
+- Make zanata.xml more inline with upstream (alikins@redhat.com)
+- Fix up test case for new buildr (jbowes@redhat.com)
+- Remove clobbering of SLA level case (jbowes@redhat.com)
+- make deploy script work without a DBPASSWORD passed to it (alikins@redhat.com)
+- getString strips the prefix, expect in the test (alikins@redhat.com)
+- Add support for passing a DBUSER/DBPASSWORD (alikins@redhat.com)
+- Handle katello-passwd style obscured passwords. (alikins@redhat.com)
+
 * Tue Jun 26 2012 James Bowes <jbowes@redhat.com> 0.7.3-1
 - 834684: minor changes to checkstyle.xml to bring it up to date with
   Checkstyle 5.5 (dmitri@redhat.com)

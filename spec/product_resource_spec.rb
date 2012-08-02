@@ -31,5 +31,19 @@ describe 'Product Resource' do
     product1.name.should == product2.name
   end
 
+  it 'retrieves the owners of a product' do
+    owner = create_owner(random_string('owner'))
+    product = create_product(random_string("test_id"),
+      random_string("test_name"))
+    provided_product = create_product()
+    @cp.create_subscription(owner['key'], product.id, 10, [provided_product.id])
+    @cp.refresh_pools(owner['key'])
+    user = user_client(owner, random_string('billy'))
+    system = consumer_client(user, 'system6')
+    system.consume_product(product.id)
+    product_owners = @cp.get_product_owners([provided_product.id])
+    product_owners.should have(1).things
+    product_owners[0]['key'].should == owner['key']
+  end
 end
 
