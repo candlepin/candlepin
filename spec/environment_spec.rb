@@ -130,7 +130,8 @@ describe 'Environments' do
     extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{content['id']}.1").should be_true
 
     # Make sure the enabled field was overridden to false:
-    extensions_hash["1.3.6.1.4.1.2312.9.2.#{content['id']}.1.8"].should == "..0"
+    extension_from_cert(ent['certificates'][0]['cert'],
+        "1.3.6.1.4.1.2312.9.2.#{content['id']}.1.8").should == "0"
   end
 
   it 'regenerates certificates after promoting/demoting content' do

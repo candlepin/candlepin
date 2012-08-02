@@ -34,6 +34,8 @@ public final class OIDUtil {
     public static final String CHANNEL_FAMILY_NAMESPACE_KEY = "Channel Family";
     public static final String ROLE_ENT_NAMESPACE_KEY = "Role Entitlement";
     public static final String PRODUCT_CERT_NAMESPACE_KEY = "Product";
+    public static final String ENTITLEMENT_VERSION_KEY = "Entitlement Version";
+    public static final String ENTITLEMENT_DATA_KEY = "Entitlement Data";
     public static final String UUID_KEY = "UUID";
     public static final String HOST_UUID_KEY = "Host UUID";
     public static final String ORDER_NAME_KEY = "Name";
@@ -107,6 +109,8 @@ public final class OIDUtil {
         TOPLEVEL_NAMESPACES.put(ROLE_ENT_NAMESPACE_KEY, "3");
         TOPLEVEL_NAMESPACES.put(ORDER_NAMESPACE_KEY, "4");
         TOPLEVEL_NAMESPACES.put(SYSTEM_NAMESPACE_KEY, "5");
+        TOPLEVEL_NAMESPACES.put(ENTITLEMENT_VERSION_KEY, "6");
+        TOPLEVEL_NAMESPACES.put(ENTITLEMENT_DATA_KEY, "7");
 
         // system oids
         SYSTEM_OIDS.put(UUID_KEY, "1");

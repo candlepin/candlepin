@@ -76,7 +76,7 @@ describe 'Candlepin Export' do
   it 'should not export virt product entitlement certificates' do
      Dir["#{@export_dir}/entitlement_certificates/*.pem"].find_all do |ent|
       cert = OpenSSL::X509::Certificate.new(File.read(ent))
-      get_extension(cert, '1.3.6.1.4.1.2312.9.4.1').include? 'virt_product'
+      extension_from_cert(cert, '1.3.6.1.4.1.2312.9.4.1').include? 'virt_product'
     end.should be_empty
   end
 

@@ -61,7 +61,8 @@ public abstract class PKIUtility {
     }
 
     public abstract X509Certificate createX509Certificate(String dn,
-        Set<X509ExtensionWrapper> extensions, Date startDate, Date endDate,
+        Set<X509ExtensionWrapper> extensions, Set<X509ByteExtensionWrapper> byteExtensions,
+        Date startDate, Date endDate,
         KeyPair clientKeyPair, BigInteger serialNumber, String alternateName)
         throws GeneralSecurityException, IOException;
 
