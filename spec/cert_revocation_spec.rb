@@ -1,4 +1,5 @@
 require 'candlepin_scenarios'
+require 'openssl'
 
 describe 'Certificate Revocation List' do
 
@@ -33,7 +34,8 @@ describe 'Certificate Revocation List' do
 
   it 'does not contain the serial of a valid entitlement(s)' do
       @system.consume_product(@virt_prod.id)
-      revoked_serials.should be_empty
+      serial = filter_serial(@virt_prod)
+      revoked_serials.should_not include(serial)
   end
 
   it 'contains the serials of revoked entitlement(s) and not the unrevoked ones' do
@@ -65,6 +67,25 @@ describe 'Certificate Revocation List' do
     revoked_serials.should_not include(serials)
   end
 
+  it 'should regenerate the on-disk crl and revoke' do
+    crl = OpenSSL::X509::CRL.new File.read "/var/lib/candlepin/candlepin-crl.crl"
+    oldlen = crl.revoked.length
+    old_time = File.mtime("/var/lib/candlepin/candlepin-crl.crl")
+    #consume an entitlement, revoke it and check that CRL contains the new serial.
+    @system.consume_product(@monitoring_prod.id)
+    serial = filter_serial(@monitoring_prod)
+
+    @system.revoke_all_entitlements()
+    revoked_serials.should include(serial)
+
+    # ensure that the on-disk crl got updated
+    new_time = File.mtime("/var/lib/candlepin/candlepin-crl.crl")
+    new_time.should_not == old_time
+    crl = OpenSSL::X509::CRL.new File.read "/var/lib/candlepin/candlepin-crl.crl"
+    crl.revoked.length.should == oldlen + 1
+    FileUtils.cp("/var/lib/candlepin/candlepin-crl.crl", "/tmp/spec2.crl")
+  end
+
   it 'should regenerate the on-disk crl' do
     old_time = File.mtime("/var/lib/candlepin/candlepin-crl.crl")
     # do some stuff
@@ -81,6 +102,7 @@ describe 'Certificate Revocation List' do
     # ensure that the on-disk crl got updated
     new_time = File.mtime("/var/lib/candlepin/candlepin-crl.crl")
     new_time.should_not == old_time 
+    FileUtils.cp("/var/lib/candlepin/candlepin-crl.crl", "/tmp/spec.crl")
   end
 
   def filter_serial(product, consumer=@system)

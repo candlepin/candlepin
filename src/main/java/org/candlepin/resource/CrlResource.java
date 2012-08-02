@@ -14,26 +14,29 @@
  */
 package org.candlepin.resource;
 
+import com.google.inject.Inject;
+
 import org.candlepin.auth.Principal;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.CrlGenerator;
 import org.candlepin.exceptions.IseException;
-import org.candlepin.pki.PKIUtility;
+import org.candlepin.model.CertificateSerial;
+import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.util.CrlFileUtil;
-
-import com.google.inject.Inject;
 
 import java.io.File;
 import java.io.IOException;
 import java.security.cert.CRLException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509CRL;
-import java.util.UUID;
+import java.util.List;
 
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
@@ -44,17 +47,20 @@ import javax.ws.rs.core.MediaType;
 public class CrlResource {
 
     private CrlGenerator crlGenerator;
-    private PKIUtility pkiUtility;
     private CrlFileUtil crlFileUtil;
     private Config config;
+    private CertificateSerialCurator certificateSerialCurator;
+
 
     @Inject
-    public CrlResource(CrlGenerator crlGenerator, PKIUtility pkiUtility,
-        CrlFileUtil crlFileUtil, Config config) {
+    public CrlResource(CrlGenerator crlGenerator,
+        CrlFileUtil crlFileUtil, Config config,
+        CertificateSerialCurator certificateSerialCurator) {
+
         this.crlGenerator = crlGenerator;
-        this.pkiUtility = pkiUtility;
         this.crlFileUtil = crlFileUtil;
         this.config = config;
+        this.certificateSerialCurator = certificateSerialCurator;
     }
 
     /**
@@ -68,21 +74,61 @@ public class CrlResource {
     public String getCurrentCrl(@Context Principal principal)
         throws CRLException, IOException {
 
-        X509CRL crl = this.crlGenerator.createCRL();
-
-        String filePath = config.getString(ConfigProperties.CRL_FILE_PATH);
-        if (filePath == null) {
-            throw new IseException("CRL file path not defined in config file");
-        }
+        String filePath = getCrlFilePath();
         File crlFile = new File(filePath);
 
+        byte[] encoded = null;
+
         try {
-            crlFileUtil.updateCRLFile(crlFile, "CN=test, UID=" + UUID.randomUUID());
+            X509CRL crl = crlFileUtil.readCRLFile(crlFile);
+            crl = crlGenerator.syncCRLWithDB(crl);
+            encoded = crlFileUtil.writeCRLFile(crlFile, crl);
         }
         catch (CertificateException e) {
             throw new IseException(e.getMessage(), e);
         }
 
-        return new String(pkiUtility.getPemEncoded(crl));
+        return new String(encoded);
+    }
+
+    /**
+     * delete a certificate from the revocation list
+     * @param sids list of certificate serial ids
+     * @throws CRLException if there is a problem updating the CRL object
+     * @throws IOException if there is a problem reading the crl file
+     */
+    @DELETE
+    @Produces(MediaType.APPLICATION_JSON)
+    public void unrevoke(@QueryParam("sid") String[] sids)
+        throws CRLException, IOException {
+
+        String filePath = getCrlFilePath();
+        File crlFile = new File(filePath);
+
+        try {
+            X509CRL crl = crlFileUtil.readCRLFile(crlFile);
+
+            // get crl file if it exists
+            // lookup entitlement, find CertificateSerial
+            List<CertificateSerial> serials =
+                certificateSerialCurator.listBySerialIds(sids);
+
+            crl = crlGenerator.removeEntries(crl, serials);
+
+            crlFileUtil.writeCRLFile(crlFile,  crl);
+        }
+        catch (CertificateException e) {
+            throw new IseException(e.getMessage(), e);
+        }
+    }
+
+    private String getCrlFilePath() {
+        String filePath = config.getString(ConfigProperties.CRL_FILE_PATH);
+
+        if (filePath == null) {
+            throw new IseException("CRL file path not defined in config file");
+        }
+
+        return filePath;
     }
 }

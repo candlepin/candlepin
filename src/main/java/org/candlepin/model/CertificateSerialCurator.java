@@ -14,10 +14,10 @@
  */
 package org.candlepin.model;
 
-import java.util.List;
-
 import org.candlepin.util.Util;
 import org.hibernate.criterion.Restrictions;
+
+import java.util.List;
 
 
 /**
@@ -62,4 +62,19 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
                 .setBoolean("revoked", true).executeUpdate();
     }
 
+    @SuppressWarnings("unchecked")
+    public List<CertificateSerial> listBySerialIds(String[] ids) {
+        if (ids == null) {
+            return null;
+        }
+
+        // convert ids to Longs for the query
+        Long[] lids = new Long[ids.length];
+        for (int i = 0; i < ids.length; i++) {
+            lids[i] = Long.valueOf(ids[i]);
+        }
+
+        return currentSession().createCriteria(
+            CertificateSerial.class).add(Restrictions.in("id", lids)).list();
+    }
 }
