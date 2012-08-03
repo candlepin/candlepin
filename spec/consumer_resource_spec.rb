@@ -54,10 +54,10 @@ describe 'Consumer Resource' do
 
     uuids = []
     @cp.list_consumers.each do |c|
-      # These are HATEOAS serialized consumers, the ID is the numeric DB
-      # ID, so pull the UUID off the URL.
-      # TODO: Find a better way once client is more HATEOASy.
-      uuids << c['href'].split('/')[-1]
+      uuids << c['uuid']
+      # Consumer lists should not have idCert or facts:
+      c['facts'].should be_nil
+      c['idCert'].should be_nil
     end
     uuids.include?(@consumer1.uuid).should be_true
     uuids.include?(@consumer2.uuid).should be_true

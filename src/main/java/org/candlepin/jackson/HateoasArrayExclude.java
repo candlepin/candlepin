@@ -20,11 +20,11 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * HateoasField: Annotation used with JsonFilter and our HateoasBeanPropertyFilter.
- * Apply to the getter's of properties that are to be included when we trigger
- * the reduced "HATEOAS" style of serialization for certain nested objects.
+ * HateoasArrayIgnoreField: Annotation used with our HateoasBeanPropertyFilter.
+ * Applied to object fields that we want to skip serialization for if we're withing the
+ * context of an array.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD})
-public @interface HateoasField {
+public @interface HateoasArrayExclude {
 }

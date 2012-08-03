@@ -33,16 +33,22 @@ public class HateoasBeanPropertyFilter extends JsonBeanPropertyFilter {
         SerializerProvider serializerProvider, BeanPropertyWriter writer) throws Exception {
         JsonStreamContext context = jsonGenerator.getOutputContext();
 
-        if ((context.getParent() == null) || (!context.getParent().inObject())) {
-            // Not serializing a nested object, so we'll write normally:
-            writer.serializeAsField(obj, jsonGenerator, serializerProvider);
-        }
-        else {
-            // We are doing HATEOAS serialization at this point, check if the getter
-            // for this property has the annotation, serialize if so, skip it if not:
-            if (annotationPresent(obj, writer.getName(), HateoasField.class)) {
+        if ((context.getParent() != null) && (context.getParent().inArray())) {
+            // skip annotated fields if within array:
+            if (!annotationPresent(obj, writer.getName(), HateoasArrayExclude.class)) {
                 writer.serializeAsField(obj, jsonGenerator, serializerProvider);
             }
+        }
+        // Check if we should trigger reduced HATEOAS serialization for a nested object by
+        // looking for the annotation on the fields getter:
+        else if ((context.getParent() != null) && (context.getParent().inObject())) {
+            if (annotationPresent(obj, writer.getName(), HateoasInclude.class)) {
+                writer.serializeAsField(obj, jsonGenerator, serializerProvider);
+            }
+        }
+        else {
+            // Normal serialization:
+            writer.serializeAsField(obj, jsonGenerator, serializerProvider);
         }
     }
 }

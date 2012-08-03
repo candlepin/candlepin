@@ -31,7 +31,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
-import org.candlepin.jackson.HateoasField;
+import org.candlepin.jackson.HateoasInclude;
 import org.candlepin.resteasy.InfoProperty;
 import org.codehaus.jackson.map.annotate.JsonFilter;
 import org.hibernate.annotations.GenericGenerator;
@@ -128,7 +128,7 @@ public class Owner extends AbstractHibernateObject implements Serializable,
      * @return the id
      */
     @Override
-    @HateoasField
+    @HateoasInclude
     public String getId() {
         return id;
     }
@@ -141,7 +141,7 @@ public class Owner extends AbstractHibernateObject implements Serializable,
     }
 
     @InfoProperty("key")
-    @HateoasField
+    @HateoasInclude
     public String getKey() {
         return key;
     }
@@ -154,7 +154,7 @@ public class Owner extends AbstractHibernateObject implements Serializable,
      * @return the name
      */
     @InfoProperty("displayName")
-    @HateoasField
+    @HateoasInclude
     public String getDisplayName() {
         return this.displayName;
     }
@@ -299,7 +299,7 @@ public class Owner extends AbstractHibernateObject implements Serializable,
         return upstreamUuid;
     }
 
-    @HateoasField
+    @HateoasInclude
     public String getHref() {
         return "/owners/" + getKey();
     }
