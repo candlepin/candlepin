@@ -32,7 +32,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
-import org.candlepin.jackson.HateoasField;
+import org.candlepin.jackson.HateoasInclude;
 import org.candlepin.jackson.SkipExport;
 import org.codehaus.jackson.map.annotate.JsonFilter;
 import org.hibernate.annotations.ForeignKey;
@@ -116,7 +116,7 @@ public class Entitlement extends AbstractHibernateObject implements Linkable, Ow
      * @return the id
      */
     @Override
-    @HateoasField
+    @HateoasInclude
     public String getId() {
         return id;
     }
@@ -255,7 +255,7 @@ public class Entitlement extends AbstractHibernateObject implements Linkable, Ow
             ", consumer= " + (consumer == null ? "null" : consumer.getUuid()) + "]";
     }
 
-    @HateoasField
+    @HateoasInclude
     public String getHref() {
         return "/entitlements/" + getId();
     }

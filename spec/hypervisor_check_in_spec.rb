@@ -17,7 +17,7 @@ describe 'Hypervisor Resource' do
     results = @user.hypervisor_check_in(@owner['key'],  host_guest_mapping)
     results.created.size.should == 1
 
-    consumer = results.created[0]
+    consumer = @cp.get_consumer(results.created[0]['uuid'])
     check_hypervisor_consumer(consumer, @expected_host, @expected_guest_ids)
 
     @cp.get_consumer_guests(@expected_host).length.should == 2
