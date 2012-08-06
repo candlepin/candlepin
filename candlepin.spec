@@ -28,52 +28,10 @@ BuildRequires: ant >= 0:1.7.0
 BuildRequires: gettext
 BuildRequires: selinux-policy-doc
 
-%if 0%{?fedora}
 %define distlibdir %{_datadir}/%{name}/lib/
 %define libdir %{_datadir}/%{name}/lib/
 %define usecpdeps "usecpdeps"
-BuildRequires: candlepin-deps
-%endif
-
-%if 0%{?rhel}
-BuildRequires: bouncycastle
-BuildRequires: hibernate3 >= 3.3.2
-BuildRequires: hibernate3-annotations >= 0:3.4.0
-# for schema
-BuildRequires: hibernate3-entitymanager >= 0:3.4.0
-BuildRequires: hibernate3-commons-annotations
-# end for schema
-BuildRequires: google-collections >= 0:1.0
-BuildRequires: resteasy >= 0:2.3.1
-BuildRequires: hornetq >= 0:2.2.11
-BuildRequires: google-guice >= 0:3.0
-BuildRequires: log4j
-BuildRequires: jakarta-commons-lang
-BuildRequires: jakarta-commons-io
-BuildRequires: apache-commons-codec
-BuildRequires: codehaus-jackson >= 0:1.9.2
-BuildRequires: codehaus-jackson-core-lgpl
-BuildRequires: codehaus-jackson-mapper-lgpl
-BuildRequires: codehaus-jackson-xc
-BuildRequires: codehaus-jackson-jaxrs
-BuildRequires: jakarta-commons-httpclient
-BuildRequires: jpa_1_0_api
-BuildRequires: netty
-BuildRequires: glassfish-jaxb
-BuildRequires: jms >= 0:1.1
-BuildRequires: oauth
-BuildRequires: rhino
-BuildRequires: slf4j >= 0:1.6.1
-BuildRequires: quartz >= 0:2.1.5
-# needed to setup runtime deps, not for compilation
-BuildRequires: c3p0
-BuildRequires: scannotation
-BuildRequires: postgresql-jdbc
-BuildRequires: servlet
-BuildRequires: gettext-commons
-# resteasy multipart requires this at runtime
-BuildRequires: apache-mime4j
-%endif
+BuildRequires: candlepin-deps >= 0:0.1.2
 
 # Common requires go here
 Requires: java >= 0:1.6.0
@@ -81,33 +39,6 @@ Requires: java >= 0:1.6.0
 Requires: wget
 Requires: liquibase >= 2.0.3
 Requires: postgresql-jdbc
-
-# specific requires
-%if 0%{?rhel}
-# candlepin webapp requires
-Requires: bouncycastle
-Requires: hibernate3 >= 3.3.2
-Requires: hibernate3-annotations >= 0:3.4.0
-Requires: hibernate3-entitymanager >= 0:3.4.0
-Requires: c3p0
-Requires: resteasy >= 0:2.3.1
-Requires: google-guice >= 0:3.0
-Requires: codehaus-jackson >= 0:1.9.2
-Requires: codehaus-jackson-xc
-Requires: codehaus-jackson-core-lgpl
-Requires: codehaus-jackson-mapper-lgpl
-Requires: codehaus-jackson-jaxrs
-Requires: hornetq >= 0:2.2.11
-Requires: netty
-Requires: oauth
-Requires: rhino
-Requires: quartz >= 0:2.1.5
-Requires: log4j
-Requires: glassfish-jaxb
-Requires: scannotation
-Requires: slf4j >= 0:1.6.1
-%endif
-%define __jar_repack %{nil}
 
 %description
 Candlepin is an open source entitlement management system.
