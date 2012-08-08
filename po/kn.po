@@ -19,76 +19,28 @@ msgstr ""
 "X-Generator: Zanata 1.6.1\n"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java:145
-msgid "Standalone candlepin does not support redeeming a subscription."
-msgstr ""
-"ಪ್ರತ್ಯೇಕ ಕ್ಯಾಂಡಲ್‌ಪಿನ್ ಒಂದು ಚಂದಾದಾರಿಕೆಯನ್ನು ಹಿಂಪಡೆಯುವಿಕೆಯನ್ನು "
-"ಬೆಂಬಲಿಸುವುದಿಲ್ಲ."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/sync/ConsumerImporter.java:47
-msgid "No ID for upstream distributor"
-msgstr "ಅಪ್‌ಸ್ಟ್ರೀಮ್ ವಿತರಕರಿಗೆ ಯಾವುದೆ ID ಇಲ್ಲ"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/sync/ConsumerImporter.java:57
-msgid "This distributor has already been imported by another owner"
-msgstr "ಈ ಮಾಲಿಕನು ಈಗಾಗಲೆ ಬೇರೊಂದು ವಿತರಕರಿಂದ ಆಮದು ಮಾಡಿಕೊಂಡಿದ್ದಾನೆ"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/sync/ConsumerImporter.java:63
-msgid "Owner has already imported from another distributor"
-msgstr "ಮಾಲಿಕನು ಈಗಾಗಲೆ ಬೇರೊಂದು ವಿತರಕರಿಂದ ಆಮದು ಮಾಡಿಕೊಂಡಿದ್ದಾನೆ"
-
-# translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:142
-msgid "Wrong metadata type"
-msgstr "ತಪ್ಪು ಮೆಟಾಡೇಟದ ಬಗೆ"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/sync/Importer.java:151
-msgid "Invalid owner"
-msgstr "ಅಮಾನ್ಯವಾದ ಮಾಲಿಕ"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/sync/Importer.java:163
-msgid "Import is older than existing data"
-msgstr "ಆಮದು ಮಾಡಲಾಗಿದ್ದು ಈಗಿರುವ ಮಾಹಿತಿಗಿಂತ ಹಳೆಯದಾಗಿದೆ"
+#: src/main/java/org/candlepin/guice/I18nProvider.java:92
+#: src/main/java/org/candlepin/exceptions/mappers/BadRequestExceptionMapper.java:70
+msgid "Bad Request"
+msgstr "ತಪ್ಪು ಮನವಿ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author shanky
-#: src/main/java/org/candlepin/sync/Importer.java:202
-#: src/main/java/org/candlepin/sync/Importer.java:207
-msgid "Failed to import archive"
-msgstr "ಆರ್ಕೈವ್‌ ಅನ್ನು ಆಮದು ಮಾಡಿಕೊಳ್ಳಲು ವಿಫಲಗೊಂಡಿದೆ"
+#: src/main/java/org/candlepin/auth/interceptor/SecurityInterceptor.java:193
+msgid "Unable to verify request."
+msgstr "ಮನವಿಯನ್ನು ಪರಿಶೀಲಿಸಲು ಸಾಧ್ಯವಾಗಿಲ್ಲ."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author shanky
-#: src/main/java/org/candlepin/sync/Importer.java:306
+#: src/main/java/org/candlepin/auth/interceptor/SecurityInterceptor.java:202
+msgid "Organization"
+msgstr "ಸಂಸ್ಥೆ"
+
+#: src/main/java/org/candlepin/auth/interceptor/SecurityInterceptor.java:207
 #, java-format
-msgid "Incompatible rules: import version {0} older than our version {1}."
+msgid "{0} with id {1} could not be found."
 msgstr ""
-"ಹೊಂದಿಕೆಯಾಗದ ನಿಯಮಗಳು: ಆಮದು ಮಾಡಲಾದ ಆವೃತ್ತಿಯಾದ {0} ನಮ್ಮ ಆವೃತ್ತಿ {1} ಗಿಂತ "
-"ಹಳೆಯದಾಗಿದೆ."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/sync/Importer.java:309
-msgid "Manifest data will be imported without rules import."
-msgstr "ಮ್ಯಾನಿಫೆಸ್ಟ್‍ ಮಾಹಿತಿಯನ್ನು ನಿಯಮಗಳ ಆಮದು ಇಲ್ಲದೆ ಆಮದು ಮಾಡಿಕೊಳ್ಳಲಾಗುತ್ತದೆ."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/sync/EntitlementImporter.java:119
-msgid "Unable to find product with ID: "
-msgstr "ಈ ಉತ್ಪನ್ನ IDಯೊಂದಿಗಿನ ಉತ್ಪನ್ನವನ್ನು ಪತ್ತೆ ಮಾಡಲು ಸಾಧ್ಯವಾಗಿಲ್ಲ: "
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author shanky
@@ -203,665 +155,6 @@ msgstr ""
 #, java-format
 msgid "Unable to entitle consumer to the product ''{0}'': {1}"
 msgstr "ಗ್ರಾಹಕನನ್ನು ''{0}'' ಎಂಬ ಉತ್ಪನ್ನಕ್ಕೆ ಅರ್ಹತೆ ನೀಡಲು ಸಾಧ್ಯವಾಗಿಲ್ಲ: {1}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/EnvironmentResource.java:98
-#: src/main/java/org/candlepin/resource/EnvironmentResource.java:117
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:707
-#, java-format
-msgid "No such environment: {0}"
-msgstr "ಅಂತಹ ಯಾವುದೆ ಪರಿಸರವಿಲ್ಲ: {0}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/EnvironmentResource.java:247
-#, java-format
-msgid "No such environment : {0}"
-msgstr "ಅಂತಹ ಯಾವುದೆ ಪರಿಸರವಿಲ್ಲ: {0}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/RoleResource.java:82
-#, java-format
-msgid "No such owner: {0}"
-msgstr "ಅಂತಹ ಯಾವುದೆ ಮಾಲಿಕನಿಲ್ಲ: {0}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/RoleResource.java:112
-msgid "Role ID does not match path."
-msgstr "ಪಾತ್ರದ ID ಯು ಮಾರ್ಗಕ್ಕೆ ಹೊಂದಿಕೆಯಾಗುತ್ತಿಲ್ಲ."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/RoleResource.java:138
-msgid "Access type NONE not supported."
-msgstr "NONE ಎಂಬ ನಿಲುಕಣೆಯ ಬಗೆಗೆ ಅನುಮತಿ ಇಲ್ಲ."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/RoleResource.java:177
-#, java-format
-msgid "No such permission: {0} in role: {1}"
-msgstr "ಅಂತಹ ಯಾವುದೆ ಅನುಮತಿ ಇಲ್ಲ: {0} ಪಾತ್ರದಲ್ಲಿರುವುದು: {1}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/RoleResource.java:191
-#, java-format
-msgid "No such role: {0}"
-msgstr "ಅಂತಹ ಯಾವುದೆ ಪಾತ್ರವಿಲ್ಲ: {0}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/RoleResource.java:199
-#, java-format
-msgid "No such user: {0}"
-msgstr "ಅಂತಹ ಯಾವುದೆ ಬಳಕೆದಾರರಿಲ್ಲ: {0}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:135
-msgid "The quantity must be greater than 0"
-msgstr "ಪ್ರಮಾಣವು 0 ಗಿಂತ ದೊಡ್ಡದಾಗಿರಬೇಕು"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:145
-msgid ""
-"Pools requiring a 'person' consumer should not be added to an activation key"
-" since a consumer type of 'person' cannot be used with activation keys"
-msgstr ""
-"ಒಂದು 'person' ಗ್ರಾಹಕನ ಅಗತ್ಯವಿರುವ ಪೂಲ್‌ಗಳನ್ನು ಒಂದು ಸಕ್ರಿಯಗೊಳಿಕೆಯ ಕೀಲಿಯನ್ನು "
-"ಸೇರಿಸಬಾರದು ಏಕೆಂದರೆ 'person' ಎಂಬ ಗ್ರಾಹಕನು ಸಕ್ರಿಯಗೊಳಿಕೆ ಕೀಲಿಯನ್ನು ಬಳಸುವಂತಿಲ್ಲ"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:154
-msgid ""
-"Error: Only pools with multi-entitlement product subscriptions can be added "
-"to the activation key with a quantity greater than one."
-msgstr ""
-"ದೋಷ: ಕೇವಲ ಅನೇಕ-ಎಂಟೈಟಲ್ಮೆಂಟ್‌ ಉತ್ಪನ್ನ ಚಂದಾದಾರಿಕೆಗಳನ್ನು ಹೊಂದಿರುವ ಪೂಲ್‌ಗಳನ್ನು "
-"ಮಾತ್ರ ಒಂದಕ್ಕಿಂತ ದೊಡ್ಡದಾದ ಸಕ್ರಿಯಗೊಳಿಕೆ ಕೀಲಿಯನ್ನು ಸೇರಿಸಲು ಸಾಧ್ಯವಿರುತ್ತದೆ."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:161
-msgid "The quantity must not be greater than the total allowed for the pool"
-msgstr "ಪ್ರಮಾಣವು ಪೂಲ್‌ಗೆ ಒಟ್ಟು ಅನುಮತಿಯಿರುವುದಕ್ಕಿಂತ ಹೆಚ್ಚು ಇರಬಾರದು"
-
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:222
-#, java-format
-msgid "ActivationKey with id {0} could not be found."
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:233
-#, java-format
-msgid "Pool with id {0} could not be found."
-msgstr ""
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:122
-#, java-format
-msgid "no certificate for subscription {0}"
-msgstr "{0} ಎಂಬ ಚಂದಾದಾರಿಕೆಗೆ ಯಾವುದೆ ಪ್ರಮಾಣಪತ್ರವು ಇಲ್ಲ"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:141
-msgid "email is required for notification"
-msgstr "ಸೂಚನೆಗಾಗಿ ಇಮೈಲ್‌ನ ಅಗತ್ಯವಿರುತ್ತದೆ"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:146
-msgid "email locale is required for notification"
-msgstr "ಸೂಚನೆಗಾಗಿ ಇಮೈಲ್‌ನ ಲೊಕ್ಯಾಲ್‌ನ ಅಗತ್ಯವಿರುತ್ತದೆ"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:152
-#: src/main/java/org/candlepin/resource/OwnerResource.java:701
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1322
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:124
-#, java-format
-msgid "No such consumer: {0}"
-msgstr "ಅಂತಹ ಯಾವುದೆ ಗ್ರಾಹಕರಿಲ್ಲ: {0}"
-
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:182
-#, java-format
-msgid "Subscription with id {0} could not be found."
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/ProductResource.java:110
-#: src/main/java/org/candlepin/resource/ProductResource.java:129
-#: src/main/java/org/candlepin/resource/ProductResource.java:189
-#, java-format
-msgid "Product with UUID ''{0}'' could not be found."
-msgstr ""
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/ProductResource.java:193
-#, java-format
-msgid "Product with UUID ''{0}'' cannot be deleted while subscriptions exist."
-msgstr ""
-"ಚಂದಾದಾರಿಕೆಯು ಇರುವಂತೆಯೆ UUID ''{0}'' ಯನ್ನು ಹೊಂದಿರುವ ಉತ್ಪನ್ನವನ್ನು ಅಳಿಸಲು "
-"ಸಾಧ್ಯವಿರುವುದಿಲ್ಲ."
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:253
-#, java-format
-msgid "Could not create the Owner: {0}. Parent {1} does not exist."
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/OwnerResource.java:265
-#, java-format
-msgid "Could not create the Owner: {0}"
-msgstr ""
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/OwnerResource.java:449
-msgid "Must provide a name for activation key."
-msgstr "ಸಕ್ರಿಯಗೊಳಿಕೆ ಕೀಲಿಗಾಗಿ ಒಂದು ಹೆಸರನ್ನು ಒದಗಿಸುವುದು ಅತ್ಯಗತ್ಯ."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/OwnerResource.java:456
-msgid ""
-"Activation key names must be alphanumeric or the characters '-' or '_'. ["
-msgstr ""
-"ಸಕ್ರಿಯಗೊಳಿಕೆ ಕೀಲಿಯ ಹೆಸರುಗಳು ವರ್ಣಮಾಲೆಅಂಕೀಯ (ಅಲ್ಫಾನ್ಯೂಮರಿಕ್) ಅಥವ '-' ಅಥವ '_' "
-"ಅನ್ನು ಹೊಂದಿರಬೇಕು. ["
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/OwnerResource.java:463
-msgid "Activation key name ["
-msgstr "ಸಕ್ರಿಯಗೊಳಿಕೆ ಕೀಲಿಯ ಹೆಸರು ["
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:549
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:627
-#: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:122
-#, java-format
-msgid "No such consumer type: {0}"
-msgstr "ಆ ಬಗೆಯ ಯಾವುದೆ ಗ್ರಾಹಕರಿಲ್ಲ: {0}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/OwnerResource.java:587
-#: src/main/java/org/candlepin/resource/PoolResource.java:134
-#, java-format
-msgid "consumer: {0} not found"
-msgstr "ಗ್ರಾಹಕ: {0} ಕಂಡುಬಂದಿಲ್ಲ"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:691
-#: src/main/java/org/candlepin/resource/OwnerResource.java:796
-#: src/main/java/org/candlepin/resource/OwnerResource.java:960
-#: src/main/java/org/candlepin/resource/OwnerResource.java:990
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1019
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1045
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1084
-#, java-format
-msgid "owner with key: {0} was not found."
-msgstr "ಕೀಲಿ : {0}ಅನ್ನು ಹೊಂದಿರುವ ಮಾಲಿಕ ಕಂಡು ಬಂದಿಲ್ಲ."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:764
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:466
-#, java-format
-msgid "Service level {0} is not available to consumers of organization {1}."
-msgstr "{1} ಎಂಬ ಸಂಸ್ಥೆಯ ಗ್ರಾಹಕರಿಗೆ ಸೇವೆಯ ಮಟ್ಟ {1} ಲಭ್ಯವಿರುವುದಿಲ್ಲ."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:815
-#, java-format
-msgid "subscription with id: {0} not found."
-msgstr "id: {0} ಅನ್ನು ಹೊಂದಿರುವ ಚಂದಾದಾರಿಕೆ ಕಂಡು ಬಂದಿಲ್ಲ."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:903
-msgid "Error reading export archive"
-msgstr "ರಫ್ತು ಆರ್ಕೈವ್ ಅನ್ನು ಓದುವಲ್ಲಿ ದೋಷ"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1066
-#, java-format
-msgid "Problem generating ueber cert for owner {0}"
-msgstr "{0} ಎಂಬ ಗ್ರಾಹಕನಿಗಾಗಿ ueber cert ಅನ್ನು ಉತ್ಪಾದಿಸುವಲ್ಲಿ ತೊಂದರೆ ಉಂಟಾಗಿದೆ"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1092
-#, java-format
-msgid "ueber certificate for owner {0} was not found. Please generate one."
-msgstr ""
-"{0} ಎಂಬ ಮಾಲಿಕನಿಗಾಗಿ ueber ಪ್ರಮಾಣಪತ್ರವು ಕಂಡುಬಂದಿಲ್ಲ. ದಯವಿಟ್ಟು ಹೊಸತೊಂದನ್ನು "
-"ರಚಿಸಿ."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1120
-#, java-format
-msgid "{0} file imported successfully."
-msgstr "{0} ಕಡತವನ್ನು ಯಶಸ್ವಿಯಾಗಿ ಆಮದು ಮಾಡಲಾಗಿದೆ."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1122
-#, java-format
-msgid "{0} file imported forcibly"
-msgstr "{0} ಕಡತವನ್ನು ಒತ್ತಾಯಪೂರ್ವಕವಾಗಿ ಆಮದು ಮಾಡಲಾಗಿದೆ."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/EventResource.java:85
-#, java-format
-msgid "Event with ID ''{0}'' could not be found."
-msgstr "\"{0}\" ಎಂಬ ID ಯನ್ನು ಹೊಂದಿರುವ ಘಟನೆಯು ಕಂಡುಬಂದಿಲ್ಲ."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/StatisticResource.java:61
-msgid "couldn't generate statistics"
-msgstr "ಅಂಕಿಅಂಶಗಳನ್ನು ಉತ್ಪಾದಿಸಲು ಸಾಧ್ಯವಾಗಿಲ್ಲ"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/PoolResource.java:117
-msgid "Cannot filter on both owner and consumer"
-msgstr "ಮಾಲಿಕ ಹಾಗು ಗ್ರಾಹಕ ಎರಡನ್ನೂ ಫಿಲ್ಟರ್ ಮಾಡಲಾಗುವುದಿಲ್ಲ"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/PoolResource.java:121
-msgid "A consumer or owner is needed to filter on product"
-msgstr "ಉತ್ಪನ್ನದ ಮೇಲೆ ಫಿಲ್ಟರ್ ಮಾಡಲು ಗ್ರಾಹಕ ಅಥವ ಮಾಲಿಕನ ಅಗತ್ಯವಿರುತ್ತದೆ"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/PoolResource.java:140
-#, java-format
-msgid "User {0} cannot access consumer {1}"
-msgstr "{0} ಎಂಬ ಬಳಕೆದಾರ {1} ಎಂಬ ಗ್ರಾಹಕನನ್ನು ನಿಲುಕಿಸಿಕೊಳ್ಳಲು ಸಾಧ್ಯವಿರುವುದಿಲ್ಲ"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/PoolResource.java:151
-#, java-format
-msgid "owner: {0}"
-msgstr "ಮಾಲಿಕ: {0}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/PoolResource.java:155
-#, java-format
-msgid "User {0} cannot access owner {1}"
-msgstr "{0} ಎಂಬ ಬಳಕೆದಾರ {1} ಎಂಬ ಮಾಲಿಕನನ್ನು ನಿಲುಕಿಸಿಕೊಳ್ಳಲು ಸಾಧ್ಯವಿರುವುದಿಲ್ಲ"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/PoolResource.java:164
-#, java-format
-msgid "User {0} cannot access all pools."
-msgstr "{0} ಎಂಬ ಬಳಕೆದಾರ ಎಲ್ಲಾ ಪೂಲ್‌ಗಳನ್ನು ನಿಲುಕಿಸಿಕೊಳ್ಳಲು ಸಾಧ್ಯವಿರುವುದಿಲ್ಲ."
-
-#: src/main/java/org/candlepin/resource/PoolResource.java:192
-#: src/main/java/org/candlepin/resource/PoolResource.java:209
-#, java-format
-msgid "Entitlement Pool with ID ''{0}'' could not be found."
-msgstr ""
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:224
-#, java-format
-msgid "Organization with key: {0} was not found."
-msgstr "ಸಂಸ್ಥೆಯ ಕೀಲಿ: {0} ಕಂಡು ಬಂದಿಲ್ಲ."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:308
-msgid "Insufficient permissions"
-msgstr "ಸಾಕಷ್ಟು ಅನುಮತಿಗಳಿಲ್ಲ"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:314
-msgid "Must specify an org to register with activation keys."
-msgstr ""
-"ಸಕ್ರಿಯಗೊಳಿಕೆ ಕೀಲಿಗಳೊಂದಿಗೆ ನೋಂದಾಯಿಸಲು ಒಂದು ಸಂಸ್ಥೆಯನ್ನು ಸೂಚಿಸುವುದು "
-"ಅಗತ್ಯವಾಗಿರುತ್ತದೆ."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:318
-msgid "Cannot specify username with activation keys."
-msgstr "ಸಕ್ರಿಯಗೊಳಿಕೆ ಕೀಲಿಗಳೊಂದಿಗೆ ಬಳಕೆದಾರ ಹೆಸರನ್ನು ಸೂಚಿಸಲು ಸಾಧ್ಯವಾಗಿಲ್ಲ."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:339
-msgid "A consumer type of 'person' cannot be used with activation keys"
-msgstr "'person' ಎಂಬ ಬಗೆಯ ಗ್ರಾಹಕನನ್ನು ಸಕ್ರಿಯಗೊಳಿಕೆ ಕೀಲಿಗಳೊಂದಿಗೆ ಬಳಸುವಂತಿಲ್ಲ"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:344
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:353
-msgid "System name cannot contain most special characters."
-msgstr "ವ್ಯವಸ್ಥೆಯ ಹೆಸರು ಅತಿ ವಿಶೇಷವಾದ ಅಕ್ಷರಗಳನ್ನು ಹೊಂದಿರುವಂತಿಲ್ಲ."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:398
-msgid "Pool ID must be provided"
-msgstr "ಪೂಲ್ ಐಡಿಯನ್ನು ಒದಗಿಸಬೇಕು"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:422
-#, java-format
-msgid "Problem creating consumer {0}"
-msgstr "{0} ಎಂಬ ಗ್ರಾಹಕನನ್ನು ರಚಿಸುವಾಗ ತೊಂದರೆ ಉಂಟಾಗಿದೆ"
-
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:443
-msgid "System name cannot be null."
-msgstr ""
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:450
-msgid "System name cannot begin with # character"
-msgstr "ವ್ಯವಸ್ಥೆಯ ಹೆಸರು # ಅಕ್ಷರದೊಂದಿಗೆ ಆರಂಭಗೊಳ್ಳುವಂತಿಲ್ಲ"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:496
-#, java-format
-msgid "Activation key ''{0}'' not found for organization ''{1}''."
-msgstr "''{1}'' ಎಂಬ ಸಂಸ್ಥೆಗಾಗಿ ''{0}'' ಎಂಬ ಸಕ್ರಿಯಗೊಳಿಕೆ ಕೀಲಿಯು ಕಂಡುಬಂದಿಲ್ಲ."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:518
-#, java-format
-msgid "User {0} has no roles for organization {1}"
-msgstr "{0} ಎಂಬ ಬಳಕೆದಾರನು {1} ಎಂಬ ಸಂಸ್ಥೆಗಾಗಿ ಯಾವುದೆ ಪಾತ್ರಗಳನ್ನು ಹೊಂದಿಲ್ಲ"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:530
-#, java-format
-msgid "User {0} has already registered a personal consumer"
-msgstr "{0} ಎಂಬ ಬಳಕೆದಾರರು ಒಂದು ಖಾಸಗಿ ಗ್ರಾಹಕನನ್ನು ನೋಂದಾಯಿಸಿದ್ದಾರೆ"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:547
-msgid "You must specify an organization for new consumers."
-msgstr "ಹೊಸ ಗ್ರಾಹಕರಿಗಾಗಿ ನೀವು ಒಂದು ಸಂಸ್ಥೆಯನ್ನು ಸೂಚಿಸುವುದು ಅಗತ್ಯವಾಗಿರುತ್ತದೆ."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:558
-#, java-format
-msgid "Organization {0} does not exist."
-msgstr "{0} ಎಂಬ ಸಂಸ್ಥೆಯು ಅಸ್ತಿತ್ವದಲ್ಲಿಲ್ಲ."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:565
-#, java-format
-msgid "User {0} cannot access organization {1}"
-msgstr ""
-"{0} ಎಂಬ ಬಳಕೆದಾರನು {1} ಎಂಬ ಸಂಸ್ಥೆಯನ್ನು ನಿಲುಕಿಸಿಕೊಳ್ಳಲು ಸಾಧ್ಯವಿರುವುದಿಲ್ಲ"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:985
-#, java-format
-msgid "Cannot unregister {0} consumer {1} because: {2}"
-msgstr "{1} ಎಂಬ ಗ್ರಾಹಕನ {0} ನೋಂದಣಿಯನ್ನು ರದ್ದು ಮಾಡಲಾಗಲಿಲ್ಲ ಏಕೆಂದರೆ: {2}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1072
-msgid "Unable to create entitlement archive"
-msgstr "ಎಂಟೈಟಲ್ಮೆಂಟ್‌ ಆರ್ಕೈವ್ ಅನ್ನು ರಚಿಸಲು ಸಾಧ್ಯವಾಗಿಲ್ಲ"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1183
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1194
-msgid "Cannot bind by multiple parameters."
-msgstr "ಬಹು ನಿಯತಾಂಕದೊಂದಿಗೆ ಬೈಂಡ್ ಮಾಡಲಾಗಿಲ್ಲ"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1188
-msgid "Cannot specify a quantity when auto-binding."
-msgstr "ಸ್ವಯಂ-ಬೈಂಡಿಂಗ್ ಮಾಡುವಾಗ ಒಂದು ಪ್ರಮಾಣವನ್ನು ಸೂಚಿಸಲು ಸಾಧ್ಯವಿರುವುದಿಲ್ಲ"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1257
-#, java-format
-msgid "Asked to be subscribed to a product that has no pool: {0} "
-msgstr "ಯಾವುದೆ ಪೂಲ್ ಅನ್ನು ಹೊಂದಿರದ ಉತ್ಪನ್ನಕ್ಕೆ ಚಂದಾದಾರವಾಗಿರಲು ಕೋರಲಾಗಿದೆ: {0} "
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1332
-#, java-format
-msgid "No such entitlement: {0}"
-msgstr "ಅಂತಹ ಯಾವುದೆ ಎಂಟೈಟಲ್ಮೆಂಟ್ ಇಲ್ಲ: {0}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1356
-#, java-format
-msgid "No such product: {0}"
-msgstr "ಅಂತಹ ಯಾವುದೆ ಉತ್ಪನ್ನ ಇಲ್ಲ: {0}"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1404
-msgid "Consumer with ID "
-msgstr "ಐಡಿಯನ್ನು ಹೊಂದಿರುವ ಗ್ರಾಹಕ"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1442
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:152
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:172
-#, java-format
-msgid "Entitlement with ID ''{0}'' could not be found."
-msgstr "''{0}'' ಎಂಬ IDಯನ್ನು ಹೊಂದಿರದ ಎಂಟೈಟಲ್ಮೆಂಟ್‌ ಕಂಡುಬಂದಿಲ್ಲ."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1466
-#, java-format
-msgid "Entitlement Certificate with serial number {0} could not be found."
-msgstr ""
-"{0} ಎಂಬ ಅನುಕ್ರಮ ಸಂಖ್ಯೆಯನ್ನು ಹೊಂದಿರುವ ಎಂಟೈಟಲ್ಮೆಂಟ್‌ ಪ್ರಮಾಣಪತ್ರವು ಕಂಡುಬಂದಿಲ್ಲ."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1528
-#, java-format
-msgid ""
-"Consumer {0} cannot be exported. A manifest cannot be made for consumer of "
-"type ''{1}''."
-msgstr ""
-"{0} ಎಂಬ ಗ್ರಾಹಕನನ್ನು ರಫ್ತು ಮಾಡಲು ಸಾಧ್ಯವಿರುವುದಿಲ್ಲ. ''{1}'' ಎಂಬ ಬಳಕೆದಾರನಿಗಾಗಿ "
-"ಮ್ಯಾನಿಫೆಸ್ಟ್‍ ಅನ್ನು ಮಾಡಲು ಸಾಧ್ಯವಿರುವುದಿಲ್ಲ."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1546
-msgid "Unable to create export archive"
-msgstr "ರಫ್ತು ಆರ್ಕೈವ್ ಅನ್ನು ರಚಿಸಲು ಸಾಧ್ಯವಾಗಿಲ್ಲ"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1579
-#, java-format
-msgid "Problem regenerating id cert for consumer {0}"
-msgstr "{0} ಎಂಬ ಗ್ರಾಹಕನಿಗಾಗಿ id cert ಅನ್ನು ಉತ್ಪಾದಿಸುವಲ್ಲಿ ತೊಂದರೆ ಉಂಟಾಗಿದೆ"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1646
-#, java-format
-msgid "The consumer with UUID {0} is not a virtual guest."
-msgstr "UUID {0} ಅನ್ನು ಹೊಂದಿರುವ ಗ್ರಾಹಕನು ವರ್ಚುವಲ್ ಅತಿಥಿಯಾಗಿಲ್ಲ."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:105
-#, java-format
-msgid "Consumer: {0} has no entitlement for product {1}"
-msgstr ""
-"ಗ್ರಾಹಕ: {0} ಎನ್ನುವವರು {1} ಎಂಬ ಉತ್ಪನ್ನಕ್ಕಾಗಿ ಯಾವುದೆ ಎಂಟೈಟಲ್ಮೆಂಟ್‌ ಅನ್ನು "
-"ಹೊಂದಿಲ್ಲ"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/RulesResource.java:81
-msgid "Error decoding the rules. The text should be base 64 encoded"
-msgstr ""
-"ನಿಯಮಗಳನ್ನು ಡೀಕೋಡ್ ಮಾಡುವಲ್ಲಿ ದೋಷ ಉಂಟಾಗಿದೆ. ಪಠ್ಯವು ಬೇಸ್ 64 ಎನ್‌ಕೋಡ್ ಮಾಡಿರಬೇಕು"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/RulesResource.java:105
-msgid "couldn't read rules file"
-msgstr "ನಿಯಮಗಳ ಕಡತವನ್ನು ಓದಲು ಸಾಧ್ಯವಾಗಿಲ್ಲ"
-
-#: src/main/java/org/candlepin/resource/ContentResource.java:80
-#, java-format
-msgid "Content with id {0} could not be found."
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/JobResource.java:108
-msgid "You must specify an owner key, consumer UUID, or principal name."
-msgstr ""
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/JobResource.java:114
-msgid ""
-"You must specify one of owner key, consumer uuid, or principal name, but not"
-" all."
-msgstr ""
-"ನೀವು ಒಂದು ಮಾಲಿಕ ಕೀಲಿಯನ್ನು, uuid ಅಥವ ಮುಖ್ಯ ಹೆಸರನ್ನು ಸೂಚಿಸುವುದು "
-"ಅಗತ್ಯವಾಗಿರುತ್ತದೆ, ಆದರೆ ಎಲ್ಲವೂ ಅಗತ್ಯವಿರುವುದಿಲ್ಲ."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/JobResource.java:173
-msgid "Error setting scheduler status"
-msgstr "ಶೆಡ್ಯೂಲರ್ ಸ್ಥಿತಿಯನ್ನು ಹೊಂದಿಸುವಲ್ಲಿ ದೋಷ"
-
-#: src/main/java/org/candlepin/resource/JobResource.java:201
-msgid "job already canceled"
-msgstr ""
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/JobResource.java:204
-msgid "cannot cancel a job that is not in CREATED state"
-msgstr "CREATED ಸ್ಥಿತಿಯಲ್ಲಿರದ ಕೆಲಸವನ್ನು ರದ್ದುಗೊಳಿಸಲು ಸಾಧ್ಯವಿರುವುದಿಲ್ಲ."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/resource/MigrationResource.java:64
-msgid "Bad entity value."
-msgstr "ತಪ್ಪು ಘಟಕದ ಮೌಲ್ಯ."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:85
-msgid "ConsumerType with id '"
-msgstr "ಈ ಐಡಿಯನ್ನು ಹೊಂದಿರುವ ಗ್ರಾಹಕರ ಬಗೆ '"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:107
-#, java-format
-msgid "Problem creating consumertype: {0}"
-msgstr "ಗ್ರಾಹಕರ ಬಗೆಯನ್ನು ರಚಿಸಲು ಸಾಧ್ಯವಾಗಿಲ್ಲ: {0}"
-
-#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:128
-#, java-format
-msgid "Consumer Type with label {0} could not be found."
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:149
-#, java-format
-msgid "Consumer Type with id {0} could not be found."
-msgstr ""
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/guice/I18nProvider.java:92
-#: src/main/java/org/candlepin/exceptions/mappers/BadRequestExceptionMapper.java:70
-msgid "Bad Request"
-msgstr "ತಪ್ಪು ಮನವಿ"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/model/EntitlementCurator.java:247
-#, java-format
-msgid "No product found for product id {0}"
-msgstr "{0} ಎಂಬ ಐಡಿಯನ್ನು ಹೊಂದಿರುವ ಯಾವುದೆ ಉತ್ಪನ್ನವಿಲ್ಲ"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:96
-#, java-format
-msgid "Name of the consumer should be shorter than {0} characters."
-msgstr "ಗ್ರಾಹಕರ ಹೆಸರು {0} ಅಕ್ಷರಗಳಿಗಿಂತ ಚಿಕ್ಕದಾಗಿರಬೇಕು."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:353
-#, java-format
-msgid ""
-"The consumer with UUID {0} is a virtual guest. It does not have guests."
-msgstr ""
-"UUID {0} ಅನ್ನು ಹೊಂದಿರುವ ಗ್ರಾಹಕನು ವರ್ಚುವಲ್ ಅತಿಥಿಯಾಗಿದ್ದಾರೆ. ಇದು ಅತಿಥಿಗಳನ್ನು "
-"ಹೊಂದಿಲ್ಲ."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/auth/interceptor/SecurityInterceptor.java:193
-msgid "Unable to verify request."
-msgstr "ಮನವಿಯನ್ನು ಪರಿಶೀಲಿಸಲು ಸಾಧ್ಯವಾಗಿಲ್ಲ."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/auth/interceptor/SecurityInterceptor.java:202
-msgid "Organization"
-msgstr "ಸಂಸ್ಥೆ"
-
-#: src/main/java/org/candlepin/auth/interceptor/SecurityInterceptor.java:207
-#, java-format
-msgid "{0} with id {1} could not be found."
-msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author shanky
@@ -1055,25 +348,638 @@ msgid "{0} deleted the guest id {1}"
 msgstr "{0} ಎನ್ನುವುದು {1} ಎಂಬ ಅತಿಥಿ idಯನ್ನು ಅಳಿಸಿದೆ"
 
 # translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/policy/js/entitlement/AbstractEntitlementRules.java:161
+# keys
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:96
 #, java-format
-msgid "''{0}'' Should contain name, priority and at least one attribute"
+msgid "Name of the consumer should be shorter than {0} characters."
+msgstr "ಗ್ರಾಹಕರ ಹೆಸರು {0} ಅಕ್ಷರಗಳಿಗಿಂತ ಚಿಕ್ಕದಾಗಿರಬೇಕು."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:353
+#, java-format
+msgid ""
+"The consumer with UUID {0} is a virtual guest. It does not have guests."
 msgstr ""
-"''{0}'' ಎನ್ನುವುದು ಹೆಸರು, ಆದ್ಯತೆ ಹಾಗು ಕನಿಷ್ಟ ಒಂದು ಗುಣವಿಶೇಷವನ್ನು ಹೊಂದಿರಬೇಕು"
+"UUID {0} ಅನ್ನು ಹೊಂದಿರುವ ಗ್ರಾಹಕನು ವರ್ಚುವಲ್ ಅತಿಥಿಯಾಗಿದ್ದಾರೆ. ಇದು ಅತಿಥಿಗಳನ್ನು "
+"ಹೊಂದಿಲ್ಲ."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/policy/js/entitlement/AbstractEntitlementRules.java:176
-msgid "second parameter should be the priority number."
-msgstr "ಎರಡನೆ ನಿಯತಾಂಕವು ಆದ್ಯತೆ ಸಂಖ್ಯೆಯಾಗಿರಬೇಕು."
-
-# translation auto-copied from project Candlepin, version master, document
-# keys
-#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:88
+#: src/main/java/org/candlepin/model/EntitlementCurator.java:247
 #, java-format
-msgid "Entitlements for {0} expired on: {1}"
-msgstr "{0} ಗಾಗಿನ ಎಂಟೈಟಲ್ಮೆಂಟ್‌ಗಳ ವಾಯಿದೆಯು ಈ ದಿನಾಂಕದಂದು ಕೊನೆಗೊಳ್ಳುತ್ತವೆ: {1}"
+msgid "No product found for product id {0}"
+msgstr "{0} ಎಂಬ ಐಡಿಯನ್ನು ಹೊಂದಿರುವ ಯಾವುದೆ ಉತ್ಪನ್ನವಿಲ್ಲ"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:122
+#: src/main/java/org/candlepin/resource/OwnerResource.java:549
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:627
+#, java-format
+msgid "No such consumer type: {0}"
+msgstr "ಆ ಬಗೆಯ ಯಾವುದೆ ಗ್ರಾಹಕರಿಲ್ಲ: {0}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/PoolResource.java:117
+msgid "Cannot filter on both owner and consumer"
+msgstr "ಮಾಲಿಕ ಹಾಗು ಗ್ರಾಹಕ ಎರಡನ್ನೂ ಫಿಲ್ಟರ್ ಮಾಡಲಾಗುವುದಿಲ್ಲ"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/PoolResource.java:121
+msgid "A consumer or owner is needed to filter on product"
+msgstr "ಉತ್ಪನ್ನದ ಮೇಲೆ ಫಿಲ್ಟರ್ ಮಾಡಲು ಗ್ರಾಹಕ ಅಥವ ಮಾಲಿಕನ ಅಗತ್ಯವಿರುತ್ತದೆ"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/PoolResource.java:134
+#: src/main/java/org/candlepin/resource/OwnerResource.java:587
+#, java-format
+msgid "consumer: {0} not found"
+msgstr "ಗ್ರಾಹಕ: {0} ಕಂಡುಬಂದಿಲ್ಲ"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/PoolResource.java:140
+#, java-format
+msgid "User {0} cannot access consumer {1}"
+msgstr "{0} ಎಂಬ ಬಳಕೆದಾರ {1} ಎಂಬ ಗ್ರಾಹಕನನ್ನು ನಿಲುಕಿಸಿಕೊಳ್ಳಲು ಸಾಧ್ಯವಿರುವುದಿಲ್ಲ"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/PoolResource.java:151
+#, java-format
+msgid "owner: {0}"
+msgstr "ಮಾಲಿಕ: {0}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/PoolResource.java:155
+#, java-format
+msgid "User {0} cannot access owner {1}"
+msgstr "{0} ಎಂಬ ಬಳಕೆದಾರ {1} ಎಂಬ ಮಾಲಿಕನನ್ನು ನಿಲುಕಿಸಿಕೊಳ್ಳಲು ಸಾಧ್ಯವಿರುವುದಿಲ್ಲ"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/PoolResource.java:164
+#, java-format
+msgid "User {0} cannot access all pools."
+msgstr "{0} ಎಂಬ ಬಳಕೆದಾರ ಎಲ್ಲಾ ಪೂಲ್‌ಗಳನ್ನು ನಿಲುಕಿಸಿಕೊಳ್ಳಲು ಸಾಧ್ಯವಿರುವುದಿಲ್ಲ."
+
+#: src/main/java/org/candlepin/resource/PoolResource.java:192
+#: src/main/java/org/candlepin/resource/PoolResource.java:209
+#, java-format
+msgid "Entitlement Pool with ID ''{0}'' could not be found."
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:253
+#, java-format
+msgid "Could not create the Owner: {0}. Parent {1} does not exist."
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/OwnerResource.java:265
+#, java-format
+msgid "Could not create the Owner: {0}"
+msgstr ""
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/OwnerResource.java:449
+msgid "Must provide a name for activation key."
+msgstr "ಸಕ್ರಿಯಗೊಳಿಕೆ ಕೀಲಿಗಾಗಿ ಒಂದು ಹೆಸರನ್ನು ಒದಗಿಸುವುದು ಅತ್ಯಗತ್ಯ."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/OwnerResource.java:456
+msgid ""
+"Activation key names must be alphanumeric or the characters '-' or '_'. ["
+msgstr ""
+"ಸಕ್ರಿಯಗೊಳಿಕೆ ಕೀಲಿಯ ಹೆಸರುಗಳು ವರ್ಣಮಾಲೆಅಂಕೀಯ (ಅಲ್ಫಾನ್ಯೂಮರಿಕ್) ಅಥವ '-' ಅಥವ '_' "
+"ಅನ್ನು ಹೊಂದಿರಬೇಕು. ["
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/OwnerResource.java:463
+msgid "Activation key name ["
+msgstr "ಸಕ್ರಿಯಗೊಳಿಕೆ ಕೀಲಿಯ ಹೆಸರು ["
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/OwnerResource.java:691
+#: src/main/java/org/candlepin/resource/OwnerResource.java:796
+#: src/main/java/org/candlepin/resource/OwnerResource.java:960
+#: src/main/java/org/candlepin/resource/OwnerResource.java:990
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1019
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1045
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1084
+#, java-format
+msgid "owner with key: {0} was not found."
+msgstr "ಕೀಲಿ : {0}ಅನ್ನು ಹೊಂದಿರುವ ಮಾಲಿಕ ಕಂಡು ಬಂದಿಲ್ಲ."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/OwnerResource.java:701
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1322
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:124
+#: src/main/java/org/candlepin/resource/SubscriptionResource.java:152
+#, java-format
+msgid "No such consumer: {0}"
+msgstr "ಅಂತಹ ಯಾವುದೆ ಗ್ರಾಹಕರಿಲ್ಲ: {0}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/OwnerResource.java:764
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:466
+#, java-format
+msgid "Service level {0} is not available to consumers of organization {1}."
+msgstr "{1} ಎಂಬ ಸಂಸ್ಥೆಯ ಗ್ರಾಹಕರಿಗೆ ಸೇವೆಯ ಮಟ್ಟ {1} ಲಭ್ಯವಿರುವುದಿಲ್ಲ."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/OwnerResource.java:815
+#, java-format
+msgid "subscription with id: {0} not found."
+msgstr "id: {0} ಅನ್ನು ಹೊಂದಿರುವ ಚಂದಾದಾರಿಕೆ ಕಂಡು ಬಂದಿಲ್ಲ."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/OwnerResource.java:903
+msgid "Error reading export archive"
+msgstr "ರಫ್ತು ಆರ್ಕೈವ್ ಅನ್ನು ಓದುವಲ್ಲಿ ದೋಷ"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1066
+#, java-format
+msgid "Problem generating ueber cert for owner {0}"
+msgstr "{0} ಎಂಬ ಗ್ರಾಹಕನಿಗಾಗಿ ueber cert ಅನ್ನು ಉತ್ಪಾದಿಸುವಲ್ಲಿ ತೊಂದರೆ ಉಂಟಾಗಿದೆ"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1092
+#, java-format
+msgid "ueber certificate for owner {0} was not found. Please generate one."
+msgstr ""
+"{0} ಎಂಬ ಮಾಲಿಕನಿಗಾಗಿ ueber ಪ್ರಮಾಣಪತ್ರವು ಕಂಡುಬಂದಿಲ್ಲ. ದಯವಿಟ್ಟು ಹೊಸತೊಂದನ್ನು "
+"ರಚಿಸಿ."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1120
+#, java-format
+msgid "{0} file imported successfully."
+msgstr "{0} ಕಡತವನ್ನು ಯಶಸ್ವಿಯಾಗಿ ಆಮದು ಮಾಡಲಾಗಿದೆ."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1122
+#, java-format
+msgid "{0} file imported forcibly"
+msgstr "{0} ಕಡತವನ್ನು ಒತ್ತಾಯಪೂರ್ವಕವಾಗಿ ಆಮದು ಮಾಡಲಾಗಿದೆ."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:224
+#, java-format
+msgid "Organization with key: {0} was not found."
+msgstr "ಸಂಸ್ಥೆಯ ಕೀಲಿ: {0} ಕಂಡು ಬಂದಿಲ್ಲ."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:308
+msgid "Insufficient permissions"
+msgstr "ಸಾಕಷ್ಟು ಅನುಮತಿಗಳಿಲ್ಲ"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:314
+msgid "Must specify an org to register with activation keys."
+msgstr ""
+"ಸಕ್ರಿಯಗೊಳಿಕೆ ಕೀಲಿಗಳೊಂದಿಗೆ ನೋಂದಾಯಿಸಲು ಒಂದು ಸಂಸ್ಥೆಯನ್ನು ಸೂಚಿಸುವುದು "
+"ಅಗತ್ಯವಾಗಿರುತ್ತದೆ."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:318
+msgid "Cannot specify username with activation keys."
+msgstr "ಸಕ್ರಿಯಗೊಳಿಕೆ ಕೀಲಿಗಳೊಂದಿಗೆ ಬಳಕೆದಾರ ಹೆಸರನ್ನು ಸೂಚಿಸಲು ಸಾಧ್ಯವಾಗಿಲ್ಲ."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:339
+msgid "A consumer type of 'person' cannot be used with activation keys"
+msgstr "'person' ಎಂಬ ಬಗೆಯ ಗ್ರಾಹಕನನ್ನು ಸಕ್ರಿಯಗೊಳಿಕೆ ಕೀಲಿಗಳೊಂದಿಗೆ ಬಳಸುವಂತಿಲ್ಲ"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:344
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:353
+msgid "System name cannot contain most special characters."
+msgstr "ವ್ಯವಸ್ಥೆಯ ಹೆಸರು ಅತಿ ವಿಶೇಷವಾದ ಅಕ್ಷರಗಳನ್ನು ಹೊಂದಿರುವಂತಿಲ್ಲ."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:398
+msgid "Pool ID must be provided"
+msgstr "ಪೂಲ್ ಐಡಿಯನ್ನು ಒದಗಿಸಬೇಕು"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:422
+#, java-format
+msgid "Problem creating consumer {0}"
+msgstr "{0} ಎಂಬ ಗ್ರಾಹಕನನ್ನು ರಚಿಸುವಾಗ ತೊಂದರೆ ಉಂಟಾಗಿದೆ"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:443
+msgid "System name cannot be null."
+msgstr ""
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:450
+msgid "System name cannot begin with # character"
+msgstr "ವ್ಯವಸ್ಥೆಯ ಹೆಸರು # ಅಕ್ಷರದೊಂದಿಗೆ ಆರಂಭಗೊಳ್ಳುವಂತಿಲ್ಲ"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:496
+#, java-format
+msgid "Activation key ''{0}'' not found for organization ''{1}''."
+msgstr "''{1}'' ಎಂಬ ಸಂಸ್ಥೆಗಾಗಿ ''{0}'' ಎಂಬ ಸಕ್ರಿಯಗೊಳಿಕೆ ಕೀಲಿಯು ಕಂಡುಬಂದಿಲ್ಲ."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:518
+#, java-format
+msgid "User {0} has no roles for organization {1}"
+msgstr "{0} ಎಂಬ ಬಳಕೆದಾರನು {1} ಎಂಬ ಸಂಸ್ಥೆಗಾಗಿ ಯಾವುದೆ ಪಾತ್ರಗಳನ್ನು ಹೊಂದಿಲ್ಲ"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:530
+#, java-format
+msgid "User {0} has already registered a personal consumer"
+msgstr "{0} ಎಂಬ ಬಳಕೆದಾರರು ಒಂದು ಖಾಸಗಿ ಗ್ರಾಹಕನನ್ನು ನೋಂದಾಯಿಸಿದ್ದಾರೆ"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:547
+msgid "You must specify an organization for new consumers."
+msgstr "ಹೊಸ ಗ್ರಾಹಕರಿಗಾಗಿ ನೀವು ಒಂದು ಸಂಸ್ಥೆಯನ್ನು ಸೂಚಿಸುವುದು ಅಗತ್ಯವಾಗಿರುತ್ತದೆ."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:558
+#, java-format
+msgid "Organization {0} does not exist."
+msgstr "{0} ಎಂಬ ಸಂಸ್ಥೆಯು ಅಸ್ತಿತ್ವದಲ್ಲಿಲ್ಲ."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:565
+#, java-format
+msgid "User {0} cannot access organization {1}"
+msgstr ""
+"{0} ಎಂಬ ಬಳಕೆದಾರನು {1} ಎಂಬ ಸಂಸ್ಥೆಯನ್ನು ನಿಲುಕಿಸಿಕೊಳ್ಳಲು ಸಾಧ್ಯವಿರುವುದಿಲ್ಲ"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:707
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:98
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:117
+#, java-format
+msgid "No such environment: {0}"
+msgstr "ಅಂತಹ ಯಾವುದೆ ಪರಿಸರವಿಲ್ಲ: {0}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:985
+#, java-format
+msgid "Cannot unregister {0} consumer {1} because: {2}"
+msgstr "{1} ಎಂಬ ಗ್ರಾಹಕನ {0} ನೋಂದಣಿಯನ್ನು ರದ್ದು ಮಾಡಲಾಗಲಿಲ್ಲ ಏಕೆಂದರೆ: {2}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1072
+msgid "Unable to create entitlement archive"
+msgstr "ಎಂಟೈಟಲ್ಮೆಂಟ್‌ ಆರ್ಕೈವ್ ಅನ್ನು ರಚಿಸಲು ಸಾಧ್ಯವಾಗಿಲ್ಲ"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1183
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1194
+msgid "Cannot bind by multiple parameters."
+msgstr "ಬಹು ನಿಯತಾಂಕದೊಂದಿಗೆ ಬೈಂಡ್ ಮಾಡಲಾಗಿಲ್ಲ"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1188
+msgid "Cannot specify a quantity when auto-binding."
+msgstr "ಸ್ವಯಂ-ಬೈಂಡಿಂಗ್ ಮಾಡುವಾಗ ಒಂದು ಪ್ರಮಾಣವನ್ನು ಸೂಚಿಸಲು ಸಾಧ್ಯವಿರುವುದಿಲ್ಲ"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1257
+#, java-format
+msgid "Asked to be subscribed to a product that has no pool: {0} "
+msgstr "ಯಾವುದೆ ಪೂಲ್ ಅನ್ನು ಹೊಂದಿರದ ಉತ್ಪನ್ನಕ್ಕೆ ಚಂದಾದಾರವಾಗಿರಲು ಕೋರಲಾಗಿದೆ: {0} "
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1332
+#, java-format
+msgid "No such entitlement: {0}"
+msgstr "ಅಂತಹ ಯಾವುದೆ ಎಂಟೈಟಲ್ಮೆಂಟ್ ಇಲ್ಲ: {0}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1356
+#, java-format
+msgid "No such product: {0}"
+msgstr "ಅಂತಹ ಯಾವುದೆ ಉತ್ಪನ್ನ ಇಲ್ಲ: {0}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1404
+msgid "Consumer with ID "
+msgstr "ಐಡಿಯನ್ನು ಹೊಂದಿರುವ ಗ್ರಾಹಕ"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1442
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:152
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:172
+#, java-format
+msgid "Entitlement with ID ''{0}'' could not be found."
+msgstr "''{0}'' ಎಂಬ IDಯನ್ನು ಹೊಂದಿರದ ಎಂಟೈಟಲ್ಮೆಂಟ್‌ ಕಂಡುಬಂದಿಲ್ಲ."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1466
+#, java-format
+msgid "Entitlement Certificate with serial number {0} could not be found."
+msgstr ""
+"{0} ಎಂಬ ಅನುಕ್ರಮ ಸಂಖ್ಯೆಯನ್ನು ಹೊಂದಿರುವ ಎಂಟೈಟಲ್ಮೆಂಟ್‌ ಪ್ರಮಾಣಪತ್ರವು ಕಂಡುಬಂದಿಲ್ಲ."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1528
+#, java-format
+msgid ""
+"Consumer {0} cannot be exported. A manifest cannot be made for consumer of "
+"type ''{1}''."
+msgstr ""
+"{0} ಎಂಬ ಗ್ರಾಹಕನನ್ನು ರಫ್ತು ಮಾಡಲು ಸಾಧ್ಯವಿರುವುದಿಲ್ಲ. ''{1}'' ಎಂಬ ಬಳಕೆದಾರನಿಗಾಗಿ "
+"ಮ್ಯಾನಿಫೆಸ್ಟ್‍ ಅನ್ನು ಮಾಡಲು ಸಾಧ್ಯವಿರುವುದಿಲ್ಲ."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1546
+msgid "Unable to create export archive"
+msgstr "ರಫ್ತು ಆರ್ಕೈವ್ ಅನ್ನು ರಚಿಸಲು ಸಾಧ್ಯವಾಗಿಲ್ಲ"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1579
+#, java-format
+msgid "Problem regenerating id cert for consumer {0}"
+msgstr "{0} ಎಂಬ ಗ್ರಾಹಕನಿಗಾಗಿ id cert ಅನ್ನು ಉತ್ಪಾದಿಸುವಲ್ಲಿ ತೊಂದರೆ ಉಂಟಾಗಿದೆ"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1646
+#, java-format
+msgid "The consumer with UUID {0} is not a virtual guest."
+msgstr "UUID {0} ಅನ್ನು ಹೊಂದಿರುವ ಗ್ರಾಹಕನು ವರ್ಚುವಲ್ ಅತಿಥಿಯಾಗಿಲ್ಲ."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/MigrationResource.java:64
+msgid "Bad entity value."
+msgstr "ತಪ್ಪು ಘಟಕದ ಮೌಲ್ಯ."
+
+#: src/main/java/org/candlepin/resource/JobResource.java:108
+msgid "You must specify an owner key, consumer UUID, or principal name."
+msgstr ""
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/JobResource.java:114
+msgid ""
+"You must specify one of owner key, consumer uuid, or principal name, but not"
+" all."
+msgstr ""
+"ನೀವು ಒಂದು ಮಾಲಿಕ ಕೀಲಿಯನ್ನು, uuid ಅಥವ ಮುಖ್ಯ ಹೆಸರನ್ನು ಸೂಚಿಸುವುದು "
+"ಅಗತ್ಯವಾಗಿರುತ್ತದೆ, ಆದರೆ ಎಲ್ಲವೂ ಅಗತ್ಯವಿರುವುದಿಲ್ಲ."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/JobResource.java:173
+msgid "Error setting scheduler status"
+msgstr "ಶೆಡ್ಯೂಲರ್ ಸ್ಥಿತಿಯನ್ನು ಹೊಂದಿಸುವಲ್ಲಿ ದೋಷ"
+
+#: src/main/java/org/candlepin/resource/JobResource.java:201
+msgid "job already canceled"
+msgstr ""
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/JobResource.java:204
+msgid "cannot cancel a job that is not in CREATED state"
+msgstr "CREATED ಸ್ಥಿತಿಯಲ್ಲಿರದ ಕೆಲಸವನ್ನು ರದ್ದುಗೊಳಿಸಲು ಸಾಧ್ಯವಿರುವುದಿಲ್ಲ."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:105
+#, java-format
+msgid "Consumer: {0} has no entitlement for product {1}"
+msgstr ""
+"ಗ್ರಾಹಕ: {0} ಎನ್ನುವವರು {1} ಎಂಬ ಉತ್ಪನ್ನಕ್ಕಾಗಿ ಯಾವುದೆ ಎಂಟೈಟಲ್ಮೆಂಟ್‌ ಅನ್ನು "
+"ಹೊಂದಿಲ್ಲ"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:247
+#, java-format
+msgid "No such environment : {0}"
+msgstr "ಅಂತಹ ಯಾವುದೆ ಪರಿಸರವಿಲ್ಲ: {0}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/StatisticResource.java:61
+msgid "couldn't generate statistics"
+msgstr "ಅಂಕಿಅಂಶಗಳನ್ನು ಉತ್ಪಾದಿಸಲು ಸಾಧ್ಯವಾಗಿಲ್ಲ"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/RulesResource.java:81
+msgid "Error decoding the rules. The text should be base 64 encoded"
+msgstr ""
+"ನಿಯಮಗಳನ್ನು ಡೀಕೋಡ್ ಮಾಡುವಲ್ಲಿ ದೋಷ ಉಂಟಾಗಿದೆ. ಪಠ್ಯವು ಬೇಸ್ 64 ಎನ್‌ಕೋಡ್ ಮಾಡಿರಬೇಕು"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/RulesResource.java:105
+msgid "couldn't read rules file"
+msgstr "ನಿಯಮಗಳ ಕಡತವನ್ನು ಓದಲು ಸಾಧ್ಯವಾಗಿಲ್ಲ"
+
+#: src/main/java/org/candlepin/resource/ProductResource.java:116
+#: src/main/java/org/candlepin/resource/ProductResource.java:135
+#: src/main/java/org/candlepin/resource/ProductResource.java:195
+#, java-format
+msgid "Product with UUID ''{0}'' could not be found."
+msgstr ""
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/ProductResource.java:199
+#, java-format
+msgid "Product with UUID ''{0}'' cannot be deleted while subscriptions exist."
+msgstr ""
+"ಚಂದಾದಾರಿಕೆಯು ಇರುವಂತೆಯೆ UUID ''{0}'' ಯನ್ನು ಹೊಂದಿರುವ ಉತ್ಪನ್ನವನ್ನು ಅಳಿಸಲು "
+"ಸಾಧ್ಯವಿರುವುದಿಲ್ಲ."
+
+#: src/main/java/org/candlepin/resource/ProductResource.java:254
+msgid "Must specify product ID."
+msgstr ""
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/SubscriptionResource.java:122
+#, java-format
+msgid "no certificate for subscription {0}"
+msgstr "{0} ಎಂಬ ಚಂದಾದಾರಿಕೆಗೆ ಯಾವುದೆ ಪ್ರಮಾಣಪತ್ರವು ಇಲ್ಲ"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/SubscriptionResource.java:141
+msgid "email is required for notification"
+msgstr "ಸೂಚನೆಗಾಗಿ ಇಮೈಲ್‌ನ ಅಗತ್ಯವಿರುತ್ತದೆ"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/SubscriptionResource.java:146
+msgid "email locale is required for notification"
+msgstr "ಸೂಚನೆಗಾಗಿ ಇಮೈಲ್‌ನ ಲೊಕ್ಯಾಲ್‌ನ ಅಗತ್ಯವಿರುತ್ತದೆ"
+
+#: src/main/java/org/candlepin/resource/SubscriptionResource.java:182
+#, java-format
+msgid "Subscription with id {0} could not be found."
+msgstr ""
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/EventResource.java:85
+#, java-format
+msgid "Event with ID ''{0}'' could not be found."
+msgstr "\"{0}\" ಎಂಬ ID ಯನ್ನು ಹೊಂದಿರುವ ಘಟನೆಯು ಕಂಡುಬಂದಿಲ್ಲ."
+
+#: src/main/java/org/candlepin/resource/ContentResource.java:80
+#, java-format
+msgid "Content with id {0} could not be found."
+msgstr ""
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:135
+msgid "The quantity must be greater than 0"
+msgstr "ಪ್ರಮಾಣವು 0 ಗಿಂತ ದೊಡ್ಡದಾಗಿರಬೇಕು"
+
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:145
+msgid ""
+"Cannot add pools restricted to consumer type 'person' to activation keys."
+msgstr ""
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:152
+msgid ""
+"Error: Only pools with multi-entitlement product subscriptions can be added "
+"to the activation key with a quantity greater than one."
+msgstr ""
+"ದೋಷ: ಕೇವಲ ಅನೇಕ-ಎಂಟೈಟಲ್ಮೆಂಟ್‌ ಉತ್ಪನ್ನ ಚಂದಾದಾರಿಕೆಗಳನ್ನು ಹೊಂದಿರುವ ಪೂಲ್‌ಗಳನ್ನು "
+"ಮಾತ್ರ ಒಂದಕ್ಕಿಂತ ದೊಡ್ಡದಾದ ಸಕ್ರಿಯಗೊಳಿಕೆ ಕೀಲಿಯನ್ನು ಸೇರಿಸಲು ಸಾಧ್ಯವಿರುತ್ತದೆ."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:159
+msgid "The quantity must not be greater than the total allowed for the pool"
+msgstr "ಪ್ರಮಾಣವು ಪೂಲ್‌ಗೆ ಒಟ್ಟು ಅನುಮತಿಯಿರುವುದಕ್ಕಿಂತ ಹೆಚ್ಚು ಇರಬಾರದು"
+
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:220
+#, java-format
+msgid "ActivationKey with id {0} could not be found."
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:231
+#, java-format
+msgid "Pool with id {0} could not be found."
+msgstr ""
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:85
+msgid "ConsumerType with id '"
+msgstr "ಈ ಐಡಿಯನ್ನು ಹೊಂದಿರುವ ಗ್ರಾಹಕರ ಬಗೆ '"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:107
+#, java-format
+msgid "Problem creating consumertype: {0}"
+msgstr "ಗ್ರಾಹಕರ ಬಗೆಯನ್ನು ರಚಿಸಲು ಸಾಧ್ಯವಾಗಿಲ್ಲ: {0}"
+
+#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:128
+#, java-format
+msgid "Consumer Type with label {0} could not be found."
+msgstr ""
+
+#: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:149
+#, java-format
+msgid "Consumer Type with id {0} could not be found."
+msgstr ""
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/RoleResource.java:82
+#, java-format
+msgid "No such owner: {0}"
+msgstr "ಅಂತಹ ಯಾವುದೆ ಮಾಲಿಕನಿಲ್ಲ: {0}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/RoleResource.java:112
+msgid "Role ID does not match path."
+msgstr "ಪಾತ್ರದ ID ಯು ಮಾರ್ಗಕ್ಕೆ ಹೊಂದಿಕೆಯಾಗುತ್ತಿಲ್ಲ."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/RoleResource.java:138
+msgid "Access type NONE not supported."
+msgstr "NONE ಎಂಬ ನಿಲುಕಣೆಯ ಬಗೆಗೆ ಅನುಮತಿ ಇಲ್ಲ."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/RoleResource.java:177
+#, java-format
+msgid "No such permission: {0} in role: {1}"
+msgstr "ಅಂತಹ ಯಾವುದೆ ಅನುಮತಿ ಇಲ್ಲ: {0} ಪಾತ್ರದಲ್ಲಿರುವುದು: {1}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/RoleResource.java:191
+#, java-format
+msgid "No such role: {0}"
+msgstr "ಅಂತಹ ಯಾವುದೆ ಪಾತ್ರವಿಲ್ಲ: {0}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/resource/RoleResource.java:199
+#, java-format
+msgid "No such user: {0}"
+msgstr "ಅಂತಹ ಯಾವುದೆ ಬಳಕೆದಾರರಿಲ್ಲ: {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1088,6 +994,70 @@ msgstr "{1}.{2}:{3} ನಲ್ಲಿ ಚಾಲನಾ ಸಮಯದ ದೋಷ {0}"
 #, java-format
 msgid "{0} is not a valid value for {1}"
 msgstr "{0} ಎನ್ನುವುದು {1} ನ ಒಂದು ಮಾನ್ಯವಾದ ಮೌಲ್ಯ"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/sync/Importer.java:142
+msgid "Wrong metadata type"
+msgstr "ತಪ್ಪು ಮೆಟಾಡೇಟದ ಬಗೆ"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/sync/Importer.java:151
+msgid "Invalid owner"
+msgstr "ಅಮಾನ್ಯವಾದ ಮಾಲಿಕ"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/sync/Importer.java:163
+msgid "Import is older than existing data"
+msgstr "ಆಮದು ಮಾಡಲಾಗಿದ್ದು ಈಗಿರುವ ಮಾಹಿತಿಗಿಂತ ಹಳೆಯದಾಗಿದೆ"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/sync/Importer.java:202
+#: src/main/java/org/candlepin/sync/Importer.java:207
+msgid "Failed to import archive"
+msgstr "ಆರ್ಕೈವ್‌ ಅನ್ನು ಆಮದು ಮಾಡಿಕೊಳ್ಳಲು ವಿಫಲಗೊಂಡಿದೆ"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/sync/Importer.java:306
+#, java-format
+msgid "Incompatible rules: import version {0} older than our version {1}."
+msgstr ""
+"ಹೊಂದಿಕೆಯಾಗದ ನಿಯಮಗಳು: ಆಮದು ಮಾಡಲಾದ ಆವೃತ್ತಿಯಾದ {0} ನಮ್ಮ ಆವೃತ್ತಿ {1} ಗಿಂತ "
+"ಹಳೆಯದಾಗಿದೆ."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/sync/Importer.java:309
+msgid "Manifest data will be imported without rules import."
+msgstr "ಮ್ಯಾನಿಫೆಸ್ಟ್‍ ಮಾಹಿತಿಯನ್ನು ನಿಯಮಗಳ ಆಮದು ಇಲ್ಲದೆ ಆಮದು ಮಾಡಿಕೊಳ್ಳಲಾಗುತ್ತದೆ."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/sync/EntitlementImporter.java:119
+msgid "Unable to find product with ID: "
+msgstr "ಈ ಉತ್ಪನ್ನ IDಯೊಂದಿಗಿನ ಉತ್ಪನ್ನವನ್ನು ಪತ್ತೆ ಮಾಡಲು ಸಾಧ್ಯವಾಗಿಲ್ಲ: "
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/sync/ConsumerImporter.java:47
+msgid "No ID for upstream distributor"
+msgstr "ಅಪ್‌ಸ್ಟ್ರೀಮ್ ವಿತರಕರಿಗೆ ಯಾವುದೆ ID ಇಲ್ಲ"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/sync/ConsumerImporter.java:57
+msgid "This distributor has already been imported by another owner"
+msgstr "ಈ ಮಾಲಿಕನು ಈಗಾಗಲೆ ಬೇರೊಂದು ವಿತರಕರಿಂದ ಆಮದು ಮಾಡಿಕೊಂಡಿದ್ದಾನೆ"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/sync/ConsumerImporter.java:63
+msgid "Owner has already imported from another distributor"
+msgstr "ಮಾಲಿಕನು ಈಗಾಗಲೆ ಬೇರೊಂದು ವಿತರಕರಿಂದ ಆಮದು ಮಾಡಿಕೊಂಡಿದ್ದಾನೆ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1127,3 +1097,32 @@ msgstr "OAuth ದೋಷವು ಎದುರಾಗಿದೆ. ಆಂತರಿಕ �
 #: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:160
 msgid "Error getting oauth consumer Key"
 msgstr "oauth ಗ್ರಾಹಕ ಕೀಲಿಯನ್ನು ಪಡೆಯುವಲ್ಲಿ ದೋಷ"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java:145
+msgid "Standalone candlepin does not support redeeming a subscription."
+msgstr ""
+"ಪ್ರತ್ಯೇಕ ಕ್ಯಾಂಡಲ್‌ಪಿನ್ ಒಂದು ಚಂದಾದಾರಿಕೆಯನ್ನು ಹಿಂಪಡೆಯುವಿಕೆಯನ್ನು "
+"ಬೆಂಬಲಿಸುವುದಿಲ್ಲ."
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:88
+#, java-format
+msgid "Entitlements for {0} expired on: {1}"
+msgstr "{0} ಗಾಗಿನ ಎಂಟೈಟಲ್ಮೆಂಟ್‌ಗಳ ವಾಯಿದೆಯು ಈ ದಿನಾಂಕದಂದು ಕೊನೆಗೊಳ್ಳುತ್ತವೆ: {1}"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys, author shanky
+#: src/main/java/org/candlepin/policy/js/entitlement/AbstractEntitlementRules.java:161
+#, java-format
+msgid "''{0}'' Should contain name, priority and at least one attribute"
+msgstr ""
+"''{0}'' ಎನ್ನುವುದು ಹೆಸರು, ಆದ್ಯತೆ ಹಾಗು ಕನಿಷ್ಟ ಒಂದು ಗುಣವಿಶೇಷವನ್ನು ಹೊಂದಿರಬೇಕು"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/policy/js/entitlement/AbstractEntitlementRules.java:176
+msgid "second parameter should be the priority number."
+msgstr "ಎರಡನೆ ನಿಯತಾಂಕವು ಆದ್ಯತೆ ಸಂಖ್ಯೆಯಾಗಿರಬೇಕು."
