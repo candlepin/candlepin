@@ -14,7 +14,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.7.4.2
+Version: 0.7.5.1
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -210,6 +210,18 @@ fi
 
 
 %changelog
+* Wed Aug 08 2012 William Poteat <wpoteat@redhat.com> 0.7.5-1
+- Update to the .po files (wpoteat@redhat.com)
+- 732538: Fix error message adding pools to activation keys.
+  (dgoodwin@redhat.com)
+- Remove total sub count and total subs consumed from owner info.
+  (dgoodwin@redhat.com)
+- Reduce amount of data in GET /consumers. (dgoodwin@redhat.com)
+- 832528: New API method to return all owners of specified products.
+  (awood@redhat.com)
+- Allow server to create version 2 certificates when requested.
+  (wpoteat@redhat.com)
+
 * Wed Aug 08 2012 jesus m. rodriguez <jesusr@redhat.com> 0.7.4.2-1
 - bump version (jesusr@redhat.com)
 - community builds use candlepin-deps (jesusr@redhat.com)
