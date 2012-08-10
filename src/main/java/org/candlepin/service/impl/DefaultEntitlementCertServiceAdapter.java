@@ -175,8 +175,9 @@ public class DefaultEntitlementCertServiceAdapter extends
             }
         }
 
+        // V2 is short-circuited by design
         String entitlementVersion = ent.getConsumer().getFact("system.certificate_version");
-        if (entitlementVersion != null && entitlementVersion.startsWith("2.")) {
+        if (entitlementVersion != null && entitlementVersion.startsWith("2.") && false) {
             extensions = prepareV2Extensions(products, ent, contentPrefix,
                 promotedContent, sub);
             byteExtensions = prepareV2ByteExtensions(products, ent, contentPrefix,
