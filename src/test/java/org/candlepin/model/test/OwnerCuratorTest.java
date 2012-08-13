@@ -109,7 +109,7 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         List<String> productIds = new ArrayList<String>();
         productIds.add(provided.getId());
         productIds.add(provided2.getId());
-        List<Owner> results = ownerCurator.lookupOwnersByProduct(productIds);
+        List<Owner> results = ownerCurator.lookupOwnersByActiveProduct(productIds);
 
         Assert.assertEquals(2, results.size());
     }
@@ -127,7 +127,7 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
 
         List<String> productIds = new ArrayList<String>();
         productIds.add(provided.getId());
-        List<Owner> results = ownerCurator.lookupOwnersByProduct(productIds);
+        List<Owner> results = ownerCurator.lookupOwnersByActiveProduct(productIds);
 
         Assert.assertEquals(1, results.size());
         Assert.assertEquals(owner, results.get(0));
@@ -165,7 +165,7 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
 
         List<String> productIds = new ArrayList<String>();
         productIds.add(provided.getId());
-        List<Owner> results = ownerCurator.lookupOwnersByProduct(productIds);
+        List<Owner> results = ownerCurator.lookupOwnersByActiveProduct(productIds);
 
         Assert.assertTrue(results.isEmpty());
     }

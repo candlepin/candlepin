@@ -441,8 +441,8 @@ class Candlepin
     delete(url)
   end
 
-  def get_product_owners(product_ids)
-    url = "/products/owners?"
+  def get_active_product_owners(product_ids)
+    url = "/products/active/owners?"
     product_ids.each do |pid|
       url << "product=#{pid}&"
     end
