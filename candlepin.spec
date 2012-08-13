@@ -14,7 +14,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.7.6.1
+Version: 0.7.6.2
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -210,6 +210,11 @@ fi
 
 
 %changelog
+* Mon Aug 13 2012 jesus m. rodriguez <jesusr@redhat.com> 0.7.6.2-1
+- Disable certificate v2 ability (wpoteat@redhat.com)
+- Change apidiff to format with python json.tool (alikins@redhat.com)
+- Update to the .po files (wpoteat@redhat.com)
+
 * Mon Aug 13 2012 William Poteat <wpoteat@redhat.com> 0.7.6-1
 - Disable certificate v2 ability (wpoteat@redhat.com)
 - Change apidiff to format with python json.tool (alikins@redhat.com)
