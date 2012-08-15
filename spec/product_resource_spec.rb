@@ -41,7 +41,7 @@ describe 'Product Resource' do
     user = user_client(owner, random_string('billy'))
     system = consumer_client(user, 'system6')
     system.consume_product(product.id)
-    product_owners = @cp.get_product_owners([provided_product.id])
+    product_owners = @cp.get_active_product_owners([provided_product.id])
     product_owners.should have(1).things
     product_owners[0]['key'].should == owner['key']
   end
