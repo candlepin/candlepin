@@ -65,7 +65,7 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
             .uniqueResult();
     }
 
-    public List<Owner> lookupOwnersByProduct(List<String> productIds) {
+    public List<Owner> lookupOwnersByActiveProduct(List<String> productIds) {
         DetachedCriteria poolIdQuery =
             DetachedCriteria.forClass(ProvidedProduct.class, "pp");
         poolIdQuery.add(Restrictions.in("pp.productId", productIds))
