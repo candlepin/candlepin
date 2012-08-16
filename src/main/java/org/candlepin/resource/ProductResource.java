@@ -248,12 +248,12 @@ public class ProductResource {
     @GET
     @Path("/owners")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Owner> getProductOwners(@QueryParam("product") String[] productIds) {
+    public List<Owner> getActiveProductOwners(@QueryParam("product") String[] productIds) {
         List<String> ids = Arrays.asList(productIds);
         if (ids.isEmpty()) {
             throw new BadRequestException(i18n.tr("Must specify product ID."));
         }
 
-        return ownerCurator.lookupOwnersByProduct(ids);
+        return ownerCurator.lookupOwnersByActiveProduct(ids);
     }
 }
