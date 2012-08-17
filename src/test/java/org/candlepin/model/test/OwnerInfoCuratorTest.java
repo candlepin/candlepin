@@ -355,8 +355,8 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
     public void testOwnerPoolEnabledCountProductOnly() {
         ConsumerType type = consumerTypeCurator.lookupByLabel("system");
         pool1.setAttribute("enabled_consumer_types", "");
-        Product prod = productCurator.lookupById(pool1.getProductId());
-        prod.setAttribute("enabled_consumer_types", type.getLabel());
+        pool1.setProductAttribute("enabled_consumer_types", type.getLabel(),
+            pool1.getProductId());
         owner.addEntitlementPool(pool1);
 
         OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
@@ -375,8 +375,8 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         ConsumerType type = consumerTypeCurator.lookupByLabel("domain");
         ConsumerType type2 = consumerTypeCurator.lookupByLabel("system");
         pool1.setAttribute("enabled_consumer_types", type.getLabel());
-        Product prod = productCurator.lookupById(pool1.getProductId());
-        prod.setAttribute("enabled_consumer_types", type2.getLabel());
+        pool1.setProductAttribute("enabled_consumer_types", type2.getLabel(),
+            pool1.getProductId());
         owner.addEntitlementPool(pool1);
 
         OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);
@@ -481,8 +481,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
     public void testOwnerInfoEntitlementsConsumedByFamilySortsByFamily() {
         owner.addEntitlementPool(pool1);
 
-        Product prod = productCurator.lookupById(pool1.getProductId());
-        prod.setAttribute("product_family", "test family");
+        pool1.setProductAttribute("product_family", "test family", pool1.getProductId());
 
         ConsumerType type = consumerTypeCurator.lookupByLabel("system");
         Consumer consumer = new Consumer("test-consumer", "test-user", owner, type);
@@ -513,8 +512,7 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         // other tests look at physical, so just do virtual
         owner.addEntitlementPool(pool1);
 
-        Product prod = productCurator.lookupById(pool1.getProductId());
-        prod.setAttribute("virt_only", "true");
+        pool1.setProductAttribute("virt_only", "true", pool1.getProductId());
 
         ConsumerType type = consumerTypeCurator.lookupByLabel("system");
         Consumer consumer = new Consumer("test-consumer", "test-user", owner, type);

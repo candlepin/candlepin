@@ -25,6 +25,7 @@ import org.hibernate.Session;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -100,13 +101,10 @@ public class OwnerInfoCurator {
             ConsumerType ct = typeHash.get(consumerType);
             info.addToConsumerTypeCountByPool(ct);
 
-            consumerType = getAccumulatedAttribute(pool, "enabled_consumer_types");
-            if (consumerType != null && !consumerType.trim().equals("")) {
-                for (String type : consumerType.split(",")) {
-                    ct = typeHash.get(type);
-                    if (ct != null) {
-                        info.addToEnabledConsumerTypeCountByPool(ct);
-                    }
+            for (String type : getAccumulatedAttribute(pool, "enabled_consumer_types")) {
+                ct = typeHash.get(type);
+                if (ct != null) {
+                    info.addToEnabledConsumerTypeCountByPool(ct);
                 }
             }
 
@@ -141,10 +139,9 @@ public class OwnerInfoCurator {
         // XXX dealing with attributes in java. that's bad!
         String productFamily = pool.getAttributeValue(attribute);
         if (productFamily == null || productFamily.trim().equals("")) {
-            String productId = pool.getProductId();
-            Product product = productAdapter.getProductById(productId);
-            if (product != null) {
-                productFamily = product.getAttributeValue(attribute);
+            Attribute attr = pool.getProductAttribute(attribute);
+            if (attr != null) {
+                productFamily = attr.getValue();
             }
         }
         return productFamily;
@@ -154,18 +151,28 @@ public class OwnerInfoCurator {
      * @param pool
      * @return
      */
-    private String getAccumulatedAttribute(Pool pool, String aType) {
+    private List<String> getAccumulatedAttribute(Pool pool, String aType) {
         // XXX dealing with attributes in java. that's bad!
+        List<String> values = new ArrayList<String>();
+
         String consumerTypes = pool.getAttributeValue(aType);
-        String productId = pool.getProductId();
-        Product product = productAdapter.getProductById(productId);
-        if (product != null) {
-            if (consumerTypes == null || consumerTypes.length() > 0) {
-                consumerTypes += ",";
+        if (consumerTypes != null) {
+            for (String part : consumerTypes.split(",")) {
+                values.add(part);
             }
-            consumerTypes += product.getAttributeValue(aType);
         }
-        return consumerTypes;
+
+        Attribute attr = pool.getProductAttribute(aType);
+        if (attr != null) {
+            consumerTypes = attr.getValue();
+            if (consumerTypes != null) {
+                for (String part : consumerTypes.split(",")) {
+                    values.add(part);
+                }
+            }
+        }
+
+        return values;
     }
 
 
