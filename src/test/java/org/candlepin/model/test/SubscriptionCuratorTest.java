@@ -17,7 +17,9 @@ package org.candlepin.model.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -29,6 +31,7 @@ import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.impl.DefaultSubscriptionServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -118,4 +121,55 @@ public class SubscriptionCuratorTest extends DatabaseTestFixture {
         assertEquals(1, subIds.size());
     }
 
+    @Test
+    public void testLookupOwnerByProduct() {
+        Owner owner = createOwner();
+        Product product = TestUtil.createProduct();
+        Product provided = TestUtil.createProduct();
+        productCurator.create(product);
+        productCurator.create(provided);
+
+        Set<Product> providedProducts = new HashSet<Product>();
+        providedProducts.add(provided);
+        Subscription sub = TestUtil.createSubscription(owner, product, providedProducts);
+        adapter.createSubscription(sub);
+
+        List<String> productIds = new ArrayList<String>();
+        productIds.add(product.getId());
+        productIds.add(provided.getId());
+        Set<Owner> results = adapter.lookupOwnersByProduct(productIds);
+
+        assertEquals(1, results.size());
+        assertTrue(results.contains(owner));
+    }
+
+    @Test
+    public void testLookupMultipleOwnersByProduct() {
+        Owner owner = createOwner();
+        Owner owner2 = createOwner();
+
+        Product product = TestUtil.createProduct();
+        Product product2 = TestUtil.createProduct();
+        Product provided = TestUtil.createProduct();
+        productCurator.create(product);
+        productCurator.create(product2);
+        productCurator.create(provided);
+
+        Set<Product> providedProducts = new HashSet<Product>();
+        providedProducts.add(provided);
+        Subscription sub = TestUtil.createSubscription(owner, product, providedProducts);
+        adapter.createSubscription(sub);
+
+        sub = TestUtil.createSubscription(owner2, product2);
+        adapter.createSubscription(sub);
+
+        List<String> productIds = new ArrayList<String>();
+        productIds.add(product2.getId());
+        productIds.add(provided.getId());
+
+        Set<Owner> results = adapter.lookupOwnersByProduct(productIds);
+        assertEquals(2, results.size());
+        assertTrue(results.contains(owner));
+        assertTrue(results.contains(owner2));
+    }
 }

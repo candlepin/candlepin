@@ -31,7 +31,7 @@ describe 'Product Resource' do
     product1.name.should == product2.name
   end
 
-  it 'retrieves the owners of a product' do
+  it 'retrieves the owners of an active product' do
     owner = create_owner(random_string('owner'))
     product = create_product(random_string("test_id"),
       random_string("test_name"))
@@ -45,5 +45,36 @@ describe 'Product Resource' do
     product_owners.should have(1).things
     product_owners[0]['key'].should == owner['key']
   end
+
+  it 'refreshes pools for specific products' do
+    owner = create_owner(random_string('owner'))
+    owner_client = user_client(owner, random_string('testuser'))
+    product = create_product(random_string("test_id"),
+      random_string("test_name"))
+    provided_product = create_product()
+    @cp.create_subscription(owner['key'], product.id, 10, [provided_product.id])
+    pool = owner_client.list_pools(:owner => owner.id)
+    pool.should have(0).things
+    @cp.refresh_pools_for_product(product.id)
+    pool = owner_client.list_pools(:owner => owner.id)
+    pool.should have(1).things
+    pool[0]['owner']['key'].should == owner['key']
+  end
+
+  it 'refreshes pools for specific provided products' do
+    owner = create_owner(random_string('owner'))
+    owner_client = user_client(owner, random_string('testuser'))
+    product = create_product(random_string("test_id"),
+      random_string("test_name"))
+    provided_product = create_product()
+    @cp.create_subscription(owner['key'], product.id, 10, [provided_product.id])
+    pool = owner_client.list_pools(:owner => owner.id)
+    pool.should have(0).things
+    @cp.refresh_pools_for_product(provided_product.id)
+    pool = owner_client.list_pools(:owner => owner.id)
+    pool.should have(1).things
+    pool[0]['owner']['key'].should == owner['key']
+  end
+
 end
 
