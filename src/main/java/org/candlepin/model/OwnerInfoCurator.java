@@ -91,13 +91,7 @@ public class OwnerInfoCurator {
             if (now.before(pool.getStartDate()) || now.after(pool.getEndDate())) {
                 continue;
             }
-            if (info.getPoolNearestToExpiry() == null) {
-                info.setPoolNearestToExpiry(pool);
-            }
-            else if (pool.getEndDate().before(info.getPoolNearestToExpiry()
-                             .getEndDate())) {
-                info.setPoolNearestToExpiry(pool);
-            }
+
             // do consumerTypeCountByPool
             String consumerType = getAttribute(pool, "requires_consumer_type");
             if (consumerType == null || consumerType.trim().equals("")) {

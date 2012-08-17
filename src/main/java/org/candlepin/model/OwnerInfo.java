@@ -32,7 +32,6 @@ public class OwnerInfo {
     private Map<String, Integer> enabledConsumerTypeCountByPool;
     private Map<String, Integer> consumerCountsByComplianceStatus;
     private Map<String, ConsumptionTypeCounts> entitlementsConsumedByFamily;
-    private Pool poolNearestToExpiry;
 
     public static final String GUEST = "guest";
     public static final String PHYSICAL = "physical";
@@ -180,13 +179,4 @@ public class OwnerInfo {
     public void setPhysicalCount(Integer count) {
         consumerGuestCounts.put(PHYSICAL, count);
     }
-
-    public Pool getPoolNearestToExpiry() {
-        return poolNearestToExpiry;
-    }
-
-    public void setPoolNearestToExpiry(Pool poolNearestToExpiry) {
-        this.poolNearestToExpiry = poolNearestToExpiry;
-    }
-
 }
