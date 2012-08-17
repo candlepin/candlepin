@@ -90,7 +90,7 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testLookupMultipleOwnersByMultipleProducts() {
+    public void testLookupMultipleOwnersByMultipleActiveProducts() {
         Owner owner = createOwner();
         Owner owner2 = createOwner();
 
@@ -109,13 +109,13 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         List<String> productIds = new ArrayList<String>();
         productIds.add(provided.getId());
         productIds.add(provided2.getId());
-        List<Owner> results = ownerCurator.lookupOwnersByProduct(productIds);
+        List<Owner> results = ownerCurator.lookupOwnersByActiveProduct(productIds);
 
         Assert.assertEquals(2, results.size());
     }
 
     @Test
-    public void testLookupOwnerByProduct() {
+    public void testLookupOwnerByActiveProduct() {
         Owner owner = createOwner();
 
         Product product = TestUtil.createProduct();
@@ -127,14 +127,14 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
 
         List<String> productIds = new ArrayList<String>();
         productIds.add(provided.getId());
-        List<Owner> results = ownerCurator.lookupOwnersByProduct(productIds);
+        List<Owner> results = ownerCurator.lookupOwnersByActiveProduct(productIds);
 
         Assert.assertEquals(1, results.size());
         Assert.assertEquals(owner, results.get(0));
     }
 
     @Test
-    public void testLookupOwnersByProductWithExpiredEntitlements() {
+    public void testLookupOwnersByActiveProductWithExpiredEntitlements() {
         Owner owner = createOwner();
 
         Product product = TestUtil.createProduct();
@@ -165,7 +165,7 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
 
         List<String> productIds = new ArrayList<String>();
         productIds.add(provided.getId());
-        List<Owner> results = ownerCurator.lookupOwnersByProduct(productIds);
+        List<Owner> results = ownerCurator.lookupOwnersByActiveProduct(productIds);
 
         Assert.assertTrue(results.isEmpty());
     }
