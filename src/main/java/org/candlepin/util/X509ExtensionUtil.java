@@ -34,12 +34,16 @@ import org.candlepin.pki.X509ExtensionWrapper;
 import com.google.inject.Inject;
 
 /**
- * X509ExtensionUtil
+ * X509ExtensionUtil for V1 Certificates
  */
 public class X509ExtensionUtil  extends X509Util{
 
     private static Logger log = Logger.getLogger(X509ExtensionUtil.class);
     private Config config;
+
+    // If we're generating a cert with more content sets than this limit, we will error
+    // out, as the certificate is likely too large for the CDN:
+    private static final int V1_CONTENT_LIMIT = 185;
 
     @Inject
     public X509ExtensionUtil(Config config) {
@@ -201,12 +205,17 @@ public class X509ExtensionUtil  extends X509Util{
 
     public Set<X509ExtensionWrapper> contentExtensions(
         Set<ProductContent> productContent, String contentPrefix,
-        Map<String, EnvironmentContent> promotedContent, Consumer consumer) {
+        Map<String, EnvironmentContent> promotedContent, Consumer consumer)
+        throws CertificateSizeException {
 
         Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<X509ExtensionWrapper>();
 
         boolean enableEnvironmentFiltering = config.environmentFileringEnabled();
 
+        // For V1 certificates we're going to error out if we exceed a limit which is
+        // likely going to generate a certificate too large for the CDN, and return an
+        // informative error message to the user.
+        int contentCounter = 0;
         for (ProductContent pc : productContent) {
             if (enableEnvironmentFiltering) {
                 if (consumer.getEnvironment() != null && !promotedContent.containsKey(
@@ -216,6 +225,7 @@ public class X509ExtensionUtil  extends X509Util{
                     continue;
                 }
             }
+            contentCounter++;
 
             // augment the content path with the prefix if it is passed in
             String contentPath = pc.getContent().getContentUrl();
@@ -283,6 +293,11 @@ public class X509ExtensionUtil  extends X509Util{
             }
 
         }
+
+        if (contentCounter > V1_CONTENT_LIMIT) {
+            throw new CertificateSizeException();
+        }
+
         return toReturn;
     }
 }

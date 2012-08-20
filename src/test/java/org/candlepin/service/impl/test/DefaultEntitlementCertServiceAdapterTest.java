@@ -38,6 +38,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -63,6 +64,7 @@ import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.impl.DefaultEntitlementCertServiceAdapter;
+import org.candlepin.util.CertificateSizeException;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509ExtensionUtil;
 import org.candlepin.util.X509V2ExtensionUtil;
@@ -73,6 +75,7 @@ import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.xnap.commons.i18n.I18nFactory;
 
 /**
  * DefaultEntitlementCertServiceAdapter
@@ -117,7 +120,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         certServiceAdapter = new DefaultEntitlementCertServiceAdapter(
             mockedPKI, extensionUtil, v2extensionUtil, null, null, serialCurator,
-            productAdapter, entCurator);
+            productAdapter, entCurator,
+            I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK));
 
         product = new Product("12345", "a product", "variant", "version",
             "arch", "SVC");
@@ -154,8 +158,22 @@ public class DefaultEntitlementCertServiceAdapterTest {
         return c;
     }
 
+    @Test(expected = CertificateSizeException.class)
+    public void tooManyContentSets() throws CertificateSizeException {
+        Set<Content> productContent = new HashSet<Content>();
+        for (int i = 0; i < 200; i++) {
+            productContent.add(createContent(CONTENT_NAME + i, CONTENT_ID + i,
+                CONTENT_LABEL + i, CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL,
+                CONTENT_GPG_URL));
+        }
+
+        product.setContent(productContent);
+        extensionUtil.contentExtensions(product.getProductContent(), null,
+                new HashMap<String, EnvironmentContent>(), entitlement.getConsumer());
+    }
+
     @Test
-    public void testContentExtentionCreation() {
+    public void testContentExtentionCreation() throws CertificateSizeException {
         Set<X509ExtensionWrapper> contentExtensions = extensionUtil
             .contentExtensions(product.getProductContent(), null,
                 new HashMap<String, EnvironmentContent>(), entitlement.getConsumer());
@@ -175,7 +193,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
 
     @Test
-    public void testContentExtentionExcludesNonPromotedContent() {
+    public void testContentExtentionExcludesNonPromotedContent()
+        throws CertificateSizeException {
 
         // Environment, but no promoted content:
         Environment e = new Environment("env1", "Env 1", owner);
@@ -190,7 +209,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
 
     @Test
-    public void testContentExtentionIncludesPromotedContent() {
+    public void testContentExtentionIncludesPromotedContent()
+        throws CertificateSizeException {
 
         // Environment, with promoted content:
         Environment e = new Environment("env1", "Env 1", owner);
@@ -210,7 +230,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
 
     @Test
-    public void testContentRequiredTagsExtention() {
+    public void testContentRequiredTagsExtention()  throws CertificateSizeException {
         Set<X509ExtensionWrapper> contentExtensions = extensionUtil
             .contentExtensions(product.getProductContent(), null,
                 new HashMap<String, EnvironmentContent>(), entitlement.getConsumer());
