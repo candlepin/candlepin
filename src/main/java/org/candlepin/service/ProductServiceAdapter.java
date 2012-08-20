@@ -86,4 +86,11 @@ public interface ProductServiceAdapter {
     void removeContent(String productId, String contentId);
 
     boolean productHasSubscriptions(Product prod);
+
+    /**
+     * Gets all products matching productIds.
+     *
+     * @param productIds
+     */
+    List<Product> getProducts(String[] productIds);
 }

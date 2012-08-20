@@ -49,8 +49,7 @@ public class JsExportRules {
     public boolean canExport(Entitlement entitlement) {
         Pool pool = entitlement.getPool();
         ReadOnlyConsumer consumer = new ReadOnlyConsumer(entitlement.getConsumer());
-        Product product = this.productAdapter.getProductById(pool.getProductId());
-        Map<String, String> allAttributes = jsRules.getFlattenedAttributes(product, pool);
+        Map<String, String> allAttributes = jsRules.getFlattenedAttributes(pool);
 
         Map<String, Object> args = new HashMap<String, Object>();
         args.put("attributes", allAttributes);

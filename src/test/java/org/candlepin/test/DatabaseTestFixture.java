@@ -32,6 +32,7 @@ import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.controller.CandlepinPoolManager;
+import org.candlepin.guice.CandlepinSingletonScope;
 import org.candlepin.guice.TestPrincipalProviderSetter;
 import org.candlepin.model.ActivationKey;
 import org.candlepin.model.ActivationKeyCurator;
@@ -137,6 +138,7 @@ public class DatabaseTestFixture {
     protected StatisticCurator statisticCurator;
     protected UniqueIdGenerator uniqueIdGenerator;
     protected UeberCertificateGenerator ueberCertGenerator;
+    protected CandlepinSingletonScope cpSingletonScope;
 
     private PersistService persistanceService;
 
@@ -156,6 +158,12 @@ public class DatabaseTestFixture {
                 new CandlepinNonServletEnvironmentTestingModule());
         }
 
+        cpSingletonScope = injector.getInstance(CandlepinSingletonScope.class);
+        // Because all candlepin operations are running in the CandlepinSingletonScope
+        // we'll force the instance creations to be done inside the scope.
+        // Exit the scope to make sure that it is clean before starting the test.
+        cpSingletonScope.exit();
+        cpSingletonScope.enter();
         persistanceService = injector.getInstance(PersistService.class);
 
         injector.getInstance(EntityManagerFactory.class);
@@ -211,21 +219,26 @@ public class DatabaseTestFixture {
 
     @After
     public void shutdown() {
-        injector.getInstance(PersistFilter.class).destroy();
-
-        HibernateEntityManagerImplementor hem =
-            (HibernateEntityManagerImplementor) entityManager();
-        Connection connection = hem.getSession().connection();
         try {
-            connection.createStatement().execute("SHUTDOWN");
-        }
-        catch (SQLException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+            injector.getInstance(PersistFilter.class).destroy();
 
-        entityManager().close();
-        emf.close();
+            HibernateEntityManagerImplementor hem =
+                (HibernateEntityManagerImplementor) entityManager();
+            Connection connection = hem.getSession().connection();
+            try {
+                connection.createStatement().execute("SHUTDOWN");
+            }
+            catch (SQLException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+
+            entityManager().close();
+            emf.close();
+        }
+        finally {
+            cpSingletonScope.exit();
+        }
     }
 
     protected Module getGuiceOverrideModule() {

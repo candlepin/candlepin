@@ -32,6 +32,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductPoolAttribute;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Subscription;
+import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.pool.PoolHelper;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.TestUtil;
@@ -49,6 +50,7 @@ public class PoolHelperTest {
     private PoolManager pm;
     private ProductServiceAdapter psa;
     private Entitlement ent;
+    private ProductCache productCache;
 
     @Before
     public void init() {
@@ -58,6 +60,7 @@ public class PoolHelperTest {
         pm = mock(PoolManager.class);
         psa = mock(ProductServiceAdapter.class);
         ent = mock(Entitlement.class);
+        productCache = new ProductCache(psa);
 
         // default to an empty list, override in the test
         when(pool.getProvidedProducts()).thenReturn(Collections.EMPTY_SET);
@@ -72,7 +75,7 @@ public class PoolHelperTest {
         when(product.getName()).thenReturn("Awesome Product");
         when(sub.getProduct()).thenReturn(product);
 
-        PoolHelper ph = new PoolHelper(pm, psa, null);
+        PoolHelper ph = new PoolHelper(pm, productCache, null);
         assertFalse(ph.checkForChangedProducts(pool, sub));
     }
 
@@ -84,7 +87,7 @@ public class PoolHelperTest {
         when(product.getName()).thenReturn("Awesome Product Changed");
         when(sub.getProduct()).thenReturn(product);
 
-        PoolHelper ph = new PoolHelper(pm, psa, null);
+        PoolHelper ph = new PoolHelper(pm, productCache, null);
         assertTrue(ph.checkForChangedProducts(pool, sub));
     }
 
@@ -96,7 +99,7 @@ public class PoolHelperTest {
         when(product.getName()).thenReturn("Awesome Product");
         when(sub.getProduct()).thenReturn(product);
 
-        PoolHelper ph = new PoolHelper(pm, psa, null);
+        PoolHelper ph = new PoolHelper(pm, productCache, null);
         assertTrue(ph.checkForChangedProducts(pool, sub));
     }
 
@@ -129,7 +132,7 @@ public class PoolHelperTest {
         attribs.add(pppa);
         when(pool.getProductAttributes()).thenReturn(attribs);
 
-        PoolHelper ph = new PoolHelper(pm, psa, null);
+        PoolHelper ph = new PoolHelper(pm, productCache, null);
         assertTrue(ph.checkForChangedProducts(pool, sub));
     }
 
@@ -140,9 +143,12 @@ public class PoolHelperTest {
         targetProduct.setAttribute("A1", "V1");
         targetProduct.setAttribute("A2", "V2");
         Subscription sourceSub = TestUtil.createSubscription(targetProduct);
-        Pool targetPool = TestUtil.createPool(targetProduct);
 
-        PoolHelper ph = new PoolHelper(pm, psa, null);
+        Pool targetPool = TestUtil.createPool(targetProduct);
+        // createPool will simulate the copy automatically - reset them.
+        targetPool.setProductAttributes(new HashSet<ProductPoolAttribute>());
+
+        PoolHelper ph = new PoolHelper(pm, productCache, null);
         when(psa.getProductById(targetProduct.getId())).thenReturn(targetProduct);
         assertTrue("Update expected.",
             ph.copyProductAttributesOntoPool(sourceSub, targetPool));
@@ -161,7 +167,7 @@ public class PoolHelperTest {
         Pool targetPool = TestUtil.createPool(targetProduct);
         targetPool.setProductAttribute("A1", "V1", targetProduct.getId());
 
-        PoolHelper ph = new PoolHelper(pm, psa, null);
+        PoolHelper ph = new PoolHelper(pm, productCache, null);
         when(psa.getProductById(targetProduct.getId())).thenReturn(targetProduct);
         assertTrue("Update expected.",
             ph.copyProductAttributesOntoPool(sourceSub, targetPool));
@@ -180,7 +186,7 @@ public class PoolHelperTest {
         Pool targetPool = TestUtil.createPool(targetProduct);
         targetPool.setProductAttribute("A1", null, targetProduct.getId());
 
-        PoolHelper ph = new PoolHelper(pm, psa, null);
+        PoolHelper ph = new PoolHelper(pm, productCache, null);
         when(psa.getProductById(targetProduct.getId())).thenReturn(targetProduct);
         assertTrue("Update expected.",
             ph.copyProductAttributesOntoPool(sourceSub, targetPool));
@@ -196,7 +202,7 @@ public class PoolHelperTest {
         targetPool = TestUtil.createPool(targetProduct);
         targetPool.setProductAttribute("A1", "V-updated-new", targetProduct.getId());
 
-        ph = new PoolHelper(pm, psa, null);
+        ph = new PoolHelper(pm, productCache, null);
         when(psa.getProductById(targetProduct.getId())).thenReturn(targetProduct);
         assertTrue("Update expected.",
             ph.copyProductAttributesOntoPool(sourceSub, targetPool));
@@ -212,7 +218,7 @@ public class PoolHelperTest {
         targetPool = TestUtil.createPool(targetProduct);
         targetPool.setProductAttribute("A1", null, targetProduct.getId());
 
-        ph = new PoolHelper(pm, psa, null);
+        ph = new PoolHelper(pm, productCache, null);
         when(psa.getProductById(targetProduct.getId())).thenReturn(targetProduct);
         assertTrue("Update expected.",
             ph.copyProductAttributesOntoPool(sourceSub, targetPool));
@@ -230,7 +236,7 @@ public class PoolHelperTest {
 
         targetPool.setProductAttribute("A1", "V1", targetProduct.getId());
 
-        PoolHelper ph = new PoolHelper(pm, psa, null);
+        PoolHelper ph = new PoolHelper(pm, productCache, null);
         when(psa.getProductById(targetProduct.getId())).thenReturn(targetProduct);
         assertTrue("Update expected.",
             ph.copyProductAttributesOntoPool(sourceSub, targetPool));
@@ -251,7 +257,7 @@ public class PoolHelperTest {
         when(psa.getProductById(targetProduct.getId())).thenReturn(targetProduct);
         when(ent.getConsumer()).thenReturn(cons);
 
-        PoolHelper ph = new PoolHelper(pm, psa, ent);
+        PoolHelper ph = new PoolHelper(pm, productCache, ent);
         Pool hostRestrictedPool = ph.createHostRestrictedPool(targetProduct.getId(),
             targetPool, "unlimited");
 

@@ -32,7 +32,7 @@ import org.candlepin.policy.js.JsRules;
 import org.candlepin.policy.js.ReadOnlyConsumer;
 import org.candlepin.policy.js.ReadOnlyPool;
 import org.candlepin.policy.js.ReadOnlyProduct;
-import org.candlepin.policy.js.ReadOnlyProductCache;
+import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.RuleExecutionException;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.service.ProductServiceAdapter;
@@ -57,12 +57,12 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
     @Inject
     public EntitlementRules(DateSource dateSource,
         JsRules jsRules,
-        ProductServiceAdapter prodAdapter,
+        ProductCache productCache,
         I18n i18n, Config config, ConsumerCurator consumerCurator) {
 
         this.jsRules = jsRules;
         this.dateSource = dateSource;
-        this.prodAdapter = prodAdapter;
+        this.productCache = productCache;
         this.i18n = i18n;
         this.attributesToRules = null;
         this.config = config;
@@ -75,13 +75,13 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
     }
 
     @Override
-    public PreEntHelper preEntitlement(
-        Consumer consumer, Pool entitlementPool, Integer quantity) {
+    public PreEntHelper preEntitlement(Consumer consumer, Pool entitlementPool, Integer quantity) {
 
         jsRules.reinitTo("entitlement_name_space");
         rulesInit();
 
-        PreEntHelper preHelper = runPreEntitlement(consumer, entitlementPool, quantity);
+        PreEntHelper preHelper = runPreEntitlement(consumer, entitlementPool,
+            quantity);
 
         if (entitlementPool.isExpired(dateSource)) {
             preHelper.getResult().addError(
@@ -98,13 +98,15 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
 
         // Provide objects for the script:
         String topLevelProductId = pool.getProductId();
-        Product product = prodAdapter.getProductById(topLevelProductId);
-        Map<String, String> allAttributes = jsRules.getFlattenedAttributes(product, pool);
+        ReadOnlyProduct product = new ReadOnlyProduct(topLevelProductId,
+            pool.getProductName(),
+            jsRules.getFlattenedAttributes(pool.getProductAttributes()));
+        Map<String, String> allAttributes = jsRules.getFlattenedAttributes(pool);
 
         Map<String, Object> args = new HashMap<String, Object>();
         args.put("consumer", new ReadOnlyConsumer(consumer));
-        args.put("product", new ReadOnlyProduct(product));
-        args.put("pool", new ReadOnlyPool(pool, new ReadOnlyProductCache(prodAdapter)));
+        args.put("product", product);
+        args.put("pool", new ReadOnlyPool(pool, productCache));
         args.put("pre", preHelper);
         args.put("attributes", allAttributes);
         args.put("prodAttrSeparator", PROD_ARCHITECTURE_SEPARATOR);
@@ -131,36 +133,28 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
     }
 
     @Override
-    public List<PoolQuantity> selectBestPools(Consumer consumer, String[] productIds,
-        List<Pool> pools, ComplianceStatus compliance, String serviceLevelOverride,
-        Set<String> exemptLevels) {
+    public List<PoolQuantity> selectBestPools(Consumer consumer, String[] productIds, List<Pool> pools,
+        ComplianceStatus compliance, String serviceLevelOverride, Set<String> exemptLevels) {
 
         jsRules.reinitTo("entitlement_name_space");
         rulesInit();
-
-        ReadOnlyProductCache productCache = new ReadOnlyProductCache(prodAdapter);
 
         log.info("Selecting best entitlement pool for product: " +
             Arrays.toString(productIds));
         List<ReadOnlyPool> readOnlyPools = ReadOnlyPool.fromCollection(pools, productCache);
 
-        List<Product> products = new LinkedList<Product>();
+        List<ReadOnlyProduct> readOnlyProducts = new LinkedList<ReadOnlyProduct>();
         Set<Rule> matchingRules = new HashSet<Rule>();
         for (String productId : productIds) {
-            Product product = prodAdapter.getProductById(productId);
+            Product product = productCache.getProductById(productId);
 
             if (product != null) {
-                products.add(product);
-
-                Map<String, String> allAttributes = jsRules.getFlattenedAttributes(product,
-                    null);
-                matchingRules.addAll(rulesForAttributes(allAttributes.keySet(),
+                ReadOnlyProduct roProduct = new ReadOnlyProduct(product);
+                readOnlyProducts.add(roProduct);
+                matchingRules.addAll(rulesForAttributes(roProduct.getAttributes().keySet(),
                     attributesToRules));
             }
         }
-
-        Set<ReadOnlyProduct> readOnlyProducts = ReadOnlyProduct.fromProducts(products);
-        productCache.addProducts(readOnlyProducts);
 
         // Provide objects for the script:
         Map<String, Object> args = new HashMap<String, Object>();

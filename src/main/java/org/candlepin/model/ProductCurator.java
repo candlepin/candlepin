@@ -14,11 +14,16 @@
  */
 package org.candlepin.model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.candlepin.auth.interceptor.EnforceAccessControl;
 
 import com.google.inject.persist.Transactional;
 
+import org.hibernate.Criteria;
 import org.hibernate.Query;
+import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 
 /**
@@ -107,5 +112,19 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         Query poolQuery = currentSession().createQuery(poolString).setString(
             "prodId", prod.getId());
         return poolQuery.list().size() > 0;
+    }
+
+    /**
+     * @param productIds
+     * @return
+     */
+    public List<Product> listByIds(String[] productIds) {
+        if (productIds == null || productIds.length == 0) {
+            return new ArrayList<Product>();
+        }
+
+        Criteria c = currentSession().createCriteria(Product.class);
+        c.add(Restrictions.in("id", productIds));
+        return c.list();
     }
 }
