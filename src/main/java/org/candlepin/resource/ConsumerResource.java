@@ -1298,9 +1298,14 @@ public class ConsumerResource {
 
         List<PoolQuantity> dryRunPools = new ArrayList<PoolQuantity>();
 
+        long start = System.currentTimeMillis();
         try {
+            log.info("##### Checking service level: " + serviceLevel);
             checkServiceLevel(consumer.getOwner(), serviceLevel);
+            log.info("##### DONE: " + (System.currentTimeMillis() - start));
+            log.info("##### DOING DRY-RUN");
             dryRunPools = entitler.getDryRun(consumer, serviceLevel);
+            log.info("##### DONE DRY-RUN: " + (System.currentTimeMillis() - start));
         }
         catch (ForbiddenException fe) {
             return dryRunPools;

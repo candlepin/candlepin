@@ -18,34 +18,41 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.candlepin.guice.CandlepinSingletonScoped;
+import org.candlepin.model.Product;
 import org.candlepin.service.ProductServiceAdapter;
+
+import com.google.inject.Inject;
 
 /**
  * ReadOnlyProductCache
  */
-public class ReadOnlyProductCache {
+@CandlepinSingletonScoped
+public class ProductCache {
 
-    private Map<String, ReadOnlyProduct> products;
     private ProductServiceAdapter productAdapter;
+    private Map<String, Product> products;
 
-    public ReadOnlyProductCache(ProductServiceAdapter productAdapter) {
-        products = new HashMap<String, ReadOnlyProduct>();
+    @Inject
+    public ProductCache(ProductServiceAdapter productAdapter) {
+        products = new HashMap<String, Product>();
         this.productAdapter = productAdapter;
     }
 
-    public ReadOnlyProduct getProductById(String productId) {
+    public Product getProductById(String productId) {
         if (!products.containsKey(productId)) {
             products.put(productId,
-                new ReadOnlyProduct(productAdapter.getProductById(productId)));
+                productAdapter.getProductById(productId));
         }
         return products.get(productId);
     }
 
-    public void addProducts(Set<ReadOnlyProduct> products) {
-        for (ReadOnlyProduct product : products) {
+    public void addProducts(Set<Product> products) {
+        for (Product product : products) {
             if (!this.products.containsKey(product.getId())) {
                 this.products.put(product.getId(), product);
             }
         }
     }
+
 }

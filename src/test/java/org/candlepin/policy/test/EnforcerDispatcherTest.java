@@ -21,22 +21,23 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.policy.EnforcerDispatcher;
+import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.policy.js.entitlement.ManifestEntitlementRules;
 import org.candlepin.policy.js.pool.PoolHelper;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 /**
  * EnforcerDispatcherTest
@@ -46,6 +47,7 @@ public class EnforcerDispatcherTest {
     private EntitlementRules rules;
     private EnforcerDispatcher ed;
     private ComplianceStatus compliance;
+    private ProductCache productCache;
 
     @Before
     public void init() {
@@ -53,6 +55,7 @@ public class EnforcerDispatcherTest {
         ce = mock(ManifestEntitlementRules.class);
         ed = new EnforcerDispatcher(rules, ce);
         compliance = mock(ComplianceStatus.class);
+        productCache = mock(ProductCache.class);
     }
 
     @Test
@@ -129,8 +132,8 @@ public class EnforcerDispatcherTest {
         ed.selectBestPools(c, pids, pools, compliance, test, exempt);
         verify(rules, never()).selectBestPools(eq(c), eq(pids), eq(pools),
             eq(compliance), eq(test), eq(exempt));
-        verify(ce, atLeastOnce()).selectBestPools(eq(c), eq(pids), eq(pools),
-            eq(compliance), eq(test), eq(exempt));
+        verify(ce, atLeastOnce()).selectBestPools(eq(c), eq(pids),
+            eq(pools), eq(compliance), eq(test), eq(exempt));
     }
 
     @Test
@@ -147,8 +150,8 @@ public class EnforcerDispatcherTest {
         String test = null;
         Set<String> exempt = new HashSet<String>();
         ed.selectBestPools(c, pids, pools, compliance, test, exempt);
-        verify(rules, atLeastOnce()).selectBestPools(eq(c), eq(pids), eq(pools),
-            eq(compliance), eq(test), eq(exempt));
+        verify(rules, atLeastOnce()).selectBestPools(eq(c), eq(pids),
+            eq(pools), eq(compliance), eq(test), eq(exempt));
         verify(ce, never()).selectBestPools(eq(c), eq(pids), eq(pools),
             eq(compliance), eq(test), eq(exempt));
     }

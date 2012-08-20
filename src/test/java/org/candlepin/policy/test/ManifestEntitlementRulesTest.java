@@ -37,6 +37,7 @@ import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRules;
 import org.candlepin.policy.js.JsRulesProvider;
 import org.candlepin.policy.js.ReadOnlyPool;
+import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.entitlement.ManifestEntitlementRules;
 import org.candlepin.policy.js.entitlement.PreEntHelper;
@@ -71,6 +72,8 @@ public class ManifestEntitlementRulesTest extends DatabaseTestFixture {
     private Owner owner;
     private Consumer consumer;
     private JsRules jsRules;
+    private ProductCache productCache;
+
     private static final String LONGEST_EXPIRY_PRODUCT = "LONGEST001";
     private static final String HIGHEST_QUANTITY_PRODUCT = "QUANTITY001";
     private static final String BAD_RULE_PRODUCT = "BADRULE001";
@@ -104,8 +107,10 @@ public class ManifestEntitlementRulesTest extends DatabaseTestFixture {
 
         jsRules = new JsRulesProvider(rulesCurator).get();
 
+        productCache = new ProductCache(productAdapter);
         enforcer = new ManifestEntitlementRules(new DateSourceForTesting(2010, 1, 1),
-            jsRules, productAdapter, i18n, config, consumerCurator);
+            jsRules, productCache, i18n, config, consumerCurator);
+
     }
 
     @Test

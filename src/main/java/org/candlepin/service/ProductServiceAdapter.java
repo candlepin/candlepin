@@ -86,4 +86,5 @@ public interface ProductServiceAdapter {
     void removeContent(String productId, String contentId);
 
     boolean productHasSubscriptions(Product prod);
+
 }

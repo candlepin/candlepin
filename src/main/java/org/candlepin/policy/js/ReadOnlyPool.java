@@ -17,6 +17,7 @@ package org.candlepin.policy.js;
 import org.candlepin.model.Attribute;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolAttribute;
+import org.candlepin.model.Product;
 import org.candlepin.model.ProductPoolAttribute;
 import org.candlepin.model.ProvidedProduct;
 
@@ -35,14 +36,14 @@ import java.util.Set;
 public class ReadOnlyPool {
 
     private Pool entPool;
-    private ReadOnlyProductCache productCache;
+    private ProductCache productCache;
     private Map<String, String> attributes = null;
     private Map<String, String> productAttributes = null;
 
     /**
      * @param entPool the read-write version of the EntitlementPool to copy.
      */
-    public ReadOnlyPool(Pool entPool, ReadOnlyProductCache productCache) {
+    public ReadOnlyPool(Pool entPool, ProductCache productCache) {
         this.entPool = entPool;
         this.productCache = productCache;
         initializeReadOnlyAttributes();
@@ -110,7 +111,7 @@ public class ReadOnlyPool {
     }
 
     public static List<ReadOnlyPool> fromCollection(Collection<Pool> pools,
-        ReadOnlyProductCache productCache) {
+        ProductCache productCache) {
         List<ReadOnlyPool> toReturn = new ArrayList<ReadOnlyPool>(pools.size());
         for (Pool pool : pools) {
             toReturn.add(new ReadOnlyPool(pool, productCache));
@@ -150,17 +151,23 @@ public class ReadOnlyPool {
     public ReadOnlyProduct[] getProducts() {
         Set<ReadOnlyProduct> products = new HashSet<ReadOnlyProduct>();
 
-        products.add(productCache.getProductById(entPool.getProductId()));
+        products.add(new ReadOnlyProduct(entPool.getProductId(),
+            entPool.getProductName(), productAttributes));
 
         for (ProvidedProduct providedProduct : entPool.getProvidedProducts()) {
-            products.add(productCache.getProductById(providedProduct
-                .getProductId()));
+            // FIXME MS Need to find out if provided product attrs are the same as
+            //          that of the top-level product.
+            Product provided = productCache.getProductById(providedProduct.getProductId());
+            if (provided != null) {
+                products.add(new ReadOnlyProduct(provided));
+            }
         }
 
         return products.toArray(new ReadOnlyProduct[products.size()]);
     }
 
     public ReadOnlyProduct getTopLevelProduct() {
-        return productCache.getProductById(entPool.getProductId());
+        return new ReadOnlyProduct(entPool.getProductId(), entPool.getProductName(),
+            productAttributes);
     }
 }
