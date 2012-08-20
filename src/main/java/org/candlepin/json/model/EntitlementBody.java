@@ -67,5 +67,9 @@ public class EntitlementBody {
     public void setProducts(List<Product> products) {
         this.products = products;
     }
+    
+    public List<Product> getProducts() {
+        return this.products;
+    }
 
 }

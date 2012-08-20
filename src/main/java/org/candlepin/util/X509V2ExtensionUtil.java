@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -42,10 +43,10 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
+import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 import org.codehaus.jackson.annotate.JsonMethod;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 
 import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
@@ -93,6 +94,7 @@ public class X509V2ExtensionUtil extends X509Util{
 
         EntitlementBody eb = createEntitlementBody(products, ent,
             contentPrefix, promotedContent, sub);
+        createContentURLTree(eb);
         String payload = toJson(eb);
         log.debug(payload);
         byte[] value = null;
@@ -386,4 +388,58 @@ public class X509V2ExtensionUtil extends X509Util{
         }
         return output;
     }
+    
+    protected void createContentURLTree (EntitlementBody eb) {
+        // collect content URL's
+        List<Content> contentSet = new ArrayList<Content>();
+        for (org.candlepin.json.model.Product p : eb.getProducts()) {
+            for (org.candlepin.json.model.Content c : p.getContent()) {
+                contentSet.add(c);
+            }
+        }
+        // build nodes
+        Map<String, Node> nodes = new HashMap<String, Node>();
+        for (Content c : contentSet) {
+            String url = c.getPath();
+            StringTokenizer st = new StringTokenizer("/");
+            for (;st.hasMoreTokens();) {
+                String nodeVal = st.nextToken();
+                Node n = nodes.get(nodeVal);
+                if (n == null) {
+                    n = new Node(nodeVal);
+                    nodes.put(nodeVal, n);
+                }
+                n.weight++;
+            }
+        }
+        log.debug(nodes);
+    }
+    
+    private static class Node implements Comparable {
+        private String value;
+        private int weight = 0;
+        private Node left = null;
+        private Node right = null;
+
+        Node(String value, int weight, Node left, Node right) {
+            this.value = value;
+            this.weight = weight;
+            this.left = left;
+            this.right = right;
+        }
+        
+        Node(String value) {
+            this.value = value;
+        }
+
+        public boolean isLeaf() {
+            return value != null && value.trim() != "";
+        }
+
+        // compare, based on frequency
+        public int compareTo(Object that) {
+            return this.weight - ((Node)that).weight;
+        }
+    }
+    
 }

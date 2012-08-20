@@ -67,4 +67,8 @@ public class Product {
     public void setContent(List<Content> content) {
         this.content = content;
     }
+    
+    public List<Content> getContent() {
+        return this.content;
+    }
 }
