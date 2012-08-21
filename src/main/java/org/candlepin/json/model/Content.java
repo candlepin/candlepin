@@ -86,7 +86,7 @@ public class Content {
     }
 
     /**
-     * 
+     *@return path
      */
     public String getPath() {
         return this.path;

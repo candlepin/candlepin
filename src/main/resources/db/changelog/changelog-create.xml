@@ -1101,4 +1101,5 @@
     <include file="db/changelog/20120608114047-expand-import-record-webapp-prefix.xml" />
     <include file="db/changelog/20120607124900-add-entitlement-dirty-column.xml" />
     <include file="db/changelog/20120720091214-add-foreign-key-indexes.xml" />
+    <include file="db/changelog/20120821113145-add-payload-and-signature-to-cert.xml" />
 </databaseChangeLog>

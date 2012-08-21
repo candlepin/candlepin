@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 
 import org.apache.log4j.Logger;
@@ -92,33 +93,56 @@ public class X509V2ExtensionUtil extends X509Util{
         Set<X509ByteExtensionWrapper> toReturn =
             new LinkedHashSet<X509ByteExtensionWrapper>();
 
-        EntitlementBody eb = createEntitlementBody(products, ent,
-            contentPrefix, promotedContent, sub);
-        createContentURLTree(eb);
-        String payload = toJson(eb);
-        log.debug(payload);
-        byte[] value = null;
-        try {
-            value = processPayload(payload);
-        }
-        catch (Exception e) {
-            log.error("Unable to compile data for entitlement certificate", e);
-            throw new IOException(e);
-        }
+        byte[] value = new byte[0];
 
+        EntitlementBody eb = createEntitlementBodyContent(products, ent,
+            contentPrefix, promotedContent, sub);
+
+        List<Content> contentList = createContentList(eb);
+        List<Node> nodeList = getNodeList(contentList);
+        byte[] pathDictionary = makePathDictionary(nodeList);
+        List<Node> treeNodeList = new ArrayList<Node>();
+        treeNodeList.addAll(nodeList);
+        Node root = makeTree(treeNodeList);
+        List<String[]> leafCodes = encodeLeafs(nodeList, root);
+        List<List<String[]>> pathCodes = encodeContentURLs(contentList, root);
+
+        if (log.isDebugEnabled()) {
+            debugOutputTreeAndCodes(root, nodeList, leafCodes, contentList, pathCodes);
+        }
         X509ByteExtensionWrapper bodyExtension =
             new X509ByteExtensionWrapper(OIDUtil.REDHAT_OID + "." +
                 OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_DATA_KEY),
-                false, value);
+                false, pathDictionary);
         toReturn.add(bodyExtension);
 
         return toReturn;
     }
 
+    private byte[] makePathDictionary(List<Node> nodes) throws IOException {
+        byte[] result = new byte[0];
+        for (Node n : nodes) {
+            try {
+                byte[] thisNode = processPayload(n.value);
+                byte[] combined = new byte[result.length + thisNode.length + 1];
+                for (int i = 0; i < combined.length - 1; ++i) {
+                    combined[i] = i < result.length ? result[i] :
+                        thisNode[i - result.length];
+                }
+                result = combined;
+            }
+            catch (UnsupportedEncodingException uee) {
+                throw new IOException(uee);
+            }
+        }
+        return result;
+    }
+
     private byte[] processPayload(String payload)
         throws IOException, UnsupportedEncodingException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DeflaterOutputStream dos = new DeflaterOutputStream(baos);
+        DeflaterOutputStream dos = new DeflaterOutputStream(baos,
+            new Deflater(Deflater.HUFFMAN_ONLY));
         dos.write(payload.getBytes("UTF-8"));
         dos.finish();
         dos.close();
@@ -135,6 +159,18 @@ public class X509V2ExtensionUtil extends X509Util{
         toReturn.setQuantity(ent.getQuantity());
         toReturn.setSubscription(createSubscription(sub, ent));
         toReturn.setOrder(createOrder(sub));
+        toReturn.setProducts(createProducts(products, contentPrefix, promotedContent,
+            ent.getConsumer(), ent));
+
+        return toReturn;
+    }
+
+    public EntitlementBody createEntitlementBodyContent(Set<Product> products,
+        Entitlement ent, String contentPrefix,
+        Map<String, EnvironmentContent> promotedContent,
+        org.candlepin.model.Subscription sub) {
+
+        EntitlementBody toReturn = new EntitlementBody();
         toReturn.setProducts(createProducts(products, contentPrefix, promotedContent,
             ent.getConsumer(), ent));
 
@@ -388,35 +424,123 @@ public class X509V2ExtensionUtil extends X509Util{
         }
         return output;
     }
-    
-    protected void createContentURLTree (EntitlementBody eb) {
+
+    protected List<Content> createContentList(EntitlementBody eb) {
         // collect content URL's
-        List<Content> contentSet = new ArrayList<Content>();
+        List<Content> contentList = new ArrayList<Content>();
         for (org.candlepin.json.model.Product p : eb.getProducts()) {
             for (org.candlepin.json.model.Content c : p.getContent()) {
-                contentSet.add(c);
+                contentList.add(c);
             }
         }
-        // build nodes
-        Map<String, Node> nodes = new HashMap<String, Node>();
+        return contentList;
+    }
+
+    private void debugOutputTreeAndCodes(Node tree, List<Node> nodes,
+        List<String[]> nodePaths, List<Content> contentList,
+        List<List<String[]>> urls) {
+        log.debug("Node Tree: " + writeTrie(tree, new ArrayList<String>()));
+        log.debug("Node paths: ");
+        writeNodePaths(nodes, nodePaths);
+        log.debug("URL Codes: ");
+        writeURLCodes(contentList, urls);
+    }
+
+    private void writeNodePaths(List<Node> nodes, List<String[]> nodePaths) {
+        int line = 0;
+        for (Node n : nodes) {
+            log.debug("Node: " + n.value);
+            String all = "";
+            for (String item : nodePaths.get(line++)) {
+                all += item;
+            }
+            log.debug("Path: [" + all + "]");
+        }
+    }
+
+    private void writeURLCodes(List<Content> contentList, List<List<String[]>> urls) {
+        int line = 0;
+        for (List<String[]> url : urls) {
+            log.debug("URL: " + contentList.get(line++).getPath());
+            String all = "";
+            for (String[] path : url) {
+                for (String item : path) {
+                    all += item;
+                }
+                all += "-";
+            }
+            log.debug("[" + all + "]");
+        }
+    }
+
+    private List<String> writeTrie(Node x, List<String> output) {
+        if (!x.value.equals("")) {
+            output.add(x.value);
+            return output;
+        }
+        output = writeTrie(x.left, output);
+        output = writeTrie(x.right, output);
+        return output;
+    }
+
+    private Node makeTree(List<Node> nodesList) {
+        while (nodesList.size() > 1) {
+            Node node1 = findSmallest(null, nodesList);
+            Node node2 = findSmallest(node1, nodesList);
+            Node parent = mergeNodes(node1, node2);
+            nodesList.add(parent);
+            nodesList.remove(node1);
+            nodesList.remove(node2);
+        }
+        return nodesList.get(0);
+    }
+
+    private List<Node> getNodeList(List<Content> contentSet) {
+        List<Node> nodes = new ArrayList<Node>();
         for (Content c : contentSet) {
             String url = c.getPath();
-            StringTokenizer st = new StringTokenizer("/");
-            for (;st.hasMoreTokens();) {
+            StringTokenizer st = new StringTokenizer(url, "/");
+            for (; st.hasMoreTokens();) {
                 String nodeVal = st.nextToken();
-                Node n = nodes.get(nodeVal);
-                if (n == null) {
-                    n = new Node(nodeVal);
-                    nodes.put(nodeVal, n);
+                Node foundNode = null;
+                for (Node n : nodes) {
+                    if (n.value.equals(nodeVal)) {
+                        foundNode = n;
+                        break;
+                    }
                 }
-                n.weight++;
+                if (foundNode == null) {
+                    foundNode = new Node(nodeVal);
+                }
+                foundNode.weight++;
+                nodes.remove(foundNode);
+                nodes.add(foundNode);
             }
         }
-        log.debug(nodes);
+        return nodes;
     }
-    
-    private static class Node implements Comparable {
-        private String value;
+
+    private Node findSmallest(Node notThis, List<Node> nodes) {
+        Node smallest = null;
+        for (Node n : nodes) {
+            if (smallest == null || n.weight < smallest.weight) {
+                if (notThis == null || !n.value.equals(notThis.value)) {
+                    smallest = n;
+                }
+            }
+        }
+        return smallest;
+    }
+
+    private Node mergeNodes(Node node1, Node node2) {
+        Node left = node1.weight <= node2.weight ? node1 : node2;
+        Node right = node1.weight > node2.weight ? node1 : node2;
+        Node parent = new Node("", left.weight + right.weight, left, right);
+        return parent;
+    }
+
+    private static class Node {
+        private String value = "";
         private int weight = 0;
         private Node left = null;
         private Node right = null;
@@ -427,19 +551,84 @@ public class X509V2ExtensionUtil extends X509Util{
             this.left = left;
             this.right = right;
         }
-        
         Node(String value) {
             this.value = value;
         }
-
-        public boolean isLeaf() {
-            return value != null && value.trim() != "";
-        }
-
-        // compare, based on frequency
-        public int compareTo(Object that) {
-            return this.weight - ((Node)that).weight;
-        }
     }
-    
+
+    private List<String[]> encodeLeafs(List<Node> nodeList, Node tree) {
+        List<String[]> result = new ArrayList<String[]>();
+        for (Node n : nodeList) {
+            List<String> location = retrieveNodeLocation(n.value, tree,
+                new ArrayList<String>());
+            String[] path = location.toArray(new String[0]);
+            result.add(path);
+        }
+        return result;
+    }
+
+    private List<List<String[]>> encodeContentURLs(List<Content> contentList, Node tree) {
+        // final set of locator codes. each list member is a url. each string array is a
+        // url item's location
+        List<List<String[]>> result = new ArrayList<List<String[]>>();
+
+        // cache to reduce number of tree walks needed
+        Map<String, String[]> cache = new HashMap<String, String[]>();
+
+        for (Content c : contentList) {
+            List<String[]> path = new ArrayList<String[]>();
+            String url = c.getPath();
+            StringTokenizer st = new StringTokenizer(url, "/");
+            for (; st.hasMoreTokens();) {
+                String pathVal = st.nextToken();
+                if (cache.get(pathVal) != null) {
+                    path.add(cache.get(pathVal));
+                }
+                else {
+                    List<String> location = retrieveNodeLocation(pathVal, tree,
+                        new ArrayList<String>());
+                    String[] pathArray = location.toArray(new String[0]);
+                    path.add(pathArray);
+                    cache.put(pathVal, pathArray);
+                }
+            }
+            result.add(path);
+        }
+        return result;
+    }
+
+    private List<String> retrieveNodeLocation(String pathSegment,
+        Node tree, List<String> location) {
+        Node left = tree.left;
+        Node right = tree.right;
+        if (left != null && pathSegment.equals(left.value)) {
+            location.add("0");
+            return location;
+        }
+        else if (right != null && pathSegment.equals(right.value)) {
+            location.add("1");
+            return location;
+        }
+        if (left != null) {
+            List<String> leftLocation = new ArrayList<String>();
+            leftLocation.addAll(location);
+            leftLocation.add("0");
+            List<String> moreLeftLocation = retrieveNodeLocation(pathSegment,
+                left, leftLocation);
+            if (moreLeftLocation != null) {
+                return moreLeftLocation;
+            }
+        }
+        if (right != null) {
+            List<String> rightLocation = new ArrayList<String>();
+            rightLocation.addAll(location);
+            rightLocation.add("1");
+            List<String> moreRightLocation = retrieveNodeLocation(pathSegment,
+                right, rightLocation);
+            if (moreRightLocation != null) {
+                return moreRightLocation;
+            }
+        }
+        return null;
+    }
 }
