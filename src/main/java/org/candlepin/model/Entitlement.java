@@ -168,7 +168,10 @@ public class Entitlement extends AbstractHibernateObject implements Linkable, Ow
      */
     @XmlTransient
     public String getProductId() {
-        return this.pool.getProductId();
+        if (this.pool != null) {
+            return this.pool.getProductId();
+        }
+        return null;
     }
 
     /**
