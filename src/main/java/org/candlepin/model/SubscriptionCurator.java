@@ -15,8 +15,10 @@
 package org.candlepin.model;
 
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.hibernate.Criteria;
@@ -133,6 +135,26 @@ public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> 
             return new LinkedList<Subscription>();
         }
         return subs;
+    }
+
+    public Set<Owner> lookupOwnersByProduct(List<String> productIds) {
+        Set<Owner> ownerSet = new HashSet<Owner>();
+
+        String query = "from Owner o where o.id in (" +
+                " select distinct s.owner.id from Subscription s" +
+                " join s.providedProducts pp where pp.id in (:productIds))";
+        List<Owner> owners = currentSession().createQuery(query)
+            .setParameterList("productIds", productIds).list();
+        ownerSet.addAll(owners);
+
+        query = "from Owner o where o.id in (" +
+                " select distinct s.owner.id from Subscription s" +
+                " where s.product.id in (:productIds))";
+        owners = currentSession().createQuery(query)
+            .setParameterList("productIds", productIds).list();
+        ownerSet.addAll(owners);
+
+        return ownerSet;
     }
 
 }

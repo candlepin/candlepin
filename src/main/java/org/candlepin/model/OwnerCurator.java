@@ -65,6 +65,11 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
             .uniqueResult();
     }
 
+    /**
+     * Note that this query looks up only provided products.
+     * @param productIds
+     * @return a list of owners
+     */
     public List<Owner> lookupOwnersByActiveProduct(List<String> productIds) {
         DetachedCriteria poolIdQuery =
             DetachedCriteria.forClass(ProvidedProduct.class, "pp");
