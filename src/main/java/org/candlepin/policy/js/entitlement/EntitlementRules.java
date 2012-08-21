@@ -36,6 +36,7 @@ import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.RuleExecutionException;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.util.DateSource;
+import org.candlepin.util.X509ExtensionUtil;
 import org.mozilla.javascript.RhinoException;
 import org.xnap.commons.i18n.I18n;
 
@@ -140,6 +141,8 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         jsRules.reinitTo("entitlement_name_space");
         rulesInit();
 
+        pools = filterPoolsForV1Certificates(consumer, pools);
+
         log.info("Selecting best entitlement pool for product: " +
             Arrays.toString(productIds));
         List<ReadOnlyPool> readOnlyPools = ReadOnlyPool.fromCollection(pools);
@@ -228,5 +231,30 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         else {
             return null;
         }
+    }
+
+    /*
+     * If this consumer only supports V1 certificates, we need to filter out pools
+     * with too many content sets.
+     */
+    private List<Pool> filterPoolsForV1Certificates(Consumer consumer,
+        List<Pool> pools) {
+        if (!consumer.hasFact("system.certificate_version") ||
+            (consumer.hasFact("system.certificate_version") &&
+            consumer.getFact("system.certificate_version").startsWith("1."))) {
+            List<Pool> newPools = new LinkedList<Pool>();
+            for (Pool p : pools) {
+                // TODO: optimize to use cache
+                Product product = prodAdapter.getProductById(p.getProductId());
+                if (product.getProductContent().size() <=
+                    X509ExtensionUtil.V1_CONTENT_LIMIT) {
+                    newPools.add(p);
+                }
+            }
+            return newPools;
+        }
+
+        // Otherwise return the list of pools as is:
+        return pools;
     }
 }

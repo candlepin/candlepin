@@ -43,7 +43,7 @@ public class X509ExtensionUtil  extends X509Util{
 
     // If we're generating a cert with more content sets than this limit, we will error
     // out, as the certificate is likely too large for the CDN:
-    private static final int V1_CONTENT_LIMIT = 185;
+    public static final int V1_CONTENT_LIMIT = 185;
 
     @Inject
     public X509ExtensionUtil(Config config) {
