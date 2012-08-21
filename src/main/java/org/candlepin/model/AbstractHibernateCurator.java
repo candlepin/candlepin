@@ -141,7 +141,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         getEntityManager().flush();
     }
 
-    protected Session currentSession() {
+    public Session currentSession() {
         Session sess = (Session) entityManager.get().getDelegate();
         return sess;
     }

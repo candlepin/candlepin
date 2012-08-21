@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.policy.js.pool;
+package org.candlepin.policy.criteria;
 
 import java.util.HashMap;
 import java.util.List;
@@ -22,50 +22,52 @@ import org.apache.log4j.Logger;
 import org.candlepin.config.Config;
 import org.candlepin.exceptions.IseException;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.Pool;
-import org.candlepin.policy.PoolFilter;
+import org.candlepin.model.ConsumerCurator;
 import org.candlepin.policy.js.JsRules;
+import org.hibernate.criterion.Criterion;
 
 import com.google.inject.Inject;
 
 /**
- * JsPoolFilter
+ * RulesCriteria
  */
-public class JsPoolFilter implements PoolFilter {
-    private static Logger log = Logger.getLogger(JsPoolFilter.class);
+public class RulesCriteria  {
     protected Logger rulesLogger = null;
 
-    private JsRules jsRules;
-    private Config config;
+    protected JsRules jsRules;
+    protected Config config;
+    protected ConsumerCurator consumerCurator;
+    protected static Logger log = Logger.getLogger(RulesCriteria.class);
 
+    private static String jsNameSpace = "criteria_name_space";
     @Inject
-    public JsPoolFilter(JsRules jsRules, Config config) {
+    public RulesCriteria(JsRules jsRules, Config config,
+            ConsumerCurator consumerCurator) {
         this.jsRules = jsRules;
         this.config = config;
-        rulesLogger = Logger.getLogger(JsPoolFilter.class.getCanonicalName() + ".rules");
-        jsRules.init("pool_filter_name_space");
+        this.consumerCurator = consumerCurator;
+        jsRules.init(jsNameSpace);
     }
 
-    /* (non-Javadoc)
-     * @see org.candlepin.policy.PoolFilter#filterPools(java.util.List)
-     */
-    @Override
-    public List<Pool> filterPools(Consumer consumer, List<Pool> pools) {
+
+    public List<Criterion> availableEntitlementCriteria(Consumer consumer) {
         Map<String, Object> args = new HashMap<String, Object>();
-        args.put("pools", pools);
         args.put("standalone", config.standalone());
         args.put("log", rulesLogger);
         args.put("consumer", consumer);
-        List<Pool> poolsFiltered = null;
+
+        List<Criterion> poolsCriteria = null;
         try {
-            poolsFiltered = jsRules.invokeMethod("filterPools", args);
+            poolsCriteria = jsRules.invokeMethod("poolCriteria", args);
         }
         catch (NoSuchMethodException e) {
-            log.error("Unable to find javascript method: filterPools");
+            log.error("Unable to find javascript method: poolCriteria");
             log.error(e);
-            throw new IseException("Unable to filterPools.");
+            throw new IseException("Unable to create pool criteria.");
         }
-        return poolsFiltered;
+        return poolsCriteria;
     }
+
+
 
 }

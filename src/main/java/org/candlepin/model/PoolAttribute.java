@@ -22,7 +22,7 @@ import javax.persistence.Table;
 /**
  * See Attributes interface for documentation.
  */
-@Entity
+@Entity(name = "PoolAttribute")
 @Table(name = "cp_pool_attribute")
 @Embeddable
 public class PoolAttribute extends AbstractPoolAttribute {

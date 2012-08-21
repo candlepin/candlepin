@@ -42,9 +42,9 @@ import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Subscription;
 import org.candlepin.policy.Enforcer;
 import org.candlepin.policy.EntitlementRefusedException;
-import org.candlepin.policy.PoolFilter;
 import org.candlepin.policy.PoolRules;
 import org.candlepin.policy.ValidationResult;
+import org.candlepin.policy.criteria.RulesCriteria;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.entitlement.PreEntHelper;
@@ -82,7 +82,7 @@ public class CandlepinPoolManager implements PoolManager {
     private Config config;
     private Enforcer enforcer;
     private PoolRules poolRules;
-    private PoolFilter poolFilter;
+    private RulesCriteria rulesCriteria;
     private EntitlementCurator entitlementCurator;
     private ConsumerCurator consumerCurator;
     private EntitlementCertServiceAdapter entCertAdapter;
@@ -102,7 +102,7 @@ public class CandlepinPoolManager implements PoolManager {
         ProductServiceAdapter productAdapter,
         EntitlementCertServiceAdapter entCertAdapter, EventSink sink,
         EventFactory eventFactory, Config config, Enforcer enforcer,
-        PoolRules poolRules, PoolFilter poolFilter, EntitlementCurator curator1,
+        PoolRules poolRules, RulesCriteria rulesCriteria, EntitlementCurator curator1,
         ConsumerCurator consumerCurator, EntitlementCertificateCurator ecC,
         ComplianceRules complianceRules) {
 
@@ -116,7 +116,7 @@ public class CandlepinPoolManager implements PoolManager {
         this.consumerCurator = consumerCurator;
         this.enforcer = enforcer;
         this.poolRules = poolRules;
-        this.poolFilter = poolFilter;
+        this.rulesCriteria = rulesCriteria;
         this.entCertAdapter = entCertAdapter;
         this.entitlementCertificateCurator = ecC;
         this.complianceRules = complianceRules;
@@ -412,6 +412,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         for (Pool pool : allOwnerPools) {
+            log.debug("pool " + pool);
             boolean providesProduct = false;
             for (String productId : productIds) {
                 if (pool.provides(productId)) {

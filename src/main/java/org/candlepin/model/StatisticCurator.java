@@ -275,7 +275,7 @@ public class StatisticCurator extends AbstractHibernateCurator<Statistic> {
         }
     }
 
-    protected Session currentSession() {
+    public Session currentSession() {
         Session sess = (Session) entityManager.get().getDelegate();
         return sess;
     }

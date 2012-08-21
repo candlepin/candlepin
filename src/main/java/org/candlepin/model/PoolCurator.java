@@ -22,11 +22,12 @@ import org.apache.log4j.Logger;
 import org.candlepin.auth.interceptor.EnforceAccessControl;
 import org.candlepin.policy.Enforcer;
 import org.candlepin.policy.js.entitlement.PreEntHelper;
-import org.candlepin.policy.PoolFilter;
+import org.candlepin.policy.criteria.RulesCriteria;
 import org.hibernate.Criteria;
 import org.hibernate.Filter;
 import org.hibernate.LockMode;
 import org.hibernate.ReplicationMode;
+import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
@@ -49,15 +50,15 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     private static Logger log = Logger.getLogger(PoolCurator.class);
     private Enforcer enforcer;
-    private PoolFilter poolFilter;
+    private RulesCriteria poolCriteria;
     @Inject
     protected Injector injector;
 
     @Inject
-    protected PoolCurator(Enforcer enforcer, PoolFilter poolFilter) {
+    protected PoolCurator(Enforcer enforcer, RulesCriteria poolCriteria) {
         super(Pool.class);
         this.enforcer = enforcer;
-        this.poolFilter = poolFilter;
+        this.poolCriteria = poolCriteria;
     }
 
     @Override
@@ -170,7 +171,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             o = c.getOwner();
         }
 
-        log.debug("PoolFilter " + poolFilter);
 
         if (log.isDebugEnabled()) {
             log.debug("Listing available pools for:");
@@ -198,11 +198,21 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             crit.add(Restrictions.ge("endDate", activeOn));
         }
 
-        //log.debug("crit: " + crit);
+        List<Criterion> filterCriteria = poolCriteria.availableEntitlementCriteria(
+            c);
+        if (log.isDebugEnabled()) {
+            log.debug("Got " + filterCriteria.size() + "  query filters from database.");
+        }
+        for (Criterion rulesCriteria : filterCriteria) {
+            crit.add(rulesCriteria);
+        }
+
         // FIXME: sort by enddate?
         List<Pool> results = crit.list();
 
-        log.debug("results: " + results);
+        if (log.isDebugEnabled()) {
+            log.debug("Loaded " + results.size() + " pools from database.");
+        }
 
         if (results == null) {
             log.debug("no results");
@@ -224,8 +234,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 if (p.provides(productId)) {
                     newResults.add(p);
                     if (log.isDebugEnabled()) {
-                        log.debug("Pool provides " + productId +
-                            ": " + p);
+                        log.debug("Pool provides " + productId + ": " + p);
                     }
                 }
             }
@@ -238,9 +247,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         // available, and the consumer requests the actual entitlement, and the
         // request still could fail.
         if (c != null) {
-            List<Pool> filteredPools = this.poolFilter.filterPools(c, results);
             List<Pool> newResults = new LinkedList<Pool>();
-            log.debug("Filtering pools for consumer");
             for (Pool p : results) {
                 PreEntHelper helper = enforcer.preEntitlement(c, p, 1);
                 if (helper.getResult().isSuccessful() &&
