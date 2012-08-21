@@ -161,7 +161,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     @Test(expected = CertificateSizeException.class)
     public void tooManyContentSets() throws CertificateSizeException {
         Set<Content> productContent = new HashSet<Content>();
-        for (int i = 0; i < 200; i++) {
+        for (int i = 0; i < X509ExtensionUtil.V1_CONTENT_LIMIT + 1; i++) {
             productContent.add(createContent(CONTENT_NAME + i, CONTENT_ID + i,
                 CONTENT_LABEL + i, CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL,
                 CONTENT_GPG_URL));

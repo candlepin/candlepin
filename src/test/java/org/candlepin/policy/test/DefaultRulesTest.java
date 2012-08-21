@@ -17,6 +17,7 @@ package org.candlepin.policy.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
@@ -32,6 +33,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
@@ -59,6 +61,7 @@ import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.TestDateUtil;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.DateSourceImpl;
+import org.candlepin.util.X509ExtensionUtil;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -915,6 +918,41 @@ public class DefaultRulesTest {
         List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
             new String[]{ productId }, pools, compliance, null, new HashSet<String>());
 
+        assertEquals(1, bestPools.size());
+    }
+
+    @Test
+    public void testSelectBestPoolsFiltersTooMuchContent() {
+        Product product = new Product(productId, "A test product");
+
+        Set<Content> productContent = new HashSet<Content>();
+        for (int i = 0; i < X509ExtensionUtil.V1_CONTENT_LIMIT + 1; i++) {
+            productContent.add(new Content("fake" + i, "fake" + i,
+                "fake" + i, "yum", "vendor", "", ""));
+        }
+
+        product.setContent(productContent);
+        Pool pool = TestUtil.createPool(owner, product);
+        pool.setId("DEAD-BEEF");
+        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool);
+
+        List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>());
+        assertNull(bestPools);
+
+        // Try again with explicitly setting the consumer to cert v1:
+        consumer.setFact("system.certificate_version", "1.0");
+        bestPools = enforcer.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>());
+        assertNull(bestPools);
+
+        // And again with cert v2:
+        consumer.setFact("system.certificate_version", "2.5");
+        bestPools = enforcer.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>());
         assertEquals(1, bestPools.size());
     }
 
