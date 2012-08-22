@@ -91,20 +91,20 @@ public class OwnerInfo {
         entitlementsConsumedByType.put(type.getLabel(), entitlements);
     }
 
-    public void addToConsumerTypeCountByPool(ConsumerType type) {
+    public void addToConsumerTypeCountByPool(ConsumerType type, int toAdd) {
         Integer count = consumerTypeCountByPool.get(type.getLabel());
         if (count == null) {
             count = 0;
         }
-        consumerTypeCountByPool.put(type.getLabel(), ++count);
+        consumerTypeCountByPool.put(type.getLabel(), count + toAdd);
     }
 
-    public void addToEnabledConsumerTypeCountByPool(ConsumerType type) {
+    public void addToEnabledConsumerTypeCountByPool(ConsumerType type, int toAdd) {
         Integer count = enabledConsumerTypeCountByPool.get(type.getLabel());
         if (count == null) {
             count = 0;
         }
-        enabledConsumerTypeCountByPool.put(type.getLabel(), ++count);
+        enabledConsumerTypeCountByPool.put(type.getLabel(), count + toAdd);
     }
 
     public void setConsumerTypesByPool(List<ConsumerType> consumerTypes) {
@@ -126,6 +126,30 @@ public class OwnerInfo {
 
         typeCounts.physical += physical;
         typeCounts.guest += virtual;
+    }
+
+    void addDefaultEntitlementsConsumedByFamily(int physical, int virtual) {
+        for (String key : entitlementsConsumedByFamily.keySet()) {
+            ConsumptionTypeCounts count = entitlementsConsumedByFamily.get(key);
+            physical -= count.physical;
+            virtual -= count.guest;
+        }
+
+        // just ignore the default family if we have nothing to put in it.
+        if (physical > 0 || virtual > 0) {
+            addToEntitlementsConsumedByFamily("none", physical, virtual);
+        }
+    }
+
+    public void addDefaultEnabledConsumerTypeCount(int activePools) {
+        for (String key : consumerTypeCountByPool.keySet()) {
+            // don't want to count systems twice!
+            if (key.equals("system")) {
+                continue;
+            }
+            activePools -= consumerTypeCountByPool.get(key);
+        }
+        consumerTypeCountByPool.put("system", activePools);
     }
 
     /**
