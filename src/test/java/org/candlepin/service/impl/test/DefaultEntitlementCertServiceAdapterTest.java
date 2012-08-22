@@ -110,6 +110,14 @@ public class DefaultEntitlementCertServiceAdapterTest {
     private Content content;
     private Owner owner;
 
+    private String[] testUrls = {"/content/dist/rhel/$releasever/$basearch/os",
+        "/content/dist/rhel/$releasever/$basearch/debug",
+        "/content/dist/rhel/$releasever/$basearch/source/SRPMS",
+        "/content/dist/jboss/source",
+        "/content/beta/rhel/$releasever/$basearch/os",
+        "/content/beta/rhel/$releasever/$basearch/debug",
+        "/content/beta/rhel/$releasever/$basearch/source/SRPMS"};
+
     @Before
     public void setUp() {
         extensionUtil = new X509ExtensionUtil(new Config());
