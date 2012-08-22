@@ -19,6 +19,7 @@ import org.candlepin.auth.Principal;
 import org.candlepin.auth.interceptor.SecurityInterceptor;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Config;
+import org.candlepin.config.LoggingConfig;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.guice.CandlepinModule;
@@ -91,6 +92,7 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
         bind(X509ExtensionUtil.class);
         bind(Config.class).to(CandlepinCommonTestConfig.class)
             .asEagerSingleton();
+        bind(LoggingConfig.class).asEagerSingleton();
         bind(ConsumerResource.class);
         bind(PoolResource.class);
         bind(EntitlementResource.class);
