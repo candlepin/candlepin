@@ -70,7 +70,9 @@ public class CrlGenerator {
     public X509CRL syncCRLWithDB(X509CRL x509crl) {
         List<X509CRLEntryWrapper> crlEntries = null;
         BigInteger no = getCRLNumber(x509crl);
-        log.info("Old CRLNumber is : " + no);
+        if (log.isDebugEnabled()) {
+            log.debug("Old CRLNumber is : " + no);
+        }
 
         if (x509crl != null) {
             crlEntries = this.toSimpleCRLEntries(removeExpiredSerials(x509crl
@@ -159,7 +161,9 @@ public class CrlGenerator {
     public X509CRL removeEntries(X509CRL x509crl, List<CertificateSerial> serials) {
         List<X509CRLEntryWrapper> crlEntries = null;
         BigInteger no = getCRLNumber(x509crl);
-        log.info("Old CRLNumber is : " + no);
+        if (log.isDebugEnabled()) {
+            log.debug("Old CRLNumber is : " + no);
+        }
 
         if (x509crl != null) {
             Set<? extends X509CRLEntry> revokedEntries = x509crl
