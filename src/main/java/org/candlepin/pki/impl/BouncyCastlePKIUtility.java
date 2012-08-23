@@ -85,6 +85,7 @@ import com.google.inject.Inject;
  * See also {@link BouncyCastlePKIReader} for more notes on using NSS/JSS, and a note
  * about not using bouncycastle as the JSSE provider.
  */
+@SuppressWarnings("deprecation")
 public class BouncyCastlePKIUtility extends PKIUtility {
     private static Logger log = Logger.getLogger(BouncyCastlePKIUtility.class);
 

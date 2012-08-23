@@ -36,7 +36,6 @@ import java.io.IOException;
 import java.security.cert.CRLException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509CRL;
-import java.util.UUID;
 
 /**
  * CrlFileUtilTest
@@ -51,14 +50,14 @@ public class CrlFileUtilTest {
 
     @Before
     public void init() {
-        this.cfu = new CrlFileUtil(crlGenerator, pkiUtility);
+        this.cfu = new CrlFileUtil(pkiUtility);
     }
 
     @Test(expected = IOException.class)
     public void executeGivenDirectory() throws IOException,
                    CRLException, CertificateException {
         File crlFile = new File("/tmp");
-        cfu.updateCRLFile(crlFile, "CN=test, UID=" + UUID.randomUUID());
+        cfu.readCRLFile(crlFile);
     }
 
     @Test
@@ -67,9 +66,9 @@ public class CrlFileUtilTest {
 
         X509CRL crl = mock(X509CRL.class);
         when(crl.getEncoded()).thenReturn(Base64.encodeBase64("encoded".getBytes()));
-        when(crlGenerator.updateCRL(any(X509CRL.class))).thenReturn(crl);
+        when(crlGenerator.syncCRLWithDB(any(X509CRL.class))).thenReturn(crl);
         when(pkiUtility.getPemEncoded(any(X509CRL.class))).thenReturn(new byte [2]);
-        cfu.updateCRLFile(crlFile, "CN=test, UID=" + UUID.randomUUID());
+        cfu.writeCRLFile(crlFile, crl);
         File f = new File("/tmp/biteme.crl");
         assertTrue(f.exists());
         assertTrue(f.length() > 0);
@@ -84,9 +83,10 @@ public class CrlFileUtilTest {
             assertEquals(0, f.length());
             X509CRL crl = mock(X509CRL.class);
             when(crl.getEncoded()).thenReturn(Base64.encodeBase64("encoded".getBytes()));
-            when(crlGenerator.updateCRL(any(X509CRL.class))).thenReturn(crl);
+            when(crlGenerator.syncCRLWithDB(any(X509CRL.class))).thenReturn(crl);
             when(pkiUtility.getPemEncoded(any(X509CRL.class))).thenReturn(new byte [2]);
-            cfu.updateCRLFile(f, "CN=test, UID=" + UUID.randomUUID());
+            X509CRL updatedcrl = cfu.readCRLFile(f);
+            cfu.writeCRLFile(f, updatedcrl);
             assertTrue(f.length() > 0);
         }
         finally {
@@ -105,8 +105,27 @@ public class CrlFileUtilTest {
             assertEquals(0, f.length());
             // put some garbage in the file to cause the CRLException
             FileUtils.writeByteArrayToFile(f, "gobbledygook".getBytes());
-            cfu.updateCRLFile(f, "CN=test, UID=" + UUID.randomUUID());
+            cfu.readCRLFile(f);
 
+        }
+        finally {
+            if (f != null) {
+                f.delete();
+            }
+        }
+    }
+
+    @Test
+    public void updatecrlfile() throws Exception {
+        File f = null;
+        try {
+            f = File.createTempFile("test", ".crl");
+            assertEquals(0, f.length());
+            X509CRL crl = mock(X509CRL.class);
+            when(crl.getEncoded()).thenReturn(Base64.encodeBase64("encoded".getBytes()));
+            when(pkiUtility.getPemEncoded(any(X509CRL.class))).thenReturn(new byte [2]);
+            cfu.writeCRLFile(f, crl);
+            assertTrue(f.length() > 0);
         }
         finally {
             if (f != null) {

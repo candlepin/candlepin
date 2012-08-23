@@ -60,15 +60,19 @@ public class CrlGenerator {
     }
 
     /**
-     * Update crl.
+     * Synchronizes the given crl with the values from the database. If the
+     * given crl is null, a new list will be created. The method will return
+     * an updated crl.
      *
-     * @param x509crl the x509crl
-     * @return the x509 crl
+     * @param x509crl the crl to sync (can be null).
+     * @return the updated crl
      */
-    public X509CRL updateCRL(X509CRL x509crl) {
+    public X509CRL syncCRLWithDB(X509CRL x509crl) {
         List<X509CRLEntryWrapper> crlEntries = null;
         BigInteger no = getCRLNumber(x509crl);
-        log.info("Old CRLNumber is : " + no);
+        if (log.isDebugEnabled()) {
+            log.debug("Old CRLNumber is : " + no);
+        }
 
         if (x509crl != null) {
             crlEntries = this.toSimpleCRLEntries(removeExpiredSerials(x509crl
@@ -83,15 +87,6 @@ public class CrlGenerator {
 
         return pkiUtility.createX509CRL(crlEntries, no
             .add(BigInteger.ONE));
-    }
-
-    /**
-     * Generate a new CRL.
-     *
-     * @return the x509 CRL
-     */
-    public X509CRL createCRL() {
-        return updateCRL(null);
     }
 
     /**
@@ -158,6 +153,61 @@ public class CrlGenerator {
     }
 
     /**
+     * Remove serials inadvertently added to the CRL.
+     * @param x509crl to be repaired.
+     * @param serials certificate serials to be removed.
+     * @return updated CRL with the given entries removed.
+     */
+    public X509CRL removeEntries(X509CRL x509crl, List<CertificateSerial> serials) {
+        List<X509CRLEntryWrapper> crlEntries = null;
+        BigInteger no = getCRLNumber(x509crl);
+        if (log.isDebugEnabled()) {
+            log.debug("Old CRLNumber is : " + no);
+        }
+
+        if (x509crl != null) {
+            Set<? extends X509CRLEntry> revokedEntries = x509crl
+                .getRevokedCertificates();
+            Set<X509CRLEntry> toKeep = Util.newSet();
+
+            Map<BigInteger, X509CRLEntry> map = newMap();
+
+            if (revokedEntries == null || revokedEntries.isEmpty()) {
+                return x509crl;
+            }
+
+            // map them to make it easier to find
+            for (X509CRLEntry entry : revokedEntries) {
+                map.put(entry.getSerialNumber(), entry);
+            }
+
+            for (CertificateSerial cs : serials) {
+                X509CRLEntry entry = map.get(cs.getSerial());
+                if (entry != null) {
+                    map.remove(cs.getSerial());
+                    if (log.isTraceEnabled()) {
+                        log.trace("Serial #" + cs.getId() +
+                            " has been found. Removing it from CRL");
+                    }
+                    // put them back in circulation
+                    cs.setCollected(false);
+                    cs.setRevoked(false);
+                }
+            }
+
+            certificateSerialCurator.saveOrUpdateAll(serials);
+
+            toKeep.addAll(map.values());
+            crlEntries = toSimpleCRLEntries(toKeep);
+        }
+        else {
+            crlEntries = newList();
+        }
+
+        return pkiUtility.createX509CRL(crlEntries, no.add(BigInteger.ONE));
+    }
+
+    /**
      * Gets the cRL number.
      *
      * @param x509crl the x509crl
@@ -167,8 +217,8 @@ public class CrlGenerator {
         if (x509crl == null) {
             return BigInteger.ZERO;
         }
-        return new BigInteger(pkiUtility.decodeDERValue(x509crl.getExtensionValue(
-            OIDUtil.CRL_NUMBER)));
+        return new BigInteger(pkiUtility.decodeDERValue(
+            x509crl.getExtensionValue(OIDUtil.CRL_NUMBER)));
     }
 
     /**
@@ -181,8 +231,8 @@ public class CrlGenerator {
         Set<? extends X509CRLEntry> entries) {
         List<X509CRLEntryWrapper> crlEntries = newList();
         for (X509CRLEntry entry : entries) {
-            crlEntries.add(new X509CRLEntryWrapper(entry.getSerialNumber(), entry
-                .getRevocationDate()));
+            crlEntries.add(new X509CRLEntryWrapper(entry.getSerialNumber(),
+                entry.getRevocationDate()));
         }
         return crlEntries;
     }

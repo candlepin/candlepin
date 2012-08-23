@@ -14,18 +14,25 @@
  */
 package org.candlepin.pinsetter.tasks;
 
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
+
 
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.controller.CrlGenerator;
 import org.candlepin.util.CrlFileUtil;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.quartz.JobExecutionException;
+
+import java.io.File;
+import java.security.cert.X509CRL;
 
 /**
  * CertificateRevocationListTaskTest
@@ -36,16 +43,29 @@ public class CertificateRevocationListTaskTest {
 
     @Mock private Config config;
     @Mock private CrlFileUtil crlFileUtil;
+    @Mock private CrlGenerator generator;
+    @Mock private X509CRL crl;
 
     @Before
     public void init() {
-        this.task = new CertificateRevocationListTask(config, crlFileUtil);
+        this.task = new CertificateRevocationListTask(config, crlFileUtil, generator);
     }
 
     @Test(expected = JobExecutionException.class)
     public void executeNullFilePath() throws JobExecutionException {
         when(config.getString(ConfigProperties.CRL_FILE_PATH)).thenReturn(null);
         task.execute(null);
+    }
+
+    @Test
+    public void execute() throws Exception {
+        when(config.getString(ConfigProperties.CRL_FILE_PATH)).thenReturn("/tmp/test.crl");
+        when(crlFileUtil.readCRLFile(any(File.class))).thenReturn(crl);
+        when(generator.syncCRLWithDB(eq(crl))).thenReturn(crl);
+
+        task.execute(null);
+
+        verify(crlFileUtil).writeCRLFile(any(File.class), eq(crl));
     }
 
 }
