@@ -83,7 +83,6 @@ describe 'Certificate Revocation List' do
     new_time.should_not == old_time
     crl = OpenSSL::X509::CRL.new File.read "/var/lib/candlepin/candlepin-crl.crl"
     crl.revoked.length.should == oldlen + 1
-    FileUtils.cp("/var/lib/candlepin/candlepin-crl.crl", "/tmp/spec2.crl")
   end
 
   it 'should regenerate the on-disk crl' do
@@ -101,8 +100,7 @@ describe 'Certificate Revocation List' do
     revoked_serials.should_not include(serials)
     # ensure that the on-disk crl got updated
     new_time = File.mtime("/var/lib/candlepin/candlepin-crl.crl")
-    new_time.should_not == old_time 
-    FileUtils.cp("/var/lib/candlepin/candlepin-crl.crl", "/tmp/spec.crl")
+    new_time.should_not == old_time
   end
 
   def filter_serial(product, consumer=@system)
