@@ -143,8 +143,10 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
 
         pools = filterPoolsForV1Certificates(consumer, pools);
 
-        log.info("Selecting best entitlement pool for product: " +
-            Arrays.toString(productIds));
+        if (log.isDebugEnabled()) {
+            log.debug("Selecting best entitlement pool for product: " +
+                Arrays.toString(productIds));
+        }
         List<ReadOnlyPool> readOnlyPools = ReadOnlyPool.fromCollection(pools, productCache);
 
         List<ReadOnlyProduct> readOnlyProducts = new LinkedList<ReadOnlyProduct>();
@@ -171,41 +173,22 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         args.put("exemptList", exemptLevels);
 
         Map<ReadOnlyPool, Integer> result = null;
-        boolean foundMatchingRule = false;
-        for (Rule rule : matchingRules) {
-            try {
-                Object output =
-                    jsRules.invokeMethod(SELECT_POOL_PREFIX + rule.getRuleName(), args);
-                result = jsRules.convertMap(output);
-                foundMatchingRule = true;
-                log.info("Excuted javascript rule: " + SELECT_POOL_PREFIX +
-                    rule.getRuleName());
-                break;
-            }
-            catch (NoSuchMethodException e) {
-                // continue on to the next rule in the list.
-            }
-            catch (RhinoException e) {
-                throw new RuleExecutionException(e);
+        // Only need to run the select best pools global rule:
+        try {
+            Object output =
+                jsRules.invokeMethod(GLOBAL_SELECT_POOL_FUNCTION, args);
+            result = jsRules.convertMap(output);
+            if (log.isDebugEnabled()) {
+                log.debug("Excuted javascript rule: " + GLOBAL_SELECT_POOL_FUNCTION);
             }
         }
-
-        if (!foundMatchingRule) {
-            try {
-                Object output = jsRules.invokeMethod(GLOBAL_SELECT_POOL_FUNCTION, args);
-                result = jsRules.convertMap(output);
-                log.info("Excuted javascript rule: " +
-                    GLOBAL_SELECT_POOL_FUNCTION);
-            }
-            catch (NoSuchMethodException ex) {
-                log.warn("No default rule found: " +
-                    GLOBAL_SELECT_POOL_FUNCTION);
-                log.warn("Resorting to default pool selection behavior.");
-                return selectBestPoolDefault(pools);
-            }
-            catch (RhinoException ex) {
-                throw new RuleExecutionException(ex);
-            }
+        catch (NoSuchMethodException e) {
+            log.warn("No default rule found: " + GLOBAL_SELECT_POOL_FUNCTION);
+            log.warn("Resorting to default pool selection behavior.");
+            return selectBestPoolDefault(pools);
+        }
+        catch (RhinoException e) {
+            throw new RuleExecutionException(e);
         }
 
         if (pools.size() > 0 && result == null) {
@@ -217,7 +200,9 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         for (Pool p : pools) {
             for (Entry<ReadOnlyPool, Integer> entry : result.entrySet()) {
                 if (p.getId().equals(entry.getKey().getId())) {
-                    log.debug("Best pool: " + p);
+                    if (log.isDebugEnabled()) {
+                        log.debug("Best pool: " + p);
+                    }
 
                     int quantity = entry.getValue();
                     bestPools.add(new PoolQuantity(p, quantity));
@@ -245,7 +230,7 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
             List<Pool> newPools = new LinkedList<Pool>();
             for (Pool p : pools) {
                 // TODO: optimize to use cache
-                Product product = prodAdapter.getProductById(p.getProductId());
+                Product product = productCache.getProductById(p.getProductId());
                 if (product.getProductContent().size() <=
                     X509ExtensionUtil.V1_CONTENT_LIMIT) {
                     newPools.add(p);

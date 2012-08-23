@@ -387,23 +387,6 @@ public class EnforcerTest extends DatabaseTestFixture {
         assertNull(result);
     }
 
-    @Test(expected = RuleExecutionException.class)
-    public void testSelectBestPoolBadRule() {
-        Product product = new Product("a-product", "A product for testing");
-        product.setAttribute(BAD_RULE_PRODUCT, "");
-        productCurator.create(product);
-
-
-        Pool pool1 = createPoolAndSub(owner, product, 5L, TestUtil
-            .createDate(2000, 02, 26), TestUtil.createDate(2050, 02, 26));
-
-        when(this.productAdapter.getProductById("a-product"))
-            .thenReturn(product);
-
-        enforcer.selectBestPools(consumer, new String[] {"a-product"},
-            Collections.singletonList(pool1), compliance, null, new HashSet<String>());
-    }
-
     @Test
     public void testSelectBestPoolDefaultRule() {
         Product product = new Product("a-product", "A product for testing");
