@@ -93,13 +93,13 @@ public class CrlResource {
 
     /**
      * delete a certificate from the revocation list
-     * @param sids list of certificate serial ids
+     * @param serialIds list of certificate serial ids
      * @throws CRLException if there is a problem updating the CRL object
      * @throws IOException if there is a problem reading the crl file
      */
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
-    public void unrevoke(@QueryParam("sid") String[] sids)
+    public void unrevoke(@QueryParam("serial") String[] serialIds)
         throws CRLException, IOException {
 
         String filePath = getCrlFilePath();
@@ -111,7 +111,7 @@ public class CrlResource {
             // get crl file if it exists
             // lookup entitlement, find CertificateSerial
             List<CertificateSerial> serials =
-                certificateSerialCurator.listBySerialIds(sids);
+                certificateSerialCurator.listBySerialIds(serialIds);
 
             crl = crlGenerator.removeEntries(crl, serials);
 
