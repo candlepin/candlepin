@@ -783,7 +783,6 @@ var ConsumerDelete = {
 var PoolCriteria = {
     poolCriteria: function() {
         var criteriaFilters = new java.util.LinkedList();
-        
         // Don't load virt_only pools if this consumer isn't a guest:
         if (!"true".equalsIgnoreCase(consumer.getFact("virt.is_guest"))) {
 
@@ -792,14 +791,13 @@ var PoolCriteria = {
                         org.candlepin.model.PoolAttribute, "attr")
                     .add(org.hibernate.criterion.Restrictions.eq("name", "virt_only"))
                     .add(org.hibernate.criterion.Restrictions.eq("value", "true"))
-                    .add(org.hibernate.criterion.Property.forName("pool.id")
-                            .eqProperty("attr.pool"))
+                    .add(org.hibernate.criterion.Property.forName("this.id")
+                            .eqProperty("attr.pool.id"))
                     .setProjection(org.hibernate.criterion.Projections.property("attr.id"));
-            
             criteriaFilters.add(org.hibernate.criterion.Subqueries.notExists(
                     noVirtOnlyProductAttr));
         }
-        
+
         return criteriaFilters;
     }
 }
