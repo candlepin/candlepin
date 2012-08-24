@@ -14,13 +14,13 @@
  */
 package org.candlepin.pinsetter.tasks;
 
-import org.candlepin.config.Config;
-import org.candlepin.config.ConfigProperties;
-import org.candlepin.util.CrlFileUtil;
-
 import com.google.inject.Inject;
 
 import org.apache.log4j.Logger;
+import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.controller.CrlGenerator;
+import org.candlepin.util.CrlFileUtil;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
@@ -29,7 +29,7 @@ import java.io.File;
 import java.io.IOException;
 import java.security.cert.CRLException;
 import java.security.cert.CertificateException;
-import java.util.UUID;
+import java.security.cert.X509CRL;
 
 /**
  * CertificateRevocationListTask.
@@ -39,8 +39,7 @@ public class CertificateRevocationListTask implements Job {
     public static final String DEFAULT_SCHEDULE = "0 0 12 * * ?";
 
     private Config config;
-
-
+    private CrlGenerator crlGenerator;
     private CrlFileUtil crlFileUtil;
 
     private static Logger log = Logger.getLogger(CertificateRevocationListTask.class);
@@ -53,9 +52,10 @@ public class CertificateRevocationListTask implements Job {
      */
     @Inject
     public CertificateRevocationListTask(Config conf,
-        CrlFileUtil crlFileUtil) {
+        CrlFileUtil crlFileUtil, CrlGenerator crlGenerator) {
         this.config = conf;
         this.crlFileUtil = crlFileUtil;
+        this.crlGenerator = crlGenerator;
     }
 
     @Override
@@ -69,7 +69,9 @@ public class CertificateRevocationListTask implements Job {
         }
         try {
             File crlFile = new File(filePath);
-            crlFileUtil.updateCRLFile(crlFile, "CN=test, UID=" + UUID.randomUUID());
+            X509CRL crl = crlFileUtil.readCRLFile(crlFile);
+            crl = crlGenerator.syncCRLWithDB(crl);
+            crlFileUtil.writeCRLFile(crlFile, crl);
         }
         catch (CRLException e) {
             log.error(e);
@@ -84,7 +86,4 @@ public class CertificateRevocationListTask implements Job {
             throw new JobExecutionException(e, false);
         }
     }
-
-
-
 }

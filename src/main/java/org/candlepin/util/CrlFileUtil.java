@@ -14,7 +14,6 @@
  */
 package org.candlepin.util;
 
-import org.candlepin.controller.CrlGenerator;
 import org.candlepin.pki.PKIUtility;
 
 import com.google.inject.Inject;
@@ -36,20 +35,26 @@ import java.security.cert.X509CRL;
  */
 public class CrlFileUtil {
     private static Logger log = Logger.getLogger(CrlFileUtil.class);
-    private CrlGenerator crlGenerator;
     private PKIUtility pkiUtility;
 
     @Inject
-    public CrlFileUtil(CrlGenerator crlGenerator, PKIUtility pkiUtility) {
-        this.crlGenerator = crlGenerator;
+    public CrlFileUtil(PKIUtility pkiUtility) {
         this.pkiUtility = pkiUtility;
     }
 
-    public void updateCRLFile(File file, String principal)
+    /**
+     * Given a file to CRL, this method will read it in if
+     *  it's none empty and return an X.509 CRL structure.
+     * @param file to the CRL
+     * @return X.509 CRL structure
+     * @throws CRLException thrown if there's a problem parsing the input file
+     * @throws CertificateException thrown if there's a problem parsing the input file
+     * @throws IOException thrown if there's general I/O problems
+     */
+    public X509CRL readCRLFile(File file)
         throws CRLException, CertificateException, IOException {
 
         FileInputStream in = null;
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
         try {
             if (file.exists() && file.length() > 0) {
                 log.info("CRL File: " + file + " exists. Loading the old CRL");
@@ -63,10 +68,8 @@ public class CrlFileUtil {
                 x509crl = (X509CRL) CertificateFactory.getInstance("X.509")
                     .generateCRL(in);
             }
-            x509crl = this.crlGenerator.updateCRL(x509crl);
-            stream.write(pkiUtility.getPemEncoded(x509crl));
-            log.info("Completed generating CRL. Writing it to disk");
-            FileUtils.writeByteArrayToFile(file, stream.toByteArray());
+
+            return x509crl;
         }
         finally {
             if (in != null) {
@@ -80,7 +83,31 @@ public class CrlFileUtil {
                 }
             }
         }
-
     }
 
+    public byte[] writeCRLFile(File file, X509CRL crl)
+        throws CRLException, CertificateException, IOException {
+
+        byte[] encoded = pkiUtility.getPemEncoded(crl);
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+
+        try {
+            stream.write(encoded);
+            log.info("Completed generating CRL. Writing it to disk");
+            FileUtils.writeByteArrayToFile(file, stream.toByteArray());
+        }
+        finally {
+            if (stream != null) {
+                try {
+                    stream.close();
+                }
+                catch (IOException e) {
+                    log.error(
+                        "exception when closing a CRL file: " + file.getAbsolutePath());
+                }
+            }
+        }
+
+        return encoded;
+    }
 }

@@ -21,22 +21,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.math.BigInteger;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.X509CRL;
-import java.security.cert.X509CRLEntry;
-import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-
-import javax.security.auth.x500.X500Principal;
-
 import org.bouncycastle.asn1.x509.CRLNumber;
 import org.bouncycastle.asn1.x509.X509Extensions;
 import org.bouncycastle.x509.X509V2CRLGenerator;
@@ -55,9 +39,26 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import java.math.BigInteger;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509CRL;
+import java.security.cert.X509CRLEntry;
+import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+
+import javax.security.auth.x500.X500Principal;
+
 /**
  * CRLGeneratorTest
  */
+@SuppressWarnings("deprecation")
 @RunWith(MockitoJUnitRunner.class)
 public class CrlGeneratorTest {
 
@@ -194,11 +195,75 @@ public class CrlGeneratorTest {
     }
 
     @Test
+    public void emptyRevocationsReturnsUntouched() throws Exception {
+        // there's gotta be a way to reduce to a set of mocks
+
+        KeyPair kp = CrlGeneratorTest.generateKP();
+        X509V2CRLGenerator g = new X509V2CRLGenerator();
+        g.setIssuerDN(new X500Principal("CN=test, UID=" + UUID.randomUUID()));
+        g.setThisUpdate(new Date());
+        g.setNextUpdate(Util.tomorrow());
+        g.setSignatureAlgorithm("SHA1withRSA");
+        g.addExtension(X509Extensions.CRLNumber, false,
+            new CRLNumber(BigInteger.TEN));
+        X509CRL x509crl = g.generate(kp.getPrivate());
+
+        // now we need to remove one of those serials
+        List<CertificateSerial> toremove = new ArrayList<CertificateSerial>() {
+            {
+                add(stubCS(100L, new Date()));
+            }
+        };
+
+        X509CRL untouchedcrl = generator.removeEntries(x509crl, toremove);
+        assertEquals(x509crl, untouchedcrl);
+    }
+
+    @Test
+    @SuppressWarnings("serial")
+    public void removeEntries() throws Exception {
+        // there's gotta be a way to reduce to a set of mocks
+
+        KeyPair kp = CrlGeneratorTest.generateKP();
+        X509V2CRLGenerator g = new X509V2CRLGenerator();
+        g.setIssuerDN(new X500Principal("CN=test, UID=" + UUID.randomUUID()));
+        g.setThisUpdate(new Date());
+        g.setNextUpdate(Util.tomorrow());
+        g.setSignatureAlgorithm("SHA1withRSA");
+        g.addExtension(X509Extensions.CRLNumber, false,
+            new CRLNumber(BigInteger.TEN));
+        X509CRL x509crl = g.generate(kp.getPrivate());
+
+        List<CertificateSerial> serials = getStubCSList();
+        List<X509CRLEntryWrapper> entries = Util.newList();
+        for (CertificateSerial serial : serials) {
+            entries.add(new X509CRLEntryWrapper(serial.getSerial(),
+                new Date()));
+            serial.setCollected(true);
+        }
+
+        x509crl = pkiUtility.createX509CRL(entries, BigInteger.TEN);
+        assertEquals(3, x509crl.getRevokedCertificates().size());
+
+
+        // now we need to remove one of those serials
+        List<CertificateSerial> toremove = new ArrayList<CertificateSerial>() {
+            {
+                add(stubCS(100L, new Date()));
+            }
+        };
+
+        X509CRL updatedcrl = generator.removeEntries(x509crl, toremove);
+        Set<? extends X509CRLEntry> revoked = updatedcrl.getRevokedCertificates();
+        assertEquals(2, revoked.size());
+    }
+
+    @Test
     public void updateCRLWithNullInput() {
         List<CertificateSerial> serials = getStubCSList();
         when(this.curator.retrieveTobeCollectedSerials())
             .thenReturn(serials);
-        X509CRL x509crl = this.generator.updateCRL((X509CRL) null);
+        X509CRL x509crl = this.generator.syncCRLWithDB((X509CRL) null);
         verify(this.curator).deleteExpiredSerials();
         assertEquals(BigInteger.ONE, this.generator.getCRLNumber(x509crl));
         Set<? extends X509CRLEntry> entries = x509crl.getRevokedCertificates();
@@ -231,7 +296,7 @@ public class CrlGeneratorTest {
                     add(stubCS(1002L, new Date()));
                 }
             });
-        X509CRL newCRL = this.generator.updateCRL(oldCert);
+        X509CRL newCRL = this.generator.syncCRLWithDB(oldCert);
 
         verify(this.curator, times(1)).retrieveTobeCollectedSerials();
         verify(this.curator, times(1)).deleteExpiredSerials();
@@ -319,5 +384,4 @@ public class CrlGeneratorTest {
         when(entry.getRevocationDate()).thenReturn(dt);
         return entry;
     }
-
 }

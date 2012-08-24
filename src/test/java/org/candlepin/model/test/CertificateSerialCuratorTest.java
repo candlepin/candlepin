@@ -24,14 +24,17 @@ import static org.candlepin.util.Util.tomorrow;
 import static org.candlepin.util.Util.yesterday;
 import static org.junit.Assert.assertNotNull;
 
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.test.DatabaseTestFixture;
 import org.junit.Test;
+
+import java.math.BigInteger;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * CertificateSerialCuratorTest
@@ -183,5 +186,36 @@ public class CertificateSerialCuratorTest extends DatabaseTestFixture {
         createCS().withExpDate(addDaysToDt(30)).revoked(true).save();
         createCS().withExpDate(tomorrow()).revoked(false).save();
         assertEquals(3, this.certSerialCurator.deleteExpiredSerials());
+    }
+
+    @Test
+    public void testListBySerialIds() {
+        CertificateSerial serial = createCS().withExpDate("03/10/2010")
+            .collected(false).revoked(false).save();
+        CertificateSerial serial1 = createCS().withExpDate("03/10/2012")
+            .collected(true).revoked(true).save();
+
+        String[] ids = new String[2];
+        ids[0] = String.valueOf(serial.getSerial());
+        ids[1] = String.valueOf(serial1.getSerial());
+
+        List<CertificateSerial> serials = certSerialCurator.listBySerialIds(ids);
+        assertEquals(2, serials.size());
+
+        // verify
+        Map<BigInteger, CertificateSerial> values =
+            new HashMap<BigInteger, CertificateSerial>();
+
+        for (CertificateSerial s : serials) {
+            values.put(s.getSerial(), s);
+        }
+
+        assertNotNull(values.get(serial.getSerial()));
+        assertNotNull(values.get(serial1.getSerial()));
+    }
+
+    @Test
+    public void givenNullReturnsNull() {
+        assertEquals(null, certSerialCurator.listBySerialIds(null));
     }
 }
