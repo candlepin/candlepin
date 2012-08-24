@@ -14,179 +14,129 @@
  */
 package org.candlepin.policy.test;
 
-import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
 
-import javax.persistence.EntityManager;
-
-import org.hibernate.Criteria;
-import org.hibernate.Session;
-import org.hibernate.criterion.Criterion;
-import org.hibernate.ejb.HibernateEntityManagerImplementor;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Matchers.any;
 
 import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.Rules;
-import org.candlepin.model.RulesCurator;
-import org.candlepin.model.PoolCurator;
-import org.candlepin.policy.Enforcer;
-import org.candlepin.policy.criteria.RulesCriteria;
-import org.candlepin.policy.js.JsRulesProvider;
-import org.candlepin.policy.js.entitlement.PreEntHelper;
-import org.candlepin.policy.js.pool.JsPoolRules;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
-import org.candlepin.util.Util;
-import org.candlepin.auth.UserPrincipal;
-import org.candlepin.config.Config;
-import org.candlepin.controller.PoolManager;
 
-/**
- * JsPoolFilter
+/*
+ * Test the Javascript pool criteria. This works because we configure an enforcer for the
+ * unit tests that by default, will always return success. As such if we see pools getting
+ * filtered out below, we know it was because of the hibernate query mechanism.
  */
 @RunWith(MockitoJUnitRunner.class)
 public class PoolCriteriaTest extends DatabaseTestFixture {
-    private static final String RULES_FILE = "/rules/default-rules.js";
-    private JsRulesProvider provider;
-
-    @Mock private RulesCurator rulesCuratorMock;
-    @Mock private ProductServiceAdapter productAdapterMock;
-    @Mock private PoolManager poolManagerMock;
-    @Mock private Config configMock;
-    @Mock private ConsumerCurator consumerCuratorMock;
-    @Mock private Consumer consumerMock;
-    @Mock private Enforcer enforcerMock;
 
     private Owner owner;
     private Consumer consumer;
-    private RulesCriteria poolsCriteria;
-    private JsPoolRules poolRules;
 
     @Before
     public void setUp() {
-
-        // Load the default production rules:
-        InputStream is = this.getClass().getResourceAsStream(RULES_FILE);
-        Rules rules = new Rules(Util.readFile(is));
-
-        when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
-        when(rulesCuratorMock.getRules()).thenReturn(rules);
-
-
-        this.provider = new JsRulesProvider(rulesCuratorMock);
-        poolRules = new JsPoolRules(this.provider.get(), poolManagerMock,
-                                    productAdapterMock, configMock);
-
-        poolsCriteria = new RulesCriteria(this.provider.get(), configMock,
-            consumerCuratorMock);
-        //principal = TestUtil.createOwnerPrincipal();
-        //owner = principal.getOwners().get(0);
         owner = this.createOwner();
-
-        // Mock the enforcer to always return success, so we're just testing query
-        // filters here, and the rules won't interfere:
-//        PreEntHelper dummyHelperResult = new PreEntHelper(1, consumerCuratorMock);
-//        when(enforcerMock.preEntitlement(any(Consumer.class), any(Pool.class),
-//            1)).thenReturn(dummyHelperResult);
     }
 
     @Test
-    public void createCriteria() {
+    public void virtOnlyPoolAttributeFiltering() {
 
         consumer = this.createConsumer(owner);
         Product targetProduct = TestUtil.createProduct();
         this.productCurator.create(targetProduct);
-        Pool targetPool = this.createPoolAndSub(owner, targetProduct, 1L, new Date(),new Date());
-        //Pool targetPool = TestUtil.createPool(targetProduct);
-        List<Pool> pools = new LinkedList<Pool>();
-        pools.add(targetPool);
-        //this.poolCurator.saveOrUpdateAll(pools);
+        Pool physicalPool = this.createPoolAndSub(owner, targetProduct, 1L, new Date(),
+            new Date());
 
-        Session sess = (Session) this.poolCurator.currentSession();
-        Criteria testCritReal = sess.createCriteria(Pool.class);
+        Pool virtPool = this.createPoolAndSub(owner, targetProduct, 1L, new Date(),
+            new Date());
+        virtPool.setAttribute("virt_only", "true");
+        poolCurator.merge(virtPool);
 
-        List<Criterion> testCrits = poolsCriteria.availableEntitlementCriteria(consumer);
-        for (Criterion criterion: testCrits) {
-            testCritReal.add(criterion);
-        }
-        pools = testCritReal.list();
+        List<Pool> results = poolCurator.listAvailableEntitlementPools(consumer, null,
+            null, null, false, true);
 
-        assertEquals(1, pools.size());
+        assertEquals(1, results.size());
+        assertEquals(physicalPool.getId(), results.get(0).getId());
+
+        // Make the consumer a guest and try again:
+        consumer.setFact("virt.is_guest", "true");
+        results = poolCurator.listAvailableEntitlementPools(consumer, null,
+            null, null, false, true);
+
+        assertEquals(2, results.size());
 
     }
 
+    // Virt only can also be on the product:
     @Test
-    public void createCriteriaNoMatch() {
+    public void virtOnlyProductAttributeFiltering() {
 
         consumer = this.createConsumer(owner);
         Product targetProduct = TestUtil.createProduct();
+        targetProduct.setAttribute("virt_only", "true");
         this.productCurator.create(targetProduct);
-        Pool targetPool = this.createPoolAndSub(owner, targetProduct, 1L, new Date(),new Date());
-        //Pool targetPool = TestUtil.createPool(targetProduct);
-        List<Pool> pools = new LinkedList<Pool>();
-        pools.add(targetPool);
 
-        Session sess = (Session) this.poolCurator.currentSession();
-        Criteria testCritReal = sess.createCriteria(Pool.class);
-        Owner notTheOwner = this.createOwner();
-        when(consumerMock.getOwner()).thenReturn(notTheOwner);
-        List<Criterion> testCrits = poolsCriteria.availableEntitlementCriteria(consumerMock);
-        for (Criterion criterion: testCrits) {
-            testCritReal.add(criterion);
-        }
-        pools = testCritReal.list();
+        this.createPoolAndSub(owner, targetProduct, 1L, new Date(),
+            new Date());
 
-        assertEquals(pools.size(), 1);
+        List<Pool> results = poolCurator.listAvailableEntitlementPools(consumer, null,
+            null, null, false, true);
 
+        assertEquals(0, results.size());
+        // Make the consumer a guest and try again:
+        consumer.setFact("virt.is_guest", "true");
+        results = poolCurator.listAvailableEntitlementPools(consumer, null,
+            null, null, false, true);
+
+        assertEquals(2, results.size());
+    }
+
+    @Test
+    public void requiresHostPoolAttributeFiltering() {
+
+        consumer = this.createConsumer(owner);
+
+        Consumer host = createConsumer(owner);
+        host.addGuestId(new GuestId("GUESTUUID", host));
+        consumerCurator.update(host);
+
+        Product targetProduct = TestUtil.createProduct();
+        this.productCurator.create(targetProduct);
+
+        Pool virtPool = this.createPoolAndSub(owner, targetProduct, 1L, new Date(),
+            new Date());
+        virtPool.setAttribute("virt_only", "true");
+        virtPool.setAttribute("requires_host", "");
+        poolCurator.merge(virtPool);
+
+        List<Pool> results = poolCurator.listAvailableEntitlementPools(consumer, null,
+            null, null, false, true);
+
+        assertEquals(0, results.size());
+
+        // Make the consumer a guest and try again:
+        consumer.setFact("virt.is_guest", "true");
+        consumer.setFact("virt.uuid", "GUESTUUID");
+        consumerCurator.update(consumer);
+        assertEquals(host.getUuid(), consumerCurator.getHost("GUESTUUID").getUuid());
+        results = poolCurator.listAvailableEntitlementPools(consumer, null,
+            null, null, false, true);
+
+        assertEquals(1, results.size());
     }
 
 
-
-
-
-//    @Test
-//    public void virtOnlyPoolAttributeFiltering() {
-//
-//        consumer = this.createConsumer(owner); // physical system for now
-//
-//        Product targetProduct = TestUtil.createProduct();
-//
-//        this.productCurator.create(targetProduct);
-//        Pool targetPool = this.createPoolAndSub(owner, targetProduct, 1L,
-//            new Date(),new Date());
-//
-////        List<Pool> pools = new LinkedList<Pool>();
-////        pools.add(targetPool);
-////        this.poolCurator.saveOrUpdateAll(pools);
-//
-//        List<Criteria> = poolCriteria.availableEntitlementCriteria(consumer);
-//        pools = testCrit.list();
-//
-//        assertEquals(1, pools.size());
-//    }
-
-    // TODO: product attribute
-
-    //
 
 //
 //    @Test
