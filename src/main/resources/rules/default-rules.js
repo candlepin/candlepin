@@ -782,50 +782,63 @@ var ConsumerDelete = {
  */
 var PoolCriteria = {
     poolCriteria: function() {
+        // FIXME: alot of this could be cleaned up with some
+        // class/method var's instead of full paths, etc
         var criteriaFilters = new java.util.LinkedList();
         // Don't load virt_only pools if this consumer isn't a guest:
         if (!"true".equalsIgnoreCase(consumer.getFact("virt.is_guest"))) {
-
-            var noVirtOnlyProductAttr =
+            // not a guest
+            var noVirtOnlyPoolAttr =
                 org.hibernate.criterion.DetachedCriteria.forClass(
-                        org.candlepin.model.PoolAttribute, "attr")
+                        org.candlepin.model.PoolAttribute, "pool_attr")
                     .add(org.hibernate.criterion.Restrictions.eq("name", "virt_only"))
                     .add(org.hibernate.criterion.Restrictions.eq("value", "true"))
                     .add(org.hibernate.criterion.Property.forName("this.id")
-                            .eqProperty("attr.pool.id"))
-                    .setProjection(org.hibernate.criterion.Projections.property("attr.id"));
+                            .eqProperty("pool_attr.pool.id"))
+                    .setProjection(org.hibernate.criterion.Projections.property("pool_attr.id"));
+            criteriaFilters.add(org.hibernate.criterion.Subqueries.notExists(
+                    noVirtOnlyPoolAttr));
+
+            // same criteria but for PoolProduct attributes
+            // not sure if this should be two seperate criteria, or if it's
+            // worth it to combine in some clever fashion
+            var noVirtOnlyProductAttr =
+                org.hibernate.criterion.DetachedCriteria.forClass(
+                        org.candlepin.model.ProductPoolAttribute, "prod_attr")
+                    .add(org.hibernate.criterion.Restrictions.eq("name", "virt_only"))
+                    .add(org.hibernate.criterion.Restrictions.eq("value", "true"))
+                    .add(org.hibernate.criterion.Property.forName("this.id")
+                            .eqProperty("prod_attr.pool.id"))
+                    .setProjection(org.hibernate.criterion.Projections.property("prod_attr.id"));
             criteriaFilters.add(org.hibernate.criterion.Subqueries.notExists(
                     noVirtOnlyProductAttr));
+
+        } else {
+            // we are a virt guest
+            // add criteria for filtering out pools that are not for this guest
+            if (consumer.hasFact("virt.uuid")) {
+                var hostConsumer = consumerCurator.getHost(consumer.getFact("virt.uuid"));
+
+                var noRequiresHost = org.hibernate.criterion.DetachedCriteria.forClass(
+                        org.candlepin.model.PoolAttribute, "attr")
+                        .add(org.hibernate.criterion.Restrictions.eq("name", "requires_host"))
+                        // Note: looking for pools that are not for this guest
+                        .add(org.hibernate.criterion.Restrictions.ne("value", hostConsumer.getUuid()))
+                        .add(org.hibernate.criterion.Property.forName("this.id")
+                            .eqProperty("attr.pool.id"))
+                        .setProjection(org.hibernate.criterion.Projections.property("attr.id"));
+                // we do want everything else
+                criteriaFilters.add(org.hibernate.criterion.Subqueries.notExists(
+                        noRequiresHost));
+
+            }
+            // no virt.uuid, we can't try to filter
         }
 
         return criteriaFilters;
     }
 }
 
-
-//        if ((consumer.getFact("virt.is_guest") != null) && (consumer.getFact("virt.is_guest"))) {
-
-//            var requires_host = existingPool.getAttributeValue("requires_host");
-//            var matching_host = false;
-//            if ((requires_host != null) && (virt_guest)) {
-//                // have to check the host consumer uuid here...
-//                var consumer_host = consumerCurator.getHost(requires_host);
-//                if (consumer_host != null) {
-//                    matching_host = true;
-//                    log.debug("\t matching host: " + matching_host + " " + requires_host);
-//                }
-//            }
-//
-//            // if we are not a virt_only pool
-//            if (!existingPool.attributeEquals("virt_only", "true")) {
-//                log.debug("\t adding non virt_only pool" + existingPool.getId());
-//                filteredPools.add(existingPool);
-//            } else {
-//                // we are a virt_only pool
-//                // virt_only gets added if we are a virt_guest and if  either there is
-//                // no required_host, or we have the matching_host for required_host
-//                log.debug("\t checking virt_only pools for virt_guest/required_hosts");
-//                if (virt_guest) {
 
 var Pool = {
 
