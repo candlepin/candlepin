@@ -185,9 +185,19 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         }
         if (c != null) {
             crit.add(Restrictions.eq("owner", c.getOwner()));
-            // filter out pools that are less than cpu.cpu_sockets and not multi-entitle?
-            // Should we add support for adding criteria from js? we could do
-            // it but I don't think I want to write a js ORM
+
+            // Ask the rules for any business logic criteria to filter with for
+            // this consumer
+            List<Criterion> filterCriteria = poolCriteria.availableEntitlementCriteria(
+                c);
+
+            if (log.isDebugEnabled()) {
+                log.debug("Got " + filterCriteria.size() + "  query filters from database.");
+            }
+
+            for (Criterion rulesCriteria : filterCriteria) {
+                crit.add(rulesCriteria);
+            }
         }
         if (o != null) {
             crit.add(Restrictions.eq("owner", o));
@@ -196,15 +206,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         if (activeOn != null) {
             crit.add(Restrictions.le("startDate", activeOn));
             crit.add(Restrictions.ge("endDate", activeOn));
-        }
-
-        List<Criterion> filterCriteria = poolCriteria.availableEntitlementCriteria(
-            c);
-        if (log.isDebugEnabled()) {
-            log.debug("Got " + filterCriteria.size() + "  query filters from database.");
-        }
-        for (Criterion rulesCriteria : filterCriteria) {
-            crit.add(rulesCriteria);
         }
 
         // FIXME: sort by enddate?
