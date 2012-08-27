@@ -231,7 +231,8 @@ do
   /usr/sbin/semodule -s ${selinuxvariant} -i \
     %{_datadir}/selinux/${selinuxvariant}/%{modulename}.pp &> /dev/null || :
 done
-/sbin/restorecon %{_localstatedir}/cache/thumbslug || :
+/sbin/restorecon %{_localstatedir}/cache/thumbslug &> /dev/null || :
+/sbin/restorecon -R %{_sysconfdir}/%{name}/ &> /dev/null || :
 
 %postun selinux
 if [ $1 -eq 0 ] ; then
@@ -239,6 +240,8 @@ if [ $1 -eq 0 ] ; then
   do
      /usr/sbin/semodule -s ${selinuxvariant} -r %{modulename} &> /dev/null || :
   done
+  /sbin/restorecon %{_localstatedir}/cache/thumbslug &> /dev/null || :
+  /sbin/restorecon -R %{_sysconfdir}/%{name}/ &> /dev/null || :
 fi
 
 
@@ -247,7 +250,7 @@ fi
 %{_datadir}/%{name}/cpsetup
 %{_datadir}/%{name}/cpdb
 %{_sysconfdir}/%{name}/certs/
-%ghost %attr %attr(644, root, root) %{_sysconfdir}/%{name}/certs/candlepin-ca.crt
+%ghost %attr(644, root, root) %{_sysconfdir}/%{name}/certs/candlepin-ca.crt
 
 %files jboss
 %defattr(-,jboss,jboss,-)
