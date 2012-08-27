@@ -149,17 +149,21 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         }
         List<ReadOnlyPool> readOnlyPools = ReadOnlyPool.fromCollection(pools);
 
+        /*
+         * NOTE: These are engineering product IDs being passed in which are installed on
+         * the given system. There is almost no value to looking these up from the product
+         * service as there's not much useful, and indeed all the select pool rules ever
+         * use is the product ID, which we had before we did the lookup. Unfortunately we
+         * need to maintain backward compatability with past rules files, so we will
+         * continue providing ReadOnlyProduct objects to the rules, but we'll just
+         * pre-populate the ID field and not do an actual lookup.
+         */
         List<ReadOnlyProduct> readOnlyProducts = new LinkedList<ReadOnlyProduct>();
-        Set<Rule> matchingRules = new HashSet<Rule>();
         for (String productId : productIds) {
-            Product product = productCache.getProductById(productId);
-
-            if (product != null) {
-                ReadOnlyProduct roProduct = new ReadOnlyProduct(product);
-                readOnlyProducts.add(roProduct);
-                matchingRules.addAll(rulesForAttributes(roProduct.getAttributes().keySet(),
-                    attributesToRules));
-            }
+            // NOTE: using ID as name here, rules just need ID:
+            ReadOnlyProduct roProduct = new ReadOnlyProduct(productId, productId,
+                new HashMap<String, String>());
+            readOnlyProducts.add(roProduct);
         }
 
         // Provide objects for the script:
