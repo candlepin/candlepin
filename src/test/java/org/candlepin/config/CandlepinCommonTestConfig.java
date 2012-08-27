@@ -16,11 +16,18 @@ package org.candlepin.config;
 
 import java.net.URISyntaxException;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * CandlepinCommonTestConfig
  */
 public class CandlepinCommonTestConfig extends Config {
+
+    public CandlepinCommonTestConfig() {
+        // explicitly _not_ using the /etc/candlepin/candlepin.conf file in testing.
+        this.configuration = new TreeMap<String, String>(
+            ConfigProperties.DEFAULT_PROPERTIES);
+    }
 
     @Override
     protected Map<String, String> loadProperties() {
