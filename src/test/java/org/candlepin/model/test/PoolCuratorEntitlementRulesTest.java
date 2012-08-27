@@ -145,7 +145,7 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
                 .entitlementsAvailable(1));
     }
 
-    @Test(expected = EntitlementRefusedException.class)
+    @Test(expected = RuntimeException.class)
     public void concurrentCreationOfEntitlementsShouldFailIfOverMaxMemberLimit()
         throws Exception {
         Long numAvailEntitlements = 1L;

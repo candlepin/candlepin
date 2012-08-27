@@ -188,9 +188,12 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
             poolManager.entitleByProduct(parentSystem, monitoring.getId());
             fail();
         }
-        catch (EntitlementRefusedException e) {
+        // With criteria filtered pools we end up with a RuntimeException
+        // here.
+        catch (RuntimeException e) {
             //expected
         }
+
         assertEquals(Long.valueOf(5), monitoringPool.getConsumed());
     }
 
