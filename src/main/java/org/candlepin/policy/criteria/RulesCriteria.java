@@ -46,6 +46,7 @@ public class RulesCriteria  {
         this.jsRules = jsRules;
         this.config = config;
         this.consumerCurator = consumerCurator;
+        this.rulesLogger = Logger.getLogger(RulesCriteria.class.getCanonicalName() + ".rules");
         jsRules.init(jsNameSpace);
     }
 
@@ -55,6 +56,7 @@ public class RulesCriteria  {
         args.put("standalone", config.standalone());
         args.put("log", rulesLogger);
         args.put("consumer", consumer);
+        args.put("consumerCurator", consumerCurator);
 
         List<Criterion> poolsCriteria = null;
         try {
