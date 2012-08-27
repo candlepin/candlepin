@@ -52,7 +52,8 @@ public class JsPoolRules implements PoolRules {
         this.poolManager = poolManager;
         this.productAdapter = productAdapter;
         this.config = config;
-        this.rulesLogger = Logger.getLogger(JsPoolRules.class.getCanonicalName() + ".rules");
+        this.rulesLogger = Logger.getLogger(
+            JsPoolRules.class.getCanonicalName() + ".rules");
         jsRules.init("pool_name_space");
     }
 

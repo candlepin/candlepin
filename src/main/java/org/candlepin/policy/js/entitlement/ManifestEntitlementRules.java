@@ -74,11 +74,6 @@ public class ManifestEntitlementRules extends AbstractEntitlementRules implement
         return preHelper;
     }
 
-//    @Override
-//    public PoolFilter poolFilter(Consumer consumer, List<Pool> pools) {
-//        jsRules.reinitTo("pool_filter_name_space");
-//        return poolFiler
-//    }
     /**
      * The standard pre entitlement runs both the global and the attribute rules
      *    Here we have limited it to the global only as the exclusions based on

@@ -317,8 +317,9 @@ public class PoolManagerTest {
         ValidationResult badResult = mock(ValidationResult.class);
         ValidationResult goodResult = mock(ValidationResult.class);
 
-        when(mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class), any(Owner.class),
-            any(String.class), any(Date.class), anyBoolean(), anyBoolean())).thenReturn(pools);
+        when(mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
+            any(Owner.class), any(String.class), any(Date.class), anyBoolean(),
+            anyBoolean())).thenReturn(pools);
         when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(pool1);
         when(enforcerMock.preEntitlement(any(Consumer.class), any(Pool.class),
             anyInt())).thenReturn(badHelper).thenReturn(goodHelper);
@@ -358,8 +359,9 @@ public class PoolManagerTest {
 
         ValidationResult result = mock(ValidationResult.class);
 
-        when(mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class), any(Owner.class),
-            any(String.class), eq(now), anyBoolean(), anyBoolean())).thenReturn(pools);
+        when(mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
+            any(Owner.class), any(String.class), eq(now), anyBoolean(),
+            anyBoolean())).thenReturn(pools);
         when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(pool1);
         when(enforcerMock.preEntitlement(any(Consumer.class), any(Pool.class),
             anyInt())).thenReturn(helper);

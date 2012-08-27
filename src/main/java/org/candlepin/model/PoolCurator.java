@@ -192,7 +192,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 c);
 
             if (log.isDebugEnabled()) {
-                log.debug("Got " + filterCriteria.size() + "  query filters from database.");
+                log.debug("Got " + filterCriteria.size() +
+                    "  query filters from database.");
             }
 
             for (Criterion rulesCriteria : filterCriteria) {

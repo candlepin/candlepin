@@ -29,7 +29,6 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.policy.Enforcer;
-import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -81,11 +80,6 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
         assertEquals(1, results.size());
     }
 
-//    @Test
-//    public void testListAllForConsumerBonusPool() {
-//        consumer.setFact('virt.is_guest', '1');
-//
-//    }
 
     @Test
     public void testListAllForConsumerExcludesErrors() {

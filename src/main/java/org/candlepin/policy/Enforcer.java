@@ -77,12 +77,6 @@ public interface Enforcer {
         Set<String> exemptList)
         throws RuleExecutionException;
 
-    /**
-     *
-     * @param pools List of pools to filter
-     * @return
-     */
-//    PoolFilter poolFilter(Consumer consumer, List<Pool> pools);
 
     /**
      * Run pre-entitlement checks.

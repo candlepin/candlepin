@@ -351,9 +351,7 @@ public class CandlepinPoolManager implements PoolManager {
     public List<Entitlement> entitleByProducts(Consumer consumer,
         String[] productIds, Date entitleDate)
         throws EntitlementRefusedException {
-        log.debug("Consumer: " + consumer);
         Owner owner = consumer.getOwner();
-        log.debug("Owner: " + owner);
         List<Entitlement> entitlements = new LinkedList<Entitlement>();
 
         // Use the current date if one wasn't provided:
@@ -383,11 +381,9 @@ public class CandlepinPoolManager implements PoolManager {
         String serviceLevelOverride)
         throws EntitlementRefusedException {
 
-        log.debug("getBestPools");
+
         ValidationResult failedResult = null;
-        // we seem to need to pass consumer here if we want to filter based
-        // on consumer facts
-//        List<Pool> allOwnerPools = poolCurator.listByOwner(owner, entitleDate;
+
         List<Pool> allOwnerPools = poolCurator.listAvailableEntitlementPools(
             consumer, owner, (String) null, entitleDate, true, false);
         List<Pool> filteredPools = new LinkedList<Pool>();
@@ -395,7 +391,6 @@ public class CandlepinPoolManager implements PoolManager {
         // We have to check compliance status here so we can replace an empty
         // array of product IDs with the array the consumer actually needs. (i.e. during
         // a healing request)
-        log.debug("Consumer: " + consumer);
         ComplianceStatus compliance = complianceRules.getStatus(consumer, entitleDate);
         if (productIds == null || productIds.length == 0) {
             log.debug("No products specified for bind, checking compliance to see what " +
@@ -412,7 +407,6 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         for (Pool pool : allOwnerPools) {
-            log.debug("pool " + pool);
             boolean providesProduct = false;
             for (String productId : productIds) {
                 if (pool.provides(productId)) {
