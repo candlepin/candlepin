@@ -49,6 +49,7 @@ import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.Subscription;
 import org.candlepin.policy.Enforcer;
+import org.candlepin.policy.PoolFilter;
 import org.candlepin.policy.PoolRules;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.compliance.ComplianceRules;
@@ -100,6 +101,8 @@ public class PoolManagerTest {
     @Mock
     private PoolRules poolRulesMock;
     @Mock
+    private PoolFilter poolFilterMock;
+    @Mock
     private ConsumerCurator consumerCuratorMock;
 
     @Mock
@@ -125,8 +128,8 @@ public class PoolManagerTest {
         this.principal = TestUtil.createOwnerPrincipal();
         this.manager = spy(new CandlepinPoolManager(mockPoolCurator, mockSubAdapter,
             mockProductAdapter, entCertAdapterMock, mockEventSink,
-            eventFactory, mockConfig, enforcerMock, poolRulesMock, entitlementCurator,
-            consumerCuratorMock, certCuratorMock, complianceRules));
+            eventFactory, mockConfig, enforcerMock, poolRulesMock, poolFilterMock,
+            entitlementCurator, consumerCuratorMock, certCuratorMock, complianceRules));
 
         when(entCertAdapterMock.generateEntitlementCert(any(Entitlement.class),
             any(Subscription.class), any(Product.class))).thenReturn(

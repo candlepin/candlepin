@@ -460,6 +460,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
         return "EntitlementPool [id = " + getId() + ", owner = " + owner.getId() +
             ", products = " + productId + " - " + getProvidedProducts() +
             ", sub = " + getSubscriptionId() +
+            ", attributes = " + getAttributes() +
             ", quantity = " + getQuantity() + ", expires = " + getEndDate() + "]";
     }
 

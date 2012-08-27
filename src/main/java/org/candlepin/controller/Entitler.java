@@ -160,6 +160,7 @@ public class Entitler {
     public List<Entitlement> bindByProducts(String[] productIds,
         Consumer consumer, Date entitleDate) {
 
+        log.debug("Consumer: " + consumer);
         // Attempt to create entitlements:
         try {
             List<Entitlement> entitlements = poolManager.entitleByProducts(

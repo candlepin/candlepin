@@ -37,11 +37,13 @@ import java.util.Map;
 public class JsPoolRules implements PoolRules {
 
     private static Logger log = Logger.getLogger(JsPoolRules.class);
+    protected Logger rulesLogger = null;
 
     private JsRules jsRules;
     private PoolManager poolManager;
     private ProductServiceAdapter productAdapter;
     private Config config;
+
 
     @Inject
     public JsPoolRules(JsRules jsRules, PoolManager poolManager,
@@ -50,6 +52,7 @@ public class JsPoolRules implements PoolRules {
         this.poolManager = poolManager;
         this.productAdapter = productAdapter;
         this.config = config;
+        rulesLogger = Logger.getLogger(JsPoolRules.class.getCanonicalName() + ".rules");
         jsRules.init("pool_name_space");
     }
 
@@ -61,6 +64,7 @@ public class JsPoolRules implements PoolRules {
         args.put("helper", new PoolHelper(this.poolManager,
             this.productAdapter, null));
         args.put("standalone", config.standalone());
+        args.put("log", rulesLogger);
         List<Pool> poolsCreated = null;
         try {
             poolsCreated = jsRules.invokeMethod("createPools", args);

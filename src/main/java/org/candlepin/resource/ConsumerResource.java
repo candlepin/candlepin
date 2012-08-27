@@ -717,6 +717,7 @@ public class ConsumerResource {
         if (changesMade) {
             log.info("Consumer " + toUpdate.getUuid() + " updated.");
 
+            // does this emply a rules pass just to set this attribute?
             ComplianceStatus compliance = complianceRules.getStatus(toUpdate,
                 Calendar.getInstance().getTime());
             toUpdate.setEntitlementStatus(compliance.getStatus());
@@ -1204,6 +1205,7 @@ public class ConsumerResource {
         // Verify consumer exists:
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
 
+        log.debug("Consumer (post verify): " + consumer);
         try {
             // I hate double negatives, but if they have accepted all
             // terms, we want comeToTerms to be true.
@@ -1248,6 +1250,7 @@ public class ConsumerResource {
         }
         else {
             try {
+                log.debug("Consumer: " + consumer);
                 entitlements = entitler.bindByProducts(productIds, consumer, entitleDate);
             }
             catch (ForbiddenException fe) {
@@ -1256,6 +1259,7 @@ public class ConsumerResource {
             catch (RuntimeException re) {
                 log.warn(i18n.tr("Asked to be subscribed to a product that " +
                     "has no pool: {0} ", re.getMessage()));
+                throw re;
             }
         }
 

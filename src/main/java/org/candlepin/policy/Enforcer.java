@@ -78,6 +78,13 @@ public interface Enforcer {
         throws RuleExecutionException;
 
     /**
+     *
+     * @param pools List of pools to filter
+     * @return
+     */
+//    PoolFilter poolFilter(Consumer consumer, List<Pool> pools);
+
+    /**
      * Run pre-entitlement checks.
      *
      * Ensures sufficient entitlements remain, but also verifies all attributes

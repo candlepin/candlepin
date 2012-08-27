@@ -67,7 +67,6 @@ public class PoolResource {
 
     @Inject
     public PoolResource(PoolCurator poolCurator,
-
         ConsumerCurator consumerCurator, OwnerCurator ownerCurator,
         StatisticCurator statisticCurator, I18n i18n,
         EventSink eventSink, PoolManager poolManager) {

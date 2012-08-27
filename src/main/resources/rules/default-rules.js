@@ -16,6 +16,10 @@ function pool_name_space() {
     return Pool;
 }
 
+function pool_filter_name_space() {
+   return PoolFilter;
+}
+
 function export_name_space() {
     return Export;
 }
@@ -770,12 +774,91 @@ var ConsumerDelete = {
     }
 }
 
+var PoolFilter = {
+    // This whole thing needs to be abstracted for the attribute
+    // and the consumer fact check probably pulled into a preFilter
+    // and abstracted
+    //
+    //  This was originally intended to happen well before
+    //  EntitlementRules come into play, but it seems like it
+    //  could just as easily be a PrePreFilter on Entitlement
+    //
+    //
+    filterPools: function() {
+        log.debug("POOL FILTER CALLED");
+        var filteredPools = new java.util.LinkedList();
+        var virt_guest = false;
+        if (consumer == null) {
+
+            return pools;
+        }
+
+        if ((consumer.getFact("virt.is_guest") != null) && (consumer.getFact("virt.is_guest"))) {
+            // no filtering for virt guests
+            log.debug("We are  a virt guest, can't skip virt pools");
+            // filter out host restricted pools that don't match
+
+            virt_guest = true;
+            //return pools;
+        }
+
+        log.debug("filtering pools");
+        log.debug("virt.is_guest: " + consumer.getFact("virt.is_guest"));
+        for each (var existingPool in pools.toArray()) {
+            log.debug("Checking pool: " + existingPool.getId());
+            log.debug("virt_only: " + existingPool.getAttributeValue("virt_only"));
+            log.debug("pool attributes: " + existingPool.getAttributes());
+
+            var requires_host = existingPool.getAttributeValue("requires_host");
+            var matching_host = false;
+            if ((requires_host != null) && (virt_guest)) {
+                // have to check the host consumer uuid here...
+                var consumer_host = consumerCurator.getHost(requires_host);
+                if (consumer_host != null) {
+                    matching_host = true;
+                    log.debug("\t matching host: " + matching_host + " " + requires_host);
+                }
+            }
+
+            // if we are not a virt_only pool
+            if (!existingPool.attributeEquals("virt_only", "true")) {
+                log.debug("\t adding non virt_only pool" + existingPool.getId());
+                filteredPools.add(existingPool);
+            } else {
+                // we are a virt_only pool
+                // virt_only gets added if we are a virt_guest and if  either there is
+                // no required_host, or we have the matching_host for required_host
+                log.debug("\t checking virt_only pools for virt_guest/required_hosts");
+                if (virt_guest) {
+                    if ((requires_host)) {
+                        if (matching_host) {
+                            log.debug("\t\t\t matching_guest: " + matching_host);
+                            filteredPools.add(existingPool);
+                        } else {
+                            log.debug("\t\t\t requires_host set but no matching guest, skipping pool: " + 
+                                    existingPool.getId());
+                            }
+                    } else {
+                        log.debug("\t\t no requires host, virt_only, adding: " + existingPool.getId());
+                        filteredPools.add(existingPool);
+                        }
+                } else {
+                    log.debug("\t\t not a virt guest, skipping pool: " + existingPool.getId());
+                    }
+                }
+            }
+
+        return filteredPools;
+    }
+}
+
 var Pool = {
 
     /*
      * Creates all appropriate pools for a subscription.
      */
     createPools: function () {
+        log.info("creating pool: " + sub.getId());
         var pools = new java.util.LinkedList();
         var quantity = sub.getQuantity() * sub.getProduct().getMultiplier();
         var providedProducts = new java.util.HashSet();
@@ -819,7 +902,7 @@ var Pool = {
             if ('unlimited'.equals(virt_limit)) {
                 var derivedPool = helper.createPool(sub, sub.getProduct().getId(),
                                                     'unlimited', virt_attributes);
-            derivedPool.setSubscriptionSubKey("derived");
+                derivedPool.setSubscriptionSubKey("derived");
                 pools.add(derivedPool);
             } else {
                 var virt_limit_quantity = parseInt(virt_limit);
@@ -827,11 +910,12 @@ var Pool = {
                 if (virt_limit_quantity > 0) {
                     var virt_quantity = quantity * virt_limit_quantity;
 
+                    log.debug("creating virt only pool");
                     var derivedPool = helper.createPool(sub, sub.getProduct().getId(),
                                                         virt_quantity.toString(),
                                                         virt_attributes);
-            derivedPool.setSubscriptionSubKey("derived");
-            pools.add(derivedPool);
+                    derivedPool.setSubscriptionSubKey("derived");
+                    pools.add(derivedPool);
                 }
             }
         }

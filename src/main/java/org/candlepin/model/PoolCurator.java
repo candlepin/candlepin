@@ -22,6 +22,7 @@ import org.apache.log4j.Logger;
 import org.candlepin.auth.interceptor.EnforceAccessControl;
 import org.candlepin.policy.Enforcer;
 import org.candlepin.policy.js.entitlement.PreEntHelper;
+import org.candlepin.policy.PoolFilter;
 import org.hibernate.Criteria;
 import org.hibernate.Filter;
 import org.hibernate.LockMode;
@@ -48,13 +49,15 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     private static Logger log = Logger.getLogger(PoolCurator.class);
     private Enforcer enforcer;
+    private PoolFilter poolFilter;
     @Inject
     protected Injector injector;
 
     @Inject
-    protected PoolCurator(Enforcer enforcer) {
+    protected PoolCurator(Enforcer enforcer, PoolFilter poolFilter) {
         super(Pool.class);
         this.enforcer = enforcer;
+        this.poolFilter = poolFilter;
     }
 
     @Override
@@ -167,6 +170,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             o = c.getOwner();
         }
 
+        log.debug("PoolFilter " + poolFilter);
+
         if (log.isDebugEnabled()) {
             log.debug("Listing available pools for:");
             log.debug("   consumer: " + c);
@@ -180,6 +185,9 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         }
         if (c != null) {
             crit.add(Restrictions.eq("owner", c.getOwner()));
+            // filter out pools that are less than cpu.cpu_sockets and not multi-entitle?
+            // Should we add support for adding criteria from js? we could do
+            // it but I don't think I want to write a js ORM
         }
         if (o != null) {
             crit.add(Restrictions.eq("owner", o));
@@ -190,14 +198,18 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             crit.add(Restrictions.ge("endDate", activeOn));
         }
 
+        //log.debug("crit: " + crit);
         // FIXME: sort by enddate?
         List<Pool> results = crit.list();
+
+        log.debug("results: " + results);
 
         if (results == null) {
             log.debug("no results");
             return new ArrayList<Pool>();
         }
 
+        log.debug("results(postfilter): " + results);
         log.debug("active pools for owner: " + results.size());
 
         // crit.add(Restrictions.or(Restrictions.eq("productId", productId),
@@ -226,6 +238,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         // available, and the consumer requests the actual entitlement, and the
         // request still could fail.
         if (c != null) {
+            List<Pool> filteredPools = this.poolFilter.filterPools(c, results);
             List<Pool> newResults = new LinkedList<Pool>();
             log.debug("Filtering pools for consumer");
             for (Pool p : results) {

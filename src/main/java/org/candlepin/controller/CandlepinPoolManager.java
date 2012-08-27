@@ -42,6 +42,7 @@ import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Subscription;
 import org.candlepin.policy.Enforcer;
 import org.candlepin.policy.EntitlementRefusedException;
+import org.candlepin.policy.PoolFilter;
 import org.candlepin.policy.PoolRules;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.compliance.ComplianceRules;
@@ -81,6 +82,7 @@ public class CandlepinPoolManager implements PoolManager {
     private Config config;
     private Enforcer enforcer;
     private PoolRules poolRules;
+    private PoolFilter poolFilter;
     private EntitlementCurator entitlementCurator;
     private ConsumerCurator consumerCurator;
     private EntitlementCertServiceAdapter entCertAdapter;
@@ -100,7 +102,7 @@ public class CandlepinPoolManager implements PoolManager {
         ProductServiceAdapter productAdapter,
         EntitlementCertServiceAdapter entCertAdapter, EventSink sink,
         EventFactory eventFactory, Config config, Enforcer enforcer,
-        PoolRules poolRules, EntitlementCurator curator1,
+        PoolRules poolRules, PoolFilter poolFilter, EntitlementCurator curator1,
         ConsumerCurator consumerCurator, EntitlementCertificateCurator ecC,
         ComplianceRules complianceRules) {
 
@@ -114,6 +116,7 @@ public class CandlepinPoolManager implements PoolManager {
         this.consumerCurator = consumerCurator;
         this.enforcer = enforcer;
         this.poolRules = poolRules;
+        this.poolFilter = poolFilter;
         this.entCertAdapter = entCertAdapter;
         this.entitlementCertificateCurator = ecC;
         this.complianceRules = complianceRules;
@@ -348,7 +351,9 @@ public class CandlepinPoolManager implements PoolManager {
     public List<Entitlement> entitleByProducts(Consumer consumer,
         String[] productIds, Date entitleDate)
         throws EntitlementRefusedException {
+        log.debug("Consumer: " + consumer);
         Owner owner = consumer.getOwner();
+        log.debug("Owner: " + owner);
         List<Entitlement> entitlements = new LinkedList<Entitlement>();
 
         // Use the current date if one wasn't provided:
@@ -378,13 +383,19 @@ public class CandlepinPoolManager implements PoolManager {
         String serviceLevelOverride)
         throws EntitlementRefusedException {
 
+        log.debug("getBestPools");
         ValidationResult failedResult = null;
-        List<Pool> allOwnerPools = poolCurator.listByOwner(owner, entitleDate);
+        // we seem to need to pass consumer here if we want to filter based
+        // on consumer facts
+//        List<Pool> allOwnerPools = poolCurator.listByOwner(owner, entitleDate;
+        List<Pool> allOwnerPools = poolCurator.listAvailableEntitlementPools(
+            consumer, owner, (String) null, entitleDate, true, false);
         List<Pool> filteredPools = new LinkedList<Pool>();
 
         // We have to check compliance status here so we can replace an empty
         // array of product IDs with the array the consumer actually needs. (i.e. during
         // a healing request)
+        log.debug("Consumer: " + consumer);
         ComplianceStatus compliance = complianceRules.getStatus(consumer, entitleDate);
         if (productIds == null || productIds.length == 0) {
             log.debug("No products specified for bind, checking compliance to see what " +

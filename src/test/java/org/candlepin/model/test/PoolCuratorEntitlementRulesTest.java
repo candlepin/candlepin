@@ -81,6 +81,12 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
         assertEquals(1, results.size());
     }
 
+//    @Test
+//    public void testListAllForConsumerBonusPool() {
+//        consumer.setFact('virt.is_guest', '1');
+//
+//    }
+
     @Test
     public void testListAllForConsumerExcludesErrors() {
         Product p = new Product(CPU_LIMITED_PRODUCT, CPU_LIMITED_PRODUCT);
