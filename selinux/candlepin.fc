@@ -5,5 +5,5 @@
 
 /etc/candlepin/certs(/.*)?  gen_context(system_u:object_r:candlepin_etc_certs_rw_t,s0)
 
-/etc/candlepin/certs/candlepin-ca.cert gen_context(system_u:object_r:candlepin_etc_certs_ca_cert_r_t,s0)
+/etc/candlepin/certs/candlepin-ca.crt  gen_context(system_u:object_r:candlepin_etc_certs_ca_cert_r_t,s0)
 
