@@ -247,6 +247,7 @@ fi
 %{_datadir}/%{name}/cpsetup
 %{_datadir}/%{name}/cpdb
 %{_sysconfdir}/%{name}/certs/
+%ghost %attr %attr(644, root, root) %{_sysconfdir}/%{name}/certs/candlepin-ca.crt
 
 %files jboss
 %defattr(-,jboss,jboss,-)

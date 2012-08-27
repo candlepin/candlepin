@@ -14,6 +14,14 @@ permissive candlepin_t;
 type candlepin_etc_rw_t;
 files_type(candlepin_etc_rw_t)
 
+type candlepin_etc_certs_rw_t;
+files_type(candlepin_etc_certs_rw_t)
+
+
+type candlepin_etc_certs_ca_cert_r_t;
+files_type(candlepin_etc_certs_ca_cert_r_t)
+
+
 ########################################
 #
 # candlepin local policy
@@ -24,6 +32,13 @@ allow candlepin_t self:unix_stream_socket create_stream_socket_perms;
 
 manage_dirs_pattern(candlepin_t, candlepin_etc_rw_t, candlepin_etc_rw_t)
 manage_files_pattern(candlepin_t, candlepin_etc_rw_t, candlepin_etc_rw_t)
+
+manage_dirs_pattern(candlepin_t, candlepin_etc_certs_rw_t, candlepin_etc_certs_rw_t)
+manage_files_pattern(candlepin_t, candlepin_etc_certs_rw_t, candlepin_etc_certs_rw_t)
+
+manage_dirs_pattern(candlepin_t, candlepin_etc_certs_ca_cert_r_t, candlepin_etc_certs_ca_cert_r_t)
+manage_files_pattern(candlepin_t, candlepin_etc_certs_ca_cert_r_t, candlepin_etc_certs_ca_cert_r_t)
+
 
 sysnet_dns_name_resolve(candlepin_t)
 corenet_all_recvfrom_unlabeled(candlepin_t)
@@ -37,7 +52,7 @@ corenet_tcp_bind_http_port(candlepin_t)
 
 domain_use_interactive_fds(candlepin_t)
 
-
 logging_send_syslog_msg(candlepin_t)
 
 miscfiles_read_localization(candlepin_t)
+

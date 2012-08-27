@@ -58,7 +58,10 @@ interface(`candlepin_read_conf_files',`
 
 	allow $1 candlepin_etc_rw_t:file read_file_perms;
 	allow $1 candlepin_etc_rw_t:dir list_dir_perms;
-	files_search_etc($1)
+    allow $1 candlepin_etc_certs_rw_t:file read_file_perms;
+    allow $1 candlepin_etc_certs_rw_t:dir list_dir_perms;
+    allow $1 candlepin_etc_certs_ca_cert_r_t:file read_file_perms;
+    files_search_etc($1)
 ')
 
 ########################################
