@@ -14,7 +14,6 @@
  */
 package org.candlepin.policy.test;
 
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -117,8 +116,15 @@ public class PoolCriteriaTest extends DatabaseTestFixture {
         Pool virtPool = this.createPoolAndSub(owner, targetProduct, 1L, new Date(),
             new Date());
         virtPool.setAttribute("virt_only", "true");
-        virtPool.setAttribute("requires_host", "");
+        virtPool.setAttribute("requires_host", host.getUuid());
         poolCurator.merge(virtPool);
+
+        // Another pool requiring a different host:
+        Pool anotherVirtPool = this.createPoolAndSub(owner, targetProduct, 1L, new Date(),
+            new Date());
+        anotherVirtPool.setAttribute("virt_only", "true");
+        anotherVirtPool.setAttribute("requires_host", "SOMEOTHERUUID");
+        poolCurator.merge(anotherVirtPool);
 
         List<Pool> results = poolCurator.listAvailableEntitlementPools(consumer, null,
             null, null, false, true);
@@ -134,6 +140,7 @@ public class PoolCriteriaTest extends DatabaseTestFixture {
             null, null, false, true);
 
         assertEquals(1, results.size());
+        assertEquals(virtPool.getId(), results.get(0).getId());
     }
 
 
