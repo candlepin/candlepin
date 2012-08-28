@@ -817,20 +817,22 @@ var PoolCriteria = {
             // we are a virt guest
             // add criteria for filtering out pools that are not for this guest
             if (consumer.hasFact("virt.uuid")) {
+                var hostUuid = ""; // need a default value in case there is no registered host
                 var hostConsumer = consumerCurator.getHost(consumer.getFact("virt.uuid"));
-
+                if (hostConsumer != null) {
+                    hostUuid = hostConsumer.getUuid();
+                }
                 var noRequiresHost = org.hibernate.criterion.DetachedCriteria.forClass(
                         org.candlepin.model.PoolAttribute, "attr")
                         .add(org.hibernate.criterion.Restrictions.eq("name", "requires_host"))
-                        // Note: looking for pools that are not for this guest
-                        .add(org.hibernate.criterion.Restrictions.ne("value", hostConsumer.getUuid()))
+                        //  Note: looking for pools that are not for this guest
+                        .add(org.hibernate.criterion.Restrictions.ne("value", hostUuid))
                         .add(org.hibernate.criterion.Property.forName("this.id")
-                            .eqProperty("attr.pool.id"))
-                        .setProjection(org.hibernate.criterion.Projections.property("attr.id"));
+                                .eqProperty("attr.pool.id"))
+                                .setProjection(org.hibernate.criterion.Projections.property("attr.id"));
                 // we do want everything else
                 criteriaFilters.add(org.hibernate.criterion.Subqueries.notExists(
                         noRequiresHost));
-
             }
             // no virt.uuid, we can't try to filter
         }
