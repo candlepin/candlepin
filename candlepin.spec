@@ -14,7 +14,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.7.6
+Version: 0.7.7
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -283,6 +283,24 @@ fi
 
 
 %changelog
+* Tue Aug 28 2012 Alex Wood <awood@redhat.com> 0.7.7-1
+- 851512: add restorecon -R to %%post (alikins@redhat.com)
+- 851512: add certs_rw and candlepin-ca.certs file context (alikins@redhat.com)
+- remove FileUtils.cp calls used for debugging (jesusr@redhat.com)
+- ownerinfo: replace pool iteration with hql queries (jbowes@redhat.com)
+- ownerinfo: use pool.getProductAttribute rather than the product adapter
+  (jbowes@redhat.com)
+- remove ownerinfo.poolNearestToExpiry; it's not used. (jbowes@redhat.com)
+- Add ability to remove a cert from the certificate revocation list (CRL).
+  (jesusr@redhat.com)
+- Bind a LoggingConfig here so we set log levels for tests (alikins@redhat.com)
+- Add API method to refresh pools for owner of specific products.
+  (awood@redhat.com)
+- Renaming method for getting owners of active products. (awood@redhat.com)
+- 842450: Fix newline issues in candlepin translations (bkearney@redhat.com)
+- First draft of script to mass load data for performance testing.
+  (dgoodwin@redhat.com)
+
 * Mon Aug 13 2012 William Poteat <wpoteat@redhat.com> 0.7.6-1
 - Disable certificate v2 ability (wpoteat@redhat.com)
 - Change apidiff to format with python json.tool (alikins@redhat.com)
