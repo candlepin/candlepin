@@ -48,6 +48,7 @@ import org.candlepin.policy.PoolRules;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.JsRules;
 import org.candlepin.policy.js.JsRulesProvider;
+import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.RuleExecutionException;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
@@ -96,10 +97,13 @@ public class DefaultRulesTest {
     private Consumer consumer;
     private String productId = "a-product";
     private PoolRules poolRules;
+    private ProductCache productCache;
 
     @Before
     public void createEnforcer() throws Exception {
         MockitoAnnotations.initMocks(this);
+
+        this.productCache = new ProductCache(this.prodAdapter);
 
         URL url = this.getClass().getClassLoader()
             .getResource("rules/default-rules.js");
@@ -122,7 +126,7 @@ public class DefaultRulesTest {
 
         JsRules jsRules = new JsRulesProvider(rulesCurator).get();
         enforcer = new EntitlementRules(new DateSourceImpl(), jsRules,
-            prodAdapter, I18nFactory.getI18n(getClass(), Locale.US,
+            productCache, I18nFactory.getI18n(getClass(), Locale.US,
                 I18nFactory.FALLBACK), config, consumerCurator);
 
         owner = new Owner();
@@ -131,7 +135,8 @@ public class DefaultRulesTest {
 
         poolRules = new JsPoolRules(new JsRulesProvider(rulesCurator).get(),
             poolManagerMock,
-            prodAdapter, config);
+            productCache, config);
+
     }
 
     private Pool createPool(Owner owner, Product product) {
@@ -165,7 +170,7 @@ public class DefaultRulesTest {
             new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
         Enforcer enf = new ManifestEntitlementRules(new DateSourceImpl(),
             new JsRulesProvider(rulesCurator).get(),
-            prodAdapter, I18nFactory.getI18n(getClass(), Locale.US,
+            productCache, I18nFactory.getI18n(getClass(), Locale.US,
                 I18nFactory.FALLBACK), config, consumerCurator);
 
         Product product = new Product(productId, "A product for testing");
@@ -288,8 +293,9 @@ public class DefaultRulesTest {
         product.setAttribute("requires_consumer_type", nonSystemType);
         Pool pool = TestUtil.createPool(owner, product);
         pool.setId("fakeid" + TestUtil.randomInt());
-        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
         consumer.setType(new ConsumerType(nonSystemType));
+
+        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
             .getResult();
@@ -742,7 +748,7 @@ public class DefaultRulesTest {
             new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
         Enforcer enf = new ManifestEntitlementRules(new DateSourceImpl(),
             new JsRulesProvider(rulesCurator).get(),
-            prodAdapter, I18nFactory.getI18n(getClass(), Locale.US,
+            productCache, I18nFactory.getI18n(getClass(), Locale.US,
                 I18nFactory.FALLBACK), config, consumerCurator);
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, "10");
         List<Pool> pools = poolRules.createPools(s);
@@ -763,7 +769,7 @@ public class DefaultRulesTest {
 
         Entitlement e = new Entitlement(physicalPool, c, new Date(), new Date(),
             1);
-        PoolHelper postHelper = new PoolHelper(poolManagerMock, prodAdapter, e);
+        PoolHelper postHelper = new PoolHelper(poolManagerMock, productCache, e);
         List<Pool> poolList = new ArrayList<Pool>();
         poolList.add(virtBonusPool);
         when(poolManagerMock.lookupBySubscriptionId(eq(physicalPool.getSubscriptionId())))
@@ -783,7 +789,7 @@ public class DefaultRulesTest {
             new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
         Enforcer enf = new ManifestEntitlementRules(new DateSourceImpl(),
             new JsRulesProvider(rulesCurator).get(),
-            prodAdapter, I18nFactory.getI18n(getClass(), Locale.US,
+            productCache, I18nFactory.getI18n(getClass(), Locale.US,
                 I18nFactory.FALLBACK), config, consumerCurator);
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, "unlimited");
         List<Pool> pools = poolRules.createPools(s);
@@ -805,7 +811,7 @@ public class DefaultRulesTest {
 
         Entitlement e = new Entitlement(physicalPool, c, new Date(), new Date(),
             1);
-        PoolHelper postHelper = new PoolHelper(poolManagerMock, prodAdapter, e);
+        PoolHelper postHelper = new PoolHelper(poolManagerMock, productCache, e);
         List<Pool> poolList = new ArrayList<Pool>();
         poolList.add(virtBonusPool);
         when(poolManagerMock.lookupBySubscriptionId(eq(physicalPool.getSubscriptionId())))
@@ -846,7 +852,7 @@ public class DefaultRulesTest {
             new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
         Enforcer enf = new ManifestEntitlementRules(new DateSourceImpl(),
             new JsRulesProvider(rulesCurator).get(),
-            prodAdapter, I18nFactory.getI18n(getClass(), Locale.US,
+            productCache, I18nFactory.getI18n(getClass(), Locale.US,
                 I18nFactory.FALLBACK), config, consumerCurator);
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, "unlimited");
         List<Pool> pools = poolRules.createPools(s);
@@ -870,7 +876,7 @@ public class DefaultRulesTest {
             10);
         physicalPool.setConsumed(10L);
         physicalPool.setExported(10L);
-        PoolHelper postHelper = new PoolHelper(poolManagerMock, prodAdapter, e);
+        PoolHelper postHelper = new PoolHelper(poolManagerMock, productCache, e);
         List<Pool> poolList = new ArrayList<Pool>();
         poolList.add(virtBonusPool);
         when(poolManagerMock.lookupBySubscriptionId(eq(physicalPool.getSubscriptionId())))

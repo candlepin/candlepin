@@ -161,6 +161,12 @@ public class TestUtil {
                 11, 30), TestUtil.createDate(2015, 11, 30), "SUB234598S",
             "ACC123");
 
+        // Simulate copying product attributes to the pool.
+        if (product != null) {
+            for (ProductAttribute attr : product.getAttributes()) {
+                pool.setProductAttribute(attr.getName(), attr.getValue(), product.getId());
+            }
+        }
         return pool;
     }
 

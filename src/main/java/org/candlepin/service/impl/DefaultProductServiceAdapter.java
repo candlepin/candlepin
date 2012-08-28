@@ -87,6 +87,11 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
     }
 
     @Override
+    public List<Product> getProducts(String[] productIds) {
+        return prodCurator.listByIds(productIds);
+    }
+
+    @Override
     public Product createProduct(Product product) {
         if (prodCurator.find(product.getId()) != null) {
             throw new BadRequestException("product with ID " + product.getId() +

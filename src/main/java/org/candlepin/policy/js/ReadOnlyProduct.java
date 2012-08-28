@@ -29,16 +29,25 @@ import org.candlepin.model.ProductAttribute;
  */
 public class ReadOnlyProduct {
 
-    private final Product product;
-    private Map<String, String> attributes = null;
+    private final String productId;
+    private final String productName;
+    private Map<String, String> attributes;
 
     /**
      * read-only product constructor.
      * @param product read/write product to copy
      */
+    public ReadOnlyProduct(String productId, String productName,
+        Map<String, String> attributes) {
+        this.productId = productId;
+        this.productName = productName;
+        this.attributes = attributes;
+    }
+
     public ReadOnlyProduct(Product product) {
-        this.product = product;
-        initializeReadOnlyAttributes();
+        this.productId = product.getId();
+        this.productName = product.getName();
+        this.attributes = getFlattenedAttributes(product);
     }
 
     /**
@@ -46,7 +55,7 @@ public class ReadOnlyProduct {
      * @return the product name
      */
     public String getName() {
-        return product.getName();
+        return this.productName;
     }
 
     /**
@@ -54,10 +63,9 @@ public class ReadOnlyProduct {
      * @return the product id
      */
     public String getId() {
-        return product.getId();
+        return this.productId;
     }
 
-    // We may want to drop this and force use of the flattened attributes list.
     /**
      * Return product attribute matching the given name.
      * @param name attribute name
@@ -72,7 +80,7 @@ public class ReadOnlyProduct {
     }
 
     public boolean hasAttribute(String key) {
-        return product.hasAttribute(key);
+        return attributes.containsKey(key);
     }
 
     @Override
@@ -86,12 +94,12 @@ public class ReadOnlyProduct {
 
         ReadOnlyProduct another = (ReadOnlyProduct) anObject;
 
-        return product.getId().equals(another.getId());
+        return this.productId.equals(another.getId());
     }
 
     @Override
     public int hashCode() {
-        return product.getId().hashCode() * 31;
+        return this.productId.hashCode() * 31;
     }
 
     /**
@@ -107,13 +115,14 @@ public class ReadOnlyProduct {
         return toReturn;
     }
 
-    private void initializeReadOnlyAttributes() {
-        attributes = new HashMap<String, String>();
+    private HashMap<String, String> getFlattenedAttributes(Product product) {
+        HashMap<String, String> attributes = new HashMap<String, String>();
         Set<ProductAttribute> attributeList = product.getAttributes();
         if (attributeList != null) {
             for (Attribute current : attributeList) {
                 attributes.put(current.getName(), current.getValue());
             }
         }
+        return attributes;
     }
 }

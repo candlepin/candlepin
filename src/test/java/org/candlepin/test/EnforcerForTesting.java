@@ -19,6 +19,7 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.policy.Enforcer;
+import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.RuleExecutionException;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.entitlement.PreEntHelper;
@@ -41,8 +42,8 @@ public class EnforcerForTesting implements Enforcer {
     }
 
     @Override
-    public PreEntHelper preEntitlement(
-            Consumer consumer, Pool enitlementPool, Integer quantity) {
+    public PreEntHelper preEntitlement(Consumer consumer, Pool enitlementPool,
+            Integer quantity) {
         return new PreEntHelper(1, null);
     }
 

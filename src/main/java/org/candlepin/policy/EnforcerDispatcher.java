@@ -14,7 +14,8 @@
  */
 package org.candlepin.policy;
 
-import com.google.inject.Inject;
+import java.util.List;
+import java.util.Set;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
@@ -28,8 +29,7 @@ import org.candlepin.policy.js.entitlement.PreEntHelper;
 import org.candlepin.policy.js.entitlement.PreUnbindHelper;
 import org.candlepin.policy.js.pool.PoolHelper;
 
-import java.util.List;
-import java.util.Set;
+import com.google.inject.Inject;
 
 /**
  * EnforcerDispatcher
@@ -56,19 +56,20 @@ public class EnforcerDispatcher implements Enforcer {
     }
 
     @Override
-    public PreEntHelper preEntitlement(
-        Consumer consumer, Pool entitlementPool, Integer quantity) {
+    public PreEntHelper preEntitlement(Consumer consumer, Pool entitlementPool,
+        Integer quantity) {
 
         if (consumer.getType().isManifest()) {
-            return manifestEnforcer.preEntitlement(consumer, entitlementPool, quantity);
+            return manifestEnforcer.preEntitlement(consumer, entitlementPool,
+                quantity);
         }
 
         return jsEnforcer.preEntitlement(consumer, entitlementPool, quantity);
     }
 
     @Override
-    public List<PoolQuantity> selectBestPools(Consumer consumer, String[] productIds,
-        List<Pool> pools, ComplianceStatus compliance, String serviceLevelOverride,
+    public List<PoolQuantity> selectBestPools(Consumer consumer, String[] productIds, List<Pool> pools,
+        ComplianceStatus compliance, String serviceLevelOverride,
         Set<String> exemptList)
         throws RuleExecutionException {
         if (consumer.getType().isManifest()) {

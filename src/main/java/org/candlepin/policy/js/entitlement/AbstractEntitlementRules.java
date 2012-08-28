@@ -14,27 +14,6 @@
  */
 package org.candlepin.policy.js.entitlement;
 
-import org.apache.log4j.Logger;
-import org.candlepin.config.Config;
-import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerCurator;
-import org.candlepin.model.Entitlement;
-import org.candlepin.model.Pool;
-import org.candlepin.model.PoolCurator;
-import org.candlepin.model.PoolQuantity;
-import org.candlepin.model.Product;
-import org.candlepin.policy.Enforcer;
-import org.candlepin.policy.js.JsRules;
-import org.candlepin.policy.js.ReadOnlyConsumer;
-import org.candlepin.policy.js.ReadOnlyProduct;
-import org.candlepin.policy.js.RuleExecutionException;
-import org.candlepin.policy.js.compliance.ComplianceStatus;
-import org.candlepin.policy.js.pool.PoolHelper;
-import org.candlepin.service.ProductServiceAdapter;
-import org.candlepin.util.DateSource;
-import org.mozilla.javascript.RhinoException;
-import org.xnap.commons.i18n.I18n;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -46,6 +25,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
+import org.candlepin.config.Config;
+import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.Entitlement;
+import org.candlepin.model.Pool;
+import org.candlepin.model.PoolCurator;
+import org.candlepin.model.PoolQuantity;
+import org.candlepin.policy.Enforcer;
+import org.candlepin.policy.js.JsRules;
+import org.candlepin.policy.js.ReadOnlyConsumer;
+import org.candlepin.policy.js.ReadOnlyProduct;
+import org.candlepin.policy.js.ProductCache;
+import org.candlepin.policy.js.RuleExecutionException;
+import org.candlepin.policy.js.compliance.ComplianceStatus;
+import org.candlepin.policy.js.pool.PoolHelper;
+import org.candlepin.util.DateSource;
+import org.mozilla.javascript.RhinoException;
+import org.xnap.commons.i18n.I18n;
+
 /**
  * Enforces the Javascript Rules definition.
  */
@@ -55,7 +54,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
     protected Logger rulesLogger = null;
     protected DateSource dateSource;
 
-    protected ProductServiceAdapter prodAdapter;
+    protected ProductCache productCache;
     protected I18n i18n;
     protected Map<String, Set<Rule>> attributesToRules;
     protected JsRules jsRules;
@@ -340,12 +339,14 @@ public abstract class AbstractEntitlementRules implements Enforcer {
 
         // Provide objects for the script:
         String topLevelProductId = pool.getProductId();
-        Product product = prodAdapter.getProductById(topLevelProductId);
-        Map<String, String> allAttributes = jsRules.getFlattenedAttributes(product, pool);
+        ReadOnlyProduct readOnlyProduct = new ReadOnlyProduct(topLevelProductId,
+            pool.getProductName(),
+            jsRules.getFlattenedAttributes(pool.getProductAttributes()));
+        Map<String, String> allAttributes = jsRules.getFlattenedAttributes(pool);
 
         Map<String, Object> args = new HashMap<String, Object>();
         args.put("consumer", new ReadOnlyConsumer(c, null));
-        args.put("product", new ReadOnlyProduct(product));
+        args.put("product", readOnlyProduct);
         args.put("post", postHelper);
         args.put("pool", pool);
         args.put("attributes", allAttributes);
@@ -369,12 +370,16 @@ public abstract class AbstractEntitlementRules implements Enforcer {
 
         // Provide objects for the script:
         String topLevelProductId = pool.getProductId();
-        Product product = prodAdapter.getProductById(topLevelProductId);
-        Map<String, String> allAttributes = jsRules.getFlattenedAttributes(product, pool);
+        ReadOnlyProduct readOnlyProduct = new ReadOnlyProduct(topLevelProductId,
+            pool.getProductName(),
+            jsRules.getFlattenedAttributes(pool.getProductAttributes()));
+
+        Map<String, String> allAttributes =
+            jsRules.getFlattenedAttributes(pool);
 
         Map<String, Object> args = new HashMap<String, Object>();
         args.put("consumer", new ReadOnlyConsumer(c));
-        args.put("product", new ReadOnlyProduct(product));
+        args.put("product", readOnlyProduct);
         args.put("post", postHelper);
         args.put("pool", pool);
         args.put("attributes", allAttributes);
@@ -415,8 +420,8 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         return postHelper;
     }
 
-    public PreEntHelper preEntitlement(
-            Consumer consumer, Pool entitlementPool, Integer quantity) {
+    @Override
+    public PreEntHelper preEntitlement(Consumer consumer, Pool entitlementPool, Integer quantity) {
 
         jsRules.reinitTo("entitlement_name_space");
         rulesInit();
@@ -424,8 +429,10 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         return new PreEntHelper(1, null);
     }
 
+    @Override
     public List<PoolQuantity> selectBestPools(Consumer consumer, String[] productIds,
-        List<Pool> pools, ComplianceStatus compliance, String serviceLevelOverride,
+        List<Pool> pools, ComplianceStatus compliance,
+        String serviceLevelOverride,
         Set<String> exemptList)
         throws RuleExecutionException {
 

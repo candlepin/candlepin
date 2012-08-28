@@ -18,6 +18,9 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
+import org.candlepin.model.Product;
+import org.candlepin.policy.js.ReadOnlyProduct;
+import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.RuleExecutionException;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.entitlement.PreEntHelper;
@@ -66,15 +69,16 @@ public interface Enforcer {
      * Will throw RuleExecutionException if both pools and a rule exist, but no pool
      * is returned from the rule.
      *
+     * @param consumer the consumer to fetch best pools for.
      * @param productIds Product IDs
      * @param pools List of pools to select from.
      * @return best pools as determined by the rules, and the quantity to take from each
      * @throws RuleExecutionException Thrown if both pools and a rule exist, but no
      * pool is returned.
      */
-    List<PoolQuantity> selectBestPools(Consumer consumer, String[] productIds,
-        List<Pool> pools, ComplianceStatus compliance, String serviceLevelOverride,
-        Set<String> exemptList)
+    List<PoolQuantity> selectBestPools(Consumer consumer,
+        String[] productIds, List<Pool> pools, ComplianceStatus compliance,
+        String serviceLevelOverride, Set<String> exemptList)
         throws RuleExecutionException;
 
     /**

@@ -14,14 +14,14 @@
  */
 package org.candlepin.policy.js.entitlement;
 
-import com.google.inject.Inject;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.candlepin.config.Config;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Pool;
-import org.candlepin.model.Product;
 import org.candlepin.policy.Enforcer;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationWarning;
@@ -29,13 +29,11 @@ import org.candlepin.policy.js.JsRules;
 import org.candlepin.policy.js.ReadOnlyConsumer;
 import org.candlepin.policy.js.ReadOnlyPool;
 import org.candlepin.policy.js.ReadOnlyProduct;
-import org.candlepin.policy.js.ReadOnlyProductCache;
-import org.candlepin.service.ProductServiceAdapter;
+import org.candlepin.policy.js.ProductCache;
 import org.candlepin.util.DateSource;
 import org.xnap.commons.i18n.I18n;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.google.inject.Inject;
 
 /**
  * ManifestEntitlementRules - Exists primarily to allow consumers of manifest type
@@ -46,12 +44,12 @@ public class ManifestEntitlementRules extends AbstractEntitlementRules implement
     @Inject
     public ManifestEntitlementRules(DateSource dateSource,
         JsRules jsRules,
-        ProductServiceAdapter prodAdapter,
+        ProductCache productCache,
         I18n i18n, Config config, ConsumerCurator consumerCurator) {
 
         this.jsRules = jsRules;
         this.dateSource = dateSource;
-        this.prodAdapter = prodAdapter;
+        this.productCache = productCache;
         this.i18n = i18n;
         this.attributesToRules = null;
         this.config = config;
@@ -63,13 +61,13 @@ public class ManifestEntitlementRules extends AbstractEntitlementRules implement
     }
 
     @Override
-    public PreEntHelper preEntitlement(
-        Consumer consumer, Pool entitlementPool, Integer quantity) {
+    public PreEntHelper preEntitlement(Consumer consumer, Pool entitlementPool, Integer quantity) {
 
         jsRules.reinitTo("entitlement_name_space");
         rulesInit();
 
-        PreEntHelper preHelper = runPreEntitlement(consumer, entitlementPool, quantity);
+        PreEntHelper preHelper = runPreEntitlement(consumer, entitlementPool,
+            quantity);
 
         return preHelper;
     }
@@ -88,13 +86,15 @@ public class ManifestEntitlementRules extends AbstractEntitlementRules implement
 
         // Provide objects for the script:
         String topLevelProductId = pool.getProductId();
-        Product product = prodAdapter.getProductById(topLevelProductId);
-        Map<String, String> allAttributes = jsRules.getFlattenedAttributes(product, pool);
+        ReadOnlyProduct product = new ReadOnlyProduct(topLevelProductId,
+            pool.getProductName(),
+            jsRules.getFlattenedAttributes(pool.getProductAttributes()));
+        Map<String, String> allAttributes = jsRules.getFlattenedAttributes(pool);
 
         Map<String, Object> args = new HashMap<String, Object>();
         args.put("consumer", new ReadOnlyConsumer(consumer));
-        args.put("product", new ReadOnlyProduct(product));
-        args.put("pool", new ReadOnlyPool(pool, new ReadOnlyProductCache(prodAdapter)));
+        args.put("product", product);
+        args.put("pool", new ReadOnlyPool(pool, productCache));
         args.put("pre", preHelper);
         args.put("attributes", allAttributes);
         args.put("prodAttrSeparator", PROD_ARCHITECTURE_SEPARATOR);
