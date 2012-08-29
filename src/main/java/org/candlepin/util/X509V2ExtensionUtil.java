@@ -62,7 +62,9 @@ public class X509V2ExtensionUtil extends X509Util{
     private EntitlementCurator entCurator;
     private String thisVersion = "2.0";
 
-    private static long nodeId = 0;
+    private long pathNodeId = 0;
+    private long huffNodeId = 0;
+    private static final String END_NODE = "*";
 
     @Inject
     public X509V2ExtensionUtil(Config config, EntitlementCurator entCurator) {
@@ -97,20 +99,29 @@ public class X509V2ExtensionUtil extends X509Util{
         EntitlementBody eb = createEntitlementBodyContent(products, ent,
             contentPrefix, promotedContent, sub);
 
-        List<Content> contentList = getContentList(eb);
-        PathNode treeRoot = makePathTree(contentList, new PathNode());
-        List<String> nodeStrings = orderStrings(treeRoot);
-        byte[] pathDictionary = byteProcess(nodeStrings);
-        List<PathNode> orderedNodes = orderNodes(treeRoot);
-        byte[] nodeDictionary = makeNodeDictionary(nodeStrings, orderedNodes);
-        byte[] value = combineByteArrays(pathDictionary, nodeDictionary);
         X509ByteExtensionWrapper bodyExtension =
             new X509ByteExtensionWrapper(OIDUtil.REDHAT_OID + "." +
                 OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_DATA_KEY),
-                false, value);
+                false, retreiveContentValue(eb));
         toReturn.add(bodyExtension);
 
         return toReturn;
+    }
+
+    private byte[] retreiveContentValue(EntitlementBody eb) throws IOException {
+        List<Content> contentList = getContentList(eb);
+        PathNode treeRoot = makePathTree(contentList, new PathNode());
+        List<String> nodeStrings = orderStrings(treeRoot);
+        List<HuffNode> stringHuffNodes = getStringNodeList(treeRoot);
+        HuffNode stringTrieParent = makeTrie(stringHuffNodes);
+        byte[] pathDictionary = byteProcess(nodeStrings);
+        List<PathNode> orderedNodes = orderNodes(treeRoot);
+        List<HuffNode> pathNodeHuffNodes = getPathNodeNodeList(orderedNodes);
+        HuffNode pathNodeTrieParent = makeTrie(pathNodeHuffNodes);
+        byte[] nodeDictionary = makeNodeDictionary(stringTrieParent,
+            pathNodeTrieParent, orderedNodes);
+        byte[] value = combineByteArrays(pathDictionary, nodeDictionary);
+        return value;
     }
 
     public EntitlementBody createEntitlementBody(Set<Product> products,
@@ -429,9 +440,11 @@ public class X509V2ExtensionUtil extends X509Util{
     private void makePathForURL(StringTokenizer st, PathNode parent, PathNode endMarker) {
         if (st.hasMoreTokens()) {
             String childVal = st.nextToken();
+            if (childVal.equals("")) { return; }
             boolean isNew = true;
             for (NodePair child : parent.getChildren()) {
-                if (child.getName().equals(childVal)) {
+                if (child.getName().equals(childVal) &&
+                    !child.getConnection().equals(endMarker)) {
                     makePathForURL(st, child.getConnection(), endMarker);
                     isNew = false;
                 }
@@ -531,7 +544,6 @@ public class X509V2ExtensionUtil extends X509Util{
                 }
             }
         }
-        parts.add("::");
         if (log.isDebugEnabled()) {
             log.debug("Parts List: " + parts);
         }
@@ -589,35 +601,97 @@ public class X509V2ExtensionUtil extends X509Util{
         return nodes;
     }
 
-    private byte[] makeNodeDictionary(List<String> nodeStrings,
-        List<PathNode> orderedNodes)
+    private byte[] makeNodeDictionary(HuffNode stringParent,
+        HuffNode pathNodeParent, List<PathNode> pathNodes)
         throws UnsupportedEncodingException, IOException {
-        String delimiter = nodeStrings.get(nodeStrings.size() - 1);
-        List<String> result = new ArrayList<String>();
-
-        // hash for lookups
-        Map<String, Integer> stringHash = new HashMap<String, Integer>();
-        int index = 0;
-        for (String s : nodeStrings) {
-            stringHash.put(s, index++);
-        }
-        Map<Long, Integer> nodeHash = new HashMap<Long, Integer>();
-        index = 0;
-        for (PathNode pn : orderedNodes) {
-            nodeHash.put(pn.getId(), index++);
-        }
-
-        for (PathNode pn : orderedNodes) {
+        byte[] result = {(byte) pathNodes.size()};
+        StringBuffer bits = new StringBuffer();
+        String endNodeLocation = findNodeString(stringParent, END_NODE);
+        for (PathNode pn : pathNodes) {
             for (NodePair np : pn.getChildren()) {
-                result.add(stringHash.get(np.getName()).toString());
-                result.add(nodeHash.get(np.getConnection().getId()).toString());
+                bits.append(findNodeString(stringParent, np.getName()));
+                bits.append(findPathNode(pathNodeParent, np.getConnection()));
             }
-            result.add(delimiter);
+            bits.append(endNodeLocation);
         }
         if (log.isDebugEnabled()) {
-            log.debug(result);
+            log.debug(bits);
         }
-        return byteProcess(result);
+        if (bits.length() % 8 != 0) {
+            int toAdd = 8 - (bits.length() % 8);
+            for (int i = 0;  i < toAdd; i++) {
+                bits.append("0");
+            }
+        }
+        while (bits.length() > 0) {
+            String oneByte = bits.substring(0, 8);
+            result = combineByteArrays(result,
+                new byte[] {(byte) Integer.parseInt(oneByte, 2)});
+            bits.delete(0, 8);
+        }
+        return result;
+    }
+
+    private String findNodeString(HuffNode stringTrie, String need) {
+        HuffNode left = stringTrie.getLeft();
+        HuffNode right = stringTrie.getRight();
+        if (left != null && left.getValue() != null) {
+            String value = (String) left.getValue();
+            if (value.equals(need)) {
+                return "0";
+            }
+        }
+        if (right != null && right.getValue() != null) {
+            String value = (String) right.getValue();
+            if (value.equals(need)) {
+                return "1";
+            }
+        }
+        if (left != null) {
+            String leftPath = findNodeString(left, need);
+            if (leftPath.length() > 0) {
+                return "0" + leftPath;
+            }
+        }
+        if (right != null) {
+            String rightPath = findNodeString(right, need);
+            if (rightPath.length() > 0) {
+                return "1" + rightPath;
+            }
+        }
+        return "";
+    }
+
+    private String findPathNode(HuffNode pathNodeTrie, PathNode need) {
+        HuffNode left = pathNodeTrie.getLeft();
+        HuffNode right = pathNodeTrie.getRight();
+        if (left != null &&
+            left.getValue() != null) {
+            PathNode value = (PathNode) left.getValue();
+            if (value.getId() == need.getId()) {
+                return "0";
+            }
+        }
+        if (right != null &&
+            right.getValue() != null) {
+            PathNode value = (PathNode) right.getValue();
+            if (value.getId() == need.getId()) {
+                return "1";
+            }
+        }
+        if (left != null) {
+            String leftPath = findPathNode(left, need);
+            if (leftPath.length() > 0) {
+                return "0" + leftPath;
+            }
+        }
+        if (right != null) {
+            String rightPath = findPathNode(right, need);
+            if (rightPath.length() > 0) {
+                return "1" + rightPath;
+            }
+        }
+        return "";
     }
 
     public static String toJson(Object anObject) {
@@ -641,6 +715,7 @@ public class X509V2ExtensionUtil extends X509Util{
             new Deflater(Deflater.HUFFMAN_ONLY));
         for (String segment : entries) {
             dos.write(segment.getBytes("UTF-8"));
+            dos.write(0);
         }
         dos.finish();
         dos.close();
@@ -648,11 +723,127 @@ public class X509V2ExtensionUtil extends X509Util{
     }
 
     private byte[] combineByteArrays(byte[] a, byte[] b) {
+        if (a.length == 0) { return b; }
+        if (b.length == 0) { return a; }
         byte[] combined = new byte[a.length + b.length];
-        for (int i = 0; i < combined.length - 1; ++i) {
+        for (int i = 0; i < combined.length; ++i) {
             combined[i] = i < a.length ? a[i] : b[i - a.length];
         }
         return combined;
+    }
+
+    private List<HuffNode> getStringNodeList(PathNode parent) {
+        List<HuffNode> nodes = new ArrayList<HuffNode>();
+        Map<String, Integer> segments =  new HashMap<String, Integer>();
+        Set<PathNode> pathNodes =  new HashSet<PathNode>();
+
+        buildSegments(segments, pathNodes, parent);
+        int count = 0;
+        int highest = 0;
+        HuffNode newOne = null;
+        for (String part : segments.keySet()) {
+            if (!part.equals("")) {
+                count = segments.get(part);
+                newOne = new HuffNode(part, count);
+                nodes.add(newOne);
+                if (count > highest) {
+                    highest = count;
+                }
+            }
+        }
+        newOne = new HuffNode(END_NODE, ++highest);
+        nodes.add(newOne);
+        return nodes;
+    }
+
+    private List<HuffNode> getPathNodeNodeList(List<PathNode> pathNodes) {
+        List<HuffNode> nodes = new ArrayList<HuffNode>();
+        for (PathNode pn : pathNodes) {
+            nodes.add(new HuffNode(pn, pn.getParents().size()));
+        }
+        return nodes;
+    }
+
+    private HuffNode makeTrie(List<HuffNode> nodesList) {
+        while (nodesList.size() > 1) {
+            HuffNode node1 = findSmallest(null, nodesList);
+            HuffNode node2 = findSmallest(node1, nodesList);
+            HuffNode parent = mergeNodes(node1, node2);
+            nodesList.add(parent);
+            nodesList.remove(node1);
+            nodesList.remove(node2);
+        }
+        return nodesList.get(0);
+    }
+
+    private HuffNode findSmallest(HuffNode exclude, List<HuffNode> nodes) {
+        HuffNode smallest = null;
+        for (HuffNode n : nodes) {
+            boolean isExclude = false;
+            if (exclude != null) {
+                isExclude = n.getId() == exclude.getId();
+            }
+            if (!isExclude && (smallest == null || n.getWeight() < smallest.getWeight())) {
+                smallest = n;
+            }
+        }
+        return smallest;
+    }
+
+    private HuffNode mergeNodes(HuffNode node1, HuffNode node2) {
+        HuffNode left = node1.weight <= node2.weight ? node1 : node2;
+        HuffNode right = node1.weight > node2.weight ? node1 : node2;
+        HuffNode parent = new HuffNode(null, left.weight + right.weight, left, right);
+        return parent;
+    }
+
+    private class HuffNode {
+        private long id = 0;
+        private Object value = null;
+        private int weight = 0;
+        private HuffNode left = null;
+        private HuffNode right = null;
+
+        HuffNode(Object value, int weight, HuffNode left, HuffNode right) {
+            this.value = value;
+            this.weight = weight;
+            this.left = left;
+            this.right = right;
+            this.id = huffNodeId++;
+        }
+        HuffNode(Object value, int weight) {
+            this.value = value;
+            this.weight = weight;
+            this.id = huffNodeId++;
+        }
+
+        Object getValue() {
+            return this.value;
+        }
+
+        int getWeight() {
+            return this.weight;
+        }
+
+        HuffNode getLeft() {
+            return this.left;
+        }
+
+        HuffNode getRight() {
+            return this.right;
+        }
+
+        long getId() {
+            return this.id;
+        }
+
+        public String toString() {
+            return "ID: " + id +
+                   ", Value: " + value +
+                   ", Weight: " + weight +
+                   ", Left: " + left +
+                   ", Right: " + right;
+        }
     }
 
     private class PathNode {
@@ -661,7 +852,7 @@ public class X509V2ExtensionUtil extends X509Util{
         private List<PathNode> parents = new ArrayList<PathNode>();
 
         PathNode() {
-            this.id = nodeId++;
+            this.id = pathNodeId++;
         }
 
         long getId() {
