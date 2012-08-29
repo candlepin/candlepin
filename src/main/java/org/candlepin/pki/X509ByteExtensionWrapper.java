@@ -14,6 +14,8 @@
  */
 package org.candlepin.pki;
 
+import java.util.Arrays;
+
 /**
  * X509ExtensionWrapper
  */
@@ -30,7 +32,7 @@ public class X509ByteExtensionWrapper {
     }
 
     public String toString() {
-        return "[" + oid + " = " + value + "]";
+        return "[" + oid + " = " + Arrays.toString(value) + "]";
     }
 
     public String getOid() {
