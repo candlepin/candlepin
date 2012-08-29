@@ -213,8 +213,8 @@ public class DefaultEntitlementCertServiceAdapter extends
                     contentPrefix, promotedContent, ent.getConsumer()));
             }
             catch (CertificateSizeException e) {
-                throw new IseException(i18n.tr("Too many content sets for certificate, " +
-                    "please upgrade to a newer client to use subscription: {0}",
+                throw new IseException(i18n.tr("Too many content sets for certificate. " +
+                    "Please upgrade to a newer client to use subscription: {0}",
                     ent.getPool().getProductName()));
             }
         }
