@@ -163,4 +163,9 @@ public class DefaultSubscriptionServiceAdapter implements
         subCurator.delete(s);
     }
 
+    @Override
+    public Set<Owner> lookupOwnersByProduct(List<String> productIds) {
+        return subCurator.lookupOwnersByProduct(productIds);
+    }
+
 }

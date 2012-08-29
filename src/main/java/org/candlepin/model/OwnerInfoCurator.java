@@ -25,10 +25,13 @@ import org.hibernate.Session;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.EntityManager;
 
@@ -39,19 +42,17 @@ import javax.persistence.EntityManager;
 public class OwnerInfoCurator {
     private Provider<EntityManager> entityManager;
     private ConsumerTypeCurator consumerTypeCurator;
-    private ProductServiceAdapter productAdapter;
-    private static final String DEFAULT_CONSUMER_TYPE = "system";
 
     @Inject
     public OwnerInfoCurator(Provider<EntityManager> entityManager,
         ConsumerTypeCurator consumerTypeCurator, ProductServiceAdapter psa) {
         this.entityManager = entityManager;
         this.consumerTypeCurator = consumerTypeCurator;
-        this.productAdapter = psa;
     }
 
     public OwnerInfo lookupByOwner(Owner owner) {
         OwnerInfo info = new OwnerInfo();
+        Date now = new Date();
 
         List<ConsumerType> types = consumerTypeCurator.listAll();
         HashMap<String, ConsumerType> typeHash = new HashMap<String, ConsumerType>();
@@ -78,102 +79,42 @@ public class OwnerInfoCurator {
             if (result != null) {
                 entitlements = (Integer) result;
             }
-
             info.addTypeTotal(type, consumers, entitlements);
+
+            int count = getRequiresConsumerTypeCount(type, owner, now);
+            info.addToConsumerTypeCountByPool(type, count);
+
+            count = getEnabledConsumerTypeCount(type, owner, now);
+            if (count > 0) {
+                info.addToEnabledConsumerTypeCountByPool(type, count);
+            }
+
         }
 
-        Date now = new Date();
-        info.setConsumerTypesByPool(types);
+        int activePools = getActivePoolCount(owner, now);
+        info.addDefaultEnabledConsumerTypeCount(activePools);
 
-        for (Pool pool : owner.getPools()) {
-            // clients using the ownerinfo details are only concerned with pools
-            // active *right now*
-            if (now.before(pool.getStartDate()) || now.after(pool.getEndDate())) {
-                continue;
-            }
-            if (info.getPoolNearestToExpiry() == null) {
-                info.setPoolNearestToExpiry(pool);
-            }
-            else if (pool.getEndDate().before(info.getPoolNearestToExpiry()
-                             .getEndDate())) {
-                info.setPoolNearestToExpiry(pool);
-            }
-            // do consumerTypeCountByPool
-            String consumerType = getAttribute(pool, "requires_consumer_type");
-            if (consumerType == null || consumerType.trim().equals("")) {
-                consumerType = DEFAULT_CONSUMER_TYPE;
-            }
-            ConsumerType ct = typeHash.get(consumerType);
-            info.addToConsumerTypeCountByPool(ct);
+        Collection<String> families = getProductFamilies(owner, now);
 
-            consumerType = getAccumulatedAttribute(pool, "enabled_consumer_types");
-            if (consumerType != null && !consumerType.trim().equals("")) {
-                for (String type : consumerType.split(",")) {
-                    ct = typeHash.get(type);
-                    if (ct != null) {
-                        info.addToEnabledConsumerTypeCountByPool(ct);
-                    }
-                }
-            }
-
-            // now do entitlementsConsumedByFamily
-            String productFamily = getAttribute(pool, "product_family");
-            // default bucket for familyless entitlements
-            if (productFamily == null || productFamily.trim().equals("")) {
-                productFamily = "none";
-            }
-
-            int count = getEntitlementCountForPool(pool);
-
-            if ("true".equals(getAttribute(pool, "virt_only"))) {
-                info.addToEntitlementsConsumedByFamily(productFamily, 0, count);
-            }
-            else {
-                info.addToEntitlementsConsumedByFamily(productFamily, count, 0);
-            }
+        for (String family : families) {
+            int virtualCount = getProductFamilyCount(owner, now, family, true);
+            int totalCount = getProductFamilyCount(owner, now, family, false);
+            info.addToEntitlementsConsumedByFamily(family, totalCount - virtualCount,
+                virtualCount);
         }
+
+        int virtTotalEntitlements = getProductFamilyCount(owner, now, null, true);
+        int totalEntitlements = getProductFamilyCount(owner, now, null, false);
+
+        info.addDefaultEntitlementsConsumedByFamily(
+            totalEntitlements - virtTotalEntitlements,
+            virtTotalEntitlements);
 
         setConsumerGuestCounts(owner, info);
         setConsumerCountsByComplianceStatus(owner, info);
 
         return info;
     }
-
-    /**
-     * @param pool
-     * @return
-     */
-    private String getAttribute(Pool pool, String attribute) {
-        // XXX dealing with attributes in java. that's bad!
-        String productFamily = pool.getAttributeValue(attribute);
-        if (productFamily == null || productFamily.trim().equals("")) {
-            String productId = pool.getProductId();
-            Product product = productAdapter.getProductById(productId);
-            if (product != null) {
-                productFamily = product.getAttributeValue(attribute);
-            }
-        }
-        return productFamily;
-    }
-
-    /**
-     * @param pool
-     * @return
-     */
-    private String getAccumulatedAttribute(Pool pool, String aType) {
-        // XXX dealing with attributes in java. that's bad!
-        String consumerTypes = pool.getAttributeValue(aType);
-        String productId = pool.getProductId();
-        Product product = productAdapter.getProductById(productId);
-        if (product != null) {
-            if (consumerTypes == null || consumerTypes.length() > 0) {
-                consumerTypes += ",";
-            }
-            consumerTypes += product.getAttributeValue(aType);
-        }
-        return consumerTypes;
-    }
-
 
     private void setConsumerGuestCounts(Owner owner, OwnerInfo info) {
 
@@ -200,20 +141,6 @@ public class OwnerInfoCurator {
         info.setPhysicalCount(physicalCount);
     }
 
-    private int getEntitlementCountForPool(Pool pool) {
-        String queryStr = "select sum(e.quantity) from Entitlement e " +
-            "where e.pool = :pool";
-        Query query = currentSession().createQuery(queryStr)
-            .setEntity("pool", pool);
-        Long count = (Long) query.uniqueResult();
-        if (count == null) {
-            return 0;
-        }
-        else {
-            return count.intValue();
-        }
-    }
-
     private void setConsumerCountsByComplianceStatus(Owner owner, OwnerInfo info) {
         String queryStr = "select c.entitlementStatus, count(c) from Consumer c where " +
             "c.owner = :owner and c.entitlementStatus is not null " +
@@ -234,6 +161,183 @@ public class OwnerInfoCurator {
             Integer count = ((Long) object[1]).intValue();
             info.setConsumerCountByComplianceStatus(status, count);
         }
+    }
+
+    private int getActivePoolCount(Owner owner, Date date) {
+        String queryStr = "select count (p) from Pool p " +
+            "where p.owner = :owner " +
+            "and p.startDate < :date and p.endDate > :date";
+        Query query = currentSession().createQuery(queryStr)
+            .setEntity("owner", owner)
+            .setParameter("date", date);
+        return ((Long) query.uniqueResult()).intValue();
+    }
+
+    private int getRequiresConsumerTypeCount(ConsumerType type, Owner owner, Date date) {
+        String queryStr = "select count (p) from Pool p join p.attributes as attr " +
+            "where p.owner = :owner " +
+            "and p.startDate < :date and p.endDate > :date " +
+            "and attr.name = 'requires_consumer_type'" +
+            "and attr.value = :type";
+        Query query = currentSession().createQuery(queryStr)
+            .setEntity("owner", owner)
+            .setParameter("type", type.getLabel())
+            .setParameter("date", date);
+        int count = ((Long) query.uniqueResult()).intValue();
+
+        queryStr = "select count (p) from Pool p join p.productAttributes as prod " +
+            "where p.owner = :owner " +
+            "and p.startDate < :date and p.endDate > :date " +
+            "and prod.name = 'requires_consumer_type'" +
+            "and prod.value = :type " +
+            "and p not in (select distinct pa.pool from PoolAttribute pa " +
+            "              where pa.name = 'requires_consumer_type')";
+        query = currentSession().createQuery(queryStr)
+            .setEntity("owner", owner)
+            .setParameter("type", type.getLabel())
+            .setParameter("date", date);
+
+        return count + ((Long) query.uniqueResult()).intValue();
+    }
+
+    private int getEnabledConsumerTypeCount(ConsumerType type, Owner owner, Date date) {
+        String queryStr = "select count(distinct p) from Pool p " +
+            "join p.attributes as attr " +
+            "where p.owner = :owner " +
+            "and p.startDate < :date and p.endDate > :date " +
+            "and attr.name = 'enabled_consumer_types' and (" +
+            "             attr.value = :single " +
+            "             or attr.value LIKE :begin " +
+            "             or attr.value LIKE :middle " +
+            "             or attr.value LIKE :end" +
+            ")";
+        Query query = currentSession().createQuery(queryStr)
+            .setEntity("owner", owner)
+            .setParameter("date", date)
+            .setParameter("begin", type.getLabel() + ",%")
+            .setParameter("middle", "%," + type.getLabel() + ",%")
+            .setParameter("end", "%," + type.getLabel())
+            .setParameter("single", type.getLabel());
+        int count = ((Long) query.uniqueResult()).intValue();
+
+        queryStr = "select count(distinct p) from Pool p " +
+            "join p.productAttributes as prod " +
+            "where p.owner = :owner " +
+            "and p.startDate < :date and p.endDate > :date " +
+            "and prod.name = 'enabled_consumer_types' and (" +
+            "             prod.value = :single " +
+            "             or prod.value LIKE :begin " +
+            "             or prod.value LIKE :middle " +
+            "             or prod.value LIKE :end" +
+            ") " +
+            "and p not in (select distinct pa.pool from PoolAttribute pa " +
+            "               where pa.name = 'enabled_consumer_types')";
+        query = currentSession().createQuery(queryStr)
+            .setEntity("owner", owner)
+            .setParameter("date", date)
+            .setParameter("begin", type.getLabel() + ",%")
+            .setParameter("middle", "%," + type.getLabel() + ",%")
+            .setParameter("end", "%," + type.getLabel())
+            .setParameter("single", type.getLabel());
+
+        return count + ((Long) query.uniqueResult()).intValue();
+    }
+
+    private Collection<String> getProductFamilies(Owner owner, Date date) {
+        Set<String> families = new HashSet<String>();
+
+        String queryStr = "select distinct attr.value from Pool p " +
+            "join p.attributes as attr " +
+            "where p.owner = :owner " +
+            "and p.startDate < :date and p.endDate > :date " +
+            "and attr.name = 'product_family'";
+        Query query = currentSession().createQuery(queryStr)
+            .setEntity("owner", owner)
+            .setParameter("date", date);
+
+        Iterator iter = query.iterate();
+        while (iter.hasNext()) {
+            String family = (String) iter.next();
+            families.add(family);
+        }
+
+        queryStr = "select distinct prod.value from Pool p " +
+            "join p.productAttributes as prod " +
+            "where p.owner = :owner " +
+            "and p.startDate < :date and p.endDate > :date " +
+            "and prod.name = 'product_family' " +
+            "and p not in (select distinct pa.pool from PoolAttribute pa" +
+            "              where pa.name = 'product_family')";
+        query = currentSession().createQuery(queryStr)
+            .setEntity("owner", owner)
+            .setParameter("date", date);
+
+        iter = query.iterate();
+        while (iter.hasNext()) {
+            String family = (String) iter.next();
+            families.add(family);
+        }
+
+        return families;
+    }
+
+    /*
+     * If called with virt = false, returns the total number of all entitlements in
+     * that family for that owner. So you probably want to subtract  the result of
+     * virt=true from that.
+     *
+     * use family = null to get counts for all pools.
+     */
+    private int getProductFamilyCount(Owner owner, Date date, String family, boolean virt) {
+        String queryStr = "select sum(ent.quantity) from Pool p" +
+            "              join p.entitlements as ent " +
+            "              where p.owner = :owner " +
+            "              and p.startDate < :date and p.endDate > :date ";
+
+        if (family != null) {
+            queryStr +=
+                "and (p in (select p from Pool p join p.attributes as attr " +
+                "           where p.owner = :owner " +
+                "           and attr.name = 'product_family' and attr.value = :family)" +
+                "     or (p in (select p from Pool p join p.productAttributes as prod " +
+                "              where p.owner = :owner " +
+                "              and prod.name = 'product_family' " +
+                "              and prod.value = :family) " +
+                "         and p not in (select p from Pool p join p.attributes as attr " +
+                "                       where p.owner = :owner " +
+                "                       and attr.name = 'product_family')" +
+                "        )" +
+                ")";
+        }
+
+        if (virt) {
+            queryStr += "and (p in (select p from Pool p join p.attributes as attr " +
+                        "           where attr.name = 'virt_only' " +
+                        "           and attr.value = 'true') " +
+                        "     or (p in (select p from Pool p " +
+                        "               join p.productAttributes as prod " +
+                        "               where p.owner = :owner " +
+                        "               and prod.name = 'virt_only' " +
+                        "               and prod.value = 'true')" +
+                        "         and p not in (select p from Pool p " +
+                        "                       join p.attributes as attr " +
+                        "                       where p.owner = :owner " +
+                        "                       and attr.name = 'virt_only')" +
+                        "     )" +
+                        ")";
+        }
+        Query query = currentSession().createQuery(queryStr)
+            .setEntity("owner", owner)
+            .setParameter("date", date);
+        if (family != null) {
+            query.setParameter("family", family);
+        }
+        Long res = (Long) query.uniqueResult();
+        if (res == null) {
+            return 0;
+        }
+
+        return res.intValue();
     }
 
     protected Session currentSession() {

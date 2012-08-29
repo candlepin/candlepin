@@ -449,6 +449,14 @@ class Candlepin
     get(url)
   end
 
+  def refresh_pools_for_product(product_id, immediate=false, lazy_regen=true)
+    return async_call(immediate) do
+      url="/products/#{product_id}/subscriptions?"
+      url += "lazy_regen=false&" if !lazy_regen
+      put(url)
+    end
+  end
+
   def create_product(id, name, params={}, dependentProductIds=[])
 
     multiplier = params[:multiplier] || 1

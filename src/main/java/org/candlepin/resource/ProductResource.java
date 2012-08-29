@@ -27,19 +27,23 @@ import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.Statistic;
 import org.candlepin.model.StatisticCurator;
+import org.candlepin.pinsetter.tasks.RefreshPoolsForProductJob;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.service.ProductServiceAdapter;
 
 import com.google.inject.Inject;
 
+import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Arrays;
 import java.util.List;
 
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -248,12 +252,28 @@ public class ProductResource {
     @GET
     @Path("/owners")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Owner> getProductOwners(@QueryParam("product") String[] productIds) {
+    public List<Owner> getActiveProductOwners(@QueryParam("product") String[] productIds) {
         List<String> ids = Arrays.asList(productIds);
         if (ids.isEmpty()) {
             throw new BadRequestException(i18n.tr("Must specify product ID."));
         }
 
-        return ownerCurator.lookupOwnersByProduct(ids);
+        return ownerCurator.lookupOwnersByActiveProduct(ids);
+    }
+
+    @PUT
+    @Path("/{product_uuid}/subscriptions")
+    @Produces(MediaType.APPLICATION_JSON)
+    public JobDetail refreshPoolsForProduct(
+        @PathParam("product_uuid") String pid,
+        @QueryParam("lazy_regen") @DefaultValue("true") Boolean lazyRegen) {
+
+        Product product = prodAdapter.getProductById(pid);
+        if (product == null) {
+            throw new NotFoundException(
+                i18n.tr("Product with UUID ''{0}'' could not be found.", pid));
+        }
+
+        return RefreshPoolsForProductJob.forProduct(product, lazyRegen);
     }
 }

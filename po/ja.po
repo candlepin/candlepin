@@ -656,9 +656,7 @@ msgstr "複数のパラメータでバインドできません。"
 # keys, author khasida
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1188
 msgid "Cannot specify a quantity when auto-binding."
-msgstr ""
-"自動バインドの時は数量を指定できません。\n"
-"\t"
+msgstr "自動バインドの時は数量を指定できません。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author khasida
@@ -856,9 +854,7 @@ msgstr ""
 # keys, author khasida
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:135
 msgid "The quantity must be greater than 0"
-msgstr ""
-"数量はゼロ以上の数値にして下さい\n"
-"\t"
+msgstr "数量はゼロ以上の数値にして下さい"
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:145
 msgid ""
