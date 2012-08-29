@@ -141,7 +141,7 @@ public class DefaultEntitlementCertServiceAdapter extends
         throws GeneralSecurityException, IOException {
 
         // oiduitl is busted at the moment, so do this manually
-        Set<X509ExtensionWrapper> extensions = new LinkedHashSet<X509ExtensionWrapper>();
+        Set<X509ExtensionWrapper> extensions;
         Set<X509ByteExtensionWrapper> byteExtensions =
             new LinkedHashSet<X509ByteExtensionWrapper>();
         Set<Product> products = new HashSet<Product>(getProvidedProducts(ent
