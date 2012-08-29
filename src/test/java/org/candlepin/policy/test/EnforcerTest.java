@@ -375,16 +375,15 @@ public class EnforcerTest extends DatabaseTestFixture {
         assertTrue(result.contains(new PoolQuantity(desired, 1)));
     }
 
-    @Test
+    @Test(expected = RuntimeException.class)
     public void testSelectBestPoolNoPools() {
         when(this.productAdapter.getProductById(HIGHEST_QUANTITY_PRODUCT))
             .thenReturn(new Product(HIGHEST_QUANTITY_PRODUCT, HIGHEST_QUANTITY_PRODUCT));
 
         // There are no pools for the product in this case:
-        List<PoolQuantity> result = enforcer.selectBestPools(consumer,
+        enforcer.selectBestPools(consumer,
             new String[] {HIGHEST_QUANTITY_PRODUCT}, new LinkedList<Pool>(), compliance,
             null, new HashSet<String>());
-        assertNull(result);
     }
 
     @Test

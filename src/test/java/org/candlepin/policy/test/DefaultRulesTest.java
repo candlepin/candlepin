@@ -923,7 +923,9 @@ public class DefaultRulesTest {
 
     @Test
     public void testSelectBestPoolsFiltersTooMuchContent() {
-        Product product = new Product(productId, "A test product");
+        Product mktProduct = new Product(productId, "A test product");
+        Product engProduct = new Product(Integer.toString(TestUtil.randomInt()),
+            "An ENG product");
 
         Set<Content> productContent = new HashSet<Content>();
         for (int i = 0; i < X509ExtensionUtil.V1_CONTENT_LIMIT + 1; i++) {
@@ -931,27 +933,40 @@ public class DefaultRulesTest {
                 "fake" + i, "yum", "vendor", "", ""));
         }
 
-        product.setContent(productContent);
-        Pool pool = TestUtil.createPool(owner, product);
+        engProduct.setContent(productContent);
+        Pool pool = TestUtil.createPool(owner, mktProduct);
         pool.setId("DEAD-BEEF");
-        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+        pool.addProvidedProduct(new ProvidedProduct(engProduct.getId(),
+            engProduct.getName()));
+        when(this.prodAdapter.getProductById(productId)).thenReturn(mktProduct);
+        when(this.prodAdapter.getProductById(engProduct.getId())).thenReturn(engProduct);
 
         List<Pool> pools = new LinkedList<Pool>();
         pools.add(pool);
 
-        List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null, new HashSet<String>());
-        assertNull(bestPools);
+        try {
+            enforcer.selectBestPools(consumer,
+                new String[]{ productId }, pools, compliance, null, new HashSet<String>());
+            fail();
+        }
+        catch (RuntimeException e) {
+            // expected
+        }
 
         // Try again with explicitly setting the consumer to cert v1:
         consumer.setFact("system.certificate_version", "1.0");
-        bestPools = enforcer.selectBestPools(consumer,
-            new String[]{ productId }, pools, compliance, null, new HashSet<String>());
-        assertNull(bestPools);
+        try {
+            enforcer.selectBestPools(consumer,
+                new String[]{ productId }, pools, compliance, null, new HashSet<String>());
+            fail();
+        }
+        catch (RuntimeException e) {
+            // expected
+        }
 
         // And again with cert v2:
         consumer.setFact("system.certificate_version", "2.5");
-        bestPools = enforcer.selectBestPools(consumer,
+        List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
             new String[]{ productId }, pools, compliance, null, new HashSet<String>());
         assertEquals(1, bestPools.size());
     }

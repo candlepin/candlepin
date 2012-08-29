@@ -25,6 +25,7 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProvidedProduct;
 import org.candlepin.policy.Enforcer;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationWarning;
@@ -141,11 +142,22 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         jsRules.reinitTo("entitlement_name_space");
         rulesInit();
 
+        int poolsBeforeContentFilter = pools.size();
         pools = filterPoolsForV1Certificates(consumer, pools);
 
-        if (log.isDebugEnabled()) {
-            log.debug("Selecting best entitlement pool for product: " +
+        // TODO: Not the best behavior:
+        if (pools.size() == 0) {
+            throw new RuntimeException("No entitlements for products: " +
                 Arrays.toString(productIds));
+        }
+
+        if (log.isDebugEnabled()) {
+            log.debug("Selecting best entitlement pool for products: " +
+                Arrays.toString(productIds));
+            if (poolsBeforeContentFilter != pools.size()) {
+                log.debug((poolsBeforeContentFilter - pools.size()) + " pools filtered " +
+                    "due to too much content");
+            }
         }
         List<ReadOnlyPool> readOnlyPools = ReadOnlyPool.fromCollection(pools);
 
@@ -232,11 +244,22 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
             (consumer.hasFact("system.certificate_version") &&
             consumer.getFact("system.certificate_version").startsWith("1."))) {
             List<Pool> newPools = new LinkedList<Pool>();
+
             for (Pool p : pools) {
-                // TODO: optimize to use cache
-                Product product = productCache.getProductById(p.getProductId());
-                if (product.getProductContent().size() <=
-                    X509ExtensionUtil.V1_CONTENT_LIMIT) {
+                boolean contentOk = true;
+
+                // Check each provided product, if *any* have too much content, we must
+                // skip the pool:
+                for (ProvidedProduct providedProd : p.getProvidedProducts()) {
+                    Product product = productCache.getProductById(
+                        providedProd.getProductId());
+                    if (product.getProductContent().size() >
+                        X509ExtensionUtil.V1_CONTENT_LIMIT) {
+                        contentOk = false;
+                        break;
+                    }
+                }
+                if (contentOk) {
                     newPools.add(p);
                 }
             }
