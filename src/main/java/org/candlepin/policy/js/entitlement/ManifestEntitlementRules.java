@@ -95,7 +95,7 @@ public class ManifestEntitlementRules extends AbstractEntitlementRules implement
         Map<String, Object> args = new HashMap<String, Object>();
         args.put("consumer", new ReadOnlyConsumer(consumer));
         args.put("product", product);
-        args.put("pool", new ReadOnlyPool(pool, productCache));
+        args.put("pool", new ReadOnlyPool(pool));
         args.put("pre", preHelper);
         args.put("attributes", allAttributes);
         args.put("prodAttrSeparator", PROD_ARCHITECTURE_SEPARATOR);

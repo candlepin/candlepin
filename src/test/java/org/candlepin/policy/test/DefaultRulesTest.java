@@ -1581,45 +1581,6 @@ public class DefaultRulesTest {
     }
 
     @Test
-    public void testFindBestWithOverlappingPoolsReturnsBothWithMultiEntitle() {
-        String productId1 = "ABB";
-        String productId2 = "DEE";
-        String productId3 = "CED";
-
-        Product product1 = new Product(productId1, "A test product1");
-        Product product2 = new Product(productId2, "A test product2");
-        Product product3 = new Product(productId3, "A test product3");
-
-        product2.setAttribute("multi-entitlement", "yes");
-
-        Pool pool1 = TestUtil.createPool(owner, product1);
-        pool1.setId("DEAD-BEEF");
-
-        Pool pool2 = TestUtil.createPool(owner, product3);
-        pool2.setId("DEAD-BEEF2");
-
-        Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
-        providedProducts.add(new ProvidedProduct(product2.getId(), product2
-            .getName()));
-        pool1.setProvidedProducts(providedProducts);
-        pool2.setProvidedProducts(providedProducts);
-
-        when(this.prodAdapter.getProductById(productId1)).thenReturn(product1);
-        when(this.prodAdapter.getProductById(productId2)).thenReturn(product2);
-        when(this.prodAdapter.getProductById(productId3)).thenReturn(product3);
-
-        List<Pool> pools = new LinkedList<Pool>();
-        pools.add(pool1);
-        pools.add(pool2);
-
-        List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer, new String[]{
-            productId1, productId2, productId3 }, pools, compliance, null,
-            new HashSet<String>());
-
-        assertEquals(2, bestPools.size());
-    }
-
-    @Test
     public void testFindBestWithTwoPoolsPrefersVirt() {
         String productId1 = "A";
 
