@@ -21,6 +21,7 @@ import com.google.inject.persist.Transactional;
 import org.apache.log4j.Logger;
 import org.candlepin.auth.interceptor.EnforceAccessControl;
 import org.candlepin.policy.Enforcer;
+import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.entitlement.PreEntHelper;
 import org.hibernate.Criteria;
 import org.hibernate.Filter;
@@ -51,6 +52,9 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     private Enforcer enforcer;
     @Inject
     protected Injector injector;
+
+    @Inject
+    protected ProductCache productCache;
 
     @Inject
     protected PoolCurator(Enforcer enforcer) {
