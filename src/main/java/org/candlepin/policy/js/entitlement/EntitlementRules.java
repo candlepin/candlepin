@@ -43,7 +43,6 @@ import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;

@@ -17,7 +17,6 @@ package org.candlepin.policy.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
@@ -963,8 +962,32 @@ public class DefaultRulesTest {
         catch (RuntimeException e) {
             // expected
         }
+    }
 
-        // And again with cert v2:
+    @Test
+    public void testSelectBestPoolsLotsOfContentV2Client() {
+        Product mktProduct = new Product(productId, "A test product");
+        Product engProduct = new Product(Integer.toString(TestUtil.randomInt()),
+            "An ENG product");
+
+        Set<Content> productContent = new HashSet<Content>();
+        for (int i = 0; i < X509ExtensionUtil.V1_CONTENT_LIMIT + 1; i++) {
+            productContent.add(new Content("fake" + i, "fake" + i,
+                "fake" + i, "yum", "vendor", "", ""));
+        }
+
+        engProduct.setContent(productContent);
+        Pool pool = TestUtil.createPool(owner, mktProduct);
+        pool.setId("DEAD-BEEF");
+        pool.addProvidedProduct(new ProvidedProduct(engProduct.getId(),
+            engProduct.getName()));
+        when(this.prodAdapter.getProductById(productId)).thenReturn(mktProduct);
+        when(this.prodAdapter.getProductById(engProduct.getId())).thenReturn(engProduct);
+
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool);
+
+        // Shouldn't throw an exception as we do for certv1 clients.
         consumer.setFact("system.certificate_version", "2.5");
         List<PoolQuantity> bestPools = enforcer.selectBestPools(consumer,
             new String[]{ productId }, pools, compliance, null, new HashSet<String>());
