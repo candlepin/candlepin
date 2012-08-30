@@ -16,7 +16,6 @@ package org.candlepin.policy.js.export;
 
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
-import org.candlepin.model.Product;
 import org.candlepin.policy.js.JsRules;
 import org.candlepin.policy.js.ReadOnlyConsumer;
 import org.candlepin.policy.js.RuleExecutionException;
@@ -49,8 +48,7 @@ public class JsExportRules {
     public boolean canExport(Entitlement entitlement) {
         Pool pool = entitlement.getPool();
         ReadOnlyConsumer consumer = new ReadOnlyConsumer(entitlement.getConsumer());
-        Product product = this.productAdapter.getProductById(pool.getProductId());
-        Map<String, String> allAttributes = jsRules.getFlattenedAttributes(product, pool);
+        Map<String, String> allAttributes = jsRules.getFlattenedAttributes(pool);
 
         Map<String, Object> args = new HashMap<String, Object>();
         args.put("attributes", allAttributes);

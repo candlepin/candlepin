@@ -108,4 +108,5 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             "prodId", prod.getId());
         return poolQuery.list().size() > 0;
     }
+
 }

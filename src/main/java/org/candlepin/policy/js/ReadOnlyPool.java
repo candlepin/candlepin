@@ -35,16 +35,14 @@ import java.util.Set;
 public class ReadOnlyPool {
 
     private Pool entPool;
-    private ReadOnlyProductCache productCache;
     private Map<String, String> attributes = null;
     private Map<String, String> productAttributes = null;
 
     /**
      * @param entPool the read-write version of the EntitlementPool to copy.
      */
-    public ReadOnlyPool(Pool entPool, ReadOnlyProductCache productCache) {
+    public ReadOnlyPool(Pool entPool) {
         this.entPool = entPool;
-        this.productCache = productCache;
         initializeReadOnlyAttributes();
     }
 
@@ -109,11 +107,10 @@ public class ReadOnlyPool {
         return entPool.getQuantity();
     }
 
-    public static List<ReadOnlyPool> fromCollection(Collection<Pool> pools,
-        ReadOnlyProductCache productCache) {
+    public static List<ReadOnlyPool> fromCollection(Collection<Pool> pools) {
         List<ReadOnlyPool> toReturn = new ArrayList<ReadOnlyPool>(pools.size());
         for (Pool pool : pools) {
-            toReturn.add(new ReadOnlyPool(pool, productCache));
+            toReturn.add(new ReadOnlyPool(pool));
         }
         return toReturn;
     }
@@ -150,17 +147,22 @@ public class ReadOnlyPool {
     public ReadOnlyProduct[] getProducts() {
         Set<ReadOnlyProduct> products = new HashSet<ReadOnlyProduct>();
 
-        products.add(productCache.getProductById(entPool.getProductId()));
+        products.add(new ReadOnlyProduct(entPool.getProductId(),
+            entPool.getProductName(), productAttributes));
 
-        for (ProvidedProduct providedProduct : entPool.getProvidedProducts()) {
-            products.add(productCache.getProductById(providedProduct
-                .getProductId()));
+        for (ProvidedProduct provided : entPool.getProvidedProducts()) {
+            // We don't use the attributes of the provided products,
+            // so set them to empty.
+            products.add(new ReadOnlyProduct(provided.getProductId(),
+                                             provided.getProductName(),
+                                             new HashMap<String, String>()));
         }
 
         return products.toArray(new ReadOnlyProduct[products.size()]);
     }
 
     public ReadOnlyProduct getTopLevelProduct() {
-        return productCache.getProductById(entPool.getProductId());
+        return new ReadOnlyProduct(entPool.getProductId(), entPool.getProductName(),
+            productAttributes);
     }
 }

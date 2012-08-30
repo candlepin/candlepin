@@ -36,8 +36,7 @@ public class TransactionalPinsetterJobTest {
         UnitOfWork manager = mock(UnitOfWork.class);
         Job wrapped = mock(Job.class);
         JobExecutionContext ctx = mock(JobExecutionContext.class);
-        TransactionalPinsetterJob tpj = new TransactionalPinsetterJob(
-            wrapped, manager);
+        TransactionalPinsetterJob tpj = new TransactionalPinsetterJob(wrapped, manager);
 
         tpj.execute(ctx);
 
