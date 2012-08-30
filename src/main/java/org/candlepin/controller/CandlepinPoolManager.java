@@ -395,9 +395,11 @@ public class CandlepinPoolManager implements PoolManager {
             productIds = tmpSet.toArray(new String [] {});
         }
 
-        log.info("Attempting for products on date: " + entitleDate);
-        for (String productId : productIds) {
-            log.info("  " + productId);
+        if (log.isDebugEnabled()) {
+            log.debug("Attempting for products on date: " + entitleDate);
+            for (String productId : productIds) {
+                log.debug("  " + productId);
+            }
         }
 
         for (Pool pool : allOwnerPools) {
@@ -432,8 +434,6 @@ public class CandlepinPoolManager implements PoolManager {
             if (failedResult != null) {
                 throw new EntitlementRefusedException(failedResult);
             }
-            throw new RuntimeException("No entitlements for products: " +
-                Arrays.toString(productIds));
         }
 
         List<PoolQuantity> enforced = enforcer.selectBestPools(consumer,

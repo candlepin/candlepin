@@ -609,9 +609,11 @@ var Entitlement = {
         var pools_by_class = [];
 
         // "pools" is a list of all the owner's pools which are compatible for the system:
-        log.debug("Selecting best pools from: " + pools.length);
-        for each (pool in pools) {
-            log.debug("   " + pool.getId());
+        if (log.isDebugEnabled()) {
+            log.debug("Selecting best pools from: " + pools.length);
+            for each (pool in pools) {
+                log.debug("   " + pool.getId());
+            }
         }
 
         var consumerSLA = consumer.getServiceLevel();
