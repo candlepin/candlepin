@@ -162,10 +162,9 @@ public class X509V2ExtensionUtil extends X509Util{
         String management = sub.getProduct().getAttributeValue("management_enabled");
         if (management != null && !management.trim().equals("")) {
             // only included if not the default value of false
-            Boolean m = new Boolean(management.equalsIgnoreCase("true") ||
-                management.equalsIgnoreCase("1"));
-            if (m) {
-                toReturn.setManagement(m);
+            if (management.equalsIgnoreCase("true") ||
+                    management.equalsIgnoreCase("1")) {
+                toReturn.setManagement(Boolean.TRUE);
             }
         }
 

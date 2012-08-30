@@ -26,6 +26,7 @@ import org.candlepin.policy.criteria.RulesCriteria;
 import org.hibernate.Criteria;
 import org.hibernate.Filter;
 import org.hibernate.LockMode;
+import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
@@ -437,16 +438,16 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @return Set of levels based on exempt flag.
      */
     public Set<String> retrieveServiceLevelsForOwner(Owner owner, boolean exempt) {
-        List<ProductPoolAttribute> items =  currentSession()
-            .createCriteria(ProductPoolAttribute.class)
-            .add(Restrictions.or(
-                Restrictions.eq("name", "support_level"),
-                Restrictions.eq("name", "support_level_exempt")))
-            .addOrder(Order.desc("name"))
-            .createCriteria("pool")
-            .add(Restrictions.eq("owner", owner))
-            .list();
-        Set<Pool> exemptPoolSla = new HashSet<Pool>();
+        String stmt = "select distinct name, value, productId " +
+                      "from ProductPoolAttribute a where " +
+                      "(name='support_level' or name='support_level_exempt') " +
+                      "and productId in (select distinct p.productId from Pool p where " +
+                      "owner_id=:owner_id) order by name DESC";
+
+        Query q = currentSession().createQuery(stmt);
+        q.setParameter("owner_id", owner.getId());
+        List<Object[]> results = q.list();
+
         // Use case insensitive comparison here, since we treat
         // Premium the same as PREMIUM or premium, to make it easier for users to specify
         // a level on the cli. However, use the original case, since Premium is more
@@ -454,34 +455,35 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         Set<String> slaSet = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
         Set<String> exemptSlaSet = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
 
-        // make collection of sla's that are exempt
-        // first part of list is exempt attr's
-        for (ProductPoolAttribute item : items) {
-            if ("support_level_exempt".equals(item.getName())) {
-                if ("true".equalsIgnoreCase(item.getValue())) {
-                    exemptPoolSla.add(item.getPool());
-                }
+        Set<String> exemptProductIds = new HashSet<String>();
+
+        for (Object[] result : results) {
+            String name = (String) result[0];
+            String value = (String) result[1];
+            String productId = (String) result[2];
+
+            if ("support_level_exempt".equals(name) && "true".equalsIgnoreCase(value)) {
+                exemptProductIds.add(productId);
             }
-            // second part of list is levels, add to list if pool
-            // has exempt attr
-            else if (item.getValue() != null &&
-                    !item.getValue().trim().equals("")) {
-                if (exemptPoolSla.contains(item.getPool())) {
-                    exemptSlaSet.add(item.getValue());
+            else if ("support_level".equalsIgnoreCase(name) &&
+                (value != null && !value.trim().equals(""))) {
+                if (exemptProductIds.contains(productId)) {
+                    exemptSlaSet.add(value);
                 }
             }
         }
 
-        // since we have to take casing into account, iterate levels
-        // and exempt matches.
-        for (ProductPoolAttribute item : items) {
-            if (!"support_level_exempt".equals(item.getName())) {
-                String value = item.getValue();
+        for (Object[] result : results) {
+            String name = (String) result[0];
+            String value = (String) result[1];
+
+            if (!"support_level_exempt".equals(name)) {
                 if (!exemptSlaSet.contains(value)) {
                     slaSet.add(value);
                 }
             }
         }
+
         if (exempt) {
             return exemptSlaSet;
         }
