@@ -128,7 +128,7 @@ public class OwnerInfo {
         typeCounts.guest += virtual;
     }
 
-    void addDefaultEntitlementsConsumedByFamily(int physical, int virtual) {
+    public void addDefaultEntitlementsConsumedByFamily(int physical, int virtual) {
         for (String key : entitlementsConsumedByFamily.keySet()) {
             ConsumptionTypeCounts count = entitlementsConsumedByFamily.get(key);
             physical -= count.physical;
