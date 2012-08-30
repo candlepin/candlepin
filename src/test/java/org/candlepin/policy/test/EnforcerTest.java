@@ -16,10 +16,20 @@ package org.candlepin.policy.test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.candlepin.config.Config;
 import org.candlepin.model.Consumer;
@@ -34,6 +44,7 @@ import org.candlepin.policy.Enforcer;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.JsRules;
 import org.candlepin.policy.js.JsRulesProvider;
+import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.RuleExecutionException;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
@@ -47,18 +58,6 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 public class EnforcerTest extends DatabaseTestFixture {
 
     @Mock private ProductServiceAdapter productAdapter;
@@ -69,6 +68,8 @@ public class EnforcerTest extends DatabaseTestFixture {
     private Enforcer enforcer;
     private Owner owner;
     private Consumer consumer;
+    private ProductCache productCache;
+
     private static final String LONGEST_EXPIRY_PRODUCT = "LONGEST001";
     private static final String HIGHEST_QUANTITY_PRODUCT = "QUANTITY001";
     private static final String BAD_RULE_PRODUCT = "BADRULE001";
@@ -77,6 +78,8 @@ public class EnforcerTest extends DatabaseTestFixture {
     @Before
     public void createEnforcer() throws Exception {
         MockitoAnnotations.initMocks(this);
+
+        productCache = new ProductCache(productAdapter);
 
         owner = createOwner();
         ownerCurator.create(owner);
@@ -103,7 +106,7 @@ public class EnforcerTest extends DatabaseTestFixture {
         JsRules jsRules = new JsRulesProvider(rulesCurator).get();
 
         enforcer = new EntitlementRules(new DateSourceForTesting(2010, 1, 1),
-            jsRules, productAdapter, i18n, config, consumerCurator);
+            jsRules, productCache, i18n, config, consumerCurator);
     }
 
     @Test
@@ -370,33 +373,15 @@ public class EnforcerTest extends DatabaseTestFixture {
         assertTrue(result.contains(new PoolQuantity(desired, 1)));
     }
 
-    @Test
+    @Test(expected = RuntimeException.class)
     public void testSelectBestPoolNoPools() {
         when(this.productAdapter.getProductById(HIGHEST_QUANTITY_PRODUCT))
             .thenReturn(new Product(HIGHEST_QUANTITY_PRODUCT, HIGHEST_QUANTITY_PRODUCT));
 
         // There are no pools for the product in this case:
-        List<PoolQuantity> result = enforcer.selectBestPools(consumer,
+        enforcer.selectBestPools(consumer,
             new String[] {HIGHEST_QUANTITY_PRODUCT}, new LinkedList<Pool>(), compliance,
             null, new HashSet<String>());
-        assertNull(result);
-    }
-
-    @Test(expected = RuleExecutionException.class)
-    public void testSelectBestPoolBadRule() {
-        Product product = new Product("a-product", "A product for testing");
-        product.setAttribute(BAD_RULE_PRODUCT, "");
-        productCurator.create(product);
-
-
-        Pool pool1 = createPoolAndSub(owner, product, 5L, TestUtil
-            .createDate(2000, 02, 26), TestUtil.createDate(2050, 02, 26));
-
-        when(this.productAdapter.getProductById("a-product"))
-            .thenReturn(product);
-
-        enforcer.selectBestPools(consumer, new String[] {"a-product"},
-            Collections.singletonList(pool1), compliance, null, new HashSet<String>());
     }
 
     @Test

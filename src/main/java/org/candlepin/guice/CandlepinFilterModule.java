@@ -17,6 +17,7 @@ package org.candlepin.guice;
 import com.google.inject.servlet.ServletModule;
 
 import org.candlepin.servlet.filter.CandlepinPersistFilter;
+import org.candlepin.servlet.filter.CandlepinScopeFilter;
 import org.candlepin.servlet.filter.ContentTypeHackFilter;
 import org.candlepin.servlet.filter.logging.LoggingFilter;
 import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher;
@@ -28,6 +29,7 @@ public class CandlepinFilterModule extends ServletModule {
 
     @Override
     protected void configureServlets() {
+        filter("/*").through(CandlepinScopeFilter.class);
         filter("/*").through(CandlepinPersistFilter.class);
         filter("/*").through(LoggingFilter.class);
         filter("/*").through(ContentTypeHackFilter.class);

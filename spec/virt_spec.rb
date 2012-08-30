@@ -60,8 +60,9 @@ describe 'Standalone Virt-Limit Subscriptions' do
 
     # Should not be able to use the pool as this guest is not on the correct
     # host:
-    entitlements = @guest2_client.consume_pool(@guest_pool['id'])
-    entitlements.should be_nil
+    lambda do
+        @guest2_client.consume_pool(@guest_pool['id'])
+    end.should raise_exception(RestClient::Forbidden)
   end
 
   it 'should list host restricted pool only for its guests' do

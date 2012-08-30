@@ -52,6 +52,7 @@ import org.candlepin.policy.Enforcer;
 import org.candlepin.policy.PoolRules;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.criteria.RulesCriteria;
+import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.entitlement.PreEntHelper;
@@ -118,6 +119,7 @@ public class PoolManagerTest {
     private Pool pool;
     private Product product;
     private ComplianceStatus dummyComplianceStatus;
+    private ProductCache productCache;
 
     @Before
     public void init() throws Exception {
@@ -125,9 +127,10 @@ public class PoolManagerTest {
         o = new Owner("key", "displayname");
         pool = TestUtil.createPool(o, product);
 
+        this.productCache = new ProductCache(mockProductAdapter);
         this.principal = TestUtil.createOwnerPrincipal();
         this.manager = spy(new CandlepinPoolManager(mockPoolCurator, mockSubAdapter,
-            mockProductAdapter, entCertAdapterMock, mockEventSink,
+	    productCache, entCertAdapterMock, mockEventSink,
             eventFactory, mockConfig, enforcerMock, poolRulesMock, poolCriteriaMock,
             entitlementCurator, consumerCuratorMock, certCuratorMock, complianceRules));
 
@@ -321,8 +324,8 @@ public class PoolManagerTest {
             any(Owner.class), any(String.class), any(Date.class), anyBoolean(),
             anyBoolean())).thenReturn(pools);
         when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(pool1);
-        when(enforcerMock.preEntitlement(any(Consumer.class), any(Pool.class),
-            anyInt())).thenReturn(badHelper).thenReturn(goodHelper);
+        when(enforcerMock.preEntitlement(any(Consumer.class), any(Pool.class), anyInt()))
+            .thenReturn(badHelper).thenReturn(goodHelper);
 
         when(badHelper.getResult()).thenReturn(badResult);
         when(goodHelper.getResult()).thenReturn(goodResult);
@@ -363,8 +366,8 @@ public class PoolManagerTest {
             any(Owner.class), any(String.class), eq(now), anyBoolean(),
             anyBoolean())).thenReturn(pools);
         when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(pool1);
-        when(enforcerMock.preEntitlement(any(Consumer.class), any(Pool.class),
-            anyInt())).thenReturn(helper);
+        when(enforcerMock.preEntitlement(any(Consumer.class), any(Pool.class), anyInt()))
+            .thenReturn(helper);
 
         when(helper.getResult()).thenReturn(result);
         when(result.isSuccessful()).thenReturn(true);
@@ -512,8 +515,8 @@ public class PoolManagerTest {
             anyBoolean(), anyBoolean())).thenReturn(pools);
 
         when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(pool1);
-        when(enforcerMock.preEntitlement(any(Consumer.class), any(Pool.class),
-            anyInt())).thenReturn(helper);
+        when(enforcerMock.preEntitlement(any(Consumer.class), any(Pool.class), anyInt()))
+            .thenReturn(helper);
 
         when(helper.getResult()).thenReturn(result);
         when(result.isSuccessful()).thenReturn(true);

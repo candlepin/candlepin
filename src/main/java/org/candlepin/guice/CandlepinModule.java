@@ -14,14 +14,6 @@
  */
 package org.candlepin.guice;
 
-import com.google.common.base.Function;
-import com.google.inject.AbstractModule;
-import com.google.inject.Singleton;
-import com.google.inject.matcher.Matcher;
-import com.google.inject.matcher.Matchers;
-import com.google.inject.name.Names;
-import com.google.inject.persist.jpa.JpaPersistModule;
-
 import org.candlepin.audit.EventSink;
 import org.candlepin.audit.EventSinkImpl;
 import org.candlepin.auth.Principal;
@@ -111,6 +103,14 @@ import org.quartz.JobListener;
 import org.quartz.spi.JobFactory;
 import org.xnap.commons.i18n.I18n;
 
+import com.google.common.base.Function;
+import com.google.inject.AbstractModule;
+import com.google.inject.Singleton;
+import com.google.inject.matcher.Matcher;
+import com.google.inject.matcher.Matchers;
+import com.google.inject.name.Names;
+import com.google.inject.persist.jpa.JpaPersistModule;
+
 /**
  * CandlepinProductionConfiguration
  */
@@ -118,6 +118,10 @@ public class CandlepinModule extends AbstractModule {
 
     @Override
     public void configure() {
+        // Bindings for our custom scope
+        CandlepinSingletonScope singletonScope = new CandlepinSingletonScope();
+        bindScope(CandlepinSingletonScoped.class, singletonScope);
+        bind(CandlepinSingletonScope.class).toInstance(singletonScope);
 
         Config config = new Config();
         bind(Config.class).asEagerSingleton();

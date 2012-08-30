@@ -23,6 +23,8 @@ import org.candlepin.config.LoggingConfig;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.guice.CandlepinModule;
+import org.candlepin.guice.CandlepinSingletonScope;
+import org.candlepin.guice.CandlepinSingletonScoped;
 import org.candlepin.guice.I18nProvider;
 import org.candlepin.guice.JPAInitializer;
 import org.candlepin.guice.PrincipalProvider;
@@ -86,6 +88,9 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
 
     @Override
     public void configure() {
+        CandlepinSingletonScope singletonScope = new CandlepinSingletonScope();
+        bindScope(CandlepinSingletonScoped.class, singletonScope);
+        bind(CandlepinSingletonScope.class).toInstance(singletonScope);
 
         install(new JpaPersistModule("default"));
         bind(JPAInitializer.class).asEagerSingleton();

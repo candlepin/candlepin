@@ -33,7 +33,7 @@ import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductPoolAttribute;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Subscription;
-import org.candlepin.service.ProductServiceAdapter;
+import org.candlepin.policy.js.ProductCache;
 
 /**
  * Post Entitlement Helper, this object is provided as a global variable to the
@@ -43,13 +43,13 @@ import org.candlepin.service.ProductServiceAdapter;
 public class PoolHelper {
 
     private PoolManager poolManager;
-    private ProductServiceAdapter prodAdapter;
+    private ProductCache productCache;
     private Entitlement sourceEntitlement;
 
-    public PoolHelper(PoolManager poolManager, ProductServiceAdapter prodAdapter,
+    public PoolHelper(PoolManager poolManager, ProductCache productCache,
         Entitlement sourceEntitlement) {
         this.poolManager = poolManager;
-        this.prodAdapter = prodAdapter;
+        this.productCache = productCache;
         this.sourceEntitlement = sourceEntitlement;
     }
 
@@ -201,7 +201,7 @@ public class PoolHelper {
         Set<String> processed = new HashSet<String>();
 
         boolean hasChanged = false;
-        Product product = prodAdapter.getProductById(productId);
+        Product product = productCache.getProductById(productId);
         if (product != null) {
             for (Attribute attr : product.getAttributes()) {
 
@@ -264,7 +264,7 @@ public class PoolHelper {
             }
         }
 
-        Product derivedProduct = prodAdapter.getProductById(productId);
+        Product derivedProduct = productCache.getProductById(productId);
         Pool pool = new Pool(owner, productId,
             derivedProduct.getName(),
             new HashSet<ProvidedProduct>(), q,
