@@ -24,6 +24,8 @@ import com.google.inject.Scope;
 
 /**
  * CandlepinSingletonScope
+ *
+ * A per-request / per-unit of work guice singleton scope.
  */
 public class CandlepinSingletonScope implements Scope {
 
