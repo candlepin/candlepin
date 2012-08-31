@@ -30,6 +30,11 @@ import com.google.inject.Inject;
 
 /**
  * RulesCriteria
+ *
+ * A class used to generate database criteria for filtering
+ * out rules that are not applicable for a consumer before
+ * running them through a rules check.
+ *
  */
 public class RulesCriteria  {
     protected Logger rulesLogger = null;
@@ -52,6 +57,13 @@ public class RulesCriteria  {
     }
 
 
+    /**
+     * Create a List of jpa criterion that can filter out pools
+     *         that are not applicable to consumer
+     *
+     * @param consumer The consumer we are filtering pools for
+     * @return List of Criterion
+     */
     public List<Criterion> availableEntitlementCriteria(Consumer consumer) {
         Map<String, Object> args = new HashMap<String, Object>();
         args.put("standalone", config.standalone());
