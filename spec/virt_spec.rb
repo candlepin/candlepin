@@ -61,7 +61,7 @@ describe 'Standalone Virt-Limit Subscriptions' do
     # Should not be able to use the pool as this guest is not on the correct
     # host:
     lambda do
-      @guest2_client.consume_pool(@guest_pool['id'])
+        @guest2_client.consume_pool(@guest_pool['id'])
     end.should raise_exception(RestClient::Forbidden)
   end
 

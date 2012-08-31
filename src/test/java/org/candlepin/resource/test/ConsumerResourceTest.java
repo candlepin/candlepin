@@ -153,7 +153,7 @@ public class ConsumerResourceTest {
         CandlepinPoolManager poolManager = new CandlepinPoolManager(null,
             mockedSubscriptionServiceAdapter, null,
             mockedEntitlementCertServiceAdapter, null, null, new Config(), null,
-            null, mockedEntitlementCurator, mockedConsumerCurator, null, null);
+            null, null, mockedEntitlementCurator, mockedConsumerCurator, null, null);
 
         ConsumerResource consumerResource = new ConsumerResource(
             mockedConsumerCurator, null, null, null, mockedEntitlementCurator, null,
