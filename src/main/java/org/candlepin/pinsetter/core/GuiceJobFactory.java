@@ -14,6 +14,7 @@
  */
 package org.candlepin.pinsetter.core;
 
+import org.candlepin.guice.CandlepinSingletonScope;
 import org.quartz.Job;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
@@ -30,11 +31,14 @@ import com.google.inject.persist.UnitOfWork;
  * @version $Rev$
  */
 public class GuiceJobFactory implements JobFactory {
+
     private Injector injector;
+    private CandlepinSingletonScope candlepinSingletonScope;
 
     @Inject
-    public GuiceJobFactory(Injector injector) {
+    public GuiceJobFactory(Injector injector, CandlepinSingletonScope singletonScope) {
         this.injector = injector;
+        this.candlepinSingletonScope = singletonScope;
     }
 
     /**
@@ -44,7 +48,14 @@ public class GuiceJobFactory implements JobFactory {
     public Job newJob(TriggerFiredBundle bundle, Scheduler scheduler)
         throws SchedulerException {
         Class<Job> jobClass = (Class<Job>) bundle.getJobDetail().getJobClass();
-        return new TransactionalPinsetterJob(injector.getInstance(jobClass),
-            injector.getInstance(UnitOfWork.class));
+
+        candlepinSingletonScope.enter();
+        try {
+            return new TransactionalPinsetterJob(injector.getInstance(jobClass),
+                injector.getInstance(UnitOfWork.class));
+        }
+        finally {
+            candlepinSingletonScope.exit();
+        }
     }
 }

@@ -44,6 +44,7 @@ import org.candlepin.policy.Enforcer;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.PoolRules;
 import org.candlepin.policy.ValidationResult;
+import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.entitlement.PreEntHelper;
@@ -51,7 +52,6 @@ import org.candlepin.policy.js.entitlement.PreUnbindHelper;
 import org.candlepin.policy.js.pool.PoolHelper;
 import org.candlepin.policy.js.pool.PoolUpdate;
 import org.candlepin.service.EntitlementCertServiceAdapter;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.Util;
 
@@ -75,7 +75,6 @@ public class CandlepinPoolManager implements PoolManager {
     private static Logger log = Logger.getLogger(CandlepinPoolManager.class);
 
     private SubscriptionServiceAdapter subAdapter;
-    private ProductServiceAdapter productAdapter;
     private EventSink sink;
     private EventFactory eventFactory;
     private Config config;
@@ -86,6 +85,7 @@ public class CandlepinPoolManager implements PoolManager {
     private EntitlementCertServiceAdapter entCertAdapter;
     private EntitlementCertificateCurator entitlementCertificateCurator;
     private ComplianceRules complianceRules;
+    private ProductCache productCache;
 
     /**
      * @param poolCurator
@@ -97,7 +97,7 @@ public class CandlepinPoolManager implements PoolManager {
     @Inject
     public CandlepinPoolManager(PoolCurator poolCurator,
         SubscriptionServiceAdapter subAdapter,
-        ProductServiceAdapter productAdapter,
+        ProductCache productCache,
         EntitlementCertServiceAdapter entCertAdapter, EventSink sink,
         EventFactory eventFactory, Config config, Enforcer enforcer,
         PoolRules poolRules, EntitlementCurator curator1,
@@ -106,7 +106,6 @@ public class CandlepinPoolManager implements PoolManager {
 
         this.poolCurator = poolCurator;
         this.subAdapter = subAdapter;
-        this.productAdapter = productAdapter;
         this.sink = sink;
         this.eventFactory = eventFactory;
         this.config = config;
@@ -117,6 +116,7 @@ public class CandlepinPoolManager implements PoolManager {
         this.entCertAdapter = entCertAdapter;
         this.entitlementCertificateCurator = ecC;
         this.complianceRules = complianceRules;
+        this.productCache = productCache;
     }
 
     public Set<Entitlement> refreshPoolsWithoutRegeneration(Owner owner) {
@@ -395,9 +395,11 @@ public class CandlepinPoolManager implements PoolManager {
             productIds = tmpSet.toArray(new String [] {});
         }
 
-        log.info("Attempting for products on date: " + entitleDate);
-        for (String productId : productIds) {
-            log.info("  " + productId);
+        if (log.isDebugEnabled()) {
+            log.debug("Attempting for products on date: " + entitleDate);
+            for (String productId : productIds) {
+                log.debug("  " + productId);
+            }
         }
 
         for (Pool pool : allOwnerPools) {
@@ -409,8 +411,7 @@ public class CandlepinPoolManager implements PoolManager {
                 }
             }
             if (providesProduct) {
-                PreEntHelper preHelper = enforcer.preEntitlement(consumer,
-                    pool, 1);
+                PreEntHelper preHelper = enforcer.preEntitlement(consumer, pool, 1);
                 ValidationResult result = preHelper.getResult();
 
                 if (result.hasErrors() || result.hasWarnings()) {
@@ -433,13 +434,12 @@ public class CandlepinPoolManager implements PoolManager {
             if (failedResult != null) {
                 throw new EntitlementRefusedException(failedResult);
             }
-            throw new RuntimeException("No entitlements for products: " +
-                Arrays.toString(productIds));
         }
 
-        return enforcer.selectBestPools(consumer,
+        List<PoolQuantity> enforced = enforcer.selectBestPools(consumer,
             productIds, filteredPools, compliance, serviceLevelOverride,
             poolCurator.retrieveServiceLevelsForOwner(owner, true));
+        return enforced;
     }
 
     public Entitlement entitleByProduct(Consumer consumer, String productId)
@@ -481,8 +481,7 @@ public class CandlepinPoolManager implements PoolManager {
         pool = poolCurator.lockAndLoad(pool);
 
         /* XXX: running pre rules twice on the entitle by product case */
-        PreEntHelper preHelper = enforcer.preEntitlement(consumer, pool,
-            quantity);
+        PreEntHelper preHelper = enforcer.preEntitlement(consumer, pool, quantity);
         ValidationResult result = preHelper.getResult();
 
         if (!result.isSuccessful()) {
@@ -503,7 +502,7 @@ public class CandlepinPoolManager implements PoolManager {
             pool.setExported(pool.getExported() + quantity);
         }
 
-        PoolHelper poolHelper = new PoolHelper(this, productAdapter, e);
+        PoolHelper poolHelper = new PoolHelper(this, productCache, e);
         enforcer.postEntitlement(consumer, poolHelper, e);
 
         // Check consumer's new compliance status and save:
@@ -563,7 +562,7 @@ public class CandlepinPoolManager implements PoolManager {
         else {
             // This is possible in a sub-pool, for example - the pool was not
             // created directly from a subscription
-            product = productAdapter.getProductById(e.getProductId());
+            product = productCache.getProductById(e.getProductId());
 
             // in the case of a sub-pool, we want to find the originating
             // subscription for cert generation
@@ -630,7 +629,7 @@ public class CandlepinPoolManager implements PoolManager {
         List<Entitlement> allEnvEnts = entitlementCurator.listByEnvironment(e);
         Set<Entitlement> entsToRegen = new HashSet<Entitlement>();
         for (Entitlement ent : allEnvEnts) {
-            Product prod = productAdapter.getProductById(ent.getProductId());
+            Product prod = productCache.getProductById(ent.getProductId());
             for (String contentId : affectedContent) {
                 if (prod.hasContent(contentId)) {
                     entsToRegen.add(ent);
@@ -639,7 +638,7 @@ public class CandlepinPoolManager implements PoolManager {
 
             // Now the provided products:
             for (ProvidedProduct provided : ent.getPool().getProvidedProducts()) {
-                Product providedProd = productAdapter.getProductById(
+                Product providedProd = productCache.getProductById(
                     provided.getProductId());
                 for (String contentId : affectedContent) {
                     if (providedProd.hasContent(contentId)) {
@@ -765,7 +764,7 @@ public class CandlepinPoolManager implements PoolManager {
             pool.setExported(pool.getExported() - entitlement.getQuantity());
         }
         // post unbind actions
-        PoolHelper poolHelper = new PoolHelper(this, productAdapter, entitlement);
+        PoolHelper poolHelper = new PoolHelper(this, productCache, entitlement);
         enforcer.postUnbind(consumer, poolHelper, entitlement);
 
         // Find all of the entitlements that modified the original entitlement,

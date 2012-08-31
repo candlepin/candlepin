@@ -30,7 +30,8 @@ git pull &> /dev/null
 echo "master - $(git log --pretty=format:%h -n1)"
 
 gen_api api1.json
-git checkout -f "@{$since}" &> /dev/null
+git checkout -f `git rev-list -n 1 --before="$since" master`
+#git checkout -f "@{$since}" &> /dev/null
 
 echo "$since - $(git log --pretty=format:%h -n1)"
 echo

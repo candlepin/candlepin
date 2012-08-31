@@ -33,6 +33,8 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CollectionOfElements;
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
 
 /**
  * Represents a Product that can be consumed and entitled. Products define the
@@ -74,6 +76,7 @@ public class Product extends AbstractHibernateObject implements Linkable {
 
     @CollectionOfElements
     @JoinTable(name = "cp_product_content", joinColumns = @JoinColumn(name = "product_id"))
+    @LazyCollection(LazyCollectionOption.EXTRA) // allows .size() without loading all data
     private Set<ProductContent> productContent = new HashSet<ProductContent>();
 
     @ManyToMany(mappedBy = "providedProducts")
