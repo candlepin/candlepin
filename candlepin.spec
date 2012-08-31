@@ -14,7 +14,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.7.7
+Version: 0.7.8
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -283,6 +283,21 @@ fi
 
 
 %changelog
+* Fri Aug 31 2012 jesus m. rodriguez <jesusr@redhat.com> 0.7.8-1
+- Pull curator classes out into their own package. (jbowes@redhat.com)
+- Fix certv1 content filtering on autobinds. (dgoodwin@redhat.com)
+- Performance fix for select best pools. (dgoodwin@redhat.com)
+- Removed unnecessary comments (mstead@redhat.com)
+- Adding comments to classes. (mstead@redhat.com)
+- Removed unnecessary product lookup for RO Pool provided products.  (mstead@redhat.com)
+- Added distinct to service level for owner query (mstead@redhat.com)
+- Improved query for retreiving service levels for owner. (mstead@redhat.com)
+- remove unnecessary assignment to null (jesusr@redhat.com)
+- Performance improvements when selecting best pools (mstead@redhat.com)
+- various findbugs cleanup (jesusr@redhat.com)
+- Don't use the real /etc/candlepin/candlepin.conf during testing (jbowes@redhat.com)
+- Add null check for Entitlement.getProductId (alikins@redhat.com)
+
 * Tue Aug 28 2012 Alex Wood <awood@redhat.com> 0.7.7-1
 - 851512: add restorecon -R to %%post (alikins@redhat.com)
 - 851512: add certs_rw and candlepin-ca.certs file context (alikins@redhat.com)
