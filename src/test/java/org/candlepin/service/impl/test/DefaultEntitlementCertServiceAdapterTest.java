@@ -32,6 +32,7 @@ import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -85,7 +86,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     private static final String CONTENT_ID = "1234";
     private static final String CONTENT_TYPE = "yum";
     private static final String CONTENT_GPG_URL = "gpgUrl";
-    private static final String CONTENT_URL = "contentUrl";
+    private static final String CONTENT_URL = "/content/dist/rhel/$releasever/$basearch/os";
     private static final String CONTENT_VENDOR = "vendor";
     private static final String CONTENT_NAME = "name";
     private static final Long CONTENT_METADATA_EXPIRE = 3200L;
@@ -109,6 +110,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     private Pool pool;
     private Content content;
     private Owner owner;
+    private Set<Content> superContent;
 
     private String[] testUrls = {"/content/dist/rhel/$releasever/$basearch/os",
         "/content/dist/rhel/$releasever/$basearch/debug",
@@ -134,6 +136,12 @@ public class DefaultEntitlementCertServiceAdapterTest {
             CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL, CONTENT_GPG_URL);
         content.setMetadataExpire(CONTENT_METADATA_EXPIRE);
         content.setRequiredTags(REQUIRED_TAGS);
+
+        superContent = new HashSet<Content>();
+        for (String url : testUrls) {
+            superContent.add(createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
+                CONTENT_TYPE, CONTENT_VENDOR, url, CONTENT_GPG_URL));
+        }
 
         subscription = new Subscription(null, product, new HashSet<Product>(),
             1L, new Date(), new Date(), new Date());
@@ -533,9 +541,51 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
 
     @Test
+    public void testContentExtension() throws IOException {
+        Set<Product> products = new HashSet<Product>();
+        products.add(product);
+        product.setContent(superContent);
+        when(entitlement.getConsumer().getFact("system.certificate_version"))
+            .thenReturn("2.1");
+        when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
+
+        Set<X509ExtensionWrapper> extensions =
+            certServiceAdapter.prepareV2Extensions(products, entitlement, "prefix",
+                null, subscription);
+        Set<X509ByteExtensionWrapper> byteExtensions =
+            certServiceAdapter.prepareV2ByteExtensions(products, entitlement, "prefix",
+                null, subscription);
+        Map<String, X509ExtensionWrapper> map =
+            new HashMap<String, X509ExtensionWrapper>();
+        for (X509ExtensionWrapper ext : extensions) {
+            map.put(ext.getOid(), ext);
+        }
+        Map<String, X509ByteExtensionWrapper> byteMap =
+            new HashMap<String, X509ByteExtensionWrapper>();
+        for (X509ByteExtensionWrapper ext : byteExtensions) {
+            byteMap.put(ext.getOid(), ext);
+        }
+        assertTrue(map.containsKey("1.3.6.1.4.1.2312.9.6"));
+        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("2.0"));
+
+        assertTrue(byteMap.containsKey("1.3.6.1.4.1.2312.9.7"));
+        List<String> contentSetList = new ArrayList<String>();
+        try {
+            contentSetList = v2extensionUtil.hydrateContentPackage(
+                byteMap.get("1.3.6.1.4.1.2312.9.7").getValue());
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        assertEquals(7, contentSetList.size());
+    }
+
+    @Test
     public void testPrepareV2Extensions() throws IOException {
         Set<Product> products = new HashSet<Product>();
         products.add(product);
+        product.setContent(superContent);
         when(entitlement.getConsumer().getFact("system.certificate_version"))
             .thenReturn("2.1");
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
