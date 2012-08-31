@@ -717,7 +717,6 @@ public class ConsumerResource {
         if (changesMade) {
             log.info("Consumer " + toUpdate.getUuid() + " updated.");
 
-            // does this emply a rules pass just to set this attribute?
             ComplianceStatus compliance = complianceRules.getStatus(toUpdate,
                 Calendar.getInstance().getTime());
             toUpdate.setEntitlementStatus(compliance.getStatus());
