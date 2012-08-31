@@ -130,8 +130,8 @@ public class PoolManagerTest {
         this.productCache = new ProductCache(mockProductAdapter);
         this.principal = TestUtil.createOwnerPrincipal();
         this.manager = spy(new CandlepinPoolManager(mockPoolCurator, mockSubAdapter,
-	    productCache, entCertAdapterMock, mockEventSink,
-            eventFactory, mockConfig, enforcerMock, poolRulesMock, poolCriteriaMock,
+            productCache, entCertAdapterMock, mockEventSink, eventFactory,
+            mockConfig, enforcerMock, poolRulesMock, poolCriteriaMock,
             entitlementCurator, consumerCuratorMock, certCuratorMock, complianceRules));
 
         when(entCertAdapterMock.generateEntitlementCert(any(Entitlement.class),

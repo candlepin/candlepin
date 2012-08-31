@@ -58,7 +58,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     @Inject
     protected ProductCache productCache;
-    @Inject    
+
+    @Inject
     protected PoolCurator(Enforcer enforcer, RulesCriteria poolCriteria) {
         super(Pool.class);
         this.enforcer = enforcer;
