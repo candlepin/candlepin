@@ -44,6 +44,7 @@ import org.candlepin.policy.Enforcer;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.PoolRules;
 import org.candlepin.policy.ValidationResult;
+import org.candlepin.policy.criteria.RulesCriteria;
 import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -80,6 +81,7 @@ public class CandlepinPoolManager implements PoolManager {
     private Config config;
     private Enforcer enforcer;
     private PoolRules poolRules;
+    private RulesCriteria rulesCriteria;
     private EntitlementCurator entitlementCurator;
     private ConsumerCurator consumerCurator;
     private EntitlementCertServiceAdapter entCertAdapter;
@@ -100,7 +102,7 @@ public class CandlepinPoolManager implements PoolManager {
         ProductCache productCache,
         EntitlementCertServiceAdapter entCertAdapter, EventSink sink,
         EventFactory eventFactory, Config config, Enforcer enforcer,
-        PoolRules poolRules, EntitlementCurator curator1,
+        PoolRules poolRules, RulesCriteria rulesCriteria, EntitlementCurator curator1,
         ConsumerCurator consumerCurator, EntitlementCertificateCurator ecC,
         ComplianceRules complianceRules) {
 
@@ -113,6 +115,7 @@ public class CandlepinPoolManager implements PoolManager {
         this.consumerCurator = consumerCurator;
         this.enforcer = enforcer;
         this.poolRules = poolRules;
+        this.rulesCriteria = rulesCriteria;
         this.entCertAdapter = entCertAdapter;
         this.entitlementCertificateCurator = ecC;
         this.complianceRules = complianceRules;
@@ -378,8 +381,11 @@ public class CandlepinPoolManager implements PoolManager {
         String serviceLevelOverride)
         throws EntitlementRefusedException {
 
+
         ValidationResult failedResult = null;
-        List<Pool> allOwnerPools = poolCurator.listByOwner(owner, entitleDate);
+
+        List<Pool> allOwnerPools = poolCurator.listAvailableEntitlementPools(
+            consumer, owner, (String) null, entitleDate, true, false);
         List<Pool> filteredPools = new LinkedList<Pool>();
 
         // We have to check compliance status here so we can replace an empty

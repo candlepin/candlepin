@@ -29,7 +29,6 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.policy.Enforcer;
-import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -80,6 +79,7 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
                 null, null, true, true);
         assertEquals(1, results.size());
     }
+
 
     @Test
     public void testListAllForConsumerExcludesErrors() {
@@ -139,7 +139,7 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
                 .entitlementsAvailable(1));
     }
 
-    @Test(expected = EntitlementRefusedException.class)
+    @Test(expected = RuntimeException.class)
     public void concurrentCreationOfEntitlementsShouldFailIfOverMaxMemberLimit()
         throws Exception {
         Long numAvailEntitlements = 1L;
