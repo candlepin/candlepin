@@ -12,32 +12,55 @@ describe 'Job Status' do
     @cp.create_subscription(@owner['key'], @monitoring.id, 4)
   end
 
+  def finish_job(status)
+    #let it finish
+    while status != nil && status['state'].downcase != 'finished'
+      sleep 1
+      # POSTing here will delete the job once it has finished
+      status = @owner.post(status['statusPath'])
+    end
+  end
+ 
   it 'should contain the owner key' do
     status = @cp.refresh_pools(@owner['key'], true)
     status['targetId'].should == @owner['key']
+
+    finish_job(status)
   end
 
   it 'should contain the target type' do
     status = @cp.refresh_pools(@owner['key'], true)
     status['targetType'].should == "owner"
+
+    finish_job(status)
   end
 
 
   it 'should be findable by owner key' do
-    3.times { @cp.refresh_pools(@owner['key'], true) }
+    jobs = []
+    3.times { jobs << @cp.refresh_pools(@owner['key'], true) }
 
     @cp.list_jobs(@owner['key']).length.should == 3
+
+    jobs.each do |job|
+      finish_job(job)
+    end
   end
 
   it 'should only find jobs with the correct owner key' do
     owner2 = create_owner(random_string('some_owner'))
     @cp.create_subscription(owner2['key'], @monitoring.id, 100)
 
+    jobs = []
     # Just some random numbers here
-    6.times { @cp.refresh_pools(owner2['key'], true) }
-    4.times { @cp.refresh_pools(@owner['key'], true) }
+    6.times { jobs << @cp.refresh_pools(owner2['key'], true) }
+    4.times { jobs << @cp.refresh_pools(@owner['key'], true) }
 
     @cp.list_jobs(@owner['key']).length.should == 4
+
+    jobs.each do |job|
+      finish_job(job)
+    end
   end
 
   it 'should find an empty list if the owner key is wrong' do
@@ -78,12 +101,7 @@ describe 'Job Status' do
     status['targetType'].should == "consumer"
     status['targetId'].should == system.uuid
 
-    #let it finish
-    while status != nil && status['state'].downcase != 'finished'
-      sleep 1
-      # POSTing here will delete the job once it has finished
-      status = @owner.post(status['statusPath'])
-    end
+    finish_job(status)
   end
 
 
