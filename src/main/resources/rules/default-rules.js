@@ -820,7 +820,6 @@ var PoolCriteria = {
             // add criteria for filtering out pools that are not for this guest
             if (consumer.hasFact("virt.uuid")) {
                 var hostUuid = ""; // need a default value in case there is no registered host
-                var hostConsumer = consumerCurator.getHost(consumer.getFact("virt.uuid"));
                 if (hostConsumer != null) {
                     hostUuid = hostConsumer.getUuid();
                 }

@@ -57,7 +57,14 @@ public class RulesCriteria  {
         args.put("standalone", config.standalone());
         args.put("log", rulesLogger);
         args.put("consumer", consumer);
-        args.put("consumerCurator", consumerCurator);
+
+        // avoid passing in a consumerCurator just to get the host
+        // consumer uuid
+        Consumer hostConsumer = null;
+        if (consumer.getFact("virt.uuid") != null) {
+            hostConsumer = consumerCurator.getHost(consumer.getFact("virt.uuid"));
+        }
+        args.put("hostConsumer", hostConsumer);
 
         List<Criterion> poolsCriteria = null;
         try {
