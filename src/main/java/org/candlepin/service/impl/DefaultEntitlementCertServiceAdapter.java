@@ -15,9 +15,7 @@
 package org.candlepin.service.impl;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.net.URLEncoder;
 import java.security.GeneralSecurityException;
@@ -28,9 +26,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.zip.DeflaterOutputStream;
 
-import org.candlepin.json.model.EntitlementBody;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Entitlement;
@@ -199,16 +195,6 @@ public class DefaultEntitlementCertServiceAdapter extends
         return contentPrefix;
     }
 
-    private byte[] processPayload(String payload)
-        throws IOException, UnsupportedEncodingException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DeflaterOutputStream dos = new DeflaterOutputStream(baos);
-        dos.write(payload.getBytes("UTF-8"));
-        dos.finish();
-        dos.close();
-        return baos.toByteArray();
-    }
-
     /**
      * @param ent
      * @return
@@ -327,12 +313,9 @@ public class DefaultEntitlementCertServiceAdapter extends
         Map<String, EnvironmentContent> promotedContent = getPromotedContent(entitlement);
         String contentPrefix = getContentPrefix(entitlement, !thisIsUeberCert);
 
-        EntitlementBody map = v2extensionUtil.createEntitlementBody(products, entitlement,
-            contentPrefix, promotedContent, sub);
 
-        String json = v2extensionUtil.toJson(map);
-        byte[] payloadBytes = processPayload(json);
-
+        byte[] payloadBytes = v2extensionUtil.createEntitlementDataPayload(products,
+            entitlement, contentPrefix, promotedContent, sub);
         String payload = "-----BEGIN ENTITLEMENT DATA-----\n";
         payload += Util.toBase64(payloadBytes);
         payload += "-----END ENTITLEMENT DATA-----\n";

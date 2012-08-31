@@ -14,6 +14,7 @@
  */
 package org.candlepin.util;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -111,11 +112,25 @@ public class X509V2ExtensionUtil extends X509Util{
         return toReturn;
     }
 
+    public byte[] createEntitlementDataPayload(Set<Product> products,
+        Entitlement ent, String contentPrefix,
+        Map<String, EnvironmentContent> promotedContent,
+        org.candlepin.model.Subscription sub)
+        throws UnsupportedEncodingException, IOException {
+
+        EntitlementBody map = createEntitlementBody(products, ent,
+            contentPrefix, promotedContent, sub);
+
+        String json = toJson(map);
+        return processPayload(json);
+    }
+
+
     private byte[] retreiveContentValue(EntitlementBody eb) throws IOException {
         List<Content> contentList = getContentList(eb);
         PathNode treeRoot = makePathTree(contentList, new PathNode());
         List<String> nodeStrings = orderStrings(treeRoot);
-        List<HuffNode> stringHuffNodes = getStringNodeList(treeRoot);
+        List<HuffNode> stringHuffNodes = getStringNodeList(nodeStrings);
         HuffNode stringTrieParent = makeTrie(stringHuffNodes);
         byte[] pathDictionary = byteProcess(nodeStrings);
         List<PathNode> orderedNodes = orderNodes(treeRoot);
@@ -458,7 +473,7 @@ public class X509V2ExtensionUtil extends X509Util{
         nodeRep.append(hn.getValue());
         nodeRep.append("]");
 
-        System.out.print(nodeRep + "\n");
+        log.debug(nodeRep + "\n");
         if (hn.getLeft() != null) {
             printTrie(hn.getLeft(), tab + 1);
         }
@@ -776,34 +791,21 @@ public class X509V2ExtensionUtil extends X509Util{
         return combined;
     }
 
-    private List<HuffNode> getStringNodeList(PathNode parent) {
+    private List<HuffNode> getStringNodeList(List<String> pathStrings) {
         List<HuffNode> nodes = new ArrayList<HuffNode>();
-        Map<String, Integer> segments =  new HashMap<String, Integer>();
-        Set<PathNode> pathNodes =  new HashSet<PathNode>();
-
-        buildSegments(segments, pathNodes, parent);
-        int count = 0;
-        int highest = 0;
-        HuffNode newOne = null;
-        for (String part : segments.keySet()) {
-            if (!part.equals("")) {
-                count = segments.get(part);
-                newOne = new HuffNode(part, count);
-                nodes.add(newOne);
-                if (count > highest) {
-                    highest = count;
-                }
-            }
+        int idx = 1;
+        for (String part : pathStrings) {
+            nodes.add(new HuffNode(part, idx++));
         }
-        newOne = new HuffNode(END_NODE, ++highest);
-        nodes.add(newOne);
+        nodes.add(new HuffNode(END_NODE, idx));
         return nodes;
     }
 
     private List<HuffNode> getPathNodeNodeList(List<PathNode> pathNodes) {
         List<HuffNode> nodes = new ArrayList<HuffNode>();
+        int idx = 1;
         for (PathNode pn : pathNodes) {
-            nodes.add(new HuffNode(pn, pn.getParents().size()));
+            nodes.add(new HuffNode(pn, idx++));
         }
         return nodes;
     }
@@ -850,7 +852,6 @@ public class X509V2ExtensionUtil extends X509Util{
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         Inflater i = new Inflater();
         InflaterOutputStream ios = new InflaterOutputStream(baos, i);
-        System.out.print(payload);
         ios.write(payload);
         ios.finish();
         long read = i.getBytesRead();
@@ -859,7 +860,7 @@ public class X509V2ExtensionUtil extends X509Util{
         int weight = 1;
         for (byte b : baos.toByteArray()) {
             if (b == '\0') {
-                pathDictionary.add(new HuffNode(name, weight));
+                pathDictionary.add(new HuffNode(name, weight++));
                 name = "";
             }
             else {
@@ -872,13 +873,16 @@ public class X509V2ExtensionUtil extends X509Util{
         HuffNode pathTrie = makeTrie(triePathDictionary);
 
         StringBuffer nodeBits = new StringBuffer();
-        for (int idx = (new Long(read)).intValue(); idx < payload.length; idx++) {
-            int value = payload[idx];
-            String someBits = Integer.toBinaryString(value);
+        ByteArrayInputStream bais = new ByteArrayInputStream(payload,
+            (new Long(read)).intValue(), (new Long(payload.length - read).intValue()));
+        int value = bais.read();
+        while (value != -1) {
+            String someBits = Integer.toString(value, 2);
             for (int pad = 0; pad < 8 - someBits.length(); pad++) {
                 nodeBits.append("0");
             }
             nodeBits.append(someBits);
+            value = bais.read();
         }
         // check for size bits
         int nodeCount = 0;
@@ -890,8 +894,8 @@ public class X509V2ExtensionUtil extends X509Util{
             nodeCount = Integer.parseInt(nodeBits.substring(0, 8), 2);
             nodeBits.delete(0, 8);
         }
-        for (int j = 0; j < nodeCount; j++) {
-            nodeDictionary.add(new HuffNode(new PathNode(), 1));
+        for (int j = 1; j <= nodeCount; j++) {
+            nodeDictionary.add(new HuffNode(new PathNode(), j));
         }
         List<HuffNode> trieNodeDictionary = new ArrayList<HuffNode>();
         trieNodeDictionary.addAll(nodeDictionary);
@@ -946,9 +950,9 @@ public class X509V2ExtensionUtil extends X509Util{
                 // if its END_NODE we are done
                 String nameValue = null;
                 StringBuffer nameBits = new StringBuffer();
-                while (nameValue == null) {
-                    nameBits.append(nodeBits.substring(0, 1));
-                    nodeBits.delete(0, 1);
+                while (nameValue == null && stillNode) {
+                    nameBits.append(nodeBits.charAt(0));
+                    nodeBits.deleteCharAt(0);
                     String lookupValue = (String) findHuffNodeValueByBits(pathTrie,
                         nameBits.toString());
                     if (lookupValue != null) {
@@ -958,22 +962,27 @@ public class X509V2ExtensionUtil extends X509Util{
                         }
                         nameValue = lookupValue;
                     }
-                }
-                if (stillNode) {
-                    PathNode nodeValue = null;
-                    StringBuffer pathBits = new StringBuffer();
-                    while (nodeValue == null) {
-                        pathBits.append(nodeBits.substring(0, 1));
-                        nodeBits.delete(0, 1);
-                        PathNode lookupValue = (PathNode) findHuffNodeValueByBits(nodeTrie,
-                            pathBits.toString());
-                        if (lookupValue != null) {
-                            nodeValue = lookupValue;
-                            nodeValue.addParent((PathNode) node.getValue());
-                        }
+                    if (nodeBits.length() == 0) {
+                        stillNode = false;
                     }
-                    ((PathNode) node.getValue()).addChild(
-                        new NodePair(nameValue, nodeValue));
+                }
+
+                PathNode nodeValue = null;
+                StringBuffer pathBits = new StringBuffer();
+                while (nodeValue == null && stillNode) {
+                    pathBits.append(nodeBits.charAt(0));
+                    nodeBits.deleteCharAt(0);
+                    PathNode lookupValue = (PathNode) findHuffNodeValueByBits(nodeTrie,
+                        pathBits.toString());
+                    if (lookupValue != null) {
+                        nodeValue = lookupValue;
+                        nodeValue.addParent((PathNode) node.getValue());
+                        ((PathNode) node.getValue()).addChild(
+                            new NodePair(nameValue, nodeValue));
+                    }
+                    if (nodeBits.length() == 0) {
+                        stillNode = false;
+                    }
                 }
             }
         }
@@ -986,10 +995,20 @@ public class X509V2ExtensionUtil extends X509Util{
         }
         for (NodePair child : root.getChildren()) {
             StringBuffer childPath = new StringBuffer(aPath.substring(0));
-            aPath.append("/");
-            aPath.append(child.getName());
+            childPath.append("/");
+            childPath.append(child.getName());
             makeURLs(child.getConnection(), urls, childPath);
         }
+    }
+
+    private byte[] processPayload(String payload)
+        throws IOException, UnsupportedEncodingException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        DeflaterOutputStream dos = new DeflaterOutputStream(baos);
+        dos.write(payload.getBytes("UTF-8"));
+        dos.finish();
+        dos.close();
+        return baos.toByteArray();
     }
 
     private class HuffNode {
@@ -1123,10 +1142,6 @@ public class X509V2ExtensionUtil extends X509Util{
 
         String getName() {
             return name;
-        }
-
-        void setName(String name) {
-            this.name = name;
         }
 
         PathNode getConnection() {
