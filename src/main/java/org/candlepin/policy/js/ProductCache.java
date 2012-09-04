@@ -108,6 +108,15 @@ public class ProductCache {
 
     }
 
+    /**
+     *
+     * ProductMapping
+     *
+     * A <code>LinkedHashMap</code> implementation that represents a mapped
+     * reference to {@link Product} references. This implementation allows
+     * a maximum of 100 mapped products. When an attempt is made to insert
+     * more than 100, the eldest product reference will be removed.
+     */
     protected class ProductMapping extends LinkedHashMap<String, ProductReference> {
 
         // The maximum number of products allowed in the map.
