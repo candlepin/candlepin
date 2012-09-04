@@ -550,7 +550,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<Product> products = new HashSet<Product>();
         products.add(product);
         when(entitlement.getConsumer().getFact("system.certificate_version"))
-            .thenReturn("2.1");
+            .thenReturn("3.1");
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
 
         subscription.getProduct().setAttribute("warning_period", "20");
@@ -575,7 +575,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             map.put(ext.getOid(), ext);
         }
         assertTrue(map.containsKey("1.3.6.1.4.1.2312.9.6"));
-        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("2.0"));
+        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("3.0"));
 
         byte[] payload = v2extensionUtil.createEntitlementDataPayload(products, entitlement,
             "prefix", null, subscription);
@@ -652,7 +652,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<Product> products = new HashSet<Product>();
         products.add(product);
         when(entitlement.getConsumer().getFact("system.certificate_version"))
-            .thenReturn("2.1");
+            .thenReturn("3.1");
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
 
         subscription.getProduct().setAttribute("warning_period", "0");
@@ -671,7 +671,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             map.put(ext.getOid(), ext);
         }
         assertTrue(map.containsKey("1.3.6.1.4.1.2312.9.6"));
-        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("2.0"));
+        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("3.0"));
 
         byte[] payload = v2extensionUtil.createEntitlementDataPayload(products, entitlement,
             "prefix", null, subscription);
@@ -707,7 +707,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<Product> products = new HashSet<Product>();
         products.add(product);
         when(entitlement.getConsumer().getFact("system.certificate_version"))
-            .thenReturn("2.1");
+            .thenReturn("3.1");
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
 
         subscription.getProduct().setAttribute("management_enabled", "1");
@@ -722,7 +722,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             map.put(ext.getOid(), ext);
         }
         assertTrue(map.containsKey("1.3.6.1.4.1.2312.9.6"));
-        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("2.0"));
+        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("3.0"));
 
         byte[] payload = v2extensionUtil.createEntitlementDataPayload(products, entitlement,
             "prefix", null, subscription);
@@ -749,7 +749,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         products.add(product);
         product.setContent(superContent);
         when(entitlement.getConsumer().getFact("system.certificate_version"))
-            .thenReturn("2.1");
+            .thenReturn("3.1");
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
 
         Set<X509ExtensionWrapper> extensions =
@@ -769,7 +769,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             byteMap.put(ext.getOid(), ext);
         }
         assertTrue(map.containsKey("1.3.6.1.4.1.2312.9.6"));
-        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("2.0"));
+        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("3.0"));
 
         assertTrue(byteMap.containsKey("1.3.6.1.4.1.2312.9.7"));
         List<String> contentSetList = new ArrayList<String>();

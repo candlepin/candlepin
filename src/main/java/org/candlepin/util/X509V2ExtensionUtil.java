@@ -64,7 +64,7 @@ public class X509V2ExtensionUtil extends X509Util{
     private static Logger log = Logger.getLogger(X509V2ExtensionUtil.class);
     private Config config;
     private EntitlementCurator entCurator;
-    private String thisVersion = "2.0";
+    private String thisVersion = "3.0";
 
     private long pathNodeId = 0;
     private long huffNodeId = 0;
