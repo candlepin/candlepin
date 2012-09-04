@@ -2,6 +2,8 @@
  * Default Candlepin rule set.
  */
 
+
+
 var SOCKET_FACT="cpu.cpu_socket(s)";
 
 function entitlement_name_space() {
@@ -14,6 +16,10 @@ function consumer_delete_name_space() {
 
 function pool_name_space() {
     return Pool;
+}
+
+function criteria_name_space() {
+    return PoolCriteria;
 }
 
 function export_name_space() {
@@ -609,9 +615,11 @@ var Entitlement = {
         var pools_by_class = [];
 
         // "pools" is a list of all the owner's pools which are compatible for the system:
-        log.debug("Selecting best pools from: " + pools.length);
-        for each (pool in pools) {
-            log.debug("   " + pool.getId());
+        if (log.isDebugEnabled()) {
+            log.debug("Selecting best pools from: " + pools.length);
+            for each (pool in pools) {
+                log.debug("   " + pool.getId());
+            }
         }
 
         var consumerSLA = consumer.getServiceLevel();
@@ -770,12 +778,78 @@ var ConsumerDelete = {
     }
 }
 
+/*
+ * Return Hibernate criteria we can apply to the pool query when listing pools that
+ * are relevant for a consumer.
+ */
+var PoolCriteria = {
+    poolCriteria: function() {
+        // FIXME: alot of this could be cleaned up with some
+        // class/method var's instead of full paths, etc
+        var criteriaFilters = new java.util.LinkedList();
+        // Don't load virt_only pools if this consumer isn't a guest:
+        if (!"true".equalsIgnoreCase(consumer.getFact("virt.is_guest"))) {
+            // not a guest
+            var noVirtOnlyPoolAttr =
+                org.hibernate.criterion.DetachedCriteria.forClass(
+                        org.candlepin.model.PoolAttribute, "pool_attr")
+                    .add(org.hibernate.criterion.Restrictions.eq("name", "virt_only"))
+                    .add(org.hibernate.criterion.Restrictions.eq("value", "true"))
+                    .add(org.hibernate.criterion.Property.forName("this.id")
+                            .eqProperty("pool_attr.pool.id"))
+                    .setProjection(org.hibernate.criterion.Projections.property("pool_attr.id"));
+            criteriaFilters.add(org.hibernate.criterion.Subqueries.notExists(
+                    noVirtOnlyPoolAttr));
+
+            // same criteria but for PoolProduct attributes
+            // not sure if this should be two seperate criteria, or if it's
+            // worth it to combine in some clever fashion
+            var noVirtOnlyProductAttr =
+                org.hibernate.criterion.DetachedCriteria.forClass(
+                        org.candlepin.model.ProductPoolAttribute, "prod_attr")
+                    .add(org.hibernate.criterion.Restrictions.eq("name", "virt_only"))
+                    .add(org.hibernate.criterion.Restrictions.eq("value", "true"))
+                    .add(org.hibernate.criterion.Property.forName("this.id")
+                            .eqProperty("prod_attr.pool.id"))
+                    .setProjection(org.hibernate.criterion.Projections.property("prod_attr.id"));
+            criteriaFilters.add(org.hibernate.criterion.Subqueries.notExists(
+                    noVirtOnlyProductAttr));
+
+        } else {
+            // we are a virt guest
+            // add criteria for filtering out pools that are not for this guest
+            if (consumer.hasFact("virt.uuid")) {
+                var hostUuid = ""; // need a default value in case there is no registered host
+                if (hostConsumer != null) {
+                    hostUuid = hostConsumer.getUuid();
+                }
+                var noRequiresHost = org.hibernate.criterion.DetachedCriteria.forClass(
+                        org.candlepin.model.PoolAttribute, "attr")
+                        .add(org.hibernate.criterion.Restrictions.eq("name", "requires_host"))
+                        //  Note: looking for pools that are not for this guest
+                        .add(org.hibernate.criterion.Restrictions.ne("value", hostUuid))
+                        .add(org.hibernate.criterion.Property.forName("this.id")
+                                .eqProperty("attr.pool.id"))
+                                .setProjection(org.hibernate.criterion.Projections.property("attr.id"));
+                // we do want everything else
+                criteriaFilters.add(org.hibernate.criterion.Subqueries.notExists(
+                        noRequiresHost));
+            }
+            // no virt.uuid, we can't try to filter
+        }
+
+        return criteriaFilters;
+    }
+}
+
+
 var Pool = {
 
     /*
      * Creates all appropriate pools for a subscription.
      */
     createPools: function () {
+        log.info("creating pool: " + sub.getId());
         var pools = new java.util.LinkedList();
         var quantity = sub.getQuantity() * sub.getProduct().getMultiplier();
         var providedProducts = new java.util.HashSet();
@@ -819,7 +893,7 @@ var Pool = {
             if ('unlimited'.equals(virt_limit)) {
                 var derivedPool = helper.createPool(sub, sub.getProduct().getId(),
                                                     'unlimited', virt_attributes);
-            derivedPool.setSubscriptionSubKey("derived");
+                derivedPool.setSubscriptionSubKey("derived");
                 pools.add(derivedPool);
             } else {
                 var virt_limit_quantity = parseInt(virt_limit);
@@ -827,11 +901,12 @@ var Pool = {
                 if (virt_limit_quantity > 0) {
                     var virt_quantity = quantity * virt_limit_quantity;
 
+                    log.debug("creating virt only pool");
                     var derivedPool = helper.createPool(sub, sub.getProduct().getId(),
                                                         virt_quantity.toString(),
                                                         virt_attributes);
-            derivedPool.setSubscriptionSubKey("derived");
-            pools.add(derivedPool);
+                    derivedPool.setSubscriptionSubKey("derived");
+                    pools.add(derivedPool);
                 }
             }
         }

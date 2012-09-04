@@ -14,7 +14,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.7.6
+Version: 0.7.8
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -231,7 +231,8 @@ do
   /usr/sbin/semodule -s ${selinuxvariant} -i \
     %{_datadir}/selinux/${selinuxvariant}/%{modulename}.pp &> /dev/null || :
 done
-/sbin/restorecon %{_localstatedir}/cache/thumbslug || :
+/sbin/restorecon %{_localstatedir}/cache/thumbslug &> /dev/null || :
+/sbin/restorecon -R %{_sysconfdir}/%{name}/ &> /dev/null || :
 
 %postun selinux
 if [ $1 -eq 0 ] ; then
@@ -239,6 +240,8 @@ if [ $1 -eq 0 ] ; then
   do
      /usr/sbin/semodule -s ${selinuxvariant} -r %{modulename} &> /dev/null || :
   done
+  /sbin/restorecon %{_localstatedir}/cache/thumbslug &> /dev/null || :
+  /sbin/restorecon -R %{_sysconfdir}/%{name}/ &> /dev/null || :
 fi
 
 
@@ -247,6 +250,7 @@ fi
 %{_datadir}/%{name}/cpsetup
 %{_datadir}/%{name}/cpdb
 %{_sysconfdir}/%{name}/certs/
+%ghost %attr(644, root, root) %{_sysconfdir}/%{name}/certs/candlepin-ca.crt
 
 %files jboss
 %defattr(-,jboss,jboss,-)
@@ -279,6 +283,39 @@ fi
 
 
 %changelog
+* Fri Aug 31 2012 jesus m. rodriguez <jesusr@redhat.com> 0.7.8-1
+- Pull curator classes out into their own package. (jbowes@redhat.com)
+- Fix certv1 content filtering on autobinds. (dgoodwin@redhat.com)
+- Performance fix for select best pools. (dgoodwin@redhat.com)
+- Removed unnecessary comments (mstead@redhat.com)
+- Adding comments to classes. (mstead@redhat.com)
+- Removed unnecessary product lookup for RO Pool provided products.  (mstead@redhat.com)
+- Added distinct to service level for owner query (mstead@redhat.com)
+- Improved query for retreiving service levels for owner. (mstead@redhat.com)
+- remove unnecessary assignment to null (jesusr@redhat.com)
+- Performance improvements when selecting best pools (mstead@redhat.com)
+- various findbugs cleanup (jesusr@redhat.com)
+- Don't use the real /etc/candlepin/candlepin.conf during testing (jbowes@redhat.com)
+- Add null check for Entitlement.getProductId (alikins@redhat.com)
+
+* Tue Aug 28 2012 Alex Wood <awood@redhat.com> 0.7.7-1
+- 851512: add restorecon -R to %%post (alikins@redhat.com)
+- 851512: add certs_rw and candlepin-ca.certs file context (alikins@redhat.com)
+- remove FileUtils.cp calls used for debugging (jesusr@redhat.com)
+- ownerinfo: replace pool iteration with hql queries (jbowes@redhat.com)
+- ownerinfo: use pool.getProductAttribute rather than the product adapter
+  (jbowes@redhat.com)
+- remove ownerinfo.poolNearestToExpiry; it's not used. (jbowes@redhat.com)
+- Add ability to remove a cert from the certificate revocation list (CRL).
+  (jesusr@redhat.com)
+- Bind a LoggingConfig here so we set log levels for tests (alikins@redhat.com)
+- Add API method to refresh pools for owner of specific products.
+  (awood@redhat.com)
+- Renaming method for getting owners of active products. (awood@redhat.com)
+- 842450: Fix newline issues in candlepin translations (bkearney@redhat.com)
+- First draft of script to mass load data for performance testing.
+  (dgoodwin@redhat.com)
+
 * Mon Aug 13 2012 William Poteat <wpoteat@redhat.com> 0.7.6-1
 - Disable certificate v2 ability (wpoteat@redhat.com)
 - Change apidiff to format with python json.tool (alikins@redhat.com)

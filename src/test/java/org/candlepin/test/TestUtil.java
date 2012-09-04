@@ -129,8 +129,13 @@ public class TestUtil {
     }
 
     public static Subscription createSubscription(Owner owner, Product product) {
+        return createSubscription(owner, product, new HashSet<Product>());
+    }
+
+    public static Subscription createSubscription(Owner owner, Product product,
+        Set<Product> providedProducts) {
         Subscription sub = new Subscription(owner, product,
-            new HashSet<Product>(), 1000L, createDate(2000, 1, 1), createDate(
+            providedProducts, 1000L, createDate(2000, 1, 1), createDate(
                 2050, 1, 1), createDate(2000, 1, 1));
         return sub;
     }
@@ -156,6 +161,12 @@ public class TestUtil {
                 11, 30), TestUtil.createDate(2015, 11, 30), "SUB234598S",
             "ACC123");
 
+        // Simulate copying product attributes to the pool.
+        if (product != null) {
+            for (ProductAttribute attr : product.getAttributes()) {
+                pool.setProductAttribute(attr.getName(), attr.getValue(), product.getId());
+            }
+        }
         return pool;
     }
 

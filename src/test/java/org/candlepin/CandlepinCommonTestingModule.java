@@ -19,9 +19,12 @@ import org.candlepin.auth.Principal;
 import org.candlepin.auth.interceptor.SecurityInterceptor;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Config;
+import org.candlepin.config.LoggingConfig;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.guice.CandlepinModule;
+import org.candlepin.guice.CandlepinSingletonScope;
+import org.candlepin.guice.CandlepinSingletonScoped;
 import org.candlepin.guice.I18nProvider;
 import org.candlepin.guice.JPAInitializer;
 import org.candlepin.guice.PrincipalProvider;
@@ -37,6 +40,7 @@ import org.candlepin.pki.impl.BouncyCastlePKIUtility;
 import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
 import org.candlepin.policy.Enforcer;
 import org.candlepin.policy.PoolRules;
+import org.candlepin.policy.criteria.RulesCriteria;
 import org.candlepin.policy.js.JsRules;
 import org.candlepin.policy.js.JsRulesProvider;
 import org.candlepin.policy.js.pool.JsPoolRules;
@@ -84,6 +88,9 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
 
     @Override
     public void configure() {
+        CandlepinSingletonScope singletonScope = new CandlepinSingletonScope();
+        bindScope(CandlepinSingletonScoped.class, singletonScope);
+        bind(CandlepinSingletonScope.class).toInstance(singletonScope);
 
         install(new JpaPersistModule("default"));
         bind(JPAInitializer.class).asEagerSingleton();
@@ -91,6 +98,7 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
         bind(X509ExtensionUtil.class);
         bind(Config.class).to(CandlepinCommonTestConfig.class)
             .asEagerSingleton();
+        bind(LoggingConfig.class).asEagerSingleton();
         bind(ConsumerResource.class);
         bind(PoolResource.class);
         bind(EntitlementResource.class);
@@ -139,6 +147,7 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
         bind(IdentityCertServiceAdapter.class).to(
             DefaultIdentityCertServiceAdapter.class);
         bind(PoolRules.class).to(JsPoolRules.class);
+        bind(RulesCriteria.class);
         bind(PoolManager.class).to(CandlepinPoolManager.class);
         bind(UniqueIdGenerator.class).to(DefaultUniqueIdGenerator.class);
 

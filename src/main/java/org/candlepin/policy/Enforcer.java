@@ -66,16 +66,18 @@ public interface Enforcer {
      * Will throw RuleExecutionException if both pools and a rule exist, but no pool
      * is returned from the rule.
      *
+     * @param consumer the consumer to fetch best pools for.
      * @param productIds Product IDs
      * @param pools List of pools to select from.
      * @return best pools as determined by the rules, and the quantity to take from each
      * @throws RuleExecutionException Thrown if both pools and a rule exist, but no
      * pool is returned.
      */
-    List<PoolQuantity> selectBestPools(Consumer consumer, String[] productIds,
-        List<Pool> pools, ComplianceStatus compliance, String serviceLevelOverride,
-        Set<String> exemptList)
+    List<PoolQuantity> selectBestPools(Consumer consumer,
+        String[] productIds, List<Pool> pools, ComplianceStatus compliance,
+        String serviceLevelOverride, Set<String> exemptList)
         throws RuleExecutionException;
+
 
     /**
      * Run pre-entitlement checks.

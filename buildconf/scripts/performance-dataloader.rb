@@ -21,7 +21,7 @@ PORT = 8443
 
 # This is low, we need more but not until there's a list pools fix, the performance is just too slow:
 SYSTEM_COUNT = 100
-POOL_COUNT = 100
+POOL_COUNT = 300
 
 # Using eng products from our test data so we can test clients manually as
 # well. (easier as we have product certs laying around for these)
@@ -61,6 +61,7 @@ puts "Creating #{POOL_COUNT / 2} virt-limit subscriptions/pools:"
   mkt_prod = cp.create_product(mkt_prod_id, mkt_prod_id, {
     :attributes => {
       :virt_limit => "4",
+      :requires_consumer_type => "system",
     }
   })
   sub1 = cp.create_subscription(owner['key'], mkt_prod['id'], 50,

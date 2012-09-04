@@ -21,11 +21,15 @@ import com.google.inject.persist.Transactional;
 import org.apache.log4j.Logger;
 import org.candlepin.auth.interceptor.EnforceAccessControl;
 import org.candlepin.policy.Enforcer;
+import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.entitlement.PreEntHelper;
+import org.candlepin.policy.criteria.RulesCriteria;
 import org.hibernate.Criteria;
 import org.hibernate.Filter;
 import org.hibernate.LockMode;
+import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
+import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
@@ -48,13 +52,18 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     private static Logger log = Logger.getLogger(PoolCurator.class);
     private Enforcer enforcer;
+    private RulesCriteria poolCriteria;
     @Inject
     protected Injector injector;
 
     @Inject
-    protected PoolCurator(Enforcer enforcer) {
+    protected ProductCache productCache;
+
+    @Inject
+    protected PoolCurator(Enforcer enforcer, RulesCriteria poolCriteria) {
         super(Pool.class);
         this.enforcer = enforcer;
+        this.poolCriteria = poolCriteria;
     }
 
     @Override
@@ -167,6 +176,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             o = c.getOwner();
         }
 
+
         if (log.isDebugEnabled()) {
             log.debug("Listing available pools for:");
             log.debug("   consumer: " + c);
@@ -180,6 +190,20 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         }
         if (c != null) {
             crit.add(Restrictions.eq("owner", c.getOwner()));
+
+            // Ask the rules for any business logic criteria to filter with for
+            // this consumer
+            List<Criterion> filterCriteria = poolCriteria.availableEntitlementCriteria(
+                c);
+
+            if (log.isDebugEnabled()) {
+                log.debug("Got " + filterCriteria.size() +
+                    "  query filters from database.");
+            }
+
+            for (Criterion rulesCriteria : filterCriteria) {
+                crit.add(rulesCriteria);
+            }
         }
         if (o != null) {
             crit.add(Restrictions.eq("owner", o));
@@ -193,11 +217,16 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         // FIXME: sort by enddate?
         List<Pool> results = crit.list();
 
+        if (log.isDebugEnabled()) {
+            log.debug("Loaded " + results.size() + " pools from database.");
+        }
+
         if (results == null) {
             log.debug("no results");
             return new ArrayList<Pool>();
         }
 
+        log.debug("results(postfilter): " + results);
         log.debug("active pools for owner: " + results.size());
 
         // crit.add(Restrictions.or(Restrictions.eq("productId", productId),
@@ -212,8 +241,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 if (p.provides(productId)) {
                     newResults.add(p);
                     if (log.isDebugEnabled()) {
-                        log.debug("Pool provides " + productId +
-                            ": " + p);
+                        log.debug("Pool provides " + productId + ": " + p);
                     }
                 }
             }
@@ -227,7 +255,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         // request still could fail.
         if (c != null) {
             List<Pool> newResults = new LinkedList<Pool>();
-            log.debug("Filtering pools for consumer");
             for (Pool p : results) {
                 PreEntHelper helper = enforcer.preEntitlement(c, p, 1);
                 if (helper.getResult().isSuccessful() &&
@@ -415,16 +442,16 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @return Set of levels based on exempt flag.
      */
     public Set<String> retrieveServiceLevelsForOwner(Owner owner, boolean exempt) {
-        List<ProductPoolAttribute> items =  currentSession()
-            .createCriteria(ProductPoolAttribute.class)
-            .add(Restrictions.or(
-                Restrictions.eq("name", "support_level"),
-                Restrictions.eq("name", "support_level_exempt")))
-            .addOrder(Order.desc("name"))
-            .createCriteria("pool")
-            .add(Restrictions.eq("owner", owner))
-            .list();
-        Set<Pool> exemptPoolSla = new HashSet<Pool>();
+        String stmt = "select distinct name, value, productId " +
+                      "from ProductPoolAttribute a where " +
+                      "(name='support_level' or name='support_level_exempt') " +
+                      "and productId in (select distinct p.productId from Pool p where " +
+                      "owner_id=:owner_id) order by name DESC";
+
+        Query q = currentSession().createQuery(stmt);
+        q.setParameter("owner_id", owner.getId());
+        List<Object[]> results = q.list();
+
         // Use case insensitive comparison here, since we treat
         // Premium the same as PREMIUM or premium, to make it easier for users to specify
         // a level on the cli. However, use the original case, since Premium is more
@@ -432,34 +459,35 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         Set<String> slaSet = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
         Set<String> exemptSlaSet = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
 
-        // make collection of sla's that are exempt
-        // first part of list is exempt attr's
-        for (ProductPoolAttribute item : items) {
-            if ("support_level_exempt".equals(item.getName())) {
-                if ("true".equalsIgnoreCase(item.getValue())) {
-                    exemptPoolSla.add(item.getPool());
-                }
+        Set<String> exemptProductIds = new HashSet<String>();
+
+        for (Object[] result : results) {
+            String name = (String) result[0];
+            String value = (String) result[1];
+            String productId = (String) result[2];
+
+            if ("support_level_exempt".equals(name) && "true".equalsIgnoreCase(value)) {
+                exemptProductIds.add(productId);
             }
-            // second part of list is levels, add to list if pool
-            // has exempt attr
-            else if (item.getValue() != null &&
-                    !item.getValue().trim().equals("")) {
-                if (exemptPoolSla.contains(item.getPool())) {
-                    exemptSlaSet.add(item.getValue());
+            else if ("support_level".equalsIgnoreCase(name) &&
+                (value != null && !value.trim().equals(""))) {
+                if (exemptProductIds.contains(productId)) {
+                    exemptSlaSet.add(value);
                 }
             }
         }
 
-        // since we have to take casing into account, iterate levels
-        // and exempt matches.
-        for (ProductPoolAttribute item : items) {
-            if (!"support_level_exempt".equals(item.getName())) {
-                String value = item.getValue();
+        for (Object[] result : results) {
+            String name = (String) result[0];
+            String value = (String) result[1];
+
+            if (!"support_level_exempt".equals(name)) {
                 if (!exemptSlaSet.contains(value)) {
                     slaSet.add(value);
                 }
             }
         }
+
         if (exempt) {
             return exemptSlaSet;
         }

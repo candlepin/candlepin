@@ -59,7 +59,8 @@ public class JobStatus extends AbstractHibernateObject {
      */
     public enum TargetType {
         OWNER,
-        CONSUMER;
+        CONSUMER,
+        PRODUCT;
     }
 
     @Id

@@ -27,6 +27,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.candlepin.exceptions.IseException;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Entitlement;
@@ -46,11 +47,13 @@ import org.candlepin.pki.X509ExtensionWrapper;
 import org.candlepin.service.BaseEntitlementCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.util.Util;
+import org.candlepin.util.CertificateSizeException;
 import org.candlepin.util.X509ExtensionUtil;
 import org.candlepin.util.X509Util;
 import org.candlepin.util.X509V2ExtensionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Collections2;
@@ -69,6 +72,7 @@ public class DefaultEntitlementCertServiceAdapter extends
     private CertificateSerialCurator serialCurator;
     private ProductServiceAdapter productAdapter;
     private EntitlementCurator entCurator;
+    private I18n i18n;
 
     private static Logger log =
         LoggerFactory.getLogger(DefaultEntitlementCertServiceAdapter.class);
@@ -81,7 +85,7 @@ public class DefaultEntitlementCertServiceAdapter extends
         KeyPairCurator keyPairCurator,
         CertificateSerialCurator serialCurator,
         ProductServiceAdapter productAdapter,
-        EntitlementCurator entCurator) {
+        EntitlementCurator entCurator, I18n i18n) {
 
         this.pki = pki;
         this.extensionUtil = extensionUtil;
@@ -91,6 +95,7 @@ public class DefaultEntitlementCertServiceAdapter extends
         this.serialCurator = serialCurator;
         this.productAdapter = productAdapter;
         this.entCurator = entCurator;
+        this.i18n = i18n;
     }
 
 
@@ -143,7 +148,7 @@ public class DefaultEntitlementCertServiceAdapter extends
         throws GeneralSecurityException, IOException {
 
         // oiduitl is busted at the moment, so do this manually
-        Set<X509ExtensionWrapper> extensions = new LinkedHashSet<X509ExtensionWrapper>();
+        Set<X509ExtensionWrapper> extensions;
         Set<X509ByteExtensionWrapper> byteExtensions =
             new LinkedHashSet<X509ByteExtensionWrapper>();
         Set<Product> products = new HashSet<Product>(getProvidedProducts(ent
@@ -223,9 +228,16 @@ public class DefaultEntitlementCertServiceAdapter extends
         for (Product prod : Collections2
             .filter(products, X509Util.PROD_FILTER_PREDICATE)) {
             result.addAll(extensionUtil.productExtensions(prod));
-            result.addAll(extensionUtil.contentExtensions(
-                extensionUtil.filterProductContent(prod, ent, entCurator),
-                contentPrefix, promotedContent, ent.getConsumer()));
+            try {
+                result.addAll(extensionUtil.contentExtensions(
+                    extensionUtil.filterProductContent(prod, ent, entCurator),
+                    contentPrefix, promotedContent, ent.getConsumer()));
+            }
+            catch (CertificateSizeException e) {
+                throw new IseException(i18n.tr("Too many content sets for certificate. " +
+                    "Please upgrade to a newer client to use subscription: {0}",
+                    ent.getPool().getProductName()));
+            }
         }
 
         if (sub != null) {

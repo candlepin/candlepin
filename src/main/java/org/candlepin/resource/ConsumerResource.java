@@ -1204,6 +1204,7 @@ public class ConsumerResource {
         // Verify consumer exists:
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
 
+        log.debug("Consumer (post verify): " + consumer);
         try {
             // I hate double negatives, but if they have accepted all
             // terms, we want comeToTerms to be true.
