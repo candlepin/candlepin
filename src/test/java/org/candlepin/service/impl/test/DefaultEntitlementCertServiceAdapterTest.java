@@ -54,7 +54,6 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContent;
-import org.candlepin.model.KeyPairCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolAttribute;
@@ -107,8 +106,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
     private ProductServiceAdapter productAdapter;
     @Mock
     private EntitlementCurator entCurator;
-    @Mock
-    private KeyPairCurator keyPairCurator;
     private X509ExtensionUtil extensionUtil;
     private X509V2ExtensionUtil v2extensionUtil;
     private Product product;
@@ -133,14 +130,10 @@ public class DefaultEntitlementCertServiceAdapterTest {
         v2extensionUtil = new X509V2ExtensionUtil(new Config(), entCurator);
 
         certServiceAdapter = new DefaultEntitlementCertServiceAdapter(
-<<<<<<< HEAD
-            mockedPKI, extensionUtil, v2extensionUtil, null, keyPairCurator,
-            serialCurator, productAdapter, entCurator);
-=======
             mockedPKI, extensionUtil, v2extensionUtil, null, null, serialCurator,
             productAdapter, entCurator,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK));
->>>>>>> master
+
 
         product = new Product("12345", "a product", "variant", "version",
             "arch", "SVC");
