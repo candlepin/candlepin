@@ -19,6 +19,8 @@ import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.guice.CandlepinSingletonScoped;
 import org.candlepin.model.Product;
 import org.candlepin.service.ProductServiceAdapter;
@@ -33,10 +35,10 @@ import com.google.inject.Inject;
  * is not in the cache, it is looked up by the adapter and
  * is automatically stored.
  *
- * The cache can contain a maximum of 100 products at a time
- * and is implemented using <code>SoftReference</code>s
- * so that when memory becomes an issue, the GC can claim
- * any products it requires.
+ * The cache can only contain its configured maximum of products
+ * at a time {@link ConfigProperties} <code>PRODUCT_CACHE_MAX</code>
+ * and is implemented using <code>SoftReference</code>s so that when
+ * memory becomes an issue, the GC can claim any products it requires.
  *
  */
 @CandlepinSingletonScoped
@@ -48,8 +50,8 @@ public class ProductCache {
     protected ProductMapping products;
 
     @Inject
-    public ProductCache(ProductServiceAdapter productAdapter) {
-        products = new ProductMapping();
+    public ProductCache(Config config, ProductServiceAdapter productAdapter) {
+        products = new ProductMapping(config.getInt(ConfigProperties.PRODUCT_CACHE_MAX));
         this.productAdapter = productAdapter;
     }
 
@@ -119,8 +121,11 @@ public class ProductCache {
      */
     protected class ProductMapping extends LinkedHashMap<String, ProductReference> {
 
-        // The maximum number of products allowed in the map.
-        private static final int MAX_PRODUCTS = 100;
+        private int max;
+
+        public ProductMapping(int max) {
+            this.max = max;
+        }
 
         /*
          * When an attempt is made to add a product to the map,
@@ -129,9 +134,8 @@ public class ProductCache {
          */
         @Override
         protected boolean removeEldestEntry(Entry<String, ProductReference> eldest) {
-            return this.size() > MAX_PRODUCTS;
+            return this.size() > max;
         }
-
 
     }
 }

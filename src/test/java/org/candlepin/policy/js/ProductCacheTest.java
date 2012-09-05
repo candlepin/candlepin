@@ -22,7 +22,10 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.mock;
 
+import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Product;
 import org.candlepin.service.ProductServiceAdapter;
 import org.junit.Before;
@@ -37,12 +40,32 @@ public class ProductCacheTest {
 
     @Mock
     private ProductServiceAdapter mockProductAdapter;
+
+    @Mock
+    private Config config;
+
     private TestingProductCache cache;
 
     @Before
     public void setupTest() {
         MockitoAnnotations.initMocks(this);
-        cache = new TestingProductCache(mockProductAdapter);
+
+        when(config.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
+        cache = new TestingProductCache(config, mockProductAdapter);
+    }
+
+    @Test
+    public void ensureCacheMaxIsConfigurable() {
+        int maxProducts = 200;
+        Config testConfigMock = mock(Config.class);
+        when(testConfigMock.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX)))
+            .thenReturn(maxProducts);
+        ProductCache testCache = new ProductCache(testConfigMock, mockProductAdapter);
+        for (int i = 0; i < 220; i++) {
+            addProductToCache(testCache, "Prod" + i);
+        }
+        assertEquals(maxProducts, testCache.size());
+
     }
 
     @Test
@@ -155,18 +178,22 @@ public class ProductCacheTest {
         verify(mockProductAdapter, times(2)).getProductById(eq(productId));
     }
 
-    private Product addProductToCache(String productId) {
+    private Product addProductToCache(ProductCache prodCache, String productId) {
         Product product = new Product(productId, productId);
         when(mockProductAdapter.getProductById(product.getId())).thenReturn(product);
         assertNotNull("Failed to add product to cache.",
-            cache.getProductById(product.getId()));
+            prodCache.getProductById(product.getId()));
         return product;
+    }
+
+    private Product addProductToCache(String productId) {
+        return addProductToCache(cache, productId);
     }
 
     private class TestingProductCache extends ProductCache {
 
-        public TestingProductCache(ProductServiceAdapter productAdapter) {
-            super(productAdapter);
+        public TestingProductCache(Config config, ProductServiceAdapter productAdapter) {
+            super(config, productAdapter);
         }
 
         public void setNullReferenceForKey(String productId) {
