@@ -59,9 +59,9 @@ import com.google.inject.Inject;
 /**
  * X509ExtensionUtil
  */
-public class X509V2ExtensionUtil extends X509Util{
+public class X509V3ExtensionUtil extends X509Util{
 
-    private static Logger log = Logger.getLogger(X509V2ExtensionUtil.class);
+    private static Logger log = Logger.getLogger(X509V3ExtensionUtil.class);
     private Config config;
     private EntitlementCurator entCurator;
     private String thisVersion = "3.0";
@@ -71,7 +71,7 @@ public class X509V2ExtensionUtil extends X509Util{
     private static final String END_NODE = "*";
 
     @Inject
-    public X509V2ExtensionUtil(Config config, EntitlementCurator entCurator) {
+    public X509V3ExtensionUtil(Config config, EntitlementCurator entCurator) {
         // Output everything in UTC
         this.config = config;
         this.entCurator = entCurator;

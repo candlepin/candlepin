@@ -50,7 +50,7 @@ import org.candlepin.util.Util;
 import org.candlepin.util.CertificateSizeException;
 import org.candlepin.util.X509ExtensionUtil;
 import org.candlepin.util.X509Util;
-import org.candlepin.util.X509V2ExtensionUtil;
+import org.candlepin.util.X509V3ExtensionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -67,7 +67,7 @@ public class DefaultEntitlementCertServiceAdapter extends
 
     private PKIUtility pki;
     private X509ExtensionUtil extensionUtil;
-    private X509V2ExtensionUtil v2extensionUtil;
+    private X509V3ExtensionUtil v3extensionUtil;
     private KeyPairCurator keyPairCurator;
     private CertificateSerialCurator serialCurator;
     private ProductServiceAdapter productAdapter;
@@ -80,7 +80,7 @@ public class DefaultEntitlementCertServiceAdapter extends
     @Inject
     public DefaultEntitlementCertServiceAdapter(PKIUtility pki,
         X509ExtensionUtil extensionUtil,
-        X509V2ExtensionUtil v2extensionUtil,
+        X509V3ExtensionUtil v3extensionUtil,
         EntitlementCertificateCurator entCertCurator,
         KeyPairCurator keyPairCurator,
         CertificateSerialCurator serialCurator,
@@ -89,7 +89,7 @@ public class DefaultEntitlementCertServiceAdapter extends
 
         this.pki = pki;
         this.extensionUtil = extensionUtil;
-        this.v2extensionUtil = v2extensionUtil;
+        this.v3extensionUtil = v3extensionUtil;
         this.entCertCurator = entCertCurator;
         this.keyPairCurator = keyPairCurator;
         this.serialCurator = serialCurator;
@@ -158,13 +158,12 @@ public class DefaultEntitlementCertServiceAdapter extends
         Map<String, EnvironmentContent> promotedContent = getPromotedContent(ent);
         String contentPrefix = getContentPrefix(ent, useContentPrefix);
 
-        // V2 is disabled by design
         String entitlementVersion = ent.getConsumer()
             .getFact("system.certificate_version");
-        if (entitlementVersion != null && entitlementVersion.startsWith("2.")) {
-            extensions = prepareV2Extensions(products, ent, contentPrefix,
+        if (entitlementVersion != null && entitlementVersion.startsWith("3.")) {
+            extensions = prepareV3Extensions(products, ent, contentPrefix,
                 promotedContent, sub);
-            byteExtensions = prepareV2ByteExtensions(products, ent, contentPrefix,
+            byteExtensions = prepareV3ByteExtensions(products, ent, contentPrefix,
                 promotedContent, sub);
         }
         else {
@@ -256,19 +255,19 @@ public class DefaultEntitlementCertServiceAdapter extends
         return result;
     }
 
-    public Set<X509ExtensionWrapper> prepareV2Extensions(Set<Product> products,
+    public Set<X509ExtensionWrapper> prepareV3Extensions(Set<Product> products,
         Entitlement ent, String contentPrefix,
         Map<String, EnvironmentContent> promotedContent, Subscription sub) {
-        Set<X509ExtensionWrapper> result =  v2extensionUtil.getExtensions(products,
+        Set<X509ExtensionWrapper> result =  v3extensionUtil.getExtensions(products,
             ent, contentPrefix, promotedContent, sub);
         return result;
     }
 
-    public Set<X509ByteExtensionWrapper> prepareV2ByteExtensions(Set<Product> products,
+    public Set<X509ByteExtensionWrapper> prepareV3ByteExtensions(Set<Product> products,
         Entitlement ent, String contentPrefix,
         Map<String, EnvironmentContent> promotedContent, Subscription sub)
         throws IOException {
-        Set<X509ByteExtensionWrapper> result =  v2extensionUtil.getByteExtensions(products,
+        Set<X509ByteExtensionWrapper> result =  v3extensionUtil.getByteExtensions(products,
             ent, contentPrefix, promotedContent, sub);
         return result;
     }
@@ -326,7 +325,7 @@ public class DefaultEntitlementCertServiceAdapter extends
         String contentPrefix = getContentPrefix(entitlement, !thisIsUeberCert);
 
 
-        byte[] payloadBytes = v2extensionUtil.createEntitlementDataPayload(products,
+        byte[] payloadBytes = v3extensionUtil.createEntitlementDataPayload(products,
             entitlement, contentPrefix, promotedContent, sub);
         String payload = "-----BEGIN ENTITLEMENT DATA-----\n";
         payload += Util.toBase64(payloadBytes);
