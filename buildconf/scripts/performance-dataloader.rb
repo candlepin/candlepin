@@ -14,23 +14,29 @@
 require  "../../client/ruby/candlepin_api"
 require 'pp'
 require 'benchmark'
+require 'optparse'
 
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "admin"
 HOST = "localhost"
 PORT = 8443
 
-# Number of systems to register and autobind:
-SYSTEM_COUNT = 5000
-
-# Number of pools/subscriptions to create:
-POOL_COUNT = 1000
-
 # Array of installed products each system will have. When we create pools,
 # we'll have them provide some random combination of these. These are all
 # from our test data, as the products must already exist, and we can more
 # easily test our own clients against the org this script creates.
-INSTALLED_PRODUCTS = ['37060', '100000000000002', '37065', '37070', '37068']
+INSTALLED_PRODUCTS = [
+  '37060',
+  '37062',
+  '37065',
+  '37070',
+  '37067',
+  '37068',
+  '37069',
+  '37080',
+  '27060',
+  '100000000000002',
+]
 
 ARCH = "x86_64"
 
@@ -68,7 +74,7 @@ end
 def create_pools(cp, owner_key, count, attributes, quantity)
   end_date = Date.new(2025, 5, 29)
   time = Benchmark.realtime do
-    (1..(POOL_COUNT)).each do |i|
+    (1..(count)).each do |i|
       mkt_prod_id = random_string('mkt-prod')
       mkt_prod = cp.create_product(mkt_prod_id, mkt_prod_id, {
         :attributes => attributes,
@@ -80,34 +86,73 @@ def create_pools(cp, owner_key, count, attributes, quantity)
   puts "   #{time} seconds"
 end
 
+options = {}
+optparse = OptionParser.new do |opts|
+  options[:org] = random_string("perf-owner")
+  opts.on("-o KEY", "--org KEY", "Create or re-use a specific org.") do |org_key|
+    options[:org] = org_key
+  end
+
+  # By default we won't create any new pools:
+  options[:pool_count] = 0
+  opts.on("-p POOL_COUNT", "--pool-count POOL_COUNT", "Number of pools/subscriptions to create.") do |pool_count|
+    options[:pool_count] = pool_count.to_i
+  end
+
+  # By default we won't create any new systems:
+  options[:system_count] = 0
+  opts.on("-s SYSTEM_COUNT", "--system-count SYSTEM_COUNT", "Number of systems to register and autosubscribe.") do |system_count|
+    options[:system_count] = system_count.to_i
+  end
+
+  opts.on('-h', '--help', 'Display this screen') do
+    exit
+  end
+end
+
+optparse.parse!
+
 cp = Candlepin.new(ADMIN_USERNAME, ADMIN_PASSWORD, nil, nil, HOST, PORT)
 
 # Create the owner we will load up with data:
-owner = cp.create_owner random_string("perf-owner")
 
-puts "Created test owner: #{owner['key']}"
-
-puts "Creating #{POOL_COUNT} subscriptions/pools:"
-attributes = {
-  :virt_limit => "4",
-  :arch => ARCH,
-  :requires_consumer_type => "system",
-  :support_level => "Amazing",
-  :support_type => "Everything",
-  #:stacking_id => "sostacked",
-  #:sockets => "2",
-  #"multi-entitlement" => "yes",
-}
-# To enable stacking, uncomment the attributes above and adjust the quantity
-# here:
-create_pools(cp, owner['key'], POOL_COUNT, attributes, 500)
-
-puts "Refreshing pools..."
-time = Benchmark.realtime do
-  cp.refresh_pools(owner['key'])
+begin
+  owner = cp.get_owner options[:org]
+  puts "Re-using owner: #{owner['key']}"
+rescue RestClient::ResourceNotFound
+  owner = cp.create_owner options[:org]
+  puts "Created owner: #{owner['key']}"
 end
-puts "   #{time} seconds"
 
-puts "Creating #{SYSTEM_COUNT} systems:"
-create_systems(cp, owner['key'], SYSTEM_COUNT, {"cpu.cpu_socket(s)" => 8, "uname.machine" => ARCH})
+if options[:pool_count] > 0
+  puts "Creating #{options[:pool_count]} subscriptions/pools:"
+  attributes = {
+    :virt_limit => "4",
+    :arch => ARCH,
+    :requires_consumer_type => "system",
+    :support_level => "Amazing",
+    :support_type => "Everything",
+    #:stacking_id => "sostacked",
+    #:sockets => "2",
+    #"multi-entitlement" => "yes",
+  }
+  # To enable stacking, uncomment the attributes above and adjust the quantity
+  # here:
+  create_pools(cp, owner['key'], options[:pool_count], attributes, 500)
+
+  puts "Refreshing pools..."
+  time = Benchmark.realtime do
+    cp.refresh_pools(owner['key'])
+  end
+  puts "   #{time} seconds"
+else
+  puts "Skipping pool creation. (use --pool-count)"
+end
+
+if options[:system_count] > 0
+  puts "Creating #{options[:system_count]} systems:"
+  create_systems(cp, owner['key'], options[:system_count], {"cpu.cpu_socket(s)" => 8, "uname.machine" => ARCH})
+else
+  puts "Skipping system registration and autobinds. (use --system-count)"
+end
 
