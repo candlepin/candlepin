@@ -69,6 +69,7 @@ public class X509V3ExtensionUtil extends X509Util{
     private long pathNodeId = 0;
     private long huffNodeId = 0;
     private static final String END_NODE = "*";
+    private static boolean treeDebug = false;
 
     @Inject
     public X509V3ExtensionUtil(Config config, EntitlementCurator entCurator) {
@@ -418,13 +419,15 @@ public class X509V3ExtensionUtil extends X509Util{
         PathNode endMarker = new PathNode();
         for (Content c : contents) {
             String path = c.getPath();
-            log.debug(path);
+            if (treeDebug) {
+                log.debug(path);
+            }
             StringTokenizer st = new StringTokenizer(path, "/");
             makePathForURL(st, parent, endMarker);
         }
-        if (log.isDebugEnabled()) { printTree(parent, 0); }
+        if (treeDebug) { printTree(parent, 0); }
         condenseSubTreeNodes(endMarker);
-        if (log.isDebugEnabled()) { printTree(parent, 0); }
+        if (treeDebug) { printTree(parent, 0); }
         return parent;
     }
 
@@ -472,7 +475,7 @@ public class X509V3ExtensionUtil extends X509Util{
         nodeRep.append(hn.getValue());
         nodeRep.append("]");
 
-        log.debug(nodeRep + "\n");
+        log.debug(nodeRep);
         if (hn.getLeft() != null) {
             printTrie(hn.getLeft(), tab + 1);
         }
@@ -588,7 +591,7 @@ public class X509V3ExtensionUtil extends X509Util{
                 }
             }
         }
-        if (log.isDebugEnabled()) {
+        if (treeDebug) {
             log.debug("Parts List: " + parts);
         }
         return parts;
@@ -630,7 +633,7 @@ public class X509V3ExtensionUtil extends X509Util{
                 result.add(pos, pn);
             }
         }
-        if (log.isDebugEnabled()) {
+        if (treeDebug) {
             log.debug(result);
         }
         return result;
@@ -672,7 +675,7 @@ public class X509V3ExtensionUtil extends X509Util{
             }
             bits.append(endNodeLocation);
         }
-        if (log.isDebugEnabled()) {
+        if (treeDebug) {
             log.debug(bits);
         }
         if (bits.length() % 8 != 0) {
@@ -686,6 +689,14 @@ public class X509V3ExtensionUtil extends X509Util{
             result = combineByteArrays(result,
                 new byte[] {(byte) Integer.parseInt(oneByte, 2)});
             bits.delete(0, 8);
+        }
+        if (treeDebug) {
+            ByteArrayInputStream bais = new ByteArrayInputStream(result);
+            int value = bais.read();
+            while (value != -1) {
+                log.debug(value);
+                value = bais.read();
+            }
         }
         return result;
     }
@@ -810,35 +821,41 @@ public class X509V3ExtensionUtil extends X509Util{
     }
 
     private HuffNode makeTrie(List<HuffNode> nodesList) {
-        while (nodesList.size() > 1) {
-            HuffNode node1 = findSmallest(null, nodesList);
-            HuffNode node2 = findSmallest(node1, nodesList);
-            HuffNode parent = mergeNodes(node1, node2);
-            nodesList.add(parent);
-            nodesList.remove(node1);
-            nodesList.remove(node2);
+        // drop the first node if path node value, it is not needed
+        if (nodesList.get(0).getValue() instanceof PathNode) {
+            nodesList.remove(0);
         }
-        printTrie(nodesList.get(0), 0);
+        while (nodesList.size() > 1) {
+            int node1 = findSmallest(-1, nodesList);
+            int node2 = findSmallest(node1, nodesList);
+            HuffNode hn1 = nodesList.get(node1);
+            HuffNode hn2 = nodesList.get(node2);
+            HuffNode merged = mergeNodes(hn1, hn2);
+            nodesList.remove(hn1);
+            nodesList.remove(hn2);
+            nodesList.add(merged);
+        }
+        if (treeDebug) {
+            printTrie(nodesList.get(0), 0);
+        }
         return nodesList.get(0);
     }
 
-    private HuffNode findSmallest(HuffNode exclude, List<HuffNode> nodes) {
-        HuffNode smallest = null;
-        for (HuffNode n : nodes) {
-            boolean isExclude = false;
-            if (exclude != null) {
-                isExclude = n.getId() == exclude.getId();
-            }
-            if (!isExclude && (smallest == null || n.getWeight() < smallest.getWeight())) {
-                smallest = n;
+    private int findSmallest(int exclude, List<HuffNode> nodes) {
+        int smallest = -1;
+        for (int index = 0; index < nodes.size(); index++) {
+            if (index == exclude) { continue; }
+            if (smallest == -1 || nodes.get(index).getWeight() <
+                nodes.get(smallest).getWeight()) {
+                smallest = index;
             }
         }
         return smallest;
     }
 
     private HuffNode mergeNodes(HuffNode node1, HuffNode node2) {
-        HuffNode left = node1.weight <= node2.weight ? node1 : node2;
-        HuffNode right = node1.weight > node2.weight ? node1 : node2;
+        HuffNode left = node1;
+        HuffNode right = node2;
         HuffNode parent = new HuffNode(null, left.weight + right.weight, left, right);
         return parent;
     }
