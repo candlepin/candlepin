@@ -1,12 +1,12 @@
 require 'candlepin_scenarios'
 
-describe 'Environments Certificate V2' do
+describe 'Environments Certificate V3' do
   include CandlepinMethods
   include CandlepinScenarios
 
   before(:each) do
     @owner = create_owner random_string('test_owner')
-    @org_admin = user_client(@owner, 'guy')
+    @org_admin = user_client(@owner, random_string('guy'))
     @env = @org_admin.create_environment(@owner['key'], 'testenv1',
       "My Test Env 1", "For test systems only.")
   end

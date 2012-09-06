@@ -101,6 +101,8 @@ describe 'Entitlement Certificate V3' do
   end
 
   it 'encoded the content urls' do
+    @system.unbind_entitlement @entitlement.id
+
     @content_1 = create_content({:content_url => '/content/dist/rhel/$releasever/$basearch/debug',})
     @cp.add_content_to_product(@product.id, @content_1.id, true)
     @content_2 = create_content({:content_url => '/content/beta/rhel/$releasever/$basearch/source/SRPMS',})
@@ -108,7 +110,7 @@ describe 'Entitlement Certificate V3' do
     @cp.refresh_pools(@owner['key'])
     @system.consume_product(@product.id)[0]
 
-    payload = @system.list_certificates[1]['payload']
+    payload = @system.list_certificates[0]['payload']
     payload_end = payload.length - 32
     payload = payload[33..payload_end] 
     asn1_body = Base64.decode64(payload)
@@ -117,11 +119,12 @@ describe 'Entitlement Certificate V3' do
 
     json_body['products'][0]['content'].size.should == 3
 
-    value = extension_from_cert(@system.list_certificates[1]['cert'], "1.3.6.1.4.1.2312.9.7")
+    value = extension_from_cert(@system.list_certificates[0]['cert'], "1.3.6.1.4.1.2312.9.7")
 
-    File.open('tmp.bin', 'w') do |f1|  
-      f1.puts value
-    end
+    # Can dump binary to file
+    #File.open('tmp.bin', 'w') do |f1|  
+    #  f1.puts value
+    #end
   
     urls = []
     urls[0] = '/content/dist/rhel/$releasever/$basearch/os'

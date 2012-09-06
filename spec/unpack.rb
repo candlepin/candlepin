@@ -41,7 +41,7 @@ module Unpack
 
     @sentinal = '*'
     string_trie = build_huffman_for_strings(load_dictionary(data).map {|x| "\t#{x}" })
-    print_trie(string_trie.root, 0)
+    # print_trie(string_trie.root, 0)
     buf = z_data_io.read()
     path_root = build_path_nodes(buf, string_trie)
     path_root
@@ -75,7 +75,7 @@ module Unpack
           idx += 1
         end
         node_trie = build_huffman_for_nodes(node_dict)
-        print_trie(node_trie.root, 0)
+        # print_trie(node_trie.root, 0)
         is_count = false 
       else # make bit list
           bit_list += get_bits(byte)
@@ -194,6 +194,8 @@ module Unpack
     nodeRep += ", Symbol = ["
     nodeRep += hn.symbol.to_s
     nodeRep += "]"
+
+    puts nodeRep
  
     if !hn.left.nil?
       print_trie(hn.left, tab + 1)
