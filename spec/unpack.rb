@@ -40,7 +40,7 @@ module Unpack
     z_data_io.seek(e_pos)
 
     @sentinal = '*'
-    string_trie = build_huffman_for_strings(load_dictionary(data).map {|x| "\t#{x}" })
+    string_trie = build_huffman_for_strings(load_dictionary(data))
     # print_trie(string_trie.root, 0)
     buf = z_data_io.read()
     path_root = build_path_nodes(buf, string_trie)
@@ -68,12 +68,8 @@ module Unpack
     buf.each_byte do |byte|
       if is_count # get number of nodes
         node_count += byte
-        idx = 0
-        node_dict = Array.new(node_count)
-        until idx == node_count do
-          node_dict[idx] = Node.new() 
-          idx += 1
-        end
+        node_dict = []
+        node_count.times { node_dict << Node.new() }
         node_trie = build_huffman_for_nodes(node_dict)
         # print_trie(node_trie.root, 0)
         is_count = false 
@@ -170,12 +166,10 @@ module Unpack
 
   def build_huffman_for_nodes(list)
     # parent doesn't have to go into the table
-    i = 1
+    i = 0
     expanded = []
     list.each do |node|
-      if i != 1
-        i.times {expanded << node}
-      end
+      i.times {expanded << node}
       i += 1
     end
     table = HuffmanEncoding.new expanded

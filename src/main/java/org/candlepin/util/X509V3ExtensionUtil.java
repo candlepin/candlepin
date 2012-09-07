@@ -816,7 +816,7 @@ public class X509V3ExtensionUtil extends X509Util{
 
     private List<HuffNode> getPathNodeNodeList(List<PathNode> pathNodes) {
         List<HuffNode> nodes = new ArrayList<HuffNode>();
-        int idx = 1;
+        int idx = 0;
         for (PathNode pn : pathNodes) {
             nodes.add(new HuffNode(pn, idx++));
         }
@@ -913,7 +913,7 @@ public class X509V3ExtensionUtil extends X509Util{
             nodeCount = Integer.parseInt(nodeBits.substring(0, 8), 2);
             nodeBits.delete(0, 8);
         }
-        for (int j = 1; j <= nodeCount; j++) {
+        for (int j = 0; j < nodeCount; j++) {
             nodeDictionary.add(new HuffNode(new PathNode(), j));
         }
         List<HuffNode> trieNodeDictionary = new ArrayList<HuffNode>();
