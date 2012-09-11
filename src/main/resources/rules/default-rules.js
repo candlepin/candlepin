@@ -707,10 +707,8 @@ var Entitlement = {
         for each (pool_combo in candidate_combos) {
             var provided_count = 0;
             var unique_provided = [];
-            log.debug("checking pool_combo " + pool_combo);
             for each (pool_class in pool_combo) {
                 var pool = pool_class[0];
-                log.debug("\tpool_combo " + pool.getId());
                 var provided_products = getRelevantProvidedProducts(pool, products);
                 for each (provided_product in provided_products) {
                     log.debug("\t\tprovided_product " + provided_product.getId());

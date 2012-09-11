@@ -38,7 +38,7 @@ def reg_and_consume(server, port, user, pass, product)
   cp = Candlepin.new(username=user, password=pass,
     cert=nil, key=nil,
     host=server, port=port)
-  consumer = cp.register("test" << rand(10000).to_s)
+  consumer = cp.register("test" << rand(10000).to_s, :system, nil, {}, nil, CP_OWNER_KEY)
 
   cp = Candlepin.new(nil, nil, consumer['idCert']['cert'],
                      consumer['idCert']['key'], server, port)
