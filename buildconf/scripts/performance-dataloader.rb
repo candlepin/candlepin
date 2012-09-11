@@ -95,22 +95,28 @@ optparse = OptionParser.new do |opts|
 
   # By default we won't create any new pools:
   options[:pool_count] = 0
-  opts.on("-p POOL_COUNT", "--pool-count POOL_COUNT", "Number of pools/subscriptions to create.") do |pool_count|
+  opts.on("-p POOL_COUNT", "--pool-count POOL_COUNT", "Number of pools/subscriptions to create. (default: 0)") do |pool_count|
     options[:pool_count] = pool_count.to_i
   end
 
   # By default we won't create any new systems:
   options[:system_count] = 0
-  opts.on("-s SYSTEM_COUNT", "--system-count SYSTEM_COUNT", "Number of systems to register and autosubscribe.") do |system_count|
+  opts.on("-s SYSTEM_COUNT", "--system-count SYSTEM_COUNT", "Number of systems to register and autosubscribe. (default: 0)") do |system_count|
     options[:system_count] = system_count.to_i
   end
 
   opts.on('-h', '--help', 'Display this screen') do
+    puts opts
     exit
   end
 end
 
 optparse.parse!
+
+if options[:pool_count] == 0 and options[:system_count] == 0
+  puts "Nothing to do, exiting..."
+  exit
+end
 
 cp = Candlepin.new(ADMIN_USERNAME, ADMIN_PASSWORD, nil, nil, HOST, PORT)
 
