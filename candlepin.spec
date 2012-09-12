@@ -14,7 +14,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.7.8
+Version: 0.7.9
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -283,6 +283,36 @@ fi
 
 
 %changelog
+* Wed Sep 12 2012 Alex Wood <awood@redhat.com> 0.7.9-1
+- Fix and clarify performance script CLI help. (dgoodwin@redhat.com)
+- Remove some useless and verbose JS logging. (dgoodwin@redhat.com)
+- Add some CLI options for performance dataload script. (dgoodwin@redhat.com)
+- Improvements for the performance test script. (dgoodwin@redhat.com)
+- Let refresh_pools finish in job_status_spec (jbowes@redhat.com)
+- add some javadoc for RulesCriteria (alikins@redhat.com)
+- unneeded comment removed (alikins@redhat.com)
+- checkstyle cleanup (alikins@redhat.com)
+- pass in the hostConsumer instead of consumerCurator (alikins@redhat.com)
+- spec files fixes for entitlement bind changes (alikins@redhat.com)
+- fix spec expecting a http error, now expect null (alikins@redhat.com)
+- Fix criteria rules when guest has no registered host consumer.
+  (dgoodwin@redhat.com)
+- revert unneeded changes (alikins@redhat.com)
+- clean up (alikins@redhat.com)
+- Fix test cases for cases where criteria filter all pools (alikins@redhat.com)
+- Add criteria create for requires_host (alikins@redhat.com)
+- Add a pysical pool to virtOnlyProductAttributeFiltering (alikins@redhat.com)
+- properly init rulesLogger (alikins@redhat.com)
+- Pass in a ConsumerCurator so we can look up consumers (alikins@redhat.com)
+- move rules criteria into a Consumer null check (alikins@redhat.com)
+- Fix a pool criteria test to fail until we implement. (dgoodwin@redhat.com)
+- Tests for PoolCriteria rules. (dgoodwin@redhat.com)
+- Fix the criteria to match against Pool from main criteria
+  (alikins@redhat.com)
+- Drop pure js filters, move to db criteria based filtering
+  (alikins@redhat.com)
+- Add js support for pool filtering (alikins@redhat.com)
+
 * Fri Aug 31 2012 jesus m. rodriguez <jesusr@redhat.com> 0.7.8-1
 - Pull curator classes out into their own package. (jbowes@redhat.com)
 - Fix certv1 content filtering on autobinds. (dgoodwin@redhat.com)
