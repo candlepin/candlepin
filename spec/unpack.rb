@@ -63,11 +63,36 @@ module Unpack
     node_trie = nil
     node_dict = {}
     is_count = true
+    multi_count = false
+    byte_count = 0
     node_count = 0
     bit_list = ''
     buf.each_byte do |byte|
       if is_count # get number of nodes
-        node_count += byte
+        # print "Byte: #{byte}\n"
+        if !multi_count and byte > 127
+          multi_count = true
+          byte_count = byte - 128
+          # print "Byte count: #{byte_count}\n"
+          next
+        end
+        if multi_count
+          # print "Multicount\n"
+          node_count = node_count << 8
+          # print "Node count #{node_count}\n"
+          node_count += byte
+          # print "Node count #{node_count}\n"
+          byte_count = byte_count - 1
+          # print "Byte count #{byte_count}\n"
+          multi_count = byte_count > 0
+          # print "Multicount #{multi_count}\n"
+          if multi_count
+            next
+          end
+        else
+          node_count += byte
+        end
+        # print "Node Count: #{node_count}\n"
         node_dict = []
         node_count.times { node_dict << Node.new() }
         node_trie = build_huffman_for_nodes(node_dict)

@@ -101,16 +101,14 @@ describe 'Entitlement Certificate V3' do
   end
 
   it 'encoded the content urls' do
-    @system.unbind_entitlement @entitlement.id
-
     @content_1 = create_content({:content_url => '/content/dist/rhel/$releasever/$basearch/debug',})
     @cp.add_content_to_product(@product.id, @content_1.id, true)
     @content_2 = create_content({:content_url => '/content/beta/rhel/$releasever/$basearch/source/SRPMS',})
     @cp.add_content_to_product(@product.id, @content_2.id, true)
     @cp.refresh_pools(@owner['key'])
-    @system.consume_product(@product.id)[0]
+    entitlement = @system.consume_product(@product.id)[0]
 
-    payload = @system.list_certificates[0]['payload']
+    payload = entitlement.certificates[0]['payload']
     payload_end = payload.length - 32
     payload = payload[33..payload_end] 
     asn1_body = Base64.decode64(payload)
@@ -119,7 +117,7 @@ describe 'Entitlement Certificate V3' do
 
     json_body['products'][0]['content'].size.should == 3
 
-    value = extension_from_cert(@system.list_certificates[0]['cert'], "1.3.6.1.4.1.2312.9.7")
+    value = extension_from_cert(entitlement.certificates[0]['cert'], "1.3.6.1.4.1.2312.9.7")
 
     # Can dump binary to file
     #File.open('tmp.bin', 'w') do |f1|  
@@ -131,6 +129,41 @@ describe 'Entitlement Certificate V3' do
     urls[1] = '/content/dist/rhel/$releasever/$basearch/debug'
     urls[2] = '/content/beta/rhel/$releasever/$basearch/source/SRPMS'
     are_content_urls_present(value, urls).should == true
+    @system.unbind_entitlement @entitlement.id
+  end
 
+  it 'encoded many content urls' do
+    number = 100
+    number.times do |i|
+      content = create_content({:content_url => "/content/dist/rhel/$releasever#{i}/$basearch#{i}/debug#{i}",})
+      @cp.add_content_to_product(@product.id, content.id, true)
+    end
+    @cp.refresh_pools(@owner['key'])
+    entitlement = @system.consume_product(@product.id)[0]
+
+    payload = entitlement.certificates[0]['payload']
+    payload_end = payload.length - 32
+    payload = payload[33..payload_end]
+    asn1_body = Base64.decode64(payload)
+    body = Zlib::Inflate.inflate(asn1_body)
+    json_body = JSON.parse(body)
+
+    json_body['products'][0]['content'].size.should == 101
+
+    value = extension_from_cert(entitlement.certificates[0]['cert'], "1.3.6.1.4.1.2312.9.7")
+
+    # Can dump binary to file
+    #File.open('tmp.bin', 'w') do |f1|
+    #  f1.puts value
+    #end
+
+    urls = []
+    urls[0] = '/content/dist/rhel/$releasever0/$basearch0/debug0'
+    urls[1] = '/content/dist/rhel/$releasever29/$basearch29/debug29'
+    urls[2] = '/content/dist/rhel/$releasever41/$basearch41/debug41'
+    urls[3] = '/content/dist/rhel/$releasever75/$basearch75/debug75'
+    urls[4] = '/content/dist/rhel/$releasever99/$basearch99/debug99'
+    are_content_urls_present(value, urls).should == true
+    @system.unbind_entitlement @entitlement.id
   end
 end
