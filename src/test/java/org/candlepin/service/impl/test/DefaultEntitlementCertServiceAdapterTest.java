@@ -29,9 +29,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -67,7 +69,10 @@ import org.candlepin.service.impl.DefaultEntitlementCertServiceAdapter;
 import org.candlepin.util.CertificateSizeException;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509ExtensionUtil;
-import org.candlepin.util.X509V2ExtensionUtil;
+import org.candlepin.util.X509V3ExtensionUtil;
+import org.candlepin.util.X509V3ExtensionUtil.HuffNode;
+import org.candlepin.util.X509V3ExtensionUtil.NodePair;
+import org.candlepin.util.X509V3ExtensionUtil.PathNode;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -88,7 +93,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     private static final String CONTENT_ID = "1234";
     private static final String CONTENT_TYPE = "yum";
     private static final String CONTENT_GPG_URL = "gpgUrl";
-    private static final String CONTENT_URL = "contentUrl";
+    private static final String CONTENT_URL = "/content/dist/rhel/$releasever/$basearch/os";
     private static final String CONTENT_VENDOR = "vendor";
     private static final String CONTENT_NAME = "name";
     private static final Long CONTENT_METADATA_EXPIRE = 3200L;
@@ -105,23 +110,33 @@ public class DefaultEntitlementCertServiceAdapterTest {
     @Mock
     private EntitlementCurator entCurator;
     private X509ExtensionUtil extensionUtil;
-    private X509V2ExtensionUtil v2extensionUtil;
+    private X509V3ExtensionUtil v3extensionUtil;
     private Product product;
     private Subscription subscription;
     private Entitlement entitlement;
     private Pool pool;
     private Content content;
     private Owner owner;
+    private Set<Content> superContent;
+
+    private String[] testUrls = {"/content/dist/rhel/$releasever/$basearch/os",
+        "/content/dist/rhel/$releasever/$basearch/debug",
+        "/content/dist/rhel/$releasever/$basearch/source/SRPMS",
+        "/content/dist/jboss/source",
+        "/content/beta/rhel/$releasever/$basearch/os",
+        "/content/beta/rhel/$releasever/$basearch/debug",
+        "/content/beta/rhel/$releasever/$basearch/source/SRPMS"};
 
     @Before
     public void setUp() {
         extensionUtil = new X509ExtensionUtil(new Config());
-        v2extensionUtil = new X509V2ExtensionUtil(new Config(), entCurator);
+        v3extensionUtil = new X509V3ExtensionUtil(new Config(), entCurator);
 
         certServiceAdapter = new DefaultEntitlementCertServiceAdapter(
-            mockedPKI, extensionUtil, v2extensionUtil, null, null, serialCurator,
+            mockedPKI, extensionUtil, v3extensionUtil, null, null, serialCurator,
             productAdapter, entCurator,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK));
+
 
         product = new Product("12345", "a product", "variant", "version",
             "arch", "SVC");
@@ -130,6 +145,12 @@ public class DefaultEntitlementCertServiceAdapterTest {
             CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL, CONTENT_GPG_URL);
         content.setMetadataExpire(CONTENT_METADATA_EXPIRE);
         content.setRequiredTags(REQUIRED_TAGS);
+
+        superContent = new HashSet<Content>();
+        for (String url : testUrls) {
+            superContent.add(createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
+                CONTENT_TYPE, CONTENT_VENDOR, url, CONTENT_GPG_URL));
+        }
 
         subscription = new Subscription(null, product, new HashSet<Product>(),
             1L, new Date(), new Date(), new Date());
@@ -545,11 +566,12 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
 
     @Test
-    public void testPrepareV2Extensions() throws IOException {
+    public void testPrepareV3EntitlementData() throws IOException,
+        GeneralSecurityException {
         Set<Product> products = new HashSet<Product>();
         products.add(product);
         when(entitlement.getConsumer().getFact("system.certificate_version"))
-            .thenReturn("2.1");
+            .thenReturn("3.1");
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
 
         subscription.getProduct().setAttribute("warning_period", "20");
@@ -566,28 +588,21 @@ public class DefaultEntitlementCertServiceAdapterTest {
         }
 
         Set<X509ExtensionWrapper> extensions =
-            certServiceAdapter.prepareV2Extensions(products, entitlement, "prefix",
-                null, subscription);
-        Set<X509ByteExtensionWrapper> byteExtensions =
-            certServiceAdapter.prepareV2ByteExtensions(products, entitlement, "prefix",
+            certServiceAdapter.prepareV3Extensions(products, entitlement, "prefix",
                 null, subscription);
         Map<String, X509ExtensionWrapper> map =
             new HashMap<String, X509ExtensionWrapper>();
         for (X509ExtensionWrapper ext : extensions) {
             map.put(ext.getOid(), ext);
         }
-        Map<String, X509ByteExtensionWrapper> byteMap =
-            new HashMap<String, X509ByteExtensionWrapper>();
-        for (X509ByteExtensionWrapper ext : byteExtensions) {
-            byteMap.put(ext.getOid(), ext);
-        }
         assertTrue(map.containsKey("1.3.6.1.4.1.2312.9.6"));
-        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("2.0"));
+        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("3.0"));
 
-        assertTrue(byteMap.containsKey("1.3.6.1.4.1.2312.9.7"));
+        byte[] payload = v3extensionUtil.createEntitlementDataPayload(products, entitlement,
+            "prefix", null, subscription);
         String stringValue = "";
         try {
-            stringValue = processPayload(byteMap.get("1.3.6.1.4.1.2312.9.7").getValue());
+            stringValue = processPayload(payload);
         }
         catch (Exception e) {
             throw new RuntimeException(e);
@@ -654,11 +669,11 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
 
     @Test
-    public void testPrepareV2ExtensionsForDefaults() throws IOException {
+    public void testPrepareV3EntitlementDataForDefaults() throws IOException {
         Set<Product> products = new HashSet<Product>();
         products.add(product);
         when(entitlement.getConsumer().getFact("system.certificate_version"))
-            .thenReturn("2.1");
+            .thenReturn("3.1");
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
 
         subscription.getProduct().setAttribute("warning_period", "0");
@@ -669,28 +684,21 @@ public class DefaultEntitlementCertServiceAdapterTest {
         }
 
         Set<X509ExtensionWrapper> extensions =
-            certServiceAdapter.prepareV2Extensions(products, entitlement, "prefix",
-                null, subscription);
-        Set<X509ByteExtensionWrapper> byteExtensions =
-            certServiceAdapter.prepareV2ByteExtensions(products, entitlement, "prefix",
+            certServiceAdapter.prepareV3Extensions(products, entitlement, "prefix",
                 null, subscription);
         Map<String, X509ExtensionWrapper> map =
             new HashMap<String, X509ExtensionWrapper>();
         for (X509ExtensionWrapper ext : extensions) {
             map.put(ext.getOid(), ext);
         }
-        Map<String, X509ByteExtensionWrapper> byteMap =
-            new HashMap<String, X509ByteExtensionWrapper>();
-        for (X509ByteExtensionWrapper ext : byteExtensions) {
-            byteMap.put(ext.getOid(), ext);
-        }
         assertTrue(map.containsKey("1.3.6.1.4.1.2312.9.6"));
-        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("2.0"));
+        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("3.0"));
 
-        assertTrue(byteMap.containsKey("1.3.6.1.4.1.2312.9.7"));
+        byte[] payload = v3extensionUtil.createEntitlementDataPayload(products, entitlement,
+            "prefix", null, subscription);
         String stringValue = "";
         try {
-            stringValue = processPayload(byteMap.get("1.3.6.1.4.1.2312.9.7").getValue());
+            stringValue = processPayload(payload);
         }
         catch (Exception e) {
             throw new RuntimeException(e);
@@ -716,39 +724,32 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
 
     @Test
-    public void testPrepareV2ExtensionsForBooleans() throws IOException {
+    public void testPrepareV3EntitlementDataForBooleans() throws IOException {
         Set<Product> products = new HashSet<Product>();
         products.add(product);
         when(entitlement.getConsumer().getFact("system.certificate_version"))
-            .thenReturn("2.1");
+            .thenReturn("3.1");
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
 
         subscription.getProduct().setAttribute("management_enabled", "1");
         entitlement.getPool().setAttribute("virt_only", "1");
 
         Set<X509ExtensionWrapper> extensions =
-            certServiceAdapter.prepareV2Extensions(products, entitlement, "prefix",
-                null, subscription);
-        Set<X509ByteExtensionWrapper> byteExtensions =
-            certServiceAdapter.prepareV2ByteExtensions(products, entitlement, "prefix",
+            certServiceAdapter.prepareV3Extensions(products, entitlement, "prefix",
                 null, subscription);
         Map<String, X509ExtensionWrapper> map =
             new HashMap<String, X509ExtensionWrapper>();
         for (X509ExtensionWrapper ext : extensions) {
             map.put(ext.getOid(), ext);
         }
-        Map<String, X509ByteExtensionWrapper> byteMap =
-            new HashMap<String, X509ByteExtensionWrapper>();
-        for (X509ByteExtensionWrapper ext : byteExtensions) {
-            byteMap.put(ext.getOid(), ext);
-        }
         assertTrue(map.containsKey("1.3.6.1.4.1.2312.9.6"));
-        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("2.0"));
+        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("3.0"));
 
-        assertTrue(byteMap.containsKey("1.3.6.1.4.1.2312.9.7"));
+        byte[] payload = v3extensionUtil.createEntitlementDataPayload(products, entitlement,
+            "prefix", null, subscription);
         String stringValue = "";
         try {
-            stringValue = processPayload(byteMap.get("1.3.6.1.4.1.2312.9.7").getValue());
+            stringValue = processPayload(payload);
         }
         catch (Exception e) {
             throw new RuntimeException(e);
@@ -763,11 +764,222 @@ public class DefaultEntitlementCertServiceAdapterTest {
         assertTrue((Boolean) subs.get("virt_only"));
     }
 
+    @Test
+    public void testContentExtension() throws IOException {
+        Set<Product> products = new HashSet<Product>();
+        products.add(product);
+        product.setContent(superContent);
+        when(entitlement.getConsumer().getFact("system.certificate_version"))
+            .thenReturn("3.1");
+        when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
+
+        Set<X509ByteExtensionWrapper> byteExtensions =
+            certServiceAdapter.prepareV3ByteExtensions(products, entitlement, "prefix",
+                null, subscription);
+        Map<String, X509ExtensionWrapper> map =
+            new HashMap<String, X509ExtensionWrapper>();
+        Map<String, X509ByteExtensionWrapper> byteMap =
+            new HashMap<String, X509ByteExtensionWrapper>();
+        for (X509ByteExtensionWrapper ext : byteExtensions) {
+            byteMap.put(ext.getOid(), ext);
+        }
+
+        assertTrue(byteMap.containsKey("1.3.6.1.4.1.2312.9.7"));
+        List<String> contentSetList = new ArrayList<String>();
+        try {
+            contentSetList = v3extensionUtil.hydrateContentPackage(
+                byteMap.get("1.3.6.1.4.1.2312.9.7").getValue());
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        assertEquals(7, contentSetList.size());
+        for (String url : testUrls) {
+            assertTrue(contentSetList.contains("/prefix" + url));
+        }
+    }
+
+    @Test
+    public void testContentExtensionLargeSet() throws IOException {
+        Set<Product> products = new HashSet<Product>();
+        Product extremeProduct = new Product("12345", "a product", "variant", "version",
+            "arch", "SVC");
+        products.add(extremeProduct);
+        Set<Content> extremeContent = new HashSet<Content>();
+        for (int i = 0; i < 550; i++) {
+            String url = "/content/dist" + i + "/jboss/source" + i;
+            extremeContent.add(createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
+                CONTENT_TYPE, CONTENT_VENDOR, url, CONTENT_GPG_URL));
+        }
+        extremeProduct.setContent(extremeContent);
+        when(entitlement.getConsumer().getFact("system.certificate_version"))
+            .thenReturn("3.1");
+        when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
+
+        Set<X509ExtensionWrapper> extensions =
+            certServiceAdapter.prepareV3Extensions(products, entitlement, "prefix",
+                null, subscription);
+        Set<X509ByteExtensionWrapper> byteExtensions =
+            certServiceAdapter.prepareV3ByteExtensions(products, entitlement, "prefix",
+                null, subscription);
+        Map<String, X509ExtensionWrapper> map =
+            new HashMap<String, X509ExtensionWrapper>();
+        Map<String, X509ByteExtensionWrapper> byteMap =
+            new HashMap<String, X509ByteExtensionWrapper>();
+        for (X509ByteExtensionWrapper ext : byteExtensions) {
+            byteMap.put(ext.getOid(), ext);
+        }
+
+        assertTrue(byteMap.containsKey("1.3.6.1.4.1.2312.9.7"));
+        List<String> contentSetList = new ArrayList<String>();
+        try {
+            contentSetList = v3extensionUtil.hydrateContentPackage(
+                byteMap.get("1.3.6.1.4.1.2312.9.7").getValue());
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        assertEquals(550, contentSetList.size());
+        for (int i = 0; i < 550; i++) {
+            String url = "/content/dist" + i + "/jboss/source" + i;
+            assertTrue(contentSetList.contains("/prefix" + url));
+        }
+    }
+
+    @Test
+    public void testPathTreeCommonHeadAndTail() {
+        List<org.candlepin.json.model.Content> contentList =
+            new ArrayList<org.candlepin.json.model.Content>();
+        for (int i = 0; i < 20; i++) {
+            org.candlepin.json.model.Content cont =
+                new org.candlepin.json.model.Content();
+            cont.setPath("/head/neck/shoulders/heart" + i + "/waist" +
+                i + "/leg/foot/heel");
+            contentList.add(cont);
+        }
+        PathNode location = v3extensionUtil.makePathTree(contentList,
+            v3extensionUtil.new PathNode());
+        v3extensionUtil.printTree(location, 0);
+        assertEquals(location.getChildren().size(), 1);
+        assertEquals(location.getChildren().get(0).getName(), "head");
+        location = location.getChildren().get(0).getConnection();
+        assertEquals(location.getChildren().size(), 1);
+        assertEquals(location.getChildren().get(0).getName(), "neck");
+        location = location.getChildren().get(0).getConnection();
+        assertEquals(location.getChildren().size(), 1);
+        assertEquals(location.getChildren().get(0).getName(), "shoulders");
+        location = location.getChildren().get(0).getConnection();
+        assertEquals(location.getChildren().size(), 20);
+
+        // find the common footer nodes and make sure they are merged.
+        long legId = -1;
+        long footId = -1;
+        long heelId = -1;
+        for (NodePair np : location.getChildren()) {
+            // np is a "heart" pair
+            assertTrue(np.getName().startsWith("heart"));
+
+            // now waist node
+            PathNode waist = np.getConnection();
+            assertEquals(waist.getChildren().size(), 1);
+            assertTrue(waist.getChildren().get(0).getName().startsWith("waist"));
+
+            // go to "leg" node
+            PathNode leg = waist.getChildren().get(0).getConnection();
+            if (legId == -1) {
+                legId = leg.getId();
+            }
+            else {
+                assertEquals(leg.getId(), legId);
+            }
+            assertEquals(leg.getChildren().size(), 1);
+            assertEquals(leg.getChildren().get(0).getName(), "leg");
+
+            // go to "foot" node
+            PathNode foot = leg.getChildren().get(0).getConnection();
+            if (footId == -1) {
+                footId = foot.getId();
+            }
+            else {
+                assertEquals(foot.getId(), footId);
+            }
+            assertEquals(foot.getChildren().size(), 1);
+            assertEquals(foot.getChildren().get(0).getName(), "foot");
+
+            // go to "heel" node
+            PathNode heel = foot.getChildren().get(0).getConnection();
+            if (heelId == -1) {
+                heelId = heel.getId();
+            }
+            else {
+                assertEquals(heel.getId(), heelId);
+            }
+            assertEquals(heel.getChildren().size(), 1);
+            assertEquals(heel.getChildren().get(0).getName(), "heel");
+        }
+    }
+
+    @Test
+    public void testPathDictionary() throws IOException {
+        List<org.candlepin.json.model.Content> contentList =
+            new ArrayList<org.candlepin.json.model.Content>();
+        org.candlepin.json.model.Content cont = null;
+        for (int i = 0; i < 20; i++) {
+            cont = new org.candlepin.json.model.Content();
+            cont.setPath("/head/neck/shoulders/heart" + i + "/waist" +
+                i + "/leg/foot/heel");
+            contentList.add(cont);
+        }
+        cont = new org.candlepin.json.model.Content();
+        cont.setPath("/head/neck/shoulders/chest/leg");
+        contentList.add(cont);
+        cont = new org.candlepin.json.model.Content();
+        cont.setPath("/head/neck/shoulders/chest/foot");
+        contentList.add(cont);
+        cont = new org.candlepin.json.model.Content();
+        cont.setPath("/head/neck/shoulders/chest/torso/leg");
+        contentList.add(cont);
+
+        PathNode location = v3extensionUtil.makePathTree(contentList,
+            v3extensionUtil.new PathNode());
+        List<String> nodeStrings = v3extensionUtil.orderStrings(location);
+        assertEquals(nodeStrings.size(), 48);
+        // frequency sorted
+        assertEquals(nodeStrings.get(46), "foot");
+        assertEquals(nodeStrings.get(47), "leg");
+    }
+
+    @Test
+    public void testHuffNodeTrieCreationAndTreeSearch() {
+        String[] paths = {"01110", "01111", "0110", "1110",
+            "1111", "010", "100", "101", "110", "00"};
+        List<HuffNode> huffNodes = new ArrayList<HuffNode>();
+        List<Object> members = new ArrayList<Object>();
+        for (int i = 1; i <= 10; i++) {
+            Object o = new Object();
+            huffNodes.add(v3extensionUtil.new HuffNode(o, i));
+            members.add(o);
+        }
+        HuffNode trieParent = v3extensionUtil.makeTrie(huffNodes);
+        v3extensionUtil.printTrie(trieParent, 0);
+        assertEquals(trieParent.getWeight(), 55);
+        assertEquals(trieParent.getLeft().getWeight(), 22);
+        assertEquals(trieParent.getRight().getWeight(), 33);
+
+        int idx = 0;
+        for (Object o : members) {
+            assertEquals(paths[idx], v3extensionUtil.findHuffPath(trieParent, o));
+            Object found = v3extensionUtil.findHuffNodeValueByBits(trieParent,
+                paths[idx++]);
+            assertEquals(o, found);
+        }
+    }
+
     private String processPayload(byte[] payload)
         throws IOException, UnsupportedEncodingException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         InflaterOutputStream ios = new InflaterOutputStream(baos);
-        System.out.print(payload);
         ios.write(payload);
         ios.finish();
         return baos.toString();

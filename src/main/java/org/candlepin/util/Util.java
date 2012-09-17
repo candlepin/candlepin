@@ -237,7 +237,7 @@ public class Util {
 
     public static String toBase64(byte [] data) {
         try {
-            return new String(Base64.encodeBase64(data), "ASCII");
+            return new String(Base64.encodeBase64(data, true), "ASCII");
         }
         catch (UnsupportedEncodingException e) {
             log.warn("Unable to convert binary data to string", e);

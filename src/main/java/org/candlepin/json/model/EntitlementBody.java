@@ -68,4 +68,8 @@ public class EntitlementBody {
         this.products = products;
     }
 
+    public List<Product> getProducts() {
+        return this.products;
+    }
+
 }

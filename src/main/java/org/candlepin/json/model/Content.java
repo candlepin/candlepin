@@ -86,6 +86,13 @@ public class Content {
     }
 
     /**
+     *@return path
+     */
+    public String getPath() {
+        return this.path;
+    }
+
+    /**
      * @param gpgUrl
      */
     public void setGpgUrl(String gpgUrl) {
