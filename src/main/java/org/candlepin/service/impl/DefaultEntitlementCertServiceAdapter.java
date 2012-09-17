@@ -14,6 +14,7 @@
  */
 package org.candlepin.service.impl;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URLEncoder;
@@ -45,10 +46,11 @@ import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
 import org.candlepin.service.BaseEntitlementCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
+import org.candlepin.util.Util;
 import org.candlepin.util.CertificateSizeException;
 import org.candlepin.util.X509ExtensionUtil;
 import org.candlepin.util.X509Util;
-import org.candlepin.util.X509V2ExtensionUtil;
+import org.candlepin.util.X509V3ExtensionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -65,7 +67,7 @@ public class DefaultEntitlementCertServiceAdapter extends
 
     private PKIUtility pki;
     private X509ExtensionUtil extensionUtil;
-    private X509V2ExtensionUtil v2extensionUtil;
+    private X509V3ExtensionUtil v3extensionUtil;
     private KeyPairCurator keyPairCurator;
     private CertificateSerialCurator serialCurator;
     private ProductServiceAdapter productAdapter;
@@ -78,7 +80,7 @@ public class DefaultEntitlementCertServiceAdapter extends
     @Inject
     public DefaultEntitlementCertServiceAdapter(PKIUtility pki,
         X509ExtensionUtil extensionUtil,
-        X509V2ExtensionUtil v2extensionUtil,
+        X509V3ExtensionUtil v3extensionUtil,
         EntitlementCertificateCurator entCertCurator,
         KeyPairCurator keyPairCurator,
         CertificateSerialCurator serialCurator,
@@ -87,7 +89,7 @@ public class DefaultEntitlementCertServiceAdapter extends
 
         this.pki = pki;
         this.extensionUtil = extensionUtil;
-        this.v2extensionUtil = v2extensionUtil;
+        this.v3extensionUtil = v3extensionUtil;
         this.entCertCurator = entCertCurator;
         this.keyPairCurator = keyPairCurator;
         this.serialCurator = serialCurator;
@@ -153,6 +155,55 @@ public class DefaultEntitlementCertServiceAdapter extends
             .getPool(), sub));
         products.add(product);
 
+        Map<String, EnvironmentContent> promotedContent = getPromotedContent(ent);
+        String contentPrefix = getContentPrefix(ent, useContentPrefix);
+
+        String entitlementVersion = ent.getConsumer()
+            .getFact("system.certificate_version");
+        if (entitlementVersion != null && entitlementVersion.startsWith("3.")) {
+            extensions = prepareV3Extensions(products, ent, contentPrefix,
+                promotedContent, sub);
+            byteExtensions = prepareV3ByteExtensions(products, ent, contentPrefix,
+                promotedContent, sub);
+        }
+        else {
+            extensions = prepareV1Extensions(products, ent, contentPrefix,
+                promotedContent, sub);
+        }
+
+        X509Certificate x509Cert =  this.pki.createX509Certificate(
+                createDN(ent), extensions, byteExtensions, sub.getStartDate(),
+                ent.getEndDate(), keyPair, serialNumber, null);
+        return x509Cert;
+    }
+
+    /**
+     * @param ent
+     * @param useContentPrefix
+    * @return
+     * @throws IOException
+     */
+    private String getContentPrefix(Entitlement ent, boolean useContentPrefix)
+        throws IOException {
+        String contentPrefix = null;
+        if (useContentPrefix) {
+            contentPrefix = ent.getOwner().getContentPrefix();
+            Environment env = ent.getConsumer().getEnvironment();
+            if (contentPrefix != null && !contentPrefix.equals("")) {
+                if (env != null) {
+                    contentPrefix = contentPrefix.replaceAll("\\$env", env.getName());
+                }
+                contentPrefix = this.cleanUpPrefix(contentPrefix);
+            }
+        }
+        return contentPrefix;
+    }
+
+    /**
+     * @param ent
+     * @return
+     */
+    private Map<String, EnvironmentContent> getPromotedContent(Entitlement ent) {
         // Build a set of all content IDs promoted to the consumer's environment so
         // we can determine if anything needs to be skipped:
         Map<String, EnvironmentContent> promotedContent =
@@ -166,38 +217,7 @@ public class DefaultEntitlementCertServiceAdapter extends
                 promotedContent.put(envContent.getContentId(), envContent);
             }
         }
-
-        String contentPrefix = null;
-        if (useContentPrefix) {
-            contentPrefix = ent.getOwner().getContentPrefix();
-            Environment env = ent.getConsumer().getEnvironment();
-            if (contentPrefix != null && !contentPrefix.equals("")) {
-                if (env != null) {
-                    contentPrefix = contentPrefix.replaceAll("\\$env", env.getName());
-                }
-
-                contentPrefix = this.cleanUpPrefix(contentPrefix);
-            }
-        }
-
-        // V2 is disabled by design
-//       String entitlementVersion = ent.getConsumer()
-//           .getFact("system.certificate_version");
-//       if (entitlementVersion != null && entitlementVersion.startsWith("2.")) {
-//            extensions = prepareV2Extensions(products, ent, contentPrefix,
-//                promotedContent, sub);
-//            byteExtensions = prepareV2ByteExtensions(products, ent, contentPrefix,
-//                promotedContent, sub);
-//        }
-//        else {
-        extensions = prepareV1Extensions(products, ent, contentPrefix,
-            promotedContent, sub);
-//        }
-
-        X509Certificate x509Cert =  this.pki.createX509Certificate(
-                createDN(ent), extensions, byteExtensions, sub.getStartDate(),
-                ent.getEndDate(), keyPair, serialNumber, null);
-        return x509Cert;
+        return promotedContent;
     }
 
     private Set<X509ExtensionWrapper> prepareV1Extensions(Set<Product> products,
@@ -235,19 +255,19 @@ public class DefaultEntitlementCertServiceAdapter extends
         return result;
     }
 
-    public Set<X509ExtensionWrapper> prepareV2Extensions(Set<Product> products,
+    public Set<X509ExtensionWrapper> prepareV3Extensions(Set<Product> products,
         Entitlement ent, String contentPrefix,
         Map<String, EnvironmentContent> promotedContent, Subscription sub) {
-        Set<X509ExtensionWrapper> result =  v2extensionUtil.getExtensions(products,
+        Set<X509ExtensionWrapper> result =  v3extensionUtil.getExtensions(products,
             ent, contentPrefix, promotedContent, sub);
         return result;
     }
 
-    public Set<X509ByteExtensionWrapper> prepareV2ByteExtensions(Set<Product> products,
+    public Set<X509ByteExtensionWrapper> prepareV3ByteExtensions(Set<Product> products,
         Entitlement ent, String contentPrefix,
         Map<String, EnvironmentContent> promotedContent, Subscription sub)
         throws IOException {
-        Set<X509ByteExtensionWrapper> result =  v2extensionUtil.getByteExtensions(products,
+        Set<X509ByteExtensionWrapper> result =  v3extensionUtil.getByteExtensions(products,
             ent, contentPrefix, promotedContent, sub);
         return result;
     }
@@ -297,6 +317,27 @@ public class DefaultEntitlementCertServiceAdapter extends
         cert.setSerial(serial);
         cert.setKeyAsBytes(pki.getPemEncoded(keyPair.getPrivate()));
         cert.setCertAsBytes(this.pki.getPemEncoded(x509Cert));
+
+        Set<Product> products = new HashSet<Product>(getProvidedProducts(entitlement
+            .getPool(), sub));
+        products.add(product);
+        Map<String, EnvironmentContent> promotedContent = getPromotedContent(entitlement);
+        String contentPrefix = getContentPrefix(entitlement, !thisIsUeberCert);
+
+
+        byte[] payloadBytes = v3extensionUtil.createEntitlementDataPayload(products,
+            entitlement, contentPrefix, promotedContent, sub);
+        String payload = "-----BEGIN ENTITLEMENT DATA-----\n";
+        payload += Util.toBase64(payloadBytes);
+        payload += "-----END ENTITLEMENT DATA-----\n";
+        cert.setPayload(payload);
+
+        byte[] bytes = pki.getSHA256WithRSAHash(new ByteArrayInputStream(payloadBytes));
+        String signature = "-----BEGIN RSA SIGNATURE-----\n";
+        signature += Util.toBase64(bytes);
+        signature += "-----END RSA SIGNATURE-----\n";
+        cert.setSignature(signature);
+
         cert.setEntitlement(entitlement);
 
         log.debug("Generated cert serial number: " + serial.getId());

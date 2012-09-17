@@ -6,7 +6,7 @@ describe 'Unsubscribe' do
 
   before(:each) do
     @owner = create_owner random_string('test_owner')
-    @user = user_client(@owner, 'guy')
+    @user = user_client(@owner, random_string('guy'))
     @monitoring = create_product(nil, random_string('monitoring'))
 
     @cp.create_subscription(@owner['key'], @monitoring.id, 4)

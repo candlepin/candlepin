@@ -6,7 +6,7 @@ describe 'Multiplier Products' do
 
   before(:each) do
     @owner = create_owner random_string('some_owner')
-    @user = user_client(@owner, 'guy')
+    @user = user_client(@owner, random_string('guy'))
   end
 
   it 'should have the correct quantity' do

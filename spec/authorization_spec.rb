@@ -9,7 +9,7 @@ describe 'Authorization' do
 
   before(:each) do
     @owner = create_owner random_string('test_owner')
-    @user = user_client(@owner, 'guy')
+    @user = user_client(@owner, random_string('guy'))
   end
 
   it 'returns a 401 if user credentials are invalid' do
