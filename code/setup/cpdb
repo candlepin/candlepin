@@ -42,9 +42,11 @@ def error_out(command, status, output):
 
 class DbSetup(object):
 
-    def __init__(self, username, db):
+    def __init__(self, username, password, db):
         self.username = username
         self.db = db
+        if password:
+            os.environ["PGPASSWORD"] = password
 
     def create(self):
         print("Creating candlepin database")
@@ -111,6 +113,9 @@ if __name__ == "__main__":
     parser.add_option("-d", "--database",
             dest="db", default="candlepin",
             help="database name to use")
+    parser.add_option("-p", "--password",
+            dest="dbpassword",
+            help="database password to use")
 
     (options, args) = parser.parse_args()
 
@@ -119,7 +124,7 @@ if __name__ == "__main__":
         print("ERROR: Please specify --create or --update.")
         sys.exit(1)
 
-    dbsetup = DbSetup(options.dbuser, options.db)
+    dbsetup = DbSetup(options.dbuser, options.dbpassword, options.db)
     if options.create:
         if options.drop:
             dbsetup.drop()
