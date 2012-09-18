@@ -55,6 +55,8 @@ public class Util {
     public static final String UTC_STR = "UTC";
     private static Logger log = Logger.getLogger(Util.class);
     private static ObjectMapper mapper = new ObjectMapper();
+    // If we don't specify the line separator, it will use CRLF
+    private static Base64 base64 = new Base64(64, "\n".getBytes());
 
     private Util() {
         // default ctor
@@ -237,7 +239,7 @@ public class Util {
 
     public static String toBase64(byte [] data) {
         try {
-            return new String(Base64.encodeBase64(data, true), "ASCII");
+            return new String(base64.encode(data), "ASCII");
         }
         catch (UnsupportedEncodingException e) {
             log.warn("Unable to convert binary data to string", e);
