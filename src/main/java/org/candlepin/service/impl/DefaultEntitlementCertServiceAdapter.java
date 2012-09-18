@@ -316,7 +316,6 @@ public class DefaultEntitlementCertServiceAdapter extends
         EntitlementCertificate cert = new EntitlementCertificate();
         cert.setSerial(serial);
         cert.setKeyAsBytes(pki.getPemEncoded(keyPair.getPrivate()));
-        cert.setCertAsBytes(this.pki.getPemEncoded(x509Cert));
 
         Set<Product> products = new HashSet<Product>(getProvidedProducts(entitlement
             .getPool(), sub));
@@ -324,19 +323,20 @@ public class DefaultEntitlementCertServiceAdapter extends
         Map<String, EnvironmentContent> promotedContent = getPromotedContent(entitlement);
         String contentPrefix = getContentPrefix(entitlement, !thisIsUeberCert);
 
+        byte [] pem = this.pki.getPemEncoded(x509Cert);
 
         byte[] payloadBytes = v3extensionUtil.createEntitlementDataPayload(products,
             entitlement, contentPrefix, promotedContent, sub);
         String payload = "-----BEGIN ENTITLEMENT DATA-----\n";
         payload += Util.toBase64(payloadBytes);
         payload += "-----END ENTITLEMENT DATA-----\n";
-        cert.setPayload(payload);
 
         byte[] bytes = pki.getSHA256WithRSAHash(new ByteArrayInputStream(payloadBytes));
         String signature = "-----BEGIN RSA SIGNATURE-----\n";
         signature += Util.toBase64(bytes);
         signature += "-----END RSA SIGNATURE-----\n";
-        cert.setSignature(signature);
+
+        cert.setCert(new String(pem) + payload + signature);
 
         cert.setEntitlement(entitlement);
 
