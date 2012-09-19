@@ -226,8 +226,10 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             return new ArrayList<Pool>();
         }
 
-        log.debug("results(postfilter): " + results);
-        log.debug("active pools for owner: " + results.size());
+        if (log.isDebugEnabled()) {
+            log.debug("results(postfilter): " + results);
+            log.debug("active pools for owner: " + results.size());
+        }
 
         // crit.add(Restrictions.or(Restrictions.eq("productId", productId),
         // Restrictions.in("", results)))
