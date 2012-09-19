@@ -954,6 +954,31 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
 
     @Test
+    public void testPathTreeSortsChildNodesAlphabetically() {
+        List<org.candlepin.json.model.Content> contentList =
+            new ArrayList<org.candlepin.json.model.Content>();
+
+        org.candlepin.json.model.Content contentA = new org.candlepin.json.model.Content();
+        contentA.setPath("/AAA");
+        org.candlepin.json.model.Content contentB = new org.candlepin.json.model.Content();
+        contentB.setPath("/BBB");
+        org.candlepin.json.model.Content contentC = new org.candlepin.json.model.Content();
+        contentC.setPath("/CCC");
+
+        contentList.add(contentB);
+        contentList.add(contentC);
+        contentList.add(contentA);
+
+        PathNode location = v3extensionUtil.makePathTree(contentList,
+            v3extensionUtil.new PathNode());
+
+        assertEquals(3, location.getChildren().size(), 3);
+        assertEquals("AAA", location.getChildren().get(0).getName());
+        assertEquals("BBB", location.getChildren().get(1).getName());
+        assertEquals("CCC", location.getChildren().get(2).getName());
+    }
+
+    @Test
     public void testPathDictionary() throws IOException {
         List<org.candlepin.json.model.Content> contentList =
             new ArrayList<org.candlepin.json.model.Content>();

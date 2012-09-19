@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -1095,6 +1096,7 @@ public class X509V3ExtensionUtil extends X509Util{
         }
 
         public List<NodePair> getChildren() {
+            Collections.sort(this.children);
             return this.children;
         }
 
@@ -1147,7 +1149,7 @@ public class X509V3ExtensionUtil extends X509Util{
      * NodePair
      */
 
-    public class NodePair {
+    public class NodePair implements Comparable{
         private String name;
         private PathNode connection;
 
@@ -1170,6 +1172,14 @@ public class X509V3ExtensionUtil extends X509Util{
 
         public String toString() {
             return "Name: " + name + ", Connection: " + connection.getId();
+        }
+
+        /* (non-Javadoc)
+         * @see java.lang.Comparable#compareTo(java.lang.Object)
+         */
+        @Override
+        public int compareTo(Object other) {
+            return this.name.compareTo(((NodePair) other).name);
         }
     }
 }
