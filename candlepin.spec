@@ -17,7 +17,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.7.9
+Version: 0.7.10
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -287,6 +287,20 @@ fi
 
 
 %changelog
+* Wed Sep 19 2012 jesus m. rodriguez <jesusr@redhat.com> 0.7.10-1
+- 858286: don't generate detached cert data for certv1 (jbowes@redhat.com)
+- Use proper unix style line endings in our pem encoding (jbowes@redhat.com)
+- Improve logging for poolcurator failures (jbowes@redhat.com)
+- certv3: store payload and sig in the cert column (jbowes@redhat.com)
+- 857494: Allow cpdb to accept a password from the command line.  (awood@redhat.com)
+- add builder.mock_args to rhel releaser (jesusr@redhat.com)
+- add reqcpdeps macro and set reqcpdeps to 1 when building fedora (jesusr@redhat.com)
+- We need java-devel to build, not java (jbowes@redhat.com)
+- certv3: start counting from 1 for node weights (jbowes@redhat.com)
+- ProductCache: configure max prods, limit number of products (mstead@redhat.com)
+- Further update to make all references and names V3 (wpoteat@redhat.com)
+- wrap pool results in a isDebugEnabled() (alikins@redhat.com)
+- certv3: encode tree for URL, update compression, build huffman tries (wpoteat@redhat.com)
 * Wed Sep 12 2012 Alex Wood <awood@redhat.com> 0.7.9-1
 - Fix and clarify performance script CLI help. (dgoodwin@redhat.com)
 - Remove some useless and verbose JS logging. (dgoodwin@redhat.com)
