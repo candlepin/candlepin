@@ -21,6 +21,7 @@ import com.google.inject.persist.Transactional;
 import org.apache.log4j.Logger;
 import org.candlepin.auth.interceptor.EnforceAccessControl;
 import org.candlepin.policy.Enforcer;
+import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.entitlement.PreEntHelper;
 import org.candlepin.policy.criteria.RulesCriteria;
@@ -259,14 +260,18 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             List<Pool> newResults = new LinkedList<Pool>();
             for (Pool p : results) {
                 PreEntHelper helper = enforcer.preEntitlement(c, p, 1);
-                if (helper.getResult().isSuccessful() &&
-                        (!helper.getResult().hasWarnings() || includeWarnings)) {
+                ValidationResult result = helper.getResult();
+                if (result.isSuccessful() && (!result.hasWarnings() || includeWarnings)) {
                     newResults.add(p);
                 }
                 else {
                     log.info("Omitting pool due to failed rule check: " + p.getId());
-                    log.info(helper.getResult().getErrors());
-                    log.info(helper.getResult().getWarnings());
+                    if (result.hasErrors()) {
+                        log.info("\tErrors: " + result.getErrors());
+                    }
+                    if (result.hasWarnings()) {
+                        log.info("\tWarnings: " + result.getWarnings());
+                    }
                 }
             }
             results = newResults;

@@ -24,15 +24,18 @@ import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.mock;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
+import java.security.Key;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -47,13 +50,17 @@ import java.util.StringTokenizer;
 import java.util.zip.InflaterOutputStream;
 
 import org.candlepin.config.Config;
+import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.EntitlementCertificate;
+import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContent;
+import org.candlepin.model.KeyPairCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolAttribute;
@@ -64,6 +71,7 @@ import org.candlepin.model.Subscription;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
+import org.candlepin.pki.impl.BouncyCastlePKIUtility;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.impl.DefaultEntitlementCertServiceAdapter;
 import org.candlepin.util.CertificateSizeException;
@@ -109,6 +117,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
     private ProductServiceAdapter productAdapter;
     @Mock
     private EntitlementCurator entCurator;
+    @Mock
+    private KeyPairCurator keyPairCurator;
     private X509ExtensionUtil extensionUtil;
     private X509V3ExtensionUtil v3extensionUtil;
     private Product product;
@@ -133,8 +143,9 @@ public class DefaultEntitlementCertServiceAdapterTest {
         v3extensionUtil = new X509V3ExtensionUtil(new Config(), entCurator);
 
         certServiceAdapter = new DefaultEntitlementCertServiceAdapter(
-            mockedPKI, extensionUtil, v3extensionUtil, null, null, serialCurator,
-            productAdapter, entCurator,
+            mockedPKI, extensionUtil, v3extensionUtil,
+            mock(EntitlementCertificateCurator.class), keyPairCurator,
+            serialCurator, productAdapter, entCurator,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK));
 
 
@@ -762,6 +773,28 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Map<String, Object> subs = (Map<String, Object>) data.get("subscription");
         assertTrue((Boolean) subs.get("management"));
         assertTrue((Boolean) subs.get("virt_only"));
+    }
+
+    @Test
+    public void testDetachedEntitlementDataNotAddedToCertV1()
+        throws Exception {
+
+        KeyPair keyPair = new BouncyCastlePKIUtility(null, null).generateNewKeyPair();
+        when(keyPairCurator.getConsumerKeyPair(any(Consumer.class))).thenReturn(keyPair);
+
+        when(mockedPKI.getPemEncoded(any(X509Certificate.class))).thenReturn(
+            "".getBytes());
+        when(mockedPKI.getPemEncoded(any(Key.class))).thenReturn("".getBytes());
+
+        CertificateSerial serial = mock(CertificateSerial.class);
+        when(serial.getId()).thenReturn(1L);
+        when(serialCurator.create(any(CertificateSerial.class))).thenReturn(serial);
+
+        EntitlementCertificate cert =
+            certServiceAdapter.generateEntitlementCert(entitlement, subscription,
+                product);
+
+        assertTrue(!cert.getCert().contains("ENTITLEMENT DATA"));
     }
 
     @Test

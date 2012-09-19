@@ -308,7 +308,7 @@ public class DefaultEntitlementCertServiceAdapter extends
         CertificateSerial serial = new CertificateSerial(entitlement.getEndDate());
         // We need the sequence generated id before we create the EntitlementCertificate,
         // otherwise we could have used cascading create
-        serialCurator.create(serial);
+        serial = serialCurator.create(serial);
 
         X509Certificate x509Cert = createX509Certificate(entitlement, sub,
             product, BigInteger.valueOf(serial.getId()), keyPair, !thisIsUeberCert);
@@ -323,26 +323,34 @@ public class DefaultEntitlementCertServiceAdapter extends
         Map<String, EnvironmentContent> promotedContent = getPromotedContent(entitlement);
         String contentPrefix = getContentPrefix(entitlement, !thisIsUeberCert);
 
-        byte [] pem = this.pki.getPemEncoded(x509Cert);
+        String pem = new String(this.pki.getPemEncoded(x509Cert));
 
-        byte[] payloadBytes = v3extensionUtil.createEntitlementDataPayload(products,
-            entitlement, contentPrefix, promotedContent, sub);
-        String payload = "-----BEGIN ENTITLEMENT DATA-----\n";
-        payload += Util.toBase64(payloadBytes);
-        payload += "-----END ENTITLEMENT DATA-----\n";
+        String entitlementVersion = entitlement.getConsumer()
+            .getFact("system.certificate_version");
+        if (entitlementVersion != null && entitlementVersion.startsWith("3.")) {
+            byte[] payloadBytes = v3extensionUtil.createEntitlementDataPayload(products,
+                entitlement, contentPrefix, promotedContent, sub);
+            String payload = "-----BEGIN ENTITLEMENT DATA-----\n";
+            payload += Util.toBase64(payloadBytes);
+            payload += "-----END ENTITLEMENT DATA-----\n";
 
-        byte[] bytes = pki.getSHA256WithRSAHash(new ByteArrayInputStream(payloadBytes));
-        String signature = "-----BEGIN RSA SIGNATURE-----\n";
-        signature += Util.toBase64(bytes);
-        signature += "-----END RSA SIGNATURE-----\n";
+            byte[] bytes = pki.getSHA256WithRSAHash(new ByteArrayInputStream(payloadBytes));
+            String signature = "-----BEGIN RSA SIGNATURE-----\n";
+            signature += Util.toBase64(bytes);
+            signature += "-----END RSA SIGNATURE-----\n";
 
-        cert.setCert(new String(pem) + payload + signature);
+            pem += payload + signature;
+        }
+
+        cert.setCert(pem);
 
         cert.setEntitlement(entitlement);
 
-        log.debug("Generated cert serial number: " + serial.getId());
-        log.debug("Key: " + cert.getKey());
-        log.debug("Cert: " + cert.getCert());
+        if (log.isDebugEnabled()) {
+            log.debug("Generated cert serial number: " + serial.getId());
+            log.debug("Key: " + cert.getKey());
+            log.debug("Cert: " + cert.getCert());
+        }
 
         entitlement.getCertificates().add(cert);
         entCertCurator.create(cert);
