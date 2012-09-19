@@ -36,6 +36,7 @@ import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
@@ -127,7 +128,9 @@ public class PoolManagerTest {
         o = new Owner("key", "displayname");
         pool = TestUtil.createPool(o, product);
 
-        this.productCache = new ProductCache(mockProductAdapter);
+        when(mockConfig.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
+        this.productCache = new ProductCache(mockConfig, mockProductAdapter);
+
         this.principal = TestUtil.createOwnerPrincipal();
         this.manager = spy(new CandlepinPoolManager(mockPoolCurator, mockSubAdapter,
             productCache, entCertAdapterMock, mockEventSink, eventFactory,

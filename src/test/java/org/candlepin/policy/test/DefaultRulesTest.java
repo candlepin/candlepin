@@ -26,7 +26,21 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+
 import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -67,19 +81,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.xnap.commons.i18n.I18nFactory;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-
 /**
  * DefaultRulesTest
  */
@@ -105,7 +106,8 @@ public class DefaultRulesTest {
     public void createEnforcer() throws Exception {
         MockitoAnnotations.initMocks(this);
 
-        this.productCache = new ProductCache(this.prodAdapter);
+        when(config.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
+        this.productCache = new ProductCache(config, this.prodAdapter);
 
         URL url = this.getClass().getClassLoader()
             .getResource("rules/default-rules.js");

@@ -17,6 +17,7 @@ package org.candlepin.policy.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -32,6 +33,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
@@ -79,7 +81,8 @@ public class EnforcerTest extends DatabaseTestFixture {
     public void createEnforcer() throws Exception {
         MockitoAnnotations.initMocks(this);
 
-        productCache = new ProductCache(productAdapter);
+        when(config.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
+        productCache = new ProductCache(config, productAdapter);
 
         owner = createOwner();
         ownerCurator.create(owner);

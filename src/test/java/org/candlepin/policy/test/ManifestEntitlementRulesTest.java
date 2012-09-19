@@ -23,6 +23,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
@@ -107,7 +108,9 @@ public class ManifestEntitlementRulesTest extends DatabaseTestFixture {
 
         jsRules = new JsRulesProvider(rulesCurator).get();
 
-        productCache = new ProductCache(productAdapter);
+        when(config.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
+        productCache = new ProductCache(config, productAdapter);
+
         enforcer = new ManifestEntitlementRules(new DateSourceForTesting(2010, 1, 1),
             jsRules, productCache, i18n, config, consumerCurator);
 
