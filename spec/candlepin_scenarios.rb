@@ -344,6 +344,16 @@ module ExportMethods
 
 end
 
+module CertificateMethods
+
+  def extract_payload(certificate)
+    payload = certificate.split("-----BEGIN ENTITLEMENT DATA-----\n")[1]
+    payload = payload.split("-----END ENTITLEMENT DATA-----")[0]
+    asn1_body = Base64.decode64(payload)
+    body = Zlib::Inflate.inflate(asn1_body)
+    JSON.parse(body)
+  end
+end
 
 # This allows for dot notation instead of using hashes for everything
 class Hash
