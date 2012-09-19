@@ -1,9 +1,9 @@
 require 'candlepin_scenarios'
-require 'json'
 require 'unpack'
 
 describe 'Entitlement Certificate V3' do
   include CandlepinMethods
+  include CertificateMethods
   include CandlepinScenarios
   include Unpack
 
@@ -60,12 +60,7 @@ describe 'Entitlement Certificate V3' do
   end
 
   it 'generated the correct body in the blob' do
-    payload = @system.list_certificates[0]['payload']
-    payload_end = payload.length - 32
-    payload = payload[33..payload_end] 
-    asn1_body = Base64.decode64(payload)
-    body = Zlib::Inflate.inflate(asn1_body)
-    json_body = JSON.parse(body)
+    json_body = extract_payload(@system.list_certificates[0]['cert'])
 
     json_body['consumer'].should == @system.get_consumer()['uuid']
     json_body['quantity'].should == 1
@@ -108,22 +103,12 @@ describe 'Entitlement Certificate V3' do
     @cp.refresh_pools(@owner['key'])
     entitlement = @system.consume_product(@product.id)[0]
 
-    payload = entitlement.certificates[0]['payload']
-    payload_end = payload.length - 32
-    payload = payload[33..payload_end] 
-    asn1_body = Base64.decode64(payload)
-    body = Zlib::Inflate.inflate(asn1_body)
-    json_body = JSON.parse(body)
+    json_body = extract_payload(entitlement.certificates[0]['cert'])
 
     json_body['products'][0]['content'].size.should == 3
 
     value = extension_from_cert(entitlement.certificates[0]['cert'], "1.3.6.1.4.1.2312.9.7")
 
-    # Can dump binary to file
-    #File.open('tmp.bin', 'w') do |f1|  
-    #  f1.puts value
-    #end
-  
     urls = []
     urls[0] = '/content/dist/rhel/$releasever/$basearch/os'
     urls[1] = '/content/dist/rhel/$releasever/$basearch/debug'
@@ -141,12 +126,7 @@ describe 'Entitlement Certificate V3' do
     @cp.refresh_pools(@owner['key'])
     entitlement = @system.consume_product(@product.id)[0]
 
-    payload = entitlement.certificates[0]['payload']
-    payload_end = payload.length - 32
-    payload = payload[33..payload_end]
-    asn1_body = Base64.decode64(payload)
-    body = Zlib::Inflate.inflate(asn1_body)
-    json_body = JSON.parse(body)
+    json_body = extract_payload(entitlement.certificates[0]['cert'])
 
     json_body['products'][0]['content'].size.should == 101
 

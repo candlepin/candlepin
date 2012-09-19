@@ -19,7 +19,6 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
@@ -55,11 +54,6 @@ public class EntitlementCertificate extends AbstractCertificate {
     @JoinColumn(nullable = false)
     @Index(name = "cp_cert_entitlement_fk_idx")
     private Entitlement entitlement;
-
-    @Lob
-    private String payload;
-    @Lob
-    private String signature;
 
     public CertificateSerial getSerial() {
         return serial;
@@ -107,33 +101,5 @@ public class EntitlementCertificate extends AbstractCertificate {
             }
         }
         return false;
-    }
-
-    /**
-     * @return the payload
-     */
-    public String getPayload() {
-        return payload;
-    }
-
-    /**
-     * @param payload the payload to set
-     */
-    public void setPayload(String payload) {
-        this.payload = payload;
-    }
-
-    /**
-     * @return the signature
-     */
-    public String getSignature() {
-        return signature;
-    }
-
-    /**
-     * @param signature the signature to set
-     */
-    public void setSignature(String signature) {
-        this.signature = signature;
     }
 }

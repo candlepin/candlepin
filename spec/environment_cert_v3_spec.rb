@@ -2,6 +2,7 @@ require 'candlepin_scenarios'
 
 describe 'Environments Certificate V3' do
   include CandlepinMethods
+  include CertificateMethods
   include CandlepinScenarios
 
   before(:each) do
@@ -41,12 +42,8 @@ describe 'Environments Certificate V3' do
     value = extension_from_cert(ent['certificates'][0]['cert'], "1.3.6.1.4.1.2312.9.6")
     value.should == "3.0"
 
-    payload = ent['certificates'][0]['payload']
-    payload_end = payload.length - 32
-    payload = payload[33..payload_end] 
-    compressed_body = Base64.decode64(payload)
-    body = Zlib::Inflate.inflate(compressed_body)
-    json_body = JSON.parse(body)
+    json_body = extract_payload(ent['certificates'][0]['cert'])
+
     json_body['products'][0]['content'].size.should == 1
     json_body['products'][0]['content'][0]['id'].should == content['id']
     json_body['products'][0]['content'][0]['enabled'].should == false
@@ -81,12 +78,8 @@ describe 'Environments Certificate V3' do
     value = extension_from_cert(ent['certificates'][0]['cert'], "1.3.6.1.4.1.2312.9.6")
     value.should == "3.0"
 
-    payload = ent['certificates'][0]['payload']
-    payload_end = payload.length - 32
-    payload = payload[33..payload_end] 
-    compressed_body = Base64.decode64(payload)
-    body = Zlib::Inflate.inflate(compressed_body)
-    json_body = JSON.parse(body)
+    json_body = extract_payload(ent['certificates'][0]['cert'])
+
     json_body['products'][0]['content'].size.should == 1
     json_body['products'][0]['content'][0]['id'].should == content['id']
     serial = ent['certificates'][0]['serial']['serial']
@@ -98,12 +91,9 @@ describe 'Environments Certificate V3' do
         }])
     sleep 1
     ent = consumer_cp.list_entitlements()[0]
-    payload = ent['certificates'][0]['payload']
-    payload_end = payload.length - 32
-    payload = payload[33..payload_end] 
-    compressed_body = Base64.decode64(payload)
-    body = Zlib::Inflate.inflate(compressed_body)
-    json_body = JSON.parse(body)
+
+    json_body = extract_payload(ent['certificates'][0]['cert'])
+
     json_body['products'][0]['content'].size.should == 2
     ids = [json_body['products'][0]['content'][0]['id'],json_body['products'][0]['content'][1]['id']]
     ids.should include(content['id'])
@@ -115,13 +105,9 @@ describe 'Environments Certificate V3' do
     @org_admin.demote_content(@env['id'], [content2['id']])
     sleep 1
     ent = consumer_cp.list_entitlements()[0]
-    compressed_body = extension_from_cert(ent['certificates'][0]['cert'], "1.3.6.1.4.1.2312.9.7")
-    payload = ent['certificates'][0]['payload']
-    payload_end = payload.length - 32
-    payload = payload[33..payload_end] 
-    compressed_body = Base64.decode64(payload)
-    body = Zlib::Inflate.inflate(compressed_body)
-    json_body = JSON.parse(body)
+
+    json_body = extract_payload(ent['certificates'][0]['cert'])
+
     json_body['products'][0]['content'].size.should == 1
     json_body['products'][0]['content'][0]['id'].should == content['id']
     another_serial = ent['certificates'][0]['serial']['serial']
