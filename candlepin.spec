@@ -17,7 +17,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.7.10
+Version: 0.7.11
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -287,6 +287,10 @@ fi
 
 
 %changelog
+* Wed Sep 19 2012 jesus m. rodriguez <jesusr@redhat.com> 0.7.11-1
+- certv3: sort path names alphabetically (jbowes@redhat.com)
+- latest strings from zanata (alikins@redhat.com)
+
 * Wed Sep 19 2012 jesus m. rodriguez <jesusr@redhat.com> 0.7.10-1
 - 858286: don't generate detached cert data for certv1 (jbowes@redhat.com)
 - Use proper unix style line endings in our pem encoding (jbowes@redhat.com)
