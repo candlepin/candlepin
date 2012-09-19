@@ -14,10 +14,13 @@
  */
 package org.candlepin.policy.js;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.lang.ref.SoftReference;
+import java.util.LinkedHashMap;
+import java.util.Map.Entry;
 import java.util.Set;
 
+import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.guice.CandlepinSingletonScoped;
 import org.candlepin.model.Product;
 import org.candlepin.service.ProductServiceAdapter;
@@ -25,34 +28,114 @@ import org.candlepin.service.ProductServiceAdapter;
 import com.google.inject.Inject;
 
 /**
- * ReadOnlyProductCache
+ * ProductCache
+ *
+ * Caches products that have been retrieved from the product
+ * adapter. If an attempt is made to retrieve a product that
+ * is not in the cache, it is looked up by the adapter and
+ * is automatically stored.
+ *
+ * The cache can only contain its configured maximum of products
+ * at a time {@link ConfigProperties} <code>PRODUCT_CACHE_MAX</code>
+ * and is implemented using <code>SoftReference</code>s so that when
+ * memory becomes an issue, the GC can claim any products it requires.
+ *
  */
 @CandlepinSingletonScoped
 public class ProductCache {
 
     private ProductServiceAdapter productAdapter;
-    private Map<String, Product> products;
+
+    // Protected for testing purposes
+    protected ProductMapping products;
 
     @Inject
-    public ProductCache(ProductServiceAdapter productAdapter) {
-        products = new HashMap<String, Product>();
+    public ProductCache(Config config, ProductServiceAdapter productAdapter) {
+        products = new ProductMapping(config.getInt(ConfigProperties.PRODUCT_CACHE_MAX));
         this.productAdapter = productAdapter;
     }
 
     public Product getProductById(String productId) {
-        if (!products.containsKey(productId)) {
-            products.put(productId,
-                productAdapter.getProductById(productId));
+        ProductReference productReference = null;
+        if (!contains(productId)) {
+            productReference = addProductReference(productId);
         }
-        return products.get(productId);
+        else {
+            productReference = products.get(productId);
+        }
+        return productReference.get();
     }
 
     public void addProducts(Set<Product> products) {
         for (Product product : products) {
-            if (!this.products.containsKey(product.getId())) {
-                this.products.put(product.getId(), product);
+            if (!contains(product.getId())) {
+                this.products.put(product.getId(), new ProductReference(product));
             }
         }
     }
 
+    public boolean contains(String productId) {
+        if (!this.products.containsKey(productId)) {
+            return false;
+        }
+
+        // GC may have cleaned up the fetched reference if memory was required.
+        ProductReference productReference = this.products.get(productId);
+        return productReference != null && productReference.get() != null;
+    }
+
+    public int size() {
+        return products.size();
+    }
+
+    private ProductReference addProductReference(String productId) {
+        ProductReference productReference =
+            new ProductReference(productAdapter.getProductById(productId));
+        products.put(productId, productReference);
+        return productReference;
+    }
+
+    /**
+     * ProductReference
+     *
+     * A reference to a product object. We use <code>SoftReference</code>
+     * here instead of WeakReference as they only get GC'd when memory
+     * is getting low.
+     */
+    protected class ProductReference extends SoftReference<Product> {
+
+        public ProductReference(Product referent) {
+            super(referent);
+        }
+
+    }
+
+    /**
+     *
+     * ProductMapping
+     *
+     * A <code>LinkedHashMap</code> implementation that represents a mapped
+     * reference to {@link Product} references. This implementation allows
+     * a maximum of 100 mapped products. When an attempt is made to insert
+     * more than 100, the eldest product reference will be removed.
+     */
+    protected class ProductMapping extends LinkedHashMap<String, ProductReference> {
+
+        private int max;
+
+        public ProductMapping(int max) {
+            this.max = max;
+        }
+
+        /*
+         * When an attempt is made to add a product to the map,
+         * let the mapping remove the eldest product that was
+         * added if we are over our size limit.
+         */
+        @Override
+        protected boolean removeEldestEntry(Entry<String, ProductReference> eldest) {
+            return this.size() > max;
+        }
+
+    }
 }

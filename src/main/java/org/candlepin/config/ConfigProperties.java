@@ -96,6 +96,8 @@ public class ConfigProperties {
     public static final String PASSPHRASE_SECRET_FILE =
         "candlepin.passphrase.path";
 
+    public static final String PRODUCT_CACHE_MAX = "candlepin.cache.product_cache_max";
+
     public static final Map<String, String> DEFAULT_PROPERTIES =
         new HashMap<String, String>() {
 
@@ -165,6 +167,13 @@ public class ConfigProperties {
                 this.put(PASSPHRASE_SECRET_FILE,
                     "/etc/katello/secure/passphrase");
 
+                /**
+                 *  Defines the maximum number of products allowed in the product cache.
+                 *  On deployments with a large number of products, it might be better
+                 *  to set this to a large number, keeping in mind that it will yield
+                 *  a larger memory footprint as the cache fills up.
+                 */
+                this.put(PRODUCT_CACHE_MAX, "100");
             }
         };
     public static final String CRL_FILE_PATH = "candlepin.crl.file";
