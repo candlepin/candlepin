@@ -8,7 +8,10 @@
 %global modulename candlepin
 %define distlibdir %{_tmppath}/distlibdir/
 %define libdir %{_datadir}/java/
-%define usecpdeps ""
+
+%if 0%{?fedora}
+%define reqcpdeps 1
+%endif
 
 Name: candlepin
 Summary: Candlepin is an open source entitlement management system
@@ -28,14 +31,14 @@ BuildRequires: ant >= 0:1.7.0
 BuildRequires: gettext
 BuildRequires: selinux-policy-doc
 
-%if 0%{?fedora}
+
+%if 0%{?reqcpdeps}
 %define distlibdir %{_datadir}/%{name}/lib/
 %define libdir %{_datadir}/%{name}/lib/
 %define usecpdeps "usecpdeps"
 BuildRequires: candlepin-deps
-%endif
-
-%if 0%{?rhel}
+%else
+%define usecpdeps ""
 BuildRequires: bouncycastle
 BuildRequires: hibernate3 >= 3.3.2
 BuildRequires: hibernate3-annotations >= 0:3.4.0
@@ -83,7 +86,8 @@ Requires: liquibase >= 2.0.3
 Requires: postgresql-jdbc
 
 # specific requires
-%if 0%{?rhel}
+# if not using cpdeps, we'll need real requires
+%if 0%{!?reqcpdeps}
 # candlepin webapp requires
 Requires: bouncycastle
 Requires: hibernate3 >= 3.3.2
