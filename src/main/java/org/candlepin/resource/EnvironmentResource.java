@@ -19,7 +19,7 @@ import static org.quartz.JobBuilder.newJob;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.interceptor.SecurityHole;
 import org.candlepin.auth.interceptor.Verify;
-import org.candlepin.controller.CandlepinPoolManager;
+import org.candlepin.controller.PoolManager;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Consumer;
@@ -64,13 +64,13 @@ public class EnvironmentResource {
     private I18n i18n;
     private EnvironmentContentCurator envContentCurator;
     private ConsumerResource consumerResource;
-    private CandlepinPoolManager poolManager;
+    private PoolManager poolManager;
     private ConsumerCurator consumerCurator;
 
     @Inject
     public EnvironmentResource(EnvironmentCurator envCurator, I18n i18n,
         EnvironmentContentCurator envContentCurator,
-        ConsumerResource consumerResource, CandlepinPoolManager poolManager,
+        ConsumerResource consumerResource, PoolManager poolManager,
         ConsumerCurator consumerCurator) {
 
         this.envCurator = envCurator;
