@@ -29,6 +29,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.policy.Enforcer;
+import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -132,14 +133,14 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
         CandlepinPoolManager anotherEntitler =
             injector.getInstance(CandlepinPoolManager.class);
 
-        anotherEntitler.entitleByProduct(consumer, newProduct.getId());
-        anotherEntitler.entitleByProduct(consumer, newProduct.getId());
+        anotherEntitler.entitleByPool(consumer, consumerPool, 1);
+        anotherEntitler.entitleByPool(consumer, consumerPool, 1);
 
         assertFalse(poolCurator.find(consumerPool.getId())
                 .entitlementsAvailable(1));
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test(expected = EntitlementRefusedException.class)
     public void concurrentCreationOfEntitlementsShouldFailIfOverMaxMemberLimit()
         throws Exception {
         Long numAvailEntitlements = 1L;
@@ -154,10 +155,10 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
         CandlepinPoolManager anotherEntitler =
             injector.getInstance(CandlepinPoolManager.class);
 
-        Entitlement e1 = poolManager.entitleByProduct(consumer, newProduct.getId());
+        Entitlement e1 = poolManager.entitleByPool(consumer, consumerPool, 1);
         assertNotNull(e1);
 
-        anotherEntitler.entitleByProduct(consumer, newProduct.getId());
+        anotherEntitler.entitleByPool(consumer, consumerPool, 1);
     }
 
     @Override

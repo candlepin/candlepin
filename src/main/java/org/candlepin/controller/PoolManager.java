@@ -65,9 +65,6 @@ public interface PoolManager {
     Entitlement entitleByPool(Consumer consumer, Pool pool, Integer quantity)
         throws EntitlementRefusedException;
 
-    Entitlement entitleByProduct(Consumer consumer, String productId)
-        throws EntitlementRefusedException;
-
     Entitlement ueberCertEntitlement(Consumer consumer, Pool pool,
         Integer quantity) throws EntitlementRefusedException;
 
