@@ -35,8 +35,9 @@ describe 'Virt Only Pools' do
       'virt.is_guest' => false
     })
 
-    entitlement = guest.consume_product(virt_product.id)
-    entitlement.should be_nil
+    lambda do
+      entitlement = guest.consume_product(virt_product.id)
+    end.should raise_exception(RestClient::BadRequest)
   end
 
   it 'virt_only product should result in virt_only pool' do

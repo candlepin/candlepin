@@ -99,8 +99,9 @@ describe 'Entitlements' do
   it 'should not allow consuming two entitlements for the same product' do
     @system.consume_product @super_awesome.id
 
-    entitlements = @system.consume_product @super_awesome.id
-    entitlements.should be_nil
+    lambda do
+      entitlements = @system.consume_product @super_awesome.id
+    end.should raise_exception(RestClient::BadRequest)
   end
 
   it 'should not allow consuming two entitlements in same pool' do
