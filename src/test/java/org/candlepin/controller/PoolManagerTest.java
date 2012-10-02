@@ -134,8 +134,8 @@ public class PoolManagerTest {
         this.principal = TestUtil.createOwnerPrincipal();
         this.manager = spy(new CandlepinPoolManager(mockPoolCurator, mockSubAdapter,
             productCache, entCertAdapterMock, mockEventSink, eventFactory,
-            mockConfig, enforcerMock, poolRulesMock, poolCriteriaMock,
-            entitlementCurator, consumerCuratorMock, certCuratorMock, complianceRules));
+            mockConfig, enforcerMock, poolRulesMock, entitlementCurator,
+            consumerCuratorMock, certCuratorMock, complianceRules));
 
         when(entCertAdapterMock.generateEntitlementCert(any(Entitlement.class),
             any(Subscription.class), any(Product.class))).thenReturn(
@@ -305,49 +305,6 @@ public class PoolManagerTest {
 
         verify(entCertAdapterMock).revokeEntitlementCertificates(e);
         verify(entitlementCurator).delete(e);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Test
-    public void testGrantByProductPicksPoolWithAvailableEntitlements() throws Exception {
-        Product product = TestUtil.createProduct();
-        List<Pool> pools = Util.newList();
-        Pool pool1 = TestUtil.createPool(product);
-        pools.add(pool1);
-        Pool pool2 = TestUtil.createPool(product);
-        pools.add(pool2);
-
-        PreEntHelper badHelper = mock(PreEntHelper.class);
-        PreEntHelper goodHelper = mock(PreEntHelper.class);
-
-        ValidationResult badResult = mock(ValidationResult.class);
-        ValidationResult goodResult = mock(ValidationResult.class);
-
-        when(mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
-            any(Owner.class), any(String.class), any(Date.class), anyBoolean(),
-            anyBoolean())).thenReturn(pools);
-        when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(pool1);
-        when(enforcerMock.preEntitlement(any(Consumer.class), any(Pool.class), anyInt()))
-            .thenReturn(badHelper).thenReturn(goodHelper);
-
-        when(badHelper.getResult()).thenReturn(badResult);
-        when(goodHelper.getResult()).thenReturn(goodResult);
-
-        when(badResult.isSuccessful()).thenReturn(false);
-        when(goodResult.isSuccessful()).thenReturn(true);
-
-        List<PoolQuantity> bestPools = new ArrayList<PoolQuantity>();
-        bestPools.add(new PoolQuantity(pool1, 1));
-        when(enforcerMock.selectBestPools(any(Consumer.class), any(String[].class),
-            any(List.class), any(ComplianceStatus.class), any(String.class),
-            any(Set.class)))
-            .thenReturn(bestPools);
-
-        Entitlement e = manager.entitleByProduct(TestUtil.createConsumer(o),
-            product.getId());
-
-        assertNotNull(e);
-
     }
 
     @SuppressWarnings("unchecked")
