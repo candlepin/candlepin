@@ -14,17 +14,22 @@
  */
 package org.candlepin.resource;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import org.candlepin.controller.PoolManager;
 import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.EnvironmentContent;
@@ -44,15 +49,17 @@ public class ContentResource {
     private I18n i18n;
     private UniqueIdGenerator idGenerator;
     private EnvironmentContentCurator envContentCurator;
+    private PoolManager poolManager;
 
     @Inject
     public ContentResource(ContentCurator contentCurator, I18n i18n,
-        UniqueIdGenerator idGenerator, EnvironmentContentCurator envContentCurator) {
+        UniqueIdGenerator idGenerator, EnvironmentContentCurator envContentCurator,
+        PoolManager poolManager) {
         this.i18n = i18n;
         this.contentCurator = contentCurator;
         this.idGenerator = idGenerator;
         this.envContentCurator = envContentCurator;
-
+        this.poolManager = poolManager;
     }
 
     /**
@@ -106,6 +113,28 @@ public class ContentResource {
         return contentCurator.create(content);
     }
 
+    @PUT
+    @Produces(MediaType.APPLICATION_JSON)
+    public Content updateContent(Content changes) {
+        Content updated = contentCurator.update(changes);
+
+        if (updated == null) {
+            throw new NotFoundException(
+                i18n.tr("Content with id {0} could not be found.", changes.getId()));
+        }
+
+        // require regeneration of entitlement certificates of affected consumers
+        poolManager.regenerateCertificatesOf(setFrom(updated.getId()), true);
+
+        return updated;
+    }
+
+    private <T> Set<T> setFrom(T anElement) {
+        Set<T> toReturn = new HashSet<T>();
+        toReturn.add(anElement);
+        return toReturn;
+    }
+
     /**
      * @httpcode 200
      */
@@ -117,7 +146,7 @@ public class ContentResource {
         contentCurator.delete(nuke);
 
         // Clean up any dangling environment content:
-        for (EnvironmentContent ec : envContentCurator.lookupByAndContent(cid)) {
+        for (EnvironmentContent ec : envContentCurator.lookupByContent(cid)) {
             envContentCurator.delete(ec);
         }
     }

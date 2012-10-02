@@ -37,4 +37,18 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
             merge(c);
         }
     }
+
+    @Transactional
+    public Content update(Content changes) {
+        Content current = find(changes.getId());
+
+        if (current == null) {
+            return null;
+        }
+
+        current.copyProperties(changes);
+        save(current);
+
+        return current;
+    }
 }

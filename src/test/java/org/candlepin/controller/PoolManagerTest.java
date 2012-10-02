@@ -15,9 +15,9 @@
 package org.candlepin.controller;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
@@ -31,6 +31,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
@@ -43,6 +49,7 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
@@ -63,18 +70,11 @@ import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
 
 /**
  * PoolManagerTest
@@ -106,6 +106,8 @@ public class PoolManagerTest {
     private RulesCriteria poolCriteriaMock;
     @Mock
     private ConsumerCurator consumerCuratorMock;
+    @Mock
+    private EnvironmentCurator envCurator;
 
     @Mock
     private EventFactory eventFactory;
@@ -135,7 +137,7 @@ public class PoolManagerTest {
         this.manager = spy(new CandlepinPoolManager(mockPoolCurator, mockSubAdapter,
             productCache, entCertAdapterMock, mockEventSink, eventFactory,
             mockConfig, enforcerMock, poolRulesMock, entitlementCurator,
-            consumerCuratorMock, certCuratorMock, complianceRules));
+            consumerCuratorMock, certCuratorMock, complianceRules, envCurator));
 
         when(entCertAdapterMock.generateEntitlementCert(any(Entitlement.class),
             any(Subscription.class), any(Product.class))).thenReturn(
@@ -495,7 +497,5 @@ public class PoolManagerTest {
         verify(enforcerMock).selectBestPools(any(Consumer.class), eq(installedPids),
             any(List.class), eq(mockCompliance), any(String.class),
             any(Set.class));
-
-
     }
 }

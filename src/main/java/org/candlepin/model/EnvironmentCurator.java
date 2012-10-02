@@ -15,6 +15,7 @@
 package org.candlepin.model;
 
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.criterion.Restrictions;
 
@@ -27,18 +28,27 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
         super(Environment.class);
     }
 
+    @SuppressWarnings("unchecked")
     public List<Environment> listForOwner(Owner o) {
         return this.currentSession().createCriteria(Environment.class)
             .add(Restrictions.eq("owner", o)).list();
     }
 
+    @SuppressWarnings("unchecked")
     public List<Environment> listForOwnerByName(Owner o, String envName) {
         return this.currentSession().createCriteria(Environment.class)
             .add(Restrictions.eq("owner", o)).add(Restrictions.eq("name", envName)).list();
     }
 
+    @SuppressWarnings("unchecked")
+    public List<Environment> listWithContent(Set<String> contentIds) {
+        return currentSession().createCriteria(Environment.class)
+            .createCriteria("environmentContent")
+            .add(Restrictions.in("contentId", contentIds))
+            .list();
+    }
+
     public void evict(Environment e) {
         this.currentSession().evict(e);
     }
-
 }
