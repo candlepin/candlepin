@@ -21,12 +21,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Matchers.any;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 
 import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Environment;
@@ -115,5 +117,23 @@ public class ContentResourceTest {
         when(cc.find(eq("10"))).thenReturn(null);
         cr.remove("10");
         verify(cc, never()).delete(eq(content));
+    }
+
+    @Test
+    public void testUpdateContent() {
+        Content content = mock(Content.class);
+        when(cc.update(any(Content.class))).thenReturn(content);
+
+        cr.updateContent(content);
+
+        verify(cc, atLeastOnce()).update(eq(content));
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void testUpdateContentThrowsExceptionWhenContentDoesNotExist() {
+        Content content = mock(Content.class);
+        when(cc.update(any(Content.class))).thenReturn(null);
+
+        cr.updateContent(content);
     }
 }

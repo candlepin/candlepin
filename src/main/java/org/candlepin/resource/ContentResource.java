@@ -19,12 +19,14 @@ import java.util.List;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.EnvironmentContent;
@@ -104,6 +106,20 @@ public class ContentResource {
             return lookedUp;
         }
         return contentCurator.create(content);
+    }
+
+    @PUT
+    @Produces(MediaType.APPLICATION_JSON)
+    public Content updateContent(Content changes) {
+        Content updated = contentCurator.update(changes);
+
+        if (updated == null) {
+            throw new NotFoundException(
+                i18n.tr("Content with id {0} could not be found.", changes.getId()));
+        }
+
+        // entitlement certs will be lazily regenerated for us.
+        return updated;
     }
 
     /**
