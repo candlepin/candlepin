@@ -14,10 +14,17 @@
  */
 package org.candlepin.controller;
 
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
-
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.candlepin.audit.Event;
@@ -33,6 +40,7 @@ import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
@@ -55,16 +63,8 @@ import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.Util;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
+import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
 /**
  * PoolManager
@@ -86,6 +86,7 @@ public class CandlepinPoolManager implements PoolManager {
     private EntitlementCertificateCurator entitlementCertificateCurator;
     private ComplianceRules complianceRules;
     private ProductCache productCache;
+    private EnvironmentCurator envCurator;
 
     /**
      * @param poolCurator
@@ -102,7 +103,7 @@ public class CandlepinPoolManager implements PoolManager {
         EventFactory eventFactory, Config config, Enforcer enforcer,
         PoolRules poolRules, EntitlementCurator curator1,
         ConsumerCurator consumerCurator, EntitlementCertificateCurator ecC,
-        ComplianceRules complianceRules) {
+        ComplianceRules complianceRules, EnvironmentCurator envCurator) {
 
         this.poolCurator = poolCurator;
         this.subAdapter = subAdapter;
@@ -117,6 +118,7 @@ public class CandlepinPoolManager implements PoolManager {
         this.entitlementCertificateCurator = ecC;
         this.complianceRules = complianceRules;
         this.productCache = productCache;
+        this.envCurator = envCurator;
     }
 
     public Set<Entitlement> refreshPoolsWithoutRegeneration(Owner owner) {
@@ -650,6 +652,23 @@ public class CandlepinPoolManager implements PoolManager {
         log.info("Found " + entsToRegen.size() + " certificates to regenerate.");
 
         regenerateCertificatesOf(entsToRegen, lazy);
+    }
+
+
+    /**
+     * Used to regenerate certificates affected by a mass content promotion/demotion.
+     *
+     * WARNING: can be quite expensive, currently we must look up all entitlements in the
+     * environment, all provided products for each entitlement, and check if any product
+     * provides any of the modified content set IDs.
+     *
+     * @param affectedContent List of content set IDs promoted/demoted.
+     */
+    @Transactional
+    public void regenerateCertificatesOf(Set<String> affectedContent, boolean lazy) {
+        for (Environment e : envCurator.listWithContent(affectedContent)) {
+            regenerateCertificatesOf(e, affectedContent, lazy);
+        }
     }
 
     /**

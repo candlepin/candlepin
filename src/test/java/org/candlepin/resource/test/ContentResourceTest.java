@@ -14,19 +14,23 @@
  */
 package org.candlepin.resource.test;
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.anyLong;
-import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
+import org.candlepin.controller.PoolManager;
 import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Environment;
@@ -36,6 +40,7 @@ import org.candlepin.resource.ContentResource;
 import org.candlepin.service.impl.DefaultUniqueIdGenerator;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentMatcher;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 /**
@@ -47,14 +52,16 @@ public class ContentResourceTest {
     private ContentResource cr;
     private I18n i18n;
     private EnvironmentContentCurator envContentCurator;
+    private PoolManager poolManager;
 
     @Before
     public void init() {
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         cc = mock(ContentCurator.class);
         envContentCurator = mock(EnvironmentContentCurator.class);
+        poolManager = mock(PoolManager.class);
         cr = new ContentResource(cc, i18n, new DefaultUniqueIdGenerator(),
-            envContentCurator);
+            envContentCurator, poolManager);
     }
 
     @Test
@@ -98,12 +105,13 @@ public class ContentResourceTest {
         Content content = mock(Content.class);
         when(content.getId()).thenReturn("10");
         when(cc.find(eq("10"))).thenReturn(content);
-        List<EnvironmentContent> envContents = new LinkedList<EnvironmentContent>();
-        EnvironmentContent ec = new EnvironmentContent(mock(Environment.class),
-            content.getId(), true);
-        envContents.add(ec);
-        when(envContentCurator.lookupByAndContent(content.getId())).thenReturn(envContents);
+        EnvironmentContent ec =
+            new EnvironmentContent(mock(Environment.class), content.getId(), true);
+        List<EnvironmentContent> envContents = listFrom(ec);
+        when(envContentCurator.lookupByContent(content.getId())).thenReturn(envContents);
+
         cr.remove("10");
+
         verify(cc, atLeastOnce()).delete(eq(content));
         verify(envContentCurator, atLeastOnce()).delete(eq(ec));
     }
@@ -115,5 +123,51 @@ public class ContentResourceTest {
         when(cc.find(eq("10"))).thenReturn(null);
         cr.remove("10");
         verify(cc, never()).delete(eq(content));
+    }
+
+    @Test
+    public void testUpdateContent() {
+        final String contentId = "10";
+        Content content = mock(Content.class);
+        when(content.getId()).thenReturn(contentId);
+
+        when(cc.update(any(Content.class))).thenReturn(content);
+
+        cr.updateContent(content);
+
+        verify(cc).update(eq(content));
+        verify(poolManager).regenerateCertificatesOf(
+            argThat(new SetContaining(listFrom(contentId))), anyBoolean());
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void testUpdateContentThrowsExceptionWhenContentDoesNotExist() {
+        Content content = mock(Content.class);
+        when(cc.update(any(Content.class))).thenReturn(null);
+
+        cr.updateContent(content);
+    }
+
+    private <T> List<T> listFrom(T anElement) {
+        List<T> l = new ArrayList<T>();
+        l.add(anElement);
+        return l;
+    }
+
+    private <T> Set<T> setFrom(T anElement) {
+        Set<T> s = new HashSet<T>();
+        s.add(anElement);
+        return s;
+    }
+
+    private class SetContaining extends ArgumentMatcher<Set<String>> {
+        private Collection shouldContain;
+
+        public SetContaining(Collection shouldContain) {
+            this.shouldContain = shouldContain;
+        }
+        public boolean matches(Object set) {
+            return ((Set) set).containsAll(shouldContain);
+        }
     }
 }
