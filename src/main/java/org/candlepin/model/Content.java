@@ -190,7 +190,9 @@ public class Content extends AbstractHibernateObject {
             Content that = (Content) other;
             return new EqualsBuilder().append(this.contentUrl, that.contentUrl)
                 .append(this.gpgUrl, that.gpgUrl)
-                .append(this.label, that.label).append(this.type, that.type)
+                .append(this.label, that.label)
+                .append(this.name, that.name)
+                .append(this.type, that.type)
                 .append(this.vendor, that.vendor).isEquals();
         }
         return false;
@@ -245,4 +247,27 @@ public class Content extends AbstractHibernateObject {
         return releaseVer;
     }
 
+    /**
+     * @param from Content object to copy properties from.
+     * @return current Content object with updated properites
+     */
+    public Content copyProperties(Content from) {
+        setType(from.getType());
+        setLabel(from.getLabel());
+        setName(from.getName());
+        setVendor(from.getVendor());
+        setContentUrl(from.getContentUrl());
+        setRequiredTags(from.getRequiredTags());
+        setReleaseVer(from.getReleaseVer());
+        setGpgUrl(from.getGpgUrl());
+        setMetadataExpire(from.getMetadataExpire());
+        setModifiedProductIds(defaultIfNull(from.getModifiedProductIds(),
+            new HashSet<String>()));
+
+        return this;
+    }
+
+    private <T> T defaultIfNull(T val, T dflt) {
+        return val == null ? dflt : val;
+    }
 }

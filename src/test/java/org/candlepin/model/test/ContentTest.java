@@ -18,7 +18,7 @@ import java.util.HashSet;
 import org.candlepin.model.Content;
 import org.candlepin.test.DatabaseTestFixture;
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 import static org.hamcrest.collection.IsCollectionContaining.hasItem;
 import static org.junit.Assert.assertThat;
 
