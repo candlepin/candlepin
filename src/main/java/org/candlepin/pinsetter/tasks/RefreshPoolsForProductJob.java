@@ -17,10 +17,9 @@ package org.candlepin.pinsetter.tasks;
 import static org.quartz.JobBuilder.newJob;
 
 import org.candlepin.controller.PoolManager;
-import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
 import org.candlepin.pinsetter.core.model.JobStatus;
-import org.candlepin.service.SubscriptionServiceAdapter;
+import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
@@ -31,24 +30,20 @@ import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-
 /**
  * RefreshPoolsForProductJob
  */
 public class RefreshPoolsForProductJob implements Job {
 
-    private SubscriptionServiceAdapter subAdapter;
+    private ProductServiceAdapter productAdapter;
     private PoolManager poolManager;
 
     public static final String LAZY_REGEN = "lazy_regen";
 
     @Inject
-    public RefreshPoolsForProductJob(SubscriptionServiceAdapter subAdapter,
+    public RefreshPoolsForProductJob(ProductServiceAdapter productAdapter,
         PoolManager poolManager) {
-        this.subAdapter = subAdapter;
+        this.productAdapter = productAdapter;
         this.poolManager = poolManager;
     }
 
@@ -58,14 +53,9 @@ public class RefreshPoolsForProductJob implements Job {
         String productId = context.getMergedJobDataMap().getString(JobStatus.TARGET_ID);
         Boolean lazy = context.getMergedJobDataMap().getBoolean(LAZY_REGEN);
 
-        List<String> l = new ArrayList<String>();
-        l.add(productId);
+        poolManager.getRefresher(lazy).add(
+            productAdapter.getProductById(productId)).run();
 
-        Set<Owner> owners = subAdapter.lookupOwnersByProduct(l);
-
-        for (Owner owner : owners) {
-            poolManager.refreshPools(owner, lazy);
-        }
         context.setResult("Pools refreshed for product " + productId);
     }
 

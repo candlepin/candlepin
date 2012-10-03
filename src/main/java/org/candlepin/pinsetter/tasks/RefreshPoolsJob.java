@@ -68,7 +68,7 @@ public class RefreshPoolsJob implements Job {
         }
 
         // Assume that we verified the request in the resource layer:
-        poolManager.refreshPools(owner, lazy);
+        poolManager.getRefresher(lazy).add(owner).run();
 
         context.setResult("Pools refreshed for owner " + owner.getDisplayName());
     }

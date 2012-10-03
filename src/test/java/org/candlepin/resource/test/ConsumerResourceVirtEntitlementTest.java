@@ -115,8 +115,6 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         subCurator.create(unlimitSub);
 
         unlimitPools = poolManager.createPoolsForSubscription(unlimitSub);
-
-        poolManager.refreshPools(owner, false);
     }
 
     /**
@@ -143,10 +141,6 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
                 // ensure the correct # consumed from the bonus pool
                 assertTrue(p.getConsumed() == 20);
                 assertTrue(p.getQuantity() == 100);
-                poolManager.refreshPools(owner, true);
-                // double check after pools refresh
-                assertTrue(p.getConsumed() == 20);
-                assertTrue(p.getQuantity() == 100);
                 // keep this list so we don't need to search again
                 subscribedTo.add(p);
             }
@@ -160,10 +154,6 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         for (Pool p : subscribedTo) {
             assertTrue(p.getConsumed() == 20);
             assertTrue(p.getQuantity() == 30);
-            poolManager.refreshPools(owner, true);
-            // double check after pools refresh
-            assertTrue(p.getConsumed() == 20);
-            assertTrue(p.getQuantity() == 30);
         }
         // manifest consume from the physical pool and then check bonus pool quantities.
         //   Should result in a revocation of one of the 10 count entitlements.
@@ -172,20 +162,12 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         for (Pool p : subscribedTo) {
             assertTrue(p.getConsumed() == 10);
             assertTrue(p.getQuantity() == 10);
-            poolManager.refreshPools(owner, true);
-            // double check after pools refresh
-            assertTrue(p.getConsumed() == 10);
-            assertTrue(p.getQuantity() == 10);
         }
         // system consume from the physical pool and then check bonus pool quantities.
         //   Should result in no change in the entitlements for the guest.
         consumerResource.bind(systemConsumer.getUuid(), parentPool.getId(), null, 1, null,
             null, false, null);
         for (Pool p : subscribedTo) {
-            assertTrue(p.getConsumed() == 10);
-            assertTrue(p.getQuantity() == 10);
-            poolManager.refreshPools(owner, true);
-            // double check after pools refresh
             assertTrue(p.getConsumed() == 10);
             assertTrue(p.getQuantity() == 10);
         }
@@ -211,7 +193,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
                     10, null, null, false, null);
                 assertTrue(p.getConsumed() == 20);
                 assertTrue(p.getQuantity() == -1);
-                poolManager.refreshPools(owner, true);
+                poolManager.getRefresher().add(owner).run();
                 // double check after pools refresh
                 assertTrue(p.getConsumed() == 20);
                 assertTrue(p.getQuantity() == -1);
@@ -227,20 +209,12 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         for (Pool p : subscribedTo) {
             assertTrue(p.getConsumed() == 20);
             assertTrue(p.getQuantity() == -1);
-            poolManager.refreshPools(owner, true);
-            // double check after pools refresh
-            assertTrue(p.getConsumed() == 20);
-            assertTrue(p.getQuantity() == -1);
         }
         // Full consumption of physical pool causes revocation of bonus pool entitlements
         //   and quantity change to 0
         consumerResource.bind(manifestConsumer.getUuid(), parentPool.getId(), null, 3, null,
             null, false, null);
         for (Pool p : subscribedTo) {
-            assertTrue(p.getConsumed() == 0);
-            assertTrue(p.getQuantity() == 0);
-            poolManager.refreshPools(owner, true);
-            // double check after pools refresh
             assertTrue(p.getConsumed() == 0);
             assertTrue(p.getQuantity() == 0);
         }

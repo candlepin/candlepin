@@ -103,7 +103,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     @Transactional
     @EnforceAccessControl
     public List<Pool> listByOwner(Owner o, Date activeOn) {
-        return listAvailableEntitlementPools(null, o, (String) null, activeOn, true, false);
+        return listAvailableEntitlementPools(null, o, null, activeOn, true, false);
     }
 
     /**
