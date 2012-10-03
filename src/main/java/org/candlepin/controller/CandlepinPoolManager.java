@@ -663,7 +663,7 @@ public class CandlepinPoolManager implements PoolManager {
      */
     @Transactional
     public void regenerateCertificatesOf(Set<String> affectedContent, boolean lazy) {
-        for(Environment e : envCurator.listWithContent(affectedContent)) {
+        for (Environment e : envCurator.listWithContent(affectedContent)) {
             regenerateCertificatesOf(e, affectedContent, lazy);
         }
     }
