@@ -16,67 +16,68 @@ package org.candlepin.model.test;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.candlepin.model.Environment;
+import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.Owner;
 import org.candlepin.test.DatabaseTestFixture;
-
+import org.junit.Before;
 import org.junit.Test;
 
 
 public class EnvironmentCuratorTest extends DatabaseTestFixture {
+    private Owner owner;
+    private Environment environment;
+
+    @Before
+    public void setUp() {
+        owner = ownerCurator.create(new Owner("test-owner", "Test Owner"));
+        environment = envCurator.create(new Environment("env1", "Env 1", owner));
+    }
 
     @Test
     public void create() {
-        Owner owner = new Owner("test-owner", "Test Owner");
-        owner = ownerCurator.create(owner);
-
-        Environment e = new Environment("env1", "Env 1", owner);
-        envCurator.create(e);
-
         assertEquals(1, envCurator.listAll().size());
-        e = envCurator.find("env1");
+        Environment e = envCurator.find("env1");
         assertEquals(owner, e.getOwner());
     }
 
     @Test public void delete() {
-        Owner owner = new Owner("test-owner", "Test Owner");
-        owner = ownerCurator.create(owner);
-
-        Environment e = new Environment("env1", "Env 1", owner);
-        e = envCurator.create(e);
-
-        envCurator.delete(e);
+        envCurator.delete(environment);
         assertEquals(0, envCurator.listAll().size());
     }
 
     @Test public void listForOwner() {
-
-        Owner owner = new Owner("test-owner", "Test Owner");
-        owner = ownerCurator.create(owner);
-
-        Environment e = new Environment("env1", "Env 1", owner);
-        e = envCurator.create(e);
-
         List<Environment> envs = envCurator.listForOwner(owner);
         assertEquals(1, envs.size());
+        assertEquals(envs.get(0), environment);
     }
 
     @Test public void listForOwnerByName() {
-
-        Owner owner = new Owner("test-owner", "Test Owner");
-        owner = ownerCurator.create(owner);
-
-        Environment e = new Environment("env1", "Env 1", owner);
-        e = envCurator.create(e);
-
-        e = new Environment("env2", "Another Env", owner);
-        e = envCurator.create(e);
+        Environment e = envCurator.create(new Environment("env2", "Another Env", owner));
 
         List<Environment> envs = envCurator.listForOwnerByName(owner, "Another Env");
         assertEquals(1, envs.size());
-        assertEquals("env2", envs.get(0).getId());
+        assertEquals(e, envs.get(0));
     }
 
+    @Test
+    public void listWithContent() {
+        Environment e = envCurator.create(new Environment("env2", "Another Env", owner));
+
+        final String contentId = "contentId";
+        EnvironmentContent ec = envContentCurator.create(
+            new EnvironmentContent(environment, contentId, true));
+
+        Set<String> ids = new HashSet<String>();
+        ids.add(contentId);
+
+        List<Environment> envs = envCurator.listWithContent(ids);
+
+        assertEquals(1, envs.size());
+        assertEquals(environment, envs.get(0));
+    }
 }

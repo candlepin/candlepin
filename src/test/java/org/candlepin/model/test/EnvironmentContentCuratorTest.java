@@ -66,7 +66,7 @@ public class EnvironmentContentCuratorTest extends DatabaseTestFixture {
         e = envCurator.find(e.getId());
         assertEquals(1, e.getEnvironmentContent().size());
 
-        assertEquals(1, envContentCurator.lookupByAndContent(c.getId()).size());
+        assertEquals(1, envContentCurator.lookupByContent(c.getId()).size());
     }
 
     @Test
