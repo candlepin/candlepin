@@ -23,6 +23,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.mock;
 
@@ -86,7 +87,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -119,6 +119,10 @@ public class DefaultEntitlementCertServiceAdapterTest {
     private EntitlementCurator entCurator;
     @Mock
     private KeyPairCurator keyPairCurator;
+
+    @Mock
+    private Consumer consumer;
+
     private X509ExtensionUtil extensionUtil;
     private X509V3ExtensionUtil v3extensionUtil;
     private Product product;
@@ -139,14 +143,16 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     @Before
     public void setUp() {
-        extensionUtil = new X509ExtensionUtil(new Config());
-        v3extensionUtil = new X509V3ExtensionUtil(new Config(), entCurator);
+        Config config = new Config();
+        extensionUtil = new X509ExtensionUtil(config);
+        v3extensionUtil = new X509V3ExtensionUtil(config, entCurator);
 
         certServiceAdapter = new DefaultEntitlementCertServiceAdapter(
             mockedPKI, extensionUtil, v3extensionUtil,
             mock(EntitlementCertificateCurator.class), keyPairCurator,
             serialCurator, productAdapter, entCurator,
-            I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK));
+            I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
+            config);
 
 
         product = new Product("12345", "a product", "variant", "version",
@@ -175,7 +181,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         entitlement = new Entitlement();
         entitlement.setQuantity(new Integer(ENTITLEMENT_QUANTITY));
-        entitlement.setConsumer(Mockito.mock(Consumer.class));
+        entitlement.setConsumer(consumer);
         entitlement.setStartDate(subscription.getStartDate());
         entitlement.setEndDate(subscription.getEndDate());
         entitlement.setPool(pool);
@@ -561,6 +567,61 @@ public class DefaultEntitlementCertServiceAdapterTest {
             argThat(new ListDoesNotContainSupportType()), any(Set.class), any(Date.class),
             any(Date.class), any(KeyPair.class), any(BigInteger.class),
             any(String.class));
+    }
+
+    @Test
+    public void ensureV3CertIsCreatedWhenEnableCertV3ConfigIsTrue() throws Exception {
+        Config mockConfig = mock(Config.class);
+        when(mockConfig.certV3IsEnabled()).thenReturn(true);
+
+        when(consumer.getFact(eq("system.certificate_version"))).thenReturn("3.0");
+
+        X509V3ExtensionUtil mockV3extensionUtil = mock(X509V3ExtensionUtil.class);
+        X509ExtensionUtil mockExtensionUtil = mock(X509ExtensionUtil.class);
+
+        DefaultEntitlementCertServiceAdapter entAdapter =
+            new DefaultEntitlementCertServiceAdapter(mockedPKI, mockExtensionUtil,
+                mockV3extensionUtil, mock(EntitlementCertificateCurator.class),
+                keyPairCurator, serialCurator, productAdapter, entCurator,
+                I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
+                mockConfig);
+
+        entAdapter.createX509Certificate(entitlement, subscription,
+            product, new BigInteger("1234"), keyPair(), true);
+        verify(mockV3extensionUtil).getExtensions(any(Set.class), eq(entitlement),
+            any(String.class), any(Map.class), eq(subscription));
+        verify(mockV3extensionUtil).getByteExtensions(any(Set.class),
+            eq(entitlement), any(String.class), any(Map.class), eq(subscription));
+        verifyZeroInteractions(mockExtensionUtil);
+    }
+
+    @Test
+    public void ensureV1CertIsCreatedWhenEnableCertV3ConfigIsFalse() throws Exception {
+        Config mockConfig = mock(Config.class);
+        when(mockConfig.certV3IsEnabled()).thenReturn(false);
+        // Ensure that the consumer is still at V3.
+        when(consumer.getFact(eq("system.certificate_version"))).thenReturn("3.0");
+
+        X509V3ExtensionUtil mockV3extensionUtil = mock(X509V3ExtensionUtil.class);
+        X509ExtensionUtil mockExtensionUtil = mock(X509ExtensionUtil.class);
+
+        DefaultEntitlementCertServiceAdapter entAdapter =
+            new DefaultEntitlementCertServiceAdapter(mockedPKI, mockExtensionUtil,
+                mockV3extensionUtil, mock(EntitlementCertificateCurator.class),
+                keyPairCurator, serialCurator, productAdapter, entCurator,
+                I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
+                mockConfig);
+
+        entAdapter.createX509Certificate(entitlement, subscription,
+            product, new BigInteger("1234"), keyPair(), true);
+        verify(mockExtensionUtil).productExtensions(eq(product));
+        verify(mockExtensionUtil).contentExtensions(any(Set.class), any(String.class),
+            any(Map.class), eq(consumer));
+        verify(mockExtensionUtil).subscriptionExtensions(eq(subscription),
+            eq(entitlement));
+        verify(mockExtensionUtil).entitlementExtensions(eq(entitlement));
+        verify(mockExtensionUtil).consumerExtensions(eq(consumer));
+        verifyZeroInteractions(mockV3extensionUtil);
     }
 
     @Test
