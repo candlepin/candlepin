@@ -17,7 +17,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.7.11
+Version: 0.7.12
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -287,6 +287,12 @@ fi
 
 
 %changelog
+* Thu Oct 04 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.7.12-1
+- added support for updating of Content (dmitri@redhat.com)
+- Remove botched curator package move. (jbowes@redhat.com)
+- fixed Release object serialization issue - 'id' field shouldn't be serialized
+  (dmitri@redhat.com)
+
 * Wed Sep 19 2012 jesus m. rodriguez <jesusr@redhat.com> 0.7.11-1
 - certv3: sort path names alphabetically (jbowes@redhat.com)
 - latest strings from zanata (alikins@redhat.com)
