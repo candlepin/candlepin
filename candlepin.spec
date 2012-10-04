@@ -14,7 +14,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.7.8
+Version: 0.7.8.0
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -283,6 +283,12 @@ fi
 
 
 %changelog
+* Thu Oct 04 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.7.8.0-1
+- added support for updating of Content (dmitri@redhat.com)
+
+* Thu Oct 04 2012 Devan Goodwin <dgoodwin@rm-rf.ca>
+- added support for updating of Content (dmitri@redhat.com)
+
 * Fri Aug 31 2012 jesus m. rodriguez <jesusr@redhat.com> 0.7.8-1
 - Pull curator classes out into their own package. (jbowes@redhat.com)
 - Fix certv1 content filtering on autobinds. (dgoodwin@redhat.com)
