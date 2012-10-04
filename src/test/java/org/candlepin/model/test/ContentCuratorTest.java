@@ -40,7 +40,7 @@ public class ContentCuratorTest extends DatabaseTestFixture {
         updates.setRequiredTags("required-tags");
         updates.setReleaseVer("releaseVer");
         updates.setMetadataExpire(new Long(1));
-        updates.setModifiedProductIds(new HashSet<String>() {{ add("productIdOne"); }});
+        updates.setModifiedProductIds(new HashSet<String>() { { add("productIdOne"); } });
     }
 
     @Test
@@ -53,7 +53,7 @@ public class ContentCuratorTest extends DatabaseTestFixture {
         Content toBeUpdated = new Content(
             "Test Content", updates.getId(),
             "test-content-label", "yum", "test-vendor",
-            "test-content-url", "test-gpg-url");;
+            "test-content-url", "test-gpg-url");
         contentCurator.create(toBeUpdated);
 
         contentCurator.update(updates);

@@ -169,5 +169,5 @@ public class ContentResourceTest {
         public boolean matches(Object set) {
             return ((Set) set).containsAll(shouldContain);
         }
-     }
+    }
 }
