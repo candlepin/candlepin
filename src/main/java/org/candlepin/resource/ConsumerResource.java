@@ -1255,8 +1255,11 @@ public class ConsumerResource {
                 throw fe;
             }
             catch (RuntimeException re) {
-                log.warn(i18n.tr("Asked to be subscribed to a product that " +
-                    "has no pool: {0} ", re.getMessage()));
+                String errorMessage = i18n.tr("Asked to be subscribed to a product that " +
+                    "has no pool: {0} ", re.getMessage());
+                log.warn(errorMessage);
+                return Response.status(Response.Status.BAD_REQUEST)
+                    .type(MediaType.APPLICATION_JSON).entity(errorMessage).build();
             }
         }
 
