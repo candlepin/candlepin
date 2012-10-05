@@ -14,8 +14,29 @@
  */
 package org.candlepin.resource;
 
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
+import java.io.File;
+import java.io.IOException;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringTokenizer;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 
 import org.apache.log4j.Logger;
 import org.candlepin.audit.Event;
@@ -79,27 +100,8 @@ import org.jboss.resteasy.util.GenericType;
 import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
+import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
 
 /**
@@ -885,10 +887,21 @@ public class OwnerResource {
         @QueryParam("force") @DefaultValue("false") boolean force,
         MultipartInput input) {
 
+        String filename = "";
         Owner owner = findOwner(ownerKey);
         Map<String, Object> data = new HashMap<String, Object>();
         try {
             InputPart part = input.getParts().get(0);
+            MultivaluedMap<String, String> headers = part.getHeaders();
+            String contDis = headers.getFirst("Content-Disposition");
+            StringTokenizer st = new StringTokenizer(contDis, ";");
+            while (st.hasMoreTokens()) {
+                String entry = st.nextToken().trim();
+                if (entry.startsWith("filename")) {
+                    filename = entry.substring(entry.indexOf("=") + 2, entry.length() - 1);
+                    break;
+                }
+            }
             File archive = part.getBody(new GenericType<File>() {
             });
             log.info("Importing archive " + archive.getAbsolutePath() + " for owner " +
@@ -896,25 +909,25 @@ public class OwnerResource {
             data = importer.loadExport(owner, archive, force);
 
             sink.emitImportCreated(owner);
-            recordImportSuccess(owner, data, force);
+            recordImportSuccess(owner, data, force, filename);
         }
         catch (IOException e) {
-            recordImportFailure(owner, data, e);
+            recordImportFailure(owner, data, e, filename);
             throw new IseException(i18n.tr("Error reading export archive"), e);
         }
         // These come back with internationalized messages, so we can transfer:
         catch (SyncDataFormatException e) {
-            recordImportFailure(owner, data, e);
+            recordImportFailure(owner, data, e, filename);
             throw new BadRequestException(e.getMessage(), e);
         }
         catch (ImporterException e) {
-            recordImportFailure(owner, data, e);
+            recordImportFailure(owner, data, e, filename);
             throw new IseException(e.getMessage(), e);
         }
         // Grab candlepin exceptions to record the error and then rethrow
         // to pass on the http return code
         catch (CandlepinException e) {
-            recordImportFailure(owner, data, e);
+            recordImportFailure(owner, data, e, filename);
             throw e;
         }
         finally {
@@ -1100,7 +1113,8 @@ public class OwnerResource {
         return ueberCertificate.get(0);
     }
 
-    private void recordImportSuccess(Owner owner, Map data, boolean force) {
+    private void recordImportSuccess(Owner owner, Map data, boolean force,
+        String filename) {
         ImportRecord record = new ImportRecord(owner);
         Meta meta = (Meta) data.get("meta");
         ConsumerDto consumer = (ConsumerDto) data.get("consumer");
@@ -1116,6 +1130,7 @@ public class OwnerResource {
                 record.setUpstreamType(consumer.getType().getLabel());
             }
         }
+        record.setFileName(filename);
 
         String msg = i18n.tr("{0} file imported successfully.", owner.getKey());
         if (force) {
@@ -1127,7 +1142,8 @@ public class OwnerResource {
         this.importRecordCurator.create(record);
     }
 
-    private void recordImportFailure(Owner owner, Map data, Throwable error) {
+    private void recordImportFailure(Owner owner, Map data, Throwable error,
+        String filename) {
         ImportRecord record = new ImportRecord(owner);
         Meta meta = (Meta) data.get("meta");
         ConsumerDto consumer = (ConsumerDto) data.get("consumer");
@@ -1141,6 +1157,7 @@ public class OwnerResource {
             record.setUpstreamId(consumer.getUuid());
             record.setUpstreamType(consumer.getType().getLabel());
         }
+        record.setFileName(filename);
 
         record.recordStatus(ImportRecord.Status.FAILURE, error.getMessage());
 

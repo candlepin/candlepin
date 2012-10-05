@@ -50,6 +50,7 @@ describe 'Candlepin Import' do
       import['upstreamId'].should == consumer['uuid']
       import['upstreamType'].should == consumer['type']['label']
       import.include?('webAppPrefix').should be_true
+      import['fileName'].should == @export_filename.split("/").last
     end
   end
 

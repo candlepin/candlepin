@@ -18,12 +18,25 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
+import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+
+import javax.ws.rs.core.MultivaluedMap;
+
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
+import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.config.CandlepinCommonTestConfig;
@@ -31,11 +44,14 @@ import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ForbiddenException;
+import org.candlepin.exceptions.IseException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.ActivationKey;
 import org.candlepin.model.ActivationKeyCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.ImportRecord;
+import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerPermission;
@@ -44,19 +60,18 @@ import org.candlepin.model.Product;
 import org.candlepin.model.Role;
 import org.candlepin.model.Subscription;
 import org.candlepin.resource.OwnerResource;
+import org.candlepin.sync.Importer;
+import org.candlepin.sync.ImporterException;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
-
 import org.jboss.resteasy.plugins.providers.atom.Entry;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
+import org.jboss.resteasy.plugins.providers.multipart.InputPart;
+import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
+import org.jboss.resteasy.specimpl.MultivaluedMapImpl;
+import org.jboss.resteasy.util.GenericType;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
 /**
  * OwnerResourceTest
  */
@@ -70,6 +85,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     private Product product;
     private EventFactory eventFactory;
     private CandlepinCommonTestConfig config;
+    private ImportRecordCurator importRecordCurator;
 
     @Before
     public void setUp() {
@@ -83,6 +99,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         eventFactory = injector.getInstance(EventFactory.class);
         this.config = (CandlepinCommonTestConfig) injector
             .getInstance(Config.class);
+        importRecordCurator = injector.getInstance(ImportRecordCurator.class);
     }
 
     @Test
@@ -667,5 +684,79 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertNull(owner.getDefaultServiceLevel());
         assertEquals("New Name", owner.getDisplayName());
         assertEquals(parentOwner2, owner.getParentOwner());
+    }
+
+    @Test
+    public void testImportRecordSuccessWithFilename()
+        throws IOException, ImporterException {
+        Importer importer = mock(Importer.class);
+        EventSink es = mock(EventSink.class);
+        OwnerResource thisOwnerResource = new OwnerResource(ownerCurator, null, null,
+            null, null, null, i18n, es, null, null, null, importer, null, null,
+            null, importRecordCurator, null, null, null, null, null, null, null, null,
+            null, null);
+
+        MultipartInput input = mock(MultipartInput.class);
+        InputPart part = mock(InputPart.class);
+        File archive = mock(File.class);
+        List<InputPart> parts = new ArrayList<InputPart>();
+        parts.add(part);
+        MultivaluedMap<String, String> mm = new MultivaluedMapImpl<String, String>();
+        List<String> contDis = new ArrayList<String>();
+        contDis.add("form-data; name=\"upload\"; filename=\"test_file.zip\"");
+        mm.put("Content-Disposition", contDis);
+
+        when(input.getParts()).thenReturn(parts);
+        when(part.getHeaders()).thenReturn(mm);
+        when(part.getBody(any(GenericType.class))).thenReturn(archive);
+        when(importer.loadExport(eq(owner), any(File.class), eq(false)))
+            .thenReturn(new HashMap<String, Object>());
+
+        thisOwnerResource.importData(owner.getKey(), false, input);
+        List<ImportRecord> records = importRecordCurator.findRecords(owner);
+        ImportRecord ir = records.get(0);
+        assertEquals("test_file.zip", ir.getFileName());
+        assertEquals(owner, ir.getOwner());
+        assertEquals(ImportRecord.Status.SUCCESS, ir.getStatus());
+    }
+
+    @Test
+    public void testImportRecordFailureWithFilename()
+        throws IOException, ImporterException {
+        Importer importer = mock(Importer.class);
+        EventSink es = mock(EventSink.class);
+        OwnerResource thisOwnerResource = new OwnerResource(ownerCurator, null, null,
+            null, null, null, i18n, es, null, null, null, importer, null, null,
+            null, importRecordCurator, null, null, null, null, null, null, null, null,
+            null, null);
+
+        MultipartInput input = mock(MultipartInput.class);
+        InputPart part = mock(InputPart.class);
+        File archive = mock(File.class);
+        List<InputPart> parts = new ArrayList<InputPart>();
+        parts.add(part);
+        MultivaluedMap<String, String> mm = new MultivaluedMapImpl<String, String>();
+        List<String> contDis = new ArrayList<String>();
+        contDis.add("form-data; name=\"upload\"; filename=\"test_file.zip\"");
+        mm.put("Content-Disposition", contDis);
+
+        when(input.getParts()).thenReturn(parts);
+        when(part.getHeaders()).thenReturn(mm);
+        when(part.getBody(any(GenericType.class))).thenReturn(archive);
+        when(importer.loadExport(eq(owner), any(File.class), eq(false)))
+            .thenThrow(new ImporterException("Bad import"));
+
+        try {
+            thisOwnerResource.importData(owner.getKey(), false, input);
+        }
+        catch (IseException ise) {
+            // expected, so we catch and go on.
+        }
+        List<ImportRecord> records = importRecordCurator.findRecords(owner);
+        ImportRecord ir = records.get(0);
+        assertEquals("test_file.zip", ir.getFileName());
+        assertEquals(owner, ir.getOwner());
+        assertEquals(ImportRecord.Status.FAILURE, ir.getStatus());
+        assertEquals("Bad import", ir.getStatusMessage());
     }
 }
