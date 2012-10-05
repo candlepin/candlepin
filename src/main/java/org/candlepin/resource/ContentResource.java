@@ -115,16 +115,19 @@ public class ContentResource {
 
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
-    public Content updateContent(Content changes) {
-        Content updated = contentCurator.update(changes);
-
-        if (updated == null) {
+    @Path("/{content_id}")
+    public Content updateContent(@PathParam("content_id") String contentId,
+            Content changes) {
+        Content lookedUp  = contentCurator.find(contentId);
+        if (lookedUp == null) {
             throw new NotFoundException(
-                i18n.tr("Content with id {0} could not be found.", changes.getId()));
+                i18n.tr("Content with id {0} could not be found.", contentId));
         }
 
+        changes.setId(contentId);
+        Content updated = contentCurator.createOrUpdate(changes);
         // require regeneration of entitlement certificates of affected consumers
-        poolManager.regenerateCertificatesOf(setFrom(updated.getId()), true);
+        poolManager.regenerateCertificatesOf(setFrom(contentId), true);
 
         return updated;
     }
