@@ -131,11 +131,13 @@ public class ContentResourceTest {
         Content content = mock(Content.class);
         when(content.getId()).thenReturn(contentId);
 
-        when(cc.update(any(Content.class))).thenReturn(content);
+        when(cc.find(any(String.class))).thenReturn(content);
+        when(cc.createOrUpdate(any(Content.class))).thenReturn(content);
 
-        cr.updateContent(content);
+        cr.updateContent(contentId, content);
 
-        verify(cc).update(eq(content));
+        verify(cc).find(eq(contentId));
+        verify(cc).createOrUpdate(eq(content));
         verify(poolManager).regenerateCertificatesOf(
             argThat(new SetContaining(listFrom(contentId))), anyBoolean());
     }
@@ -143,21 +145,15 @@ public class ContentResourceTest {
     @Test(expected = NotFoundException.class)
     public void testUpdateContentThrowsExceptionWhenContentDoesNotExist() {
         Content content = mock(Content.class);
-        when(cc.update(any(Content.class))).thenReturn(null);
+        when(cc.find(any(String.class))).thenReturn(null);
 
-        cr.updateContent(content);
+        cr.updateContent("someId", content);
     }
 
     private <T> List<T> listFrom(T anElement) {
         List<T> l = new ArrayList<T>();
         l.add(anElement);
         return l;
-    }
-
-    private <T> Set<T> setFrom(T anElement) {
-        Set<T> s = new HashSet<T>();
-        s.add(anElement);
-        return s;
     }
 
     private class SetContaining extends ArgumentMatcher<Set<String>> {

@@ -26,29 +26,13 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
     }
 
     @Transactional
-    public void createOrUpdate(Content c) {
+    public Content createOrUpdate(Content c) {
         Content existing = find(c.getId());
         if (existing == null) {
             create(c);
-            return;
+            return c;
         }
-        else {
-            // Copy the ID so Hibernate knows this is an existing entity to merge:
-            merge(c);
-        }
-    }
-
-    @Transactional
-    public Content update(Content changes) {
-        Content current = find(changes.getId());
-
-        if (current == null) {
-            return null;
-        }
-
-        current.copyProperties(changes);
-        save(current);
-
-        return current;
+        // Copy the ID so Hibernate knows this is an existing entity to merge:
+        return merge(c);
     }
 }
