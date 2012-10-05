@@ -463,7 +463,7 @@ public class ConsumerResource {
             }
             throw new BadRequestException(
                 i18n.tr(
-                    "Service level {0} is not available " +
+                    "Service level '{0}' is not available " +
                     "to consumers of organization {1}.",
                     serviceLevel, owner.getKey()));
         }
