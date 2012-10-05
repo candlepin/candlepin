@@ -44,11 +44,6 @@ public class ContentCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void shouldReturnNullOnUpdateIfContentNotFound() {
-        assertNull(contentCurator.update(updates));
-    }
-
-    @Test
     public void shouldUpdateContentWithNewValues() {
         Content toBeUpdated = new Content(
             "Test Content", updates.getId(),
@@ -56,7 +51,7 @@ public class ContentCuratorTest extends DatabaseTestFixture {
             "test-content-url", "test-gpg-url");
         contentCurator.create(toBeUpdated);
 
-        contentCurator.update(updates);
+        toBeUpdated = contentCurator.createOrUpdate(updates);
 
         assertEquals(toBeUpdated.getName(), updates.getName());
         assertEquals(toBeUpdated.getLabel(), updates.getLabel());
