@@ -15,7 +15,9 @@
 package org.candlepin.pinsetter.core;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -23,19 +25,18 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 import static org.quartz.JobKey.jobKey;
 
+import com.google.inject.persist.UnitOfWork;
+
 import org.candlepin.auth.Principal;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.pinsetter.core.model.JobStatus.JobState;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
-
-import com.google.inject.persist.UnitOfWork;
 
 
 /**
@@ -171,5 +172,41 @@ public class PinsetterJobListenerTest {
         verify(status).setResult(eq("job errored"));
         verify(status, never()).update(eq(ctx));
         verify(jcurator).merge(eq(status));
+    }
+
+    @Test
+    public void bug863518WasExecuted() {
+        JobDetail detail = mock(JobDetail.class);
+        when(detail.getKey()).thenReturn(jobKey("foo"));
+        when(ctx.getJobDetail()).thenReturn(detail);
+        when(jcurator.find(any(String.class))).thenThrow(new RuntimeException());
+        try {
+            listener.jobWasExecuted(ctx, null);
+        }
+        catch (RuntimeException re) {
+            // do nothing, we're really trying to verify end is called
+        }
+        verify(unitOfWork, atLeastOnce()).end();
+    }
+
+    @Test
+    public void bug863518ToBeExecuted() {
+        Principal principal = mock(Principal.class);
+        JobDataMap map = new JobDataMap();
+        JobDetail detail = mock(JobDetail.class);
+
+        map.put(PinsetterJobListener.PRINCIPAL_KEY, principal);
+
+        when(ctx.getMergedJobDataMap()).thenReturn(map);
+        when(detail.getKey()).thenReturn(jobKey("foo"));
+        when(ctx.getJobDetail()).thenReturn(detail);
+        when(jcurator.find(any(String.class))).thenThrow(new RuntimeException());
+        try {
+            listener.jobToBeExecuted(ctx);
+        }
+        catch (RuntimeException re) {
+            // do nothing, we're really trying to verify end is called
+        }
+        verify(unitOfWork, atLeastOnce()).end();
     }
 }

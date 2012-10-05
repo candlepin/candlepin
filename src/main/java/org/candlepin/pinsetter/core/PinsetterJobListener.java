@@ -63,9 +63,13 @@ public class PinsetterJobListener implements JobListener {
         Principal principal = (Principal) context.getMergedJobDataMap().get(PRINCIPAL_KEY);
         ResteasyProviderFactory.pushContext(Principal.class, principal);
 
-        unitOfWork.begin();
-        updateJob(context);
-        unitOfWork.end();
+        try {
+            unitOfWork.begin();
+            updateJob(context);
+        }
+        finally {
+            unitOfWork.end();
+        }
     }
 
     @Override
@@ -76,10 +80,14 @@ public class PinsetterJobListener implements JobListener {
     @Override
     public void jobWasExecuted(JobExecutionContext context,
         JobExecutionException exception) {
-        unitOfWork.begin();
-        updateJob(context, exception);
-        unitOfWork.end();
-        ResteasyProviderFactory.popContextData(Principal.class);
+        try {
+            unitOfWork.begin();
+            updateJob(context, exception);
+        }
+        finally {
+            unitOfWork.end();
+            ResteasyProviderFactory.popContextData(Principal.class);
+        }
     }
 
     private void updateJob(JobExecutionContext ctx) {
