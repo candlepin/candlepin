@@ -161,7 +161,7 @@ public class PoolManagerTest {
             mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
                 any(Owner.class), anyString(), any(Date.class),
                 anyBoolean(), anyBoolean())).thenReturn(pools);
-        this.manager.refreshPools(getOwner(), true);
+        this.manager.getRefresher().add(getOwner()).run();
         verify(this.manager).deletePool(same(p));
     }
 
@@ -185,7 +185,7 @@ public class PoolManagerTest {
         newPools.add(p);
         when(poolRulesMock.createPools(s)).thenReturn(newPools);
 
-        this.manager.refreshPools(getOwner(), true);
+        this.manager.getRefresher().add(getOwner()).run();
         verify(this.mockPoolCurator, times(1)).create(any(Pool.class));
     }
 
@@ -394,7 +394,7 @@ public class PoolManagerTest {
         ValidationResult result = new ValidationResult();
         when(preHelper.getResult()).thenReturn(result);
 
-        manager.refreshPools(sub.getOwner(), true);
+        this.manager.getRefresher().add(sub.getOwner()).run();
 
         verify(mockSubAdapter).deleteSubscription(eq(sub));
         verify(mockPoolCurator).delete(eq(p));

@@ -22,12 +22,12 @@ import org.apache.log4j.Logger;
 import org.candlepin.audit.EventSink;
 import org.candlepin.config.Config;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.Refresher;
 import org.candlepin.exceptions.ConflictException;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.ContentCurator;
-import org.candlepin.model.Entitlement;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
 import org.candlepin.model.Owner;
@@ -37,7 +37,6 @@ import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.pki.PKIUtility;
-import org.candlepin.util.Util;
 import org.candlepin.util.VersionUtil;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.hibernate.exception.ConstraintViolationException;
@@ -247,9 +246,7 @@ public class Importer {
          */
 //        validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, metadata, force);
 
-
         importRules(importFiles.get(ImportFile.RULES.fileName()).listFiles(), metadata);
-
 
         importConsumerTypes(importFiles.get(ImportFile.CONSUMER_TYPE.fileName()).listFiles());
 
@@ -257,29 +254,34 @@ public class Importer {
         validateMetadata(ExporterMetadata.TYPE_PER_USER, owner, metadata, force);
         ConsumerDto consumer = importConsumer(owner, importFiles.get(ImportFile.CONSUMER.fileName()));
 
-        Set<Entitlement> entitlementsToRegen = Util.newSet();
-
         // If the consumer has no entitlements, this products directory will end up empty.
         // This also implies there will be no entitlements to import.
         if (importFiles.get(ImportFile.PRODUCTS.fileName()) != null) {
+            Refresher refresher = poolManager.getRefresher();
             ProductImporter importer = new ProductImporter(productCurator, contentCurator, poolManager);
 
-            Set<Product> importedProducts = importProducts(
+            Set<Product> productsToImport = importProducts(
                 importFiles.get(ImportFile.PRODUCTS.fileName()).listFiles(),
                 importer);
 
-            entitlementsToRegen = importer.getEntitlementsToRegenerate(importedProducts);
+            Set<Product> modifiedProducts = importer.getChangedProducts(productsToImport);
+            for (Product product : modifiedProducts) {
+                refresher.add(product);
+            }
 
-            importEntitlements(owner, importedProducts,
+            importer.store(productsToImport);
+
+            importEntitlements(owner, productsToImport,
                 importFiles.get(ImportFile.ENTITLEMENTS.fileName()).listFiles());
+
+            refresher.add(owner);
+            refresher.run();
         }
         else {
             log.warn("No products found to import, skipping product and entitlement import.");
         }
 
-        entitlementsToRegen.addAll(poolManager.refreshPoolsWithoutRegeneration(owner));
-        // Regenerate certificates lazily during imports:
-        poolManager.regenerateCertificatesOf(entitlementsToRegen, true);
+
         return consumer;
     }
 
@@ -366,7 +368,7 @@ public class Importer {
                 }
             }
         }
-        importer.store(productsToImport);
+
         // TODO: Do we need to cleanup unused products? Looked at this earlier and it
         // looks somewhat complex and a little bit dangerous, so we're leaving them
         // around for now.
