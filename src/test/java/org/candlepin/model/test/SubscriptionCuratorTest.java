@@ -19,7 +19,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -35,6 +34,11 @@ import org.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
 
+/*
+ * Yes, this is called SubscriptionCuratorTest, but it uses the
+ * SubscriptionServiceAdapter. All the calls  that are in here on the
+ * adapter are just thin wrappers around the curator.
+ */
 public class SubscriptionCuratorTest extends DatabaseTestFixture {
 
     private Owner owner;
@@ -122,37 +126,66 @@ public class SubscriptionCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testLookupOwnerByProduct() {
+    public void testLookupSubscriptionByProduct() {
         Owner owner = createOwner();
         Product product = TestUtil.createProduct();
-        Product provided = TestUtil.createProduct();
         productCurator.create(product);
-        productCurator.create(provided);
 
-        Set<Product> providedProducts = new HashSet<Product>();
-        providedProducts.add(provided);
-        Subscription sub = TestUtil.createSubscription(owner, product, providedProducts);
+        Subscription sub = TestUtil.createSubscription(owner, product);
         adapter.createSubscription(sub);
 
-        List<String> productIds = new ArrayList<String>();
-        productIds.add(product.getId());
-        productIds.add(provided.getId());
-        Set<Owner> results = adapter.lookupOwnersByProduct(productIds);
+        List<Subscription> results = adapter.getSubscriptions(product);
 
         assertEquals(1, results.size());
-        assertTrue(results.contains(owner));
+        assertTrue(results.contains(sub));
     }
 
     @Test
-    public void testLookupMultipleOwnersByProduct() {
+    public void testLookupMultipleSubscriptionsByProduct() {
+        Owner owner = createOwner();
+
+        Product product = TestUtil.createProduct();
+        productCurator.create(product);
+
+        Subscription sub = TestUtil.createSubscription(owner, product);
+        adapter.createSubscription(sub);
+
+        Subscription sub2 = TestUtil.createSubscription(owner, product);
+        adapter.createSubscription(sub2);
+
+        List<Subscription> results = adapter.getSubscriptions(product);
+        assertEquals(2, results.size());
+        assertTrue(results.contains(sub));
+        assertTrue(results.contains(sub2));
+    }
+
+    @Test
+    public void testLookupMultipleSubscriptionsByProductManyOwners() {
         Owner owner = createOwner();
         Owner owner2 = createOwner();
 
         Product product = TestUtil.createProduct();
-        Product product2 = TestUtil.createProduct();
+        productCurator.create(product);
+
+        Subscription sub = TestUtil.createSubscription(owner, product);
+        adapter.createSubscription(sub);
+
+        Subscription sub2 = TestUtil.createSubscription(owner2, product);
+        adapter.createSubscription(sub2);
+
+        List<Subscription> results = adapter.getSubscriptions(product);
+        assertEquals(2, results.size());
+        assertTrue(results.contains(sub));
+        assertTrue(results.contains(sub2));
+    }
+
+    @Test
+    public void testLookupSubscriptionByProductProvidedProduct() {
+        Owner owner = createOwner();
+
+        Product product = TestUtil.createProduct();
         Product provided = TestUtil.createProduct();
         productCurator.create(product);
-        productCurator.create(product2);
         productCurator.create(provided);
 
         Set<Product> providedProducts = new HashSet<Product>();
@@ -160,16 +193,87 @@ public class SubscriptionCuratorTest extends DatabaseTestFixture {
         Subscription sub = TestUtil.createSubscription(owner, product, providedProducts);
         adapter.createSubscription(sub);
 
-        sub = TestUtil.createSubscription(owner2, product2);
+        List<Subscription> results = adapter.getSubscriptions(provided);
+        assertEquals(1, results.size());
+        assertTrue(results.contains(sub));
+    }
+
+    /*
+     * For the degenerate case where we have the same product as both provided and
+     * the main product, make sure the row only comes back once.
+     *
+     * Our schema should prevent the same product from being provided twice.
+     */
+    @Test
+    public void testLookupSubscriptionGivesUniqueResult() {
+        Owner owner = createOwner();
+
+        Product product = TestUtil.createProduct();
+        productCurator.create(product);
+
+        Set<Product> providedProducts = new HashSet<Product>();
+        providedProducts.add(product);
+        Subscription sub = TestUtil.createSubscription(owner, product, providedProducts);
         adapter.createSubscription(sub);
 
-        List<String> productIds = new ArrayList<String>();
-        productIds.add(product2.getId());
-        productIds.add(provided.getId());
-
-        Set<Owner> results = adapter.lookupOwnersByProduct(productIds);
-        assertEquals(2, results.size());
-        assertTrue(results.contains(owner));
-        assertTrue(results.contains(owner2));
+        List<Subscription> results = adapter.getSubscriptions(product);
+        assertEquals(1, results.size());
+        assertTrue(results.contains(sub));
     }
+
+    @Test
+    public void testLookupSubscriptionByProductMixedMainAndProvidedProduct() {
+        Owner owner = createOwner();
+
+        Product product = TestUtil.createProduct();
+        Product product2 = TestUtil.createProduct();
+        Product product3 = TestUtil.createProduct();
+        productCurator.create(product);
+        productCurator.create(product2);
+        productCurator.create(product3);
+
+        Set<Product> providedProducts = new HashSet<Product>();
+        providedProducts.add(product);
+
+        Subscription sub = TestUtil.createSubscription(owner, product2, providedProducts);
+        adapter.createSubscription(sub);
+
+        Set<Product> providedProducts2 = new HashSet<Product>();
+        providedProducts2.add(product3);
+        Subscription sub2 = TestUtil.createSubscription(owner, product, providedProducts2);
+        adapter.createSubscription(sub2);
+
+        List<Subscription> results = adapter.getSubscriptions(product);
+        assertEquals(2, results.size());
+        assertTrue(results.contains(sub));
+        assertTrue(results.contains(sub2));
+    }
+
+    @Test
+    public void testLookupSubscriptionByProductDoesNotIncludeExtraSubscriptions() {
+        Owner owner = createOwner();
+
+        Product product = TestUtil.createProduct();
+        Product product2 = TestUtil.createProduct();
+        Product product3 = TestUtil.createProduct();
+        productCurator.create(product);
+        productCurator.create(product2);
+        productCurator.create(product3);
+
+        Set<Product> providedProducts = new HashSet<Product>();
+        providedProducts.add(product);
+
+        Subscription sub = TestUtil.createSubscription(owner, product2, providedProducts);
+        adapter.createSubscription(sub);
+
+        Set<Product> providedProducts2 = new HashSet<Product>();
+        providedProducts2.add(product3);
+        Subscription sub2 = TestUtil.createSubscription(owner, product, providedProducts2);
+        adapter.createSubscription(sub2);
+
+        List<Subscription> results = adapter.getSubscriptions(product3);
+        assertEquals(1, results.size());
+        assertTrue(results.contains(sub2));
+    }
+
 }

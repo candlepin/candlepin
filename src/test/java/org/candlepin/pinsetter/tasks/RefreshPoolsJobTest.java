@@ -23,6 +23,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.controller.CandlepinPoolManager;
+import org.candlepin.controller.Refresher;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
@@ -45,19 +46,24 @@ public class RefreshPoolsJobTest {
         Owner owner = mock(Owner.class);
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         JobDataMap jdm = mock(JobDataMap.class);
+        Refresher refresher = mock(Refresher.class);
 
         when(ctx.getMergedJobDataMap()).thenReturn(jdm);
         when(jdm.getString(eq(JobStatus.TARGET_ID))).thenReturn("someownerkey");
         when(jdm.getBoolean(eq(RefreshPoolsJob.LAZY_REGEN))).thenReturn(true);
         when(oc.lookupByKey(eq("someownerkey"))).thenReturn(owner);
         when(owner.getDisplayName()).thenReturn("test owner");
+        when(pm.getRefresher(eq(true))).thenReturn(refresher);
+        when(refresher.add(eq(owner))).thenReturn(refresher);
 
         // test
         RefreshPoolsJob rpj = new RefreshPoolsJob(oc, pm);
         rpj.execute(ctx);
 
         // verification
-        verify(pm).refreshPools(owner, true);
+        verify(pm).getRefresher(true);
+        verify(refresher).add(owner);
+        verify(refresher).run();
         verify(ctx).setResult(eq("Pools refreshed for owner test owner"));
     }
 

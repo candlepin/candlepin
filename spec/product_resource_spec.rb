@@ -61,6 +61,21 @@ describe 'Product Resource' do
     pool[0]['owner']['key'].should == owner['key']
   end
 
+  it 'does not refresh pools without a given product' do
+    owner = create_owner(random_string('owner'))
+    owner_client = user_client(owner, random_string('testuser'))
+    product = create_product(random_string("test_id"),
+      random_string("test_name"))
+    product2 = create_product()
+    provided_product = create_product()
+    @cp.create_subscription(owner['key'], product.id, 10, [provided_product.id])
+    pool = owner_client.list_pools(:owner => owner.id)
+    pool.should have(0).things
+    @cp.refresh_pools_for_product(product2.id)
+    pool = owner_client.list_pools(:owner => owner.id)
+    pool.should have(0).things
+  end
+
   it 'refreshes pools for specific provided products' do
     owner = create_owner(random_string('owner'))
     owner_client = user_client(owner, random_string('testuser'))

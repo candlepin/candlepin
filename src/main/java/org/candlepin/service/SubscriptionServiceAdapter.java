@@ -16,10 +16,10 @@ package org.candlepin.service;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
+import org.candlepin.model.Product;
 import org.candlepin.model.Subscription;
 
 /**
@@ -148,10 +148,10 @@ public interface SubscriptionServiceAdapter {
     void deleteSubscription(Subscription s);
 
     /**
-     * Look up all the owners with subscriptions to a given list of products IDs.
+     * Search for all subscriptions that provide a given product.
      *
-     * @param productIds a list of product IDs to look up owners for.
-     * @return a set of owners subscribed to the given products.
+     * @param product the main or provided product to look for.
+     * @return a list of subscriptions that provide this product.
      */
-    Set<Owner> lookupOwnersByProduct(List<String> productIds);
+    List<Subscription> getSubscriptions(Product product);
 }

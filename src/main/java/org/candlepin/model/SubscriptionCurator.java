@@ -15,13 +15,12 @@
 package org.candlepin.model;
 
 import java.util.Date;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.hibernate.Criteria;
+import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.criterion.Restrictions;
 
 /**
@@ -82,8 +81,8 @@ public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> 
     /**
      * Return a list of subscriptions for the given product.
      *
-     * NOTE: This method does not include results for "provided" products,
-     * only the primary.
+     * We do essentially 2 queries here, so there is room for optimization
+     * both in speed and memory usage.
      *
      * @param product product to search for.
      * @return a list of subscriptions
@@ -91,9 +90,14 @@ public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> 
     @SuppressWarnings("unchecked")
     public List<Subscription> listByProduct(Product product) {
 
-        Criteria subscriptionCriteria = currentSession().createCriteria(Subscription.class);
-
-        subscriptionCriteria.add(Restrictions.eq("product", product));
+        Criteria subscriptionCriteria = currentSession()
+                .createCriteria(Subscription.class)
+                .createAlias("providedProducts", "providedProduct",
+                    CriteriaSpecification.LEFT_JOIN)
+                .add(Restrictions.or(
+                    Restrictions.eq("product", product),
+                    Restrictions.eq("providedProduct.id", product.getId())
+            ));
 
         List<Subscription> subs = subscriptionCriteria.list();
         if (subs == null) {
@@ -136,25 +140,4 @@ public class SubscriptionCurator extends AbstractHibernateCurator<Subscription> 
         }
         return subs;
     }
-
-    public Set<Owner> lookupOwnersByProduct(List<String> productIds) {
-        Set<Owner> ownerSet = new HashSet<Owner>();
-
-        String query = "from Owner o where o.id in (" +
-                " select distinct s.owner.id from Subscription s" +
-                " join s.providedProducts pp where pp.id in (:productIds))";
-        List<Owner> owners = currentSession().createQuery(query)
-            .setParameterList("productIds", productIds).list();
-        ownerSet.addAll(owners);
-
-        query = "from Owner o where o.id in (" +
-                " select distinct s.owner.id from Subscription s" +
-                " where s.product.id in (:productIds))";
-        owners = currentSession().createQuery(query)
-            .setParameterList("productIds", productIds).list();
-        ownerSet.addAll(owners);
-
-        return ownerSet;
-    }
-
 }

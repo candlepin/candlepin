@@ -18,11 +18,8 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.Set;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.candlepin.model.ContentCurator;
-import org.candlepin.model.Entitlement;
-import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductContent;
@@ -66,25 +63,6 @@ public class ProductImporter {
         return importedProduct;
     }
 
-    public Set<Entitlement> getEntitlementsToRegenerate(Set<Product> products) {
-        Set<Entitlement> entitlementsToRegen = Util.newSet();
-        for (Product importedProduct : products) {
-            final Product existingProduct = this.curator.find(importedProduct
-                .getId());
-
-            if (hasProductChanged(existingProduct, importedProduct)) {
-                for (Pool pool : this.poolManager
-                    .getListOfEntitlementPoolsForProduct(importedProduct.getId())) {
-                    for (Entitlement e : pool.getEntitlements()) {
-                        entitlementsToRegen.add(e);
-                    }
-                }
-            }
-        }
-
-        return entitlementsToRegen;
-    }
-
     public void store(Set<Product> products) {
         for (Product importedProduct : products) {
             // Handling the storing/updating of Content here. This is
@@ -102,19 +80,55 @@ public class ProductImporter {
         }
     }
 
-    protected final boolean hasProductChanged(Product existingProd, Product importedProd) {
+    /**
+     * Examine the list of products that are about to be imported, and return a set of them
+     * that have been modified from their state in the db.
+     *
+     * Will not return brand new products.
+     *
+     * @param products The list of yet to be imported products
+     * @return a set of all products that exist in the db, but will be changed
+     */
+    Set<Product> getChangedProducts(Set<Product> products) {
+        Set<Product> toReturn = Util.newSet();
 
-        if (existingProd == null) {
-            return true;
+        for (Product product : products) {
+            Product existing = curator.lookupById(product.getId());
+
+            if (existing != null && hasProductChanged(existing, product)) {
+                toReturn.add(product);
+            }
         }
-        return Sets.difference(existingProd.getProductContent(),
-                    importedProd.getProductContent()).size() > 0 ||
-                Sets.difference(existingProd.getAttributes(),
-                        importedProd.getAttributes()).size() > 0 ||
-                !new EqualsBuilder()
-                        .append(existingProd.getName(), importedProd.getName())
-                        .append(existingProd.getMultiplier(), importedProd.getMultiplier())
-                        .isEquals();
+
+        return toReturn;
     }
 
+    protected final boolean hasProductChanged(Product existingProd, Product importedProd) {
+        // trying to go in order from least to most work.
+        if (!existingProd.getName().equals(importedProd.getName())) {
+            return true;
+        }
+
+        if (existingProd.getMultiplier() != importedProd.getMultiplier()) {
+            return true;
+        }
+
+        if (existingProd.getAttributes().size() != importedProd.getAttributes().size()) {
+            return true;
+        }
+        if (Sets.intersection(existingProd.getAttributes(),
+            importedProd.getAttributes()).size() != existingProd.getAttributes().size()) {
+            return true;
+        }
+
+        if (existingProd.getProductContent().size() != importedProd.getProductContent().size()) {
+            return true;
+        }
+        if (Sets.intersection(existingProd.getProductContent(),
+            importedProd.getProductContent()).size() != existingProd.getProductContent().size()) {
+            return true;
+        }
+
+        return false;
+    }
 }

@@ -164,8 +164,7 @@ public class DefaultSubscriptionServiceAdapter implements
     }
 
     @Override
-    public Set<Owner> lookupOwnersByProduct(List<String> productIds) {
-        return subCurator.lookupOwnersByProduct(productIds);
+    public List<Subscription> getSubscriptions(Product product) {
+        return subCurator.listByProduct(product);
     }
-
 }
