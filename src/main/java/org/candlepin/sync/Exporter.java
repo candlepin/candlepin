@@ -26,6 +26,7 @@ import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProvidedProduct;
@@ -117,6 +118,7 @@ public class Exporter {
 
             exportMeta(baseDir);
             exportConsumer(baseDir, consumer);
+            exportIdentityCertificate(baseDir, consumer);
             exportEntitlements(baseDir, consumer);
             exportEntitlementsCerts(baseDir, consumer, null, true);
             exportProducts(baseDir, consumer);
@@ -326,6 +328,31 @@ public class Exporter {
                     cert.getSerial().getId() + ".pem");
                 FileWriter writer = new FileWriter(file);
                 entCert.export(writer, cert);
+                writer.close();
+            }
+        }
+    }
+
+    private void exportIdentityCertificate(File baseDir, Consumer consumer)
+        throws IOException {
+
+        File idcertdir = new File(baseDir.getCanonicalPath(), "identity_certificate");
+        idcertdir.mkdir();
+
+        IdentityCertificate cert = consumer.getIdCert();
+        File file = new File(idcertdir.getCanonicalPath(),
+            cert.getSerial().getId() + ".pem");
+
+        // paradigm dictates this should go in an exporter.export method
+        FileWriter writer = null;
+
+        try {
+            writer = new FileWriter(file);
+            writer.write(cert.getCert());
+            writer.write(cert.getKey());
+        }
+        finally {
+            if (writer != null) {
                 writer.close();
             }
         }
