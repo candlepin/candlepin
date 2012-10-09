@@ -50,7 +50,8 @@ describe 'Entitlement Certificate V3' do
     @user = user_client(@owner, random_string('billy'))
 
     @system = consumer_client(@user, random_string('system1'), :candlepin, nil,
-				{'system.certificate_version' => '3.1'})
+				{'system.certificate_version' => '3.1',
+				 'system.testing' => 'true'})
     @entitlement = @system.consume_product(@product.id)[0]
   end
 

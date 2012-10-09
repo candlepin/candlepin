@@ -98,6 +98,8 @@ public class ConfigProperties {
 
     public static final String PRODUCT_CACHE_MAX = "candlepin.cache.product_cache_max";
 
+    public static final String ENABLE_CERT_V3 = "candlepin.enable_cert_v3";
+
     public static final Map<String, String> DEFAULT_PROPERTIES =
         new HashMap<String, String>() {
 
@@ -174,6 +176,11 @@ public class ConfigProperties {
                  *  a larger memory footprint as the cache fills up.
                  */
                 this.put(PRODUCT_CACHE_MAX, "100");
+
+                /**
+                 * By default, disable cert v3.
+                 */
+                this.put(ENABLE_CERT_V3, "false");
             }
         };
     public static final String CRL_FILE_PATH = "candlepin.crl.file";
@@ -184,4 +191,5 @@ public class ConfigProperties {
      */
     public static final String IDENTITY_CERT_EXPIRY_THRESHOLD =
                                "candlepin.identityCert.expiry.threshold";
+
 }
