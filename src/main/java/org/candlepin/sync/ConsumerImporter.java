@@ -41,7 +41,8 @@ public class ConsumerImporter {
         return mapper.readValue(reader, ConsumerDto.class);
     }
 
-    public void store(Owner owner, ConsumerDto consumer) throws SyncDataFormatException {
+    public void store(Owner owner, ConsumerDto consumer, ConflictOverrides forcedConflicts)
+        throws SyncDataFormatException {
 
         if (consumer.getUuid() == null) {
             throw new SyncDataFormatException(i18n.tr("No ID for upstream distributor"));
@@ -53,14 +54,27 @@ public class ConsumerImporter {
             log.error("Cannot import manifest for org: " + owner.getKey());
             log.error("Upstream distributor " + consumer.getUuid() +
                 " already in use by org: " + alreadyUsing.getKey());
+
+            // NOTE: this is not a conflict that can be overridden because we simply don't
+            // allow two orgs to use the same manifest at once. The other org would have to
+            // delete their manifest after which it could be used elsewhere.
             throw new SyncDataFormatException(
                 i18n.tr("This distributor has already been imported by another owner"));
         }
 
         if (owner.getUpstreamUuid() != null &&
             !owner.getUpstreamUuid().equals(consumer.getUuid())) {
-            throw new SyncDataFormatException(
-                i18n.tr("Owner has already imported from another distributor"));
+            if (!forcedConflicts.isForced(Importer.Conflict.DISTRIBUTOR_CONFLICT)) {
+                throw new ImportConflictException(
+                    i18n.tr("Owner has already imported from another distributor"),
+                    Importer.Conflict.DISTRIBUTOR_CONFLICT);
+            }
+            else {
+                log.warn("Forcing import from a new distributor for org: " +
+                        owner.getKey());
+                log.warn("Old distributor UUID: " + owner.getUpstreamUuid());
+                log.warn("New distributor UUID: " + consumer.getUuid());
+            }
         }
 
         owner.setUpstreamUuid(consumer.getUuid());

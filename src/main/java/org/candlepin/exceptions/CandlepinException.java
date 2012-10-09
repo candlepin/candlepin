@@ -27,7 +27,7 @@ public class CandlepinException extends RuntimeException {
     private static final long serialVersionUID = -3430329252623764984L;
     private final Status returnCode;
 
-    private final ExceptionMessage message;
+    protected final ExceptionMessage message;
 
     public CandlepinException(Status returnCode, String message) {
        this(returnCode, message, null);

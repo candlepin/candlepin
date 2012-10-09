@@ -88,6 +88,7 @@ import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.sync.ConsumerDto;
+import org.candlepin.sync.ConflictOverrides;
 import org.candlepin.sync.Importer;
 import org.candlepin.sync.ImporterException;
 import org.candlepin.sync.Meta;
@@ -269,6 +270,7 @@ public class OwnerResource {
 
     /**
      * Deletes an owner
+     *
      * @httpcode 404
      * @httpcode 200
      */
@@ -883,9 +885,36 @@ public class OwnerResource {
     @POST
     @Path("{owner_key}/imports")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public void importData(@PathParam("owner_key") @Verify(Owner.class) String ownerKey,
-        @QueryParam("force") @DefaultValue("false") boolean force,
-        MultipartInput input) {
+    public void importManifest(
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
+        @QueryParam("force") String[] overrideConflicts, MultipartInput input) {
+
+        if (overrideConflicts.length == 1) {
+            /*
+             * For backward compatibility, look for force=true and if found,
+             * treat it just like what it used to mean, ignore an old manifest
+             * creation date.
+             */
+            if (overrideConflicts[0].equalsIgnoreCase("true")) {
+                overrideConflicts = new String [] { "MANIFEST_OLD" };
+            }
+            else if (overrideConflicts[0].equalsIgnoreCase("false")) {
+                overrideConflicts = new String [] {};
+            }
+        }
+        if (log.isDebugEnabled()) {
+            for (String s : overrideConflicts) {
+                log.debug("Forcing conflict if encountered: " + s);
+            }
+        }
+
+        ConflictOverrides overrides = null;
+        try {
+            overrides = new ConflictOverrides(overrideConflicts);
+        }
+        catch (IllegalArgumentException e) {
+            throw new BadRequestException(i18n.tr("Unknown conflict to force"));
+        }
 
         String filename = "";
         Owner owner = findOwner(ownerKey);
@@ -904,12 +933,12 @@ public class OwnerResource {
             }
             File archive = part.getBody(new GenericType<File>() {
             });
-            log.info("Importing archive " + archive.getAbsolutePath() + " for owner " +
-                       owner.getDisplayName());
-            data = importer.loadExport(owner, archive, force);
+            log.info("Importing archive " + archive.getAbsolutePath() +
+                " for owner " + owner.getDisplayName());
+            data = importer.loadExport(owner, archive, overrides);
 
             sink.emitImportCreated(owner);
-            recordImportSuccess(owner, data, force, filename);
+            recordImportSuccess(owner, data, overrides, filename);
         }
         catch (IOException e) {
             recordImportFailure(owner, data, e, filename);
@@ -1113,8 +1142,9 @@ public class OwnerResource {
         return ueberCertificate.get(0);
     }
 
-    private void recordImportSuccess(Owner owner, Map data, boolean force,
-        String filename) {
+    private void recordImportSuccess(Owner owner, Map data,
+        ConflictOverrides forcedConflicts, String filename) {
+
         ImportRecord record = new ImportRecord(owner);
         Meta meta = (Meta) data.get("meta");
         ConsumerDto consumer = (ConsumerDto) data.get("consumer");
@@ -1133,7 +1163,7 @@ public class OwnerResource {
         record.setFileName(filename);
 
         String msg = i18n.tr("{0} file imported successfully.", owner.getKey());
-        if (force) {
+        if (!forcedConflicts.isEmpty()) {
             msg = i18n.tr("{0} file imported forcibly", owner.getKey());
         }
 
