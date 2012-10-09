@@ -45,6 +45,7 @@ class DbSetup(object):
     def __init__(self, username, password, db):
         self.username = username
         self.db = db
+        self.password = password
         if password:
             os.environ["PGPASSWORD"] = password
 
@@ -84,14 +85,19 @@ class DbSetup(object):
             classpath = "%s:%s" % (classpath, TOMCAT_CLASSPATH)
         if os.path.exists(JBOSS_CLASSPATH):
             classpath = "%s:%s" % (classpath, JBOSS_CLASSPATH)
-        output = run_command("liquibase --driver=org.postgresql.Driver --classpath=%s "
-                "--changeLogFile=%s "
-                "--url=jdbc:postgresql:%s --username=%s migrate" % (
+        liquibase_options = "--driver=org.postgresql.Driver " \
+                "--classpath=%s --changeLogFile=%s " \
+                "--url=jdbc:postgresql:%s --username=%s " % (
             classpath,
             changelog_path,
             self.db,
             self.username,
-        ))
+        )
+
+        if self.password:
+            liquibase_options += " --password=%s" % self.password
+
+        output = run_command("liquibase %s migrate" % liquibase_options)
         print output
 
 
