@@ -27,6 +27,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.candlepin.config.Config;
 import org.candlepin.exceptions.IseException;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
@@ -73,6 +74,7 @@ public class DefaultEntitlementCertServiceAdapter extends
     private ProductServiceAdapter productAdapter;
     private EntitlementCurator entCurator;
     private I18n i18n;
+    private Config config;
 
     private static Logger log =
         LoggerFactory.getLogger(DefaultEntitlementCertServiceAdapter.class);
@@ -85,7 +87,8 @@ public class DefaultEntitlementCertServiceAdapter extends
         KeyPairCurator keyPairCurator,
         CertificateSerialCurator serialCurator,
         ProductServiceAdapter productAdapter,
-        EntitlementCurator entCurator, I18n i18n) {
+        EntitlementCurator entCurator, I18n i18n,
+        Config config) {
 
         this.pki = pki;
         this.extensionUtil = extensionUtil;
@@ -96,6 +99,7 @@ public class DefaultEntitlementCertServiceAdapter extends
         this.productAdapter = productAdapter;
         this.entCurator = entCurator;
         this.i18n = i18n;
+        this.config = config;
     }
 
 
@@ -158,9 +162,7 @@ public class DefaultEntitlementCertServiceAdapter extends
         Map<String, EnvironmentContent> promotedContent = getPromotedContent(ent);
         String contentPrefix = getContentPrefix(ent, useContentPrefix);
 
-        String entitlementVersion = ent.getConsumer()
-            .getFact("system.certificate_version");
-        if (entitlementVersion != null && entitlementVersion.startsWith("3.")) {
+        if (shouldGenerateV3(ent)) {
             extensions = prepareV3Extensions(products, ent, contentPrefix,
                 promotedContent, sub);
             byteExtensions = prepareV3ByteExtensions(products, ent, contentPrefix,
@@ -175,6 +177,28 @@ public class DefaultEntitlementCertServiceAdapter extends
                 createDN(ent), extensions, byteExtensions, sub.getStartDate(),
                 ent.getEndDate(), keyPair, serialNumber, null);
         return x509Cert;
+    }
+
+    private boolean shouldGenerateV3(Entitlement entitlement) {
+        String entitlementVersion = entitlement.getConsumer()
+            .getFact("system.certificate_version");
+
+        // REMOVE ME: This fact is being provided by our spec tests
+        // in order to bypass the default disableCertV3=true config
+        // property. There is no way for the spec tests to determine
+        // if v3 is disabled, so this is a TEMPORARY HACK to allow
+        // the tests to run correctly.
+        //
+        // This should be removed along with certV3IsEnabled once all
+        // other services ready for V3 certificates.
+        boolean testConsumer = entitlement.getConsumer()
+            .hasFact("system.testing");
+
+        if (!testConsumer && !this.config.certV3IsEnabled()) {
+            return false;
+        }
+
+        return entitlementVersion != null && entitlementVersion.startsWith("3.");
     }
 
     /**
@@ -325,9 +349,7 @@ public class DefaultEntitlementCertServiceAdapter extends
 
         String pem = new String(this.pki.getPemEncoded(x509Cert));
 
-        String entitlementVersion = entitlement.getConsumer()
-            .getFact("system.certificate_version");
-        if (entitlementVersion != null && entitlementVersion.startsWith("3.")) {
+        if (shouldGenerateV3(entitlement)) {
             byte[] payloadBytes = v3extensionUtil.createEntitlementDataPayload(products,
                 entitlement, contentPrefix, promotedContent, sub);
             String payload = "-----BEGIN ENTITLEMENT DATA-----\n";
