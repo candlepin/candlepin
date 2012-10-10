@@ -336,7 +336,7 @@ public class Exporter {
     private void exportIdentityCertificate(File baseDir, Consumer consumer)
         throws IOException {
 
-        File idcertdir = new File(baseDir.getCanonicalPath(), "identity_certificate");
+        File idcertdir = new File(baseDir.getCanonicalPath(), "upstream_consumer");
         idcertdir.mkdir();
 
         IdentityCertificate cert = consumer.getIdCert();

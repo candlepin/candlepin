@@ -289,7 +289,7 @@ public class ExporterTest {
         // VERIFY
         assertNotNull(export);
         assertTrue(export.exists());
-        verifyContent(export, "export/identity_certificate/10.pem",
+        verifyContent(export, "export/upstream_consumer/10.pem",
             new VerifyIdentityCert("10.pem"));
     }
 
