@@ -60,6 +60,8 @@ public class ImportRecord extends AbstractHibernateObject {
 
     private Status status;
     private String statusMessage;
+    @Column(name = "file_name", nullable = true)
+    private String fileName;
     @Column(name = "generated_by", nullable = true)
     private String generatedBy;
     @Column(name = "generated_date", nullable = true)
@@ -114,6 +116,14 @@ public class ImportRecord extends AbstractHibernateObject {
     public void recordStatus(Status status, String message) {
         this.status = status;
         this.statusMessage = message;
+    }
+
+    public String getFileName() {
+        return fileName;
+    }
+
+    public void setFileName(String name) {
+        this.fileName = name;
     }
 
     public String getGeneratedBy() {
