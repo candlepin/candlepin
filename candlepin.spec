@@ -17,7 +17,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.7.12
+Version: 0.7.13
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -287,6 +287,19 @@ fi
 
 
 %changelog
+* Wed Oct 10 2012 William Poteat <wpoteat@redhat.com> 0.7.13-1
+- 863518: put unitOfWork.end() in a finally block (jesusr@redhat.com)
+- Save the name of the import file uploaded in the event history
+  (wpoteat@redhat.com)
+- 857494: Add DB password to liquibase command. (awood@redhat.com)
+- Added candlepin.enable_cert_v3 config property. (mstead@redhat.com)
+- 800145: Update pools across all owners on product import (jbowes@redhat.com)
+- 857918: Add quotes around the invalid service level (bkearney@redhat.com)
+- changed ContentResource#update to use contentId in the resource path
+  (dmitri@redhat.com)
+- Return a proper response when asking to subscribe to an product with no pool
+  (brad@redhat.com)
+
 * Thu Oct 04 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.7.12-1
 - added support for updating of Content (dmitri@redhat.com)
 - Remove botched curator package move. (jbowes@redhat.com)
