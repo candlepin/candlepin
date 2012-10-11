@@ -15,7 +15,9 @@
 package org.candlepin.sync;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -31,11 +33,12 @@ import java.io.Reader;
 import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Locale;
 
 
 import org.candlepin.config.Config;
-import org.candlepin.exceptions.ConflictException;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
 import org.codehaus.jackson.JsonGenerationException;
@@ -92,7 +95,8 @@ public class ImporterTest {
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
         Importer i = new Importer(null, null, null, null, null, null, null,
             null, null, emc, null, null, i18n);
-        i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actual, false);
+        i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actual,
+            new ConflictOverrides());
 
         Meta fileMeta = mapper.readValue(file, Meta.class);
         Meta actualMeta = mapper.readValue(actual, Meta.class);
@@ -115,13 +119,14 @@ public class ImporterTest {
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(null);
         Importer i = new Importer(null, null, null, null, null, null, null,
             null, null, emc, null, null, i18n);
-        i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta, false);
+        i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta,
+            new ConflictOverrides());
         assertTrue(f.delete());
         assertTrue(actualmeta.delete());
         verify(emc).create(any(ExporterMetadata.class));
     }
 
-    @Test(expected = ConflictException.class)
+    @Test
     public void oldImport() throws Exception {
         // actualmeta is the mock for the import itself
         File actualmeta = createFile("/tmp/meta.json", "0.0.3", getDateBeforeDays(10),
@@ -135,8 +140,66 @@ public class ImporterTest {
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
         Importer i = new Importer(null, null, null, null, null, null, null,
             null, null, emc, null, null, i18n);
-        i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta, false);
+        try {
+            i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta,
+                new ConflictOverrides());
+            fail();
+        }
+        catch (ImportConflictException e) {
+            assertFalse(e.message().getConflicts().isEmpty());
+            assertEquals(1, e.message().getConflicts().size());
+            assertTrue(e.message().getConflicts().contains(
+                Importer.Conflict.MANIFEST_OLD));
+        }
     }
+
+    @Test
+    public void sameImport() throws Exception {
+        // actualmeta is the mock for the import itself
+        Date date = getDateBeforeDays(10);
+        File actualmeta = createFile("/tmp/meta.json", "0.0.3", date,
+            "test_user", "prefix");
+        ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
+        // emc is the mock for lastrun (i.e., the most recent import in CP)
+        ExporterMetadata em = new ExporterMetadata();
+        em.setExported(date); // exact same date = assumed same manifest
+        em.setId("42");
+        em.setType(ExporterMetadata.TYPE_SYSTEM);
+        when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
+        Importer i = new Importer(null, null, null, null, null, null, null,
+            null, null, emc, null, null, i18n);
+        try {
+            i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta,
+                new ConflictOverrides());
+            fail();
+        }
+        catch (ImportConflictException e) {
+            assertFalse(e.message().getConflicts().isEmpty());
+            assertEquals(1, e.message().getConflicts().size());
+            assertTrue(e.message().getConflicts().contains(
+                Importer.Conflict.MANIFEST_SAME));
+        }
+    }
+
+    @Test
+    public void mergeConflicts() {
+        ImportConflictException e2 = new ImportConflictException("testing",
+            Importer.Conflict.DISTRIBUTOR_CONFLICT);
+        ImportConflictException e3 = new ImportConflictException("testing2",
+            Importer.Conflict.MANIFEST_OLD);
+        List<ImportConflictException> exceptions =
+            new LinkedList<ImportConflictException>();
+        exceptions.add(e2);
+        exceptions.add(e3);
+
+        ImportConflictException e1 = new ImportConflictException(exceptions);
+        assertEquals("testing\ntesting2", e1.message().getDisplayMessage());
+        assertEquals(2, e1.message().getConflicts().size());
+        assertTrue(e1.message().getConflicts().contains(
+            Importer.Conflict.DISTRIBUTOR_CONFLICT));
+        assertTrue(e1.message().getConflicts().contains(Importer.Conflict.MANIFEST_OLD));
+    }
+
     @Test
     public void newerImport() throws Exception {
         // this tests bz #790751
@@ -153,7 +216,8 @@ public class ImporterTest {
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
         Importer i = new Importer(null, null, null, null, null, null, null,
             null, null, emc, null, null, i18n);
-        i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta, false);
+        i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta,
+            new ConflictOverrides());
         assertEquals(importDate, em.getExported());
     }
 
@@ -174,8 +238,8 @@ public class ImporterTest {
 
         //verify that rules were imported
         verify(ri).importObject(any(Reader.class));
-
     }
+
     @Test
     public void olderVersionImport() throws Exception {
         // if we are importing candlepin 0.0.1 data into
@@ -188,7 +252,8 @@ public class ImporterTest {
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(null);
         Importer i = new Importer(null, null, ri, null, null, null, null,
             null, null, emc, null, null, i18n);
-        i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta, false);
+        i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta,
+            new ConflictOverrides());
         //verify that rules were not imported
         verify(ri, never()).importObject(any(Reader.class));
     }
@@ -202,7 +267,7 @@ public class ImporterTest {
                 null, null, null, null, null, i18n);
 
             // null Type should cause exception
-            i.validateMetadata(null, null, actualmeta, false);
+            i.validateMetadata(null, null, actualmeta, new ConflictOverrides());
         }
         finally {
             assertTrue(actualmeta.delete());
@@ -221,7 +286,8 @@ public class ImporterTest {
             null, null, emc, null, null, i18n);
 
         // null Type should cause exception
-        i.validateMetadata(ExporterMetadata.TYPE_PER_USER, null, actualmeta, false);
+        i.validateMetadata(ExporterMetadata.TYPE_PER_USER, null, actualmeta,
+            new ConflictOverrides());
         verify(emc, never()).create(any(ExporterMetadata.class));
     }
 

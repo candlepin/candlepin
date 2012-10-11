@@ -115,12 +115,13 @@ describe 'Candlepin Import' do
       import.status == 'FAILURE'
     end
 
-    error.statusMessage.should == 'Import is older than existing data'
+    error.statusMessage.should == 'Import is same as existing data'
   end
 
-  it 'should return a success on a force import' do
+  it 'should allow forcing the same manifest' do
     # This test must run after a successful import has already occurred.
-    @cp.import(@import_owner['key'], @export_filename, {:force => true})
+    @cp.import(@import_owner['key'], @export_filename,
+      {:force => ["MANIFEST_SAME", "DISTRIBUTOR_CONFLICT"]})
   end
 
   it 'should allow importing older manifests into another owner' do
@@ -134,7 +135,40 @@ describe 'Candlepin Import' do
     @cp.import(owner2['key'], older_export)
   end
 
-  it 'should return 400 when importing already used manifest' do
+  it 'should return 409 when importing manifest from different distributor' do
+    create_candlepin_export()
+    another_export = @export_filename
+    old_upstream_uuid = @cp.get_owner(@import_owner['key'])['upstreamUuid']
+
+    begin
+      @cp.import(@import_owner['key'], another_export)
+    rescue RestClient::Exception => e
+        expected = "Owner has already imported from another distributor"
+        json = JSON.parse(e.http_body)
+        json["displayMessage"].include?(expected).should be_true
+        e.http_code.should == 409
+    end
+    @cp.get_owner(@import_owner['key'])['upstreamUuid'].should == old_upstream_uuid
+
+  end
+
+  it 'should allow forcing a manifest from a different distributor' do
+    create_candlepin_export()
+    another_export = @export_filename
+
+    old_upstream_uuid = @cp.get_owner(@import_owner['key'])['upstreamUuid']
+    pools = @cp.list_owner_pools(@import_owner['key'])
+    pool_ids = pools.collect { |p| p['id'] }
+    @cp.import(@import_owner['key'], another_export,
+      {:force => ['DISTRIBUTOR_CONFLICT']})
+    @cp.get_owner(@import_owner['key'])['upstreamUuid'].should_not == old_upstream_uuid
+    pools = @cp.list_owner_pools(@import_owner['key'])
+    new_pool_ids = pools.collect { |p| p['id'] }
+    # compare without considering order, pools should have changed completely:
+    new_pool_ids.should_not =~ pool_ids
+  end
+
+  it 'should return 400 when importing manifest in use by another owner' do
     # export was already imported into another org in the
     # before statement, let's ensure a second import causes
     # the expected error

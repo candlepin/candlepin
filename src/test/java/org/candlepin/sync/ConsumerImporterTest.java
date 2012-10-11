@@ -15,6 +15,9 @@
 package org.candlepin.sync;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -94,7 +97,7 @@ public class ConsumerImporterTest {
         ConsumerDto consumer = new ConsumerDto();
         consumer.setUuid("test-uuid");
 
-        importer.store(owner, consumer);
+        importer.store(owner, consumer, new ConflictOverrides());
         assertEquals("test-uuid", owner.getUpstreamUuid());
         verify(curator).merge(owner);
     }
@@ -106,7 +109,7 @@ public class ConsumerImporterTest {
         ConsumerDto consumer = new ConsumerDto();
         consumer.setUuid("test-uuid");
 
-        importer.store(owner, consumer);
+        importer.store(owner, consumer, new ConflictOverrides());
 
         assertEquals("test-uuid", owner.getUpstreamUuid());
     }
@@ -125,17 +128,37 @@ public class ConsumerImporterTest {
         anotherOwner.setUpstreamUuid(upstreamUuid);
         when(curator.lookupWithUpstreamUuid(consumer.getUuid())).thenReturn(anotherOwner);
 
-        importer.store(owner, consumer);
+        importer.store(owner, consumer, new ConflictOverrides());
     }
 
-    @Test(expected = ImporterException.class)
+    @Test
     public void importConsumerWithMismatchedUuidShouldThrowException() throws ImporterException {
         Owner owner = new Owner();
         owner.setUpstreamUuid("another-test-uuid");
         ConsumerDto consumer = new ConsumerDto();
         consumer.setUuid("test-uuid");
 
-        importer.store(owner, consumer);
+        try {
+            importer.store(owner, consumer, new ConflictOverrides());
+            fail();
+        }
+        catch (ImportConflictException e) {
+            assertFalse(e.message().getConflicts().isEmpty());
+            assertTrue(e.message().getConflicts().contains(
+                Importer.Conflict.DISTRIBUTOR_CONFLICT));
+        }
+    }
+
+    @Test
+    public void importConsumerWithMismatchedUuidShouldNotThrowExceptionIfForced() throws ImporterException {
+        Owner owner = new Owner();
+        owner.setUpstreamUuid("another-test-uuid");
+        ConsumerDto consumer = new ConsumerDto();
+        consumer.setUuid("test-uuid");
+
+        importer.store(owner, consumer,
+            new ConflictOverrides(Importer.Conflict.DISTRIBUTOR_CONFLICT));
+        assertEquals(consumer.getUuid(), owner.getUpstreamUuid());
     }
 
     @Test(expected = ImporterException.class)
@@ -144,6 +167,6 @@ public class ConsumerImporterTest {
         ConsumerDto consumer = new ConsumerDto();
         consumer.setUuid(null);
 
-        importer.store(owner, consumer);
+        importer.store(owner, consumer, new ConflictOverrides());
     }
 }
