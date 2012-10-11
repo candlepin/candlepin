@@ -16,6 +16,23 @@ package org.candlepin.sync;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
+import javax.persistence.PersistenceException;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
@@ -23,7 +40,6 @@ import org.candlepin.audit.EventSink;
 import org.candlepin.config.Config;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.Refresher;
-import org.candlepin.exceptions.ConflictException;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
@@ -38,25 +54,11 @@ import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.util.VersionUtil;
+
 import org.codehaus.jackson.map.ObjectMapper;
 import org.hibernate.exception.ConstraintViolationException;
 import org.xnap.commons.i18n.I18n;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Reader;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-
-import javax.persistence.PersistenceException;
 
 /**
  * Importer
@@ -87,6 +89,17 @@ public class Importer {
         }
 
     }
+
+    /**
+     * Keys representing the various errors that can occur during a manifest
+     * import, but be overridden with forces.
+     */
+    public enum Conflict {
+        MANIFEST_OLD, MANIFEST_SAME, DISTRIBUTOR_CONFLICT, SIGNATURE_CONFLICT
+    }
+
+
+
 
     private ConsumerTypeCurator consumerTypeCurator;
     private ProductCurator productCurator;
@@ -131,11 +144,14 @@ public class Importer {
      * @param type ExporterMetadata.TYPE_PER_USER or TYPE_SYSTEM
      * @param owner Owner in the case of PER_USER
      * @param meta meta.json file
+     * @param forcedConflicts Conflicts we will override if encountered
      * @throws IOException thrown if there's a problem reading the file
      * @throws ImporterException thrown if the metadata is invalid.
      */
-    public void validateMetadata(String type, Owner owner, File meta, boolean force)
+    public void validateMetadata(String type, Owner owner, File meta,
+        ConflictOverrides forcedConflicts)
         throws IOException, ImporterException {
+
         Meta m = mapper.readValue(meta, Meta.class);
         if (type == null) {
             throw new ImporterException(i18n.tr("Wrong metadata type"));
@@ -158,17 +174,34 @@ public class Importer {
             lastrun = expMetaCurator.create(lastrun);
         }
         else {
-            if (!force && lastrun.getExported().compareTo(m.getCreated()) >= 0) {
-                throw new ConflictException(i18n.tr("Import is older than existing data"));
+            if (lastrun.getExported().compareTo(m.getCreated()) > 0) {
+                if (!forcedConflicts.isForced(Importer.Conflict.MANIFEST_OLD)) {
+                    throw new ImportConflictException(i18n.tr(
+                        "Import is older than existing data"),
+                        Importer.Conflict.MANIFEST_OLD);
+                }
+                else {
+                    log.warn("Manifest older than existing data.");
+                }
             }
-            else {
-                lastrun.setExported(m.getCreated());
-                expMetaCurator.merge(lastrun);
+            else if (lastrun.getExported().compareTo(m.getCreated()) == 0) {
+                if (!forcedConflicts.isForced(Importer.Conflict.MANIFEST_SAME)) {
+                    throw new ImportConflictException(i18n.tr(
+                        "Import is same as existing data"),
+                        Importer.Conflict.MANIFEST_SAME);
+                }
+                else {
+                    log.warn("Manifest same as existing data.");
+                }
             }
+
+            lastrun.setExported(m.getCreated());
+            expMetaCurator.merge(lastrun);
         }
     }
 
-    public Map<String, Object> loadExport(Owner owner, File exportFile, boolean force)
+    public Map<String, Object> loadExport(Owner owner, File exportFile,
+        ConflictOverrides overrides)
         throws ImporterException {
         File tmpDir = null;
         InputStream exportStream = null;
@@ -180,6 +213,31 @@ public class Importer {
 
             exportStream = new FileInputStream(new File(tmpDir, "consumer_export.zip"));
 
+            /*
+             * Disabling this once again for a little bit longer. Dependent projects
+             * are not yet ready for it, and we're having some difficulty with the actual
+             * upstream cert to use.
+             *
+             * When we bring this back, we should probably report this conflict
+             * immediately, rather than continuing to extract and trying to find any
+             * other conflicts to pass back.
+             */
+//            boolean verifiedSignature = pki.verifySHA256WithRSAHashWithUpstreamCACert(
+//                exportStream,
+//                loadSignature(new File(tmpDir, "signature")));
+//            if (!verifiedSignature) {
+//                log.warn("Manifest signature check failed.");
+//                if (!forcedConflicts
+//                    .isForced(ImportConflicts.Conflict.SIGNATURE_CONFLICT)) {
+//                    conflicts.addConflict(
+//                        i18n.tr("Failed import file hash check."),
+//                        ImportConflicts.Conflict.SIGNATURE_CONFLICT);
+//                }
+//                else {
+//                    log.warn("Ignoring signature check failure.");
+//                }
+//            }
+
             File exportDir
                 = extractArchive(tmpDir, new File(tmpDir, "consumer_export.zip"));
 
@@ -188,14 +246,17 @@ public class Importer {
                 importFiles.put(file.getName(), file);
             }
 
-            ConsumerDto consumer = importObjects(owner, importFiles, force);
+            ConsumerDto consumer = importObjects(owner, importFiles, overrides);
             Meta m = mapper.readValue(importFiles.get(ImportFile.META.fileName()),
                 Meta.class);
             result.put("consumer", consumer);
             result.put("meta", m);
             return result;
         }
-
+//        catch (CertificateException e) {
+//            log.error("Exception caught importing archive", e);
+//            throw new ImportExtractionException("unable to extract export archive", e);
+//        }
         catch (ConstraintViolationException cve) {
             log.error("Failed to import archive", cve);
             throw new ImporterException(i18n.tr("Failed to import archive"),
@@ -233,7 +294,8 @@ public class Importer {
 
     @Transactional(rollbackOn = {IOException.class,
             ImporterException.class, RuntimeException.class})
-    public ConsumerDto importObjects(Owner owner, Map<String, File> importFiles, boolean force)
+    private ConsumerDto importObjects(Owner owner, Map<String, File> importFiles,
+        ConflictOverrides overrides)
         throws IOException, ImporterException {
 
         File metadata = importFiles.get(ImportFile.META.fileName());
@@ -246,13 +308,43 @@ public class Importer {
          */
 //        validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, metadata, force);
 
+        // If any calls find conflicts we'll assemble them into one exception detailing all
+        // the conflicts which occurred, so the caller can override them all at once
+        // if desired:
+        List<ImportConflictException> conflictExceptions =
+            new LinkedList<ImportConflictException>();
+
         importRules(importFiles.get(ImportFile.RULES.fileName()).listFiles(), metadata);
 
-        importConsumerTypes(importFiles.get(ImportFile.CONSUMER_TYPE.fileName()).listFiles());
+        importConsumerTypes(importFiles.get(
+            ImportFile.CONSUMER_TYPE.fileName()).listFiles());
 
         // per user elements
-        validateMetadata(ExporterMetadata.TYPE_PER_USER, owner, metadata, force);
-        ConsumerDto consumer = importConsumer(owner, importFiles.get(ImportFile.CONSUMER.fileName()));
+        try {
+            validateMetadata(ExporterMetadata.TYPE_PER_USER, owner, metadata,
+                overrides);
+        }
+        catch (ImportConflictException e) {
+            conflictExceptions.add(e);
+        }
+
+        ConsumerDto consumer = null;
+        try {
+            consumer = importConsumer(owner,
+                importFiles.get(ImportFile.CONSUMER.fileName()), overrides);
+        }
+        catch (ImportConflictException e) {
+            conflictExceptions.add(e);
+        }
+
+        // At this point we're done checking for any potential conflicts:
+        if (!conflictExceptions.isEmpty()) {
+            log.error("Conflicts occurred during import that were not overridden:");
+            for (ImportConflictException e : conflictExceptions) {
+                log.error(e.message().getConflicts());
+            }
+            throw new ImportConflictException(conflictExceptions);
+        }
 
         // If the consumer has no entitlements, this products directory will end up empty.
         // This also implies there will be no entitlements to import.
@@ -305,7 +397,8 @@ public class Importer {
         }
         else {
             log.warn(
-                i18n.tr("Incompatible rules: import version {0} older than our version {1}.",
+                i18n.tr(
+                    "Incompatible rules: import version {0} older than our version {1}.",
                     m.getVersion(), VersionUtil.getVersionString()));
             log.warn(
                 i18n.tr("Manifest data will be imported without rules import."));
@@ -331,15 +424,16 @@ public class Importer {
         importer.store(consumerTypeObjs);
     }
 
-    public ConsumerDto importConsumer(Owner owner, File consumerFile) throws IOException,
-        SyncDataFormatException {
+    public ConsumerDto importConsumer(Owner owner, File consumerFile,
+        ConflictOverrides forcedConflicts)
+        throws IOException, SyncDataFormatException {
         ConsumerImporter importer = new ConsumerImporter(ownerCurator, i18n);
         Reader reader = null;
         ConsumerDto consumer = null;
         try {
             reader = new FileReader(consumerFile);
             consumer = importer.createObject(mapper, reader);
-            importer.store(owner, consumer);
+            importer.store(owner, consumer, forcedConflicts);
         }
         finally {
             if (reader != null) {

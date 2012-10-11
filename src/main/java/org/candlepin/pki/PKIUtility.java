@@ -42,6 +42,7 @@ import java.util.Set;
 
 
 import org.apache.log4j.Logger;
+import org.candlepin.config.ConfigProperties;
 
 /**
  * PKIUtility
@@ -146,6 +147,16 @@ public abstract class PKIUtility {
 
             updateSignature(input, signature);
             return signature.verify(signedHash);
+        }
+        catch (SignatureException se) {
+            /*
+             * Can happen if your candlepin upstream cert is not the same length as the one
+             * which signed the manifest. Treat it like a bad signature check failure.
+             */
+            log.error(se);
+            log.warn(ConfigProperties.CA_CERT_UPSTREAM + " may not match the server" +
+                " that signed manifest.");
+            return false;
         }
         catch (Exception e) {
             throw new RuntimeException(e);

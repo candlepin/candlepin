@@ -770,9 +770,18 @@ class Candlepin
   end
 
   def import(owner_key, filename, params = {})
-    force = params[:force] || false
-    path = "/owners/#{owner_key}/imports"
-    path += "?force=#{force}"
+    path = "/owners/#{owner_key}/imports?"
+    if params.has_key? :force
+      if params[:force].kind_of? Array
+        # New style, array of conflict keys to force:
+        params[:force].each do |f|
+          path += "force=#{f}&"
+        end
+      else
+        # Old style, force=true/false:
+        path += "force=#{force}"
+      end
+    end
     post_file path, File.new(filename)
   end
 

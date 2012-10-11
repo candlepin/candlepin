@@ -60,6 +60,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.Role;
 import org.candlepin.model.Subscription;
 import org.candlepin.resource.OwnerResource;
+import org.candlepin.sync.ConflictOverrides;
 import org.candlepin.sync.Importer;
 import org.candlepin.sync.ImporterException;
 import org.candlepin.test.DatabaseTestFixture;
@@ -709,10 +710,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         when(input.getParts()).thenReturn(parts);
         when(part.getHeaders()).thenReturn(mm);
         when(part.getBody(any(GenericType.class))).thenReturn(archive);
-        when(importer.loadExport(eq(owner), any(File.class), eq(false)))
+        when(importer.loadExport(eq(owner), any(File.class), any(ConflictOverrides.class)))
             .thenReturn(new HashMap<String, Object>());
 
-        thisOwnerResource.importData(owner.getKey(), false, input);
+        thisOwnerResource.importManifest(owner.getKey(), new String [] {}, input);
         List<ImportRecord> records = importRecordCurator.findRecords(owner);
         ImportRecord ir = records.get(0);
         assertEquals("test_file.zip", ir.getFileName());
@@ -743,11 +744,11 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         when(input.getParts()).thenReturn(parts);
         when(part.getHeaders()).thenReturn(mm);
         when(part.getBody(any(GenericType.class))).thenReturn(archive);
-        when(importer.loadExport(eq(owner), any(File.class), eq(false)))
+        when(importer.loadExport(eq(owner), any(File.class), any(ConflictOverrides.class)))
             .thenThrow(new ImporterException("Bad import"));
 
         try {
-            thisOwnerResource.importData(owner.getKey(), false, input);
+            thisOwnerResource.importManifest(owner.getKey(), new String [] {}, input);
         }
         catch (IseException ise) {
             // expected, so we catch and go on.
