@@ -841,7 +841,8 @@ public class OwnerResource {
     @Path("{owner_key}/imports")
     @Produces(MediaType.APPLICATION_JSON)
     public JobDetail undoImports(
-        @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
+        @Context Principal principal) {
 
         Owner owner = findOwner(ownerKey);
         log.info("Deleting all subscriptions from manifests for owner: " + ownerKey);
@@ -868,6 +869,8 @@ public class OwnerResource {
             throw new NotFoundException("No import found for owner " + ownerKey);
         }
         exportCurator.delete(metadata);
+
+        this.recordManifestDeletion(owner, principal.getUsername());
 
         // Refresh pools to cleanup entitlements:
         return RefreshPoolsJob.forOwner(owner, false);
@@ -1160,6 +1163,17 @@ public class OwnerResource {
         record.setFileName(filename);
 
         record.recordStatus(ImportRecord.Status.FAILURE, error.getMessage());
+
+        this.importRecordCurator.create(record);
+    }
+
+    private void recordManifestDeletion(Owner owner, String username) {
+        ImportRecord record = new ImportRecord(owner);
+        record.setGeneratedBy(username);
+        record.setGeneratedDate(new Date());
+        String msg = i18n.tr("Subscriptions deleted by {0}", username);
+        record.recordStatus(ImportRecord.Status.DELETE, msg);
+
 
         this.importRecordCurator.create(record);
     }

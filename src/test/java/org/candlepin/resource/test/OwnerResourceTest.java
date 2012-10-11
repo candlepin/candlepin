@@ -39,6 +39,7 @@ import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.ConsumerPrincipal;
+import org.candlepin.auth.UserPrincipal;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
@@ -50,6 +51,8 @@ import org.candlepin.model.ActivationKey;
 import org.candlepin.model.ActivationKeyCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.ExporterMetadata;
+import org.candlepin.model.ExporterMetadataCurator;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.Owner;
@@ -59,6 +62,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.Role;
 import org.candlepin.model.Subscription;
+import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.resource.OwnerResource;
 import org.candlepin.sync.Importer;
 import org.candlepin.sync.ImporterException;
@@ -599,7 +603,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     public void undoImportforOwnerWithNoImports() {
         Owner owner1 = new Owner("owner-with-no-imports", "foo");
         ownerResource.createOwner(owner1);
-        ownerResource.undoImports(owner1.getKey());
+        ownerResource.undoImports(owner1.getKey(),
+            new UserPrincipal("JarjarBinks", null, true));
     }
 
     @Test(expected = BadRequestException.class)
@@ -718,6 +723,30 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals("test_file.zip", ir.getFileName());
         assertEquals(owner, ir.getOwner());
         assertEquals(ImportRecord.Status.SUCCESS, ir.getStatus());
+    }
+
+    @Test
+    public void testImportRecordDeleteWithLogging()
+        throws IOException, ImporterException {
+        EventSink es = mock(EventSink.class);
+        ExporterMetadataCurator ec = mock(ExporterMetadataCurator.class);
+        SubscriptionCurator sc = mock(SubscriptionCurator.class);
+        OwnerResource thisOwnerResource = new OwnerResource(ownerCurator, null, sc,
+            null, null, null, i18n, es, null, null, null, null, null, ec,
+            null, importRecordCurator, null, null, null, null, null, null, null, null,
+            null, null);
+
+        ExporterMetadata metadata = new ExporterMetadata();
+        when(ec.lookupByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner))
+            .thenReturn(metadata);
+        when(sc.listByOwner(owner)).thenReturn(new ArrayList<Subscription>());
+
+        thisOwnerResource.undoImports(owner.getKey(),
+            new UserPrincipal("JarJarBinks", null, true));
+        List<ImportRecord> records = importRecordCurator.findRecords(owner);
+        assertTrue(records.size() == 1);
+        ImportRecord ir = records.get(0);
+        assertTrue(ir.getStatus() == ImportRecord.Status.DELETE);
     }
 
     @Test
