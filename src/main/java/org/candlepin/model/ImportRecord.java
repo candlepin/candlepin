@@ -45,7 +45,8 @@ public class ImportRecord extends AbstractHibernateObject {
      */
     public enum Status {
         SUCCESS,
-        FAILURE
+        FAILURE,
+        DELETE
     }
 
     @Id
