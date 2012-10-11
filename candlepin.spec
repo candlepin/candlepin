@@ -17,7 +17,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.7.13
+Version: 0.7.14
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -287,6 +287,11 @@ fi
 
 
 %changelog
+* Thu Oct 11 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.7.14-1
+- Add new mechanism for detecting/overriding import conflicts.
+  (dgoodwin@redhat.com)
+- Allow updating consumer names (jbowes@redhat.com)
+
 * Wed Oct 10 2012 William Poteat <wpoteat@redhat.com> 0.7.13-1
 - 863518: put unitOfWork.end() in a finally block (jesusr@redhat.com)
 - Save the name of the import file uploaded in the event history
