@@ -330,7 +330,9 @@ public class ConsumerResource {
             }
         }
 
-        userName = checkConsumerName(consumer, principal, userName);
+        userName = setUserName(consumer, principal, userName);
+
+        checkConsumerName(consumer);
 
         ConsumerType type = lookupConsumerType(consumer.getType().getLabel());
         if (type.isType(ConsumerTypeEnum.PERSON)) {
@@ -428,7 +430,7 @@ public class ConsumerResource {
      * @param userName
      * @return
      */
-    private String checkConsumerName(Consumer consumer, Principal principal,
+    private String setUserName(Consumer consumer, Principal principal,
         String userName) {
         if (userName == null) {
             userName = principal.getUsername();
@@ -437,6 +439,15 @@ public class ConsumerResource {
         if (userName != null) {
             consumer.setUsername(userName);
         }
+        return userName;
+    }
+    /**
+     * @param consumer
+     * @param principal
+     * @param userName
+     * @return
+     */
+    private void checkConsumerName(Consumer consumer) {
 
         if (consumer.getName() == null) {
             throw new BadRequestException(
@@ -449,7 +460,6 @@ public class ConsumerResource {
             throw new BadRequestException(
                 i18n.tr("System name cannot begin with # character"));
         }
-        return userName;
     }
 
     private void checkServiceLevel(Owner owner, String serviceLevel)
@@ -712,6 +722,17 @@ public class ConsumerResource {
             // lazily regenerate certs, so the client can still work
             poolManager.regenerateEntitlementCertificates(toUpdate, true);
             changesMade = true;
+        }
+
+        // like the other values in an update, if consumer name is null, act as if
+        // it should remain the same
+        if (updated.getName() != null && !toUpdate.getName().equals(updated.getName())) {
+            checkConsumerName(updated);
+            toUpdate.setName(updated.getName());
+
+            // get the new name into the id cert
+            IdentityCertificate ic = generateIdCert(toUpdate, true);
+            toUpdate.setIdCert(ic);
         }
 
         if (changesMade) {
@@ -1569,19 +1590,12 @@ public class ConsumerResource {
 
         Consumer c = verifyAndLookupConsumer(uuid);
 
-        try {
-            IdentityCertificate ic = generateIdCert(c, true);
-            c.setIdCert(ic);
-            consumerCurator.update(c);
-            Event consumerModified = this.eventFactory.consumerModified(c);
-            this.sink.sendEvent(consumerModified);
-            return c;
-        }
-        catch (Exception e) {
-            log.error("Problem regenerating id cert for consumer:", e);
-            throw new BadRequestException(i18n.tr(
-                "Problem regenerating id cert for consumer {0}", c));
-        }
+        IdentityCertificate ic = generateIdCert(c, true);
+        c.setIdCert(ic);
+        consumerCurator.update(c);
+        Event consumerModified = this.eventFactory.consumerModified(c);
+        this.sink.sendEvent(consumerModified);
+        return c;
     }
 
     /**
@@ -1589,31 +1603,49 @@ public class ConsumerResource {
      * Throws RuntimeException if there is a problem with generating the
      * certificate.
      *
+     * Regenerating an Id Cert is ok to do at any time. Since we only check
+     * that the cert's date range is valid, and that it is signed by us,
+     * and that the consumer UUID is in our db, it doesn't matter if the actual
+     * cert itself is the one stored in our db (and therefore the most recent
+     * version) or not.
+     *
      * @param c Consumer whose certificate needs to be generated.
      * @param regen if true, forces a regen of the certificate.
      * @return The identity certificate for the given consumer.
-     * @throws IOException thrown if there's a problem generating the cert.
-     * @throws GeneralSecurityException thrown incase of security error.
      */
-    private IdentityCertificate generateIdCert(Consumer c, boolean regen)
-        throws GeneralSecurityException, IOException {
-
+    private IdentityCertificate generateIdCert(Consumer c, boolean regen) {
         IdentityCertificate idCert = null;
+        boolean errored = false;
 
-        if (regen) {
-            idCert = identityCertService.regenerateIdentityCert(c);
+        try {
+            if (regen) {
+                idCert = identityCertService.regenerateIdentityCert(c);
+            }
+            else {
+                idCert = identityCertService.generateIdentityCert(c);
+            }
+
+            if (idCert == null) {
+                errored = true;
+            }
         }
-        else {
-            idCert = identityCertService.generateIdentityCert(c);
+        catch (GeneralSecurityException e) {
+            log.error("Problem regenerating id cert for consumer:", e);
+            errored = true;
+        }
+        catch (IOException e) {
+            log.error("Problem regenerating id cert for consumer:", e);
+            errored = true;
+        }
+
+        if (errored) {
+            throw new BadRequestException(i18n.tr(
+                "Problem regenerating id cert for consumer {0}", c));
         }
 
         if (log.isDebugEnabled()) {
             log.debug("Generated identity cert: " + idCert);
             log.debug("Created consumer: " + c);
-        }
-
-        if (idCert == null) {
-            throw new RuntimeException("Error generating identity certificate.");
         }
 
         return idCert;

@@ -30,6 +30,7 @@ import org.candlepin.audit.EventSink;
 import org.candlepin.config.Config;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.ActivationKeyCurator;
 import org.candlepin.model.Consumer;
@@ -41,6 +42,7 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
+import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Release;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -51,6 +53,7 @@ import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.Ignore;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
@@ -92,6 +95,9 @@ public class ConsumerResourceUpdateTest {
 
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class)))
             .thenReturn(new ComplianceStatus(new Date()));
+
+        when(idCertService.regenerateIdentityCert(any(Consumer.class)))
+            .thenReturn(new IdentityCertificate());
     }
 
     @Test
@@ -101,7 +107,7 @@ public class ConsumerResourceUpdateTest {
         verify(sink, never()).sendEvent((Event) any());
     }
 
-    public Consumer getFakeConsumer() {
+    private Consumer getFakeConsumer() {
         Consumer consumer = new Consumer();
         String uuid = "FAKEUUID";
         consumer.setUuid(uuid);
@@ -129,7 +135,7 @@ public class ConsumerResourceUpdateTest {
     }
 
 
-    public void compareConsumerRelease(String release1, String release2, Boolean verify) {
+    private void compareConsumerRelease(String release1, String release2, Boolean verify) {
         Consumer consumer = getFakeConsumer();
         consumer.setReleaseVer(new Release(release1));
 
@@ -355,9 +361,8 @@ public class ConsumerResourceUpdateTest {
         verify(sink).sendEvent(eq(event));
     }
 
-    /*
-     commented out per mkhusid, see 768872 comment #41
-
+    // ignored out per mkhusid, see 768872 comment #41
+    @Ignore
     @Test
     public void ensureNewGuestIsHealedIfItWasMigratedFromAnotherHost() {
         String uuid = "TEST_CONSUMER";
@@ -389,7 +394,7 @@ public class ConsumerResourceUpdateTest {
 
         verify(poolManager).revokeEntitlement(eq(entitlement));
         verify(entitler).bindByProducts(null, guest1, null);
-    } */
+    }
 
     @Test
     public void ensureExistingGuestHasEntitlementIsRemovedIfAlreadyAssocWithDiffHost() {
@@ -567,18 +572,15 @@ public class ConsumerResourceUpdateTest {
             new ConsumerInstalledProduct("P1", "Product One");
         GuestId expectedGuestId = new GuestId("GUEST_ID_1");
 
+        Consumer existing = getFakeConsumer();
+        existing.setFacts(new HashMap<String, String>());
+        existing.setInstalledProducts(new HashSet<ConsumerInstalledProduct>());
+
         Consumer updated = new Consumer();
         updated.setUuid(uuid);
         updated.setFact(expectedFactName, expectedFactValue);
         updated.addInstalledProduct(expectedInstalledProduct);
         updated.addGuestId(expectedGuestId);
-
-        Consumer existing = new Consumer();
-        existing.setUuid(updated.getUuid());
-        existing.setFacts(new HashMap<String, String>());
-        existing.setInstalledProducts(new HashSet<ConsumerInstalledProduct>());
-
-        when(this.consumerCurator.findByUuid(existing.getUuid())).thenReturn(existing);
 
         this.resource.updateConsumer(existing.getUuid(), updated);
         assertEquals(1, existing.getFacts().size());
@@ -591,17 +593,13 @@ public class ConsumerResourceUpdateTest {
 
     @Test
     public void canUpdateConsumerEnvironment() {
-        String uuid = "A Consumer";
         Environment changedEnvironment = new Environment("42", "environment", null);
 
+        Consumer existing = getFakeConsumer();
+
         Consumer updated = new Consumer();
-        updated.setUuid(uuid);
         updated.setEnvironment(changedEnvironment);
 
-        Consumer existing = new Consumer();
-        existing.setUuid(updated.getUuid());
-
-        when(consumerCurator.findByUuid(existing.getUuid())).thenReturn(existing);
         when(environmentCurator.find(changedEnvironment.getId())).thenReturn(
                 changedEnvironment);
 
@@ -627,6 +625,65 @@ public class ConsumerResourceUpdateTest {
         when(environmentCurator.find(changedEnvironment.getId())).thenReturn(null);
 
         resource.updateConsumer(existing.getUuid(), updated);
+    }
+
+    @Test
+    public void canUpdateName() {
+        Consumer consumer = getFakeConsumer();
+        consumer.setName("old name");
+        Consumer updated = new Consumer();
+        updated.setName("new name");
+
+        resource.updateConsumer(consumer.getUuid(), updated);
+
+        assertEquals(updated.getName(), consumer.getName());
+    }
+
+    @Test
+    public void updatedNameRegeneratesIdCert() {
+        Consumer consumer = getFakeConsumer();
+        consumer.setName("old name");
+        Consumer updated = new Consumer();
+        updated.setName("new name");
+
+        resource.updateConsumer(consumer.getUuid(), updated);
+
+        assertEquals(updated.getName(), consumer.getName());
+        assertNotNull(consumer.getIdCert());
+    }
+
+    @Test
+    public void sameNameDoesntRegenIdCert() {
+        Consumer consumer = getFakeConsumer();
+        consumer.setName("old name");
+        Consumer updated = new Consumer();
+        updated.setName("old name");
+
+        resource.updateConsumer(consumer.getUuid(), updated);
+
+        assertEquals(updated.getName(), consumer.getName());
+        assertNull(consumer.getIdCert());
+    }
+
+    @Test
+    public void updatingToNullNameIgnoresName() {
+        Consumer consumer = getFakeConsumer();
+        consumer.setName("old name");
+        Consumer updated = new Consumer();
+        updated.setName(null);
+
+        resource.updateConsumer(consumer.getUuid(), updated);
+        assertEquals("old name", consumer.getName());
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void updatingToInvalidCharacterNameNotAllowed() {
+        Consumer consumer = getFakeConsumer();
+        consumer.setName("old name");
+        Consumer updated = new Consumer();
+        updated.setName("#a name");
+
+        resource.updateConsumer(consumer.getUuid(), updated);
     }
 
     private Consumer createConsumerWithGuests(String ... guestIds) {
