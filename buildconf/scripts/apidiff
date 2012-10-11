@@ -39,14 +39,12 @@ echo
 gen_api api2.json
 git checkout -f master &> /dev/null
 
-diff_apis api2.json api1.json
+diff_apis api2.json api1.json | tee api_diff.txt
 
 retcode=$?
 if [ "$retcode" -eq "0" ]; then
     echo "No changes detected"
 fi
 
-rm api1.json
-rm api2.json
 
 exit $retcode

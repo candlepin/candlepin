@@ -39,14 +39,12 @@ echo
 gen_schema schema2.txt
 git checkout -f master &> /dev/null
 
-diff_schemas schema2.txt schema1.txt
+diff_schemas schema2.txt schema1.txt | tee schema_diff.txt
 
 retcode=$?
 if [ "$retcode" -eq "0" ]; then
     echo "No changes detected"
 fi
 
-rm schema1.txt
-rm schema2.txt
 
 exit $retcode
