@@ -21,9 +21,8 @@ describe 'Domain Consumer' do
   it 'should not be able to consume non domain specific products' do
     consumer = consumer_client(@user, 'guest_consumer', :domain)
 
-    lambda do
-      entitlements = consumer.consume_product @monitoring.id
-    end.should raise_exception(RestClient::BadRequest)
+    entitlements = consumer.consume_product @monitoring.id
+    entitlements.should be_nil
   end
 
   it 'should be able to consume domain products' do
@@ -36,9 +35,8 @@ describe 'Domain Consumer' do
   it 'should ONLY be able to consume domain products' do
     system = consumer_client(@user, 'non-domain')
 
-    lambda do
-      entitlements = system.consume_product(@domain_product.id)
-    end.should raise_exception(RestClient::BadRequest)
+    entitlements = system.consume_product(@domain_product.id)
+    entitlements.should be_nil
   end
 
 end
