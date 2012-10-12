@@ -95,6 +95,15 @@ describe 'Candlepin Import' do
     end.should_not be_empty
   end
 
+  it 'should create a DELETE record on a deleted import' do
+    @import_owner_client.undo_import(@import_owner['key'])
+    @import_owner_client.list_imports(@import_owner['key']).find_all do |import|
+      import.status == 'DELETE'
+    end.should_not be_empty
+    # Re-import so the rest of the tests can pass:
+    @cp.import(@import_owner['key'], @export_filename)
+  end
+
   it 'should return a 409 on a duplicate import' do
     lambda do
       @cp.import(@import_owner['key'], @export_filename)
