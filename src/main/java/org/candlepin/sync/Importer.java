@@ -187,7 +187,7 @@ public class Importer {
             else if (lastrun.getExported().compareTo(m.getCreated()) == 0) {
                 if (!forcedConflicts.isForced(Importer.Conflict.MANIFEST_SAME)) {
                     throw new ImportConflictException(i18n.tr(
-                        "Import is same as existing data"),
+                        "Import is the same as existing data"),
                         Importer.Conflict.MANIFEST_SAME);
                 }
                 else {

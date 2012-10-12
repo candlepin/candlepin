@@ -115,7 +115,7 @@ describe 'Candlepin Import' do
       import.status == 'FAILURE'
     end
 
-    error.statusMessage.should == 'Import is same as existing data'
+    error.statusMessage.should == 'Import is the same as existing data'
   end
 
   it 'should allow forcing the same manifest' do
