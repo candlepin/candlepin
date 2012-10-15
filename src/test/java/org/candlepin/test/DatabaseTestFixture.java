@@ -14,15 +14,13 @@
  */
 package org.candlepin.test;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashSet;
-
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.servlet.http.HttpServletRequest;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Module;
+import com.google.inject.persist.PersistFilter;
+import com.google.inject.persist.PersistService;
+import com.google.inject.persist.UnitOfWork;
+import com.google.inject.util.Modules;
 
 import org.candlepin.CandlepinCommonTestingModule;
 import org.candlepin.CandlepinNonServletEnvironmentTestingModule;
@@ -55,8 +53,8 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerPermission;
 import org.candlepin.model.OwnerPermissionCurator;
 import org.candlepin.model.Pool;
-import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolAttributeCurator;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductAttributeCurator;
@@ -73,6 +71,7 @@ import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.model.SubscriptionsCertificateCurator;
 import org.candlepin.model.UeberCertificateGenerator;
+import org.candlepin.model.UpstreamConsumerCurator;
 import org.candlepin.model.UserCurator;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
@@ -84,13 +83,15 @@ import org.junit.After;
 import org.junit.Before;
 import org.xnap.commons.i18n.I18n;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Module;
-import com.google.inject.util.Modules;
-import com.google.inject.persist.PersistFilter;
-import com.google.inject.persist.PersistService;
-import com.google.inject.persist.UnitOfWork;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashSet;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * Test fixture for test classes requiring access to the database.
@@ -139,6 +140,7 @@ public class DatabaseTestFixture {
     protected UniqueIdGenerator uniqueIdGenerator;
     protected UeberCertificateGenerator ueberCertGenerator;
     protected CandlepinSingletonScope cpSingletonScope;
+    protected UpstreamConsumerCurator upstreamConsumerCurator;
 
     private PersistService persistanceService;
 
@@ -175,6 +177,7 @@ public class DatabaseTestFixture {
         productCertificateCurator = injector
             .getInstance(ProductCertificateCurator.class);
         consumerCurator = injector.getInstance(ConsumerCurator.class);
+        upstreamConsumerCurator = injector.getInstance(UpstreamConsumerCurator.class);
         eventCurator = injector.getInstance(EventCurator.class);
         permissionCurator = injector.getInstance(OwnerPermissionCurator.class);
         roleCurator = injector.getInstance(RoleCurator.class);
