@@ -1038,6 +1038,50 @@
                 "support_level": "Layered",
                 "support_level_exempt": "true"
             }
+        },
+      {
+            "name": "RAM Limiting Product",
+            "id": "801",
+            "version": "1.0",
+            "arch": "x86_64",
+            "attributes": {
+            },
+            "content": [
+                [11113, true],
+                [0, false],
+                [1, true],
+                [11124, false],
+                [11123, false],
+                [11125, false],
+                [11128, false],
+                [11126, false],
+                [11121, false]
+            ]
+        },
+        {
+            "name": "RAM Limiting Package (8GB - Stackable)",
+            "id": "ram-8gb-stackable",
+            "type": "MKT",
+            "attributes": {
+                "multi-entitlement": "yes",
+                "stacking_id": 2,
+                "ram": 8
+            },
+            "provided_products": [
+                "801"
+            ]
+        },
+        {
+            "name": "RAM Limiting Package (8GB)",
+            "id": "ram-8gb",
+            "type": "MKT",
+            "attributes": {
+                "ram": 8
+            },
+            "provided_products": [
+                "801"
+            ]
         }
+
     ]
 }

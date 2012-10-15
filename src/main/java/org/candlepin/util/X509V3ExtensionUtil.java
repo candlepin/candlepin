@@ -196,6 +196,11 @@ public class X509V3ExtensionUtil extends X509Util{
             toReturn.setSockets(new Integer(socketLimit));
         }
 
+        String ramLimit = sub.getProduct().getAttributeValue("ram");
+        if (ramLimit != null && !ramLimit.trim().equals("")) {
+            toReturn.setRam(new Integer(ramLimit));
+        }
+
         String management = sub.getProduct().getAttributeValue("management_enabled");
         if (management != null && !management.trim().equals("")) {
             // only included if not the default value of false

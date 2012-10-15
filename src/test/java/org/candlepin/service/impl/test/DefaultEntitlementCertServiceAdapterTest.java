@@ -648,6 +648,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         subscription.getProduct().setAttribute("warning_period", "20");
         subscription.getProduct().setAttribute("sockets", "4");
+        subscription.getProduct().setAttribute("ram", "8");
         subscription.getProduct().setAttribute("management_enabled", "true");
         subscription.getProduct().setAttribute("stacking_id", "45678");
         entitlement.getPool().setAttribute("virt_only", "true");
@@ -689,6 +690,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         assertEquals(subs.get("name"), subscription.getProduct().getName());
         assertEquals(subs.get("warning"), 20);
         assertEquals(subs.get("sockets"), 4);
+        assertEquals(subs.get("ram"), 8);
         assertTrue((Boolean) subs.get("management"));
         assertEquals(subs.get("stacking_id"), "45678");
         assertTrue((Boolean) subs.get("virt_only"));

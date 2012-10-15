@@ -30,6 +30,7 @@ describe 'Entitlement Certificate V3' do
 				{:version => '6.4',
 				 :arch => 'i386, x86_64',
                                  :sockets => 4,
+                                 :ram => 8,
                                  :warning_period => 15,
                                  :management_enabled => true,
                                  :stacking_id => '8888',
@@ -69,6 +70,7 @@ describe 'Entitlement Certificate V3' do
     json_body['subscription']['name'].should == @product.name
     json_body['subscription']['warning'].should == 15
     json_body['subscription']['sockets'].should == 4
+    json_body['subscription']['ram'].should == 8
     json_body['subscription']['management'].should == true
     json_body['subscription']['stacking_id'].should == '8888'
     json_body['subscription']['virt_only'].should be_nil
