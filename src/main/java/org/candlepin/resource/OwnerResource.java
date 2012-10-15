@@ -14,29 +14,8 @@
  */
 package org.candlepin.resource;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.StringTokenizer;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
+import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
 import org.apache.log4j.Logger;
 import org.candlepin.audit.Event;
@@ -82,13 +61,14 @@ import org.candlepin.model.StatisticCurator;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.model.UeberCertificateGenerator;
+import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UniqueIdGenerator;
-import org.candlepin.sync.ConsumerDto;
 import org.candlepin.sync.ConflictOverrides;
+import org.candlepin.sync.ConsumerDto;
 import org.candlepin.sync.Importer;
 import org.candlepin.sync.ImporterException;
 import org.candlepin.sync.Meta;
@@ -101,8 +81,29 @@ import org.jboss.resteasy.util.GenericType;
 import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
 
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
+import java.io.File;
+import java.io.IOException;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringTokenizer;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 
 
 /**
@@ -1143,6 +1144,25 @@ public class OwnerResource {
             = entitlementCertCurator.listForConsumer(ueberConsumer);
 
         return ueberCertificate.get(0);
+    }
+
+    /**
+     * @return a List of UpstreamConsumer for the given Owner
+     * @httpcode 404
+     * @httpcode 200
+     */
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{owner_key}/upstream_consumer")
+    public List<UpstreamConsumer> getUpstreamConsumers(@Context Principal principal,
+        @Verify(Owner.class) @PathParam("owner_key") String ownerKey) {
+        Owner o = findOwner(ownerKey);
+        if (o == null) {
+            throw new NotFoundException(i18n.tr(
+                "owner with key: {0} was not found.", ownerKey));
+        }
+
+        return null;
     }
 
     private void recordImportSuccess(Owner owner, Map data,
