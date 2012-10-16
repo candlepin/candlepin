@@ -387,7 +387,7 @@ public class Importer {
             Reader reader = null;
             try {
                 reader = new FileReader(rulesFiles[0]);
-                rulesImporter.importObject(reader);
+                rulesImporter.importObject(reader, m.getVersion());
             }
             finally {
                 if (reader != null) {

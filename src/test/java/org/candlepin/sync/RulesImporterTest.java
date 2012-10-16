@@ -22,6 +22,7 @@ import java.io.StringReader;
 
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
+import org.candlepin.util.VersionUtil;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -46,7 +47,7 @@ public class RulesImporterTest {
 
     @Test
     public void importRules() throws IOException {
-        importer.importObject(new StringReader(RULE));
+        importer.importObject(new StringReader(RULE), VersionUtil.getVersionString());
         verify(curator).update(any(Rules.class)); // TODO: can't get custom matcher to work?
     }
 

@@ -19,6 +19,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -226,7 +227,8 @@ public class ImporterTest {
         // if we do are importing candlepin 0.0.10 data into candlepin 0.0.3,
         // import the rules.
 
-        File actualmeta = createFile("/tmp/meta.json", "0.0.10", new Date(),
+        String version = "0.0.10";
+        File actualmeta = createFile("/tmp/meta.json", version, new Date(),
             "test_user", "prefix");
         File[] jsArray = createMockJsFile(MOCK_JS_PATH);
         ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
@@ -237,7 +239,7 @@ public class ImporterTest {
         i.importRules(jsArray, actualmeta);
 
         //verify that rules were imported
-        verify(ri).importObject(any(Reader.class));
+        verify(ri).importObject(any(Reader.class), eq(version));
     }
 
     @Test
@@ -255,7 +257,7 @@ public class ImporterTest {
         i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta,
             new ConflictOverrides());
         //verify that rules were not imported
-        verify(ri, never()).importObject(any(Reader.class));
+        verify(ri, never()).importObject(any(Reader.class), any(String.class));
     }
 
     @Test(expected = ImporterException.class)

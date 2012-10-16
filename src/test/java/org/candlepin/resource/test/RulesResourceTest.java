@@ -16,8 +16,10 @@ package org.candlepin.resource.test;
 
 import static org.junit.Assert.assertEquals;
 
+import org.candlepin.model.Rules;
 import org.candlepin.resource.RulesResource;
 import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.util.VersionUtil;
 import org.junit.Before;
 import org.junit.Test;
 import org.apache.commons.codec.binary.Base64;
@@ -31,7 +33,6 @@ public class RulesResourceTest extends DatabaseTestFixture {
 
     @Before
     public void setUp() {
-
         rulesResource = injector.getInstance(RulesResource.class);
     }
 
@@ -40,6 +41,8 @@ public class RulesResourceTest extends DatabaseTestFixture {
         String rulesBuffer = new String(Base64.encodeBase64String(("//foobar"
             .getBytes())));
         rulesResource.upload(rulesBuffer);
+        Rules rules = rulesCurator.getRules();
+        assertEquals(VersionUtil.getVersionString(), rules.getCandlepinVersion());
     }
 
     @Test
