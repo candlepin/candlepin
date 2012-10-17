@@ -17,7 +17,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.7.15
+Version: 0.7.16
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -287,6 +287,12 @@ fi
 
 
 %changelog
+* Mon Oct 15 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.7.16-1
+- 860773: Create import records when manifests are deleted.
+  (bkearney@redhat.com)
+- Slight text improvement for same manifest conflict message.
+  (dgoodwin@redhat.com)
+
 * Thu Oct 11 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.7.15-1
 - Revert bad request on unsuccessful autobind. (dgoodwin@redhat.com)
 
