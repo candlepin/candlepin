@@ -205,6 +205,22 @@ describe 'Consumer Resource' do
     cp_client.consume_pool(pool.id).size.should == 1
   end
 
+  it 'updates consumer updated timestamp on bind' do
+    consumer = @user1.register(random_string("meow"))
+    consumer_client = Candlepin.new(username=nil, password=nil,
+        cert=consumer['idCert']['cert'],
+        key=consumer['idCert']['key'])
+
+    prod = create_product()
+    subs = @cp.create_subscription(@owner1['key'], prod['id'])
+    @cp.refresh_pools(@owner1['key'])
+    pool = consumer_client.list_pools({:owner => @owner1['id']}).first
+
+    # Do a bind and make sure the updated timestamp changed:
+    old_updated = @cp.get_consumer(consumer['uuid'])['updated']
+    consumer_client.consume_pool(pool['id'])
+    @cp.get_consumer(consumer['uuid'])['updated'].should_not == old_updated
+  end
 
   it 'should allow consumer to bind to products based on product quantity across pools' do
     owner = create_owner random_string('owner')
