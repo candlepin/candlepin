@@ -760,17 +760,17 @@ msgstr "Valore entità incorretto."
 #: src/main/java/org/candlepin/resource/JobResource.java:108
 msgid "You must specify an owner key, consumer UUID, or principal name."
 msgstr ""
-"Specifica una chiave del proprietario, uuid dell'utenza o un nome "
+"Specifica una chiave del proprietario, UUID dell'utenza o un nome "
 "principale."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author fvalen
 #: src/main/java/org/candlepin/resource/JobResource.java:114
 msgid ""
-"You must specify one of owner key, consumer uuid, or principal name, but not"
+"You must specify one of owner key, consumer UUID, or principal name, but not"
 " all."
 msgstr ""
-"Specifica uno tra la chiave del proprietario, uuid dell'utenza o un nome "
+"Specifica uno tra la chiave del proprietario, UUID dell'utenza o un nome "
 "principale ma non tutti."
 
 # translation auto-copied from project Candlepin, version master, document

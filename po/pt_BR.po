@@ -756,10 +756,10 @@ msgstr ""
 # keys, author rgyorfy
 #: src/main/java/org/candlepin/resource/JobResource.java:114
 msgid ""
-"You must specify one of owner key, consumer uuid, or principal name, but not"
+"You must specify one of owner key, consumer UUID, or principal name, but not"
 " all."
 msgstr ""
-"Você deve especificar uma chave proprietária, uuid de consumidor ou nome "
+"Você deve especificar uma chave proprietária, UUID de consumidor ou nome "
 "principal, mas não todos."
 
 # translation auto-copied from project Candlepin, version master, document

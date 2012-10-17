@@ -112,7 +112,7 @@ public class JobResource {
         // make sure we didn't specify them all
         if (!ensureOnlyOne(ownerKey, uuid, principalName)) {
             throw new BadRequestException(i18n.tr("You must specify one of " +
-                "owner key, consumer uuid, or principal name, but not all."));
+                "owner key, consumer UUID, or principal name, but not all."));
         }
 
         List<JobStatus> statuses = null;
