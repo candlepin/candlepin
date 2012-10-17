@@ -36,7 +36,52 @@ BuildRequires: selinux-policy-doc
 %define distlibdir %{_datadir}/%{name}/lib/
 %define libdir %{_datadir}/%{name}/lib/
 %define usecpdeps "usecpdeps"
+
+# for:
+# hibernate3-annotations >= 0:3.4.0
+# hibernate3-commons-annotations
+# google-collections
+# codehaus-jackson
+# codehaus-jackson-core-lgpl
+# codehaus-jackson-mapper-lgpl
+# codehaus-jackson-xc
+# codehaus-jackson-jaxrs
+# jpa_1_0_api
+# quartz
 BuildRequires: candlepin-deps
+
+BuildRequires: bouncycastle
+BuildRequires: log4j
+BuildRequires: jakarta-commons-lang
+%if 0%{?fedora}
+BuildRequires: apache-commons-io
+%else
+BuildRequires: jakarta-commons-io
+%endif
+BuildRequires: jakarta-commons-httpclient
+BuildRequires: netty
+BuildRequires: oauth
+BuildRequires: rhino
+BuildRequires: postgresql-jdbc
+BuildRequires: servlet
+%if 0%{?fedora} > 16
+BuildRequires: hibernate3 >= 3.3.2
+BuildRequires: hibernate3-entitymanager >= 0:3.4.0
+BuildRequires: resteasy >= 0:2.3.1
+BuildRequires: hornetq >= 0:2.2.11
+BuildRequires: glassfish-jaxb
+%endif
+%if 0%{?fedora} > 15
+BuildRequires: google-guice >= 0:3.0
+BuildRequires: apache-commons-codec
+BuildRequires: jms >= 0:1.1
+BuildRequires: slf4j >= 0:1.6.1
+BuildRequires: c3p0
+BuildRequires: scannotation
+BuildRequires: gettext-commons
+BuildRequires: apache-mime4j
+%endif
+
 %else
 %define usecpdeps ""
 BuildRequires: bouncycastle
