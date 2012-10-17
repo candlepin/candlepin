@@ -41,7 +41,7 @@ describe 'Candlepin Import' do
     o.upstreamUuid.should == @candlepin_client.uuid
   end
 
-  it "originating information should be populted in the import" do
+  it "originating information should be populated in the import" do
     @import_owner_client.list_imports(@import_owner['key']).find_all do |import|
       consumer = @candlepin_client.get_consumer()
       import['generatedBy'].should == consumer['name']
@@ -155,10 +155,20 @@ describe 'Candlepin Import' do
         expected = "Owner has already imported from another distributor"
         json = JSON.parse(e.http_body)
         json["displayMessage"].include?(expected).should be_true
+        json["conflicts"].size.should == 1
+        json["conflicts"].include?("DISTRIBUTOR_CONFLICT").should be_true
         e.http_code.should == 409
     end
     @cp.get_owner(@import_owner['key'])['upstreamUuid'].should == old_upstream_uuid
 
+    # Try again and make sure we don't see MANIFEST_SAME appear: (this was a bug)
+    begin
+      @cp.import(@import_owner['key'], another_export)
+    rescue RestClient::Exception => e
+        json = JSON.parse(e.http_body)
+        json["conflicts"].size.should == 1
+        json["conflicts"].include?("DISTRIBUTOR_CONFLICT").should be_true
+    end
   end
 
   it 'should allow forcing a manifest from a different distributor' do
