@@ -16,24 +16,6 @@ package org.candlepin.resource;
 
 import static org.quartz.JobBuilder.newJob;
 
-import org.candlepin.auth.interceptor.Verify;
-import org.candlepin.controller.PoolManager;
-import org.candlepin.exceptions.BadRequestException;
-import org.candlepin.exceptions.NotFoundException;
-import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerCurator;
-import org.candlepin.model.Entitlement;
-import org.candlepin.model.EntitlementCurator;
-import org.candlepin.pinsetter.tasks.RegenProductEntitlementCertsJob;
-import org.candlepin.service.ProductServiceAdapter;
-import org.candlepin.util.Util;
-
-import com.google.inject.Inject;
-
-import org.quartz.JobDataMap;
-import org.quartz.JobDetail;
-import org.xnap.commons.i18n.I18n;
-
 import java.util.Arrays;
 import java.util.List;
 
@@ -47,6 +29,26 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import org.candlepin.auth.interceptor.Verify;
+import org.candlepin.controller.PoolManager;
+import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.exceptions.NotFoundException;
+import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.Entitlement;
+import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.SubscriptionCurator;
+import org.candlepin.model.SubscriptionsCertificate;
+import org.candlepin.pinsetter.tasks.RegenProductEntitlementCertsJob;
+import org.candlepin.service.ProductServiceAdapter;
+import org.candlepin.service.SubscriptionServiceAdapter;
+import org.candlepin.util.Util;
+import org.quartz.JobDataMap;
+import org.quartz.JobDetail;
+import org.xnap.commons.i18n.I18n;
+
+import com.google.inject.Inject;
+
 /**
  * REST api gateway for the User object.
  */
@@ -55,17 +57,23 @@ public class EntitlementResource {
     private final ConsumerCurator consumerCurator;
     private PoolManager poolManager;
     private final EntitlementCurator entitlementCurator;
+    private final SubscriptionCurator subscriptionCurator;
+    private SubscriptionServiceAdapter subService;
     private I18n i18n;
     private ProductServiceAdapter prodAdapter;
 
     @Inject
     public EntitlementResource(ProductServiceAdapter prodAdapter,
             EntitlementCurator entitlementCurator,
+            SubscriptionCurator subscriptionCurator,
             ConsumerCurator consumerCurator,
+            SubscriptionServiceAdapter subService,
             PoolManager poolManager,
             I18n i18n) {
 
         this.entitlementCurator = entitlementCurator;
+        this.subscriptionCurator = subscriptionCurator;
+        this.subService = subService;
         this.consumerCurator = consumerCurator;
         this.i18n = i18n;
         this.prodAdapter = prodAdapter;
@@ -150,6 +158,35 @@ public class EntitlementResource {
         }
         throw new NotFoundException(
             i18n.tr("Entitlement with ID ''{0}'' could not be found.", dbid));
+    }
+
+    /**
+     * Return the entitlement for the given id.
+     * @param dbid entitlement id.
+     * @return the entitlement for the given id.
+     * @httpcode 404
+     * @httpcode 200
+     */
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{dbid}/upstream_cert")
+    public SubscriptionsCertificate getEntitlementUpstreamCert(
+        @PathParam("dbid") @Verify(Entitlement.class) String dbid) {
+        Entitlement ent = entitlementCurator.find(dbid);
+        List<Entitlement> tempList = Arrays.asList(ent);
+        poolManager.regenerateDirtyEntitlements(tempList);
+
+        String subscriptionId = ent.getPool().getSubscriptionId();
+        SubscriptionResource subResource = new SubscriptionResource(subService,
+            consumerCurator, i18n);
+        SubscriptionsCertificate sc = subResource.getSubCert(subscriptionId);
+
+        if (sc != null) {
+            return sc;
+        }
+        throw new NotFoundException(
+            i18n.tr("SubscriptionsCertificate for Entitlement ID ''{0}'' " +
+                "could not be found.", dbid));
     }
 
     /**
