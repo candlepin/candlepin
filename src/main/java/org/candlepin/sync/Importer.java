@@ -292,9 +292,10 @@ public class Importer {
         }
     }
 
-    @Transactional(rollbackOn = {IOException.class,
-            ImporterException.class, RuntimeException.class})
-    private ConsumerDto importObjects(Owner owner, Map<String, File> importFiles,
+    @Transactional(rollbackOn = {IOException.class, ImporterException.class,
+            RuntimeException.class, ImportConflictException.class})
+    // WARNING: Keep this method public, otherwise @Transactional is ignored:
+    ConsumerDto importObjects(Owner owner, Map<String, File> importFiles,
         ConflictOverrides overrides)
         throws IOException, ImporterException {
 
