@@ -31,6 +31,7 @@ import org.candlepin.exceptions.ServiceUnavailableException;
 import org.candlepin.model.CuratorException;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
+import org.candlepin.util.VersionUtil;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
@@ -73,7 +74,7 @@ public class RulesResource {
         Rules rules = null;
         try {
             String decoded = new String(Base64.decodeBase64(rulesBuffer));
-            rules = new Rules(decoded);
+            rules = new Rules(decoded, VersionUtil.getVersionString());
         }
         catch (Throwable t) {
             log.error("Exception in rules upload", t);

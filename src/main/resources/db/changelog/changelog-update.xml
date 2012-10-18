@@ -9,4 +9,5 @@
     <include file="db/changelog/20120607124900-add-entitlement-dirty-column.xml" />
     <include file="db/changelog/20120720091214-add-foreign-key-indexes.xml" />
     <include file="db/changelog/20121004150608-add-file-name-to-import-record.xml" />
+    <include file="db/changelog/20121015121627-add-rules-cp-version-column.xml" />
 </databaseChangeLog>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+
+    <changeSet id="20121015121627" author="dgoodwin">
+        <comment>Add a column in rules table for the version of candlepin they came from.</comment>
+        <addColumn tableName="cp_rules">
+            <column name="candlepin_version" type="varchar(255)"/>
+        </addColumn>
+        <!-- this statement lets us update existing values without setting a column default -->
+        <addNotNullConstraint tableName="cp_rules"
+                columnName="candlepin_version"
+                defaultNullValue="0.0.0" />
+    </changeSet>
+
+</databaseChangeLog>

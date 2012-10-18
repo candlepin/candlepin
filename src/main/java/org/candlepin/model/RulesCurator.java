@@ -15,6 +15,7 @@
 package org.candlepin.model;
 
 import org.candlepin.util.Util;
+import org.candlepin.util.VersionUtil;
 
 import com.google.inject.persist.Transactional;
 
@@ -61,10 +62,22 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
      */
     public Rules getRules() {
         List<Rules> existingRuleSet = listAll();
-        if (existingRuleSet.isEmpty()) {
-            return rulesFromFile(getDefaultRulesFile());
+        // If there are rules in the database and their version is not less than the
+        // candlepin version this server is currently running, we'll use them:
+        if (!existingRuleSet.isEmpty() &&
+            VersionUtil.getRulesVersionCompatibility(
+                existingRuleSet.get(0).getCandlepinVersion())) {
+            return existingRuleSet.get(0);
         }
-        return existingRuleSet.get(0);
+
+        if (!existingRuleSet.isEmpty()) {
+            log.warn("Ignoring older rules in database, candlepin version: " +
+                existingRuleSet.get(0).getCandlepinVersion());
+        }
+
+        log.info("Loading default rules.");
+        return rulesFromFile(getDefaultRulesFile());
+
     }
 
     private Date getUpdatedFromDB() {
@@ -102,11 +115,6 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
         return new Date(rulesFile.lastModified());
     }
 
-    @Override
-    public Rules create(Rules entity) {
-        return super.create(entity);
-    }
-
     // @Override
     @Transactional
     public void delete(Rules entity) {
@@ -126,7 +134,7 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
 
     private Rules rulesFromFile(String path) {
         InputStream is = this.getClass().getResourceAsStream(path);
-        return new Rules(Util.readFile(is));
+        return new Rules(Util.readFile(is), VersionUtil.getVersionString());
     }
 
     protected String getDefaultRulesFile() {

@@ -17,6 +17,7 @@ package org.candlepin.util;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 
+import org.candlepin.model.Rules;
 import org.junit.After;
 import org.junit.Test;
 
@@ -28,6 +29,7 @@ import java.util.Map;
  * VersionUtilTest
  */
 public class VersionUtilTest {
+
     @Test
     public void normalVersion() throws Exception {
         writeoutVersion("1.3.0", "1");
@@ -74,8 +76,14 @@ public class VersionUtilTest {
         assertTrue(VersionUtil.getRulesVersionCompatibility("0.5.20"));
     }
 
-    private void writeoutVersion(String version, String release) throws Exception {
-        PrintStream ps = new PrintStream(new File(this.getClass()
+    @Test
+    public void rulesCompatibilityVsNull() throws Exception {
+        writeoutVersion("0.5.15", "1");
+        assertFalse(VersionUtil.getRulesVersionCompatibility(null));
+    }
+
+    public static void writeoutVersion(String version, String release) throws Exception {
+        PrintStream ps = new PrintStream(new File(new Rules().getClass()
             .getClassLoader().getResource("candlepin_info.properties").toURI()));
         ps.println("version=" + version);
         ps.println("release=" + release);
