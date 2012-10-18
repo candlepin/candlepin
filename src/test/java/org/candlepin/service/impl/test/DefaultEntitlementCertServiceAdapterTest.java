@@ -22,10 +22,10 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.mock;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -82,6 +82,7 @@ import org.candlepin.util.X509V3ExtensionUtil;
 import org.candlepin.util.X509V3ExtensionUtil.HuffNode;
 import org.candlepin.util.X509V3ExtensionUtil.NodePair;
 import org.candlepin.util.X509V3ExtensionUtil.PathNode;
+import org.candlepin.version.CertVersionConflictException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -552,6 +553,15 @@ public class DefaultEntitlementCertServiceAdapterTest {
             any(String.class));
     }
 
+    @Test(expected = CertVersionConflictException.class)
+    public void ensureV1CertificateCreationFailsWithUnsupportedProductAttribute()
+        throws Exception {
+        ProductAttribute attr = new ProductAttribute("ram", "4");
+        subscription.getProduct().addAttribute(attr);
+        certServiceAdapter.createX509Certificate(entitlement, subscription,
+            product, new BigInteger("1234"), keyPair(), true);
+    }
+
     @Test
     public void supportValuesAbsentOnCertIfNoSupportAttributes()
         throws Exception {
@@ -669,7 +679,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             map.put(ext.getOid(), ext);
         }
         assertTrue(map.containsKey("1.3.6.1.4.1.2312.9.6"));
-        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("3.0"));
+        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("3.1"));
 
         byte[] payload = v3extensionUtil.createEntitlementDataPayload(products, entitlement,
             "prefix", null, subscription);
@@ -766,7 +776,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             map.put(ext.getOid(), ext);
         }
         assertTrue(map.containsKey("1.3.6.1.4.1.2312.9.6"));
-        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("3.0"));
+        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("3.1"));
 
         byte[] payload = v3extensionUtil.createEntitlementDataPayload(products, entitlement,
             "prefix", null, subscription);
@@ -817,7 +827,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             map.put(ext.getOid(), ext);
         }
         assertTrue(map.containsKey("1.3.6.1.4.1.2312.9.6"));
-        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("3.0"));
+        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("3.1"));
 
         byte[] payload = v3extensionUtil.createEntitlementDataPayload(products, entitlement,
             "prefix", null, subscription);

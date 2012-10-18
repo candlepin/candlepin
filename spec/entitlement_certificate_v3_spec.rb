@@ -56,9 +56,9 @@ describe 'Entitlement Certificate V3' do
     @entitlement = @system.consume_product(@product.id)[0]
   end
 
-  it 'generated a version 3.0 certificate' do
+  it 'generated a version 3.1 certificate' do
     value = extension_from_cert(@system.list_certificates[0]['cert'], "1.3.6.1.4.1.2312.9.6")
-    value.should == "3.0"
+    value.should == "3.1"
   end
 
   it 'generated the correct body in the blob' do

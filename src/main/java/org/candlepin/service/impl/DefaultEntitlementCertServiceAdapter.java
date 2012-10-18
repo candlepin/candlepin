@@ -31,6 +31,7 @@ import org.candlepin.config.Config;
 import org.candlepin.exceptions.IseException;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
+import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
@@ -47,11 +48,13 @@ import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
 import org.candlepin.service.BaseEntitlementCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
-import org.candlepin.util.Util;
 import org.candlepin.util.CertificateSizeException;
+import org.candlepin.util.Util;
 import org.candlepin.util.X509ExtensionUtil;
 import org.candlepin.util.X509Util;
 import org.candlepin.util.X509V3ExtensionUtil;
+import org.candlepin.version.CertVersionConflictException;
+import org.candlepin.version.ProductVersionValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -162,6 +165,10 @@ public class DefaultEntitlementCertServiceAdapter extends
         Map<String, EnvironmentContent> promotedContent = getPromotedContent(ent);
         String contentPrefix = getContentPrefix(ent, useContentPrefix);
 
+        // Check to make sure that the subscription is supported by
+        // the consumer's cert_version.
+        verifySubscriptionSupport(sub, ent.getConsumer());
+
         if (shouldGenerateV3(ent)) {
             extensions = prepareV3Extensions(products, ent, contentPrefix,
                 promotedContent, sub);
@@ -177,6 +184,15 @@ public class DefaultEntitlementCertServiceAdapter extends
                 createDN(ent), extensions, byteExtensions, sub.getStartDate(),
                 ent.getEndDate(), keyPair, serialNumber, null);
         return x509Cert;
+    }
+
+    private void verifySubscriptionSupport(Subscription sub, Consumer consumer) {
+        String consumerVersion = consumer.getFact("system.certificate_version");
+        if (!ProductVersionValidator.validate(sub.getProduct(), consumerVersion)) {
+            String error = i18n.tr("Please upgrade to a newer client " +
+                "to use subscription: {0}", sub.getProduct().getName());
+            throw new CertVersionConflictException(error);
+        }
     }
 
     private boolean shouldGenerateV3(Entitlement entitlement) {
