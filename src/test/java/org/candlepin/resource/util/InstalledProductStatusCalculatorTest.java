@@ -44,6 +44,7 @@ import org.candlepin.policy.js.JsRulesProvider;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.util.Util;
+import org.candlepin.util.VersionUtil;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -74,7 +75,7 @@ public class InstalledProductStatusCalculatorTest {
 
         // Load the default production rules:
         InputStream is = this.getClass().getResourceAsStream(RULES_FILE);
-        Rules rules = new Rules(Util.readFile(is));
+        Rules rules = new Rules(Util.readFile(is), VersionUtil.getVersionString());
         when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
         when(rulesCuratorMock.getRules()).thenReturn(rules);
         provider = new JsRulesProvider(rulesCuratorMock);

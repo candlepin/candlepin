@@ -76,10 +76,11 @@ public class VersionUtil {
     }
 
     public static boolean getRulesVersionCompatibility(String importVersion) {
+
         // if the import version is older than our version, the
         // rules are not compatible
         RpmVersionComparator rpmcmp = new RpmVersionComparator();
-        String myVersion = getVersionMap().get("version");
+        String myVersion = getVersionString();
 
         if (rpmcmp.compare(myVersion, importVersion) == 1) {
             return false;

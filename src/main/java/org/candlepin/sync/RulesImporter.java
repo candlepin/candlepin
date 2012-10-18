@@ -37,10 +37,11 @@ public class RulesImporter {
         this.curator = curator;
     }
 
-    public Rules importObject(Reader reader) throws IOException {
+    public Rules importObject(Reader reader, String candlepinVersion) throws IOException {
         log.debug("Importing rules file");
         new BufferedReader(reader);
 
-        return curator.update(new Rules(StringFromReader.asString(reader)));
+        return curator.update(new Rules(StringFromReader.asString(reader),
+            candlepinVersion));
     }
 }
