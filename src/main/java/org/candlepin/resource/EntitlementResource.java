@@ -19,6 +19,7 @@ import static org.quartz.JobBuilder.newJob;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -38,7 +39,6 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.SubscriptionCurator;
-import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.pinsetter.tasks.RegenProductEntitlementCertsJob;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -161,16 +161,17 @@ public class EntitlementResource {
     }
 
     /**
-     * Return the entitlement for the given id.
+     * Return the subscription cert for the given id.
      * @param dbid entitlement id.
-     * @return the entitlement for the given id.
+     * @return the subscription cert for the given id.
      * @httpcode 404
      * @httpcode 200
      */
     @GET
-    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes({MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON})
+    @Produces({ MediaType.TEXT_PLAIN })
     @Path("{dbid}/upstream_cert")
-    public SubscriptionsCertificate getEntitlementUpstreamCert(
+    public String getEntitlementUpstreamCert(
         @PathParam("dbid") @Verify(Entitlement.class) String dbid) {
         Entitlement ent = entitlementCurator.find(dbid);
         List<Entitlement> tempList = Arrays.asList(ent);
@@ -179,7 +180,7 @@ public class EntitlementResource {
         String subscriptionId = ent.getPool().getSubscriptionId();
         SubscriptionResource subResource = new SubscriptionResource(subService,
             consumerCurator, i18n);
-        SubscriptionsCertificate sc = subResource.getSubCert(subscriptionId);
+        String sc = subResource.getSubCertAsPem(subscriptionId);
 
         if (sc != null) {
             return sc;
