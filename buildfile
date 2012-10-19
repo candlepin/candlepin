@@ -186,6 +186,7 @@ define "candlepin" do
   doc.using :tag => 'httpcode:m:HTTP Code:'
 
   package(:jar, :id=>'candlepin-api').clean.include 'target/classes/org/candlepin/auth','target/classes/org/candlepin/config','target/classes/org/candlepin/service','target/classes/org/candlepin/model','target/classes/org/candlepin/pki', 'target/classes/org/candlepin/exceptions', 'target/classes/org/candlepin/util', :path=>"org/candlepin/"
+  package(:jar, :id=>"candlepin").include 'target/classes/org/candlepin'
   package(:war, :id=>"candlepin").libs += artifacts(HSQLDB)
   package(:war, :id=>"candlepin").classes << generate
 
