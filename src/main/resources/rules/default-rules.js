@@ -81,14 +81,14 @@ function arrayToString(a) {
     return msg;
 }
 
-// XXX i don't know what this is really called
-function recursiveCombination(a, n) {
+// Compute the set of all sets of combinations of elements in a.
+function superSet(a, n) {
     if (a.length == 0) {
         return [];
     }
 
     var res = [];
-    for each (x in recursiveCombination(a.slice(1), n)) {
+    for each (x in superSet(a.slice(1), n)) {
         if (x.length <= n) {
             res.push(x);
         }
@@ -690,7 +690,7 @@ var Entitlement = {
             }
         }
 
-        var candidate_combos = recursiveCombination(pools_by_class, products.length);
+        var candidate_combos = superSet(pools_by_class, products.length);
 
         log.debug("Selecting " + products.length + " products from " + pools_by_class.length +
                   " pools in " + candidate_combos.length + " possible combinations");
