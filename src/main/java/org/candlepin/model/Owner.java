@@ -14,6 +14,11 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.jackson.HateoasInclude;
+import org.candlepin.resteasy.InfoProperty;
+import org.codehaus.jackson.map.annotate.JsonFilter;
+import org.hibernate.annotations.GenericGenerator;
+
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
@@ -30,11 +35,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
-
-import org.candlepin.jackson.HateoasInclude;
-import org.candlepin.resteasy.InfoProperty;
-import org.codehaus.jackson.map.annotate.JsonFilter;
-import org.hibernate.annotations.GenericGenerator;
 
 /**
  * Represents the owner of entitlements. This is akin to an organization,
@@ -83,12 +83,9 @@ public class Owner extends AbstractHibernateObject implements Serializable,
     @OneToMany(mappedBy = "owner", targetEntity = Pool.class)
     private Set<Pool> pools;
 
-    /*
-     * The uuid of the consumer in the upstream candlepin that maps to this
-     * owner, for entitlement syncing.
-     */
-    @Column(name = "upstream_uuid", unique = true)
-    private String upstreamUuid;
+    @OneToOne
+    @JoinColumn(name = "upstream_id")
+    private UpstreamConsumer upstreamConsumer;
 
     /**
      * Default constructor
@@ -286,17 +283,35 @@ public class Owner extends AbstractHibernateObject implements Serializable,
     }
 
     /**
-     * @param upstreamUuid the upstreamUuid to set
+     * @param upstream the upstream consumer to set
      */
-    public void setUpstreamUuid(String upstreamUuid) {
-        this.upstreamUuid = upstreamUuid;
+    public void setUpstreamConsumer(UpstreamConsumer upstream) {
+        this.upstreamConsumer = upstream;
+        if (upstream != null) {
+            upstream.setOwner(this);
+        }
+    }
+
+    public void setUpstreamUuid(String donothing) {
+        System.out.println("setting " + donothing);
     }
 
     /**
      * @return the upstreamUuid
      */
     public String getUpstreamUuid() {
-        return upstreamUuid;
+        if (upstreamConsumer == null) {
+            return null;
+        }
+
+        return upstreamConsumer.getUuid();
+    }
+
+    /**
+     * @return the
+     */
+    public UpstreamConsumer getUpstreamConsumer() {
+        return upstreamConsumer;
     }
 
     @HateoasInclude

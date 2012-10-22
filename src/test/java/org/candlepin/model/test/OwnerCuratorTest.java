@@ -21,6 +21,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProvidedProduct;
+import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
@@ -64,10 +65,14 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
 
     @Test(expected = PersistenceException.class)
     public void upstreamUuidConstraint() {
+        UpstreamConsumer uc = new UpstreamConsumer();
+        uc.setUuid("sameuuid");
+        upstreamConsumerCurator.create(uc);
+
         Owner owner1 = new Owner("owner1");
-        owner1.setUpstreamUuid("sameuuid");
+        owner1.setUpstreamConsumer(uc);
         Owner owner2 = new Owner("owner2");
-        owner2.setUpstreamUuid("sameuuid");
+        owner2.setUpstreamConsumer(uc);
 
         ownerCurator.create(owner1);
         ownerCurator.create(owner2);

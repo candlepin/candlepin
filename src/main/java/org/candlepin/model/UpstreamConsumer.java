@@ -61,7 +61,7 @@ public class UpstreamConsumer extends AbstractHibernateObject {
     private String name;
 
     @OneToOne
-    @JoinColumn(name = "upstream_consumer_idcert_id")
+    @JoinColumn(name = "consumer_idcert_id")
     private IdentityCertificate idCert;
 
     @ManyToOne
@@ -78,10 +78,10 @@ public class UpstreamConsumer extends AbstractHibernateObject {
     @OneToOne(cascade = CascadeType.ALL)
     private KeyPair keyPair;
 
-    @Column(length = 255)
+    @Column(length = 255, name = "prefix_url_web")
     private String prefixUrlWeb;
 
-    @Column(length = 255)
+    @Column(length = 255, name = "prefix_url_api")
     private String prefixUrlApi;
 
     public UpstreamConsumer(String name, Owner owner, ConsumerType type) {
