@@ -911,7 +911,7 @@ msgstr "{0} ਲੇਬਲ ਵਾਲੀ ਖਪਤਕਾਰ ਕਿਸਮ ਨਹੀ�
 #: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:149
 #, java-format
 msgid "Consumer Type with id {0} could not be found."
-msgstr "id {0} ਵਾਲੀ ਖਪਤਕਾਰ ਕਿਸਮ ਨਹੀਂ ਲੱਭ ਸਕੀ।\\"
+msgstr "id {0} ਵਾਲੀ ਖਪਤਕਾਰ ਕਿਸਮ ਨਹੀਂ ਲੱਭ ਸਕੀ।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author jassy
