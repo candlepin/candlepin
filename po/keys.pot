@@ -544,7 +544,7 @@ msgstr ""
 
 #: src/main/java/org/candlepin/resource/JobResource.java:114
 msgid ""
-"You must specify one of owner key, consumer uuid, or principal name, but not "
+"You must specify one of owner key, consumer UUID, or principal name, but not "
 "all."
 msgstr ""
 

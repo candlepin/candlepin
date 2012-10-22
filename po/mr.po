@@ -744,10 +744,10 @@ msgstr "मालक कि, ग्राहक UUID, किंवा मुख�
 # keys
 #: src/main/java/org/candlepin/resource/JobResource.java:114
 msgid ""
-"You must specify one of owner key, consumer uuid, or principal name, but not"
+"You must specify one of owner key, consumer UUID, or principal name, but not"
 " all."
 msgstr ""
-"मालकीय कि, ग्राहक uuid, किंवा मूळ नाव, परंतु सगळे नाही यापैकी एक निर्देशीत "
+"मालकीय कि, ग्राहक UUID, किंवा मूळ नाव, परंतु सगळे नाही यापैकी एक निर्देशीत "
 "करणे शक्य आहे."
 
 # translation auto-copied from project Candlepin, version master, document

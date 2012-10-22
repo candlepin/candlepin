@@ -742,7 +742,7 @@ msgstr "Необходимо указать ключ владельца, UUID к
 # keys, author ypoyarko
 #: src/main/java/org/candlepin/resource/JobResource.java:114
 msgid ""
-"You must specify one of owner key, consumer uuid, or principal name, but not"
+"You must specify one of owner key, consumer UUID, or principal name, but not"
 " all."
 msgstr ""
 "Необходимо указать или ключ владельца, или UUID клиента, или имя субъекта."

@@ -739,9 +739,9 @@ msgstr "所有者キー、コンシューマー UUID、又はプリンシパル�
 # keys, author khasida
 #: src/main/java/org/candlepin/resource/JobResource.java:114
 msgid ""
-"You must specify one of owner key, consumer uuid, or principal name, but not"
+"You must specify one of owner key, consumer UUID, or principal name, but not"
 " all."
-msgstr "所有者キー、コンシューマ uuid、又はプリンシパル名のうち 1 つを指定してください。全て指定する必要はありません。"
+msgstr "所有者キー、コンシューマ UUID、又はプリンシパル名のうち 1 つを指定してください。全て指定する必要はありません。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author khasida
