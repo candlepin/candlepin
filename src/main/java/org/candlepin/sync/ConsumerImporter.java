@@ -77,7 +77,9 @@ public class ConsumerImporter {
             }
         }
 
-        owner.setUpstreamUuid(consumer.getUuid());
+        // TODO: need to determine what to do here
+        log.error("FIX ME BEFORE COMMITTING");
+        //owner.setUpstreamUuid(consumer.getUuid());
         curator.merge(owner);
     }
 

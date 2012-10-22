@@ -864,7 +864,7 @@ public class OwnerResource {
         }
 
         // Clear out upstream ID so owner can import from other distributors:
-        owner.setUpstreamUuid(null);
+        owner.setUpstreamConsumer(null);
 
         ExporterMetadata metadata = exportCurator.lookupByTypeAndOwner(
             ExporterMetadata.TYPE_PER_USER, owner);

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+
+    <changeSet id="20121019144118-1" author="jesusr">
+        <comment>New UpstreamConsumer model object used by manifests</comment>
+        <!-- See http://www.liquibase.org/manual/refactoring_commands -->
+        <createTable tableName="cp_upstream_consumer">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_upstream_consumer_pkey"/>
+            </column>
+            <column name="uuid" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="owner_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="consumer_idcert_id" type="VARCHAR(32)"/>
+            <column name="keypair_id" type="VARCHAR(32)"/>
+            <column name="prefix_url_web" type="VARCHAR(255)"/>
+            <column name="prefix_url_api" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="20121019144118-2" author="jesusr">
+        <addColumn tableName="cp_owner">
+            <column name="upstream_id" type="VARCHAR(32)" />
+        </addColumn>
+        <addForeignKeyConstraint constraintName="fk_upstream_consumer_id" baseColumnNames="upstream_id" baseTableName="cp_owner" referencedTableName="cp_upstream_consumer" referencedColumnNames="id"/>
+        <dropColumn tableName="cp_owner" columnName="upstream_uuid"/>
+    </changeSet>
+
+</databaseChangeLog>
