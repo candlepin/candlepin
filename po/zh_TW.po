@@ -739,9 +739,9 @@ msgstr "您必須指定擁有者金鑰、消費者 UUID、或主名稱。"
 # keys, author snowlet
 #: src/main/java/org/candlepin/resource/JobResource.java:114
 msgid ""
-"You must specify one of owner key, consumer uuid, or principal name, but not"
+"You must specify one of owner key, consumer UUID, or principal name, but not"
 " all."
-msgstr "您必須指定擁有者金鑰、消耗者 uuid、或主要名稱之一，而不是全部。"
+msgstr "您必須指定擁有者金鑰、消耗者 UUID、或主要名稱之一，而不是全部。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author snowlet

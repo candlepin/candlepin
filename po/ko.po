@@ -738,9 +738,9 @@ msgstr "소유자 키, 사용자 UUID, 주요 이름 등을 지정하셔야 합�
 # keys, author eukim
 #: src/main/java/org/candlepin/resource/JobResource.java:114
 msgid ""
-"You must specify one of owner key, consumer uuid, or principal name, but not"
+"You must specify one of owner key, consumer UUID, or principal name, but not"
 " all."
-msgstr "소유자 키, 사용자 uuid, 주요 이름 중 하나를 지정하셔야 합니다. "
+msgstr "소유자 키, 사용자 UUID, 주요 이름 중 하나를 지정하셔야 합니다. "
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim

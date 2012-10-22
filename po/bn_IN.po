@@ -752,10 +752,10 @@ msgstr ""
 # keys, author runab
 #: src/main/java/org/candlepin/resource/JobResource.java:114
 msgid ""
-"You must specify one of owner key, consumer uuid, or principal name, but not"
+"You must specify one of owner key, consumer UUID, or principal name, but not"
 " all."
 msgstr ""
-"মালিকের-কি, গ্রাহকের uuid অথবা প্রিন্সিপ্যাল নামের মধ্যে একটি উল্লেখ করা "
+"মালিকের-কি, গ্রাহকের UUID অথবা প্রিন্সিপ্যাল নামের মধ্যে একটি উল্লেখ করা "
 "আবশ্যক। সককটি উল্লেখ করা যাবে না।"
 
 # translation auto-copied from project Candlepin, version master, document

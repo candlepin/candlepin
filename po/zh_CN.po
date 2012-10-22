@@ -738,7 +738,7 @@ msgstr "您必须指定一个所有者密钥、客户 UUID 或主要名称。"
 # keys, author xhuang
 #: src/main/java/org/candlepin/resource/JobResource.java:114
 msgid ""
-"You must specify one of owner key, consumer uuid, or principal name, but not"
+"You must specify one of owner key, consumer UUID, or principal name, but not"
 " all."
 msgstr "您必须指定所有者密钥、客户 UUID 或主要名称中的一个，但不是全部。"
 

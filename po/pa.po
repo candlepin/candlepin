@@ -741,10 +741,10 @@ msgstr "ਤੁਹਾਨੂੰ ਮਾਲਕ ਕੁੰਜੀ ਦੇਣੀ ਜਰ�
 # keys, author jassy
 #: src/main/java/org/candlepin/resource/JobResource.java:114
 msgid ""
-"You must specify one of owner key, consumer uuid, or principal name, but not"
+"You must specify one of owner key, consumer UUID, or principal name, but not"
 " all."
 msgstr ""
-"ਤੁਹਾਨੂੰ ਮਾਲਕ ਕੁੰਜੀ, ਗਾਹਕ uuid, ਜਾਂ ਮੁੱਖ ਨਾਂ ਵਿੱਚੋਂ ਇੱਕ ਦੇਣਾ ਜਰੂਰੀ ਹੈ, ਪਰ "
+"ਤੁਹਾਨੂੰ ਮਾਲਕ ਕੁੰਜੀ, ਗਾਹਕ UUID, ਜਾਂ ਮੁੱਖ ਨਾਂ ਵਿੱਚੋਂ ਇੱਕ ਦੇਣਾ ਜਰੂਰੀ ਹੈ, ਪਰ "
 "ਸਾਰੇ ਨਹੀਂ।"
 
 # translation auto-copied from project Candlepin, version master, document

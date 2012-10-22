@@ -757,10 +757,10 @@ msgstr ""
 # keys, author ifelix
 #: src/main/java/org/candlepin/resource/JobResource.java:114
 msgid ""
-"You must specify one of owner key, consumer uuid, or principal name, but not"
+"You must specify one of owner key, consumer UUID, or principal name, but not"
 " all."
 msgstr ""
-"ஒரு உரிமையாளர் விசை, நுகர்வோர் uuid, அல்லது தலைமை பெயர், ஆனால் அனைவரையும் "
+"ஒரு உரிமையாளர் விசை, நுகர்வோர் UUID, அல்லது தலைமை பெயர், ஆனால் அனைவரையும் "
 "இல்லாமரல் குறிப்பிட வேண்டும். "
 
 # translation auto-copied from project Candlepin, version master, document

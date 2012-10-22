@@ -749,10 +749,10 @@ msgstr "ଆପଣଙ୍କୁ ଏକ ମାଲିକ କି, ଗ୍ରାହକ 
 # keys, author mgiri
 #: src/main/java/org/candlepin/resource/JobResource.java:114
 msgid ""
-"You must specify one of owner key, consumer uuid, or principal name, but not"
+"You must specify one of owner key, consumer UUID, or principal name, but not"
 " all."
 msgstr ""
-"ଆପଣଙ୍କୁ ମାଲିକ କି, ଗ୍ରାହକ uuid, କିମ୍ବା ପ୍ରିନସିପାଲ ନାମ ମଧ୍ଯରୁ ଗୋଟିଏକୁ ଉଲ୍ଲେଖ "
+"ଆପଣଙ୍କୁ ମାଲିକ କି, ଗ୍ରାହକ UUID, କିମ୍ବା ପ୍ରିନସିପାଲ ନାମ ମଧ୍ଯରୁ ଗୋଟିଏକୁ ଉଲ୍ଲେଖ "
 "କରିବାକୁ ହେବ, କିନ୍ତୁ ସମସ୍ତଙ୍କୁ ନୁହଁ।"
 
 # translation auto-copied from project Candlepin, version master, document

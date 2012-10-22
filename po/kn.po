@@ -764,10 +764,10 @@ msgstr ""
 # keys, author shanky
 #: src/main/java/org/candlepin/resource/JobResource.java:114
 msgid ""
-"You must specify one of owner key, consumer uuid, or principal name, but not"
+"You must specify one of owner key, consumer UUID, or principal name, but not"
 " all."
 msgstr ""
-"ನೀವು ಒಂದು ಮಾಲಿಕ ಕೀಲಿಯನ್ನು, uuid ಅಥವ ಮುಖ್ಯ ಹೆಸರನ್ನು ಸೂಚಿಸುವುದು "
+"ನೀವು ಒಂದು ಮಾಲಿಕ ಕೀಲಿಯನ್ನು, UUID ಅಥವ ಮುಖ್ಯ ಹೆಸರನ್ನು ಸೂಚಿಸುವುದು "
 "ಅಗತ್ಯವಾಗಿರುತ್ತದೆ, ಆದರೆ ಎಲ್ಲವೂ ಅಗತ್ಯವಿರುವುದಿಲ್ಲ."
 
 # translation auto-copied from project Candlepin, version master, document

@@ -748,10 +748,10 @@ msgstr ""
 # keys, author kkrothap
 #: src/main/java/org/candlepin/resource/JobResource.java:114
 msgid ""
-"You must specify one of owner key, consumer uuid, or principal name, but not"
+"You must specify one of owner key, consumer UUID, or principal name, but not"
 " all."
 msgstr ""
-"మీరు యజమాని కీ, వినియోగదారి uuid, లేదా పిన్సిపల్ పేరు వీటిలో యేదోవొకటి "
+"మీరు యజమాని కీ, వినియోగదారి UUID, లేదా పిన్సిపల్ పేరు వీటిలో యేదోవొకటి "
 "తెలపాలి, అన్నీ కాదు."
 
 # translation auto-copied from project Candlepin, version master, document
