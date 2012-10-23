@@ -51,4 +51,22 @@ public class ProductVersionValidator {
         return true;
     }
 
+    /**
+     * Determines the minimum cert version required to support the product. This is
+     * done by finding the max version defined by the product's attributes.
+     *
+     * @param product the product to check.
+     * @return the minimum required version, 1.0.0 if no registered attributes are found.
+     */
+    public static Version getMinVersion(Product product) {
+        Version min = new Version("1.0.0");
+        for (Entry<String, Version> entry : PRODUCT_ATTR_VERSION_REQUIREMENTS.entrySet()) {
+            if (product.hasAttribute(entry.getKey()) &&
+                min.compareTo(entry.getValue()) < 0) {
+                min = entry.getValue();
+            }
+        }
+        return min;
+    }
+
 }

@@ -556,10 +556,57 @@ public class DefaultEntitlementCertServiceAdapterTest {
     @Test(expected = CertVersionConflictException.class)
     public void ensureV1CertificateCreationFailsWithUnsupportedProductAttribute()
         throws Exception {
+        // RAM requires 3.1, so an exception should be thrown for cert V1 clients.
+        when(consumer.getFact(eq("system.certificate_version"))).thenReturn("1.0");
         ProductAttribute attr = new ProductAttribute("ram", "4");
         subscription.getProduct().addAttribute(attr);
         certServiceAdapter.createX509Certificate(entitlement, subscription,
             product, new BigInteger("1234"), keyPair(), true);
+    }
+
+    @Test(expected = CertVersionConflictException.class)
+    public void ensureV3CertificateCreationFailsWithUnsupportedConsumerCertVersion()
+        throws Exception {
+        // RAM requires 3.1, so an exception should be thrown.
+        when(consumer.getFact(eq("system.certificate_version"))).thenReturn("3.0");
+        ProductAttribute attr = new ProductAttribute("ram", "4");
+        subscription.getProduct().addAttribute(attr);
+        certServiceAdapter.createX509Certificate(entitlement, subscription,
+            product, new BigInteger("1234"), keyPair(), true);
+    }
+
+    @Test
+    public void ensureV3CertificateCreationOkWhenConsumerSupportsV3Dot1Certs()
+        throws Exception {
+        when(consumer.getFact(eq("system.certificate_version"))).thenReturn("3.1");
+        ProductAttribute attr = new ProductAttribute("ram", "4");
+        subscription.getProduct().addAttribute(attr);
+        certServiceAdapter.createX509Certificate(entitlement, subscription,
+            product, new BigInteger("1234"), keyPair(), true);
+    }
+
+    @Test(expected = CertVersionConflictException.class)
+    public void ensureV3ProductCreationNotOkWhenV3SupportIsDisabledOnServer()
+        throws Exception {
+        Config mockConfig = mock(Config.class);
+        when(mockConfig.certV3IsEnabled()).thenReturn(false);
+
+        when(consumer.getFact(eq("system.certificate_version"))).thenReturn("3.0");
+
+        X509V3ExtensionUtil mockV3extensionUtil = mock(X509V3ExtensionUtil.class);
+        X509ExtensionUtil mockExtensionUtil = mock(X509ExtensionUtil.class);
+
+        ProductAttribute attr = new ProductAttribute("ram", "4");
+        subscription.getProduct().addAttribute(attr);
+
+        DefaultEntitlementCertServiceAdapter entAdapter =
+            new DefaultEntitlementCertServiceAdapter(mockedPKI, mockExtensionUtil,
+                mockV3extensionUtil, mock(EntitlementCertificateCurator.class),
+                keyPairCurator, serialCurator, productAdapter, entCurator,
+                I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
+                mockConfig);
+        entAdapter.createX509Certificate(entitlement, subscription, product,
+            new BigInteger("1234"), keyPair(), true);
     }
 
     @Test

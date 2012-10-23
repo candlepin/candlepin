@@ -14,6 +14,7 @@
  */
 package org.candlepin.version;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -51,6 +52,20 @@ public class ProductVersionValidatorTests {
         assertFalse(ProductVersionValidator.validate(product, "1.0"));
         assertFalse(ProductVersionValidator.validate(product, "3.0"));
         assertFalse(ProductVersionValidator.validate(product, "2.9.99"));
+    }
+
+    @Test
+    public void getMinVersion() {
+        assertEquals("3.1.0", ProductVersionValidator.getMinVersion(product).toString());
+    }
+
+    @Test
+    public void getMinVersionDefaultsToOneWhenProductAttributeNotVersioned() {
+        Product noAttrVersionedProduct = new Product("333", "Test Product");
+        // sockets attribute is not versioned in the ProductVersionValidator.
+        noAttrVersionedProduct.setAttribute("sockets", "2");
+        assertEquals("1.0.0",
+            ProductVersionValidator.getMinVersion(noAttrVersionedProduct).toString());
     }
 
 }
