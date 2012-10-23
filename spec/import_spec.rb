@@ -202,10 +202,24 @@ describe 'Candlepin Import' do
     end
   end
 
-  it "should store the subscription's upstream entitlement cert" do
+  it "should store the subscription upstream entitlement cert" do
     sublist = @cp.list_subscriptions(@import_owner['key'])
     cert = @cp.get_subscription_cert sublist.first.id
     cert[0..26].should == "-----BEGIN CERTIFICATE-----"
     cert.include?("-----BEGIN RSA PRIVATE KEY-----").should == true
+
+    # while were here, lets access the upstream cert via entitlement id
+    pool = nil
+    pools =  @import_owner_client.list_pools({:owner => @import_owner['id']})
+    pools.each do |p|
+        if p.subscriptionId == sublist.first.id
+            pool = p
+            break
+        end
+    end
+    consumer = consumer_client(@import_owner_client, 'system6')
+    entitlement = consumer.consume_pool(pool.id)[0]
+    ent =  @cp.get_subscription_cert_by_ent_id entitlement.id
+    cert.should == ent
   end
 end
