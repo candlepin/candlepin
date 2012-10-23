@@ -23,8 +23,8 @@ import os
 
 from optparse import OptionParser
 
-TOMCAT_CLASSPATH = "/var/lib/jbossas/server/production/deploy/candlepin.war/WEB-INF/classes/"
-JBOSS_CLASSPATH = "/var/lib/tomcat6/webapps/candlepin/WEB-INF/classes/"
+JBOSS_CLASSPATH = "/var/lib/jbossas/server/production/deploy/candlepin.war/WEB-INF/classes/"
+TOMCAT_CLASSPATH = "/var/lib/tomcat6/webapps/candlepin/WEB-INF/classes/"
 
 def run_command(command):
     (status, output) = commands.getstatusoutput(command)
