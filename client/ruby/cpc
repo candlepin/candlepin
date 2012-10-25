@@ -67,6 +67,11 @@ optparse = OptionParser.new do|opts|
         options[:context] = opt
     end
 
+    options[:uuid] = nil
+    opts.on( '--uuid [UUID]', 'UUID to use. Defults to nil' ) do |opt|
+        options[:uuid] = opt
+    end
+
     options[:ssl] = true
     opts.on( '--nossl', 'Do not use SSL.' ) do |opt|
         options[:ssl] = false
@@ -107,7 +112,7 @@ if ARGV.empty?
 else
 
   cli = CandlepinCLI.new(options[:user], options[:password], nil,nil,
-                        options[:server], options[:port], nil, nil,
+                        options[:server], options[:port], nil, options[:uuid],
                         options[:trused_user], options[:context],
                         options[:ssl])
 
