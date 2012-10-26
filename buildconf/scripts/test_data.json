@@ -1059,19 +1059,6 @@
             ]
         },
         {
-            "name": "RAM Limiting Package (8GB - Stackable)",
-            "id": "ram-8gb-stackable",
-            "type": "MKT",
-            "attributes": {
-                "multi-entitlement": "yes",
-                "stacking_id": 2,
-                "ram": 8
-            },
-            "provided_products": [
-                "801"
-            ]
-        },
-        {
             "name": "RAM Limiting Package (8GB)",
             "id": "ram-8gb",
             "type": "MKT",
