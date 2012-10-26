@@ -22,6 +22,16 @@ import org.candlepin.model.Product;
 
 /**
  * ProductVersionValidator
+ *
+ * Since the introduction of cert V3, we not have the concept of a certificate
+ * version. When certificates are changed (i.e, new attributes), we will bump
+ * the certificate's version.
+ *
+ * This class defines what certificate version is required for a Product
+ * based on its attributes. It has the ability to determine if a given
+ * entitlement version is valid for given product. It can also determine
+ * the minimum entitlement version required in order to support the given
+ * product.
  */
 public class ProductVersionValidator {
 
@@ -40,6 +50,15 @@ public class ProductVersionValidator {
         // Can not create an instance of this class.
     }
 
+    /**
+     * Validates the specified entitlement version against the required versions
+     * of the specified product's attributes.
+     *
+     * @param product the product to check against.
+     * @param version the entitlement version to check.
+     * @return true if the version meets the product's attribute version requirements,
+     *         false otherwise.
+     */
     public static boolean validate(Product product, String version) {
         Version check = new Version(version);
         for (Entry<String, Version> entry : PRODUCT_ATTR_VERSION_REQUIREMENTS.entrySet()) {
