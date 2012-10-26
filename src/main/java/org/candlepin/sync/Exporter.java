@@ -14,10 +14,6 @@
  */
 package org.candlepin.sync;
 
-import com.google.inject.Inject;
-
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.candlepin.config.Config;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Consumer;
@@ -27,6 +23,7 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.IdentityCertificate;
+import org.candlepin.model.KeyPair;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProvidedProduct;
@@ -35,6 +32,11 @@ import org.candlepin.policy.js.export.JsExportRules;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.util.VersionUtil;
+
+import com.google.inject.Inject;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.File;
@@ -119,6 +121,7 @@ public class Exporter {
             exportMeta(baseDir);
             exportConsumer(baseDir, consumer);
             exportIdentityCertificate(baseDir, consumer);
+            exportKeyPair(baseDir, consumer);
             exportEntitlements(baseDir, consumer);
             exportEntitlementsCerts(baseDir, consumer, null, true);
             exportProducts(baseDir, consumer);
@@ -292,6 +295,14 @@ public class Exporter {
         return webAppPrefix;
     }
 
+    private String getWebAppHost() {
+        String webAppHost = config.getString("candlepin.export.webapp.hostname");
+        if (webAppHost != null && webAppHost.trim().equals("")) {
+            webAppHost = null;
+        }
+        return webAppHost;
+    }
+
     private String getVersion() throws IOException {
         Map<String, String> map = VersionUtil.getVersionMap();
         return map.get("version") + "-" + map.get("release");
@@ -300,7 +311,8 @@ public class Exporter {
     private void exportConsumer(File baseDir, Consumer consumer) throws IOException {
         File file = new File(baseDir.getCanonicalPath(), "consumer.json");
         FileWriter writer = new FileWriter(file);
-        this.consumerExporter.export(mapper, writer, consumer);
+        this.consumerExporter.export(mapper, writer, consumer, getWebAppHost(),
+            getWebAppPrefix());
         writer.close();
     }
 
@@ -350,6 +362,28 @@ public class Exporter {
             writer = new FileWriter(file);
             writer.write(cert.getCert());
             writer.write(cert.getKey());
+        }
+        finally {
+            if (writer != null) {
+                writer.close();
+            }
+        }
+    }
+
+    private void exportKeyPair(File baseDir, Consumer consumer)
+        throws IOException {
+        File keypairdir = new File(baseDir.getCanonicalPath(), "upstream_consumer");
+        keypairdir.mkdir();
+
+        KeyPair keyPair = consumer.getKeyPair();
+        File file = new File(keypairdir.getCanonicalPath(), "keypair.pem");
+
+        FileWriter writer = null;
+
+        try {
+            writer = new FileWriter(file);
+            writer.write(new String(pki.getPemEncoded(keyPair.getPrivateKey())));
+            writer.write(new String(pki.getPemEncoded(keyPair.getPublicKey())));
         }
         finally {
             if (writer != null) {

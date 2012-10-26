@@ -22,7 +22,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.apache.commons.io.FileUtils;
 import org.candlepin.auth.Principal;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Config;
@@ -34,6 +33,7 @@ import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.IdentityCertificate;
+import org.candlepin.model.KeyPair;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
@@ -44,6 +44,8 @@ import org.candlepin.pki.PKIUtility;
 import org.candlepin.policy.js.export.JsExportRules;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
+
+import org.apache.commons.io.FileUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
@@ -57,6 +59,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -112,6 +116,12 @@ public class ExporterTest {
         pprov = mock(PrincipalProvider.class);
 
         when(exportRules.canExport(any(Entitlement.class))).thenReturn(Boolean.TRUE);
+    }
+
+    private KeyPair createKeyPair() {
+        PublicKey pk = mock(PublicKey.class);
+        PrivateKey ppk = mock(PrivateKey.class);
+        return new KeyPair(ppk, pk);
     }
 
     @Test
@@ -172,6 +182,13 @@ public class ExporterTest {
         idcert.setUpdated(new Date());
         when(consumer.getIdCert()).thenReturn(idcert);
 
+        KeyPair keyPair = createKeyPair();
+        when(consumer.getKeyPair()).thenReturn(keyPair);
+        when(pki.getPemEncoded(keyPair.getPrivateKey()))
+            .thenReturn("privateKey".getBytes());
+        when(pki.getPemEncoded(keyPair.getPublicKey()))
+            .thenReturn("publicKey".getBytes());
+
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules, pprov);
@@ -213,6 +230,13 @@ public class ExporterTest {
         idcert.setUpdated(new Date());
         when(consumer.getIdCert()).thenReturn(idcert);
 
+        KeyPair keyPair = createKeyPair();
+        when(consumer.getKeyPair()).thenReturn(keyPair);
+        when(pki.getPemEncoded(keyPair.getPrivateKey()))
+            .thenReturn("privateKey".getBytes());
+        when(pki.getPemEncoded(keyPair.getPublicKey()))
+            .thenReturn("publicKey".getBytes());
+
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules, pprov);
 
@@ -241,6 +265,13 @@ public class ExporterTest {
         idcert.setCreated(new Date());
         idcert.setUpdated(new Date());
         when(consumer.getIdCert()).thenReturn(idcert);
+
+        KeyPair keyPair = createKeyPair();
+        when(consumer.getKeyPair()).thenReturn(keyPair);
+        when(pki.getPemEncoded(keyPair.getPrivateKey()))
+            .thenReturn("privateKey".getBytes());
+        when(pki.getPemEncoded(keyPair.getPublicKey()))
+            .thenReturn("publicKey".getBytes());
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
@@ -281,6 +312,13 @@ public class ExporterTest {
         idcert.setUpdated(new Date());
         when(consumer.getIdCert()).thenReturn(idcert);
 
+        KeyPair keyPair = createKeyPair();
+        when(consumer.getKeyPair()).thenReturn(keyPair);
+        when(pki.getPemEncoded(keyPair.getPrivateKey()))
+            .thenReturn("privateKey".getBytes());
+        when(pki.getPemEncoded(keyPair.getPublicKey()))
+            .thenReturn("publicKey".getBytes());
+
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules, pprov);
@@ -291,6 +329,48 @@ public class ExporterTest {
         assertTrue(export.exists());
         verifyContent(export, "export/upstream_consumer/10.pem",
             new VerifyIdentityCert("10.pem"));
+    }
+
+    @Test
+    public void exportKeyPair() throws Exception {
+        config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+        Rules mrules = mock(Rules.class);
+        Consumer consumer = mock(Consumer.class);
+        Principal principal = mock(Principal.class);
+
+        when(mrules.getRules()).thenReturn("foobar");
+        when(pki.getSHA256WithRSAHash(any(InputStream.class))).thenReturn(
+            "signature".getBytes());
+        when(rc.getRules()).thenReturn(mrules);
+        when(pprov.get()).thenReturn(principal);
+        when(principal.getUsername()).thenReturn("testUser");
+
+        // specific to this test
+        IdentityCertificate idcert = new IdentityCertificate();
+        idcert.setSerial(new CertificateSerial(10L, new Date()));
+        idcert.setKey("euh0876puhapodifbvj094");
+        idcert.setCert("hpj-08ha-w4gpoknpon*)&^%#");
+        idcert.setCreated(new Date());
+        idcert.setUpdated(new Date());
+        when(consumer.getIdCert()).thenReturn(idcert);
+
+        KeyPair keyPair = createKeyPair();
+        when(consumer.getKeyPair()).thenReturn(keyPair);
+        when(pki.getPemEncoded(keyPair.getPrivateKey()))
+            .thenReturn("privateKey".getBytes());
+        when(pki.getPemEncoded(keyPair.getPublicKey()))
+            .thenReturn("publicKey".getBytes());
+
+        // FINALLY test this badboy
+        Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
+            pce, ec, ee, pki, config, exportRules, pprov);
+        File export = e.getFullExport(consumer);
+
+        // VERIFY
+        assertNotNull(export);
+        assertTrue(export.exists());
+        verifyContent(export, "export/upstream_consumer/keypair.pem",
+            new VerifyKeyPair("keypair.pem"));
     }
 
     /**
@@ -461,6 +541,27 @@ public class ExporterTest {
 
             BufferedReader br = new BufferedReader(new FileReader("/tmp/" + filename));
             assertEquals("hpj-08ha-w4gpoknpon*)&^%#euh0876puhapodifbvj094", br.readLine());
+            br.close();
+        }
+    }
+
+    public static class VerifyKeyPair implements Verify {
+        private String filename;
+        public VerifyKeyPair(String filename) {
+            this.filename = filename;
+        }
+
+        public void verify(ZipInputStream zis, byte[] buf) throws IOException {
+            OutputStream os = new FileOutputStream("/tmp/" + filename);
+            int n;
+            while ((n = zis.read(buf, 0, 1024)) > -1) {
+                os.write(buf, 0, n);
+            }
+            os.flush();
+            os.close();
+
+            BufferedReader br = new BufferedReader(new FileReader("/tmp/" + filename));
+            assertEquals("privateKeypublicKey", br.readLine());
             br.close();
         }
     }

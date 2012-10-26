@@ -93,6 +93,7 @@ public class ConfigProperties {
          "candlepin.consumer_person_name_pattern";
 
     public static final String WEBAPP_PREFIX = "candlepin.export.webapp.prefix";
+    public static final String WEBAPP_HOSTNAME = "candlepin.export.webapp.hostname";
     public static final String PASSPHRASE_SECRET_FILE =
         "candlepin.passphrase.path";
 
@@ -165,7 +166,8 @@ public class ConfigProperties {
                 this.put(CONSUMER_PERSON_NAME_PATTERN,
                     "[\\#\\?\\'\\`\\!@{}()\\[\\]\\?&\\w-\\.]+");
 
-                this.put(WEBAPP_PREFIX, "localhost:8443/candlepin");
+                this.put(WEBAPP_PREFIX, "/candlepin");
+                this.put(WEBAPP_HOSTNAME, "localhost:8443");
                 this.put(PASSPHRASE_SECRET_FILE,
                     "/etc/katello/secure/passphrase");
 
