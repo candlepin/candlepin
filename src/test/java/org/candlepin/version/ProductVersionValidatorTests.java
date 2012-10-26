@@ -55,6 +55,12 @@ public class ProductVersionValidatorTests {
     }
 
     @Test
+    public void validateAgainstVersion1WhenVersionStringIsNullOrEmpty() {
+        assertFalse(ProductVersionValidator.validate(product, null));
+        assertFalse(ProductVersionValidator.validate(product, ""));
+    }
+
+    @Test
     public void getMinVersion() {
         assertEquals("3.1.0", ProductVersionValidator.getMinVersion(product).toString());
     }
