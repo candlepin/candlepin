@@ -55,7 +55,6 @@ import org.candlepin.util.X509Util;
 import org.candlepin.util.X509V3ExtensionUtil;
 import org.candlepin.version.CertVersionConflictException;
 import org.candlepin.version.ProductVersionValidator;
-import org.candlepin.version.Version;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -193,8 +192,8 @@ public class DefaultEntitlementCertServiceAdapter extends
         //
         // REMOVE ME: This check can likely be removed when the enable/disable
         //            certv3 functionality is removed.
-        Version min = ProductVersionValidator.getMinVersion(sub.getProduct());
-        if (!shouldGenerateV3(entitlement) && min.compareTo(new Version("1")) > 0) {
+        String min = ProductVersionValidator.getMinVersion(sub.getProduct());
+        if (!shouldGenerateV3(entitlement) && min.compareTo("1") > 0) {
             String error = i18n.tr("The server does not support subscriptions requiring " +
                 "V3 certificates.");
             throw new CertVersionConflictException(error);

@@ -62,7 +62,7 @@ public class ProductVersionValidatorTests {
 
     @Test
     public void getMinVersion() {
-        assertEquals("3.1.0", ProductVersionValidator.getMinVersion(product).toString());
+        assertEquals("3.1", ProductVersionValidator.getMinVersion(product).toString());
     }
 
     @Test
@@ -70,7 +70,7 @@ public class ProductVersionValidatorTests {
         Product noAttrVersionedProduct = new Product("333", "Test Product");
         // sockets attribute is not versioned in the ProductVersionValidator.
         noAttrVersionedProduct.setAttribute("sockets", "2");
-        assertEquals("1.0.0",
+        assertEquals("1.0",
             ProductVersionValidator.getMinVersion(noAttrVersionedProduct).toString());
     }
 

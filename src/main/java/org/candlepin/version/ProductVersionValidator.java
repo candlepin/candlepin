@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.candlepin.model.Product;
+import org.candlepin.util.RpmVersionComparator;
 
 /**
  * ProductVersionValidator
@@ -38,12 +39,12 @@ public class ProductVersionValidator {
     /**
      * A mapping of product attribute to minimum required version.
      */
-    private static final Map<String, Version> PRODUCT_ATTR_VERSION_REQUIREMENTS =
-        new HashMap<String, Version>();
+    private static final Map<String, String> PRODUCT_ATTR_VERSION_REQUIREMENTS =
+        new HashMap<String, String>();
 
     // Add any product atttribute version requirements here.
     static {
-        PRODUCT_ATTR_VERSION_REQUIREMENTS.put("ram", new Version("3.1"));
+        PRODUCT_ATTR_VERSION_REQUIREMENTS.put("ram", "3.1");
     }
 
     private ProductVersionValidator() {
@@ -60,10 +61,11 @@ public class ProductVersionValidator {
      *         false otherwise.
      */
     public static boolean validate(Product product, String version) {
-        Version check = new Version(version);
-        for (Entry<String, Version> entry : PRODUCT_ATTR_VERSION_REQUIREMENTS.entrySet()) {
+        RpmVersionComparator versionComparitor = new RpmVersionComparator();
+        version = version == null || version.isEmpty() ? "1.0" : version;
+        for (Entry<String, String> entry : PRODUCT_ATTR_VERSION_REQUIREMENTS.entrySet()) {
             if (product.hasAttribute(entry.getKey()) &&
-                check.compareTo(entry.getValue()) < 0) {
+                versionComparitor.compare(version, entry.getValue()) < 0) {
                 return false;
             }
         }
@@ -77,11 +79,12 @@ public class ProductVersionValidator {
      * @param product the product to check.
      * @return the minimum required version, 1.0.0 if no registered attributes are found.
      */
-    public static Version getMinVersion(Product product) {
-        Version min = new Version("1.0.0");
-        for (Entry<String, Version> entry : PRODUCT_ATTR_VERSION_REQUIREMENTS.entrySet()) {
+    public static String getMinVersion(Product product) {
+        RpmVersionComparator versionComparitor = new RpmVersionComparator();
+        String min = "1.0";
+        for (Entry<String, String> entry : PRODUCT_ATTR_VERSION_REQUIREMENTS.entrySet()) {
             if (product.hasAttribute(entry.getKey()) &&
-                min.compareTo(entry.getValue()) < 0) {
+                versionComparitor.compare(min, entry.getValue()) < 0) {
                 min = entry.getValue();
             }
         }
