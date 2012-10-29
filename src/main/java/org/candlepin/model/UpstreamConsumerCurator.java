@@ -49,7 +49,7 @@ public class UpstreamConsumerCurator extends AbstractHibernateCurator<UpstreamCo
     public void delete(UpstreamConsumer entity) {
         // save off the ids before we delete
         DeletedConsumer dc = new DeletedConsumer(entity.getUuid(),
-            entity.getOwner().getId());
+            entity.getOwnerId());
 
         super.delete(entity);
 
