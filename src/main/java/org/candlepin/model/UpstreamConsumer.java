@@ -88,6 +88,13 @@ public class UpstreamConsumer extends AbstractHibernateObject {
         this.type = type;
     }
 
+    public UpstreamConsumer(String name, Owner owner, ConsumerType type, String uuid) {
+        this.name = name;
+        this.ownerId = owner.getId();
+        this.type = type;
+        this.uuid = uuid;
+    }
+
     public UpstreamConsumer() {
         // This constructor is for creating a new UpstreamConsumer in the DB,
         // so we'll generate a UUID at this point.
