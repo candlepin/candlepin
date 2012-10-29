@@ -52,6 +52,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
+import org.candlepin.model.UpstreamConsumerCurator;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.util.VersionUtil;
 
@@ -115,6 +116,7 @@ public class Importer {
     private CertificateSerialCurator csCurator;
     private EventSink sink;
     private I18n i18n;
+    private UpstreamConsumerCurator upstreamCurator;
 
     @Inject
     public Importer(ConsumerTypeCurator consumerTypeCurator, ProductCurator productCurator,
@@ -428,7 +430,7 @@ public class Importer {
     public ConsumerDto importConsumer(Owner owner, File consumerFile,
         ConflictOverrides forcedConflicts)
         throws IOException, SyncDataFormatException {
-        ConsumerImporter importer = new ConsumerImporter(ownerCurator, i18n);
+        ConsumerImporter importer = new ConsumerImporter(ownerCurator, upstreamCurator, i18n);
         Reader reader = null;
         ConsumerDto consumer = null;
         try {
