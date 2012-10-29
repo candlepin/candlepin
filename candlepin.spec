@@ -17,7 +17,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.7.16
+Version: 0.7.17
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -287,6 +287,19 @@ fi
 
 
 %changelog
+* Mon Oct 29 2012 jesus m. rodriguez <jesusr@redhat.com> 0.7.17-1
+- Allow retrieval of upstream subscription certificate via entitlement id
+  (wpoteat@redhat.com)
+- variables should point to correct paths (jesusr@redhat.com)
+- Properly rename recursiveCombination to powerSet (jbowes@redhat.com)
+- Ignore old rules in database after a Candlepin upgrade. (dgoodwin@redhat.com)
+- 820630: Fix the pa.po translations where a trailing \ was added.
+  (bkearney@redhat.com)
+- 820630: Replace the string uuid with UUID (bkearney@redhat.com)
+- Add a test for consumer updated timestamp on bind. (dgoodwin@redhat.com)
+- Fix a bug with distributor manifest conflicts. (dgoodwin@redhat.com)
+- 864508: Service level {0} is not available to consumers (wpoteat@redhat.com)
+
 * Mon Oct 15 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.7.16-1
 - 860773: Create import records when manifests are deleted.
   (bkearney@redhat.com)
