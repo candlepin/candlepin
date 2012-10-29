@@ -49,6 +49,7 @@ import org.candlepin.pki.X509ExtensionWrapper;
 import org.candlepin.service.BaseEntitlementCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.util.CertificateSizeException;
+import org.candlepin.util.RpmVersionComparator;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509ExtensionUtil;
 import org.candlepin.util.X509Util;
@@ -193,7 +194,8 @@ public class DefaultEntitlementCertServiceAdapter extends
         // REMOVE ME: This check can likely be removed when the enable/disable
         //            certv3 functionality is removed.
         String min = ProductVersionValidator.getMinVersion(sub.getProduct());
-        if (!shouldGenerateV3(entitlement) && min.compareTo("1") > 0) {
+        if (!shouldGenerateV3(entitlement) &&
+            ProductVersionValidator.compareVersion(min, "1.0") > 0) {
             String error = i18n.tr("The server does not support subscriptions requiring " +
                 "V3 certificates.");
             throw new CertVersionConflictException(error);

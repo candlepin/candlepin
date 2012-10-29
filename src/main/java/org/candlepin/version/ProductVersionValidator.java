@@ -80,15 +80,29 @@ public class ProductVersionValidator {
      * @return the minimum required version, 1.0.0 if no registered attributes are found.
      */
     public static String getMinVersion(Product product) {
-        RpmVersionComparator versionComparitor = new RpmVersionComparator();
         String min = "1.0";
         for (Entry<String, String> entry : PRODUCT_ATTR_VERSION_REQUIREMENTS.entrySet()) {
             if (product.hasAttribute(entry.getKey()) &&
-                versionComparitor.compare(min, entry.getValue()) < 0) {
+                ProductVersionValidator.compareVersion(min, entry.getValue()) < 0) {
                 min = entry.getValue();
             }
         }
         return min;
+    }
+
+    /**
+     * Compares two version strings.
+     *
+     * @see RpmVersionComparator
+     *
+     * @param version1
+     * @param version2
+     * @return an int value less than, equal to, or greater than 0 depending on
+     *         whether version1 is less than, equal to, or greater than version2.
+     */
+    public static int compareVersion(String version1, String version2) {
+        RpmVersionComparator c = new RpmVersionComparator();
+        return c.compare(version1, version2);
     }
 
 }
