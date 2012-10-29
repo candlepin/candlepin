@@ -288,7 +288,7 @@ public class Owner extends AbstractHibernateObject implements Serializable,
     public void setUpstreamConsumer(UpstreamConsumer upstream) {
         this.upstreamConsumer = upstream;
         if (upstream != null) {
-            upstream.setOwner(this);
+            upstream.setOwnerId(id);
         }
     }
 

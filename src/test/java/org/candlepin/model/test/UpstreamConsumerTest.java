@@ -44,7 +44,7 @@ public class UpstreamConsumerTest {
         UpstreamConsumer luc = new UpstreamConsumer("fake name", o, ct);
         assertNotNull(luc.getUuid());
         assertEquals("fake name", luc.getName());
-        assertEquals(o, luc.getOwner());
+        assertEquals(o.getId(), luc.getOwnerId());
         assertEquals(ct, luc.getType());
     }
 
@@ -53,7 +53,7 @@ public class UpstreamConsumerTest {
         UpstreamConsumer luc = new UpstreamConsumer();
         assertNotNull(luc.getUuid());
         assertEquals(null, luc.getName());
-        assertEquals(null, luc.getOwner());
+        assertEquals(null, luc.getOwnerId());
         assertEquals(null, luc.getType());
     }
 
@@ -70,8 +70,8 @@ public class UpstreamConsumerTest {
     @Test
     public void owner() {
         Owner o = mock(Owner.class);
-        uc.setOwner(o);
-        assertEquals(o, uc.getOwner());
+        uc.setOwnerId(o.getId());
+        assertEquals(o.getId(), uc.getOwnerId());
     }
 
     @Test

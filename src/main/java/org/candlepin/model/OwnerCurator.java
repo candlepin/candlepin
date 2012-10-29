@@ -61,7 +61,8 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
 
     public Owner lookupWithUpstreamUuid(String upstreamUuid) {
         return (Owner) currentSession().createCriteria(Owner.class)
-            .add(Restrictions.eq("upstreamUuid", upstreamUuid))
+            .createCriteria("upstreamConsumer")
+            .add(Restrictions.eq("uuid", upstreamUuid))
             .uniqueResult();
     }
 

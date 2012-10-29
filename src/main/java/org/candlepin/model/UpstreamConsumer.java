@@ -21,7 +21,6 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.annotate.JsonFilter;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -69,11 +68,8 @@ public class UpstreamConsumer extends AbstractHibernateObject {
     @ForeignKey(name = "fk_consumer_consumer_type")
     private ConsumerType type;
 
-    @ManyToOne
-    @ForeignKey(name = "fk_upstream_consumer_owner")
-    @JoinColumn(nullable = false)
-    @Index(name = "cp_upstream_consumer_owner_fk_idx")
-    private Owner owner;
+    @Column(name = "owner_id", length = 32, nullable = false)
+    private String ownerId;
 
     @OneToOne(cascade = CascadeType.ALL)
     private KeyPair keyPair;
@@ -88,7 +84,7 @@ public class UpstreamConsumer extends AbstractHibernateObject {
         this();
 
         this.name = name;
-        this.owner = owner;
+        this.ownerId = owner.getId();
         this.type = type;
     }
 
@@ -176,16 +172,16 @@ public class UpstreamConsumer extends AbstractHibernateObject {
     /**
      * @return the owner of this Consumer.
      */
-    public Owner getOwner() {
-        return owner;
+    public String getOwnerId() {
+        return ownerId;
     }
 
     /**
      * Associates an owner to this Consumer.
-     * @param owner owner to associate to this Consumer.
+     * @param oid owner to associate to this Consumer.
      */
-    public void setOwner(Owner owner) {
-        this.owner = owner;
+    public void setOwnerId(String oid) {
+        this.ownerId = oid;
     }
 
     @XmlTransient
@@ -229,5 +225,4 @@ public class UpstreamConsumer extends AbstractHibernateObject {
     public void setApiUrl(String url) {
         prefixUrlApi = url;
     }
-
 }
