@@ -24,7 +24,7 @@ import org.candlepin.util.RpmVersionComparator;
 /**
  * ProductVersionValidator
  *
- * Since the introduction of cert V3, we not have the concept of a certificate
+ * Since the introduction of cert V3, we now have the concept of a certificate
  * version. When certificates are changed (i.e, new attributes), we will bump
  * the certificate's version.
  *
