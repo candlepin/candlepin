@@ -84,6 +84,7 @@ public class ConsumerImporter {
         // create an UpstreamConsumer from the imported ConsumerDto
         UpstreamConsumer uc = new UpstreamConsumer(consumer.getName(),
             consumer.getOwner(), consumer.getType(), consumer.getUuid());
+        uc.setWebUrl(consumer.getPrefix());
         uc = upstreamCurator.create(uc);
         owner.setUpstreamConsumer(uc);
 

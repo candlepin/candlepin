@@ -16,23 +16,6 @@ package org.candlepin.sync;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Reader;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-
-import javax.persistence.PersistenceException;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
@@ -55,10 +38,27 @@ import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.model.UpstreamConsumerCurator;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.util.VersionUtil;
-
 import org.codehaus.jackson.map.ObjectMapper;
 import org.hibernate.exception.ConstraintViolationException;
 import org.xnap.commons.i18n.I18n;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
+import javax.persistence.PersistenceException;
 
 
 /**
@@ -123,7 +123,8 @@ public class Importer {
         RulesImporter rulesImporter, OwnerCurator ownerCurator,
         ContentCurator contentCurator, SubscriptionCurator subCurator, PoolManager pm,
         PKIUtility pki, Config config, ExporterMetadataCurator emc,
-        CertificateSerialCurator csc, EventSink sink, I18n i18n) {
+        CertificateSerialCurator csc, EventSink sink, I18n i18n,
+        UpstreamConsumerCurator upstreamCurator) {
 
         this.config = config;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -139,6 +140,7 @@ public class Importer {
         this.csCurator = csc;
         this.sink = sink;
         this.i18n = i18n;
+        this.upstreamCurator = upstreamCurator;
     }
 
     /**
