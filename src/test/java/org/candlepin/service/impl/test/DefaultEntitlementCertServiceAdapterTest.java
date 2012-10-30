@@ -19,6 +19,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
@@ -553,26 +554,42 @@ public class DefaultEntitlementCertServiceAdapterTest {
             any(String.class));
     }
 
-    @Test(expected = CertVersionConflictException.class)
+    @Test
     public void ensureV1CertificateCreationFailsWithUnsupportedProductAttribute()
         throws Exception {
         // RAM requires 3.1, so an exception should be thrown for cert V1 clients.
         when(consumer.getFact(eq("system.certificate_version"))).thenReturn("1.0");
         ProductAttribute attr = new ProductAttribute("ram", "4");
         subscription.getProduct().addAttribute(attr);
-        certServiceAdapter.createX509Certificate(entitlement, subscription,
-            product, new BigInteger("1234"), keyPair(), true);
+
+        try {
+            certServiceAdapter.createX509Certificate(entitlement, subscription,
+                product, new BigInteger("1234"), keyPair(), true);
+            fail("Expected CertException here.");
+        }
+        catch (CertVersionConflictException e) {
+            assertEquals("Please upgrade to a newer client to use subscription: " +
+                         subscription.getProduct().getName(), e.getMessage());
+        }
     }
 
-    @Test(expected = CertVersionConflictException.class)
+    @Test
     public void ensureV3CertificateCreationFailsWithUnsupportedConsumerCertVersion()
         throws Exception {
         // RAM requires 3.1, so an exception should be thrown.
         when(consumer.getFact(eq("system.certificate_version"))).thenReturn("3.0");
         ProductAttribute attr = new ProductAttribute("ram", "4");
         subscription.getProduct().addAttribute(attr);
-        certServiceAdapter.createX509Certificate(entitlement, subscription,
-            product, new BigInteger("1234"), keyPair(), true);
+
+        try {
+            certServiceAdapter.createX509Certificate(entitlement, subscription,
+                product, new BigInteger("1234"), keyPair(), true);
+            fail("Expected CertException here.");
+        }
+        catch (CertVersionConflictException e) {
+            assertEquals("Please upgrade to a newer client to use subscription: " +
+                         subscription.getProduct().getName(), e.getMessage());
+        }
     }
 
     @Test
@@ -585,7 +602,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             product, new BigInteger("1234"), keyPair(), true);
     }
 
-    @Test(expected = CertVersionConflictException.class)
+    @Test
     public void ensureV3ProductCreationNotOkWhenV3SupportIsDisabledOnServer()
         throws Exception {
         Config mockConfig = mock(Config.class);
@@ -605,8 +622,15 @@ public class DefaultEntitlementCertServiceAdapterTest {
                 keyPairCurator, serialCurator, productAdapter, entCurator,
                 I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
                 mockConfig);
-        entAdapter.createX509Certificate(entitlement, subscription, product,
-            new BigInteger("1234"), keyPair(), true);
+        try {
+            entAdapter.createX509Certificate(entitlement, subscription, product,
+                new BigInteger("1234"), keyPair(), true);
+            fail("Expected CertVersionConflictException to be thrown.");
+        }
+        catch (CertVersionConflictException e) {
+            assertEquals("The server does not support subscriptions requiring " +
+                         "V3 certificates.", e.getMessage());
+        }
     }
 
     @Test

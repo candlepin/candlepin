@@ -194,7 +194,7 @@ public class DefaultEntitlementCertServiceAdapter extends
         // REMOVE ME: This check can likely be removed when the enable/disable
         //            certv3 functionality is removed.
         String min = ProductVersionValidator.getMinVersion(sub.getProduct());
-        if (!shouldGenerateV3(entitlement) &&
+        if (!config.certV3IsEnabled() &&
             ProductVersionValidator.compareVersion(min, "1.0") > 0) {
             String error = i18n.tr("The server does not support subscriptions requiring " +
                 "V3 certificates.");
