@@ -3,6 +3,7 @@
     <url>https://translate.zanata.org/zanata/</url>
     <project>candlepin</project>
     <project-version>master</project-version>
+    <project-type>gettext</project-type>
     <locales>
         <locale>as</locale>
         <locale>bn-IN</locale>
