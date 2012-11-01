@@ -53,6 +53,8 @@
               value="${target.dir}/candlepin-${version}.war" />
     <property name="api.jar"
               value="${target.dir}/candlepin-api-${version}.jar" />
+    <property name="candlepin-certgen.jar"
+              value="${target.dir}/candlepin-certgen-${version}.jar" />
   </target>
 
   <target name="da_popo">
@@ -147,6 +149,27 @@
         <include name="**/pki/**"/>
         <include name="**/exceptions/**"/>
         <include name="**/util/**"/>
+      </fileset>
+      <manifest>
+        <attribute name="Implementation-Vendor" value="" />
+        <attribute name="Manifest-Version" value="1.0" />
+        <attribute name="Build-By" value="${env.USER}" />
+        <attribute name="Created-By" value="Buildr" />
+        <attribute name="Implementation-Version" value="" />
+        <attribute name="Implementation-Title" value="The Proxy project" />
+        <attribute name="Build-Jdk" value="" />
+      </manifest>
+    </jar>
+    <jar destfile="${candlepin-certgen.jar}">
+      <fileset dir="${target.dir}/classes">
+        <include name="**/config/**"/>
+        <include name="**/util/**"/>
+        <include name="**/service/**"/>
+        <include name="**/model/**"/>
+        <include name="**/pki/**"/>
+        <include name="**/jackson/**"/>
+        <!-- only used to retrieve class names in Config-->
+        <include name="**/pinsetter/**"/>
       </fileset>
       <manifest>
         <attribute name="Implementation-Vendor" value="" />

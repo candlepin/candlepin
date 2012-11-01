@@ -141,6 +141,14 @@ Group: Development/Libraries
 %description devel
 Development libraries for candlepin integration
 
+%package certgen-lib
+Summary: candlepin certgen library for use by other apps
+Group: Internet/Applications
+
+%description certgen-lib
+candlepin library for use by other apps
+
+
 %package selinux
 Summary:        SELinux policy module supporting candlepin
 Group:          System Environment/Base
@@ -208,6 +216,11 @@ unzip target/%{name}-%{version}.war -d $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbo
 # devel
 install -d -m 755 $RPM_BUILD_ROOT/%{_datadir}/%{name}/lib/
 install -m 644 target/%{name}-api-%{version}.jar $RPM_BUILD_ROOT/%{_datadir}/%{name}/lib/
+
+# jar
+install -d -m 755 $RPM_BUILD_ROOT/usr/share/java
+install -m 644 target/%{name}-certgen-%{version}.jar $RPM_BUILD_ROOT/usr/share/java/
+ln -s /usr/share/java/candlepin-certgen-%{version}.jar $RPM_BUILD_ROOT/usr/share/java/candlepin-certgen.jar
 
 # /var/lib dir for hornetq state
 install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/%{name}
@@ -279,6 +292,10 @@ fi
 %defattr(644,root,root,775)
 %{_datadir}/%{name}/lib/%{name}-api-%{version}.jar
 
+%files certgen-lib
+%defattr(644,root,root,775)
+/usr/share/java/%{name}-certgen-%{version}.jar
+/usr/share/java/%{name}-certgen.jar
 
 %files selinux
 %defattr(-,root,root,0755)
