@@ -174,20 +174,18 @@ public class EntitlementResource {
     public String getEntitlementUpstreamCert(
         @PathParam("dbid") String dbid) {
         Entitlement ent = entitlementCurator.find(dbid);
-        List<Entitlement> tempList = Arrays.asList(ent);
-        poolManager.regenerateDirtyEntitlements(tempList);
+        // optimization: don't do entitlement regen here, as we don't read
+        // the entitlement certificate in this call.
+
+        if (ent == null) {
+            throw new NotFoundException(i18n.tr(
+                "Entitlement with ID ''{0}'' could not be found.", dbid));
+        }
 
         String subscriptionId = ent.getPool().getSubscriptionId();
         SubscriptionResource subResource = new SubscriptionResource(subService,
             consumerCurator, i18n);
-        String sc = subResource.getSubCertAsPem(subscriptionId);
-
-        if (sc != null) {
-            return sc;
-        }
-        throw new NotFoundException(
-            i18n.tr("SubscriptionsCertificate for Entitlement ID ''{0}'' " +
-                "could not be found.", dbid));
+        return subResource.getSubCertAsPem(subscriptionId);
     }
 
     /**
