@@ -115,6 +115,14 @@ if nocstyle.nil?
    require "./buildr/checkstyle"
 end
 
+# dont require findbugs by default
+# needs "buildr-findBugs" gem installed
+# (and findbugs and it's large set of deps)
+findbugs = ENV['findbugs']
+if not findbugs.nil?
+    require 'buildr-findBugs'
+end
+
 #############################################################################
 # PROJECT BUILD
 #############################################################################
