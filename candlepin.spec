@@ -17,7 +17,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.7.17
+Version: 0.7.18
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -304,6 +304,12 @@ fi
 
 
 %changelog
+* Fri Nov 02 2012 William Poteat <wpoteat@redhat.com> 0.7.18-1
+- Add findbugs target (alikins@redhat.com)
+- Add a build target to build candlepin as a jar, so it can be used by other
+  apps. Also, create a new rpm for the jar. (cduryee@redhat.com)
+- allow to build in katello koji (msuchy@redhat.com)
+
 * Mon Oct 29 2012 jesus m. rodriguez <jesusr@redhat.com> 0.7.17-1
 - Allow retrieval of upstream subscription certificate via entitlement id
   (wpoteat@redhat.com)
