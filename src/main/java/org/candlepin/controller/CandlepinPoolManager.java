@@ -62,6 +62,7 @@ import org.candlepin.policy.js.pool.PoolUpdate;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.Util;
+import org.candlepin.version.CertVersionConflictException;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -568,6 +569,9 @@ public class CandlepinPoolManager implements PoolManager {
             return generateUeberCert ?
                 entCertAdapter.generateUeberCert(e, sub, product) :
                 entCertAdapter.generateEntitlementCert(e, sub, product);
+        }
+        catch (CertVersionConflictException cvce) {
+            throw cvce;
         }
         catch (Exception ex) {
             throw new RuntimeException(ex);
