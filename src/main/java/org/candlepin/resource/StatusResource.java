@@ -71,7 +71,7 @@ public class StatusResource {
      */
     @GET
     @Produces({ MediaType.APPLICATION_JSON})
-    @SecurityHole(noAuth = true)
+    @SecurityHole(noAuth = true, anon = true)
     public Status status() {
         boolean good = true;
         try {

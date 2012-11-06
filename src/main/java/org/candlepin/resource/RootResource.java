@@ -47,6 +47,8 @@ public class RootResource {
     private static Logger log = Logger.getLogger(RootResource.class);
     public static final List<Class> RESOURCE_CLASSES;
     private Config config;
+    private static List<Link> links = null;
+
     static {
         RESOURCE_CLASSES = new LinkedList<Class>();
         RESOURCE_CLASSES.add(AdminResource.class);
@@ -80,20 +82,13 @@ public class RootResource {
         this.config = config;
     }
 
-    /**
-     * @httpcode 200
-     * @return a list of links
-     */
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @SecurityHole(noAuth = true)
-    public List<Link> getRootResources() {
-
+    @SecurityHole(noAuth = true, anon = true)
+    protected List<Link> createLinks() {
         // Hidden resources will be omitted from the supported list we send to the clients:
         List<String> hideResources = Arrays.asList(config.getString(
             ConfigProperties.HIDDEN_RESOURCES).split(" "));
 
-        List<Link> links = new LinkedList<Link>();
+        List<Link> newLinks = new LinkedList<Link>();
         for (Class c : RESOURCE_CLASSES) {
             Path a = (Path) c.getAnnotation(Path.class);
             String href = a.value();
@@ -104,12 +99,31 @@ public class RootResource {
             }
 
             if (!hideResources.contains(rel)) {
-                links.add(new Link(rel, href));
+                newLinks.add(new Link(rel, href));
             }
             else {
                 log.debug("Hiding supported resource: " + rel);
             }
 
+        }
+        return newLinks;
+    }
+
+
+    /**
+     * @httpcode 200
+     * @return a list of links
+     */
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @SecurityHole(noAuth = true, anon = true)
+    public List<Link> getRootResources() {
+        // Create the links when requested. Although
+        // this is not thread safe, doing this 2 or 3 times
+        // will not hurt anything as it will result in a little
+        // bit more garbage
+        if (links == null) {
+            links = createLinks();
         }
         return links;
     }

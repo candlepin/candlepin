@@ -20,10 +20,23 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- *
+ * Annotation to control access into a method. If noAuth is set to true, then the
+ * system will attempt to authenticate the user, but will still let the call through
+ * if authentication can not be done. If anon is set to true, then no
+ * authentication will be done.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD})
 public @interface SecurityHole {
+    /**
+     * Set to true if the method does not require an identity (e.g.
+     * a ConsumerPrincipal) but the engine should try and create it first.
+     */
     boolean noAuth() default false;
+
+    /**
+     * Set to true if the method does not require an identity (e.g.
+     * a ConsumerPrincipal) and the engine should not try and create it.
+     */
+    boolean anon() default false;
 }
