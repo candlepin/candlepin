@@ -125,18 +125,25 @@ public class AuthInterceptor implements PreProcessInterceptor {
             log.debug("Authentication check for " + request.getUri().getPath());
         }
 
-        // Check all the configured providers
-        for (AuthProvider provider : providers) {
-            principal = provider.getPrincipal(request);
+        // Check for anonymous calls, and let them through
+        if (securityHole != null && securityHole.anon()) {
+            log.debug("Request is anonymous, adding NoAuth Principal");
+            principal = new NoAuthPrincipal();
+        }
+        else {
+            // This method is not anonymous, so attempt to
+            // establish the identity.
+            for (AuthProvider provider : providers) {
+                principal = provider.getPrincipal(request);
 
-            if (principal != null) {
-                break;
+                if (principal != null) {
+                    break;
+                }
             }
         }
 
         // At this point, there is no provider that has given a valid principal,
-        // so we use the NoAuthPrincipal here
-        // No authentication is required, give a no auth principal
+        // so we use the NoAuthPrincipal here if it is set.
         if (principal == null) {
             if (securityHole != null && securityHole.noAuth()) {
                 log.debug("No auth allowed for resource; setting NoAuth principal");
