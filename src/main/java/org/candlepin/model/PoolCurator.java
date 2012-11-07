@@ -334,6 +334,16 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         .add(Restrictions.eq("subscriptionId", subId)).list();
     }
 
+    public List<Pool> lookupOversubscribedBySubscriptionId(String subId) {
+        String queryString = "from Pool as pool " +
+            "where pool.subscriptionId = :subId AND " +
+            "pool.quantity >= 0 AND " +
+            "pool.consumed > pool.quantity ";
+        Query query = currentSession().createQuery(queryString);
+        query.setString("subId", subId);
+        return query.list();
+    }
+
     @Transactional
     public Pool replicate(Pool pool) {
         for (ProvidedProduct pp : pool.getProvidedProducts()) {
