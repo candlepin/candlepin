@@ -322,6 +322,10 @@ public class CandlepinPoolManager implements PoolManager {
         return this.poolCurator.lookupBySubscriptionId(id);
     }
 
+    public List<Pool> lookupOversubscribedBySubscriptionId(String id) {
+        return this.poolCurator.lookupOversubscribedBySubscriptionId(id);
+    }
+
     /**
      * Request an entitlement by product. If the entitlement cannot be granted,
      * null will be returned. TODO: Throw exception if entitlement not granted.
@@ -527,7 +531,8 @@ public class CandlepinPoolManager implements PoolManager {
      * @param pool
      */
     private void checkBonusPoolQuantities(Consumer consumer, Pool pool) {
-        for (Pool derivedPool : lookupBySubscriptionId(pool.getSubscriptionId())) {
+        for (Pool derivedPool :
+                lookupOversubscribedBySubscriptionId(pool.getSubscriptionId())) {
             if (!derivedPool.getId().equals(pool.getId()) &&
                 derivedPool.getQuantity() != -1) {
                 deleteExcessEntitlements(derivedPool);

@@ -229,6 +229,52 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testLoookupOverconsumedBySubscriptionId() {
+
+        Pool pool = createPoolAndSub(owner, product, 1L,
+            TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
+        poolCurator.create(pool);
+        String subid = pool.getSubscriptionId();
+        assertEquals(1, poolCurator.lookupBySubscriptionId(subid).size());
+        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionId(subid).size());
+
+
+        Entitlement e = new Entitlement(pool, consumer, pool.getStartDate(),
+            pool.getEndDate(), 1);
+        entitlementCurator.create(e);
+
+        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionId(subid).size());
+
+        e = new Entitlement(pool, consumer, pool.getStartDate(),
+            pool.getEndDate(), 1);
+        entitlementCurator.create(e);
+        assertEquals(1, poolCurator.lookupOversubscribedBySubscriptionId(subid).size());
+    }
+
+    @Test
+    public void testLoookupOverconsumedBySubscriptionIdIgnoresUnlimited() {
+
+        Pool pool = createPoolAndSub(owner, product, -1L,
+            TestUtil.createDate(2050, 3, 2), TestUtil.createDate(2055, 3, 2));
+        poolCurator.create(pool);
+        String subid = pool.getSubscriptionId();
+        assertEquals(1, poolCurator.lookupBySubscriptionId(subid).size());
+        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionId(subid).size());
+
+
+        Entitlement e = new Entitlement(pool, consumer, pool.getStartDate(),
+            pool.getEndDate(), 1);
+        entitlementCurator.create(e);
+
+        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionId(subid).size());
+
+        e = new Entitlement(pool, consumer, pool.getStartDate(),
+            pool.getEndDate(), 1);
+        entitlementCurator.create(e);
+        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionId(subid).size());
+    }
+
+    @Test
     public void testListByActiveOnIncludesSameStartDay() {
         Date activeOn = TestUtil.createDate(2011, 2, 2);
 
