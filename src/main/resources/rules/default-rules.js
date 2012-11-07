@@ -5,6 +5,7 @@
 
 
 var SOCKET_FACT="cpu.cpu_socket(s)";
+var RAM_FACT = "memory.memtotal";
 
 function entitlement_name_space() {
     return Entitlement;
@@ -172,19 +173,23 @@ function architectureMatches(product, consumer) {
    return true;
 }
 
+function get_attribute_from_pool(pool, attributeName) {
+	// this can be either a ReadOnlyPool or a Pool, so deal with attributes as appropriate.
+    var attribute = pool.getProductAttribute(attributeName);
+    if ("getValue" in attribute) {
+        var value = attribute.getValue();
+    }
+    else {
+        var value = attribute;
+    }
+    return value
+}
+
 // get the number of sockets that each entitlement from a pool covers. 
 // if sockets is set to 0 or is not set, it is considered to be unlimited.
 function get_pool_sockets(pool) {
     if (pool.getProductAttribute("sockets")) {
-        // this can be either a ReadOnlyPool or a Pool, so deal with attributes as appropriate.
-        var attribute = pool.getProductAttribute("sockets");
-        if ("getValue" in attribute) {
-            var sockets = attribute.getValue();
-        }
-        else {
-            var sockets = attribute;
-        }
-
+        var sockets = get_attribute_from_pool(pool, "sockets");
         if (sockets == 0) {
             return Infinity;
         }
@@ -195,6 +200,10 @@ function get_pool_sockets(pool) {
     else {
         return Infinity;
     }
+}
+
+function get_pool_ram(pool) {
+	
 }
 
 // assumptions: number of pools consumed from is not considered, so we might not be taking from the smallest amount.
@@ -1061,14 +1070,42 @@ function stack_is_compliant(consumer, stack_id, ents, log) {
  */
 function ent_is_compliant(consumer, ent, log) {
     log.debug("Checking entitlement compliance: " + ent.getId());
-    var consumer_sockets = 1;
+    var consumerSockets = 1;
     if (consumer.hasFact(SOCKET_FACT)) {
-        consumer_sockets = parseInt(consumer.getFact(SOCKET_FACT));
+        consumerSockets = parseInt(consumer.getFact(SOCKET_FACT));
     }
+    log.debug("  Consumer sockets found: " + consumerSockets);
 
-    var covered_sockets = get_pool_sockets(ent.getPool());
+    var coveredSockets = get_pool_sockets(ent.getPool());
+    log.debug("  Sockets covered by pool: " + coveredSockets);
 
-    return covered_sockets >= consumer_sockets;
+    if (coveredSockets < consumerSockets) {
+    	log.debug("  Entitlement does not cover system sockets.");
+    	return false;
+    }
+    
+    // Verify RAM coverage if required.
+    // Default consumer RAM to 1 GB if not defined
+    var consumerRam = 1
+    if (consumer.hasFact(RAM_FACT)) {
+    	consumerRam = parseInt(consumer.getFact(RAM_FACT)) / 1000 / 1000;
+    }
+    log.debug("  Consumer RAM found: " + consumerRam);
+    
+    if (ent.getPool().getProductAttribute("ram")) {
+	    var poolRamAttr = get_attribute_from_pool(ent.getPool(), "ram");
+	    if (poolRamAttr != null && !poolRamAttr.isEmpty()) {
+	    	var ram = parseInt(poolRamAttr);
+	    	if (consumerRam > ram) {    		
+	    		return false;
+	    	}
+	    }
+    }
+    else {
+    	log.debug("  No RAM attribute on pool. Skipping RAM check.");
+    }
+    
+    return true
 }
 
 /**
