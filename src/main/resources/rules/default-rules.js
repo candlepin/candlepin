@@ -202,10 +202,6 @@ function get_pool_sockets(pool) {
     }
 }
 
-function get_pool_ram(pool) {
-	
-}
-
 // assumptions: number of pools consumed from is not considered, so we might not be taking from the smallest amount.
 // we only stack within the same pool_class. if you have stacks that provide different sets of products,
 // you won't be able to stack from them
