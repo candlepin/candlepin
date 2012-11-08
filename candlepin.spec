@@ -17,7 +17,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.7.18
+Version: 0.7.19
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -304,6 +304,11 @@ fi
 
 
 %changelog
+* Thu Nov 08 2012 William Poteat <wpoteat@redhat.com> 0.7.19-1
+- Performance improvements around anonymous entry points. (bkearney@redhat.com)
+- Improve performance of subscribe action in standalone mode.
+  (bkearney@redhat.com)
+
 * Fri Nov 02 2012 William Poteat <wpoteat@redhat.com> 0.7.18-1
 - Add findbugs target (alikins@redhat.com)
 - Add a build target to build candlepin as a jar, so it can be used by other
