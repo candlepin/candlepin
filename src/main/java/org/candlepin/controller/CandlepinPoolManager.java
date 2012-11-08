@@ -519,6 +519,60 @@ public class CandlepinPoolManager implements PoolManager {
         return e;
     }
 
+    public Entitlement adjustEntitlementQuantity(Consumer consumer, Entitlement ent,
+        Integer quantity) throws EntitlementRefusedException {
+
+        // Because there are several paths to this one place where entitlements
+        // are granted, we cannot be positive the caller obtained a lock on the
+        // pool
+        // when it was read. As such we're going to reload it with a lock
+        // before starting this process.
+        Pool pool = ent.getPool();
+        pool = poolCurator.lockAndLoad(pool);
+
+        int difference = quantity - ent.getQuantity();
+        if (difference > 0) {
+            PreEntHelper preHelper = enforcer.preEntitlement(consumer, pool, difference);
+            ValidationResult result = preHelper.getResult();
+
+            if (!result.isSuccessful()) {
+                log.warn("Entitlement not granted: " +
+                    result.getErrors().toString());
+                throw new EntitlementRefusedException(result);
+            }
+        }
+
+        // The quantity is calculated at fetch time. We update it here
+        // To reflect what we just added to the db.
+        pool.setConsumed(pool.getConsumed() + difference);
+        if (consumer.getType().isManifest()) {
+            pool.setExported(pool.getExported() + difference);
+        }
+
+        ent.setQuantity(quantity);
+
+        PoolHelper poolHelper = new PoolHelper(this, productCache, ent);
+        enforcer.postEntitlement(consumer, poolHelper, ent);
+
+        // Check consumer's new compliance status and save:
+        ComplianceStatus compliance = complianceRules.getStatus(consumer, new Date());
+        consumer.setEntitlementStatus(compliance.getStatus());
+
+        entitlementCurator.merge(ent);
+        consumerCurator.update(consumer);
+
+        regenerateCertificatesOf(ent, false, true);
+        for (Entitlement regenEnt : entitlementCurator.listModifying(ent)) {
+            // Lazily regenerate modified certificates:
+            this.regenerateCertificatesOf(regenEnt, false, true);
+        }
+
+        // we might have changed the bonus pool quantities, lets find out.
+        checkBonusPoolQuantities(consumer, pool);
+
+        return ent;
+    }
+
     /**
      * This method will pull the bonus pools from a physical and make sure that
      *  the bonus pools are not over-consumed.

@@ -523,6 +523,13 @@ class Candlepin
     return results
   end
 
+  def change_entitlement_quantity(entitlement, params={})
+    quantity = params[:quantity] || 0
+    entitlement.quantity = quantity
+
+    put("/entitlements/#{entitlement.id}", entitlement)
+  end
+
   def list_rules()
     get_text("/rules")
   end

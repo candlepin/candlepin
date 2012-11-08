@@ -14,9 +14,6 @@
  */
 package org.candlepin.resource;
 
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
-
 import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -74,9 +71,9 @@ import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.DeleteResult;
 import org.candlepin.model.DeletedConsumer;
 import org.candlepin.model.DeletedConsumerCurator;
-import org.candlepin.model.DeleteResult;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCurator;
@@ -111,6 +108,9 @@ import org.candlepin.util.Util;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
+
+import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
 /**
  * API Gateway for Consumers

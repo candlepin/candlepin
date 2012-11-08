@@ -29,8 +29,10 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.candlepin.auth.interceptor.Verify;
+import org.candlepin.controller.Entitler;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
@@ -61,6 +63,7 @@ public class EntitlementResource {
     private SubscriptionServiceAdapter subService;
     private I18n i18n;
     private ProductServiceAdapter prodAdapter;
+    private Entitler entitler;
 
     @Inject
     public EntitlementResource(ProductServiceAdapter prodAdapter,
@@ -69,7 +72,7 @@ public class EntitlementResource {
             ConsumerCurator consumerCurator,
             SubscriptionServiceAdapter subService,
             PoolManager poolManager,
-            I18n i18n) {
+            I18n i18n, Entitler entitler) {
 
         this.entitlementCurator = entitlementCurator;
         this.subscriptionCurator = subscriptionCurator;
@@ -78,6 +81,7 @@ public class EntitlementResource {
         this.i18n = i18n;
         this.prodAdapter = prodAdapter;
         this.poolManager = poolManager;
+        this.entitler = entitler;
     }
 
     private void verifyExistence(Object o, String id) {
@@ -159,6 +163,53 @@ public class EntitlementResource {
         throw new NotFoundException(
             i18n.tr("Entitlement with ID ''{0}'' could not be found.", dbid));
     }
+
+    /**
+     * Adjust the quantity of an entitlement.
+     *     *
+     * @param id Entitlement id.
+     * @return Response with a list containing the entitlement as adjusted
+     * @httpcode 400
+     * @httpcode 403
+     * @httpcode 404
+     * @httpcode 200
+     */
+    @PUT
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{entitlement_id}")
+    public Response adjustEntitlementQuantity(
+        @PathParam("entitlement_id") @Verify(Entitlement.class) String id,
+        Entitlement update) {
+
+        // Check that quantity param was set and is not 0:
+        if (update.getQuantity() <= 0) {
+            throw new BadRequestException(
+                i18n.tr("Quantity value must be greater than 0"));
+        }
+
+        // Verify entitlement exists:
+        Entitlement entitlement = entitlementCurator.find(id);
+        if (entitlement != null) {
+            List<Entitlement> adjustedEntitlements = null;
+            // make sure that this will be a change
+            if (entitlement.getQuantity() != update.getQuantity()) {
+                Consumer consumer = entitlement.getConsumer();
+                adjustedEntitlements = entitler.adjustEntitlementQuantity(consumer,
+                    entitlement, update.getQuantity());
+
+                // Trigger events:
+                entitler.sendEvents(adjustedEntitlements);
+            }
+            return Response.status(Response.Status.OK)
+                .type(MediaType.APPLICATION_JSON).entity(adjustedEntitlements).build();
+        }
+        else {
+            throw new NotFoundException(
+                i18n.tr("Entitlement with ID ''{0}'' could not be found.", id));
+        }
+    }
+
 
     /**
      * Return the subscription cert for the given id.

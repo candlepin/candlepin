@@ -19,6 +19,9 @@ describe 'Entitlement Resource' do
     #create consumer
     user = user_client(@owner, 'billy')
     @system = consumer_client(user, 'system6')
+
+    #separate for quantity adjust tests - here for cleanup
+    @qowner = create_owner random_string 'test_owner'
   end
 
   it 'should allow entitlement certificate regeneration based on product id' do
@@ -69,6 +72,81 @@ describe 'Entitlement Resource' do
       system2.list_entitlements(:uuid => @system.uuid)
 
       # Then
+    end.should raise_exception(RestClient::Forbidden)
+  end
+
+  it 'should allow consumer to change entitlement quantity' do
+    owner_client = user_client(@qowner, random_string('owner'))
+    cp_client = consumer_client(owner_client, random_string('consumer'), :system)
+    prod = create_product(random_string('product'), random_string('product'),
+                          :attributes => { :'multi-entitlement' => 'yes'})
+    subs = @cp.create_subscription(@qowner['key'], prod.id, 10)
+    @cp.refresh_pools(@qowner['key'])
+    pool = cp_client.list_pools({:owner => @qowner['id']}).first
+    entitlement = cp_client.consume_pool(pool.id, {:quantity => 3}).first
+    ent_cert_ser = entitlement['certificates'].first['serial']['id']
+    entitlement2 = cp_client.consume_pool(pool.id, {:quantity => 2}).first
+    entitlement.quantity.should == 3
+    pool = cp_client.list_pools({:owner => @qowner['id']}).first
+    pool.consumed.should == 5
+
+    # change it higher
+    cp_client.change_entitlement_quantity(entitlement, {:quantity => 5})
+    adj_entitlement = cp_client.get_entitlement(entitlement.id)
+    adj_cert_ser_1 = adj_entitlement['certificates'].first['serial']['id']
+    adj_pool = cp_client.list_pools({:owner => @qowner['id']}).first
+    adj_entitlement.quantity.should == 5
+    adj_pool.consumed.should == 7
+    adj_cert_ser_1.should_not == ent_cert_ser
+
+    # change it lower
+    cp_client.change_entitlement_quantity(entitlement, {:quantity => 2})
+    adj_entitlement = cp_client.get_entitlement(entitlement.id)
+    adj_cert_ser_2 = adj_entitlement['certificates'].first['serial']['id']
+    adj_pool = cp_client.list_pools({:owner => @qowner['id']}).first
+    adj_entitlement.quantity.should == 2
+    adj_pool.consumed.should == 4
+    adj_cert_ser_2.should_not == ent_cert_ser
+    adj_cert_ser_2.should_not == adj_cert_ser_1
+  end
+
+  it 'should not allow consumer to change entitlement quantity out of bounds' do
+    owner_client = user_client(@qowner, random_string('owner'))
+    cp_client = consumer_client(owner_client, random_string('consumer'), :system)
+    prod = create_product(random_string('product'), random_string('product'),
+                          :attributes => { :'multi-entitlement' => 'yes'})
+    subs = @cp.create_subscription(@qowner['key'], prod.id, 10)
+    @cp.refresh_pools(@qowner['key'])
+    pool = cp_client.list_pools({:owner => @qowner['id']}).first
+    entitlement = cp_client.consume_pool(pool.id, {:quantity => 3}).first
+    entitlement2 = cp_client.consume_pool(pool.id, {:quantity => 2}).first
+    entitlement.quantity.should == 3
+    pool = cp_client.list_pools({:owner => @qowner['id']}).first
+    pool.consumed.should == 5
+
+    lambda do
+      cp_client.change_entitlement_quantity(entitlement, {:quantity => 9})
+    end.should raise_exception(RestClient::Forbidden)
+
+    lambda do
+      cp_client.change_entitlement_quantity(entitlement, {:quantity => -1})
+    end.should raise_exception(RestClient::BadRequest)
+  end
+
+  it 'should not allow consumer to change entitlement quantity non-multi' do
+    owner_client = user_client(@qowner, random_string('owner'))
+    cp_client = consumer_client(owner_client, random_string('consumer'), :system)
+    prod = create_product(random_string('product'), random_string('product'))
+    subs = @cp.create_subscription(@qowner['key'], prod.id, 10)
+    @cp.refresh_pools(@qowner['key'])
+    pool = cp_client.list_pools({:owner => @qowner['id']}).first
+    entitlement = cp_client.consume_pool(pool.id, {:quantity => 1}).first
+    entitlement.quantity.should == 1
+    pool = cp_client.list_pools({:owner => @qowner['id']}).first
+    pool.consumed.should == 1
+
+    lambda do
+      cp_client.change_entitlement_quantity(entitlement, {:quantity => 2})
     end.should raise_exception(RestClient::Forbidden)
   end
 
