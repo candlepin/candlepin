@@ -430,6 +430,7 @@ var Entitlement = {
     attribute_mappings: function() {
         return  "architecture:1:arch," +
             "sockets:1:sockets," +
+            "ram:1:ram," +
             "requires_consumer_type:1:requires_consumer_type," +
             "user_license:1:user_license," +
             "virt_only:1:virt_only," +
@@ -564,6 +565,20 @@ var Entitlement = {
     },
 
     post_sockets: function() {
+    },
+
+    pre_ram: function() {
+    	var consumerRam = get_consumer_ram(consumer);
+    	log.info("Consumer has " + consumerRam + "GB of RAM.");
+    	
+    	var productRam = parseInt(product.getAttribute("ram"));
+    	log.info("Product has " + productRam + "GB of RAM");
+    	if (consumerRam > productRam) {
+    		pre.addWarning("rulewarning.unsupported.ram");
+    	}
+    },
+
+    post_ram: function() {
     },
 
     pre_global: function() {
@@ -1082,26 +1097,33 @@ function ent_is_compliant(consumer, ent, log) {
     
     // Verify RAM coverage if required.
     // Default consumer RAM to 1 GB if not defined
-    var consumerRam = 1
-    if (consumer.hasFact(RAM_FACT)) {
-    	consumerRam = parseInt(consumer.getFact(RAM_FACT)) / 1000 / 1000;
-    }
-    log.debug("  Consumer RAM found: " + consumerRam);
+    var consumerRam = get_consumer_ram(consumer);
+    log.info("  Consumer RAM found: " + consumerRam);
     
     if (ent.getPool().getProductAttribute("ram")) {
 	    var poolRamAttr = get_attribute_from_pool(ent.getPool(), "ram");
 	    if (poolRamAttr != null && !poolRamAttr.isEmpty()) {
 	    	var ram = parseInt(poolRamAttr);
+	    	log.info("  Pool RAM found: " + ram)
 	    	if (consumerRam > ram) {    		
 	    		return false;
 	    	}
 	    }
     }
     else {
-    	log.debug("  No RAM attribute on pool. Skipping RAM check.");
+    	log.info("  No RAM attribute on pool. Skipping RAM check.");
     }
     
     return true
+}
+
+function get_consumer_ram(consumer) {
+	var consumerRam = 1;
+    if (consumer.hasFact(RAM_FACT)) {
+    	var ramGb = parseInt(consumer.getFact(RAM_FACT)) / 1000 / 1000;
+    	consumerRam = java.lang.Math.round(ramGb);
+    }
+	return consumerRam;
 }
 
 /**

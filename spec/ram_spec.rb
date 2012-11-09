@@ -10,25 +10,24 @@ describe 'RAM Limiting' do
     # Create a product limiting by RAM only.
     @ram_product = create_product(nil, nil, :attributes => 
                 {:version => '6.4',
-                 :arch => 'i386, x86_64',
                  :ram => 8,
                  :warning_period => 15,
                  :management_enabled => true,
                  :support_level => 'standard',
                  :support_type => 'excellent',})
-    @cp.create_subscription(@owner['key'], @ram_product.id, 10, [], '1888', '1234')
+    @ram_sub = @cp.create_subscription(@owner['key'], @ram_product.id, 10, [], '1888', '1234')
 
     # Create a product limiting by RAM and sockets.
     @ram_and_socket_product = create_product(nil, nil, :attributes => 
                 {:version => '1.2',
-                 :arch => 'x86_64',
                  :ram => 8,
                  :sockets => 4,
                  :warning_period => 15,
                  :management_enabled => true,
                  :support_level => 'standard',
                  :support_type => 'excellent',})
-    @cp.create_subscription(@owner['key'], @ram_and_socket_product.id, 5, [], '18881', '1222')
+    @ram_socket_sub = @cp.create_subscription(@owner['key'], @ram_and_socket_product.id, 5,
+                                              [], '18881', '1222')
 
     # Refresh pools so that the subscription pools will be available to the test systems.
     @cp.refresh_pools(@owner['key'])
@@ -37,7 +36,7 @@ describe 'RAM Limiting' do
   end
 
   it 'can consume ram entitlement if requesting v3.1 certificate' do
-    system = consumer_client(@user, random_string('system1'), :candlepin, nil,
+    system = consumer_client(@user, random_string('system1'), :system, nil,
                 {'system.certificate_version' => '3.1',
                  # Since cert v3 is disabled by default, configure consumer bypass.
                  'system.testing' => 'true'})
@@ -46,7 +45,7 @@ describe 'RAM Limiting' do
   end
 
   it 'can not consume ram entitlement when requesting less than v3.1 certificate' do
-    system = consumer_client(@user, random_string('system1'), :candlepin, nil,
+    system = consumer_client(@user, random_string('system1'), :system, nil,
                 {'system.certificate_version' => '3.0',
                  # Since cert v3 is disabled by default, configure consumer bypass.
                  'system.testing' => 'true'})
@@ -62,7 +61,7 @@ describe 'RAM Limiting' do
   end
 
   it 'can not consume ram entitlement when server does not support cert V3' do
-    system = consumer_client(@user, random_string('system1'), :candlepin, nil,
+    system = consumer_client(@user, random_string('system1'), :system, nil,
                 # cert v3 is currently disabled by default.
                 {'system.certificate_version' => '3.1'})
     expected_error = "The server does not support subscriptions requiring V3 certificates."
@@ -77,7 +76,7 @@ describe 'RAM Limiting' do
   end
 
   it 'consumer status should be valid when consumer RAM is covered' do
-    system = consumer_client(@user, random_string('system1'), :candlepin, nil,
+    system = consumer_client(@user, random_string('system1'), :system, nil,
                 {'system.certificate_version' => '3.1',
                  # Simulate 8 GB of RAM as would be returned from system fact (kb)
                  'memory.memtotal' => '8000000',
@@ -99,7 +98,7 @@ describe 'RAM Limiting' do
   end
 
   it 'consumer status should be partial when consumer RAM not covered' do
-    system = consumer_client(@user, random_string('system1'), :candlepin, nil,
+    system = consumer_client(@user, random_string('system1'), :system, nil,
                 {'system.certificate_version' => '3.1',
                  # Simulate 16 GB of RAM as would be returned from system fact (kb)
                  'memory.memtotal' => '16000000',
@@ -110,7 +109,10 @@ describe 'RAM Limiting' do
     ]
     system.update_consumer({:installedProducts => installed})
     
-    entitlement = system.consume_product(@ram_product.id)[0]
+    pool = find_pool(@owner.id, @ram_sub.id)
+    pool.should_not == nil
+    
+    entitlement = system.consume_pool(pool.id)
     entitlement.should_not == nil
     
     compliance_status = @cp.get_compliance(consumer_id=system.uuid)
@@ -121,7 +123,7 @@ describe 'RAM Limiting' do
   end
   
   it 'consumer status should be partial when consumer RAM covered but not sockets' do
-    system = consumer_client(@user, random_string('system1'), :candlepin, nil,
+    system = consumer_client(@user, random_string('system1'), :system, nil,
                 {'system.certificate_version' => '3.1',
                  # Simulate 8 GB of RAM as would be returned from system fact (kb)
                  # which should be covered by the enitlement when consumed.
@@ -136,7 +138,11 @@ describe 'RAM Limiting' do
         'productName' => @ram_and_socket_product.name}
     ]
     system.update_consumer({:installedProducts => installed})
-    entitlement = system.consume_product(@ram_and_socket_product.id)[0]
+
+    pool = find_pool(@owner.id, @ram_socket_sub.id)
+    pool.should_not == nil
+    
+    entitlement = system.consume_pool(pool.id)
     entitlement.should_not == nil
     
     compliance_status = @cp.get_compliance(consumer_id=system.uuid)
@@ -147,7 +153,7 @@ describe 'RAM Limiting' do
   end
   
   it 'consumer status should be partial when consumer sockets covered but not RAM' do
-    system = consumer_client(@user, random_string('system1'), :candlepin, nil,
+    system = consumer_client(@user, random_string('system1'), :system, nil,
                 {'system.certificate_version' => '3.1',
                  # Simulate 16 GB of RAM as would be returned from system fact (kb)
                  # which will not be covered by the enitlement when consumed.
@@ -162,9 +168,13 @@ describe 'RAM Limiting' do
         'productName' => @ram_and_socket_product.name}
     ]
     system.update_consumer({:installedProducts => installed})
-    entitlement = system.consume_product(@ram_and_socket_product.id)[0]
-    entitlement.should_not == nil
+
+    pool = find_pool(@owner.id, @ram_socket_sub.id)
+    pool.should_not == nil
     
+    entitlement = system.consume_pool(pool.id)
+    entitlement.should_not == nil
+
     compliance_status = @cp.get_compliance(consumer_id=system.uuid)
     compliance_status['status'].should == 'partial'
     compliance_status['compliant'].should == false
@@ -173,7 +183,7 @@ describe 'RAM Limiting' do
   end
   
   it 'consumer status is valid when both RAM and sockets are covered' do
-    system = consumer_client(@user, random_string('system1'), :candlepin, nil,
+    system = consumer_client(@user, random_string('system1'), :system, nil,
                 {'system.certificate_version' => '3.1',
                  # Simulate 8 GB of RAM as would be returned from system fact (kb)
                  # which will be covered by the enitlement when consumed.
@@ -196,6 +206,62 @@ describe 'RAM Limiting' do
     compliance_status['compliant'].should == true
     compliant_products = compliance_status['compliantProducts']
     compliant_products.should have_key(@ram_and_socket_product.id)
+  end
+  
+  it 'can heal when RAM limited' do
+    system = consumer_client(@user, random_string('system1'), :system, nil,
+                {'system.certificate_version' => '3.1',
+                 # Simulate 8 GB of RAM as would be returned from system fact (kb)
+                 'memory.memtotal' => '8000000',
+                 # Since cert v3 is disabled by default, configure consumer bypass.
+                 'system.testing' => 'true'})
+    installed = [
+        {'productId' => @ram_product.id, 'productName' => @ram_product.name}
+    ]
+    system.update_consumer({:installedProducts => installed})
+    
+    # Perform healing
+    ents = system.consume_product()
+    ents.size.should == 1
+  end
+  
+  it 'will not heal when system RAM is not covered by any entitlements' do
+    system = consumer_client(@user, random_string('system1'), :system, nil,
+                {'system.certificate_version' => '3.1',
+                 # Simulate 12 GB of RAM as would be returned from system fact (kb)
+                 'memory.memtotal' => '12000000',
+                 # Since cert v3 is disabled by default, configure consumer bypass.
+                 'system.testing' => 'true'})
+    installed = [
+        {'productId' => @ram_product.id, 'productName' => @ram_product.name}
+    ]
+    system.update_consumer({:installedProducts => installed})
+    
+    # Perform healing
+    ents = system.consume_product()
+    ents.should == nil
+  end
+  
+  it 'can heal when both RAM and socket limited' do
+    system = consumer_client(@user, random_string('system1'), :system, nil,
+                {'system.certificate_version' => '3.1',
+                 # Simulate 8 GB of RAM as would be returned from system fact (kb)
+                 # which will be covered by the enitlement when consumed.
+                 'memory.memtotal' => '8000000',
+                 # Simulate system having 4 sockets which will be covered after consuming
+                 # the entitlement
+                 'cpu.cpu_socket(s)' => '4',
+                 # Since cert v3 is disabled by default, configure consumer bypass.
+                 'system.testing' => 'true'})
+    installed = [
+        {'productId' => @ram_and_socket_product.id,
+        'productName' => @ram_and_socket_product.name}
+    ]
+    system.update_consumer({:installedProducts => installed})
+    
+    # Perform healing
+    ents = system.consume_product()
+    ents.size.should == 1
   end
   
 end
