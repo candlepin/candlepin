@@ -1120,7 +1120,7 @@ function ent_is_compliant(consumer, ent, log) {
 function get_consumer_ram(consumer) {
 	var consumerRam = 1;
     if (consumer.hasFact(RAM_FACT)) {
-    	var ramGb = parseInt(consumer.getFact(RAM_FACT)) / 1000 / 1000;
+    	var ramGb = parseInt(consumer.getFact(RAM_FACT)) / 1024 / 1024;
     	consumerRam = java.lang.Math.round(ramGb);
     }
 	return consumerRam;
