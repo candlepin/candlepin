@@ -84,13 +84,17 @@ public class UpstreamConsumer extends AbstractHibernateObject {
         this();
 
         this.name = name;
-        this.ownerId = owner.getId();
+        if (owner != null) {
+            this.ownerId = owner.getId();
+        }
         this.type = type;
     }
 
     public UpstreamConsumer(String name, Owner owner, ConsumerType type, String uuid) {
         this.name = name;
-        this.ownerId = owner.getId();
+        if (owner != null) {
+            this.ownerId = owner.getId();
+        }
         this.type = type;
         this.uuid = uuid;
     }
