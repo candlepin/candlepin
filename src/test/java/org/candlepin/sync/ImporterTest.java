@@ -30,6 +30,10 @@ import com.google.inject.Injector;
 import org.candlepin.config.Config;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.UpstreamConsumer;
+import org.candlepin.model.UpstreamConsumerCurator;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -337,9 +341,25 @@ public class ImporterTest {
     }
 
     @Test
-    public void readPemFile() throws Exception {
-        Importer i = new Importer(null, null, null, null, null, null, null,
-            null, null, null, null, null, i18n, null);
-        File pemfile = new File("target/test/resources/certs/testidcert.pem");
+    public void importConsumer() throws Exception {
+        OwnerCurator oc = mock(OwnerCurator.class);
+        // we assume mock will return null for any method, hence why there
+        // is no when statement for the lookupWithUpstreamUuid.
+        UpstreamConsumerCurator uc = mock(UpstreamConsumerCurator.class);
+
+        Importer i = new Importer(null, null, null, oc, null, null, null,
+            null, null, null, null, null, i18n, uc);
+        File[] upstream = new File[1];
+        File idcertfile = new File("target/test/resources/upstream/testidcert.json");
+        upstream[0] = idcertfile;
+        File consumerfile = new File("target/test/resources/upstream/consumer.json");
+
+        Owner owner = mock(Owner.class);
+        ConflictOverrides forcedConflicts = mock(ConflictOverrides.class);
+        when(forcedConflicts.isForced(any(Importer.Conflict.class))).thenReturn(false);
+
+        i.importConsumer(owner, consumerfile, upstream, forcedConflicts);
+
+        verify(uc).create(any(UpstreamConsumer.class));
     }
 }
