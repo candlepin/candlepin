@@ -464,7 +464,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                         "inner join a.pool as p " +
                         "where p.owner.id = :owner_id and " +
                         "(a.name = 'support_level' or a.name='support_level_exempt') " +
-                        "order by a.name DESC" ;
+                        "order by a.name DESC";
 
         Query q = currentSession().createQuery(stmt);
         q.setParameter("owner_id", owner.getId());
