@@ -14,9 +14,9 @@
  */
 package org.candlepin.sync;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -24,6 +24,20 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import com.google.inject.Injector;
+
+import org.candlepin.config.Config;
+import org.candlepin.model.ExporterMetadata;
+import org.candlepin.model.ExporterMetadataCurator;
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -39,19 +53,6 @@ import java.util.List;
 import java.util.Locale;
 
 
-import org.candlepin.config.Config;
-import org.candlepin.model.ExporterMetadata;
-import org.candlepin.model.ExporterMetadataCurator;
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.xnap.commons.i18n.I18n;
-import org.xnap.commons.i18n.I18nFactory;
-
-
 /**
  * ImporterTest
  */
@@ -60,6 +61,7 @@ public class ImporterTest {
     private ObjectMapper mapper;
     private I18n i18n;
     private static final String MOCK_JS_PATH = "/tmp/empty.js";
+    private Injector injector;
 
     @Before
     public void init() throws FileNotFoundException, URISyntaxException {
@@ -95,7 +97,7 @@ public class ImporterTest {
         em.setType(ExporterMetadata.TYPE_SYSTEM);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, null, emc, null, null, i18n);
+            null, null, emc, null, null, i18n, null);
         i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actual,
             new ConflictOverrides());
 
@@ -119,7 +121,7 @@ public class ImporterTest {
         ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(null);
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, null, emc, null, null, i18n);
+            null, null, emc, null, null, i18n, null);
         i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta,
             new ConflictOverrides());
         assertTrue(f.delete());
@@ -140,7 +142,7 @@ public class ImporterTest {
         em.setType(ExporterMetadata.TYPE_SYSTEM);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, null, emc, null, null, i18n);
+            null, null, emc, null, null, i18n, null);
         try {
             i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta,
                 new ConflictOverrides());
@@ -168,7 +170,7 @@ public class ImporterTest {
         em.setType(ExporterMetadata.TYPE_SYSTEM);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, null, emc, null, null, i18n);
+            null, null, emc, null, null, i18n, null);
         try {
             i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta,
                 new ConflictOverrides());
@@ -216,7 +218,7 @@ public class ImporterTest {
         em.setType(ExporterMetadata.TYPE_SYSTEM);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, null, emc, null, null, i18n);
+            null, null, emc, null, null, i18n, null);
         i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta,
             new ConflictOverrides());
         assertEquals(importDate, em.getExported());
@@ -235,7 +237,7 @@ public class ImporterTest {
         RulesImporter ri = mock(RulesImporter.class);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(null);
         Importer i = new Importer(null, null, ri, null, null, null, null,
-            null, null, emc, null, null, i18n);
+            null, null, emc, null, null, i18n, null);
         i.importRules(jsArray, actualmeta);
 
         //verify that rules were imported
@@ -253,7 +255,7 @@ public class ImporterTest {
 
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(null);
         Importer i = new Importer(null, null, ri, null, null, null, null,
-            null, null, emc, null, null, i18n);
+            null, null, emc, null, null, i18n, null);
         i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta,
             new ConflictOverrides());
         //verify that rules were not imported
@@ -266,7 +268,7 @@ public class ImporterTest {
             "test_user", "prefix");
         try {
             Importer i = new Importer(null, null, null, null, null, null, null,
-                null, null, null, null, null, i18n);
+                null, null, null, null, null, i18n, null);
 
             // null Type should cause exception
             i.validateMetadata(null, null, actualmeta, new ConflictOverrides());
@@ -285,7 +287,7 @@ public class ImporterTest {
             .thenReturn(null);
 
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, null, emc, null, null, i18n);
+            null, null, emc, null, null, i18n, null);
 
         // null Type should cause exception
         i.validateMetadata(ExporterMetadata.TYPE_PER_USER, null, actualmeta,
@@ -334,4 +336,10 @@ public class ImporterTest {
         return backDate;
     }
 
+    @Test
+    public void readPemFile() throws Exception {
+        Importer i = new Importer(null, null, null, null, null, null, null,
+            null, null, null, null, null, i18n, null);
+        File pemfile = new File("target/test/resources/certs/testidcert.pem");
+    }
 }

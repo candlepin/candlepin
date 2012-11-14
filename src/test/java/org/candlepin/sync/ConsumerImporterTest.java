@@ -119,7 +119,7 @@ public class ConsumerImporterTest {
                 }
             });
 
-        importer.store(owner, consumer, new ConflictOverrides());
+        importer.store(owner, consumer, new ConflictOverrides(), null, null);
 
         // now verify that the owner has the upstream consumer set
         ArgumentCaptor<UpstreamConsumer> arg =
@@ -138,7 +138,7 @@ public class ConsumerImporterTest {
         when(consumer.getUuid()).thenReturn("test-uuid");
         when(consumer.getOwner()).thenReturn(owner);
 
-        importer.store(owner, consumer, new ConflictOverrides());
+        importer.store(owner, consumer, new ConflictOverrides(), null, null);
 
         // now verify that the owner didn't change
         // arg.getValue() returns the Owner being stored
@@ -162,7 +162,7 @@ public class ConsumerImporterTest {
         anotherOwner.setUpstreamUuid(upstreamUuid);
         when(curator.lookupWithUpstreamUuid(consumer.getUuid())).thenReturn(anotherOwner);
 
-        importer.store(owner, consumer, new ConflictOverrides());
+        importer.store(owner, consumer, new ConflictOverrides(), null, null);
     }
 
     @Test
@@ -174,7 +174,7 @@ public class ConsumerImporterTest {
         when(consumer.getOwner()).thenReturn(owner);
 
         try {
-            importer.store(owner, consumer, new ConflictOverrides());
+            importer.store(owner, consumer, new ConflictOverrides(), null, null);
             fail();
         }
         catch (ImportConflictException e) {
@@ -204,7 +204,7 @@ public class ConsumerImporterTest {
             });
 
         importer.store(owner, consumer,
-            new ConflictOverrides(Importer.Conflict.DISTRIBUTOR_CONFLICT));
+            new ConflictOverrides(Importer.Conflict.DISTRIBUTOR_CONFLICT), null, null);
 
         // now verify that the owner has the upstream consumer set
         ArgumentCaptor<UpstreamConsumer> arg =
@@ -221,6 +221,6 @@ public class ConsumerImporterTest {
         ConsumerDto consumer = new ConsumerDto();
         consumer.setUuid(null);
 
-        importer.store(owner, consumer, new ConflictOverrides());
+        importer.store(owner, consumer, new ConflictOverrides(), null, null);
     }
 }
