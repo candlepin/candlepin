@@ -285,25 +285,25 @@ public class Exporter {
         FileWriter writer = new FileWriter(file);
         Meta m = new Meta(getVersion(), new Date(),
             principalProvider.get().getPrincipalName(),
-            getWebAppPrefix());
+            getPrefixWebUrl());
         meta.export(mapper, writer, m);
         writer.close();
     }
 
-    private String getWebAppPrefix() {
-        String webAppPrefix = config.getString("candlepin.export.webapp.prefix");
-        if (webAppPrefix != null && webAppPrefix.trim().equals("")) {
-            webAppPrefix = null;
+    private String getPrefixWebUrl() {
+        String prefixWebUrl = config.getString("candlepin.export.prefix.weburl");
+        if (prefixWebUrl != null && prefixWebUrl.trim().equals("")) {
+            prefixWebUrl = null;
         }
-        return webAppPrefix;
+        return prefixWebUrl;
     }
 
-    private String getWebAppHost() {
-        String webAppHost = config.getString("candlepin.export.webapp.hostname");
-        if (webAppHost != null && webAppHost.trim().equals("")) {
-            webAppHost = null;
+    private String getPrefixApiUrl() {
+        String prefixApiUrl = config.getString("candlepin.export.prefix.apiurl");
+        if (prefixApiUrl != null && prefixApiUrl.trim().equals("")) {
+            prefixApiUrl = null;
         }
-        return webAppHost;
+        return prefixApiUrl;
     }
 
     private String getVersion() throws IOException {
@@ -314,8 +314,8 @@ public class Exporter {
     private void exportConsumer(File baseDir, Consumer consumer) throws IOException {
         File file = new File(baseDir.getCanonicalPath(), "consumer.json");
         FileWriter writer = new FileWriter(file);
-        this.consumerExporter.export(mapper, writer, consumer, getWebAppHost(),
-            getWebAppPrefix());
+        this.consumerExporter.export(mapper, writer, consumer, getPrefixApiUrl(),
+            getPrefixWebUrl());
         writer.close();
     }
 
@@ -356,15 +356,14 @@ public class Exporter {
 
         IdentityCertificate cert = consumer.getIdCert();
         File file = new File(idcertdir.getCanonicalPath(),
-            cert.getSerial().getId() + ".pem");
+            cert.getSerial().getId() + ".json");
 
         // paradigm dictates this should go in an exporter.export method
         FileWriter writer = null;
 
         try {
             writer = new FileWriter(file);
-            writer.write(cert.getCert());
-            writer.write(cert.getKey());
+            mapper.writeValue(writer, cert);
         }
         finally {
             if (writer != null) {
@@ -379,14 +378,15 @@ public class Exporter {
         keypairdir.mkdir();
 
         KeyPair keyPair = consumer.getKeyPair();
-        File file = new File(keypairdir.getCanonicalPath(), "keypair.pem");
+        File file = new File(keypairdir.getCanonicalPath(), "keypair.json");
 
         FileWriter writer = null;
 
         try {
             writer = new FileWriter(file);
-            writer.write(new String(pki.getPemEncoded(keyPair.getPrivateKey())));
-            writer.write(new String(pki.getPemEncoded(keyPair.getPublicKey())));
+//            writer.write(new String(pki.getPemEncoded(keyPair.getPrivateKey())));
+//            writer.write(new String(pki.getPemEncoded(keyPair.getPublicKey())));
+            mapper.writeValue(writer, keyPair);
         }
         finally {
             if (writer != null) {

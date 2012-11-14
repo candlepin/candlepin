@@ -32,9 +32,9 @@ public class ConsumerExporter {
     }
 
     void export(ObjectMapper mapper, Writer writer, Consumer consumer,
-        String hostname, String prefix) throws IOException {
+        String weburl, String apiurl) throws IOException {
         ConsumerDto dto = new ConsumerDto(consumer.getUuid(), consumer.getName(),
-            consumer.getType(), consumer.getOwner(), hostname, prefix);
+            consumer.getType(), consumer.getOwner(), weburl, apiurl);
 
         mapper.writeValue(writer, dto);
     }

@@ -15,6 +15,8 @@
 package org.candlepin.sync;
 
 import org.apache.log4j.Logger;
+import org.candlepin.model.IdentityCertificate;
+import org.candlepin.model.KeyPair;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.UpstreamConsumer;
@@ -45,7 +47,8 @@ public class ConsumerImporter {
         return mapper.readValue(reader, ConsumerDto.class);
     }
 
-    public void store(Owner owner, ConsumerDto consumer, ConflictOverrides forcedConflicts)
+    public void store(Owner owner, ConsumerDto consumer,
+        ConflictOverrides forcedConflicts, IdentityCertificate idcert, KeyPair pair)
         throws SyncDataFormatException {
 
         if (consumer.getUuid() == null) {
@@ -87,7 +90,10 @@ public class ConsumerImporter {
         // create an UpstreamConsumer from the imported ConsumerDto
         UpstreamConsumer uc = new UpstreamConsumer(consumer.getName(),
             consumer.getOwner(), consumer.getType(), consumer.getUuid());
-        uc.setWebUrl(consumer.getPrefix());
+        uc.setWebUrl(consumer.getUrlWeb());
+        uc.setApiUrl(consumer.getUrlApi());
+        uc.setIdCert(idcert);
+        uc.setKeyPair(pair);
         uc = upstreamCurator.create(uc);
         owner.setUpstreamConsumer(uc);
 

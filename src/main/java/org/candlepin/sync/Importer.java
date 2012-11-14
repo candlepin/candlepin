@@ -29,6 +29,8 @@ import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
+import org.candlepin.model.IdentityCertificate;
+import org.candlepin.model.KeyPair;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Product;
@@ -79,7 +81,8 @@ public class Importer {
         ENTITLEMENTS("entitlements"),
         ENTITLEMENT_CERTIFICATES("entitlement_certificates"),
         PRODUCTS("products"),
-        RULES_FILE("rules2/rules.js");
+        RULES_FILE("rules2/rules.js"),
+        UPSTREAM_CONSUMER("upstream_consumer");
 
         private String fileName;
         ImportFile(String fileName) {
@@ -343,6 +346,12 @@ public class Importer {
                                         "required entitlements directory"));
         }
 
+        File upstreamFile = importFiles.get(ImportFile.UPSTREAM_CONSUMER.fileName());
+        if (upstreamFile == null) {
+            throw new ImporterException(i18n.tr("The archive does not contain the " +
+                "required upstream_consumer.json file"));
+        }
+
         // system level elements
         /*
          * Checking a system wide last import date breaks multi-tenant deployments whenever
@@ -373,7 +382,8 @@ public class Importer {
 
         ConsumerDto consumer = null;
         try {
-            consumer = importConsumer(owner, consumerFile, overrides);
+            consumer = importConsumer(owner, consumerFile,
+                upstreamFile.listFiles(), overrides);
         }
         catch (ImportConflictException e) {
             conflictExceptions.add(e);
@@ -457,15 +467,48 @@ public class Importer {
     }
 
     public ConsumerDto importConsumer(Owner owner, File consumerFile,
-        ConflictOverrides forcedConflicts)
+        File[] upstreamConsumer, ConflictOverrides forcedConflicts)
         throws IOException, SyncDataFormatException {
+
+        IdentityCertificate idcert = null;
+        KeyPair pair = null;
+        for (File uc : upstreamConsumer) {
+            if (uc.getName().startsWith("keypair.")) {
+                log.debug("Import upstream consumer keypair: " + uc.getName());
+                Reader reader = null;
+                try {
+                    reader = new FileReader(uc);
+                    pair = mapper.readValue(reader, KeyPair.class);
+                }
+                finally {
+                    if (reader != null) {
+                        reader.close();
+                    }
+                }
+            }
+            else if (uc.getName().endsWith(".json")) {
+                log.debug("Import upstream consumeridentity certificate: " +
+                    uc.getName());
+                Reader reader = null;
+                try {
+                    reader = new FileReader(uc);
+                    idcert = mapper.readValue(reader, IdentityCertificate.class);
+                }
+                finally {
+                    if (reader != null) {
+                        reader.close();
+                    }
+                }
+            }
+        }
+
         ConsumerImporter importer = new ConsumerImporter(ownerCurator, upstreamCurator, i18n);
         Reader reader = null;
         ConsumerDto consumer = null;
         try {
             reader = new FileReader(consumerFile);
             consumer = importer.createObject(mapper, reader);
-            importer.store(owner, consumer, forcedConflicts);
+            importer.store(owner, consumer, forcedConflicts, idcert, pair);
         }
         finally {
             if (reader != null) {

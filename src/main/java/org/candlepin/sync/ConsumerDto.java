@@ -26,20 +26,20 @@ public class ConsumerDto {
     private String name;
     private ConsumerType type;
     private Owner owner;
-    private String hostname;
-    private String prefix;
+    private String prefixUrlWeb;
+    private String prefixUrlApi;
 
     public ConsumerDto() {
     }
 
     ConsumerDto(String uuid, String name, ConsumerType type, Owner owner,
-        String hostname, String prefix) {
+        String prefixUrlWeb, String prefixUrlApi) {
         this.uuid = uuid;
         this.name = name;
         this.type = type;
         this.owner = owner;
-        this.hostname = hostname;
-        this.prefix = prefix;
+        this.prefixUrlWeb = prefixUrlWeb;
+        this.prefixUrlApi = prefixUrlApi;
     }
 
     public String getUuid() {
@@ -74,20 +74,20 @@ public class ConsumerDto {
         this.owner = owner;
     }
 
-    public String getHostname() {
-        return hostname;
+    public String getUrlWeb() {
+        return prefixUrlWeb;
     }
 
-    public void setHostname(String hostname) {
-        this.hostname = hostname;
+    public void setUrlWeb(String prefixUrlWeb) {
+        this.prefixUrlWeb = prefixUrlWeb;
     }
 
-    public String getPrefix() {
-        return prefix;
+    public String getUrlApi() {
+        return prefixUrlApi;
     }
 
-    public void setPrefix(String prefix) {
-        this.prefix = prefix;
+    public void setUrlApi(String prefixUrlApi) {
+        this.prefixUrlApi = prefixUrlApi;
     }
 
     public Consumer consumer() {

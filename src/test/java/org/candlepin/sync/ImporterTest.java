@@ -42,6 +42,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import com.google.inject.Injector;
 
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Config;
@@ -60,7 +61,6 @@ import org.junit.Test;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
-
 /**
  * ImporterTest
  */
@@ -70,6 +70,7 @@ public class ImporterTest {
     private I18n i18n;
     private static final String MOCK_JS_PATH = "/tmp/empty.js";
     private CandlepinCommonTestConfig config;
+    private Injector injector;
 
     @Before
     public void init() throws FileNotFoundException, URISyntaxException {
@@ -107,7 +108,7 @@ public class ImporterTest {
         em.setType(ExporterMetadata.TYPE_SYSTEM);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, null, emc, null, null, i18n);
+            null, null, emc, null, null, i18n, null);
         i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actual,
             new ConflictOverrides());
 
@@ -131,7 +132,7 @@ public class ImporterTest {
         ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(null);
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, null, emc, null, null, i18n);
+            null, null, emc, null, null, i18n, null);
         i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta,
             new ConflictOverrides());
         assertTrue(f.delete());
@@ -152,7 +153,7 @@ public class ImporterTest {
         em.setType(ExporterMetadata.TYPE_SYSTEM);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, null, emc, null, null, i18n);
+            null, null, emc, null, null, i18n, null);
         try {
             i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta,
                 new ConflictOverrides());
@@ -180,7 +181,7 @@ public class ImporterTest {
         em.setType(ExporterMetadata.TYPE_SYSTEM);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, null, emc, null, null, i18n);
+            null, null, emc, null, null, i18n, null);
         try {
             i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta,
                 new ConflictOverrides());
@@ -228,10 +229,48 @@ public class ImporterTest {
         em.setType(ExporterMetadata.TYPE_SYSTEM);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, null, emc, null, null, i18n);
+            null, null, emc, null, null, i18n, null);
         i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta,
             new ConflictOverrides());
         assertEquals(importDate, em.getExported());
+    }
+
+    @Test
+    public void newerVersionImport() throws Exception {
+        // if we do are importing candlepin 0.0.10 data into candlepin 0.0.3,
+        // import the rules.
+
+        String version = "0.0.10";
+        File actualmeta = createFile("/tmp/meta.json", version, new Date(),
+            "test_user", "prefix");
+        File[] jsArray = createMockJsFile(MOCK_JS_PATH);
+        ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
+        RulesImporter ri = mock(RulesImporter.class);
+        when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(null);
+        Importer i = new Importer(null, null, ri, null, null, null, null,
+            null, null, emc, null, null, i18n, null);
+        i.importRules(jsArray, actualmeta);
+
+        //verify that rules were imported
+        verify(ri).importObject(any(Reader.class), eq(version));
+    }
+
+    @Test
+    public void olderVersionImport() throws Exception {
+        // if we are importing candlepin 0.0.1 data into
+        // candlepin 0.0.3, do not import the rules
+        File actualmeta = createFile("/tmp/meta.json", "0.0.1", new Date(),
+            "test_user", "prefix");
+        ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
+        RulesImporter ri = mock(RulesImporter.class);
+
+        when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(null);
+        Importer i = new Importer(null, null, ri, null, null, null, null,
+            null, null, emc, null, null, i18n, null);
+        i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta,
+            new ConflictOverrides());
+        //verify that rules were not imported
+        verify(ri, never()).importObject(any(Reader.class), any(String.class));
     }
 
     @Test(expected = ImporterException.class)
@@ -240,7 +279,7 @@ public class ImporterTest {
             "test_user", "prefix");
         try {
             Importer i = new Importer(null, null, null, null, null, null, null,
-                null, null, null, null, null, i18n);
+                null, null, null, null, null, i18n, null);
 
             // null Type should cause exception
             i.validateMetadata(null, null, actualmeta, new ConflictOverrides());
@@ -259,7 +298,7 @@ public class ImporterTest {
             .thenReturn(null);
 
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, null, emc, null, null, i18n);
+            null, null, emc, null, null, i18n, null);
 
         // null Type should cause exception
         i.validateMetadata(ExporterMetadata.TYPE_PER_USER, null, actualmeta,
@@ -601,4 +640,10 @@ public class ImporterTest {
         in.close();
     }
 
+    @Test
+    public void readPemFile() throws Exception {
+        Importer i = new Importer(null, null, null, null, null, null, null,
+            null, null, null, null, null, i18n, null);
+        File pemfile = new File("target/test/resources/certs/testidcert.pem");
+    }
 }
