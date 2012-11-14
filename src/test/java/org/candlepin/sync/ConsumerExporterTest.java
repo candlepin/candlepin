@@ -47,7 +47,7 @@ public class ConsumerExporterTest {
         consumer.setName("testy consumer");
         consumer.setType(ctype);
 
-        exporter.export(mapper, writer, consumer, "testHostname", "testPrefix");
+        exporter.export(mapper, writer, consumer, "/subscriptions", "/candlepin");
 
         assertEquals("{\"uuid\":\"" + consumer.getUuid() + "\"," +
                      "\"name\":\"" + consumer.getName() + "\"," +
@@ -56,8 +56,8 @@ public class ConsumerExporterTest {
                      "\"label\":\"" + ctype.getLabel() + "\"," +
                      "\"manifest\":" + ctype.isManifest() + "}," +
                      "\"owner\":null," +
-                     "\"hostname\":\"testHostname\"," +
-                     "\"prefix\":\"testPrefix\"}",
+                     "\"urlWeb\":\"/subscriptions\"," +
+                     "\"urlApi\":\"/candlepin\"}",
             writer.toString());
     }
 }
