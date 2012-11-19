@@ -22,6 +22,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.apache.commons.io.FileUtils;
 import org.candlepin.auth.Principal;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Config;
@@ -44,8 +45,6 @@ import org.candlepin.pki.PKIUtility;
 import org.candlepin.policy.js.export.JsExportRules;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
-
-import org.apache.commons.io.FileUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
@@ -59,8 +58,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.security.PrivateKey;
-import java.security.PublicKey;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -119,9 +118,21 @@ public class ExporterTest {
     }
 
     private KeyPair createKeyPair() {
-        PublicKey pk = mock(PublicKey.class);
-        PrivateKey ppk = mock(PrivateKey.class);
-        return new KeyPair(ppk, pk);
+        KeyPair cpKeyPair = null;
+
+        try {
+            KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
+            generator.initialize(2048);
+            java.security.KeyPair newPair = generator.generateKeyPair();
+            cpKeyPair = new KeyPair(newPair.getPrivate(), newPair.getPublic());
+            //create(cpKeyPair);
+            //c.setKeyPair(cpKeyPair);
+        }
+        catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+
+        return cpKeyPair;
     }
 
     @Test

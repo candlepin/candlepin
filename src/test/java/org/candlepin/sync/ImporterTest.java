@@ -27,6 +27,7 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Injector;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.candlepin.config.Config;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
@@ -34,6 +35,9 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.UpstreamConsumerCurator;
+import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.impl.BouncyCastlePKIUtility;
+import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -50,6 +54,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Reader;
 import java.net.URISyntaxException;
+import java.security.Security;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -342,16 +347,22 @@ public class ImporterTest {
 
     @Test
     public void importConsumer() throws Exception {
+        Security.addProvider(new BouncyCastleProvider());
+        PKIUtility pki = new BouncyCastlePKIUtility(null,
+            new DefaultSubjectKeyIdentifierWriter());
+
         OwnerCurator oc = mock(OwnerCurator.class);
         // we assume mock will return null for any method, hence why there
         // is no when statement for the lookupWithUpstreamUuid.
         UpstreamConsumerCurator uc = mock(UpstreamConsumerCurator.class);
 
         Importer i = new Importer(null, null, null, oc, null, null, null,
-            null, null, null, null, null, i18n, uc);
-        File[] upstream = new File[1];
+            pki, null, null, null, null, i18n, uc);
+        File[] upstream = new File[2];
         File idcertfile = new File("target/test/resources/upstream/testidcert.json");
+        File kpfile = new File("target/test/resources/upstream/keypair.pem");
         upstream[0] = idcertfile;
+        upstream[1] = kpfile;
         File consumerfile = new File("target/test/resources/upstream/consumer.json");
 
         Owner owner = mock(Owner.class);
