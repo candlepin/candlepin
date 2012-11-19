@@ -44,6 +44,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import com.google.inject.Injector;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
@@ -55,6 +56,8 @@ import org.candlepin.sync.Importer.ImportFile;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.UpstreamConsumerCurator;
+import org.candlepin.pki.impl.BouncyCastlePKIUtility;
+import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -63,6 +66,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
+
+import java.security.Security;
 
 /**
  * ImporterTest
@@ -645,16 +650,22 @@ public class ImporterTest {
 
     @Test
     public void importConsumer() throws Exception {
+        Security.addProvider(new BouncyCastleProvider());
+        PKIUtility pki = new BouncyCastlePKIUtility(null,
+            new DefaultSubjectKeyIdentifierWriter());
+
         OwnerCurator oc = mock(OwnerCurator.class);
         // we assume mock will return null for any method, hence why there
         // is no when statement for the lookupWithUpstreamUuid.
         UpstreamConsumerCurator uc = mock(UpstreamConsumerCurator.class);
 
         Importer i = new Importer(null, null, null, oc, null, null, null,
-            null, null, null, null, null, i18n, uc);
-        File[] upstream = new File[1];
+            pki, null, null, null, null, i18n, uc);
+        File[] upstream = new File[2];
         File idcertfile = new File("target/test/resources/upstream/testidcert.json");
+        File kpfile = new File("target/test/resources/upstream/keypair.pem");
         upstream[0] = idcertfile;
+        upstream[1] = kpfile;
         File consumerfile = new File("target/test/resources/upstream/consumer.json");
 
         Owner owner = mock(Owner.class);

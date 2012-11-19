@@ -478,7 +478,8 @@ public class Importer {
                 Reader reader = null;
                 try {
                     reader = new FileReader(uc);
-                    pair = mapper.readValue(reader, KeyPair.class);
+                    java.security.KeyPair kp = pki.readPemEncodedKeyPair(reader);
+                    pair = new KeyPair(kp.getPrivate(), kp.getPublic());
                 }
                 finally {
                     if (reader != null) {
@@ -499,6 +500,10 @@ public class Importer {
                         reader.close();
                     }
                 }
+            }
+            else {
+                log.warn("Extra file found in upstream_consumer directory: " +
+                    (uc != null ? uc.getName() : "null"));
             }
         }
 

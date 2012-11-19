@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.security.Key;
@@ -108,6 +109,14 @@ public abstract class PKIUtility {
     public abstract byte[] getPemEncoded(Key key) throws IOException;
 
     public abstract byte[] getPemEncoded(X509CRL crl) throws IOException;
+
+    /**
+     * Reads a KeyPair from a PEM encoded stream.
+     * @param rdr PEM encoded stream
+     * @return KeyPair found in the stream.
+     * @throws IOException thrown if there is a problem reading the stream.
+     */
+    public abstract KeyPair readPemEncodedKeyPair(Reader rdr) throws IOException;
 
     public static X509Certificate createCert(byte[] certData) {
         try {

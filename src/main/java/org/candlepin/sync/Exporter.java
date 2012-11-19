@@ -378,15 +378,15 @@ public class Exporter {
         keypairdir.mkdir();
 
         KeyPair keyPair = consumer.getKeyPair();
-        File file = new File(keypairdir.getCanonicalPath(), "keypair.json");
+        File file = new File(keypairdir.getCanonicalPath(), "keypair.pem");
 
         FileWriter writer = null;
 
         try {
             writer = new FileWriter(file);
-//            writer.write(new String(pki.getPemEncoded(keyPair.getPrivateKey())));
-//            writer.write(new String(pki.getPemEncoded(keyPair.getPublicKey())));
-            mapper.writeValue(writer, keyPair);
+            writer.write(new String(pki.getPemEncoded(keyPair.getPrivateKey())));
+            writer.write(new String(pki.getPemEncoded(keyPair.getPublicKey())));
+//            mapper.writeValue(writer, keyPair);
         }
         finally {
             if (writer != null) {
