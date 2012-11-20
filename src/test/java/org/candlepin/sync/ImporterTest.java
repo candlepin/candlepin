@@ -25,8 +25,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.google.inject.Injector;
-
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.candlepin.config.Config;
 import org.candlepin.model.ExporterMetadata;
@@ -70,7 +68,6 @@ public class ImporterTest {
     private ObjectMapper mapper;
     private I18n i18n;
     private static final String MOCK_JS_PATH = "/tmp/empty.js";
-    private Injector injector;
 
     @Before
     public void init() throws FileNotFoundException, URISyntaxException {
