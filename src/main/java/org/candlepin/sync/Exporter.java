@@ -304,7 +304,7 @@ public class Exporter {
         return prefixApiUrl;
     }
 
-    private String getVersion() throws IOException {
+    private String getVersion() {
         Map<String, String> map = VersionUtil.getVersionMap();
         return map.get("version") + "-" + map.get("release");
     }
