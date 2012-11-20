@@ -386,7 +386,6 @@ public class Exporter {
             writer = new FileWriter(file);
             writer.write(new String(pki.getPemEncoded(keyPair.getPrivateKey())));
             writer.write(new String(pki.getPemEncoded(keyPair.getPublicKey())));
-//            mapper.writeValue(writer, keyPair);
         }
         finally {
             if (writer != null) {
