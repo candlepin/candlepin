@@ -135,6 +135,7 @@ public class ExporterTest {
         return cpKeyPair;
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void exportProducts() throws Exception {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
@@ -251,7 +252,7 @@ public class ExporterTest {
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
             pce, ec, ee, pki, config, exportRules, pprov);
 
-        File export = e.getFullExport(consumer);
+        e.getFullExport(consumer);
     }
 
     @Test
