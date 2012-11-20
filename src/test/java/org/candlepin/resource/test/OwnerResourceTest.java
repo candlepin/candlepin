@@ -23,22 +23,12 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.File;
-import java.io.IOException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-
-import javax.ws.rs.core.MultivaluedMap;
-
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.ConsumerPrincipal;
+import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Config;
@@ -63,6 +53,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.Role;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
+import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.resource.OwnerResource;
 import org.candlepin.sync.ConflictOverrides;
 import org.candlepin.sync.Importer;
@@ -77,6 +68,17 @@ import org.jboss.resteasy.specimpl.MultivaluedMapImpl;
 import org.jboss.resteasy.util.GenericType;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.io.File;
+import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+
+import javax.ws.rs.core.MultivaluedMap;
 /**
  * OwnerResourceTest
  */
@@ -788,5 +790,24 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals(owner, ir.getOwner());
         assertEquals(ImportRecord.Status.FAILURE, ir.getStatus());
         assertEquals("Bad import", ir.getStatusMessage());
+    }
+
+    @Test
+    public void upstreamConsumers() {
+        Principal p = mock(Principal.class);
+        OwnerCurator oc = mock(OwnerCurator.class);
+        UpstreamConsumer upstream = mock(UpstreamConsumer.class);
+        Owner owner = mock(Owner.class);
+        OwnerResource ownerres = new OwnerResource(oc, null, null,
+            null, null, null, i18n, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null, null, null,
+            null, null);
+
+        when(oc.lookupByKey(eq("admin"))).thenReturn(owner);
+        when(owner.getUpstreamConsumer()).thenReturn(upstream);
+
+        List<UpstreamConsumer> results = ownerres.getUpstreamConsumers(p, "admin");
+        assertNotNull(results);
+        assertEquals(1, results.size());
     }
 }
