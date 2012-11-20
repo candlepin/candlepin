@@ -78,7 +78,6 @@ public class ImporterTest {
     private I18n i18n;
     private static final String MOCK_JS_PATH = "/tmp/empty.js";
     private CandlepinCommonTestConfig config;
-    private Injector injector;
 
     @Before
     public void init() throws FileNotFoundException, URISyntaxException {
