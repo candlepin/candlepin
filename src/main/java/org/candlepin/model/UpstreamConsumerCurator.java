@@ -47,23 +47,7 @@ public class UpstreamConsumerCurator extends AbstractHibernateCurator<UpstreamCo
     @Transactional
     @EnforceAccessControl
     public void delete(UpstreamConsumer entity) {
-        // save off the ids before we delete
-        DeletedConsumer dc = new DeletedConsumer(entity.getUuid(),
-            entity.getOwnerId());
-
         super.delete(entity);
-
-//        DeletedConsumer existing = deletedConsumerCurator.
-//                    findByConsumerUuid(dc.getConsumerUuid());
-//        if (existing != null) {
-//            // update the owner ID in case the same UUID was specified by two owners
-//            existing.setOwnerId(dc.getOwnerId());
-//            existing.setUpdated(new Date());
-//            deletedConsumerCurator.save(existing);
-//        }
-//        else {
-//            deletedConsumerCurator.create(dc);
-//        }
     }
 
     protected void validate(UpstreamConsumer entity) {
