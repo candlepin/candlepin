@@ -83,6 +83,7 @@ import org.xnap.commons.i18n.I18n;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -1153,7 +1154,7 @@ public class OwnerResource {
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @Path("{owner_key}/upstream_consumer")
+    @Path("{owner_key}/upstream_consumers")
     public List<UpstreamConsumer> getUpstreamConsumers(@Context Principal principal,
         @Verify(Owner.class) @PathParam("owner_key") String ownerKey) {
         Owner o = findOwner(ownerKey);
@@ -1162,7 +1163,14 @@ public class OwnerResource {
                 "owner with key: {0} was not found.", ownerKey));
         }
 
-        return null;
+        // returning as a list for future proofing. today we support one, but
+        // users of this api want to protect against having to change their code
+        // when multiples are supported.
+        UpstreamConsumer upstream = o.getUpstreamConsumer();
+
+        List<UpstreamConsumer> results = new ArrayList<UpstreamConsumer>(1);
+        results.add(upstream);
+        return results;
     }
 
     private void recordImportSuccess(Owner owner, Map data,
