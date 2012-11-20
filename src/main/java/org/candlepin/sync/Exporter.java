@@ -15,6 +15,7 @@
 package org.candlepin.sync;
 
 import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
@@ -288,7 +289,7 @@ public class Exporter {
     }
 
     private String getPrefixWebUrl() {
-        String prefixWebUrl = config.getString("candlepin.export.prefix.weburl");
+        String prefixWebUrl = config.getString(ConfigProperties.PREFIX_WEBURL);
         if (prefixWebUrl != null && prefixWebUrl.trim().equals("")) {
             prefixWebUrl = null;
         }
@@ -296,7 +297,7 @@ public class Exporter {
     }
 
     private String getPrefixApiUrl() {
-        String prefixApiUrl = config.getString("candlepin.export.prefix.apiurl");
+        String prefixApiUrl = config.getString(ConfigProperties.PREFIX_APIURL);
         if (prefixApiUrl != null && prefixApiUrl.trim().equals("")) {
             prefixApiUrl = null;
         }
