@@ -569,10 +569,10 @@ var Entitlement = {
 
     pre_ram: function() {
     	var consumerRam = get_consumer_ram(consumer);
-    	log.info("Consumer has " + consumerRam + "GB of RAM.");
+    	log.debug("Consumer has " + consumerRam + "GB of RAM.");
     	
     	var productRam = parseInt(product.getAttribute("ram"));
-    	log.info("Product has " + productRam + "GB of RAM");
+    	log.debug("Product has " + productRam + "GB of RAM");
     	if (consumerRam > productRam) {
     		pre.addWarning("rulewarning.unsupported.ram");
     	}
@@ -1098,20 +1098,20 @@ function ent_is_compliant(consumer, ent, log) {
     // Verify RAM coverage if required.
     // Default consumer RAM to 1 GB if not defined
     var consumerRam = get_consumer_ram(consumer);
-    log.info("  Consumer RAM found: " + consumerRam);
+    log.debug("  Consumer RAM found: " + consumerRam);
     
     if (ent.getPool().getProductAttribute("ram")) {
 	    var poolRamAttr = get_attribute_from_pool(ent.getPool(), "ram");
 	    if (poolRamAttr != null && !poolRamAttr.isEmpty()) {
 	    	var ram = parseInt(poolRamAttr);
-	    	log.info("  Pool RAM found: " + ram)
+	    	log.debug("  Pool RAM found: " + ram)
 	    	if (consumerRam > ram) {    		
 	    		return false;
 	    	}
 	    }
     }
     else {
-    	log.info("  No RAM attribute on pool. Skipping RAM check.");
+    	log.debug("  No RAM attribute on pool. Skipping RAM check.");
     }
     
     return true

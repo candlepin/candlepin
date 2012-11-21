@@ -8,7 +8,7 @@ describe 'RAM Limiting' do
     @owner = create_owner random_string('test_owner')
     
     # Create a product limiting by RAM only.
-    @ram_product = create_product(nil, nil, :attributes => 
+    @ram_product = create_product(nil, random_string("Product1"), :attributes => 
                 {:version => '6.4',
                  :ram => 8,
                  :warning_period => 15,
@@ -18,7 +18,7 @@ describe 'RAM Limiting' do
     @ram_sub = @cp.create_subscription(@owner['key'], @ram_product.id, 10, [], '1888', '1234')
 
     # Create a product limiting by RAM and sockets.
-    @ram_and_socket_product = create_product(nil, nil, :attributes => 
+    @ram_and_socket_product = create_product(nil, random_string("Product2"), :attributes => 
                 {:version => '1.2',
                  :ram => 8,
                  :sockets => 4,
@@ -49,10 +49,20 @@ describe 'RAM Limiting' do
                 {'system.certificate_version' => '3.0',
                  # Since cert v3 is disabled by default, configure consumer bypass.
                  'system.testing' => 'true'})
+                 
+    installed = [
+        {'productId' => @ram_sub.id,
+        'productName' => @ram_sub.name}
+    ]
+    system.update_consumer({:installedProducts => installed})
+
+    pool = find_pool(@owner.id, @ram_sub.id)
+    pool.should_not == nil
+
     expected_error = "Please upgrade to a newer client to use subscription: %s" % [@ram_product.name]
     begin
-      response = system.consume_product(@ram_product.id)
-      #end.should raise_exception(RestClient::Conflict)
+      entitlement = system.consume_pool(pool.id)
+      entitlement.should_not == nil
       fail("Conflict error should have been raised since system's certificate version is incorrect.")
     rescue RestClient::Conflict => e
       message = JSON.parse(e.http_body)['displayMessage']
@@ -64,9 +74,19 @@ describe 'RAM Limiting' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
                 # cert v3 is currently disabled by default.
                 {'system.certificate_version' => '3.1'})
+    
+    installed = [
+        {'productId' => @ram_sub.id,
+        'productName' => @ram_sub.name}
+    ]
+    system.update_consumer({:installedProducts => installed})
+
+    pool = find_pool(@owner.id, @ram_sub.id)
+    pool.should_not == nil
+    
     expected_error = "The server does not support subscriptions requiring V3 certificates."
     begin
-      response = system.consume_product(@ram_product.id)
+      response = system.consume_pool(pool.id)
       #end.should raise_exception(RestClient::Conflict)
       fail("Conflict error should have been raised since system's certificate version is incorrect.")
     rescue RestClient::Conflict => e

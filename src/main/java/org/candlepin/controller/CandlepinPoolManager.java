@@ -46,6 +46,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductPoolAttribute;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Subscription;
 import org.candlepin.policy.Enforcer;
@@ -63,6 +64,7 @@ import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.Util;
 import org.candlepin.version.CertVersionConflictException;
+import org.candlepin.version.ProductVersionValidator;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -424,7 +426,16 @@ public class CandlepinPoolManager implements PoolManager {
                     }
                 }
                 else {
-                    filteredPools.add(pool);
+                    try {
+                        // Make sure that the pool is supported. We want to
+                        // skip any that require a version greater than
+                        // what the consumer supports.
+                        verifySubscriptionSupport(consumer, pool);
+                        filteredPools.add(pool);
+                    }
+                    catch (CertVersionConflictException cvce) {
+                        log.debug("Pool filtered from candidates: " + cvce.getMessage());
+                    }
                 }
             }
         }
@@ -440,6 +451,34 @@ public class CandlepinPoolManager implements PoolManager {
             productIds, filteredPools, compliance, serviceLevelOverride,
             poolCurator.retrieveServiceLevelsForOwner(owner, true));
         return enforced;
+    }
+
+    private void verifySubscriptionSupport(Consumer consumer, Pool pool) {
+        // Create the top level product from the pool.
+        Product product = new Product(pool.getProductId(), pool.getProductName());
+        for (ProductPoolAttribute attr: pool.getProductAttributes()) {
+            product.setAttribute(attr.getName(), attr.getValue());
+        }
+
+        String min = ProductVersionValidator.getMinVersion(product);
+
+        // If cert V3 is disabled, only support V3+.
+        //
+        // REMOVE ME: This check can likely be removed when the enable/disable
+        //            certv3 functionality is removed.
+        if ((!config.certV3IsEnabled() &&
+             !consumer.hasFact("system.testing")) &&
+            ProductVersionValidator.compareVersion(min, "1.0") > 0) {
+            String error = "The server does not support subscriptions requiring " +
+                "V3 certificates.";
+            throw new CertVersionConflictException(error);
+        }
+
+        String consumerVersion = consumer.getFact("system.certificate_version");
+        if (!ProductVersionValidator.validate(product, consumerVersion)) {
+            String error = "Consumer must be upgraded to use: " + product.getName();
+            throw new CertVersionConflictException(error);
+        }
     }
 
     /**
