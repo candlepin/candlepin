@@ -174,7 +174,7 @@ function architectureMatches(product, consumer) {
 }
 
 function get_attribute_from_pool(pool, attributeName) {
-	// this can be either a ReadOnlyPool or a Pool, so deal with attributes as appropriate.
+    // this can be either a ReadOnlyPool or a Pool, so deal with attributes as appropriate.
     var attribute = pool.getProductAttribute(attributeName);
     if ("getValue" in attribute) {
         var value = attribute.getValue();
@@ -298,7 +298,7 @@ function findStackingPools(pool_class, consumer, compliance) {
             }
 
             // if this stack is already done, no need to add more to it.
-	    if (stackToEntitledSockets[stack_id] >= consumer_sockets) {
+            if (stackToEntitledSockets[stack_id] >= consumer_sockets) {
                 continue;
             }
 
@@ -331,7 +331,7 @@ function findStackingPools(pool_class, consumer, compliance) {
     var not_stacked_pool_map = new java.util.HashMap();
     // We have a not stackable pool.
     if (notStackable.length > 0) {
-	for each (pool in notStackable) {
+        for each (pool in notStackable) {
             var covered_sockets = get_pool_sockets(pool);
             if (covered_sockets > not_stacked_sockets) {
                 found_pool = true;
@@ -339,7 +339,7 @@ function findStackingPools(pool_class, consumer, compliance) {
                 not_stacked_pool_map.put(pool, 1);
                 not_stacked_sockets = covered_sockets;
             }
-	}
+        }
     }
 
     // if an unstacked pool can cover all our products, take that.
@@ -485,7 +485,7 @@ var Entitlement = {
 
     pre_requires_consumer_type: function() {
         if (!attributes.get("requires_consumer_type").equals(consumer.getType()) &&
-        		!consumer.getType().equals("uebercert")) {
+                !consumer.getType().equals("uebercert")) {
             pre.addError("rulefailed.consumer.type.mismatch");
         }
     },
@@ -568,14 +568,14 @@ var Entitlement = {
     },
 
     pre_ram: function() {
-    	var consumerRam = get_consumer_ram(consumer);
-    	log.debug("Consumer has " + consumerRam + "GB of RAM.");
-    	
-    	var productRam = parseInt(product.getAttribute("ram"));
-    	log.debug("Product has " + productRam + "GB of RAM");
-    	if (consumerRam > productRam) {
-    		pre.addWarning("rulewarning.unsupported.ram");
-    	}
+        var consumerRam = get_consumer_ram(consumer);
+        log.debug("Consumer has " + consumerRam + "GB of RAM.");
+
+        var productRam = parseInt(product.getAttribute("ram"));
+        log.debug("Product has " + productRam + "GB of RAM");
+        if (consumerRam > productRam) {
+            pre.addWarning("rulewarning.unsupported.ram");
+        }
     },
 
     post_ram: function() {
@@ -595,7 +595,7 @@ var Entitlement = {
             // "hypervisor"/"uebercert" type are essentially the same as "system".
             if (!product.hasAttribute("requires_consumer_type")) {
                 if (!consumer.getType().equals("system") && !consumer.getType().equals("hypervisor") &&
-                		!consumer.getType().equals("uebercert")) {
+                        !consumer.getType().equals("uebercert")) {
                     pre.addError("rulefailed.consumer.type.mismatch");
                 }
 
@@ -1091,8 +1091,8 @@ function ent_is_compliant(consumer, ent, log) {
     log.debug("  Sockets covered by pool: " + coveredSockets);
 
     if (coveredSockets < consumerSockets) {
-    	log.debug("  Entitlement does not cover system sockets.");
-    	return false;
+        log.debug("  Entitlement does not cover system sockets.");
+        return false;
     }
     
     // Verify RAM coverage if required.
@@ -1101,29 +1101,29 @@ function ent_is_compliant(consumer, ent, log) {
     log.debug("  Consumer RAM found: " + consumerRam);
     
     if (ent.getPool().getProductAttribute("ram")) {
-	    var poolRamAttr = get_attribute_from_pool(ent.getPool(), "ram");
-	    if (poolRamAttr != null && !poolRamAttr.isEmpty()) {
-	    	var ram = parseInt(poolRamAttr);
-	    	log.debug("  Pool RAM found: " + ram)
-	    	if (consumerRam > ram) {    		
-	    		return false;
-	    	}
-	    }
+        var poolRamAttr = get_attribute_from_pool(ent.getPool(), "ram");
+        if (poolRamAttr != null && !poolRamAttr.isEmpty()) {
+            var ram = parseInt(poolRamAttr);
+            log.debug("  Pool RAM found: " + ram)
+            if (consumerRam > ram) {
+                return false;
+            }
+        }
     }
     else {
-    	log.debug("  No RAM attribute on pool. Skipping RAM check.");
+        log.debug("  No RAM attribute on pool. Skipping RAM check.");
     }
     
     return true
 }
 
 function get_consumer_ram(consumer) {
-	var consumerRam = 1;
+    var consumerRam = 1;
     if (consumer.hasFact(RAM_FACT)) {
-    	var ramGb = parseInt(consumer.getFact(RAM_FACT)) / 1024 / 1024;
-    	consumerRam = java.lang.Math.round(ramGb);
+        var ramGb = parseInt(consumer.getFact(RAM_FACT)) / 1024 / 1024;
+        consumerRam = java.lang.Math.round(ramGb);
     }
-	return consumerRam;
+    return consumerRam;
 }
 
 /**
