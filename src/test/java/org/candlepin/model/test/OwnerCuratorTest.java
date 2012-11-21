@@ -14,17 +14,22 @@
  */
 package org.candlepin.model.test;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProvidedProduct;
+import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
-
-import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -47,7 +52,7 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
 
         this.ownerCurator.replicate(owner);
 
-        Assert.assertEquals("testing",
+        assertEquals("testing",
                 this.ownerCurator.find("testing-primary-key").getKey());
     }
 
@@ -64,10 +69,14 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
 
     @Test(expected = PersistenceException.class)
     public void upstreamUuidConstraint() {
+        UpstreamConsumer uc = new UpstreamConsumer();
+        uc.setUuid("sameuuid");
+        upstreamConsumerCurator.create(uc);
+
         Owner owner1 = new Owner("owner1");
-        owner1.setUpstreamUuid("sameuuid");
+        owner1.setUpstreamConsumer(uc);
         Owner owner2 = new Owner("owner2");
-        owner2.setUpstreamUuid("sameuuid");
+        owner2.setUpstreamConsumer(uc);
 
         ownerCurator.create(owner1);
         ownerCurator.create(owner2);
@@ -111,7 +120,7 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         productIds.add(provided2.getId());
         List<Owner> results = ownerCurator.lookupOwnersByActiveProduct(productIds);
 
-        Assert.assertEquals(2, results.size());
+        assertEquals(2, results.size());
     }
 
     @Test
@@ -129,8 +138,8 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         productIds.add(provided.getId());
         List<Owner> results = ownerCurator.lookupOwnersByActiveProduct(productIds);
 
-        Assert.assertEquals(1, results.size());
-        Assert.assertEquals(owner, results.get(0));
+        assertEquals(1, results.size());
+        assertEquals(owner, results.get(0));
     }
 
     @Test
@@ -167,6 +176,28 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         productIds.add(provided.getId());
         List<Owner> results = ownerCurator.lookupOwnersByActiveProduct(productIds);
 
-        Assert.assertTrue(results.isEmpty());
+        assertTrue(results.isEmpty());
+    }
+
+    @Test
+    public void lookupByUpstreamUuid() {
+        Owner owner = new Owner("owner1");
+        // setup some data
+        owner = ownerCurator.create(owner);
+        ConsumerType type = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
+        consumerTypeCurator.create(type);
+        UpstreamConsumer uc = new UpstreamConsumer("test-upstream-consumer",
+               owner, type);
+        uc.setUuid("someuuid");
+        uc = upstreamConsumerCurator.create(uc);
+        owner.setUpstreamConsumer(uc);
+        ownerCurator.merge(owner);
+
+        // ok let's see if this works
+        Owner found = ownerCurator.lookupWithUpstreamUuid("someuuid");
+
+        // verify all is well in the world
+        assertNotNull(found);
+        assertEquals(owner.getId(), found.getId());
     }
 }

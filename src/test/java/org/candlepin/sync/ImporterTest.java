@@ -14,9 +14,9 @@
  */
 package org.candlepin.sync;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -25,23 +25,17 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.io.Reader;
-import java.net.URISyntaxException;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-
-
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.candlepin.config.Config;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.UpstreamConsumer;
+import org.candlepin.model.UpstreamConsumerCurator;
+import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.impl.BouncyCastlePKIUtility;
+import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -50,6 +44,20 @@ import org.junit.Before;
 import org.junit.Test;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.io.Reader;
+import java.net.URISyntaxException;
+import java.security.Security;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
 
 
 /**
@@ -95,7 +103,7 @@ public class ImporterTest {
         em.setType(ExporterMetadata.TYPE_SYSTEM);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, null, emc, null, null, i18n);
+            null, null, emc, null, null, i18n, null);
         i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actual,
             new ConflictOverrides());
 
@@ -119,7 +127,7 @@ public class ImporterTest {
         ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(null);
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, null, emc, null, null, i18n);
+            null, null, emc, null, null, i18n, null);
         i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta,
             new ConflictOverrides());
         assertTrue(f.delete());
@@ -140,7 +148,7 @@ public class ImporterTest {
         em.setType(ExporterMetadata.TYPE_SYSTEM);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, null, emc, null, null, i18n);
+            null, null, emc, null, null, i18n, null);
         try {
             i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta,
                 new ConflictOverrides());
@@ -168,7 +176,7 @@ public class ImporterTest {
         em.setType(ExporterMetadata.TYPE_SYSTEM);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, null, emc, null, null, i18n);
+            null, null, emc, null, null, i18n, null);
         try {
             i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta,
                 new ConflictOverrides());
@@ -216,7 +224,7 @@ public class ImporterTest {
         em.setType(ExporterMetadata.TYPE_SYSTEM);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, null, emc, null, null, i18n);
+            null, null, emc, null, null, i18n, null);
         i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta,
             new ConflictOverrides());
         assertEquals(importDate, em.getExported());
@@ -235,7 +243,7 @@ public class ImporterTest {
         RulesImporter ri = mock(RulesImporter.class);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(null);
         Importer i = new Importer(null, null, ri, null, null, null, null,
-            null, null, emc, null, null, i18n);
+            null, null, emc, null, null, i18n, null);
         i.importRules(jsArray, actualmeta);
 
         //verify that rules were imported
@@ -253,7 +261,7 @@ public class ImporterTest {
 
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(null);
         Importer i = new Importer(null, null, ri, null, null, null, null,
-            null, null, emc, null, null, i18n);
+            null, null, emc, null, null, i18n, null);
         i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta,
             new ConflictOverrides());
         //verify that rules were not imported
@@ -266,7 +274,7 @@ public class ImporterTest {
             "test_user", "prefix");
         try {
             Importer i = new Importer(null, null, null, null, null, null, null,
-                null, null, null, null, null, i18n);
+                null, null, null, null, null, i18n, null);
 
             // null Type should cause exception
             i.validateMetadata(null, null, actualmeta, new ConflictOverrides());
@@ -285,7 +293,7 @@ public class ImporterTest {
             .thenReturn(null);
 
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, null, emc, null, null, i18n);
+            null, null, emc, null, null, i18n, null);
 
         // null Type should cause exception
         i.validateMetadata(ExporterMetadata.TYPE_PER_USER, null, actualmeta,
@@ -334,4 +342,32 @@ public class ImporterTest {
         return backDate;
     }
 
+    @Test
+    public void importConsumer() throws Exception {
+        Security.addProvider(new BouncyCastleProvider());
+        PKIUtility pki = new BouncyCastlePKIUtility(null,
+            new DefaultSubjectKeyIdentifierWriter());
+
+        OwnerCurator oc = mock(OwnerCurator.class);
+        // we assume mock will return null for any method, hence why there
+        // is no when statement for the lookupWithUpstreamUuid.
+        UpstreamConsumerCurator uc = mock(UpstreamConsumerCurator.class);
+
+        Importer i = new Importer(null, null, null, oc, null, null, null,
+            pki, null, null, null, null, i18n, uc);
+        File[] upstream = new File[2];
+        File idcertfile = new File("target/test/resources/upstream/testidcert.json");
+        File kpfile = new File("target/test/resources/upstream/keypair.pem");
+        upstream[0] = idcertfile;
+        upstream[1] = kpfile;
+        File consumerfile = new File("target/test/resources/upstream/consumer.json");
+
+        Owner owner = mock(Owner.class);
+        ConflictOverrides forcedConflicts = mock(ConflictOverrides.class);
+        when(forcedConflicts.isForced(any(Importer.Conflict.class))).thenReturn(false);
+
+        i.importConsumer(owner, consumerfile, upstream, forcedConflicts);
+
+        verify(uc).create(any(UpstreamConsumer.class));
+    }
 }

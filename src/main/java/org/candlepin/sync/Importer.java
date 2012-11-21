@@ -16,6 +16,34 @@ package org.candlepin.sync;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.log4j.Logger;
+import org.candlepin.audit.EventSink;
+import org.candlepin.config.Config;
+import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.Refresher;
+import org.candlepin.model.CertificateSerialCurator;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.ContentCurator;
+import org.candlepin.model.ExporterMetadata;
+import org.candlepin.model.ExporterMetadataCurator;
+import org.candlepin.model.IdentityCertificate;
+import org.candlepin.model.KeyPair;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
+import org.candlepin.model.Subscription;
+import org.candlepin.model.SubscriptionCurator;
+import org.candlepin.model.UpstreamConsumerCurator;
+import org.candlepin.pki.PKIUtility;
+import org.candlepin.util.VersionUtil;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.hibernate.exception.ConstraintViolationException;
+import org.xnap.commons.i18n.I18n;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -33,31 +61,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import javax.persistence.PersistenceException;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
-import org.candlepin.audit.EventSink;
-import org.candlepin.config.Config;
-import org.candlepin.controller.PoolManager;
-import org.candlepin.controller.Refresher;
-import org.candlepin.model.CertificateSerialCurator;
-import org.candlepin.model.ConsumerType;
-import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.ContentCurator;
-import org.candlepin.model.ExporterMetadata;
-import org.candlepin.model.ExporterMetadataCurator;
-import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
-import org.candlepin.model.Subscription;
-import org.candlepin.model.SubscriptionCurator;
-import org.candlepin.pki.PKIUtility;
-import org.candlepin.util.VersionUtil;
-
-import org.codehaus.jackson.map.ObjectMapper;
-import org.hibernate.exception.ConstraintViolationException;
-import org.xnap.commons.i18n.I18n;
 
 
 /**
@@ -77,7 +80,8 @@ public class Importer {
         ENTITLEMENTS("entitlements"),
         ENTITLEMENT_CERTIFICATES("entitlement_certificates"),
         PRODUCTS("products"),
-        RULES("rules");
+        RULES("rules"),
+        UPSTREAM_CONSUMER("upstream_consumer");
 
         private String fileName;
         ImportFile(String fileName) {
@@ -115,13 +119,15 @@ public class Importer {
     private CertificateSerialCurator csCurator;
     private EventSink sink;
     private I18n i18n;
+    private UpstreamConsumerCurator upstreamCurator;
 
     @Inject
     public Importer(ConsumerTypeCurator consumerTypeCurator, ProductCurator productCurator,
         RulesImporter rulesImporter, OwnerCurator ownerCurator,
         ContentCurator contentCurator, SubscriptionCurator subCurator, PoolManager pm,
         PKIUtility pki, Config config, ExporterMetadataCurator emc,
-        CertificateSerialCurator csc, EventSink sink, I18n i18n) {
+        CertificateSerialCurator csc, EventSink sink, I18n i18n,
+        UpstreamConsumerCurator upstreamCurator) {
 
         this.config = config;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -137,6 +143,7 @@ public class Importer {
         this.csCurator = csc;
         this.sink = sink;
         this.i18n = i18n;
+        this.upstreamCurator = upstreamCurator;
     }
 
     /**
@@ -332,7 +339,9 @@ public class Importer {
         ConsumerDto consumer = null;
         try {
             consumer = importConsumer(owner,
-                importFiles.get(ImportFile.CONSUMER.fileName()), overrides);
+                importFiles.get(ImportFile.CONSUMER.fileName()),
+                importFiles.get(ImportFile.UPSTREAM_CONSUMER.fileName()).listFiles(),
+                overrides);
         }
         catch (ImportConflictException e) {
             conflictExceptions.add(e);
@@ -426,15 +435,53 @@ public class Importer {
     }
 
     public ConsumerDto importConsumer(Owner owner, File consumerFile,
-        ConflictOverrides forcedConflicts)
+        File[] upstreamConsumer, ConflictOverrides forcedConflicts)
         throws IOException, SyncDataFormatException {
-        ConsumerImporter importer = new ConsumerImporter(ownerCurator, i18n);
+
+        IdentityCertificate idcert = null;
+        KeyPair pair = null;
+        for (File uc : upstreamConsumer) {
+            if (uc.getName().startsWith("keypair.")) {
+                log.debug("Import upstream consumer keypair: " + uc.getName());
+                Reader reader = null;
+                try {
+                    reader = new FileReader(uc);
+                    java.security.KeyPair kp = pki.readPemEncodedKeyPair(reader);
+                    pair = new KeyPair(kp.getPrivate(), kp.getPublic());
+                }
+                finally {
+                    if (reader != null) {
+                        reader.close();
+                    }
+                }
+            }
+            else if (uc.getName().endsWith(".json")) {
+                log.debug("Import upstream consumeridentity certificate: " +
+                    uc.getName());
+                Reader reader = null;
+                try {
+                    reader = new FileReader(uc);
+                    idcert = mapper.readValue(reader, IdentityCertificate.class);
+                }
+                finally {
+                    if (reader != null) {
+                        reader.close();
+                    }
+                }
+            }
+            else {
+                log.warn("Extra file found in upstream_consumer directory: " +
+                    (uc != null ? uc.getName() : "null"));
+            }
+        }
+
+        ConsumerImporter importer = new ConsumerImporter(ownerCurator, upstreamCurator, i18n);
         Reader reader = null;
         ConsumerDto consumer = null;
         try {
             reader = new FileReader(consumerFile);
             consumer = importer.createObject(mapper, reader);
-            importer.store(owner, consumer, forcedConflicts);
+            importer.store(owner, consumer, forcedConflicts, idcert, pair);
         }
         finally {
             if (reader != null) {
