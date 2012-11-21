@@ -251,4 +251,78 @@ public class MigrateOwnerJobTest {
             });
         }
     }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void bz874785NullPointer() throws JobExecutionException {
+        OwnerClient oclient = mock(OwnerClient.class);
+        ConsumerClient conclient = mock(ConsumerClient.class);
+        when(conn.connect(eq(OwnerClient.class), any(Credentials.class),
+            any(String.class))).thenReturn(oclient);
+        when(conn.connect(eq(ConsumerClient.class), any(Credentials.class),
+            any(String.class))).thenReturn(conclient);
+
+        ClientResponse<Owner> resp = mock(ClientResponse.class);
+
+        List<Pool> pools = new ArrayList<Pool>();
+        pools.add(mock(Pool.class));
+
+        List<Consumer> consumers = new ArrayList<Consumer>();
+        Consumer consumer = mock(Consumer.class);
+        when(consumer.getUuid()).thenReturn("357ec012");
+
+        // return null getFacts and ensure we don't blow up because of it
+        when(consumer.getFacts()).thenReturn(null);
+        consumers.add(consumer);
+
+        List<Entitlement> ents = new ArrayList<Entitlement>();
+        Entitlement ent = mock(Entitlement.class);
+        when(ent.getId()).thenReturn("ff8080812e9");
+        ents.add(ent);
+
+        ClientResponse<List<Pool>> prsp = mock(ClientResponse.class);
+        ClientResponse<List<Consumer>> crsp = mock(ClientResponse.class);
+        ClientResponse<List<Entitlement>> ersp = mock(ClientResponse.class);
+        Response drsp = mock(Response.class);
+
+        when(oclient.replicateOwner(eq("admin"))).thenReturn(resp);
+        when(oclient.replicatePools(eq("admin"))).thenReturn(prsp);
+        when(oclient.replicateEntitlements(eq("admin"))).thenReturn(ersp);
+        when(oclient.replicateConsumers(eq("admin"))).thenReturn(crsp);
+        when(oclient.deleteOwner(eq("admin"), eq(false))).thenReturn(drsp);
+        when(conclient.replicateEntitlements(eq("357ec012"),
+            any(String.class))).thenReturn(ersp);
+        when(resp.getStatus()).thenReturn(200);
+        when(prsp.getStatus()).thenReturn(200);
+        when(crsp.getStatus()).thenReturn(200);
+        when(ersp.getStatus()).thenReturn(200);
+        when(drsp.getStatus()).thenReturn(204); // typical response from delete
+
+        when(prsp.getEntity()).thenReturn(pools);
+        when(crsp.getEntity()).thenReturn(consumers);
+        when(ersp.getEntity()).thenReturn(ents).thenReturn(ents);
+        JobDataMap map = new JobDataMap();
+        map.put("owner_key", "admin");
+        map.put("uri", "http://foo.example.com/candlepin");
+        map.put("delete", true);
+
+        Owner owner = mock(Owner.class);
+        when(ownerCurator.lookupByKey(eq("admin"))).thenReturn(owner);
+        when(consumerCurator.listByOwner(any(Owner.class))).thenReturn(consumers);
+        when(entCurator.find(eq("ff8080812e9"))).thenReturn(ent);
+
+        // test it :)
+        moj.execute(buildContext(map));
+
+        // verify everything was called
+        verify(conn).connect(eq(OwnerClient.class), any(Credentials.class),
+            eq("http://foo.example.com/candlepin"));
+        verify(ownerCurator, atLeastOnce()).replicate(any(Owner.class));
+        verify(poolCurator, atLeastOnce()).replicate(any(Pool.class));
+        verify(consumerCurator, atLeastOnce()).replicate(any(Consumer.class));
+        verify(entCurator, atLeastOnce()).replicate(any(Entitlement.class));
+        verify(entCurator, atLeastOnce()).merge(any(Entitlement.class));
+        verify(oclient, atLeastOnce()).deleteOwner(eq("admin"), eq(false));
+        verify(sink, atLeastOnce()).emitOwnerMigrated(any(Owner.class));
+    }
 }
