@@ -456,7 +456,7 @@ public class CandlepinPoolManager implements PoolManager {
     private void verifySubscriptionSupport(Consumer consumer, Pool pool) {
         // Create the top level product from the pool.
         Product product = new Product(pool.getProductId(), pool.getProductName());
-        for (ProductPoolAttribute attr: pool.getProductAttributes()) {
+        for (ProductPoolAttribute attr : pool.getProductAttributes()) {
             product.setAttribute(attr.getName(), attr.getValue());
         }
 

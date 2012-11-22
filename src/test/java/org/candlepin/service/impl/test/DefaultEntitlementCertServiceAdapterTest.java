@@ -639,8 +639,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
                 I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
                 mockConfig);
 
-       entAdapter.createX509Certificate(entitlement, subscription,
-            product, new BigInteger("1234"), keyPair(), true);
+        entAdapter.createX509Certificate(entitlement, subscription, product,
+            new BigInteger("1234"), keyPair(), true);
     }
 
     @Test
