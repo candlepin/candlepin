@@ -14,10 +14,9 @@
  */
 package org.candlepin.sync;
 
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
@@ -54,10 +53,12 @@ import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.util.VersionUtil;
-
 import org.codehaus.jackson.map.ObjectMapper;
 import org.hibernate.exception.ConstraintViolationException;
 import org.xnap.commons.i18n.I18n;
+
+import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
 
 /**
@@ -208,10 +209,10 @@ public class Importer {
         Map<String, Object> result = new HashMap<String, Object>();
         try {
             tmpDir = new SyncUtils(config).makeTempDir("import");
-
             extractArchive(tmpDir, exportFile);
 
-            exportStream = new FileInputStream(new File(tmpDir, "consumer_export.zip"));
+//           only need this call when sig file is verified
+//            exportStream = new FileInputStream(new File(tmpDir, "consumer_export.zip"));
 
             /*
              * Disabling this once again for a little bit longer. Dependent projects
@@ -238,11 +239,22 @@ public class Importer {
 //                }
 //            }
 
-            File exportDir
-                = extractArchive(tmpDir, new File(tmpDir, "consumer_export.zip"));
+            File signature = new File(tmpDir, "signature");
+            if (signature.length() == 0) {
+                throw new ImportExtractionException(i18n.tr("The archive does not " +
+                                          "contain the required signature file"));
+            }
+
+            File consumerExport = new File(tmpDir, "consumer_export.zip");
+            File exportDir = extractArchive(tmpDir, consumerExport);
 
             Map<String, File> importFiles = new HashMap<String, File>();
-            for (File file : exportDir.listFiles()) {
+            File[] listFiles = exportDir.listFiles();
+            if (listFiles == null || listFiles.length == 0) {
+                throw new ImportExtractionException(i18n.tr("The consumer_export " +
+                    "archive has no contents"));
+            }
+            for (File file : listFiles) {
                 importFiles.put(file.getName(), file);
             }
 
@@ -257,6 +269,11 @@ public class Importer {
 //            log.error("Exception caught importing archive", e);
 //            throw new ImportExtractionException("unable to extract export archive", e);
 //        }
+        catch (FileNotFoundException fnfe) {
+            log.error("Archive file does not contain consumer_export.zip", fnfe);
+            throw new ImportExtractionException(i18n.tr("The archive does not contain " +
+                                           "the required consumer_export.zip file"));
+        }
         catch (ConstraintViolationException cve) {
             log.error("Failed to import archive", cve);
             throw new ImporterException(i18n.tr("Failed to import archive"),
@@ -300,6 +317,35 @@ public class Importer {
         throws IOException, ImporterException {
 
         File metadata = importFiles.get(ImportFile.META.fileName());
+        if (metadata == null) {
+            throw new ImporterException(i18n.tr("The archive does not contain the " +
+                                   "required meta.json file"));
+        }
+        File rules = importFiles.get(ImportFile.RULES.fileName());
+        if (rules == null) {
+            throw new ImporterException(i18n.tr("The archive does not contain the " +
+                                    "required rules directory"));
+        }
+        if (rules.listFiles().length == 0) {
+            throw new ImporterException(i18n.tr("The archive does not contain the " +
+                "required rules file(s)"));
+        }
+        File consumerTypes = importFiles.get(ImportFile.CONSUMER_TYPE.fileName());
+        if (consumerTypes == null) {
+            throw new ImporterException(i18n.tr("The archive does not contain the " +
+                                    "required consumer_types directory"));
+        }
+        File consumerFile = importFiles.get(ImportFile.CONSUMER.fileName());
+        if (consumerFile == null) {
+            throw new ImporterException(i18n.tr("The archive does not contain the " +
+                "required consumer.json file"));
+        }
+        File products = importFiles.get(ImportFile.PRODUCTS.fileName());
+        File entitlements = importFiles.get(ImportFile.ENTITLEMENTS.fileName());
+        if (products != null && entitlements == null) {
+            throw new ImporterException(i18n.tr("The archive does not contain the " +
+                                        "required entitlements directory"));
+        }
 
         // system level elements
         /*
@@ -315,10 +361,9 @@ public class Importer {
         List<ImportConflictException> conflictExceptions =
             new LinkedList<ImportConflictException>();
 
-        importRules(importFiles.get(ImportFile.RULES.fileName()).listFiles(), metadata);
+        importRules(rules.listFiles(), metadata);
 
-        importConsumerTypes(importFiles.get(
-            ImportFile.CONSUMER_TYPE.fileName()).listFiles());
+        importConsumerTypes(consumerTypes.listFiles());
 
         // per user elements
         try {
@@ -331,8 +376,7 @@ public class Importer {
 
         ConsumerDto consumer = null;
         try {
-            consumer = importConsumer(owner,
-                importFiles.get(ImportFile.CONSUMER.fileName()), overrides);
+            consumer = importConsumer(owner, consumerFile, overrides);
         }
         catch (ImportConflictException e) {
             conflictExceptions.add(e);
@@ -364,8 +408,7 @@ public class Importer {
 
             importer.store(productsToImport);
 
-            importEntitlements(owner, productsToImport,
-                importFiles.get(ImportFile.ENTITLEMENTS.fileName()).listFiles());
+            importEntitlements(owner, productsToImport, entitlements.listFiles());
 
             refresher.add(owner);
             refresher.run();
@@ -505,14 +548,18 @@ public class Importer {
      * @param exportDir Directory where Candlepin data was exported.
      * @return File reference to the new archive tar.gz.
      */
-    private File extractArchive(File tempDir, File exportFile) throws IOException {
+    private File extractArchive(File tempDir, File exportFile)
+        throws IOException, ImportExtractionException {
         log.info("Extracting archive to: " + tempDir.getAbsolutePath());
         byte[] buf = new byte[1024];
-        ZipInputStream zipinputstream = null;
-        ZipEntry zipentry;
-        zipinputstream = new ZipInputStream(new FileInputStream(exportFile));
+        ZipInputStream zipinputstream = new ZipInputStream(new FileInputStream(exportFile));
+        ZipEntry zipentry = zipinputstream.getNextEntry();
 
-        zipentry = zipinputstream.getNextEntry();
+        if (zipentry == null) {
+            throw new ImportExtractionException(i18n.tr("The archive {0} is not " +
+                "a properly compressed file or is empty", exportFile.getName()));
+        }
+
         while (zipentry != null) {
             //for each entry to be extracted
             String entryName = zipentry.getName();
