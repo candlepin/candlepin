@@ -31,7 +31,6 @@ import org.candlepin.config.Config;
 import org.candlepin.exceptions.IseException;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
-import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
@@ -186,27 +185,21 @@ public class DefaultEntitlementCertServiceAdapter extends
         return x509Cert;
     }
 
-    private void verifySubscriptionSupport(Entitlement entitlement, Subscription sub) {
+    private void verifySubscriptionSupport(Entitlement ent, Subscription sub) {
         // If cert V3 is disabled, do not create a certificate with anything
         // considered V3+ as it is not supported in V1.
-        //
-        // REMOVE ME: This check can likely be removed when the enable/disable
-        //            certv3 functionality is removed.
-        String min = ProductVersionValidator.getMinVersion(sub.getProduct());
-        if ((!config.certV3IsEnabled() &&
-             !entitlement.getConsumer().hasFact("system.testing")) &&
-            ProductVersionValidator.compareVersion(min, "1.0") > 0) {
-            String error = i18n.tr("The server does not support subscriptions requiring " +
-                "V3 certificates.");
-            throw new CertVersionConflictException(error);
+        if (!ProductVersionValidator.verifyServerSupport(config, ent.getConsumer(),
+            sub.getProduct().getAttributes())) {
+            throw new CertVersionConflictException(i18n.tr("The server does not support " +
+                "subscriptions requiring V3 certificates."));
         }
 
-        Consumer consumer = entitlement.getConsumer();
-        String consumerVersion = consumer.getFact("system.certificate_version");
-        if (!ProductVersionValidator.validate(sub.getProduct(), consumerVersion)) {
-            String error = i18n.tr("Please upgrade to a newer client " +
-                "to use subscription: {0}", sub.getProduct().getName());
-            throw new CertVersionConflictException(error);
+        // Check to make sure that the consumer supports the required cert
+        // versions for all attributes.
+        if (!ProductVersionValidator.verifyClientSupport(ent.getConsumer(),
+            sub.getProduct().getAttributes())) {
+            throw new CertVersionConflictException(i18n.tr("Please upgrade to a newer " +
+                "client to use subscription: {0}", sub.getProduct().getName()));
         }
     }
 

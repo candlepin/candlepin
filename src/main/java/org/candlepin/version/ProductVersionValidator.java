@@ -16,9 +16,11 @@ package org.candlepin.version;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
+import java.util.Set;
 
-import org.candlepin.model.Product;
+import org.candlepin.config.Config;
+import org.candlepin.model.Attribute;
+import org.candlepin.model.Consumer;
 import org.candlepin.util.RpmVersionComparator;
 
 /**
@@ -52,45 +54,6 @@ public class ProductVersionValidator {
     }
 
     /**
-     * Validates the specified entitlement version against the required versions
-     * of the specified product's attributes.
-     *
-     * @param product the product to check against.
-     * @param version the entitlement version to check.
-     * @return true if the version meets the product's attribute version requirements,
-     *         false otherwise.
-     */
-    public static boolean validate(Product product, String version) {
-        RpmVersionComparator versionComparitor = new RpmVersionComparator();
-        version = version == null || version.isEmpty() ? "1.0" : version;
-        for (Entry<String, String> entry : PRODUCT_ATTR_VERSION_REQUIREMENTS.entrySet()) {
-            if (product.hasAttribute(entry.getKey()) &&
-                versionComparitor.compare(version, entry.getValue()) < 0) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Determines the minimum cert version required to support the product. This is
-     * done by finding the max version defined by the product's attributes.
-     *
-     * @param product the product to check.
-     * @return the minimum required version, 1.0.0 if no registered attributes are found.
-     */
-    public static String getMinVersion(Product product) {
-        String min = "1.0";
-        for (Entry<String, String> entry : PRODUCT_ATTR_VERSION_REQUIREMENTS.entrySet()) {
-            if (product.hasAttribute(entry.getKey()) &&
-                ProductVersionValidator.compareVersion(min, entry.getValue()) < 0) {
-                min = entry.getValue();
-            }
-        }
-        return min;
-    }
-
-    /**
      * Compares two version strings.
      *
      * @see RpmVersionComparator
@@ -103,6 +66,69 @@ public class ProductVersionValidator {
     public static int compareVersion(String version1, String version2) {
         RpmVersionComparator c = new RpmVersionComparator();
         return c.compare(version1, version2);
+    }
+
+    public static boolean verifyServerSupport(Config config, Consumer consumer,
+        Set<? extends Attribute> productAttributes) {
+        String min = ProductVersionValidator.getMin(productAttributes);
+        if ((!config.certV3IsEnabled() && !consumer.hasFact("system.testing")) &&
+            ProductVersionValidator.compareVersion(min, "1.0") > 0) {
+            return false;
+        }
+        return true;
+    }
+
+    public static boolean verifyClientSupport(Consumer consumer,
+        Set<? extends Attribute> productAttributes) {
+        String consumerVersion = consumer.getFact("system.certificate_version");
+        return ProductVersionValidator.validate(productAttributes, consumerVersion);
+    }
+
+    /**
+     * Validates the specified entitlement version against the required versions
+     * of the specified product's attributes.
+     *
+     * @param product the product to check against.
+     * @param version the entitlement version to check.
+     * @return true if the version meets the product's attribute version requirements,
+     *         false otherwise.
+     */
+    private static boolean validate(Set<? extends Attribute> productAttrs, String version) {
+        version = version == null || version.isEmpty() ? "1.0" : version;
+        for (Attribute attr : productAttrs) {
+            String attrName = attr.getName();
+            if (!PRODUCT_ATTR_VERSION_REQUIREMENTS.containsKey(attrName)) {
+                continue;
+            }
+            String registeredVersion = PRODUCT_ATTR_VERSION_REQUIREMENTS.get(attrName);
+            if (compareVersion(version, registeredVersion) < 0) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Determines the minimum cert version required to support a product based on
+     * its attributes.
+     *
+     * @param productAttributes the attributes to check.
+     * @return the minimum required version, 1.0.0 if no registered attributes are found.
+     */
+    private static String getMin(Set<? extends Attribute> productAttributes) {
+        String min = "1.0";
+        for (Attribute attr : productAttributes) {
+            if (!PRODUCT_ATTR_VERSION_REQUIREMENTS.containsKey(attr.getName())) {
+                continue;
+            }
+
+            String attrVersion = PRODUCT_ATTR_VERSION_REQUIREMENTS.get(attr.getName());
+            if (ProductVersionValidator.compareVersion(min, attrVersion) < 0) {
+                min = attrVersion;
+            }
+        }
+        return min;
     }
 
 }

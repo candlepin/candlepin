@@ -46,7 +46,6 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductPoolAttribute;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Subscription;
 import org.candlepin.policy.Enforcer;
@@ -426,15 +425,24 @@ public class CandlepinPoolManager implements PoolManager {
                     }
                 }
                 else {
-                    try {
-                        // Make sure that the pool is supported. We want to
-                        // skip any that require a version greater than
-                        // what the consumer supports.
-                        verifySubscriptionSupport(consumer, pool);
-                        filteredPools.add(pool);
+
+                    // If cert V3 is disabled, do not create a certificate with anything
+                    // considered V3+ as it is not supported in V1.
+                    if (!ProductVersionValidator.verifyServerSupport(config, consumer,
+                        pool.getProductAttributes())) {
+                        log.debug("Pool filtered from candidates because the server " +
+                                  "does not support subscriptions requiring V3 " +
+                                  "certificates.");
                     }
-                    catch (CertVersionConflictException cvce) {
-                        log.debug("Pool filtered from candidates: " + cvce.getMessage());
+                    // Check to make sure that the consumer supports the required cert
+                    // versions for all attributes.
+                    else if (!ProductVersionValidator.verifyClientSupport(consumer,
+                        pool.getProductAttributes())) {
+                        log.debug("Pool filtered from candidates because it is " +
+                                  "unsupported by the consumer. Upgrade client to use.");
+                    }
+                    else {
+                        filteredPools.add(pool);
                     }
                 }
             }
@@ -451,34 +459,6 @@ public class CandlepinPoolManager implements PoolManager {
             productIds, filteredPools, compliance, serviceLevelOverride,
             poolCurator.retrieveServiceLevelsForOwner(owner, true));
         return enforced;
-    }
-
-    private void verifySubscriptionSupport(Consumer consumer, Pool pool) {
-        // Create the top level product from the pool.
-        Product product = new Product(pool.getProductId(), pool.getProductName());
-        for (ProductPoolAttribute attr : pool.getProductAttributes()) {
-            product.setAttribute(attr.getName(), attr.getValue());
-        }
-
-        String min = ProductVersionValidator.getMinVersion(product);
-
-        // If cert V3 is disabled, only support V3+.
-        //
-        // REMOVE ME: This check can likely be removed when the enable/disable
-        //            certv3 functionality is removed.
-        if ((!config.certV3IsEnabled() &&
-             !consumer.hasFact("system.testing")) &&
-            ProductVersionValidator.compareVersion(min, "1.0") > 0) {
-            String error = "The server does not support subscriptions requiring " +
-                "V3 certificates.";
-            throw new CertVersionConflictException(error);
-        }
-
-        String consumerVersion = consumer.getFact("system.certificate_version");
-        if (!ProductVersionValidator.validate(product, consumerVersion)) {
-            String error = "Consumer must be upgraded to use: " + product.getName();
-            throw new CertVersionConflictException(error);
-        }
     }
 
     /**

@@ -14,11 +14,18 @@
  */
 package org.candlepin.version;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-import org.candlepin.model.Product;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
+
+import org.candlepin.config.Config;
+import org.candlepin.model.Consumer;
+import org.candlepin.model.ProductAttribute;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -27,51 +34,105 @@ import org.junit.Test;
  */
 public class ProductVersionValidatorTests {
 
-    private Product product;
+    private Config config;
+    private Consumer consumer;
+    private Set<ProductAttribute> attrs;
 
     @Before
     public void setUp() {
-        product = new Product("123", "RAM Product");
-        product.setAttribute("ram", "2");
+        config = mock(Config.class);
+        consumer = new Consumer();
+        consumer.setFacts(new HashMap<String, String>());
+        attrs = new HashSet<ProductAttribute>();
+        // RAM requires version certificate_version 3.1
+        attrs.add(new ProductAttribute("ram", "2"));
     }
 
     @Test
-    public void ramLimitedProductRequires3Dot1() {
-        assertTrue(ProductVersionValidator.validate(product, "3.1"));
+    public void verifyClientSupportWhenProductRequires3Dot1() {
+        consumer.setFact("system.certificate_version", "3.1");
+        assertTrue(ProductVersionValidator.verifyClientSupport(consumer, attrs));
     }
 
     @Test
-    public void ramLimitedProductValidWithVersionGreaterThan3Dot1() {
-        assertTrue(ProductVersionValidator.validate(product, "3.2"));
-        assertTrue(ProductVersionValidator.validate(product, "3.1.1"));
-        assertTrue(ProductVersionValidator.validate(product, "3.1.0"));
+    public void verifyClientSupportWhenConsumerVersionGreaterThanProductVersion() {
+        consumer.setFact("system.certificate_version", "3.2");
+        assertTrue(ProductVersionValidator.verifyClientSupport(consumer, attrs));
+
+        consumer.setFact("system.certificate_version", "3.1.1");
+        assertTrue(ProductVersionValidator.verifyClientSupport(consumer, attrs));
+
+        consumer.setFact("system.certificate_version", "3.1.0");
+        assertTrue(ProductVersionValidator.verifyClientSupport(consumer, attrs));
     }
 
     @Test
-    public void ramLimitedProductNotValidWithVersionLessThan3Dot1() {
-        assertFalse(ProductVersionValidator.validate(product, "1.0"));
-        assertFalse(ProductVersionValidator.validate(product, "3.0"));
-        assertFalse(ProductVersionValidator.validate(product, "2.9.99"));
+    public void verifyClientSupportWhenConsumerVersionLessThanProductVersion() {
+        consumer.setFact("system.certificate_version", "1.0");
+        assertFalse(ProductVersionValidator.verifyClientSupport(consumer, attrs));
+
+        consumer.setFact("system.certificate_version", "3.0");
+        assertFalse(ProductVersionValidator.verifyClientSupport(consumer, attrs));
+
+        consumer.setFact("system.certificate_version", "2.9.99");
+        assertFalse(ProductVersionValidator.verifyClientSupport(consumer, attrs));
     }
 
     @Test
-    public void validateAgainstVersion1WhenVersionStringIsNullOrEmpty() {
-        assertFalse(ProductVersionValidator.validate(product, null));
-        assertFalse(ProductVersionValidator.validate(product, ""));
+    public void verifyConsumerVersion1Point0WhenConsumerVersionIsNull() {
+        consumer.setFact("system.certificate_version", null);
+        assertFalse(ProductVersionValidator.verifyClientSupport(consumer, attrs));
     }
 
     @Test
-    public void getMinVersion() {
-        assertEquals("3.1", ProductVersionValidator.getMinVersion(product).toString());
+    public void verifyConsumerVersion1Point0WhenConsumerVersionIsEmpty() {
+        consumer.setFact("system.certificate_version", "");
+        assertFalse(ProductVersionValidator.verifyClientSupport(consumer, attrs));
     }
 
     @Test
-    public void getMinVersionDefaultsToOneWhenProductAttributeNotVersioned() {
-        Product noAttrVersionedProduct = new Product("333", "Test Product");
-        // sockets attribute is not versioned in the ProductVersionValidator.
-        noAttrVersionedProduct.setAttribute("sockets", "2");
-        assertEquals("1.0",
-            ProductVersionValidator.getMinVersion(noAttrVersionedProduct).toString());
+    public void verifyConsumerVersion1Point0WhenConsumerVersionIsNotSet() {
+        consumer.setFacts(new HashMap<String, String>());
+        assertFalse(ProductVersionValidator.verifyClientSupport(consumer, attrs));
+    }
+
+
+    // verifyServerVersion tests
+    //
+    // Since RAM requires cert v3.1, we want to make sure that we
+    // check that the server is supporting the correct min version
+    // of 3.1
+
+    @Test
+    public void verifyServerVersionWhenCertV3Enabled() {
+        // RAM requires 3.1 version certs so if V3 is enabled we are Ok.
+        when(config.certV3IsEnabled()).thenReturn(true);
+        assertTrue(ProductVersionValidator.verifyServerSupport(config, consumer, attrs));
+    }
+
+    @Test
+    public void verifyServerVersionWhenCertV3Disabled() {
+        // RAM requires 3.1 version certs so if V3 is disabled we are NOT Ok.
+        when(config.certV3IsEnabled()).thenReturn(false);
+        assertFalse(ProductVersionValidator.verifyServerSupport(config, consumer, attrs));
+    }
+
+    @Test
+    public void verifyServerVersionWhenV3DisabledButProductRequires1Point0Minimum() {
+        Set<ProductAttribute> supportedWhenDisabled = new HashSet<ProductAttribute>();
+        supportedWhenDisabled.add(new ProductAttribute("sockets", "4"));
+
+        when(config.certV3IsEnabled()).thenReturn(false);
+        assertTrue(ProductVersionValidator.verifyServerSupport(config, consumer,
+            supportedWhenDisabled));
+    }
+
+    @Test
+    public void verifyServerVersionWhenCertV3DisabledButTestingConsumerSpecified() {
+        when(config.certV3IsEnabled()).thenReturn(false);
+        // Force the served back into v3 mode.
+        consumer.setFact("system.testing", "");
+        assertTrue(ProductVersionValidator.verifyServerSupport(config, consumer, attrs));
     }
 
 }
