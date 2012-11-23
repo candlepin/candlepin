@@ -62,6 +62,8 @@ import org.candlepin.policy.js.pool.PoolUpdate;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.Util;
+import org.candlepin.version.CertVersionConflictException;
+import org.candlepin.version.ProductVersionValidator;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -427,7 +429,25 @@ public class CandlepinPoolManager implements PoolManager {
                     }
                 }
                 else {
-                    filteredPools.add(pool);
+
+                    // If cert V3 is disabled, do not create a certificate with anything
+                    // considered V3+ as it is not supported in V1.
+                    if (!ProductVersionValidator.verifyServerSupport(config, consumer,
+                        pool.getProductAttributes())) {
+                        log.debug("Pool filtered from candidates because the server " +
+                                  "does not support subscriptions requiring V3 " +
+                                  "certificates.");
+                    }
+                    // Check to make sure that the consumer supports the required cert
+                    // versions for all attributes.
+                    else if (!ProductVersionValidator.verifyClientSupport(consumer,
+                        pool.getProductAttributes())) {
+                        log.debug("Pool filtered from candidates because it is " +
+                                  "unsupported by the consumer. Upgrade client to use.");
+                    }
+                    else {
+                        filteredPools.add(pool);
+                    }
                 }
             }
         }
@@ -573,6 +593,9 @@ public class CandlepinPoolManager implements PoolManager {
             return generateUeberCert ?
                 entCertAdapter.generateUeberCert(e, sub, product) :
                 entCertAdapter.generateEntitlementCert(e, sub, product);
+        }
+        catch (CertVersionConflictException cvce) {
+            throw cvce;
         }
         catch (Exception ex) {
             throw new RuntimeException(ex);

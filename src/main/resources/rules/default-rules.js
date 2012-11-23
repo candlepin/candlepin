@@ -5,6 +5,7 @@
 
 
 var SOCKET_FACT="cpu.cpu_socket(s)";
+var RAM_FACT = "memory.memtotal";
 
 function entitlement_name_space() {
     return Entitlement;
@@ -172,19 +173,23 @@ function architectureMatches(product, consumer) {
    return true;
 }
 
+function get_attribute_from_pool(pool, attributeName) {
+    // this can be either a ReadOnlyPool or a Pool, so deal with attributes as appropriate.
+    var attribute = pool.getProductAttribute(attributeName);
+    if ("getValue" in attribute) {
+        var value = attribute.getValue();
+    }
+    else {
+        var value = attribute;
+    }
+    return value
+}
+
 // get the number of sockets that each entitlement from a pool covers. 
 // if sockets is set to 0 or is not set, it is considered to be unlimited.
 function get_pool_sockets(pool) {
     if (pool.getProductAttribute("sockets")) {
-        // this can be either a ReadOnlyPool or a Pool, so deal with attributes as appropriate.
-        var attribute = pool.getProductAttribute("sockets");
-        if ("getValue" in attribute) {
-            var sockets = attribute.getValue();
-        }
-        else {
-            var sockets = attribute;
-        }
-
+        var sockets = get_attribute_from_pool(pool, "sockets");
         if (sockets == 0) {
             return Infinity;
         }
@@ -293,7 +298,7 @@ function findStackingPools(pool_class, consumer, compliance) {
             }
 
             // if this stack is already done, no need to add more to it.
-	    if (stackToEntitledSockets[stack_id] >= consumer_sockets) {
+            if (stackToEntitledSockets[stack_id] >= consumer_sockets) {
                 continue;
             }
 
@@ -326,7 +331,7 @@ function findStackingPools(pool_class, consumer, compliance) {
     var not_stacked_pool_map = new java.util.HashMap();
     // We have a not stackable pool.
     if (notStackable.length > 0) {
-	for each (pool in notStackable) {
+        for each (pool in notStackable) {
             var covered_sockets = get_pool_sockets(pool);
             if (covered_sockets > not_stacked_sockets) {
                 found_pool = true;
@@ -334,7 +339,7 @@ function findStackingPools(pool_class, consumer, compliance) {
                 not_stacked_pool_map.put(pool, 1);
                 not_stacked_sockets = covered_sockets;
             }
-	}
+        }
     }
 
     // if an unstacked pool can cover all our products, take that.
@@ -425,6 +430,7 @@ var Entitlement = {
     attribute_mappings: function() {
         return  "architecture:1:arch," +
             "sockets:1:sockets," +
+            "ram:1:ram," +
             "requires_consumer_type:1:requires_consumer_type," +
             "user_license:1:user_license," +
             "virt_only:1:virt_only," +
@@ -479,7 +485,7 @@ var Entitlement = {
 
     pre_requires_consumer_type: function() {
         if (!attributes.get("requires_consumer_type").equals(consumer.getType()) &&
-        		!consumer.getType().equals("uebercert")) {
+                !consumer.getType().equals("uebercert")) {
             pre.addError("rulefailed.consumer.type.mismatch");
         }
     },
@@ -561,6 +567,20 @@ var Entitlement = {
     post_sockets: function() {
     },
 
+    pre_ram: function() {
+        var consumerRam = get_consumer_ram(consumer);
+        log.debug("Consumer has " + consumerRam + "GB of RAM.");
+
+        var productRam = parseInt(product.getAttribute("ram"));
+        log.debug("Product has " + productRam + "GB of RAM");
+        if (consumerRam > productRam) {
+            pre.addWarning("rulewarning.unsupported.ram");
+        }
+    },
+
+    post_ram: function() {
+    },
+
     pre_global: function() {
         if (!consumer.isManifest()) {
             if (consumer.hasEntitlement(pool.getId()) && product.getAttribute("multi-entitlement") != "yes") {
@@ -575,7 +595,7 @@ var Entitlement = {
             // "hypervisor"/"uebercert" type are essentially the same as "system".
             if (!product.hasAttribute("requires_consumer_type")) {
                 if (!consumer.getType().equals("system") && !consumer.getType().equals("hypervisor") &&
-                		!consumer.getType().equals("uebercert")) {
+                        !consumer.getType().equals("uebercert")) {
                     pre.addError("rulefailed.consumer.type.mismatch");
                 }
 
@@ -1061,14 +1081,49 @@ function stack_is_compliant(consumer, stack_id, ents, log) {
  */
 function ent_is_compliant(consumer, ent, log) {
     log.debug("Checking entitlement compliance: " + ent.getId());
-    var consumer_sockets = 1;
+    var consumerSockets = 1;
     if (consumer.hasFact(SOCKET_FACT)) {
-        consumer_sockets = parseInt(consumer.getFact(SOCKET_FACT));
+        consumerSockets = parseInt(consumer.getFact(SOCKET_FACT));
     }
+    log.debug("  Consumer sockets found: " + consumerSockets);
 
-    var covered_sockets = get_pool_sockets(ent.getPool());
+    var coveredSockets = get_pool_sockets(ent.getPool());
+    log.debug("  Sockets covered by pool: " + coveredSockets);
 
-    return covered_sockets >= consumer_sockets;
+    if (coveredSockets < consumerSockets) {
+        log.debug("  Entitlement does not cover system sockets.");
+        return false;
+    }
+    
+    // Verify RAM coverage if required.
+    // Default consumer RAM to 1 GB if not defined
+    var consumerRam = get_consumer_ram(consumer);
+    log.debug("  Consumer RAM found: " + consumerRam);
+    
+    if (ent.getPool().getProductAttribute("ram")) {
+        var poolRamAttr = get_attribute_from_pool(ent.getPool(), "ram");
+        if (poolRamAttr != null && !poolRamAttr.isEmpty()) {
+            var ram = parseInt(poolRamAttr);
+            log.debug("  Pool RAM found: " + ram)
+            if (consumerRam > ram) {
+                return false;
+            }
+        }
+    }
+    else {
+        log.debug("  No RAM attribute on pool. Skipping RAM check.");
+    }
+    
+    return true
+}
+
+function get_consumer_ram(consumer) {
+    var consumerRam = 1;
+    if (consumer.hasFact(RAM_FACT)) {
+        var ramGb = parseInt(consumer.getFact(RAM_FACT)) / 1024 / 1024;
+        consumerRam = java.lang.Math.round(ramGb);
+    }
+    return consumerRam;
 }
 
 /**

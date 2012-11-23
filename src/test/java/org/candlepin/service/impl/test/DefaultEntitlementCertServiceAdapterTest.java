@@ -19,13 +19,14 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.mock;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -82,6 +83,7 @@ import org.candlepin.util.X509V3ExtensionUtil;
 import org.candlepin.util.X509V3ExtensionUtil.HuffNode;
 import org.candlepin.util.X509V3ExtensionUtil.NodePair;
 import org.candlepin.util.X509V3ExtensionUtil.PathNode;
+import org.candlepin.version.CertVersionConflictException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -553,6 +555,126 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
 
     @Test
+    public void ensureV1CertificateCreationFailsWithUnsupportedProductAttribute()
+        throws Exception {
+
+        Config mockConfig = mock(Config.class);
+        when(mockConfig.certV3IsEnabled()).thenReturn(true);
+
+        // RAM requires 3.1, so an exception should be thrown for cert V1 clients.
+        when(consumer.getFact(eq("system.certificate_version"))).thenReturn("1.0");
+        ProductAttribute attr = new ProductAttribute("ram", "4");
+        subscription.getProduct().addAttribute(attr);
+
+        X509V3ExtensionUtil mockV3extensionUtil = mock(X509V3ExtensionUtil.class);
+        X509ExtensionUtil mockExtensionUtil = mock(X509ExtensionUtil.class);
+
+        DefaultEntitlementCertServiceAdapter entAdapter =
+            new DefaultEntitlementCertServiceAdapter(mockedPKI, mockExtensionUtil,
+                mockV3extensionUtil, mock(EntitlementCertificateCurator.class),
+                keyPairCurator, serialCurator, productAdapter, entCurator,
+                I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
+                mockConfig);
+
+        try {
+            entAdapter.createX509Certificate(entitlement, subscription,
+                product, new BigInteger("1234"), keyPair(), true);
+            fail("Expected CertException here.");
+        }
+        catch (CertVersionConflictException e) {
+            assertEquals("Please upgrade to a newer client to use subscription: " +
+                         subscription.getProduct().getName(), e.getMessage());
+        }
+    }
+
+    @Test
+    public void ensureV3CertificateCreationFailsWithUnsupportedConsumerCertVersion()
+        throws Exception {
+        Config mockConfig = mock(Config.class);
+        when(mockConfig.certV3IsEnabled()).thenReturn(true);
+
+        // RAM requires 3.1, so an exception should be thrown.
+        when(consumer.getFact(eq("system.certificate_version"))).thenReturn("3.0");
+        ProductAttribute attr = new ProductAttribute("ram", "4");
+        subscription.getProduct().addAttribute(attr);
+
+        X509V3ExtensionUtil mockV3extensionUtil = mock(X509V3ExtensionUtil.class);
+        X509ExtensionUtil mockExtensionUtil = mock(X509ExtensionUtil.class);
+
+        DefaultEntitlementCertServiceAdapter entAdapter =
+            new DefaultEntitlementCertServiceAdapter(mockedPKI, mockExtensionUtil,
+                mockV3extensionUtil, mock(EntitlementCertificateCurator.class),
+                keyPairCurator, serialCurator, productAdapter, entCurator,
+                I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
+                mockConfig);
+
+        try {
+            entAdapter.createX509Certificate(entitlement, subscription,
+                product, new BigInteger("1234"), keyPair(), true);
+            fail("Expected CertException here.");
+        }
+        catch (CertVersionConflictException e) {
+            assertEquals("Please upgrade to a newer client to use subscription: " +
+                         subscription.getProduct().getName(), e.getMessage());
+        }
+    }
+
+    @Test
+    public void ensureV3CertificateCreationOkWhenConsumerSupportsV3Dot1Certs()
+        throws Exception {
+        Config mockConfig = mock(Config.class);
+        when(mockConfig.certV3IsEnabled()).thenReturn(true);
+
+        when(consumer.getFact(eq("system.certificate_version"))).thenReturn("3.1");
+        ProductAttribute attr = new ProductAttribute("ram", "4");
+        subscription.getProduct().addAttribute(attr);
+
+        X509V3ExtensionUtil mockV3extensionUtil = mock(X509V3ExtensionUtil.class);
+        X509ExtensionUtil mockExtensionUtil = mock(X509ExtensionUtil.class);
+
+        DefaultEntitlementCertServiceAdapter entAdapter =
+            new DefaultEntitlementCertServiceAdapter(mockedPKI, mockExtensionUtil,
+                mockV3extensionUtil, mock(EntitlementCertificateCurator.class),
+                keyPairCurator, serialCurator, productAdapter, entCurator,
+                I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
+                mockConfig);
+
+        entAdapter.createX509Certificate(entitlement, subscription, product,
+            new BigInteger("1234"), keyPair(), true);
+    }
+
+    @Test
+    public void ensureV3ProductCreationNotOkWhenV3SupportIsDisabledOnServer()
+        throws Exception {
+        Config mockConfig = mock(Config.class);
+        when(mockConfig.certV3IsEnabled()).thenReturn(false);
+
+        when(consumer.getFact(eq("system.certificate_version"))).thenReturn("3.0");
+
+        X509V3ExtensionUtil mockV3extensionUtil = mock(X509V3ExtensionUtil.class);
+        X509ExtensionUtil mockExtensionUtil = mock(X509ExtensionUtil.class);
+
+        ProductAttribute attr = new ProductAttribute("ram", "4");
+        subscription.getProduct().addAttribute(attr);
+
+        DefaultEntitlementCertServiceAdapter entAdapter =
+            new DefaultEntitlementCertServiceAdapter(mockedPKI, mockExtensionUtil,
+                mockV3extensionUtil, mock(EntitlementCertificateCurator.class),
+                keyPairCurator, serialCurator, productAdapter, entCurator,
+                I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
+                mockConfig);
+        try {
+            entAdapter.createX509Certificate(entitlement, subscription, product,
+                new BigInteger("1234"), keyPair(), true);
+            fail("Expected CertVersionConflictException to be thrown.");
+        }
+        catch (CertVersionConflictException e) {
+            assertEquals("The server does not support subscriptions requiring " +
+                         "V3 certificates.", e.getMessage());
+        }
+    }
+
+    @Test
     public void supportValuesAbsentOnCertIfNoSupportAttributes()
         throws Exception {
 
@@ -648,6 +770,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         subscription.getProduct().setAttribute("warning_period", "20");
         subscription.getProduct().setAttribute("sockets", "4");
+        subscription.getProduct().setAttribute("ram", "8");
         subscription.getProduct().setAttribute("management_enabled", "true");
         subscription.getProduct().setAttribute("stacking_id", "45678");
         entitlement.getPool().setAttribute("virt_only", "true");
@@ -668,7 +791,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             map.put(ext.getOid(), ext);
         }
         assertTrue(map.containsKey("1.3.6.1.4.1.2312.9.6"));
-        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("3.0"));
+        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("3.1"));
 
         byte[] payload = v3extensionUtil.createEntitlementDataPayload(products, entitlement,
             "prefix", null, subscription);
@@ -689,6 +812,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         assertEquals(subs.get("name"), subscription.getProduct().getName());
         assertEquals(subs.get("warning"), 20);
         assertEquals(subs.get("sockets"), 4);
+        assertEquals(subs.get("ram"), 8);
         assertTrue((Boolean) subs.get("management"));
         assertEquals(subs.get("stacking_id"), "45678");
         assertTrue((Boolean) subs.get("virt_only"));
@@ -764,7 +888,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             map.put(ext.getOid(), ext);
         }
         assertTrue(map.containsKey("1.3.6.1.4.1.2312.9.6"));
-        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("3.0"));
+        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("3.1"));
 
         byte[] payload = v3extensionUtil.createEntitlementDataPayload(products, entitlement,
             "prefix", null, subscription);
@@ -815,7 +939,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             map.put(ext.getOid(), ext);
         }
         assertTrue(map.containsKey("1.3.6.1.4.1.2312.9.6"));
-        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("3.0"));
+        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("3.1"));
 
         byte[] payload = v3extensionUtil.createEntitlementDataPayload(products, entitlement,
             "prefix", null, subscription);
