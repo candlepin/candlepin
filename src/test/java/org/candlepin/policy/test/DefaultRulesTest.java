@@ -510,6 +510,49 @@ public class DefaultRulesTest {
     }
 
     @Test
+    public void consumerHavingLessRamThanProductShouldNotGenerateWarning() {
+        // Fact specified in kb
+        Pool pool = setupArchTest("ram", "4", "memory.memtotal", "2000000");
+
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
+            .getResult();
+        assertFalse(result.hasErrors());
+        assertFalse(result.hasWarnings());
+    }
+
+    @Test
+    public void consumerHavingEqualRamAsProductShouldNotGenerateWarning() {
+        // Fact specified in kb
+        Pool pool = setupArchTest("ram", "2", "memory.memtotal", "2000000");
+
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
+            .getResult();
+        assertFalse(result.hasErrors());
+        assertFalse(result.hasWarnings());
+    }
+
+    @Test
+    public void consumerRamIsRoundedToNearestGbAndShouldNotGenerateWarning() {
+        // Fact specified in kb - actual value of 2 GiB in kb.
+        Pool pool = setupArchTest("ram", "2", "memory.memtotal", "2097152");
+
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
+            .getResult();
+        assertFalse(result.hasErrors());
+        assertFalse(result.hasWarnings());
+    }
+
+    @Test
+    public void consumerHavingMoreRamThanProductGeneratesWarning() {
+        Pool pool = setupArchTest("ram", "2", "memory.memtotal", "4000000");
+
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
+            .getResult();
+        assertFalse(result.hasErrors());
+        assertTrue(result.hasWarnings());
+    }
+
+    @Test
     public void correctConsumerTypeShouldNotGenerateError() {
         Pool pool = setupProductWithRequiresConsumerTypeAttribute();
         consumer.setType(new ConsumerType(ConsumerTypeEnum.DOMAIN));

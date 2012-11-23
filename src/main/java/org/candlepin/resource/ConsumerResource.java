@@ -108,6 +108,7 @@ import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.sync.ExportCreationException;
 import org.candlepin.sync.Exporter;
 import org.candlepin.util.Util;
+import org.candlepin.version.CertVersionConflictException;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
@@ -1274,6 +1275,9 @@ public class ConsumerResource {
             }
             catch (ForbiddenException fe) {
                 throw fe;
+            }
+            catch (CertVersionConflictException cvce) {
+                throw cvce;
             }
             catch (RuntimeException re) {
                 log.warn(i18n.tr("Asked to be subscribed to a product that " +

@@ -31,6 +31,8 @@ public class Subscription {
     private String name;
     private Integer warning;
     private Integer sockets;
+    // RAM is specified in GB.
+    private Integer ram;
     private Boolean management;
     @JsonProperty("stacking_id")
     private String stackingId;
@@ -64,6 +66,13 @@ public class Subscription {
      */
     public void setSockets(Integer sockets) {
         this.sockets = sockets;
+    }
+
+    /**
+     * @param ram
+     */
+    public void setRam(Integer ram) {
+        this.ram = ram;
     }
 
     /**
