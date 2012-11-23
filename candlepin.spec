@@ -171,7 +171,6 @@ SELinux policy module supporting candlepin
 
 %prep
 %setup -q
-#rm -rf %{distlibdir}
 mkdir -p %{distlibdir}
 
 %build
@@ -202,16 +201,25 @@ install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat6/webapps/
 install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat6/webapps/%{name}/
 install -d -m 755 $RPM_BUILD_ROOT/%{_sysconfdir}/tomcat6/
 unzip target/%{name}-%{version}.war -d $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat6/webapps/%{name}/
+
+
+%if !0%{?reqcpdeps}
+#remove the copied jars and resymlink
+rm $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat6/webapps/%{name}/WEB-INF/lib/*.jar
+ant -Ddistlibdir=$RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat6/webapps/%{name}/WEB-INF/lib/ initjars
+%endif
 ln -s /etc/candlepin/certs/keystore $RPM_BUILD_ROOT/%{_sysconfdir}/tomcat6/keystore
-#rm -f $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat6/webapps/%{name}/WEB-INF/lib/bc*jdk16*.jar
-#ln -s %{_datadir}/java/bcprov.jar $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat6/webapps/%{name}/WEB-INF/lib/bcprov.jar
 
 # jbossas
 install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/
 install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/%{name}.war
 unzip target/%{name}-%{version}.war -d $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/%{name}.war/
-#rm -f $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/%{name}.war/WEB-INF/lib/bc*jdk16*.jar
-#ln -s %{_datadir}/java/bcprov.jar $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/%{name}.war/WEB-INF/lib/bcprov.jar
+
+%if !0%{?reqcpdeps}
+#remove the copied jars and resymlink
+rm $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/%{name}.war/WEB-INF/lib/*.jar
+ant -Ddistlibdir=$RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/%{name}.war/WEB-INF/lib/ initjars 
+%endif
 
 # devel
 install -d -m 755 $RPM_BUILD_ROOT/%{_datadir}/%{name}/lib/
