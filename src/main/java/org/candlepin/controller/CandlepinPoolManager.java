@@ -308,7 +308,7 @@ public class CandlepinPoolManager implements PoolManager {
             log.debug("   new pool: " + p);
         }
         if (created != null) {
-            sink.emitPoolCreated(created);
+            subAdapter.sendActivationEmail(created.getSubscriptionId());
         }
 
         return created;
