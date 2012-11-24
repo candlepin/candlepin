@@ -106,7 +106,7 @@ public class ImporterTest {
         em.setType(ExporterMetadata.TYPE_SYSTEM);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, null, emc, null, null, i18n);
+            null, null, emc, null, i18n);
         i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actual,
             new ConflictOverrides());
 
@@ -130,7 +130,7 @@ public class ImporterTest {
         ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(null);
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, null, emc, null, null, i18n);
+            null, null, emc, null, i18n);
         i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta,
             new ConflictOverrides());
         assertTrue(f.delete());
@@ -151,7 +151,7 @@ public class ImporterTest {
         em.setType(ExporterMetadata.TYPE_SYSTEM);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, null, emc, null, null, i18n);
+            null, null, emc, null, i18n);
         try {
             i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta,
                 new ConflictOverrides());
@@ -179,7 +179,7 @@ public class ImporterTest {
         em.setType(ExporterMetadata.TYPE_SYSTEM);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, null, emc, null, null, i18n);
+            null, null, emc, null, i18n);
         try {
             i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta,
                 new ConflictOverrides());
@@ -227,7 +227,7 @@ public class ImporterTest {
         em.setType(ExporterMetadata.TYPE_SYSTEM);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, null, emc, null, null, i18n);
+            null, null, emc, null, i18n);
         i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta,
             new ConflictOverrides());
         assertEquals(importDate, em.getExported());
@@ -246,7 +246,7 @@ public class ImporterTest {
         RulesImporter ri = mock(RulesImporter.class);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(null);
         Importer i = new Importer(null, null, ri, null, null, null, null,
-            null, null, emc, null, null, i18n);
+            null, null, emc, null, i18n);
         i.importRules(jsArray, actualmeta);
 
         //verify that rules were imported
@@ -264,7 +264,7 @@ public class ImporterTest {
 
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(null);
         Importer i = new Importer(null, null, ri, null, null, null, null,
-            null, null, emc, null, null, i18n);
+            null, null, emc, null, i18n);
         i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta,
             new ConflictOverrides());
         //verify that rules were not imported
@@ -277,7 +277,7 @@ public class ImporterTest {
             "test_user", "prefix");
         try {
             Importer i = new Importer(null, null, null, null, null, null, null,
-                null, null, null, null, null, i18n);
+                null, null, null, null, i18n);
 
             // null Type should cause exception
             i.validateMetadata(null, null, actualmeta, new ConflictOverrides());
@@ -296,7 +296,7 @@ public class ImporterTest {
             .thenReturn(null);
 
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, null, emc, null, null, i18n);
+            null, null, emc, null, i18n);
 
         // null Type should cause exception
         i.validateMetadata(ExporterMetadata.TYPE_PER_USER, null, actualmeta,
@@ -308,7 +308,7 @@ public class ImporterTest {
     public void testImportWithNonZipArchive()
         throws IOException, ImporterException {
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, config, null, null, null, i18n);
+            null, config, null, null, i18n);
 
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
@@ -332,7 +332,7 @@ public class ImporterTest {
     public void testImportZipArchiveNoContent()
         throws IOException, ImporterException {
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, config, null, null, null, i18n);
+            null, config, null, null, i18n);
 
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
@@ -357,7 +357,7 @@ public class ImporterTest {
     public void testImportZipSigConsumerNotZip()
         throws IOException, ImporterException {
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, config, null, null, null, i18n);
+            null, config, null, null, i18n);
 
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
@@ -388,7 +388,7 @@ public class ImporterTest {
     public void testImportZipSigAndEmptyConsumerZip()
         throws IOException, ImporterException {
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, config, null, null, null, i18n);
+            null, config, null, null, i18n);
 
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
@@ -419,7 +419,7 @@ public class ImporterTest {
     public void testImportNoMeta()
         throws IOException, ImporterException {
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, config, null, null, null, i18n);
+            null, config, null, null, i18n);
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
         Map<String, File> importFiles = new HashMap<String, File>();
@@ -449,7 +449,7 @@ public class ImporterTest {
     public void testImportNoRulesDir()
         throws IOException, ImporterException {
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, config, null, null, null, i18n);
+            null, config, null, null, i18n);
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
         Map<String, File> importFiles = new HashMap<String, File>();
@@ -476,7 +476,7 @@ public class ImporterTest {
     public void testImportNoRulesFile()
         throws IOException, ImporterException {
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, config, null, null, null, i18n);
+            null, config, null, null, i18n);
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
         Map<String, File> importFiles = new HashMap<String, File>();
@@ -505,7 +505,7 @@ public class ImporterTest {
     public void testImportNoConsumerTypesDir()
         throws IOException, ImporterException {
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, config, null, null, null, i18n);
+            null, config, null, null, i18n);
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
         Map<String, File> importFiles = new HashMap<String, File>();
@@ -535,7 +535,7 @@ public class ImporterTest {
     public void testImportNoConsumer()
         throws IOException, ImporterException {
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, config, null, null, null, i18n);
+            null, config, null, null, i18n);
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
         Map<String, File> importFiles = new HashMap<String, File>();
@@ -566,7 +566,7 @@ public class ImporterTest {
         throws IOException, ImporterException {
         RulesImporter ri = mock(RulesImporter.class);
         Importer i = new Importer(null, null, ri, null, null, null, null,
-            null, config, null, null, null, i18n);
+            null, config, null, null, i18n);
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
         Map<String, File> importFiles = new HashMap<String, File>();
@@ -603,7 +603,7 @@ public class ImporterTest {
     public void testImportProductNoEntitlementDir()
         throws IOException, ImporterException {
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, config, null, null, null, i18n);
+            null, config, null, null, i18n);
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
         Map<String, File> importFiles = new HashMap<String, File>();

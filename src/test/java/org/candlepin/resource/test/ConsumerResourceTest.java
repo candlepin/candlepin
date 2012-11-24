@@ -38,8 +38,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-import org.candlepin.audit.EventFactory;
-import org.candlepin.audit.EventSink;
 import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.config.Config;
 import org.candlepin.controller.CandlepinPoolManager;
@@ -122,7 +120,7 @@ public class ConsumerResourceTest {
 
         ConsumerResource consumerResource = new ConsumerResource(
             mockedConsumerCurator, null, null, null, mockedEntitlementCurator, null,
-            mockedEntitlementCertServiceAdapter, null, null, null, null, null,
+            mockedEntitlementCertServiceAdapter, null,
             null, null, mockedPoolManager, null, null, null, null, null, null,
             null, null, null, new Config());
 
@@ -152,12 +150,12 @@ public class ConsumerResourceTest {
 
         CandlepinPoolManager poolManager = new CandlepinPoolManager(null,
             mockedSubscriptionServiceAdapter, null,
-            mockedEntitlementCertServiceAdapter, null, null, new Config(), null,
+            mockedEntitlementCertServiceAdapter, new Config(), null,
             null, mockedEntitlementCurator, mockedConsumerCurator, null, null, null);
 
         ConsumerResource consumerResource = new ConsumerResource(
             mockedConsumerCurator, null, null, null, mockedEntitlementCurator, null,
-            mockedEntitlementCertServiceAdapter, null, null, null, null, null,
+            mockedEntitlementCertServiceAdapter, null,
             null, null, poolManager, null, null, null, null, null, null,
             null, null, null, new Config());
 
@@ -192,7 +190,7 @@ public class ConsumerResourceTest {
 
         CandlepinPoolManager mgr = mock(CandlepinPoolManager.class);
         ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
-            null, null, null, null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null,
             null, mgr, null, null, null, null, null, null, null, null, null,
             new Config());
         cr.regenerateEntitlementCertificates(consumer.getUuid(), null, true);
@@ -209,9 +207,6 @@ public class ConsumerResourceTest {
         IdentityCertServiceAdapter mockedIdSvc = Mockito
             .mock(IdentityCertServiceAdapter.class);
 
-        EventSink sink = Mockito.mock(EventSink.class);
-        EventFactory factory = Mockito.mock(EventFactory.class);
-
         Consumer consumer = createConsumer();
         consumer.setIdCert(createIdCert());
         IdentityCertificate ic = consumer.getIdCert();
@@ -223,7 +218,7 @@ public class ConsumerResourceTest {
             createIdCert());
 
         ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
-            null, null, null, mockedIdSvc, null, null, sink, factory, null, null,
+            null, null, null, mockedIdSvc, null, null,
             null, null, null, null, null, null, mockedOwnerCurator, null, null, null,
             null, null, new Config());
 
@@ -242,9 +237,6 @@ public class ConsumerResourceTest {
         IdentityCertServiceAdapter mockedIdSvc = Mockito
             .mock(IdentityCertServiceAdapter.class);
 
-        EventSink sink = Mockito.mock(EventSink.class);
-        EventFactory factory = Mockito.mock(EventFactory.class);
-
         SubscriptionServiceAdapter ssa = Mockito.mock(SubscriptionServiceAdapter.class);
         ComplianceRules rules = Mockito.mock(ComplianceRules.class);
 
@@ -259,7 +251,7 @@ public class ConsumerResourceTest {
             createIdCert());
 
         ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
-            null, ssa, null, mockedIdSvc, null, null, sink, factory, null, null,
+            null, ssa, null, mockedIdSvc, null, null,
             null, null, null, null, null, null, mockedOwnerCurator, null, null,
             rules, null, null, new Config());
 
@@ -281,7 +273,7 @@ public class ConsumerResourceTest {
             consumer);
 
         ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
-            null, ssa, null, null, null, null, null, null, null, null,
+            null, ssa, null, null, null, null,
             null, null, null, null, null, null, mockedOwnerCurator, null, null,
             rules, null, null, new Config());
 
@@ -310,7 +302,7 @@ public class ConsumerResourceTest {
         when(ctc.lookupByLabel(eq("person"))).thenReturn(cType);
 
         ConsumerResource cr = new ConsumerResource(null, ctc,
-            null, null, null, null, null, i18n, null, null, null, null,
+            null, null, null, null, null, i18n,
             null, null, null, null, null, null, oc, akc, null, null, null, null,
             new Config());
         cr.create(c, nap, null, "testOwner", "testKey");
@@ -333,7 +325,7 @@ public class ConsumerResourceTest {
                 .thenThrow(new RuntimeException());
 
             ConsumerResource cr = new ConsumerResource(cc, null,
-                null, sa, null, null, null, i18n, null, null, null, null,
+                null, sa, null, null, null, i18n,
                 null, null, null, null, null, null, null, null, e, null, null, null,
                 new Config());
             cr.bind("fakeConsumer", null, prodIds, 1, null, null, false, null);
@@ -360,7 +352,7 @@ public class ConsumerResourceTest {
         when(cc.findByUuid(eq("fakeConsumer"))).thenReturn(c);
 
         ConsumerResource cr = new ConsumerResource(cc, null,
-            null, sa, null, null, null, null, null, null, null, null,
+            null, sa, null, null, null, null,
             null, null, null, null, null, null, null, null, e, null, null, null,
             new Config());
         String dtStr = "2011-09-26T18:10:50.184081+00:00";
@@ -380,7 +372,7 @@ public class ConsumerResourceTest {
 
         ConsumerResource consumerResource = new ConsumerResource(consumerCurator, null,
             null, null, entitlementCurator, null, null, i18n, null, null, null,
-            null, null, null, null, null, null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null, null,
             new Config());
 
         consumerResource.unbindBySerial("fake uuid",
@@ -393,7 +385,7 @@ public class ConsumerResourceTest {
         when(consumerCurator.findByUuid(eq("fake uuid"))).thenReturn(null);
 
         ConsumerResource consumerResource = new ConsumerResource(consumerCurator, null,
-            null, null, null, null, null, i18n, null, null, null, null,
+            null, null, null, null, null, i18n,
             null, null, null, null, null, null, null, null, null, null, null, null,
             new Config());
 
@@ -405,7 +397,7 @@ public class ConsumerResourceTest {
     public void testBindMultipleParams() throws Exception {
         ConsumerCurator consumerCurator = mock(ConsumerCurator.class);
         ConsumerResource consumerResource = new ConsumerResource(consumerCurator, null,
-            null, null, null, null, null, i18n, null, null, null, null,
+            null, null, null, null, null, i18n,
             null, null, null, null, null, null, null, null, null, null, null, null,
             new Config());
 
@@ -418,7 +410,7 @@ public class ConsumerResourceTest {
     public void testBindByPoolBadConsumerUuid() throws Exception {
         ConsumerCurator consumerCurator = mock(ConsumerCurator.class);
         ConsumerResource consumerResource = new ConsumerResource(consumerCurator, null,
-            null, null, null, null, null, i18n, null, null, null, null,
+            null, null, null, null, null, i18n,
             null, null, null, null, null, null, null, null, null, null, null, null,
             new Config());
 
@@ -434,7 +426,7 @@ public class ConsumerResourceTest {
     public void testRegenerateEntitlementCertificatesWithInvalidConsumerId() {
         ConsumerCurator consumerCurator = mock(ConsumerCurator.class);
         ConsumerResource consumerResource = new ConsumerResource(consumerCurator, null,
-            null, null, null, null, null, i18n, null, null, null, null,
+            null, null, null, null, null, i18n,
             null, null, null, null, null, null, null, null, null, null, null, null,
             new Config());
 

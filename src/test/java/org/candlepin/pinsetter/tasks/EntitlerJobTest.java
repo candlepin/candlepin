@@ -95,7 +95,6 @@ public class EntitlerJobTest {
         EntitlerJob job = new EntitlerJob(e);
         job.execute(ctx);
         verify(e).bindByPool(eq(pool), eq(consumerUuid), eq(1));
-        verify(e).sendEvents(eq(ents));
     }
 
     @Test
@@ -112,7 +111,6 @@ public class EntitlerJobTest {
         EntitlerJob job = new EntitlerJob(e);
         job.execute(ctx);
         verify(e).bindByProducts(eq(pids), eq(consumerUuid), eq((Date) null));
-        verify(e).sendEvents(eq(ents));
     }
 
     /**

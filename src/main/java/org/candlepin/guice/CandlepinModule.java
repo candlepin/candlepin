@@ -14,8 +14,6 @@
  */
 package org.candlepin.guice;
 
-import org.candlepin.audit.EventSink;
-import org.candlepin.audit.EventSinkImpl;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.interceptor.SecurityInterceptor;
 import org.candlepin.config.Config;
@@ -61,7 +59,6 @@ import org.candlepin.policy.js.JsRulesProvider;
 import org.candlepin.policy.js.pool.JsPoolRules;
 import org.candlepin.resource.ActivationKeyResource;
 import org.candlepin.resource.AdminResource;
-import org.candlepin.resource.AtomFeedResource;
 import org.candlepin.resource.CertificateSerialResource;
 import org.candlepin.resource.ConsumerResource;
 import org.candlepin.resource.ConsumerTypeResource;
@@ -69,7 +66,6 @@ import org.candlepin.resource.ContentResource;
 import org.candlepin.resource.CrlResource;
 import org.candlepin.resource.EntitlementResource;
 import org.candlepin.resource.EnvironmentResource;
-import org.candlepin.resource.EventResource;
 import org.candlepin.resource.HypervisorResource;
 import org.candlepin.resource.JobResource;
 import org.candlepin.resource.MigrationResource;
@@ -137,8 +133,6 @@ public class CandlepinModule extends AbstractModule {
         bind(HypervisorResource.class);
         bind(ConsumerTypeResource.class);
         bind(ContentResource.class);
-        bind(AtomFeedResource.class);
-        bind(EventResource.class);
         bind(PoolResource.class);
         bind(EntitlementResource.class);
         bind(OwnerResource.class);
@@ -190,7 +184,6 @@ public class CandlepinModule extends AbstractModule {
         bind(PinsetterAsyncInterceptor.class);
         bind(VersionPostInterceptor.class);
         bind(JsonProvider.class);
-        bind(EventSink.class).to(EventSinkImpl.class);
         bind(JobFactory.class).to(GuiceJobFactory.class);
         bind(JobListener.class).to(PinsetterJobListener.class);
         bind(PinsetterKernel.class);

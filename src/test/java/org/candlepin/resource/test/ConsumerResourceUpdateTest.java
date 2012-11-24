@@ -24,9 +24,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
 
-import org.candlepin.audit.Event;
-import org.candlepin.audit.EventFactory;
-import org.candlepin.audit.EventSink;
 import org.candlepin.config.Config;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.PoolManager;
@@ -68,8 +65,6 @@ public class ConsumerResourceUpdateTest {
     @Mock private SubscriptionServiceAdapter subscriptionService;
     @Mock private ConsumerCurator consumerCurator;
     @Mock private ConsumerTypeCurator consumerTypeCurator;
-    @Mock private EventSink sink;
-    @Mock private EventFactory eventFactory;
     @Mock private ActivationKeyCurator activationKeyCurator;
     @Mock private PoolManager poolManager;
     @Mock private ComplianceRules complianceRules;
@@ -87,7 +82,7 @@ public class ConsumerResourceUpdateTest {
 
         this.resource = new ConsumerResource(this.consumerCurator,
             this.consumerTypeCurator, null, this.subscriptionService, null,
-            this.idCertService, null, this.i18n, this.sink, this.eventFactory, null, null,
+            this.idCertService, null, this.i18n,
             this.userService, null, poolManager, null, null, null, null,
             this.activationKeyCurator, this.entitler, this.complianceRules,
             this.deletedConsumerCurator, this.environmentCurator,
@@ -98,13 +93,6 @@ public class ConsumerResourceUpdateTest {
 
         when(idCertService.regenerateIdentityCert(any(Consumer.class)))
             .thenReturn(new IdentityCertificate());
-    }
-
-    @Test
-    public void nothingChanged() throws Exception {
-        Consumer consumer = getFakeConsumer();
-        this.resource.updateConsumer(consumer.getUuid(), consumer);
-        verify(sink, never()).sendEvent((Event) any());
     }
 
     private Consumer getFakeConsumer() {
@@ -135,7 +123,7 @@ public class ConsumerResourceUpdateTest {
     }
 
 
-    private void compareConsumerRelease(String release1, String release2, Boolean verify) {
+    private void compareConsumerRelease(String release1, String release2) {
         Consumer consumer = getFakeConsumer();
         consumer.setReleaseVer(new Release(release1));
 
@@ -143,49 +131,29 @@ public class ConsumerResourceUpdateTest {
         incoming.setReleaseVer(new Release(release2));
 
         this.resource.updateConsumer(consumer.getUuid(), incoming);
-        if (verify) {
-            verify(sink).sendEvent((Event) any());
-        }
+
         assertEquals(consumer.getReleaseVer().getReleaseVer(),
             incoming.getReleaseVer().getReleaseVer());
     }
 
     @Test
     public void releaseVerChanged() {
-        compareConsumerRelease("6.2", "6.2.1", true);
+        compareConsumerRelease("6.2", "6.2.1");
     }
 
     @Test
     public void releaseVerChangedEmpty() {
-        compareConsumerRelease("", "6.2.1", true);
+        compareConsumerRelease("", "6.2.1");
     }
 
     @Test
     public void releaseVerChangedNull() {
-        compareConsumerRelease(null, "6.2.1", true);
+        compareConsumerRelease(null, "6.2.1");
     }
 
     @Test
     public void releaseVerNothingChangedEmpty() {
-        compareConsumerRelease("", "", false);
-    }
-
-    @Test
-    public void installedPackagesChanged() throws Exception {
-        ConsumerInstalledProduct a = new ConsumerInstalledProduct("a", "Product A");
-        ConsumerInstalledProduct b = new ConsumerInstalledProduct("b", "Product B");
-        ConsumerInstalledProduct c = new ConsumerInstalledProduct("c", "Product C");
-
-        Consumer consumer = getFakeConsumer();
-        consumer.addInstalledProduct(a);
-        consumer.addInstalledProduct(b);
-
-        Consumer incoming = new Consumer();
-        incoming.addInstalledProduct(b);
-        incoming.addInstalledProduct(c);
-
-        this.resource.updateConsumer(consumer.getUuid(), incoming);
-        verify(sink).sendEvent((Event) any());
+        compareConsumerRelease("", "");
     }
 
     @Test
@@ -203,7 +171,6 @@ public class ConsumerResourceUpdateTest {
         incoming.addInstalledProduct(c);
 
         this.resource.updateConsumer(consumer.getUuid(), incoming);
-        verify(sink).sendEvent((Event) any());
         verify(complianceRules).getStatus(eq(consumer), any(Date.class));
     }
 
@@ -303,62 +270,6 @@ public class ConsumerResourceUpdateTest {
         updated.setGuestIds(new ArrayList<GuestId>());
         this.resource.updateConsumer(existing.getUuid(), updated);
         assertTrue(existing.getGuestIds().isEmpty());
-    }
-
-    @Test
-    public void ensureCreateEventIsSentWhenGuestIdIsAddedToConsumer() {
-        String uuid = "TEST_CONSUMER";
-        Consumer existing = createConsumerWithGuests(new String[0]);
-        existing.setUuid(uuid);
-
-        when(this.consumerCurator.findByUuid(uuid)).thenReturn(existing);
-
-        // Create a consumer with 1 new guest.
-        Consumer updated = createConsumerWithGuests("Guest 1");
-
-        Event expectedEvent = new Event();
-        when(this.eventFactory.guestIdCreated(existing, updated.getGuestIds().get(0)))
-            .thenReturn(expectedEvent);
-
-        this.resource.updateConsumer(existing.getUuid(), updated);
-        verify(sink).sendEvent(eq(expectedEvent));
-    }
-
-    @Test
-    public void ensureEventIsSentWhenGuestIdIsremovedFromConsumer() {
-        String uuid = "TEST_CONSUMER";
-        Consumer existing = createConsumerWithGuests("Guest 1", "Guest 2");
-        existing.setUuid(uuid);
-
-        when(this.consumerCurator.findByUuid(uuid)).thenReturn(existing);
-
-        // Create a consumer with one less guest id.
-        Consumer updated = createConsumerWithGuests("Guest 2");
-
-        Event expectedEvent = new Event();
-        when(this.eventFactory.guestIdDeleted(existing, existing.getGuestIds().get(0)))
-            .thenReturn(expectedEvent);
-
-        this.resource.updateConsumer(existing.getUuid(), updated);
-        verify(sink).sendEvent(eq(expectedEvent));
-    }
-
-    @Test
-    public void ensureEventIsNotFiredWhenNoChangeWasMadeToConsumerGuestIds() {
-        String uuid = "TEST_CONSUMER";
-        Consumer existing = createConsumerWithGuests("Guest 1", "Guest 2");
-        existing.setUuid(uuid);
-
-        when(this.consumerCurator.findByUuid(uuid)).thenReturn(existing);
-
-        Consumer updated = createConsumerWithGuests("Guest 1", "Guest 2");
-        updated.setUuid(uuid);
-
-        Event event = new Event();
-        when(this.eventFactory.consumerModified(existing, updated)).thenReturn(event);
-
-        this.resource.updateConsumer(existing.getUuid(), updated);
-        verify(sink).sendEvent(eq(event));
     }
 
     // ignored out per mkhusid, see 768872 comment #41
@@ -606,7 +517,6 @@ public class ConsumerResourceUpdateTest {
         resource.updateConsumer(existing.getUuid(), updated);
 
         verify(poolManager, atMost(1)).regenerateEntitlementCertificates(existing, true);
-        verify(sink).sendEvent((Event) any());
     }
 
     @Test(expected = NotFoundException.class)

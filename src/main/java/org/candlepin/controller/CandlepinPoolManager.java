@@ -27,9 +27,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
-import org.candlepin.audit.Event;
-import org.candlepin.audit.EventFactory;
-import org.candlepin.audit.EventSink;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.ActivationKey;
@@ -77,8 +74,6 @@ public class CandlepinPoolManager implements PoolManager {
     private static Logger log = Logger.getLogger(CandlepinPoolManager.class);
 
     private SubscriptionServiceAdapter subAdapter;
-    private EventSink sink;
-    private EventFactory eventFactory;
     private Config config;
     private Enforcer enforcer;
     private PoolRules poolRules;
@@ -101,16 +96,14 @@ public class CandlepinPoolManager implements PoolManager {
     public CandlepinPoolManager(PoolCurator poolCurator,
         SubscriptionServiceAdapter subAdapter,
         ProductCache productCache,
-        EntitlementCertServiceAdapter entCertAdapter, EventSink sink,
-        EventFactory eventFactory, Config config, Enforcer enforcer,
+        EntitlementCertServiceAdapter entCertAdapter,
+        Config config, Enforcer enforcer,
         PoolRules poolRules, EntitlementCurator curator1, ConsumerCurator consumerCurator,
         EntitlementCertificateCurator ecC, ComplianceRules complianceRules,
         EnvironmentCurator envCurator) {
 
         this.poolCurator = poolCurator;
         this.subAdapter = subAdapter;
-        this.sink = sink;
-        this.eventFactory = eventFactory;
         this.config = config;
         this.entitlementCurator = curator1;
         this.consumerCurator = consumerCurator;
@@ -226,17 +219,6 @@ public class CandlepinPoolManager implements PoolManager {
     Set<Entitlement> updatePoolsForSubscription(List<Pool> existingPools,
         Subscription sub) {
 
-        /*
-         * Rules need to determine which pools have changed, but the Java must
-         * send out the events. Create an event for each pool that could change,
-         * even if we won't use them all.
-         */
-        Map<String, Event> poolEvents = new HashMap<String, Event>();
-        for (Pool existing : existingPools) {
-            Event e = eventFactory.poolChangedFrom(existing);
-            poolEvents.put(existing.getId(), e);
-        }
-
         // Hand off to Javascript to determine which pools need updating:
         List<PoolUpdate> updatedPools = poolRules.updatePools(sub,
             existingPools);
@@ -269,10 +251,6 @@ public class CandlepinPoolManager implements PoolManager {
             }
             // save changes for the pool
             this.poolCurator.merge(existingPool);
-
-            eventFactory.poolChangedTo(poolEvents.get(existingPool.getId()),
-                existingPool);
-            sink.sendEvent(poolEvents.get(existingPool.getId()));
         }
 
         return entitlementsToRegen;
@@ -729,7 +707,6 @@ public class CandlepinPoolManager implements PoolManager {
         entitlementCurator.merge(e);
 
         // send entitlement changed event.
-        this.sink.sendEvent(this.eventFactory.entitlementChanged(e));
         if (log.isDebugEnabled()) {
             log.debug("Generated entitlementCertificate: #" + generated.getId());
         }
@@ -795,7 +772,6 @@ public class CandlepinPoolManager implements PoolManager {
         pool.getEntitlements().remove(entitlement);
         poolCurator.merge(pool);
         entitlementCurator.delete(entitlement);
-        Event event = eventFactory.entitlementDeleted(entitlement);
 
         // The quantity is calculated at fetch time. We update it here
         // To reflect what we just removed from the db.
@@ -817,8 +793,6 @@ public class CandlepinPoolManager implements PoolManager {
         ComplianceStatus compliance = complianceRules.getStatus(consumer, new Date());
         consumer.setEntitlementStatus(compliance.getStatus());
         consumerCurator.update(consumer);
-
-        sink.sendEvent(event);
     }
 
     @Override
@@ -858,8 +832,6 @@ public class CandlepinPoolManager implements PoolManager {
     @Override
     @Transactional
     public void deletePool(Pool pool) {
-        Event event = eventFactory.poolDeleted(pool);
-
         // remove the link between the key and the pool before deleting the pool
         // TODO: is there a better way to do this with hibernate annotations?
         List<ActivationKey> keys = poolCurator.getActivationKeysForPool(pool);
@@ -873,7 +845,6 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         poolCurator.delete(pool);
-        sink.sendEvent(event);
     }
 
     /**

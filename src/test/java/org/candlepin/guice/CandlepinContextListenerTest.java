@@ -14,7 +14,6 @@
  */
 package org.candlepin.guice;
 
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atMost;
 import static org.mockito.Mockito.mock;
@@ -22,12 +21,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.audit.HornetqContextListener;
 import org.candlepin.config.Config;
 import org.candlepin.pinsetter.core.PinsetterContextListener;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Injector;
 import com.google.inject.Module;
 
 import org.jboss.resteasy.spi.Registry;
@@ -48,14 +45,12 @@ import javax.servlet.ServletContextEvent;
 public class CandlepinContextListenerTest {
     private Config config;
     private CandlepinContextListener listener;
-    private HornetqContextListener hqlistener;
     private PinsetterContextListener pinlistener;
     private ServletContextEvent evt;
 
     @Before
     public void init() {
         config = new Config(new HashMap<String, String>());
-        hqlistener = mock(HornetqContextListener.class);
         pinlistener = mock(PinsetterContextListener.class);
         // for testing we override the getModules so we can
         // insert our mock versions of listeners to verify
@@ -78,7 +73,6 @@ public class CandlepinContextListenerTest {
     public void contextInitialized() {
         prepareForInitialization();
         listener.contextInitialized(evt);
-        verify(hqlistener).contextInitialized(any(Injector.class));
         verify(pinlistener).contextInitialized();
     }
 
@@ -109,7 +103,6 @@ public class CandlepinContextListenerTest {
         // make sure we only call it 4 times all from init code
         verify(evt, atMost(4)).getServletContext();
         verifyNoMoreInteractions(evt); // destroy shoudln't use it
-        verify(hqlistener).contextDestroyed();
         verify(pinlistener).contextDestroyed();
     }
 
@@ -119,7 +112,6 @@ public class CandlepinContextListenerTest {
         protected void configure() {
             bind(Config.class).toInstance(config);
             bind(PinsetterContextListener.class).toInstance(pinlistener);
-            bind(HornetqContextListener.class).toInstance(hqlistener);
         }
     }
 }

@@ -39,10 +39,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.apache.log4j.Logger;
-import org.candlepin.audit.Event;
-import org.candlepin.audit.EventAdapter;
-import org.candlepin.audit.EventFactory;
-import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.interceptor.Verify;
@@ -64,7 +60,6 @@ import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentCurator;
-import org.candlepin.model.EventCurator;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
 import org.candlepin.model.ImportRecord;
@@ -94,7 +89,6 @@ import org.candlepin.sync.ImporterException;
 import org.candlepin.sync.Meta;
 import org.candlepin.sync.SyncDataFormatException;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
-import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.jboss.resteasy.util.GenericType;
@@ -120,11 +114,7 @@ public class OwnerResource {
     private SubscriptionServiceAdapter subService;
     private ConsumerCurator consumerCurator;
     private I18n i18n;
-    private EventSink sink;
-    private EventFactory eventFactory;
-    private EventAdapter eventAdapter;
     private static Logger log = Logger.getLogger(OwnerResource.class);
-    private EventCurator eventCurator;
     private Importer importer;
     private ExporterMetadataCurator exportCurator;
     private ImportRecordCurator importRecordCurator;
@@ -143,9 +133,7 @@ public class OwnerResource {
         ActivationKeyCurator activationKeyCurator,
         ConsumerCurator consumerCurator,
         StatisticCurator statisticCurator,
-        I18n i18n, EventSink sink,
-        EventFactory eventFactory, EventCurator eventCurator,
-        EventAdapter eventAdapter, Importer importer,
+        I18n i18n, Importer importer,
         PoolManager poolManager, ExporterMetadataCurator exportCurator,
         OwnerInfoCurator ownerInfoCurator,
         ImportRecordCurator importRecordCurator,
@@ -167,14 +155,10 @@ public class OwnerResource {
         this.consumerCurator = consumerCurator;
         this.statisticCurator = statisticCurator;
         this.i18n = i18n;
-        this.sink = sink;
-        this.eventFactory = eventFactory;
-        this.eventCurator = eventCurator;
         this.importer = importer;
         this.exportCurator = exportCurator;
         this.importRecordCurator = importRecordCurator;
         this.poolManager = poolManager;
-        this.eventAdapter = eventAdapter;
         this.subService = subService;
         this.permissionCurator = permCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -258,8 +242,6 @@ public class OwnerResource {
         }
         Owner toReturn = ownerCurator.create(owner);
 
-        sink.emitOwnerCreated(owner);
-
         if (toReturn != null) {
             return toReturn;
         }
@@ -280,11 +262,8 @@ public class OwnerResource {
     public void deleteOwner(@PathParam("owner_key") String ownerKey,
         @QueryParam("revoke") @DefaultValue("true") boolean revoke) {
         Owner owner = findOwner(ownerKey);
-        Event e = eventFactory.ownerDeleted(owner);
 
         cleanupAndDelete(owner, revoke);
-
-        sink.sendEvent(e);
     }
 
     private void cleanupAndDelete(Owner owner, boolean revokeCerts) {
@@ -470,7 +449,6 @@ public class OwnerResource {
 
 
         ActivationKey newKey = activationKeyCurator.create(activationKey);
-        sink.emitActivationKeyCreated(newKey);
 
         return newKey;
     }
@@ -618,61 +596,6 @@ public class OwnerResource {
     }
 
     /**
-     * @return the owner Feed
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @GET
-    @Produces("application/atom+xml")
-    @Path("{owner_key}/atom")
-    public Feed getOwnerAtomFeed(@PathParam("owner_key")
-            @Verify(Owner.class) String ownerKey) {
-        Owner o = findOwner(ownerKey);
-        String path = String.format("/owners/%s/atom", ownerKey);
-        Feed feed = this.eventAdapter.toFeed(
-            this.eventCurator.listMostRecent(FEED_LIMIT, o), path);
-        feed.setTitle("Event feed for owner " + o.getDisplayName());
-        return feed;
-    }
-
-    /**
-     * @return the consumer Feed
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @GET
-    @Produces("application/atom+xml")
-    @Path("{owner_key}/consumers/{consumer_uuid}/atom")
-    public Feed getConsumerAtomFeed(
-        @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
-        @PathParam("consumer_uuid") String consumerUuid) {
-        String path = String.format("/consumers/%s/atom", consumerUuid);
-        Consumer consumer = findConsumer(consumerUuid);
-        Feed feed = this.eventAdapter.toFeed(
-            this.eventCurator.listMostRecent(FEED_LIMIT, consumer), path);
-        feed.setTitle("Event feed for consumer " + consumer.getUuid());
-        return feed;
-    }
-
-    /**
-     * @return a list of Events
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{owner_key}/events")
-    public List<Event> getEvents(
-        @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
-        Owner o = findOwner(ownerKey);
-        List<Event> events = this.eventCurator.listMostRecent(FEED_LIMIT, o);
-        if (events != null) {
-            eventAdapter.addMessageText(events);
-        }
-        return events;
-    }
-
-    /**
      * @return a list of Subscriptions
      * @httpcode 404
      * @httpcode 200
@@ -749,8 +672,6 @@ public class OwnerResource {
         }
 
         ownerCurator.merge(toUpdate);
-        Event e = eventFactory.ownerModified(owner);
-        sink.sendEvent(e);
         return toUpdate;
     }
 
@@ -940,7 +861,6 @@ public class OwnerResource {
                 " for owner " + owner.getDisplayName());
             data = importer.loadExport(owner, archive, overrides);
 
-            sink.emitImportCreated(owner);
             recordImportSuccess(owner, data, overrides, filename);
         }
         catch (IOException e) {

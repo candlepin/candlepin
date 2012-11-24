@@ -68,9 +68,8 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
         consumerTypeCurator.create(ueberCertType);
 
         or = new OwnerResource(ownerCurator, poolCurator,
-            null, null, consumerCurator, null, i18n, null, null, null,
-            null, null, poolManager, null, null, null, subAdapter,
-            null, consumerTypeCurator, productAdapter, contentCurator,
+            null, null, consumerCurator, null, i18n, null, poolManager, null, null, null,
+            subAdapter, null, consumerTypeCurator, productAdapter, contentCurator,
             entCertCurator, entitlementCurator, uniqueIdGenerator, ueberCertGenerator,
             null);
     }

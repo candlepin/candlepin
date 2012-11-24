@@ -37,7 +37,6 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
 
-import org.candlepin.audit.HornetqContextListener;
 import org.candlepin.pinsetter.core.PinsetterContextListener;
 
 /**
@@ -52,7 +51,6 @@ import org.candlepin.pinsetter.core.PinsetterContextListener;
  */
 public class CandlepinContextListener extends
         GuiceResteasyBootstrapServletContextListener {
-    private HornetqContextListener hornetqListener;
     private PinsetterContextListener pinsetterListener;
     private Injector injector;
     // a bit of application-initialization code. Not sure if this is the
@@ -78,15 +76,12 @@ public class CandlepinContextListener extends
         injector = Guice.createInjector(getModules());
         processInjector(registry, providerFactory, injector);
 
-        hornetqListener = injector.getInstance(HornetqContextListener.class);
-        hornetqListener.contextInitialized(injector);
         pinsetterListener = injector.getInstance(PinsetterContextListener.class);
         pinsetterListener.contextInitialized();
     }
 
     @Override
     public void contextDestroyed(ServletContextEvent event) {
-        hornetqListener.contextDestroyed();
         pinsetterListener.contextDestroyed();
     }
 

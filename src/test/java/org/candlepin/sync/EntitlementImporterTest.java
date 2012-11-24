@@ -14,14 +14,10 @@
  */
 package org.candlepin.sync;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.audit.Event;
-import org.candlepin.audit.EventSink;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
 import org.candlepin.model.Subscription;
@@ -45,7 +41,6 @@ import java.util.Locale;
 @RunWith(MockitoJUnitRunner.class)
 public class EntitlementImporterTest {
 
-    @Mock private EventSink sink;
     @Mock private SubscriptionCurator curator;
     private Owner owner;
     private Subscription testSub;
@@ -62,7 +57,7 @@ public class EntitlementImporterTest {
         this.owner = new Owner();
         this.testSub.setOwner(this.owner);
 
-        this.importer = new EntitlementImporter(this.curator, null, this.sink, i18n);
+        this.importer = new EntitlementImporter(this.curator, null, i18n);
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
     }
 
@@ -82,7 +77,6 @@ public class EntitlementImporterTest {
         verify(curator).create(testSub);
         verify(curator, never()).delete(testSub);
         verify(curator, never()).merge(testSub);
-        verify(sink, atLeastOnce()).emitSubscriptionCreated(testSub);
     }
 
     @Test
@@ -105,7 +99,6 @@ public class EntitlementImporterTest {
         verify(curator, never()).create(testSub);
         verify(curator).merge(testSub);
         verify(curator, never()).delete(testSub);
-        verify(sink, atLeastOnce()).emitSubscriptionModified(testSub, testSub);
     }
 
     @Test
@@ -124,8 +117,5 @@ public class EntitlementImporterTest {
         verify(curator, never()).create(testSub);
         verify(curator, never()).merge(testSub);
         verify(curator).delete(testSub);
-        verify(sink, atLeastOnce()).createSubscriptionDeleted(testSub);
-        verify(sink, atLeastOnce()).sendEvent(any(Event.class));
-
     }
 }

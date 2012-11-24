@@ -59,34 +59,6 @@ describe 'Consumer Facts' do
     consumer['facts']['memory.memtotal'].should be_nil
   end
 
-  it 'emits an event when facts are updated' do
-    updated_facts = {
-      'uname.machine' => 'x86_64',
-      'uname.system'     => 'Linux',
-    }
-    @consumer_api.update_consumer({:facts => updated_facts})
-
-    events = @cp.list_consumer_events(@owner['key'], @consumer.uuid)
-
-    # Punting on this for now...
-    events.should include("consumer")
-    events.should include("updated")
-  end
-
-  it 'does not emit an event when facts do not change' do
-    updated_facts = {
-      'uname.machine' => 'i686',
-      'uname.system'     => 'Linux',
-    }
-    @consumer_api.update_consumer({:facts => updated_facts})
-
-    events = @cp.list_consumer_events(@owner['key'], @consumer.uuid)
-
-    # Punting on this for now...
-    events.should include("consumer")
-    events.should include("updated")
-  end
-
   it 'updates consumer updated date when facts are updated' do
     updated_facts = {
       'uname.system' => 'x86_64',

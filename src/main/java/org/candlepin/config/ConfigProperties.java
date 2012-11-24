@@ -42,13 +42,6 @@ public class ConfigProperties {
     public static final String CA_CERT_UPSTREAM = "candlepin.upstream_ca_cert";
     public static final String CA_KEY_PASSWORD = "candlepin.ca_key_password";
 
-    public static final String HORNETQ_BASE_DIR = "candlepin.audit.hornetq.base_dir";
-    public static final String HORNETQ_LARGE_MSG_SIZE =
-                                      "candlepin.audit.hornetq.large_msg_size";
-    public static final String AUDIT_LISTENERS = "candlepin.audit.listeners";
-    public static final String AUDIT_LOG_FILE = "candlepin.audit.log_file";
-    public static final String AUDIT_LOG_VERBOSE = "candlepin.audit.log_verbose";
-
     public static final String PRETTY_PRINT = "candlepin.pretty_print";
     public static final String REVOKE_ENTITLEMENT_IN_FIFO_ORDER =
                                       "candlepin.entitlement.revoke.order.fifo";
@@ -113,15 +106,6 @@ public class ConfigProperties {
                     "/etc/candlepin/certs/candlepin-upstream-ca.crt");
 
                 this.put(ACTIVATION_DEBUG_PREFIX, "");
-
-                this.put(HORNETQ_BASE_DIR, "/var/lib/candlepin/hornetq");
-                this.put(HORNETQ_LARGE_MSG_SIZE, new Integer(10 * 1024).toString());
-                this.put(AUDIT_LISTENERS,
-                    "org.candlepin.audit.DatabaseListener," +
-                        "org.candlepin.audit.LoggingListener," +
-                        "org.candlepin.audit.ActivationListener");
-                this.put(AUDIT_LOG_FILE, "/var/log/candlepin/audit.log");
-                this.put(AUDIT_LOG_VERBOSE, "false");
 
                 this.put(PRETTY_PRINT, "false");
                 this.put(REVOKE_ENTITLEMENT_IN_FIFO_ORDER, "true");

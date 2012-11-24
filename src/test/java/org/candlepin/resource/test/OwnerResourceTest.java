@@ -34,9 +34,6 @@ import java.util.List;
 
 import javax.ws.rs.core.MultivaluedMap;
 
-import org.candlepin.audit.Event;
-import org.candlepin.audit.EventFactory;
-import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.UserPrincipal;
@@ -69,8 +66,6 @@ import org.candlepin.sync.Importer;
 import org.candlepin.sync.ImporterException;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
-import org.jboss.resteasy.plugins.providers.atom.Entry;
-import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.jboss.resteasy.specimpl.MultivaluedMapImpl;
@@ -88,7 +83,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     private Owner owner;
     private List<Owner> owners;
     private Product product;
-    private EventFactory eventFactory;
     private CandlepinCommonTestConfig config;
     private ImportRecordCurator importRecordCurator;
 
@@ -101,7 +95,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         owners.add(owner);
         product = TestUtil.createProduct();
         productCurator.create(product);
-        eventFactory = injector.getInstance(EventFactory.class);
         this.config = (CandlepinCommonTestConfig) injector
             .getInstance(Config.class);
         importRecordCurator = injector.getInstance(ImportRecordCurator.class);
@@ -331,78 +324,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ownerResource.deleteOwner(owner.getKey(), true);
     }
 
-    private Event createConsumerCreatedEvent(Owner o) {
-        // Rather than run through an entire call to ConsumerResource, we'll
-        // fake the
-        // events in the db:
-        setupPrincipal(o, Access.ALL);
-        Consumer consumer = TestUtil.createConsumer(o);
-        consumerTypeCurator.create(consumer.getType());
-        consumerCurator.create(consumer);
-        Event e1 = eventFactory.consumerCreated(consumer);
-        eventCurator.create(e1);
-        return e1;
-    }
-
-    @Test
-    public void ownersAtomFeed() {
-        Owner owner2 = new Owner("anotherOwner");
-        ownerCurator.create(owner2);
-
-        Event e1 = createConsumerCreatedEvent(owner);
-        // Make an event from another owner:
-        createConsumerCreatedEvent(owner2);
-
-        // Make sure we're acting as the correct owner admin:
-        setupPrincipal(owner, Access.ALL);
-
-        securityInterceptor.enable();
-
-        Feed feed = ownerResource.getOwnerAtomFeed(owner.getKey());
-        assertEquals(1, feed.getEntries().size());
-        Entry entry = feed.getEntries().get(0);
-        assertEquals(e1.getTimestamp(), entry.getPublished());
-    }
-
-    @Test(expected = ForbiddenException.class)
-    public void ownerCannotAccessAnotherOwnersAtomFeed() {
-        Owner owner2 = new Owner("anotherOwner");
-        ownerCurator.create(owner2);
-
-        // Or more specifically, gets no results, the call will not error out
-        // because he has the correct role.
-        createConsumerCreatedEvent(owner);
-
-        setupPrincipal(owner2, Access.ALL);
-
-        securityInterceptor.enable();
-
-        ownerResource.getOwnerAtomFeed(owner.getKey());
-    }
-
-    @Test(expected = ForbiddenException.class)
-    public void testConsumerRoleCannotAccessOwnerAtomFeed() {
-        Consumer c = TestUtil.createConsumer(owner);
-        consumerTypeCurator.create(c.getType());
-        consumerCurator.create(c);
-        setupPrincipal(new ConsumerPrincipal(c));
-
-        securityInterceptor.enable();
-
-        ownerResource.getOwnerAtomFeed(owner.getKey());
-    }
-
-    @Test(expected = ForbiddenException.class)
-    public void consumerCannotAccessConsumerAtomFeed() {
-        Consumer c = TestUtil.createConsumer(owner);
-        consumerTypeCurator.create(c.getType());
-        consumerCurator.create(c);
-        setupPrincipal(new ConsumerPrincipal(c));
-
-        securityInterceptor.enable();
-
-        ownerResource.getConsumerAtomFeed(owner.getKey(), c.getUuid());
-    }
 
     @Test(expected = ForbiddenException.class)
     public void consumerCannotListAllConsumersInOwner() {
@@ -425,51 +346,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         ownerResource.getPools(owner.getKey(), null, null, false, null);
-    }
-
-    @Test(expected = ForbiddenException.class)
-    public void ownerCannotAccessAnotherOwnersConsumerAtomFeed() {
-        Owner owner2 = new Owner("anotherOwner");
-        ownerCurator.create(owner2);
-
-        securityInterceptor.enable();
-
-        Event e1 = createConsumerCreatedEvent(owner);
-        Consumer c = consumerCurator.find(e1.getEntityId());
-
-        // Should see no results:
-        setupPrincipal(owner2, Access.ALL);
-        ownerResource.getConsumerAtomFeed(owner.getKey(), c.getUuid());
-    }
-
-    @Test
-    public void consumersAtomFeed() {
-        Owner owner2 = new Owner("anotherOwner");
-        ownerCurator.create(owner2);
-
-        // Make a consumer, we'll look for this creation event:
-        Event e1 = createConsumerCreatedEvent(owner);
-        Consumer c = consumerCurator.find(e1.getEntityId());
-
-        // Make another consumer in this org, we do *not* want to see this in
-        // the results:
-        createConsumerCreatedEvent(owner);
-
-        // Create another consumer in a different org, again do not want to see
-        // this:
-        setupPrincipal(owner2, Access.ALL);
-        // leaving the interceptors off here because consumer types are created
-        // by the test harness, which will fail if the interceptors are turned on
-        createConsumerCreatedEvent(owner2);
-
-        // Make sure we're acting as the correct owner admin:
-        setupPrincipal(owner, Access.ALL);
-        securityInterceptor.enable();
-
-        Feed feed = ownerResource.getConsumerAtomFeed(owner.getKey(), c.getUuid());
-        assertEquals(1, feed.getEntries().size());
-        Entry entry = feed.getEntries().get(0);
-        assertEquals(e1.getTimestamp(), entry.getPublished());
     }
 
     @Test
@@ -622,7 +498,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         OwnerResource or = new OwnerResource(oc, null,
             null, akc, null, null, i18n, null, null, null,
-            null, null, null, null, null, null, null,
+            null, null, null,
             null, null, null, null, null, null, null, null, null);
         or.createActivationKey("testOwner", ak);
     }
@@ -696,9 +572,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     public void testImportRecordSuccessWithFilename()
         throws IOException, ImporterException {
         Importer importer = mock(Importer.class);
-        EventSink es = mock(EventSink.class);
         OwnerResource thisOwnerResource = new OwnerResource(ownerCurator, null, null,
-            null, null, null, i18n, es, null, null, null, importer, null, null,
+            null, null, null, i18n, importer, null, null,
             null, importRecordCurator, null, null, null, null, null, null, null, null,
             null, null);
 
@@ -729,11 +604,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test
     public void testImportRecordDeleteWithLogging()
         throws IOException, ImporterException {
-        EventSink es = mock(EventSink.class);
         ExporterMetadataCurator ec = mock(ExporterMetadataCurator.class);
         SubscriptionCurator sc = mock(SubscriptionCurator.class);
         OwnerResource thisOwnerResource = new OwnerResource(ownerCurator, null, sc,
-            null, null, null, i18n, es, null, null, null, null, null, ec,
+            null, null, null, i18n, null, null, ec,
             null, importRecordCurator, null, null, null, null, null, null, null, null,
             null, null);
 
@@ -754,9 +628,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     public void testImportRecordFailureWithFilename()
         throws IOException, ImporterException {
         Importer importer = mock(Importer.class);
-        EventSink es = mock(EventSink.class);
         OwnerResource thisOwnerResource = new OwnerResource(ownerCurator, null, null,
-            null, null, null, i18n, es, null, null, null, importer, null, null,
+            null, null, null, i18n, importer, null, null,
             null, importRecordCurator, null, null, null, null, null, null, null, null,
             null, null);
 

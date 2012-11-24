@@ -17,16 +17,11 @@ package org.candlepin.pinsetter.tasks;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.audit.Event;
-import org.candlepin.audit.EventFactory;
-import org.candlepin.audit.EventSink;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.exceptions.BadRequestException;
@@ -44,7 +39,6 @@ import org.junit.Test;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -53,8 +47,6 @@ import java.util.Locale;
  */
 public class EntitlerTest {
     private PoolManager pm;
-    private EventFactory ef;
-    private EventSink sink;
     private I18n i18n;
     private Entitler entitler;
     private Consumer consumer;
@@ -70,8 +62,6 @@ public class EntitlerTest {
     @Before
     public void init() {
         pm = mock(PoolManager.class);
-        ef = mock(EventFactory.class);
-        sink = mock(EventSink.class);
         cc = mock(ConsumerCurator.class);
         consumer = mock(Consumer.class);
         i18n = I18nFactory.getI18n(
@@ -79,7 +69,7 @@ public class EntitlerTest {
             Locale.US,
             I18nFactory.READ_PROPERTIES | I18nFactory.FALLBACK
         );
-        entitler = new Entitler(pm, cc, i18n, ef, sink);
+        entitler = new Entitler(pm, cc, i18n);
     }
 
     @Test
@@ -208,35 +198,5 @@ public class EntitlerTest {
         catch (EntitlementRefusedException e) {
             fail(msg + ": threw unexpected error");
         }
-    }
-
-    @Test
-    public void events() {
-        List<Entitlement> ents = new ArrayList<Entitlement>();
-        ents.add(mock(Entitlement.class));
-        ents.add(mock(Entitlement.class));
-
-        Event evt1 = mock(Event.class);
-        Event evt2 = mock(Event.class);
-        when(ef.entitlementCreated(any(Entitlement.class)))
-            .thenReturn(evt1)
-            .thenReturn(evt2);
-        entitler.sendEvents(ents);
-
-        verify(sink).sendEvent(eq(evt1));
-        verify(sink).sendEvent(eq(evt2));
-    }
-
-    @Test
-    public void noEventsWhenEntitlementsNull() {
-        entitler.sendEvents(null);
-        verify(sink, never()).sendEvent(any(Event.class));
-    }
-
-    @Test
-    public void noEventsWhenListEmpty() {
-        List<Entitlement> ents = new ArrayList<Entitlement>();
-        entitler.sendEvents(ents);
-        verify(sink, never()).sendEvent(any(Event.class));
     }
 }

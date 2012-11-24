@@ -53,14 +53,12 @@ public class RootResource {
         RESOURCE_CLASSES = new LinkedList<Class>();
         RESOURCE_CLASSES.add(AdminResource.class);
         RESOURCE_CLASSES.add(UserResource.class);
-        RESOURCE_CLASSES.add(AtomFeedResource.class);
         RESOURCE_CLASSES.add(CertificateSerialResource.class);
         RESOURCE_CLASSES.add(ConsumerResource.class);
         RESOURCE_CLASSES.add(ConsumerTypeResource.class);
         RESOURCE_CLASSES.add(ContentResource.class);
         RESOURCE_CLASSES.add(CrlResource.class);
         RESOURCE_CLASSES.add(EntitlementResource.class);
-        RESOURCE_CLASSES.add(EventResource.class);
         RESOURCE_CLASSES.add(JobResource.class);
         RESOURCE_CLASSES.add(OwnerResource.class);
         RESOURCE_CLASSES.add(PoolResource.class);

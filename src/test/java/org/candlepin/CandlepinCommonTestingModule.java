@@ -14,7 +14,6 @@
  */
 package org.candlepin;
 
-import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.interceptor.SecurityInterceptor;
 import org.candlepin.config.CandlepinCommonTestConfig;
@@ -66,7 +65,6 @@ import org.candlepin.service.impl.DefaultUserServiceAdapter;
 import org.candlepin.service.impl.stub.StubEntitlementCertServiceAdapter;
 import org.candlepin.test.DateSourceForTesting;
 import org.candlepin.test.EnforcerForTesting;
-import org.candlepin.test.EventSinkForTesting;
 import org.candlepin.test.PKIReaderForTesting;
 import org.candlepin.util.DateSource;
 import org.candlepin.util.ExpiryDateFunction;
@@ -132,7 +130,6 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
 
         bind(PrincipalProvider.class).to(TestPrincipalProvider.class);
         bind(Principal.class).toProvider(TestPrincipalProvider.class);
-        bind(EventSink.class).to(EventSinkForTesting.class);
 
         SecurityInterceptor se = new SecurityInterceptor();
         requestInjection(se);

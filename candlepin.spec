@@ -48,7 +48,6 @@ BuildRequires: hibernate3-commons-annotations
 # end for schema
 BuildRequires: google-collections >= 0:1.0
 BuildRequires: resteasy >= 0:2.3.1
-BuildRequires: hornetq >= 0:2.2.11
 BuildRequires: google-guice >= 0:3.0
 BuildRequires: log4j
 BuildRequires: jakarta-commons-lang
@@ -101,8 +100,6 @@ Requires: codehaus-jackson-xc
 Requires: codehaus-jackson-core-lgpl
 Requires: codehaus-jackson-mapper-lgpl
 Requires: codehaus-jackson-jaxrs
-Requires: hornetq >= 0:2.2.11
-Requires: netty
 Requires: oauth
 Requires: rhino
 Requires: quartz >= 0:2.1.5
@@ -222,7 +219,7 @@ install -d -m 755 $RPM_BUILD_ROOT/usr/share/java
 install -m 644 target/%{name}-certgen-%{version}.jar $RPM_BUILD_ROOT/usr/share/java/
 ln -s /usr/share/java/candlepin-certgen-%{version}.jar $RPM_BUILD_ROOT/usr/share/java/candlepin-certgen.jar
 
-# /var/lib dir for hornetq state
+# /var/lib dir for crl
 install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/%{name}
 
 install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/log/%{name}
