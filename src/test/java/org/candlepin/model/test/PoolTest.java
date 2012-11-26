@@ -20,12 +20,14 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import org.candlepin.model.Consumer;
+import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductPoolAttribute;
 import org.candlepin.model.ProvidedProduct;
+import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.junit.Before;
@@ -262,5 +264,20 @@ public class PoolTest extends DatabaseTestFixture {
         pa.toString();
         ppa.hashCode();
         pa.hashCode();
+    }
+
+    // sunny test - real rules not invoked here. Can only be sure the counts are recorded.
+    // Rule tests already exist for quantity filter.
+    // Will use spec tests to see if quantity rules are followed in this scenario.
+    @Test
+    public void testEntitlementQuantityChange() throws EntitlementRefusedException {
+        Entitlement ent = poolManager.entitleByPool(consumer, pool, 3);
+        assertTrue(ent.getQuantity() == 3);
+        poolManager.adjustEntitlementQuantity(consumer, ent, 5);
+        Entitlement ent2 = entitlementCurator.find(ent.getId());
+        assertTrue(ent2.getQuantity() == 5);
+        Pool pool2 = poolCurator.find(pool.getId());
+        assertTrue(pool2.getConsumed() == 5);
+        assertTrue(pool2.getEntitlements().size() == 1);
     }
 }
