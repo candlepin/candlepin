@@ -292,10 +292,6 @@ public class Owner extends AbstractHibernateObject implements Serializable,
         }
     }
 
-    public void setUpstreamUuid(String donothing) {
-        System.out.println("setting " + donothing);
-    }
-
     /**
      * @return the upstreamUuid
      */
