@@ -66,7 +66,7 @@ public class ConsumerImporterTest {
     }
 
     @Test
-    public void importShouldCreateAValidConsumer() throws IOException, ImporterException {
+    public void importShouldCreateAValidConsumer() throws IOException {
         ConsumerDto consumer =
             importer.createObject(mapper, new StringReader("{\"uuid\":\"test-uuid\",\"name\":\"test-name\"}"));
 
@@ -152,14 +152,15 @@ public class ConsumerImporterTest {
     public void importConsumerWithSameUuidOnAnotherOwnerShouldThrowException()
         throws ImporterException {
         Owner owner = new Owner();
-        String upstreamUuid = "test-uuid";
-        owner.setUpstreamUuid(upstreamUuid);
+        UpstreamConsumer uc = new UpstreamConsumer();
+        uc.setUuid("test-uuid");
+        owner.setUpstreamConsumer(uc);
         ConsumerDto consumer = new ConsumerDto();
         consumer.setUuid("test-uuid");
 
         Owner anotherOwner = new Owner("other", "Other");
         anotherOwner.setId("blah");
-        anotherOwner.setUpstreamUuid(upstreamUuid);
+        anotherOwner.setUpstreamConsumer(uc);
         when(curator.lookupWithUpstreamUuid(consumer.getUuid())).thenReturn(anotherOwner);
 
         importer.store(owner, consumer, new ConflictOverrides(), null, null);
