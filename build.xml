@@ -219,7 +219,7 @@
     <attribute name="dir" />
 
     <sequential>
-      <echo message="Copying @{jars}" />
+      <echo message="Symlinking @{jars}" />
       <exec executable="build-jar-repository" failonerror="true" >
         <arg value="-p" />
         <arg value="-s @{dir}" />
