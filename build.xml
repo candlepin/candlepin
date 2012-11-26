@@ -22,8 +22,7 @@
     dom4j gettext-commons google-collections guice
     guice-assistedinject guice-multibindings guice-persist guice-servlet
     guice-throwingproviders hibernate-annotations hibernate-commons-annotations
-    hibernate-core hibernate-entitymanager hornetq/hornetq-core
-    hornetq/hornetq-core-client javassist javax.inject jaxb-impl
+    hibernate-core hibernate-entitymanager javassist javax.inject jaxb-impl
     jboss-logging jpa_1_0_api js jta log4j netty oauth oauth-provider
     postgresql-jdbc quartz resteasy/resteasy-atom-provider
     resteasy/resteasy-guice resteasy/resteasy-jaxb-provider

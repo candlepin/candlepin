@@ -16,7 +16,6 @@ package org.candlepin.pinsetter.tasks;
 
 import static org.quartz.JobBuilder.newJob;
 
-import org.candlepin.audit.EventSink;
 import org.candlepin.client.CandlepinConnection;
 import org.candlepin.client.ConsumerClient;
 import org.candlepin.client.OwnerClient;
@@ -73,7 +72,6 @@ public class MigrateOwnerJob implements Job {
     private CandlepinConnection conn;
     private Config config;
     private HashMap<String, String> entMap = new HashMap<String, String>();
-    private EventSink sink;
 
 
     /**
@@ -89,7 +87,7 @@ public class MigrateOwnerJob implements Job {
     @Inject
     public MigrateOwnerJob(CandlepinConnection connection, Config conf,
         OwnerCurator oc, PoolCurator pc, EntitlementCurator ec,
-        ConsumerCurator cc, EventSink es) {
+        ConsumerCurator cc) {
 
         ownerCurator = oc;
         consumerCurator = cc;
@@ -97,7 +95,6 @@ public class MigrateOwnerJob implements Job {
         config = conf;
         poolCurator = pc;
         entCurator = ec;
-        sink = es;
     }
 
     private static String buildUri(String uri) {
@@ -225,8 +222,6 @@ public class MigrateOwnerJob implements Job {
                 entCurator.merge(realent);
             }
         }
-
-        sink.emitOwnerMigrated(owner);
     }
 
     /**

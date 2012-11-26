@@ -14,8 +14,6 @@
  */
 package org.candlepin.sync;
 
-import org.candlepin.audit.Event;
-import org.candlepin.audit.EventSink;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Entitlement;
@@ -46,15 +44,13 @@ public class EntitlementImporter {
 
     private SubscriptionCurator subscriptionCurator;
     private CertificateSerialCurator csCurator;
-    private EventSink sink;
     private I18n i18n;
 
     public EntitlementImporter(SubscriptionCurator subscriptionCurator,
-        CertificateSerialCurator csCurator, EventSink sink, I18n i18n) {
+        CertificateSerialCurator csCurator, I18n i18n) {
 
         this.subscriptionCurator = subscriptionCurator;
         this.csCurator = csCurator;
-        this.sink = sink;
         this.i18n = i18n;
     }
 
@@ -148,23 +144,17 @@ public class EntitlementImporter {
 
                 // send out created event
                 log.debug("emitting subscription event");
-                sink.emitSubscriptionCreated(subscription);
             }
             else {
                 subscription.setId(local.getId());
                 subscriptionCurator.merge(subscription);
 
                 existingSubByEntitlement.remove(subscription.getUpstreamPoolId());
-
-                // send updated event
-                sink.emitSubscriptionModified(local, subscription);
             }
         }
 
         for (Subscription subscription : existingSubByEntitlement.values()) {
-            Event e = sink.createSubscriptionDeleted(subscription);
             subscriptionCurator.delete(subscription);
-            sink.sendEvent(e);
         }
     }
 }

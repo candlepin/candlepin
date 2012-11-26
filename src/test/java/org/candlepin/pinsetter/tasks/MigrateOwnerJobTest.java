@@ -25,7 +25,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.audit.EventSink;
 import org.candlepin.client.CandlepinConnection;
 import org.candlepin.client.ConsumerClient;
 import org.candlepin.client.OwnerClient;
@@ -74,7 +73,6 @@ public class MigrateOwnerJobTest {
     private Config config;
     private PoolCurator poolCurator;
     private EntitlementCurator entCurator;
-    private EventSink sink;
 
     @Before
     public void init() {
@@ -84,9 +82,8 @@ public class MigrateOwnerJobTest {
         conn = mock(CandlepinConnection.class);
         poolCurator = mock(PoolCurator.class);
         entCurator = mock(EntitlementCurator.class);
-        sink = mock(EventSink.class);
         moj = new MigrateOwnerJob(conn, config, ownerCurator, poolCurator,
-            entCurator, consumerCurator, sink);
+            entCurator, consumerCurator);
     }
 
     @Test
@@ -201,7 +198,6 @@ public class MigrateOwnerJobTest {
         verify(entCurator, atLeastOnce()).replicate(any(Entitlement.class));
         verify(entCurator, atLeastOnce()).merge(any(Entitlement.class));
         verify(oclient, atLeastOnce()).deleteOwner(eq("admin"), eq(false));
-        verify(sink, atLeastOnce()).emitOwnerMigrated(any(Owner.class));
     }
 
     @Test(expected = Exception.class)
@@ -323,6 +319,5 @@ public class MigrateOwnerJobTest {
         verify(entCurator, atLeastOnce()).replicate(any(Entitlement.class));
         verify(entCurator, atLeastOnce()).merge(any(Entitlement.class));
         verify(oclient, atLeastOnce()).deleteOwner(eq("admin"), eq(false));
-        verify(sink, atLeastOnce()).emitOwnerMigrated(any(Owner.class));
     }
 }

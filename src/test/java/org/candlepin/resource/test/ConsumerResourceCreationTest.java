@@ -19,7 +19,6 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.auth.Principal;
@@ -92,7 +91,6 @@ public class ConsumerResourceCreationTest {
     @Mock private ConsumerCurator consumerCurator;
     @Mock private ConsumerTypeCurator consumerTypeCurator;
     @Mock private OwnerCurator ownerCurator;
-    @Mock private EventSink sink;
     @Mock private ActivationKeyCurator activationKeyCurator;
     @Mock private ComplianceRules complianceRules;
     @Mock private DeletedConsumerCurator deletedConsumerCurator;
@@ -113,9 +111,8 @@ public class ConsumerResourceCreationTest {
         this.config = initConfig();
         this.resource = new ConsumerResource(this.consumerCurator,
             this.consumerTypeCurator, null, this.subscriptionService, null,
-            this.idCertService, null, this.i18n, this.sink, null, null, null,
-            this.userService, null, null, null, null, null, this.ownerCurator,
-            this.activationKeyCurator, null, this.complianceRules,
+            this.idCertService, null, this.i18n, this.userService, null, null, null, null,
+            null, this.ownerCurator, this.activationKeyCurator, null, this.complianceRules,
             this.deletedConsumerCurator, null, this.config);
 
         this.system = initSystem();

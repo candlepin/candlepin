@@ -17,9 +17,6 @@ package org.candlepin.controller;
 import com.google.inject.Inject;
 
 import org.apache.log4j.Logger;
-import org.candlepin.audit.Event;
-import org.candlepin.audit.EventFactory;
-import org.candlepin.audit.EventSink;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.model.Consumer;
@@ -44,18 +41,12 @@ public class Entitler {
 
     private PoolManager poolManager;
     private I18n i18n;
-    private EventFactory evtFactory;
-    private EventSink sink;
     private ConsumerCurator consumerCurator;
 
     @Inject
-    public Entitler(PoolManager pm, ConsumerCurator cc, I18n i18n,
-        EventFactory evtFactory, EventSink sink) {
-
+    public Entitler(PoolManager pm, ConsumerCurator cc, I18n i18n) {
         this.poolManager = pm;
         this.i18n = i18n;
-        this.evtFactory = evtFactory;
-        this.sink = sink;
         this.consumerCurator = cc;
     }
 
@@ -232,14 +223,5 @@ public class Entitler {
             }
         }
         return result;
-    }
-
-    public void sendEvents(List<Entitlement> entitlements) {
-        if (entitlements != null) {
-            for (Entitlement e : entitlements) {
-                Event event = evtFactory.entitlementCreated(e);
-                sink.sendEvent(event);
-            }
-        }
     }
 }

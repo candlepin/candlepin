@@ -21,11 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.reset;
 
-import org.candlepin.audit.Event;
-import org.candlepin.audit.EventSink;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
@@ -50,7 +46,6 @@ import com.google.inject.Module;
 import org.apache.commons.collections.Transformer;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 import java.util.Date;
 import java.util.HashSet;
@@ -79,7 +74,6 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     private Owner o;
     private Consumer parentSystem;
     private Consumer childVirtSystem;
-    private EventSink eventSink;
 
     @Before
     public void setUp() throws Exception {
@@ -211,10 +205,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
     @Test
     public void testRegenerateEntitlementCertificatesWithNoEntitlement() {
-        reset(this.eventSink); // pool creation events went out from setup
         poolManager.regenerateEntitlementCertificates(childVirtSystem, true);
         assertEquals(0, collectEntitlementCertIds(this.childVirtSystem).size());
-        Mockito.verifyZeroInteractions(this.eventSink);
     }
 
     @Test
@@ -295,8 +287,6 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         Set<EntitlementCertificate> oldsIds =
             collectEntitlementCertIds(this.childVirtSystem);
         poolManager.regenerateEntitlementCertificates(childVirtSystem, false);
-        Mockito.verify(this.eventSink, Mockito.times(oldsIds.size()))
-            .sendEvent(any(Event.class));
         Set<EntitlementCertificate> newIds =
             collectEntitlementCertIds(this.childVirtSystem);
         assertFalse(containsAny(transform(oldsIds, invokerTransformer("getId")),
@@ -336,8 +326,6 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
             @Override
             protected void configure() {
                 bind(Enforcer.class).to(EntitlementRules.class);
-                eventSink = Mockito.mock(EventSink.class);
-                bind(EventSink.class).toInstance(eventSink);
             }
         };
     }

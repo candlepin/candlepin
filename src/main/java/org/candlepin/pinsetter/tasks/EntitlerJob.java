@@ -57,13 +57,11 @@ public class EntitlerJob implements Job {
                 // bindByPool
                 String poolId = map.getString("pool_id");
                 List<Entitlement> ents = entitler.bindByPool(poolId, uuid, qty);
-                entitler.sendEvents(ents);
             }
             else if (map.containsKey("product_ids")) {
                 String[] prodIds = (String[]) map.get("product_ids");
                 List<Entitlement> ents = entitler.bindByProducts(prodIds, uuid,
                     entitleDate);
-                entitler.sendEvents(ents);
             }
 
             ctx.setResult("Entitlements created for owner");

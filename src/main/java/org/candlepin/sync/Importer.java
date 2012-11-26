@@ -35,7 +35,6 @@ import javax.persistence.PersistenceException;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
-import org.candlepin.audit.EventSink;
 import org.candlepin.config.Config;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.Refresher;
@@ -114,7 +113,6 @@ public class Importer {
     private Config config;
     private ExporterMetadataCurator expMetaCurator;
     private CertificateSerialCurator csCurator;
-    private EventSink sink;
     private I18n i18n;
 
     @Inject
@@ -122,7 +120,7 @@ public class Importer {
         RulesImporter rulesImporter, OwnerCurator ownerCurator,
         ContentCurator contentCurator, SubscriptionCurator subCurator, PoolManager pm,
         PKIUtility pki, Config config, ExporterMetadataCurator emc,
-        CertificateSerialCurator csc, EventSink sink, I18n i18n) {
+        CertificateSerialCurator csc, I18n i18n) {
 
         this.config = config;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -136,7 +134,6 @@ public class Importer {
         this.pki = pki;
         this.expMetaCurator = emc;
         this.csCurator = csc;
-        this.sink = sink;
         this.i18n = i18n;
     }
 
@@ -517,7 +514,7 @@ public class Importer {
     public void importEntitlements(Owner owner, Set<Product> products, File[] entitlements)
         throws IOException, SyncDataFormatException {
         EntitlementImporter importer = new EntitlementImporter(subCurator, csCurator,
-            sink, i18n);
+            i18n);
 
         Map<String, Product> productsById = new HashMap<String, Product>();
         for (Product product : products) {

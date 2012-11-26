@@ -85,13 +85,6 @@ OAUTH= [group('oauth',
               :version => '20100527')]
 
 QUARTZ = 'org.quartz-scheduler:quartz:jar:2.1.5'
-HORNETQ = [group('hornetq-core',
-                 'hornetq-core-client',
-#                 'hornetq-resources', #Native libs for libaio
-                 :under=>'org.hornetq',
-                 :version=>'2.2.11.Final'),
-            'org.jboss.netty:netty:jar:3.2.1.Final']
-
 
 SCHEMASPY = 'net.sourceforge:schemaSpy:jar:4.1.1'
 
@@ -171,7 +164,7 @@ define "candlepin" do
   compile.options.target = '1.6'
   compile.options.source = '1.6'
   compile_classpath = [COMMONS, DB, RESTEASY, LOG4J, HIBERNATE, BOUNCYCASTLE,
-    GUICE, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ, SUN_JAXB, MIME4J, OAUTH, RHINO, COLLECTIONS]
+    GUICE, JACKSON, QUARTZ, GETTEXT_COMMONS, SUN_JAXB, MIME4J, OAUTH, RHINO, COLLECTIONS]
   compile.with compile_classpath
   compile.with LOGDRIVER if Buildr.environment == 'logdriver'
 

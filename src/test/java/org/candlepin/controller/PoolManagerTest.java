@@ -37,9 +37,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import org.candlepin.audit.Event;
-import org.candlepin.audit.EventFactory;
-import org.candlepin.audit.EventSink;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
@@ -89,8 +86,6 @@ public class PoolManagerTest {
     @Mock
     private ProductServiceAdapter mockProductAdapter;
     @Mock
-    private EventSink mockEventSink;
-    @Mock
     private Config mockConfig;
     @Mock
     private EntitlementCurator entitlementCurator;
@@ -108,9 +103,6 @@ public class PoolManagerTest {
     private ConsumerCurator consumerCuratorMock;
     @Mock
     private EnvironmentCurator envCurator;
-
-    @Mock
-    private EventFactory eventFactory;
 
     @Mock
     private ComplianceRules complianceRules;
@@ -135,9 +127,9 @@ public class PoolManagerTest {
 
         this.principal = TestUtil.createOwnerPrincipal();
         this.manager = spy(new CandlepinPoolManager(mockPoolCurator, mockSubAdapter,
-            productCache, entCertAdapterMock, mockEventSink, eventFactory,
-            mockConfig, enforcerMock, poolRulesMock, entitlementCurator,
-            consumerCuratorMock, certCuratorMock, complianceRules, envCurator));
+            productCache, entCertAdapterMock, mockConfig, enforcerMock, poolRulesMock,
+            entitlementCurator, consumerCuratorMock, certCuratorMock, complianceRules,
+            envCurator));
 
         when(entCertAdapterMock.generateEntitlementCert(any(Entitlement.class),
             any(Subscription.class), any(Product.class))).thenReturn(
@@ -225,7 +217,6 @@ public class PoolManagerTest {
         verify(entCertAdapterMock).revokeEntitlementCertificates(e);
         verify(entCertAdapterMock).generateEntitlementCert(eq(e), eq(s),
             eq(product));
-        verify(mockEventSink, times(1)).sendEvent(any(Event.class));
     }
 
     /**
@@ -240,7 +231,6 @@ public class PoolManagerTest {
         int expectedEventCount) {
         verify(mockPoolCurator).retrieveFreeEntitlementsOfPool(any(Pool.class),
             eq(true));
-        verify(mockEventSink, times(expectedEventCount)).sendEvent(any(Event.class));
 
         assertEquals(s.getQuantity(), p.getQuantity());
         assertEquals(s.getEndDate(), p.getEndDate());
@@ -431,10 +421,6 @@ public class PoolManagerTest {
 
         // And the pool should be deleted:
         verify(mockPoolCurator).delete(p);
-
-        // Check that appropriate events were sent out:
-        verify(eventFactory).poolDeleted(p);
-        verify(mockEventSink, times(3)).sendEvent((Event) any());
     }
 
     private Pool createPoolWithEntitlements() {

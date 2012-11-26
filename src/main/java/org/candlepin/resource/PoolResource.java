@@ -14,7 +14,6 @@
  */
 package org.candlepin.resource;
 
-import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.interceptor.SecurityHole;
@@ -69,7 +68,7 @@ public class PoolResource {
     public PoolResource(PoolCurator poolCurator,
         ConsumerCurator consumerCurator, OwnerCurator ownerCurator,
         StatisticCurator statisticCurator, I18n i18n,
-        EventSink eventSink, PoolManager poolManager) {
+        PoolManager poolManager) {
 
         this.poolCurator = poolCurator;
         this.consumerCurator = consumerCurator;

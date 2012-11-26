@@ -45,10 +45,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
-import org.candlepin.audit.Event;
-import org.candlepin.audit.EventAdapter;
-import org.candlepin.audit.EventFactory;
-import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.auth.Principal;
@@ -82,7 +78,6 @@ import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentCurator;
-import org.candlepin.model.EventCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
@@ -131,10 +126,6 @@ public class ConsumerResource {
     private EntitlementCertServiceAdapter entCertService;
     private UserServiceAdapter userService;
     private I18n i18n;
-    private EventSink sink;
-    private EventFactory eventFactory;
-    private EventCurator eventCurator;
-    private EventAdapter eventAdapter;
     private static final int FEED_LIMIT = 1000;
     private Exporter exporter;
     private PoolManager poolManager;
@@ -157,8 +148,7 @@ public class ConsumerResource {
         EntitlementCurator entitlementCurator,
         IdentityCertServiceAdapter identityCertService,
         EntitlementCertServiceAdapter entCertServiceAdapter, I18n i18n,
-        EventSink sink, EventFactory eventFactory, EventCurator eventCurator,
-        EventAdapter eventAdapter, UserServiceAdapter userService,
+        UserServiceAdapter userService,
         Exporter exporter, PoolManager poolManager, PoolCurator poolCurator,
         ConsumerRules consumerRules, ConsumerDeleteHelper consumerDeleteHelper,
         OwnerCurator ownerCurator, ActivationKeyCurator activationKeyCurator,
@@ -174,9 +164,6 @@ public class ConsumerResource {
         this.identityCertService = identityCertService;
         this.entCertService = entCertServiceAdapter;
         this.i18n = i18n;
-        this.sink = sink;
-        this.eventFactory = eventFactory;
-        this.eventCurator = eventCurator;
         this.userService = userService;
         this.exporter = exporter;
         this.poolManager = poolManager;
@@ -184,7 +171,6 @@ public class ConsumerResource {
         this.consumerRules = consumerRules;
         this.consumerDeleteHelper = consumerDeleteHelper;
         this.ownerCurator = ownerCurator;
-        this.eventAdapter = eventAdapter;
         this.activationKeyCurator = activationKeyCurator;
         this.entitler = entitler;
         this.complianceRules = complianceRules;
@@ -390,8 +376,6 @@ public class ConsumerResource {
             IdentityCertificate idCert = generateIdCert(consumer, false);
             consumer.setIdCert(idCert);
 
-            sink.emitConsumerCreated(consumer);
-
             // Process activation keys.
             for (ActivationKey ak : keys) {
                 for (ActivationKeyPool akp : ak.getPools()) {
@@ -401,9 +385,6 @@ public class ConsumerResource {
                         i18n.tr("Pool ID must be provided"));
                     entitlements = entitler.bindByPool(poolId, consumer, akp
                         .getQuantity().intValue());
-
-                    // Trigger events:
-                    entitler.sendEvents(entitlements);
                 }
             }
 
@@ -669,10 +650,6 @@ public class ConsumerResource {
         if (log.isDebugEnabled()) {
             log.debug("Updating consumer: " + toUpdate.getUuid());
         }
-        // We need a representation of the consumer before making any modifications.
-        // If nothing changes we won't send.
-        Event event = eventFactory.consumerModified(toUpdate, updated);
-
         boolean changesMade = checkForFactsUpdate(toUpdate, updated);
         changesMade = checkForInstalledProductsUpdate(toUpdate, updated) || changesMade;
         changesMade = checkForGuestsUpdate(toUpdate, updated) || changesMade;
@@ -746,7 +723,6 @@ public class ConsumerResource {
             // Set the updated date here b/c @PreUpdate will not get fired
             // since only the facts table will receive the update.
             toUpdate.setUpdated(new Date());
-            sink.sendEvent(event);
         }
         return changesMade;
     }
@@ -862,7 +838,6 @@ public class ConsumerResource {
                 if (log.isDebugEnabled()) {
                     log.debug("New guest ID added: " + guestId.getGuestId());
                 }
-                sink.sendEvent(eventFactory.guestIdCreated(existing, guestId));
             }
 
             // The guest has not registered. No need to process entitlements.
@@ -918,7 +893,6 @@ public class ConsumerResource {
             if (log.isDebugEnabled()) {
                 log.debug("Guest ID removed: " + guestId.getGuestId());
             }
-            sink.sendEvent(eventFactory.guestIdDeleted(existing, guestId));
 
         }
         return true;
@@ -1010,10 +984,8 @@ public class ConsumerResource {
         }
         consumerRules.onConsumerDelete(consumerDeleteHelper, toDelete);
 
-        Event event = eventFactory.consumerDeleted(toDelete);
         consumerCurator.delete(toDelete);
         identityCertService.deleteIdentityCert(toDelete);
-        sink.sendEvent(event);
     }
 
     /**
@@ -1285,9 +1257,6 @@ public class ConsumerResource {
             }
         }
 
-        // Trigger events:
-        entitler.sendEvents(entitlements);
-
         return Response.status(Response.Status.OK)
             .type(MediaType.APPLICATION_JSON).entity(entitlements).build();
     }
@@ -1494,25 +1463,6 @@ public class ConsumerResource {
     }
 
     /**
-     * @return a list of Event objects
-     * @httpcode 404
-     * @httpcode 200
-     */
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{consumer_uuid}/events")
-    public List<Event> getConsumerEvents(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid) {
-        Consumer consumer = verifyAndLookupConsumer(consumerUuid);
-        List<Event> events = this.eventCurator.listMostRecent(FEED_LIMIT,
-            consumer);
-        if (events != null) {
-            eventAdapter.addMessageText(events);
-        }
-        return events;
-    }
-
-    /**
      * @httpcode 404
      * @httpcode 200
      */
@@ -1565,7 +1515,6 @@ public class ConsumerResource {
             response.addHeader("Content-Disposition", "attachment; filename=" +
                 archive.getName());
 
-            sink.sendEvent(eventFactory.exportCreated(consumer));
             return archive;
         }
         catch (ExportCreationException e) {
@@ -1594,8 +1543,6 @@ public class ConsumerResource {
         IdentityCertificate ic = generateIdCert(c, true);
         c.setIdCert(ic);
         consumerCurator.update(c);
-        Event consumerModified = this.eventFactory.consumerModified(c);
-        this.sink.sendEvent(consumerModified);
         return c;
     }
 
