@@ -81,13 +81,7 @@ public class UpstreamConsumer extends AbstractHibernateObject {
     private String prefixUrlApi;
 
     public UpstreamConsumer(String name, Owner owner, ConsumerType type) {
-        this();
-
-        this.name = name;
-        if (owner != null) {
-            this.ownerId = owner.getId();
-        }
-        this.type = type;
+        this(name, owner, type, null);
     }
 
     public UpstreamConsumer(String name, Owner owner, ConsumerType type, String uuid) {
@@ -97,6 +91,9 @@ public class UpstreamConsumer extends AbstractHibernateObject {
         }
         this.type = type;
         this.uuid = uuid;
+
+        // this ensures the uuid is set
+        this.ensureUUID();
     }
 
     public UpstreamConsumer() {
