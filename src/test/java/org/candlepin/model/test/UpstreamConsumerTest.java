@@ -15,7 +15,6 @@
 package org.candlepin.model.test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 
 import org.candlepin.model.ConsumerType;
@@ -33,15 +32,15 @@ public class UpstreamConsumerTest {
 
     @Before
     public void init() {
-        uc = new UpstreamConsumer();
+        uc = new UpstreamConsumer("someuuid");
     }
 
     @Test
     public void ctor() {
         Owner o = mock(Owner.class);
         ConsumerType ct = mock(ConsumerType.class);
-        UpstreamConsumer luc = new UpstreamConsumer("fake name", o, ct);
-        assertNotNull(luc.getUuid());
+        UpstreamConsumer luc = new UpstreamConsumer("fake name", o, ct, "someuuid");
+        assertEquals("someuuid", luc.getUuid());
         assertEquals("fake name", luc.getName());
         assertEquals(o.getId(), luc.getOwnerId());
         assertEquals(ct, luc.getType());
@@ -50,20 +49,10 @@ public class UpstreamConsumerTest {
     @Test
     public void defaultCtor() {
         UpstreamConsumer luc = new UpstreamConsumer();
-        assertNotNull(luc.getUuid());
+        assertEquals("", luc.getUuid());
         assertEquals(null, luc.getName());
         assertEquals(null, luc.getOwnerId());
         assertEquals(null, luc.getType());
-    }
-
-    @Test
-    public void uuidNotAffectedAfterBeingSet() {
-        uc.setUuid("test-uuid");
-        uc.ensureUUID();
-
-        // make sure ensureUUID doesn't touch uuid if
-        // it has already been set
-        assertEquals("test-uuid", uc.getUuid());
     }
 
     @Test
@@ -109,5 +98,12 @@ public class UpstreamConsumerTest {
     public void apiUrl() {
         uc.setApiUrl("some-fake-url");
         assertEquals("some-fake-url", uc.getApiUrl());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void exception() {
+        Owner o = mock(Owner.class);
+        ConsumerType ct = mock(ConsumerType.class);
+        new UpstreamConsumer("fake name", o, ct, null);
     }
 }
