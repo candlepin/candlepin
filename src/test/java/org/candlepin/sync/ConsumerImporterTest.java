@@ -135,8 +135,7 @@ public class ConsumerImporterTest {
     public void importConsumerWithSameUuidOnAnotherOwnerShouldThrowException()
         throws ImporterException {
         Owner owner = new Owner();
-        UpstreamConsumer uc = new UpstreamConsumer();
-        uc.setUuid("test-uuid");
+        UpstreamConsumer uc = new UpstreamConsumer("test-uuid");
         owner.setUpstreamConsumer(uc);
         ConsumerDto consumer = new ConsumerDto();
         consumer.setUuid("test-uuid");

@@ -16,7 +16,6 @@ package org.candlepin.model;
 
 import org.candlepin.jackson.HateoasArrayExclude;
 import org.candlepin.jackson.HateoasInclude;
-import org.candlepin.util.Util;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.annotate.JsonFilter;
 import org.hibernate.annotations.ForeignKey;
@@ -75,26 +74,26 @@ public class UpstreamConsumer extends AbstractHibernateObject {
     @Column(length = 255, name = "prefix_url_api")
     private String prefixUrlApi;
 
-    public UpstreamConsumer(String name, Owner owner, ConsumerType type) {
-        this(name, owner, type, null);
-    }
-
     public UpstreamConsumer(String name, Owner owner, ConsumerType type, String uuid) {
+        if (uuid == null) {
+            throw new IllegalArgumentException("uuid is null");
+        }
+
         this.name = name;
         if (owner != null) {
             this.ownerId = owner.getId();
         }
         this.type = type;
         this.uuid = uuid;
+    }
 
-        // this ensures the uuid is set
-        this.ensureUUID();
+    public UpstreamConsumer(String uuid) {
+        this(null, null, null, uuid);
     }
 
     public UpstreamConsumer() {
-        // This constructor is for creating a new UpstreamConsumer in the DB,
-        // so we'll generate a UUID at this point.
-        this.ensureUUID();
+        // needed for Hibernate
+        this("");
     }
 
     /**
@@ -103,12 +102,6 @@ public class UpstreamConsumer extends AbstractHibernateObject {
     @HateoasInclude
     public String getUuid() {
         return uuid;
-    }
-
-    public void ensureUUID() {
-        if (uuid == null  || uuid.length() == 0) {
-            this.uuid = Util.generateUUID();
-        }
     }
 
     /**

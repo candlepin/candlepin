@@ -69,8 +69,7 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
 
     @Test(expected = PersistenceException.class)
     public void upstreamUuidConstraint() {
-        UpstreamConsumer uc = new UpstreamConsumer();
-        uc.setUuid("sameuuid");
+        UpstreamConsumer uc = new UpstreamConsumer("sameuuid");
 
         Owner owner1 = new Owner("owner1");
         owner1.setUpstreamConsumer(uc);
@@ -186,8 +185,7 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         ConsumerType type = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
         consumerTypeCurator.create(type);
         UpstreamConsumer uc = new UpstreamConsumer("test-upstream-consumer",
-               owner, type);
-        uc.setUuid("someuuid");
+               owner, type, "someuuid");
         owner.setUpstreamConsumer(uc);
         ownerCurator.merge(owner);
 
