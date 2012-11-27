@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EnvironmentContent;
@@ -33,6 +34,8 @@ import com.google.common.base.Predicate;
  */
 public abstract class X509Util {
 
+    private static Logger log = Logger.getLogger(X509Util.class);
+
     public static final Predicate<Product>
     PROD_FILTER_PREDICATE = new Predicate<Product>() {
         @Override
@@ -42,9 +45,13 @@ public abstract class X509Util {
     };
 
     /**
-     * Scan the product content looking for any which modify some other product. If found
-     * we must check that this consumer has another entitlement granting them access
-     * to that modified product. If they do not, we should filter out this content.
+     * Scan the product content looking for any we should filter out.
+     *
+     * Will filter out any content which modifies another product if the consumer does
+     * not have an entitlement granting them access to that product.
+     *
+     * Will also filter out any content not promoted to the consumer's environment
+     * if environment filtering is enabled.
      *
      * @param prod the product who's content we should filter
      * @param ent the original entitlement
@@ -63,9 +70,8 @@ public abstract class X509Util {
             if (filterEnvironment) {
                 if (ent.getConsumer().getEnvironment() != null &&
                     !promotedContent.containsKey(pc.getContent().getId())) {
-                    // FIXME MS
-                    //log.debug("Skipping content not promoted to environment: " +
-                    //    pc.getContent().getId());
+                    log.debug("Skipping content not promoted to environment: " +
+                        pc.getContent().getId());
                     continue;
                 }
             }
