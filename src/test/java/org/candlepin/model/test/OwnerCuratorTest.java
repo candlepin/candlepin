@@ -71,7 +71,6 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
     public void upstreamUuidConstraint() {
         UpstreamConsumer uc = new UpstreamConsumer();
         uc.setUuid("sameuuid");
-        upstreamConsumerCurator.create(uc);
 
         Owner owner1 = new Owner("owner1");
         owner1.setUpstreamConsumer(uc);
@@ -189,7 +188,6 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         UpstreamConsumer uc = new UpstreamConsumer("test-upstream-consumer",
                owner, type);
         uc.setUuid("someuuid");
-        uc = upstreamConsumerCurator.create(uc);
         owner.setUpstreamConsumer(uc);
         ownerCurator.merge(owner);
 

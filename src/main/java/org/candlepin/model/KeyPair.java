@@ -22,9 +22,6 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
 
 import org.hibernate.annotations.GenericGenerator;
 
@@ -32,8 +29,6 @@ import org.hibernate.annotations.GenericGenerator;
  * KeyPair: Simple wrapper for a Java security keypair. We need to store these in
  * the database for re-use when generating entitlement and identity certificates.
  */
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_key_pair")
 public class KeyPair extends AbstractHibernateObject{

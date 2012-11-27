@@ -125,8 +125,6 @@ public class ExporterTest {
             generator.initialize(2048);
             java.security.KeyPair newPair = generator.generateKeyPair();
             cpKeyPair = new KeyPair(newPair.getPrivate(), newPair.getPublic());
-            //create(cpKeyPair);
-            //c.setKeyPair(cpKeyPair);
         }
         catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
@@ -341,48 +339,6 @@ public class ExporterTest {
         assertTrue(export.exists());
         verifyContent(export, "export/upstream_consumer/10.pem",
             new VerifyIdentityCert("10.pem"));
-    }
-
-    @Test
-    public void exportKeyPair() throws Exception {
-        config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
-        Rules mrules = mock(Rules.class);
-        Consumer consumer = mock(Consumer.class);
-        Principal principal = mock(Principal.class);
-
-        when(mrules.getRules()).thenReturn("foobar");
-        when(pki.getSHA256WithRSAHash(any(InputStream.class))).thenReturn(
-            "signature".getBytes());
-        when(rc.getRules()).thenReturn(mrules);
-        when(pprov.get()).thenReturn(principal);
-        when(principal.getUsername()).thenReturn("testUser");
-
-        // specific to this test
-        IdentityCertificate idcert = new IdentityCertificate();
-        idcert.setSerial(new CertificateSerial(10L, new Date()));
-        idcert.setKey("euh0876puhapodifbvj094");
-        idcert.setCert("hpj-08ha-w4gpoknpon*)&^%#");
-        idcert.setCreated(new Date());
-        idcert.setUpdated(new Date());
-        when(consumer.getIdCert()).thenReturn(idcert);
-
-        KeyPair keyPair = createKeyPair();
-        when(consumer.getKeyPair()).thenReturn(keyPair);
-        when(pki.getPemEncoded(keyPair.getPrivateKey()))
-            .thenReturn("privateKey".getBytes());
-        when(pki.getPemEncoded(keyPair.getPublicKey()))
-            .thenReturn("publicKey".getBytes());
-
-        // FINALLY test this badboy
-        Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov);
-        File export = e.getFullExport(consumer);
-
-        // VERIFY
-        assertNotNull(export);
-        assertTrue(export.exists());
-        verifyContent(export, "export/upstream_consumer/keypair.pem",
-            new VerifyKeyPair("keypair.pem"));
     }
 
     /**

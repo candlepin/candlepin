@@ -16,11 +16,9 @@ package org.candlepin.sync;
 
 import org.apache.log4j.Logger;
 import org.candlepin.model.IdentityCertificate;
-import org.candlepin.model.KeyPair;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.UpstreamConsumer;
-import org.candlepin.model.UpstreamConsumerCurator;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.xnap.commons.i18n.I18n;
 
@@ -34,12 +32,10 @@ public class ConsumerImporter {
     private static Logger log = Logger.getLogger(ConsumerImporter.class);
 
     private OwnerCurator curator;
-    private UpstreamConsumerCurator upstreamCurator;
     private I18n i18n;
 
-    public ConsumerImporter(OwnerCurator curator, UpstreamConsumerCurator ucc, I18n i18n) {
+    public ConsumerImporter(OwnerCurator curator, I18n i18n) {
         this.curator = curator;
-        this.upstreamCurator = ucc;
         this.i18n = i18n;
     }
 
@@ -48,7 +44,7 @@ public class ConsumerImporter {
     }
 
     public void store(Owner owner, ConsumerDto consumer,
-        ConflictOverrides forcedConflicts, IdentityCertificate idcert, KeyPair pair)
+        ConflictOverrides forcedConflicts, IdentityCertificate idcert)
         throws SyncDataFormatException {
 
         if (consumer.getUuid() == null) {
@@ -90,8 +86,6 @@ public class ConsumerImporter {
         uc.setWebUrl(consumer.getUrlWeb());
         uc.setApiUrl(consumer.getUrlApi());
         uc.setIdCert(idcert);
-        uc.setKeyPair(pair);
-        uc = upstreamCurator.create(uc);
         owner.setUpstreamConsumer(uc);
 
         curator.merge(owner);

@@ -30,14 +30,12 @@ import org.candlepin.model.ContentCurator;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
 import org.candlepin.model.IdentityCertificate;
-import org.candlepin.model.KeyPair;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
-import org.candlepin.model.UpstreamConsumerCurator;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.util.VersionUtil;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -119,15 +117,13 @@ public class Importer {
     private CertificateSerialCurator csCurator;
     private EventSink sink;
     private I18n i18n;
-    private UpstreamConsumerCurator upstreamCurator;
 
     @Inject
     public Importer(ConsumerTypeCurator consumerTypeCurator, ProductCurator productCurator,
         RulesImporter rulesImporter, OwnerCurator ownerCurator,
         ContentCurator contentCurator, SubscriptionCurator subCurator, PoolManager pm,
         PKIUtility pki, Config config, ExporterMetadataCurator emc,
-        CertificateSerialCurator csc, EventSink sink, I18n i18n,
-        UpstreamConsumerCurator upstreamCurator) {
+        CertificateSerialCurator csc, EventSink sink, I18n i18n) {
 
         this.config = config;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -143,7 +139,6 @@ public class Importer {
         this.csCurator = csc;
         this.sink = sink;
         this.i18n = i18n;
-        this.upstreamCurator = upstreamCurator;
     }
 
     /**
@@ -439,23 +434,8 @@ public class Importer {
         throws IOException, SyncDataFormatException {
 
         IdentityCertificate idcert = null;
-        KeyPair pair = null;
         for (File uc : upstreamConsumer) {
-            if (uc.getName().startsWith("keypair.")) {
-                log.debug("Import upstream consumer keypair: " + uc.getName());
-                Reader reader = null;
-                try {
-                    reader = new FileReader(uc);
-                    java.security.KeyPair kp = pki.readPemEncodedKeyPair(reader);
-                    pair = new KeyPair(kp.getPrivate(), kp.getPublic());
-                }
-                finally {
-                    if (reader != null) {
-                        reader.close();
-                    }
-                }
-            }
-            else if (uc.getName().endsWith(".json")) {
+            if (uc.getName().endsWith(".json")) {
                 log.debug("Import upstream consumeridentity certificate: " +
                     uc.getName());
                 Reader reader = null;
@@ -475,13 +455,13 @@ public class Importer {
             }
         }
 
-        ConsumerImporter importer = new ConsumerImporter(ownerCurator, upstreamCurator, i18n);
+        ConsumerImporter importer = new ConsumerImporter(ownerCurator, i18n);
         Reader reader = null;
         ConsumerDto consumer = null;
         try {
             reader = new FileReader(consumerFile);
             consumer = importer.createObject(mapper, reader);
-            importer.store(owner, consumer, forcedConflicts, idcert, pair);
+            importer.store(owner, consumer, forcedConflicts, idcert);
         }
         finally {
             if (reader != null) {
