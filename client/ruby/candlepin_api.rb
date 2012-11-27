@@ -120,6 +120,14 @@ class Candlepin
     put("#{path}/#{uuid}", consumer)
   end
 
+  def update_entitlement(params)
+    entitlement = {
+        :id => params[:id]
+    }
+    entitlement[:quantity] = params[:quantity]
+    put("/entitlements/#{params[:id]}", entitlement)
+  end
+
   def get_user_info(user)
     get("/users/#{user}")
   end

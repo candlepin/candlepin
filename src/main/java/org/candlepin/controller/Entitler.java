@@ -141,6 +141,42 @@ public class Entitler {
         }
     }
 
+    public void adjustEntitlementQuantity(Consumer consumer, Entitlement ent,
+        Integer quantity) {
+        // Attempt to adjust an entitlement:
+        try {
+            poolManager.adjustEntitlementQuantity(consumer, ent, quantity);
+        }
+        catch (EntitlementRefusedException e) {
+            // Could be multiple errors, but we'll just report the first one for
+            // now:
+            String msg;
+            String error = e.getResult().getErrors().get(0).getResourceKey();
+
+            if (error.equals("rulefailed.no.entitlements.available")) {
+                msg = i18n.tr(
+                    "Insufficient pool quantity available for adjustment to entitlement " +
+                    "''{0}''.",
+                    ent.getId());
+            }
+            else if (error.equals("rulefailed.pool.does.not.support.multi-entitlement")) {
+                msg = i18n.tr("Multi-entitlement not supported for pool connected with " +
+                              "entitlement ''{0}''.",
+                    ent.getId());
+            }
+            else if (error.equals("rulefailed.consumer.already.has.product")) {
+                msg = i18n.tr("Multi-entitlement not supported for pool connected with " +
+                              "entitlement ''{0}''.",
+                    ent.getId());
+            }
+            else {
+                msg = i18n.tr("Unable to adjust quantity for the entitlement with " +
+                    "id ''{0}'': {1}", ent.getId(), error);
+            }
+            throw new ForbiddenException(msg);
+        }
+    }
+
     public List<Entitlement> bindByProducts(String[] productIds,
         String consumeruuid, Date entitleDate) {
         Consumer c = consumerCurator.findByUuid(consumeruuid);
