@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.candlepin.config.Config;
-import org.candlepin.exceptions.IseException;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Entitlement;
@@ -294,8 +293,8 @@ public class DefaultEntitlementCertServiceAdapter extends
         // likely going to generate a certificate too large for the CDN, and return an
         // informative error message to the user.
         if (contentCounter > X509ExtensionUtil.V1_CONTENT_LIMIT) {
-            throw new CertificateSizeException(i18n.tr("Too many content sets for certificate. " +
-                "Please upgrade to a newer client to use subscription: {0}",
+            throw new CertificateSizeException(i18n.tr("Too many content sets for " +
+                "certificate. Please upgrade to a newer client to use subscription: {0}",
                 ent.getPool().getProductName()));
         }
 
