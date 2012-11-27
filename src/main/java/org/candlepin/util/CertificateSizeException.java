@@ -14,12 +14,14 @@
  */
 package org.candlepin.util;
 
+import org.candlepin.exceptions.IseException;
+
 /**
  * CertificateSizeException: Thrown when we cannot generate a certificate as it will be
  * too large for the CDN.
  */
-public class CertificateSizeException extends Exception {
-    public CertificateSizeException() {
-        super();
+public class CertificateSizeException extends IseException {
+    public CertificateSizeException(String message) {
+        super(message);
     }
 }
