@@ -29,7 +29,6 @@
                 <constraints nullable="false"/>
             </column>
             <column name="consumer_idcert_id" type="VARCHAR(32)"/>
-            <column name="keypair_id" type="VARCHAR(32)"/>
             <column name="prefix_url_web" type="VARCHAR(255)"/>
             <column name="prefix_url_api" type="VARCHAR(255)"/>
         </createTable>
