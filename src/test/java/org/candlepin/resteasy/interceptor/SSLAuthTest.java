@@ -22,6 +22,7 @@ import static org.mockito.Mockito.when;
 
 import java.security.Principal;
 import java.security.cert.X509Certificate;
+import java.util.Locale;
 
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.model.Consumer;
@@ -35,6 +36,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
 
 public class SSLAuthTest {
 
@@ -43,11 +46,13 @@ public class SSLAuthTest {
     @Mock private DeletedConsumerCurator deletedConsumerCurator;
 
     private SSLAuth auth;
+    private I18n i18n;
 
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        this.auth = new SSLAuth(this.consumerCurator, this.deletedConsumerCurator);
+        i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
+        this.auth = new SSLAuth(this.consumerCurator, this.deletedConsumerCurator, i18n);
     }
 
     /**

@@ -26,6 +26,7 @@ import org.candlepin.model.DeletedConsumer;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.resource.dto.HypervisorCheckInResult;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -54,14 +55,17 @@ public class HypervisorResource {
     private PoolManager poolManager;
     private ConsumerResource consumerResource;
     private DeletedConsumerCurator deletedConsumerCurator;
+    private I18n i18n;
 
     @Inject
     public HypervisorResource(ConsumerResource consumerResource, PoolManager poolManager,
-        ConsumerCurator consumerCurator, DeletedConsumerCurator deletedConsumerCurator) {
+        ConsumerCurator consumerCurator, DeletedConsumerCurator deletedConsumerCurator,
+        I18n i18n) {
         this.consumerResource = consumerResource;
         this.poolManager = poolManager;
         this.consumerCurator = consumerCurator;
         this.deletedConsumerCurator = deletedConsumerCurator;
+        this.i18n = i18n;
     }
 
     /**
@@ -96,8 +100,9 @@ public class HypervisorResource {
                 DeletedConsumer deletedHypervisor =
                     deletedConsumerCurator.findByConsumerUuid(hostEntry.getKey());
                 if (deletedHypervisor != null) {
-                    throw new GoneException("Hypervisor " + hostEntry.getKey() +
-                                                " has been deleted previously");
+                    throw new GoneException(
+                        i18n.tr("Hypervisor {0} has been deleted previously",
+                            hostEntry.getKey(), hostEntry.getKey()));
                 }
                 Consumer consumer = consumerCurator.findByUuid(hostEntry.getKey());
                 if (consumer == null) {

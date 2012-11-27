@@ -138,7 +138,7 @@ public class UserResource {
 
         // Note, to change the username, the old username needs to be provided.
         if (userService.findByLogin(username) == null) {
-            throw new NotFoundException("user " + username + " does not exists");
+            throw new NotFoundException(i18n.tr("User {0} does not exist", username));
         }
         return userService.updateUser(user);
     }
@@ -154,7 +154,7 @@ public class UserResource {
     public void deleteUser(@PathParam("username") String username) {
         User user = userService.findByLogin(username);
         if (user == null) {
-            throw new GoneException("user " + username + " not found");
+            throw new GoneException(i18n.tr("User {0} not found", username), username);
         }
         else {
             userService.deleteUser(user);

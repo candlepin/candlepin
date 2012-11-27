@@ -38,6 +38,7 @@ import org.jboss.resteasy.spi.Failure;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.spi.interception.PreProcessInterceptor;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -57,11 +58,13 @@ public class AuthInterceptor implements PreProcessInterceptor {
     private Config config;
     private UserServiceAdapter userService;
     private List<AuthProvider> providers = new ArrayList<AuthProvider>();
+    private I18n i18n;
 
     @Inject
     public AuthInterceptor(Config config, UserServiceAdapter userService,
         OwnerCurator ownerCurator, ConsumerCurator consumerCurator,
-        DeletedConsumerCurator deletedConsumerCurator, Injector injector) {
+        DeletedConsumerCurator deletedConsumerCurator, Injector injector,
+        I18n i18n) {
         super();
         this.consumerCurator = consumerCurator;
         this.injector = injector;
@@ -69,6 +72,7 @@ public class AuthInterceptor implements PreProcessInterceptor {
         this.userService = userService;
         this.ownerCurator = ownerCurator;
         this.deletedConsumerCurator = deletedConsumerCurator;
+        this.i18n = i18n;
         this.setupAuthStrategies();
     }
 
@@ -81,7 +85,7 @@ public class AuthInterceptor implements PreProcessInterceptor {
         if (config.oAuthEnabled()) {
             log.debug("OAuth Authentication is enabled.");
             TrustedConsumerAuth consumerAuth =
-                new TrustedConsumerAuth(consumerCurator, deletedConsumerCurator);
+                new TrustedConsumerAuth(consumerCurator, deletedConsumerCurator, i18n);
             TrustedUserAuth userAuth = new TrustedUserAuth(userService, injector);
             TrustedExternalSystemAuth systemAuth = new TrustedExternalSystemAuth();
             providers
@@ -96,12 +100,18 @@ public class AuthInterceptor implements PreProcessInterceptor {
         // consumer certificates
         if (config.sslAuthEnabled()) {
             log.debug("Certificate Based Authentication is enabled.");
-            providers.add(new SSLAuth(consumerCurator, deletedConsumerCurator));
+            providers.add(
+                new SSLAuth(consumerCurator,
+                    deletedConsumerCurator,
+                    i18n));
         }
         // trusted headers
         if (config.trustedAuthEnabled()) {
             log.debug("Trusted Authentication is enabled.");
-            providers.add(new TrustedConsumerAuth(consumerCurator, deletedConsumerCurator));
+            providers.add(
+                new TrustedConsumerAuth(consumerCurator,
+                    deletedConsumerCurator,
+                    i18n));
             providers.add(new TrustedUserAuth(userService, injector));
         }
     }

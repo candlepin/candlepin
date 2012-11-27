@@ -46,6 +46,7 @@ import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -62,6 +63,7 @@ public class AuthInterceptorTest {
     private ConsumerCurator cc;
     private DeletedConsumerCurator dcc;
     private Injector injector;
+    private I18n i18n;
 
     @Before
     public void init() {
@@ -71,7 +73,8 @@ public class AuthInterceptorTest {
         cc = mock(ConsumerCurator.class);
         dcc = mock(DeletedConsumerCurator.class);
         injector = Guice.createInjector(new AuthInterceptorTestModule());
-        interceptor = new AuthInterceptor(config, usa, oc, cc, dcc, injector);
+        i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
+        interceptor = new AuthInterceptor(config, usa, oc, cc, dcc, injector, i18n);
     }
 
     @Test(expected = UnauthorizedException.class)

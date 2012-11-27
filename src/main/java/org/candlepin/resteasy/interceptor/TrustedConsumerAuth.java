@@ -22,6 +22,7 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.DeletedConsumerCurator;
 
 import org.jboss.resteasy.spi.HttpRequest;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 
@@ -36,8 +37,9 @@ class TrustedConsumerAuth extends ConsumerAuth {
 
     @Inject
     TrustedConsumerAuth(ConsumerCurator consumerCurator,
-        DeletedConsumerCurator deletedConsumerCurator) {
-        super(consumerCurator, deletedConsumerCurator);
+        DeletedConsumerCurator deletedConsumerCurator,
+        I18n i18n) {
+        super(consumerCurator, deletedConsumerCurator, i18n);
     }
 
     public Principal getPrincipal(HttpRequest request) {

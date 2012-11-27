@@ -122,7 +122,7 @@ public class HypervisorResourceTest {
             this.activationKeyCurator, null, this.complianceRules,
             this.deletedConsumerCurator, null, new Config());
         hypervisorResource = new HypervisorResource(consumerResource, poolManager,
-            consumerCurator, this.deletedConsumerCurator);
+            consumerCurator, this.deletedConsumerCurator, i18n);
 
         // Ensure that we get the consumer that was passed in back from the create call.
         when(consumerCurator.create(any(Consumer.class))).thenAnswer(new Answer<Object>() {
