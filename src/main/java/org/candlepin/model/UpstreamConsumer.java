@@ -22,7 +22,6 @@ import org.codehaus.jackson.map.annotate.JsonFilter;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -34,7 +33,6 @@ import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 
 /**
  * UpstreamConsumer
@@ -70,9 +68,6 @@ public class UpstreamConsumer extends AbstractHibernateObject {
 
     @Column(name = "owner_id", length = 32, nullable = false)
     private String ownerId;
-
-    @OneToOne(cascade = CascadeType.ALL)
-    private KeyPair keyPair;
 
     @Column(length = 255, name = "prefix_url_web")
     private String prefixUrlWeb;
@@ -190,18 +185,6 @@ public class UpstreamConsumer extends AbstractHibernateObject {
      */
     public void setOwnerId(String oid) {
         this.ownerId = oid;
-    }
-
-    @XmlTransient
-    public KeyPair getKeyPair() {
-        return keyPair;
-    }
-
-    /**
-     * @param keyPair
-     */
-    public void setKeyPair(KeyPair keyPair) {
-        this.keyPair = keyPair;
     }
 
     /**

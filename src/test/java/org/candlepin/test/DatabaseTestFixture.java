@@ -71,7 +71,6 @@ import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.model.SubscriptionsCertificateCurator;
 import org.candlepin.model.UeberCertificateGenerator;
-import org.candlepin.model.UpstreamConsumerCurator;
 import org.candlepin.model.UserCurator;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
@@ -140,7 +139,6 @@ public class DatabaseTestFixture {
     protected UniqueIdGenerator uniqueIdGenerator;
     protected UeberCertificateGenerator ueberCertGenerator;
     protected CandlepinSingletonScope cpSingletonScope;
-    protected UpstreamConsumerCurator upstreamConsumerCurator;
 
     private PersistService persistanceService;
 
@@ -177,7 +175,6 @@ public class DatabaseTestFixture {
         productCertificateCurator = injector
             .getInstance(ProductCertificateCurator.class);
         consumerCurator = injector.getInstance(ConsumerCurator.class);
-        upstreamConsumerCurator = injector.getInstance(UpstreamConsumerCurator.class);
         eventCurator = injector.getInstance(EventCurator.class);
         permissionCurator = injector.getInstance(OwnerPermissionCurator.class);
         roleCurator = injector.getInstance(RoleCurator.class);

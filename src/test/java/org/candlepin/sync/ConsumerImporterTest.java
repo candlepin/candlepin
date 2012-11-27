@@ -18,7 +18,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -28,14 +27,11 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.UpstreamConsumer;
-import org.candlepin.model.UpstreamConsumerCurator;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -51,7 +47,6 @@ import java.util.Map;
 public class ConsumerImporterTest {
 
     private ConsumerImporter importer;
-    private UpstreamConsumerCurator upstreamCurator;
     private ObjectMapper mapper;
     private OwnerCurator curator;
     private I18n i18n;
@@ -59,9 +54,8 @@ public class ConsumerImporterTest {
     @Before
     public void setUp() {
         curator = mock(OwnerCurator.class);
-        upstreamCurator = mock(UpstreamConsumerCurator.class);
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        importer = new ConsumerImporter(curator, upstreamCurator, i18n);
+        importer = new ConsumerImporter(curator, i18n);
         mapper = SyncUtils.getObjectMapper(new Config(new HashMap<String, String>()));
     }
 
@@ -107,19 +101,8 @@ public class ConsumerImporterTest {
         when(owner.getId()).thenReturn("test-owner-id");
         when(consumer.getUuid()).thenReturn("test-uuid");
         when(consumer.getOwner()).thenReturn(owner);
-        when(upstreamCurator.create(any(UpstreamConsumer.class))).thenAnswer(
-            new Answer<UpstreamConsumer>() {
-                public UpstreamConsumer answer(InvocationOnMock invocation) {
-                    Object[] args = invocation.getArguments();
-                    System.out.println("answer called");
-                    UpstreamConsumer uc = (UpstreamConsumer) args[0];
-                    uc.setId("test-uc-id");
-                    System.out.println("uuid: " + uc.getUuid());
-                    return uc;
-                }
-            });
 
-        importer.store(owner, consumer, new ConflictOverrides(), null, null);
+        importer.store(owner, consumer, new ConflictOverrides(), null);
 
         // now verify that the owner has the upstream consumer set
         ArgumentCaptor<UpstreamConsumer> arg =
@@ -138,7 +121,7 @@ public class ConsumerImporterTest {
         when(consumer.getUuid()).thenReturn("test-uuid");
         when(consumer.getOwner()).thenReturn(owner);
 
-        importer.store(owner, consumer, new ConflictOverrides(), null, null);
+        importer.store(owner, consumer, new ConflictOverrides(), null);
 
         // now verify that the owner didn't change
         // arg.getValue() returns the Owner being stored
@@ -163,7 +146,7 @@ public class ConsumerImporterTest {
         anotherOwner.setUpstreamConsumer(uc);
         when(curator.lookupWithUpstreamUuid(consumer.getUuid())).thenReturn(anotherOwner);
 
-        importer.store(owner, consumer, new ConflictOverrides(), null, null);
+        importer.store(owner, consumer, new ConflictOverrides(), null);
     }
 
     @Test
@@ -175,7 +158,7 @@ public class ConsumerImporterTest {
         when(consumer.getOwner()).thenReturn(owner);
 
         try {
-            importer.store(owner, consumer, new ConflictOverrides(), null, null);
+            importer.store(owner, consumer, new ConflictOverrides(), null);
             fail();
         }
         catch (ImportConflictException e) {
@@ -192,20 +175,9 @@ public class ConsumerImporterTest {
         when(owner.getUpstreamUuid()).thenReturn("another-test-uuid");
         when(consumer.getUuid()).thenReturn("test-uuid");
         when(consumer.getOwner()).thenReturn(owner);
-        when(upstreamCurator.create(any(UpstreamConsumer.class))).thenAnswer(
-            new Answer<UpstreamConsumer>() {
-                public UpstreamConsumer answer(InvocationOnMock invocation) {
-                    Object[] args = invocation.getArguments();
-                    System.out.println("answer called");
-                    UpstreamConsumer uc = (UpstreamConsumer) args[0];
-                    uc.setId("test-uc-id");
-                    System.out.println("uuid: " + uc.getUuid());
-                    return uc;
-                }
-            });
 
         importer.store(owner, consumer,
-            new ConflictOverrides(Importer.Conflict.DISTRIBUTOR_CONFLICT), null, null);
+            new ConflictOverrides(Importer.Conflict.DISTRIBUTOR_CONFLICT), null);
 
         // now verify that the owner has the upstream consumer set
         ArgumentCaptor<UpstreamConsumer> arg =
@@ -222,6 +194,6 @@ public class ConsumerImporterTest {
         ConsumerDto consumer = new ConsumerDto();
         consumer.setUuid(null);
 
-        importer.store(owner, consumer, new ConflictOverrides(), null, null);
+        importer.store(owner, consumer, new ConflictOverrides(), null);
     }
 }

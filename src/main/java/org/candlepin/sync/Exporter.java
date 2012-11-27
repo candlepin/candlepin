@@ -29,7 +29,6 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.IdentityCertificate;
-import org.candlepin.model.KeyPair;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProvidedProduct;
@@ -125,7 +124,6 @@ public class Exporter {
             exportMeta(baseDir);
             exportConsumer(baseDir, consumer);
             exportIdentityCertificate(baseDir, consumer);
-            exportKeyPair(baseDir, consumer);
             exportEntitlements(baseDir, consumer);
             exportEntitlementsCerts(baseDir, consumer, null, true);
             exportProducts(baseDir, consumer);
@@ -365,28 +363,6 @@ public class Exporter {
         try {
             writer = new FileWriter(file);
             mapper.writeValue(writer, cert);
-        }
-        finally {
-            if (writer != null) {
-                writer.close();
-            }
-        }
-    }
-
-    private void exportKeyPair(File baseDir, Consumer consumer)
-        throws IOException {
-        File keypairdir = new File(baseDir.getCanonicalPath(), "upstream_consumer");
-        keypairdir.mkdir();
-
-        KeyPair keyPair = consumer.getKeyPair();
-        File file = new File(keypairdir.getCanonicalPath(), "keypair.pem");
-
-        FileWriter writer = null;
-
-        try {
-            writer = new FileWriter(file);
-            writer.write(new String(pki.getPemEncoded(keyPair.getPrivateKey())));
-            writer.write(new String(pki.getPemEncoded(keyPair.getPublicKey())));
         }
         finally {
             if (writer != null) {

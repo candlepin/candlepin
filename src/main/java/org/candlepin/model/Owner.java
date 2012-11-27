@@ -23,6 +23,7 @@ import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -83,7 +84,7 @@ public class Owner extends AbstractHibernateObject implements Serializable,
     @OneToMany(mappedBy = "owner", targetEntity = Pool.class)
     private Set<Pool> pools;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "upstream_id")
     private UpstreamConsumer upstreamConsumer;
 
@@ -295,6 +296,7 @@ public class Owner extends AbstractHibernateObject implements Serializable,
     /**
      * @return the upstreamUuid
      */
+    @XmlTransient
     public String getUpstreamUuid() {
         if (upstreamConsumer == null) {
             return null;

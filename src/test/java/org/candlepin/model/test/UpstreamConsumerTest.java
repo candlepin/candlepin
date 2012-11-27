@@ -20,7 +20,6 @@ import static org.mockito.Mockito.mock;
 
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.IdentityCertificate;
-import org.candlepin.model.KeyPair;
 import org.candlepin.model.Owner;
 import org.candlepin.model.UpstreamConsumer;
 import org.junit.Before;
@@ -110,12 +109,5 @@ public class UpstreamConsumerTest {
     public void apiUrl() {
         uc.setApiUrl("some-fake-url");
         assertEquals("some-fake-url", uc.getApiUrl());
-    }
-
-    @Test
-    public void keypair() {
-        KeyPair kp = mock(KeyPair.class);
-        uc.setKeyPair(kp);
-        assertEquals(kp, uc.getKeyPair());
     }
 }

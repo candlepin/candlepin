@@ -30,7 +30,6 @@ import org.bouncycastle.asn1.x509.GeneralNames;
 import org.bouncycastle.asn1.x509.KeyPurposeId;
 import org.bouncycastle.asn1.x509.KeyUsage;
 import org.bouncycastle.asn1.x509.X509Extensions;
-import org.bouncycastle.openssl.PEMReader;
 import org.bouncycastle.openssl.PEMWriter;
 import org.bouncycastle.x509.X509V2CRLGenerator;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
@@ -46,7 +45,6 @@ import org.candlepin.util.Util;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.io.Reader;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.security.Key;
@@ -254,10 +252,5 @@ public class BouncyCastlePKIUtility extends PKIUtility {
                 }
             }
         }
-    }
-
-    public KeyPair readPemEncodedKeyPair(Reader rdr) throws IOException {
-        PEMReader pr = new PEMReader(rdr);
-        return (KeyPair) pr.readObject();
     }
 }
