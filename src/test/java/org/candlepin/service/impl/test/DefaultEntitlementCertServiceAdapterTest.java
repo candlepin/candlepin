@@ -432,7 +432,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             CONTENT_LABEL, CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL,
             CONTENT_GPG_URL);
         // Change label to prevent an equals match:
-        Content modContent = createContent(CONTENT_NAME, CONTENT_ID,
+        Content modContent = createContent(CONTENT_NAME, CONTENT_ID + "_2",
             "differentlabel", CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL,
             CONTENT_GPG_URL);
         modContent.setLabel("mod content");
@@ -451,8 +451,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
                 any(Date.class), any(Date.class))).thenReturn(
                     new HashSet<Entitlement>());
         // Mod content should get filtered out because we have no ents providing
-        // the
-        // product it modifies:
+        // the product it modifies:
         assertEquals(1,
             extensionUtil.filterProductContent(modProduct, entitlement, entCurator,
                 new HashMap<String, EnvironmentContent>(), false)
@@ -470,11 +469,13 @@ public class DefaultEntitlementCertServiceAdapterTest {
                 .size());
 
         // Make sure that we filter by environment when asked.
-        when(consumer.getEnvironment()).thenReturn(new Environment());
+        Environment environment = new Environment();
+        when(consumer.getEnvironment()).thenReturn(environment);
 
         Map<String, EnvironmentContent> promotedContent =
             new HashMap<String, EnvironmentContent>();
-        promotedContent.put(normalContent.getId(), new EnvironmentContent());
+        promotedContent.put(normalContent.getId(), new EnvironmentContent(environment,
+            "content", true));
 
         assertEquals(1,
             extensionUtil.filterProductContent(modProduct, entitlement, entCurator,
