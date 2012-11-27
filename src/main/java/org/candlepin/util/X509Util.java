@@ -15,11 +15,13 @@
 package org.candlepin.util;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
 
@@ -44,15 +46,30 @@ public abstract class X509Util {
      * we must check that this consumer has another entitlement granting them access
      * to that modified product. If they do not, we should filter out this content.
      *
-     * @param prod
-     * @param ent
+     * @param prod the product who's content we should filter
+     * @param ent the original entitlement
+     * @param entCurator
+     * @param promotedContent
+     * @param filterEnvironment show content also be filtered by environment.
      * @return ProductContent to include in the certificate.
      */
     public Set<ProductContent> filterProductContent(Product prod, Entitlement ent,
-        EntitlementCurator entCurator) {
+        EntitlementCurator entCurator, Map<String, EnvironmentContent> promotedContent,
+        boolean filterEnvironment) {
         Set<ProductContent> filtered = new HashSet<ProductContent>();
 
         for (ProductContent pc : prod.getProductContent()) {
+            // Filter any content not promoted to environment.
+            if (filterEnvironment) {
+                if (ent.getConsumer().getEnvironment() != null &&
+                    !promotedContent.containsKey(pc.getContent().getId())) {
+                    // FIXME MS
+                    //log.debug("Skipping content not promoted to environment: " +
+                    //    pc.getContent().getId());
+                    continue;
+                }
+            }
+
             boolean include = true;
             if (pc.getContent().getModifiedProductIds().size() > 0) {
                 include = false;
@@ -75,5 +92,6 @@ public abstract class X509Util {
         }
         return filtered;
     }
+
 
 }

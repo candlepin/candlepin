@@ -40,6 +40,7 @@ import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.KeyPairCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Subscription;
 import org.candlepin.pki.PKIUtility;
@@ -272,19 +273,30 @@ public class DefaultEntitlementCertServiceAdapter extends
         Entitlement ent, String contentPrefix,
         Map<String, EnvironmentContent> promotedContent, Subscription sub) {
         Set<X509ExtensionWrapper> result =  new LinkedHashSet<X509ExtensionWrapper>();
+
+        int contentCounter = 0;
+        boolean enableEnvironmentFiltering = config.environmentFileringEnabled();
         for (Product prod : Collections2
             .filter(products, X509Util.PROD_FILTER_PREDICATE)) {
             result.addAll(extensionUtil.productExtensions(prod));
-            try {
-                result.addAll(extensionUtil.contentExtensions(
-                    extensionUtil.filterProductContent(prod, ent, entCurator),
-                    contentPrefix, promotedContent, ent.getConsumer()));
-            }
-            catch (CertificateSizeException e) {
-                throw new IseException(i18n.tr("Too many content sets for certificate. " +
-                    "Please upgrade to a newer client to use subscription: {0}",
-                    ent.getPool().getProductName()));
-            }
+            Set<ProductContent> filteredContent =
+                extensionUtil.filterProductContent(prod, ent, entCurator,
+                    promotedContent, enableEnvironmentFiltering);
+
+            // Keep track of the number of content sets that are being added.
+            contentCounter += filteredContent.size();
+
+            result.addAll(extensionUtil.contentExtensions(filteredContent,
+                contentPrefix, promotedContent, ent.getConsumer()));
+        }
+
+        // For V1 certificates we're going to error out if we exceed a limit which is
+        // likely going to generate a certificate too large for the CDN, and return an
+        // informative error message to the user.
+        if (contentCounter > X509ExtensionUtil.V1_CONTENT_LIMIT) {
+            throw new CertificateSizeException(i18n.tr("Too many content sets for certificate. " +
+                "Please upgrade to a newer client to use subscription: {0}",
+                ent.getPool().getProductName()));
         }
 
         if (sub != null) {

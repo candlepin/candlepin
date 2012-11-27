@@ -25,6 +25,7 @@ import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
@@ -199,17 +200,46 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
 
     @Test(expected = CertificateSizeException.class)
-    public void tooManyContentSets() throws CertificateSizeException {
+    public void tooManyContentSetsAcrossMultipleProducts() throws Exception {
+        Set<Product> providedProducts = new HashSet<Product>();
+        Product pp1 = new Product("12346", "Provided 1", "variant", "version",
+            "arch", "SVC");
+        pp1.setContent(generateContent(100, "PP1"));
+        providedProducts.add(pp1);
+
+        Product pp2 = new Product("12347", "Provided 2", "variant", "version",
+            "arch", "SVC");
+        pp2.setContent(generateContent(100, "PP2"));
+        providedProducts.add(pp2);
+
+        subscription.setProvidedProducts(providedProducts);
+
+        certServiceAdapter.createX509Certificate(entitlement, subscription,
+            product, new BigInteger("1234"), keyPair(), true);
+    }
+
+    private Set<Content> generateContent(int numberToGenerate, String prefix) {
         Set<Content> productContent = new HashSet<Content>();
-        for (int i = 0; i < X509ExtensionUtil.V1_CONTENT_LIMIT + 1; i++) {
-            productContent.add(createContent(CONTENT_NAME + i, CONTENT_ID + i,
-                CONTENT_LABEL + i, CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL,
-                CONTENT_GPG_URL));
+        for (int i = 0; i < numberToGenerate; i++) {
+            productContent.add(createContent(prefix + CONTENT_NAME + i,
+                                             prefix + CONTENT_ID + i,
+                                             prefix + CONTENT_LABEL + i,
+                                             CONTENT_TYPE,
+                                             CONTENT_VENDOR,
+                                             CONTENT_URL,
+                                             CONTENT_GPG_URL));
         }
+        return productContent;
+    }
+
+    @Test(expected = CertificateSizeException.class)
+    public void tooManyContentSets() throws Exception {
+        Set<Content> productContent = generateContent(X509ExtensionUtil.V1_CONTENT_LIMIT +
+            1, "TestContent");
 
         product.setContent(productContent);
-        extensionUtil.contentExtensions(product.getProductContent(), null,
-                new HashMap<String, EnvironmentContent>(), entitlement.getConsumer());
+        certServiceAdapter.createX509Certificate(entitlement, subscription,
+            product, new BigInteger("1234"), keyPair(), true);
     }
 
     @Test
@@ -230,22 +260,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
         encodedContent = getEncodedContent(contentExtensions);
         assertTrue(isEncodedContentValid(encodedContent));
         assertFalse(encodedContent.containsKey(CONTENT_METADATA_EXPIRE.toString()));
-    }
-
-    @Test
-    public void testContentExtentionExcludesNonPromotedContent()
-        throws CertificateSizeException {
-
-        // Environment, but no promoted content:
-        Environment e = new Environment("env1", "Env 1", owner);
-        when(entitlement.getConsumer().getEnvironment()).thenReturn(e);
-
-        Set<X509ExtensionWrapper> contentExtensions = extensionUtil
-            .contentExtensions(product.getProductContent(), null,
-                new HashMap<String, EnvironmentContent>(), entitlement.getConsumer());
-        Map<String, X509ExtensionWrapper> encodedContent = getEncodedContent(
-            contentExtensions);
-        assertFalse(encodedContent.containsKey(content.getLabel()));
     }
 
     @Test
@@ -440,7 +454,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         // the
         // product it modifies:
         assertEquals(1,
-            extensionUtil.filterProductContent(modProduct, entitlement, entCurator)
+            extensionUtil.filterProductContent(modProduct, entitlement, entCurator,
+                new HashMap<String, EnvironmentContent>(), false)
                 .size());
 
         // Now mock that we have an entitlement providing one of the modified
@@ -450,7 +465,20 @@ public class DefaultEntitlementCertServiceAdapterTest {
             this.entCurator.listProviding(any(Consumer.class), eq("product2"),
                 any(Date.class), any(Date.class))).thenReturn(successResult);
         assertEquals(2,
-            extensionUtil.filterProductContent(modProduct, entitlement, entCurator)
+            extensionUtil.filterProductContent(modProduct, entitlement, entCurator,
+                new HashMap<String, EnvironmentContent>(), false)
+                .size());
+
+        // Make sure that we filter by environment when asked.
+        when(consumer.getEnvironment()).thenReturn(new Environment());
+
+        Map<String, EnvironmentContent> promotedContent =
+            new HashMap<String, EnvironmentContent>();
+        promotedContent.put(normalContent.getId(), new EnvironmentContent());
+
+        assertEquals(1,
+            extensionUtil.filterProductContent(modProduct, entitlement, entCurator,
+                promotedContent, true)
                 .size());
     }
 
