@@ -20,6 +20,7 @@ import org.candlepin.exceptions.GoneException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.DeletedConsumerCurator;
+import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 
@@ -32,12 +33,15 @@ public abstract class ConsumerAuth implements AuthProvider {
 
     protected ConsumerCurator consumerCurator;
     protected DeletedConsumerCurator deletedConsumerCurator;
+    protected I18n i18n;
 
     @Inject
     ConsumerAuth(ConsumerCurator consumerCurator,
-        DeletedConsumerCurator deletedConsumerCurator) {
+        DeletedConsumerCurator deletedConsumerCurator,
+        I18n i18n) {
         this.consumerCurator = consumerCurator;
         this.deletedConsumerCurator = deletedConsumerCurator;
+        this.i18n = i18n;
     }
 
     public ConsumerPrincipal createPrincipal(String consumerUuid) {
@@ -47,8 +51,8 @@ public abstract class ConsumerAuth implements AuthProvider {
             // If this UUID has been deleted, return a 410.
             if (deletedConsumerCurator.countByConsumerUuid(consumerUuid) > 0) {
                 log.debug("Key " + consumerUuid + " is deleted, throwing GoneException");
-                throw new GoneException("Consumer " + consumerUuid +
-                    " has been deleted", consumerUuid);
+                throw new GoneException(
+                    i18n.tr("Consumer {0} has been deleted", consumerUuid), consumerUuid);
             }
 
             Consumer consumer = this.consumerCurator.getConsumer(consumerUuid);
