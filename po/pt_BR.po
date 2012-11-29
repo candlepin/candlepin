@@ -1,20 +1,30 @@
 # gcintra <gcintra@fedoraproject.org>, 2012. #zanata
+# ldelima <ldelima@redhat.com>, 2012. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-06-27 12:35-0400\n"
-"PO-Revision-Date: 2012-09-24 06:29-0400\n"
-"Last-Translator: gcintra <gcintra@fedoraproject.org>\n"
+"PO-Revision-Date: 2012-11-01 09:45-0400\n"
+"Last-Translator: ldelima <ldelima@redhat.com>\n"
 "Language-Team: Portuguese (Brazil)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: pt-BR\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
-"X-Generator: Zanata 1.7.3\n"
+"X-Generator: Zanata 2.0.2\n"
 
-#: src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:260
+#: src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:193
+msgid "The server does not support subscriptions requiring V3 certificates."
+msgstr ""
+
+#: src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:201
+#, java-format
+msgid "Please upgrade to a newer client to use subscription: {0}"
+msgstr ""
+
+#: src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:296
 #, java-format
 msgid ""
 "Too many content sets for certificate. Please upgrade to a newer client to "
@@ -49,36 +59,72 @@ msgstr "Proprietário já importou de outro distribuidor"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:157
+#: src/main/java/org/candlepin/sync/Importer.java:158
 msgid "Wrong metadata type"
 msgstr "Tipo de meta-dados inválido"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:166
+#: src/main/java/org/candlepin/sync/Importer.java:167
 msgid "Invalid owner"
 msgstr "Proprietário inválido"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:180
+#: src/main/java/org/candlepin/sync/Importer.java:181
 msgid "Import is older than existing data"
 msgstr "A importação é mais antiga do que os dados existentes"
 
-#: src/main/java/org/candlepin/sync/Importer.java:190
+#: src/main/java/org/candlepin/sync/Importer.java:191
 msgid "Import is the same as existing data"
+msgstr "A importação é a mesma que a dos dados existentes"
+
+#: src/main/java/org/candlepin/sync/Importer.java:244
+msgid "The archive does not contain the required signature file"
+msgstr ""
+
+#: src/main/java/org/candlepin/sync/Importer.java:254
+msgid "The consumer_export archive has no contents"
+msgstr ""
+
+#: src/main/java/org/candlepin/sync/Importer.java:274
+msgid "The archive does not contain the required consumer_export.zip file"
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author gcintra
-#: src/main/java/org/candlepin/sync/Importer.java:262
-#: src/main/java/org/candlepin/sync/Importer.java:267
+#: src/main/java/org/candlepin/sync/Importer.java:279
+#: src/main/java/org/candlepin/sync/Importer.java:284
 msgid "Failed to import archive"
 msgstr "Falha ao importar um arquivo"
 
+#: src/main/java/org/candlepin/sync/Importer.java:321
+msgid "The archive does not contain the required meta.json file"
+msgstr ""
+
+#: src/main/java/org/candlepin/sync/Importer.java:326
+msgid "The archive does not contain the required rules directory"
+msgstr ""
+
+#: src/main/java/org/candlepin/sync/Importer.java:330
+msgid "The archive does not contain the required rules file(s)"
+msgstr ""
+
+#: src/main/java/org/candlepin/sync/Importer.java:335
+msgid "The archive does not contain the required consumer_types directory"
+msgstr ""
+
+#: src/main/java/org/candlepin/sync/Importer.java:340
+msgid "The archive does not contain the required consumer.json file"
+msgstr ""
+
+#: src/main/java/org/candlepin/sync/Importer.java:346
+msgid "The archive does not contain the required entitlements directory"
+msgstr ""
+
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:402
+#: src/main/java/org/candlepin/sync/Importer.java:445
 #, java-format
 msgid "Incompatible rules: import version {0} older than our version {1}."
 msgstr ""
@@ -87,9 +133,14 @@ msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:405
+#: src/main/java/org/candlepin/sync/Importer.java:448
 msgid "Manifest data will be imported without rules import."
 msgstr "Dados do manifesto serão importados sem importação de regras."
+
+#: src/main/java/org/candlepin/sync/Importer.java:559
+#, java-format
+msgid "The archive {0} is not a properly compressed file or is empty"
+msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author gcintra
@@ -210,7 +261,7 @@ msgstr "Não foi possível subscrever o consumidores ao produto ''{0}'': {1}"
 # keys, author gcintra
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:98
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:117
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:717
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:718
 #, java-format
 msgid "No such environment: {0}"
 msgstr "Não existe tal ambiente: {0}"
@@ -324,7 +375,7 @@ msgstr "localiade do e-mail é requerido para notificação"
 # keys
 #: src/main/java/org/candlepin/resource/SubscriptionResource.java:152
 #: src/main/java/org/candlepin/resource/OwnerResource.java:705
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1344
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1348
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:132
 #, java-format
 msgid "No such consumer: {0}"
@@ -390,7 +441,7 @@ msgstr "Nome da chave de ativação ["
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/resource/OwnerResource.java:553
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:637
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:638
 #: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:122
 #, java-format
 msgid "No such consumer type: {0}"
@@ -418,11 +469,13 @@ msgid "owner with key: {0} was not found."
 msgstr "o proprietário com chave: {0} não foi encontrado"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:768
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:476
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:477
 #, java-format
 msgid ""
 "Service level ''{0}'' is not available to consumers of organization {1}."
 msgstr ""
+"O nível de serviço ''{0}'' não está disponível para consumidores da "
+"organização {1}."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -433,7 +486,7 @@ msgstr "a subscrição com id: {0} não foi encontrada."
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:919
 msgid "Unknown conflict to force"
-msgstr ""
+msgstr "Conflito para forçar desconhecido"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -474,7 +527,7 @@ msgstr "arquivo {0} importado forçadamente"
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1204
 #, java-format
 msgid "Subscriptions deleted by {0}"
-msgstr ""
+msgstr "As subscrições foram deletadas por {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author rgyorfy
@@ -537,172 +590,173 @@ msgstr "Direitos de serviços de Pool com ID ''{0}'' não foram encontrados."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author rgyorfy
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:224
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:225
 #, java-format
 msgid "Organization with key: {0} was not found."
 msgstr "A organização com a chave: {0} não foi encontrada."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author rgyorfy
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:308
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:309
 msgid "Insufficient permissions"
 msgstr "Permissões insuficientes"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author rgyorfy
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:314
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:315
 msgid "Must specify an org to register with activation keys."
 msgstr "Deve especificar uma org para registrar com as chaves de ativação."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author rgyorfy
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:318
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:319
 msgid "Cannot specify username with activation keys."
 msgstr "Não pode especificar o nome de usuário com as chaves de ativação."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author rgyorfy
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:341
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:342
 msgid "A consumer type of 'person' cannot be used with activation keys"
 msgstr ""
 "Um tipo de consumidor 'pessoa' não pode ser usado com chaves de ativação"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:346
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:355
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:347
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:356
 msgid "System name cannot contain most special characters."
 msgstr "O nome do sistema não pode conter os caractéres mais especiais."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:400
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:401
 msgid "Pool ID must be provided"
 msgstr "A ID do conjunto deve ser fornecida"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:424
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:425
 #, java-format
 msgid "Problem creating consumer {0}"
 msgstr "Problema encontrado ao criar o consumidor {0}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:454
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:455
 msgid "System name cannot be null."
 msgstr "Nome do sistema não pôde ser nulo."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:461
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:462
 msgid "System name cannot begin with # character"
 msgstr "O nome do sistema não pode começar com o caractér #"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author rgyorfy
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:506
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:507
 #, java-format
 msgid "Activation key ''{0}'' not found for organization ''{1}''."
 msgstr "Chave de ativaçao \"{0}\" não encontrada para organização \"{1}\"."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author rgyorfy
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:528
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:529
 #, java-format
 msgid "User {0} has no roles for organization {1}"
 msgstr "O usuário {0} não possui nenhuma função para a organização {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:540
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:541
 #, java-format
 msgid "User {0} has already registered a personal consumer"
 msgstr "O usuário {0} já registrou o consumidores pessoal"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author rgyorfy
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:557
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:558
 msgid "You must specify an organization for new consumers."
 msgstr "Você deve especificar uma organização para os novos consumidores."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author rgyorfy
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:568
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:569
 #, java-format
 msgid "Organization {0} does not exist."
 msgstr "Organização {0} não existe."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author rgyorfy
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:575
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:576
 #, java-format
 msgid "User {0} cannot access organization {1}"
 msgstr "Usuário {0} não pode acessar a organização {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1006
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1007
 #, java-format
 msgid "Cannot unregister {0} consumer {1} because: {2}"
 msgstr "Não pode cancelar {0} o consumidor {1} devido: {2}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1093
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1094
 msgid "Unable to create entitlement archive"
 msgstr "Incapaz de criar um arquivos de direitos"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1204
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1215
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1205
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1216
 msgid "Cannot bind by multiple parameters."
 msgstr "Não é possível vincular por parâmetros múltiplos."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author rgyorfy
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1209
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1210
 msgid "Cannot specify a quantity when auto-binding."
 msgstr "Não é possível especificar a quantidade quando em auto-vinculação."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author rgyorfy
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1279
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1283
 #, java-format
 msgid "Asked to be subscribed to a product that has no pool: {0} "
 msgstr "Pediu para ser subscrito a um produto que não possui um conjunto: {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1354
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1358
 #, java-format
 msgid "No such entitlement: {0}"
 msgstr "Não foi possível encontrar o direito: {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1378
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1382
 #, java-format
 msgid "No such product: {0}"
 msgstr "Não foi possível encontrar o produto: {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1426
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1430
 msgid "Consumer with ID "
 msgstr "Consumidor com ID"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author gcintra
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1464
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1468
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:160
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:210
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:182
+#: src/main/java/org/candlepin/resource/EntitlementResource.java:208
 #, java-format
 msgid "Entitlement with ID ''{0}'' could not be found."
 msgstr "Serviços com o ID ''{0}'' não foi encontrado."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1488
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1492
 #, java-format
 msgid "Entitlement Certificate with serial number {0} could not be found."
 msgstr ""
@@ -710,7 +764,7 @@ msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author gcintra
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1550
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1554
 #, java-format
 msgid ""
 "Consumer {0} cannot be exported. A manifest cannot be made for consumer of "
@@ -721,20 +775,20 @@ msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1568
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1572
 msgid "Unable to create export archive"
 msgstr "Não foi possível criar o arquivo de exportação"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1640
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1644
 #, java-format
 msgid "Problem regenerating id cert for consumer {0}"
 msgstr "Erro na tentativa de regenerar o certificado de id ao consumidor {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author gcintra
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1679
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1683
 #, java-format
 msgid "The consumer with UUID {0} is not a virtual guest."
 msgstr "O consumidor com o UUID {0} não é um convidado virtual. "
@@ -745,12 +799,6 @@ msgstr "O consumidor com o UUID {0} não é um convidado virtual. "
 #, java-format
 msgid "Consumer: {0} has no entitlement for product {1}"
 msgstr "Consumidor: {0} não possui o direito do produto {1}"
-
-#: src/main/java/org/candlepin/resource/EntitlementResource.java:189
-#, java-format
-msgid ""
-"SubscriptionsCertificate for Entitlement ID ''{0}'' could not be found."
-msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -782,6 +830,8 @@ msgid ""
 "You must specify one of owner key, consumer UUID, or principal name, but not"
 " all."
 msgstr ""
+"Você deve especificar a chave propetária, o UUID do consumidor ou o nome "
+"principal, porém não todos."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author rgyorfy
