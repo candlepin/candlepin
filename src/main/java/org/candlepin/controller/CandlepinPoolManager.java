@@ -513,6 +513,7 @@ public class CandlepinPoolManager implements PoolManager {
         pool = poolCurator.lockAndLoad(pool);
 
         if (quantity > 0) {
+            // XXX preEntitlement is run twice for new entitlement creation
             PreEntHelper preHelper = enforcer.preEntitlement(consumer, pool, quantity);
             ValidationResult result = preHelper.getResult();
 
