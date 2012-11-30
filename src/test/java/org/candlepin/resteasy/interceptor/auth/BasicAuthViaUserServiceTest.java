@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.resteasy.interceptor;
+package org.candlepin.resteasy.interceptor.auth;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -26,6 +26,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerPermission;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
+import org.candlepin.resteasy.interceptor.auth.BasicAuth;
 import org.candlepin.service.UserServiceAdapter;
 
 import com.google.inject.Injector;
