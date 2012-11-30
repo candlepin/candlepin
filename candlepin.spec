@@ -276,6 +276,7 @@ fi
 %{_datadir}/%{name}/cpdb
 %{_sysconfdir}/%{name}/certs/
 %ghost %attr(644, root, root) %{_sysconfdir}/%{name}/certs/candlepin-ca.crt
+%doc LICENSE
 
 %files jboss
 %defattr(-,jboss,jboss,-)
