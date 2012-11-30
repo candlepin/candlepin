@@ -367,8 +367,8 @@ public class CandlepinPoolManager implements PoolManager {
 
         // now make the entitlements
         for (PoolQuantity entry : bestPools) {
-            entitlements.add(addEntitlement(consumer, entry.getPool(),
-                entry.getQuantity(), false));
+            entitlements.add(addOrUpdateEntitlement(consumer, entry.getPool(),
+                null, entry.getQuantity(), false));
         }
 
         return entitlements;
@@ -479,19 +479,32 @@ public class CandlepinPoolManager implements PoolManager {
     @Transactional
     public Entitlement entitleByPool(Consumer consumer, Pool pool,
         Integer quantity) throws EntitlementRefusedException {
-        return addEntitlement(consumer, pool, quantity, false);
+        return addOrUpdateEntitlement(consumer, pool, null, quantity, false);
     }
 
     @Override
     @Transactional
     public Entitlement ueberCertEntitlement(Consumer consumer, Pool pool,
         Integer quantity) throws EntitlementRefusedException {
-        return addEntitlement(consumer, pool, 1, true);
+        return addOrUpdateEntitlement(consumer, pool, null, 1, true);
     }
 
-    private Entitlement addEntitlement(Consumer consumer, Pool pool,
-        Integer quantity, boolean generateUeberCert) throws EntitlementRefusedException {
+    @Override
+    @Transactional
+    public Entitlement adjustEntitlementQuantity(Consumer consumer,
+        Entitlement entitlement, Integer quantity)
+        throws EntitlementRefusedException {
+        int change = quantity - entitlement.getQuantity();
+        if (change == 0) {
+            return entitlement;
+        }
+        return addOrUpdateEntitlement(consumer, entitlement.getPool(), entitlement,
+            change, true);
+    }
 
+    private Entitlement addOrUpdateEntitlement(Consumer consumer, Pool pool,
+        Entitlement entitlement, Integer quantity, boolean generateUeberCert)
+        throws EntitlementRefusedException {
         // Because there are several paths to this one place where entitlements
         // are granted, we cannot be positive the caller obtained a lock on the
         // pool
@@ -499,20 +512,25 @@ public class CandlepinPoolManager implements PoolManager {
         // before starting this process.
         pool = poolCurator.lockAndLoad(pool);
 
-        /* XXX: running pre rules twice on the entitle by product case */
-        PreEntHelper preHelper = enforcer.preEntitlement(consumer, pool, quantity);
-        ValidationResult result = preHelper.getResult();
+        if (quantity > 0) {
+            PreEntHelper preHelper = enforcer.preEntitlement(consumer, pool, quantity);
+            ValidationResult result = preHelper.getResult();
 
-        if (!result.isSuccessful()) {
-            log.warn("Entitlement not granted: " +
-                result.getErrors().toString());
-            throw new EntitlementRefusedException(result);
+            if (!result.isSuccessful()) {
+                log.warn("Entitlement not granted: " +
+                    result.getErrors().toString());
+                throw new EntitlementRefusedException(result);
+            }
+        }
+        EntitlementHandler handler = null;
+        if (entitlement == null) {
+            handler = new NewHandler();
+        }
+        else {
+            handler = new UpdateHandler();
         }
 
-        Entitlement e = new Entitlement(pool, consumer, pool.getStartDate(),
-            pool.getEndDate(), quantity);
-        consumer.addEntitlement(e);
-        pool.getEntitlements().add(e);
+        entitlement = handler.handleEntitlement(consumer, pool, entitlement, quantity);
 
         // The quantity is calculated at fetch time. We update it here
         // To reflect what we just added to the db.
@@ -520,27 +538,25 @@ public class CandlepinPoolManager implements PoolManager {
         if (consumer.getType().isManifest()) {
             pool.setExported(pool.getExported() + quantity);
         }
-
-        PoolHelper poolHelper = new PoolHelper(this, productCache, e);
-        enforcer.postEntitlement(consumer, poolHelper, e);
+        PoolHelper poolHelper = new PoolHelper(this, productCache, entitlement);
+        handler.handlePostEntitlement(consumer, poolHelper, entitlement);
 
         // Check consumer's new compliance status and save:
         ComplianceStatus compliance = complianceRules.getStatus(consumer, new Date());
         consumer.setEntitlementStatus(compliance.getStatus());
 
-        entitlementCurator.create(e);
+        handler.handleEntitlementPersist(entitlement);
         consumerCurator.update(consumer);
 
-        generateEntitlementCertificate(consumer, pool, e, generateUeberCert);
-        for (Entitlement regenEnt : entitlementCurator.listModifying(e)) {
+        handler.handleSelfCertificate(consumer, pool, entitlement, generateUeberCert);
+        for (Entitlement regenEnt : entitlementCurator.listModifying(entitlement)) {
             // Lazily regenerate modified certificates:
             this.regenerateCertificatesOf(regenEnt, generateUeberCert, true);
         }
 
         // we might have changed the bonus pool quantities, lets find out.
-        checkBonusPoolQuantities(consumer, pool);
-
-        return e;
+        handler.handleBonusPools(consumer, pool, entitlement);
+        return entitlement;
     }
 
     /**
@@ -931,5 +947,85 @@ public class CandlepinPoolManager implements PoolManager {
     @Override
     public Refresher getRefresher(boolean lazy) {
         return new Refresher(this, this.subAdapter, this.poolCurator, lazy);
+    }
+
+    /**
+     * EntitlementHandler
+     */
+    private interface EntitlementHandler {
+        Entitlement handleEntitlement(Consumer consumer, Pool pool,
+            Entitlement entitlement, int quantity);
+        void handlePostEntitlement(Consumer consumer, PoolHelper poolHelper,
+            Entitlement entitlement);
+        void handleEntitlementPersist(Entitlement entitlement);
+        void handleSelfCertificate(Consumer consumer, Pool pool,
+            Entitlement entitlement, boolean generateUeberCert);
+        void handleBonusPools(Consumer consumer, Pool pool, Entitlement entitlement);
+    }
+
+    /**
+     * NewHandler
+     */
+    private class NewHandler implements EntitlementHandler{
+        @Override
+        public Entitlement handleEntitlement(Consumer consumer, Pool pool,
+            Entitlement entitlement, int quantity) {
+            Entitlement newEntitlement = new Entitlement(pool, consumer,
+                pool.getStartDate(), pool.getEndDate(), quantity);
+            consumer.addEntitlement(newEntitlement);
+            pool.getEntitlements().add(newEntitlement);
+            return newEntitlement;
+        }
+        @Override
+        public void handlePostEntitlement(Consumer consumer, PoolHelper poolHelper,
+            Entitlement entitlement) {
+            enforcer.postEntitlement(consumer, poolHelper, entitlement);
+        }
+        @Override
+        public void handleEntitlementPersist(Entitlement entitlement) {
+            entitlementCurator.create(entitlement);
+        }
+        @Override
+        public void handleSelfCertificate(Consumer consumer, Pool pool,
+            Entitlement entitlement, boolean generateUeberCert) {
+            generateEntitlementCertificate(consumer, pool, entitlement, generateUeberCert);
+        }
+        @Override
+        public void handleBonusPools(Consumer consumer, Pool pool,
+            Entitlement entitlement) {
+            checkBonusPoolQuantities(consumer, pool);
+        }
+    }
+
+    /**
+     * UpdateHandler
+     */
+    private class UpdateHandler implements EntitlementHandler{
+        @Override
+        public Entitlement handleEntitlement(Consumer consumer, Pool pool,
+            Entitlement entitlement, int quantity) {
+            entitlement.setQuantity(entitlement.getQuantity() + quantity);
+            return entitlement;
+        }
+        @Override
+        public void handlePostEntitlement(Consumer consumer, PoolHelper poolHelper,
+            Entitlement entitlement) {
+        }
+        @Override
+        public void handleEntitlementPersist(Entitlement entitlement) {
+            entitlementCurator.merge(entitlement);
+        }
+        @Override
+        public void handleSelfCertificate(Consumer consumer, Pool pool,
+            Entitlement entitlement, boolean generateUeberCert) {
+            regenerateCertificatesOf(entitlement, generateUeberCert, true);
+        }
+        @Override
+        public void handleBonusPools(Consumer consumer, Pool pool,
+            Entitlement entitlement) {
+            updatePoolsForSubscription(poolCurator.listBySourceEntitlement(entitlement),
+                subAdapter.getSubscription(pool.getSubscriptionId()));
+            checkBonusPoolQuantities(consumer, pool);
+        }
     }
 }

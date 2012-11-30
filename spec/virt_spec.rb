@@ -168,4 +168,48 @@ describe 'Standalone Virt-Limit Subscriptions' do
     @guest2_client.list_entitlements.length.should == 1
   end
 
+  it 'should change the quantity on a virt_only pool when the source entitlement quantity changes' do
+    # Create a sub for a virt limited product:
+    product = create_product(random_string('product'), random_string('product'),
+                      :attributes => { :virt_limit => 3, :'multi-entitlement' => 'yes'})
+
+    #create a sub
+    sub = @cp.create_subscription(@owner['key'], product.id, 10)
+    @cp.refresh_pools(@owner['key'])
+
+    pools = @user.list_pools :owner => @owner.id, \
+           :product => product.id
+    pools.size.should == 1
+    pool = pools[0]
+
+    host_ent = @host1_client.consume_pool(pool['id'], {:quantity => 3})[0]
+    pools = @user.list_pools :owner => @owner.id, \
+           :product => product.id
+    pools.size.should == 2
+    pools.each do |now_pool|
+        if now_pool['id'] != pool['id']
+            now_pool['quantity'].should == 9
+        end
+    end
+    # reduce entitlement
+    @host1_client.update_entitlement({:id => host_ent.id, :quantity => 2})
+    pools = @user.list_pools :owner => @owner.id, \
+           :product => product.id
+    pools.size.should == 2
+    pools.each do |now_pool|
+        if now_pool['id'] != pool['id']
+            now_pool['quantity'].should == 6
+        end
+    end
+    # increase entitlement"
+    @host1_client.update_entitlement({:id => host_ent.id, :quantity => 5})
+    pools = @user.list_pools :owner => @owner.id, \
+           :product => product.id
+    pools.size.should == 2
+    pools.each do |now_pool|
+        if now_pool['id'] != pool['id']
+            now_pool['quantity'].should == 15
+        end
+    end
+  end
 end
