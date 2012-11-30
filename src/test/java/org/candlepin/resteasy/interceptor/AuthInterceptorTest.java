@@ -39,6 +39,7 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.User;
+import org.candlepin.resteasy.interceptor.auth.AuthInterceptor;
 import org.candlepin.service.UserServiceAdapter;
 import org.jboss.resteasy.core.ResourceMethod;
 import org.jboss.resteasy.mock.MockHttpRequest;
