@@ -17,7 +17,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.7.19
+Version: 0.7.21
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -313,6 +313,75 @@ fi
 
 
 %changelog
+* Fri Nov 30 2012 William Poteat <wpoteat@redhat.com> 0.7.21-1
+- Add back missing todo (jbowes@redhat.com)
+- Alter entitlement quantites (wpoteat@redhat.com)
+- add LICENSE file to candlepin rpm (jmrodri@gmail.com)
+- 877697: Localize the GoneException. (bkearney@redhat.com)
+- adding license file (jmrodri@gmail.com)
+- 879022: Fix too many V1 content sets across multiple products.
+  (dgoodwin@redhat.com)
+- Fix symlinking jars message in build.xml (jbowes@redhat.com)
+- 873655: Don't bundle the jar deps (jbowes@redhat.com)
+- Refactored ProductVersionValidator to require product attributes.
+  (mstead@redhat.com)
+- 830896: Improve error detection and handling of manifest import
+  (wpoteat@redhat.com)
+- 874785: null pointer while migrating owner (jesusr@redhat.com)
+- selectBestPools now filters any pools whos versions are not supported
+  (mstead@redhat.com)
+- Add script to clean up the content ID changed breakage. (dgoodwin@redhat.com)
+- 874041: fix for a performance issue selecting the set of SLA's for an owner.
+  (bkearney@redhat.com)
+- Sync system RAM calculation with that of the client (mstead@redhat.com)
+- Implemented Autobind/Heal for RAM products (mstead@redhat.com)
+- Consider RAM when determining status (mstead@redhat.com)
+- Rethrow CertVersionConflictException so it is visible to callers
+  (mstead@redhat.com)
+- Only check config option when checking server cert support.
+  (mstead@redhat.com)
+- Removed RAM from test product as it is no longer supported.
+  (mstead@redhat.com)
+- Removed stackable RAM (no longer supporting) (mstead@redhat.com)
+- Ensure RAM certs can not be created with V3 disabled (mstead@redhat.com)
+- Check cert version of consumer against ram (mstead@redhat.com)
+- Added ram attribute to V3 certificates (mstead@redhat.com)
+
+* Fri Nov 30 2012 William Poteat <wpoteat@redhat.com>
+- Alter entitlement quantites (wpoteat@redhat.com)
+- add LICENSE file to candlepin rpm (jmrodri@gmail.com)
+- 877697: Localize the GoneException. (bkearney@redhat.com)
+- adding license file (jmrodri@gmail.com)
+- 879022: Fix too many V1 content sets across multiple products.
+  (dgoodwin@redhat.com)
+- Fix symlinking jars message in build.xml (jbowes@redhat.com)
+- 873655: Don't bundle the jar deps (jbowes@redhat.com)
+- Refactored ProductVersionValidator to require product attributes.
+  (mstead@redhat.com)
+- 830896: Improve error detection and handling of manifest import
+  (wpoteat@redhat.com)
+- 874785: null pointer while migrating owner (jesusr@redhat.com)
+- selectBestPools now filters any pools whos versions are not supported
+  (mstead@redhat.com)
+- Add script to clean up the content ID changed breakage. (dgoodwin@redhat.com)
+- 874041: fix for a performance issue selecting the set of SLA's for an owner.
+  (bkearney@redhat.com)
+- Sync system RAM calculation with that of the client (mstead@redhat.com)
+- Implemented Autobind/Heal for RAM products (mstead@redhat.com)
+- Consider RAM when determining status (mstead@redhat.com)
+- Added spec tests for RAM limiting cert creation (mstead@redhat.com)
+- Rethrow CertVersionConflictException so it is visible to callers
+  (mstead@redhat.com)
+- Added test product with both sockets and ram (mstead@redhat.com)
+- Only check config option when checking server cert support.
+  (mstead@redhat.com)
+- Removed RAM from test product as it is no longer supported.
+  (mstead@redhat.com)
+- Removed stackable RAM (no longer supporting) (mstead@redhat.com)
+- Ensure RAM certs can not be created with V3 disabled (mstead@redhat.com)
+- Check cert version of consumer against ram (mstead@redhat.com)
+- Added ram attribute to V3 certificates (mstead@redhat.com)
+
 * Thu Nov 08 2012 William Poteat <wpoteat@redhat.com> 0.7.19-1
 - Performance improvements around anonymous entry points. (bkearney@redhat.com)
 - Improve performance of subscribe action in standalone mode.
