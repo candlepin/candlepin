@@ -26,7 +26,6 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerPermission;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
-import org.candlepin.resteasy.interceptor.auth.BasicAuth;
 import org.candlepin.service.UserServiceAdapter;
 
 import com.google.inject.Injector;

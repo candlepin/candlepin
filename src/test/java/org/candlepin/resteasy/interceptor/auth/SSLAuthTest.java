@@ -31,7 +31,6 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
-import org.candlepin.resteasy.interceptor.auth.SSLAuth;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.junit.Before;
 import org.junit.Test;
