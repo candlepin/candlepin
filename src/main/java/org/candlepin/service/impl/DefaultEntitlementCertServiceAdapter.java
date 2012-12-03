@@ -269,9 +269,21 @@ public class DefaultEntitlementCertServiceAdapter extends
         // likely going to generate a certificate too large for the CDN, and return an
         // informative error message to the user.
         if (contentCounter > X509ExtensionUtil.V1_CONTENT_LIMIT) {
-            throw new CertificateSizeException(i18n.tr("Too many content sets for " +
-                "certificate. Please upgrade to a newer client to use subscription: {0}",
-                ent.getPool().getProductName()));
+            String cause;
+            if (config.certV3IsEnabled()) {
+                cause = i18n.tr("Too many content sets for certificate. Please upgrade " +
+                                "to a newer client to use subscription: {0}",
+                                ent.getPool().getProductName());
+            }
+            // TODO This can be removed once the candlepin.enable_cert_v3 config
+            //      option is removed.
+            else {
+                cause = i18n.tr("The support of V3 certificates is not enabled on the " +
+                                "server and is required for large content set " +
+                                "subscription: {0}", ent.getPool().getProductName());
+            }
+
+            throw new CertificateSizeException(cause);
         }
 
         if (sub != null) {
