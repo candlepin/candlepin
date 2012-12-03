@@ -17,7 +17,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.7.13.4
+Version: 0.7.13.5
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -287,6 +287,10 @@ fi
 
 
 %changelog
+* Mon Dec 03 2012 Michael Stead <mstead@redhat.com> 0.7.13.5-1
+- 879022: Add message for too many content sets when V3 is disabled.
+  (mstead@redhat.com)
+
 * Tue Nov 27 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.7.13.4-1
 - Revert bad commits for failed subscribe status code. (dgoodwin@redhat.com)
 
