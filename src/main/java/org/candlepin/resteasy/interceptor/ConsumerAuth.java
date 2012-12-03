@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.resteasy.interceptor.auth;
+package org.candlepin.resteasy.interceptor;
 
 import org.apache.log4j.Logger;
 import org.candlepin.auth.ConsumerPrincipal;

@@ -46,7 +46,7 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.User;
-import org.candlepin.resteasy.interceptor.auth.AuthUtil;
+import org.candlepin.resteasy.interceptor.AuthUtil;
 import org.candlepin.util.Util;
 import org.xnap.commons.i18n.I18n;
 

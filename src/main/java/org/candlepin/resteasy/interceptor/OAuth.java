@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.resteasy.interceptor.auth;
+package org.candlepin.resteasy.interceptor;
 
 import java.io.IOException;
 import com.google.inject.Injector;
@@ -40,7 +40,6 @@ import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.CandlepinException;
 import org.candlepin.exceptions.IseException;
 import org.candlepin.exceptions.UnauthorizedException;
-import org.candlepin.resteasy.interceptor.RestEasyOAuthMessage;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.xnap.commons.i18n.I18n;
 
