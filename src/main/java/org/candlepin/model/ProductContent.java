@@ -58,6 +58,11 @@ public class ProductContent extends AbstractHibernateObject {
         return null;
     }
 
+    public void setId(String s) {
+        // TODO: just here to appease jackson
+        return;
+    }
+
     /**
      * @param content the content to set
      */
