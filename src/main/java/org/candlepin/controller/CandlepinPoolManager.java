@@ -324,8 +324,8 @@ public class CandlepinPoolManager implements PoolManager {
         return this.poolCurator.lookupBySubscriptionId(id);
     }
 
-    public List<Pool> lookupOversubscribedBySubscriptionId(String id) {
-        return this.poolCurator.lookupOversubscribedBySubscriptionId(id);
+    public List<Pool> lookupOversubscribedBySubscriptionId(String subId, Entitlement ent) {
+        return this.poolCurator.lookupOversubscribedBySubscriptionId(subId, ent);
     }
 
     /**
@@ -567,9 +567,9 @@ public class CandlepinPoolManager implements PoolManager {
      * @param consumer
      * @param pool
      */
-    private void checkBonusPoolQuantities(Consumer consumer, Pool pool) {
+    private void checkBonusPoolQuantities(Consumer consumer, Pool pool, Entitlement e) {
         for (Pool derivedPool :
-                lookupOversubscribedBySubscriptionId(pool.getSubscriptionId())) {
+                lookupOversubscribedBySubscriptionId(pool.getSubscriptionId(), e)) {
             if (!derivedPool.getId().equals(pool.getId()) &&
                 derivedPool.getQuantity() != -1) {
                 deleteExcessEntitlements(derivedPool);
@@ -994,7 +994,7 @@ public class CandlepinPoolManager implements PoolManager {
         @Override
         public void handleBonusPools(Consumer consumer, Pool pool,
             Entitlement entitlement) {
-            checkBonusPoolQuantities(consumer, pool);
+            checkBonusPoolQuantities(consumer, pool, entitlement);
         }
     }
 
@@ -1026,7 +1026,7 @@ public class CandlepinPoolManager implements PoolManager {
             Entitlement entitlement) {
             updatePoolsForSubscription(poolCurator.listBySourceEntitlement(entitlement),
                 subAdapter.getSubscription(pool.getSubscriptionId()));
-            checkBonusPoolQuantities(consumer, pool);
+            checkBonusPoolQuantities(consumer, pool, entitlement);
         }
     }
 }
