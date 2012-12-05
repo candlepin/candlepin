@@ -310,7 +310,7 @@ public class X509V3ExtensionUtil extends X509Util{
 
         List<Content> toReturn = new ArrayList<Content>();
 
-        boolean enableEnvironmentFiltering = config.environmentFileringEnabled();
+        boolean enableEnvironmentFiltering = config.environmentFilteringEnabled();
 
         for (ProductContent pc : productContent) {
             Content content = new Content();
