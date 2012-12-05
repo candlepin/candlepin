@@ -168,6 +168,7 @@
         <include name="**/model/**"/>
         <include name="**/pki/**"/>
         <include name="**/jackson/**"/>
+        <include name="**/exceptions/**"/>
         <!-- only used to retrieve class names in Config-->
         <include name="**/pinsetter/**"/>
       </fileset>
