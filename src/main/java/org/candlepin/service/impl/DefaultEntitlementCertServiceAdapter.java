@@ -274,7 +274,7 @@ public class DefaultEntitlementCertServiceAdapter extends
         Set<X509ExtensionWrapper> result =  new LinkedHashSet<X509ExtensionWrapper>();
 
         int contentCounter = 0;
-        boolean enableEnvironmentFiltering = config.environmentFileringEnabled();
+        boolean enableEnvironmentFiltering = config.environmentFilteringEnabled();
         for (Product prod : Collections2
             .filter(products, X509Util.PROD_FILTER_PREDICATE)) {
             result.addAll(extensionUtil.productExtensions(prod));

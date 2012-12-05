@@ -188,7 +188,7 @@ public class Config {
      *
      * @return if system should filter content by environment.
      */
-    public boolean environmentFileringEnabled() {
+    public boolean environmentFilteringEnabled() {
         return getBoolean(ConfigProperties.ENV_CONTENT_FILTERING);
     }
 
