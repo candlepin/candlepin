@@ -185,7 +185,7 @@ function get_attribute_from_pool(pool, attributeName) {
     return value
 }
 
-// get the number of sockets that each entitlement from a pool covers. 
+// get the number of sockets that each entitlement from a pool covers.
 // if sockets is set to 0 or is not set, it is considered to be unlimited.
 function get_pool_sockets(pool) {
     if (pool.getProductAttribute("sockets")) {
@@ -236,7 +236,7 @@ function findStackingPools(pool_class, consumer, compliance) {
     for each (stack_id in compliance.getPartialStacks().keySet().toArray()) {
         var covered_sockets = 0;
         for each (entitlement in partialStacks.get(stack_id).toArray()) {
-            covered_sockets += entitlement.getQuantity() * get_pool_sockets(entitlement.getPool()); 
+            covered_sockets += entitlement.getQuantity() * get_pool_sockets(entitlement.getPool());
             productIdToStackId[entitlement.getPool().getProductId()] = stack_id;
             for each (product in entitlement.getPool().getProvidedProducts().toArray()) {
                 productIdToStackId[product.getProductId()] = stack_id;
@@ -867,7 +867,6 @@ var Pool = {
      * Creates all appropriate pools for a subscription.
      */
     createPools: function () {
-        log.info("creating pool: " + sub.getId());
         var pools = new java.util.LinkedList();
         var quantity = sub.getQuantity() * sub.getProduct().getMultiplier();
         var providedProducts = new java.util.HashSet();
@@ -919,7 +918,6 @@ var Pool = {
                 if (virt_limit_quantity > 0) {
                     var virt_quantity = quantity * virt_limit_quantity;
 
-                    log.debug("creating virt only pool");
                     var derivedPool = helper.createPool(sub, sub.getProduct().getId(),
                                                         virt_quantity.toString(),
                                                         virt_attributes);
@@ -1094,12 +1092,12 @@ function ent_is_compliant(consumer, ent, log) {
         log.debug("  Entitlement does not cover system sockets.");
         return false;
     }
-    
+
     // Verify RAM coverage if required.
     // Default consumer RAM to 1 GB if not defined
     var consumerRam = get_consumer_ram(consumer);
     log.debug("  Consumer RAM found: " + consumerRam);
-    
+
     if (ent.getPool().getProductAttribute("ram")) {
         var poolRamAttr = get_attribute_from_pool(ent.getPool(), "ram");
         if (poolRamAttr != null && !poolRamAttr.isEmpty()) {
@@ -1113,7 +1111,7 @@ function ent_is_compliant(consumer, ent, log) {
     else {
         log.debug("  No RAM attribute on pool. Skipping RAM check.");
     }
-    
+
     return true
 }
 
