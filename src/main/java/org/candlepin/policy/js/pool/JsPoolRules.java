@@ -64,7 +64,6 @@ public class JsPoolRules implements PoolRules {
         args.put("helper", new PoolHelper(this.poolManager,
             this.productCache, null));
         args.put("standalone", config.standalone());
-        args.put("log", rulesLogger);
         List<Pool> poolsCreated = null;
         try {
             poolsCreated = jsRules.invokeMethod("createPools", args);
