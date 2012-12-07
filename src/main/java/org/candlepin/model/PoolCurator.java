@@ -334,13 +334,34 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         .add(Restrictions.eq("subscriptionId", subId)).list();
     }
 
-    public List<Pool> lookupOversubscribedBySubscriptionId(String subId) {
+    /**
+     * Attempts to find pools which are oversubscribed after the creation or modification
+     * of the given entitlement.
+     *
+     * To do this we search for only the pools related to the subscription ID which
+     * could have changed, the two cases where this can happen are:
+     *
+     * 1. Bonus pool (not derived from any entitlement) after a bind. (in cases such as
+     * exporting to downstream)
+     * 2. A derived pool whose source entitlment just had it's quantity reduced.
+     *
+     * This has to be done carefully to avoid potential performance problems with
+     * virt_bonus on-site subscriptions where one pool is created per physical
+     * entitlement.
+     *
+     * @param subId Subscription ID of the pool.
+     * @param ent Entitlement just created or modified.
+     * @return Pools with too many entitlements for their new quantity.
+     */
+    public List<Pool> lookupOversubscribedBySubscriptionId(String subId, Entitlement ent) {
         String queryString = "from Pool as pool " +
             "where pool.subscriptionId = :subId AND " +
+            "(pool.sourceEntitlement = null OR pool.sourceEntitlement = :ent) AND " +
             "pool.quantity >= 0 AND " +
             "pool.consumed > pool.quantity ";
         Query query = currentSession().createQuery(queryString);
         query.setString("subId", subId);
+        query.setEntity("ent", ent);
         return query.list();
     }
 
