@@ -1115,6 +1115,9 @@ public class X509V3ExtensionUtil extends X509Util{
         }
 
         boolean isEquivalentTo(PathNode that) {
+            if (this.getId() == that.getId()) {
+                return true;
+            }
             // same number of children with the same names for child nodes
             if (this.getChildren().size() != that.getChildren().size()) {
                 return false;
@@ -1123,8 +1126,13 @@ public class X509V3ExtensionUtil extends X509Util{
                 boolean found = false;
                 for (NodePair thatnp : that.getChildren()) {
                     if (thisnp.getName().equals(thatnp.getName())) {
-                        found = true;
-                        break;
+                        if (thisnp.getConnection().isEquivalentTo(thatnp.getConnection())) {
+                            found = true;
+                            break;
+                        }
+                        else {
+                            return false;
+                        }
                     }
                 }
                 if (!found) {
