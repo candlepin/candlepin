@@ -236,19 +236,58 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         poolCurator.create(pool);
         String subid = pool.getSubscriptionId();
         assertEquals(1, poolCurator.lookupBySubscriptionId(subid).size());
-        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionId(subid).size());
-
 
         Entitlement e = new Entitlement(pool, consumer, pool.getStartDate(),
             pool.getEndDate(), 1);
         entitlementCurator.create(e);
 
-        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionId(subid).size());
+        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionId(
+            subid, e).size());
 
         e = new Entitlement(pool, consumer, pool.getStartDate(),
             pool.getEndDate(), 1);
         entitlementCurator.create(e);
-        assertEquals(1, poolCurator.lookupOversubscribedBySubscriptionId(subid).size());
+        assertEquals(1, poolCurator.lookupOversubscribedBySubscriptionId(
+            subid, e).size());
+    }
+
+    @Test
+    public void testLoookupOverconsumedIgnoresOtherSourceEntitlementPools() {
+
+        Pool pool = createPoolAndSub(owner, product, 1L,
+            TestUtil.createDate(2011, 3, 2), TestUtil.createDate(2055, 3, 2));
+        poolCurator.create(pool);
+
+        String subid = pool.getSubscriptionId();
+
+        Entitlement sourceEnt = new Entitlement(pool, consumer, pool.getStartDate(),
+            pool.getEndDate(), 1);
+        entitlementCurator.create(sourceEnt);
+
+        // Create derived pool referencing the entitlement just made:
+        Pool derivedPool = new Pool(owner, product.getId(), product.getName(),
+            new HashSet<ProvidedProduct>(), 1L, TestUtil.createDate(2011, 3, 2),
+            TestUtil.createDate(2055, 3, 2),
+            "", "");
+        derivedPool.setSourceEntitlement(sourceEnt);
+        derivedPool.setSubscriptionId(subid);
+        poolCurator.create(derivedPool);
+
+        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionId(
+            subid, sourceEnt).size());
+
+        // Oversubscribe to the derived pool:
+        Entitlement derivedEnt = new Entitlement(derivedPool, consumer,
+            derivedPool.getStartDate(), derivedPool.getEndDate(), 2);
+        entitlementCurator.create(derivedEnt);
+
+        // Passing the source entitlement should find the oversubscribed derived pool:
+        assertEquals(1, poolCurator.lookupOversubscribedBySubscriptionId(
+            subid, sourceEnt).size());
+
+        // Passing the derived entitlement should not see any oversubscribed pool:
+        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionId(
+            subid, derivedEnt).size());
     }
 
     @Test
@@ -259,19 +298,20 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         poolCurator.create(pool);
         String subid = pool.getSubscriptionId();
         assertEquals(1, poolCurator.lookupBySubscriptionId(subid).size());
-        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionId(subid).size());
 
 
         Entitlement e = new Entitlement(pool, consumer, pool.getStartDate(),
             pool.getEndDate(), 1);
         entitlementCurator.create(e);
 
-        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionId(subid).size());
+        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionId(
+            subid, e).size());
 
         e = new Entitlement(pool, consumer, pool.getStartDate(),
             pool.getEndDate(), 1);
         entitlementCurator.create(e);
-        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionId(subid).size());
+        assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionId(
+            subid, e).size());
     }
 
     @Test
