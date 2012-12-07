@@ -927,6 +927,12 @@ public class ConsumerResource {
         Set<Entitlement> deletableGuestEntitlements = new HashSet<Entitlement>();
         for (Entitlement entitlement : guest.getEntitlements()) {
             Pool pool = entitlement.getPool();
+
+            // If there is no host required, do not revoke the entitlement.
+            if (!pool.hasAttribute("requires_host")) {
+                continue;
+            }
+
             String requiredHost = getRequiredHost(pool);
             if (isVirtOnly(pool) && !requiredHost.equals(host.getUuid())) {
                 log.warn("Removing entitlement " + entitlement.getProductId() +
