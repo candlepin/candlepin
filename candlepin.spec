@@ -87,7 +87,7 @@ Requires: postgresql-jdbc
 
 # specific requires
 # if not using cpdeps, we'll need real requires
-%if 0%{!?reqcpdeps}
+%if !0%{?reqcpdeps}
 # candlepin webapp requires
 Requires: bouncycastle
 Requires: hibernate3 >= 3.3.2
@@ -110,6 +110,13 @@ Requires: log4j
 Requires: glassfish-jaxb
 Requires: scannotation
 Requires: slf4j >= 0:1.6.1
+Requires: jakarta-commons-lang
+Requires: jakarta-commons-io
+Requires: apache-commons-codec
+Requires: jakarta-commons-httpclient
+Requires: google-collections >= 0:1.0
+Requires: apache-mime4j
+Requires: gettext-commons
 %endif
 %define __jar_repack %{nil}
 
@@ -218,7 +225,7 @@ unzip target/%{name}-%{version}.war -d $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbo
 %if !0%{?reqcpdeps}
 #remove the copied jars and resymlink
 rm $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/%{name}.war/WEB-INF/lib/*.jar
-ant -Ddistlibdir=$RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/%{name}.war/WEB-INF/lib/ initjars 
+ant -Ddistlibdir=$RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/%{name}.war/WEB-INF/lib/ initjars
 %endif
 
 # devel

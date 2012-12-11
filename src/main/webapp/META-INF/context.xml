@@ -1,0 +1,2 @@
+<!-- Candlepin needs symlink support to read its jars -->
+<Context path="/candlepin" allowLinking="true" />
