@@ -17,7 +17,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.7.21
+Version: 0.7.22
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -320,6 +320,21 @@ fi
 
 
 %changelog
+* Tue Dec 11 2012 jesus m. rodriguez <jesusr@redhat.com> 0.7.22-1
+- 885857: Fix missing dependencies in non-cpdeps builds. (dgoodwin@redhat.com)
+- 837655: no longer bundle dependencies
+- 840086: no longer bundle dependencies
+- Cert V3 path tree condensing not properly assessing equivalent path nodes (wpoteat@redhat.com)
+- 884694: Fix import of manifests into older candlepin. (dgoodwin@redhat.com)
+- Adding exception class inclusion to build.xml as well (cduryee@redhat.com)
+- Filering -> Filtering typo (jesusr@redhat.com)
+- Overconsumption check performance fix. (dgoodwin@redhat.com)
+- Add a setter for ID on ProductContent, and a buildfile fix (cduryee@redhat.com)
+- 879022: Add message for too many content sets when V3 is disabled.  (mstead@redhat.com)
+- Revert "Move auth related interceptors to their own subpackage" (dgoodwin@redhat.com)
+- remove redudant imports (jesusr@redhat.com)
+- Move auth related interceptors to their own subpackage (jbowes@redhat.com)
+
 * Fri Nov 30 2012 William Poteat <wpoteat@redhat.com> 0.7.21-1
 - Add back missing todo (jbowes@redhat.com)
 - Alter entitlement quantites (wpoteat@redhat.com)
