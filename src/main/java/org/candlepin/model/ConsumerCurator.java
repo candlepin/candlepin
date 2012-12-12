@@ -134,7 +134,10 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     /**
-     * Lookup consumer by its virt.uuid
+     * Lookup consumer by its virt.uuid.
+     *
+     * In some cases the hypervisor will report UUIDs with uppercase, while the guest will
+     * report lowercase. As such we do case insenitive comparison when looking these up.
      *
      * @param uuid consumer virt.uuid to find
      * @return Consumer whose name matches the given virt.uuid, null otherwise.
@@ -147,8 +150,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             .createCriteria(Consumer.class)
             .addOrder(Order.desc("updated"))
             .add(Restrictions.sqlRestriction("{alias}.id in (select cp_consumer_id " +
-                "from cp_consumer_facts where mapkey = 'virt.uuid' and element = ?)",
-                uuid, Hibernate.STRING)).list();
+                "from cp_consumer_facts where mapkey = 'virt.uuid' and lower(element) = ?)",
+                uuid.toLowerCase(), Hibernate.STRING)).list();
         if (options != null && options.size() != 0) {
             result = options.get(0);
         }
@@ -312,6 +315,9 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * As multiple hosts could have reported the same guest ID, we find the newest
      * and assume this is the authoritative host for the guest.
      *
+     * This search needs to be case insenitive as some hypervisors report uppercase
+     * guest UUIDs, when the guest itself will report lowercase.
+     *
      * @param guestId a virtual guest ID (not a consumer UUID)
      * @return host consumer who most recently reported the given guestId (if any)
      */
@@ -324,7 +330,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         // load a bunch of data.
         List<GuestId> consumers = currentSession()
             .createCriteria(GuestId.class)
-            .add(Restrictions.eq("guestId", guestId))
+            .add(Restrictions.eq("guestId", guestId).ignoreCase())
             .list();
         Consumer newest = null;
         if (consumers != null) {

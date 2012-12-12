@@ -146,12 +146,17 @@ public class ConsumerTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void ensureUpdatedDateChangesOnUpdate() {
+    public void ensureUpdatedDateChangesOnUpdate() throws Exception {
         Date beforeUpdateDate = consumer.getUpdated();
 
         ConsumerResource consumerResource = injector.getInstance(ConsumerResource.class);
-        consumer.setFact("FACT", "FACT_VALUE");
-        consumerResource.updateConsumer(consumer.getUuid(), consumer);
+
+        // Create a new consumer, can't re-use reference to the old:
+        Consumer newConsumer = new Consumer();
+        newConsumer.setUuid(consumer.getUuid());
+        newConsumer.setFact("FACT", "FACT_VALUE");
+
+        consumerResource.updateConsumer(consumer.getUuid(), newConsumer);
 
         Consumer lookedUp = consumerCurator.find(consumer.getId());
         Date lookedUpDate = lookedUp.getUpdated();
