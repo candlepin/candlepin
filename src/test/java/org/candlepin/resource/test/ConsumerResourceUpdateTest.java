@@ -354,11 +354,32 @@ public class ConsumerResourceUpdateTest {
         Consumer updated = createConsumerWithGuests("Guest 1", "Guest 2");
         updated.setUuid(uuid);
 
+        // Has to be mocked even though we don't intend to send:
         Event event = new Event();
         when(this.eventFactory.consumerModified(existing, updated)).thenReturn(event);
 
         this.resource.updateConsumer(existing.getUuid(), updated);
-        verify(sink).sendEvent(eq(event));
+        verify(sink, never()).sendEvent(any(Event.class));
+    }
+
+    @Test
+    public void ensureEventIsNotFiredWhenGuestIDCaseChanges() {
+        String uuid = "TEST_CONSUMER";
+        Consumer existing = createConsumerWithGuests("aaa123", "bbb123");
+        existing.setUuid(uuid);
+
+        when(this.consumerCurator.findByUuid(uuid)).thenReturn(existing);
+
+        // flip case on one ID, should be treated as no change
+        Consumer updated = createConsumerWithGuests("aaa123", "BBB123");
+        updated.setUuid(uuid);
+
+        // Has to be mocked even though we don't intend to send:
+        Event event = new Event();
+        when(this.eventFactory.consumerModified(existing, updated)).thenReturn(event);
+
+        this.resource.updateConsumer(existing.getUuid(), updated);
+        verify(sink, never()).sendEvent(any(Event.class));
     }
 
     // ignored out per mkhusid, see 768872 comment #41

@@ -102,7 +102,7 @@ public class GuestId extends AbstractHibernateObject {
             return false;
         }
         GuestId that = (GuestId) other;
-        if (this.getGuestId().equals(that.getGuestId())) {
+        if (this.getGuestId().equalsIgnoreCase(that.getGuestId())) {
             return true;
         }
         return false;

@@ -29,6 +29,7 @@ import org.candlepin.model.GuestId;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
 import org.candlepin.test.DatabaseTestFixture;
+import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -36,13 +37,21 @@ import org.junit.Test;
  */
 public class ConsumerCuratorTest extends DatabaseTestFixture {
 
+    private Owner owner;
+    private ConsumerType ct;
+
+    @Before
+    public void setUp() {
+        owner = new Owner("test-owner", "Test Owner");
+        owner = ownerCurator.create(owner);
+        ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
+        ct = consumerTypeCurator.create(ct);
+
+    }
+
     @Test
     @SuppressWarnings("unchecked")
     public void normalCreate() {
-        Owner owner = new Owner("test-owner", "Test Owner");
-        owner = ownerCurator.create(owner);
-        ConsumerType ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
-        ct = consumerTypeCurator.create(ct);
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
         consumerCurator.create(consumer);
 
@@ -53,10 +62,6 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void addGuestConsumers() {
-        Owner owner = new Owner("test-owner", "Test Owner");
-        owner = ownerCurator.create(owner);
-        ConsumerType ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
-        ct = consumerTypeCurator.create(ct);
         Consumer consumer = new Consumer("hostConsumer", "testUser", owner, ct);
         consumerCurator.create(consumer);
         Consumer gConsumer1 = new Consumer("guestConsumer1", "testUser", owner, ct);
@@ -74,11 +79,23 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void caseInsensitiveVirtUuidMatching() {
+        Consumer host = new Consumer("hostConsumer", "testUser", owner, ct);
+        consumerCurator.create(host);
+
+        Consumer gConsumer1 = new Consumer("guestConsumer1", "testUser", owner, ct);
+        gConsumer1.getFacts().put("virt.uuid", "daf0fe10-956b-7b4e-b7dc-b383ce681ba8");
+        consumerCurator.create(gConsumer1);
+
+        host.addGuestId(new GuestId("DAF0FE10-956B-7B4E-B7DC-B383CE681BA8"));
+        consumerCurator.update(host);
+
+        List<Consumer> guests = consumerCurator.getGuests(host);
+        assertTrue(guests.size() == 1);
+    }
+
+    @Test
     public void addGuestsNotConsumers() {
-        Owner owner = new Owner("test-owner", "Test Owner");
-        owner = ownerCurator.create(owner);
-        ConsumerType ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
-        ct = consumerTypeCurator.create(ct);
         Consumer consumer = new Consumer("hostConsumer", "testUser", owner, ct);
         consumerCurator.create(consumer);
         consumer.addGuestId(new GuestId("test-guest-1"));
@@ -91,10 +108,6 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void getGuestConsumerSharedId() throws Exception {
-        Owner owner = new Owner("test-owner", "Test Owner");
-        owner = ownerCurator.create(owner);
-        ConsumerType ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
-        ct = consumerTypeCurator.create(ct);
         Consumer hConsumer1 = new Consumer("hostConsumer1", "testUser", owner, ct);
         consumerCurator.create(hConsumer1);
         Consumer hConsumer2 = new Consumer("hostConsumer2", "testUser", owner, ct);
@@ -112,7 +125,9 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumerCurator.create(gConsumer2);
 
         hConsumer1.addGuestId(new GuestId("test-guest-1"));
-        hConsumer2.addGuestId(new GuestId("test-guest-1"));
+        // Uppercase the guest ID reported by host 2 just to make sure the casing is
+        // working properly here too:
+        hConsumer2.addGuestId(new GuestId("TEST-GUEST-1"));
         consumerCurator.update(hConsumer1);
         consumerCurator.update(hConsumer2);
 
@@ -131,10 +146,6 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void noGuestsRegistered() {
-        Owner owner = new Owner("test-owner", "Test Owner");
-        owner = ownerCurator.create(owner);
-        ConsumerType ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
-        ct = consumerTypeCurator.create(ct);
         Consumer consumer = new Consumer("hostConsumer", "testUser", owner, ct);
         consumer = consumerCurator.create(consumer);
 
@@ -144,11 +155,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void updatelastCheckin() throws Exception {
-        Owner owner = new Owner("test-owner", "Test Owner");
         Date date = new Date();
-        owner = ownerCurator.create(owner);
-        ConsumerType ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
-        ct = consumerTypeCurator.create(ct);
         Consumer consumer = new Consumer("hostConsumer", "testUser", owner, ct);
         consumer.setLastCheckin(date);
         consumer = consumerCurator.create(consumer);
@@ -158,10 +165,6 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void delete() {
-        Owner owner = new Owner("test-owner", "Test Owner");
-        owner = ownerCurator.create(owner);
-        ConsumerType ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
-        ct = consumerTypeCurator.create(ct);
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
         consumer = consumerCurator.create(consumer);
         String cid = consumer.getUuid();
@@ -178,14 +181,10 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     @Test
     public void deleteTwice() {
         // attempt to create and delete the same consumer uuid twice
-        Owner owner = new Owner("test-owner", "Test Owner");
         Owner altOwner = new Owner("test-owner2", "Test Owner2");
 
-        owner = ownerCurator.create(owner);
         altOwner = ownerCurator.create(altOwner);
 
-        ConsumerType ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
-        ct = consumerTypeCurator.create(ct);
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
         consumer.setUuid("Doppelganger");
         consumer = consumerCurator.create(consumer);
