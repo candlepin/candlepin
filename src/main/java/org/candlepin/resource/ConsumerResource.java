@@ -921,6 +921,16 @@ public class ConsumerResource {
             sink.sendEvent(eventFactory.guestIdDeleted(existing, guestId));
 
         }
+
+        // If nothing shows as being added, and nothing shows as being removed, we should
+        // return false here and stop. This is done after the above logic however, as we
+        // still need to watch out for multiple hosts reporting the same guest, even if
+        // the list they are reporting has not changed.
+        if (removedGuests.size() == 0 && addedGuests.size() == 0) {
+            return false;
+        }
+
+        // Otherwise something must have changed:
         return true;
     }
 
