@@ -718,9 +718,18 @@ public class CandlepinPoolManager implements PoolManager {
         }
     }
 
-    @Override
+    /**
+     * Remove the given entitlement and clean up.
+     *
+     * @param entitlement entitlement to remove
+     * @param regenModified should we look for modified entitlements that are affected
+     * and regenerated. False if we're mass deleting all the entitlements for a consumer
+     * anyhow, true otherwise. Prevents a deadlock issue on mysql (at least).
+     */
     @Transactional
-    public void removeEntitlement(Entitlement entitlement) {
+    void removeEntitlement(Entitlement entitlement,
+        boolean regenModified) {
+
         Consumer consumer = entitlement.getConsumer();
         Pool pool = entitlement.getPool();
 
@@ -779,11 +788,13 @@ public class CandlepinPoolManager implements PoolManager {
         PoolHelper poolHelper = new PoolHelper(this, productCache, entitlement);
         enforcer.postUnbind(consumer, poolHelper, entitlement);
 
-        // Find all of the entitlements that modified the original entitlement,
-        // and regenerate those to remove the content sets.
-        // Lazy regeneration is ok here.
-        this.regenerateCertificatesOf(entitlementCurator
-            .listModifying(entitlement), true);
+        if (regenModified) {
+            // Find all of the entitlements that modified the original entitlement,
+            // and regenerate those to remove the content sets.
+            // Lazy regeneration is ok here.
+            this.regenerateCertificatesOf(entitlementCurator
+                .listModifying(entitlement), true);
+        }
 
         // Check consumer's new compliance status and save:
         ComplianceStatus compliance = complianceRules.getStatus(consumer, new Date());
@@ -797,7 +808,7 @@ public class CandlepinPoolManager implements PoolManager {
     @Transactional
     public void revokeEntitlement(Entitlement entitlement) {
         entCertAdapter.revokeEntitlementCertificates(entitlement);
-        removeEntitlement(entitlement);
+        removeEntitlement(entitlement, true);
     }
 
     @Override
@@ -805,7 +816,8 @@ public class CandlepinPoolManager implements PoolManager {
     public int revokeAllEntitlements(Consumer consumer) {
         int count = 0;
         for (Entitlement e : entitlementCurator.listByConsumer(consumer)) {
-            revokeEntitlement(e);
+            entCertAdapter.revokeEntitlementCertificates(e);
+            removeEntitlement(e, false);
             count++;
         }
         return count;
@@ -816,7 +828,7 @@ public class CandlepinPoolManager implements PoolManager {
     public int removeAllEntitlements(Consumer consumer) {
         int count = 0;
         for (Entitlement e : entitlementCurator.listByConsumer(consumer)) {
-            removeEntitlement(e);
+            removeEntitlement(e, false);
             count++;
         }
         return count;
