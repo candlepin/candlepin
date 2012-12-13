@@ -17,7 +17,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.7.22
+Version: 0.7.23
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -320,6 +320,11 @@ fi
 
 
 %changelog
+* Thu Dec 13 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.7.23-1
+- 886211: Fix a deadlock in mysql. (dgoodwin@redhat.com)
+- 884973: Make guest/host UUID comparisons case insensitive.
+  (dgoodwin@redhat.com)
+
 * Tue Dec 11 2012 jesus m. rodriguez <jesusr@redhat.com> 0.7.22-1
 - 885857: Fix missing dependencies in non-cpdeps builds. (dgoodwin@redhat.com)
 - 837655: no longer bundle dependencies
