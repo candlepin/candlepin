@@ -118,8 +118,6 @@ public interface PoolManager {
 
     void revokeEntitlement(Entitlement entitlement);
 
-    void removeEntitlement(Entitlement entitlement);
-
     Pool updatePoolQuantity(Pool pool, long adjust);
 
     Pool setPoolQuantity(Pool pool, long set);
