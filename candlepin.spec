@@ -17,7 +17,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.7.13.6
+Version: 0.7.13.7
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -287,6 +287,12 @@ fi
 
 
 %changelog
+* Thu Dec 13 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.7.13.7-1
+- 886211: Fix a deadlock in mysql. (dgoodwin@redhat.com)
+- Cert V3 path tree condensing not properly assessing equivalent path nodes
+  (wpoteat@redhat.com)
+- 864508: Service level {0} is not available to consumers (wpoteat@redhat.com)
+
 * Thu Dec 06 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.7.13.6-1
 - 884694: Fix import of manifests into older candlepin. (dgoodwin@redhat.com)
 
