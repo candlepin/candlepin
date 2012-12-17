@@ -388,6 +388,33 @@ public class JsPoolRulesTest {
     }
 
     @Test
+    public void hostedVirtLimitRemoved() {
+        when(configMock.standalone()).thenReturn(false);
+        Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);
+        s.getProduct().setAttribute("virt_limit", "4");
+        List<Pool> pools = poolRules.createPools(s);
+        assertEquals(2, pools.size());
+
+        Pool virtBonusPool = pools.get(1);
+
+        // Now we update the sub and see if that unlimited pool gets adjusted:
+        s.getProduct().getAttributes().clear();
+        List<PoolUpdate> updates = poolRules.updatePools(s, pools);
+        assertEquals(2, updates.size());
+
+        // Regular pool should be in a sane state:
+        PoolUpdate baseUpdate = updates.get(0);
+        assertEquals(new Long(10), baseUpdate.getPool().getQuantity());
+        assertFalse(baseUpdate.getPool().hasAttribute(PoolManager.DELETE_FLAG));
+
+        // Virt bonus pool should have quantity 0 and be flagged for cleanup:
+        PoolUpdate virtUpdate = updates.get(1);
+        assertEquals(new Long(0), virtUpdate.getPool().getQuantity());
+        assertEquals("true", virtUpdate.getPool().getAttributeValue(
+            PoolManager.DELETE_FLAG));
+    }
+
+    @Test
     public void hostedVirtLimitSubWithMultiplierCreatesUnlimitedBonusVirtOnlyPool() {
         when(configMock.standalone()).thenReturn(false);
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);

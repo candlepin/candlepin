@@ -953,37 +953,50 @@ var Pool = {
                 existingPool.attributeEquals("virt_only", "true") &&
                 existingPool.hasProductAttribute("virt_limit")) {
 
-                // Assuming there mere be a virt limit attribute set on the sub product,
-                // this is true for all pools with pool_derived. (for now...)
-                var virt_limit = attributes.get("virt_limit");
-
-                if ('unlimited'.equals(virt_limit)) {
-                    if (existingPool.getQuantity() == 0) {
-                        // this will only happen if the rules set it to be 0.
-                        //   don't modify
-                        expectedQuantity = 0;
-                    }
-                    else {
-                        // pretty much all the rest.
-                        expectedQuantity = -1;
-                    }
+                if (!attributes.containsKey("virt_limit")) {
+                    log.warn("virt_limit attribute has been removed from subscription, flagging pool for deletion if supported: " + existingPool.getId());
+                    // virt_limit has been removed! We need to clean up this pool. Set
+                    // attribute to notify the server of this:
+                    existingPool.setAttribute("candlepin.delete_pool", "true");
+                    // Older candlepin's won't look at the delete attribute, so we will
+                    // set the expected quantity to 0 to effectively disable the pool
+                    // on those servers as well.
+                    expectedQuantity = 0;
                 }
                 else {
-                    if (standalone) {
-                        // this is how we determined the quantity
-                        expectedQuantity = existingPool.getSourceEntitlement().getQuantity() * parseInt(virt_limit);
+                    var virt_limit = attributes.get("virt_limit");
+
+                    if ('unlimited'.equals(virt_limit)) {
+                        if (existingPool.getQuantity() == 0) {
+                            // this will only happen if the rules set it to be 0.
+                            //   don't modify
+                            expectedQuantity = 0;
+                        }
+                        else {
+                            // pretty much all the rest.
+                            expectedQuantity = -1;
+                        }
                     }
                     else {
-                        // we need to see if a parent pool exists and has been exported. Adjust is number exported
-                        //   from a parent pool. If no parent pool, adjust = 0 [a scenario of virtual pool only]
-                        var adjust = 0;
-                        for (var idex = 0 ; idex < pools.size(); idex++ ) {
-                            var derivedPool = pools.get(idex);
-                            if (!derivedPool.getAttributeValue("pool_derived")) {
-                                adjust = derivedPool.getExported();
-                            }
+                        if (standalone) {
+                            // this is how we determined the quantity
+                            expectedQuantity = existingPool.getSourceEntitlement().getQuantity() * parseInt(virt_limit);
                         }
-                        expectedQuantity = (expectedQuantity-adjust) * parseInt(virt_limit);
+                        else {
+                            // we need to see if a parent pool exists and has been exported. Adjust is number exported
+                            //   from a parent pool. If no parent pool, adjust = 0 [a scenario of virtual pool only]
+                            // WARNING: we're assuming there is only one base (non-derived) pool. This may change in the
+                            // future requiring a more complex adjustment for exported quantities if there are multiple
+                            // pools in play.
+                            var adjust = 0;
+                            for (var idex = 0 ; idex < pools.size(); idex++ ) {
+                                var derivedPool = pools.get(idex);
+                                if (!derivedPool.getAttributeValue("pool_derived")) {
+                                    adjust = derivedPool.getExported();
+                                }
+                            }
+                            expectedQuantity = (expectedQuantity-adjust) * parseInt(virt_limit);
+                        }
                     }
                 }
             }
