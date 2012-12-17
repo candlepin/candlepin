@@ -246,6 +246,15 @@ public class CandlepinPoolManager implements PoolManager {
 
             Pool existingPool = updatedPool.getPool();
 
+            // Delete pools the rules signal needed to be cleaned up:
+            if (existingPool.hasAttribute(PoolManager.DELETE_FLAG) &&
+                existingPool.getAttributeValue(PoolManager.DELETE_FLAG).equals("true")) {
+                log.warn("Deleting pool as requested by rules: " +
+                    existingPool.getId());
+                deletePool(existingPool);
+                continue;
+            }
+
             // quantity has changed. delete any excess entitlements from pool
             if (updatedPool.getQuantityChanged()) {
                 this.deleteExcessEntitlements(existingPool);
