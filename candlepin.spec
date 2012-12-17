@@ -17,7 +17,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.7.13.7
+Version: 0.7.13.8
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -287,6 +287,10 @@ fi
 
 
 %changelog
+* Mon Dec 17 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.7.13.8-1
+- 887287: Detect when virt_limit is removed from subscriptions.
+  (dgoodwin@redhat.com)
+
 * Thu Dec 13 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.7.13.7-1
 - 886211: Fix a deadlock in mysql. (dgoodwin@redhat.com)
 - Cert V3 path tree condensing not properly assessing equivalent path nodes
