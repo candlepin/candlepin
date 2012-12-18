@@ -59,7 +59,8 @@ describe 'RAM Limiting' do
     pool = find_pool(@owner.id, @ram_sub.id)
     pool.should_not == nil
 
-    expected_error = "Please upgrade to a newer client to use subscription: %s" % [@ram_product.name]
+    expected_error = ("The client must support at least v3.1 certificates in order to use subscription: %s." +
+                     " A newer client may be available to address this problem.") % [@ram_product.name]
     begin
       entitlement = system.consume_pool(pool.id)
       entitlement.should_not == nil
