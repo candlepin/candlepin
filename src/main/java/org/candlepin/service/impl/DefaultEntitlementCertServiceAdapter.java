@@ -198,8 +198,11 @@ public class DefaultEntitlementCertServiceAdapter extends
         // versions for all attributes.
         if (!ProductVersionValidator.verifyClientSupport(ent.getConsumer(),
             sub.getProduct().getAttributes())) {
-            throw new CertVersionConflictException(i18n.tr("Please upgrade to a newer " +
-                "client to use subscription: {0}", sub.getProduct().getName()));
+            throw new CertVersionConflictException(i18n.tr("The client must support " +
+                "at least v{0} certificates in order to use subscription: {1}. " +
+                "A newer client may be available to address this " +
+                "problem.", ProductVersionValidator.getMinimumCertificateVersion(sub),
+                sub.getProduct().getName()));
         }
     }
 
@@ -295,9 +298,10 @@ public class DefaultEntitlementCertServiceAdapter extends
         if (contentCounter > X509ExtensionUtil.V1_CONTENT_LIMIT) {
             String cause;
             if (config.certV3IsEnabled()) {
-                cause = i18n.tr("Too many content sets for certificate. Please upgrade " +
-                                "to a newer client to use subscription: {0}",
-                                ent.getPool().getProductName());
+                cause = i18n.tr("Too many content sets for certificate {0}. A newer " +
+                    "client may be available to address this problem. " +
+                    "See kbase https://access.redhat.com/knowledge/node/129003 for more " +
+                    "information.", ent.getPool().getProductName());
             }
             // TODO This can be removed once the candlepin.enable_cert_v3 config
             //      option is removed.

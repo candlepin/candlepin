@@ -637,8 +637,10 @@ public class DefaultEntitlementCertServiceAdapterTest {
             fail("Expected CertException here.");
         }
         catch (CertVersionConflictException e) {
-            assertEquals("Please upgrade to a newer client to use subscription: " +
-                         subscription.getProduct().getName(), e.getMessage());
+            String expected = "The client must support at least v3.1 certificates in " +
+                "order to use subscription: " + subscription.getProduct().getName() +
+                ". A newer client may be available to address this problem.";
+            assertEquals(expected, e.getMessage());
         }
     }
 
@@ -669,8 +671,10 @@ public class DefaultEntitlementCertServiceAdapterTest {
             fail("Expected CertException here.");
         }
         catch (CertVersionConflictException e) {
-            assertEquals("Please upgrade to a newer client to use subscription: " +
-                         subscription.getProduct().getName(), e.getMessage());
+            String expected = "The client must support at least v3.1 certificates in " +
+                "order to use subscription: " + subscription.getProduct().getName() +
+                ". A newer client may be available to address this problem.";
+            assertEquals(expected, e.getMessage());
         }
     }
 
