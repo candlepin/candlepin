@@ -1180,6 +1180,7 @@ public class OwnerResource {
         ImportRecord record = new ImportRecord(owner);
         Meta meta = (Meta) data.get("meta");
         ConsumerDto consumer = (ConsumerDto) data.get("consumer");
+        log.error("Recording import failure", error);
         if (meta != null) {
             record.setGeneratedBy(meta.getPrincipalName());
             record.setGeneratedDate(meta.getCreated());
