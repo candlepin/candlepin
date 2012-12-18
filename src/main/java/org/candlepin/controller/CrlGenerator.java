@@ -34,6 +34,7 @@ import org.candlepin.util.OIDUtil;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
 // TODO:  Clean up these protected methods - most are protected only for unit testing!
 /**
@@ -67,6 +68,7 @@ public class CrlGenerator {
      * @param x509crl the crl to sync (can be null).
      * @return the updated crl
      */
+    @Transactional
     public X509CRL syncCRLWithDB(X509CRL x509crl) {
         List<X509CRLEntryWrapper> crlEntries = null;
         BigInteger no = getCRLNumber(x509crl);
@@ -158,6 +160,7 @@ public class CrlGenerator {
      * @param serials certificate serials to be removed.
      * @return updated CRL with the given entries removed.
      */
+    @Transactional
     public X509CRL removeEntries(X509CRL x509crl, List<CertificateSerial> serials) {
         List<X509CRLEntryWrapper> crlEntries = null;
         BigInteger no = getCRLNumber(x509crl);
