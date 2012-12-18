@@ -21,6 +21,7 @@ import java.util.Set;
 import org.candlepin.config.Config;
 import org.candlepin.model.Attribute;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.Subscription;
 import org.candlepin.util.RpmVersionComparator;
 
 /**
@@ -82,6 +83,10 @@ public class ProductVersionValidator {
         Set<? extends Attribute> productAttributes) {
         String consumerVersion = consumer.getFact("system.certificate_version");
         return ProductVersionValidator.validate(productAttributes, consumerVersion);
+    }
+
+    public static String getMinimumCertificateVersion(Subscription sub) {
+        return ProductVersionValidator.getMin(sub.getProduct().getAttributes());
     }
 
     /**
