@@ -153,7 +153,7 @@ public abstract class PKIUtility {
              * Can happen if your candlepin upstream cert is not the same length as the one
              * which signed the manifest. Treat it like a bad signature check failure.
              */
-            log.error(se);
+            log.error("SignatureException:", se);
             log.warn(ConfigProperties.CA_CERT_UPSTREAM + " may not match the server" +
                 " that signed manifest.");
             return false;

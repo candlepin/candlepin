@@ -107,7 +107,7 @@ public class HornetqContextListener {
             hornetqServer.start();
         }
         catch (Exception e) {
-            log.error("Failed to start hornetq message server - " + e);
+            log.error("Failed to start hornetq message server:", e);
             throw new RuntimeException(e);
         }
 
@@ -163,11 +163,11 @@ public class HornetqContextListener {
             session.close();
         }
         catch (HornetQException e) {
-            log.error("Problem cleaning old message queues - " + e);
+            log.error("Problem cleaning old message queues:", e);
             throw new RuntimeException(e);
         }
         catch (Exception e) {
-            log.error("Problem cleaning old message queues - " + e);
+            log.error("Problem cleaning old message queues:", e);
             throw new RuntimeException(e);
         }
     }
