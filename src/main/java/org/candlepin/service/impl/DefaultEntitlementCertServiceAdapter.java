@@ -271,9 +271,10 @@ public class DefaultEntitlementCertServiceAdapter extends
         if (contentCounter > X509ExtensionUtil.V1_CONTENT_LIMIT) {
             String cause;
             if (config.certV3IsEnabled()) {
-                cause = i18n.tr("Too many content sets for certificate. Please upgrade " +
-                                "to a newer client to use subscription: {0}",
-                                ent.getPool().getProductName());
+                cause = i18n.tr("Too many content sets for certificate {0}. A newer " +
+                    "client may be available to address this problem. " +
+                    "See kbase https://access.redhat.com/knowledge/node/129003 for more " +
+                    "information.", ent.getPool().getProductName());
             }
             // TODO This can be removed once the candlepin.enable_cert_v3 config
             //      option is removed.
