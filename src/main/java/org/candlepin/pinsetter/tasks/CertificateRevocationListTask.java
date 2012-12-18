@@ -74,15 +74,15 @@ public class CertificateRevocationListTask implements Job {
             crlFileUtil.writeCRLFile(crlFile, crl);
         }
         catch (CRLException e) {
-            log.error(e);
+            log.error("CRLException:", e);
             throw new JobExecutionException(e, false);
         }
         catch (CertificateException e) {
-            log.error(e);
+            log.error("CertificateException:", e);
             throw new JobExecutionException(e, false);
         }
         catch (IOException e) {
-            log.error(e);
+            log.error("IOException:", e);
             throw new JobExecutionException(e, false);
         }
     }
