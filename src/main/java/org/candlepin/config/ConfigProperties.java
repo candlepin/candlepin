@@ -100,6 +100,22 @@ public class ConfigProperties {
 
     public static final String ENABLE_CERT_V3 = "candlepin.enable_cert_v3";
 
+    public static final String INTEGER_FACTS = "candlepin.integer_facts";
+    private static final String INTEGER_FACT_LIST = "";
+
+    public static final String POSITIVE_INTEGER_FACTS = "candlepin.positive_integer_facts";
+    private static final String POSITIVE_INTEGER_FACT_LIST =
+        "cpu.core(s)_per_socket," +
+        "cpu.cpu(s)," +
+        "cpu.cpu_socket(s)," +
+        "lscpu.core(s)_per_socket," +
+        "lscpu.cpu(s)," +
+        "lscpu.numa_node(s)," +
+        "lscpu.numa_node0_cpu(s)," +
+        "lscpu.on-line_cpu(s)_list," +
+        "lscpu.socket(s)," +
+        "lscpu.thread(s)_per_core";
+
     public static final Map<String, String> DEFAULT_PROPERTIES =
         new HashMap<String, String>() {
 
@@ -181,6 +197,11 @@ public class ConfigProperties {
                  * By default, disable cert v3.
                  */
                 this.put(ENABLE_CERT_V3, "false");
+                /**
+                 * As we do math on some facts, we need to constrain some values
+                 */
+                this.put(INTEGER_FACTS, INTEGER_FACT_LIST);
+                this.put(POSITIVE_INTEGER_FACTS, POSITIVE_INTEGER_FACT_LIST);
             }
         };
     public static final String CRL_FILE_PATH = "candlepin.crl.file";
