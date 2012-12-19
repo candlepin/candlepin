@@ -20,6 +20,12 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.persistence.PersistenceException;
+
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Config;
@@ -39,15 +45,8 @@ import org.candlepin.model.User;
 import org.candlepin.resource.ConsumerResource;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
-
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.persistence.PersistenceException;
 
 public class ConsumerTest extends DatabaseTestFixture {
 
@@ -458,6 +457,109 @@ public class ConsumerTest extends DatabaseTestFixture {
         assertNull(consumer.getFact("anotherbadkey"));
 
         config.setProperty(ConfigProperties.CONSUMER_FACTS_MATCHER, oldValue);
+    }
+
+    @Test
+    public void testConsumerFactsVerifySuccess() {
+        CandlepinCommonTestConfig config =
+            (CandlepinCommonTestConfig) injector.getInstance(Config.class);
+        String oldValueInt = config.getString(ConfigProperties.INTEGER_FACTS);
+        String oldValuePos = config.getString(ConfigProperties.POSITIVE_INTEGER_FACTS);
+        config.setProperty(ConfigProperties.INTEGER_FACTS,
+            "system.count, system.multiplier");
+        config.setProperty(ConfigProperties.POSITIVE_INTEGER_FACTS, "system.count");
+
+        Consumer consumer = new Consumer("a consumer", "username", owner, consumerType);
+
+        Map<String, String> facts = new HashMap<String, String>();
+        facts.put("system.count", "3");
+        facts.put("system.multiplier", "-2");
+
+        consumer.setFacts(facts);
+
+        consumer = consumerCurator.create(consumer);
+        config.setProperty(ConfigProperties.INTEGER_FACTS, oldValueInt);
+        config.setProperty(ConfigProperties.POSITIVE_INTEGER_FACTS, oldValuePos);
+    }
+
+    @Test (expected = BadRequestException.class)
+    public void testConsumerFactsVerifyBadInt() {
+        CandlepinCommonTestConfig config =
+            (CandlepinCommonTestConfig) injector.getInstance(Config.class);
+        String oldValueInt = config.getString(ConfigProperties.INTEGER_FACTS);
+        String oldValuePos = config.getString(ConfigProperties.POSITIVE_INTEGER_FACTS);
+        config.setProperty(ConfigProperties.INTEGER_FACTS,
+            "system.count, system.multiplier");
+        config.setProperty(ConfigProperties.POSITIVE_INTEGER_FACTS, "system.count");
+
+        Consumer consumer = new Consumer("a consumer", "username", owner, consumerType);
+
+        Map<String, String> facts = new HashMap<String, String>();
+        facts.put("system.count", "zzz");
+        facts.put("system.multiplier", "-2");
+
+        consumer.setFacts(facts);
+        try {
+            consumer = consumerCurator.create(consumer);
+        }
+        finally {
+            config.setProperty(ConfigProperties.INTEGER_FACTS, oldValueInt);
+            config.setProperty(ConfigProperties.POSITIVE_INTEGER_FACTS, oldValuePos);
+        }
+    }
+
+    @Test (expected = BadRequestException.class)
+    public void testConsumerFactsVerifyBadPositive() {
+        CandlepinCommonTestConfig config =
+            (CandlepinCommonTestConfig) injector.getInstance(Config.class);
+        String oldValueInt = config.getString(ConfigProperties.INTEGER_FACTS);
+        String oldValuePos = config.getString(ConfigProperties.POSITIVE_INTEGER_FACTS);
+        config.setProperty(ConfigProperties.INTEGER_FACTS,
+            "system.count, system.multiplier");
+        config.setProperty(ConfigProperties.POSITIVE_INTEGER_FACTS, "system.count");
+
+        Consumer consumer = new Consumer("a consumer", "username", owner, consumerType);
+
+        Map<String, String> facts = new HashMap<String, String>();
+        facts.put("system.count", "-2");
+        facts.put("system.multiplier", "-2");
+
+        consumer.setFacts(facts);
+        try {
+            consumer = consumerCurator.create(consumer);
+        }
+        finally {
+            config.setProperty(ConfigProperties.INTEGER_FACTS, oldValueInt);
+            config.setProperty(ConfigProperties.POSITIVE_INTEGER_FACTS, oldValuePos);
+        }
+    }
+
+    @Test (expected = BadRequestException.class)
+    public void testConsumerFactsVerifyBadUpdate() {
+        CandlepinCommonTestConfig config =
+            (CandlepinCommonTestConfig) injector.getInstance(Config.class);
+        String oldValueInt = config.getString(ConfigProperties.INTEGER_FACTS);
+        String oldValuePos = config.getString(ConfigProperties.POSITIVE_INTEGER_FACTS);
+        config.setProperty(ConfigProperties.INTEGER_FACTS,
+            "system.count, system.multiplier");
+        config.setProperty(ConfigProperties.POSITIVE_INTEGER_FACTS, "system.count");
+
+        Consumer consumer = new Consumer("a consumer", "username", owner, consumerType);
+
+        Map<String, String> facts = new HashMap<String, String>();
+        facts.put("system.count", "3");
+        facts.put("system.multiplier", "-2");
+
+        consumer.setFacts(facts);
+        try {
+            consumer = consumerCurator.create(consumer);
+            consumer.setFact("system.count", "sss");
+            consumer = consumerCurator.update(consumer);
+        }
+        finally {
+            config.setProperty(ConfigProperties.INTEGER_FACTS, oldValueInt);
+            config.setProperty(ConfigProperties.POSITIVE_INTEGER_FACTS, oldValuePos);
+        }
     }
 
     @Test
