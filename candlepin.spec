@@ -17,7 +17,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.7.13.8
+Version: 0.7.13.9
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -287,6 +287,15 @@ fi
 
 
 %changelog
+* Wed Dec 19 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.7.13.9-1
+- 888849: Fixed stalled jobs on async bind (mstead@redhat.com)
+- 888035: Update messages for invalid certificates. (mstead@redhat.com)
+- 858759: Do not remove guest virt ents when no host required
+  (mstead@redhat.com)
+- Fix improper logging of exceptions. (dgoodwin@redhat.com)
+- 886211: Add transactional annotations for CrlGenerator task.
+  (dgoodwin@redhat.com)
+
 * Mon Dec 17 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.7.13.8-1
 - 887287: Detect when virt_limit is removed from subscriptions.
   (dgoodwin@redhat.com)
