@@ -68,8 +68,10 @@ public class EntitlerJob implements Job {
 
             ctx.setResult("Entitlements created for owner");
         }
-        catch (CandlepinException ce) {
-            throw new JobExecutionException(ce.getMessage(), ce, false);
+        // Catch any exception that is fired and re-throw as a JobExecutionException
+        // so that the job will be properly cleaned up on failure.
+        catch (Exception e) {
+            throw new JobExecutionException(e.getMessage(), e, false);
         }
     }
 
