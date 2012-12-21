@@ -29,10 +29,20 @@ public abstract class JsonBeanPropertyFilter implements BeanPropertyFilter {
 
     protected Boolean annotationPresent(Object obj, String propertyName,
         Class<? extends Annotation> clazz) {
-        String methodName = "get" + propertyName.substring(0, 1).toUpperCase() +
-            propertyName.substring(1);
         try {
-            Method getter = obj.getClass().getMethod(methodName);
+            String postFix = propertyName.substring(0, 1).toUpperCase() +
+                propertyName.substring(1);
+            String methodName = "get" + postFix;
+            Method getter = null;
+            try {
+                getter = obj.getClass().getMethod(methodName);
+            }
+            catch (NoSuchMethodException e) {
+                // Look for common boolean pattern of "is"
+                // instead of "get"
+                methodName = "is" + postFix;
+                getter = obj.getClass().getMethod(methodName);
+            }
             Annotation a = getter.getAnnotation(clazz);
             if (a != null) {
                 return true;
@@ -40,7 +50,7 @@ public abstract class JsonBeanPropertyFilter implements BeanPropertyFilter {
         }
         catch (NoSuchMethodException e) {
             log.warn("Unable to serialize property '" + propertyName +
-                " without getter: " + methodName);
+                " without a getter");
             return false;
         }
         return false;
