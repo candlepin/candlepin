@@ -15,16 +15,24 @@
 package org.candlepin.model;
 
 import org.candlepin.auth.interceptor.EnforceAccessControl;
+import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.exceptions.BadRequestException;
 
+import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.hibernate.Query;
 import org.hibernate.criterion.Restrictions;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * interact with Products.
  */
 public class ProductCurator extends AbstractHibernateCurator<Product> {
+
+    @Inject private Config config;
+    @Inject private I18n i18n;
 
     /**
      * default ctor
@@ -68,6 +76,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
 
         for (ProductAttribute attr : p.getAttributes()) {
             attr.setProduct(p);
+            validateAttributeValue(attr);
         }
 
         merge(p);
@@ -84,9 +93,70 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
          */
         for (ProductAttribute attr : entity.getAttributes()) {
             attr.setProduct(entity);
+            validateAttributeValue(attr);
         }
 
         return super.create(entity);
+    }
+
+    private void validateAttributeValue(ProductAttribute attr) {
+        String intAttrs = config.getString(ConfigProperties.INTEGER_ATTRIBUTES);
+        String posAttrs = config.getString(ConfigProperties.POSITIVE_INTEGER_ATTRIBUTES);
+        String longAttrs = config.getString(ConfigProperties.LONG_ATTRIBUTES);
+        String posLongAttrs = config.getString(ConfigProperties.POSITIVE_LONG_ATTRIBUTES);
+        String boolAttrs = config.getString(ConfigProperties.BOOLEAN_ATTRIBUTES);
+
+        if (attr.getValue() == null || attr.getValue().trim().equals("")) { return; }
+
+        if (intAttrs != null && intAttrs.contains(attr.getName()) ||
+            posAttrs != null && posAttrs.contains(attr.getName())) {
+            int value = -1;
+            try {
+                value = Integer.parseInt(attr.getValue());
+            }
+            catch (NumberFormatException nfe) {
+                throw new BadRequestException(i18n.tr(
+                    "The attribute ''{0}'' must be an integer value.",
+                    attr.getName()));
+            }
+            if (posAttrs != null && posAttrs.contains(
+                attr.getName()) &&
+                value <= 0) {
+                throw new BadRequestException(i18n.tr(
+                    "The attribute ''{0}'' must have a positive value.",
+                    attr.getName()));
+            }
+        }
+        else if (longAttrs != null && longAttrs.contains(attr.getName()) ||
+            posLongAttrs != null && posLongAttrs.contains(attr.getName())) {
+            long value = -1;
+            try {
+                value = Long.parseLong(attr.getValue());
+            }
+            catch (NumberFormatException nfe) {
+                throw new BadRequestException(i18n.tr(
+                    "The attribute ''{0}'' must be a long value.",
+                    attr.getName()));
+            }
+            if (posAttrs != null && posAttrs.contains(
+                attr.getName()) &&
+                value <= 0) {
+                throw new BadRequestException(i18n.tr(
+                    "The attribute ''{0}'' must have a positive value.",
+                    attr.getName()));
+            }
+        }
+        else if (boolAttrs != null && boolAttrs.contains(attr.getName())) {
+            if (attr.getValue() != null &&
+                !"true".equalsIgnoreCase(attr.getValue().trim()) &&
+                !"false".equalsIgnoreCase(attr.getValue()) &&
+                !"1".equalsIgnoreCase(attr.getValue()) &&
+                !"0".equalsIgnoreCase(attr.getValue())) {
+                throw new BadRequestException(i18n.tr(
+                    "The attribute ''{0}'' must be a boolean value.",
+                    attr.getName()));
+            }
+        }
     }
 
     @Transactional

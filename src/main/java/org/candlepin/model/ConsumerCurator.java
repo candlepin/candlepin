@@ -305,7 +305,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
                     }
                     if (posFacts != null && posFacts.contains(
                         entry.getKey()) &&
-                        value < 0) {
+                        value <= 0) {
                         throw new BadRequestException(i18n.tr(
                             "The fact ''{0}'' must have a positive value.",
                             entry.getKey()));

@@ -17,7 +17,6 @@ package org.candlepin.pinsetter.tasks;
 import static org.quartz.JobBuilder.newJob;
 
 import org.candlepin.controller.Entitler;
-import org.candlepin.exceptions.CandlepinException;
 import org.candlepin.model.Entitlement;
 import org.candlepin.pinsetter.core.model.JobStatus;
 import org.candlepin.util.Util;

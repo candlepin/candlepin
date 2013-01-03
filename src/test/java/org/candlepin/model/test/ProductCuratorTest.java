@@ -31,15 +31,62 @@ import java.util.Set;
 
 import javax.persistence.PersistenceException;
 
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.type.TypeReference;
+import org.candlepin.config.CandlepinCommonTestConfig;
+import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.Content;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.test.DatabaseTestFixture;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.TypeReference;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 public class ProductCuratorTest extends DatabaseTestFixture {
+
+    private String oldValueInt = "";
+    private String oldValuePos = "";
+    private String oldValueLong = "";
+    private String oldValuePosLong = "";
+    private String oldValueBool = "";
+    private CandlepinCommonTestConfig config = null;
+
+    @Before
+    public void setUp() {
+        config = (CandlepinCommonTestConfig) injector.getInstance(Config.class);
+        oldValueInt = config.getString(
+            ConfigProperties.INTEGER_ATTRIBUTES);
+        oldValuePos = config.getString(
+            ConfigProperties.POSITIVE_INTEGER_ATTRIBUTES);
+        oldValueLong = config.getString(
+            ConfigProperties.LONG_ATTRIBUTES);
+        oldValuePosLong = config.getString(
+            ConfigProperties.POSITIVE_LONG_ATTRIBUTES);
+        oldValueBool = config.getString(
+            ConfigProperties.BOOLEAN_ATTRIBUTES);
+        config.setProperty(ConfigProperties.INTEGER_ATTRIBUTES,
+            "product.count, product.multiplier");
+        config.setProperty(ConfigProperties.POSITIVE_INTEGER_ATTRIBUTES,
+            "product.pos_count");
+        config.setProperty(ConfigProperties.LONG_ATTRIBUTES,
+            "product.long_count, product.long_multiplier");
+        config.setProperty(ConfigProperties.POSITIVE_LONG_ATTRIBUTES,
+            "product.long_pos_count");
+        config.setProperty(ConfigProperties.BOOLEAN_ATTRIBUTES,
+            "product.bool_val_str, product.bool_val_num");
+    }
+
+    @After
+    public void shutdown() {
+        config.setProperty(ConfigProperties.INTEGER_ATTRIBUTES, oldValueInt);
+        config.setProperty(ConfigProperties.POSITIVE_INTEGER_ATTRIBUTES, oldValuePos);
+        config.setProperty(ConfigProperties.LONG_ATTRIBUTES, oldValueLong);
+        config.setProperty(ConfigProperties.POSITIVE_LONG_ATTRIBUTES, oldValuePosLong);
+        config.setProperty(ConfigProperties.BOOLEAN_ATTRIBUTES, oldValueBool);
+    }
 
     @Test
     @SuppressWarnings("unchecked")
@@ -301,6 +348,142 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         }
         // Old attributes should get cleaned up:
         assertEquals(3, all.size());
+    }
+
+    @Test
+    public void testProductAttributeValidationSuccess() {
+        Product original = createTestProduct();
+        original.addAttribute(new ProductAttribute("product.count", "1"));
+        original.addAttribute(new ProductAttribute("product.pos_count", "5"));
+        original.addAttribute(new ProductAttribute("product.long_multiplier",
+            (new Long(Integer.MAX_VALUE * 1000)).toString()));
+        original.addAttribute(new ProductAttribute("product.bool_val_str", "true"));
+        original.addAttribute(new ProductAttribute("product.bool_val_num", "0"));
+        productCurator.create(original);
+
+        original.setAttribute("product.count", "134");
+        original.setAttribute("product.pos_count", "333");
+        original.setAttribute("product.long_multiplier",
+            (new Long(Integer.MAX_VALUE * 100)).toString());
+        original.setAttribute("product.bool_val_str", "false");
+        original.setAttribute("product.bool_val_num", "1");
+        productCurator.createOrUpdate(original);
+    }
+
+    @Test
+    public void testProductAttributeCreationFail() {
+        Product original = createTestProduct();
+        try {
+            original.addAttribute(new ProductAttribute("product.count", "1.0"));
+            productCurator.create(original);
+            // causes test failure if exception is not thrown
+            assertTrue(false);
+        }
+        catch (BadRequestException bre) {
+            assertEquals("The attribute 'product.count' must be an integer value.",
+                bre.getMessage());
+            original.setAttribute("product.count", "");
+        }
+        try {
+            original.addAttribute(new ProductAttribute("product.pos_count", "-5"));
+            productCurator.create(original);
+            assertTrue(false);
+        }
+        catch (BadRequestException bre) {
+            assertEquals("The attribute 'product.pos_count' must have a positive value.",
+                bre.getMessage());
+            original.setAttribute("product.pos_count", "");
+        }
+        try {
+            original.addAttribute(new ProductAttribute("product.long_multiplier",
+                "LL"));
+            productCurator.create(original);
+            assertTrue(false);
+        }
+        catch (BadRequestException bre) {
+            assertEquals("The attribute 'product.long_multiplier' must be a long value.",
+                bre.getMessage());
+            original.setAttribute("product.long_multiplier", "");
+        }
+        try {
+            original.addAttribute(new ProductAttribute("product.bool_val_str", "yes"));
+            productCurator.create(original);
+            assertTrue(false);
+        }
+        catch (BadRequestException bre) {
+            assertEquals("The attribute 'product.bool_val_str' must be a boolean value.",
+                bre.getMessage());
+            original.setAttribute("product.bool_val_str", "");
+        }
+        try {
+            original.addAttribute(new ProductAttribute("product.bool_val_num", "2"));
+            productCurator.create(original);
+            assertTrue(false);
+        }
+        catch (BadRequestException bre) {
+            assertEquals("The attribute 'product.bool_val_num' must be a boolean value.",
+                bre.getMessage());
+            original.setAttribute("product.bool_val_num", "");
+        }
+    }
+
+    @Test
+    public void testProductAttributeUpdateFail() {
+        Product original = createTestProduct();
+        productCurator.create(original);
+
+        try {
+            original.addAttribute(new ProductAttribute("product.count", "one"));
+            productCurator.createOrUpdate(original);
+            // causes test failure if exception is not thrown
+            assertTrue(false);
+        }
+        catch (BadRequestException bre) {
+            assertEquals("The attribute 'product.count' must be an integer value.",
+                bre.getMessage());
+            original.setAttribute("product.count", "");
+        }
+        try {
+            original.addAttribute(new ProductAttribute("product.pos_count", "-44"));
+            productCurator.createOrUpdate(original);
+            assertTrue(false);
+        }
+        catch (BadRequestException bre) {
+            assertEquals("The attribute 'product.pos_count' must have a positive value.",
+                bre.getMessage());
+            original.setAttribute("product.pos_count", "");
+        }
+        try {
+            original.addAttribute(new ProductAttribute("product.long_multiplier",
+                "10^23"));
+            productCurator.createOrUpdate(original);
+            assertTrue(false);
+        }
+        catch (BadRequestException bre) {
+            assertEquals("The attribute 'product.long_multiplier' must be a long value.",
+                bre.getMessage());
+            original.setAttribute("product.long_multiplier", "");
+        }
+        try {
+            original.addAttribute(new ProductAttribute("product.bool_val_str", "flase"));
+            productCurator.createOrUpdate(original);
+            assertTrue(false);
+        }
+        catch (BadRequestException bre) {
+            assertEquals("The attribute 'product.bool_val_str' must be a boolean value.",
+                bre.getMessage());
+            original.setAttribute("product.bool_val_str", "");
+        }
+        try {
+            original.addAttribute(new ProductAttribute("product.bool_val_num", "6"));
+            productCurator.createOrUpdate(original);
+            assertTrue(false);
+        }
+        catch (BadRequestException bre) {
+            assertEquals("The attribute 'product.bool_val_num' must be a boolean value.",
+                bre.getMessage());
+            original.setAttribute("product.bool_val_num", "");
+        }
     }
 
     public void testRemoveProductContent() {
