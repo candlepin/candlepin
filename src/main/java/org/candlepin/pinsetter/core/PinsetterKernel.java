@@ -53,6 +53,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
@@ -167,15 +168,17 @@ public class PinsetterKernel {
                 if (log.isDebugEnabled()) {
                     log.debug("Scheduling " + jobImpl);
                 }
-                CronTrigger trigger = null;
+
+                // Find all existing cron triggers matching this job impl:
+                List<CronTrigger> existingCronTriggers = new LinkedList<CronTrigger>();
                 if (jobKeys != null) {
                     for (JobKey key : jobKeys) {
                         JobDetail jd = scheduler.getJobDetail(key);
                         if (jd != null &&
                             jd.getJobClass().getName().equals(jobImpl)) {
-                            trigger = (CronTrigger) scheduler.getTrigger(
+                            CronTrigger trigger = (CronTrigger) scheduler.getTrigger(
                                 triggerKey(key.getName(), CRON_GROUP));
-                            break;
+                            existingCronTriggers.add(trigger);
                         }
                     }
                 }
@@ -192,17 +195,9 @@ public class PinsetterKernel {
                         log.debug("Scheduler entry for " + jobImpl + ": " +
                             schedule);
                     }
-                    /*
-                     * Ensure no duplicate jobs get created as well as allow job
-                     * schedules to be replaced by configuration changes.
-                     */
-                    if (trigger == null || !trigger.getCronExpression().equals(schedule)) {
-                        if (trigger != null) {
-                            scheduler.deleteJob(
-                                jobKey(jobImpl, CRON_GROUP));
-                        }
-                        pendingJobs.add(new JobEntry(jobImpl, schedule));
-                    }
+
+                    addUniqueJob(pendingJobs, jobImpl,
+                        existingCronTriggers, schedule);
                 }
                 else {
                     log.warn("No schedule found for " + jobImpl + ". Skipping...");
@@ -216,6 +211,38 @@ public class PinsetterKernel {
             throw new RuntimeException(e.getLocalizedMessage(), e);
         }
         scheduleJobs(pendingJobs);
+    }
+
+    /*
+     * Adds a unique job, replacing any old ones with different schedules.
+     */
+    private void addUniqueJob(List<JobEntry> pendingJobs,
+        String jobImpl, List<CronTrigger> existingCronTriggers, String schedule)
+        throws SchedulerException {
+
+        // If trigger already exists with same schedule, nothing to do:
+        if (existingCronTriggers.size() == 1 &&
+            existingCronTriggers.get(0).getCronExpression().equals(schedule)) {
+            return;
+        }
+
+        /*
+         * Otherwise, we know there are existing triggers, delete them all and create
+         * one with our new schedule. Normally there should only ever be one, but past
+         * bugs caused duplicates so we handle this situation by default now.
+         *
+         * This could be cleaning up some with the same schedule we want, but we can't
+         * allow there to be multiple with the same schedule so simpler to just make sure
+         * there's only one.
+         */
+        log.warn("Cleaning up " + existingCronTriggers.size() + " obsolete triggers.");
+        for (CronTrigger t : existingCronTriggers) {
+            boolean result = scheduler.deleteJob(t.getJobKey());
+            log.warn(t.getJobKey() + " deletion success?: " + result);
+        }
+
+        // Create our new job:
+        pendingJobs.add(new JobEntry(jobImpl, schedule));
     }
 
     /**
