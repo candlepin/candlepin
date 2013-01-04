@@ -21,6 +21,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.startsWith;
 import static org.mockito.Mockito.atMost;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -148,7 +149,7 @@ public class PinsetterKernelTest {
         verify(sched).start();
         ArgumentCaptor<JobStatus> arg = ArgumentCaptor.forClass(JobStatus.class);
         verify(jcurator, atMost(1)).create(arg.capture());
-        JobStatus stat = (JobStatus) arg.getValue();
+        JobStatus stat = arg.getValue();
         assertTrue(stat.getId().startsWith(Util.getClassName(CancelJobJob.class)));
         verify(sched, atMost(1)).scheduleJob(any(JobDetail.class), any(Trigger.class));
     }
@@ -230,23 +231,60 @@ public class PinsetterKernelTest {
         props.put("pinsetter.org.candlepin.pinsetter.tasks." +
             "JobCleaner.schedule", "*/1 * * * * ?");
         Config config = new Config(props);
-        CronTrigger cronTrigger = mock(CronTrigger.class);
         JobDetail jobDetail = mock(JobDetail.class);
 
         String crongrp = "cron group";
         Set<JobKey> jobs = new HashSet<JobKey>();
-        jobs.add(jobKey("org.candlepin.pinsetter.tasks.JobCleaner"));
+        JobKey key = jobKey("org.candlepin.pinsetter.tasks.JobCleaner");
+        jobs.add(key);
+
+        CronTrigger cronTrigger = mock(CronTrigger.class);
+        when(cronTrigger.getJobKey()).thenReturn(key);
+        when(cronTrigger.getCronExpression()).thenReturn("*/7 * * * * ?");
 
         when(sched.getJobKeys(eq(jobGroupEquals(crongrp)))).thenReturn(jobs);
         when(sched.getTrigger(any(TriggerKey.class))).thenReturn(cronTrigger);
-
-        when(cronTrigger.getCronExpression()).thenReturn("*/7 * * * * ?");
         when(sched.getJobDetail(any(JobKey.class))).thenReturn(jobDetail);
+
         doReturn(JobCleaner.class).when(jobDetail).getJobClass();
 
         pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
         pk.startup();
-        verify(sched).deleteJob(any(JobKey.class));
+        verify(sched).deleteJob(key);
+        verify(jcurator).create(any(JobStatus.class));
+    }
+
+    @Test
+    public void updateMultipleSchedules() throws Exception {
+        Map<String, String> props = new HashMap<String, String>();
+        props.put(ConfigProperties.DEFAULT_TASKS, JobCleaner.class.getName());
+        props.put("org.quartz.jobStore.isClustered", "true");
+        props.put("pinsetter.org.candlepin.pinsetter.tasks." +
+            "JobCleaner.schedule", "*/1 * * * * ?");
+        Config config = new Config(props);
+        JobDetail jobDetail = mock(JobDetail.class);
+
+        // Hack multiple job schedules for same job:
+        String crongrp = "cron group";
+        Set<JobKey> jobs = new HashSet<JobKey>();
+        JobKey key = jobKey("org.candlepin.pinsetter.tasks.JobCleaner");
+        jobs.add(key);
+        JobKey key2 = jobKey("org.candlepin.pinsetter.tasks.JobCleaner2");
+        jobs.add(key2);
+
+        CronTrigger cronTrigger = mock(CronTrigger.class);
+        when(cronTrigger.getJobKey()).thenReturn(key);
+        when(cronTrigger.getCronExpression()).thenReturn("*/7 * * * * ?");
+
+        when(sched.getJobKeys(eq(jobGroupEquals(crongrp)))).thenReturn(jobs);
+        when(sched.getTrigger(any(TriggerKey.class))).thenReturn(cronTrigger);
+        when(sched.getJobDetail(any(JobKey.class))).thenReturn(jobDetail);
+
+        doReturn(JobCleaner.class).when(jobDetail).getJobClass();
+
+        pk = new PinsetterKernel(config, jfactory, jlistener, jcurator, sfactory);
+        pk.startup();
+        verify(sched, times(2)).deleteJob(any(JobKey.class));
         verify(jcurator).create(any(JobStatus.class));
     }
 
