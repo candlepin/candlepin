@@ -457,17 +457,16 @@ public class OwnerResource {
                           .replace("_", "0");
         if (!testName.matches("[a-zA-Z0-9]*")) {
             throw new BadRequestException(
-                i18n.tr("Activation key names must be alphanumeric or the " +
-                    "characters '-' or '_'. " +
-                    "[" + activationKey.getName() + "]"));
+                i18n.tr("The activation key name ''{0}'' must be alphanumeric or " +
+                    "include the characters '-' or '_'", activationKey.getName()));
         }
+
 
         if (activationKeyCurator.lookupForOwner(activationKey.getName(), owner) != null) {
             throw new BadRequestException(
-                i18n.tr("Activation key name [" + activationKey.getName() +
-                    "] is already in use for owner [" + ownerKey + "]"));
+                i18n.tr("The activation key name ''{0}'' is already in use for owner {1}",
+                    activationKey.getName(), ownerKey));
         }
-
 
         ActivationKey newKey = activationKeyCurator.create(activationKey);
         sink.emitActivationKeyCreated(newKey);
