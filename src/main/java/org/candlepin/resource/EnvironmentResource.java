@@ -244,7 +244,7 @@ public class EnvironmentResource {
         Environment e = envCurator.find(envId);
         if (e == null) {
             throw new NotFoundException(i18n.tr(
-                "No such environment : {0}", envId));
+                "No such environment: {0}", envId));
         }
         return e;
     }
