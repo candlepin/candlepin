@@ -31,15 +31,37 @@ import java.util.Set;
 
 import javax.persistence.PersistenceException;
 
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.type.TypeReference;
+import org.candlepin.config.CandlepinCommonTestConfig;
+import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.Content;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.test.DatabaseTestFixture;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.TypeReference;
+import org.junit.Before;
 import org.junit.Test;
 
 public class ProductCuratorTest extends DatabaseTestFixture {
+
+    private CandlepinCommonTestConfig config = null;
+
+    @Before
+    public void setUp() {
+        config = (CandlepinCommonTestConfig) injector.getInstance(Config.class);
+        config.setProperty(ConfigProperties.INTEGER_ATTRIBUTES,
+            "product.count, product.multiplier");
+        config.setProperty(ConfigProperties.POSITIVE_INTEGER_ATTRIBUTES,
+            "product.pos_count");
+        config.setProperty(ConfigProperties.LONG_ATTRIBUTES,
+            "product.long_count, product.long_multiplier");
+        config.setProperty(ConfigProperties.POSITIVE_LONG_ATTRIBUTES,
+            "product.long_pos_count");
+        config.setProperty(ConfigProperties.BOOLEAN_ATTRIBUTES,
+            "product.bool_val_str, product.bool_val_num");
+    }
 
     @Test
     @SuppressWarnings("unchecked")
@@ -301,6 +323,142 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         }
         // Old attributes should get cleaned up:
         assertEquals(3, all.size());
+    }
+
+    @Test
+    public void testProductAttributeValidationSuccessCreate() {
+        Product original = createTestProduct();
+        original.addAttribute(new ProductAttribute("product.count", "1"));
+        original.addAttribute(new ProductAttribute("product.pos_count", "5"));
+        original.addAttribute(new ProductAttribute("product.long_multiplier",
+            (new Long(Integer.MAX_VALUE * 1000)).toString()));
+        original.addAttribute(new ProductAttribute("product.long_pos_count", "23"));
+        original.addAttribute(new ProductAttribute("product.bool_val_str", "true"));
+        original.addAttribute(new ProductAttribute("product.bool_val_num", "0"));
+        productCurator.create(original);
+        assertTrue(original.getId() != null);
+    }
+
+    @Test
+    public void testProductAttributeValidationSuccessUpdate() {
+        Product original = createTestProduct();
+        productCurator.create(original);
+        assertTrue(original.getId() != null);
+        original.setAttribute("product.count", "134");
+        original.setAttribute("product.pos_count", "333");
+        original.setAttribute("product.long_multiplier",
+            (new Long(Integer.MAX_VALUE * 100)).toString());
+        original.setAttribute("product.long_pos_count", "10");
+        original.setAttribute("product.bool_val_str", "false");
+        original.setAttribute("product.bool_val_num", "1");
+        productCurator.createOrUpdate(original);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testProductAttributeCreationFailBadInt() {
+        Product original = createTestProduct();
+        original.addAttribute(new ProductAttribute("product.count", "1.0"));
+        productCurator.create(original);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testProductAttributeCreationFailBadPosInt() {
+        Product original = createTestProduct();
+        original.addAttribute(new ProductAttribute("product.pos_count", "-5"));
+        productCurator.create(original);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testProductAttributeCreationFailBadLong() {
+        Product original = createTestProduct();
+        original.addAttribute(new ProductAttribute("product.long_multiplier",
+            "ZZ"));
+        productCurator.create(original);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testProductAttributeCreationFailBadPosLong() {
+        Product original = createTestProduct();
+        original.addAttribute(new ProductAttribute("product.long_pos_count",
+            "-1"));
+        productCurator.create(original);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testProductAttributeCreationFailBadStringBool() {
+        Product original = createTestProduct();
+        original.addAttribute(new ProductAttribute("product.bool_val_str", "yes"));
+        productCurator.create(original);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testProductAttributeCreationFailNumberBool() {
+        Product original = createTestProduct();
+        original.addAttribute(new ProductAttribute("product.bool_val_num", "2"));
+        productCurator.create(original);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testProductAttributeUpdateFailInt() {
+        Product original = createTestProduct();
+        productCurator.create(original);
+        assertTrue(original.getId() != null);
+        original.addAttribute(new ProductAttribute("product.count", "one"));
+        productCurator.createOrUpdate(original);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testProductAttributeUpdateFailPosInt() {
+        Product original = createTestProduct();
+        productCurator.create(original);
+        assertTrue(original.getId() != null);
+        original.addAttribute(new ProductAttribute("product.pos_count", "-44"));
+        productCurator.createOrUpdate(original);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testProductAttributeUpdateFailLong() {
+        Product original = createTestProduct();
+        productCurator.create(original);
+        assertTrue(original.getId() != null);
+        original.addAttribute(new ProductAttribute("product.long_multiplier",
+            "10^23"));
+        productCurator.createOrUpdate(original);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testProductAttributeUpdateFailPosLong() {
+        Product original = createTestProduct();
+        productCurator.create(original);
+        assertTrue(original.getId() != null);
+        original.addAttribute(new ProductAttribute("product.long_pos_count",
+            "-23"));
+        productCurator.createOrUpdate(original);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testProductAttributeUpdateFailStringBool() {
+        Product original = createTestProduct();
+        productCurator.create(original);
+        assertTrue(original.getId() != null);
+        original.addAttribute(new ProductAttribute("product.bool_val_str", "flase"));
+        productCurator.createOrUpdate(original);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testProductAttributeUpdateFailNumberBool() {
+        Product original = createTestProduct();
+        productCurator.create(original);
+        assertTrue(original.getId() != null);
+        original.addAttribute(new ProductAttribute("product.bool_val_num", "6"));
+        productCurator.createOrUpdate(original);
+    }
+
+    @Test
+    public void testSubstringConfigList() {
+        Product original = createTestProduct();
+        original.addAttribute(new ProductAttribute("product.pos", "-5"));
+        productCurator.create(original);
     }
 
     public void testRemoveProductContent() {
