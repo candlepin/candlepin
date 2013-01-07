@@ -60,7 +60,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     public Consumer create(Consumer entity) {
         entity.ensureUUID();
         if (entity.getFacts() != null) {
-            entity.setFacts(filterFacts(entity.getFacts()));
+            entity.setFacts(filterAndVerifyFacts(entity.getFacts()));
         }
         validate(entity);
         return super.create(entity);
@@ -248,7 +248,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         // TODO: Are any of these read-only?
         existingConsumer.setEntitlements(entitlementCurator
             .bulkUpdate(updatedConsumer.getEntitlements()));
-        Map<String, String> newFacts = filterFacts(updatedConsumer.getFacts());
+        Map<String, String> newFacts = filterAndVerifyFacts(updatedConsumer.getFacts());
         if (factsChanged(newFacts, existingConsumer.getFacts())) {
             existingConsumer.setFacts(newFacts);
         }
@@ -284,12 +284,33 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * @param facts
      * @return the list of facts filtered by the fact filter regex config
      */
-    private Map<String, String> filterFacts(Map<String, String> factsIn) {
+    private Map<String, String> filterAndVerifyFacts(Map<String, String> factsIn) {
         Map<String, String> facts = new HashMap<String, String>();
-        for (Entry<String, String> entry : factsIn.entrySet()) {
-            if (entry.getKey().matches(
-                config.getString(ConfigProperties.CONSUMER_FACTS_MATCHER))) {
+        String factMatch = config.getString(ConfigProperties.CONSUMER_FACTS_MATCHER);
+        String intFacts = config.getString(ConfigProperties.INTEGER_FACTS);
+        String posFacts = config.getString(ConfigProperties.POSITIVE_INTEGER_FACTS);
 
+        for (Entry<String, String> entry : factsIn.entrySet()) {
+            if (entry.getKey().matches(factMatch)) {
+                if (intFacts != null && intFacts.contains(entry.getKey()) ||
+                    posFacts != null && posFacts.contains(entry.getKey())) {
+                    int value = -1;
+                    try {
+                        value = Integer.parseInt(entry.getValue());
+                    }
+                    catch (NumberFormatException nfe) {
+                        throw new BadRequestException(i18n.tr(
+                            "The fact ''{0}'' must be an integer.",
+                            entry.getKey()));
+                    }
+                    if (posFacts != null && posFacts.contains(
+                        entry.getKey()) &&
+                        value <= 0) {
+                        throw new BadRequestException(i18n.tr(
+                            "The fact ''{0}'' must have a positive value.",
+                            entry.getKey()));
+                    }
+                }
                 facts.put(entry.getKey(), entry.getValue());
             }
         }
