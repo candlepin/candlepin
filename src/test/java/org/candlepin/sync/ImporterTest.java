@@ -312,7 +312,7 @@ public class ImporterTest {
 
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
-        File archive = new File("non_zip_file.zip");
+        File archive = new File("/tmp/non_zip_file.zip");
         FileWriter fw = new FileWriter(archive);
         fw.write("Just a flat file");
         fw.close();
@@ -337,7 +337,7 @@ public class ImporterTest {
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
 
-        File archive = new File("file.zip");
+        File archive = new File("/tmp/file.zip");
         ZipOutputStream out = new ZipOutputStream(new FileOutputStream(archive));
         out.putNextEntry(new ZipEntry("This is just a zip file with no content"));
         out.close();
@@ -362,11 +362,11 @@ public class ImporterTest {
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
 
-        File archive = new File("file.zip");
+        File archive = new File("/tmp/file.zip");
         ZipOutputStream out = new ZipOutputStream(new FileOutputStream(archive));
         out.putNextEntry(new ZipEntry("signature"));
         out.write("This is the placeholder for the signature file".getBytes());
-        File ceArchive = new File("consumer_export.zip");
+        File ceArchive = new File("/tmp/consumer_export.zip");
         FileOutputStream fos = new FileOutputStream(ceArchive);
         fos.write("This is just a flat file".getBytes());
         fos.close();
@@ -393,11 +393,11 @@ public class ImporterTest {
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
 
-        File archive = new File("file.zip");
+        File archive = new File("/tmp/file.zip");
         ZipOutputStream out = new ZipOutputStream(new FileOutputStream(archive));
         out.putNextEntry(new ZipEntry("signature"));
         out.write("This is the placeholder for the signature file".getBytes());
-        File ceArchive = new File("consumer_export.zip");
+        File ceArchive = new File("/tmp/consumer_export.zip");
         ZipOutputStream cezip = new ZipOutputStream(new FileOutputStream(ceArchive));
         cezip.putNextEntry(new ZipEntry("This is just a zip file with no content"));
         cezip.close();
