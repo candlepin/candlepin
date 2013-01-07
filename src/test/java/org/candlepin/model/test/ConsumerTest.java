@@ -20,6 +20,12 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.persistence.PersistenceException;
+
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Config;
@@ -39,15 +45,8 @@ import org.candlepin.model.User;
 import org.candlepin.resource.ConsumerResource;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
-
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.persistence.PersistenceException;
 
 public class ConsumerTest extends DatabaseTestFixture {
 

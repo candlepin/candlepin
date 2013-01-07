@@ -18,8 +18,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.candlepin.config.CandlepinCommonTestConfig;
+import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
@@ -39,6 +45,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     private Owner owner;
     private ConsumerType ct;
+    private Consumer factConsumer;
 
     @Before
     public void setUp() {
@@ -47,6 +54,13 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         ct = consumerTypeCurator.create(ct);
 
+        CandlepinCommonTestConfig config =
+            (CandlepinCommonTestConfig) injector.getInstance(Config.class);
+        config.setProperty(ConfigProperties.INTEGER_FACTS,
+            "system.count, system.multiplier");
+        config.setProperty(ConfigProperties.POSITIVE_INTEGER_FACTS, "system.count");
+
+        factConsumer = new Consumer("a consumer", "username", owner, ct);
     }
 
     @Test
@@ -202,5 +216,60 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         Date deletionDate2 = dc.getUpdated();
         assertEquals(-1, deletionDate1.compareTo(deletionDate2));
         assertEquals(altOwner.getId(), dc.getOwnerId());
+    }
+
+    @Test
+    public void testConsumerFactsVerifySuccess() {
+        Map<String, String> facts = new HashMap<String, String>();
+        facts.put("system.count", "3");
+        facts.put("system.multiplier", "-2");
+
+        factConsumer.setFacts(facts);
+
+        factConsumer = consumerCurator.create(factConsumer);
+        assertEquals(consumerCurator.findByUuid(factConsumer.getUuid()), factConsumer);
+    }
+
+    @Test (expected = BadRequestException.class)
+    public void testConsumerFactsVerifyBadInt() {
+        Map<String, String> facts = new HashMap<String, String>();
+        facts.put("system.count", "zzz");
+        facts.put("system.multiplier", "-2");
+
+        factConsumer.setFacts(facts);
+        factConsumer = consumerCurator.create(factConsumer);
+    }
+
+    @Test (expected = BadRequestException.class)
+    public void testConsumerFactsVerifyBadPositive() {
+        Map<String, String> facts = new HashMap<String, String>();
+        facts.put("system.count", "-2");
+        facts.put("system.multiplier", "-2");
+
+        factConsumer.setFacts(facts);
+        factConsumer = consumerCurator.create(factConsumer);
+    }
+
+    @Test (expected = BadRequestException.class)
+    public void testConsumerFactsVerifyBadUpdate() {
+        Map<String, String> facts = new HashMap<String, String>();
+        facts.put("system.count", "3");
+        facts.put("system.multiplier", "-2");
+
+        factConsumer.setFacts(facts);
+        factConsumer = consumerCurator.create(factConsumer);
+        assertEquals(consumerCurator.findByUuid(factConsumer.getUuid()), factConsumer);
+        factConsumer.setFact("system.count", "sss");
+        factConsumer = consumerCurator.update(factConsumer);
+    }
+
+    @Test
+    public void testSubstringConfigList() {
+        Map<String, String> facts = new HashMap<String, String>();
+        facts.put("system.cou", "this should not be checked");
+
+        factConsumer.setFacts(facts);
+        factConsumer = consumerCurator.create(factConsumer);
+        assertEquals(consumerCurator.findByUuid(factConsumer.getUuid()), factConsumer);
     }
 }

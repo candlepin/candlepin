@@ -100,6 +100,51 @@ public class ConfigProperties {
 
     public static final String ENABLE_CERT_V3 = "candlepin.enable_cert_v3";
 
+    public static final String INTEGER_FACTS =
+        "candlepin.integer_facts";
+    private static final String INTEGER_FACT_LIST =
+        "";
+
+    public static final String POSITIVE_INTEGER_FACTS =
+        "candlepin.positive_integer_facts";
+    private static final String POSITIVE_INTEGER_FACT_LIST =
+        "cpu.core(s)_per_socket," +
+        "cpu.cpu(s)," +
+        "cpu.cpu_socket(s)," +
+        "lscpu.core(s)_per_socket," +
+        "lscpu.cpu(s)," +
+        "lscpu.numa_node(s)," +
+        "lscpu.numa_node0_cpu(s)," +
+        "lscpu.on-line_cpu(s)_list," +
+        "lscpu.socket(s)," +
+        "lscpu.thread(s)_per_core";
+
+    public static final String INTEGER_ATTRIBUTES =
+        "candlepin.integer_attriubtes";
+    private static final String INTEGER_ATTRIBUTE_LIST = "";
+
+    public static final String POSITIVE_INTEGER_ATTRIBUTES =
+        "candlepin.positive_integer_attributes";
+    private static final String POSITIVE_INTEGER_ATTRIBUTE_LIST =
+        "sockets," +
+        "warning_period," +
+        "ram";
+
+    public static final String LONG_ATTRIBUTES =
+        "candlepin.long_attributes";
+    private static final String LONG_ATTRIBUTE_LIST =
+        "";
+
+    public static final String POSITIVE_LONG_ATTRIBUTES =
+        "candlepin.positive_long_attributes";
+    private static final String POSITIVE_LONG_ATTRIBUTE_LIST =
+        "metadata_expire";
+
+    public static final String BOOLEAN_ATTRIBUTES = "candlepin.boolean_attributes";
+    private static final String BOOLEAN_ATTRIBUTE_LIST =
+        "management_enabled," +
+        "virt_only";
+
     public static final Map<String, String> DEFAULT_PROPERTIES =
         new HashMap<String, String>() {
 
@@ -181,6 +226,17 @@ public class ConfigProperties {
                  * By default, disable cert v3.
                  */
                 this.put(ENABLE_CERT_V3, "false");
+                /**
+                 * As we do math on some facts and attributes, we need to constrain
+                 * some values
+                 */
+                this.put(INTEGER_FACTS, INTEGER_FACT_LIST);
+                this.put(POSITIVE_INTEGER_FACTS, POSITIVE_INTEGER_FACT_LIST);
+                this.put(INTEGER_ATTRIBUTES, INTEGER_ATTRIBUTE_LIST);
+                this.put(POSITIVE_INTEGER_ATTRIBUTES, POSITIVE_INTEGER_ATTRIBUTE_LIST);
+                this.put(LONG_ATTRIBUTES, LONG_ATTRIBUTE_LIST);
+                this.put(POSITIVE_LONG_ATTRIBUTES, POSITIVE_LONG_ATTRIBUTE_LIST);
+                this.put(BOOLEAN_ATTRIBUTES, BOOLEAN_ATTRIBUTE_LIST);
             }
         };
     public static final String CRL_FILE_PATH = "candlepin.crl.file";
