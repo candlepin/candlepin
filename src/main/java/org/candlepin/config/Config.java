@@ -16,7 +16,9 @@ package org.candlepin.config;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
@@ -258,6 +260,28 @@ public class Config {
         }
 
         return value.split(",");
+    }
+
+    /**
+     * get the config entry for string s
+     *
+     * @param s string to get the value of
+     * @return the value as an List
+     */
+    public List<String> getStringList(String s) {
+        if (s == null) {
+            return null;
+        }
+        String value = getString(s);
+
+        if (value == null) {
+            return null;
+        }
+        List<String> list = new ArrayList<String>();
+        for (String entry : value.split(",")) {
+            list.add(entry.trim());
+        }
+        return list;
     }
 
     public boolean getBoolean(String s) {
