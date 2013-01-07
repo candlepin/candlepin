@@ -14,17 +14,18 @@
  */
 package org.candlepin.model;
 
+import java.util.List;
+
 import org.candlepin.auth.interceptor.EnforceAccessControl;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.exceptions.BadRequestException;
-
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
-
 import org.hibernate.Query;
 import org.hibernate.criterion.Restrictions;
 import org.xnap.commons.i18n.I18n;
+
+import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
 /**
  * interact with Products.
@@ -100,16 +101,18 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     private void validateAttributeValue(ProductAttribute attr) {
-        String intAttrs = config.getString(ConfigProperties.INTEGER_ATTRIBUTES);
-        String posAttrs = config.getString(ConfigProperties.POSITIVE_INTEGER_ATTRIBUTES);
-        String longAttrs = config.getString(ConfigProperties.LONG_ATTRIBUTES);
-        String posLongAttrs = config.getString(ConfigProperties.POSITIVE_LONG_ATTRIBUTES);
-        String boolAttrs = config.getString(ConfigProperties.BOOLEAN_ATTRIBUTES);
+        List<String> intAttrs = config.getStringList(ConfigProperties.INTEGER_ATTRIBUTES);
+        List<String> posIntAttrs = config.getStringList(
+            ConfigProperties.POSITIVE_INTEGER_ATTRIBUTES);
+        List<String> longAttrs = config.getStringList(ConfigProperties.LONG_ATTRIBUTES);
+        List<String> posLongAttrs = config.getStringList(
+            ConfigProperties.POSITIVE_LONG_ATTRIBUTES);
+        List<String> boolAttrs = config.getStringList(ConfigProperties.BOOLEAN_ATTRIBUTES);
 
         if (attr.getValue() == null || attr.getValue().trim().equals("")) { return; }
 
         if (intAttrs != null && intAttrs.contains(attr.getName()) ||
-            posAttrs != null && posAttrs.contains(attr.getName())) {
+            posIntAttrs != null && posIntAttrs.contains(attr.getName())) {
             int value = -1;
             try {
                 value = Integer.parseInt(attr.getValue());
@@ -119,7 +122,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
                     "The attribute ''{0}'' must be an integer value.",
                     attr.getName()));
             }
-            if (posAttrs != null && posAttrs.contains(
+            if (posIntAttrs != null && posIntAttrs.contains(
                 attr.getName()) &&
                 value <= 0) {
                 throw new BadRequestException(i18n.tr(
@@ -138,7 +141,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
                     "The attribute ''{0}'' must be a long value.",
                     attr.getName()));
             }
-            if (posAttrs != null && posAttrs.contains(
+            if (posLongAttrs != null && posLongAttrs.contains(
                 attr.getName()) &&
                 value <= 0) {
                 throw new BadRequestException(i18n.tr(

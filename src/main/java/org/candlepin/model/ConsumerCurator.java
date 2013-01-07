@@ -287,8 +287,10 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     private Map<String, String> filterAndVerifyFacts(Map<String, String> factsIn) {
         Map<String, String> facts = new HashMap<String, String>();
         String factMatch = config.getString(ConfigProperties.CONSUMER_FACTS_MATCHER);
-        String intFacts = config.getString(ConfigProperties.INTEGER_FACTS);
-        String posFacts = config.getString(ConfigProperties.POSITIVE_INTEGER_FACTS);
+        List<String> intFacts = config.getStringList(
+            ConfigProperties.INTEGER_FACTS);
+        List<String> posFacts = config.getStringList(
+            ConfigProperties.POSITIVE_INTEGER_FACTS);
 
         for (Entry<String, String> entry : factsIn.entrySet()) {
             if (entry.getKey().matches(factMatch)) {
