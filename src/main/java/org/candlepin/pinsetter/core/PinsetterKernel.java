@@ -178,7 +178,12 @@ public class PinsetterKernel {
                             jd.getJobClass().getName().equals(jobImpl)) {
                             CronTrigger trigger = (CronTrigger) scheduler.getTrigger(
                                 triggerKey(key.getName(), CRON_GROUP));
-                            existingCronTriggers.add(trigger);
+                            if (trigger != null) {
+                                existingCronTriggers.add(trigger);
+                            }
+                            else {
+                                log.warn("JobKey " + key + " returned null cron trigger.");
+                            }
                         }
                     }
                 }
