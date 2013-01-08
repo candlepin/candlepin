@@ -17,7 +17,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.7.13.10
+Version: 0.7.13.11
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -287,6 +287,9 @@ fi
 
 
 %changelog
+* Tue Jan 08 2013 jesus m. rodriguez <jesusr@redhat.com> 0.7.13.11-1
+- Fix attempts to delete null cron triggers. (dgoodwin@redhat.com)
+
 * Fri Jan 04 2013 Devan Goodwin <dgoodwin@rm-rf.ca> 0.7.13.10-1
 - Minor checkstyle fixes. (dgoodwin@redhat.com)
 - 886211: Fix duplicate pinsetter jobs on every config change.
