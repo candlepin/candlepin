@@ -115,7 +115,6 @@ public class ConfigProperties {
         "lscpu.cpu(s)," +
         "lscpu.numa_node(s)," +
         "lscpu.numa_node0_cpu(s)," +
-        "lscpu.on-line_cpu(s)_list," +
         "lscpu.socket(s)," +
         "lscpu.thread(s)_per_core";
 
