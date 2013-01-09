@@ -58,7 +58,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
             (CandlepinCommonTestConfig) injector.getInstance(Config.class);
         config.setProperty(ConfigProperties.INTEGER_FACTS,
             "system.count, system.multiplier");
-        config.setProperty(ConfigProperties.POSITIVE_INTEGER_FACTS, "system.count");
+        config.setProperty(ConfigProperties.NON_NEG_INTEGER_FACTS, "system.count");
 
         factConsumer = new Consumer("a consumer", "username", owner, ct);
     }

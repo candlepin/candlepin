@@ -290,7 +290,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         List<String> intFacts = config.getStringList(
             ConfigProperties.INTEGER_FACTS);
         List<String> posFacts = config.getStringList(
-            ConfigProperties.POSITIVE_INTEGER_FACTS);
+            ConfigProperties.NON_NEG_INTEGER_FACTS);
 
         for (Entry<String, String> entry : factsIn.entrySet()) {
             if (entry.getKey().matches(factMatch)) {
@@ -307,7 +307,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
                     }
                     if (posFacts != null && posFacts.contains(
                         entry.getKey()) &&
-                        value <= 0) {
+                        value < 0) {
                         throw new BadRequestException(i18n.tr(
                             "The fact ''{0}'' must have a positive value.",
                             entry.getKey()));
