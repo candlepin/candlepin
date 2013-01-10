@@ -58,7 +58,9 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
             (CandlepinCommonTestConfig) injector.getInstance(Config.class);
         config.setProperty(ConfigProperties.INTEGER_FACTS,
             "system.count, system.multiplier");
-        config.setProperty(ConfigProperties.POSITIVE_INTEGER_FACTS, "system.count");
+        // "lscpu.on-line_cpu(s)_list" is an example of a fact that is not an int
+        config.setProperty(ConfigProperties.POSITIVE_INTEGER_FACTS,
+            "system.count");
 
         factConsumer = new Consumer("a consumer", "username", owner, ct);
     }
@@ -267,6 +269,16 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     public void testSubstringConfigList() {
         Map<String, String> facts = new HashMap<String, String>();
         facts.put("system.cou", "this should not be checked");
+
+        factConsumer.setFacts(facts);
+        factConsumer = consumerCurator.create(factConsumer);
+        assertEquals(consumerCurator.findByUuid(factConsumer.getUuid()), factConsumer);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testConsumerFactsOnLineCpus() {
+        Map<String, String> facts = new HashMap<String, String>();
+        facts.put("lscpu.on-line_cpu(s)_list", "0-7");
 
         factConsumer.setFacts(facts);
         factConsumer = consumerCurator.create(factConsumer);

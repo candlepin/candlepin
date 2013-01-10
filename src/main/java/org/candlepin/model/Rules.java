@@ -60,9 +60,16 @@ public class Rules extends AbstractHibernateObject {
         this.candlepinVersion = candlepinVersion;
     }
 
+
+
+                             
+
+    // JESUS WOULD NOT APPROVE
+    //
+    //
     /**
-     * default ctor
-     */
+     * default ctor             
+            */
     public Rules() {
     }
 
