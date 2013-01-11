@@ -53,11 +53,11 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         config = (CandlepinCommonTestConfig) injector.getInstance(Config.class);
         config.setProperty(ConfigProperties.INTEGER_ATTRIBUTES,
             "product.count, product.multiplier");
-        config.setProperty(ConfigProperties.POSITIVE_INTEGER_ATTRIBUTES,
+        config.setProperty(ConfigProperties.NON_NEG_INTEGER_ATTRIBUTES,
             "product.pos_count");
         config.setProperty(ConfigProperties.LONG_ATTRIBUTES,
             "product.long_count, product.long_multiplier");
-        config.setProperty(ConfigProperties.POSITIVE_LONG_ATTRIBUTES,
+        config.setProperty(ConfigProperties.NON_NEG_LONG_ATTRIBUTES,
             "product.long_pos_count");
         config.setProperty(ConfigProperties.BOOLEAN_ATTRIBUTES,
             "product.bool_val_str, product.bool_val_num");
@@ -361,6 +361,13 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         productCurator.create(original);
     }
 
+    @Test
+    public void testProductAttributeCreationSuccessZeroInt() {
+        Product original = createTestProduct();
+        original.addAttribute(new ProductAttribute("product.pos_count", "0"));
+        productCurator.create(original);
+    }
+
     @Test(expected = BadRequestException.class)
     public void testProductAttributeCreationFailBadPosInt() {
         Product original = createTestProduct();
@@ -413,6 +420,15 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         productCurator.create(original);
         assertTrue(original.getId() != null);
         original.addAttribute(new ProductAttribute("product.pos_count", "-44"));
+        productCurator.createOrUpdate(original);
+    }
+
+    @Test
+    public void testProductAttributeUpdateSuccessZeroInt() {
+        Product original = createTestProduct();
+        productCurator.create(original);
+        assertTrue(original.getId() != null);
+        original.addAttribute(new ProductAttribute("product.pos_count", "0"));
         productCurator.createOrUpdate(original);
     }
 

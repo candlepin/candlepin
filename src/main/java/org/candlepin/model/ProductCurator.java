@@ -103,10 +103,10 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     private void validateAttributeValue(ProductAttribute attr) {
         List<String> intAttrs = config.getStringList(ConfigProperties.INTEGER_ATTRIBUTES);
         List<String> posIntAttrs = config.getStringList(
-            ConfigProperties.POSITIVE_INTEGER_ATTRIBUTES);
+            ConfigProperties.NON_NEG_INTEGER_ATTRIBUTES);
         List<String> longAttrs = config.getStringList(ConfigProperties.LONG_ATTRIBUTES);
         List<String> posLongAttrs = config.getStringList(
-            ConfigProperties.POSITIVE_LONG_ATTRIBUTES);
+            ConfigProperties.NON_NEG_LONG_ATTRIBUTES);
         List<String> boolAttrs = config.getStringList(ConfigProperties.BOOLEAN_ATTRIBUTES);
 
         if (attr.getValue() == null || attr.getValue().trim().equals("")) { return; }
@@ -124,7 +124,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
             }
             if (posIntAttrs != null && posIntAttrs.contains(
                 attr.getName()) &&
-                value <= 0) {
+                value < 0) {
                 throw new BadRequestException(i18n.tr(
                     "The attribute ''{0}'' must have a positive value.",
                     attr.getName()));

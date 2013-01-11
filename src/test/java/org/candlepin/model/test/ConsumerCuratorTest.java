@@ -25,7 +25,6 @@ import java.util.Map;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
@@ -58,7 +57,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
             (CandlepinCommonTestConfig) injector.getInstance(Config.class);
         config.setProperty(ConfigProperties.INTEGER_FACTS,
             "system.count, system.multiplier");
-        config.setProperty(ConfigProperties.POSITIVE_INTEGER_FACTS, "system.count");
+        config.setProperty(ConfigProperties.NON_NEG_INTEGER_FACTS, "system.count");
 
         factConsumer = new Consumer("a consumer", "username", owner, ct);
     }
@@ -228,9 +227,11 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
         factConsumer = consumerCurator.create(factConsumer);
         assertEquals(consumerCurator.findByUuid(factConsumer.getUuid()), factConsumer);
+        assertEquals(factConsumer.getFact("system.count"), "3");
+        assertEquals(factConsumer.getFact("system.multiplier"), "-2");
     }
 
-    @Test (expected = BadRequestException.class)
+    @Test
     public void testConsumerFactsVerifyBadInt() {
         Map<String, String> facts = new HashMap<String, String>();
         facts.put("system.count", "zzz");
@@ -238,9 +239,11 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
         factConsumer.setFacts(facts);
         factConsumer = consumerCurator.create(factConsumer);
+        assertEquals(factConsumer.getFact("system.count"), null);
+        assertEquals(factConsumer.getFact("system.multiplier"), "-2");
     }
 
-    @Test (expected = BadRequestException.class)
+    @Test
     public void testConsumerFactsVerifyBadPositive() {
         Map<String, String> facts = new HashMap<String, String>();
         facts.put("system.count", "-2");
@@ -248,10 +251,12 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
         factConsumer.setFacts(facts);
         factConsumer = consumerCurator.create(factConsumer);
+        assertEquals(factConsumer.getFact("system.count"), null);
+        assertEquals(factConsumer.getFact("system.multiplier"), "-2");
     }
 
-    @Test (expected = BadRequestException.class)
-    public void testConsumerFactsVerifyBadUpdate() {
+    @Test
+    public void testConsumerFactsVerifyBadUpdateValue() {
         Map<String, String> facts = new HashMap<String, String>();
         facts.put("system.count", "3");
         facts.put("system.multiplier", "-2");
@@ -259,8 +264,13 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         factConsumer.setFacts(facts);
         factConsumer = consumerCurator.create(factConsumer);
         assertEquals(consumerCurator.findByUuid(factConsumer.getUuid()), factConsumer);
+        assertEquals(factConsumer.getFact("system.count"), "3");
+        assertEquals(factConsumer.getFact("system.multiplier"), "-2");
+
         factConsumer.setFact("system.count", "sss");
         factConsumer = consumerCurator.update(factConsumer);
+        assertEquals(factConsumer.getFact("system.count"), null);
+        assertEquals(factConsumer.getFact("system.multiplier"), "-2");
     }
 
     @Test
