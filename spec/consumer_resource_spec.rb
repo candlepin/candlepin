@@ -810,4 +810,34 @@ describe 'Consumer Resource' do
     host2['uuid'].should == host_consumer2['uuid']
   end
 
+  it 'should allow a consumer fact to be removed when updated badly' do
+    # typing for certain facts. violation means value for fact is entirely removed
+    user = user_client(@owner1, random_string('billy'))
+    # Set a single fact, so we can make sure it doesn't get clobbered:
+    facts = {
+      'system.machine' => 'x86_64',
+      'lscpu.socket(s)' => '4',
+      'cpu.cpu(s)' => '12'
+    }
+    consumer = user.register('machine1', :system, nil, facts, nil, nil, [], nil)
+
+    # Now update the facts, must send all:
+    facts = {
+      'system.machine' => 'x86_64',
+      'lscpu.socket(s)' => 'four',
+      'cpu.cpu(s)' => '8'
+    }
+
+    consumer_client = Candlepin.new(username=nil, password=nil,
+        cert=consumer['idCert']['cert'],
+        key=consumer['idCert']['key'])
+    consumer_client.update_consumer({:facts => facts})
+    consumer = @cp.get_consumer(consumer['uuid'])
+
+    # Make sure facts weren't clobbered:
+    consumer['facts']['system.machine'].should == 'x86_64'
+    consumer['facts']['lscpu.socket(s)'].should be_nil
+    consumer['facts']['cpu.cpu(s)'].should == '8'
+  end
+
 end

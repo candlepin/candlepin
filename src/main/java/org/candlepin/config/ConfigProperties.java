@@ -105,9 +105,9 @@ public class ConfigProperties {
     private static final String INTEGER_FACT_LIST =
         "";
 
-    public static final String POSITIVE_INTEGER_FACTS =
+    public static final String NON_NEG_INTEGER_FACTS =
         "candlepin.positive_integer_facts";
-    private static final String POSITIVE_INTEGER_FACT_LIST =
+    private static final String NON_NEG_INTEGER_FACT_LIST =
         "cpu.core(s)_per_socket," +
         "cpu.cpu(s)," +
         "cpu.cpu_socket(s)," +
@@ -115,7 +115,6 @@ public class ConfigProperties {
         "lscpu.cpu(s)," +
         "lscpu.numa_node(s)," +
         "lscpu.numa_node0_cpu(s)," +
-        "lscpu.on-line_cpu(s)_list," +
         "lscpu.socket(s)," +
         "lscpu.thread(s)_per_core";
 
@@ -123,9 +122,9 @@ public class ConfigProperties {
         "candlepin.integer_attriubtes";
     private static final String INTEGER_ATTRIBUTE_LIST = "";
 
-    public static final String POSITIVE_INTEGER_ATTRIBUTES =
+    public static final String NON_NEG_INTEGER_ATTRIBUTES =
         "candlepin.positive_integer_attributes";
-    private static final String POSITIVE_INTEGER_ATTRIBUTE_LIST =
+    private static final String NON_NEG_INTEGER_ATTRIBUTE_LIST =
         "sockets," +
         "warning_period," +
         "ram";
@@ -135,9 +134,9 @@ public class ConfigProperties {
     private static final String LONG_ATTRIBUTE_LIST =
         "";
 
-    public static final String POSITIVE_LONG_ATTRIBUTES =
+    public static final String NON_NEG_LONG_ATTRIBUTES =
         "candlepin.positive_long_attributes";
-    private static final String POSITIVE_LONG_ATTRIBUTE_LIST =
+    private static final String NON_NEG_LONG_ATTRIBUTE_LIST =
         "metadata_expire";
 
     public static final String BOOLEAN_ATTRIBUTES = "candlepin.boolean_attributes";
@@ -231,11 +230,11 @@ public class ConfigProperties {
                  * some values
                  */
                 this.put(INTEGER_FACTS, INTEGER_FACT_LIST);
-                this.put(POSITIVE_INTEGER_FACTS, POSITIVE_INTEGER_FACT_LIST);
+                this.put(NON_NEG_INTEGER_FACTS, NON_NEG_INTEGER_FACT_LIST);
                 this.put(INTEGER_ATTRIBUTES, INTEGER_ATTRIBUTE_LIST);
-                this.put(POSITIVE_INTEGER_ATTRIBUTES, POSITIVE_INTEGER_ATTRIBUTE_LIST);
+                this.put(NON_NEG_INTEGER_ATTRIBUTES, NON_NEG_INTEGER_ATTRIBUTE_LIST);
                 this.put(LONG_ATTRIBUTES, LONG_ATTRIBUTE_LIST);
-                this.put(POSITIVE_LONG_ATTRIBUTES, POSITIVE_LONG_ATTRIBUTE_LIST);
+                this.put(NON_NEG_LONG_ATTRIBUTES, NON_NEG_LONG_ATTRIBUTE_LIST);
                 this.put(BOOLEAN_ATTRIBUTES, BOOLEAN_ATTRIBUTE_LIST);
             }
         };

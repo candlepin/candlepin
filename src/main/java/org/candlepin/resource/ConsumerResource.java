@@ -657,7 +657,9 @@ public class ConsumerResource {
         Consumer consumer) {
         Consumer toUpdate = verifyAndLookupConsumer(uuid);
 
-        performConsumerUpdates(consumer, toUpdate);
+        if (performConsumerUpdates(consumer, toUpdate)) {
+            consumerCurator.update(toUpdate);
+        }
     }
 
     // Requires security hole since security interceptor will intercept when the method is
