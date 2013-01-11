@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
 import org.candlepin.auth.interceptor.EnforceAccessControl;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
@@ -48,7 +49,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Inject private Config config;
     @Inject private I18n i18n;
     private static final int NAME_LENGTH = 250;
-    //private static Logger log = Logger.getLogger(ConsumerCurator.class);
+    private static Logger log = Logger.getLogger(ConsumerCurator.class);
 
     protected ConsumerCurator() {
         super(Consumer.class);
@@ -301,16 +302,20 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
                         value = Integer.parseInt(entry.getValue());
                     }
                     catch (NumberFormatException nfe) {
-                        throw new BadRequestException(i18n.tr(
-                            "The fact ''{0}'' must be an integer.",
-                            entry.getKey()));
+                        log.error(i18n.tr(
+                            "The fact ''{0}'' must be an integer instead of ''{1}''. " +
+                            "No value will exist for that fact.",
+                            entry.getKey(), entry.getValue()));
+                        continue;
                     }
                     if (posFacts != null && posFacts.contains(
                         entry.getKey()) &&
                         value < 0) {
-                        throw new BadRequestException(i18n.tr(
-                            "The fact ''{0}'' must have a positive value.",
-                            entry.getKey()));
+                        log.error(i18n.tr(
+                            "The fact ''{0}'' must have a positive integer value " +
+                            "instead of ''{1}''. No value will exist for that fact.",
+                            entry.getKey(), entry.getValue()));
+                        continue;
                     }
                 }
                 facts.put(entry.getKey(), entry.getValue());
