@@ -83,7 +83,7 @@ public class X509ExtensionUtil  extends X509Util{
         }
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
             OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_NUMBER_KEY), false, sub
-            .getId().toString()));
+            .getOrderNumber()));
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
             OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SKU_KEY), false, sub
             .getProduct().getId().toString()));

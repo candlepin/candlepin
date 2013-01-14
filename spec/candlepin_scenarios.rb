@@ -221,9 +221,9 @@ module ExportMethods
     @cp.add_content_to_product(product2.id, content.id)
     @end_date = Date.new(2025, 5, 29)
 
-    sub1 = @cp.create_subscription(@owner['key'], product1.id, 2, [], '', '12345', nil, @end_date)
-    sub2 = @cp.create_subscription(@owner['key'], product2.id, 4, [], '', '12345', nil, @end_date)
-    sub3 = @cp.create_subscription(@owner['key'], virt_product.id, 10, [], '', '12345', nil, @end_date)
+    sub1 = @cp.create_subscription(@owner['key'], product1.id, 2, [], '', '12345', '6789', nil, @end_date)
+    sub2 = @cp.create_subscription(@owner['key'], product2.id, 4, [], '', '12345', '6789', nil, @end_date)
+    sub3 = @cp.create_subscription(@owner['key'], virt_product.id, 10, [], '', '12345', '6789', nil, @end_date)
     @cp.refresh_pools(@owner['key'])
 
     pool1 = @cp.list_pools(:owner => @owner.id, :product => product1.id)[0]
@@ -279,8 +279,8 @@ module ExportMethods
     @cp.add_content_to_product(product2.id, content.id)
     @end_date = Date.new(2025, 5, 29)
 
-    sub1 = @cp.create_subscription(@owner['key'], product1.id, 12, [], '', '12345', nil, @end_date)
-    sub2 = @cp.create_subscription(@owner['key'], product2.id, 14, [], '', '12345', nil, @end_date)
+    sub1 = @cp.create_subscription(@owner['key'], product1.id, 12, [], '', '12345', '6789', nil, @end_date)
+    sub2 = @cp.create_subscription(@owner['key'], product2.id, 14, [], '', '12345', '6789', nil, @end_date)
     @cp.refresh_pools(@owner['key'])
 
     pool1 = @cp.list_pools(:owner => @owner.id, :product => product1.id)[0]
