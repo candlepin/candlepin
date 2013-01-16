@@ -35,7 +35,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
-import org.candlepin.policy.js.JsRules;
+import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRulesProvider;
 import org.candlepin.policy.js.ReadOnlyPool;
 import org.candlepin.policy.js.ProductCache;
@@ -72,7 +72,7 @@ public class ManifestEntitlementRulesTest extends DatabaseTestFixture {
     private ManifestEntitlementRules enforcer;
     private Owner owner;
     private Consumer consumer;
-    private JsRules jsRules;
+    private JsRunner jsRules;
     private ProductCache productCache;
 
     private static final String LONGEST_EXPIRY_PRODUCT = "LONGEST001";

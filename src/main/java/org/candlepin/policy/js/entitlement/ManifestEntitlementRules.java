@@ -25,7 +25,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.policy.Enforcer;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationWarning;
-import org.candlepin.policy.js.JsRules;
+import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.ReadOnlyConsumer;
 import org.candlepin.policy.js.ReadOnlyPool;
 import org.candlepin.policy.js.ReadOnlyProduct;
@@ -43,7 +43,7 @@ public class ManifestEntitlementRules extends AbstractEntitlementRules implement
 
     @Inject
     public ManifestEntitlementRules(DateSource dateSource,
-        JsRules jsRules,
+        JsRunner jsRules,
         ProductCache productCache,
         I18n i18n, Config config, ConsumerCurator consumerCurator) {
 

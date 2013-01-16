@@ -25,7 +25,7 @@ import org.candlepin.exceptions.IseException;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Subscription;
 import org.candlepin.policy.PoolRules;
-import org.candlepin.policy.js.JsRules;
+import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.ProductCache;
 
 import com.google.inject.Inject;
@@ -38,14 +38,14 @@ public class JsPoolRules implements PoolRules {
     private static Logger log = Logger.getLogger(JsPoolRules.class);
     protected Logger rulesLogger = null;
 
-    private JsRules jsRules;
+    private JsRunner jsRules;
     private PoolManager poolManager;
     private ProductCache productCache;
     private Config config;
 
 
     @Inject
-    public JsPoolRules(JsRules jsRules, PoolManager poolManager,
+    public JsPoolRules(JsRunner jsRules, PoolManager poolManager,
         ProductCache productCache, Config config) {
         this.jsRules = jsRules;
         this.poolManager = poolManager;

@@ -23,7 +23,7 @@ import org.candlepin.config.Config;
 import org.candlepin.exceptions.IseException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
-import org.candlepin.policy.js.JsRules;
+import org.candlepin.policy.js.JsRunner;
 import org.hibernate.criterion.Criterion;
 
 import com.google.inject.Inject;
@@ -39,14 +39,14 @@ import com.google.inject.Inject;
 public class RulesCriteria  {
     protected Logger rulesLogger = null;
 
-    protected JsRules jsRules;
+    protected JsRunner jsRules;
     protected Config config;
     protected ConsumerCurator consumerCurator;
     protected static Logger log = Logger.getLogger(RulesCriteria.class);
 
     private static String jsNameSpace = "criteria_name_space";
     @Inject
-    public RulesCriteria(JsRules jsRules, Config config,
+    public RulesCriteria(JsRunner jsRules, Config config,
             ConsumerCurator consumerCurator) {
         this.jsRules = jsRules;
         this.config = config;

@@ -61,7 +61,7 @@ import org.candlepin.model.Subscription;
 import org.candlepin.policy.Enforcer;
 import org.candlepin.policy.PoolRules;
 import org.candlepin.policy.ValidationResult;
-import org.candlepin.policy.js.JsRules;
+import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRulesProvider;
 import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.RuleExecutionException;
@@ -128,7 +128,7 @@ public class DefaultRulesTest {
         when(rulesCurator.getUpdated()).thenReturn(
             TestDateUtil.date(2010, 1, 1));
 
-        JsRules jsRules = new JsRulesProvider(rulesCurator).get();
+        JsRunner jsRules = new JsRulesProvider(rulesCurator).get();
         enforcer = new EntitlementRules(new DateSourceImpl(), jsRules,
             productCache, I18nFactory.getI18n(getClass(), Locale.US,
                 I18nFactory.FALLBACK), config, consumerCurator);

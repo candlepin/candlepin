@@ -23,7 +23,7 @@ import org.apache.log4j.Logger;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
-import org.candlepin.policy.js.JsRules;
+import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.RuleExecutionException;
 import org.mozilla.javascript.RhinoException;
 
@@ -37,11 +37,11 @@ import com.google.inject.Inject;
 public class ComplianceRules {
 
     private EntitlementCurator entCurator;
-    private JsRules jsRules;
+    private JsRunner jsRules;
     private static Logger log = Logger.getLogger(ComplianceRules.class);
 
     @Inject
-    public ComplianceRules(JsRules jsRules, EntitlementCurator entCurator) {
+    public ComplianceRules(JsRunner jsRules, EntitlementCurator entCurator) {
         this.entCurator = entCurator;
         this.jsRules = jsRules;
 

@@ -34,7 +34,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.policy.Enforcer;
-import org.candlepin.policy.js.JsRules;
+import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.ReadOnlyConsumer;
 import org.candlepin.policy.js.ReadOnlyProduct;
 import org.candlepin.policy.js.ProductCache;
@@ -57,7 +57,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
     protected ProductCache productCache;
     protected I18n i18n;
     protected Map<String, Set<Rule>> attributesToRules;
-    protected JsRules jsRules;
+    protected JsRunner jsRules;
     protected Config config;
     protected ConsumerCurator consumerCurator;
     protected PoolCurator poolCurator;

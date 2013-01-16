@@ -41,7 +41,7 @@ import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
 import org.candlepin.policy.Enforcer;
 import org.candlepin.policy.PoolRules;
 import org.candlepin.policy.criteria.RulesCriteria;
-import org.candlepin.policy.js.JsRules;
+import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRulesProvider;
 import org.candlepin.policy.js.pool.JsPoolRules;
 import org.candlepin.resource.ActivationKeyResource;
@@ -128,7 +128,7 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
         bind(UserServiceAdapter.class).to(DefaultUserServiceAdapter.class);
 
         bind(JsRulesProvider.class).asEagerSingleton();
-        bind(JsRules.class).toProvider(JsRulesProvider.class);
+        bind(JsRunner.class).toProvider(JsRulesProvider.class);
 
         bind(PrincipalProvider.class).to(TestPrincipalProvider.class);
         bind(Principal.class).toProvider(TestPrincipalProvider.class);

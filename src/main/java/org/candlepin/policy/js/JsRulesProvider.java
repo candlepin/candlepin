@@ -38,7 +38,7 @@ import com.google.inject.Provider;
  * once across the jvm lifetime (and whenever the rules require a recompile), and creates
  * lightweight execution scopes per thread/request.
  */
-public class JsRulesProvider implements Provider<JsRules> {
+public class JsRulesProvider implements Provider<JsRunner> {
     private static Logger log = Logger.getLogger(JsRulesProvider.class);
 
     private RulesCurator rulesCurator;
@@ -120,7 +120,7 @@ public class JsRulesProvider implements Provider<JsRules> {
         }
     }
 
-    public JsRules get() {
+    public JsRunner get() {
         /*
          * Create a new thread/request local javascript scope for the JsRules,
          * based on the preinitialized global one (which contains our js rules).
@@ -140,7 +140,7 @@ public class JsRulesProvider implements Provider<JsRules> {
             scriptLock.readLock().unlock();
         }
 
-        return new JsRules(rulesScope);
+        return new JsRunner(rulesScope);
     }
 
 }

@@ -56,7 +56,7 @@ import org.candlepin.policy.Enforcer;
 import org.candlepin.policy.EnforcerDispatcher;
 import org.candlepin.policy.criteria.RulesCriteria;
 import org.candlepin.policy.PoolRules;
-import org.candlepin.policy.js.JsRules;
+import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRulesProvider;
 import org.candlepin.policy.js.pool.JsPoolRules;
 import org.candlepin.resource.ActivationKeyResource;
@@ -181,7 +181,7 @@ public class CandlepinModule extends AbstractModule {
         bind(JAXBMarshalExceptionMapper.class);
         bind(Principal.class).toProvider(PrincipalProvider.class);
         bind(JsRulesProvider.class).asEagerSingleton();
-        bind(JsRules.class).toProvider(JsRulesProvider.class);
+        bind(JsRunner.class).toProvider(JsRulesProvider.class);
         bind(UserResource.class);
         bind(UniqueIdGenerator.class).to(DefaultUniqueIdGenerator.class);
 

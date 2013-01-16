@@ -29,7 +29,7 @@ import org.candlepin.model.ProvidedProduct;
 import org.candlepin.policy.Enforcer;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationWarning;
-import org.candlepin.policy.js.JsRules;
+import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.ReadOnlyConsumer;
 import org.candlepin.policy.js.ReadOnlyPool;
 import org.candlepin.policy.js.ReadOnlyProduct;
@@ -56,7 +56,7 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
 
     @Inject
     public EntitlementRules(DateSource dateSource,
-        JsRules jsRules,
+        JsRunner jsRules,
         ProductCache productCache,
         I18n i18n, Config config, ConsumerCurator consumerCurator) {
 
