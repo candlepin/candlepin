@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.policy;
+package org.candlepin.policy.js.entitlement;
 
 import java.util.List;
 import java.util.Set;
@@ -23,16 +23,13 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.policy.js.RuleExecutionException;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
-import org.candlepin.policy.js.entitlement.EntitlementRules;
-import org.candlepin.policy.js.entitlement.ManifestEntitlementRules;
-import org.candlepin.policy.js.entitlement.PreEntHelper;
-import org.candlepin.policy.js.entitlement.PreUnbindHelper;
 import org.candlepin.policy.js.pool.PoolHelper;
 
 import com.google.inject.Inject;
 
 /**
- * EnforcerDispatcher
+ * Determines which rules implementation to delegate to for a
+ * given consumer. (manifest consumers have their own implementation)
  */
 public class EnforcerDispatcher implements Enforcer {
 

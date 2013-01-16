@@ -34,7 +34,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 
 /**
- * JsRulesProvider - reads/compiles our javascript rules and the standard js objects only
+ * Reads/compiles our javascript rules and the standard js objects only
  * once across the jvm lifetime (and whenever the rules require a recompile), and creates
  * lightweight execution scopes per thread/request.
  */

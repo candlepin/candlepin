@@ -20,9 +20,9 @@ import com.google.inject.persist.Transactional;
 
 import org.apache.log4j.Logger;
 import org.candlepin.auth.interceptor.EnforceAccessControl;
-import org.candlepin.policy.Enforcer;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.ProductCache;
+import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.PreEntHelper;
 import org.candlepin.policy.criteria.RulesCriteria;
 import org.hibernate.Criteria;

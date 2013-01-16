@@ -22,7 +22,6 @@ import org.candlepin.config.Config;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Pool;
-import org.candlepin.policy.Enforcer;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationWarning;
 import org.candlepin.policy.js.JsRunner;
@@ -36,8 +35,8 @@ import org.xnap.commons.i18n.I18n;
 import com.google.inject.Inject;
 
 /**
- * ManifestEntitlementRules - Exists primarily to allow consumers of manifest type
- * to have alternate rules checks.
+ * Allows manifest consumers to bypass most pre-entitlement checks so subscriptions
+ * can be exported to on-site Candlepin servers.
  */
 public class ManifestEntitlementRules extends AbstractEntitlementRules implements Enforcer {
 

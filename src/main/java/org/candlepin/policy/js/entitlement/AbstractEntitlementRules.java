@@ -33,7 +33,6 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
-import org.candlepin.policy.Enforcer;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.ReadOnlyConsumer;
 import org.candlepin.policy.js.ReadOnlyProduct;
