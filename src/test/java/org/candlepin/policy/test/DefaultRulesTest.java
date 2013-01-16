@@ -58,7 +58,6 @@ import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.Subscription;
-import org.candlepin.policy.PoolRules;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
@@ -68,8 +67,9 @@ import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.policy.js.entitlement.ManifestEntitlementRules;
-import org.candlepin.policy.js.pool.JsPoolRules;
+import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.policy.js.pool.PoolHelper;
+import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.TestDateUtil;
 import org.candlepin.test.TestUtil;
@@ -137,7 +137,7 @@ public class DefaultRulesTest {
         consumer = new Consumer("test consumer", "test user", owner,
             new ConsumerType(ConsumerTypeEnum.SYSTEM));
 
-        poolRules = new JsPoolRules(new JsRunnerProvider(rulesCurator).get(),
+        poolRules = new PoolRules(new JsRunnerProvider(rulesCurator).get(),
             poolManagerMock,
             productCache, config);
 

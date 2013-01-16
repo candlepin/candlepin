@@ -38,12 +38,11 @@ import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.BouncyCastlePKIUtility;
 import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
-import org.candlepin.policy.PoolRules;
 import org.candlepin.policy.criteria.RulesCriteria;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.entitlement.Enforcer;
-import org.candlepin.policy.js.pool.JsPoolRules;
+import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.resource.ActivationKeyResource;
 import org.candlepin.resource.ConsumerResource;
 import org.candlepin.resource.EntitlementResource;
@@ -146,7 +145,7 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
         // temporary
         bind(IdentityCertServiceAdapter.class).to(
             DefaultIdentityCertServiceAdapter.class);
-        bind(PoolRules.class).to(JsPoolRules.class);
+        bind(PoolRules.class);
         bind(RulesCriteria.class);
         bind(PoolManager.class).to(CandlepinPoolManager.class);
         bind(UniqueIdGenerator.class).to(DefaultUniqueIdGenerator.class);

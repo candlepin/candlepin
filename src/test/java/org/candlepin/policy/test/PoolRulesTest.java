@@ -42,10 +42,10 @@ import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.Subscription;
-import org.candlepin.policy.PoolRules;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.ProductCache;
-import org.candlepin.policy.js.pool.JsPoolRules;
+import org.candlepin.policy.js.pool.PoolRules;
+import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.policy.js.pool.PoolUpdate;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.TestUtil;
@@ -62,7 +62,7 @@ import org.mockito.runners.MockitoJUnitRunner;
  * JsPoolRulesTest: Tests for the default rules.
  */
 @RunWith(MockitoJUnitRunner.class)
-public class JsPoolRulesTest {
+public class PoolRulesTest {
 
     private PoolRules poolRules;
 
@@ -91,7 +91,7 @@ public class JsPoolRulesTest {
         productCache = new ProductCache(configMock, productAdapterMock);
 
         JsRunnerProvider provider = new JsRunnerProvider(rulesCuratorMock);
-        poolRules = new JsPoolRules(provider.get(), poolManagerMock,
+        poolRules = new PoolRules(provider.get(), poolManagerMock,
                                     productCache, configMock);
         principal = TestUtil.createOwnerPrincipal();
         owner = principal.getOwners().get(0);
