@@ -28,7 +28,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
-import org.candlepin.policy.js.JsRulesProvider;
+import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.export.JsExportRules;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.util.Util;
@@ -59,7 +59,7 @@ public class JsExportRulesTest {
     @Mock private RulesCurator rulesCuratorMock;
     @Mock private ProductServiceAdapter productAdapterMock;
 
-    private JsRulesProvider provider;
+    private JsRunnerProvider provider;
 
     @Before
     public void setUp() {
@@ -71,7 +71,7 @@ public class JsExportRulesTest {
         when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
         when(rulesCuratorMock.getRules()).thenReturn(rules);
 
-        provider = new JsRulesProvider(rulesCuratorMock);
+        provider = new JsRunnerProvider(rulesCuratorMock);
         exportRules = new JsExportRules(provider.get(), productAdapterMock);
     }
 

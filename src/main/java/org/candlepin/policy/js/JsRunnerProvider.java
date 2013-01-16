@@ -38,8 +38,8 @@ import com.google.inject.Provider;
  * once across the jvm lifetime (and whenever the rules require a recompile), and creates
  * lightweight execution scopes per thread/request.
  */
-public class JsRulesProvider implements Provider<JsRunner> {
-    private static Logger log = Logger.getLogger(JsRulesProvider.class);
+public class JsRunnerProvider implements Provider<JsRunner> {
+    private static Logger log = Logger.getLogger(JsRunnerProvider.class);
 
     private RulesCurator rulesCurator;
 
@@ -70,7 +70,7 @@ public class JsRulesProvider implements Provider<JsRunner> {
     }
 
     @Inject
-    public JsRulesProvider(RulesCurator rulesCurator) {
+    public JsRunnerProvider(RulesCurator rulesCurator) {
         this.rulesCurator = rulesCurator;
 
         log.debug("Compiling rules for initial load");

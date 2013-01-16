@@ -61,7 +61,7 @@ import org.candlepin.model.Subscription;
 import org.candlepin.policy.PoolRules;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.JsRunner;
-import org.candlepin.policy.js.JsRulesProvider;
+import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.RuleExecutionException;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -128,7 +128,7 @@ public class DefaultRulesTest {
         when(rulesCurator.getUpdated()).thenReturn(
             TestDateUtil.date(2010, 1, 1));
 
-        JsRunner jsRules = new JsRulesProvider(rulesCurator).get();
+        JsRunner jsRules = new JsRunnerProvider(rulesCurator).get();
         enforcer = new EntitlementRules(new DateSourceImpl(), jsRules,
             productCache, I18nFactory.getI18n(getClass(), Locale.US,
                 I18nFactory.FALLBACK), config, consumerCurator);
@@ -137,7 +137,7 @@ public class DefaultRulesTest {
         consumer = new Consumer("test consumer", "test user", owner,
             new ConsumerType(ConsumerTypeEnum.SYSTEM));
 
-        poolRules = new JsPoolRules(new JsRulesProvider(rulesCurator).get(),
+        poolRules = new JsPoolRules(new JsRunnerProvider(rulesCurator).get(),
             poolManagerMock,
             productCache, config);
 
@@ -173,7 +173,7 @@ public class DefaultRulesTest {
         Consumer c = new Consumer("test consumer", "test user", owner,
             new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
         Enforcer enf = new ManifestEntitlementRules(new DateSourceImpl(),
-            new JsRulesProvider(rulesCurator).get(),
+            new JsRunnerProvider(rulesCurator).get(),
             productCache, I18nFactory.getI18n(getClass(), Locale.US,
                 I18nFactory.FALLBACK), config, consumerCurator);
 
@@ -794,7 +794,7 @@ public class DefaultRulesTest {
         Consumer c = new Consumer("test consumer", "test user", owner,
             new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
         Enforcer enf = new ManifestEntitlementRules(new DateSourceImpl(),
-            new JsRulesProvider(rulesCurator).get(),
+            new JsRunnerProvider(rulesCurator).get(),
             productCache, I18nFactory.getI18n(getClass(), Locale.US,
                 I18nFactory.FALLBACK), config, consumerCurator);
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, "10");
@@ -835,7 +835,7 @@ public class DefaultRulesTest {
         Consumer c = new Consumer("test consumer", "test user", owner,
             new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
         Enforcer enf = new ManifestEntitlementRules(new DateSourceImpl(),
-            new JsRulesProvider(rulesCurator).get(),
+            new JsRunnerProvider(rulesCurator).get(),
             productCache, I18nFactory.getI18n(getClass(), Locale.US,
                 I18nFactory.FALLBACK), config, consumerCurator);
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, "unlimited");
@@ -898,7 +898,7 @@ public class DefaultRulesTest {
         Consumer c = new Consumer("test consumer", "test user", owner,
             new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
         Enforcer enf = new ManifestEntitlementRules(new DateSourceImpl(),
-            new JsRulesProvider(rulesCurator).get(),
+            new JsRunnerProvider(rulesCurator).get(),
             productCache, I18nFactory.getI18n(getClass(), Locale.US,
                 I18nFactory.FALLBACK), config, consumerCurator);
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, "unlimited");

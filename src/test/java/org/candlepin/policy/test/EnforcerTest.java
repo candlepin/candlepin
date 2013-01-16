@@ -44,7 +44,7 @@ import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.JsRunner;
-import org.candlepin.policy.js.JsRulesProvider;
+import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.RuleExecutionException;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -106,7 +106,7 @@ public class EnforcerTest extends DatabaseTestFixture {
         when(rulesCurator.getRules()).thenReturn(rules);
         when(rulesCurator.getUpdated()).thenReturn(TestDateUtil.date(2010, 1, 1));
 
-        JsRunner jsRules = new JsRulesProvider(rulesCurator).get();
+        JsRunner jsRules = new JsRunnerProvider(rulesCurator).get();
 
         enforcer = new EntitlementRules(new DateSourceForTesting(2010, 1, 1),
             jsRules, productCache, i18n, config, consumerCurator);

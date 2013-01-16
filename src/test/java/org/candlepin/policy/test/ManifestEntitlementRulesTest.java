@@ -36,7 +36,7 @@ import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunner;
-import org.candlepin.policy.js.JsRulesProvider;
+import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.ReadOnlyPool;
 import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -106,7 +106,7 @@ public class ManifestEntitlementRulesTest extends DatabaseTestFixture {
         when(rulesCurator.getRules()).thenReturn(rules);
         when(rulesCurator.getUpdated()).thenReturn(TestDateUtil.date(2010, 1, 1));
 
-        jsRules = new JsRulesProvider(rulesCurator).get();
+        jsRules = new JsRunnerProvider(rulesCurator).get();
 
         when(config.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
         productCache = new ProductCache(config, productAdapter);

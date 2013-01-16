@@ -55,7 +55,7 @@ import org.candlepin.pki.impl.BouncyCastlePKIUtility;
 import org.candlepin.policy.criteria.RulesCriteria;
 import org.candlepin.policy.PoolRules;
 import org.candlepin.policy.js.JsRunner;
-import org.candlepin.policy.js.JsRulesProvider;
+import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EnforcerDispatcher;
 import org.candlepin.policy.js.pool.JsPoolRules;
@@ -180,8 +180,8 @@ public class CandlepinModule extends AbstractModule {
         bind(JAXBUnmarshalExceptionMapper.class);
         bind(JAXBMarshalExceptionMapper.class);
         bind(Principal.class).toProvider(PrincipalProvider.class);
-        bind(JsRulesProvider.class).asEagerSingleton();
-        bind(JsRunner.class).toProvider(JsRulesProvider.class);
+        bind(JsRunnerProvider.class).asEagerSingleton();
+        bind(JsRunner.class).toProvider(JsRunnerProvider.class);
         bind(UserResource.class);
         bind(UniqueIdGenerator.class).to(DefaultUniqueIdGenerator.class);
 
