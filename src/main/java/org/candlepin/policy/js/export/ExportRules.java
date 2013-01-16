@@ -32,14 +32,14 @@ import java.util.Map;
 /**
  *
  */
-public class JsExportRules {
-    private static Logger log = Logger.getLogger(JsExportRules.class);
+public class ExportRules {
+    private static Logger log = Logger.getLogger(ExportRules.class);
 
     private JsRunner jsRules;
     private ProductServiceAdapter productAdapter;
 
     @Inject
-    public JsExportRules(JsRunner jsRules, ProductServiceAdapter productAdapter) {
+    public ExportRules(JsRunner jsRules, ProductServiceAdapter productAdapter) {
         this.jsRules = jsRules;
         this.productAdapter = productAdapter;
         jsRules.init("export_name_space");

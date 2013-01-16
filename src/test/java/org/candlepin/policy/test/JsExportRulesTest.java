@@ -29,7 +29,7 @@ import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunnerProvider;
-import org.candlepin.policy.js.export.JsExportRules;
+import org.candlepin.policy.js.export.ExportRules;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.util.Util;
 import org.candlepin.util.VersionUtil;
@@ -52,7 +52,7 @@ import java.util.Set;
 @RunWith(MockitoJUnitRunner.class)
 public class JsExportRulesTest {
 
-    private JsExportRules exportRules;
+    private ExportRules exportRules;
 
     private static final String RULES_FILE = "/rules/default-rules.js";
 
@@ -72,7 +72,7 @@ public class JsExportRulesTest {
         when(rulesCuratorMock.getRules()).thenReturn(rules);
 
         provider = new JsRunnerProvider(rulesCuratorMock);
-        exportRules = new JsExportRules(provider.get(), productAdapterMock);
+        exportRules = new ExportRules(provider.get(), productAdapterMock);
     }
 
     @Test

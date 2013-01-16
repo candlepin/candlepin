@@ -38,7 +38,7 @@ import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.pki.PKIUtility;
-import org.candlepin.policy.js.export.JsExportRules;
+import org.candlepin.policy.js.export.ExportRules;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 
@@ -87,7 +87,7 @@ public class ExporterTest {
     private EntitlementExporter ee;
     private PKIUtility pki;
     private CandlepinCommonTestConfig config;
-    private JsExportRules exportRules;
+    private ExportRules exportRules;
     private PrincipalProvider pprov;
 
     @Before
@@ -107,7 +107,7 @@ public class ExporterTest {
         ee = new EntitlementExporter();
         pki = mock(PKIUtility.class);
         config = new CandlepinCommonTestConfig();
-        exportRules = mock(JsExportRules.class);
+        exportRules = mock(ExportRules.class);
         pprov = mock(PrincipalProvider.class);
 
         when(exportRules.canExport(any(Entitlement.class))).thenReturn(Boolean.TRUE);
