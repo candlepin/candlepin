@@ -20,11 +20,11 @@ import com.google.inject.persist.Transactional;
 
 import org.apache.log4j.Logger;
 import org.candlepin.auth.interceptor.EnforceAccessControl;
-import org.candlepin.policy.Enforcer;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.ProductCache;
+import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.PreEntHelper;
-import org.candlepin.policy.criteria.RulesCriteria;
+import org.candlepin.policy.criteria.CriteriaRules;
 import org.hibernate.Criteria;
 import org.hibernate.Filter;
 import org.hibernate.LockMode;
@@ -53,7 +53,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     private static Logger log = Logger.getLogger(PoolCurator.class);
     private Enforcer enforcer;
-    private RulesCriteria poolCriteria;
+    private CriteriaRules poolCriteria;
     @Inject
     protected Injector injector;
 
@@ -61,7 +61,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     protected ProductCache productCache;
 
     @Inject
-    protected PoolCurator(Enforcer enforcer, RulesCriteria poolCriteria) {
+    protected PoolCurator(Enforcer enforcer, CriteriaRules poolCriteria) {
         super(Pool.class);
         this.enforcer = enforcer;
         this.poolCriteria = poolCriteria;

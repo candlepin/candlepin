@@ -19,7 +19,7 @@ import java.util.Map;
 
 import com.google.inject.Inject;
 import org.candlepin.model.Consumer;
-import org.candlepin.policy.js.JsRules;
+import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.ReadOnlyConsumer;
 
 /**
@@ -27,10 +27,10 @@ import org.candlepin.policy.js.ReadOnlyConsumer;
  */
 public class ConsumerRules {
 
-    private JsRules jsRules;
+    private JsRunner jsRules;
 
     @Inject
-    public ConsumerRules(JsRules jsRules) {
+    public ConsumerRules(JsRunner jsRules) {
         this.jsRules = jsRules;
         jsRules.init("consumer_delete_name_space");
     }

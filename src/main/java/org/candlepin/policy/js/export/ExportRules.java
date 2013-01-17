@@ -16,7 +16,7 @@ package org.candlepin.policy.js.export;
 
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
-import org.candlepin.policy.js.JsRules;
+import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.ReadOnlyConsumer;
 import org.candlepin.policy.js.RuleExecutionException;
 import org.candlepin.service.ProductServiceAdapter;
@@ -32,14 +32,14 @@ import java.util.Map;
 /**
  *
  */
-public class JsExportRules {
-    private static Logger log = Logger.getLogger(JsExportRules.class);
+public class ExportRules {
+    private static Logger log = Logger.getLogger(ExportRules.class);
 
-    private JsRules jsRules;
+    private JsRunner jsRules;
     private ProductServiceAdapter productAdapter;
 
     @Inject
-    public JsExportRules(JsRules jsRules, ProductServiceAdapter productAdapter) {
+    public ExportRules(JsRunner jsRules, ProductServiceAdapter productAdapter) {
         this.jsRules = jsRules;
         this.productAdapter = productAdapter;
         jsRules.init("export_name_space");

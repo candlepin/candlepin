@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
-import org.candlepin.policy.js.JsRulesProvider;
+import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.Entitlement;
@@ -71,7 +71,7 @@ public class ComplianceRulesTest {
 
     @Mock private EntitlementCurator entCurator;
     @Mock private RulesCurator rulesCuratorMock;
-    private JsRulesProvider provider;
+    private JsRunnerProvider provider;
 
     @Before
     public void setUp() {
@@ -82,7 +82,7 @@ public class ComplianceRulesTest {
         Rules rules = new Rules(Util.readFile(is), VersionUtil.getVersionString());
         when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
         when(rulesCuratorMock.getRules()).thenReturn(rules);
-        provider = new JsRulesProvider(rulesCuratorMock);
+        provider = new JsRunnerProvider(rulesCuratorMock);
         compliance = new ComplianceRules(provider.get(), entCurator);
         owner = new Owner("test");
     }

@@ -57,15 +57,15 @@ import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.Subscription;
-import org.candlepin.policy.Enforcer;
-import org.candlepin.policy.PoolRules;
 import org.candlepin.policy.ValidationResult;
-import org.candlepin.policy.criteria.RulesCriteria;
+import org.candlepin.policy.criteria.CriteriaRules;
 import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
+import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.PreEntHelper;
 import org.candlepin.policy.js.entitlement.PreUnbindHelper;
+import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.policy.js.pool.PoolUpdate;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
@@ -105,7 +105,7 @@ public class PoolManagerTest {
     @Mock
     private PoolRules poolRulesMock;
     @Mock
-    private RulesCriteria poolCriteriaMock;
+    private CriteriaRules poolCriteriaMock;
     @Mock
     private ConsumerCurator consumerCuratorMock;
     @Mock

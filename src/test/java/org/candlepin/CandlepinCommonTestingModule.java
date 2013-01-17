@@ -38,12 +38,11 @@ import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.BouncyCastlePKIUtility;
 import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
-import org.candlepin.policy.Enforcer;
-import org.candlepin.policy.PoolRules;
-import org.candlepin.policy.criteria.RulesCriteria;
-import org.candlepin.policy.js.JsRules;
-import org.candlepin.policy.js.JsRulesProvider;
-import org.candlepin.policy.js.pool.JsPoolRules;
+import org.candlepin.policy.criteria.CriteriaRules;
+import org.candlepin.policy.js.JsRunner;
+import org.candlepin.policy.js.JsRunnerProvider;
+import org.candlepin.policy.js.entitlement.Enforcer;
+import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.resource.ActivationKeyResource;
 import org.candlepin.resource.ConsumerResource;
 import org.candlepin.resource.EntitlementResource;
@@ -127,8 +126,8 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
         bind(JobListener.class).to(PinsetterJobListener.class);
         bind(UserServiceAdapter.class).to(DefaultUserServiceAdapter.class);
 
-        bind(JsRulesProvider.class).asEagerSingleton();
-        bind(JsRules.class).toProvider(JsRulesProvider.class);
+        bind(JsRunnerProvider.class).asEagerSingleton();
+        bind(JsRunner.class).toProvider(JsRunnerProvider.class);
 
         bind(PrincipalProvider.class).to(TestPrincipalProvider.class);
         bind(Principal.class).toProvider(TestPrincipalProvider.class);
@@ -146,8 +145,8 @@ public class CandlepinCommonTestingModule extends CandlepinModule {
         // temporary
         bind(IdentityCertServiceAdapter.class).to(
             DefaultIdentityCertServiceAdapter.class);
-        bind(PoolRules.class).to(JsPoolRules.class);
-        bind(RulesCriteria.class);
+        bind(PoolRules.class);
+        bind(CriteriaRules.class);
         bind(PoolManager.class).to(CandlepinPoolManager.class);
         bind(UniqueIdGenerator.class).to(DefaultUniqueIdGenerator.class);
 

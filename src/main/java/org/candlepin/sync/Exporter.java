@@ -30,7 +30,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.pki.PKIUtility;
-import org.candlepin.policy.js.export.JsExportRules;
+import org.candlepin.policy.js.export.ExportRules;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.util.VersionUtil;
@@ -73,7 +73,7 @@ public class Exporter {
     private EntitlementCurator entitlementCurator;
     private PKIUtility pki;
     private Config config;
-    private JsExportRules exportRules;
+    private ExportRules exportRules;
     private PrincipalProvider principalProvider;
 
     @Inject
@@ -83,7 +83,7 @@ public class Exporter {
         EntitlementCertServiceAdapter entCertAdapter, ProductExporter productExporter,
         ProductServiceAdapter productAdapter, ProductCertExporter productCertExporter,
         EntitlementCurator entitlementCurator, EntitlementExporter entExporter,
-        PKIUtility pki, Config config, JsExportRules exportRules,
+        PKIUtility pki, Config config, ExportRules exportRules,
         PrincipalProvider principalProvider) {
 
         this.consumerTypeCurator = consumerTypeCurator;
