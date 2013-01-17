@@ -58,7 +58,7 @@ import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.Subscription;
 import org.candlepin.policy.ValidationResult;
-import org.candlepin.policy.criteria.RulesCriteria;
+import org.candlepin.policy.criteria.CriteriaRules;
 import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -105,7 +105,7 @@ public class PoolManagerTest {
     @Mock
     private PoolRules poolRulesMock;
     @Mock
-    private RulesCriteria poolCriteriaMock;
+    private CriteriaRules poolCriteriaMock;
     @Mock
     private ConsumerCurator consumerCuratorMock;
     @Mock

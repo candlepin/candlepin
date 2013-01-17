@@ -52,7 +52,7 @@ import org.candlepin.pki.PKIReader;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.impl.BouncyCastlePKIReader;
 import org.candlepin.pki.impl.BouncyCastlePKIUtility;
-import org.candlepin.policy.criteria.RulesCriteria;
+import org.candlepin.policy.criteria.CriteriaRules;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.entitlement.Enforcer;
@@ -154,7 +154,7 @@ public class CandlepinModule extends AbstractModule {
         bind(Enforcer.class).to(EnforcerDispatcher.class);
         bind(PoolManager.class).to(CandlepinPoolManager.class);
         bind(PoolRules.class);
-        bind(RulesCriteria.class);
+        bind(CriteriaRules.class);
         bind(Entitler.class);
         bind(RulesResource.class);
         bind(AdminResource.class);

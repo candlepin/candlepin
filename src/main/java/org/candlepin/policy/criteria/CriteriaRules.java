@@ -36,23 +36,23 @@ import com.google.inject.Inject;
  * running them through a rules check.
  *
  */
-public class RulesCriteria  {
+public class CriteriaRules  {
     protected Logger rulesLogger = null;
 
     protected JsRunner jsRules;
     protected Config config;
     protected ConsumerCurator consumerCurator;
-    protected static Logger log = Logger.getLogger(RulesCriteria.class);
+    protected static Logger log = Logger.getLogger(CriteriaRules.class);
 
     private static String jsNameSpace = "criteria_name_space";
     @Inject
-    public RulesCriteria(JsRunner jsRules, Config config,
+    public CriteriaRules(JsRunner jsRules, Config config,
             ConsumerCurator consumerCurator) {
         this.jsRules = jsRules;
         this.config = config;
         this.consumerCurator = consumerCurator;
         this.rulesLogger = Logger.getLogger(
-            RulesCriteria.class.getCanonicalName() + ".rules");
+            CriteriaRules.class.getCanonicalName() + ".rules");
         jsRules.init(jsNameSpace);
     }
 
