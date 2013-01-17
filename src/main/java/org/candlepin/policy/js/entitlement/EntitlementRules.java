@@ -26,10 +26,9 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProvidedProduct;
-import org.candlepin.policy.Enforcer;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationWarning;
-import org.candlepin.policy.js.JsRules;
+import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.ReadOnlyConsumer;
 import org.candlepin.policy.js.ReadOnlyPool;
 import org.candlepin.policy.js.ReadOnlyProduct;
@@ -50,13 +49,13 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 /**
- * Enforces the Javascript Rules definition.
+ * Enforces entitlement rules for normal (non-manifest) consumers.
  */
 public class EntitlementRules extends AbstractEntitlementRules implements Enforcer {
 
     @Inject
     public EntitlementRules(DateSource dateSource,
-        JsRules jsRules,
+        JsRunner jsRules,
         ProductCache productCache,
         I18n i18n, Config config, ConsumerCurator consumerCurator) {
 

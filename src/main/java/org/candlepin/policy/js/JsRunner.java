@@ -34,10 +34,11 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 /**
- * JsRules - javascript runner
+ * JsRunner - Responsible for running the javascript rules methods in all namespaces.
+ * Used by the various "Rules" classes.
  */
-public class JsRules {
-    private static Logger log = Logger.getLogger(JsRules.class);
+public class JsRunner {
+    private static Logger log = Logger.getLogger(JsRunner.class);
 
     private Object rulesNameSpace;
     private String namespace;
@@ -45,7 +46,7 @@ public class JsRules {
 
     private boolean initialized = false;
 
-    public JsRules(Scriptable scope) {
+    public JsRunner(Scriptable scope) {
         this.scope = scope;
     }
 

@@ -34,12 +34,12 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 
 /**
- * JsRulesProvider - reads/compiles our javascript rules and the standard js objects only
+ * Reads/compiles our javascript rules and the standard js objects only
  * once across the jvm lifetime (and whenever the rules require a recompile), and creates
  * lightweight execution scopes per thread/request.
  */
-public class JsRulesProvider implements Provider<JsRules> {
-    private static Logger log = Logger.getLogger(JsRulesProvider.class);
+public class JsRunnerProvider implements Provider<JsRunner> {
+    private static Logger log = Logger.getLogger(JsRunnerProvider.class);
 
     private RulesCurator rulesCurator;
 
@@ -70,7 +70,7 @@ public class JsRulesProvider implements Provider<JsRules> {
     }
 
     @Inject
-    public JsRulesProvider(RulesCurator rulesCurator) {
+    public JsRunnerProvider(RulesCurator rulesCurator) {
         this.rulesCurator = rulesCurator;
 
         log.debug("Compiling rules for initial load");
@@ -120,7 +120,7 @@ public class JsRulesProvider implements Provider<JsRules> {
         }
     }
 
-    public JsRules get() {
+    public JsRunner get() {
         /*
          * Create a new thread/request local javascript scope for the JsRules,
          * based on the preinitialized global one (which contains our js rules).
@@ -140,7 +140,7 @@ public class JsRulesProvider implements Provider<JsRules> {
             scriptLock.readLock().unlock();
         }
 
-        return new JsRules(rulesScope);
+        return new JsRunner(rulesScope);
     }
 
 }
