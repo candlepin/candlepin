@@ -69,7 +69,6 @@ import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.policy.js.entitlement.ManifestEntitlementRules;
 import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.policy.js.pool.PoolHelper;
-import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.TestDateUtil;
 import org.candlepin.test.TestUtil;

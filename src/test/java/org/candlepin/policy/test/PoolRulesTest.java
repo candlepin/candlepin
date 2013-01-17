@@ -45,7 +45,6 @@ import org.candlepin.model.Subscription;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.pool.PoolRules;
-import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.policy.js.pool.PoolUpdate;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.TestUtil;
