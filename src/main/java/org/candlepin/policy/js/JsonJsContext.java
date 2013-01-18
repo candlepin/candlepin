@@ -62,7 +62,7 @@ public class JsonJsContext extends JsContext {
     }
 
     public void put(String contextKey, Object contextVal, boolean serializable) {
-        if (!contextArgs.containsKey(contextKey)) {
+        if (!serializable) {
             nonSerializableContext.put(contextKey, contextVal);
         }
         else {
