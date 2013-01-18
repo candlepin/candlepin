@@ -96,8 +96,6 @@ test
 </module>
 <module name="NeedBraces">
 </module>
-<module name="DoubleCheckedLocking">
-</module>
 <module name="EmptyStatement">
 </module>
 <module name="EqualsHashCode">
