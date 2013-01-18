@@ -33,10 +33,12 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
+import org.candlepin.policy.js.ArgumentJsContext;
 import org.candlepin.policy.js.JsRunner;
+import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.ReadOnlyConsumer;
 import org.candlepin.policy.js.ReadOnlyProduct;
-import org.candlepin.policy.js.ProductCache;
+import org.candlepin.policy.js.JsContext;
 import org.candlepin.policy.js.RuleExecutionException;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.pool.PoolHelper;
@@ -188,11 +190,11 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         }
     }
 
-    protected void invokeGlobalPostEntitlementRule(Map<String, Object> args) {
+    protected void invokeGlobalPostEntitlementRule(JsContext context) {
         // No method for this product, try to find a global function, if
         // neither exists this is ok and we'll just carry on.
         try {
-            jsRules.invokeMethod(GLOBAL_POST_FUNCTION, args);
+            jsRules.invokeMethod(GLOBAL_POST_FUNCTION, context);
             log.debug("Ran rule: " + GLOBAL_POST_FUNCTION);
         }
         catch (NoSuchMethodException ex) {
@@ -204,11 +206,11 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         }
     }
 
-    protected void invokeGlobalPreEntitlementRule(Map<String, Object> args) {
+    protected void invokeGlobalPreEntitlementRule(JsContext context) {
         // No method for this product, try to find a global function, if
         // neither exists this is ok and we'll just carry on.
         try {
-            jsRules.invokeMethod(GLOBAL_PRE_FUNCTION, args);
+            jsRules.invokeMethod(GLOBAL_PRE_FUNCTION, context);
             log.debug("Ran rule: " + GLOBAL_PRE_FUNCTION);
         }
         catch (NoSuchMethodException ex) {
@@ -226,11 +228,11 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         }
     }
 
-    protected void invokeGlobalPostUnbindRule(Map<String, Object> args) {
+    protected void invokeGlobalPostUnbindRule(JsContext context) {
         // No method for this product, try to find a global function, if
         // neither exists this is ok and we'll just carry on.
         try {
-            jsRules.invokeMethod(GLOBAL_POST_FUNCTION, args);
+            jsRules.invokeMethod(GLOBAL_POST_FUNCTION, context);
             log.debug("Ran rule: " + GLOBAL_POST_FUNCTION);
         }
         catch (NoSuchMethodException ex) {
@@ -343,7 +345,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
             jsRules.getFlattenedAttributes(pool.getProductAttributes()));
         Map<String, String> allAttributes = jsRules.getFlattenedAttributes(pool);
 
-        Map<String, Object> args = new HashMap<String, Object>();
+        ArgumentJsContext args = new ArgumentJsContext();
         args.put("consumer", new ReadOnlyConsumer(c, null));
         args.put("product", readOnlyProduct);
         args.put("post", postHelper);
@@ -376,7 +378,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         Map<String, String> allAttributes =
             jsRules.getFlattenedAttributes(pool);
 
-        Map<String, Object> args = new HashMap<String, Object>();
+        ArgumentJsContext args = new ArgumentJsContext();
         args.put("consumer", new ReadOnlyConsumer(c));
         args.put("product", readOnlyProduct);
         args.put("post", postHelper);

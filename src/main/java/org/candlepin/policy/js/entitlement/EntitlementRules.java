@@ -14,9 +14,14 @@
  */
 package org.candlepin.policy.js.entitlement;
 
-import com.google.inject.Inject;
-
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.candlepin.config.Config;
@@ -28,11 +33,12 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationWarning;
+import org.candlepin.policy.js.ArgumentJsContext;
 import org.candlepin.policy.js.JsRunner;
+import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.ReadOnlyConsumer;
 import org.candlepin.policy.js.ReadOnlyPool;
 import org.candlepin.policy.js.ReadOnlyProduct;
-import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.RuleExecutionException;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.util.DateSource;
@@ -40,13 +46,7 @@ import org.candlepin.util.X509ExtensionUtil;
 import org.mozilla.javascript.RhinoException;
 import org.xnap.commons.i18n.I18n;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
+import com.google.inject.Inject;
 
 /**
  * Enforces entitlement rules for normal (non-manifest) consumers.
@@ -177,7 +177,7 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         }
 
         // Provide objects for the script:
-        Map<String, Object> args = new HashMap<String, Object>();
+        ArgumentJsContext args = new ArgumentJsContext();
         args.put("consumer", new ReadOnlyConsumer(consumer, serviceLevelOverride));
         args.put("pools", readOnlyPools.toArray());
         args.put("products", readOnlyProducts.toArray());

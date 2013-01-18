@@ -14,9 +14,7 @@
  */
 package org.candlepin.policy.js.pool;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.candlepin.config.Config;
@@ -24,6 +22,7 @@ import org.candlepin.controller.PoolManager;
 import org.candlepin.exceptions.IseException;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Subscription;
+import org.candlepin.policy.js.ArgumentJsContext;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.ProductCache;
 
@@ -56,7 +55,7 @@ public class PoolRules {
     }
 
     public List<Pool> createPools(Subscription sub) {
-        Map<String, Object> args = new HashMap<String, Object>();
+        ArgumentJsContext args = new ArgumentJsContext();
         args.put("sub", sub);
         args.put("attributes", jsRules.getFlattenedAttributes(sub.getProduct()));
         args.put("helper", new PoolHelper(this.poolManager,
@@ -74,7 +73,7 @@ public class PoolRules {
     }
 
     public List<PoolUpdate> updatePools(Subscription sub, List<Pool> existingPools) {
-        Map<String, Object> args = new HashMap<String, Object>();
+        ArgumentJsContext args = new ArgumentJsContext();
         args.put("sub", sub);
         args.put("pools", existingPools);
         args.put("attributes", jsRules.getFlattenedAttributes(sub.getProduct()));

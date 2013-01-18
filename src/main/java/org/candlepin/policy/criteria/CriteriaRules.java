@@ -14,15 +14,14 @@
  */
 package org.candlepin.policy.criteria;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.candlepin.config.Config;
 import org.candlepin.exceptions.IseException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.policy.js.ArgumentJsContext;
 import org.candlepin.policy.js.JsRunner;
 import org.hibernate.criterion.Criterion;
 
@@ -65,7 +64,7 @@ public class CriteriaRules  {
      * @return List of Criterion
      */
     public List<Criterion> availableEntitlementCriteria(Consumer consumer) {
-        Map<String, Object> args = new HashMap<String, Object>();
+        ArgumentJsContext args = new ArgumentJsContext();
         args.put("standalone", config.standalone());
         args.put("log", rulesLogger);
         args.put("consumer", consumer);

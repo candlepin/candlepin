@@ -14,20 +14,19 @@
  */
 package org.candlepin.policy.js.export;
 
+import java.util.Map;
+
+import org.apache.log4j.Logger;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
+import org.candlepin.policy.js.ArgumentJsContext;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.ReadOnlyConsumer;
 import org.candlepin.policy.js.RuleExecutionException;
 import org.candlepin.service.ProductServiceAdapter;
-
-import com.google.inject.Inject;
-
-import org.apache.log4j.Logger;
 import org.mozilla.javascript.RhinoException;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.google.inject.Inject;
 
 /**
  *
@@ -50,7 +49,7 @@ public class ExportRules {
         ReadOnlyConsumer consumer = new ReadOnlyConsumer(entitlement.getConsumer());
         Map<String, String> allAttributes = jsRules.getFlattenedAttributes(pool);
 
-        Map<String, Object> args = new HashMap<String, Object>();
+        ArgumentJsContext args = new ArgumentJsContext();
         args.put("attributes", allAttributes);
         args.put("consumer", consumer);
 

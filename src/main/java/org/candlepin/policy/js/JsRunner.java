@@ -111,11 +111,9 @@ public class JsRunner {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T invokeMethod(String method, Map<String, Object> args)
+    public <T> T invokeMethod(String method, JsContext context)
         throws NoSuchMethodException, RhinoException {
-        for (Entry<String, Object> entry : args.entrySet()) {
-            scope.put(entry.getKey(), scope, entry.getValue());
-        }
+        context.applyTo(scope);
         return (T) invokeMethod(method);
     }
 

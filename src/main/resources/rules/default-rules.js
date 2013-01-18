@@ -1157,8 +1157,17 @@ function find_relevant_pids(entitlement, consumer) {
 }
 
 var Compliance = {
+    get_status_context: function() {
+        log.info(json_context);
+        context = eval(json_context);
+        context.ondate = new Date(context.ondate);
+        return context;
+    },
+
     get_status: function() {
-        var status = getComplianceStatusOnDate(consumer, entitlements, ondate, log);
+        var context = Compliance.get_status_context();
+        log.info(context);
+        var status = getComplianceStatusOnDate(context.consumer, context.entitlements, context.ondate, log);
         var compliantUntil = ondate;
         if (status.isCompliant()) {
             if (entitlements.isEmpty()) {
@@ -1191,9 +1200,9 @@ function getComplianceStatusOnDate(consumer, entitlements, ondate, log) {
     var compliant_stack_ids = new java.util.HashSet();
     var non_compliant_stack_ids = new java.util.HashSet();
 
-    log.debug("Checking compliance status for consumer: " + consumer.getUuid());
-    for each (var e in entitlements.toArray()) {
-        log.debug("  checking entitlement: " + e.getId());
+    log.debug("Checking compliance status for consumer: " + consumer.uuid);
+    for each (var e in entitlements) {
+        log.debug("  checking entitlement: " + e.id);
         relevant_pids = find_relevant_pids(e, consumer);
         log.debug("    relevant products: " + relevant_pids);
 

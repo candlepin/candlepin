@@ -14,7 +14,6 @@
  */
 package org.candlepin.policy.js.entitlement;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
@@ -24,11 +23,12 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationWarning;
+import org.candlepin.policy.js.ArgumentJsContext;
 import org.candlepin.policy.js.JsRunner;
+import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.ReadOnlyConsumer;
 import org.candlepin.policy.js.ReadOnlyPool;
 import org.candlepin.policy.js.ReadOnlyProduct;
-import org.candlepin.policy.js.ProductCache;
 import org.candlepin.util.DateSource;
 import org.xnap.commons.i18n.I18n;
 
@@ -91,7 +91,7 @@ public class ManifestEntitlementRules extends AbstractEntitlementRules implement
             jsRules.getFlattenedAttributes(pool.getProductAttributes()));
         Map<String, String> allAttributes = jsRules.getFlattenedAttributes(pool);
 
-        Map<String, Object> args = new HashMap<String, Object>();
+        ArgumentJsContext args = new ArgumentJsContext();
         args.put("consumer", new ReadOnlyConsumer(consumer));
         args.put("product", product);
         args.put("pool", new ReadOnlyPool(pool));
