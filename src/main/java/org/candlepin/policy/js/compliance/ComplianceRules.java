@@ -98,6 +98,7 @@ public class ComplianceRules {
         catch (RhinoException e) {
             throw new RuleExecutionException(e);
         }
+        System.out.println(returner);
         return returner;
     }
 
