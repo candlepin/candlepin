@@ -27,6 +27,7 @@ public class CandlepinCommonTestConfig extends Config {
         // explicitly _not_ using the /etc/candlepin/candlepin.conf file in testing.
         this.configuration = new TreeMap<String, String>(
             ConfigProperties.DEFAULT_PROPERTIES);
+        this.configuration.putAll(loadProperties());
     }
 
     @Override
