@@ -17,6 +17,7 @@ package org.candlepin.policy.js;
 import java.util.Map.Entry;
 
 import org.candlepin.exceptions.IseException;
+import org.candlepin.jackson.ExportBeanPropertyFilter;
 import org.candlepin.jackson.HateoasBeanPropertyFilter;
 import org.codehaus.jackson.map.AnnotationIntrospector;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -39,6 +40,12 @@ public class JsonJsContext extends JsContext {
 
     public JsonJsContext() {
         mapper = new ObjectMapper();
+
+        // Since each class can only have one @JsonFilter annotation, and most have
+        // ApiHateoas, We just default here to using the Export filter.
+        SimpleFilterProvider filterProvider = new SimpleFilterProvider();
+        filterProvider.setDefaultFilter(new ExportBeanPropertyFilter());
+        mapper.setFilters(filterProvider);
 
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
         AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
