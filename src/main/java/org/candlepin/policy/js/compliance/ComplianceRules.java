@@ -18,6 +18,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.candlepin.jackson.ExportBeanPropertyFilter;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
@@ -25,6 +26,11 @@ import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsonJsContext;
 import org.candlepin.policy.js.JsContext;
 import org.candlepin.policy.js.RuleExecutionException;
+import org.codehaus.jackson.map.AnnotationIntrospector;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
+import org.codehaus.jackson.map.ser.impl.SimpleFilterProvider;
+import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
 import org.mozilla.javascript.RhinoException;
 
 import com.google.inject.Inject;
@@ -38,12 +44,23 @@ public class ComplianceRules {
 
     private EntitlementCurator entCurator;
     private JsRunner jsRules;
+    private ObjectMapper mapper;
     private static Logger log = Logger.getLogger(ComplianceRules.class);
 
     @Inject
     public ComplianceRules(JsRunner jsRules, EntitlementCurator entCurator) {
         this.entCurator = entCurator;
         this.jsRules = jsRules;
+
+        mapper = new ObjectMapper();
+        SimpleFilterProvider filterProvider = new SimpleFilterProvider();
+        filterProvider.setDefaultFilter(new ExportBeanPropertyFilter());
+        mapper.setFilters(filterProvider);
+
+        AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
+        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
+        AnnotationIntrospector pair = new AnnotationIntrospector.Pair(primary, secondary);
+        mapper.setAnnotationIntrospector(pair);
 
         jsRules.init("compliance_name_space");
     }
@@ -65,7 +82,17 @@ public class ComplianceRules {
         args.put("ondate", date);
         args.put("helper", new ComplianceRulesHelper(entCurator), false);
         args.put("log", log, false);
-        return runJsFunction(ComplianceStatus.class, "get_status", args);
+
+        // Convert the JSON returned into a ComplianceStatus object:
+        String json = runJsFunction(String.class, "get_status", args);
+        log.warn(json);
+        try {
+            ComplianceStatus status = mapper.readValue(json, ComplianceStatus.class);
+            return status;
+        }
+        catch (Exception e) {
+            throw new RuleExecutionException(e);
+        }
     }
 
     public boolean isStackCompliant(Consumer consumer, String stackId,
@@ -98,7 +125,6 @@ public class ComplianceRules {
         catch (RhinoException e) {
             throw new RuleExecutionException(e);
         }
-        System.out.println(returner);
         return returner;
     }
 

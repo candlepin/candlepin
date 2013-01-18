@@ -18,7 +18,6 @@ import java.util.Map.Entry;
 
 import org.candlepin.exceptions.IseException;
 import org.candlepin.jackson.ExportBeanPropertyFilter;
-import org.candlepin.jackson.HateoasBeanPropertyFilter;
 import org.codehaus.jackson.map.AnnotationIntrospector;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;

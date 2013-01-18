@@ -1168,13 +1168,13 @@ var Compliance = {
         var context = Compliance.get_status_context();
         log.info(context);
         var compStatus = getComplianceStatusOnDate(context.consumer, context.entitlements, context.ondate, log);
-        var compliantUntil = ondate;
+        var compliantUntil = context.ondate;
         if (compStatus.isCompliant()) {
             if (entitlements.isEmpty()) {
                 compliantUntil = null;
             }
             else {
-                compliantUntil = determineCompliantUntilDate(consumer, ondate, helper, log);
+                compliantUntil = determineCompliantUntilDate(context.consumer, context.ondate, helper, log);
             }
         }
         compStatus.compliantUntil = compliantUntil;
@@ -1202,7 +1202,7 @@ function getComplianceStatusOnDate(consumer, entitlements, ondate, log) {
         partialStacks: {},
 
         // Maps partially compliant product IDs to entitlements:
-        partialProducts: {},
+        partiallyCompliantProducts: {},
 
         // Maps compliant product IDs to entitlements:
         compliantProducts: {},
@@ -1224,8 +1224,8 @@ function getComplianceStatusOnDate(consumer, entitlements, ondate, log) {
          * already exist.
          */
         add_partial_product: function (product_id, entitlement) {
-            this.partialProducts[product_id] = this.partialProducts[product_id] || [];
-            this.partialProducts[product_id].push(null); // entitlement
+            this.partiallyCompliantProducts[product_id] = this.partiallyCompliantProducts[product_id] || [];
+            this.partiallyCompliantProducts[product_id].push(null); // entitlement
         },
 
         /*
@@ -1242,7 +1242,7 @@ function getComplianceStatusOnDate(consumer, entitlements, ondate, log) {
          */
         isCompliant: function() {
             return this.nonCompliantProducts.length == 0 &&
-                Object.keys(this.partialProducts).length == 0;
+                Object.keys(this.partiallyCompliantProducts).length == 0;
         }
     };
 
@@ -1307,22 +1307,20 @@ function getComplianceStatusOnDate(consumer, entitlements, ondate, log) {
     // considered partially compliant as well. We do however still leave the *stack*
     // in partial stacks list, as this should be repaired. (it could offer other
     // products)
-    for each (var partial_prod in compStatus.partialProducts) {
+    for each (var partial_prod in compStatus.partiallyCompliantProducts) {
         if (!(typeof compStatus.compliantProducts[partial_prod] === "undefined")) {
-            delete compStatus.partialProducts[partial_prod];
+            delete compStatus.partiallyCompliantProducts[partial_prod];
         }
     }
 
     // Run through the consumer's installed products and see if there are any we
     // didn't find an entitlement for along the way:
-    if (consumer.getInstalledProducts() != null) {
-        for each (var installed_prod in consumer.getInstalledProducts().toArray()) {
-            var installed_pid = installed_prod.getProductId();
-            // Not compliant if we didn't find any entitlements for this product:
-            if (typeof compStatus.compliantProducts[installed_pid] === "undefined" &&
-                    typeof compStatus.partialProducts[installed_pid] === "undefined") {
-                compStatus.nonCompliantProducts.push(installed_pid);
-            }
+    for each (var installed_prod in consumer.installedProducts) {
+        var installed_pid = installed_prod.productId;
+        // Not compliant if we didn't find any entitlements for this product:
+        if (typeof compStatus.compliantProducts[installed_pid] === "undefined" &&
+                typeof compStatus.partiallyCompliantProducts[installed_pid] === "undefined") {
+            compStatus.nonCompliantProducts.push(installed_pid);
         }
     }
     return compStatus;

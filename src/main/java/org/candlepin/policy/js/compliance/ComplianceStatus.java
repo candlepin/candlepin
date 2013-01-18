@@ -40,6 +40,13 @@ public class ComplianceStatus {
     private Map<String, Set<Entitlement>> partiallyCompliantProducts; // stacked
     private Map<String, Set<Entitlement>> partialStacks;
 
+    public ComplianceStatus() {
+        this.nonCompliantProducts = new HashSet<String>();
+        this.compliantProducts = new HashMap<String, Set<Entitlement>>();
+        this.partiallyCompliantProducts = new HashMap<String, Set<Entitlement>>();
+        this.partialStacks = new HashMap<String, Set<Entitlement>>();
+    }
+
     public ComplianceStatus(Date date) {
         this.date = date;
         this.nonCompliantProducts = new HashSet<String>();
