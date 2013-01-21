@@ -1425,7 +1425,7 @@ function getComplianceStatusOnDate(consumer, entitlements, ondate, log) {
     // considered partially compliant as well. We do however still leave the *stack*
     // in partial stacks list, as this should be repaired. (it could offer other
     // products)
-    for each (var partial_prod in compStatus.partiallyCompliantProducts) {
+    for (var partial_prod in compStatus.partiallyCompliantProducts) {
         if (!(typeof compStatus.compliantProducts[partial_prod] === "undefined")) {
             delete compStatus.partiallyCompliantProducts[partial_prod];
         }
