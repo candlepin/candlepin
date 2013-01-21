@@ -43,12 +43,23 @@ function unbind_name_space() {
 
 function createPool(pool) {
     // Translate productAttributes to a simple object:
+    /*
     origProdAttrs = pool.productAttributes;
     if (Array.isArray(origProdAttrs)) {
         pool.productAttributes = {};
         for each (var attr in origProdAttrs) {
             pool.productAttributes[attr.name] = attr.value;
         }
+    }
+    */
+
+    pool.getProductAttribute = function (attrName) {
+        for each (var attr in this.productAttributes) {
+            if (attr.name == attrName) {
+                return attr.value;
+            }
+        }
+        return null;
     }
 
     // Add some functions onto pool objects:
@@ -1168,7 +1179,7 @@ function ent_is_compliant(consumer, ent, log) {
     var consumerRam = get_consumer_ram(consumer);
     log.debug("  Consumer RAM found: " + consumerRam);
 
-    var poolRam = ent.pool.productAttributes["ram"];
+    var poolRam = ent.pool.getProductAttribute("ram");
     if (poolRam == null) {
         log.debug("  No RAM attribute on pool. Skipping RAM check.");
     }
@@ -1227,7 +1238,7 @@ function find_relevant_pids(entitlement, consumer) {
  */
 var Compliance = {
     get_status_context: function() {
-        log.info(json_context);
+        log.info("Input: " + json_context);
         context = eval(json_context);
         context.ondate = new Date(context.ondate);
 
@@ -1253,7 +1264,9 @@ var Compliance = {
             }
         }
         compStatus.compliantUntil = compliantUntil;
-        return JSON.stringify(compStatus);
+        json_str = JSON.stringify(compStatus);
+        log.info("Compliance JSON result: " + json_str);
+        return json_str;
     },
 
     is_stack_compliant: function() {
@@ -1320,7 +1333,7 @@ function getComplianceStatusOnDate(consumer, entitlements, ondate, log) {
          */
         add_partial_stack: function (stack_id, entitlement) {
             this.partialStacks[stack_id] = this.partialStacks[stack_id] || [];
-            this.partialStacks[stack_id].push(null); // entitlement
+            this.partialStacks[stack_id].push(entitlement);
         },
 
         /*
@@ -1329,7 +1342,7 @@ function getComplianceStatusOnDate(consumer, entitlements, ondate, log) {
          */
         add_partial_product: function (product_id, entitlement) {
             this.partiallyCompliantProducts[product_id] = this.partiallyCompliantProducts[product_id] || [];
-            this.partiallyCompliantProducts[product_id].push(null); // entitlement
+            this.partiallyCompliantProducts[product_id].push(entitlement);
         },
 
         /*
@@ -1338,7 +1351,7 @@ function getComplianceStatusOnDate(consumer, entitlements, ondate, log) {
          */
         add_compliant_product: function (product_id, entitlement) {
             this.compliantProducts[product_id] = this.compliantProducts[product_id] || [];
-            this.compliantProducts[product_id].push(null); // entitlement
+            this.compliantProducts[product_id].push(entitlement);
         },
 
         /*
