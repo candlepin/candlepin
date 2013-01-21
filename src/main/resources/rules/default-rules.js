@@ -1010,7 +1010,7 @@ var Pool = {
                 log.info("Updated product attributes from subscription.");
             }
 
-            if (!(quantityChanged || dat/getEntitlementsesChanged || productsChanged ||
+            if (!(quantityChanged || datesChanged || productsChanged ||
                   productAttributesChanged)) {
                 //TODO: Should we check whether pool is overflowing here?
                 log.info("   No updates required.");
