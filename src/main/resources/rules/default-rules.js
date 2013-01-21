@@ -1138,18 +1138,21 @@ function ent_is_compliant(consumer, ent, log) {
     var consumerRam = get_consumer_ram(consumer);
     log.debug("  Consumer RAM found: " + consumerRam);
 
-    if (ent.getPool().getProductAttribute("ram")) {
-        var poolRamAttr = get_attribute_from_pool(ent.getPool(), "ram");
-        if (poolRamAttr != null && !poolRamAttr.isEmpty()) {
+    var poolRam = poolGetProductAttribute(ent.pool, "ram");
+    if (poolRam == null) {
+        log.debug("  No RAM attribute on pool. Skipping RAM check.");
+    }
+    else {
+        if (!poolRam.isEmpty()) {
             var ram = parseInt(poolRamAttr);
             log.debug("  Pool RAM found: " + ram)
             if (consumerRam > ram) {
                 return false;
             }
         }
-    }
-    else {
-        log.debug("  No RAM attribute on pool. Skipping RAM check.");
+        else {
+            log.debug("  Pool's RAM attribute was empty. Skipping RAM check.");
+        }
     }
 
     return true
@@ -1236,7 +1239,35 @@ var Compliance = {
 
     is_ent_compliant: function () {
         return ent_is_compliant(consumer, ent, log);
+    },
+
+    filterEntitlementsByDate: function (entitlements, date) {
+        var filtered_ents = [];
+        for each (var ent in entitlements) {
+            var startDate = new Date(ent.startDate);
+            var endDate = new Date(ent.endDate);
+            if (Utils.date_compare(startDate, date) <= 0 && Utils.date_compare(endDate, date) >= 0) {
+                filtered_ents.push(ent);
+            }
+        }
+        return filtered_ents;
+    },
+
+    getSortedEndDates: function(entitlements) {
+        var sorter = function(date1, date2) {
+            var e1End = new Date(e1.endDate);
+            var e2End = new Date(e2.endDate);
+            return Utils.date_compare(e1End, e2End);
+        };
+
+        var dates = [];
+        for each (var ent in entitlements) {
+            dates.push(new Date(ent.endDate));
+        }
+        dates.sort(function(d1, d2) { Utils.date_compare(d1, d2) });
+        return dates;
     }
+
 }
 
 /**
@@ -1302,7 +1333,8 @@ function getComplianceStatusOnDate(consumer, entitlements, ondate, log) {
     var non_compliant_stack_ids = new java.util.HashSet();
 
     log.debug("Checking compliance status for consumer: " + consumer.uuid);
-    for each (var e in entitlements) {
+    var entitlementsOnDate = Compliance.filterEntitlementsByDate(entitlements, ondate);
+    for each (var e in entitlementsOnDate) {
         log.debug("  checking entitlement: " + e.id);
         relevant_pids = find_relevant_pids(e, consumer);
         log.debug("    relevant products: " + relevant_pids);
@@ -1380,27 +1412,25 @@ function getComplianceStatusOnDate(consumer, entitlements, ondate, log) {
  * Determine the compliant until date for a consumer based on the specifed start date
  * and entitlements.
  */
-function determineCompliantUntilDate(consumer, startDate, complianceHelper, log) {
-    var initialEntitlements = complianceHelper.getEntitlementsOnDate(consumer, startDate);
+function determineCompliantUntilDate(consumer, consumerEntitlements, startDate, complianceHelper, log) {
+    var initialEntitlements = Compliance.filterEntitlementsByDate(consumerEntitlements, startDate);
+
     // Get all end dates from current entitlements sorted ascending.
-    var dates = complianceHelper.getSortedEndDatesFromEntitlements(initialEntitlements)
-        .toArray();
+    var dates = Compliance.getSortedEndDates(initialEntitlements);
 
     for each (var dateToCheck in dates) {
-        var next = new Date(dateToCheck.getTime());
-        var jsStartDate = new Date(startDate.getTime());
 
         // Ignore past dates.
-        if (next < jsStartDate) {
+        if (dateToCheck < startDate) {
             continue;
         }
+
         // Need to check if we are still compliant after the end date,
         // so we add one second.
-        next.setSeconds(next.getSeconds() + 1);
+        dateToCheck.setSeconds(next.getSeconds() + 1);
 
-        var entitlementsOnDate = complianceHelper.getEntitlementsOnDate(consumer,
-                next);
-        var compStatus = getComplianceStatusOnDate(consumer, entitlementsOnDate, next, log);
+        var compStatus = getComplianceStatusOnDate(consumer, consumerEntitlements,
+                                                   dateToCheck, log);
         if (!compStatus.isCompliant()) {
             return next;
         }
@@ -1451,5 +1481,20 @@ var Unbind = {
                 }
             }
         }
+    }
+}
+
+var Utils = {
+
+    date_compare: function(d1, d2) {
+        if (d1 - d2 > 0) {
+            return 1;
+        }
+
+        if (d1 - d2 < 0) {
+            return -1;
+        }
+
+        return 0;
     }
 }

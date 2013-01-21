@@ -74,7 +74,7 @@ public class ComplianceRules {
      */
     public ComplianceStatus getStatus(Consumer c, Date date) {
 
-        List<Entitlement> ents = entCurator.listByConsumerAndDate(c, date);
+        List<Entitlement> ents = entCurator.listByConsumer(c);
 
         JsonJsContext args = new JsonJsContext();
         args.put("consumer", c);
