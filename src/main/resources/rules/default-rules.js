@@ -187,6 +187,9 @@ function get_attribute_from_pool(pool, attributeName) {
 
 // get the number of sockets that each entitlement from a pool covers.
 // if sockets is set to 0 or is not set, it is considered to be unlimited.
+//
+// TODO: WARNING: method has been forked for new JS objects approach, switch all callers
+// to new new_pool_sockets and delete this once all namespaces are converted.
 function get_pool_sockets(pool) {
     if (pool.getProductAttribute("sockets")) {
         var sockets = get_attribute_from_pool(pool, "sockets");
@@ -201,6 +204,23 @@ function get_pool_sockets(pool) {
         return Infinity;
     }
 }
+
+function new_get_pool_sockets(pool) {
+    for each (prodAttr in pool.productAttributes) {
+        if (prodAttr.name == "sockets") {
+            var sockets = prodAttr.value;
+            // TODO: is this 0 right? We would have a string here...
+            if (sockets == 0) {
+                return Infinity;
+            }
+            else {
+                return parseInt(sockets);
+            }
+        }
+    }
+    return Infinity;
+}
+
 
 // assumptions: number of pools consumed from is not considered, so we might not be taking from the smallest amount.
 // we only stack within the same pool_class. if you have stacks that provide different sets of products,
@@ -1059,7 +1079,7 @@ var Export = {
 
 function is_stacked(ent) {
     for each (var attr in ent.pool.productAttributes) {
-        if (attr['name'] == "stacking_id") {
+        if (attr.name == "stacking_id") {
             return true;
         }
     }
@@ -1070,20 +1090,21 @@ function is_stacked(ent) {
  * Check the given list of entitlements to see if a stack ID is compliant for
  * a consumer's socket count.
  */
+// TODO: move to Compliance namespace
 function stack_is_compliant(consumer, stack_id, ents, log) {
     log.debug("Checking stack compliance for: " + stack_id);
     var consumer_sockets = 1;
-    if (consumer.hasFact(SOCKET_FACT)) {
-        consumer_sockets = parseInt(consumer.getFact(SOCKET_FACT));
+    if (consumer.facts[SOCKET_FACT]) {
+        consumer_sockets = parseInt(consumer.facts[SOCKET_FACT]);
     }
     log.debug("Consumer sockets: " + consumer_sockets);
 
     var covered_sockets = 0;
-    for each (var ent in ents.toArray()) {
+    for each (var ent in ents) {
         if (is_stacked(ent)) {
-            var currentStackId = ent.getPool().getProductAttribute("stacking_id").getValue();
+            var currentStackId = poolGetProductAttribute(ent.pool, "stacking_id");
             if (currentStackId.equals(stack_id)) {
-                covered_sockets += get_pool_sockets(ent.getPool()) * ent.getQuantity();
+                covered_sockets += new_get_pool_sockets(ent.pool) * ent.quantity;
                 log.debug("Ent " + ent.id + " took covered sockets to: " + covered_sockets);
             }
         }
@@ -1095,15 +1116,16 @@ function stack_is_compliant(consumer, stack_id, ents, log) {
 /*
  * Check an entitlement to see if it provides sufficent CPU sockets a consumer.
  */
+// TODO: move to compliance namespace
 function ent_is_compliant(consumer, ent, log) {
     log.debug("Checking entitlement compliance: " + ent.id);
     var consumerSockets = 1;
-    if (consumer.hasFact(SOCKET_FACT)) {
-        consumerSockets = parseInt(consumer.getFact(SOCKET_FACT));
+    if (!(typeof consumer.facts[SOCKET_FACT] === undefined)) {
+        consumerSockets = parseInt(consumer.facts[SOCKET_FACT]);
     }
     log.debug("  Consumer sockets found: " + consumerSockets);
 
-    var coveredSockets = get_pool_sockets(ent.getPool());
+    var coveredSockets = new_get_pool_sockets(ent.pool);
     log.debug("  Sockets covered by pool: " + coveredSockets);
 
     if (coveredSockets < consumerSockets) {
@@ -1135,8 +1157,9 @@ function ent_is_compliant(consumer, ent, log) {
 
 function get_consumer_ram(consumer) {
     var consumerRam = 1;
-    if (consumer.hasFact(RAM_FACT)) {
-        var ramGb = parseInt(consumer.getFact(RAM_FACT)) / 1024 / 1024;
+    if (!(typeof consumer.facts[RAM_FACT] === undefined)) {
+        var ramGb = parseInt(consumer.facts[RAM_FACT]) / 1024 / 1024;
+        // TODO: no rounding via Java methods
         consumerRam = java.lang.Math.round(ramGb);
     }
     return consumerRam;
@@ -1154,7 +1177,7 @@ function find_relevant_pids(entitlement, consumer) {
     for each (var installed_prod in consumer.installedProducts) {
         var installed_pid = installed_prod.productId;
         // TODO: create JS objects for entitlements and pools to simplify provides:
-        if (provides(entitlement.pool, installed_pid)) {
+        if (poolProvides(entitlement.pool, installed_pid)) {
             log.debug("pool provides: " + installed_pid);
             provided_pids.push(installed_pid);
         }
@@ -1162,14 +1185,23 @@ function find_relevant_pids(entitlement, consumer) {
     return provided_pids;
 }
 
-// TODO: create a Pool object prototype and move this function onto it:
-function provides(pool, productId) {
+// TODO: create a Pool object prototype and move these functions onto it:
+function poolProvides(pool, productId) {
     for each (var provided in pool.providedProducts) {
         if (provided.productId == productId) {
             return true;
         }
     }
     return false;
+}
+
+function poolGetProductAttribute(pool, attributeName) {
+    for each (var attr in pool.productAttributes) {
+        if (attr.name == attributeName) {
+            return attr.value;
+        }
+    }
+    return null;
 }
 
 var Compliance = {
@@ -1186,11 +1218,12 @@ var Compliance = {
         var compStatus = getComplianceStatusOnDate(context.consumer, context.entitlements, context.ondate, log);
         var compliantUntil = context.ondate;
         if (compStatus.isCompliant()) {
-            if (entitlements.isEmpty()) {
+            if (context.entitlements.length == 0) {
                 compliantUntil = null;
             }
             else {
-                compliantUntil = determineCompliantUntilDate(context.consumer, context.ondate, helper, log);
+                compliantUntil = determineCompliantUntilDate(context.consumer,
+                    context.ondate, helper, log);
             }
         }
         compStatus.compliantUntil = compliantUntil;
@@ -1209,6 +1242,7 @@ var Compliance = {
 /**
  * Checks compliance status for a consumer on a given date.
  */
+// TODO: Move to compliance namespace
 function getComplianceStatusOnDate(consumer, entitlements, ondate, log) {
     var status = new org.candlepin.policy.js.compliance.ComplianceStatus(ondate);
     // TODO: use a prototype to add the functions
@@ -1277,9 +1311,7 @@ function getComplianceStatusOnDate(consumer, entitlements, ondate, log) {
         var ent_is_stacked = is_stacked(e);
         // If the pool is stacked, check that the stack requirements are met:
         if (ent_is_stacked) {
-            // TODO: would be nice if the attributes came in as a simple map, or
-            // were converted by the builder method.
-            var stack_id = e.pool.product_attributes["stacking_id"].value;
+            var stack_id = poolGetProductAttribute(e.pool, "stacking_id");
             log.debug("    pool has stack ID: " + stack_id);
 
             // Shortcuts for stacks we've already checked:
