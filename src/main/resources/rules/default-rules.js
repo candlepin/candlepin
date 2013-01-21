@@ -35,6 +35,36 @@ function unbind_name_space() {
     return Unbind;
 }
 
+
+
+/*
+ * Model object related functions.
+ */
+
+function createPool(pool) {
+    // Translate productAttributes to a simple object:
+    origProdAttrs = pool.productAttributes;
+    if (Array.isArray(origProdAttrs)) {
+        pool.productAttributes = {};
+        for each (var attr in origProdAttrs) {
+            pool.productAttributes[attr.name] = attr.value;
+        }
+    }
+
+    // Add some functions onto pool objects:
+    pool.provides = function (productId) {
+        for each (var provided in this.providedProducts) {
+            if (provided.productId == productId) {
+                return true;
+            }
+        }
+        return false;
+    };
+    return pool;
+}
+
+
+
 /* Utility functions */
 function contains(a, obj) {
     for (var i = 0; i < a.length; i++) {
@@ -1102,7 +1132,7 @@ function stack_is_compliant(consumer, stack_id, ents, log) {
     var covered_sockets = 0;
     for each (var ent in ents) {
         if (is_stacked(ent)) {
-            var currentStackId = poolGetProductAttribute(ent.pool, "stacking_id");
+            var currentStackId = ent.pool.stacking_id;
             if (currentStackId.equals(stack_id)) {
                 covered_sockets += new_get_pool_sockets(ent.pool) * ent.quantity;
                 log.debug("Ent " + ent.id + " took covered sockets to: " + covered_sockets);
@@ -1138,7 +1168,7 @@ function ent_is_compliant(consumer, ent, log) {
     var consumerRam = get_consumer_ram(consumer);
     log.debug("  Consumer RAM found: " + consumerRam);
 
-    var poolRam = poolGetProductAttribute(ent.pool, "ram");
+    var poolRam = ent.pool.productAttributes["ram"];
     if (poolRam == null) {
         log.debug("  No RAM attribute on pool. Skipping RAM check.");
     }
@@ -1180,7 +1210,7 @@ function find_relevant_pids(entitlement, consumer) {
     for each (var installed_prod in consumer.installedProducts) {
         var installed_pid = installed_prod.productId;
         // TODO: create JS objects for entitlements and pools to simplify provides:
-        if (poolProvides(entitlement.pool, installed_pid)) {
+        if (entitlement.pool.provides(installed_pid)) {
             log.debug("pool provides: " + installed_pid);
             provided_pids.push(installed_pid);
         }
@@ -1188,36 +1218,29 @@ function find_relevant_pids(entitlement, consumer) {
     return provided_pids;
 }
 
-// TODO: create a Pool object prototype and move these functions onto it:
-function poolProvides(pool, productId) {
-    for each (var provided in pool.providedProducts) {
-        if (provided.productId == productId) {
-            return true;
-        }
-    }
-    return false;
-}
-
-function poolGetProductAttribute(pool, attributeName) {
-    for each (var attr in pool.productAttributes) {
-        if (attr.name == attributeName) {
-            return attr.value;
-        }
-    }
-    return null;
-}
-
+/*
+ * Namsepace for determining compliance status of a consumer system on a
+ * specific date.
+ *
+ * Compares entitlements against installed products, accounts for stacking,
+ * socket and RAM usage.
+ */
 var Compliance = {
     get_status_context: function() {
         log.info(json_context);
         context = eval(json_context);
         context.ondate = new Date(context.ondate);
+
+        // Add some methods to the various Pool objects:
+        for each (var e in context.entitlements) {
+            e.pool = createPool(e.pool);
+        }
+
         return context;
     },
 
     get_status: function() {
         var context = Compliance.get_status_context();
-        log.info(context);
         var compStatus = getComplianceStatusOnDate(context.consumer, context.entitlements, context.ondate, log);
         var compliantUntil = context.ondate;
         if (compStatus.isCompliant()) {
@@ -1343,7 +1366,7 @@ function getComplianceStatusOnDate(consumer, entitlements, ondate, log) {
         var ent_is_stacked = is_stacked(e);
         // If the pool is stacked, check that the stack requirements are met:
         if (ent_is_stacked) {
-            var stack_id = poolGetProductAttribute(e.pool, "stacking_id");
+            var stack_id = e.pool.stacking_id;
             log.debug("    pool has stack ID: " + stack_id);
 
             // Shortcuts for stacks we've already checked:
