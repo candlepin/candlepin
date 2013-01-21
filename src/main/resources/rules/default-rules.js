@@ -1144,7 +1144,7 @@ function stack_is_compliant(consumer, stack_id, ents, log) {
     for each (var ent in ents) {
         if (is_stacked(ent)) {
             var currentStackId = ent.pool.stacking_id;
-            if (currentStackId.equals(stack_id)) {
+            if (currentStackId == stack_id) {
                 covered_sockets += new_get_pool_sockets(ent.pool) * ent.quantity;
                 log.debug("Ent " + ent.id + " took covered sockets to: " + covered_sockets);
             }
