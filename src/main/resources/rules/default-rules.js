@@ -1010,7 +1010,7 @@ var Pool = {
                 log.info("Updated product attributes from subscription.");
             }
 
-            if (!(quantityChanged || datesChanged || productsChanged ||
+            if (!(quantityChanged || dat/getEntitlementsesChanged || productsChanged ||
                   productAttributesChanged)) {
                 //TODO: Should we check whether pool is overflowing here?
                 log.info("   No updates required.");
@@ -1058,7 +1058,12 @@ var Export = {
 }
 
 function is_stacked(ent) {
-    return ent.getPool().hasProductAttribute("stacking_id");
+    for each (var attr in ent.pool.productAttributes) {
+        if (attr['name'] == "stacking_id") {
+            return true;
+        }
+    }
+    return false;
 }
 
 /**
@@ -1079,7 +1084,7 @@ function stack_is_compliant(consumer, stack_id, ents, log) {
             var currentStackId = ent.getPool().getProductAttribute("stacking_id").getValue();
             if (currentStackId.equals(stack_id)) {
                 covered_sockets += get_pool_sockets(ent.getPool()) * ent.getQuantity();
-                log.debug("Ent " + ent.getId() + " took covered sockets to: " + covered_sockets);
+                log.debug("Ent " + ent.id + " took covered sockets to: " + covered_sockets);
             }
         }
     }
@@ -1091,7 +1096,7 @@ function stack_is_compliant(consumer, stack_id, ents, log) {
  * Check an entitlement to see if it provides sufficent CPU sockets a consumer.
  */
 function ent_is_compliant(consumer, ent, log) {
-    log.debug("Checking entitlement compliance: " + ent.getId());
+    log.debug("Checking entitlement compliance: " + ent.id);
     var consumerSockets = 1;
     if (consumer.hasFact(SOCKET_FACT)) {
         consumerSockets = parseInt(consumer.getFact(SOCKET_FACT));
@@ -1143,17 +1148,28 @@ function get_consumer_ram(consumer) {
  */
 function find_relevant_pids(entitlement, consumer) {
     provided_pids = [];
-    if (consumer.getInstalledProducts() == null) {
+    if (consumer.installedProducts == null) {
         return provided_pids;
     }
-    for each (var installed_prod in consumer.getInstalledProducts().toArray()) {
-        var installed_pid = installed_prod.getProductId();
-        if (entitlement.getPool().provides(installed_pid) == true) {
+    for each (var installed_prod in consumer.installedProducts) {
+        var installed_pid = installed_prod.productId;
+        // TODO: create JS objects for entitlements and pools to simplify provides:
+        if (provides(entitlement.pool, installed_pid)) {
             log.debug("pool provides: " + installed_pid);
             provided_pids.push(installed_pid);
         }
     }
     return provided_pids;
+}
+
+// TODO: create a Pool object prototype and move this function onto it:
+function provides(pool, productId) {
+    for each (var provided in pool.providedProducts) {
+        if (provided.productId == productId) {
+            return true;
+        }
+    }
+    return false;
 }
 
 var Compliance = {
@@ -1261,7 +1277,9 @@ function getComplianceStatusOnDate(consumer, entitlements, ondate, log) {
         var ent_is_stacked = is_stacked(e);
         // If the pool is stacked, check that the stack requirements are met:
         if (ent_is_stacked) {
-            var stack_id = e.getPool().getProductAttribute("stacking_id").getValue();
+            // TODO: would be nice if the attributes came in as a simple map, or
+            // were converted by the builder method.
+            var stack_id = e.pool.product_attributes["stacking_id"].value;
             log.debug("    pool has stack ID: " + stack_id);
 
             // Shortcuts for stacks we've already checked:
