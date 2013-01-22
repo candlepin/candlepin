@@ -108,7 +108,7 @@ public class ComplianceRules {
     public boolean isEntitlementCompliant(Consumer consumer, Entitlement ent) {
         JsonJsContext args = new JsonJsContext();
         args.put("consumer", consumer);
-        args.put("ent", ent);
+        args.put("entitlement", ent);
         args.put("log", log, false);
         return runJsFunction(Boolean.class, "is_ent_compliant", args);
     }

@@ -1270,11 +1270,14 @@ var Compliance = {
     },
 
     is_stack_compliant: function() {
-        return stack_is_compliant(consumer, stack_id, entitlements, log);
+        var context = Compliance.get_status_context();
+        return stack_is_compliant(context.consumer, context.stack_id,
+            context.entitlements, log);
     },
 
     is_ent_compliant: function () {
-        return ent_is_compliant(consumer, ent, log);
+        var context = Compliance.get_status_context();
+        return ent_is_compliant(context.consumer, context.entitlement, log);
     },
 
     filterEntitlementsByDate: function (entitlements, date) {
