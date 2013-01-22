@@ -1246,13 +1246,17 @@ var Compliance = {
         for each (var e in context.entitlements) {
             e.pool = createPool(e.pool);
         }
+        if ("entitlement" in context) {
+            context.entitlement.pool = createPool(context.entitlement.pool);
+        }
 
         return context;
     },
 
     get_status: function() {
         var context = Compliance.get_status_context();
-        var compStatus = getComplianceStatusOnDate(context.consumer, context.entitlements, context.ondate, log);
+        var compStatus = getComplianceStatusOnDate(context.consumer,
+            context.entitlements, context.ondate, log);
         var compliantUntil = context.ondate;
         if (compStatus.isCompliant()) {
             if (context.entitlements.length == 0) {
@@ -1264,9 +1268,7 @@ var Compliance = {
             }
         }
         compStatus.compliantUntil = compliantUntil;
-        json_str = JSON.stringify(compStatus);
-        log.info("Compliance JSON result: " + json_str);
-        return json_str;
+        return JSON.stringify(compStatus);
     },
 
     is_stack_compliant: function() {

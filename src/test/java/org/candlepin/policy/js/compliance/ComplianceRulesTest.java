@@ -563,7 +563,7 @@ public class ComplianceRulesTest {
     @Test
     public void compliantUntilDateIsOnDateWhenInstalledProductsButNoEntitlements() {
         Consumer consumer = mockConsumer(new String[]{ "Only One Installed Prod"});
-        Date expectedOnDate = TestUtil.createDate(2011, 4, 12);
+        Date expectedOnDate = TestUtil.createDate(9999, 4, 12);
         ComplianceStatus status = compliance.getStatus(consumer, expectedOnDate);
         assertEquals(expectedOnDate, status.getCompliantUntil());
     }
@@ -625,7 +625,7 @@ public class ComplianceRulesTest {
             PRODUCT_1, PRODUCT_2));
         ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
             PRODUCT_1, PRODUCT_2));
-        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(ents);
+        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
 
         Date expectedOnDate = TestUtil.createDate(2011, 8, 30);
         ComplianceStatus status = compliance.getStatus(c, expectedOnDate);
@@ -649,11 +649,11 @@ public class ComplianceRulesTest {
             start, TestUtil.createDate(2005, 6, 22), PRODUCT_1);
 
         // Set up entitlements at specific dates.
-        when(entCurator.listByConsumerAndDate(eq(consumer),
-            eq(start))).thenReturn(Arrays.asList(expired, ent));
-
-        when(entCurator.listByConsumerAndDate(eq(consumer),
-            eq(addSecond(ent.getEndDate())))).thenReturn(Arrays.asList(new Entitlement[0]));
+        when(entCurator.listByConsumer(eq(consumer))).thenReturn(
+            Arrays.asList(expired, ent));
+//
+//        when(entCurator.listByConsumerAndDate(eq(consumer),
+//            eq(addSecond(ent.getEndDate())))).thenReturn(Arrays.asList(new Entitlement[0]));
 
         Date expectedDate = addSecond(ent.getEndDate());
         ComplianceStatus status = compliance.getStatus(consumer, start);
@@ -682,7 +682,7 @@ public class ComplianceRulesTest {
         List<Entitlement> ents = new LinkedList<Entitlement>();
 
         ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product", PRODUCT_1));
-        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(ents);
+        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
         assertEquals(1, status.getPartiallyCompliantProducts().size());
@@ -701,7 +701,7 @@ public class ComplianceRulesTest {
         Consumer c = mockConsumer(new String [] {PRODUCT_1, PRODUCT_2});
         List<Entitlement> ents = new LinkedList<Entitlement>();
         ents.add(mockEntitlement(c, "Awesome Product", PRODUCT_1));
-        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(ents);
+        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
         assertEquals(1, status.getCompliantProducts().size());
@@ -715,7 +715,7 @@ public class ComplianceRulesTest {
         List<Entitlement> ents = new LinkedList<Entitlement>();
 
         ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product", PRODUCT_1));
-        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(ents);
+        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
         assertEquals(1, status.getPartiallyCompliantProducts().size());
@@ -729,7 +729,7 @@ public class ComplianceRulesTest {
         List<Entitlement> ents = new LinkedList<Entitlement>();
         ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product", PRODUCT_1));
         ents.add(mockEntitlement(c, "Another Product", PRODUCT_3));
-        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(ents);
+        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
         assertEquals(1, status.getPartiallyCompliantProducts().size());
