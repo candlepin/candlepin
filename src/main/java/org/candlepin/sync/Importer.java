@@ -22,6 +22,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.security.cert.CertificateException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -211,38 +212,35 @@ public class Importer {
             tmpDir = new SyncUtils(config).makeTempDir("import");
             extractArchive(tmpDir, exportFile);
 
-//           only need this call when sig file is verified
-//            exportStream = new FileInputStream(new File(tmpDir, "consumer_export.zip"));
-
-            /*
-             * Disabling this once again for a little bit longer. Dependent projects
-             * are not yet ready for it, and we're having some difficulty with the actual
-             * upstream cert to use.
-             *
-             * When we bring this back, we should probably report this conflict
-             * immediately, rather than continuing to extract and trying to find any
-             * other conflicts to pass back.
-             */
-//            boolean verifiedSignature = pki.verifySHA256WithRSAHashWithUpstreamCACert(
-//                exportStream,
-//                loadSignature(new File(tmpDir, "signature")));
-//            if (!verifiedSignature) {
-//                log.warn("Manifest signature check failed.");
-//                if (!forcedConflicts
-//                    .isForced(ImportConflicts.Conflict.SIGNATURE_CONFLICT)) {
-//                    conflicts.addConflict(
-//                        i18n.tr("Failed import file hash check."),
-//                        ImportConflicts.Conflict.SIGNATURE_CONFLICT);
-//                }
-//                else {
-//                    log.warn("Ignoring signature check failure.");
-//                }
-//            }
-
             File signature = new File(tmpDir, "signature");
             if (signature.length() == 0) {
                 throw new ImportExtractionException(i18n.tr("The archive does not " +
                                           "contain the required signature file"));
+            }
+
+            exportStream = new FileInputStream(new File(tmpDir, "consumer_export.zip"));
+            boolean verifiedSignature = pki.verifySHA256WithRSAHashWithUpstreamCACert(
+                exportStream,
+                loadSignature(new File(tmpDir, "signature")));
+            if (!verifiedSignature) {
+                log.warn("Archive signature check failed.");
+                if (!overrides
+                    .isForced(Conflict.SIGNATURE_CONFLICT)) {
+
+                    /*
+                     * Normally for import conflicts that can be overridden, we try to
+                     * report them all the first time so if the user intends to override,
+                     * they can do so with just one more request. However in the case of
+                     * a bad signature, we're going to report immediately due to the nature
+                     * of what this might mean.
+                     */
+                    throw new ImportConflictException(
+                        i18n.tr("Archive failed signature check"),
+                        Conflict.SIGNATURE_CONFLICT);
+                }
+                else {
+                    log.warn("Ignoring signature check failure.");
+                }
             }
 
             File consumerExport = new File(tmpDir, "consumer_export.zip");
@@ -265,10 +263,6 @@ public class Importer {
             result.put("meta", m);
             return result;
         }
-//        catch (CertificateException e) {
-//            log.error("Exception caught importing archive", e);
-//            throw new ImportExtractionException("unable to extract export archive", e);
-//        }
         catch (FileNotFoundException fnfe) {
             log.error("Archive file does not contain consumer_export.zip", fnfe);
             throw new ImportExtractionException(i18n.tr("The archive does not contain " +
@@ -287,6 +281,11 @@ public class Importer {
         catch (IOException e) {
             log.error("Exception caught importing archive", e);
             throw new ImportExtractionException("unable to extract export archive", e);
+        }
+        catch (CertificateException e) {
+            log.error("Certificate exception checking archive signature", e);
+            throw new ImportExtractionException(
+                "Certificate exception checking archive signature", e);
         }
         finally {
             if (tmpDir != null) {
