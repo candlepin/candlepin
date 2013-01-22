@@ -589,6 +589,19 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
 
     @Test
+    public void orderNumberAttribute() throws Exception {
+        //note that "true" gets recoded to "1" to match other bools in the cert
+        subscription.setOrderNumber("this_order");
+        certServiceAdapter.createX509Certificate(entitlement, subscription,
+            product, new BigInteger("1234"), keyPair(), true);
+
+        verify(mockedPKI).createX509Certificate(any(String.class),
+            argThat(new ListContainsOrderNumberKey("this_order")), any(Set.class),
+            any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
+            any(String.class));
+    }
+
+    @Test
     public void supportValuesPresentOnCertIfAttributePresent() throws Exception {
 
         ProductAttribute attr = new ProductAttribute("support_level", "Premium");
@@ -837,6 +850,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         subscription.getProduct().setAttribute("support_type", "stype");
         subscription.setAccountNumber("account1");
         subscription.setContractNumber("contract1");
+        subscription.setOrderNumber("order1");
         for (ProductContent pc : product.getProductContent()) {
             pc.setEnabled(false);
         }
@@ -881,7 +895,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         assertEquals(service.get("type"), "stype");
 
         Map<String, Object> order = (Map<String, Object>) data.get("order");
-        assertEquals(order.get("number"), subscription.getId());
+        assertEquals(order.get("number"), subscription.getOrderNumber());
         assertTrue(((Integer) order.get("quantity")).intValue() ==
             subscription.getQuantity());
         assertNotNull(order.get("start"));
@@ -1477,6 +1491,12 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         public ListContainsVirtOnlyKey(String value) {
             super(value, "1.3.6.1.4.1.2312.9.4.18");
+        }
+    }
+    static class ListContainsOrderNumberKey extends OidMatcher {
+
+        public ListContainsOrderNumberKey(String value) {
+            super(value, "1.3.6.1.4.1.2312.9.4.2");
         }
     }
 

@@ -612,8 +612,8 @@ class Candlepin
 
   def create_subscription(owner_key, product_id, quantity=1,
                           provided_products=[], contract_number='',
-                          account_number='',start_date=nil,
-                          end_date=nil)
+                          account_number='', order_number='', 
+                          start_date=nil, end_date=nil)
     start_date ||= Date.today
     end_date ||= start_date + 365
 
@@ -622,6 +622,7 @@ class Candlepin
       'endDate'   => end_date,
       'quantity'  =>  quantity,
       'accountNumber' => account_number,
+      'orderNumber' => order_number,
       'product' => { 'id' => product_id },
       'providedProducts' => provided_products.collect { |pid| {'id' => pid} },
       'contractNumber' => contract_number
