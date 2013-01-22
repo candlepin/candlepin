@@ -144,7 +144,7 @@ describe 'Candlepin Import' do
     @cp.import(owner2['key'], older_export)
   end
 
-  it 'should return 409 when importing manifest from different distributor' do
+  it 'should return 409 when importing manifest from different subscription management application' do
     create_candlepin_export()
     another_export = @export_filename
     old_upstream_uuid = @cp.get_owner(@import_owner['key'])['upstreamUuid']
@@ -152,7 +152,7 @@ describe 'Candlepin Import' do
     begin
       @cp.import(@import_owner['key'], another_export)
     rescue RestClient::Exception => e
-        expected = "Owner has already imported from another distributor"
+        expected = "Owner has already imported from another subscription management application."
         json = JSON.parse(e.http_body)
         json["displayMessage"].include?(expected).should be_true
         json["conflicts"].size.should == 1
@@ -171,7 +171,7 @@ describe 'Candlepin Import' do
     end
   end
 
-  it 'should allow forcing a manifest from a different distributor' do
+  it 'should allow forcing a manifest from a different subscription management application' do
     create_candlepin_export()
     another_export = @export_filename
 
@@ -188,18 +188,25 @@ describe 'Candlepin Import' do
   end
 
   it 'should return 400 when importing manifest in use by another owner' do
-    # export was already imported into another org in the
-    # before statement, let's ensure a second import causes
-    # the expected error
-    owner2 = @cp.create_owner(random_string("owner2"))
+    # Because the previous tests put the original import into a different state
+    # than if you just run this single one, we need to clear first and then 
+    # re-import the original.
+    # Also added the confirmation that the exception occurs when importing to 
+    # another owner.
+    @import_owner_client.undo_import(@import_owner['key'])
+    @cp.import(@import_owner['key'], @export_filename)
 
+    owner2 = @cp.create_owner(random_string("owner2"))
+    exception = false
     begin
       @cp.import(owner2['key'], @export_filename)
     rescue RestClient::Exception => e
-        expected = "This distributor has already been imported by another owner"
+        expected = "This subscription management application has already been imported by another owner."
         JSON.parse(e.http_body)["displayMessage"].should == expected
         e.http_code.should == 400
+        exception = true
     end
+    exception.should == true
   end
 
   it "should store the subscription upstream entitlement cert" do
