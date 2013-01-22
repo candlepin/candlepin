@@ -1143,7 +1143,7 @@ function stack_is_compliant(consumer, stack_id, ents, log) {
     var covered_sockets = 0;
     for each (var ent in ents) {
         if (is_stacked(ent)) {
-            var currentStackId = ent.pool.stacking_id;
+            var currentStackId = ent.pool.getProductAttribute("stacking_id");
             if (currentStackId == stack_id) {
                 covered_sockets += new_get_pool_sockets(ent.pool) * ent.quantity;
                 log.debug("Ent " + ent.id + " took covered sockets to: " + covered_sockets);
@@ -1379,7 +1379,7 @@ function getComplianceStatusOnDate(consumer, entitlements, ondate, log) {
         var ent_is_stacked = is_stacked(e);
         // If the pool is stacked, check that the stack requirements are met:
         if (ent_is_stacked) {
-            var stack_id = e.pool.stacking_id;
+            var stack_id = e.pool.getProductAttribute("stacking_id");
             log.debug("    pool has stack ID: " + stack_id);
 
             // Shortcuts for stacks we've already checked:
