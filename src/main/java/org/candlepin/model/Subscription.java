@@ -86,6 +86,8 @@ public class Subscription extends AbstractHibernateObject {
 
     private Date modified;
 
+    private String orderNumber;
+
     @Column(name = "upstream_pool_id")
     private String upstreamPoolId;
 
@@ -239,6 +241,21 @@ public class Subscription extends AbstractHibernateObject {
      */
     public String getAccountNumber() {
         return accountNumber;
+    }
+
+    /**
+     * set the order number
+     * @param orderNumber
+     */
+    public void setOrderNumber(String orderNumber) {
+        this.orderNumber = orderNumber;
+    }
+
+    /**
+     * @return the order number
+     */
+    public String getOrderNumber() {
+        return orderNumber;
     }
 
     /**

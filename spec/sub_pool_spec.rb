@@ -18,8 +18,9 @@ describe 'Sub-Pool' do
     @provided_product2 = create_product()
 
     # Create a subscription
+    @order_number = 'order1'
     @subscription = @cp.create_subscription(@owner['key'], @parent_product.id, 5,
-      [@provided_product1.id, @provided_product2.id])
+      [@provided_product1.id, @provided_product2.id], '', '', @order_number)
     @cp.refresh_pools(@owner['key'])
 
     # Set up user
@@ -64,7 +65,7 @@ describe 'Sub-Pool' do
     cert = OpenSSL::X509::Certificate.new(entitlement_cert.cert)
 
     order_number = extension_from_cert(cert, '1.3.6.1.4.1.2312.9.4.2')
-    order_number.should == @subscription.id
+    order_number.should == @order_number
   end
 
   it 'allows unregister as consumer with outstanding entitlements' do

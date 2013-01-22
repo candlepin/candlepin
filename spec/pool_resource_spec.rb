@@ -60,7 +60,7 @@ describe 'Pool Resource' do
     client = user_client(owner, random_string('testusr'))
     product = create_product()
     @cp.create_subscription(owner['key'], product.id, 5,
-      [], '', '', Date.today - 60, Date.today - 1)
+      [], '', '', '', Date.today - 60, Date.today - 1)
     @cp.refresh_pools(owner['key'])
     (@cp.list_pools :owner => owner.id).size.should == 0
   end
