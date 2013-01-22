@@ -563,7 +563,7 @@ public class ComplianceRulesTest {
     @Test
     public void compliantUntilDateIsOnDateWhenInstalledProductsButNoEntitlements() {
         Consumer consumer = mockConsumer(new String[]{ "Only One Installed Prod"});
-        Date expectedOnDate = TestUtil.createDate(20011, 4, 12);
+        Date expectedOnDate = TestUtil.createDate(2011, 4, 12);
         ComplianceStatus status = compliance.getStatus(consumer, expectedOnDate);
         assertEquals(expectedOnDate, status.getCompliantUntil());
     }
