@@ -17,7 +17,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.7.23
+Version: 0.7.24
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -326,6 +326,38 @@ fi
 
 
 %changelog
+* Wed Jan 23 2013 William Poteat <wpoteat@redhat.com> 0.7.24-1
+- 892027: OID Order namespace reflects subscription ID rather than Order Number
+  (wpoteat@redhat.com)
+- Removed DoubleCheckedLocking checkstyle module. (dgoodwin@redhat.com)
+- 875940:  String Updates: distributor -> subscription management application
+  (wpoteat@redhat.com)
+- allow to build F18 in Koji (msuchy@redhat.com)
+- Facts and Attributes should be non-negative instead of positive
+  (wpoteat@redhat.com)
+- 835977: Re-enable manifest signature checking. (dgoodwin@redhat.com)
+- 803757: Users should not be able to enter anything other than positive
+  integers for sockets 858286: Type checking for product attributes
+  (wpoteat@redhat.com)
+- 886211: Fix duplicate pinsetter jobs on every config change.
+  (dgoodwin@redhat.com)
+- 873808: Weird strings featuring '[' in CP from OwnerResource.java
+  (wpoteat@redhat.com)
+- 889512: Look for getters which use getProperty and isProperty
+  (bkearney@redhat.com)
+- 873776: Duplicate String: Candlepin has messages for "No such environment :
+  {0}" and "No such environment: {0}" (wpoteat@redhat.com)
+- 888849: Fixed stalled jobs on async bind (mstead@redhat.com)
+- 888035: Update messages for invalid certificates. (mstead@redhat.com)
+- 886211: Add transactional annotations for CrlGenerator task.
+  (dgoodwin@redhat.com)
+- 887287: Detect when virt_limit is removed from subscriptions.
+  (dgoodwin@redhat.com)
+- 721282: Enhance the documentation delivered with the rpm.
+  (bkearney@redhat.com)
+- 858759: Do not remove guest virt ents when no host required
+  (mstead@redhat.com)
+
 * Thu Dec 13 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.7.23-1
 - 886211: Fix a deadlock in mysql. (dgoodwin@redhat.com)
 - 884973: Make guest/host UUID comparisons case insensitive.
