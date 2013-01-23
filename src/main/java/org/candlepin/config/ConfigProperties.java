@@ -119,7 +119,7 @@ public class ConfigProperties {
         "lscpu.thread(s)_per_core";
 
     public static final String INTEGER_ATTRIBUTES =
-        "candlepin.integer_attriubtes";
+        "candlepin.integer_attributes";
     private static final String INTEGER_ATTRIBUTE_LIST = "";
 
     public static final String NON_NEG_INTEGER_ATTRIBUTES =
