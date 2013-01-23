@@ -245,7 +245,7 @@ public class X509V3ExtensionUtil extends X509Util{
         SimpleDateFormat iso8601DateFormat = Util.getUTCDateFormat();
         Order toReturn = new Order();
 
-        toReturn.setNumber(sub.getId().toString());
+        toReturn.setNumber(sub.getOrderNumber());
         toReturn.setQuantity(sub.getQuantity());
         toReturn.setStart(iso8601DateFormat.format(sub.getStartDate()));
         toReturn.setEnd(iso8601DateFormat.format(sub.getEndDate()));

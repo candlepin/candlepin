@@ -48,7 +48,7 @@ describe 'Healing' do
 
     # Create a future sub, the entitlement should not come from this one:
     future_sub = @cp.create_subscription(@owner['key'], parent_prod['id'],
-      10, [@product1['id'], @product2['id']], '', '', Date.today + 30,
+      10, [@product1['id'], @product2['id']], '', '', '', Date.today + 30,
         Date.today + 60)
 
     @cp.refresh_pools(@owner['key'])
@@ -75,7 +75,7 @@ describe 'Healing' do
 
     # Create a future sub, entitlement should end up coming from here:
     future_sub = @cp.create_subscription(@owner['key'], parent_prod['id'],
-      10, [@product1['id'], @product2['id']], '', '', Date.today + 365 * 2,
+      10, [@product1['id'], @product2['id']], '', '', '', Date.today + 365 * 2,
         Date.today + 365 * 4) # valid 2-4 years from now
 
     @cp.refresh_pools(@owner['key'])

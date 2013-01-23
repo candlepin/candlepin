@@ -129,7 +129,6 @@ class CertSetup(object):
         self.cert_home = '/etc/candlepin/certs'
         self.ca_key_passwd = self.cert_home + '/candlepin-ca-password.txt'
         self.ca_key = self.cert_home + '/candlepin-ca.key'
-        self.ca_upstream_cert = self.cert_home + '/candlepin-upstream-ca.crt'
         self.ca_pub_key = self.cert_home + '/candlepin-ca-pub.key'
         self.ca_cert = self.cert_home + '/candlepin-ca.crt'
         self.keystore = self.cert_home + '/keystore'
@@ -151,7 +150,6 @@ class CertSetup(object):
         print("Creating CA certificate")
         run_command_with_sudo('openssl req -new -x509 -days 365 -key %s -out %s -subj "/CN=%s/C=US/L=Raleigh/"' % (self.ca_key, self.ca_cert, socket.gethostname()))
         run_command_with_sudo('openssl pkcs12 -export -in %s -inkey %s -out %s -name tomcat -CAfile %s -caname root -chain -password pass:password' % (self.ca_cert, self.ca_key, self.keystore, self.ca_cert))
-        run_command_with_sudo('cp %s %s' % (self.ca_cert, self.ca_upstream_cert))
         run_command_with_sudo('chmod a+r %s' % self.keystore)
 
 

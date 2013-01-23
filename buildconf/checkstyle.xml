@@ -149,7 +149,6 @@
     <!-- <module name="ArrayTrailingComma" /> -->
     <!-- <module name="AvoidInlineConditionals"/> -->
     <!-- <module name="CovariantEquals"/> -->
-    <module name="DoubleCheckedLocking"/>
     <module name="EmptyStatement"/>
     <module name="EqualsHashCode"/>
     <!-- module name="FinalLocalVariable"/> -->
@@ -202,7 +201,7 @@
        #######################################################################
      -->
     <module name="AvoidStarImport">
-        <property name="allowStaticMemberImports" value="true"/> 
+        <property name="allowStaticMemberImports" value="true"/>
     </module>
     <!-- <module name="AvoidStaticImport"/> -->
     <module name="IllegalImport"/>

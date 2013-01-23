@@ -366,7 +366,7 @@ describe 'Consumer Resource' do
     ]
     cp_client.update_consumer({:installedProducts => installed})
 
-    subs1 = @cp.create_subscription(owner['key'], product1.id, 1, [], '', '', Date.today, Date.today + 365)
+    subs1 = @cp.create_subscription(owner['key'], product1.id, 1, [], '', '', '', Date.today, Date.today + 365)
     @cp.refresh_pools(owner['key'])
 
     for pool in @cp.list_owner_pools(owner['key']) do

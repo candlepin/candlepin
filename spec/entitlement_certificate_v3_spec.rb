@@ -44,7 +44,7 @@ describe 'Entitlement Certificate V3' do
 
     @cp.add_content_to_product(@product.id, @content.id, false)
 
-    @subscription = @cp.create_subscription(@owner['key'], @product.id, 10, [], '12345', '6789')
+    @subscription = @cp.create_subscription(@owner['key'], @product.id, 10, [], '12345', '6789', 'order1')
     @cp.refresh_pools(@owner['key'])
 
     @user = user_client(@owner, random_string('billy'))
@@ -86,7 +86,7 @@ describe 'Entitlement Certificate V3' do
     json_body['subscription']['virt_only'].should be_nil
     json_body['subscription']['service']['level'].should == 'standard'
     json_body['subscription']['service']['type'].should == 'excellent'
-    json_body['order']['number'].should == @subscription.id
+    json_body['order']['number'].should == 'order1'
     json_body['order']['quantity'].should == 10
     json_body['order']['start'].should_not be_nil
     json_body['order']['end'].should_not be_nil
