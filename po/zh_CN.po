@@ -1041,83 +1041,87 @@ msgstr "{0} 对于 {1} 来说不是个有效值"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:158
+#: src/main/java/org/candlepin/sync/Importer.java:159
 msgid "Wrong metadata type"
 msgstr "错误的元数据类型"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:167
+#: src/main/java/org/candlepin/sync/Importer.java:168
 msgid "Invalid owner"
 msgstr "无效拥有者"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:181
+#: src/main/java/org/candlepin/sync/Importer.java:182
 msgid "Import is older than existing data"
 msgstr "导入的数据比现有数据旧"
 
-#: src/main/java/org/candlepin/sync/Importer.java:191
+#: src/main/java/org/candlepin/sync/Importer.java:192
 msgid "Import is the same as existing data"
 msgstr "导入与现有数据相同"
 
-#: src/main/java/org/candlepin/sync/Importer.java:244
+#: src/main/java/org/candlepin/sync/Importer.java:217
 msgid "The archive does not contain the required signature file"
 msgstr "该归档不包含所需签名文件"
 
-#: src/main/java/org/candlepin/sync/Importer.java:254
+#: src/main/java/org/candlepin/sync/Importer.java:238
+msgid "Archive failed signature check"
+msgstr ""
+
+#: src/main/java/org/candlepin/sync/Importer.java:252
 msgid "The consumer_export archive has no contents"
 msgstr "用户导出没有内容的归档"
 
-#: src/main/java/org/candlepin/sync/Importer.java:274
+#: src/main/java/org/candlepin/sync/Importer.java:268
 msgid "The archive does not contain the required consumer_export.zip file"
 msgstr "该归档不包含所需 consumer_export.zip 文件"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author leahliu
-#: src/main/java/org/candlepin/sync/Importer.java:279
-#: src/main/java/org/candlepin/sync/Importer.java:284
+#: src/main/java/org/candlepin/sync/Importer.java:273
+#: src/main/java/org/candlepin/sync/Importer.java:278
 msgid "Failed to import archive"
 msgstr "导入归档失败"
 
-#: src/main/java/org/candlepin/sync/Importer.java:320
+#: src/main/java/org/candlepin/sync/Importer.java:319
 msgid "The archive does not contain the required meta.json file"
 msgstr "该归档不包含所需 meta.json 文件"
 
-#: src/main/java/org/candlepin/sync/Importer.java:325
+#: src/main/java/org/candlepin/sync/Importer.java:324
 msgid "The archive does not contain the required rules directory"
 msgstr "该归档不包含所需规则目录"
 
-#: src/main/java/org/candlepin/sync/Importer.java:329
+#: src/main/java/org/candlepin/sync/Importer.java:328
 msgid "The archive does not contain the required rules file(s)"
 msgstr "该归档不包含所需规则文件"
 
-#: src/main/java/org/candlepin/sync/Importer.java:334
+#: src/main/java/org/candlepin/sync/Importer.java:333
 msgid "The archive does not contain the required consumer_types directory"
 msgstr "该归档不包含所需 consumer_types 目录"
 
-#: src/main/java/org/candlepin/sync/Importer.java:339
+#: src/main/java/org/candlepin/sync/Importer.java:338
 msgid "The archive does not contain the required consumer.json file"
 msgstr "该归档不包含所需 consumer_json 目录"
 
-#: src/main/java/org/candlepin/sync/Importer.java:345
+#: src/main/java/org/candlepin/sync/Importer.java:344
 msgid "The archive does not contain the required entitlements directory"
 msgstr "该归档不包含所需授权目录"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:444
+#: src/main/java/org/candlepin/sync/Importer.java:443
 #, java-format
 msgid "Incompatible rules: import version {0} older than our version {1}."
 msgstr "不兼容规则：导入版本 {0} 比我们的版本 {1} 还要旧。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:447
+#: src/main/java/org/candlepin/sync/Importer.java:446
 msgid "Manifest data will be imported without rules import."
 msgstr "在不导入规则的情况下导入清单数据。"
 
-#: src/main/java/org/candlepin/sync/Importer.java:558
+#: src/main/java/org/candlepin/sync/Importer.java:557
 #, java-format
 msgid "The archive {0} is not a properly compressed file or is empty"
 msgstr "归档 {0} 没有正确压缩或者为空"
@@ -1128,23 +1132,20 @@ msgstr "归档 {0} 没有正确压缩或者为空"
 msgid "Unable to find product with ID: "
 msgstr "无法根据 ID 找到产品："
 
-# translation auto-copied from project Candlepin, version master, document
-# keys, author leahliu
 #: src/main/java/org/candlepin/sync/ConsumerImporter.java:48
-msgid "No ID for upstream distributor"
-msgstr "上游发行商没有 ID"
+msgid "No ID for upstream subscription management application."
+msgstr ""
 
-# translation auto-copied from project Candlepin, version master, document
-# keys, author leahliu
-#: src/main/java/org/candlepin/sync/ConsumerImporter.java:62
-msgid "This distributor has already been imported by another owner"
-msgstr "已经由另一个拥有者导入这个发行商"
+#: src/main/java/org/candlepin/sync/ConsumerImporter.java:63
+msgid ""
+"This subscription management application has already been imported by "
+"another owner."
+msgstr ""
 
-# translation auto-copied from project Candlepin, version master, document
-# keys, author leahliu
-#: src/main/java/org/candlepin/sync/ConsumerImporter.java:69
-msgid "Owner has already imported from another distributor"
-msgstr "已从另一个发行商中导入拥有者"
+#: src/main/java/org/candlepin/sync/ConsumerImporter.java:71
+msgid ""
+"Owner has already imported from another subscription management application."
+msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys

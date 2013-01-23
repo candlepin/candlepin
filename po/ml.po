@@ -1093,72 +1093,76 @@ msgstr "{0},{1}-നുള്ള ഉചിതമായ മൂല്ല്യമ�
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:158
+#: src/main/java/org/candlepin/sync/Importer.java:159
 msgid "Wrong metadata type"
 msgstr "തെറ്റായ മെറ്റാഡേറ്റാ രീതി"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:167
+#: src/main/java/org/candlepin/sync/Importer.java:168
 msgid "Invalid owner"
 msgstr "തെറ്റായ ഉടമസ്ഥന്‍"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:181
+#: src/main/java/org/candlepin/sync/Importer.java:182
 msgid "Import is older than existing data"
 msgstr "നിലവിലുള്ള ഡേറ്റയേക്കാള്‍ പഴയതാണു് ലഭ്യമാക്കിയതു്"
 
-#: src/main/java/org/candlepin/sync/Importer.java:191
+#: src/main/java/org/candlepin/sync/Importer.java:192
 msgid "Import is the same as existing data"
 msgstr "ഇംപോര്‍ട്ട് ചെയ്തതു് നിലവിലുള്ള ഡേറ്റാ തന്നെയാകുന്നു"
 
-#: src/main/java/org/candlepin/sync/Importer.java:244
+#: src/main/java/org/candlepin/sync/Importer.java:217
 msgid "The archive does not contain the required signature file"
 msgstr "ആര്‍ക്കൈവില്‍ ആവശ്യമുള്ള സിഗ്നേച്ചര്‍ ഫയല്‍ ലഭ്യമല്ല"
 
-#: src/main/java/org/candlepin/sync/Importer.java:254
+#: src/main/java/org/candlepin/sync/Importer.java:238
+msgid "Archive failed signature check"
+msgstr ""
+
+#: src/main/java/org/candlepin/sync/Importer.java:252
 msgid "The consumer_export archive has no contents"
 msgstr "consumer_export ആര്‍ക്കൈവില്‍ വിവരങ്ങള്‍ ലഭ്യമല്ല"
 
-#: src/main/java/org/candlepin/sync/Importer.java:274
+#: src/main/java/org/candlepin/sync/Importer.java:268
 msgid "The archive does not contain the required consumer_export.zip file"
 msgstr "ആര്‍ക്കൈവില്‍ ആവശ്യമായ consumer_export.zip ഫയല്‍ ലഭ്യമല്ല"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/sync/Importer.java:279
-#: src/main/java/org/candlepin/sync/Importer.java:284
+#: src/main/java/org/candlepin/sync/Importer.java:273
+#: src/main/java/org/candlepin/sync/Importer.java:278
 msgid "Failed to import archive"
 msgstr "ആര്‍ക്കൈവ് ഇംപോര്‍ട്ട് ചെയ്യുന്നതില്‍ പരാജയപ്പെട്ടു"
 
-#: src/main/java/org/candlepin/sync/Importer.java:320
+#: src/main/java/org/candlepin/sync/Importer.java:319
 msgid "The archive does not contain the required meta.json file"
 msgstr "ആര്‍ക്കൈവില്‍ ആവശ്യമായ meta.json‍ ഫയല്‍ ലഭ്യമല്ല"
 
-#: src/main/java/org/candlepin/sync/Importer.java:325
+#: src/main/java/org/candlepin/sync/Importer.java:324
 msgid "The archive does not contain the required rules directory"
 msgstr "ആര്‍ക്കൈവില്‍ ആവശ്യമായ നിയമങ്ങളുടെ ഡയറക്ടറി ലഭ്യമല്ല"
 
-#: src/main/java/org/candlepin/sync/Importer.java:329
+#: src/main/java/org/candlepin/sync/Importer.java:328
 msgid "The archive does not contain the required rules file(s)"
 msgstr "ആര്‍ക്കൈവില്‍ ആവശ്യമായ നിയമങ്ങളുടെ ഫയല്‍ ലഭ്യമല്ല"
 
-#: src/main/java/org/candlepin/sync/Importer.java:334
+#: src/main/java/org/candlepin/sync/Importer.java:333
 msgid "The archive does not contain the required consumer_types directory"
 msgstr "ആര്‍ക്കൈവില്‍ ആവശ്യമായ consumer_types ഡയറക്ടറി ലഭ്യമല്ല"
 
-#: src/main/java/org/candlepin/sync/Importer.java:339
+#: src/main/java/org/candlepin/sync/Importer.java:338
 msgid "The archive does not contain the required consumer.json file"
 msgstr "ആര്‍ക്കൈവില്‍ ആവശ്യമായ consumer.json‍ ഫയല്‍ ലഭ്യമല്ല"
 
-#: src/main/java/org/candlepin/sync/Importer.java:345
+#: src/main/java/org/candlepin/sync/Importer.java:344
 msgid "The archive does not contain the required entitlements directory"
 msgstr "ആര്‍ക്കൈവില്‍ ആവശ്യമായ എന്റൈറ്റില്‍മെന്റുകളുടെ ഡയറക്ടറി ലഭ്യമല്ല"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/sync/Importer.java:444
+#: src/main/java/org/candlepin/sync/Importer.java:443
 #, java-format
 msgid "Incompatible rules: import version {0} older than our version {1}."
 msgstr ""
@@ -1167,12 +1171,12 @@ msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/sync/Importer.java:447
+#: src/main/java/org/candlepin/sync/Importer.java:446
 msgid "Manifest data will be imported without rules import."
 msgstr ""
 "ഇംപോര്‍ട്ട് നിയമങ്ങളില്ലാതെ മാനിഫെസ്റ്റ് ഡേറ്റാ ഇംപോര്‍ട്ട് ചെയ്യപ്പെടുന്നു."
 
-#: src/main/java/org/candlepin/sync/Importer.java:558
+#: src/main/java/org/candlepin/sync/Importer.java:557
 #, java-format
 msgid "The archive {0} is not a properly compressed file or is empty"
 msgstr "ആര്‍ക്കൈവ് {0} ശരിയായി കമ്പ്രസ്സ് ചെയ്ത ഫയലല്ല അല്ലെങ്കില്‍ കാലിയാണു്"
@@ -1183,25 +1187,20 @@ msgstr "ആര്‍ക്കൈവ് {0} ശരിയായി കമ്പ്
 msgid "Unable to find product with ID: "
 msgstr "ഈ ഐഡിയുള്ള പ്രൊഡക്ട് കണ്ടുപിടിയ്ക്കുവാന്‍ സാധ്യമല്ല:"
 
-# translation auto-copied from project Candlepin, version master, document
-# keys, author anipeter
 #: src/main/java/org/candlepin/sync/ConsumerImporter.java:48
-msgid "No ID for upstream distributor"
-msgstr "അപ്സ്ട്രീം വിതരണക്കാരനു് ഐഡി ലഭ്യമല്ല"
-
-# translation auto-copied from project Candlepin, version master, document
-# keys, author anipeter
-#: src/main/java/org/candlepin/sync/ConsumerImporter.java:62
-msgid "This distributor has already been imported by another owner"
+msgid "No ID for upstream subscription management application."
 msgstr ""
-"ഈ വിതരണക്കാരനെ മറ്റൊരു ഉടമസ്ഥന്‍ നിലവില്‍ ഇംപോര്‍ട്ട് ചെയ്തിരിയ്ക്കുന്നു"
 
-# translation auto-copied from project Candlepin, version master, document
-# keys, author anipeter
-#: src/main/java/org/candlepin/sync/ConsumerImporter.java:69
-msgid "Owner has already imported from another distributor"
+#: src/main/java/org/candlepin/sync/ConsumerImporter.java:63
+msgid ""
+"This subscription management application has already been imported by "
+"another owner."
 msgstr ""
-"മറ്റൊരു വിതരണക്കാരനില്‍ നിന്നും ഉടമസ്ഥന്‍ ഇംപോര്‍ട്ട് ചെയ്തിരിയ്ക്കുന്നു"
+
+#: src/main/java/org/candlepin/sync/ConsumerImporter.java:71
+msgid ""
+"Owner has already imported from another subscription management application."
+msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys

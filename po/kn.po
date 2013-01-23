@@ -1076,72 +1076,76 @@ msgstr "{0} ಎನ್ನುವುದು {1} ನ ಒಂದು ಮಾನ್ಯವ�
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:158
+#: src/main/java/org/candlepin/sync/Importer.java:159
 msgid "Wrong metadata type"
 msgstr "ತಪ್ಪು ಮೆಟಾಡೇಟದ ಬಗೆ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:167
+#: src/main/java/org/candlepin/sync/Importer.java:168
 msgid "Invalid owner"
 msgstr "ಅಮಾನ್ಯವಾದ ಮಾಲಿಕ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:181
+#: src/main/java/org/candlepin/sync/Importer.java:182
 msgid "Import is older than existing data"
 msgstr "ಆಮದು ಮಾಡಲಾಗಿದ್ದು ಈಗಿರುವ ಮಾಹಿತಿಗಿಂತ ಹಳೆಯದಾಗಿದೆ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:191
+#: src/main/java/org/candlepin/sync/Importer.java:192
 msgid "Import is the same as existing data"
 msgstr "ಆಮದು ಮಾಡಲಾಗಿದ್ದು ಈಗಿರುವ ರೀತಿಯಲ್ಲಿಯೆ ಇದೆ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:244
+#: src/main/java/org/candlepin/sync/Importer.java:217
 msgid "The archive does not contain the required signature file"
 msgstr "ಅಗತ್ಯವಿರುವ ಸಹಿ ಕಡತವನ್ನು ಆರ್ಕೈವ್ ಹೊಂದಿಲ್ಲ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:254
+#: src/main/java/org/candlepin/sync/Importer.java:238
+msgid "Archive failed signature check"
+msgstr ""
+
+#: src/main/java/org/candlepin/sync/Importer.java:252
 msgid "The consumer_export archive has no contents"
 msgstr "consumer_export ಆರ್ಕೈವ್ ಯಾವುದೆ ವಿಷಯಗಳನ್ನು ಹೊಂದಿಲ್ಲ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:274
+#: src/main/java/org/candlepin/sync/Importer.java:268
 msgid "The archive does not contain the required consumer_export.zip file"
 msgstr "ಆರ್ಕೈವ್ ಅಗತ್ಯವಿರುವ consumer_export.zip ಕಡತವನ್ನು ಹೊಂದಿಲ್ಲ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author shanky
-#: src/main/java/org/candlepin/sync/Importer.java:279
-#: src/main/java/org/candlepin/sync/Importer.java:284
+#: src/main/java/org/candlepin/sync/Importer.java:273
+#: src/main/java/org/candlepin/sync/Importer.java:278
 msgid "Failed to import archive"
 msgstr "ಆರ್ಕೈವ್‌ ಅನ್ನು ಆಮದು ಮಾಡಿಕೊಳ್ಳಲು ವಿಫಲಗೊಂಡಿದೆ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:320
+#: src/main/java/org/candlepin/sync/Importer.java:319
 msgid "The archive does not contain the required meta.json file"
 msgstr "ಆರ್ಕೈವ್ ಅಗತ್ಯವಿರುವ meta.json ಕಡತವನ್ನು ಹೊಂದಿಲ್ಲ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:325
+#: src/main/java/org/candlepin/sync/Importer.java:324
 msgid "The archive does not contain the required rules directory"
 msgstr "ಆರ್ಕೈವ್ ಅಗತ್ಯವಿರುವ ನಿಯಮಗಳ ಕೋಶವನ್ನು ಹೊಂದಿಲ್ಲ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:329
+#: src/main/java/org/candlepin/sync/Importer.java:328
 msgid "The archive does not contain the required rules file(s)"
 msgstr "ಆರ್ಕೈವ್ ಅಗತ್ಯವಿರುವ ನಿಯಮಗಳ ಕಡತವನ್ನು(ಗಳನ್ನು) ಹೊಂದಿಲ್ಲ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:334
+#: src/main/java/org/candlepin/sync/Importer.java:333
 msgid "The archive does not contain the required consumer_types directory"
 msgstr "ಆರ್ಕೈವ್ ಅಗತ್ಯವಿರುವ consumer_types ಕೋಶವನ್ನು ಹೊಂದಿಲ್ಲ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:339
+#: src/main/java/org/candlepin/sync/Importer.java:338
 msgid "The archive does not contain the required consumer.json file"
 msgstr "ಆರ್ಕೈವ್ ಅಗತ್ಯವಿರುವ consumer.json ಕಡತವನ್ನು ಹೊಂದಿಲ್ಲ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:345
+#: src/main/java/org/candlepin/sync/Importer.java:344
 msgid "The archive does not contain the required entitlements directory"
 msgstr "ಆರ್ಕೈವ್ ಅಗತ್ಯವಿರುವ ಎಂಟೈಟಲ್ಮೆಂಟ್‌ ಕೋಶವನ್ನು ಹೊಂದಿಲ್ಲ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author shanky
-#: src/main/java/org/candlepin/sync/Importer.java:444
+#: src/main/java/org/candlepin/sync/Importer.java:443
 #, java-format
 msgid "Incompatible rules: import version {0} older than our version {1}."
 msgstr ""
@@ -1150,11 +1154,11 @@ msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author shanky
-#: src/main/java/org/candlepin/sync/Importer.java:447
+#: src/main/java/org/candlepin/sync/Importer.java:446
 msgid "Manifest data will be imported without rules import."
 msgstr "ಮ್ಯಾನಿಫೆಸ್ಟ್‍ ಮಾಹಿತಿಯನ್ನು ನಿಯಮಗಳ ಆಮದು ಇಲ್ಲದೆ ಆಮದು ಮಾಡಿಕೊಳ್ಳಲಾಗುತ್ತದೆ."
 
-#: src/main/java/org/candlepin/sync/Importer.java:558
+#: src/main/java/org/candlepin/sync/Importer.java:557
 #, java-format
 msgid "The archive {0} is not a properly compressed file or is empty"
 msgstr ""
@@ -1166,23 +1170,20 @@ msgstr ""
 msgid "Unable to find product with ID: "
 msgstr "ಈ ಉತ್ಪನ್ನ IDಯೊಂದಿಗಿನ ಉತ್ಪನ್ನವನ್ನು ಪತ್ತೆ ಮಾಡಲು ಸಾಧ್ಯವಾಗಿಲ್ಲ: "
 
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
 #: src/main/java/org/candlepin/sync/ConsumerImporter.java:48
-msgid "No ID for upstream distributor"
-msgstr "ಅಪ್‌ಸ್ಟ್ರೀಮ್ ವಿತರಕರಿಗೆ ಯಾವುದೆ ID ಇಲ್ಲ"
+msgid "No ID for upstream subscription management application."
+msgstr ""
 
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/sync/ConsumerImporter.java:62
-msgid "This distributor has already been imported by another owner"
-msgstr "ಈ ಮಾಲಿಕನು ಈಗಾಗಲೆ ಬೇರೊಂದು ವಿತರಕರಿಂದ ಆಮದು ಮಾಡಿಕೊಂಡಿದ್ದಾನೆ"
+#: src/main/java/org/candlepin/sync/ConsumerImporter.java:63
+msgid ""
+"This subscription management application has already been imported by "
+"another owner."
+msgstr ""
 
-# translation auto-copied from project Candlepin, version master, document
-# keys, author shanky
-#: src/main/java/org/candlepin/sync/ConsumerImporter.java:69
-msgid "Owner has already imported from another distributor"
-msgstr "ಮಾಲಿಕನು ಈಗಾಗಲೆ ಬೇರೊಂದು ವಿತರಕರಿಂದ ಆಮದು ಮಾಡಿಕೊಂಡಿದ್ದಾನೆ"
+#: src/main/java/org/candlepin/sync/ConsumerImporter.java:71
+msgid ""
+"Owner has already imported from another subscription management application."
+msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
