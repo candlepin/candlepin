@@ -188,7 +188,7 @@ public class PoolResource {
         }
 
         throw new NotFoundException(i18n.tr(
-            "Entitlement Pool with ID ''{0}'' could not be found.", id));
+            "Subscription Pool with ID ''{0}'' could not be found.", id));
     }
 
     /**

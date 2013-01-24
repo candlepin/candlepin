@@ -85,7 +85,7 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
 
         if (entitlementPool.isExpired(dateSource)) {
             preHelper.getResult().addError(
-                new ValidationError(i18n.tr("Entitlements for {0} expired on: {1}",
+                new ValidationError(i18n.tr("Subscriptions for {0} expired on: {1}",
                     entitlementPool.getProductId(),
                     entitlementPool.getEndDate())));
         }
