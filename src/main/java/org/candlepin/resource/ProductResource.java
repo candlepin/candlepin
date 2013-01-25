@@ -14,6 +14,21 @@
  */
 package org.candlepin.resource;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
+
 import org.candlepin.auth.interceptor.SecurityHole;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
@@ -30,25 +45,10 @@ import org.candlepin.model.StatisticCurator;
 import org.candlepin.pinsetter.tasks.RefreshPoolsForProductJob;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.service.ProductServiceAdapter;
-
-import com.google.inject.Inject;
-
 import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
 
-import java.util.Arrays;
-import java.util.List;
-
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
+import com.google.inject.Inject;
 
 /**
  * API Gateway into /product
@@ -182,6 +182,41 @@ public class ProductResource {
     public void removeContent(@PathParam("product_uuid") String pid,
                               @PathParam("content_id") String contentId) {
         prodAdapter.removeContent(pid, contentId);
+    }
+
+    /**
+     * @return the Product
+     * @httpcode 200
+     */
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/{product_uuid}/reliance/{rely_product_id}")
+    public Product addReliance(@PathParam("product_uuid") String pid,
+                              @PathParam("rely_product_id") String relyId) {
+        prodAdapter.addRely(pid, relyId);
+        return prodAdapter.getProductById(pid);
+    }
+
+    /**
+     * @httpcode 200
+     */
+    @DELETE
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/{product_uuid}/reliance/{rely_product_uuid}")
+    public void removeReliance(@PathParam("product_uuid") String pid,
+                              @PathParam("rely_product_uuid") String relyId) {
+        prodAdapter.removeRely(pid, relyId);
+    }
+
+    /**
+     * @return the set of relies on products
+     * @httpcode 200
+     */
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/{product_uuid}/reliance")
+    public Set<String> getReliance(@PathParam("product_uuid") String pid) {
+        return prodAdapter.getReliesOn(pid);
     }
 
     /**

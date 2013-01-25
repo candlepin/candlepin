@@ -214,6 +214,165 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
     }
 
+    @Test
+    public void testFullReliantProducts() {
+        Product prod = new Product("test-label", "test-product-name");
+        HashSet<String> reliantProductIds = new HashSet<String>();
+        reliantProductIds.add("ProductX");
+        reliantProductIds.add("ProductY");
+        prod.setReliesOn(reliantProductIds);
+        productCurator.create(prod);
+
+        Product lookedUp = productCurator.find(prod.getId());
+        assertTrue(lookedUp.getReliesOn().contains("ProductX"));
+        assertTrue(lookedUp.getReliesOn().contains("ProductY"));
+    }
+
+    @Test
+    public void testAddReliantProducts() {
+        Product prod = new Product("test-label", "test-product-name");
+        HashSet<String> reliantProductIds = new HashSet<String>();
+        reliantProductIds.add("ProductX");
+        prod.setReliesOn(reliantProductIds);
+        productCurator.create(prod);
+        Product lookedUp = productCurator.find(prod.getId());
+        assertTrue(lookedUp.getReliesOn().contains("ProductX"));
+
+        prod.addRely("ProductY");
+        productCurator.merge(prod);
+        lookedUp = productCurator.find(prod.getId());
+        assertTrue(lookedUp.getReliesOn().contains("ProductX"));
+        assertTrue(lookedUp.getReliesOn().contains("ProductY"));
+    }
+
+    @Test
+    public void testRemoveReliantProducts() {
+        Product prod = new Product("test-label", "test-product-name");
+        HashSet<String> reliantProductIds = new HashSet<String>();
+        reliantProductIds.add("ProductX");
+        reliantProductIds.add("ProductY");
+        reliantProductIds.add("ProductZ");
+        prod.setReliesOn(reliantProductIds);
+        productCurator.create(prod);
+        Product lookedUp = productCurator.find(prod.getId());
+        assertTrue(lookedUp.getReliesOn().contains("ProductX"));
+        assertTrue(lookedUp.getReliesOn().contains("ProductY"));
+        assertTrue(lookedUp.getReliesOn().contains("ProductZ"));
+
+        prod.removeRely("ProductY");
+        productCurator.merge(prod);
+        lookedUp = productCurator.find(prod.getId());
+        assertTrue(lookedUp.getReliesOn().contains("ProductX"));
+        assertTrue(!lookedUp.getReliesOn().contains("ProductY"));
+        assertTrue(lookedUp.getReliesOn().contains("ProductZ"));
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testCircularReliantProductsOne() {
+        Product prod = new Product("test-label", "test-product-name");
+        HashSet<String> reliantProductIds = new HashSet<String>();
+        reliantProductIds.add("ProductX");
+        reliantProductIds.add("ProductY");
+        reliantProductIds.add("test-label");
+        prod.setReliesOn(reliantProductIds);
+        productCurator.create(prod);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testCircularReliantProductsTwo() {
+        Product prod1 = new Product("test-label-1", "test-product-name-1");
+        HashSet<String> reliantProductIds1 = new HashSet<String>();
+        reliantProductIds1.add("test-label-2");
+        prod1.setReliesOn(reliantProductIds1);
+        try {
+            productCurator.create(prod1);
+        }
+        catch (BadRequestException bre) {
+            // Make sure that this is not thrown here
+            // Only the next create should throw the exception
+            assertTrue(false);
+        }
+
+        Product prod2 = new Product("test-label-2", "test-product-name-2");
+        HashSet<String> reliantProductIds2 = new HashSet<String>();
+        reliantProductIds2.add("test-label-1");
+        prod2.setReliesOn(reliantProductIds2);
+        productCurator.create(prod2);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testCircularReliantProductsThree() {
+        Product prod1 = new Product("test-label-1", "test-product-name-1");
+        HashSet<String> reliantProductIds1 = new HashSet<String>();
+        reliantProductIds1.add("test-label-2");
+        prod1.setReliesOn(reliantProductIds1);
+        try {
+            productCurator.create(prod1);
+        }
+        catch (BadRequestException bre) {
+            // Make sure that this is not thrown here
+            // Only the last create should throw the exception
+            assertTrue(false);
+        }
+
+        Product prod3 = new Product("test-label-3", "test-product-name-3");
+        HashSet<String> reliantProductIds3 = new HashSet<String>();
+        reliantProductIds3.add("test-label-1");
+        prod3.setReliesOn(reliantProductIds3);
+        try {
+            productCurator.create(prod3);
+        }
+        catch (BadRequestException bre) {
+            // Make sure that this is not thrown here
+            // Only the last create should throw the exception
+            assertTrue(false);
+        }
+
+        Product prod2 = new Product("test-label-2", "test-product-name-2");
+        HashSet<String> reliantProductIds2 = new HashSet<String>();
+        reliantProductIds2.add("test-label-3");
+        prod2.setReliesOn(reliantProductIds2);
+        productCurator.create(prod2);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testCircularReliantProductsUpdate() {
+        Product prod1 = new Product("test-label-1", "test-product-name-1");
+        try {
+            productCurator.create(prod1);
+            prod1.addRely("test-label-2");
+            productCurator.merge(prod1);
+        }
+        catch (BadRequestException bre) {
+            // Make sure that this is not thrown here
+            // Only the last update should throw the exception
+            assertTrue(false);
+        }
+
+        Product prod3 = new Product("test-label-3", "test-product-name-3");
+        try {
+            productCurator.create(prod3);
+            prod3.addRely("test-label-1");
+            productCurator.merge(prod3);
+        }
+        catch (BadRequestException bre) {
+            // Make sure that this is not thrown here
+            // Only the last update should throw the exception
+            assertTrue(false);
+        }
+
+        Product prod2 = new Product("test-label-2", "test-product-name-2");
+        try {
+            productCurator.create(prod2);
+        }
+        catch (BadRequestException bre) {
+            // Make sure that this is not thrown here
+            // Only the last update should throw the exception
+            assertTrue(false);
+        }
+        prod2.addRely("test-label-3");
+        productCurator.merge(prod2);
+    }
 
     /**
      * Test whether the product updation date is updated when merging.
