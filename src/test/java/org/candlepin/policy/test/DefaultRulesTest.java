@@ -26,9 +26,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.URL;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -73,6 +71,8 @@ import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.TestDateUtil;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.DateSourceImpl;
+import org.candlepin.util.Util;
+import org.candlepin.util.VersionUtil;
 import org.candlepin.util.X509ExtensionUtil;
 import org.junit.Before;
 import org.junit.Test;
@@ -108,21 +108,10 @@ public class DefaultRulesTest {
         when(config.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
         this.productCache = new ProductCache(config, this.prodAdapter);
 
-        URL url = this.getClass().getClassLoader()
-            .getResource("rules/default-rules.js");
-        InputStreamReader inputStreamReader = new InputStreamReader(
-            url.openStream());
+        InputStream is = this.getClass().getResourceAsStream(
+            RulesCurator.DEFAULT_RULES_FILE);
+        Rules rules = new Rules(Util.readFile(is), VersionUtil.getVersionString());
 
-        BufferedReader reader = new BufferedReader(inputStreamReader);
-        StringBuilder builder = new StringBuilder();
-        String line = null;
-        while ((line = reader.readLine()) != null) {
-            builder.append(line + "\n");
-        }
-        reader.close();
-
-        Rules rules = mock(Rules.class);
-        when(rules.getRules()).thenReturn(builder.toString());
         when(rulesCurator.getRules()).thenReturn(rules);
         when(rulesCurator.getUpdated()).thenReturn(
             TestDateUtil.date(2010, 1, 1));

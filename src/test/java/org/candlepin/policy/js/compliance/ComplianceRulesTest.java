@@ -21,7 +21,6 @@ import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.mock;
 
 import java.io.InputStream;
 import java.util.Arrays;
@@ -61,8 +60,6 @@ public class ComplianceRulesTest {
     private Owner owner;
     private ComplianceRules compliance;
 
-    private static final String RULES_FILE = "/rules/default-rules.js";
-
     private static final String PRODUCT_1 = "product1";
     private static final String PRODUCT_2 = "product2";
     private static final String PRODUCT_3 = "product3";
@@ -78,7 +75,8 @@ public class ComplianceRulesTest {
         MockitoAnnotations.initMocks(this);
 
         // Load the default production rules:
-        InputStream is = this.getClass().getResourceAsStream(RULES_FILE);
+        InputStream is = this.getClass().getResourceAsStream(
+            RulesCurator.DEFAULT_RULES_FILE);
         Rules rules = new Rules(Util.readFile(is), VersionUtil.getVersionString());
         when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
         when(rulesCuratorMock.getRules()).thenReturn(rules);

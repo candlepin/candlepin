@@ -60,8 +60,6 @@ public class InstalledProductStatusCalculatorTest {
     private Owner owner;
     private ComplianceRules compliance;
 
-    private static final String RULES_FILE = "/rules/default-rules.js";
-
     private static final String PRODUCT_1 = "product1";
     private static final String STACK_ID_1 = "my-stack-1";
 
@@ -74,7 +72,8 @@ public class InstalledProductStatusCalculatorTest {
         MockitoAnnotations.initMocks(this);
 
         // Load the default production rules:
-        InputStream is = this.getClass().getResourceAsStream(RULES_FILE);
+        InputStream is = this.getClass().getResourceAsStream(
+            RulesCurator.DEFAULT_RULES_FILE);
         Rules rules = new Rules(Util.readFile(is), VersionUtil.getVersionString());
         when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
         when(rulesCuratorMock.getRules()).thenReturn(rules);

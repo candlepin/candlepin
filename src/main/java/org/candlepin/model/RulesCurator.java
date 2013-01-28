@@ -33,6 +33,7 @@ import java.util.List;
  */
 public class RulesCurator extends AbstractHibernateCurator<Rules> {
     private static Logger log = Logger.getLogger(RulesCurator.class);
+    public static final String DEFAULT_RULES_FILE = "/rules/rules.js";
 
     protected RulesCurator() {
         super(Rules.class);
@@ -138,6 +139,6 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
     }
 
     protected String getDefaultRulesFile() {
-        return "/rules/default-rules.js";
+        return DEFAULT_RULES_FILE;
     }
 }

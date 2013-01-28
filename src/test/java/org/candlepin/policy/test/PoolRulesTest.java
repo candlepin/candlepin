@@ -65,8 +65,6 @@ public class PoolRulesTest {
 
     private PoolRules poolRules;
 
-    private static final String RULES_FILE = "/rules/default-rules.js";
-
     @Mock private RulesCurator rulesCuratorMock;
     @Mock private ProductServiceAdapter productAdapterMock;
     @Mock private PoolManager poolManagerMock;
@@ -80,7 +78,8 @@ public class PoolRulesTest {
     public void setUp() {
 
         // Load the default production rules:
-        InputStream is = this.getClass().getResourceAsStream(RULES_FILE);
+        InputStream is = this.getClass().getResourceAsStream(
+            RulesCurator.DEFAULT_RULES_FILE);
         Rules rules = new Rules(Util.readFile(is), VersionUtil.getVersionString());
 
         when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
