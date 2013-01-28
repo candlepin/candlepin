@@ -228,7 +228,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         }
 
         if (log.isDebugEnabled()) {
-            log.debug("results(postfilter): " + results);
             log.debug("active pools for owner: " + results.size());
         }
 

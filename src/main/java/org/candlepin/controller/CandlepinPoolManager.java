@@ -124,26 +124,12 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     Set<Entitlement> refreshPoolsWithoutRegeneration(Owner owner) {
-        log.debug("Refreshing pools");
-
+        log.info("Refreshing pools for owner: " + owner.getKey());
         List<Subscription> subs = subAdapter.getSubscriptions(owner);
-
-        if (log.isDebugEnabled()) {
-            log.debug("Found subscriptions: ");
-            for (Subscription sub : subs) {
-                log.debug("   " + sub);
-            }
-        }
+        log.debug("Found " + subs.size() + " subscriptions.");
 
         List<Pool> pools = this.poolCurator.listAvailableEntitlementPools(null,
             owner, null, null, false, false);
-
-        if (log.isDebugEnabled()) {
-            log.debug("Found pools: ");
-            for (Pool p : pools) {
-                log.debug("   " + p);
-            }
-        }
 
         // Map all pools for this owner/product that have a
         // subscription ID associated with them.
@@ -163,7 +149,7 @@ public class CandlepinPoolManager implements PoolManager {
             // Delete any expired subscriptions. Leave it in the map
             // so that the pools will get deleted as well.
             if (isExpired(sub)) {
-                log.debug("Deleting expired subscription " + sub);
+                log.info("Deleting expired subscription: " + sub);
                 subAdapter.deleteSubscription(sub);
                 continue;
             }
