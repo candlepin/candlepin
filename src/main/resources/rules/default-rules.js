@@ -935,7 +935,6 @@ var Pool = {
     updatePools: function () {
         var poolsUpdated = new java.util.LinkedList();
         for each (var existingPool in pools.toArray()) {
-            log.info("Updating pool: " + existingPool.getId());
             var datesChanged = (!sub.getStartDate().equals(
                 existingPool.getStartDate())) ||
                 (!sub.getEndDate().equals(existingPool.getEndDate()));
@@ -1013,7 +1012,6 @@ var Pool = {
             if (!(quantityChanged || datesChanged || productsChanged ||
                   productAttributesChanged)) {
                 //TODO: Should we check whether pool is overflowing here?
-                log.info("   No updates required.");
                 continue;
             }
 
