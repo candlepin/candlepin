@@ -1109,7 +1109,7 @@ public class ConsumerResource {
         }
         catch (ExportCreationException e) {
             throw new IseException(
-                i18n.tr("Unable to create entitlement archive"), e);
+                i18n.tr("Unable to create entitlement certificate archive"), e);
         }
     }
 
@@ -1373,7 +1373,7 @@ public class ConsumerResource {
         Entitlement entitlement = entitlementCurator.find(entitlementId);
 
         if (entitlement == null) {
-            throw new NotFoundException(i18n.tr("No such entitlement: {0}",
+            throw new NotFoundException(i18n.tr("No such subscription: {0}",
                 entitlementId));
         }
         return entitlement;

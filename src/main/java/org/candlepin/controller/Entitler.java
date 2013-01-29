@@ -109,7 +109,7 @@ public class Entitler {
             }
             else if (error.equals("rulefailed.no.entitlements.available")) {
                 msg = i18n.tr(
-                    "No entitlements are available from the pool with " +
+                    "No subscriptions are available from the pool with " +
                     "id ''{0}''.", pool.getId());
             }
             else if (error.equals("rulefailed.consumer.type.mismatch")) {
@@ -216,7 +216,7 @@ public class Entitler {
                     "product ''{0}''", productId);
             }
             else if (error.equals("rulefailed.no.entitlements.available")) {
-                msg = i18n.tr("There are not enough free entitlements " +
+                msg = i18n.tr("There are not enough free subscriptions " +
                     "available for the product ''{0}''", productId);
             }
             else if (error.equals("rulefailed.consumer.type.mismatch")) {
