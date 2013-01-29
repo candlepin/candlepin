@@ -634,7 +634,7 @@ var Entitlement = {
     },
 
     pre_ram: function() {
-        var consumerRam = get_consumer_ram(consumer);
+        var consumerRam = old_get_consumer_ram(consumer);
         log.debug("Consumer has " + consumerRam + "GB of RAM.");
 
         var productRam = parseInt(product.getAttribute("ram"));
@@ -1204,6 +1204,17 @@ function ent_is_compliant(consumer, ent, log) {
     return true
 }
 
+// TODO: remove this once entitlement namespace is ported to json in/out
+function old_get_consumer_ram(consumer) {
+    var consumerRam = 1;
+    if (consumer.hasFact(RAM_FACT)) {
+        var ramGb = parseInt(consumer.getFact(RAM_FACT)) / 1024 / 1024;
+        consumerRam = java.lang.Math.round(ramGb);
+    }
+    return consumerRam;
+}
+
+
 function get_consumer_ram(consumer) {
     var consumerRam = 1;
     if (!(typeof consumer.facts[RAM_FACT] === undefined)) {
@@ -1269,7 +1280,7 @@ var Compliance = {
             }
             else {
                 compliantUntil = determineCompliantUntilDate(context.consumer,
-                    context.ondate, helper, log);
+                    context.entitlements, context.ondate, helper, log);
             }
         }
         compStatus.compliantUntil = compliantUntil;
@@ -1324,6 +1335,8 @@ function getComplianceStatusOnDate(consumer, entitlements, ondate, log) {
     var status = new org.candlepin.policy.js.compliance.ComplianceStatus(ondate);
     // TODO: use a prototype to add the functions
     var compStatus = {
+
+        date: ondate,
 
         // Maps partially compliant stack IDs to entitlements:
         partialStacks: {},
@@ -1455,11 +1468,11 @@ function getComplianceStatusOnDate(consumer, entitlements, ondate, log) {
 }
 
 /**
- * Determine the compliant until date for a consumer based on the specifed start date
+ * Determine the compliant until date for a consumer based on the specified start date
  * and entitlements.
  */
-function determineCompliantUntilDate(consumer, consumerEntitlements, startDate, complianceHelper, log) {
-    var initialEntitlements = Compliance.filterEntitlementsByDate(consumerEntitlements, startDate);
+function determineCompliantUntilDate(consumer, entitlements, startDate, complianceHelper, log) {
+    var initialEntitlements = Compliance.filterEntitlementsByDate(entitlements, startDate);
 
     // Get all end dates from current entitlements sorted ascending.
     var dates = Compliance.getSortedEndDates(initialEntitlements);
@@ -1473,12 +1486,12 @@ function determineCompliantUntilDate(consumer, consumerEntitlements, startDate, 
 
         // Need to check if we are still compliant after the end date,
         // so we add one second.
-        dateToCheck.setSeconds(next.getSeconds() + 1);
+        dateToCheck.setSeconds(dateToCheck.getSeconds() + 1);
 
-        var compStatus = getComplianceStatusOnDate(consumer, consumerEntitlements,
+        var compStatus = getComplianceStatusOnDate(consumer, entitlements,
                                                    dateToCheck, log);
         if (!compStatus.isCompliant()) {
-            return next;
+            return dateToCheck;
         }
     }
     return null;

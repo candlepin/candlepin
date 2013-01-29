@@ -649,9 +649,6 @@ public class ComplianceRulesTest {
         // Set up entitlements at specific dates.
         when(entCurator.listByConsumer(eq(consumer))).thenReturn(
             Arrays.asList(expired, ent));
-//
-//        when(entCurator.listByConsumerAndDate(eq(consumer),
-//            eq(addSecond(ent.getEndDate())))).thenReturn(Arrays.asList(new Entitlement[0]));
 
         Date expectedDate = addSecond(ent.getEndDate());
         ComplianceStatus status = compliance.getStatus(consumer, start);
