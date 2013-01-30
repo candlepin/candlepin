@@ -105,6 +105,8 @@ public class HypervisorResource {
                         i18n.tr("Hypervisor {0} has been deleted previously",
                             hostEntry.getKey(), hostEntry.getKey()));
                 }
+
+                boolean hostConsumerCreated = false;
                 Consumer consumer = consumerCurator.findByUuid(hostEntry.getKey());
                 if (consumer == null) {
                     // Create new consumer
@@ -116,7 +118,7 @@ public class HypervisorResource {
                     consumer.setGuestIds(new ArrayList<GuestId>());
                     consumer = consumerResource.create(consumer, principal, null, ownerKey,
                         null);
-                    result.created(consumer);
+                    hostConsumerCreated = true;
                 }
                 /* commented out per 768872
                 // Revoke all entitlements from the host if no guests were reported.
@@ -127,10 +129,22 @@ public class HypervisorResource {
 
                 Consumer withIds = new Consumer();
                 withIds.setGuestIds(guestIds);
-                if (consumerResource.performConsumerUpdates(withIds, consumer)) {
+                boolean guestIdsUpdated =
+                    consumerResource.performConsumerUpdates(withIds, consumer);
+                if (guestIdsUpdated) {
                     consumerCurator.update(consumer);
                 }
-                result.updated(consumer);
+
+                // Populate the result with the processed consumer.
+                if (hostConsumerCreated) {
+                    result.created(consumer);
+                }
+                else if (guestIdsUpdated && !hostConsumerCreated) {
+                    result.updated(consumer);
+                }
+                else {
+                    result.unchanged(consumer);
+                }
             }
             catch (Exception e) {
                 result.failed(hostEntry.getKey(), e.getMessage());

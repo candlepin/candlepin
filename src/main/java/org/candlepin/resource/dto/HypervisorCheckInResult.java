@@ -25,7 +25,8 @@ import org.candlepin.model.Consumer;
  *
  * <pre>
  *     created: the consumers that have been created from the host ids.
- *     updated: the host's virt ids of host consumers that have been updated.
+ *     updated: the host consumers that have had their guest IDs updated.
+ *     unchanged: the host consumers that have not been changed.
  *     failed: a list of strings formated as '{host_virt_id}: Error message'.
  * </pre>
  */
@@ -33,11 +34,13 @@ public class HypervisorCheckInResult {
 
     private Set<Consumer> created;
     private Set<Consumer> updated;
+    private Set<Consumer> unchanged;
     private Set<String> failed;
 
     public HypervisorCheckInResult() {
         this.created = new HashSet<Consumer>();
         this.updated = new HashSet<Consumer>();
+        this.unchanged = new HashSet<Consumer>();
         this.failed = new HashSet<String>();
     }
 
@@ -47,6 +50,10 @@ public class HypervisorCheckInResult {
 
     public void updated(Consumer c) {
         this.updated.add(c);
+    }
+
+    public void unchanged(Consumer c) {
+        this.unchanged.add(c);
     }
 
     public void failed(String hostVirtId, String errorMessage) {
@@ -62,7 +69,12 @@ public class HypervisorCheckInResult {
         return updated;
     }
 
+    public Set<Consumer> getUnchanged() {
+        return unchanged;
+    }
+
     public Set<String> getFailedUpdate() {
         return failed;
     }
+
 }
