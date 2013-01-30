@@ -69,6 +69,9 @@ function createPool(pool) {
 
     // Add some functions onto pool objects:
     pool.provides = function (productId) {
+        if (this.productId == productId) {
+            return true;
+        }
         for each (var provided in this.providedProducts) {
             if (provided.productId == productId) {
                 return true;
@@ -1164,7 +1167,6 @@ function find_relevant_pids(entitlement, consumer) {
     }
     for each (var installed_prod in consumer.installedProducts) {
         var installed_pid = installed_prod.productId;
-        // TODO: create JS objects for entitlements and pools to simplify provides:
         if (entitlement.pool.provides(installed_pid)) {
             log.debug("pool provides: " + installed_pid);
             provided_pids.push(installed_pid);
@@ -1182,7 +1184,6 @@ function find_relevant_pids(entitlement, consumer) {
  */
 var Compliance = {
     get_status_context: function() {
-        log.debug("Input: " + json_context);
         context = eval(json_context);
         context.ondate = new Date(context.ondate);
 
@@ -1198,6 +1199,7 @@ var Compliance = {
     },
 
     get_status: function() {
+        log.debug("INPUT: " + json_context);
         var context = Compliance.get_status_context();
         var compStatus = Compliance.getComplianceStatusOnDate(context.consumer,
             context.entitlements, context.ondate, log);
@@ -1212,7 +1214,9 @@ var Compliance = {
             }
         }
         compStatus.compliantUntil = compliantUntil;
-        return JSON.stringify(compStatus);
+        var output = JSON.stringify(compStatus);
+        log.debug("OUTPUT: " + output);
+        return output;
     },
 
     is_stack_compliant: function() {
@@ -1315,7 +1319,7 @@ var Compliance = {
         var compliant_stack_ids = new java.util.HashSet();
         var non_compliant_stack_ids = new java.util.HashSet();
 
-        log.debug("Checking compliance status for consumer: " + consumer.uuid);
+        log.debug("Checking compliance status for consumer: " + consumer.uuid + " on date: " + ondate);
         var entitlementsOnDate = Compliance.filterEntitlementsByDate(entitlements, ondate);
         for each (var e in entitlementsOnDate) {
             log.debug("  checking entitlement: " + e.id);
@@ -1450,7 +1454,6 @@ var Compliance = {
     /*
      * Check an entitlement to see if it provides sufficent CPU sockets a consumer.
      */
-    // TODO: move to compliance namespace
     ent_is_compliant: function(consumer, ent, log) {
         log.debug("Checking entitlement compliance: " + ent.id);
         var consumerSockets = 1;
@@ -1473,12 +1476,13 @@ var Compliance = {
         log.debug("  Consumer RAM found: " + consumerRam);
 
         var poolRam = ent.pool.getProductAttribute("ram");
+        log.debug("poolRam: " + poolRam);
         if (poolRam == null) {
             log.debug("  No RAM attribute on pool. Skipping RAM check.");
         }
         else {
-            if (!poolRam.isEmpty()) {
-                var ram = parseInt(poolRamAttr);
+            if (!poolRam == "") {
+                var ram = parseInt(poolRam);
                 log.debug("  Pool RAM found: " + ram)
                 if (consumerRam > ram) {
                     return false;

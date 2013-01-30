@@ -85,7 +85,6 @@ public class ComplianceRules {
 
         // Convert the JSON returned into a ComplianceStatus object:
         String json = runJsFunction(String.class, "get_status", args);
-        log.debug("Output: " + json);
         try {
             ComplianceStatus status = mapper.readValue(json, ComplianceStatus.class);
             return status;
