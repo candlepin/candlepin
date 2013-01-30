@@ -14,49 +14,29 @@
  */
 package org.candlepin.policy.js;
 
-import java.util.Map.Entry;
-
-import org.candlepin.exceptions.IseException;
-import org.candlepin.jackson.ExportBeanPropertyFilter;
-import org.codehaus.jackson.map.AnnotationIntrospector;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
-import org.codehaus.jackson.map.ser.impl.SimpleFilterProvider;
-import org.codehaus.jackson.node.ObjectNode;
-import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
 import org.mozilla.javascript.Scriptable;
 
 /**
  * JsonContext
  *
  * A javascript context which provides each of its context args as
- * a single JSON string.
+ * a single JSON string. It also provides the ability to specify
+ * non-serializable objects which are passed directly to the called
+ * JS function.
  */
 public class JsonJsContext extends JsContext {
 
-    private ObjectMapper mapper;
+    private final RulesObjectMapper rulesObjectMapper;
     private ArgumentJsContext nonSerializableContext;
 
-    public JsonJsContext() {
-        mapper = new ObjectMapper();
-
-        // Since each class can only have one @JsonFilter annotation, and most have
-        // ApiHateoas, We just default here to using the Export filter.
-        SimpleFilterProvider filterProvider = new SimpleFilterProvider();
-        filterProvider.setDefaultFilter(new ExportBeanPropertyFilter());
-        mapper.setFilters(filterProvider);
-
-        AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
-        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
-        AnnotationIntrospector pair = new AnnotationIntrospector.Pair(primary, secondary);
-        mapper.setAnnotationIntrospector(pair);
-
-        nonSerializableContext = new ArgumentJsContext();
+    public JsonJsContext(RulesObjectMapper rulesObjectMapper) {
+        this.rulesObjectMapper = rulesObjectMapper;
+        this.nonSerializableContext = new ArgumentJsContext();
     }
 
     @Override
     public void applyTo(Scriptable scope) {
-        scope.put("json_context", scope, this.buildJsonContext());
+        scope.put("json_context", scope, this.rulesObjectMapper.toJsonString(contextArgs));
         nonSerializableContext.applyTo(scope);
     }
 
@@ -66,19 +46,6 @@ public class JsonJsContext extends JsContext {
         }
         else {
             this.put(contextKey, contextVal);
-        }
-    }
-
-    private String buildJsonContext() {
-        ObjectNode mainNode = mapper.createObjectNode();
-        for (Entry<String, Object> entry : this.contextArgs.entrySet()) {
-            mainNode.putPOJO(entry.getKey(), entry.getValue());
-        }
-        try {
-            return '(' + mapper.writeValueAsString(mainNode) + ')';
-        }
-        catch (Exception e) {
-            throw new IseException("Failed to serialize", e);
         }
     }
 }

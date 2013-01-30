@@ -18,19 +18,14 @@ import java.util.Date;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.candlepin.jackson.ExportBeanPropertyFilter;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.policy.js.JsContext;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsonJsContext;
-import org.candlepin.policy.js.JsContext;
 import org.candlepin.policy.js.RuleExecutionException;
-import org.codehaus.jackson.map.AnnotationIntrospector;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
-import org.codehaus.jackson.map.ser.impl.SimpleFilterProvider;
-import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
+import org.candlepin.policy.js.RulesObjectMapper;
 import org.mozilla.javascript.RhinoException;
 
 import com.google.inject.Inject;
@@ -44,7 +39,7 @@ public class ComplianceRules {
 
     private EntitlementCurator entCurator;
     private JsRunner jsRules;
-    private ObjectMapper mapper;
+    private RulesObjectMapper mapper;
     private static Logger log = Logger.getLogger(ComplianceRules.class);
 
     @Inject
@@ -52,16 +47,7 @@ public class ComplianceRules {
         this.entCurator = entCurator;
         this.jsRules = jsRules;
 
-        mapper = new ObjectMapper();
-        SimpleFilterProvider filterProvider = new SimpleFilterProvider();
-        filterProvider.setDefaultFilter(new ExportBeanPropertyFilter());
-        mapper.setFilters(filterProvider);
-
-        AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
-        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
-        AnnotationIntrospector pair = new AnnotationIntrospector.Pair(primary, secondary);
-        mapper.setAnnotationIntrospector(pair);
-
+        mapper = RulesObjectMapper.instance();
         jsRules.init("compliance_name_space");
     }
 
@@ -76,7 +62,7 @@ public class ComplianceRules {
 
         List<Entitlement> ents = entCurator.listByConsumer(c);
 
-        JsonJsContext args = new JsonJsContext();
+        JsonJsContext args = new JsonJsContext(mapper);
         args.put("consumer", c);
         args.put("entitlements", ents);
         args.put("ondate", date);
@@ -86,7 +72,7 @@ public class ComplianceRules {
         // Convert the JSON returned into a ComplianceStatus object:
         String json = runJsFunction(String.class, "get_status", args);
         try {
-            ComplianceStatus status = mapper.readValue(json, ComplianceStatus.class);
+            ComplianceStatus status = mapper.toObject(json, ComplianceStatus.class);
             return status;
         }
         catch (Exception e) {
@@ -96,7 +82,7 @@ public class ComplianceRules {
 
     public boolean isStackCompliant(Consumer consumer, String stackId,
         List<Entitlement> entsToConsider) {
-        JsonJsContext args = new JsonJsContext();
+        JsonJsContext args = new JsonJsContext(mapper);
         args.put("stack_id", stackId);
         args.put("consumer", consumer);
         args.put("entitlements", entsToConsider);
@@ -105,7 +91,7 @@ public class ComplianceRules {
     }
 
     public boolean isEntitlementCompliant(Consumer consumer, Entitlement ent) {
-        JsonJsContext args = new JsonJsContext();
+        JsonJsContext args = new JsonJsContext(mapper);
         args.put("consumer", consumer);
         args.put("entitlement", ent);
         args.put("log", log, false);
