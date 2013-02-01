@@ -225,7 +225,7 @@ public class Entitler {
             }
             else if (error.equals("rulefailed.virt.only")) {
                 msg = i18n.tr(
-                    "Only virtual systems can consume the product ''{0}''",
+                    "Only virtual systems can have subscription ''{0}'' attached.",
                     productId);
             }
             else {
