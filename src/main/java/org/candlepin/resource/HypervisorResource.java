@@ -33,6 +33,7 @@ import com.google.inject.persist.Transactional;
 
 import org.apache.log4j.Logger;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -112,6 +113,7 @@ public class HypervisorResource {
                     consumer.setUuid(hostEntry.getKey());
                     consumer.setType(new ConsumerType(ConsumerTypeEnum.HYPERVISOR));
                     consumer.setFact("uname.machine", "x86_64");
+                    consumer.setGuestIds(new ArrayList<GuestId>());
                     consumer = consumerResource.create(consumer, principal, null, ownerKey,
                         null);
                     result.created(consumer);

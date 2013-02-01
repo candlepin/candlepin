@@ -125,6 +125,19 @@ describe 'Hypervisor Resource' do
     results.failedUpdate.size.should == 0
   end
 
+  it 'should initialize guest ids to empty when creating new host' do
+    host_guest_mapping = get_host_guest_mapping(random_string('new_host'), [])
+    results = @user.hypervisor_check_in(@owner['key'], host_guest_mapping)
+
+    # Host consumer should have been created.
+    results.created.size.should == 1
+    # Check updates.
+    results.updated.size.should == 1
+
+    results.created[0]['guestIds'].should_not == nil
+    results.updated[0]['guestIds'].should_not == nil
+  end
+
   def get_host_guest_mapping(host_uuid, guest_id_list)
     return { host_uuid => guest_id_list }
   end
