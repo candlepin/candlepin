@@ -219,7 +219,7 @@ public class EntitlementResource {
 
         if (ent == null) {
             throw new NotFoundException(i18n.tr(
-                "Entitlement with ID ''{0}'' could not be found.", dbid));
+                "Subscription with ID ''{0}'' could not be found.", dbid));
         }
 
         String subscriptionId = ent.getPool().getSubscriptionId();
