@@ -1140,7 +1140,7 @@ function old_get_consumer_ram(consumer) {
     var consumerRam = 1;
     if (consumer.hasFact(RAM_FACT)) {
         var ramGb = parseInt(consumer.getFact(RAM_FACT)) / 1024 / 1024;
-        consumerRam = java.lang.Math.round(ramGb);
+        consumerRam = Math.round(ramGb);
     }
     return consumerRam;
 }
@@ -1150,8 +1150,7 @@ function get_consumer_ram(consumer) {
     var consumerRam = 1;
     if (!(typeof consumer.facts[RAM_FACT] === undefined)) {
         var ramGb = parseInt(consumer.facts[RAM_FACT]) / 1024 / 1024;
-        // TODO: no rounding via Java methods
-        consumerRam = java.lang.Math.round(ramGb);
+        consumerRam = Math.round(ramGb);
     }
     return consumerRam;
 }

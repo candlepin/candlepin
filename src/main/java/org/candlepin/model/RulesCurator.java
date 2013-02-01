@@ -62,22 +62,28 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
      * @return the rules
      */
     public Rules getRules() {
-        List<Rules> existingRuleSet = listAll();
+        List<Rules> dbRuleSet = listAll();
+        // Load rules from RPM, we need to know it's version before we know which
+        // rules to use:
+        Rules rpmRules = rulesFromFile(getDefaultRulesFile());
+        log.debug("RPM Rules version: " + rpmRules.getVersion());
+
         // If there are rules in the database and their version is not less than the
-        // candlepin version this server is currently running, we'll use them:
-        if (!existingRuleSet.isEmpty() &&
-            VersionUtil.getRulesVersionCompatibility(
-                existingRuleSet.get(0).getCandlepinVersion())) {
-            return existingRuleSet.get(0);
+        // version this server is currently running, we'll use them:
+        if (!dbRuleSet.isEmpty() &&
+            VersionUtil.getRulesVersionCompatibility(rpmRules.getVersion(),
+                dbRuleSet.get(0).getVersion())) {
+            log.info("Using rules from database.");
+            return dbRuleSet.get(0);
         }
 
-        if (!existingRuleSet.isEmpty()) {
-            log.warn("Ignoring older rules in database, candlepin version: " +
-                existingRuleSet.get(0).getCandlepinVersion());
+        if (!dbRuleSet.isEmpty()) {
+            log.warn("Ignoring older rules in database, version: " +
+                dbRuleSet.get(0).getVersion());
         }
 
-        log.info("Loading default rules.");
-        return rulesFromFile(getDefaultRulesFile());
+        log.info("Using default rules from RPM.");
+        return rpmRules;
 
     }
 

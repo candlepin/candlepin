@@ -38,7 +38,7 @@ public class RulesImporterTest {
 
     @Mock private RulesCurator curator;
     private RulesImporter importer;
-    private String RULE = "good bye, cruel world!";
+    private String RULE = "//Version: 2.0\ngood bye, cruel world!";
 
     @Before
     public void setUp() {

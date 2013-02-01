@@ -38,17 +38,17 @@ public class RulesResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testUpload() {
-        String rulesBuffer = new String(Base64.encodeBase64String(("//foobar"
+        String rulesBuffer = new String(Base64.encodeBase64String(("//Version: 6.0\nfoobar"
             .getBytes())));
         rulesResource.upload(rulesBuffer);
         Rules rules = rulesCurator.getRules();
-        assertEquals(VersionUtil.getVersionString(), rules.getCandlepinVersion());
+        assertEquals("6.0", rules.getVersion());
     }
 
     @Test
     public void testGet() {
 
-        String rulesBuffer = new String(Base64.encodeBase64String(("//foobar"
+        String rulesBuffer = new String(Base64.encodeBase64String(("//Version: 2.0\nfoobar"
             .getBytes())));
         rulesResource.upload(rulesBuffer);
         String rules = rulesResource.get();
@@ -58,7 +58,7 @@ public class RulesResourceTest extends DatabaseTestFixture {
     @Test
     public void testDelete() {
         String origRules = rulesResource.get();
-        String newRules = new String(Base64.encodeBase64String(("//foobar"
+        String newRules = new String(Base64.encodeBase64String(("//Version: 2.0\nfoobar"
             .getBytes())));
         rulesResource.upload(newRules);
         rulesResource.delete();

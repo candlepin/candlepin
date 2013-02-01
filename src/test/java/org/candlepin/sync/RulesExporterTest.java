@@ -31,7 +31,7 @@ import org.junit.Test;
  */
 public class RulesExporterTest {
 
-    private String FAKE_RULES = "HELLO WORLD";
+    private String FAKE_RULES = "//Version: 2.0\nHELLO WORLD";
 
     @Test
     public void testMetaExporter() throws IOException {
