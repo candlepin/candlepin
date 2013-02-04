@@ -49,7 +49,6 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.model.RulesCurator;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.pki.PKIUtility;
@@ -78,7 +77,7 @@ public class Importer {
         ENTITLEMENTS("entitlements"),
         ENTITLEMENT_CERTIFICATES("entitlement_certificates"),
         PRODUCTS("products"),
-        RULES_FILE(RulesCurator.DEFAULT_RULES_FILE.substring(1)); // remove leading /
+        RULES_FILE("rules2/rules.js");
 
         private String fileName;
         ImportFile(String fileName) {

@@ -429,11 +429,21 @@ public class Exporter {
     }
 
     private void exportRules(File baseDir) throws IOException {
-        File file = new File(baseDir.getCanonicalPath(), "rules");
-        file.mkdir();
+        // Because old candlepin servers assume to import a file in rules dir, we had to
+        // move to a new directory for versioned rules file:
+        File newRulesDir = new File(baseDir.getCanonicalPath(), "rules2");
+        newRulesDir.mkdir();
+        File newRulesFile = new File(newRulesDir.getCanonicalPath(), "rules.js");
+        FileWriter writer = new FileWriter(newRulesFile);
+        rules.export(writer);
+        writer.close();
 
-        file = new File(file.getCanonicalPath(), "rules.js");
-        FileWriter writer = new FileWriter(file);
+        // The legacy rules still have to be included for deployment on old
+        // Candlepin servers:
+        File oldRulesDir = new File(baseDir.getCanonicalPath(), "rules");
+        oldRulesDir.mkdir();
+        File oldRulesFile = new File(oldRulesDir.getCanonicalPath(), "default-rules.js");
+        writer = new FileWriter(oldRulesFile);
         rules.export(writer);
         writer.close();
     }
