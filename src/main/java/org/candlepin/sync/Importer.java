@@ -78,7 +78,6 @@ public class Importer {
         ENTITLEMENTS("entitlements"),
         ENTITLEMENT_CERTIFICATES("entitlement_certificates"),
         PRODUCTS("products"),
-        RULES_DIR("rules"),
         RULES_FILE(RulesCurator.DEFAULT_RULES_FILE.substring(1)); // remove leading /
 
         private String fileName;
@@ -321,15 +320,6 @@ public class Importer {
             throw new ImporterException(i18n.tr("The archive does not contain the " +
                                    "required meta.json file"));
         }
-        File rules = importFiles.get(ImportFile.RULES_DIR.fileName());
-        if (rules == null) {
-            throw new ImporterException(i18n.tr("The archive does not contain the " +
-                                    "required rules directory"));
-        }
-        if (rules.listFiles().length == 0) {
-            throw new ImporterException(i18n.tr("The archive does not contain the " +
-                "required rules file(s)"));
-        }
         File consumerTypes = importFiles.get(ImportFile.CONSUMER_TYPE.fileName());
         if (consumerTypes == null) {
             throw new ImporterException(i18n.tr("The archive does not contain the " +
@@ -361,7 +351,8 @@ public class Importer {
         List<ImportConflictException> conflictExceptions =
             new LinkedList<ImportConflictException>();
 
-        importRules(rules.listFiles(), metadata);
+        File rules = importFiles.get(ImportFile.RULES_FILE.fileName());
+        importRules(rules, metadata);
 
         importConsumerTypes(consumerTypes.listFiles());
 
@@ -421,10 +412,16 @@ public class Importer {
         return consumer;
     }
 
-    public void importRules(File[] rulesFiles, File metadata) throws IOException {
+    public void importRules(File rulesFile, File metadata) throws IOException {
+        if (rulesFile == null) {
+            log.warn("Skipping rules import, manifest does not contain rules file: " +
+                ImportFile.RULES_FILE.fileName());
+            return;
+        }
+
         Reader reader = null;
         try {
-            reader = new FileReader(rulesFiles[0]);
+            reader = new FileReader(rulesFile);
             rulesImporter.importObject(reader);
         }
         finally {

@@ -378,12 +378,9 @@ public class ImporterTest {
     }
 
     private Map<String, File> getTestImportFiles() {
-        File ruleDir = mock(File.class);
-        File[] rulesFiles = new File[]{mock(File.class)};
-        when(ruleDir.listFiles()).thenReturn(rulesFiles);
         Map<String, File> importFiles = new HashMap<String, File>();
         importFiles.put(ImportFile.META.fileName(), mock(File.class));
-        importFiles.put(ImportFile.RULES_DIR.fileName(), ruleDir);
+        importFiles.put(ImportFile.RULES_FILE.fileName(), mock(File.class));
         importFiles.put(ImportFile.CONSUMER_TYPE.fileName(), mock(File.class));
         importFiles.put(ImportFile.CONSUMER.fileName(), mock(File.class));
         importFiles.put(ImportFile.PRODUCTS.fileName(), mock(File.class));
@@ -408,52 +405,6 @@ public class ImporterTest {
         catch (ImporterException e) {
             assertEquals(e.getMessage(), i18n.tr("The archive does not contain the " +
                 "required meta.json file"));
-            return;
-        }
-        assertTrue(false);
-    }
-
-    @Test
-    public void testImportNoRulesDir()
-        throws IOException, ImporterException {
-        Importer i = new Importer(null, null, null, null, null, null, null,
-            null, config, null, null, null, i18n);
-        Owner owner = mock(Owner.class);
-        ConflictOverrides co = mock(ConflictOverrides.class);
-        Map<String, File> importFiles = getTestImportFiles();
-
-        importFiles.put(ImportFile.RULES_DIR.fileName(), null);
-
-        try {
-            i.importObjects(owner, importFiles, co);
-        }
-        catch (ImporterException e) {
-            assertEquals(e.getMessage(), i18n.tr("The archive does not contain the " +
-                "required rules directory"));
-            return;
-        }
-        assertTrue(false);
-    }
-
-    @Test
-    public void testImportNoRulesFile()
-        throws IOException, ImporterException {
-        Importer i = new Importer(null, null, null, null, null, null, null,
-            null, config, null, null, null, i18n);
-        Owner owner = mock(Owner.class);
-        ConflictOverrides co = mock(ConflictOverrides.class);
-        Map<String, File> importFiles = getTestImportFiles();
-        File ruleDir = mock(File.class);
-        when(ruleDir.listFiles()).thenReturn(new File[0]);
-
-        importFiles.put(ImportFile.RULES_DIR.fileName(), ruleDir);
-
-        try {
-            i.importObjects(owner, importFiles, co);
-        }
-        catch (ImporterException e) {
-            assertEquals(e.getMessage(), i18n.tr("The archive does not contain the " +
-                "required rules file(s)"));
             return;
         }
         assertTrue(false);
@@ -524,7 +475,7 @@ public class ImporterTest {
             any(Reader.class));
 
         importFiles.put(ImportFile.META.fileName(), actualmeta);
-        importFiles.put(ImportFile.RULES_DIR.fileName(), ruleDir);
+        importFiles.put(ImportFile.RULES_FILE.fileName(), rulesFiles[0]);
         importFiles.put(ImportFile.PRODUCTS.fileName(), null);
         importFiles.put(ImportFile.ENTITLEMENTS.fileName(), null);
 
