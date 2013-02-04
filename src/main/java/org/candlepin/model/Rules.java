@@ -59,9 +59,8 @@ public class Rules extends AbstractHibernateObject {
     /**
      * ctor
      * @param rulesBlob Rules script
-     * @param candlepinVersion Version of Candlepin these rules are from.
      */
-    public Rules(String rulesBlob, String candlepinVersion) {
+    public Rules(String rulesBlob) {
         this.rules = rulesBlob;
 
         this.version = "";

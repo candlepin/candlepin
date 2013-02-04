@@ -14,13 +14,13 @@
  */
 package org.candlepin.sync;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 
 import org.apache.log4j.Logger;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
+import org.candlepin.util.VersionUtil;
 
 import com.google.inject.Inject;
 
@@ -37,11 +37,20 @@ public class RulesImporter {
         this.curator = curator;
     }
 
-    public Rules importObject(Reader reader, String candlepinVersion) throws IOException {
-        log.debug("Importing rules file");
-        new BufferedReader(reader);
+    public void importObject(Reader reader) throws IOException {
+        Rules existingRules = curator.getRules();
+        Rules newRules = new Rules(StringFromReader.asString(reader));
 
-        return curator.update(new Rules(StringFromReader.asString(reader),
-            candlepinVersion));
+        // Only import if rules version is greater than what we currently have now:
+        if (VersionUtil.getRulesVersionCompatibility(existingRules.getVersion(),
+            newRules.getVersion())) {
+            log.info("Importing new rules from manifest, current version: " +
+                existingRules.getVersion() + " new version: " + newRules.getVersion());
+            curator.update(newRules);
+        }
+        else {
+            log.info("Ignoring older rules in manifest, current version: " +
+                existingRules.getVersion() + " new version: " + newRules.getVersion());
+        }
     }
 }

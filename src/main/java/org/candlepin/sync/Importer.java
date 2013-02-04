@@ -49,10 +49,10 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.model.RulesCurator;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.pki.PKIUtility;
-import org.candlepin.util.VersionUtil;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.hibernate.exception.ConstraintViolationException;
 import org.xnap.commons.i18n.I18n;
@@ -78,7 +78,8 @@ public class Importer {
         ENTITLEMENTS("entitlements"),
         ENTITLEMENT_CERTIFICATES("entitlement_certificates"),
         PRODUCTS("products"),
-        RULES("rules");
+        RULES_DIR("rules"),
+        RULES_FILE(RulesCurator.DEFAULT_RULES_FILE.substring(1)); // remove leading /
 
         private String fileName;
         ImportFile(String fileName) {
@@ -320,7 +321,7 @@ public class Importer {
             throw new ImporterException(i18n.tr("The archive does not contain the " +
                                    "required meta.json file"));
         }
-        File rules = importFiles.get(ImportFile.RULES.fileName());
+        File rules = importFiles.get(ImportFile.RULES_DIR.fileName());
         if (rules == null) {
             throw new ImporterException(i18n.tr("The archive does not contain the " +
                                     "required rules directory"));
@@ -421,32 +422,16 @@ public class Importer {
     }
 
     public void importRules(File[] rulesFiles, File metadata) throws IOException {
-
-        // only import rules if versions are ok
-        Meta m = mapper.readValue(metadata, Meta.class);
-
-        if (VersionUtil.getRulesVersionCompatibility(m.getVersion())) {
-            // Only importing a single rules file now.
-            Reader reader = null;
-            try {
-                reader = new FileReader(rulesFiles[0]);
-                rulesImporter.importObject(reader, m.getVersion());
-            }
-            finally {
-                if (reader != null) {
-                    reader.close();
-                }
+        Reader reader = null;
+        try {
+            reader = new FileReader(rulesFiles[0]);
+            rulesImporter.importObject(reader);
+        }
+        finally {
+            if (reader != null) {
+                reader.close();
             }
         }
-        else {
-            log.warn(
-                i18n.tr(
-                    "Incompatible rules: import version {0} older than our version {1}.",
-                    m.getVersion(), VersionUtil.getVersionString()));
-            log.warn(
-                i18n.tr("Manifest data will be imported without rules import."));
-        }
-
     }
 
     public void importConsumerTypes(File[] consumerTypes) throws IOException {
@@ -549,7 +534,7 @@ public class Importer {
      */
     private File extractArchive(File tempDir, File exportFile)
         throws IOException, ImportExtractionException {
-        log.info("Extracting archive to: " + tempDir.getAbsolutePath());
+        log.debug("Extracting archive to: " + tempDir.getAbsolutePath());
         byte[] buf = new byte[1024];
         ZipInputStream zipinputstream = new ZipInputStream(new FileInputStream(exportFile));
         ZipEntry zipentry = zipinputstream.getNextEntry();

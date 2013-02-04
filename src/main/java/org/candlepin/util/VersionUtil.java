@@ -75,6 +75,11 @@ public class VersionUtil {
         return getVersionMap().get("version");
     }
 
+    private static int getMajorVersion(String version) {
+        String [] tokens = version.split("\\.");
+        return Integer.parseInt(tokens[0]);
+    }
+
     public static boolean getRulesVersionCompatibility(String oldVersion,
         String newVersion) {
 
@@ -83,6 +88,12 @@ public class VersionUtil {
         RpmVersionComparator rpmcmp = new RpmVersionComparator();
 
         if (rpmcmp.compare(oldVersion, newVersion) == 1) {
+            return false;
+        }
+
+        // If the incoming rules major version is greater than what we understand,
+        // the rules are not compatible:
+        if (getMajorVersion(newVersion) != getMajorVersion(oldVersion)) {
             return false;
         }
 

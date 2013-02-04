@@ -72,7 +72,6 @@ import org.candlepin.test.TestDateUtil;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.DateSourceImpl;
 import org.candlepin.util.Util;
-import org.candlepin.util.VersionUtil;
 import org.candlepin.util.X509ExtensionUtil;
 import org.junit.Before;
 import org.junit.Test;
@@ -110,7 +109,7 @@ public class DefaultRulesTest {
 
         InputStream is = this.getClass().getResourceAsStream(
             RulesCurator.DEFAULT_RULES_FILE);
-        Rules rules = new Rules(Util.readFile(is), VersionUtil.getVersionString());
+        Rules rules = new Rules(Util.readFile(is));
 
         when(rulesCurator.getRules()).thenReturn(rules);
         when(rulesCurator.getUpdated()).thenReturn(

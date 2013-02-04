@@ -32,7 +32,6 @@ import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.export.ExportRules;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.util.Util;
-import org.candlepin.util.VersionUtil;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -65,7 +64,7 @@ public class JsExportRulesTest {
         // Load the default production rules:
         InputStream is = this.getClass().getResourceAsStream(
             RulesCurator.DEFAULT_RULES_FILE);
-        Rules rules = new Rules(Util.readFile(is), VersionUtil.getVersionString());
+        Rules rules = new Rules(Util.readFile(is));
 
         when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
         when(rulesCuratorMock.getRules()).thenReturn(rules);
