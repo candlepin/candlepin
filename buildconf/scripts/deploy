@@ -1,4 +1,7 @@
-#!/bin/sh
+#!/bin/bash
+
+IMPORT_DATA="content.json users_roles_owners.json products_no_arch.json products_with_arch.json"
+
 function evalrc ()
 {
     if [ "$1" -ne "0" ] ; then
@@ -83,8 +86,11 @@ function update_keystore
 
 function upload_products
 {
+
+  IMPORT_DATA_PATHS=""
+  for i in $IMPORT_DATA; do IMPORT_DATA_PATHS="${IMPORT_DATA_PATHS} $(dirname $0)/${i}"; done
   if [ "$TESTDATA" = "1" ]; then
-	  `dirname $0`/import_products.rb  `dirname $0`/test_data.json
+	  `dirname $0`/import_products.rb ${IMPORT_DATA_PATHS}
   fi
 }
 

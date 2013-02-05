@@ -1,0 +1,202 @@
+{
+    "content": [
+        {
+            "content_url": "/foo/path/never", 
+            "gpg_url": "/foo/path/never/gpg", 
+            "id": 0, 
+            "label": "never-enabled-content", 
+            "metadata_expire": 600, 
+            "name": "never-enabled-content", 
+            "type": "yum", 
+            "vendor": "test-vendor"
+        }, 
+        {
+            "content_url": "/foo/path/always/$releasever", 
+            "gpg_url": "/foo/path/always/gpg", 
+            "id": 1, 
+            "label": "always-enabled-content", 
+            "metadata_expire": 200, 
+            "name": "always-enabled-content", 
+            "type": "yum", 
+            "vendor": "test-vendor"
+        }, 
+        {
+            "content_url": "/foo/path/always", 
+            "gpg_url": "/foo/path/always/gpg", 
+            "id": 2, 
+            "label": "tagged-content", 
+            "name": "tagged-content", 
+            "required_tags": "TAG1,TAG2", 
+            "type": "yum", 
+            "vendor": "test-vendor"
+        }, 
+        {
+            "content_url": "/foo/path", 
+            "gpg_url": "/foo/path/gpg/", 
+            "id": 1111, 
+            "label": "content-label", 
+            "metadata_expire": 0, 
+            "name": "content", 
+            "type": "yum", 
+            "vendor": "test-vendor"
+        }, 
+        {
+            "content_url": "/foo/path", 
+            "id": 234, 
+            "label": "content-label-no-gpg", 
+            "metadata_expire": 0, 
+            "name": "content-nogpg", 
+            "type": "yum", 
+            "vendor": "test-vendor"
+        }, 
+        {
+            "content_url": "/foo/path", 
+            "gpg_url": "", 
+            "id": 235, 
+            "label": "content-label-empty-gpg", 
+            "metadata_expire": 0, 
+            "name": "content-emptygpg", 
+            "type": "yum", 
+            "vendor": "test-vendor"
+        }, 
+        {
+            "content_url": "http://example.com/awesomeos-modifier", 
+            "gpg_url": "http://example.com/awesomeos-modifier/gpg", 
+            "id": 1112, 
+            "label": "awesomeos-modifier", 
+            "modified_products": [
+                "37060", 
+                "27060"
+            ], 
+            "name": "awesomeos-modifier", 
+            "type": "yum", 
+            "vendor": "test-vendor"
+        }, 
+        {
+            "content_url": "/path/to/$basearch/$releasever/awesomeos", 
+            "gpg_url": "/path/to/awesomeos/gpg/", 
+            "id": 11113, 
+            "label": "awesomeos", 
+            "metadata_expire": 3600, 
+            "name": "awesomeos", 
+            "type": "yum", 
+            "vendor": "Red Hat"
+        }, 
+        {
+            "content_url": "/path/to/awesomeos/$releasever/x86", 
+            "gpg_url": "/path/to/awesomeos/gpg/", 
+            "id": 11120, 
+            "label": "awesomeos-x86", 
+            "metadata_expire": 3600, 
+            "name": "awesomeos-x86", 
+            "type": "yum", 
+            "vendor": "Red Hat"
+        }, 
+        {
+            "content_url": "/path/to/awesomeos/i386", 
+            "gpg_url": "/path/to/awesomeos/gpg/", 
+            "id": 11122, 
+            "label": "awesomeos-i386", 
+            "metadata_expire": 3600, 
+            "name": "awesomeos-i386", 
+            "type": "yum", 
+            "vendor": "Red Hat"
+        }, 
+        {
+            "content_url": "/path/to/awesomeos/i686", 
+            "gpg_url": "/path/to/awesomeos/gpg/", 
+            "id": 11123, 
+            "label": "awesomeos-i686", 
+            "metadata_expire": 3600, 
+            "name": "awesomeos-i686", 
+            "type": "yum", 
+            "vendor": "Red Hat"
+        }, 
+        {
+            "content_url": "/path/to/awesomeos/x86_64", 
+            "gpg_url": "/path/to/awesomeos/gpg/", 
+            "id": 11124, 
+            "label": "awesomeos-x86_64", 
+            "metadata_expire": 3600, 
+            "name": "awesomeos-x86_64", 
+            "type": "yum", 
+            "vendor": "Red Hat"
+        }, 
+        {
+            "content_url": "/path/to/awesomeos/ia64", 
+            "gpg_url": "/path/to/awesomeos/gpg/", 
+            "id": 11125, 
+            "label": "awesomeos-ia64", 
+            "metadata_expire": 3600, 
+            "name": "awesomeos-ia64", 
+            "type": "yum", 
+            "vendor": "Red Hat"
+        }, 
+        {
+            "content_url": "/path/to/awesomeos/ppc64", 
+            "gpg_url": "/path/to/awesomeos/gpg/", 
+            "id": 11126, 
+            "label": "awesomeos-ppc64", 
+            "metadata_expire": 3600, 
+            "name": "awesomeos-ppc64", 
+            "type": "yum", 
+            "vendor": "Red Hat"
+        }, 
+        {
+            "content_url": "/path/to/awesomeos/ppc", 
+            "gpg_url": "/path/to/awesomeos/gpg/", 
+            "id": 11128, 
+            "label": "awesomeos-ppc", 
+            "metadata_expire": 3600, 
+            "name": "awesomeos-ppc", 
+            "type": "yum", 
+            "vendor": "Red Hat"
+        }, 
+        {
+            "content_url": "/path/to/awesomeos/s390x", 
+            "gpg_url": "/path/to/awesomeos/gpg/", 
+            "id": 11121, 
+            "label": "awesomeos-s390x", 
+            "metadata_expire": 3600, 
+            "name": "awesomeos-s390x", 
+            "type": "yum", 
+            "vendor": "Red Hat"
+        }, 
+        {
+            "content_url": "/path/to/awesomeos/all", 
+            "gpg_url": "/path/to/awesomeos/gpg/", 
+            "id": 11130, 
+            "label": "awesomeos-all", 
+            "metadata_expire": 3600, 
+            "name": "awesomeos-all", 
+            "type": "yum", 
+            "vendor": "Red Hat"
+        }, 
+        {
+            "content_url": "/path/to/awesomeos-server-scalable-fs", 
+            "gpg_url": "/path/to/awesomeos/gpg/", 
+            "id": 3700, 
+            "label": "awesomeos-server-scalable-fs", 
+            "metadata_expire": 3600, 
+            "modified_products": [
+                "37060"
+            ], 
+            "name": "awesomeos-server-scalable-fs", 
+            "type": "yum", 
+            "vendor": "Red Hat"
+        }, 
+        {
+            "content_url": "/path/to/awesomeos-workstation-scalable-fs", 
+            "gpg_url": "/path/to/awesomeos/gpg/", 
+            "id": 3701, 
+            "label": "awesomeos-workstation-scalable-fs", 
+            "metadata_expire": 3600, 
+            "modified_products": [
+                "27060"
+            ], 
+            "name": "awesomeos-workstation-scalable-fs", 
+            "type": "yum", 
+            "vendor": "Red Hat"
+        }
+    ]
+}

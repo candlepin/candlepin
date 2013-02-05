@@ -24,11 +24,11 @@ filenames.each do |filename|
   puts filename
   product_data_buf = File.read(filename)
   product_data = JSON product_data_buf
-  data['products'] = data.fetch('products',[]) + product_data['products']
-  data['content'] = data.fetch('content',[]) + product_data['content']
-  data['owners'] = data.fetch('owners', []) + product_data['owners']
-  data['users'] = data.fetch('users', []) + product_data['users']
-  data['roles'] = data.fetch('roles', []) + product_data['roles']
+  data['products'] = data.fetch('products',[]) + product_data.fetch('products', [])
+  data['content'] = data.fetch('content',[]) + product_data.fetch('content', [])
+  data['owners'] = data.fetch('owners', []) + product_data.fetch('owners', [])
+  data['users'] = data.fetch('users', []) + product_data.fetch('users', [])
+  data['roles'] = data.fetch('roles', []) + product_data.fetch('roles', [])
 end
 
 cp = Candlepin.new(username='admin', password='admin', cert=nil, key=nil, host='localhost', post=8443)
@@ -127,7 +127,8 @@ end
 
 puts
 puts "Import product data..."
-contract_number = 0
+
+created_products = []
 data['products'].each do |product|
 
   name = product['name']
@@ -139,7 +140,6 @@ data['products'].each do |product|
   type = product['type'] || "SVC"
   provided_products = product['provided_products'] || []
   attrs = product['attributes'] || {}
-  product_content = product['content'] || []
   dependent_products = product['dependencies'] || []
 
   attrs['version'] = version
@@ -148,8 +148,18 @@ data['products'].each do |product|
   attrs['type'] = type
   product_ret = cp.create_product(id, name, {:multiplier => multiplier,
                                     :attributes => attrs}, dependent_products)
+  created_products <<  product
   puts "product name: " + name + " version: " + version + \
-       " arch: " + arch + " type: " + type
+       " arch: " + arch + " type: " + type + " id: " + id + " " + product_ret['id']
+end
+
+contract_number = 0
+puts "Creating subscriptions..."
+created_products.each do |product|
+
+  id = product['id']
+  provided_products = product['provided_products'] || []
+
   startDate1 =  Date.today
   endDate1 = startDate1 + 365
   startDate2 = endDate1 - 10
@@ -157,45 +167,58 @@ data['products'].each do |product|
   startDate3 = endDate1 + 1
   endDate3 = startDate2 + 365
 
+  puts "creating subscriptions for: #{product['name']}"
   # If product ID is non-numeric, we assume it's a marketing product
   # and create subscriptions for it:
   if id.to_i.to_s != id
     # Create a SMALL and a LARGE with the slightly similar begin/end dates.
     owner_keys.each do |owner_key|
       subscription = cp.create_subscription(owner_key,
-                                            product_ret['id'],
+                                            id,
                                             SMALL_SUB_QUANTITY,
                                             provided_products,
                                             contract_number, '12331131231',
                                             startDate1, endDate1)
       contract_number += 1
       subscription = cp.create_subscription(owner_key,
-                                            product_ret['id'],
+                                            id,
                                             LARGE_SUB_QUANTITY,
                                             provided_products,
                                             contract_number, '12331131231',
                                             startDate1, endDate1)
 
       # Create a subscription for the future:
-      subscription = cp.create_subscription(owner_key, product_ret['id'],
+      subscription = cp.create_subscription(owner_key, id,
                                             15, provided_products,
                                             contract_number, '12331131231',
                                             startDate2, endDate2)
       contract_number += 1
     end
   end
+end
+
+puts "Storing product certs..."
+created_products.each do |product|
+  id = product['id']
 
   # TODO: not sure what's going on here?
   if id.to_i.to_s == id
-    product_cert = cp.get_product_cert(product_ret['id'])
-    cert_file = File.new(CERT_DIR + '/' + product_ret['id'] + '.pem', 'w+')
+    product_cert = cp.get_product_cert(id)
+    cert_file_path = CERT_DIR + '/' + id + '.pem'
+    cert_file = File.new(cert_file_path, 'w+')
     cert_file.puts(product_cert['cert'])
+    puts "product #{product['name']} cert created at #{cert_file_path}"
   end
+end
 
+ # lets build product_content after loading all the products
+puts "Creating product content associations..."
+data['products'].each do |product|
+  product_content = product['content'] || []
   product_content.each do |content|
-    cp.add_content_to_product(product_ret['id'], content[0], content[1])
+    # product_ret_id
+    cp.add_content_to_product(product['id'], content[0], content[1])
   end
-
 end
 
 # Refresh to create pools for all subscriptions just created:
