@@ -21,14 +21,14 @@ import org.codehaus.jackson.map.ser.BeanPropertyWriter;
 
 /**
  * ExportBeanPropertyFilter: A jackson filter used during creation of exports.
- * It looks for any fields on objects with the @SkipOnExport annotation, and skips them.
+ * It looks for any fields on objects with the @ExportExclude annotation, and skips them.
  */
 public class ExportBeanPropertyFilter extends JsonBeanPropertyFilter {
 
     @Override
     public void serializeAsField(Object obj, JsonGenerator jsonGenerator,
         SerializerProvider serializerProvider, BeanPropertyWriter writer) throws Exception {
-        if (!annotationPresent(obj, writer.getName(), SkipExport.class)) {
+        if (!annotationPresent(obj, writer.getName(), ExportExclude.class)) {
             writer.serializeAsField(obj, jsonGenerator, serializerProvider);
         }
     }

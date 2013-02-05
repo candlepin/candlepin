@@ -33,7 +33,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.candlepin.jackson.HateoasInclude;
-import org.candlepin.jackson.SkipExport;
+import org.candlepin.jackson.ExportExclude;
 import org.codehaus.jackson.map.annotate.JsonFilter;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
@@ -219,7 +219,7 @@ public class Entitlement extends AbstractHibernateObject implements Linkable, Ow
     /**
      * @return return the associated Consumer
      */
-    @SkipExport
+    @ExportExclude
     public Consumer getConsumer() {
         return consumer;
     }
