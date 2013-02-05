@@ -34,6 +34,7 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import org.candlepin.jackson.HateoasInclude;
 import org.candlepin.jackson.ExportExclude;
+import org.candlepin.policy.js.RulesExclude;
 import org.codehaus.jackson.map.annotate.JsonFilter;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
@@ -240,6 +241,7 @@ public class Entitlement extends AbstractHibernateObject implements Linkable, Ow
         this.quantity = quantity;
     }
 
+    @RulesExclude
     public Set<EntitlementCertificate> getCertificates() {
         return certificates;
     }

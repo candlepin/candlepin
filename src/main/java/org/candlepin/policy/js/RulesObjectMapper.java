@@ -18,7 +18,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.candlepin.exceptions.IseException;
-import org.candlepin.jackson.ExportBeanPropertyFilter;
 import org.codehaus.jackson.map.AnnotationIntrospector;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
@@ -27,7 +26,7 @@ import org.codehaus.jackson.node.ObjectNode;
 import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
 
 /**
- * RulesContextMapper
+ * RulesObjectMapper
  */
 public class RulesObjectMapper {
 
@@ -40,10 +39,8 @@ public class RulesObjectMapper {
     private RulesObjectMapper() {
         this.mapper = new ObjectMapper();
 
-        // Since each class can only have one @JsonFilter annotation, and most have
-        // ApiHateoas, We just default here to using the Export filter.
         SimpleFilterProvider filterProvider = new SimpleFilterProvider();
-        filterProvider.setDefaultFilter(new ExportBeanPropertyFilter());
+        filterProvider.setDefaultFilter(new RulesBeanPropertyFilter());
         this.mapper.setFilters(filterProvider);
 
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();

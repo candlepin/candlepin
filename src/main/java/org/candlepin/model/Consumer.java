@@ -42,6 +42,7 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import org.candlepin.jackson.HateoasArrayExclude;
 import org.candlepin.jackson.HateoasInclude;
+import org.candlepin.policy.js.RulesExclude;
 import org.candlepin.util.Util;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.annotate.JsonFilter;
@@ -222,6 +223,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     }
 
     @HateoasArrayExclude
+    @RulesExclude
     public IdentityCertificate getIdCert() {
         return idCert;
     }
