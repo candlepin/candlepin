@@ -27,6 +27,7 @@ import static org.quartz.JobKey.jobKey;
 
 import com.google.inject.persist.UnitOfWork;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.candlepin.auth.Principal;
 import org.candlepin.model.JobCurator;
 import org.candlepin.pinsetter.core.model.JobStatus;
@@ -208,5 +209,49 @@ public class PinsetterJobListenerTest {
             // do nothing, we're really trying to verify end is called
         }
         verify(unitOfWork, atLeastOnce()).end();
+    }
+
+    @Test
+    public void bug906438ResultProperLength() {
+        JobExecutionException e = mock(JobExecutionException.class);
+        JobDetail detail = mock(JobDetail.class);
+        JobStatus status = mock(JobStatus.class);
+
+        when(detail.getKey()).thenReturn(jobKey("foo"));
+        when(ctx.getJobDetail()).thenReturn(detail);
+        when(jcurator.find(eq("foo"))).thenReturn(status);
+        String longstr = RandomStringUtils.randomAlphanumeric(255);
+        when(e.getMessage()).thenReturn(longstr);
+
+        listener.jobWasExecuted(ctx, e);
+
+        verify(status).setState(eq(JobState.FAILED));
+        verify(status).setResult(eq(longstr));
+        verify(status, never()).update(eq(ctx));
+        verify(jcurator).merge(eq(status));
+    }
+
+    @Test
+    public void bug906438ResultTooLong() {
+        JobExecutionException e = mock(JobExecutionException.class);
+        JobDetail detail = mock(JobDetail.class);
+        JobDataMap map = new JobDataMap();
+        map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.OWNER);
+
+        when(detail.getKey()).thenReturn(jobKey("name", "group"));
+        when(detail.getJobDataMap()).thenReturn(map);
+        when(ctx.getJobDetail()).thenReturn(detail);
+
+        JobStatus status = new JobStatus(detail);
+        when(jcurator.find(eq("name"))).thenReturn(status);
+
+        String longstr = RandomStringUtils.randomAlphanumeric(300);
+        when(e.getMessage()).thenReturn(longstr);
+
+        listener.jobWasExecuted(ctx, e);
+
+        assertEquals(longstr.substring(0, 255), status.getResult());
+        assertEquals(JobState.FAILED, status.getState());
+        verify(jcurator).merge(eq(status));
     }
 }
