@@ -1,0 +1,252 @@
+{
+    "owners": [
+        {
+            "displayName": "Admin Owner", 
+            "name": "admin"
+        }, 
+        {
+            "displayName": "Snow White", 
+            "name": "snowwhite"
+        }, 
+        {
+            "displayName": "Donald Duck", 
+            "name": "donaldduck"
+        }
+    ], 
+    "roles": [
+        {
+            "name": "admin-all", 
+            "permissions": [
+                {
+                    "access": "ALL", 
+                    "owner": "admin"
+                }
+            ], 
+            "users": [
+                {
+                    "username": "testuser1"
+                }, 
+                {
+                    "username": "testuser2"
+                }
+            ]
+        }, 
+        {
+            "name": "admin-ro", 
+            "permissions": [
+                {
+                    "access": "READ_ONLY", 
+                    "owner": "admin"
+                }
+            ], 
+            "users": [
+                {
+                    "username": "testuser3"
+                }
+            ]
+        }, 
+        {
+            "name": "snowwhite-all", 
+            "permissions": [
+                {
+                    "access": "ALL", 
+                    "owner": "snowwhite"
+                }
+            ], 
+            "users": [
+                {
+                    "username": "doc"
+                }, 
+                {
+                    "username": "testuser1"
+                }, 
+                {
+                    "username": "grumpy"
+                }
+            ]
+        }, 
+        {
+            "name": "snowwhite-ro", 
+            "permissions": [
+                {
+                    "access": "READ_ONLY", 
+                    "owner": "snowwhite"
+                }
+            ], 
+            "users": [
+                {
+                    "username": "happy"
+                }, 
+                {
+                    "username": "sleepy"
+                }, 
+                {
+                    "username": "bashful"
+                }, 
+                {
+                    "username": "sneezy"
+                }, 
+                {
+                    "username": "dopey"
+                }
+            ]
+        }, 
+        {
+            "name": "donaldduck-all", 
+            "permissions": [
+                {
+                    "access": "ALL", 
+                    "owner": "donaldduck"
+                }
+            ], 
+            "users": [
+                {
+                    "username": "huey"
+                }, 
+                {
+                    "username": "duey"
+                }
+            ]
+        }, 
+        {
+            "name": "donaldduck-ro", 
+            "permissions": [
+                {
+                    "access": "READ_ONLY", 
+                    "owner": "donaldduck"
+                }
+            ], 
+            "users": [
+                {
+                    "username": "louie"
+                }
+            ]
+        }, 
+        {
+            "name": "donaldduck-all-snowwhite-ro", 
+            "permissions": [
+                {
+                    "access": "ALL", 
+                    "owner": "donaldduck"
+                }, 
+                {
+                    "access": "READ_ONLY", 
+                    "owner": "snowwhite"
+                }
+            ], 
+            "users": [
+                {
+                    "username": "mickey"
+                }
+            ]
+        }, 
+        {
+            "name": "donaldduck-ro-snowwhite-all", 
+            "permissions": [
+                {
+                    "access": "READ_ONLY", 
+                    "owner": "donaldduck"
+                }, 
+                {
+                    "access": "ALL", 
+                    "owner": "snowwhite"
+                }
+            ], 
+            "users": [
+                {
+                    "username": "minnie"
+                }
+            ]
+        }, 
+        {
+            "name": "donaldduck-ro-snowwhite-ro-admin-ro", 
+            "permissions": [
+                {
+                    "access": "READ_ONLY", 
+                    "owner": "donaldduck"
+                }, 
+                {
+                    "access": "READ_ONLY", 
+                    "owner": "admin"
+                }, 
+                {
+                    "access": "READ_ONLY", 
+                    "owner": "snowwhite"
+                }
+            ], 
+            "users": [
+                {
+                    "username": "magoo"
+                }
+            ]
+        }
+    ], 
+    "users": [
+        {
+            "password": "password", 
+            "username": "testuser1"
+        }, 
+        {
+            "password": "password", 
+            "username": "testuser2"
+        }, 
+        {
+            "password": "password", 
+            "username": "testuser3"
+        }, 
+        {
+            "password": "password", 
+            "superadmin": "true", 
+            "username": "doc"
+        }, 
+        {
+            "password": "password", 
+            "username": "grumpy"
+        }, 
+        {
+            "password": "password", 
+            "username": "happy"
+        }, 
+        {
+            "password": "password", 
+            "username": "sleepy"
+        }, 
+        {
+            "password": "password", 
+            "username": "bashful"
+        }, 
+        {
+            "password": "password", 
+            "username": "sneezy"
+        }, 
+        {
+            "password": "password", 
+            "username": "dopey"
+        }, 
+        {
+            "password": "password", 
+            "superadmin": "true", 
+            "username": "huey"
+        }, 
+        {
+            "password": "password", 
+            "username": "duey"
+        }, 
+        {
+            "password": "password", 
+            "username": "louie"
+        }, 
+        {
+            "password": "password", 
+            "username": "mickey"
+        }, 
+        {
+            "password": "password", 
+            "username": "minnie"
+        }, 
+        {
+            "password": "password", 
+            "username": "magoo"
+        }
+    ]
+}
