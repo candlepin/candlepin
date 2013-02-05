@@ -16,6 +16,7 @@ package org.candlepin.sync;
 
 import com.google.inject.Inject;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.candlepin.config.Config;
@@ -75,6 +76,8 @@ public class Exporter {
     private Config config;
     private ExportRules exportRules;
     private PrincipalProvider principalProvider;
+
+    private static final String LEGACY_RULES_FILE = "/rules/default-rules.js";
 
     @Inject
     public Exporter(ConsumerTypeCurator consumerTypeCurator, MetaExporter meta,
@@ -438,13 +441,21 @@ public class Exporter {
         rules.export(writer);
         writer.close();
 
-        // The legacy rules still have to be included for deployment on old
-        // Candlepin servers:
+        exportLegacyRules(baseDir);
+    }
+
+    /*
+     * We still need to export a copy of the deprecated default-rules.js so new manifests
+     * can still be imported by old candlepin servers.
+     */
+    private void exportLegacyRules(File baseDir) throws IOException {
         File oldRulesDir = new File(baseDir.getCanonicalPath(), "rules");
         oldRulesDir.mkdir();
         File oldRulesFile = new File(oldRulesDir.getCanonicalPath(), "default-rules.js");
-        writer = new FileWriter(oldRulesFile);
-        rules.export(writer);
-        writer.close();
+
+        // TODO: does this need a "exporter" object as well?
+        FileUtils.copyFile(new File(
+            this.getClass().getResource(LEGACY_RULES_FILE).getPath()),
+            oldRulesFile);
     }
 }
