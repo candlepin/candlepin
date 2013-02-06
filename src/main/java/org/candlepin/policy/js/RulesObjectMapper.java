@@ -21,6 +21,7 @@ import org.candlepin.exceptions.IseException;
 import org.codehaus.jackson.map.AnnotationIntrospector;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
+import org.codehaus.jackson.map.ser.impl.SimpleBeanPropertyFilter;
 import org.codehaus.jackson.map.ser.impl.SimpleFilterProvider;
 import org.codehaus.jackson.node.ObjectNode;
 import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
@@ -41,6 +42,10 @@ public class RulesObjectMapper {
 
         SimpleFilterProvider filterProvider = new SimpleFilterProvider();
         filterProvider.setDefaultFilter(new RulesBeanPropertyFilter());
+        filterProvider = filterProvider.addFilter("ProductAttributeFilter",
+            SimpleBeanPropertyFilter.serializeAllExcept("created", "updated", "productId"));
+        filterProvider = filterProvider.addFilter("PoolAttributeFilter",
+            SimpleBeanPropertyFilter.serializeAllExcept("created", "updated"));
         this.mapper.setFilters(filterProvider);
 
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();

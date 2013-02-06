@@ -19,12 +19,15 @@ import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 
+import org.codehaus.jackson.map.annotate.JsonFilter;
+
 /**
  * See Attributes interface for documentation.
  */
 @Entity(name = "PoolAttribute")
 @Table(name = "cp_pool_attribute")
 @Embeddable
+@JsonFilter("PoolAttributeFilter")
 public class PoolAttribute extends AbstractPoolAttribute {
 
     public PoolAttribute() {

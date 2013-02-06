@@ -14,6 +14,7 @@
  */
 package org.candlepin.policy.js;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -27,6 +28,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.IdentityCertificate;
+import org.candlepin.model.ProductAttribute;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -73,6 +75,18 @@ public class RulesObjectMapperTest {
         context.put("entitlements", allEnts);
         String output = objMapper.toJsonString(context);
         assertFalse(output.contains("FILTERME"));
+    }
+
+    @Test
+    public void filterTimestamps() {
+        ProductAttribute pa = new ProductAttribute("a", "1");
+        pa.setCreated(new Date());
+        pa.setUpdated(new Date());
+        context.put("productAttribute", pa);
+
+        String output = objMapper.toJsonString(context);
+        assertFalse(output.contains("created"));
+        assertFalse(output.contains("updated"));
     }
 
 }
