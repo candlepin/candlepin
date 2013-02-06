@@ -221,6 +221,7 @@ public class Entitlement extends AbstractHibernateObject implements Linkable, Ow
      * @return return the associated Consumer
      */
     @ExportExclude
+    @RulesExclude
     public Consumer getConsumer() {
         return consumer;
     }

@@ -28,7 +28,10 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.IdentityCertificate;
+import org.candlepin.model.Pool;
+import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.ProductAttribute;
+import org.candlepin.model.ProductPoolAttribute;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -59,6 +62,22 @@ public class RulesObjectMapperTest {
     }
 
     @Test
+    public void filterEntitlementConsumer() {
+        Entitlement e = new Entitlement();
+        Consumer c = new Consumer();
+        IdentityCertificate cert = new IdentityCertificate();
+        cert.setCert("FILTERMEPLEASE");
+        cert.setKey("KEY");
+        c.setIdCert(cert);
+        e.setConsumer(c);
+
+        context.put("entitlement", e);
+        String output = objMapper.toJsonString(context);
+        System.out.println(output);
+        assertFalse(output.contains("consumer"));
+    }
+
+    @Test
     public void filterEntitlementCert() {
         List<Entitlement> allEnts = new LinkedList<Entitlement>();
 
@@ -78,15 +97,28 @@ public class RulesObjectMapperTest {
     }
 
     @Test
-    public void filterTimestamps() {
-        ProductAttribute pa = new ProductAttribute("a", "1");
-        pa.setCreated(new Date());
-        pa.setUpdated(new Date());
-        context.put("productAttribute", pa);
+    public void filterTimestampsOffAttributes() {
+        Pool p = new Pool();
+
+        ProductPoolAttribute prodAttr = new ProductPoolAttribute("a", "1", "PRODID");
+        prodAttr.setCreated(new Date());
+        prodAttr.setUpdated(new Date());
+        p.addProductAttribute(prodAttr);
+
+        PoolAttribute poolAttr = new PoolAttribute("a", "1");
+        poolAttr.setCreated(new Date());
+        poolAttr.setUpdated(new Date());
+        p.addAttribute(poolAttr);
+
+        context.put("pool", p);
 
         String output = objMapper.toJsonString(context);
+        // Shouldn't see timestamps:
         assertFalse(output.contains("created"));
         assertFalse(output.contains("updated"));
+
+        // Shouldn't see a duplicated productId:
+        assertFalse(output.contains("PRODID"));
     }
 
 }
