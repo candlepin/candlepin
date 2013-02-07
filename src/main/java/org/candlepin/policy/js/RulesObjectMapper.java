@@ -43,9 +43,12 @@ public class RulesObjectMapper {
         SimpleFilterProvider filterProvider = new SimpleFilterProvider();
         filterProvider.setDefaultFilter(new RulesBeanPropertyFilter());
         filterProvider = filterProvider.addFilter("PoolAttributeFilter",
-            SimpleBeanPropertyFilter.serializeAllExcept("created", "updated"));
+            SimpleBeanPropertyFilter.serializeAllExcept("created", "updated", "id"));
         filterProvider = filterProvider.addFilter("ProductPoolAttributeFilter",
-            SimpleBeanPropertyFilter.serializeAllExcept("created", "updated", "productId"));
+            SimpleBeanPropertyFilter.serializeAllExcept("created", "updated", "productId",
+                "id"));
+        filterProvider = filterProvider.addFilter("ProvidedProductFilter",
+            SimpleBeanPropertyFilter.serializeAllExcept("created", "updated"));
         this.mapper.setFilters(filterProvider);
 
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();

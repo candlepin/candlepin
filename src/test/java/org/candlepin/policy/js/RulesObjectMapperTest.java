@@ -30,7 +30,6 @@ import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolAttribute;
-import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductPoolAttribute;
 import org.junit.Before;
 import org.junit.Test;
@@ -73,7 +72,6 @@ public class RulesObjectMapperTest {
 
         context.put("entitlement", e);
         String output = objMapper.toJsonString(context);
-        System.out.println(output);
         assertFalse(output.contains("consumer"));
     }
 
@@ -117,7 +115,7 @@ public class RulesObjectMapperTest {
         assertFalse(output.contains("created"));
         assertFalse(output.contains("updated"));
 
-        // Shouldn't see a duplicated productId:
+        // Shouldn't see a productId:
         assertFalse(output.contains("PRODID"));
     }
 
