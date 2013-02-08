@@ -14,6 +14,16 @@
  */
 package org.candlepin.sync;
 
+import java.io.IOException;
+import java.io.Reader;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.log4j.Logger;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventSink;
 import org.candlepin.model.CertificateSerial;
@@ -26,17 +36,8 @@ import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.model.SubscriptionsCertificate;
-
-import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.xnap.commons.i18n.I18n;
-
-import java.io.IOException;
-import java.io.Reader;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * EntitlementImporter - turn an upstream Entitlement into a local subscription
@@ -59,12 +60,15 @@ public class EntitlementImporter {
     }
 
     public Subscription importObject(ObjectMapper mapper, Reader reader, Owner owner,
-        Map<String, Product> productsById) throws IOException, SyncDataFormatException {
+        Map<String, Product> productsById, ConsumerDto consumer)
+        throws IOException, SyncDataFormatException {
 
         Entitlement entitlement = mapper.readValue(reader, Entitlement.class);
         Subscription subscription = new Subscription();
 
         subscription.setUpstreamPoolId(entitlement.getPool().getId());
+        subscription.setUpstreamEntitlementId(entitlement.getId());
+        subscription.setUpstreamConsumerId(consumer.getUuid());
 
         subscription.setOwner(owner);
 
@@ -126,45 +130,135 @@ public class EntitlementImporter {
      * @param subscriptionsToImport
      */
     public void store(Owner owner, Set<Subscription> subscriptionsToImport) {
-        Map<String, Subscription> existingSubByEntitlement =
-            new HashMap<String, Subscription>();
+        Map<String, Map<String, Subscription>> existingSubByEntitlement =
+            new HashMap<String, Map<String, Subscription>>();
+        int idx = 0;
         for (Subscription subscription : subscriptionCurator.listByOwner(owner)) {
             // if the upstream pool id is null,
             // this must be a locally controlled sub.
             if (subscription.getUpstreamPoolId() != null) {
+                // if the existing sub does not have the ent id yet,
+                //  just assign a placeholder to differentiate.
+                if (subscription.getUpstreamEntitlementId() == null ||
+                    subscription.getUpstreamEntitlementId().trim().equals("")) {
+                    subscription.setUpstreamEntitlementId("" + idx++);
+                }
+                Map<String, Subscription> subs = existingSubByEntitlement.get(
+                    subscription.getUpstreamPoolId());
+                if (subs == null) {
+                    subs = new HashMap<String, Subscription>();
+                }
+                subs.put(subscription.getUpstreamEntitlementId(), subscription);
                 existingSubByEntitlement.put(subscription.getUpstreamPoolId(),
-                    subscription);
+                    subs);
             }
         }
 
+        // if we can match to the entitlement id do it.
+        // we need a new list to hold the ones that are left
+        Set<Subscription> subscriptionsStillToImport = new HashSet<Subscription>();
         for (Subscription subscription : subscriptionsToImport) {
             log.debug("Saving subscription for upstream pool id: " +
                 subscription.getUpstreamPoolId());
-            Subscription local =
-                existingSubByEntitlement.get(subscription.getUpstreamPoolId());
-
-            if (local == null) {
-                subscriptionCurator.create(subscription);
-
-                // send out created event
-                log.debug("emitting subscription event");
-                sink.emitSubscriptionCreated(subscription);
+            Subscription local = null;
+            Map<String, Subscription> map = existingSubByEntitlement.get(
+                subscription.getUpstreamPoolId());
+            if (map == null || map.isEmpty()) {
+                createSubscription(subscription);
+                continue;
+            }
+            local = map.get(subscription.getUpstreamEntitlementId());
+            if (local != null) {
+                mergeSubscription(subscription, local, map);
             }
             else {
-                subscription.setId(local.getId());
-                subscriptionCurator.merge(subscription);
-
-                existingSubByEntitlement.remove(subscription.getUpstreamPoolId());
-
-                // send updated event
-                sink.emitSubscriptionModified(local, subscription);
+                subscriptionsStillToImport.add(subscription);
             }
         }
 
-        for (Subscription subscription : existingSubByEntitlement.values()) {
-            Event e = sink.createSubscriptionDeleted(subscription);
-            subscriptionCurator.delete(subscription);
-            sink.sendEvent(e);
+        // matches will be made against the upstream pool id and quantity.
+        // we need a new list to hold the ones that are left
+        Set<Subscription> subscriptionsNeedQuantityMatch = new HashSet<Subscription>();
+        for (Subscription subscription : subscriptionsStillToImport) {
+            Subscription local = null;
+            Map<String, Subscription> map = existingSubByEntitlement.get(
+                subscription.getUpstreamPoolId());
+            if (map == null) {
+                map = new HashMap<String, Subscription>();
+            }
+            for (Subscription localSub : map.values()) {
+                if (localSub.getQuantity() == subscription.getQuantity()) {
+                    local = localSub;
+                    break;
+                }
+            }
+            if (local != null) {
+                mergeSubscription(subscription, local, map);
+            }
+            else {
+                subscriptionsNeedQuantityMatch.add(subscription);
+            }
         }
+
+        // matches will be made against the upstream pool id and quantity.
+        // quantities will just match by position from highest to lowest
+        // we need a new list to hold the ones that are left
+        for (Subscription subscription : sort(subscriptionsNeedQuantityMatch
+            .toArray(new Subscription[0]))) {
+            Subscription local = null;
+            Map<String, Subscription> map = existingSubByEntitlement.get(
+                subscription.getUpstreamPoolId());
+            if (map == null || map.isEmpty()) {
+                createSubscription(subscription);
+                continue;
+            }
+            local = sort(map.values().toArray(new Subscription[0])).get(0);
+            mergeSubscription(subscription, local, map);
+        }
+
+        for (Map<String, Subscription> map : existingSubByEntitlement.values()) {
+            for (Subscription subscription : map.values()) {
+                Event e = sink.createSubscriptionDeleted(subscription);
+                subscriptionCurator.delete(subscription);
+                sink.sendEvent(e);
+            }
+        }
+    }
+    private List<Subscription> sort(Subscription[] subs) {
+        List<Subscription> result = new ArrayList<Subscription>();
+        for (Subscription s : subs) {
+            if (result.isEmpty()) {
+                result.add(s);
+            }
+            else {
+                boolean added = false;
+                for (int i = 0; i < result.size(); i++) {
+                    if (result.get(i).getQuantity() <= s.getQuantity()) {
+                        result.add(i, s);
+                        added = true;
+                        break;
+                    }
+                }
+                if (!added) {
+                    result.add(s);
+                }
+            }
+        }
+        return result;
+    }
+
+    private void mergeSubscription(Subscription subscription, Subscription local, Map map) {
+        subscription.setId(local.getId());
+        subscriptionCurator.merge(subscription);
+        map.remove(local.getUpstreamEntitlementId());
+        // send updated event
+        sink.emitSubscriptionModified(local, subscription);
+    }
+
+    private void createSubscription(Subscription subscription) {
+        subscriptionCurator.create(subscription);
+        // send out created event
+        log.debug("emitting subscription event");
+        sink.emitSubscriptionCreated(subscription);
     }
 }
