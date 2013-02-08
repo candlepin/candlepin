@@ -167,6 +167,7 @@ data['products'].each do |product|
                                             SMALL_SUB_QUANTITY,
                                             provided_products,
                                             contract_number, '12331131231',
+                                            'order-8675309',
                                             startDate1, endDate1)
       contract_number += 1
       subscription = cp.create_subscription(owner_key,
@@ -174,12 +175,14 @@ data['products'].each do |product|
                                             LARGE_SUB_QUANTITY,
                                             provided_products,
                                             contract_number, '12331131231',
+                                            'order-8675309',
                                             startDate1, endDate1)
 
       # Create a subscription for the future:
       subscription = cp.create_subscription(owner_key, product_ret['id'],
                                             15, provided_products,
                                             contract_number, '12331131231',
+                                            'order-8675309',
                                             startDate2, endDate2)
       contract_number += 1
     end

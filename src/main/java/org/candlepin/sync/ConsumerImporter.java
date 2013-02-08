@@ -45,7 +45,8 @@ public class ConsumerImporter {
         throws SyncDataFormatException {
 
         if (consumer.getUuid() == null) {
-            throw new SyncDataFormatException(i18n.tr("No ID for upstream distributor"));
+            throw new SyncDataFormatException(i18n.tr("No ID for " +
+                    "upstream subscription management application."));
         }
 
         // Make sure no other owner is already using this upstream UUID:
@@ -59,14 +60,16 @@ public class ConsumerImporter {
             // allow two orgs to use the same manifest at once. The other org would have to
             // delete their manifest after which it could be used elsewhere.
             throw new SyncDataFormatException(
-                i18n.tr("This distributor has already been imported by another owner"));
+                i18n.tr("This subscription management application has " +
+                    "already been imported by another owner."));
         }
 
         if (owner.getUpstreamUuid() != null &&
             !owner.getUpstreamUuid().equals(consumer.getUuid())) {
             if (!forcedConflicts.isForced(Importer.Conflict.DISTRIBUTOR_CONFLICT)) {
                 throw new ImportConflictException(
-                    i18n.tr("Owner has already imported from another distributor"),
+                    i18n.tr("Owner has already imported from another " +
+                        "subscription management application."),
                     Importer.Conflict.DISTRIBUTOR_CONFLICT);
             }
             else {

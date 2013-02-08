@@ -1109,7 +1109,7 @@ public class ConsumerResource {
         }
         catch (ExportCreationException e) {
             throw new IseException(
-                i18n.tr("Unable to create entitlement archive"), e);
+                i18n.tr("Unable to create entitlement certificate archive"), e);
         }
     }
 
@@ -1298,7 +1298,7 @@ public class ConsumerResource {
                 throw cvce;
             }
             catch (RuntimeException re) {
-                log.warn(i18n.tr("Asked to be subscribed to a product that " +
+                log.warn(i18n.tr("Unable to attach a subscription for a product that " +
                     "has no pool: {0} ", re.getMessage()));
             }
         }
@@ -1373,7 +1373,7 @@ public class ConsumerResource {
         Entitlement entitlement = entitlementCurator.find(entitlementId);
 
         if (entitlement == null) {
-            throw new NotFoundException(i18n.tr("No such entitlement: {0}",
+            throw new NotFoundException(i18n.tr("No such subscription: {0}",
                 entitlementId));
         }
         return entitlement;

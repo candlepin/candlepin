@@ -31,6 +31,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.io.Reader;
 import java.net.URISyntaxException;
@@ -49,6 +50,7 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.pki.PKIUtility;
 import org.candlepin.sync.Importer.ImportFile;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
@@ -315,14 +317,42 @@ public class ImporterTest {
         assertTrue(false);
     }
 
-    @Test
-    public void testImportZipSigConsumerNotZip()
+    @Test(expected = ImportConflictException.class)
+    public void testImportBadSignature()
         throws IOException, ImporterException {
+        PKIUtility pki = mock(PKIUtility.class);
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, config, null, null, null, i18n);
+            pki, config, null, null, null, i18n);
 
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
+
+        File archive = new File("/tmp/file.zip");
+        ZipOutputStream out = new ZipOutputStream(new FileOutputStream(archive));
+        out.putNextEntry(new ZipEntry("signature"));
+        out.write("This is the placeholder for the signature file".getBytes());
+        File ceArchive = new File("/tmp/consumer_export.zip");
+        FileOutputStream fos = new FileOutputStream(ceArchive);
+        fos.write("This is just a flat file".getBytes());
+        fos.close();
+        addFileToArchive(out, ceArchive);
+        out.close();
+
+        i.loadExport(owner, archive, co);
+    }
+
+    @Test
+    public void testImportBadConsumerZip() throws Exception {
+        PKIUtility pki = mock(PKIUtility.class);
+        Importer i = new Importer(null, null, null, null, null, null, null,
+            pki, config, null, null, null, i18n);
+
+        Owner owner = mock(Owner.class);
+        ConflictOverrides co = mock(ConflictOverrides.class);
+
+        // Mock a passed signature check:
+        when(pki.verifySHA256WithRSAHashWithUpstreamCACert(any(InputStream.class),
+            any(byte [].class))).thenReturn(true);
 
         File archive = new File("/tmp/file.zip");
         ZipOutputStream out = new ZipOutputStream(new FileOutputStream(archive));
@@ -339,21 +369,27 @@ public class ImporterTest {
             i.loadExport(owner, archive, co);
         }
         catch (ImportExtractionException e) {
-            assertEquals(e.getMessage(), i18n.tr("The archive {0} is " +
-                "not a properly compressed file or is empty", "consumer_export.zip"));
+            System.out.println(e.getMessage());
+            assertTrue(e.getMessage().contains(
+                "not a properly compressed file or is empty"));
             return;
         }
-        assertTrue(false);
+        fail();
     }
 
     @Test
     public void testImportZipSigAndEmptyConsumerZip()
-        throws IOException, ImporterException {
+        throws Exception {
+        PKIUtility pki = mock(PKIUtility.class);
         Importer i = new Importer(null, null, null, null, null, null, null,
-            null, config, null, null, null, i18n);
+            pki, config, null, null, null, i18n);
 
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
+
+        // Mock a passed signature check:
+        when(pki.verifySHA256WithRSAHashWithUpstreamCACert(any(InputStream.class),
+            any(byte [].class))).thenReturn(true);
 
         File archive = new File("/tmp/file.zip");
         ZipOutputStream out = new ZipOutputStream(new FileOutputStream(archive));
@@ -370,11 +406,10 @@ public class ImporterTest {
             i.loadExport(owner, archive, co);
         }
         catch (ImportExtractionException e) {
-            assertEquals(e.getMessage(), i18n.tr("The consumer_export " +
-                "archive has no contents"));
+            assertTrue(e.getMessage().contains("consumer_export archive has no contents"));
             return;
         }
-        assertTrue(false);
+        fail();
     }
 
     private Map<String, File> getTestImportFiles() {

@@ -129,7 +129,7 @@ public class EventAdapterImpl implements EventAdapter {
         MESSAGES.put("OWNERMODIFIED", I18n.marktr("{0} modified the owner {1}"));
         MESSAGES.put("OWNERDELETED", I18n.marktr("{0} deleted the owner {1}"));
         MESSAGES.put("ENTITLEMENTCREATED",
-            I18n.marktr("{0} consumed a subscription for product {1}"));
+            I18n.marktr("{0} attached a subscription for product {1}"));
         MESSAGES.put("ENTITLEMENTMODIFIED",
             I18n.marktr("{0} modified a subscription for product {1}"));
         MESSAGES.put("ENTITLEMENTDELETED",

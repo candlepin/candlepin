@@ -55,6 +55,7 @@ public class PoolRules {
     }
 
     public List<Pool> createPools(Subscription sub) {
+        log.info("Creating pools for new subscription: " + sub);
         ArgumentJsContext args = new ArgumentJsContext();
         args.put("sub", sub);
         args.put("attributes", jsRules.getFlattenedAttributes(sub.getProduct()));
@@ -73,6 +74,8 @@ public class PoolRules {
     }
 
     public List<PoolUpdate> updatePools(Subscription sub, List<Pool> existingPools) {
+        log.info("Refreshing pools for existing subscription: " + sub);
+        log.info("  existing pools: " + existingPools.size());
         ArgumentJsContext args = new ArgumentJsContext();
         args.put("sub", sub);
         args.put("pools", existingPools);
