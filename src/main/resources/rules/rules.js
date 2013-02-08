@@ -36,10 +36,6 @@ function compliance_name_space() {
     return Compliance;
 }
 
-function unbind_name_space() {
-    return Unbind;
-}
-
 
 
 /*
@@ -536,22 +532,6 @@ var Entitlement = {
         }
     },
 
-    post_user_license: function() {
-        if (!consumer.isManifest()) {
-            // Default to using the same product from the pool.
-            var productId = pool.getProductId();
-
-            // Check if the sub-pool should be for a different product:
-            if (attributes.containsKey("user_license_product")) {
-                productId = attributes.get("user_license_product");
-            }
-
-            // Create a sub-pool for this user
-            post.createUserRestrictedPool(productId, pool,
-                                          attributes.get("user_license"));
-        }
-    },
-
     pre_requires_consumer_type: function() {
         if (!attributes.get("requires_consumer_type").equals(consumer.getType()) &&
                 !consumer.getType().equals("uebercert")) {
@@ -562,64 +542,10 @@ var Entitlement = {
     pre_virt_limit: function() {
     },
 
-    post_virt_limit: function() {
-        if (standalone) {
-            var productId = pool.getProductId();
-            var virt_limit = attributes.get("virt_limit");
-            if ('unlimited'.equals(virt_limit)) {
-                post.createHostRestrictedPool(productId, pool, 'unlimited');
-            } else {
-                var virt_quantity = parseInt(virt_limit) * entitlement.getQuantity();
-                if (virt_quantity > 0) {
-                    post.createHostRestrictedPool(productId, pool,
-                            virt_quantity.toString());
-                }
-            }
-        }
-        else {
-            // if we are exporting we need to deal with the bonus pools
-            if (consumer.isManifest()) {
-                var virt_limit = attributes.get("virt_limit");
-                if (!'unlimited'.equals(virt_limit)) {
-                    // if the bonus pool is not unlimited, then the bonus pool quantity
-                    //   needs to be adjusted based on the virt limit
-                    var virt_quantity = parseInt(virt_limit) * entitlement.getQuantity();
-                    if (virt_quantity > 0) {
-                        var pools = post.lookupBySubscriptionId(pool.getSubscriptionId());
-                        for (var idex = 0 ; idex < pools.size(); idex++ ) {
-                            var derivedPool = pools.get(idex);
-                            if (derivedPool.getAttributeValue("pool_derived")) {
-                                derivedPool = post.updatePoolQuantity(derivedPool, -1 * virt_quantity);
-                            }
-                        }
-                    }
-                }
-                else {
-                    // if the bonus pool is unlimited, then the quantity needs to go to 0
-                    //   when the physical pool is exhausted completely by export.
-                    //   A quantity of 0 will block future binds, whereas -1 does not.
-                    if (pool.getQuantity() == pool.getExported()) {
-                        //getting all pools matching the sub id. Filtering out the 'parent'.
-                        var pools = post.lookupBySubscriptionId(pool.getSubscriptionId());
-                        for (var idex = 0 ; idex < pools.size(); idex++ ) {
-                            var derivedPool = pools.get(idex);
-                            if (derivedPool.getAttributeValue("pool_derived")) {
-                                derivedPool = post.setPoolQuantity(derivedPool, 0);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    },
-
     pre_architecture: function() {
        if (!architectureMatches(product, consumer)) {
          pre.addWarning("rulewarning.architecture.mismatch");
        }
-    },
-
-    post_architecture: function() {
     },
 
     pre_sockets: function() {
@@ -633,9 +559,6 @@ var Entitlement = {
         }
     },
 
-    post_sockets: function() {
-    },
-
     pre_ram: function() {
         var consumerRam = old_get_consumer_ram(consumer);
         log.debug("Consumer has " + consumerRam + "GB of RAM.");
@@ -645,9 +568,6 @@ var Entitlement = {
         if (consumerRam > productRam) {
             pre.addWarning("rulewarning.unsupported.ram");
         }
-    },
-
-    post_ram: function() {
     },
 
     pre_global: function() {
@@ -688,9 +608,6 @@ var Entitlement = {
         // for auto sub stacking, we need to be able to pull across multiple
         // pools eventually, so this would need to go away in that case
         pre.checkQuantity(pool);
-    },
-
-    post_global: function() {
     },
 
     select_pool_global: function() {
@@ -1497,52 +1414,6 @@ var Compliance = {
 
 }
 
-
-var Unbind = {
-
-    // defines mapping of product attributes to functions
-    // the format is: <function name>:<order number>:<attr1>:...:<attrn>, comma-separated ex.:
-    // func1:1:attr1:attr2:attr3, func2:2:attr3:attr4
-    attribute_mappings: function() {
-        return  "virt_limit:1:virt_limit";
-    },
-
-    pre_virt_limit: function() {
-    },
-
-    post_virt_limit: function() {
-        if (!standalone && consumer.isManifest()) {
-            var virt_limit = attributes.get("virt_limit");
-            if (!'unlimited'.equals(virt_limit)) {
-                // As we have unbound an entitlement from a physical pool that was previously
-                //   exported, we need to add back the reduced bonus pool quantity.
-                var virt_quantity = parseInt(virt_limit) * entitlement.getQuantity();
-                if (virt_quantity > 0) {
-                    var pools = post.lookupBySubscriptionId(pool.getSubscriptionId());
-                    for (var idex = 0 ; idex < pools.size(); idex++ ) {
-                        var derivedPool = pools.get(idex);
-                        if (derivedPool.getAttributeValue("pool_derived")) {
-                            post.updatePoolQuantity(derivedPool, virt_quantity);
-                        }
-                    }
-                }
-            }
-            else {
-                // As we have unbound an entitlement from a physical pool that was previously
-                //   exported, we need to set the unlimited bonus pool quantity to -1.
-                var pools = post.lookupBySubscriptionId(pool.getSubscriptionId());
-                for (var idex = 0 ; idex < pools.size(); idex++ ) {
-                    var derivedPool = pools.get(idex);
-                    if (derivedPool.getAttributeValue("pool_derived")) {
-                        if(derivedPool.getQuantity() == 0) {
-                            post.setPoolQuantity(derivedPool, -1);
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
 
 var Utils = {
 

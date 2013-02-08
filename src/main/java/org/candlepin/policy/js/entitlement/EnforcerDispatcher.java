@@ -78,14 +78,6 @@ public class EnforcerDispatcher implements Enforcer {
             compliance, serviceLevelOverride, exemptList);
     }
 
-    public PreUnbindHelper preUnbind(Consumer consumer, Pool entitlementPool) {
-        if (consumer.getType().isManifest()) {
-            return manifestEnforcer.preUnbind(consumer, entitlementPool);
-        }
-
-        return jsEnforcer.preUnbind(consumer, entitlementPool);
-    }
-
     public PoolHelper postUnbind(Consumer consumer, PoolHelper postEntHelper,
                 Entitlement ent) {
         if (consumer.getType().isManifest()) {

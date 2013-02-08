@@ -55,7 +55,6 @@ import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.PreEntHelper;
-import org.candlepin.policy.js.entitlement.PreUnbindHelper;
 import org.candlepin.policy.js.pool.PoolHelper;
 import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.policy.js.pool.PoolUpdate;
@@ -777,18 +776,6 @@ public class CandlepinPoolManager implements PoolManager {
         // This won't do anything for over/under consumption, but it will prevent
         // concurrency issues if someone else is operating on the pool.
         pool = poolCurator.lockAndLoad(pool);
-
-        PreUnbindHelper preHelper = enforcer.preUnbind(consumer,
-            pool);
-        ValidationResult result = preHelper.getResult();
-
-        if (!result.isSuccessful()) {
-            if (log.isDebugEnabled()) {
-                log.debug("Unbind failure from pool: " +
-                    pool.getId() + ", error: " +
-                    result.getErrors());
-            }
-        }
 
         consumer.removeEntitlement(entitlement);
 

@@ -308,8 +308,6 @@ public class PoolManagerTest {
         when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(pool);
 
         PreUnbindHelper preHelper =  mock(PreUnbindHelper.class);
-        when(enforcerMock.preUnbind(eq(c), eq(pool)))
-            .thenReturn(preHelper);
         ValidationResult result = new ValidationResult();
         when(preHelper.getResult()).thenReturn(result);
 
@@ -326,8 +324,6 @@ public class PoolManagerTest {
         List<Pool> poolsWithSource = createPoolsWithSourceEntitlement(e, product);
         when(mockPoolCurator.listBySourceEntitlement(e)).thenReturn(poolsWithSource);
         PreUnbindHelper preHelper =  mock(PreUnbindHelper.class);
-        when(enforcerMock.preUnbind(eq(e.getConsumer()), eq(e.getPool())))
-            .thenReturn(preHelper);
         ValidationResult result = new ValidationResult();
         when(preHelper.getResult()).thenReturn(result);
         when(mockConfig.standalone()).thenReturn(true);
@@ -419,8 +415,6 @@ public class PoolManagerTest {
         poolEntitlements.add(ent);
 
         when(mockPoolCurator.entitlementsIn(eq(p))).thenReturn(poolEntitlements);
-        when(enforcerMock.preUnbind(eq(ent.getConsumer()),
-            eq(ent.getPool()))).thenReturn(preHelper);
 
         ValidationResult result = new ValidationResult();
         when(preHelper.getResult()).thenReturn(result);
@@ -452,9 +446,6 @@ public class PoolManagerTest {
         when(mockPoolCurator.entitlementsIn(p)).thenReturn(
                 new ArrayList<Entitlement>(p.getEntitlements()));
         PreUnbindHelper preHelper =  mock(PreUnbindHelper.class);
-        for (Entitlement e : p.getEntitlements()) {
-            when(enforcerMock.preUnbind(eq(e.getConsumer()), eq(p))).thenReturn(preHelper);
-        }
         ValidationResult result = new ValidationResult();
         when(preHelper.getResult()).thenReturn(result);
 

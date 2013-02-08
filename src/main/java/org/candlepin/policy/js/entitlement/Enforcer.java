@@ -78,21 +78,6 @@ public interface Enforcer {
 
 
     /**
-     * Run pre-entitlement checks.
-     *
-     * Ensures sufficient entitlements remain, but also verifies all attributes
-     * on the product and relevant entitlement pool pass using the current
-     * policy.
-     *
-     * This is run prior to granting an entitlement.
-     *
-     * @param consumer Consumer who wishes to consume an entitlement.
-     * @param entitlementPool Entitlement pool to consume from.
-     * @return TODO
-     */
-    PreUnbindHelper preUnbind(Consumer consumer, Pool entitlementPool);
-
-    /**
      * Run post-entitlement actions.
      *
      * @param postEntHelper A post entitlement helper.
