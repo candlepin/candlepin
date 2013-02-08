@@ -33,8 +33,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.candlepin.jackson.HateoasInclude;
-import org.candlepin.jackson.ExportExclude;
-import org.candlepin.policy.js.RulesExclude;
 import org.codehaus.jackson.map.annotate.JsonFilter;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
@@ -62,7 +60,7 @@ import org.hibernate.annotations.Index;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_entitlement")
-@JsonFilter("ApiHateoas")
+@JsonFilter("EntitlementFilter")
 public class Entitlement extends AbstractHibernateObject implements Linkable, Owned {
 
     private static final long serialVersionUID = 1L;
@@ -220,8 +218,6 @@ public class Entitlement extends AbstractHibernateObject implements Linkable, Ow
     /**
      * @return return the associated Consumer
      */
-    @ExportExclude
-    @RulesExclude
     public Consumer getConsumer() {
         return consumer;
     }
@@ -242,7 +238,6 @@ public class Entitlement extends AbstractHibernateObject implements Linkable, Ow
         this.quantity = quantity;
     }
 
-    @RulesExclude
     public Set<EntitlementCertificate> getCertificates() {
         return certificates;
     }

@@ -42,7 +42,6 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import org.candlepin.jackson.HateoasArrayExclude;
 import org.candlepin.jackson.HateoasInclude;
-import org.candlepin.policy.js.RulesExclude;
 import org.candlepin.util.Util;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.annotate.JsonFilter;
@@ -68,7 +67,7 @@ import org.hibernate.annotations.MapKeyManyToMany;
 @Entity
 @Table(name = "cp_consumer")
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonFilter("ApiHateoas")
+@JsonFilter("ConsumerFilter")
 public class Consumer extends AbstractHibernateObject implements Linkable, Owned {
 
     public static final String UEBER_CERT_CONSUMER = "ueber_cert_consumer";
@@ -223,7 +222,6 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     }
 
     @HateoasArrayExclude
-    @RulesExclude
     public IdentityCertificate getIdCert() {
         return idCert;
     }
