@@ -148,8 +148,9 @@ data['products'].each do |product|
   attrs['arch'] = arch
   attrs['type'] = type
   product_ret = cp.create_product(id, name, {:multiplier => multiplier,
-                                    :attributes => attrs}, dependent_products,
-                                    relies_on)
+                                             :attributes => attrs,
+                                             :dependentProductIds => dependent_products,
+                                             :relies_on => relies_on})
   puts "product name: " + name + " version: " + version + \
        " arch: " + arch + " type: " + type
   startDate1 =  Date.today

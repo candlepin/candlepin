@@ -16,7 +16,6 @@ package org.candlepin.resource;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -206,17 +205,6 @@ public class ProductResource {
     public void removeReliance(@PathParam("product_uuid") String pid,
                               @PathParam("rely_product_uuid") String relyId) {
         prodAdapter.removeRely(pid, relyId);
-    }
-
-    /**
-     * @return the set of relies on products
-     * @httpcode 200
-     */
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("/{product_uuid}/reliance")
-    public Set<String> getReliance(@PathParam("product_uuid") String pid) {
-        return prodAdapter.getReliesOn(pid);
     }
 
     /**

@@ -20,6 +20,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.Calendar;
 import java.util.HashMap;
@@ -288,9 +289,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
             productCurator.create(prod1);
         }
         catch (BadRequestException bre) {
-            // Make sure that this is not thrown here
-            // Only the next create should throw the exception
-            assertTrue(false);
+            fail();
         }
 
         Product prod2 = new Product("test-label-2", "test-product-name-2");
@@ -310,9 +309,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
             productCurator.create(prod1);
         }
         catch (BadRequestException bre) {
-            // Make sure that this is not thrown here
-            // Only the last create should throw the exception
-            assertTrue(false);
+            fail();
         }
 
         Product prod3 = new Product("test-label-3", "test-product-name-3");
@@ -323,9 +320,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
             productCurator.create(prod3);
         }
         catch (BadRequestException bre) {
-            // Make sure that this is not thrown here
-            // Only the last create should throw the exception
-            assertTrue(false);
+            fail();
         }
 
         Product prod2 = new Product("test-label-2", "test-product-name-2");
@@ -344,9 +339,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
             productCurator.merge(prod1);
         }
         catch (BadRequestException bre) {
-            // Make sure that this is not thrown here
-            // Only the last update should throw the exception
-            assertTrue(false);
+            fail();
         }
 
         Product prod3 = new Product("test-label-3", "test-product-name-3");
@@ -356,9 +349,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
             productCurator.merge(prod3);
         }
         catch (BadRequestException bre) {
-            // Make sure that this is not thrown here
-            // Only the last update should throw the exception
-            assertTrue(false);
+            fail();
         }
 
         Product prod2 = new Product("test-label-2", "test-product-name-2");
@@ -366,9 +357,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
             productCurator.create(prod2);
         }
         catch (BadRequestException bre) {
-            // Make sure that this is not thrown here
-            // Only the last update should throw the exception
-            assertTrue(false);
+            fail();
         }
         prod2.addRely("test-label-3");
         productCurator.merge(prod2);
