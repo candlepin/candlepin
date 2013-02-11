@@ -28,9 +28,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
-import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.export.ExportRules;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.util.Util;
 
 import org.junit.Before;
@@ -49,14 +47,11 @@ import java.util.Set;
  * JsExportRulesTest: Tests for the default rules.
  */
 @RunWith(MockitoJUnitRunner.class)
-public class JsExportRulesTest {
+public class ExportRulesTest {
 
     private ExportRules exportRules;
 
     @Mock private RulesCurator rulesCuratorMock;
-    @Mock private ProductServiceAdapter productAdapterMock;
-
-    private JsRunnerProvider provider;
 
     @Before
     public void setUp() {
@@ -69,8 +64,7 @@ public class JsExportRulesTest {
         when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
         when(rulesCuratorMock.getRules()).thenReturn(rules);
 
-        provider = new JsRunnerProvider(rulesCuratorMock);
-        exportRules = new ExportRules(provider.get(), productAdapterMock);
+        exportRules = new ExportRules();
     }
 
     @Test
@@ -78,18 +72,12 @@ public class JsExportRulesTest {
         Entitlement entitlement = mock(Entitlement.class);
         Consumer consumer = mock(Consumer.class);
         ConsumerType type = mock(ConsumerType.class);
-        Pool pool = mock(Pool.class);
-        Product product = mock(Product.class);
-        Set<PoolAttribute> attributes = new HashSet<PoolAttribute>();
-        attributes.add(new PoolAttribute("pool_derived", "true"));
-
+        Pool pool = new Pool();
+        pool.setProductId("12345");
+        pool.setAttribute("pool_derived", "true");
 
         when(entitlement.getPool()).thenReturn(pool);
         when(entitlement.getConsumer()).thenReturn(consumer);
-        when(pool.getProductId()).thenReturn("12345");
-        when(productAdapterMock.getProductById("12345")).thenReturn(product);
-        when(product.getAttributes()).thenReturn(new HashSet<ProductAttribute>());
-        when(pool.getAttributes()).thenReturn(attributes);
         when(consumer.getType()).thenReturn(type);
         when(type.isManifest()).thenReturn(true);
 
@@ -110,7 +98,6 @@ public class JsExportRulesTest {
         when(entitlement.getPool()).thenReturn(pool);
         when(entitlement.getConsumer()).thenReturn(consumer);
         when(pool.getProductId()).thenReturn("12345");
-        when(productAdapterMock.getProductById("12345")).thenReturn(product);
         when(product.getAttributes()).thenReturn(new HashSet<ProductAttribute>());
         when(pool.getAttributes()).thenReturn(attributes);
         when(consumer.getType()).thenReturn(consumerType);
@@ -131,7 +118,6 @@ public class JsExportRulesTest {
         when(entitlement.getPool()).thenReturn(pool);
         when(entitlement.getConsumer()).thenReturn(consumer);
         when(pool.getProductId()).thenReturn("12345");
-        when(productAdapterMock.getProductById("12345")).thenReturn(product);
         when(product.getAttributes()).thenReturn(new HashSet<ProductAttribute>());
         when(pool.getAttributes()).thenReturn(attributes);
         when(consumer.getType()).thenReturn(consumerType);

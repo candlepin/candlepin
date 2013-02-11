@@ -20,14 +20,6 @@ function pool_name_space() {
     return Pool;
 }
 
-function criteria_name_space() {
-    return PoolCriteria;
-}
-
-function export_name_space() {
-    return Export;
-}
-
 function compliance_name_space() {
     return Compliance;
 }
@@ -770,71 +762,6 @@ var Entitlement = {
     }
 }
 
-/*
- * Return Hibernate criteria we can apply to the pool query when listing pools that
- * are relevant for a consumer.
- */
-var PoolCriteria = {
-    poolCriteria: function() {
-        // FIXME: alot of this could be cleaned up with some
-        // class/method var's instead of full paths, etc
-        var criteriaFilters = new java.util.LinkedList();
-        // Don't load virt_only pools if this consumer isn't a guest:
-        if (!"true".equalsIgnoreCase(consumer.getFact("virt.is_guest"))) {
-            // not a guest
-            var noVirtOnlyPoolAttr =
-                org.hibernate.criterion.DetachedCriteria.forClass(
-                        org.candlepin.model.PoolAttribute, "pool_attr")
-                    .add(org.hibernate.criterion.Restrictions.eq("name", "virt_only"))
-                    .add(org.hibernate.criterion.Restrictions.eq("value", "true"))
-                    .add(org.hibernate.criterion.Property.forName("this.id")
-                            .eqProperty("pool_attr.pool.id"))
-                    .setProjection(org.hibernate.criterion.Projections.property("pool_attr.id"));
-            criteriaFilters.add(org.hibernate.criterion.Subqueries.notExists(
-                    noVirtOnlyPoolAttr));
-
-            // same criteria but for PoolProduct attributes
-            // not sure if this should be two seperate criteria, or if it's
-            // worth it to combine in some clever fashion
-            var noVirtOnlyProductAttr =
-                org.hibernate.criterion.DetachedCriteria.forClass(
-                        org.candlepin.model.ProductPoolAttribute, "prod_attr")
-                    .add(org.hibernate.criterion.Restrictions.eq("name", "virt_only"))
-                    .add(org.hibernate.criterion.Restrictions.eq("value", "true"))
-                    .add(org.hibernate.criterion.Property.forName("this.id")
-                            .eqProperty("prod_attr.pool.id"))
-                    .setProjection(org.hibernate.criterion.Projections.property("prod_attr.id"));
-            criteriaFilters.add(org.hibernate.criterion.Subqueries.notExists(
-                    noVirtOnlyProductAttr));
-
-        } else {
-            // we are a virt guest
-            // add criteria for filtering out pools that are not for this guest
-            if (consumer.hasFact("virt.uuid")) {
-                var hostUuid = ""; // need a default value in case there is no registered host
-                if (hostConsumer != null) {
-                    hostUuid = hostConsumer.getUuid();
-                }
-                var noRequiresHost = org.hibernate.criterion.DetachedCriteria.forClass(
-                        org.candlepin.model.PoolAttribute, "attr")
-                        .add(org.hibernate.criterion.Restrictions.eq("name", "requires_host"))
-                        //  Note: looking for pools that are not for this guest
-                        .add(org.hibernate.criterion.Restrictions.ne("value", hostUuid))
-                        .add(org.hibernate.criterion.Property.forName("this.id")
-                                .eqProperty("attr.pool.id"))
-                                .setProjection(org.hibernate.criterion.Projections.property("attr.id"));
-                // we do want everything else
-                criteriaFilters.add(org.hibernate.criterion.Subqueries.notExists(
-                        noRequiresHost));
-            }
-            // no virt.uuid, we can't try to filter
-        }
-
-        return criteriaFilters;
-    }
-}
-
-
 var Pool = {
 
     /*
@@ -1022,13 +949,6 @@ var Pool = {
         return poolsUpdated;
     }
 
-}
-
-var Export = {
-    can_export_entitlement: function() {
-        pool_derived = attributes.containsKey('pool_derived');
-        return !consumer.isManifest() || !pool_derived;
-    }
 }
 
 function is_stacked(ent) {

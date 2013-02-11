@@ -14,17 +14,8 @@
  */
 package org.candlepin.policy.js.export;
 
-import java.util.Map;
-
-import org.apache.log4j.Logger;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
-import org.candlepin.policy.js.ArgumentJsContext;
-import org.candlepin.policy.js.JsRunner;
-import org.candlepin.policy.js.ReadOnlyConsumer;
-import org.candlepin.policy.js.RuleExecutionException;
-import org.candlepin.service.ProductServiceAdapter;
-import org.mozilla.javascript.RhinoException;
 
 import com.google.inject.Inject;
 
@@ -32,40 +23,20 @@ import com.google.inject.Inject;
  *
  */
 public class ExportRules {
-    private static Logger log = Logger.getLogger(ExportRules.class);
-
-    private JsRunner jsRules;
-    private ProductServiceAdapter productAdapter;
 
     @Inject
-    public ExportRules(JsRunner jsRules, ProductServiceAdapter productAdapter) {
-        this.jsRules = jsRules;
-        this.productAdapter = productAdapter;
-        jsRules.init("export_name_space");
+    public ExportRules() {
     }
 
     public boolean canExport(Entitlement entitlement) {
         Pool pool = entitlement.getPool();
-        ReadOnlyConsumer consumer = new ReadOnlyConsumer(entitlement.getConsumer());
-        Map<String, String> allAttributes = jsRules.getFlattenedAttributes(pool);
 
-        ArgumentJsContext args = new ArgumentJsContext();
-        args.put("attributes", allAttributes);
-        args.put("consumer", consumer);
-
-        // just default to true if there are any errors
-        Boolean canExport = true;
-        try {
-            canExport = jsRules.invokeMethod("can_export_entitlement", args);
-        }
-        catch (NoSuchMethodException e) {
-            log.warn("No method found: can_export_entitlement");
-        }
-        catch (RhinoException e) {
-            throw new RuleExecutionException(e);
-        }
-
-        return canExport;
+        // Product would typically never have pool_derived on it, as this would only be
+        // applied to pools internally by candlepin, but some tests were doing this so
+        // we will continue doing the same.
+        Boolean poolDerived = pool.hasProductAttribute("pool_derived") ||
+            pool.hasAttribute("pool_derived");
+        return !entitlement.getConsumer().getType().isManifest() || !poolDerived;
     }
 
 }

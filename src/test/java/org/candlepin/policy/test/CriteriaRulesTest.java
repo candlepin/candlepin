@@ -38,7 +38,7 @@ import org.candlepin.test.TestUtil;
  * filtered out below, we know it was because of the hibernate query mechanism.
  */
 @RunWith(MockitoJUnitRunner.class)
-public class PoolCriteriaTest extends DatabaseTestFixture {
+public class CriteriaRulesTest extends DatabaseTestFixture {
 
     private Owner owner;
     private Consumer consumer;
