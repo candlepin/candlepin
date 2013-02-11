@@ -65,7 +65,7 @@ BuildRequires: netty
 BuildRequires: glassfish-jaxb
 BuildRequires: jms >= 0:1.1
 BuildRequires: oauth
-BuildRequires: rhino
+BuildRequires: rhino >= 1.7-0.7.r3
 BuildRequires: slf4j >= 0:1.6.1
 BuildRequires: quartz >= 0:2.1.5
 # needed to setup runtime deps, not for compilation
