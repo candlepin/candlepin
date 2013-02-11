@@ -124,7 +124,7 @@ public class ConsumerResourceTest {
             mockedConsumerCurator, null, null, null, mockedEntitlementCurator, null,
             mockedEntitlementCertServiceAdapter, null, null, null, null, null,
             null, null, mockedPoolManager, null, null, null, null, null, null,
-            null, null, null, new Config());
+            null, null, new Config());
 
         List<CertificateSerialDto> serials = consumerResource
             .getEntitlementCertificateSerials(consumer.getUuid());
@@ -159,7 +159,7 @@ public class ConsumerResourceTest {
             mockedConsumerCurator, null, null, null, mockedEntitlementCurator, null,
             mockedEntitlementCertServiceAdapter, null, null, null, null, null,
             null, null, poolManager, null, null, null, null, null, null,
-            null, null, null, new Config());
+            null, null, new Config());
 
         consumerResource.regenerateEntitlementCertificates(consumer.getUuid(), "9999",
             false);
@@ -193,8 +193,7 @@ public class ConsumerResourceTest {
         CandlepinPoolManager mgr = mock(CandlepinPoolManager.class);
         ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
             null, null, null, null, null, null, null, null, null, null, null,
-            null, mgr, null, null, null, null, null, null, null, null, null,
-            new Config());
+            null, mgr, null, null, null, null, null, null, null, null, new Config());
         cr.regenerateEntitlementCertificates(consumer.getUuid(), null, true);
         Mockito.verify(mgr, Mockito.times(1))
             .regenerateEntitlementCertificates(eq(consumer), eq(true));
@@ -224,8 +223,8 @@ public class ConsumerResourceTest {
 
         ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
             null, null, null, mockedIdSvc, null, null, sink, factory, null, null,
-            null, null, null, null, null, null, mockedOwnerCurator, null, null, null,
-            null, null, new Config());
+            null, null, null, null, null, mockedOwnerCurator, null, null, null, null,
+            null, new Config());
 
         Consumer fooc = cr.regenerateIdentityCertificates(consumer.getUuid());
 
@@ -260,8 +259,8 @@ public class ConsumerResourceTest {
 
         ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
             null, ssa, null, mockedIdSvc, null, null, sink, factory, null, null,
-            null, null, null, null, null, null, mockedOwnerCurator, null, null,
-            rules, null, null, new Config());
+            null, null, null, null, null, mockedOwnerCurator, null, null, rules,
+            null, null, new Config());
 
         Consumer c = cr.getConsumer(consumer.getUuid());
 
@@ -282,8 +281,8 @@ public class ConsumerResourceTest {
 
         ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
             null, ssa, null, null, null, null, null, null, null, null,
-            null, null, null, null, null, null, mockedOwnerCurator, null, null,
-            rules, null, null, new Config());
+            null, null, null, null, null, mockedOwnerCurator, null, null, rules,
+            null, null, new Config());
 
         Consumer c = cr.getConsumer(consumer.getUuid());
 
@@ -311,8 +310,7 @@ public class ConsumerResourceTest {
 
         ConsumerResource cr = new ConsumerResource(null, ctc,
             null, null, null, null, null, i18n, null, null, null, null,
-            null, null, null, null, null, null, oc, akc, null, null, null, null,
-            new Config());
+            null, null, null, null, null, oc, akc, null, null, null, null, new Config());
         cr.create(c, nap, null, "testOwner", "testKey");
     }
 
@@ -334,7 +332,7 @@ public class ConsumerResourceTest {
 
             ConsumerResource cr = new ConsumerResource(cc, null,
                 null, sa, null, null, null, i18n, null, null, null, null,
-                null, null, null, null, null, null, null, null, e, null, null, null,
+                null, null, null, null, null, null, null, e, null, null, null,
                 new Config());
             cr.bind("fakeConsumer", null, prodIds, 1, null, null, false, null);
         }
@@ -361,8 +359,7 @@ public class ConsumerResourceTest {
 
         ConsumerResource cr = new ConsumerResource(cc, null,
             null, sa, null, null, null, null, null, null, null, null,
-            null, null, null, null, null, null, null, null, e, null, null, null,
-            new Config());
+            null, null, null, null, null, null, null, e, null, null, null, new Config());
         String dtStr = "2011-09-26T18:10:50.184081+00:00";
         Date dt = ResourceDateParser.parseDateString(dtStr);
         cr.bind("fakeConsumer", null, null, 1, null, null, false, dtStr);
@@ -380,7 +377,7 @@ public class ConsumerResourceTest {
 
         ConsumerResource consumerResource = new ConsumerResource(consumerCurator, null,
             null, null, entitlementCurator, null, null, i18n, null, null, null,
-            null, null, null, null, null, null, null, null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null, null, null, null, null,
             new Config());
 
         consumerResource.unbindBySerial("fake uuid",
@@ -394,8 +391,7 @@ public class ConsumerResourceTest {
 
         ConsumerResource consumerResource = new ConsumerResource(consumerCurator, null,
             null, null, null, null, null, i18n, null, null, null, null,
-            null, null, null, null, null, null, null, null, null, null, null, null,
-            new Config());
+            null, null, null, null, null, null, null, null, null, null, null, new Config());
 
         consumerResource.unbindBySerial("fake uuid",
             Long.valueOf(1234L));
@@ -406,8 +402,7 @@ public class ConsumerResourceTest {
         ConsumerCurator consumerCurator = mock(ConsumerCurator.class);
         ConsumerResource consumerResource = new ConsumerResource(consumerCurator, null,
             null, null, null, null, null, i18n, null, null, null, null,
-            null, null, null, null, null, null, null, null, null, null, null, null,
-            new Config());
+            null, null, null, null, null, null, null, null, null, null, null, new Config());
 
         consumerResource.bind("fake uuid", "fake pool uuid",
             new String[]{"12232"}, 1, null, null, false, null);
@@ -419,8 +414,7 @@ public class ConsumerResourceTest {
         ConsumerCurator consumerCurator = mock(ConsumerCurator.class);
         ConsumerResource consumerResource = new ConsumerResource(consumerCurator, null,
             null, null, null, null, null, i18n, null, null, null, null,
-            null, null, null, null, null, null, null, null, null, null, null, null,
-            new Config());
+            null, null, null, null, null, null, null, null, null, null, null, new Config());
 
         consumerResource.bind("notarealuuid", "fake pool uuid", null, null, null,
             null, false, null);
@@ -435,8 +429,7 @@ public class ConsumerResourceTest {
         ConsumerCurator consumerCurator = mock(ConsumerCurator.class);
         ConsumerResource consumerResource = new ConsumerResource(consumerCurator, null,
             null, null, null, null, null, i18n, null, null, null, null,
-            null, null, null, null, null, null, null, null, null, null, null, null,
-            new Config());
+            null, null, null, null, null, null, null, null, null, null, null, new Config());
 
         consumerResource.regenerateEntitlementCertificates("xyz", null, true);
     }

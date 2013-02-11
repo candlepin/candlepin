@@ -16,10 +16,6 @@ function entitlement_name_space() {
     return Entitlement;
 }
 
-function consumer_delete_name_space() {
-    return ConsumerDelete;
-}
-
 function pool_name_space() {
     return Pool;
 }
@@ -771,14 +767,6 @@ var Entitlement = {
 
         // We may not have selected pools for all products; that's ok.
         return selected_pools;
-    }
-}
-
-var ConsumerDelete = {
-    global: function() {
-        if (consumer.getType() == "person") {
-            helper.deleteUserRestrictedPools(consumer.getUsername());
-        }
     }
 }
 
