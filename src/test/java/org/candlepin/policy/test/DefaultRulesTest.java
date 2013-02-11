@@ -868,7 +868,8 @@ public class DefaultRulesTest {
             pools = poolRules.createPools(s);
         }
         catch (Exception e) {
-            fail();
+            fail("Create pools should not have thrown an exception on bad value for " +
+                 "virt_limit. " + e.getMessage());
         }
         assertEquals(1, pools.size());
 
