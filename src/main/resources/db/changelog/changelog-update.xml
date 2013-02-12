@@ -12,4 +12,5 @@
     <include file="db/changelog/20121015121627-add-rules-cp-version-column.xml" />
     <include file="db/changelog/20130114143642-add-order-number-to-subscription.xml" />
     <include file="db/changelog/20130124112705-add-reliant-product.xml" />
+    <include file="db/changelog/20130212124537-insert-katello-consumer-types.xml" />
 </databaseChangeLog>
