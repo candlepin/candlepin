@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+
+    <changeSet id="20130124112705" author="wpoteat">
+        <createTable tableName="cp_product_reliance">
+            <column name="parent_product_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="child_product_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <!-- See http://www.liquibase.org/manual/refactoring_commands -->
+    </changeSet>
+    <changeSet id="20130124112705-1" author="wpoteat">
+        <createIndex tableName="cp_product_reliance" indexName="cp_product_reliance_parent_product_id_idx">
+            <column name="parent_product_id"/>
+        </createIndex>
+        <addForeignKeyConstraint baseColumnNames="parent_product_id" baseTableName="cp_product_reliance" baseTableSchemaName="public" constraintName="fk_product_reliance" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+
+</databaseChangeLog>
