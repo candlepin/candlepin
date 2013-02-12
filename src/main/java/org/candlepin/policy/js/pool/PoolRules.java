@@ -62,7 +62,8 @@ public class PoolRules {
             this.productCache, null);
 
         List<Pool> pools = new LinkedList<Pool>();
-        Map<String, String> attributes = jsRules.getFlattenedAttributes(sub.getProduct());
+        Map<String, String> attributes =
+            helper.getFlattenedAttributes(sub.getProduct());
         long quantity = sub.getQuantity() * sub.getProduct().getMultiplier();
         Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
         Pool newPool = new Pool(sub.getOwner(), sub.getProduct().getId(),
@@ -136,7 +137,8 @@ public class PoolRules {
         PoolHelper helper = new PoolHelper(this.poolManager, this.productCache, null);
 
         List<PoolUpdate> poolsUpdated = new LinkedList<PoolUpdate>();
-        Map<String, String> attributes = jsRules.getFlattenedAttributes(sub.getProduct());
+        Map<String, String> attributes =
+            helper.getFlattenedAttributes(sub.getProduct());
         for (Pool existingPool : existingPools) {
             log.info("Updating pool: " + existingPool.getId());
             boolean datesChanged = (!sub.getStartDate().equals(

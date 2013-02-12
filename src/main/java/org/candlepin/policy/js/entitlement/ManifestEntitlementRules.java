@@ -88,8 +88,8 @@ public class ManifestEntitlementRules extends AbstractEntitlementRules implement
         String topLevelProductId = pool.getProductId();
         ReadOnlyProduct product = new ReadOnlyProduct(topLevelProductId,
             pool.getProductName(),
-            jsRules.getFlattenedAttributes(pool.getProductAttributes()));
-        Map<String, String> allAttributes = jsRules.getFlattenedAttributes(pool);
+            preHelper.getFlattenedAttributes(pool.getProductAttributes()));
+        Map<String, String> allAttributes = preHelper.getFlattenedAttributes(pool);
 
         ArgumentJsContext args = new ArgumentJsContext();
         args.put("consumer", new ReadOnlyConsumer(consumer));

@@ -33,9 +33,9 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
+import org.candlepin.policy.js.JsContext;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.ProductCache;
-import org.candlepin.policy.js.JsContext;
 import org.candlepin.policy.js.RuleExecutionException;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.pool.PoolHelper;
@@ -334,8 +334,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         Pool pool = entitlement.getPool();
         Consumer c = entitlement.getConsumer();
 
-        Map<String, String> attributes = jsRules
-            .getFlattenedAttributes(pool);
+        Map<String, String> attributes = postHelper.getFlattenedAttributes(pool);
 
         // Perform pool management based on the attributes of the pool:
         // TODO: should really be cleaned up, this used to be post rules but
@@ -354,8 +353,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         Pool pool = entitlement.getPool();
         Consumer c = entitlement.getConsumer();
 
-        Map<String, String> attributes = jsRules
-            .getFlattenedAttributes(pool);
+        Map<String, String> attributes = postHelper.getFlattenedAttributes(pool);
 
         if (attributes.containsKey("virt_limit")) {
             postUnbindVirtLimit(postHelper, entitlement, pool, c, attributes);

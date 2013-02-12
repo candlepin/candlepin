@@ -100,8 +100,8 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         String topLevelProductId = pool.getProductId();
         ReadOnlyProduct product = new ReadOnlyProduct(topLevelProductId,
             pool.getProductName(),
-            jsRules.getFlattenedAttributes(pool.getProductAttributes()));
-        Map<String, String> allAttributes = jsRules.getFlattenedAttributes(pool);
+            preHelper.getFlattenedAttributes(pool.getProductAttributes()));
+        Map<String, String> allAttributes = preHelper.getFlattenedAttributes(pool);
 
         Map<String, Object> args = new HashMap<String, Object>();
         args.put("consumer", new ReadOnlyConsumer(consumer));

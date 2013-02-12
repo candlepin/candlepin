@@ -17,6 +17,7 @@ package org.candlepin.policy.js.entitlement;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.policy.ValidationResult;
+import org.candlepin.policy.js.AttributeHelper;
 import org.candlepin.policy.js.ReadOnlyPool;
 
 /**
@@ -25,7 +26,7 @@ import org.candlepin.policy.js.ReadOnlyPool;
  * Object is used as a holder for utility methods useful to all rules files, as well as
  * a mechanism for the rules to return a small amount of state.
  */
-public class PreEntHelper {
+public class PreEntHelper extends AttributeHelper {
 
     private ValidationResult result;
     private Integer quantityToConsume;
