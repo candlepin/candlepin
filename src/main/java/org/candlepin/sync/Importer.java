@@ -255,6 +255,10 @@ public class Importer {
                 importFiles.put(file.getName(), file);
             }
 
+            // Need the rules file as well which is in a nested dir:
+            File rulesFile = new File(exportDir, ImportFile.RULES_FILE.fileName());
+            importFiles.put(ImportFile.RULES_FILE.fileName(), rulesFile);
+
             ConsumerDto consumer = importObjects(owner, importFiles, overrides);
             Meta m = mapper.readValue(importFiles.get(ImportFile.META.fileName()),
                 Meta.class);
@@ -411,16 +415,16 @@ public class Importer {
     }
 
     public void importRules(File rulesFile, File metadata) throws IOException {
-        if (rulesFile == null) {
-            log.warn("Skipping rules import, manifest does not contain rules file: " +
-                ImportFile.RULES_FILE.fileName());
-            return;
-        }
 
         Reader reader = null;
         try {
             reader = new FileReader(rulesFile);
             rulesImporter.importObject(reader);
+        }
+        catch (FileNotFoundException fnfe) {
+            log.warn("Skipping rules import, manifest does not contain rules file: " +
+                ImportFile.RULES_FILE.fileName());
+            return;
         }
         finally {
             if (reader != null) {
