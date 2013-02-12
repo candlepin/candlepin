@@ -57,6 +57,7 @@ import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.Subscription;
 import org.candlepin.policy.ValidationResult;
+import org.candlepin.policy.js.AttributeHelper;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.ProductCache;
@@ -65,8 +66,8 @@ import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.policy.js.entitlement.ManifestEntitlementRules;
-import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.policy.js.pool.PoolHelper;
+import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.TestDateUtil;
 import org.candlepin.test.TestUtil;
@@ -99,6 +100,7 @@ public class DefaultRulesTest {
     private String productId = "a-product";
     private PoolRules poolRules;
     private ProductCache productCache;
+    private AttributeHelper attrHelper;
 
     @Before
     public void createEnforcer() throws Exception {
@@ -124,10 +126,9 @@ public class DefaultRulesTest {
         consumer = new Consumer("test consumer", "test user", owner,
             new ConsumerType(ConsumerTypeEnum.SYSTEM));
 
-        poolRules = new PoolRules(new JsRunnerProvider(rulesCurator).get(),
-            poolManagerMock,
-            productCache, config);
+        attrHelper = new AttributeHelper();
 
+        poolRules = new PoolRules(poolManagerMock, productCache, config);
     }
 
     private Pool createPool(Owner owner, Product product) {
@@ -588,6 +589,8 @@ public class DefaultRulesTest {
             1);
 
         PoolHelper postHelper = mock(PoolHelper.class);
+        when(postHelper.getFlattenedAttributes(eq(pool))).thenReturn(
+            attrHelper.getFlattenedAttributes(pool));
         enforcer.postEntitlement(consumer, postHelper, e);
         verify(postHelper).createUserRestrictedPool(pool.getProductId(), pool,
             "unlimited");
@@ -604,6 +607,8 @@ public class DefaultRulesTest {
             1);
 
         PoolHelper postHelper = mock(PoolHelper.class);
+        when(postHelper.getFlattenedAttributes(eq(pool))).thenReturn(
+            attrHelper.getFlattenedAttributes(pool));
         enforcer.postEntitlement(consumer, postHelper, e);
         verify(postHelper).createUserRestrictedPool(subProductId, pool,
             "unlimited");
@@ -737,6 +742,8 @@ public class DefaultRulesTest {
             5);
 
         PoolHelper postHelper = mock(PoolHelper.class);
+        when(postHelper.getFlattenedAttributes(eq(pool))).thenReturn(
+            attrHelper.getFlattenedAttributes(pool));
         when(config.standalone()).thenReturn(true);
         enforcer.postEntitlement(consumer, postHelper, e);
 
@@ -753,6 +760,8 @@ public class DefaultRulesTest {
             5);
 
         PoolHelper postHelper = mock(PoolHelper.class);
+        when(postHelper.getFlattenedAttributes(eq(pool))).thenReturn(
+            attrHelper.getFlattenedAttributes(pool));
         when(config.standalone()).thenReturn(true);
         enforcer.postEntitlement(consumer, postHelper, e);
 

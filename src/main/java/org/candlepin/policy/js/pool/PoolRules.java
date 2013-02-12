@@ -29,7 +29,6 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Subscription;
-import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.ProductCache;
 
 import com.google.inject.Inject;
@@ -41,16 +40,13 @@ public class PoolRules {
 
     private static Logger log = Logger.getLogger(PoolRules.class);
 
-    private JsRunner jsRules;
     private PoolManager poolManager;
     private ProductCache productCache;
     private Config config;
 
 
     @Inject
-    public PoolRules(JsRunner jsRules, PoolManager poolManager,
-        ProductCache productCache, Config config) {
-        this.jsRules = jsRules;
+    public PoolRules(PoolManager poolManager, ProductCache productCache, Config config) {
         this.poolManager = poolManager;
         this.productCache = productCache;
         this.config = config;
