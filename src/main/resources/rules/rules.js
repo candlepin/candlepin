@@ -16,10 +16,6 @@ function entitlement_name_space() {
     return Entitlement;
 }
 
-function pool_name_space() {
-    return Pool;
-}
-
 function compliance_name_space() {
     return Compliance;
 }
