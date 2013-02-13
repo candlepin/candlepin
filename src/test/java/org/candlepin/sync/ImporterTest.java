@@ -327,7 +327,7 @@ public class ImporterTest {
                 "not a properly compressed file or is empty", "non_zip_file.zip"));
             return;
         }
-        assertTrue(false);
+        fail();
     }
 
     @Test
@@ -352,7 +352,7 @@ public class ImporterTest {
                 "contain the required signature file"));
             return;
         }
-        assertTrue(false);
+        fail();
     }
 
     @Test(expected = ImportConflictException.class)
@@ -477,7 +477,7 @@ public class ImporterTest {
                 "required meta.json file"));
             return;
         }
-        assertTrue(false);
+        fail();
     }
 
     @Test
@@ -504,7 +504,7 @@ public class ImporterTest {
                 "required rules directory"));
             return;
         }
-        assertTrue(false);
+        fail();
     }
 
     @Test
@@ -533,7 +533,7 @@ public class ImporterTest {
                 "required rules file(s)"));
             return;
         }
-        assertTrue(false);
+        fail();
     }
 
     @Test
@@ -563,7 +563,7 @@ public class ImporterTest {
                 "required consumer_types directory"));
             return;
         }
-        assertTrue(false);
+        fail();
     }
 
     @Test
@@ -593,7 +593,7 @@ public class ImporterTest {
                 "required consumer.json file"));
             return;
         }
-        assertTrue(false);
+        fail();
     }
 
     @Test
@@ -630,7 +630,7 @@ public class ImporterTest {
             assertEquals(e.getMessage(), "Done with the test");
             return;
         }
-        assertTrue(false);
+        fail();
 
     }
 
@@ -661,7 +661,7 @@ public class ImporterTest {
                 "required entitlements directory"));
             return;
         }
-        assertTrue(false);
+        fail();
     }
 
     @After

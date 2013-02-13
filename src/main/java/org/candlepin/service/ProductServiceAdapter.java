@@ -19,6 +19,7 @@ import org.candlepin.model.ProductCertificate;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Product data may originate from a separate service outside Candlepin in some
@@ -87,4 +88,9 @@ public interface ProductServiceAdapter {
 
     boolean productHasSubscriptions(Product prod);
 
+    void addRely(String productId, String relyId);
+
+    void removeRely(String productId, String relyId);
+
+    Set<String> getReliesOn(String productId);
 }
