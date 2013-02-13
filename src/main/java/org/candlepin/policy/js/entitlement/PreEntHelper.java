@@ -67,25 +67,6 @@ public class PreEntHelper extends AttributeHelper {
     }
 
     /**
-     * Verify entitlements are available in the given pool.
-     *
-     * WARNING: It is extremely important the author of a rules file makes
-     * sure this function is called at appropriate times in pre_global() and
-     * normally within all product specific functions. If not, entitlements
-     * will be granted with no checking against overall consumption limits,
-     * leaving a scenario that will have to be dealt with via compliance
-     * checking.
-     *
-     * @param entPool read-only entitlement pool to be checked.
-     */
-    public void checkQuantity(ReadOnlyPool entPool) {
-        if (!entPool.entitlementsAvailable(quantityToConsume)) {
-            result.addError("rulefailed.no.entitlements.available");
-        }
-    }
-
-
-    /**
      * Lookup a host consumer for the given guest ID, if one exists. The host may not
      * be registered to Candlepin.
      *

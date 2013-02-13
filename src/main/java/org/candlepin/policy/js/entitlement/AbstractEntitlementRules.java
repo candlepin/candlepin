@@ -31,10 +31,12 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
+import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.JsContext;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.RuleExecutionException;
+import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.policy.js.pool.PoolHelper;
 import org.candlepin.util.DateSource;
 import org.mozilla.javascript.RhinoException;
@@ -56,6 +58,8 @@ public abstract class AbstractEntitlementRules implements Enforcer {
     protected Config config;
     protected ConsumerCurator consumerCurator;
     protected PoolCurator poolCurator;
+
+    protected RulesObjectMapper objectMapper = RulesObjectMapper.instance();
 
     protected static final String PROD_ARCHITECTURE_SEPARATOR = ",";
     protected static final String PRE_PREFIX = "pre_";
@@ -148,10 +152,9 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         }
     }
 
-    protected void callPreEntitlementRules(List<Rule> matchingRules,
-        Map<String, Object> args) {
+    protected void callPreEntitlementRules(List<Rule> matchingRules, JsContext context) {
         for (Rule rule : matchingRules) {
-            jsRules.invokeRule(PRE_PREFIX + rule.getRuleName(), args);
+            jsRules.invokeRule(PRE_PREFIX + rule.getRuleName(), context);
         }
     }
 
@@ -212,6 +215,16 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         }
         catch (RhinoException ex) {
             throw new RuleExecutionException(ex);
+        }
+    }
+
+    // Always ensure that we do not over consume.
+    // FIXME for auto sub stacking, we need to be able to pull across multiple
+    // pools eventually, so this would need to go away in that case
+    protected void validatePoolQuantity(ValidationResult result, Pool pool,
+        int quantity) {
+        if (!pool.entitlementsAvailable(quantity)) {
+            result.addError("rulefailed.no.entitlements.available");
         }
     }
 

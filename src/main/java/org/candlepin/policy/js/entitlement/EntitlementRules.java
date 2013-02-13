@@ -14,7 +14,6 @@
  */
 package org.candlepin.policy.js.entitlement;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -26,9 +25,8 @@ import org.candlepin.model.Pool;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationWarning;
 import org.candlepin.policy.js.JsRunner;
+import org.candlepin.policy.js.JsonJsContext;
 import org.candlepin.policy.js.ProductCache;
-import org.candlepin.policy.js.ReadOnlyConsumer;
-import org.candlepin.policy.js.ReadOnlyPool;
 import org.candlepin.policy.js.ReadOnlyProduct;
 import org.candlepin.util.DateSource;
 import org.xnap.commons.i18n.I18n;
@@ -57,7 +55,6 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         log = Logger.getLogger(EntitlementRules.class);
         rulesLogger =
             Logger.getLogger(EntitlementRules.class.getCanonicalName() + ".rules");
-
     }
 
     @Override
@@ -69,6 +66,8 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
 
         PreEntHelper preHelper = runPreEntitlement(consumer, entitlementPool,
             quantity);
+
+        validatePoolQuantity(preHelper.getResult(), entitlementPool, quantity);
 
         if (entitlementPool.isExpired(dateSource)) {
             preHelper.getResult().addError(
@@ -90,22 +89,28 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
             preHelper.getFlattenedAttributes(pool.getProductAttributes()));
         Map<String, String> allAttributes = preHelper.getFlattenedAttributes(pool);
 
-        Map<String, Object> args = new HashMap<String, Object>();
-        args.put("consumer", new ReadOnlyConsumer(consumer));
-        args.put("product", product);
-        args.put("pool", new ReadOnlyPool(pool));
-        args.put("pre", preHelper);
-        args.put("attributes", allAttributes);
-        args.put("prodAttrSeparator", PROD_ARCHITECTURE_SEPARATOR);
-        args.put("standalone", config.standalone());
-        args.put("log", rulesLogger);
+        JsonJsContext context = new JsonJsContext(this.objectMapper);
+        context.put("consumer", consumer);
+        // Entitlements are put into the context seperately because they do
+        // not get serialized along with the Consumer.
+        // TODO Perhaps look into a Jackson view to do this.
+        context.put("consumerEntitlements", consumer.getEntitlements());
+        context.put("product", product);
+        context.put("pool", pool);
+        context.put("attributes", allAttributes);
+        context.put("prodAttrSeparator", PROD_ARCHITECTURE_SEPARATOR);
+        context.put("standalone", config.standalone());
+
+        // Add all non-serializable objects to the context.
+        context.put("pre", preHelper, false);
+        context.put("log", rulesLogger, false);
 
         log.debug("Running pre-entitlement rules for: " + consumer.getUuid() +
             " product: " + topLevelProductId);
         List<Rule> matchingRules
             = rulesForAttributes(allAttributes.keySet(), attributesToRules);
 
-        callPreEntitlementRules(matchingRules, args);
+        callPreEntitlementRules(matchingRules, context);
 
         if (log.isDebugEnabled()) {
             for (ValidationError error : preHelper.getResult().getErrors()) {

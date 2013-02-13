@@ -31,28 +31,25 @@ function autobind_name_space() {
  */
 
 function createPool(pool) {
-    // Translate productAttributes to a simple object:
-    /*
-    origProdAttrs = pool.productAttributes;
-    if (Array.isArray(origProdAttrs)) {
-        pool.productAttributes = {};
-        for (var k = 0; k < origProdAttrs.length; k++) {
-            var attr = origProdAttrs[k];
 
-            pool.productAttributes[attr.name] = attr.value;
-        }
-    }
-    */
-
-    pool.getProductAttribute = function (attrName) {
-        for (var k = 0; k < this.productAttributes.length; k++) {
-            var attr = this.productAttributes[k];
-
-            if (attr.name == attrName) {
+    // General function to look for an attribute in the specified
+    // attribute collection.
+    pool.findAttributeIn = function (attrName, attrs) {
+        for (var k = 0; k < attrs.length; k++) {
+            var attr = attrs[k];
+            if (attrName.equals(attr.name)) {
                 return attr.value;
             }
         }
         return null;
+    }
+
+    pool.getAttribute = function (attrName) {
+        return this.findAttributeIn(attrName, this.attributes);
+    }
+
+    pool.getProductAttribute = function (attrName) {
+        return this.findAttributeIn(attrName, this.productAttributes);
     }
 
     // Add some functions onto pool objects:
@@ -185,17 +182,17 @@ function hasNoInstalledOverlap(pool, compliance) {
     return true;
 }
 
-function architectureMatches(product, consumer) {
+function architectureMatches(productArchStr, consumerUnameMachine, consumerType,
+    prodAttrSeparator) {
     // Non-system consumers without an architecture fact can pass this rule
     // regardless what arch the product requires.
-    if (!consumer.hasFact("uname.machine") && !consumer.getType().equals("system")) {
+    if (!consumerUnameMachine && !"system".equals(consumerType)) {
         return true;
     }
 
     var supportedArches = [];
-    var archString = product.getAttribute('arch');
-    if (archString != null) {
-        supportedArches = archString.toUpperCase().split(prodAttrSeparator);
+    if (productArchStr != null) {
+        supportedArches = productArchStr.toUpperCase().split(prodAttrSeparator);
 
         supportedArches = new java.util.HashSet(java.util.Arrays.asList(supportedArches));
 
@@ -206,11 +203,8 @@ function architectureMatches(product, consumer) {
            supportedArches.add("I686");
         }
 
-        if(!supportedArches.contains('ALL') &&
-           (!consumer.hasFact("uname.machine")  ||
-            !supportedArches.contains(consumer.getFact('uname.machine').toUpperCase())
-            )
-          ){
+        if(!supportedArches.contains('ALL') && (!consumerUnameMachine ||
+           !supportedArches.contains(consumerUnameMachine.toUpperCase()))) {
            return false;
        }
    }
@@ -519,11 +513,31 @@ var Entitlement = {
             "requires_host:1:requires_host";
     },
 
+    get_attribute_context: function() {
+        context = eval(json_context);
+
+        if ("pool" in context) {
+            context.pool = createPool(context.pool);
+        }
+
+        context.hasEntitlement = function(poolId) {
+            for each (var e in this.consumerEntitlements) {
+                if (e.pool.id == poolId) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        return context;
+    },
+
     pre_virt_only: function() {
-        var virt_pool = 'true'.equalsIgnoreCase(attributes.get('virt_only'));
+        context = Entitlement.get_attribute_context();
+        var virt_pool = 'true'.equalsIgnoreCase(context.attributes['virt_only']);
         var guest = false;
-        if (consumer.hasFact('virt.is_guest')) {
-            guest = 'true'.equalsIgnoreCase(consumer.getFact('virt.is_guest'));
+        if (context.consumer.facts['virt.is_guest']) {
+            guest = 'true'.equalsIgnoreCase(context.consumer.facts['virt.is_guest']);
         }
 
         if (virt_pool && !guest) {
@@ -532,25 +546,27 @@ var Entitlement = {
     },
 
     pre_requires_host: function() {
+        context = Entitlement.get_attribute_context();
         // It shouldn't be possible to get a host restricted pool in hosted, but just in
         // case, make sure it won't be enforced if we do.
-        if (!standalone) {
+        if (!context.standalone) {
             return;
         }
-        if (!consumer.hasFact("virt.uuid")) {
+        if (!context.consumer.facts["virt.uuid"]) {
             pre.addError("rulefailed.virt.only");
             return;
         }
-        var hostConsumer = pre.getHostConsumer(consumer.getFact("virt.uuid"));
+        var hostConsumer = pre.getHostConsumer(context.consumer.facts["virt.uuid"]);
 
-        if (hostConsumer == null || !hostConsumer.getUuid().equals(attributes.get('requires_host'))) {
+        if (hostConsumer == null || !hostConsumer.getUuid().equals(context.attributes['requires_host'])) {
             pre.addError("virt.guest.host.does.not.match.pool.owner");
         }
     },
 
     pre_requires_consumer_type: function() {
-        if (!attributes.get("requires_consumer_type").equals(consumer.getType()) &&
-                !consumer.getType().equals("uebercert")) {
+        context = Entitlement.get_attribute_context();
+        if (!context.attributes["requires_consumer_type"].equals(context.consumer.type.label) &&
+                !context.consumer.type.label.equals("uebercert")) {
             pre.addError("rulefailed.consumer.type.mismatch");
         }
     },
@@ -559,27 +575,36 @@ var Entitlement = {
     },
 
     pre_architecture: function() {
-       if (!architectureMatches(product, consumer)) {
-         pre.addWarning("rulewarning.architecture.mismatch");
-       }
+        context = Entitlement.get_attribute_context();
+        if (!architectureMatches(context.product.attributes['arch'],
+                                 context.consumer.facts['uname.machine'],
+                                 context.consumer.type.label,
+                                 context.prodAttrSeparator)) {
+            pre.addWarning("rulewarning.architecture.mismatch");
+        }
     },
 
     pre_sockets: function() {
+        context = Entitlement.get_attribute_context();
+        var consumer = context.consumer;
+        var pool = context.pool;
+
         //usually, we assume socket count to be 1 if it is undef. However, we need to know if it's
         //undef here in order to know to skip the socket comparison (per acarter/jomara)
-        if (consumer.hasFact(SOCKET_FACT) && !product.hasAttribute("stacking_id")) {
-            if ((parseInt(product.getAttribute("sockets")) > 0) &&
-                (parseInt(product.getAttribute("sockets")) < parseInt(consumer.getFact(SOCKET_FACT)))) {
+        if (consumer.facts[SOCKET_FACT] && !pool.getProductAttribute("stacking_id")) {
+            if ((parseInt(pool.getProductAttribute("sockets")) > 0) &&
+                (parseInt(pool.getProductAttribute("sockets")) < parseInt(consumer.facts[SOCKET_FACT]))) {
                 pre.addWarning("rulewarning.unsupported.number.of.sockets");
             }
         }
     },
 
     pre_ram: function() {
-        var consumerRam = old_get_consumer_ram(consumer);
+        context = Entitlement.get_attribute_context();
+        var consumerRam = get_consumer_ram(context.consumer);
         log.debug("Consumer has " + consumerRam + "GB of RAM.");
 
-        var productRam = parseInt(product.getAttribute("ram"));
+        var productRam = parseInt(context.product.attributes["ram"]);
         log.debug("Product has " + productRam + "GB of RAM");
         if (consumerRam > productRam) {
             pre.addWarning("rulewarning.unsupported.ram");
@@ -587,27 +612,31 @@ var Entitlement = {
     },
 
     pre_global: function() {
-        if (!consumer.isManifest()) {
-            if (consumer.hasEntitlement(pool.getId()) && product.getAttribute("multi-entitlement") != "yes") {
+        context = Entitlement.get_attribute_context();
+        var consumer = context.consumer;
+        var pool = context.pool;
+        if (!consumer.type.manifest) {
+            var isMultiEntitlement = pool.getProductAttribute("multi-entitlement");
+            if (context.hasEntitlement(pool.id) && isMultiEntitlement != "yes") {
                 pre.addError("rulefailed.consumer.already.has.product");
             }
 
-            if (pre.getQuantity() > 1 && product.getAttribute("multi-entitlement") != "yes") {
+            if (pre.getQuantity() > 1 && isMultiEntitlement != "yes") {
                 pre.addError("rulefailed.pool.does.not.support.multi-entitlement");
             }
 
             // If the product has no required consumer type, assume it is restricted to "system".
             // "hypervisor"/"uebercert" type are essentially the same as "system".
-            if (!product.hasAttribute("requires_consumer_type")) {
-                if (!consumer.getType().equals("system") && !consumer.getType().equals("hypervisor") &&
-                        !consumer.getType().equals("uebercert")) {
+            if (!pool.getProductAttribute("requires_consumer_type")) {
+                if (!consumer.type.label.equals("system") && !consumer.type.label.equals("hypervisor") &&
+                        !consumer.type.label.equals("uebercert")) {
                     pre.addError("rulefailed.consumer.type.mismatch");
                 }
 
             }
 
-            if (pool.getRestrictedToUsername() != null && !pool.getRestrictedToUsername().equals(consumer.getUsername())) {
-                pre.addError("pool.not.available.to.user, pool= '" + pool.getRestrictedToUsername() + "', actual username='" + consumer.getUsername() + "'" );
+            if (pool.restrictedToUsername != null && !pool.restrictedToUsername.equals(consumer.username)) {
+                pre.addError("pool.not.available.to.user, pool= '" + pool.restrictedToUsername + "', actual username='" + consumer.username + "'" );
             }
         }
 
@@ -615,15 +644,10 @@ var Entitlement = {
         // they are exempt from all pre-rules, to keep these derived pools out of the list
         // they can bind to we must use pre_global, which is used for manifest consumers.
         else {
-            if (pool.getAttributes().containsKey("pool_derived")) {
+            if (pool.getAttribute("pool_derived")) {
                 pre.addError("pool.not.available.to.manifest.consumers");
             }
         }
-
-        // FIXME
-        // for auto sub stacking, we need to be able to pull across multiple
-        // pools eventually, so this would need to go away in that case
-        pre.checkQuantity(pool);
     },
 
 }
@@ -677,7 +701,13 @@ var Autobind = {
                     pool.getId());
             log.debug("  " + pool.getEndDate());
             log.debug("  top level product: " + (pool.getTopLevelProduct().getId()));
-            if (architectureMatches(pool.getTopLevelProduct(), consumer)) {
+
+            var unameMachine = consumer.hasFact('uname.machine') ?
+                consumer.getFact('uname.machine') : null;
+            if (architectureMatches(pool.getTopLevelProduct().getAttribute('arch'),
+                                    unameMachine,
+                                    consumer.getType(),
+                                    prodAttrSeparator)) {
                 var provided_products = getRelevantProvidedProducts(pool, products);
                 log.debug("  relevant provided products: ");
                 for (var n = 0; n < provided_products.length; n++) {
@@ -1022,6 +1052,7 @@ var Compliance = {
 
             partially_stacked = false;
             var ent_is_stacked = is_stacked(e);
+            log.info("### ent is stacked: " + ent_is_stacked);
             // If the pool is stacked, check that the stack requirements are met:
             if (ent_is_stacked) {
                 var stack_id = e.pool.getProductAttribute("stacking_id");

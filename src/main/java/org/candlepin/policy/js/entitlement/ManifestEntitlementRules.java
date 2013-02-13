@@ -23,8 +23,8 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationWarning;
-import org.candlepin.policy.js.ArgumentJsContext;
 import org.candlepin.policy.js.JsRunner;
+import org.candlepin.policy.js.JsonJsContext;
 import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.ReadOnlyConsumer;
 import org.candlepin.policy.js.ReadOnlyPool;
@@ -91,20 +91,28 @@ public class ManifestEntitlementRules extends AbstractEntitlementRules implement
             preHelper.getFlattenedAttributes(pool.getProductAttributes()));
         Map<String, String> allAttributes = preHelper.getFlattenedAttributes(pool);
 
-        ArgumentJsContext args = new ArgumentJsContext();
-        args.put("consumer", new ReadOnlyConsumer(consumer));
+        JsonJsContext args = new JsonJsContext(this.objectMapper);
+        args.put("consumer", consumer);
+        // Entitlements are put into the context seperately because they do
+        // not get serialized along with the Consumer.
+        // TODO Perhaps look into a Jackson view to do this.
+        args.put("consumerEntitlements", consumer.getEntitlements());
         args.put("product", product);
-        args.put("pool", new ReadOnlyPool(pool));
-        args.put("pre", preHelper);
+        args.put("pool", pool);
         args.put("attributes", allAttributes);
         args.put("prodAttrSeparator", PROD_ARCHITECTURE_SEPARATOR);
         args.put("standalone", config.standalone());
-        args.put("log", rulesLogger);
+
+        // Can't serialize these objects.
+        args.put("log", rulesLogger, false);
+        args.put("pre", preHelper, false);
 
         log.debug("Running pre-entitlement global rule for: " + consumer.getUuid() +
             " product: " + topLevelProductId);
 
         invokeGlobalPreEntitlementRule(args);
+
+        validatePoolQuantity(preHelper.getResult(), pool, quantity);
 
         if (log.isDebugEnabled()) {
             for (ValidationError error : preHelper.getResult().getErrors()) {

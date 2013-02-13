@@ -125,11 +125,8 @@ public class JsRunner {
         }
     }
 
-    public void invokeRule(String ruleName, Map<String, Object> args) {
-        for (Entry<String, Object> entry : args.entrySet()) {
-            scope.put(entry.getKey(), scope, entry.getValue());
-
-        }
+    public void invokeRule(String ruleName, JsContext context) {
+        context.applyTo(scope);
         invokeRule(ruleName);
     }
 

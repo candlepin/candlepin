@@ -952,10 +952,10 @@ public class DefaultRulesTest {
         pool.addAttribute(new PoolAttribute("virt_only", "true"));
         pool.addAttribute(new PoolAttribute("requires_host", parent.getUuid()));
         pool.setId("fakeid" + TestUtil.randomInt());
-        Entitlement e = new Entitlement(pool, parent, new Date(), new Date(),
-            1);
-
-        pool.setSourceEntitlement(e);
+//        Entitlement e = new Entitlement(pool, parent, new Date(), new Date(),
+//            1);
+//
+////        pool.setSourceEntitlement(e);
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
         return pool;
     }
