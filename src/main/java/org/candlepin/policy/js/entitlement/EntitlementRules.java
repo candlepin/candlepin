@@ -14,36 +14,23 @@
  */
 package org.candlepin.policy.js.entitlement;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.candlepin.config.Config;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Pool;
-import org.candlepin.model.PoolQuantity;
-import org.candlepin.model.Product;
-import org.candlepin.model.ProvidedProduct;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationWarning;
-import org.candlepin.policy.js.ArgumentJsContext;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.ReadOnlyConsumer;
 import org.candlepin.policy.js.ReadOnlyPool;
 import org.candlepin.policy.js.ReadOnlyProduct;
-import org.candlepin.policy.js.RuleExecutionException;
-import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.util.DateSource;
-import org.candlepin.util.X509ExtensionUtil;
-import org.mozilla.javascript.RhinoException;
 import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
@@ -132,139 +119,4 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         return preHelper;
     }
 
-    @Override
-    public List<PoolQuantity> selectBestPools(Consumer consumer, String[] productIds,
-        List<Pool> pools, ComplianceStatus compliance, String serviceLevelOverride,
-        Set<String> exemptLevels) {
-
-        jsRules.reinitTo("entitlement_name_space");
-        rulesInit();
-
-        int poolsBeforeContentFilter = pools.size();
-        pools = filterPoolsForV1Certificates(consumer, pools);
-
-        // TODO: Not the best behavior:
-        if (pools.size() == 0) {
-            throw new RuntimeException("No entitlements for products: " +
-                Arrays.toString(productIds));
-        }
-
-        if (log.isDebugEnabled()) {
-            log.debug("Selecting best entitlement pool for products: " +
-                Arrays.toString(productIds));
-            if (poolsBeforeContentFilter != pools.size()) {
-                log.debug((poolsBeforeContentFilter - pools.size()) + " pools filtered " +
-                    "due to too much content");
-            }
-        }
-        List<ReadOnlyPool> readOnlyPools = ReadOnlyPool.fromCollection(pools);
-
-        /*
-         * NOTE: These are engineering product IDs being passed in which are installed on
-         * the given system. There is almost no value to looking these up from the product
-         * service as there's not much useful, and indeed all the select pool rules ever
-         * use is the product ID, which we had before we did the lookup. Unfortunately we
-         * need to maintain backward compatability with past rules files, so we will
-         * continue providing ReadOnlyProduct objects to the rules, but we'll just
-         * pre-populate the ID field and not do an actual lookup.
-         */
-        List<ReadOnlyProduct> readOnlyProducts = new LinkedList<ReadOnlyProduct>();
-        for (String productId : productIds) {
-            // NOTE: using ID as name here, rules just need ID:
-            ReadOnlyProduct roProduct = new ReadOnlyProduct(productId, productId,
-                new HashMap<String, String>());
-            readOnlyProducts.add(roProduct);
-        }
-
-        // Provide objects for the script:
-        ArgumentJsContext args = new ArgumentJsContext();
-        args.put("consumer", new ReadOnlyConsumer(consumer, serviceLevelOverride));
-        args.put("pools", readOnlyPools.toArray());
-        args.put("products", readOnlyProducts.toArray());
-        args.put("prodAttrSeparator", PROD_ARCHITECTURE_SEPARATOR);
-        args.put("log", rulesLogger);
-        args.put("compliance", compliance);
-        args.put("exemptList", exemptLevels);
-
-        Map<ReadOnlyPool, Integer> result = null;
-        // Only need to run the select best pools global rule:
-        try {
-            Object output =
-                jsRules.invokeMethod(GLOBAL_SELECT_POOL_FUNCTION, args);
-            result = jsRules.convertMap(output);
-            if (log.isDebugEnabled()) {
-                log.debug("Excuted javascript rule: " + GLOBAL_SELECT_POOL_FUNCTION);
-            }
-        }
-        catch (NoSuchMethodException e) {
-            log.warn("No default rule found: " + GLOBAL_SELECT_POOL_FUNCTION);
-            log.warn("Resorting to default pool selection behavior.");
-            return selectBestPoolDefault(pools);
-        }
-        catch (RhinoException e) {
-            throw new RuleExecutionException(e);
-        }
-
-        if (pools.size() > 0 && result == null) {
-            throw new RuleExecutionException(
-                "Rule did not select a pool for products: " + Arrays.toString(productIds));
-        }
-
-        List<PoolQuantity> bestPools = new ArrayList<PoolQuantity>();
-        for (Pool p : pools) {
-            for (Entry<ReadOnlyPool, Integer> entry : result.entrySet()) {
-                if (p.getId().equals(entry.getKey().getId())) {
-                    if (log.isDebugEnabled()) {
-                        log.debug("Best pool: " + p);
-                    }
-
-                    int quantity = entry.getValue();
-                    bestPools.add(new PoolQuantity(p, quantity));
-                }
-            }
-        }
-
-        if (bestPools.size() > 0) {
-            return bestPools;
-        }
-        else {
-            return null;
-        }
-    }
-
-    /*
-     * If this consumer only supports V1 certificates, we need to filter out pools
-     * with too many content sets.
-     */
-    private List<Pool> filterPoolsForV1Certificates(Consumer consumer,
-        List<Pool> pools) {
-        if (!consumer.hasFact("system.certificate_version") ||
-            (consumer.hasFact("system.certificate_version") &&
-            consumer.getFact("system.certificate_version").startsWith("1."))) {
-            List<Pool> newPools = new LinkedList<Pool>();
-
-            for (Pool p : pools) {
-                boolean contentOk = true;
-
-                // Check each provided product, if *any* have too much content, we must
-                // skip the pool:
-                for (ProvidedProduct providedProd : p.getProvidedProducts()) {
-                    Product product = productCache.getProductById(
-                        providedProd.getProductId());
-                    if (product.getProductContent().size() >
-                        X509ExtensionUtil.V1_CONTENT_LIMIT) {
-                        contentOk = false;
-                        break;
-                    }
-                }
-                if (contentOk) {
-                    newPools.add(p);
-                }
-            }
-            return newPools;
-        }
-
-        // Otherwise return the list of pools as is:
-        return pools;
-    }
 }

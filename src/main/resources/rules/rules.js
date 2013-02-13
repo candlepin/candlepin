@@ -20,6 +20,10 @@ function compliance_name_space() {
     return Compliance;
 }
 
+function autobind_name_space() {
+    return Autobind;
+}
+
 
 
 /*
@@ -594,7 +598,11 @@ var Entitlement = {
         pre.checkQuantity(pool);
     },
 
-    select_pool_global: function() {
+}
+
+var Autobind = {
+
+    select_pools: function() {
         // Greedy selection for now, in order
         // XXX need to watch out for multientitle products - how so?
 
@@ -637,6 +645,7 @@ var Entitlement = {
 
             log.debug("Checking pool for best unique provides combination: " +
                     pool.getId());
+            log.debug("  " + pool.getEndDate());
             log.debug("  top level product: " + (pool.getTopLevelProduct().getId()));
             if (architectureMatches(pool.getTopLevelProduct(), consumer)) {
                 var provided_products = getRelevantProvidedProducts(pool, products);
@@ -664,6 +673,7 @@ var Entitlement = {
                                 break;
                             }
                         }
+                        log.debug("  inserted into slot: " + i);
 
                         // now insert the pool into the middle of the array
                         pool_class.splice(i, 0, pool);
@@ -673,6 +683,7 @@ var Entitlement = {
 
                 // If we did not find a duplicate pool providing the same products,
                 if (!duplicate_found) {
+                    log.debug("  no duplicate found");
                     var pool_class = [];
                     pool_class.push(pool);
                     pools_by_class.push(pool_class);
@@ -747,10 +758,6 @@ var Entitlement = {
                     }
                 }
             }
-        }
-
-        for (pool in selected_pools.keySet()){
-            log.debug("selected_pool2 " + pool);
         }
 
         // We may not have selected pools for all products; that's ok.

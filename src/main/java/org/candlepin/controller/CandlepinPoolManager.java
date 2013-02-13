@@ -51,6 +51,7 @@ import org.candlepin.model.Subscription;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.ProductCache;
+import org.candlepin.policy.js.autobind.AutobindRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.entitlement.Enforcer;
@@ -88,6 +89,7 @@ public class CandlepinPoolManager implements PoolManager {
     private ComplianceRules complianceRules;
     private ProductCache productCache;
     private EnvironmentCurator envCurator;
+    private AutobindRules autobindRules;
 
     /**
      * @param poolCurator
@@ -104,7 +106,7 @@ public class CandlepinPoolManager implements PoolManager {
         EventFactory eventFactory, Config config, Enforcer enforcer,
         PoolRules poolRules, EntitlementCurator curator1, ConsumerCurator consumerCurator,
         EntitlementCertificateCurator ecC, ComplianceRules complianceRules,
-        EnvironmentCurator envCurator) {
+        EnvironmentCurator envCurator, AutobindRules autobindRules) {
 
         this.poolCurator = poolCurator;
         this.subAdapter = subAdapter;
@@ -120,6 +122,7 @@ public class CandlepinPoolManager implements PoolManager {
         this.complianceRules = complianceRules;
         this.productCache = productCache;
         this.envCurator = envCurator;
+        this.autobindRules = autobindRules;
     }
 
     Set<Entitlement> refreshPoolsWithoutRegeneration(Owner owner) {
@@ -453,7 +456,7 @@ public class CandlepinPoolManager implements PoolManager {
             }
         }
 
-        List<PoolQuantity> enforced = enforcer.selectBestPools(consumer,
+        List<PoolQuantity> enforced = autobindRules.selectBestPools(consumer,
             productIds, filteredPools, compliance, serviceLevelOverride,
             poolCurator.retrieveServiceLevelsForOwner(owner, true));
         return enforced;

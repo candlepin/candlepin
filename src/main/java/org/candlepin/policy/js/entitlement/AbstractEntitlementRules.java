@@ -15,7 +15,6 @@
 package org.candlepin.policy.js.entitlement;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -32,12 +31,10 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
-import org.candlepin.model.PoolQuantity;
 import org.candlepin.policy.js.JsContext;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.RuleExecutionException;
-import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.pool.PoolHelper;
 import org.candlepin.util.DateSource;
 import org.mozilla.javascript.RhinoException;
@@ -63,9 +60,6 @@ public abstract class AbstractEntitlementRules implements Enforcer {
     protected static final String PROD_ARCHITECTURE_SEPARATOR = ",";
     protected static final String PRE_PREFIX = "pre_";
     protected static final String POST_PREFIX = "post_";
-    protected static final String SELECT_POOL_PREFIX = "select_pool_";
-    protected static final String GLOBAL_SELECT_POOL_FUNCTION = SELECT_POOL_PREFIX +
-        "global";
     protected static final String GLOBAL_PRE_FUNCTION = PRE_PREFIX + "global";
     protected static final String GLOBAL_POST_FUNCTION = POST_PREFIX + "global";
 
@@ -83,25 +77,6 @@ public abstract class AbstractEntitlementRules implements Enforcer {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-    }
-
-    /**
-     * Default behavior if no product specific and no global pool select rules
-     * exist.
-     *
-     * @param pools Pools to choose from.
-     * @return First pool in the list. (default behavior)
-     */
-    protected List<PoolQuantity> selectBestPoolDefault(List<Pool> pools) {
-        if (pools.size() > 0) {
-            List<PoolQuantity> toReturn = new ArrayList<PoolQuantity>();
-            for (Pool pool : pools) {
-                toReturn.add(new PoolQuantity(pool, 1));
-            }
-            return toReturn;
-        }
-
-        return null;
     }
 
     public List<Rule> rulesForAttributes(Set<String> attributes,
@@ -511,23 +486,4 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         return new PreEntHelper(1, null);
     }
 
-    @Override
-    public List<PoolQuantity> selectBestPools(Consumer consumer,
-        String[] productIds, List<Pool> pools, ComplianceStatus compliance,
-        String serviceLevelOverride, Set<String> exemptList)
-        throws RuleExecutionException {
-
-        jsRules.reinitTo("entitlement_name_space");
-        rulesInit();
-
-        if (pools.isEmpty()) {
-            return null;
-        }
-
-        List<PoolQuantity> best = new ArrayList<PoolQuantity>();
-        for (Pool pool : pools) {
-            best.add(new PoolQuantity(pool, 1));
-        }
-        return best;
-    }
 }
