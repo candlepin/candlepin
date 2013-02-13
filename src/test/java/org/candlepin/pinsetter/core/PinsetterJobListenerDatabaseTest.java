@@ -65,7 +65,7 @@ public class PinsetterJobListenerDatabaseTest {
     }
 
     @Test
-    public void bug906438VerifyTransaction() {
+    public void verifyDatabaseConstraintIsNotViolated() {
         PinsetterJobListener listener = injector.getInstance(PinsetterJobListener.class);
         JobExecutionException e = mock(JobExecutionException.class);
         String longstr = RandomStringUtils.randomAlphanumeric(300);

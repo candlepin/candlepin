@@ -212,7 +212,7 @@ public class PinsetterJobListenerTest {
     }
 
     @Test
-    public void bug906438ResultProperLength() {
+    public void ensureProperLengthOfResult() {
         JobExecutionException e = mock(JobExecutionException.class);
         JobDetail detail = mock(JobDetail.class);
         JobStatus status = mock(JobStatus.class);
@@ -232,7 +232,7 @@ public class PinsetterJobListenerTest {
     }
 
     @Test
-    public void bug906438ResultTooLong() {
+    public void handleResultTooLong() {
         JobExecutionException e = mock(JobExecutionException.class);
         JobDetail detail = mock(JobDetail.class);
         JobDataMap map = new JobDataMap();
