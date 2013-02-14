@@ -17,7 +17,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.7.24
+Version: 0.7.25
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -326,6 +326,22 @@ fi
 
 
 %changelog
+* Thu Feb 14 2013 William Poteat <wpoteat@redhat.com> 0.7.25-1
+- 908483: Add consumer types for katello. (bkearney@redhat.com)
+- 886726: Add translation calls to two exceptions which can be thrown during
+  import (bkearney@redhat.com)
+- 906438: prevent saving status result from killing job (jmrodri@gmail.com)
+- 887113: Katello adds subscriptions twice (wpoteat@redhat.com)
+- Method for updating manifests in distributor systems (wpoteat@redhat.com)
+- 902804: Do not include new consumer in result.updated (mstead@redhat.com)
+- 902804: Properly init consumer guestIds to empty (mstead@redhat.com)
+- 864605: Add cores to subscription information (wpoteat@redhat.com)
+- 877007: String Updates - Product string cleanups (wpoteat@redhat.com)
+- Ability to make 'relies on' relationships between products
+  (wpoteat@redhat.com)
+- 876758: String Updates: Entitlement -> Subscription updates
+  (wpoteat@redhat.com)
+
 * Wed Jan 23 2013 William Poteat <wpoteat@redhat.com> 0.7.24-1
 - 892027: OID Order namespace reflects subscription ID rather than Order Number
   (wpoteat@redhat.com)
