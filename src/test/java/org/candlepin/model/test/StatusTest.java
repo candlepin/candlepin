@@ -34,7 +34,7 @@ public class StatusTest {
 
     @Before
     public void init() {
-        status = new Status(Boolean.TRUE, "1.0", "2", Boolean.TRUE);
+        status = new Status(Boolean.TRUE, "1.0", "2", Boolean.TRUE, "2.0");
     }
 
     @Test

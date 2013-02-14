@@ -30,6 +30,7 @@ public class Status {
 
     private boolean result;
     private String version;
+    private String rulesVersion;
     private String release;
     private boolean standalone;
     private Date timeUTC;
@@ -41,12 +42,14 @@ public class Status {
 
     }
 
-    public Status(Boolean result, String version, String release, Boolean standalone) {
+    public Status(Boolean result, String version, String release, Boolean standalone,
+        String rulesVersion) {
         this.result = result;
         this.version = version;
         this.release = release;
         this.standalone = standalone;
         this.timeUTC = new Date();
+        this.rulesVersion = rulesVersion;
     }
 
     public boolean getResult() {
@@ -86,5 +89,13 @@ public class Status {
 
     public void setTimeUTC(Date timeUTC) {
         this.timeUTC = timeUTC;
+    }
+
+    public String getRulesVersion() {
+        return rulesVersion;
+    }
+
+    public void setRulesVersion(String rulesVersion) {
+        this.rulesVersion = rulesVersion;
     }
 }
