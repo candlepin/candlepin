@@ -13,9 +13,8 @@ describe 'Rules Import' do
   end
 
   it "posts and gets rules" do
-    # TODO
-    # Version 2 here has to be bumped on any API revision:
-    rules = "//Version: 2.10000\nvar a=1.0;"
+    rules_major_ver = @cp.get_status()['rulesVersion'].split(".")[0]
+    rules = "//Version: #{rules_major_ver}.10000\nvar a=1.0;"
     encoded_rules = Base64.encode64(rules)
     result = @cp.upload_rules(encoded_rules)
     fetched_rules = @cp.list_rules
