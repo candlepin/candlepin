@@ -62,6 +62,18 @@ public class EntitlementImporterTest {
     private Subscription testSub12;
     private Subscription testSub13;
     private Subscription testSub14;
+    private Subscription testSub15;
+    private Subscription testSub16;
+    private Subscription testSub20;
+    private Subscription testSub21;
+    private Subscription testSub22;
+    private Subscription testSub23;
+    private Subscription testSub24;
+    private Subscription testSub30;
+    private Subscription testSub31;
+    private Subscription testSub32;
+    private Subscription testSub33;
+    private Subscription testSub34;
     private EntitlementImporter importer;
     private I18n i18n;
     private int index = 1;
@@ -84,6 +96,18 @@ public class EntitlementImporterTest {
         this.testSub12 = createSubscription(owner, "test-prod-1", "up1", "ue12", "uc3", 23);
         this.testSub13 = createSubscription(owner, "test-prod-1", "up1", "ue13", "uc3", 17);
         this.testSub14 = createSubscription(owner, "test-prod-1", "up1", "ue14", "uc3", 10);
+        this.testSub15 = createSubscription(owner, "test-prod-1", "up1", "ue15", "uc1", 15);
+        this.testSub16 = createSubscription(owner, "test-prod-1", "up1", "ue16", "uc1", 15);
+        this.testSub20 = createSubscription(owner, "test-prod-1", "up2", "ue20", "uc1", 25);
+        this.testSub21 = createSubscription(owner, "test-prod-1", "up2", "ue21", "uc1", 20);
+        this.testSub22 = createSubscription(owner, "test-prod-1", "up2", "ue22", "uc1", 15);
+        this.testSub23 = createSubscription(owner, "test-prod-1", "up2", "ue23", "uc1", 10);
+        this.testSub24 = createSubscription(owner, "test-prod-1", "up2", "ue24", "uc1", 5);
+        this.testSub30 = createSubscription(owner, "test-prod-1", "up3", "ue30", "uc1", 25);
+        this.testSub31 = createSubscription(owner, "test-prod-1", "up3", "ue31", "uc1", 20);
+        this.testSub32 = createSubscription(owner, "test-prod-1", "up3", "ue32", "uc1", 15);
+        this.testSub33 = createSubscription(owner, "test-prod-1", "up3", "ue33", "uc1", 10);
+        this.testSub34 = createSubscription(owner, "test-prod-1", "up3", "ue34", "uc1", 5);
 
         this.importer = new EntitlementImporter(this.curator, null, this.sink, i18n);
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
@@ -429,6 +453,94 @@ public class EntitlementImporterTest {
         verify(curator).delete(testSub3);
         verify(curator, never()).delete(testSub4);
         verify(curator).delete(testSub5);
+    }
+
+    @Test
+    public void testQuantMatchAllSame() {
+        // given
+        when(curator.listByOwner(owner)).thenReturn(new LinkedList<Subscription>() {
+            {
+                add(testSub3); // quantity 15
+                add(testSub15); // quantity 15
+            }
+        });
+
+        // when
+        importer.store(owner, new HashSet<Subscription>() {
+            {
+                add(testSub3); // quantity 15
+                add(testSub16); // quantity 15
+            }
+        });
+
+        // then
+        verify(curator).merge(testSub3);
+        verify(curator).merge(testSub16);
+        verify(sink, atLeastOnce()).emitSubscriptionModified(testSub3, testSub3);
+        verify(sink, atLeastOnce()).emitSubscriptionModified(testSub15, testSub16);
+        verify(curator, never()).create(testSub3);
+        verify(curator, never()).create(testSub15);
+        verify(curator, never()).create(testSub16);
+        verify(curator, never()).delete(testSub3);
+        verify(curator, never()).delete(testSub15);
+        verify(curator, never()).delete(testSub16);
+    }
+
+    @Test
+    public void testMultiPools() {
+        // given
+        when(curator.listByOwner(owner)).thenReturn(new LinkedList<Subscription>() {
+            {
+                add(testSub1); // quantity 25
+                add(testSub2); // quantity 20
+                add(testSub3); // quantity 15
+                add(testSub4); // quantity 10
+                add(testSub5); // quantity 5
+                add(testSub20); // quantity 25
+                add(testSub21); // quantity 20
+                add(testSub22); // quantity 15
+                add(testSub23); // quantity 10
+                add(testSub24); // quantity 5
+            }
+        });
+
+        // when
+        importer.store(owner, new HashSet<Subscription>() {
+            {
+                add(testSub1); // quantity 25
+                add(testSub2); // quantity 20
+                add(testSub3); // quantity 15
+                add(testSub4); // quantity 10
+                add(testSub5); // quantity 5
+                add(testSub30); // quantity 25
+                add(testSub31); // quantity 20
+                add(testSub32); // quantity 15
+                add(testSub33); // quantity 10
+                add(testSub34); // quantity 5
+            }
+        });
+
+        // then
+        verify(curator).merge(testSub1);
+        verify(curator).merge(testSub2);
+        verify(curator).merge(testSub3);
+        verify(curator).merge(testSub4);
+        verify(curator).merge(testSub5);
+        verify(sink, atLeastOnce()).emitSubscriptionModified(testSub1, testSub1);
+        verify(sink, atLeastOnce()).emitSubscriptionModified(testSub2, testSub2);
+        verify(sink, atLeastOnce()).emitSubscriptionModified(testSub3, testSub3);
+        verify(sink, atLeastOnce()).emitSubscriptionModified(testSub4, testSub4);
+        verify(sink, atLeastOnce()).emitSubscriptionModified(testSub5, testSub5);
+        verify(curator).delete(testSub20);
+        verify(curator).delete(testSub21);
+        verify(curator).delete(testSub22);
+        verify(curator).delete(testSub23);
+        verify(curator).delete(testSub24);
+        verify(curator).create(testSub30);
+        verify(curator).create(testSub31);
+        verify(curator).create(testSub32);
+        verify(curator).create(testSub33);
+        verify(curator).create(testSub34);
     }
 
     private Subscription createSubscription(Owner owner, String productId,

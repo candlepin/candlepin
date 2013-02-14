@@ -17,6 +17,8 @@ package org.candlepin.sync;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -127,61 +129,65 @@ public class EntitlementImporter {
     }
 
     /**
-     * @param subscriptionsToImport
+     * @param subsToImport
+     *
+     *  Reconciles incoming entitlements to existing subscriptions.
+     *  Each set is mapped against the upstream pool id.
+     *  First match attempt will use entitlement id from incoming
+     *   entitlements for comparison to existing subscriptions.
+     *  Next attempt will use the exact quantity for comparison. This is to
+     *   cover scenarios where the intent is to re-establish the distributor
+     *   from the host.
+     *  The final attempt will use ordering of the remaining incoming entitlements
+     *   and of remaining existing subscriptions in descending order by quantity.
+     *  Either the remaining subscriptions will be deleted, or the unmatched incoming
+     *   entitlements will be turned into new subscriptions.
      */
-    public void store(Owner owner, Set<Subscription> subscriptionsToImport) {
-        Map<String, Map<String, Subscription>> existingSubByEntitlement =
-            new HashMap<String, Map<String, Subscription>>();
-        int idx = 0;
-        for (Subscription subscription : subscriptionCurator.listByOwner(owner)) {
-            // if the upstream pool id is null,
-            // this must be a locally controlled sub.
-            if (subscription.getUpstreamPoolId() != null) {
-                // if the existing sub does not have the ent id yet,
-                //  just assign a placeholder to differentiate.
-                if (subscription.getUpstreamEntitlementId() == null ||
-                    subscription.getUpstreamEntitlementId().trim().equals("")) {
-                    subscription.setUpstreamEntitlementId("" + idx++);
-                }
-                Map<String, Subscription> subs = existingSubByEntitlement.get(
-                    subscription.getUpstreamPoolId());
-                if (subs == null) {
-                    subs = new HashMap<String, Subscription>();
-                }
-                subs.put(subscription.getUpstreamEntitlementId(), subscription);
-                existingSubByEntitlement.put(subscription.getUpstreamPoolId(),
-                    subs);
-            }
-        }
+    public void store(Owner owner, Set<Subscription> subsToImport) {
+
+        Map<String, Map<String, Subscription>> existingSubsByUpstreamPool =
+            mapSubsByUpstreamPool(owner);
 
         // if we can match to the entitlement id do it.
         // we need a new list to hold the ones that are left
         Set<Subscription> subscriptionsStillToImport = new HashSet<Subscription>();
-        for (Subscription subscription : subscriptionsToImport) {
-            log.debug("Saving subscription for upstream pool id: " +
-                subscription.getUpstreamPoolId());
+        for (Subscription subscription : subsToImport) {
             Subscription local = null;
-            Map<String, Subscription> map = existingSubByEntitlement.get(
+            Map<String, Subscription> map = existingSubsByUpstreamPool.get(
                 subscription.getUpstreamPoolId());
             if (map == null || map.isEmpty()) {
                 createSubscription(subscription);
+                log.info("Creating new subscription for incoming entitlement with id [" +
+                    subscription.getUpstreamEntitlementId() +
+                    "]");
                 continue;
             }
             local = map.get(subscription.getUpstreamEntitlementId());
             if (local != null) {
                 mergeSubscription(subscription, local, map);
+                log.info("Merging subscription for incoming entitlement id [" +
+                    subscription.getUpstreamEntitlementId() +
+                    "] into subscription with existing entitlement id [" +
+                    local.getUpstreamEntitlementId() +
+                    "]. Entitlement id match.");
             }
             else {
                 subscriptionsStillToImport.add(subscription);
+                log.warn("Subscription for incoming entitlement id [" +
+                    subscription.getUpstreamEntitlementId() +
+                    "] does not have an entitlement id match " +
+                    "in the current subscriptions for the upstream pool id [" +
+                    subscription.getUpstreamPoolId() +
+                    "]");
             }
         }
 
         // matches will be made against the upstream pool id and quantity.
         // we need a new list to hold the ones that are left
-        Set<Subscription> subscriptionsNeedQuantityMatch = new HashSet<Subscription>();
+        List<Subscription> subscriptionsNeedQuantityMatch = new ArrayList<Subscription>();
         for (Subscription subscription : subscriptionsStillToImport) {
             Subscription local = null;
-            Map<String, Subscription> map = existingSubByEntitlement.get(
+            Map<String, Subscription> map = existingSubsByUpstreamPool.get(
                 subscription.getUpstreamPoolId());
             if (map == null) {
                 map = new HashMap<String, Subscription>();
@@ -194,60 +200,96 @@ public class EntitlementImporter {
             }
             if (local != null) {
                 mergeSubscription(subscription, local, map);
+                log.info("Merging subscription for incoming entitlement id [" +
+                    subscription.getUpstreamEntitlementId() +
+                    "] into subscription with existing entitlement id [" +
+                    local.getUpstreamEntitlementId() +
+                    "]. Exact quantity match.");
             }
             else {
                 subscriptionsNeedQuantityMatch.add(subscription);
+                log.warn("Subscription for incoming entitlement id [" +
+                    subscription.getUpstreamEntitlementId() +
+                    "] does not have an exact quantity match " +
+                    "in the current subscriptions for the upstream pool id [" +
+                    subscription.getUpstreamPoolId() +
+                    "]");
             }
         }
 
         // matches will be made against the upstream pool id and quantity.
         // quantities will just match by position from highest to lowest
         // we need a new list to hold the ones that are left
-        for (Subscription subscription : sort(subscriptionsNeedQuantityMatch
-            .toArray(new Subscription[0]))) {
+        Subscription[] inNeed = subscriptionsNeedQuantityMatch.toArray(
+            new Subscription[0]);
+        Arrays.sort(inNeed, new QuantityComparator());
+        for (Subscription subscription : inNeed) {
             Subscription local = null;
-            Map<String, Subscription> map = existingSubByEntitlement.get(
+            Map<String, Subscription> map = existingSubsByUpstreamPool.get(
                 subscription.getUpstreamPoolId());
             if (map == null || map.isEmpty()) {
                 createSubscription(subscription);
+                log.info("Creating new subscription for incoming entitlement with id [" +
+                    subscription.getUpstreamEntitlementId() +
+                    "]");
                 continue;
             }
-            local = sort(map.values().toArray(new Subscription[0])).get(0);
+            Subscription[] locals = map.values().toArray(new Subscription[0]);
+            Arrays.sort(locals, new QuantityComparator());
+            local = locals[0];
             mergeSubscription(subscription, local, map);
+            log.info("Merging subscription for incoming entitlement id [" +
+                subscription.getUpstreamEntitlementId() +
+                "] into subscription with existing entitlement id [" +
+                local.getUpstreamEntitlementId() +
+                "]. Ordered quantity match.");
         }
+        deleteRemainingLocalSubscriptions(existingSubsByUpstreamPool);
+    }
 
-        for (Map<String, Subscription> map : existingSubByEntitlement.values()) {
+    private Map<String, Map<String, Subscription>> mapSubsByUpstreamPool(Owner owner) {
+        Map<String, Map<String, Subscription>> existingSubsByUpstreamPool =
+            new HashMap<String, Map<String, Subscription>>();
+        int idx = 0;
+        for (Subscription subscription : subscriptionCurator.listByOwner(owner)) {
+            // if the upstream pool id is null,
+            // this must be a locally controlled sub.
+            if (subscription.getUpstreamPoolId() != null) {
+                // if the existing sub does not have the ent id yet,
+                //  just assign a placeholder to differentiate.
+                if (subscription.getUpstreamEntitlementId() == null ||
+                    subscription.getUpstreamEntitlementId().trim().equals("")) {
+                    subscription.setUpstreamEntitlementId("" + idx++);
+                }
+                Map<String, Subscription> subs = existingSubsByUpstreamPool.get(
+                    subscription.getUpstreamPoolId());
+                if (subs == null) {
+                    subs = new HashMap<String, Subscription>();
+                }
+                subs.put(subscription.getUpstreamEntitlementId(), subscription);
+                existingSubsByUpstreamPool.put(subscription.getUpstreamPoolId(),
+                    subs);
+            }
+        }
+        return existingSubsByUpstreamPool;
+    }
+
+    private void deleteRemainingLocalSubscriptions(
+        Map<String, Map<String, Subscription>> existingSubsByUpstreamPool) {
+        for (Map<String, Subscription> map : existingSubsByUpstreamPool.values()) {
             for (Subscription subscription : map.values()) {
                 Event e = sink.createSubscriptionDeleted(subscription);
                 subscriptionCurator.delete(subscription);
                 sink.sendEvent(e);
+                log.info("Delete subscription with entitlement id [" +
+                    subscription.getUpstreamEntitlementId() +
+                    "]");
             }
         }
-    }
-    private List<Subscription> sort(Subscription[] subs) {
-        List<Subscription> result = new ArrayList<Subscription>();
-        for (Subscription s : subs) {
-            if (result.isEmpty()) {
-                result.add(s);
-            }
-            else {
-                boolean added = false;
-                for (int i = 0; i < result.size(); i++) {
-                    if (result.get(i).getQuantity() <= s.getQuantity()) {
-                        result.add(i, s);
-                        added = true;
-                        break;
-                    }
-                }
-                if (!added) {
-                    result.add(s);
-                }
-            }
-        }
-        return result;
     }
 
-    private void mergeSubscription(Subscription subscription, Subscription local, Map map) {
+    private void mergeSubscription(Subscription subscription, Subscription local,
+        Map<String, Subscription> map) {
         subscription.setId(local.getId());
         subscriptionCurator.merge(subscription);
         map.remove(local.getUpstreamEntitlementId());
@@ -260,5 +302,19 @@ public class EntitlementImporter {
         // send out created event
         log.debug("emitting subscription event");
         sink.emitSubscriptionCreated(subscription);
+    }
+
+    /**
+     *
+     * QuantityComparator
+     *
+     * descending quantity sort on Subscriptions
+     */
+
+    public class QuantityComparator implements Comparator<Subscription> {
+        @Override
+        public int compare(Subscription s1, Subscription s2) {
+            return s2.getQuantity().compareTo(s1.getQuantity());
+        }
     }
 }
