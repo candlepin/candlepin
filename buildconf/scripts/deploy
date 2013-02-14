@@ -25,7 +25,7 @@ function gendb ()
     if [ -n "$DBPASSWORD" ] ; then
         LQCOMMAND="$LQCOMMAND --password=$DBPASSWORD "
     fi
-    LQCOMMAND="$LQCOMMAND update"
+    LQCOMMAND="$LQCOMMAND update -Dcommunity=True"
     $LQCOMMAND
     evalrc $? "schema creation failed"
 }
@@ -38,7 +38,7 @@ function updatedb ()
     if [ -n "$DBPASSWORD" ] ; then
         LQCOMMAND="$LQCOMMAND --password=$DBPASSWORD "
     fi
-    LQCOMMAND="$LQCOMMAND update"
+    LQCOMMAND="$LQCOMMAND update -Dcommunity=True"
     $LQCOMMAND
     evalrc $? "schema update failed"
 }

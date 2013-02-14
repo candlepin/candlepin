@@ -422,6 +422,14 @@ class Candlepin
     delete("/products/#{product_id}/content/#{content_id}")
   end
 
+  def add_product_reliance(product_id, rely_id)
+    post("/products/#{product_id}/reliance/#{rely_id}")
+  end
+
+  def remove_product_reliance(product_id, rely_id)
+    delete("/products/#{product_id}/reliance/#{rely_id}")
+  end
+
   # Promote content to a particular environment.
   #
   # The promotions list should contain hashes like:
@@ -465,10 +473,12 @@ class Candlepin
     end
   end
 
-  def create_product(id, name, params={}, dependentProductIds=[])
+  def create_product(id, name, params={})
 
     multiplier = params[:multiplier] || 1
     attributes = params[:attributes] || {}
+    dependentProductIds = params[:dependentProductIds] || []
+    relies_on = params[:relies_on] || []
     #if product don't have type attributes, create_product will fail on server
     #side.
     attributes['type'] = 'SVC' if attributes['type'].nil?
@@ -477,7 +487,8 @@ class Candlepin
       'id' => id,
       'multiplier' => multiplier,
       'attributes' => attributes.collect {|k,v| {'name' => k, 'value' => v}},
-      'dependentProductIds' => dependentProductIds
+      'dependentProductIds' => dependentProductIds,
+      'reliesOn' => relies_on
     }
 
     post("/products", product)

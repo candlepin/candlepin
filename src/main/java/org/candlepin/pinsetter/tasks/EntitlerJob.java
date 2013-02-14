@@ -16,6 +16,7 @@ package org.candlepin.pinsetter.tasks;
 
 import static org.quartz.JobBuilder.newJob;
 
+import org.apache.log4j.Logger;
 import org.candlepin.controller.Entitler;
 import org.candlepin.model.Entitlement;
 import org.candlepin.pinsetter.core.model.JobStatus;
@@ -36,6 +37,7 @@ import java.util.List;
  * EntitlerJob
  */
 public class EntitlerJob implements Job {
+    private static Logger log = Logger.getLogger(EntitlerJob.class);
 
     private Entitler entitler;
 
@@ -70,6 +72,7 @@ public class EntitlerJob implements Job {
         // Catch any exception that is fired and re-throw as a JobExecutionException
         // so that the job will be properly cleaned up on failure.
         catch (Exception e) {
+            log.error("EntitlerJob encountered a problem.", e);
             throw new JobExecutionException(e.getMessage(), e, false);
         }
     }

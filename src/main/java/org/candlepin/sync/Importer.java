@@ -280,12 +280,13 @@ public class Importer {
         }
         catch (IOException e) {
             log.error("Exception caught importing archive", e);
-            throw new ImportExtractionException("unable to extract export archive", e);
+            throw new ImportExtractionException(
+                i18n.tr("Unable to extract export archive"), e);
         }
         catch (CertificateException e) {
             log.error("Certificate exception checking archive signature", e);
             throw new ImportExtractionException(
-                "Certificate exception checking archive signature", e);
+                i18n.tr("Certificate exception checking archive signature"), e);
         }
         finally {
             if (tmpDir != null) {

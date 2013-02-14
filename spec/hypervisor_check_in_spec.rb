@@ -25,6 +25,73 @@ describe 'Hypervisor Resource' do
     @host_client.consume_pool(@virt_limit_pool['id'])
   end
 
+  it 'should add consumer to created when new host id and no guests reported' do
+    consumer_uuid = random_string('host')
+    mapping = get_host_guest_mapping(consumer_uuid, [])
+    result = @user.hypervisor_check_in(@owner['key'], mapping)
+    # Should only  have a result entry for created.
+    result.created.size.should == 1
+    result.updated.size.should == 0
+    result.unchanged.size.should == 0
+    result.failedUpdate.size.should == 0
+    # verify our created consumer is correct.
+    result.created[0].uuid.should == consumer_uuid
+  end
+
+  it 'should add consumer to created when new host id and guests were reported' do
+    consumer_uuid = random_string('host')
+    mapping = get_host_guest_mapping(consumer_uuid, ['g1'])
+    result = @user.hypervisor_check_in(@owner['key'], mapping)
+    # Should only  have a result entry for created.
+    result.created.size.should == 1
+    result.updated.size.should == 0
+    result.unchanged.size.should == 0
+    result.failedUpdate.size.should == 0
+    # verify our created consumer is correct.
+    result.created[0].uuid.should == consumer_uuid
+  end
+
+  it 'should add consumer to updated when guest ids are updated' do
+    mapping = get_host_guest_mapping(@expected_host, ['g1', 'g2'])
+    result = @user.hypervisor_check_in(@owner['key'], mapping)
+    # Should only  have a result entry for updated.
+    result.created.size.should ==0 
+    result.updated.size.should == 1
+    result.unchanged.size.should == 0
+    result.failedUpdate.size.should == 0
+    # verify our created consumer is correct.
+    result.updated[0].uuid.should == @expected_host
+  end
+
+  it 'should add consumer to unchanged when same guest ids are sent' do
+    mapping = get_host_guest_mapping(@expected_host, @expected_guest_ids)
+    result = @user.hypervisor_check_in(@owner['key'], mapping)
+    # Should only  have a result entry for unchanged.
+    result.created.size.should ==0 
+    result.updated.size.should == 0
+    result.unchanged.size.should == 1
+    result.failedUpdate.size.should == 0
+    # verify our created consumer is correct.
+    result.unchanged[0].uuid.should == @expected_host
+  end
+
+  it 'should add consumer to unchanged when comparing empty guest id lists' do
+    consumer_uuid = random_string('host')
+    mapping = get_host_guest_mapping(consumer_uuid, [])
+    result = @user.hypervisor_check_in(@owner['key'], mapping)
+    result.created.size.should == 1
+    result.created[0].uuid.should == consumer_uuid
+
+    # Do the same update with [] and it should be considered unchanged.
+    result = @user.hypervisor_check_in(@owner['key'], mapping)
+    result.created.size.should == 0
+    result.updated.size.should == 0
+    result.unchanged.size.should == 1 
+    result.failedUpdate.size.should == 0
+    # verify our unchanged consumer is correct.
+    result.unchanged[0].uuid.should == consumer_uuid
+  end
+
   it 'should add host and associate guests' do
     consumer = @cp.get_consumer(@expected_host)
     check_hypervisor_consumer(consumer, @expected_host, @expected_guest_ids)
@@ -38,8 +105,6 @@ describe 'Hypervisor Resource' do
     results = @user.hypervisor_check_in(@owner['key'], updated_host_guest_mapping)
     # Host consumer already existed, no creation occurred.
     results.created.size.should == 0
-    # Check updates.
-    results.updated.size.should == 1
     # Ensure that we are returning the updated consumer correctly.
     check_hypervisor_consumer(results.updated[0], @expected_host, updated_guest_ids)
     # Check that all updates were persisted correctly.
@@ -123,6 +188,14 @@ describe 'Hypervisor Resource' do
     @cp.remove_deletion_record(deletable_uuid)
     results = @user.hypervisor_check_in(@owner['key'],  host_guest_mapping)
     results.failedUpdate.size.should == 0
+  end
+
+  it 'should initialize guest ids to empty when creating new host' do
+    host_guest_mapping = get_host_guest_mapping(random_string('new_host'), [])
+    results = @user.hypervisor_check_in(@owner['key'], host_guest_mapping)
+    # Host consumer should have been created.
+    results.created.size.should == 1
+    results.created[0]['guestIds'].should_not == nil
   end
 
   def get_host_guest_mapping(host_uuid, guest_id_list)
