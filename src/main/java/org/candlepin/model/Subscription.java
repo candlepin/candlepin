@@ -91,6 +91,12 @@ public class Subscription extends AbstractHibernateObject {
     @Column(name = "upstream_pool_id")
     private String upstreamPoolId;
 
+    @Column(name = "upstream_entitlement_id")
+    private String upstreamEntitlementId;
+
+    @Column(name = "upstream_consumer_id")
+    private String upstreamConsumerId;
+
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "certificate_id")
     private SubscriptionsCertificate cert;
@@ -292,6 +298,22 @@ public class Subscription extends AbstractHibernateObject {
 
     public String getUpstreamPoolId() {
         return upstreamPoolId;
+    }
+
+    public void setUpstreamEntitlementId(String upstreamEntitlementId) {
+        this.upstreamEntitlementId = upstreamEntitlementId;
+    }
+
+    public String getUpstreamEntitlementId() {
+        return upstreamEntitlementId;
+    }
+
+    public void setUpstreamConsumerId(String upstreamConsumerId) {
+        this.upstreamConsumerId = upstreamConsumerId;
+    }
+
+    public String getUpstreamConsumerId() {
+        return upstreamConsumerId;
     }
 
     public SubscriptionsCertificate getCertificate() {
