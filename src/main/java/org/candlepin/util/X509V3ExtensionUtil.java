@@ -201,6 +201,11 @@ public class X509V3ExtensionUtil extends X509Util{
             toReturn.setRam(new Integer(ramLimit));
         }
 
+        String coreLimit = sub.getProduct().getAttributeValue("cores");
+        if (coreLimit != null && !coreLimit.trim().equals("")) {
+            toReturn.setCores(new Integer(coreLimit));
+        }
+
         String management = sub.getProduct().getAttributeValue("management_enabled");
         if (management != null && !management.trim().equals("")) {
             // only included if not the default value of false

@@ -86,6 +86,12 @@ public class Product extends AbstractHibernateObject implements Linkable {
     @JoinTable(name = "cp_product_dependent_products")
     private Set<String> dependentProductIds = new HashSet<String>();
 
+    @CollectionOfElements(targetElement = String.class)
+    @JoinTable(name = "cp_product_reliance",
+    joinColumns = @JoinColumn(name = "parent_product_id"))
+    @Column(name = "child_product_id")
+    private Set<String> reliantProductIds = new HashSet<String>();
+
     /**
      * Constructor Use this variant when creating a new object to persist.
      *
@@ -330,6 +336,28 @@ public class Product extends AbstractHibernateObject implements Linkable {
      */
     public Set<String> getDependentProductIds() {
         return dependentProductIds;
+    }
+
+    /**
+     * @param reliantProductIds the reliantProductIds to set
+     */
+    public void setReliesOn(Set<String> reliantProductIds) {
+        this.reliantProductIds = reliantProductIds;
+    }
+
+    /**
+     * @return the reliantProductIds
+     */
+    public Set<String> getReliesOn() {
+        return reliantProductIds;
+    }
+
+    public void addRely(String relyId) {
+        this.reliantProductIds.add(relyId);
+    }
+
+    public void removeRely(String relyId) {
+        this.reliantProductIds.remove(relyId);
     }
 
     @Override

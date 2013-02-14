@@ -42,10 +42,11 @@ def error_out(command, status, output):
 
 class DbSetup(object):
 
-    def __init__(self, username, password, db):
+    def __init__(self, username, password, db, community):
         self.username = username
         self.db = db
         self.password = password
+        self.community = community
         if password:
             os.environ["PGPASSWORD"] = password
 
@@ -91,13 +92,15 @@ class DbSetup(object):
             classpath,
             changelog_path,
             self.db,
-            self.username,
+            self.username
         )
 
         if self.password:
             liquibase_options += " --password=%s" % self.password
 
-        output = run_command("liquibase %s migrate" % liquibase_options)
+        output = run_command("liquibase %s migrate -Dcommunity=%s" % (
+            liquibase_options,
+            self.community))
         print output
 
 
@@ -122,6 +125,10 @@ if __name__ == "__main__":
     parser.add_option("-p", "--password",
             dest="dbpassword",
             help="database password to use")
+    parser.add_option("--community",
+            action="store_true", default=False,
+            dest="community",
+            help="true if used in a community fashion")
 
     (options, args) = parser.parse_args()
 
@@ -130,7 +137,7 @@ if __name__ == "__main__":
         print("ERROR: Please specify --create or --update.")
         sys.exit(1)
 
-    dbsetup = DbSetup(options.dbuser, options.dbpassword, options.db)
+    dbsetup = DbSetup(options.dbuser, options.dbpassword, options.db, options.community)
     if options.create:
         if options.drop:
             dbsetup.drop()

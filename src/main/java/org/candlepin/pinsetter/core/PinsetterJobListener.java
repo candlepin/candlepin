@@ -67,6 +67,10 @@ public class PinsetterJobListener implements JobListener {
             unitOfWork.begin();
             updateJob(context);
         }
+        catch (Exception e) {
+            log.error("jobToBeExecuted encountered a problem. Usually means " +
+                "there was a problem storing the job status. Job will run.", e);
+        }
         finally {
             unitOfWork.end();
         }
@@ -84,6 +88,10 @@ public class PinsetterJobListener implements JobListener {
             unitOfWork.begin();
             updateJob(context, exception);
         }
+        catch (Exception e) {
+            log.error("jobWasExecuted encountered a problem. Usually means " +
+                "there was a problem storing the job status. Job finished ok.", e);
+        }
         finally {
             unitOfWork.end();
             ResteasyProviderFactory.popContextData(Principal.class);
@@ -99,6 +107,7 @@ public class PinsetterJobListener implements JobListener {
         JobStatus status = curator.find(ctx.getJobDetail().getKey().getName());
         if (status != null) {
             if (exc != null) {
+                log.error("Job [" + status.getId() + "] failed." , exc);
                 status.setState(JobState.FAILED);
                 status.setResult(exc.getMessage());
             }
