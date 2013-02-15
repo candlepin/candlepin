@@ -79,7 +79,8 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
         if (!dbRuleSet.isEmpty() &&
             VersionUtil.getRulesVersionCompatibility(rpmRules.getVersion(),
                 dbRuleSet.get(0).getVersion())) {
-            log.info("Using rules from database.");
+            log.debug("Using rules from database, version: " +
+                dbRuleSet.get(0).getVersion());
             return dbRuleSet.get(0);
         }
 
@@ -88,7 +89,7 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
                 dbRuleSet.get(0).getVersion());
         }
 
-        log.info("Using default rules from RPM.");
+        log.debug("Using default rules from RPM.");
         return rpmRules;
 
     }
