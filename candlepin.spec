@@ -17,7 +17,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.7.13.12
+Version: 0.7.13.13
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -287,6 +287,9 @@ fi
 
 
 %changelog
+* Thu Feb 14 2013 jesus m. rodriguez <jesusr@redhat.com> 0.7.13.13-1
+- EMERGENCY PATCH (jesusr@redhat.com)
+
 * Mon Feb 11 2013 jesus m. rodriguez <jesusr@redhat.com> 0.7.13.12-1
 - 906438: prevent saving status result from killing job (jmrodri@gmail.com)
 
