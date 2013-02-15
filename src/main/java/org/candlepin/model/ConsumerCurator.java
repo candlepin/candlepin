@@ -28,9 +28,9 @@ import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.exceptions.BadRequestException;
 import org.hibernate.Criteria;
-import org.hibernate.Hibernate;
+//import org.hibernate.Hibernate;
 import org.hibernate.ReplicationMode;
-import org.hibernate.criterion.Order;
+//import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 import org.xnap.commons.i18n.I18n;
 
@@ -143,15 +143,15 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @EnforceAccessControl
     public Consumer findByVirtUuid(String uuid) {
         Consumer result = null;
-        List<Consumer> options = currentSession()
-            .createCriteria(Consumer.class)
-            .addOrder(Order.desc("updated"))
-            .add(Restrictions.sqlRestriction("{alias}.id in (select cp_consumer_id " +
-                "from cp_consumer_facts where mapkey = 'virt.uuid' and element = ?)",
-                uuid, Hibernate.STRING)).list();
-        if (options != null && options.size() != 0) {
-            result = options.get(0);
-        }
+        //List<Consumer> options = currentSession()
+        //    .createCriteria(Consumer.class)
+        //    .addOrder(Order.desc("updated"))
+        //    .add(Restrictions.sqlRestriction("{alias}.id in (select cp_consumer_id " +
+        //        "from cp_consumer_facts where mapkey = 'virt.uuid' and element = ?)",
+        //        uuid, Hibernate.STRING)).list();
+        //if (options != null && options.size() != 0) {
+        //    result = options.get(0);
+       // }
         return result;
     }
 
