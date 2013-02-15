@@ -741,6 +741,38 @@
             }
         },
         {
+            "name": "Virt Only Awesome OS for i386 Bits",
+            "id": "100000000000069",
+            "version": "3.11",
+            "arch": "i386",
+            "attributes": {
+                "sockets": 128,
+                "warning_period": 30,
+                "virt_only": "true"
+            },
+            "content": [
+                [11113, true],
+                [0, false],
+                [1, true],
+                [11122, false]
+            ]
+        },
+        {
+            "name": "Virt Only Awesome OS for i386",
+            "id": "virt-awesomeos-i386",
+            "version": "3.11",
+            "arch": "i386",
+            "type": "MKT",
+            "provided_products": [
+                "100000000000069"
+            ],
+            "attributes": {
+                "sockets": 16,
+                "warning_period": 30,
+                "virt_only": "true"
+            }
+        },
+        {
             "name": "Awesome OS for i686 Bits",
             "id": "100000000000005",
             "version": "3.11",
