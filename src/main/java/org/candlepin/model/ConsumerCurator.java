@@ -28,9 +28,8 @@ import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.exceptions.BadRequestException;
 import org.hibernate.Criteria;
-import org.hibernate.Hibernate;
+import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
-import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 import org.xnap.commons.i18n.I18n;
 
@@ -141,17 +140,26 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      */
     @Transactional
     @EnforceAccessControl
-    public Consumer findByVirtUuid(String uuid) {
+    public Consumer findByVirtUuid(String uuid, String ownerId) {
         Consumer result = null;
-        List<Consumer> options = currentSession()
-            .createCriteria(Consumer.class)
-            .addOrder(Order.desc("updated"))
-            .add(Restrictions.sqlRestriction("{alias}.id in (select cp_consumer_id " +
-                "from cp_consumer_facts where mapkey = 'virt.uuid' and element = ?)",
-                uuid, Hibernate.STRING)).list();
+
+        String sql = "select cp_consumer.id from cp_consumer " +
+            "inner join cp_consumer_facts " +
+            "on cp_consumer.id = cp_consumer_facts.cp_consumer_id " +
+            "where cp_consumer_facts.mapkey = 'virt.uuid' and " +
+            "lower(cp_consumer_facts.element) = :uuid and " +
+            "cp_consumer.owner_id = :ownerid " +
+            "order by cp_consumer.updated desc";
+
+        Query q = currentSession().createSQLQuery(sql);
+        q.setParameter("uuid", uuid.toLowerCase());
+        q.setParameter("ownerid", ownerId);
+        List<String> options = (List<String>) q.list();
+
         if (options != null && options.size() != 0) {
-            result = options.get(0);
+            result = this.find(options.get(0));
         }
+
         return result;
     }
 
@@ -361,7 +369,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
                 // Check if this is the most recent host to report the guest by asking
                 // for the consumer's current host and comparing it to ourselves.
                 if (consumer.equals(getHost(cg.getGuestId()))) {
-                    Consumer guest = findByVirtUuid(cg.getGuestId());
+                    Consumer guest = findByVirtUuid(cg.getGuestId(),
+                        consumer.getOwner().getId());
                     if (guest != null) {
                         guests.add(guest);
                     }

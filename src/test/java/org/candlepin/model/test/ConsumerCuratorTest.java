@@ -29,6 +29,7 @@ import org.candlepin.model.GuestId;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
 import org.candlepin.test.DatabaseTestFixture;
+import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -71,6 +72,50 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
         List<Consumer> guests = consumerCurator.getGuests(consumer);
         assertTrue(guests.size() == 2);
+    }
+
+    @Test
+    public void caseInsensitiveVirtUuidMatching() {
+        Owner owner = new Owner("test-owner", "Test Owner");
+        owner = ownerCurator.create(owner);
+        ConsumerType ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
+        ct = consumerTypeCurator.create(ct);
+        Consumer host = new Consumer("hostConsumer", "testUser", owner, ct);
+        consumerCurator.create(host);
+
+        Consumer gConsumer1 = new Consumer("guestConsumer1", "testUser", owner, ct);
+        gConsumer1.getFacts().put("virt.uuid", "daf0fe10-956b-7b4e-b7dc-b383ce681ba8");
+        consumerCurator.create(gConsumer1);
+
+        host.addGuestId(new GuestId("DAF0FE10-956B-7B4E-B7DC-B383CE681BA8"));
+        consumerCurator.update(host);
+
+        List<Consumer> guests = consumerCurator.getGuests(host);
+        assertTrue(guests.size() == 1);
+    }
+
+    @Test
+    public void caseInsensitiveVirtUuidMatchingDifferentOwners() {
+        Owner owner = new Owner("test-owner", "Test Owner");
+        owner = ownerCurator.create(owner);
+        ConsumerType ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
+        ct = consumerTypeCurator.create(ct);
+
+        Consumer host = new Consumer("hostConsumer", "testUser", owner, ct);
+        consumerCurator.create(host);
+
+        owner = new Owner("test-owner2", "Test Owner2");
+        owner = ownerCurator.create(owner);
+
+        Consumer gConsumer1 = new Consumer("guestConsumer1", "testUser", owner, ct);
+        gConsumer1.getFacts().put("virt.uuid", "daf0fe10-956b-7b4e-b7dc-b383ce681ba8");
+        consumerCurator.create(gConsumer1);
+
+        host.addGuestId(new GuestId("DAF0FE10-956B-7B4E-B7DC-B383CE681BA8"));
+        consumerCurator.update(host);
+
+        List<Consumer> guests = consumerCurator.getGuests(host);
+        assertTrue(guests.size() == 0);
     }
 
     @Test
