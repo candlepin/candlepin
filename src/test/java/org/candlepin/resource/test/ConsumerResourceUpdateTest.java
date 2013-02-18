@@ -43,6 +43,7 @@ import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.IdentityCertificate;
+import org.candlepin.model.Owner;
 import org.candlepin.model.Release;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -109,8 +110,11 @@ public class ConsumerResourceUpdateTest {
 
     private Consumer getFakeConsumer() {
         Consumer consumer = new Consumer();
+        Owner owner = new Owner();
+        owner.setId("FAKEOWNERID");
         String uuid = "FAKEUUID";
         consumer.setUuid(uuid);
+        consumer.setOwner(owner);
         // go ahead and patch the curator to match it
         when(this.consumerCurator.findByUuid(uuid)).thenReturn(consumer);
         return consumer;
@@ -400,7 +404,8 @@ public class ConsumerResourceUpdateTest {
         ConsumerInstalledProduct installed = mock(ConsumerInstalledProduct.class);
         guest1.addInstalledProduct(installed);
 
-        when(consumerCurator.findByVirtUuid("Guest 1")).thenReturn(guest1);
+        when(consumerCurator.findByVirtUuid("Guest 1",
+            existingHost.getOwner().getId())).thenReturn(guest1);
         // Ensure that the guests host is the existing.
         when(consumerCurator.getHost("Guest 1")).thenReturn(existingHost);
         when(consumerCurator.findByUuid("Guest 1")).thenReturn(guest1);
@@ -433,7 +438,8 @@ public class ConsumerResourceUpdateTest {
         guest1.setUuid("Guest 1");
         guest1.addEntitlement(entitlement);
 
-        when(consumerCurator.findByVirtUuid("Guest 1")).thenReturn(guest1);
+        when(consumerCurator.findByVirtUuid("Guest 1",
+            existingHost.getOwner().getId())).thenReturn(guest1);
         // Ensure that the guests host is the existing.
         when(consumerCurator.getHost("Guest 1")).thenReturn(existingHost);
 
@@ -467,7 +473,8 @@ public class ConsumerResourceUpdateTest {
         guest1.setUuid("Guest 1");
         guest1.addEntitlement(entitlement);
 
-        when(consumerCurator.findByVirtUuid("Guest 1")).thenReturn(guest1);
+        when(consumerCurator.findByVirtUuid("Guest 1",
+            host.getOwner().getId())).thenReturn(guest1);
 
         // Ensure that the guest was not reported by another host.
         when(consumerCurator.getHost("Guest 1")).thenReturn(null);
@@ -495,7 +502,8 @@ public class ConsumerResourceUpdateTest {
         guest1.setUuid("Guest 1");
         guest1.addEntitlement(entitlement);
 
-        when(consumerCurator.findByVirtUuid("Guest 1")).thenReturn(guest1);
+        when(consumerCurator.findByVirtUuid("Guest 1",
+            host.getOwner().getId())).thenReturn(guest1);
 
         // Ensure that the guest was already reported by same host.
         when(consumerCurator.getHost("Guest 1")).thenReturn(host);
@@ -523,7 +531,8 @@ public class ConsumerResourceUpdateTest {
         guest1.setUuid("Guest 1");
         guest1.addEntitlement(entitlement);
 
-        when(consumerCurator.findByVirtUuid("Guest 1")).thenReturn(guest1);
+        when(consumerCurator.findByVirtUuid("Guest 1",
+            host.getOwner().getId())).thenReturn(guest1);
 
         this.resource.updateConsumer(host.getUuid(), updatedHost);
         //verify(consumerCurator).findByVirtUuid(eq("Guest 1"));
@@ -550,7 +559,8 @@ public class ConsumerResourceUpdateTest {
         guest1.setUuid("Guest 1");
         guest1.addEntitlement(entitlement);
 
-        when(consumerCurator.findByVirtUuid("Guest 1")).thenReturn(guest1);
+        when(consumerCurator.findByVirtUuid("Guest 1",
+            host.getOwner().getId())).thenReturn(guest1);
         when(consumerCurator.getHost("Guest 1")).thenReturn(host);
 
         this.resource.updateConsumer(host.getUuid(), updatedHost);
@@ -576,7 +586,8 @@ public class ConsumerResourceUpdateTest {
         guest1.setUuid("Guest 1");
         guest1.addEntitlement(entitlement);
 
-        when(consumerCurator.findByVirtUuid("Guest 1")).thenReturn(guest1);
+        when(consumerCurator.findByVirtUuid("Guest 1",
+            host.getOwner().getId())).thenReturn(guest1);
 
         this.resource.updateConsumer(host.getUuid(), updatedHost);
 
@@ -709,6 +720,9 @@ public class ConsumerResourceUpdateTest {
 
     private Consumer createConsumerWithGuests(String ... guestIds) {
         Consumer a = new Consumer();
+        Owner owner = new Owner();
+        owner.setId("FAKEOWNERID");
+        a.setOwner(owner);
         for (String guestId : guestIds) {
             a.addGuestId(new GuestId(guestId));
         }
