@@ -854,7 +854,8 @@ public class ConsumerResource {
         // Check guests that are existing/added.
         for (GuestId guestId : incoming.getGuestIds()) {
             Consumer host = consumerCurator.getHost(guestId.getGuestId());
-            Consumer guest = consumerCurator.findByVirtUuid(guestId.getGuestId());
+            Consumer guest = consumerCurator.findByVirtUuid(guestId.getGuestId(),
+                existing.getOwner().getId());
 
             // Add back the guestId.
             existing.addGuestId(guestId);
