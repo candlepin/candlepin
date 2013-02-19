@@ -17,7 +17,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.7.13.2
+Version: 0.7.13.13
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -287,6 +287,54 @@ fi
 
 
 %changelog
+* Thu Feb 14 2013 jesus m. rodriguez <jesusr@redhat.com> 0.7.13.13-1
+- EMERGENCY PATCH (jesusr@redhat.com)
+
+* Mon Feb 11 2013 jesus m. rodriguez <jesusr@redhat.com> 0.7.13.12-1
+- 906438: prevent saving status result from killing job (jmrodri@gmail.com)
+
+* Tue Jan 08 2013 jesus m. rodriguez <jesusr@redhat.com> 0.7.13.11-1
+- Fix attempts to delete null cron triggers. (dgoodwin@redhat.com)
+
+* Fri Jan 04 2013 Devan Goodwin <dgoodwin@rm-rf.ca> 0.7.13.10-1
+- Minor checkstyle fixes. (dgoodwin@redhat.com)
+- 886211: Fix duplicate pinsetter jobs on every config change.
+  (dgoodwin@redhat.com)
+
+* Wed Dec 19 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.7.13.9-1
+- 888849: Fixed stalled jobs on async bind (mstead@redhat.com)
+- 888035: Update messages for invalid certificates. (mstead@redhat.com)
+- 858759: Do not remove guest virt ents when no host required
+  (mstead@redhat.com)
+- Fix improper logging of exceptions. (dgoodwin@redhat.com)
+- 886211: Add transactional annotations for CrlGenerator task.
+  (dgoodwin@redhat.com)
+
+* Mon Dec 17 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.7.13.8-1
+- 887287: Detect when virt_limit is removed from subscriptions.
+  (dgoodwin@redhat.com)
+
+* Thu Dec 13 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.7.13.7-1
+- 886211: Fix a deadlock in mysql. (dgoodwin@redhat.com)
+- Cert V3 path tree condensing not properly assessing equivalent path nodes
+  (wpoteat@redhat.com)
+- 864508: Service level {0} is not available to consumers (wpoteat@redhat.com)
+
+* Thu Dec 06 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.7.13.6-1
+- 884694: Fix import of manifests into older candlepin. (dgoodwin@redhat.com)
+
+* Mon Dec 03 2012 Michael Stead <mstead@redhat.com> 0.7.13.5-1
+- 879022: Add message for too many content sets when V3 is disabled.
+  (mstead@redhat.com)
+
+* Tue Nov 27 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.7.13.4-1
+- Revert bad commits for failed subscribe status code. (dgoodwin@redhat.com)
+
+* Tue Nov 27 2012 Devan Goodwin <dgoodwin@rm-rf.ca> 0.7.13.3-1
+- 879022: Fix too many V1 content sets across multiple products.
+  (dgoodwin@redhat.com)
+- 874785: Fix null pointer while migrating owner (jesusr@redhat.com)
+
 * Wed Nov 14 2012 Bryan Kearney <bkearney@redhat.com> 0.7.13.2-1
 - Bump the version (bkearney@redhat.com)
 - 874041: fix for a performance issue selecting the set of SLA's for an owner.

@@ -64,14 +64,12 @@ public class JsPoolRules implements PoolRules {
         args.put("helper", new PoolHelper(this.poolManager,
             this.productCache, null));
         args.put("standalone", config.standalone());
-        args.put("log", rulesLogger);
         List<Pool> poolsCreated = null;
         try {
             poolsCreated = jsRules.invokeMethod("createPools", args);
         }
         catch (NoSuchMethodException e) {
-            log.error("Unable to find javascript method: createPools");
-            log.error(e);
+            log.error("Unable to find javascript method: createPools", e);
             throw new IseException("Unable to create pools.");
         }
         return poolsCreated;
@@ -91,8 +89,7 @@ public class JsPoolRules implements PoolRules {
             poolsUpdated = jsRules.invokeMethod("updatePools", args);
         }
         catch (NoSuchMethodException e) {
-            log.error("Unable to find javascript method: updatePools");
-            log.error(e);
+            log.error("Unable to find javascript method: updatePools", e);
             throw new IseException("Unable to update pools.");
         }
         return poolsUpdated;

@@ -216,8 +216,7 @@ public class Importer {
                     FileUtils.deleteDirectory(tmpDir);
                 }
                 catch (IOException e) {
-                    log.error("Failed to delete extracted export");
-                    log.error(e);
+                    log.error("Failed to delete extracted export", e);
                 }
             }
             if (exportStream != null) {

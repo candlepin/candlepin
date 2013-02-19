@@ -126,12 +126,17 @@ public class DefaultEntitlementCertServiceAdapterTest {
     private X509ExtensionUtil extensionUtil;
     private X509V3ExtensionUtil v3extensionUtil;
     private Product product;
+    private Product largeContentProduct;
     private Subscription subscription;
+    private Subscription largeContentSubscription;
     private Entitlement entitlement;
+    private Entitlement largeContentEntitlement;
     private Pool pool;
+    private Pool largeContentPool;
     private Content content;
     private Owner owner;
     private Set<Content> superContent;
+    private Set<Content> largeContent;
 
     private String[] testUrls = {"/content/dist/rhel/$releasever/$basearch/os",
         "/content/dist/rhel/$releasever/$basearch/debug",
@@ -157,6 +162,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         product = new Product("12345", "a product", "variant", "version",
             "arch", "SVC");
+        largeContentProduct = new Product("67890", "large content product", "variant",
+            "version", "arch", "SVC");
 
         content = createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
             CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL, CONTENT_GPG_URL);
@@ -169,15 +176,28 @@ public class DefaultEntitlementCertServiceAdapterTest {
                 CONTENT_TYPE, CONTENT_VENDOR, url, CONTENT_GPG_URL));
         }
 
+        largeContent = new HashSet<Content>();
+        for (String url : largeTestUrls) {
+            largeContent.add(createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
+                CONTENT_TYPE, CONTENT_VENDOR, url, CONTENT_GPG_URL));
+        }
+
         subscription = new Subscription(null, product, new HashSet<Product>(),
             1L, new Date(), new Date(), new Date());
         subscription.setId("1");
+        largeContentSubscription = new Subscription(null, largeContentProduct,
+            new HashSet<Product>(),
+            1L, new Date(), new Date(), new Date());
+        largeContentSubscription.setId("2");
 
         owner = new Owner();
 
         pool = new Pool();
         pool.setProductId(product.getId());
         pool.setProductName(product.getName());
+        largeContentPool = new Pool();
+        largeContentPool.setProductId(largeContentProduct.getId());
+        largeContentPool.setProductName(largeContentProduct.getName());
 
         entitlement = new Entitlement();
         entitlement.setQuantity(new Integer(ENTITLEMENT_QUANTITY));
@@ -186,6 +206,13 @@ public class DefaultEntitlementCertServiceAdapterTest {
         entitlement.setEndDate(subscription.getEndDate());
         entitlement.setPool(pool);
         entitlement.setOwner(owner);
+        largeContentEntitlement = new Entitlement();
+        largeContentEntitlement.setQuantity(new Integer(ENTITLEMENT_QUANTITY));
+        largeContentEntitlement.setConsumer(consumer);
+        largeContentEntitlement.setStartDate(largeContentSubscription.getStartDate());
+        largeContentEntitlement.setEndDate(largeContentSubscription.getEndDate());
+        largeContentEntitlement.setPool(largeContentPool);
+        largeContentEntitlement.setOwner(owner);
 
         product.setContent(Collections.singleton(content));
     }
@@ -197,17 +224,46 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
 
     @Test(expected = CertificateSizeException.class)
-    public void tooManyContentSets() throws CertificateSizeException {
+    public void tooManyContentSetsAcrossMultipleProducts() throws Exception {
+        Set<Product> providedProducts = new HashSet<Product>();
+        Product pp1 = new Product("12346", "Provided 1", "variant", "version",
+            "arch", "SVC");
+        pp1.setContent(generateContent(100, "PP1"));
+        providedProducts.add(pp1);
+
+        Product pp2 = new Product("12347", "Provided 2", "variant", "version",
+            "arch", "SVC");
+        pp2.setContent(generateContent(100, "PP2"));
+        providedProducts.add(pp2);
+
+        subscription.setProvidedProducts(providedProducts);
+
+        certServiceAdapter.createX509Certificate(entitlement, subscription,
+            product, new BigInteger("1234"), keyPair(), true);
+    }
+
+    private Set<Content> generateContent(int numberToGenerate, String prefix) {
         Set<Content> productContent = new HashSet<Content>();
-        for (int i = 0; i < X509ExtensionUtil.V1_CONTENT_LIMIT + 1; i++) {
-            productContent.add(createContent(CONTENT_NAME + i, CONTENT_ID + i,
-                CONTENT_LABEL + i, CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL,
-                CONTENT_GPG_URL));
+        for (int i = 0; i < numberToGenerate; i++) {
+            productContent.add(createContent(prefix + CONTENT_NAME + i,
+                                             prefix + CONTENT_ID + i,
+                                             prefix + CONTENT_LABEL + i,
+                                             CONTENT_TYPE,
+                                             CONTENT_VENDOR,
+                                             CONTENT_URL,
+                                             CONTENT_GPG_URL));
         }
+        return productContent;
+    }
+
+    @Test(expected = CertificateSizeException.class)
+    public void tooManyContentSets() throws Exception {
+        Set<Content> productContent = generateContent(X509ExtensionUtil.V1_CONTENT_LIMIT +
+            1, "TestContent");
 
         product.setContent(productContent);
-        extensionUtil.contentExtensions(product.getProductContent(), null,
-                new HashMap<String, EnvironmentContent>(), entitlement.getConsumer());
+        certServiceAdapter.createX509Certificate(entitlement, subscription,
+            product, new BigInteger("1234"), keyPair(), true);
     }
 
     @Test
@@ -228,22 +284,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
         encodedContent = getEncodedContent(contentExtensions);
         assertTrue(isEncodedContentValid(encodedContent));
         assertFalse(encodedContent.containsKey(CONTENT_METADATA_EXPIRE.toString()));
-    }
-
-    @Test
-    public void testContentExtentionExcludesNonPromotedContent()
-        throws CertificateSizeException {
-
-        // Environment, but no promoted content:
-        Environment e = new Environment("env1", "Env 1", owner);
-        when(entitlement.getConsumer().getEnvironment()).thenReturn(e);
-
-        Set<X509ExtensionWrapper> contentExtensions = extensionUtil
-            .contentExtensions(product.getProductContent(), null,
-                new HashMap<String, EnvironmentContent>(), entitlement.getConsumer());
-        Map<String, X509ExtensionWrapper> encodedContent = getEncodedContent(
-            contentExtensions);
-        assertFalse(encodedContent.containsKey(content.getLabel()));
     }
 
     @Test
@@ -416,7 +456,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             CONTENT_LABEL, CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL,
             CONTENT_GPG_URL);
         // Change label to prevent an equals match:
-        Content modContent = createContent(CONTENT_NAME, CONTENT_ID,
+        Content modContent = createContent(CONTENT_NAME, CONTENT_ID + "_2",
             "differentlabel", CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL,
             CONTENT_GPG_URL);
         modContent.setLabel("mod content");
@@ -435,10 +475,10 @@ public class DefaultEntitlementCertServiceAdapterTest {
                 any(Date.class), any(Date.class))).thenReturn(
                     new HashSet<Entitlement>());
         // Mod content should get filtered out because we have no ents providing
-        // the
-        // product it modifies:
+        // the product it modifies:
         assertEquals(1,
-            extensionUtil.filterProductContent(modProduct, entitlement, entCurator)
+            extensionUtil.filterProductContent(modProduct, entitlement, entCurator,
+                new HashMap<String, EnvironmentContent>(), false)
                 .size());
 
         // Now mock that we have an entitlement providing one of the modified
@@ -448,7 +488,22 @@ public class DefaultEntitlementCertServiceAdapterTest {
             this.entCurator.listProviding(any(Consumer.class), eq("product2"),
                 any(Date.class), any(Date.class))).thenReturn(successResult);
         assertEquals(2,
-            extensionUtil.filterProductContent(modProduct, entitlement, entCurator)
+            extensionUtil.filterProductContent(modProduct, entitlement, entCurator,
+                new HashMap<String, EnvironmentContent>(), false)
+                .size());
+
+        // Make sure that we filter by environment when asked.
+        Environment environment = new Environment();
+        when(consumer.getEnvironment()).thenReturn(environment);
+
+        Map<String, EnvironmentContent> promotedContent =
+            new HashMap<String, EnvironmentContent>();
+        promotedContent.put(normalContent.getId(), new EnvironmentContent(environment,
+            "content", true));
+
+        assertEquals(1,
+            extensionUtil.filterProductContent(modProduct, entitlement, entCurator,
+                promotedContent, true)
                 .size());
     }
 
@@ -895,6 +950,46 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
 
     @Test
+    public void testSpecificLargeContent() throws IOException {
+        Set<Product> products = new HashSet<Product>();
+        products.add(largeContentProduct);
+        largeContentProduct.setContent(largeContent);
+        when(largeContentEntitlement.getConsumer().getFact("system.certificate_version"))
+            .thenReturn("3.1");
+        when(largeContentEntitlement.getConsumer().getUuid()).thenReturn("test-consumer");
+
+        Set<X509ByteExtensionWrapper> byteExtensions =
+            certServiceAdapter.prepareV3ByteExtensions(products, largeContentEntitlement,
+                "prefix", null, largeContentSubscription);
+        Map<String, X509ExtensionWrapper> map =
+            new HashMap<String, X509ExtensionWrapper>();
+        Map<String, X509ByteExtensionWrapper> byteMap =
+            new HashMap<String, X509ByteExtensionWrapper>();
+        for (X509ByteExtensionWrapper ext : byteExtensions) {
+            byteMap.put(ext.getOid(), ext);
+        }
+
+        assertTrue(byteMap.containsKey("1.3.6.1.4.1.2312.9.7"));
+        List<String> contentSetList = new ArrayList<String>();
+        try {
+            contentSetList = v3extensionUtil.hydrateContentPackage(
+                byteMap.get("1.3.6.1.4.1.2312.9.7").getValue());
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        assertEquals(largeContent.size(), contentSetList.size());
+        for (String url : largeTestUrls) {
+            assertTrue(contentSetList.contains("/prefix" + url));
+        }
+        List<String> testList = Arrays.asList(largeTestUrls);
+        for (String url : contentSetList) {
+            assertTrue(testList.contains(url.substring(7)));
+        }
+    }
+
+    @Test
     public void testContentExtensionLargeSet() throws IOException {
         Set<Product> products = new HashSet<Product>();
         Product extremeProduct = new Product("12345", "a product", "variant", "version",
@@ -1299,4 +1394,121 @@ public class DefaultEntitlementCertServiceAdapterTest {
         }
     }
 
+    private String[] largeTestUrls = {
+        "/content/beta/rhel/server/6/$releasever/$basearch/sap/source/SRPMS",
+        "/content/dist/rhel/server/6/$releasever/$basearch/sap/os",
+        "/content/dist/rhel/server/6/$releasever/$basearch/sap/debug",
+        "/content/dist/rhel/server/5/$releasever/$basearch/sap/source/SRPMS",
+        "/content/dist/rhel/server/6/$releasever/$basearch/sap/source/SRPMS",
+        "/content/dist/rhel/server/5/$releasever/$basearch/sap/os",
+        "/content/beta/rhel/server/5/$releasever/$basearch/sap/debug",
+        "/content/beta/rhel/server/5/$releasever/$basearch/sap/os",
+        "/content/beta/rhel/server/5/$releasever/$basearch/sap/source/SRPMS",
+        "/content/beta/rhel/server/6/$releasever/$basearch/sap/os",
+        "/content/beta/rhel/server/6/$releasever/$basearch/sap/debug",
+        "/content/dist/rhel/server/5/$releasever/$basearch/sap/debug",
+        "/content/beta/rhel/server/5/$releasever/$basearch/source/iso",
+        "/content/dist/rhel/server/5/$releasever/$basearch/os",
+        "/content/beta/rhel/server/6/$releasever/$basearch/optional/debug",
+        "/content/beta/rhel/server/6/$releasever/$basearch/cf-tools/1.0/os",
+        "/content/beta/rhel/server/6/$releasever/$basearch/rhev-agent/3.0/os",
+        "/content/beta/rhel/server/5/$releasever/$basearch/vt/debug",
+        "/content/beta/rhel/server/6/$releasever/$basearch/cf-tools/1.0/debug",
+        "/content/beta/rhel/server/6/$releasever/$basearch/optional/source/SRPMS",
+        "/content/dist/rhel/server/5/$releasever/$basearch/debug",
+        "/content/dist/rhel/server/6/$releasever/$basearch/supplementary/debug",
+        "/content/dist/rhel/server/5/$releasever/$basearch/supplementary/os",
+        "/content/dist/rhel/server/6/$releasever/$basearch/os",
+        "/content/dist/rhel/server/6/$releasever/$basearch/optional/source/SRPMS",
+        "/content/dist/rhel/server/6/$releasever/$basearch/source/iso",
+        "/content/dist/rhel/server/5/$releasever/$basearch/productivity/source/SRPMS",
+        "/content/dist/rhel/server/6/$releasever/$basearch/cf-tools/1.0/debug",
+        "/content/dist/rhel/server/5/$releasever/$basearch/rhev-agent/3.0/os",
+        "/content/dist/rhel/server/6/$releasever/$basearch/supplementary/os",
+        "/content/dist/rhel/server/5/$releasever/$basearch/vt/os",
+        "/content/dist/rhel/server/6/$releasever/$basearch/optional/os",
+        "/content/beta/rhel/server/5/$releasever/$basearch/supplementary/debug",
+        "/content/dist/rhel/server/6/$releasever/$basearch/supplementary/iso",
+        "/content/beta/rhel/server/5/$releasever/$basearch/debug",
+        "/content/beta/rhel/server/6/$releasever/$basearch/subscription-asset-manager/" +
+            "debug",
+        "/content/dist/rhel/server/5/$releasever/$basearch/rhev-agent/3.0/source/SRPMS",
+        "/content/beta/rhel/server/6/$releasever/$basearch/subscription-asset-manager/" +
+            "source/SRPMS",
+        "/content/beta/rhel/server/6/$releasever/$basearch/os",
+        "/content/dist/rhel/server/6/$releasever/$basearch/rhev-agent/3.0/source/SRPMS",
+        "/content/beta/rhel/server/5/$releasever/$basearch/supplementary/source/SRPMS",
+        "/content/beta/rhel/server/5/$releasever/$basearch/supplementary/os",
+        "/content/dist/rhel/server/5/$releasever/$basearch/source/iso",
+        "/content/beta/rhel/server/5/$releasever/$basearch/vt/source/SRPMS",
+        "/content/dist/rhel/server/6/$releasever/$basearch/subscription-asset-manager/1/" +
+            "debug",
+        "/content/beta/rhel/server/5/$releasever/$basearch/supplementary/iso",
+        "/content/dist/rhel/server/5/$releasever/$basearch/productivity/debug",
+        "/content/beta/rhel/server/6/$releasever/$basearch/cf-tools/1.0/source/SRPMS",
+        "/content/dist/rhel/server/6/$releasever/$basearch/cf-tools/1.0/os",
+        "/content/beta/rhel/server/6/$releasever/$basearch/source/iso",
+        "/content/dist/rhel/server/6/$releasever/$basearch/cf-tools/1.0/source/SRPMS",
+        "/content/dist/rhel/server/5/$releasever/$basearch/iso",
+        "/content/dist/rhel/server/5/$releasever/$basearch/productivity/os",
+        "/content/beta/rhel/server/5/$releasever/$basearch/rhev-agent/3.0/debug",
+        "/content/beta/rhel/server/6/$releasever/$basearch/rhev-agent/3.0/debug",
+        "/content/dist/rhel/server/5/$releasever/$basearch/vt/debug",
+        "/content/beta/rhel/server/6/$releasever/$basearch/source/SRPMS",
+        "/content/beta/rhel/server/5/$releasever/$basearch/cf-tools/1.0/source/SRPMS",
+        "/content/beta/rhel/server/5/$releasever/$basearch/rhev-agent/3.0/os",
+        "/content/dist/rhel/server/6/$releasever/$basearch/rhev-agent/3.0/debug",
+        "/content/beta/rhel/server/6/$releasever/$basearch/supplementary/debug",
+        "/content/dist/rhel/server/5/$releasever/$basearch/cf-tools/1.0/os",
+        "/content/beta/rhel/server/6/$releasever/$basearch/iso",
+        "/content/beta/rhel/server/5/$releasever/$basearch/iso",
+        "/content/beta/rhel/server/6/$releasever/$basearch/supplementary/os",
+        "/content/dist/rhel/server/5/$releasever/$basearch/supplementary/iso",
+        "/content/beta/rhel/server/5/$releasever/$basearch/cf-tools/1.0/os",
+        "/content/beta/rhel/server/6/$releasever/$basearch/optional/os",
+        "/content/beta/rhel/server/6/$releasever/$basearch/supplementary/iso",
+        "/content/dist/rhel/server/5/$releasever/$basearch/source/SRPMS",
+        "/content/beta/rhel/server/6/$releasever/$basearch/debug",
+        "/content/beta/rhel/server/6/$releasever/$basearch/subscription-asset-manager/os",
+        "/content/dist/rhel/server/5/$releasever/$basearch/supplementary/source/SRPMS",
+        "/content/dist/rhel/server/6/$releasever/$basearch/iso",
+        "/content/dist/rhel/server/5/$releasever/$basearch/rhev-agent/3.0/debug",
+        "/content/dist/rhel/server/6/$releasever/$basearch/subscription-asset-manager/1/os",
+        "/content/dist/rhel/server/6/$releasever/$basearch/debug",
+        "/content/beta/rhel/server/6/$releasever/$basearch/supplementary/source/SRPMS",
+        "/content/dist/rhel/server/5/$releasever/$basearch/vt/source/SRPMS",
+        "/content/dist/rhel/server/6/$releasever/$basearch/rhev-agent/3.0/os",
+        "/content/beta/rhel/server/5/$releasever/$basearch/rhev-agent/3.0/source/SRPMS",
+        "/content/dist/rhel/server/6/$releasever/$basearch/subscription-asset-manager/1/" +
+            "source/SRPMS",
+        "/content/beta/rhel/server/5/$releasever/$basearch/os",
+        "/content/dist/rhel/server/6/$releasever/$basearch/supplementary/source/SRPMS",
+        "/content/beta/rhel/server/5/$releasever/$basearch/vt/os",
+        "/content/dist/rhel/server/5/$releasever/$basearch/supplementary/debug",
+        "/content/dist/rhel/server/6/$releasever/$basearch/optional/debug",
+        "/content/dist/rhel/server/5/$releasever/$basearch/cf-tools/1.0/source/SRPMS",
+        "/content/beta/rhel/server/6/$releasever/$basearch/rhev-agent/3.0/source/SRPMS",
+        "/content/beta/rhel/server/5/$releasever/$basearch/source/SRPMS",
+        "/content/dist/rhel/server/6/$releasever/$basearch/source/SRPMS",
+        "/content/rhb/rhel/client/6/$releasever/$basearch/devtoolset/os",
+        "/content/rhb/rhel/workstation/5/$releasever/$basearch/devtoolset/source/SRPMS",
+        "/content/rhb/rhel/client/5/$releasever/$basearch/devtoolset/source/SRPMS",
+        "/content/rhb/rhel/client/5/$releasever/$basearch/devtoolset/os",
+        "/content/rhb/rhel/client/5/$releasever/$basearch/devtoolset/debug",
+        "/content/rhb/rhel/computenode/6/$releasever/$basearch/devtoolset/os",
+        "/content/rhb/rhel/server/6/$releasever/$basearch/devtoolset/debug",
+        "/content/rhb/rhel/workstation/6/$releasever/$basearch/devtoolset/debug",
+        "/content/rhb/rhel/server/6/$releasever/$basearch/devtoolset/source/SRPMS",
+        "/content/rhb/rhel/workstation/5/$releasever/$basearch/devtoolset/os",
+        "/content/rhb/rhel/computenode/6/$releasever/$basearch/devtoolset/debug",
+        "/content/rhb/rhel/workstation/6/$releasever/$basearch/devtoolset/source/SRPMS",
+        "/content/rhb/rhel/workstation/6/$releasever/$basearch/devtoolset/os",
+        "/content/rhb/rhel/computenode/6/$releasever/$basearch/devtoolset/source/SRPMS",
+        "/content/rhb/rhel/client/6/$releasever/$basearch/devtoolset/debug",
+        "/content/rhb/rhel/server/6/$releasever/$basearch/devtoolset/os",
+        "/content/rhb/rhel/workstation/5/$releasever/$basearch/devtoolset/debug",
+        "/content/rhb/rhel/client/6/$releasever/$basearch/devtoolset/source/SRPMS",
+        "/content/rhb/rhel/server/5/$releasever/$basearch/devtoolset/debug",
+        "/content/rhb/rhel/server/5/$releasever/$basearch/devtoolset/os",
+        "/content/rhb/rhel/server/5/$releasever/$basearch/devtoolset/source/SRPMS"};
 }

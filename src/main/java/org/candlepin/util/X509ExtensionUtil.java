@@ -205,8 +205,7 @@ public class X509ExtensionUtil  extends X509Util{
 
     public Set<X509ExtensionWrapper> contentExtensions(
         Set<ProductContent> productContent, String contentPrefix,
-        Map<String, EnvironmentContent> promotedContent, Consumer consumer)
-        throws CertificateSizeException {
+        Map<String, EnvironmentContent> promotedContent, Consumer consumer) {
 
         Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<X509ExtensionWrapper>();
 
@@ -215,18 +214,7 @@ public class X509ExtensionUtil  extends X509Util{
         // For V1 certificates we're going to error out if we exceed a limit which is
         // likely going to generate a certificate too large for the CDN, and return an
         // informative error message to the user.
-        int contentCounter = 0;
         for (ProductContent pc : productContent) {
-            if (enableEnvironmentFiltering) {
-                if (consumer.getEnvironment() != null && !promotedContent.containsKey(
-                    pc.getContent().getId())) {
-                    log.debug("Skipping content not promoted to environment: " +
-                        pc.getContent().getId());
-                    continue;
-                }
-            }
-            contentCounter++;
-
             // augment the content path with the prefix if it is passed in
             String contentPath = pc.getContent().getContentUrl();
             if (contentPrefix != null) {
@@ -292,10 +280,6 @@ public class X509ExtensionUtil  extends X509Util{
                     false, requiredTags));
             }
 
-        }
-
-        if (contentCounter > V1_CONTENT_LIMIT) {
-            throw new CertificateSizeException();
         }
 
         return toReturn;

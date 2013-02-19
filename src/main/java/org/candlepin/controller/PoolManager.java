@@ -32,6 +32,9 @@ import java.util.Set;
  */
 public interface PoolManager {
 
+    // WARNING: Changing these will impact rules files in the wild.
+    String DELETE_FLAG = "candlepin.delete_pool";
+
     Pool createPool(Pool p);
 
     /**
@@ -117,8 +120,6 @@ public interface PoolManager {
     int removeAllEntitlements(Consumer consumer);
 
     void revokeEntitlement(Entitlement entitlement);
-
-    void removeEntitlement(Entitlement entitlement);
 
     Pool updatePoolQuantity(Pool pool, long adjust);
 

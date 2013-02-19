@@ -70,6 +70,7 @@ public class JobStatus extends AbstractHibernateObject {
     private JobState state;
     private Date startTime;
     private Date finishTime;
+    @Column(length = 255)
     private String result;
     private String principalName;
 
@@ -169,7 +170,13 @@ public class JobStatus extends AbstractHibernateObject {
     }
 
     public void setResult(String result) {
-        this.result = result;
+        // truncate the results to the first 255 characters
+        if (result == null || result.length() < 255) {
+            this.result = result;
+        }
+        else {
+            this.result = result.substring(0, 255);
+        }
     }
 
     public String getPrincipalName() {

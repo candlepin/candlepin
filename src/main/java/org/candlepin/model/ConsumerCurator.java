@@ -30,6 +30,9 @@ import org.candlepin.exceptions.BadRequestException;
 import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
+//import org.hibernate.Hibernate;
+import org.hibernate.ReplicationMode;
+//import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 import org.xnap.commons.i18n.I18n;
 

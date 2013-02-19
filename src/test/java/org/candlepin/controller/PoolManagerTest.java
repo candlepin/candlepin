@@ -27,6 +27,7 @@ import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
@@ -65,6 +66,7 @@ import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.entitlement.PreEntHelper;
 import org.candlepin.policy.js.entitlement.PreUnbindHelper;
+import org.candlepin.policy.js.pool.PoolUpdate;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -190,6 +192,34 @@ public class PoolManagerTest {
     }
 
     @Test
+    public void refreshPoolsCleanupPoolThatLostVirtLimit() {
+        List<Subscription> subscriptions = Util.newList();
+        List<Pool> pools = Util.newList();
+        Subscription s = TestUtil.createSubscription(getOwner(),
+            TestUtil.createProduct());
+        s.setId("01923");
+        subscriptions.add(s);
+        Pool p = TestUtil.createPool(s.getProduct());
+        p.setSubscriptionId(s.getId());
+        p.setAttribute(PoolManager.DELETE_FLAG, "true");
+        pools.add(p);
+
+        when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
+            subscriptions);
+        when(
+            mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
+                any(Owner.class), anyString(), any(Date.class),
+                anyBoolean(), anyBoolean())).thenReturn(pools);
+
+        List<PoolUpdate> updates = new LinkedList();
+        updates.add(new PoolUpdate(p, false, true, false));
+        when(poolRulesMock.updatePools(s, pools)).thenReturn(updates);
+
+        this.manager.getRefresher().add(getOwner()).run();
+        verify(this.mockPoolCurator, times(1)).delete(any(Pool.class));
+    }
+
+    @Test
     public void testLazyRegenerate() {
         Entitlement e = new Entitlement();
         manager.regenerateCertificatesOf(e, false, true);
@@ -286,6 +316,7 @@ public class PoolManagerTest {
         int total = manager.revokeAllEntitlements(c);
 
         assertEquals(2, total);
+        verify(entitlementCurator, never()).listModifying(any(Entitlement.class));
     }
 
     @Test

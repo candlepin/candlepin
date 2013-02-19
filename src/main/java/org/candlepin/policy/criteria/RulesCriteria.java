@@ -83,8 +83,7 @@ public class RulesCriteria  {
             poolsCriteria = jsRules.invokeMethod("poolCriteria", args);
         }
         catch (NoSuchMethodException e) {
-            log.error("Unable to find javascript method: poolCriteria");
-            log.error(e);
+            log.error("Unable to find javascript method: poolCriteria", e);
             throw new IseException("Unable to create pool criteria.");
         }
         return poolsCriteria;

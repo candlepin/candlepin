@@ -551,7 +551,7 @@ public class ConsumerResourceUpdateTest {
 
         when(this.consumerCurator.findByUuid(uuid)).thenReturn(host);
 
-        Consumer updatedHost = createConsumerWithGuests("Guest 2");
+        Consumer updatedHost = createConsumerWithGuests("Guest 1");
         updatedHost.setUuid(uuid);
 
         Entitlement entitlement = TestUtil.createEntitlement();

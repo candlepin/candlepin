@@ -463,7 +463,7 @@ public class ConsumerResource {
             }
             throw new BadRequestException(
                 i18n.tr(
-                    "Service level '{0}' is not available " +
+                    "Service level ''{0}'' is not available " +
                     "to consumers of organization {1}.",
                     serviceLevel, owner.getKey()));
         }
@@ -928,6 +928,12 @@ public class ConsumerResource {
         Set<Entitlement> deletableGuestEntitlements = new HashSet<Entitlement>();
         for (Entitlement entitlement : guest.getEntitlements()) {
             Pool pool = entitlement.getPool();
+
+            // If there is no host required, do not revoke the entitlement.
+            if (!pool.hasAttribute("requires_host")) {
+                continue;
+            }
+
             String requiredHost = getRequiredHost(pool);
             if (isVirtOnly(pool) && !requiredHost.equals(host.getUuid())) {
                 log.warn("Removing entitlement " + entitlement.getProductId() +
@@ -1256,11 +1262,8 @@ public class ConsumerResource {
                 throw fe;
             }
             catch (RuntimeException re) {
-                String errorMessage = i18n.tr("Asked to be subscribed to a product that " +
-                    "has no pool: {0} ", re.getMessage());
-                log.warn(errorMessage);
-                return Response.status(Response.Status.BAD_REQUEST)
-                    .type(MediaType.APPLICATION_JSON).entity(errorMessage).build();
+                log.warn(i18n.tr("Asked to be subscribed to a product that " +
+                    "has no pool: {0} ", re.getMessage()));
             }
         }
 
