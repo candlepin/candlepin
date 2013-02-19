@@ -560,4 +560,8 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         return new Release(releaseVer);
     }
 
+    @Transient
+    public boolean isManifest() {
+        return getType().isManifest();
+    }
 }
