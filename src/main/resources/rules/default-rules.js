@@ -806,7 +806,8 @@ var PoolCriteria = {
         // class/method var's instead of full paths, etc
         var criteriaFilters = new java.util.LinkedList();
         // Don't load virt_only pools if this consumer isn't a guest:
-        if (!"true".equalsIgnoreCase(consumer.getFact("virt.is_guest"))) {
+        // or it isn't a manifest consumer
+        if (!consumer.isManifest() && !"true".equalsIgnoreCase(consumer.getFact("virt.is_guest"))) {
             // not a guest
             var noVirtOnlyPoolAttr =
                 org.hibernate.criterion.DetachedCriteria.forClass(
@@ -820,7 +821,7 @@ var PoolCriteria = {
                     noVirtOnlyPoolAttr));
 
             // same criteria but for PoolProduct attributes
-            // not sure if this should be two seperate criteria, or if it's
+            // not sure if this should be two separate criteria, or if it's
             // worth it to combine in some clever fashion
             var noVirtOnlyProductAttr =
                 org.hibernate.criterion.DetachedCriteria.forClass(
@@ -889,7 +890,7 @@ var Pool = {
 
         // note: the product attributes are getting copied above, but the following will make
         //   virt_only a pool attribute. That makes the pool explicitly virt_only to subscription
-        //    manager and any other downstream comsumer.
+        //    manager and any other downstream consumer.
         if (virtAtt != null && virtAtt.getValue() != null &&
             !virtAtt.getValue().equals("")) {
             newPool.addAttribute(new org.candlepin.model.PoolAttribute("virt_only", virtAtt.getValue()));
@@ -1086,7 +1087,7 @@ function stack_is_compliant(consumer, stack_id, ents, log) {
 }
 
 /*
- * Check an entitlement to see if it provides sufficent CPU sockets a consumer.
+ * Check an entitlement to see if it provides sufficient CPU sockets a consumer.
  */
 function ent_is_compliant(consumer, ent, log) {
     log.debug("Checking entitlement compliance: " + ent.getId());
@@ -1267,7 +1268,7 @@ function getComplianceStatusOnDate(consumer, entitlements, ondate, log) {
 }
 
 /**
- * Determine the compliant until date for a consumer based on the specifed start date
+ * Determine the compliant until date for a consumer based on the specified start date
  * and entitlements.
  */
 function determineCompliantUntilDate(consumer, startDate, complianceHelper, log) {
