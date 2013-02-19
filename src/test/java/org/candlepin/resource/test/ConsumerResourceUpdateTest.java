@@ -41,7 +41,6 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
-import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Release;
 import org.candlepin.policy.js.compliance.ComplianceRules;

@@ -29,7 +29,6 @@ import org.candlepin.model.GuestId;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
 import org.candlepin.test.DatabaseTestFixture;
-import org.junit.Before;
 import org.junit.Test;
 
 /**
