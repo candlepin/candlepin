@@ -529,12 +529,23 @@ var Entitlement = {
             return false;
         }
 
+        // Get attribute from a pool. Pool attributes are preferred
+        // but if not found, the top level product attributes will be
+        // checked.
+        context.getAttribute = function(pool, attributeName) {
+            var attr = pool.getAttribute(attributeName);
+            if (!attr) {
+                attr = pool.getProductAttribute(attributeName);
+            }
+            return attr;
+        }
+
         return context;
     },
 
     pre_virt_only: function() {
         context = Entitlement.get_attribute_context();
-        var virt_pool = 'true'.equalsIgnoreCase(context.attributes['virt_only']);
+        var virt_pool = 'true'.equalsIgnoreCase(context.getAttribute(context.pool, 'virt_only'));
         var guest = false;
         if (context.consumer.facts['virt.is_guest']) {
             guest = 'true'.equalsIgnoreCase(context.consumer.facts['virt.is_guest']);
@@ -558,15 +569,19 @@ var Entitlement = {
         }
         var hostConsumer = pre.getHostConsumer(context.consumer.facts["virt.uuid"]);
 
-        if (hostConsumer == null || !hostConsumer.getUuid().equals(context.attributes['requires_host'])) {
+        if (hostConsumer == null ||
+            !hostConsumer.getUuid().equals(context.getAttribute(context.pool,
+                                                                'requires_host'))) {
             pre.addError("virt.guest.host.does.not.match.pool.owner");
         }
     },
 
     pre_requires_consumer_type: function() {
         context = Entitlement.get_attribute_context();
-        if (!context.attributes["requires_consumer_type"].equals(context.consumer.type.label) &&
-                !context.consumer.type.label.equals("uebercert")) {
+        var requiresConsumerType = context.getAttribute(context.pool, "requires_consumer_type");
+        if (requiresConsumerType != null &&
+            !requiresConsumerType.equals(context.consumer.type.label) &&
+            !context.consumer.type.label.equals("uebercert")) {
             pre.addError("rulefailed.consumer.type.mismatch");
         }
     },
@@ -576,7 +591,7 @@ var Entitlement = {
 
     pre_architecture: function() {
         context = Entitlement.get_attribute_context();
-        if (!architectureMatches(context.product.attributes['arch'],
+        if (!architectureMatches(context.pool.getProductAttribute('arch'),
                                  context.consumer.facts['uname.machine'],
                                  context.consumer.type.label,
                                  context.prodAttrSeparator)) {
@@ -604,7 +619,7 @@ var Entitlement = {
         var consumerRam = get_consumer_ram(context.consumer);
         log.debug("Consumer has " + consumerRam + "GB of RAM.");
 
-        var productRam = parseInt(context.product.attributes["ram"]);
+        var productRam = parseInt(context.pool.getProductAttribute("ram"));
         log.debug("Product has " + productRam + "GB of RAM");
         if (consumerRam > productRam) {
             pre.addWarning("rulewarning.unsupported.ram");
@@ -613,6 +628,7 @@ var Entitlement = {
 
     pre_global: function() {
         context = Entitlement.get_attribute_context();
+        log.debug("INPUT: " + JSON.stringify(context));
         var consumer = context.consumer;
         var pool = context.pool;
         if (!consumer.type.manifest) {

@@ -84,20 +84,13 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
 
         // Provide objects for the script:
         String topLevelProductId = pool.getProductId();
-        ReadOnlyProduct product = new ReadOnlyProduct(topLevelProductId,
-            pool.getProductName(),
-            preHelper.getFlattenedAttributes(pool.getProductAttributes()));
-        Map<String, String> allAttributes = preHelper.getFlattenedAttributes(pool);
 
         JsonJsContext context = new JsonJsContext(this.objectMapper);
         context.put("consumer", consumer);
         // Entitlements are put into the context seperately because they do
         // not get serialized along with the Consumer.
-        // TODO Perhaps look into a Jackson view to do this.
         context.put("consumerEntitlements", consumer.getEntitlements());
-        context.put("product", product);
         context.put("pool", pool);
-        context.put("attributes", allAttributes);
         context.put("prodAttrSeparator", PROD_ARCHITECTURE_SEPARATOR);
         context.put("standalone", config.standalone());
 
@@ -107,6 +100,7 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
 
         log.debug("Running pre-entitlement rules for: " + consumer.getUuid() +
             " product: " + topLevelProductId);
+        Map<String, String> allAttributes = preHelper.getFlattenedAttributes(pool);
         List<Rule> matchingRules
             = rulesForAttributes(allAttributes.keySet(), attributesToRules);
 
