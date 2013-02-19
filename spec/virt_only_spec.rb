@@ -56,6 +56,20 @@ describe 'Virt Only Pools' do
     end
   end
 
+  it 'should allow virt_only pools to be exported for manifest consumers' do
+    virt_product = new_product true
+    manifest = consumer_client(@user, 'virty', :candlepin, nil, {
+      'virt.is_guest' => false
+    })
+
+    entitlement = manifest.consume_product(virt_product.id)
+    pools = @cp.list_pools({:consumer => manifest.uuid})
+    pools.size.should == 1
+    virtonly = pools[0]['attributes'].find_all {|i| i['name'] == 'virt_only'}[0]
+    virtonly['value'].should == 'true'
+
+  end
+
   private
 
   def new_product(virt_only)
