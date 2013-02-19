@@ -17,7 +17,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.7.13.13
+Version: 0.7.13.14
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -287,6 +287,10 @@ fi
 
 
 %changelog
+* Tue Feb 19 2013 jesus m. rodriguez <jesusr@redhat.com> 0.7.13.14-1
+- checkstyle: remove unused imports (jesusr@redhat.com)
+- Improve the performance is checking for guests for a given host.  (bkearney@redhat.com)
+
 * Thu Feb 14 2013 jesus m. rodriguez <jesusr@redhat.com> 0.7.13.13-1
 - EMERGENCY PATCH (jesusr@redhat.com)
 
