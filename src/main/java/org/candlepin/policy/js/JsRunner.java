@@ -111,11 +111,12 @@ public class JsRunner {
         return (T) invokeMethod(method);
     }
 
-    public void invokeRule(String ruleName) {
+    public <T> T invokeRule(String ruleName) {
         log.debug("Running rule: " + ruleName + " in namespace: " + namespace);
 
+        T returner = null;
         try {
-            this.invokeMethod(ruleName);
+            returner = this.invokeMethod(ruleName);
         }
         catch (NoSuchMethodException ex) {
             log.warn("No rule found: " + ruleName + " in namespace: " + namespace);
@@ -123,11 +124,12 @@ public class JsRunner {
         catch (RhinoException ex) {
             throw new RuleExecutionException(ex);
         }
+        return returner;
     }
 
-    public void invokeRule(String ruleName, JsContext context) {
+    public <T> T invokeRule(String ruleName, JsContext context) {
         context.applyTo(scope);
-        invokeRule(ruleName);
+        return invokeRule(ruleName);
     }
 
     public ReadOnlyPool[] convertArray(Object output) {

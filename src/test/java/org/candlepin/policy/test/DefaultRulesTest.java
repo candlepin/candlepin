@@ -139,8 +139,7 @@ public class DefaultRulesTest {
 
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
 
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
-            .getResult();
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
 
         assertTrue(result.hasErrors());
         assertFalse(result.isSuccessful());
@@ -166,8 +165,7 @@ public class DefaultRulesTest {
 
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
 
-        ValidationResult result = enf.preEntitlement(c, pool, 1)
-            .getResult();
+        ValidationResult result = enf.preEntitlement(c, pool, 1);
 
         assertTrue(result.hasErrors());
         assertFalse(result.isSuccessful());
@@ -184,8 +182,7 @@ public class DefaultRulesTest {
 
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
 
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 10)
-            .getResult();
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 10);
 
         assertFalse(result.isSuccessful());
         assertTrue(result.hasErrors());
@@ -206,9 +203,7 @@ public class DefaultRulesTest {
 
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
 
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
-            .getResult();
-
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertTrue(result.isSuccessful());
         assertFalse(result.hasErrors());
         assertFalse(result.hasErrors());
@@ -226,8 +221,7 @@ public class DefaultRulesTest {
 
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
 
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
-            .getResult();
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
 
         assertTrue(result.hasErrors());
         assertFalse(result.isSuccessful());
@@ -238,8 +232,7 @@ public class DefaultRulesTest {
         Pool pool = setupArchTest("arch", "ALL", "arch", "i686");
         pool.setId("fakeid" + TestUtil.randomInt());
 
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
-            .getResult();
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
     }
@@ -248,8 +241,7 @@ public class DefaultRulesTest {
     public void architectureMismatchShouldGenerateWarning() {
         Pool pool = setupArchTest("arch", "x86_64", "uname.machine", "i686");
 
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
-            .getResult();
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
         assertTrue(result.hasWarnings());
     }
@@ -261,8 +253,7 @@ public class DefaultRulesTest {
         // Get rid of the facts that setupTest set.
         consumer.setFacts(new HashMap<String, String>());
 
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
-            .getResult();
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
         assertTrue(result.hasWarnings());
     }
@@ -280,8 +271,7 @@ public class DefaultRulesTest {
 
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
 
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
-            .getResult();
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
     }
@@ -289,8 +279,7 @@ public class DefaultRulesTest {
     @Test
     public void architectureMatches() {
         Pool pool = setupArchTest("arch", "x86_64", "uname.machine", "x86_64");
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
-            .getResult();
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
     }
@@ -298,8 +287,7 @@ public class DefaultRulesTest {
     @Test
     public void x86ArchitectureProvidesI386() {
         Pool pool = setupArchTest("arch", "x86", "uname.machine", "i386");
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
-            .getResult();
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
     }
@@ -307,8 +295,7 @@ public class DefaultRulesTest {
     @Test
     public void x86ArchitectureProvidesI586() {
         Pool pool = setupArchTest("arch", "x86", "uname.machine", "i586");
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
-            .getResult();
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
     }
@@ -316,8 +303,7 @@ public class DefaultRulesTest {
     @Test
     public void x86ArchitectureProvidesI686() {
         Pool pool = setupArchTest("arch", "x86", "uname.machine", "i686");
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
-            .getResult();
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
     }
@@ -325,8 +311,7 @@ public class DefaultRulesTest {
     @Test
     public void testEmptyUname() {
         Pool pool = setupArchTest("arch", "s390x,x86", "uname.machine", "");
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
-            .getResult();
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
         assertTrue(result.hasWarnings());
     }
@@ -334,8 +319,7 @@ public class DefaultRulesTest {
     @Test
     public void testEmptyArch() {
         Pool pool = setupArchTest("arch", "", "uname.machine", "x86_64");
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
-            .getResult();
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
         assertTrue(result.hasWarnings());
     }
@@ -344,8 +328,7 @@ public class DefaultRulesTest {
     public void testDuplicateArchesMatches() {
         Pool pool = setupArchTest("arch", "x86_64,x86_64", "uname.machine",
             "x86_64");
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
-            .getResult();
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
     }
@@ -354,8 +337,7 @@ public class DefaultRulesTest {
     public void testDuplicateArchesNoMatches() {
         Pool pool = setupArchTest("arch", "x86_64,x86_64", "uname.machine",
             "z80");
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
-            .getResult();
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
         assertTrue(result.hasWarnings());
     }
@@ -364,8 +346,7 @@ public class DefaultRulesTest {
     public void testCommaSplitArchesTrailingComma() {
         Pool pool = setupArchTest("arch", "x86_64,x86_64,", "uname.machine",
             "x86_64");
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
-            .getResult();
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
     }
@@ -374,8 +355,7 @@ public class DefaultRulesTest {
     public void testCommaSplitArchesExtraSpaces() {
         Pool pool = setupArchTest("arch", "x86_64,  z80 ", "uname.machine",
             "x86_64");
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
-            .getResult();
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
     }
@@ -384,8 +364,7 @@ public class DefaultRulesTest {
     public void multipleArchesNoMatches() {
         Pool pool = setupArchTest("arch", "s390x,z80,ppc64", "uname.machine",
             "i686");
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
-            .getResult();
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
         assertTrue(result.hasWarnings());
     }
@@ -393,8 +372,7 @@ public class DefaultRulesTest {
     @Test
     public void multipleArchesMatches() {
         Pool pool = setupArchTest("arch", "s390x,x86", "uname.machine", "i686");
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
-            .getResult();
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
     }
@@ -402,8 +380,7 @@ public class DefaultRulesTest {
     @Test
     public void goodArchNoUnameMachine() {
         Pool pool = setupArchTest("arch", "x86", "something.not.uname", "i686");
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
-            .getResult();
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
         assertTrue(result.hasWarnings());
     }
@@ -412,8 +389,7 @@ public class DefaultRulesTest {
     public void fewerThanMaximumNumberOfSocketsShouldNotGenerateWarning() {
         Pool pool = setupArchTest("sockets", "128", "cpu.cpu_socket(s)", "2");
 
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
-            .getResult();
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
     }
@@ -422,8 +398,7 @@ public class DefaultRulesTest {
     public void matchingNumberOfSocketsShouldNotGenerateWarning() {
         Pool pool = setupArchTest("sockets", "2", "cpu.cpu_socket(s)", "2");
 
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
-            .getResult();
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
     }
@@ -437,8 +412,7 @@ public class DefaultRulesTest {
         // Get rid of the facts that setupTest set.
         consumer.setFacts(new HashMap<String, String>());
 
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
-            .getResult();
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
     }
@@ -453,8 +427,7 @@ public class DefaultRulesTest {
         // Get rid of the facts that setupTest set.
         consumer.setFacts(new HashMap<String, String>());
 
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
-            .getResult();
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
     }
@@ -482,8 +455,7 @@ public class DefaultRulesTest {
     public void exceedingNumberOfSocketsShouldGenerateWarning() {
         Pool pool = setupArchTest("sockets", "2", "cpu.cpu_socket(s)", "4");
 
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
-            .getResult();
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
         assertTrue(result.hasWarnings());
     }
@@ -493,8 +465,7 @@ public class DefaultRulesTest {
         // Fact specified in kb
         Pool pool = setupArchTest("ram", "4", "memory.memtotal", "2000000");
 
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
-            .getResult();
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
     }
@@ -504,8 +475,7 @@ public class DefaultRulesTest {
         // Fact specified in kb
         Pool pool = setupArchTest("ram", "2", "memory.memtotal", "2000000");
 
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
-            .getResult();
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
     }
@@ -515,8 +485,7 @@ public class DefaultRulesTest {
         // Fact specified in kb - actual value of 2 GiB in kb.
         Pool pool = setupArchTest("ram", "2", "memory.memtotal", "2097152");
 
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
-            .getResult();
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
     }
@@ -525,8 +494,7 @@ public class DefaultRulesTest {
     public void consumerHavingMoreRamThanProductGeneratesWarning() {
         Pool pool = setupArchTest("ram", "2", "memory.memtotal", "4000000");
 
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
-            .getResult();
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
         assertTrue(result.hasWarnings());
     }
@@ -536,8 +504,7 @@ public class DefaultRulesTest {
         Pool pool = setupProductWithRequiresConsumerTypeAttribute();
         consumer.setType(new ConsumerType(ConsumerTypeEnum.DOMAIN));
 
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
-            .getResult();
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
     }
@@ -547,8 +514,7 @@ public class DefaultRulesTest {
         Pool pool = setupProductWithRequiresConsumerTypeAttribute();
         consumer.setType(new ConsumerType(ConsumerTypeEnum.PERSON));
 
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
-            .getResult();
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertTrue(result.hasErrors());
         assertFalse(result.hasWarnings());
     }
@@ -566,8 +532,7 @@ public class DefaultRulesTest {
     public void userLicensePassesPre() {
         Pool pool = setupUserLicensedPool();
         consumer.setType(new ConsumerType(ConsumerTypeEnum.PERSON));
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
-            .getResult();
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
     }
@@ -619,8 +584,7 @@ public class DefaultRulesTest {
     public void userRestrictedPoolPassesPre() {
         Pool pool = setupUserRestrictedPool();
         consumer.setUsername("bob");
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
-            .getResult();
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
     }
@@ -630,8 +594,7 @@ public class DefaultRulesTest {
         Pool pool = setupUserRestrictedPool();
         consumer.setUsername("notbob");
 
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
-            .getResult();
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertTrue(result.hasErrors());
         assertFalse(result.hasWarnings());
     }
@@ -648,8 +611,7 @@ public class DefaultRulesTest {
 
         when(consumerCurator.getHost(guestId)).thenReturn(parent);
 
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
-            .getResult();
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
     }
@@ -671,8 +633,7 @@ public class DefaultRulesTest {
 
         when(consumerCurator.getHost(guestId)).thenReturn(otherParent);
 
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
-            .getResult();
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
     }
@@ -695,8 +656,7 @@ public class DefaultRulesTest {
 
         when(consumerCurator.getHost(guestId)).thenReturn(parent);
 
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
-            .getResult();
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasWarnings());
         assertEquals(1, result.getErrors().size());
         assertEquals("virt.guest.host.does.not.match.pool.owner",
@@ -718,8 +678,7 @@ public class DefaultRulesTest {
 
         when(consumerCurator.getHost(guestId)).thenReturn(null);
 
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1)
-            .getResult();
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasWarnings());
         assertEquals(1, result.getErrors().size());
         assertEquals("virt.guest.host.does.not.match.pool.owner",

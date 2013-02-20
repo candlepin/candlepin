@@ -55,7 +55,6 @@ import org.candlepin.policy.js.autobind.AutobindRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.entitlement.Enforcer;
-import org.candlepin.policy.js.entitlement.PreEntHelper;
 import org.candlepin.policy.js.pool.PoolHelper;
 import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.policy.js.pool.PoolUpdate;
@@ -413,8 +412,7 @@ public class CandlepinPoolManager implements PoolManager {
                 }
             }
             if (providesProduct) {
-                PreEntHelper preHelper = enforcer.preEntitlement(consumer, pool, 1);
-                ValidationResult result = preHelper.getResult();
+                ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
 
                 if (result.hasErrors() || result.hasWarnings()) {
                     // Just keep the last one around, if we need it
@@ -511,8 +509,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         if (quantity > 0) {
             // XXX preEntitlement is run twice for new entitlement creation
-            PreEntHelper preHelper = enforcer.preEntitlement(consumer, pool, quantity);
-            ValidationResult result = preHelper.getResult();
+            ValidationResult result = enforcer.preEntitlement(consumer, pool, quantity);
 
             if (!result.isSuccessful()) {
                 log.warn("Entitlement not granted: " +

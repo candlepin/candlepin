@@ -31,7 +31,9 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
+import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
+import org.candlepin.policy.ValidationWarning;
 import org.candlepin.policy.js.JsContext;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.ProductCache;
@@ -152,10 +154,22 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         }
     }
 
-    protected void callPreEntitlementRules(List<Rule> matchingRules, JsContext context) {
+    protected ValidationResult callPreEntitlementRules(List<Rule> matchingRules,
+        JsContext context) {
+        ValidationResult result = new ValidationResult();
         for (Rule rule : matchingRules) {
-            jsRules.invokeRule(PRE_PREFIX + rule.getRuleName(), context);
+            String validationJson = jsRules.invokeRule(PRE_PREFIX + rule.getRuleName(),
+                context);
+
+            // If the resulting validation json is empty, either the method
+            // did not exist in the rules, or the method did not return
+            // anything. In this case we skip the result.
+            if (validationJson == null) {
+                continue;
+            }
+            result.add(objectMapper.toObject(validationJson, ValidationResult.class));
         }
+        return result;
     }
 
     protected void callPostEntitlementRules(List<Rule> matchingRules) {
@@ -180,20 +194,22 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         }
     }
 
-    protected void invokeGlobalPreEntitlementRule(JsContext context) {
+    protected ValidationResult invokeGlobalPreEntitlementRule(JsContext context) {
         // No method for this product, try to find a global function, if
         // neither exists this is ok and we'll just carry on.
         try {
-            jsRules.invokeMethod(GLOBAL_PRE_FUNCTION, context);
+            String resultJson = jsRules.invokeMethod(GLOBAL_PRE_FUNCTION, context);
             log.debug("Ran rule: " + GLOBAL_PRE_FUNCTION);
+            return objectMapper.toObject(resultJson, ValidationResult.class);
         }
         catch (NoSuchMethodException ex) {
             // This is fine, I hope...
             log.warn("No default rule found: " + GLOBAL_PRE_FUNCTION);
         }
-        catch (RhinoException ex) {
+        catch (Exception ex) {
             throw new RuleExecutionException(ex);
         }
+        return new ValidationResult();
     }
 
     protected void callPostUnbindRules(List<Rule> matchingRules) {
@@ -490,13 +506,26 @@ public abstract class AbstractEntitlementRules implements Enforcer {
     }
 
     @Override
-    public PreEntHelper preEntitlement(Consumer consumer, Pool entitlementPool,
+    public ValidationResult preEntitlement(Consumer consumer, Pool entitlementPool,
         Integer quantity) {
 
         jsRules.reinitTo("entitlement_name_space");
         rulesInit();
 
-        return new PreEntHelper(1, null);
+        //return new PreEntHelper(1, null);
+        // FIXME MSTEAD
+        return new ValidationResult();
+    }
+
+    protected void logResult(ValidationResult result) {
+        if (log.isDebugEnabled()) {
+            for (ValidationError error : result.getErrors()) {
+                log.debug("  Rule error: " + error.getResourceKey());
+            }
+            for (ValidationWarning warning : result.getWarnings()) {
+                log.debug("  Rule warning: " + warning.getResourceKey());
+            }
+        }
     }
 
 }

@@ -20,8 +20,11 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.HashSet;
 
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
@@ -39,11 +42,9 @@ import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
-import org.candlepin.policy.js.ReadOnlyPool;
 import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.entitlement.ManifestEntitlementRules;
-import org.candlepin.policy.js.entitlement.PreEntHelper;
 import org.candlepin.policy.js.pool.PoolHelper;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
@@ -54,10 +55,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.util.HashSet;
 
 /**
  * CandlepinConsumerTypeEnforcerTest
@@ -143,9 +140,8 @@ public class ManifestEntitlementRulesTest extends DatabaseTestFixture {
         prod.setAttribute("sockets", "2");
         Pool p = TestUtil.createPool(prod);
 
-        PreEntHelper peh = enforcer.preEntitlement(c, p, 1);
-        assertNotNull(peh);
-        ValidationResult results = peh.getResult();
+        ValidationResult results = enforcer.preEntitlement(c, p, 1);
+        assertNotNull(results);
         assertTrue(results.getErrors().isEmpty());
     }
 
@@ -158,9 +154,8 @@ public class ManifestEntitlementRulesTest extends DatabaseTestFixture {
         Pool p = TestUtil.createPool(prod);
         p.setAttribute("pool_derived", "true");
 
-        PreEntHelper peh = enforcer.preEntitlement(c, p, 1);
-        assertNotNull(peh);
-        ValidationResult results = peh.getResult();
+        ValidationResult results = enforcer.preEntitlement(c, p, 1);
+        assertNotNull(results);
         assertEquals(1, results.getErrors().size());
         ValidationError error = results.getErrors().get(0);
         assertEquals("pool.not.available.to.manifest.consumers", error.getResourceKey());
@@ -175,9 +170,8 @@ public class ManifestEntitlementRulesTest extends DatabaseTestFixture {
         Pool p = TestUtil.createPool(prod);
         p.setQuantity(5L);
 
-        PreEntHelper peh = enforcer.preEntitlement(c, p, 10);
-        assertNotNull(peh);
-        ValidationResult results = peh.getResult();
+        ValidationResult results = enforcer.preEntitlement(c, p, 10);
+        assertNotNull(results);
         assertEquals(1, results.getErrors().size());
         ValidationError error = results.getErrors().get(0);
         assertEquals("rulefailed.no.entitlements.available", error.getResourceKey());

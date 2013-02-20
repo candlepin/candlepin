@@ -17,8 +17,8 @@ package org.candlepin.test;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
+import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.entitlement.Enforcer;
-import org.candlepin.policy.js.entitlement.PreEntHelper;
 import org.candlepin.policy.js.entitlement.PreUnbindHelper;
 import org.candlepin.policy.js.pool.PoolHelper;
 
@@ -35,9 +35,9 @@ public class EnforcerForTesting implements Enforcer {
     }
 
     @Override
-    public PreEntHelper preEntitlement(Consumer consumer, Pool enitlementPool,
+    public ValidationResult preEntitlement(Consumer consumer, Pool enitlementPool,
             Integer quantity) {
-        return new PreEntHelper(1, null);
+        return new ValidationResult();
     }
 
     public PreUnbindHelper preUnbind(Consumer consumer, Pool entitlementPool) {

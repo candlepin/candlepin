@@ -513,6 +513,23 @@ var Entitlement = {
             "requires_host:1:requires_host";
     },
 
+    ValidationResult: function () {
+        var result = {
+            errors: [],
+            warnings: [],
+
+            addWarning: function(message) {
+               this.warnings.push(message);
+            },
+
+            addError: function(message) {
+               this.errors.push(message);
+            }
+        };
+
+        return result;
+    },
+
     get_attribute_context: function() {
         context = eval(json_context);
 
@@ -544,7 +561,9 @@ var Entitlement = {
     },
 
     pre_virt_only: function() {
+        var result = Entitlement.ValidationResult();
         context = Entitlement.get_attribute_context();
+
         var virt_pool = 'true'.equalsIgnoreCase(context.getAttribute(context.pool, 'virt_only'));
         var guest = false;
         if (context.consumer.facts['virt.is_guest']) {
@@ -552,55 +571,66 @@ var Entitlement = {
         }
 
         if (virt_pool && !guest) {
-            pre.addError("rulefailed.virt.only");
+            result.addError("rulefailed.virt.only");
         }
+        return JSON.stringify(result);
     },
 
     pre_requires_host: function() {
+        var result = Entitlement.ValidationResult();
         context = Entitlement.get_attribute_context();
+
         // It shouldn't be possible to get a host restricted pool in hosted, but just in
         // case, make sure it won't be enforced if we do.
         if (!context.standalone) {
-            return;
+            return JSON.stringify(result);
         }
-        if (!context.consumer.facts["virt.uuid"]) {
-            pre.addError("rulefailed.virt.only");
-            return;
-        }
-        var hostConsumer = pre.getHostConsumer(context.consumer.facts["virt.uuid"]);
 
-        if (hostConsumer == null ||
-            !hostConsumer.getUuid().equals(context.getAttribute(context.pool,
-                                                                'requires_host'))) {
-            pre.addError("virt.guest.host.does.not.match.pool.owner");
+        if (!context.consumer.facts["virt.uuid"]) {
+            result.addError("rulefailed.virt.only");
+            return JSON.stringify(result);
         }
+
+        if (!context.hostConsumer ||
+            !context.hostConsumer.uuid.equals(context.getAttribute(context.pool,
+                                                                   'requires_host'))) {
+            result.addError("virt.guest.host.does.not.match.pool.owner");
+        }
+        return JSON.stringify(result);
     },
 
     pre_requires_consumer_type: function() {
+        var result = Entitlement.ValidationResult();
         context = Entitlement.get_attribute_context();
+
         var requiresConsumerType = context.getAttribute(context.pool, "requires_consumer_type");
         if (requiresConsumerType != null &&
             !requiresConsumerType.equals(context.consumer.type.label) &&
             !context.consumer.type.label.equals("uebercert")) {
-            pre.addError("rulefailed.consumer.type.mismatch");
+            result.addError("rulefailed.consumer.type.mismatch");
         }
+        return JSON.stringify(result);
     },
 
     pre_virt_limit: function() {
     },
 
     pre_architecture: function() {
+        var result = Entitlement.ValidationResult();
         context = Entitlement.get_attribute_context();
         if (!architectureMatches(context.pool.getProductAttribute('arch'),
                                  context.consumer.facts['uname.machine'],
                                  context.consumer.type.label,
                                  context.prodAttrSeparator)) {
-            pre.addWarning("rulewarning.architecture.mismatch");
+            result.addWarning("rulewarning.architecture.mismatch");
         }
+        return JSON.stringify(result);
     },
 
     pre_sockets: function() {
+        var result = Entitlement.ValidationResult();
         context = Entitlement.get_attribute_context();
+
         var consumer = context.consumer;
         var pool = context.pool;
 
@@ -609,12 +639,14 @@ var Entitlement = {
         if (consumer.facts[SOCKET_FACT] && !pool.getProductAttribute("stacking_id")) {
             if ((parseInt(pool.getProductAttribute("sockets")) > 0) &&
                 (parseInt(pool.getProductAttribute("sockets")) < parseInt(consumer.facts[SOCKET_FACT]))) {
-                pre.addWarning("rulewarning.unsupported.number.of.sockets");
+                result.addWarning("rulewarning.unsupported.number.of.sockets");
             }
         }
+        return JSON.stringify(result);
     },
 
     pre_ram: function() {
+        var result = Entitlement.ValidationResult();
         context = Entitlement.get_attribute_context();
         var consumerRam = get_consumer_ram(context.consumer);
         log.debug("Consumer has " + consumerRam + "GB of RAM.");
@@ -622,23 +654,26 @@ var Entitlement = {
         var productRam = parseInt(context.pool.getProductAttribute("ram"));
         log.debug("Product has " + productRam + "GB of RAM");
         if (consumerRam > productRam) {
-            pre.addWarning("rulewarning.unsupported.ram");
+            result.addWarning("rulewarning.unsupported.ram");
         }
+        return JSON.stringify(result);
     },
 
     pre_global: function() {
+        var result = Entitlement.ValidationResult();
         context = Entitlement.get_attribute_context();
         log.debug("INPUT: " + JSON.stringify(context));
+
         var consumer = context.consumer;
         var pool = context.pool;
         if (!consumer.type.manifest) {
             var isMultiEntitlement = pool.getProductAttribute("multi-entitlement");
             if (context.hasEntitlement(pool.id) && isMultiEntitlement != "yes") {
-                pre.addError("rulefailed.consumer.already.has.product");
+                result.addError("rulefailed.consumer.already.has.product");
             }
 
-            if (pre.getQuantity() > 1 && isMultiEntitlement != "yes") {
-                pre.addError("rulefailed.pool.does.not.support.multi-entitlement");
+            if (context.quantity > 1 && isMultiEntitlement != "yes") {
+                result.addError("rulefailed.pool.does.not.support.multi-entitlement");
             }
 
             // If the product has no required consumer type, assume it is restricted to "system".
@@ -646,13 +681,13 @@ var Entitlement = {
             if (!pool.getProductAttribute("requires_consumer_type")) {
                 if (!consumer.type.label.equals("system") && !consumer.type.label.equals("hypervisor") &&
                         !consumer.type.label.equals("uebercert")) {
-                    pre.addError("rulefailed.consumer.type.mismatch");
+                    result.addError("rulefailed.consumer.type.mismatch");
                 }
 
             }
 
             if (pool.restrictedToUsername != null && !pool.restrictedToUsername.equals(consumer.username)) {
-                pre.addError("pool.not.available.to.user, pool= '" + pool.restrictedToUsername + "', actual username='" + consumer.username + "'" );
+                result.addError("pool.not.available.to.user, pool= '" + pool.restrictedToUsername + "', actual username='" + consumer.username + "'" );
             }
         }
 
@@ -661,9 +696,10 @@ var Entitlement = {
         // they can bind to we must use pre_global, which is used for manifest consumers.
         else {
             if (pool.getAttribute("pool_derived")) {
-                pre.addError("pool.not.available.to.manifest.consumers");
+                result.addError("pool.not.available.to.manifest.consumers");
             }
         }
+        return JSON.stringify(result);
     },
 
 }
