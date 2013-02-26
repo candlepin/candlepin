@@ -22,12 +22,12 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
 import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
+import org.codehaus.jackson.map.ser.impl.SimpleBeanPropertyFilter;
 import org.codehaus.jackson.map.ser.impl.SimpleFilterProvider;
 import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.exceptions.IseException;
-import org.candlepin.jackson.ExportBeanPropertyFilter;
 
 /**
  * SyncUtils
@@ -54,10 +54,11 @@ class SyncUtils {
         mapper.setAnnotationIntrospector(pair);
         mapper.configure(SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS, false);
 
-        // Since each class can only have one @JsonFilter annotation, and most have
-        // ApiHateoas, We just default here to using the Export filter.
+        // Filter specific things we do not want exported:
         SimpleFilterProvider filterProvider = new SimpleFilterProvider();
-        filterProvider.setDefaultFilter(new ExportBeanPropertyFilter());
+        filterProvider.setFailOnUnknownId(false);
+        filterProvider = filterProvider.addFilter("EntitlementFilter",
+            SimpleBeanPropertyFilter.serializeAllExcept("consumer"));
         mapper.setFilters(filterProvider);
 
         if (config != null) {

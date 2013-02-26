@@ -33,6 +33,7 @@ import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductPoolAttribute;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Subscription;
+import org.candlepin.policy.js.AttributeHelper;
 import org.candlepin.policy.js.ProductCache;
 
 /**
@@ -40,7 +41,7 @@ import org.candlepin.policy.js.ProductCache;
  * post entitlement javascript functions allowing them to perform a specific set
  * of operations we support.
  */
-public class PoolHelper {
+public class PoolHelper extends AttributeHelper {
 
     private PoolManager poolManager;
     private ProductCache productCache;

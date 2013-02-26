@@ -12,18 +12,22 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.jackson;
+package org.candlepin.policy.js;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.util.Map.Entry;
+
+import org.mozilla.javascript.Scriptable;
 
 /**
- * SkipExport: Annotation used with JsonFilter and our ExportBeanPropertyFilter.
- * Apply to the getter's of properties that are to be set to null in the export manifest.
+ * ArguementRuleContext
  */
-@Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.METHOD})
-public @interface SkipExport {
+public class ArgumentJsContext extends JsContext {
+
+    @Override
+    public void applyTo(Scriptable scope) {
+        for (Entry<String, Object> entry : this.contextArgs.entrySet()) {
+            scope.put(entry.getKey(), scope, entry.getValue());
+        }
+    }
+
 }

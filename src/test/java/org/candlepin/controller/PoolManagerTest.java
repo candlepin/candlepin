@@ -60,6 +60,7 @@ import org.candlepin.model.Subscription;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.criteria.CriteriaRules;
 import org.candlepin.policy.js.ProductCache;
+import org.candlepin.policy.js.autobind.AutobindRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.entitlement.Enforcer;
@@ -103,6 +104,8 @@ public class PoolManagerTest {
     @Mock
     private Enforcer enforcerMock;
     @Mock
+    private AutobindRules autobindRules;
+    @Mock
     private PoolRules poolRulesMock;
     @Mock
     private CriteriaRules poolCriteriaMock;
@@ -139,7 +142,8 @@ public class PoolManagerTest {
         this.manager = spy(new CandlepinPoolManager(mockPoolCurator, mockSubAdapter,
             productCache, entCertAdapterMock, mockEventSink, eventFactory,
             mockConfig, enforcerMock, poolRulesMock, entitlementCurator,
-            consumerCuratorMock, certCuratorMock, complianceRules, envCurator));
+            consumerCuratorMock, certCuratorMock, complianceRules, envCurator,
+            autobindRules));
 
         when(entCertAdapterMock.generateEntitlementCert(any(Entitlement.class),
             any(Subscription.class), any(Product.class))).thenReturn(
@@ -308,8 +312,6 @@ public class PoolManagerTest {
         when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(pool);
 
         PreUnbindHelper preHelper =  mock(PreUnbindHelper.class);
-        when(enforcerMock.preUnbind(eq(c), eq(pool)))
-            .thenReturn(preHelper);
         ValidationResult result = new ValidationResult();
         when(preHelper.getResult()).thenReturn(result);
 
@@ -326,8 +328,6 @@ public class PoolManagerTest {
         List<Pool> poolsWithSource = createPoolsWithSourceEntitlement(e, product);
         when(mockPoolCurator.listBySourceEntitlement(e)).thenReturn(poolsWithSource);
         PreUnbindHelper preHelper =  mock(PreUnbindHelper.class);
-        when(enforcerMock.preUnbind(eq(e.getConsumer()), eq(e.getPool())))
-            .thenReturn(preHelper);
         ValidationResult result = new ValidationResult();
         when(preHelper.getResult()).thenReturn(result);
         when(mockConfig.standalone()).thenReturn(true);
@@ -367,7 +367,7 @@ public class PoolManagerTest {
 
         List<PoolQuantity> bestPools = new ArrayList<PoolQuantity>();
         bestPools.add(new PoolQuantity(pool1, 1));
-        when(enforcerMock.selectBestPools(any(Consumer.class), any(String[].class),
+        when(autobindRules.selectBestPools(any(Consumer.class), any(String[].class),
             any(List.class), any(ComplianceStatus.class), any(String.class),
             any(Set.class)))
             .thenReturn(bestPools);
@@ -419,8 +419,6 @@ public class PoolManagerTest {
         poolEntitlements.add(ent);
 
         when(mockPoolCurator.entitlementsIn(eq(p))).thenReturn(poolEntitlements);
-        when(enforcerMock.preUnbind(eq(ent.getConsumer()),
-            eq(ent.getPool()))).thenReturn(preHelper);
 
         ValidationResult result = new ValidationResult();
         when(preHelper.getResult()).thenReturn(result);
@@ -452,9 +450,6 @@ public class PoolManagerTest {
         when(mockPoolCurator.entitlementsIn(p)).thenReturn(
                 new ArrayList<Entitlement>(p.getEntitlements()));
         PreUnbindHelper preHelper =  mock(PreUnbindHelper.class);
-        for (Entitlement e : p.getEntitlements()) {
-            when(enforcerMock.preUnbind(eq(e.getConsumer()), eq(p))).thenReturn(preHelper);
-        }
         ValidationResult result = new ValidationResult();
         when(preHelper.getResult()).thenReturn(result);
 
@@ -516,7 +511,7 @@ public class PoolManagerTest {
 
         List<PoolQuantity> bestPools = new ArrayList<PoolQuantity>();
         bestPools.add(new PoolQuantity(pool1, 1));
-        when(enforcerMock.selectBestPools(any(Consumer.class), any(String[].class),
+        when(autobindRules.selectBestPools(any(Consumer.class), any(String[].class),
             any(List.class), any(ComplianceStatus.class), any(String.class),
             any(Set.class)))
             .thenReturn(bestPools);
@@ -525,7 +520,7 @@ public class PoolManagerTest {
         manager.entitleByProducts(TestUtil.createConsumer(o),
             null, now);
 
-        verify(enforcerMock).selectBestPools(any(Consumer.class), eq(installedPids),
+        verify(autobindRules).selectBestPools(any(Consumer.class), eq(installedPids),
             any(List.class), eq(mockCompliance), any(String.class),
             any(Set.class));
     }

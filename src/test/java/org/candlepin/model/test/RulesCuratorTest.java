@@ -15,12 +15,12 @@
 package org.candlepin.model.test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+
 
 import org.candlepin.model.Rules;
+import org.candlepin.policy.js.RuleParseException;
 import org.candlepin.test.DatabaseTestFixture;
-import org.candlepin.util.VersionUtil;
-import org.candlepin.util.VersionUtilTest;
-import org.junit.After;
 import org.junit.Test;
 
 /**
@@ -28,16 +28,10 @@ import org.junit.Test;
  */
 public class RulesCuratorTest extends DatabaseTestFixture {
 
-    @After
-    public void tearDown() throws Exception {
-        VersionUtilTest.writeoutVersion("${version}", "${release}");
-    }
-
     @Test
     public void deleteRules() {
         Rules origRules = rulesCurator.getRules();
-        Rules rules = new Rules("//these are the new rules",
-            VersionUtil.getVersionString());
+        Rules rules = new Rules("// Version: 2.0\n//these are the new rules");
         Rules newRules = rulesCurator.update(rules);
         rulesCurator.delete(newRules);
         Rules latestRules = rulesCurator.getRules();
@@ -45,21 +39,40 @@ public class RulesCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void ignoreOldRulesInDb() throws Exception {
-        VersionUtilTest.writeoutVersion("0.7.16", "1");
-        String oldVersion = "0.0.1-1";
-        Rules oldRules = new Rules("//oldrules", oldVersion);
-        rulesCurator.create(oldRules);
-        Rules rules = rulesCurator.getRules();
-        assertEquals("0.7.16", rules.getCandlepinVersion());
+    public void versionParsing() {
+        Rules rules = new Rules("// Version: 2.0.0\n//oldrules");
+        assertEquals("2.0.0", rules.getVersion());
+        rules = new Rules("//Version: 2.0.0\n//oldrules");
+        assertEquals("2.0.0", rules.getVersion());
+        rules = new Rules("// Version: 2.0.0  \n//oldrules");
+        assertEquals("2.0.0", rules.getVersion());
+        rules = new Rules("// version: 2.0\n//oldrules");
+        assertEquals("2.0", rules.getVersion());
+        rules = new Rules("# Version: 2.0\n//oldrules");
+        assertEquals("2.0", rules.getVersion());
     }
 
-    public void ignoreOldRulesInDbDefaultVersion() throws Exception {
-        VersionUtilTest.writeoutVersion("0.7.16", "1");
-        Rules oldRules = new Rules("//oldrules", "0.0.0"); // default set by upgrade script
+    @Test(expected = RuleParseException.class)
+    public void
+    missingVersion() {
+        Rules rules = new Rules("// version:\n//something else");
+    }
+
+    @Test
+    public void ignoreOldRulesInDb() throws Exception {
+        Rules oldRules = new Rules("// Version: 1.9\n//oldrules");
         rulesCurator.create(oldRules);
         Rules rules = rulesCurator.getRules();
-        assertEquals("0.7.16", rules.getCandlepinVersion());
+        assertFalse("1.9".equals(rules.getVersion()));
+    }
+
+    @Test
+    public void ignoreOldRulesInDbDefaultVersion() throws Exception {
+        // Default version set by upgrade script:
+        Rules oldRules = new Rules("// Version: 0.0\n//oldrules");
+        rulesCurator.create(oldRules);
+        Rules rules = rulesCurator.getRules();
+        assertFalse("0.0".equals(rules.getVersion()));
     }
 
     @Test
@@ -76,8 +89,7 @@ public class RulesCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void uploadRules() {
-        Rules rules = new Rules("//these are the new rules",
-            VersionUtil.getVersionString());
+        Rules rules = new Rules("// Version: 2.0\n//these are the new rules");
         Rules newRules = rulesCurator.update(rules);
         Rules updateRules = rulesCurator.getRules();
         assertEquals(rules.getRules(), updateRules.getRules());
@@ -85,9 +97,9 @@ public class RulesCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void uploadMultipleRules() {
-        Rules rules = new Rules("// rules1 ", VersionUtil.getVersionString());
+        Rules rules = new Rules("// Version: 2.0\n// rules1 ");
         Rules newRules = rulesCurator.update(rules);
-        Rules rules2 = new Rules("// rules2 ", VersionUtil.getVersionString());
+        Rules rules2 = new Rules("// Version: 2.0\n// rules2 ");
         Rules newRules2 = rulesCurator.update(rules2);
         Rules updateRules = rulesCurator.getRules();
         assertEquals(rules2.getRules(), updateRules.getRules());

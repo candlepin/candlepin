@@ -30,7 +30,6 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolAttribute;
-import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.Rules;
@@ -55,9 +54,7 @@ import org.mockito.MockitoAnnotations;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 
 /**
  * CandlepinConsumerTypeEnforcerTest
@@ -74,11 +71,6 @@ public class ManifestEntitlementRulesTest extends DatabaseTestFixture {
     private Consumer consumer;
     private JsRunner jsRules;
     private ProductCache productCache;
-
-    private static final String LONGEST_EXPIRY_PRODUCT = "LONGEST001";
-    private static final String HIGHEST_QUANTITY_PRODUCT = "QUANTITY001";
-    private static final String BAD_RULE_PRODUCT = "BADRULE001";
-    private static final String PRODUCT_CPULIMITED = "CPULIMITED001";
 
     @Before
     public void createEnforcer() throws Exception {
@@ -156,29 +148,6 @@ public class ManifestEntitlementRulesTest extends DatabaseTestFixture {
         assertNotNull(peh);
         peh.checkQuantity(roPool);
         verify(roPool).entitlementsAvailable(eq(10));
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void bestPoolsNull() {
-        enforcer.selectBestPools(null, null, null, compliance, null,
-            new HashSet<String>());
-    }
-
-    @Test
-    public void bestPoolEmpty() {
-        assertEquals(null,
-            enforcer.selectBestPools(null, null, new ArrayList<Pool>(),
-                compliance, null, new HashSet<String>()));
-    }
-
-    @Test
-    public void bestPool() {
-        List<PoolQuantity> pools = new ArrayList<PoolQuantity>();
-        List<Pool> allPools = new ArrayList<Pool>();
-        allPools.add(mock(Pool.class));
-        pools.add(new PoolQuantity(allPools.get(0), 1));
-        assertEquals(pools.get(0), enforcer.selectBestPools(null, null, allPools,
-            compliance, null, new HashSet<String>()).get(0));
     }
 
 }

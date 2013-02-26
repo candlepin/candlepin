@@ -14,35 +14,40 @@
  */
 package org.candlepin.policy.js.consumer;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 import com.google.inject.Inject;
+
+import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
-import org.candlepin.policy.js.JsRunner;
-import org.candlepin.policy.js.ReadOnlyConsumer;
+import org.candlepin.model.Pool;
+import org.candlepin.model.PoolCurator;
 
 /**
  * ConsumerRules
  */
 public class ConsumerRules {
 
-    private JsRunner jsRules;
+    private PoolCurator poolCurator;
+    private PoolManager poolManager;
 
     @Inject
-    public ConsumerRules(JsRunner jsRules) {
-        this.jsRules = jsRules;
-        jsRules.init("consumer_delete_name_space");
+    public ConsumerRules(PoolManager poolManager, PoolCurator poolCurator) {
+        this.poolManager = poolManager;
+        this.poolCurator = poolCurator;
     }
 
-    public ConsumerDeleteHelper onConsumerDelete(
-            ConsumerDeleteHelper consumerDeleteHelper, Consumer consumer) {
-        Map<String, Object> args = new HashMap<String, Object>();
-        args.put("consumer", new ReadOnlyConsumer(consumer));
-        args.put("helper", consumerDeleteHelper);
+    public void onConsumerDelete(Consumer consumer) {
 
-        jsRules.invokeRule("global", args);
+        // Cleanup user restricted pools:
+        if (consumer.getType().getLabel().equals("person")) {
+            List<Pool> userRestrictedPools = poolCurator
+                .listPoolsRestrictedToUser(consumer.getUsername());
 
-        return consumerDeleteHelper;
+            for (Pool pool : userRestrictedPools) {
+                poolManager.deletePool(pool);
+            }
+
+        }
     }
 }

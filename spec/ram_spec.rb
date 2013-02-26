@@ -6,9 +6,9 @@ describe 'RAM Limiting' do
 
   before(:each) do
     @owner = create_owner random_string('test_owner')
-    
+
     # Create a product limiting by RAM only.
-    @ram_product = create_product(nil, random_string("Product1"), :attributes => 
+    @ram_product = create_product(nil, random_string("Product1"), :attributes =>
                 {:version => '6.4',
                  :ram => 8,
                  :warning_period => 15,
@@ -18,7 +18,7 @@ describe 'RAM Limiting' do
     @ram_sub = @cp.create_subscription(@owner['key'], @ram_product.id, 10, [], '1888', '1234')
 
     # Create a product limiting by RAM and sockets.
-    @ram_and_socket_product = create_product(nil, random_string("Product2"), :attributes => 
+    @ram_and_socket_product = create_product(nil, random_string("Product2"), :attributes =>
                 {:version => '1.2',
                  :ram => 8,
                  :sockets => 4,
@@ -49,7 +49,7 @@ describe 'RAM Limiting' do
                 {'system.certificate_version' => '3.0',
                  # Since cert v3 is disabled by default, configure consumer bypass.
                  'system.testing' => 'true'})
-                 
+
     installed = [
         {'productId' => @ram_sub.id,
         'productName' => @ram_sub.name}
@@ -75,7 +75,7 @@ describe 'RAM Limiting' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
                 # cert v3 is currently disabled by default.
                 {'system.certificate_version' => '3.1'})
-    
+
     installed = [
         {'productId' => @ram_sub.id,
         'productName' => @ram_sub.name}
@@ -84,7 +84,7 @@ describe 'RAM Limiting' do
 
     pool = find_pool(@owner.id, @ram_sub.id)
     pool.should_not == nil
-    
+
     expected_error = "The server does not support subscriptions requiring V3 certificates."
     begin
       response = system.consume_pool(pool.id)
@@ -107,10 +107,10 @@ describe 'RAM Limiting' do
         {'productId' => @ram_product.id, 'productName' => @ram_product.name}
     ]
     system.update_consumer({:installedProducts => installed})
-    
+
     entitlement = system.consume_product(@ram_product.id)[0]
     entitlement.should_not == nil
-    
+
     compliance_status = @cp.get_compliance(consumer_id=system.uuid)
     compliance_status['status'].should == 'valid'
     compliance_status['compliant'].should == true
@@ -129,20 +129,20 @@ describe 'RAM Limiting' do
         {'productId' => @ram_product.id, 'productName' => @ram_product.name}
     ]
     system.update_consumer({:installedProducts => installed})
-    
+
     pool = find_pool(@owner.id, @ram_sub.id)
     pool.should_not == nil
-    
+
     entitlement = system.consume_pool(pool.id)
     entitlement.should_not == nil
-    
+
     compliance_status = @cp.get_compliance(consumer_id=system.uuid)
     compliance_status['status'].should == 'partial'
     compliance_status['compliant'].should == false
     partially_compliant_products = compliance_status['partiallyCompliantProducts']
     partially_compliant_products.should have_key(@ram_product.id)
   end
-  
+
   it 'consumer status should be partial when consumer RAM covered but not sockets' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
                 {'system.certificate_version' => '3.1',
@@ -162,17 +162,17 @@ describe 'RAM Limiting' do
 
     pool = find_pool(@owner.id, @ram_socket_sub.id)
     pool.should_not == nil
-    
+
     entitlement = system.consume_pool(pool.id)
     entitlement.should_not == nil
-    
+
     compliance_status = @cp.get_compliance(consumer_id=system.uuid)
     compliance_status['status'].should == 'partial'
     compliance_status['compliant'].should == false
     partially_compliant_products = compliance_status['partiallyCompliantProducts']
     partially_compliant_products.should have_key(@ram_and_socket_product.id)
   end
-  
+
   it 'consumer status should be partial when consumer sockets covered but not RAM' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
                 {'system.certificate_version' => '3.1',
@@ -192,7 +192,7 @@ describe 'RAM Limiting' do
 
     pool = find_pool(@owner.id, @ram_socket_sub.id)
     pool.should_not == nil
-    
+
     entitlement = system.consume_pool(pool.id)
     entitlement.should_not == nil
 
@@ -202,7 +202,7 @@ describe 'RAM Limiting' do
     partially_compliant_products = compliance_status['partiallyCompliantProducts']
     partially_compliant_products.should have_key(@ram_and_socket_product.id)
   end
-  
+
   it 'consumer status is valid when both RAM and sockets are covered' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
                 {'system.certificate_version' => '3.1',
@@ -221,14 +221,14 @@ describe 'RAM Limiting' do
     system.update_consumer({:installedProducts => installed})
     entitlement = system.consume_product(@ram_and_socket_product.id)[0]
     entitlement.should_not == nil
-    
+
     compliance_status = @cp.get_compliance(consumer_id=system.uuid)
     compliance_status['status'].should == 'valid'
     compliance_status['compliant'].should == true
     compliant_products = compliance_status['compliantProducts']
     compliant_products.should have_key(@ram_and_socket_product.id)
   end
-  
+
   it 'can heal when RAM limited' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
                 {'system.certificate_version' => '3.1',
@@ -240,12 +240,12 @@ describe 'RAM Limiting' do
         {'productId' => @ram_product.id, 'productName' => @ram_product.name}
     ]
     system.update_consumer({:installedProducts => installed})
-    
+
     # Perform healing
     ents = system.consume_product()
     ents.size.should == 1
   end
-  
+
   it 'will not heal when system RAM is not covered by any entitlements' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
                 {'system.certificate_version' => '3.1',
@@ -257,12 +257,12 @@ describe 'RAM Limiting' do
         {'productId' => @ram_product.id, 'productName' => @ram_product.name}
     ]
     system.update_consumer({:installedProducts => installed})
-    
+
     # Perform healing
     ents = system.consume_product()
     ents.should == nil
   end
-  
+
   it 'can heal when both RAM and socket limited' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
                 {'system.certificate_version' => '3.1',
@@ -279,11 +279,11 @@ describe 'RAM Limiting' do
         'productName' => @ram_and_socket_product.name}
     ]
     system.update_consumer({:installedProducts => installed})
-    
+
     # Perform healing
     ents = system.consume_product()
     ents.size.should == 1
   end
-  
+
 end
 

@@ -14,22 +14,26 @@
  */
 package org.candlepin.policy.criteria;
 
-import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.candlepin.config.Config;
-import org.candlepin.exceptions.IseException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
-import org.candlepin.policy.js.JsRunner;
+import org.candlepin.model.PoolAttribute;
+import org.candlepin.model.ProductPoolAttribute;
 import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Projections;
+import org.hibernate.criterion.Property;
+import org.hibernate.criterion.Restrictions;
+import org.hibernate.criterion.Subqueries;
 
 import com.google.inject.Inject;
 
 /**
- * RulesCriteria
+ * CriteriaRules
  *
  * A class used to generate database criteria for filtering
  * out rules that are not applicable for a consumer before
@@ -39,36 +43,28 @@ import com.google.inject.Inject;
 public class CriteriaRules  {
     protected Logger rulesLogger = null;
 
-    protected JsRunner jsRules;
     protected Config config;
     protected ConsumerCurator consumerCurator;
     protected static Logger log = Logger.getLogger(CriteriaRules.class);
 
-    private static String jsNameSpace = "criteria_name_space";
     @Inject
-    public CriteriaRules(JsRunner jsRules, Config config,
+    public CriteriaRules(Config config,
             ConsumerCurator consumerCurator) {
-        this.jsRules = jsRules;
         this.config = config;
         this.consumerCurator = consumerCurator;
         this.rulesLogger = Logger.getLogger(
             CriteriaRules.class.getCanonicalName() + ".rules");
-        jsRules.init(jsNameSpace);
     }
 
-
     /**
-     * Create a List of jpa criterion that can filter out pools
-     *         that are not applicable to consumer
+     * Create a List of jpa criterion that can filter out pools that are not
+     * applicable to consumer. Helps to scale down large numbers of pools specifically
+     * with virt_limit subscriptions.
      *
      * @param consumer The consumer we are filtering pools for
      * @return List of Criterion
      */
     public List<Criterion> availableEntitlementCriteria(Consumer consumer) {
-        Map<String, Object> args = new HashMap<String, Object>();
-        args.put("standalone", config.standalone());
-        args.put("log", rulesLogger);
-        args.put("consumer", consumer);
 
         // avoid passing in a consumerCurator just to get the host
         // consumer uuid
@@ -76,17 +72,61 @@ public class CriteriaRules  {
         if (consumer.getFact("virt.uuid") != null) {
             hostConsumer = consumerCurator.getHost(consumer.getFact("virt.uuid"));
         }
-        args.put("hostConsumer", hostConsumer);
 
-        List<Criterion> poolsCriteria = null;
-        try {
-            poolsCriteria = jsRules.invokeMethod("poolCriteria", args);
+        List<Criterion> criteriaFilters = new LinkedList<Criterion>();
+        // Don't load virt_only pools if this consumer isn't a guest:
+        if (!"true".equalsIgnoreCase(consumer.getFact("virt.is_guest"))) {
+            // not a guest
+            DetachedCriteria noVirtOnlyPoolAttr =
+                DetachedCriteria.forClass(
+                        PoolAttribute.class, "pool_attr")
+                    .add(Restrictions.eq("name", "virt_only"))
+                    .add(Restrictions.eq("value", "true"))
+                    .add(Property.forName("this.id")
+                            .eqProperty("pool_attr.pool.id"))
+                    .setProjection(Projections.property("pool_attr.id"));
+            criteriaFilters.add(Subqueries.notExists(
+                    noVirtOnlyPoolAttr));
+
+            // same criteria but for PoolProduct attributes
+            // not sure if this should be two seperate criteria, or if it's
+            // worth it to combine in some clever fashion
+            DetachedCriteria noVirtOnlyProductAttr =
+                DetachedCriteria.forClass(
+                        ProductPoolAttribute.class, "prod_attr")
+                    .add(Restrictions.eq("name", "virt_only"))
+                    .add(Restrictions.eq("value", "true"))
+                    .add(Property.forName("this.id")
+                            .eqProperty("prod_attr.pool.id"))
+                    .setProjection(Projections.property("prod_attr.id"));
+            criteriaFilters.add(Subqueries.notExists(
+                    noVirtOnlyProductAttr));
+
         }
-        catch (NoSuchMethodException e) {
-            log.error("Unable to find javascript method: poolCriteria", e);
-            throw new IseException("Unable to create pool criteria.");
+        else {
+            // we are a virt guest
+            // add criteria for filtering out pools that are not for this guest
+            if (consumer.hasFact("virt.uuid")) {
+                String hostUuid = ""; // need a default value in case there is no host
+                if (hostConsumer != null) {
+                    hostUuid = hostConsumer.getUuid();
+                }
+                DetachedCriteria noRequiresHost = DetachedCriteria.forClass(
+                        PoolAttribute.class, "attr")
+                        .add(Restrictions.eq("name", "requires_host"))
+                        //  Note: looking for pools that are not for this guest
+                        .add(Restrictions.ne("value", hostUuid))
+                        .add(Property.forName("this.id")
+                                .eqProperty("attr.pool.id"))
+                                .setProjection(Projections.property("attr.id"));
+                // we do want everything else
+                criteriaFilters.add(Subqueries.notExists(
+                        noRequiresHost));
+            }
+            // no virt.uuid, we can't try to filter
         }
-        return poolsCriteria;
+
+        return criteriaFilters;
     }
 
 

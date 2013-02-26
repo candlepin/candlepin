@@ -44,7 +44,7 @@ import org.hibernate.annotations.GenericGenerator;
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_owner")
-@JsonFilter("ApiHateoas")
+@JsonFilter("OwnerFilter")
 public class Owner extends AbstractHibernateObject implements Serializable,
     Linkable, Owned {
 

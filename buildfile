@@ -95,7 +95,7 @@ HORNETQ = [group('hornetq-core',
 
 SCHEMASPY = 'net.sourceforge:schemaSpy:jar:4.1.1'
 
-RHINO = 'rhino:js:jar:1.7R2'
+RHINO = 'org.mozilla:rhino:jar:1.7R3'
 
 LOGDRIVER = 'logdriver:logdriver:jar:1.0'
 

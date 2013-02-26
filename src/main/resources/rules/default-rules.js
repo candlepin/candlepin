@@ -1,5 +1,9 @@
 /*
- * Default Candlepin rule set.
+ * WARNING: DEPRECATED
+ *
+ * This rules file has been replaced by the versioned file in rules.js. Do
+ * not edit anything here, this file is not imported on newer candlepin's
+ * and only remains in manifests to appease old deployments.
  */
 
 

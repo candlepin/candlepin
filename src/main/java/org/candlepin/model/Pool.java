@@ -57,7 +57,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @Table(name = "cp_pool", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"subscriptionid", "subscriptionsubkey"})})
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonFilter("EventHateoas")
+@JsonFilter("PoolFilter")
 public class Pool extends AbstractHibernateObject implements Persisted, Owned {
 
     @Id
