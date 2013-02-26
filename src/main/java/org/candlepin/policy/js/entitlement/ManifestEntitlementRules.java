@@ -14,21 +14,15 @@
  */
 package org.candlepin.policy.js.entitlement;
 
-import java.util.Map;
-
 import org.apache.log4j.Logger;
 import org.candlepin.config.Config;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Pool;
-import org.candlepin.policy.ValidationError;
-import org.candlepin.policy.ValidationWarning;
-import org.candlepin.policy.js.ArgumentJsContext;
+import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.JsRunner;
+import org.candlepin.policy.js.JsonJsContext;
 import org.candlepin.policy.js.ProductCache;
-import org.candlepin.policy.js.ReadOnlyConsumer;
-import org.candlepin.policy.js.ReadOnlyPool;
-import org.candlepin.policy.js.ReadOnlyProduct;
 import org.candlepin.util.DateSource;
 import org.xnap.commons.i18n.I18n;
 
@@ -60,16 +54,13 @@ public class ManifestEntitlementRules extends AbstractEntitlementRules implement
     }
 
     @Override
-    public PreEntHelper preEntitlement(Consumer consumer, Pool entitlementPool,
+    public ValidationResult preEntitlement(Consumer consumer, Pool entitlementPool,
         Integer quantity) {
 
         jsRules.reinitTo("entitlement_name_space");
         rulesInit();
 
-        PreEntHelper preHelper = runPreEntitlement(consumer, entitlementPool,
-            quantity);
-
-        return preHelper;
+        return runPreEntitlement(consumer, entitlementPool, quantity);
     }
 
     /**
@@ -81,40 +72,31 @@ public class ManifestEntitlementRules extends AbstractEntitlementRules implement
      * @param quantity
      * @return
      */
-    private PreEntHelper runPreEntitlement(Consumer consumer, Pool pool, Integer quantity) {
-        PreEntHelper preHelper = new PreEntHelper(quantity, consumerCurator);
+    private ValidationResult runPreEntitlement(Consumer consumer, Pool pool,
+        Integer quantity) {
 
         // Provide objects for the script:
         String topLevelProductId = pool.getProductId();
-        ReadOnlyProduct product = new ReadOnlyProduct(topLevelProductId,
-            pool.getProductName(),
-            preHelper.getFlattenedAttributes(pool.getProductAttributes()));
-        Map<String, String> allAttributes = preHelper.getFlattenedAttributes(pool);
 
-        ArgumentJsContext args = new ArgumentJsContext();
-        args.put("consumer", new ReadOnlyConsumer(consumer));
-        args.put("product", product);
-        args.put("pool", new ReadOnlyPool(pool));
-        args.put("pre", preHelper);
-        args.put("attributes", allAttributes);
+        JsonJsContext args = new JsonJsContext(this.objectMapper);
+        args.put("consumer", consumer);
+        // Entitlements are put into the context seperately because they do
+        // not get serialized along with the Consumer.
+        args.put("consumerEntitlements", consumer.getEntitlements());
+        args.put("pool", pool);
         args.put("prodAttrSeparator", PROD_ARCHITECTURE_SEPARATOR);
         args.put("standalone", config.standalone());
-        args.put("log", rulesLogger);
+
+        // Can't serialize these objects.
+        args.put("log", rulesLogger, false);
 
         log.debug("Running pre-entitlement global rule for: " + consumer.getUuid() +
             " product: " + topLevelProductId);
 
-        invokeGlobalPreEntitlementRule(args);
+        ValidationResult result = invokeGlobalPreEntitlementRule(args);
+        validatePoolQuantity(result, pool, quantity);
+        logResult(result);
 
-        if (log.isDebugEnabled()) {
-            for (ValidationError error : preHelper.getResult().getErrors()) {
-                log.debug("  Rule error: " + error.getResourceKey());
-            }
-            for (ValidationWarning warning : preHelper.getResult().getWarnings()) {
-                log.debug("  Rule warning: " + warning.getResourceKey());
-            }
-        }
-
-        return preHelper;
+        return result;
     }
 }

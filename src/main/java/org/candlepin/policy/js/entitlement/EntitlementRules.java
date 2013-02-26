@@ -14,9 +14,8 @@
  */
 package org.candlepin.policy.js.entitlement;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.candlepin.config.Config;
@@ -24,12 +23,11 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.policy.ValidationError;
-import org.candlepin.policy.ValidationWarning;
+import org.candlepin.policy.ValidationResult;
+import org.candlepin.policy.js.AttributeHelper;
 import org.candlepin.policy.js.JsRunner;
+import org.candlepin.policy.js.JsonJsContext;
 import org.candlepin.policy.js.ProductCache;
-import org.candlepin.policy.js.ReadOnlyConsumer;
-import org.candlepin.policy.js.ReadOnlyPool;
-import org.candlepin.policy.js.ReadOnlyProduct;
 import org.candlepin.util.DateSource;
 import org.xnap.commons.i18n.I18n;
 
@@ -57,66 +55,63 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         log = Logger.getLogger(EntitlementRules.class);
         rulesLogger =
             Logger.getLogger(EntitlementRules.class.getCanonicalName() + ".rules");
-
     }
 
     @Override
-    public PreEntHelper preEntitlement(Consumer consumer, Pool entitlementPool,
+    public ValidationResult preEntitlement(Consumer consumer, Pool entitlementPool,
         Integer quantity) {
 
         jsRules.reinitTo("entitlement_name_space");
         rulesInit();
 
-        PreEntHelper preHelper = runPreEntitlement(consumer, entitlementPool,
-            quantity);
+        ValidationResult result = runPreEntitlement(consumer, entitlementPool, quantity);
+        validatePoolQuantity(result, entitlementPool, quantity);
 
         if (entitlementPool.isExpired(dateSource)) {
-            preHelper.getResult().addError(
+            result.addError(
                 new ValidationError(i18n.tr("Subscriptions for {0} expired on: {1}",
                     entitlementPool.getProductId(),
                     entitlementPool.getEndDate())));
         }
 
-        return preHelper;
+        return result;
     }
 
-    private PreEntHelper runPreEntitlement(Consumer consumer, Pool pool, Integer quantity) {
-        PreEntHelper preHelper = new PreEntHelper(quantity, consumerCurator);
-
+    private ValidationResult runPreEntitlement(Consumer consumer, Pool pool,
+        Integer quantity) {
         // Provide objects for the script:
-        String topLevelProductId = pool.getProductId();
-        ReadOnlyProduct product = new ReadOnlyProduct(topLevelProductId,
-            pool.getProductName(),
-            preHelper.getFlattenedAttributes(pool.getProductAttributes()));
-        Map<String, String> allAttributes = preHelper.getFlattenedAttributes(pool);
+        JsonJsContext context = new JsonJsContext(this.objectMapper);
+        context.put("consumer", consumer);
+        // Entitlements are put into the context seperately because they do
+        // not get serialized along with the Consumer.
+        context.put("consumerEntitlements", consumer.getEntitlements());
+        context.put("pool", pool);
+        context.put("prodAttrSeparator", PROD_ARCHITECTURE_SEPARATOR);
+        context.put("standalone", config.standalone());
+        context.put("quantity", quantity);
 
-        Map<String, Object> args = new HashMap<String, Object>();
-        args.put("consumer", new ReadOnlyConsumer(consumer));
-        args.put("product", product);
-        args.put("pool", new ReadOnlyPool(pool));
-        args.put("pre", preHelper);
-        args.put("attributes", allAttributes);
-        args.put("prodAttrSeparator", PROD_ARCHITECTURE_SEPARATOR);
-        args.put("standalone", config.standalone());
-        args.put("log", rulesLogger);
-
-        log.debug("Running pre-entitlement rules for: " + consumer.getUuid() +
-            " product: " + topLevelProductId);
-        List<Rule> matchingRules
-            = rulesForAttributes(allAttributes.keySet(), attributesToRules);
-
-        callPreEntitlementRules(matchingRules, args);
-
-        if (log.isDebugEnabled()) {
-            for (ValidationError error : preHelper.getResult().getErrors()) {
-                log.debug("  Rule error: " + error.getResourceKey());
-            }
-            for (ValidationWarning warning : preHelper.getResult().getWarnings()) {
-                log.debug("  Rule warning: " + warning.getResourceKey());
-            }
+        // If the consumer is a guest, the rules may require the host
+        // consumer.
+        if (consumer.hasFact("virt.uuid")) {
+            String guestUuid = consumer.getFact("virt.uuid");
+            context.put("hostConsumer", consumerCurator.getHost(guestUuid));
         }
 
-        return preHelper;
+        // Add all non-serializable objects to the context.
+        context.put("log", rulesLogger, false);
+
+        log.debug("Running pre-entitlement rules for: " + consumer.getUuid() +
+            " product: " + pool.getProductId());
+
+        // Determine all rules to run based on the pool's attributes.
+        AttributeHelper attributeHelper = new AttributeHelper();
+        Set<String> attributeNames = attributeHelper.getFlattenedAttributes(pool).keySet();
+        List<Rule> matchingRules = rulesForAttributes(attributeNames, attributesToRules);
+
+        ValidationResult result = callPreEntitlementRules(matchingRules, context);
+        logResult(result);
+
+        return result;
     }
 
 }
