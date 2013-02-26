@@ -297,9 +297,9 @@ function findStackingPools(pool_class, consumer, compliance) {
         var covered_sockets = 0;
         for each (entitlement in stack) {
             covered_sockets += entitlement.quantity * new_get_pool_sockets(entitlement.pool);
-            productIdToStackId[entitlement.pool.productId] = stack_id;
+            productIdToStackId[entitlement.pool.productId] = stack.id;
             for each (product in entitlement.pool.providedProducts) {
-                productIdToStackId[product.productId] = stack_id;
+                productIdToStackId[product.productId] = stack.id;
             }
         }
         // we can start entitling from the partial stack

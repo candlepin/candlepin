@@ -92,25 +92,24 @@ public class AutobindRules {
             }
         }
 
-        List<ReadOnlyProduct> readOnlyProducts = new LinkedList<ReadOnlyProduct>();
+        List<Product> products = new LinkedList<Product>();
         for (String productId : productIds) {
         // NOTE: using ID as name here, rules just need ID:
-            ReadOnlyProduct roProduct = new ReadOnlyProduct(productId, productId,
-                                        new HashMap<String, String>());
-            readOnlyProducts.add(roProduct);
+            Product product = productCache.getProductById(productId);
+            products.add(product);
         }
 
         // Provide objects for the script:
         JsonJsContext args = new JsonJsContext(mapper);
-        args.put("consumer", new ReadOnlyConsumer(consumer, serviceLevelOverride));
-        args.put("pools", readOnlyPools.toArray());
-        args.put("products", readOnlyProducts.toArray());
+        args.put("consumer", consumer);
+        args.put("pools", pools.toArray());
+        args.put("products", products.toArray());
         args.put("prodAttrSeparator", PROD_ARCHITECTURE_SEPARATOR);
         args.put("log", log, false);
         args.put("compliance", compliance);
         args.put("exemptList", exemptLevels);
 
-        // Convert the JSON returned into a ComplianceStatus object:
+        // Convert the JSON returned into a Map object:
         String json = runJsFunction(String.class, SELECT_POOL_FUNCTION, args);
         Map<String, Integer> result = null;
         try {
