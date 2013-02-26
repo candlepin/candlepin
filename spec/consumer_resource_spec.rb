@@ -498,6 +498,9 @@ describe 'Consumer Resource' do
     consumer = @cp.get_consumer(consumer['uuid'])
     consumer['serviceLevel'].should == 'VIP'
 
+    puts "subs1.id: %s" % subs1.id
+    puts "subs2.id: %s" % subs2.id
+
     # dry run against the set service level
     pools = @cp.autobind_dryrun(consumer['uuid'])
     pools.length.should == 1
