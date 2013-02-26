@@ -14,8 +14,6 @@
  */
 package org.candlepin.policy.js;
 
-import java.util.Map;
-
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.policy.MissingFactException;
@@ -27,7 +25,6 @@ public class ReadOnlyConsumer {
 
     private final Consumer consumer;
     private String serviceLevelOverride = "";
-    private Map<String, String> facts;
 
     /**
      * ctor
@@ -35,7 +32,6 @@ public class ReadOnlyConsumer {
      */
     public ReadOnlyConsumer(Consumer consumer) {
         this.consumer = consumer;
-        this.facts = consumer.getFacts();
     }
 
     /**
@@ -44,7 +40,6 @@ public class ReadOnlyConsumer {
      */
     public ReadOnlyConsumer(Consumer consumer, String serviceLevelOverride) {
         this.consumer = consumer;
-        this.facts = consumer.getFacts();
         if (serviceLevelOverride == null) {
             this.serviceLevelOverride = "";
         }
@@ -101,10 +96,6 @@ public class ReadOnlyConsumer {
             return false;
         }
         return true;
-    }
-
-    public Map<String, String> getFacts() {
-        return facts;
     }
 
     /**

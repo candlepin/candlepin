@@ -16,7 +16,6 @@ package org.candlepin.policy.js.autobind;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -33,9 +32,7 @@ import org.candlepin.policy.js.JsContext;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsonJsContext;
 import org.candlepin.policy.js.ProductCache;
-import org.candlepin.policy.js.ReadOnlyConsumer;
 import org.candlepin.policy.js.ReadOnlyPool;
-import org.candlepin.policy.js.ReadOnlyProduct;
 import org.candlepin.policy.js.RuleExecutionException;
 import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -110,13 +107,18 @@ public class AutobindRules {
         args.put("exemptList", exemptLevels);
 
         // Convert the JSON returned into a Map object:
-        String json = runJsFunction(String.class, SELECT_POOL_FUNCTION, args);
         Map<String, Integer> result = null;
         try {
+            String json = runJsFunction(String.class, SELECT_POOL_FUNCTION, args);
             result = mapper.toObject(json, Map.class);
             if (log.isDebugEnabled()) {
                 log.debug("Excuted javascript rule: " + SELECT_POOL_FUNCTION);
             }
+        }
+        catch (NoSuchMethodException e) {
+            log.warn("No method found: " + SELECT_POOL_FUNCTION);
+            log.warn("Resorting to default pool selection behavior.");
+            return selectBestPoolDefault(pools);
         }
         catch (RhinoException e) {
             throw new RuleExecutionException(e);
@@ -208,17 +210,9 @@ public class AutobindRules {
     }
 
     private <T extends Object> T runJsFunction(Class<T> clazz, String function,
-        JsContext context) {
+        JsContext context) throws NoSuchMethodException, RhinoException{
         T returner = null;
-        try {
             returner = jsRules.invokeMethod(function, context);
-        }
-        catch (NoSuchMethodException e) {
-            log.warn("No compliance javascript method found: " + function);
-        }
-        catch (RhinoException e) {
-            throw new RuleExecutionException(e);
-        }
         return returner;
     }
 
