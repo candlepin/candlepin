@@ -32,6 +32,7 @@ function autobind_name_space() {
  */
 
 function createPool(pool) {
+
     // Add some functions onto pool objects:
 
     pool.getProductAttribute = function (attrName) {
@@ -42,7 +43,9 @@ function createPool(pool) {
         if (this.productId == productId) {
             return true;
         }
-        for each (var provided in this.providedProducts) {
+        for (var k = 0; k < this.providedProducts.length; k++) {
+            var provided = this.providedProducts[k];
+
             if (provided.productId == productId) {
                 return true;
             }
@@ -98,7 +101,9 @@ function providesSameProducts(products1, products2) {
 
 function arrayToString(a) {
     msg = "[";
-    for each (q in a) {
+    for (var j = 0; j < a.length; j++) {
+        var q = a[j];
+
         msg += q.getId() + " ";
     }
     msg += "]";
@@ -112,7 +117,9 @@ function powerSet(a, n) {
     }
 
     var res = [];
-    for each (x in powerSet(a.slice(1), n)) {
+    for (var j = 0; j < powerSet(a.slice(1), n).length; j++) {
+        var x = powerSet(a.slice(1), n)[j];
+
         if (x.length <= n) {
             res.push(x);
         }
@@ -132,7 +139,9 @@ function powerSet(a, n) {
 // as you can use as many of those as you want.
 function hasNoProductOverlap(combination) {
     var seen_product_ids = [];
-    for each (pool_class in combination) {
+    for (var j = 0; j < combination.length; j++) {
+        var pool_class = combination[j];
+
         var pool = pool_class[0];
         var products = pool.products;
         log.debug("products: " + products);
@@ -231,7 +240,9 @@ function get_pool_sockets(pool) {
 }
 
 function new_get_pool_sockets(pool) {
-    for each (prodAttr in pool.productAttributes) {
+    for (var j = 0; j < pool.productAttributes.length; j++) {
+        var prodAttr = pool.productAttributes[j];
+
         if (prodAttr.name == "sockets") {
             var sockets = prodAttr.value;
             // TODO: is this 0 right? We would have a string here...
@@ -295,7 +306,9 @@ function findStackingPools(pool_class, consumer, compliance) {
         stackToEntitledSockets[stack_id] = covered_sockets;
     }
 
-    for each (pool in pool_class) {
+    for (var j = 0; j < pool_class.length; j++) {
+        var pool = pool_class[j];
+
         var quantity = 0;
         // ignore any pools that clash with installed compliant products
         if (!hasNoInstalledOverlap(pool, compliance)) {
@@ -309,7 +322,9 @@ function findStackingPools(pool_class, consumer, compliance) {
             var installed_stack_id;
             var seen_stack_id = false;
             var conflicting_stacks = false;
-            for each (product in pool.getProducts()) {
+            for (var m = 0; m < pool.getProducts().length; m++) {
+                var product = pool.getProducts()[m];
+
                 if (productIdToStackId.hasOwnProperty(product.id)) {
                     var new_installed_stack_id = productIdToStackId[product.id];
                     if (new_installed_stack_id != installed_stack_id) {
@@ -657,7 +672,9 @@ var Autobind = {
                 var duplicate_found = false;
 
                 // Check current pool against previous best to see if it's better:
-                for each (pool_class in pools_by_class) {
+                for (var n = 0; n < pools_by_class.length; n++) {
+                    var pool_class = pools_by_class[n];
+
                     var best_pool = pool_class[0];
                     var best_provided_products = getRelevantProvidedProducts(best_pool, context.products);
 
@@ -704,10 +721,14 @@ var Autobind = {
         var best_provided_count = 0;
         var best_entitlements_count = 0;
 
-        for each (pool_combo in candidate_combos) {
+        for (var k = 0; k < candidate_combos.length; k++) {
+            var pool_combo = candidate_combos[k];
+
             var provided_count = 0;
             var unique_provided = [];
-            for each (pool_class in pool_combo) {
+            for (var m = 0; m < pool_combo.length; m++) {
+                var pool_class = pool_combo[m];
+
                 var pool = pool_class[0];
                 var provided_products = getRelevantProvidedProducts(pool, context.products);
                 for each (provided_product in provided_products) {
@@ -770,7 +791,9 @@ var Autobind = {
 }
 
 function is_stacked(ent) {
-    for each (var attr in ent.pool.productAttributes) {
+    for (var j = 0; j < ent.pool.productAttributes.length; j++) {
+        var attr = ent.pool.productAttributes[j];
+
         if (attr.name == "stacking_id") {
             return true;
         }
@@ -807,7 +830,9 @@ function find_relevant_pids(entitlement, consumer) {
     if (consumer.installedProducts == null) {
         return provided_pids;
     }
-    for each (var installed_prod in consumer.installedProducts) {
+    for (var j = 0; j < consumer.installedProducts.length; j++) {
+        var installed_prod = consumer.installedProducts[j];
+
         var installed_pid = installed_prod.productId;
         if (entitlement.pool.provides(installed_pid)) {
             log.debug("pool provides: " + installed_pid);
@@ -830,7 +855,9 @@ var Compliance = {
         context.ondate = new Date(context.ondate);
 
         // Add some methods to the various Pool objects:
-        for each (var e in context.entitlements) {
+        for (var k = 0; k < ((context.entitlements) ? context.entitlements.length : 0); k++) {
+            var e = context.entitlements[k];
+
             e.pool = createPool(e.pool);
         }
         if ("entitlement" in context) {
@@ -874,7 +901,9 @@ var Compliance = {
 
     filterEntitlementsByDate: function (entitlements, date) {
         var filtered_ents = [];
-        for each (var ent in entitlements) {
+        for (var k = 0; k < entitlements.length; k++) {
+            var ent = entitlements[k];
+
             var startDate = new Date(ent.startDate);
             var endDate = new Date(ent.endDate);
             if (Utils.date_compare(startDate, date) <= 0 && Utils.date_compare(endDate, date) >= 0) {
@@ -892,7 +921,9 @@ var Compliance = {
         };
 
         var dates = [];
-        for each (var ent in entitlements) {
+        for (var k = 0; k < entitlements.length; k++) {
+            var ent = entitlements[k];
+
             dates.push(new Date(ent.endDate));
         }
         dates.sort(function(d1, d2) { Utils.date_compare(d1, d2) });
@@ -963,7 +994,9 @@ var Compliance = {
 
         log.debug("Checking compliance status for consumer: " + consumer.uuid + " on date: " + ondate);
         var entitlementsOnDate = Compliance.filterEntitlementsByDate(entitlements, ondate);
-        for each (var e in entitlementsOnDate) {
+        for (var k = 0; k < entitlementsOnDate.length; k++) {
+            var e = entitlementsOnDate[k];
+
             log.debug("  checking entitlement: " + e.id);
             relevant_pids = find_relevant_pids(e, consumer);
             log.debug("    relevant products: " + relevant_pids);
@@ -997,7 +1030,9 @@ var Compliance = {
                 }
             }
 
-            for each (relevant_pid in relevant_pids) {
+            for (var m = 0; m < relevant_pids.length; m++) {
+                var relevant_pid = relevant_pids[m];
+
                 if (partially_stacked) {
                     log.debug("   partially compliant: " + relevant_pid);
                     compStatus.add_partial_product(relevant_pid, e);
@@ -1026,7 +1061,9 @@ var Compliance = {
 
         // Run through the consumer's installed products and see if there are any we
         // didn't find an entitlement for along the way:
-        for each (var installed_prod in consumer.installedProducts) {
+        for (var k = 0; k < ((consumer.installedProducts) ? consumer.installedProducts.length : 0); k++) {
+            var installed_prod = consumer.installedProducts[k];
+
             var installed_pid = installed_prod.productId;
             // Not compliant if we didn't find any entitlements for this product:
             if (typeof compStatus.compliantProducts[installed_pid] === "undefined" &&
@@ -1047,7 +1084,9 @@ var Compliance = {
         // Get all end dates from current entitlements sorted ascending.
         var dates = Compliance.getSortedEndDates(initialEntitlements);
 
-        for each (var dateToCheck in dates) {
+        for (var k = 0; k < dates.length; k++) {
+            var dateToCheck = dates[k];
+
 
             // Ignore past dates.
             if (dateToCheck < startDate) {
@@ -1080,7 +1119,9 @@ var Compliance = {
         log.debug("Consumer sockets: " + consumer_sockets);
 
         var covered_sockets = 0;
-        for each (var ent in ents) {
+        for (var k = 0; k < ents.length; k++) {
+            var ent = ents[k];
+
             if (is_stacked(ent)) {
                 var currentStackId = ent.pool.getProductAttribute("stacking_id");
                 if (currentStackId == stack_id) {
