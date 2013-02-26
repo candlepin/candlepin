@@ -37,7 +37,7 @@ function createPool(pool) {
     pool.findAttributeIn = function (attrName, attrs) {
         for (var k = 0; k < attrs.length; k++) {
             var attr = attrs[k];
-            if (attrName.equals(attr.name)) {
+            if (attrName == attr.name) {
                 return attr.value;
             }
         }
@@ -186,7 +186,7 @@ function architectureMatches(productArchStr, consumerUnameMachine, consumerType,
     prodAttrSeparator) {
     // Non-system consumers without an architecture fact can pass this rule
     // regardless what arch the product requires.
-    if (!consumerUnameMachine && !"system".equals(consumerType)) {
+    if (!consumerUnameMachine && "system" != consumerType) {
         return true;
     }
 
@@ -490,7 +490,7 @@ function isLevelExempt (level, exemptList) {
     for (var j = 0; j < exemptList.toArray().length; j++) {
         var exemptLevel = exemptList.toArray()[j];
 
-        if (exemptLevel.equalsIgnoreCase(level)) {
+        if (Utils.equalsIgnoreCase(exemptLevel, level)) {
             return true;
         }
     }
@@ -564,10 +564,10 @@ var Entitlement = {
         var result = Entitlement.ValidationResult();
         context = Entitlement.get_attribute_context();
 
-        var virt_pool = 'true'.equalsIgnoreCase(context.getAttribute(context.pool, 'virt_only'));
+        var virt_pool = Utils.equalsIgnoreCase('true', context.getAttribute(context.pool, 'virt_only'));
         var guest = false;
         if (context.consumer.facts['virt.is_guest']) {
-            guest = 'true'.equalsIgnoreCase(context.consumer.facts['virt.is_guest']);
+            guest = Utils.equalsIgnoreCase('true', context.consumer.facts['virt.is_guest']);
         }
 
         if (virt_pool && !guest) {
@@ -592,8 +592,8 @@ var Entitlement = {
         }
 
         if (!context.hostConsumer ||
-            !context.hostConsumer.uuid.equals(context.getAttribute(context.pool,
-                                                                   'requires_host'))) {
+            context.hostConsumer.uuid != context.getAttribute(context.pool,
+                                                                   'requires_host')) {
             result.addError("virt.guest.host.does.not.match.pool.owner");
         }
         return JSON.stringify(result);
@@ -605,8 +605,8 @@ var Entitlement = {
 
         var requiresConsumerType = context.getAttribute(context.pool, "requires_consumer_type");
         if (requiresConsumerType != null &&
-            !requiresConsumerType.equals(context.consumer.type.label) &&
-            !context.consumer.type.label.equals("uebercert")) {
+            requiresConsumerType != context.consumer.type.label &&
+            context.consumer.type.label != "uebercert") {
             result.addError("rulefailed.consumer.type.mismatch");
         }
         return JSON.stringify(result);
@@ -679,14 +679,14 @@ var Entitlement = {
             // If the product has no required consumer type, assume it is restricted to "system".
             // "hypervisor"/"uebercert" type are essentially the same as "system".
             if (!pool.getProductAttribute("requires_consumer_type")) {
-                if (!consumer.type.label.equals("system") && !consumer.type.label.equals("hypervisor") &&
-                        !consumer.type.label.equals("uebercert")) {
+                if (consumer.type.label != "system" && consumer.type.label != "hypervisor" &&
+                        consumer.type.label != "uebercert") {
                     result.addError("rulefailed.consumer.type.mismatch");
                 }
 
             }
 
-            if (pool.restrictedToUsername != null && !pool.restrictedToUsername.equals(consumer.username)) {
+            if (pool.restrictedToUsername != null && pool.restrictedToUsername != consumer.username) {
                 result.addError("pool.not.available.to.user, pool= '" + pool.restrictedToUsername + "', actual username='" + consumer.username + "'" );
             }
         }
@@ -727,7 +727,7 @@ var Autobind = {
         }
 
         var consumerSLA = consumer.getServiceLevel();
-        if (consumerSLA && !consumerSLA.equals("")) {
+        if (consumerSLA && consumerSLA != "") {
             log.debug("Filtering pools by SLA: " + consumerSLA);
         }
 
@@ -743,7 +743,7 @@ var Autobind = {
             var poolSLAExempt = isLevelExempt(pool.getProductAttribute('support_level'), exemptList);
 
             if (!poolSLAExempt && consumerSLA &&
-                !consumerSLA.equals("") && !consumerSLA.equalsIgnoreCase(poolSLA)) {
+                consumerSLA != "" && !Utils.equalsIgnoreCase(consumerSLA, poolSLA)) {
                 log.debug("Skipping pool " + pool.getId() +
                         " since SLA does not match that of the consumer.");
                 continue;
@@ -1296,5 +1296,21 @@ var Utils = {
         }
 
         return 0;
+    },
+
+    /**
+     * Determines if two strings are equal, ignoring case.
+     *
+     * NOTE: null does NOT equal ""
+     */
+    equalsIgnoreCase: function(str1, str2) {
+        if (str1) {
+            str1 = str1.toLowerCase();
+        }
+        if (str2) {
+            str2 = str2.toLowerCase();
+        }
+
+        return str1 == str2;
     }
 }
