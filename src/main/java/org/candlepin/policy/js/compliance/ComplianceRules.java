@@ -66,6 +66,7 @@ public class ComplianceRules {
         args.put("consumer", c);
         args.put("entitlements", ents);
         args.put("ondate", date);
+        args.put("helper", new ComplianceRulesHelper(entCurator), false);
         args.put("log", log, false);
 
         // Convert the JSON returned into a ComplianceStatus object:
