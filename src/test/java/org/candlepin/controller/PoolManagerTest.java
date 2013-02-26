@@ -25,9 +25,9 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
@@ -64,7 +64,6 @@ import org.candlepin.policy.js.autobind.AutobindRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.entitlement.Enforcer;
-import org.candlepin.policy.js.entitlement.PreEntHelper;
 import org.candlepin.policy.js.entitlement.PreUnbindHelper;
 import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.policy.js.pool.PoolUpdate;
@@ -351,7 +350,6 @@ public class PoolManagerTest {
         pools.add(pool2);
         Date now = new Date();
 
-        PreEntHelper helper = mock(PreEntHelper.class);
 
         ValidationResult result = mock(ValidationResult.class);
 
@@ -360,9 +358,8 @@ public class PoolManagerTest {
             anyBoolean())).thenReturn(pools);
         when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(pool1);
         when(enforcerMock.preEntitlement(any(Consumer.class), any(Pool.class), anyInt()))
-            .thenReturn(helper);
+            .thenReturn(result);
 
-        when(helper.getResult()).thenReturn(result);
         when(result.isSuccessful()).thenReturn(true);
 
         List<PoolQuantity> bestPools = new ArrayList<PoolQuantity>();
@@ -486,8 +483,6 @@ public class PoolManagerTest {
         pools.add(pool1);
         Date now = new Date();
 
-        PreEntHelper helper = mock(PreEntHelper.class);
-
         ValidationResult result = mock(ValidationResult.class);
 
         // Setup an installed product for the consumer, we'll make the bind request
@@ -504,9 +499,8 @@ public class PoolManagerTest {
 
         when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(pool1);
         when(enforcerMock.preEntitlement(any(Consumer.class), any(Pool.class), anyInt()))
-            .thenReturn(helper);
+            .thenReturn(result);
 
-        when(helper.getResult()).thenReturn(result);
         when(result.isSuccessful()).thenReturn(true);
 
         List<PoolQuantity> bestPools = new ArrayList<PoolQuantity>();

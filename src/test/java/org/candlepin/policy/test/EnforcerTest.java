@@ -46,7 +46,6 @@ import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.RuleExecutionException;
-import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.service.ProductServiceAdapter;
@@ -64,7 +63,6 @@ public class EnforcerTest extends DatabaseTestFixture {
     @Mock private ProductServiceAdapter productAdapter;
     @Mock private RulesCurator rulesCurator;
     @Mock private Config config;
-    @Mock private ComplianceStatus compliance;
 
     private Enforcer enforcer;
     private Owner owner;
@@ -229,7 +227,7 @@ public class EnforcerTest extends DatabaseTestFixture {
             createConsumer(owner),
             entitlementPoolWithMembersAndExpiration(owner, product, 1, 2,
                 expiryDate(2010, 10, 10)),
-            1).getResult();
+            1);
         assertTrue(result.isSuccessful());
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
@@ -246,7 +244,7 @@ public class EnforcerTest extends DatabaseTestFixture {
             createConsumer(owner),
             entitlementPoolWithMembersAndExpiration(owner, product, 1, 1,
                 expiryDate(2010, 10, 10)),
-            1).getResult();
+            1);
 
         assertFalse(result.isSuccessful());
         assertTrue(result.hasErrors());
@@ -263,7 +261,7 @@ public class EnforcerTest extends DatabaseTestFixture {
         ValidationResult result = enforcer.preEntitlement(
             createConsumer(owner),
             entitlementPoolWithMembersAndExpiration(owner, product, 1, 2,
-                expiryDate(2000, 1, 1)), 1).getResult();
+                expiryDate(2000, 1, 1)), 1);
         assertFalse(result.isSuccessful());
         assertTrue(result.hasErrors());
         assertFalse(result.hasWarnings());
@@ -282,7 +280,7 @@ public class EnforcerTest extends DatabaseTestFixture {
             TestUtil.createConsumer(),
             entitlementPoolWithMembersAndExpiration(owner, product, 1, 2,
                 expiryDate(2000, 1, 1)),
-            1).getResult();
+            1);
 
         assertFalse(result.isSuccessful());
         assertTrue(result.hasErrors());

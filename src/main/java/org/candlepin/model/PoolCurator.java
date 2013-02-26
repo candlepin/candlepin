@@ -14,17 +14,21 @@
  */
 package org.candlepin.model;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.persist.Transactional;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
 import org.candlepin.auth.interceptor.EnforceAccessControl;
 import org.candlepin.policy.ValidationResult;
+import org.candlepin.policy.criteria.CriteriaRules;
 import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.entitlement.Enforcer;
-import org.candlepin.policy.js.entitlement.PreEntHelper;
-import org.candlepin.policy.criteria.CriteriaRules;
 import org.hibernate.Criteria;
 import org.hibernate.Filter;
 import org.hibernate.LockMode;
@@ -37,14 +41,9 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.impl.FilterImpl;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.persist.Transactional;
 
 /**
  * EntitlementPoolCurator
@@ -258,8 +257,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         if (c != null) {
             List<Pool> newResults = new LinkedList<Pool>();
             for (Pool p : results) {
-                PreEntHelper helper = enforcer.preEntitlement(c, p, 1);
-                ValidationResult result = helper.getResult();
+                ValidationResult result = enforcer.preEntitlement(c, p, 1);
                 if (result.isSuccessful() && (!result.hasWarnings() || includeWarnings)) {
                     newResults.add(p);
                 }

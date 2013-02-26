@@ -17,6 +17,7 @@ package org.candlepin.policy.js.entitlement;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
+import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.pool.PoolHelper;
 
 import com.google.inject.Inject;
@@ -47,7 +48,7 @@ public class EnforcerDispatcher implements Enforcer {
     }
 
     @Override
-    public PreEntHelper preEntitlement(Consumer consumer, Pool entitlementPool,
+    public ValidationResult preEntitlement(Consumer consumer, Pool entitlementPool,
         Integer quantity) {
 
         if (consumer.getType().isManifest()) {

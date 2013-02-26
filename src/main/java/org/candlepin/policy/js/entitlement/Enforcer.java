@@ -17,6 +17,7 @@ package org.candlepin.policy.js.entitlement;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
+import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.pool.PoolHelper;
 
 /**
@@ -37,9 +38,10 @@ public interface Enforcer {
      * @param consumer Consumer who wishes to consume an entitlement.
      * @param entitlementPool Entitlement pool to consume from.
      * @param quantity number of entitlements to consume.
-     * @return TODO
+     * @return {@link ValidationResult} a validation result from the pre-entitlement run.
      */
-    PreEntHelper preEntitlement(Consumer consumer, Pool entitlementPool, Integer quantity);
+    ValidationResult preEntitlement(Consumer consumer, Pool entitlementPool,
+        Integer quantity);
 
     /**
      * Run post-entitlement actions.
