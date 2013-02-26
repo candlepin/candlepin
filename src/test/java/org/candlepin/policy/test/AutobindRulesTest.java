@@ -18,23 +18,21 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
@@ -46,7 +44,6 @@ import org.candlepin.model.ProductPoolAttribute;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
-import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.ProductCache;
@@ -70,8 +67,8 @@ public class AutobindRulesTest {
     @Mock private ProductServiceAdapter prodAdapter;
     @Mock private Config config;
     @Mock private RulesCurator rulesCurator;
-    @Mock private ComplianceStatus compliance;
 
+    private ComplianceStatus compliance;
     private ProductCache productCache;
     private AutobindRules autobindRules; // TODO rename
     private Owner owner;
@@ -101,6 +98,7 @@ public class AutobindRulesTest {
         owner = new Owner();
         consumer = new Consumer("test consumer", "test user", owner,
             new ConsumerType(ConsumerTypeEnum.SYSTEM));
+        compliance = new ComplianceStatus();
     }
 
 
@@ -281,11 +279,11 @@ public class AutobindRulesTest {
             "2");
         Product product3 = mockProduct(productId3, "Test Provided product");
 
-        Pool pool1 = mockPool(product1);
+        Pool pool1 = TestUtil.createPool(product1);
         pool1.setId("DEAD-BEEF");
         pool1.addProvidedProduct(new ProvidedProduct(product3.getId(), product3.getName()));
 
-        Pool pool2 = mockPool(product2);
+        Pool pool2 = TestUtil.createPool(product2);
         pool2.setId("DEAD-BEEF2");
         pool2.addProvidedProduct(new ProvidedProduct(product3.getId(), product3.getName()));
 
@@ -297,17 +295,11 @@ public class AutobindRulesTest {
         //pools.add(pool1);
         pools.add(pool2);
 
-        Entitlement fakeEntitlement = mock(Entitlement.class);
-        when(fakeEntitlement.getPool()).thenReturn(pool1);
-        when(fakeEntitlement.getQuantity()).thenReturn(2);
+        Entitlement entitlement = TestUtil.createEntitlement();
+        entitlement.setPool(pool1);
+        entitlement.setQuantity(2);
 
-        Map<String, Set<Entitlement>> fakePartial =
-            new HashMap<String, Set<Entitlement>>();
-        Set<Entitlement> entitlementSet = new HashSet<Entitlement>();
-        entitlementSet.add(fakeEntitlement);
-        fakePartial.put("1", entitlementSet);
-
-        when(compliance.getPartialStacks()).thenReturn(fakePartial);
+        compliance.addPartialStack("1", entitlement);
 
         autobindRules.selectBestPools(consumer, new String[]{ productId2, productId3 },
             pools, compliance, null, new HashSet<String>());
