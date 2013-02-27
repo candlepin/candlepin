@@ -14,23 +14,23 @@
  */
 package org.candlepin.policy.test;
 
-import java.util.Date;
-import java.util.List;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.runners.MockitoJUnitRunner;
-
 import static org.junit.Assert.assertEquals;
 
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerType;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.runners.MockitoJUnitRunner;
+
+import java.util.Date;
+import java.util.List;
 
 /*
  * Test the Javascript pool criteria. This works because we configure an enforcer for the
@@ -143,6 +143,57 @@ public class PoolCriteriaTest extends DatabaseTestFixture {
 
         assertEquals(1, results.size());
         assertEquals(virtPool.getId(), results.get(0).getId());
+    }
+
+    @Test
+    public void manifestConsumerVirtOnlyNoRequiresHost() {
+        // create a manifest consumer
+        ConsumerType type = new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN);
+        consumerTypeCurator.create(type);
+        Consumer c = new Consumer("test-consumer", "test-user", owner, type);
+        consumerCurator.create(c);
+
+        Consumer host = createConsumer(owner);
+        host.addGuestId(new GuestId("GUESTUUID", host));
+        consumerCurator.update(host);
+
+        Product targetProduct = TestUtil.createProduct();
+        this.productCurator.create(targetProduct);
+
+        Pool virtPool = this.createPoolAndSub(owner, targetProduct, 1L, new Date(),
+            new Date());
+        virtPool.setAttribute("virt_only", "true");
+        virtPool.setAttribute("requires_host", host.getUuid());
+        poolCurator.merge(virtPool);
+
+        List<Pool> results = poolCurator.listAvailableEntitlementPools(
+            c, null, null, null, false, true);
+        assertEquals(0, results.size());
+    }
+
+    @Test
+    public void manifestConsumerVirtOnly() {
+        // create a manifest consumer
+        ConsumerType type = new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN);
+        consumerTypeCurator.create(type);
+        Consumer c = new Consumer("test-consumer", "test-user", owner, type);
+        consumerCurator.create(c);
+
+        Consumer host = createConsumer(owner);
+        host.addGuestId(new GuestId("GUESTUUID", host));
+        consumerCurator.update(host);
+
+        Product targetProduct = TestUtil.createProduct();
+        this.productCurator.create(targetProduct);
+
+        Pool virtPool = this.createPoolAndSub(owner, targetProduct, 1L, new Date(),
+            new Date());
+        virtPool.setAttribute("virt_only", "true");
+        poolCurator.merge(virtPool);
+
+        List<Pool> results = poolCurator.listAvailableEntitlementPools(
+            c, null, null, null, false, true);
+        assertEquals(1, results.size());
     }
 }
 
