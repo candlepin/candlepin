@@ -280,9 +280,10 @@ class Candlepin
     post("/jobs/scheduler", status)
   end
 
-  def create_consumer_type(type_label)
+  def create_consumer_type(type_label, manifest=false)
     consumer_type =  {
-      'label' => type_label
+      'label' => type_label,
+      'manifest' => manifest
     }
 
     post('/consumertypes', consumer_type)
