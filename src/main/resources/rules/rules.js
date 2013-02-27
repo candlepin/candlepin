@@ -65,6 +65,15 @@ function createPool(pool) {
             }
         }
         return false;
+    }
+    
+    pool.products = function () {
+        result = [];
+        result.push(this.productId);
+        for (var k = 0; k < this.providedProducts.length; k++) {
+            result.push(this.providedProducts[k].productId);
+        }
+        return result;
     };
     return pool;
 }
@@ -92,13 +101,13 @@ function containsAll(a, b) {
     return true;
 }
 
-function getRelevantProvidedProducts(pool, products) {
+function getRelevantProvidedProducts(pool, productIds) {
     var provided = [];
 
-    for (var i = 0 ; i < products.length ; i++) {
-        var product = products[i];
-        if (pool.provides(product.getId())) {
-            provided.push(product);
+    for (var i = 0 ; i < productIds.length ; i++) {
+        var productId = productIds[i];
+        if (pool.provides(productId)) {
+            provided.push(productId);
         }
     }
 
@@ -153,12 +162,13 @@ function hasNoProductOverlap(combination) {
         var pool_class = combination[j];
 
         var pool = pool_class[0];
-        var products = pool.products;
+        var products = pool.products();
         for (var i = 0 ; i < products.length ; i++) {
-            var product = products[i];
-            if (!contains(seen_product_ids, product.id)) {
-                seen_product_ids.push(product.id);
-            } else if (product.getAttribute("multi-entitlement") != "yes") {
+            var productId = products[i];
+            log.debug("product overlap: " + productId);
+            if (!contains(seen_product_ids, productId)) {
+                seen_product_ids.push(productId);
+            } else if (pool.getProductAttribute("multi-entitlement") != "yes") {
                 return false;
             }
         }
@@ -169,12 +179,12 @@ function hasNoProductOverlap(combination) {
 
 //Check to see if a pool provides any products that are already compliant
 function hasNoInstalledOverlap(pool, compliance) {
-    var products = pool.products;
+    var products = pool.products();
     for (var i = 0 ; i < products.length ; i++) {
-        var product = products[i];
-        log.debug("installed overlap: " + product.id);
-        if (product.getAttribute("multi-entitlement") != "yes" &&
-            compliance.getCompliantProducts().containsKey(product.id)) {
+        var productId = products[i];
+        log.debug("installed overlap: " + productId);
+        if (pool.getProductAttribute("multi-entitlement") != "yes" &&
+            Object.hasOwnProperty(compliance.compliantProducts, productId)) {
             return false;
         }
     }
@@ -212,18 +222,6 @@ function architectureMatches(productArchStr, consumerUnameMachine, consumerType,
    return true;
 }
 
-function get_attribute_from_pool(pool, attributeName) {
-    // this can be either a ReadOnlyPool or a Pool, so deal with attributes as appropriate.
-    var attribute = pool.getProductAttribute(attributeName);
-    if ("getValue" in attribute) {
-        var value = attribute.getValue();
-    }
-    else {
-        var value = attribute;
-    }
-    return value
-}
-
 // get the number of sockets that each entitlement from a pool covers.
 // if sockets is set to 0 or is not set, it is considered to be unlimited.
 //
@@ -231,7 +229,7 @@ function get_attribute_from_pool(pool, attributeName) {
 // to new new_pool_sockets and delete this once all namespaces are converted.
 function get_pool_sockets(pool) {
     if (pool.getProductAttribute("sockets")) {
-        var sockets = get_attribute_from_pool(pool, "sockets");
+        var sockets = pool.getProductAttribute("sockets");
         if (sockets == 0) {
             return Infinity;
         }
@@ -278,8 +276,8 @@ function new_get_pool_sockets(pool) {
 //
 function findStackingPools(pool_class, consumer, compliance) {
     var consumer_sockets = 1;
-    if (consumer.hasFact(SOCKET_FACT)) {
-        consumer_sockets = consumer.getFact(SOCKET_FACT);
+    if (consumer.facts[SOCKET_FACT]) {
+        consumer_sockets = consumer.facts[SOCKET_FACT];
      }
 
     var stackToEntitledSockets = {};
@@ -291,22 +289,25 @@ function findStackingPools(pool_class, consumer, compliance) {
     // (to see if there is an existing stack for a product
     // we can build upon, or a conflicting stack)
     var productIdToStackId = {};
-    var partialStacks = compliance.getPartialStacks();
+    var partialStacks = compliance.partialStacks;
+    var stack_ids = Object.getOwnPropertyNames(partialStacks);
 
     // going to assume one stack per product on the system
-    for (var j = 0; j < compliance.getPartialStacks().keySet().toArray().length; j++) {
-        var stack_id = compliance.getPartialStacks().keySet().toArray()[j];
+    for (var j = 0; j < stack_ids.length; j++) {
+        var stack_id = stack_ids[j];
+        log.debug("stack_id: " + stack_id);
 
         var covered_sockets = 0;
-        for (var k = 0; k < partialStacks.get(stack_id).toArray().length; k++) {
-            var entitlement = partialStacks.get(stack_id).toArray()[k];
+        var entitlements = partialStacks[stack_id];
+        for (var k = 0; k < entitlements.length; k++) {
+            var entitlement = entitlements[k];
 
-            covered_sockets += entitlement.getQuantity() * get_pool_sockets(entitlement.getPool());
-            productIdToStackId[entitlement.getPool().getProductId()] = stack_id;
-            for (var m = 0; m < entitlement.getPool().getProvidedProducts().toArray().length; m++) {
-                var product = entitlement.getPool().getProvidedProducts().toArray()[m];
+            covered_sockets += entitlement.quantity * new_get_pool_sockets(entitlement.pool);
+            productIdToStackId[entitlement.pool.productId] = stack_id;
+            for (var m = 0; m < entitlement.pool.providedProducts.length; m++) {
+                var product = entitlement.pool.providedProducts[m];
 
-                productIdToStackId[product.getProductId()] = stack_id;
+                productIdToStackId[product.productId] = stack_id;
             }
         }
         // we can start entitling from the partial stack
@@ -329,11 +330,12 @@ function findStackingPools(pool_class, consumer, compliance) {
             var installed_stack_id;
             var seen_stack_id = false;
             var conflicting_stacks = false;
-            for (var m = 0; m < pool.getProducts().length; m++) {
-                var product = pool.getProducts()[m];
+            var products = pool.products();
+            for (var m = 0; m < products.length; m++) {
+                var productId = products[m];
 
-                if (productIdToStackId.hasOwnProperty(product.id)) {
-                    var new_installed_stack_id = productIdToStackId[product.id];
+                if (productIdToStackId.hasOwnProperty(productId)) {
+                    var new_installed_stack_id = productIdToStackId[productId];
                     if (new_installed_stack_id != installed_stack_id) {
                         // the first id will be different
                         if (!seen_stack_id) {
@@ -360,7 +362,7 @@ function findStackingPools(pool_class, consumer, compliance) {
 
 
             if (!stackToPoolMap.hasOwnProperty(stack_id)) {
-                stackToPoolMap[stack_id] = new java.util.HashMap();
+                stackToPoolMap[stack_id] = getJsMap();
 
                 // we might already have the partial stack from compliance
                 if (!stackToEntitledSockets.hasOwnProperty(stack_id)) {
@@ -374,7 +376,7 @@ function findStackingPools(pool_class, consumer, compliance) {
             }
 
             var product_sockets = 0;
-            var pool_sockets = get_pool_sockets(pool);
+            var pool_sockets = new_get_pool_sockets(pool);
 
             while (stackToEntitledSockets[stack_id] + product_sockets < consumer_sockets) {
                 product_sockets += pool_sockets;
@@ -382,13 +384,13 @@ function findStackingPools(pool_class, consumer, compliance) {
             }
 
             // don't take more entitlements than are available!
-            if (quantity > pool.getMaxMembers() - pool.getCurrentMembers()) {
-                quantity = pool.getMaxMembers() - pool.getCurrentMembers();
+            if (quantity > pool.quantity - pool.consumed) {
+                quantity = pool.quantity - pool.consumed;
             }
 
             stackToEntitledSockets[stack_id] += quantity * pool_sockets;
 
-            stackToPoolMap[stack_id].put(pool, quantity);
+            stackToPoolMap[stack_id].push(pool, quantity);
         } else {
             // not stackable, just take one.
             notStackable.push(pool);
@@ -399,7 +401,7 @@ function findStackingPools(pool_class, consumer, compliance) {
     var found_pool = false;
 
     var not_stacked_sockets = 0;
-    var not_stacked_pool_map = new java.util.HashMap();
+    var not_stacked_pool_map = getJsMap();
     // We have a not stackable pool.
     if (notStackable.length > 0) {
         for (var k = 0; k < notStackable.length; k++) {
@@ -408,12 +410,14 @@ function findStackingPools(pool_class, consumer, compliance) {
             var covered_sockets = get_pool_sockets(pool);
             if (covered_sockets > not_stacked_sockets) {
                 found_pool = true;
-                not_stacked_pool_map = new java.util.HashMap();
-                not_stacked_pool_map.put(pool, 1);
+                not_stacked_pool_map = getJsMap();
+                not_stacked_pool_map.push(pool, 1);
                 not_stacked_sockets = covered_sockets;
             }
         }
     }
+    
+    not_stacked_pool_map.dump("not_stacked_pool_map");
 
     // if an unstacked pool can cover all our products, take that.
     if (not_stacked_sockets >= consumer_sockets) {
@@ -438,7 +442,7 @@ function findStackingPools(pool_class, consumer, compliance) {
     // All possible pools may have overlapped with existing products
     // so return nothing!
     if (!found_pool) {
-        return new java.util.HashMap();
+        return getJsMap();
     }
 
     // we can't fully cover the product. either select the best non stacker, or the best stacker.
@@ -459,36 +463,36 @@ function comparePools(pool1, pool2) {
     // Prefer a virt_only pool over a regular pool, else fall through to the next rules.
     // At this point virt_only pools will have already been filtered out by the pre rules
     // for non virt machines.
-    if (pool1.getAttribute("virt_only") == "true" && pool2.getAttribute("virt_only") != "true") {
+    if (pool1.getProductAttribute("virt_only") == "true" && pool2.getProductAttribute("virt_only") != "true") {
         return true;
     }
-    else if (pool2.getAttribute("virt_only") == "true" && pool1.getAttribute("virt_only") != "true") {
+    else if (pool2.getProductAttribute("virt_only") == "true" && pool1.getProductAttribute("virt_only") != "true") {
         return false;
     }
 
     // If both virt_only, prefer one with host_requires, otherwise keep looking
     // for a reason to pick one or the other. We know that the host must match
     // as pools are filtered before even being passed to select best pools.
-    if (pool1.getAttribute("virt_only") == "true" && pool2.getAttribute("virt_only") == "true") {
-        if (pool1.getAttribute("requires_host") != null && pool2.getAttribute("requires_host") == null) {
+    if (pool1.getProductAttribute("virt_only") == "true" && pool2.getProductAttribute("virt_only") == "true") {
+        if (pool1.getProductAttribute("requires_host") != null && pool2.getProductAttribute("requires_host") == null) {
             return true;
         }
-        if (pool2.getAttribute("requires_host") != null && pool1.getAttribute("requires_host") == null) {
+        if (pool2.getProductAttribute("requires_host") != null && pool1.getProductAttribute("requires_host") == null) {
             return false;
         }
         // If neither condition is true, no preference...
     }
 
     // If two pools are still considered equal, select the pool that expires first
-    if (pool2.getEndDate().after(pool1.getEndDate())) {
+    if (pool2.endDate > pool1.endDate) {
         return true;
     }
 
 }
 
 function isLevelExempt (level, exemptList) {
-    for (var j = 0; j < exemptList.toArray().length; j++) {
-        var exemptLevel = exemptList.toArray()[j];
+    for (var j = 0; j < exemptList.length; j++) {
+        var exemptLevel = exemptList[j];
 
         if (Utils.equalsIgnoreCase(exemptLevel, level)) {
             return true;
@@ -714,58 +718,56 @@ var Autobind = {
         // same subset of products which are applicable to the requested products.
         // further, each array is sorted, from best to worst. (pool fitness is determined
         // arbitrarily by rules herein.
+        var context = eval(json_context);
         var pools_by_class = [];
 
         // "pools" is a list of all the owner's pools which are compatible for the system:
-        if (log.isDebugEnabled()) {
-            log.debug("Selecting best pools from: " + pools.length);
-            for (var m = 0; m < pools.length; m++) {
-                var pool = pools[m];
-
-                log.debug("   " + pool.getId());
-            }
+        log.debug("Selecting best pools from: " + context.pools.length);
+        for (var m = 0; m < context.pools.length; m++) {
+            var pool = context.pools[m];
+            log.debug("   " + context.pools[m].id);
         }
 
-        var consumerSLA = consumer.getServiceLevel();
-        if (consumerSLA && consumerSLA != "") {
-            log.debug("Filtering pools by SLA: " + consumerSLA);
+        log.debug("context.serviceLevelOverride: " + context.serviceLevelOverride);
+        var consumerSLA = context.serviceLevelOverride;
+        if (!consumerSLA || consumerSLA.equals("")) {
+            consumerSLA = context.consumer.serviceLevel;
         }
 
         // Builds out the pools_by_class by iterating each pool, checking which products it provides (that
         // are relevant to this request), then filtering out other pools which provide the *exact* same products
         // by selecting the preferred pool based on other criteria.
-        for (var i = 0 ; i < pools.length ; i++) {
-            var pool = pools[i];
+        for (var i = 0 ; i < context.pools.length ; i++) {
+            var pool = createPool(context.pools[i]);
 
             // If the SLA of the consumer does not match that of the pool
             // we do not consider the pool unless the level is exempt
             var poolSLA = pool.getProductAttribute('support_level');
-            var poolSLAExempt = isLevelExempt(pool.getProductAttribute('support_level'), exemptList);
+            var poolSLAExempt = isLevelExempt(pool.getProductAttribute('support_level'), context.exemptList);
 
             if (!poolSLAExempt && consumerSLA &&
                 consumerSLA != "" && !Utils.equalsIgnoreCase(consumerSLA, poolSLA)) {
-                log.debug("Skipping pool " + pool.getId() +
+                log.debug("Skipping pool " + pool.id +
                         " since SLA does not match that of the consumer.");
                 continue;
             }
 
             log.debug("Checking pool for best unique provides combination: " +
-                    pool.getId());
-            log.debug("  " + pool.getEndDate());
-            log.debug("  top level product: " + (pool.getTopLevelProduct().getId()));
+                    pool.id);
+            log.debug("  " + pool.endDate);
+            log.debug("  top level product: " + pool.productId);
 
-            var unameMachine = consumer.hasFact('uname.machine') ?
-                consumer.getFact('uname.machine') : null;
-            if (architectureMatches(pool.getTopLevelProduct().getAttribute('arch'),
+            var unameMachine = context.consumer.facts['uname.machine'] ?
+                context.consumer.facts['uname.machine'] : null;
+            if (architectureMatches(pool.getProductAttribute('arch'),
                                     unameMachine,
-                                    consumer.getType(),
-                                    prodAttrSeparator)) {
-                var provided_products = getRelevantProvidedProducts(pool, products);
+                                    context.consumer.type,
+                                    context.prodAttrSeparator)) {
+                var provided_products = getRelevantProvidedProducts(pool, context.products);
                 log.debug("  relevant provided products: ");
                 for (var n = 0; n < provided_products.length; n++) {
                     var pp = provided_products[n];
-
-                    log.debug("    " + pp.getId());
+                    log.debug("    " + pp);
                 }
                 // XXX wasteful, should be a hash or something.
                 // Tracks if we found another pool previously looked at which had the exact same provided products:
@@ -776,11 +778,11 @@ var Autobind = {
                     var pool_class = pools_by_class[n];
 
                     var best_pool = pool_class[0];
-                    var best_provided_products = getRelevantProvidedProducts(best_pool, products);
+                    var best_provided_products = getRelevantProvidedProducts(best_pool, context.products);
 
                     if (providesSameProducts(provided_products, best_provided_products)) {
                         duplicate_found = true;
-                        log.debug("  provides same product combo as: " + pool.getId());
+                        log.debug("  provides same product combo as: " + pool.id);
 
                         // figure out where to insert this pool in its sorted class
                         var i = 0;
@@ -807,9 +809,9 @@ var Autobind = {
             }
         }
 
-        var candidate_combos = powerSet(pools_by_class, products.length);
+        var candidate_combos = powerSet(pools_by_class, context.products.length);
 
-        log.debug("Selecting " + products.length + " products from " + pools_by_class.length +
+        log.debug("Selecting " + context.products.length + " products from " + pools_by_class.length +
                   " pools in " + candidate_combos.length + " possible combinations");
 
         // Select the best pool combo. We prefer:
@@ -817,7 +819,7 @@ var Autobind = {
         // -The combo that uses the fewest entitlements
 
 
-        var selected_pools = new java.util.HashMap();
+        var selected_pools = getJsMap();
         var best_provided_count = 0;
         var best_entitlements_count = 0;
 
@@ -830,11 +832,11 @@ var Autobind = {
                 var pool_class = pool_combo[m];
 
                 var pool = pool_class[0];
-                var provided_products = getRelevantProvidedProducts(pool, products);
+                var provided_products = getRelevantProvidedProducts(pool, context.products);
                 for (var n = 0; n < provided_products.length; n++) {
                     var provided_product = provided_products[n];
 
-                    log.debug("\t\tprovided_product " + provided_product.getId());
+                    log.debug("\t\tprovided_product " + provided_product);
                     if (!contains(unique_provided, provided_product)) {
                         unique_provided.push(provided_product);
                     }
@@ -843,8 +845,7 @@ var Autobind = {
 
             for (var m = 0; m < unique_provided.length; m++) {
                 var product = unique_provided[m];
-
-                log.debug("unique_provided " + product.getId() + " " + product.getName());
+                log.debug("unique_provided " + product);
             }
 
             // number of provided products is less than our best selection. keep our current selection.
@@ -859,17 +860,20 @@ var Autobind = {
             if (unique_provided.length > best_provided_count || pool_combo.length < best_entitlements_count) {
                 // XXX we'll have to do something here to ensure no product overlap after selecting the actual pool/pools from the combo
                 if (hasNoProductOverlap(pool_combo)) {
-                    var new_selection = new java.util.HashMap();
+                    var new_selection = getJsMap();
                     var total_entitlements = 0;
                     for (var p = 0; p < pool_combo.length; p++) {
                         var pool_class = pool_combo[p];
 
-                        var poolMap = findStackingPools(pool_class, consumer, compliance);
-                        new_selection.putAll(poolMap);
+                        var poolMap = findStackingPools(pool_class, context.consumer, context.compliance);
+                        poolMap.dump("poolMap");
+                        new_selection.add_all(poolMap);
+                        new_selection.dump("new_selection");
 
                         var quantity = 0;
-                        for (value in poolMap.values()) {
-                            quantity += value;
+                        var values = poolMap.values();
+                        for (var v = 0; v < values.length; v++) {
+                            quantity += values[v];
                         }
 
                         total_entitlements += quantity;
@@ -877,7 +881,7 @@ var Autobind = {
 
                     // now verify that after selecting our actual pools from the pool combo,
                     // we still have a better choice here
-                    if (new_selection.size() > 0) {
+                    if (new_selection.values().length > 0) {
                         selected_pools = new_selection;
                         best_provided_count = unique_provided.length;
                         best_entitlements_count = total_entitlements;
@@ -887,7 +891,10 @@ var Autobind = {
         }
 
         // We may not have selected pools for all products; that's ok.
-        return selected_pools;
+        selected_pools.dump("selected_pools");
+        var output = JSON.stringify(selected_pools.map);
+        log.debug("OUTPUT: " + output);
+        return output;
     }
 }
 
@@ -1314,3 +1321,46 @@ var Utils = {
         return str1 == str2;
     }
 }
+
+function getJsMap() {
+    var js_map = {
+        map: {},
+        
+		push: function (key, value) {
+		    this.map[key.id] = value;
+		},
+		
+		add_all: function (add_js_map) {
+		    var add_map = add_js_map.map
+		    for(key in add_map)
+		    {
+		        this.map[key] = add_map[key];
+		    }
+	     },
+	     
+	     values: function () {
+	        values = [];
+		    for(key in this.map)
+		    {
+		        values.push(this.map[key]);
+		    }
+	        return values;
+	     },
+	     
+	     has_entries: function () {
+		     for(key in this.map) {
+		         return true;
+	         }
+	         return false;
+	     },
+ 
+	     dump: function (name) {
+	        log.debug("Map name: " + name);
+		    for(key in this.map)
+		    {
+		        log.debug("    Key: " + key + ", value: " + this.map[key]);
+		    }
+	     }
+     };
+     return js_map;
+ }
