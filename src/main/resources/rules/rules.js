@@ -895,17 +895,6 @@ function is_stacked(ent) {
     return false;
 }
 
-// TODO: remove this once entitlement namespace is ported to json in/out
-function old_get_consumer_ram(consumer) {
-    var consumerRam = 1;
-    if (consumer.hasFact(RAM_FACT)) {
-        var ramGb = parseInt(consumer.getFact(RAM_FACT)) / 1024 / 1024;
-        consumerRam = Math.round(ramGb);
-    }
-    return consumerRam;
-}
-
-
 function get_consumer_ram(consumer) {
     var consumerRam = 1;
     if (!(typeof consumer.facts[RAM_FACT] === undefined)) {
@@ -951,7 +940,6 @@ var Compliance = {
         // Add some methods to the various Pool objects:
         for (var k = 0; k < ((context.entitlements) ? context.entitlements.length : 0); k++) {
             var e = context.entitlements[k];
-
             e.pool = createPool(e.pool);
         }
         if ("entitlement" in context) {
