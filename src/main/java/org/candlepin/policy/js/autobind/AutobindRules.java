@@ -16,12 +16,11 @@ package org.candlepin.policy.js.autobind;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.candlepin.model.Consumer;
@@ -29,14 +28,12 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProvidedProduct;
-import org.candlepin.policy.js.ArgumentJsContext;
 import org.candlepin.policy.js.JsContext;
 import org.candlepin.policy.js.JsRunner;
+import org.candlepin.policy.js.JsonJsContext;
 import org.candlepin.policy.js.ProductCache;
-import org.candlepin.policy.js.ReadOnlyConsumer;
-import org.candlepin.policy.js.ReadOnlyPool;
-import org.candlepin.policy.js.ReadOnlyProduct;
 import org.candlepin.policy.js.RuleExecutionException;
+import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.util.X509ExtensionUtil;
 import org.mozilla.javascript.RhinoException;
@@ -55,9 +52,8 @@ public class AutobindRules {
 
     private JsRunner jsRules;
     private static Logger log = Logger.getLogger(AutobindRules.class);
-    private Logger rulesLogger = Logger.getLogger(
-        AutobindRules.class.getCanonicalName() + ".rules");
     private ProductCache productCache;
+    private RulesObjectMapper mapper;
 
 
     @Inject
@@ -65,6 +61,7 @@ public class AutobindRules {
         this.jsRules = jsRules;
         this.productCache = productCache;
 
+        mapper = RulesObjectMapper.instance();
         jsRules.init("autobind_name_space");
     }
 
@@ -89,40 +86,23 @@ public class AutobindRules {
                     "due to too much content");
             }
         }
-        List<ReadOnlyPool> readOnlyPools = ReadOnlyPool.fromCollection(pools);
-
-        /*
-         * NOTE: These are engineering product IDs being passed in which are installed on
-         * the given system. There is almost no value to looking these up from the product
-         * service as there's not much useful, and indeed all the select pool rules ever
-         * use is the product ID, which we had before we did the lookup. Unfortunately we
-         * need to maintain backward compatability with past rules files, so we will
-         * continue providing ReadOnlyProduct objects to the rules, but we'll just
-         * pre-populate the ID field and not do an actual lookup.
-         */
-        List<ReadOnlyProduct> readOnlyProducts = new LinkedList<ReadOnlyProduct>();
-        for (String productId : productIds) {
-            // NOTE: using ID as name here, rules just need ID:
-            ReadOnlyProduct roProduct = new ReadOnlyProduct(productId, productId,
-                new HashMap<String, String>());
-            readOnlyProducts.add(roProduct);
-        }
 
         // Provide objects for the script:
-        ArgumentJsContext args = new ArgumentJsContext();
-        args.put("consumer", new ReadOnlyConsumer(consumer, serviceLevelOverride));
-        args.put("pools", readOnlyPools.toArray());
-        args.put("products", readOnlyProducts.toArray());
+        JsonJsContext args = new JsonJsContext(mapper);
+        args.put("consumer", consumer);
+        args.put("serviceLevelOverride", serviceLevelOverride);
+        args.put("pools", pools.toArray());
+        args.put("products", productIds);
         args.put("prodAttrSeparator", PROD_ARCHITECTURE_SEPARATOR);
-        args.put("log", rulesLogger);
+        args.put("log", log, false);
         args.put("compliance", compliance);
         args.put("exemptList", exemptLevels);
 
-        Map<ReadOnlyPool, Integer> result = null;
+        // Convert the JSON returned into a Map object:
+        Map<String, Integer> result = null;
         try {
-            Object output =
-                jsRules.invokeMethod(SELECT_POOL_FUNCTION, args);
-            result = jsRules.convertMap(output);
+            String json = runJsFunction(String.class, SELECT_POOL_FUNCTION, args);
+            result = mapper.toObject(json, Map.class);
             if (log.isDebugEnabled()) {
                 log.debug("Excuted javascript rule: " + SELECT_POOL_FUNCTION);
             }
@@ -136,15 +116,15 @@ public class AutobindRules {
             throw new RuleExecutionException(e);
         }
 
-        if (pools.size() > 0 && result == null) {
+        if (pools.size() > 0 && (result == null || result.isEmpty())) {
             throw new RuleExecutionException(
                 "Rule did not select a pool for products: " + Arrays.toString(productIds));
         }
 
         List<PoolQuantity> bestPools = new ArrayList<PoolQuantity>();
         for (Pool p : pools) {
-            for (Entry<ReadOnlyPool, Integer> entry : result.entrySet()) {
-                if (p.getId().equals(entry.getKey().getId())) {
+            for (Entry<String, Integer> entry : result.entrySet()) {
+                if (p.getId().equals(entry.getKey())) {
                     if (log.isDebugEnabled()) {
                         log.debug("Best pool: " + p);
                     }
@@ -219,17 +199,9 @@ public class AutobindRules {
     }
 
     private <T extends Object> T runJsFunction(Class<T> clazz, String function,
-        JsContext context) {
+        JsContext context) throws NoSuchMethodException, RhinoException {
         T returner = null;
-        try {
-            returner = jsRules.invokeMethod(function, context);
-        }
-        catch (NoSuchMethodException e) {
-            log.warn("No compliance javascript method found: " + function);
-        }
-        catch (RhinoException e) {
-            throw new RuleExecutionException(e);
-        }
+        returner = jsRules.invokeMethod(function, context);
         return returner;
     }
 
