@@ -1085,7 +1085,6 @@ var Compliance = {
 
             partially_stacked = false;
             var ent_is_stacked = is_stacked(e);
-            log.info("### ent is stacked: " + ent_is_stacked);
             // If the pool is stacked, check that the stack requirements are met:
             if (ent_is_stacked) {
                 var stack_id = e.pool.getProductAttribute("stacking_id");
