@@ -64,7 +64,7 @@ public class X509V3ExtensionUtil extends X509Util{
     private static Logger log = Logger.getLogger(X509V3ExtensionUtil.class);
     private Config config;
     private EntitlementCurator entCurator;
-    private String thisVersion = "3.1";
+    private String thisVersion = "3.2";
 
     private long pathNodeId = 0;
     private long huffNodeId = 0;
@@ -160,6 +160,7 @@ public class X509V3ExtensionUtil extends X509Util{
         toReturn.setOrder(createOrder(sub));
         toReturn.setProducts(createProducts(products, contentPrefix, promotedContent,
             ent.getConsumer(), ent));
+        toReturn.setPool(createPool(ent));
 
         return toReturn;
     }
@@ -278,6 +279,12 @@ public class X509V3ExtensionUtil extends X509Util{
             .filter(products, PROD_FILTER_PREDICATE)) {
             toReturn.add(mapProduct(p, contentPrefix, promotedContent, consumer, ent));
         }
+        return toReturn;
+    }
+
+    public org.candlepin.json.model.Pool createPool(Entitlement ent) {
+        org.candlepin.json.model.Pool toReturn = new org.candlepin.json.model.Pool();
+        toReturn.setId(ent.getPool().getId());
         return toReturn;
     }
 
