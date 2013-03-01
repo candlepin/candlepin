@@ -14,10 +14,6 @@
  */
 package org.candlepin.policy.js;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import org.apache.log4j.Logger;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
@@ -132,34 +128,4 @@ public class JsRunner {
         return invokeRule(ruleName);
     }
 
-    public ReadOnlyPool[] convertArray(Object output) {
-        return (ReadOnlyPool[]) Context.jsToJava(output, ReadOnlyPool[].class);
-    }
-
-    public Map<ReadOnlyPool, Integer> convertMap(Object output) {
-        Map<ReadOnlyPool, Integer> toReturn = new HashMap<ReadOnlyPool, Integer>();
-
-        @SuppressWarnings("unchecked")
-        Map<ReadOnlyPool, Double> result =
-            (Map<ReadOnlyPool, Double>) Context.jsToJava(output, Map.class);
-
-        for (Entry<ReadOnlyPool, Double> entry : result.entrySet()) {
-            try {
-                Integer count = entry.getValue().intValue();
-                toReturn.put(entry.getKey(), count);
-            }
-            catch (ClassCastException e) {
-                // this is safe, as we'll have javascript specific ids in here
-                // that we can ignore
-                log.debug("CONVERT id is not readonly pool, ignoring: " + e);
-            }
-        }
-
-        if (toReturn.isEmpty()) {
-            return null;
-        }
-
-        log.debug("CONVERT returning hashmap");
-        return toReturn;
-    }
 }
