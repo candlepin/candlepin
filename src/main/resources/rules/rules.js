@@ -68,7 +68,7 @@ function createPool(pool) {
         }
         return false;
     }
-    
+
     pool.products = function () {
         if (this.product_list == 0) {
             this.product_list.push(this.productId);
@@ -207,17 +207,15 @@ function architectureMatches(productArchStr, consumerUnameMachine, consumerType,
     if (productArchStr != null) {
         supportedArches = productArchStr.toUpperCase().split(prodAttrSeparator);
 
-        supportedArches = new java.util.HashSet(java.util.Arrays.asList(supportedArches));
-
         // If X86 is supported, add all variants to this list:
-        if (supportedArches.contains("X86")) {
-           supportedArches.add("I386");
-           supportedArches.add("I586");
-           supportedArches.add("I686");
+        if (Utils.inArray(supportedArches, "X86")) {
+           supportedArches.push("I386");
+           supportedArches.push("I586");
+           supportedArches.push("I686");
         }
 
-        if(!supportedArches.contains('ALL') && (!consumerUnameMachine ||
-           !supportedArches.contains(consumerUnameMachine.toUpperCase()))) {
+        if(!Utils.inArray(supportedArches, 'ALL') && (!consumerUnameMachine ||
+           !Utils.inArray(supportedArches, consumerUnameMachine.toUpperCase()))) {
            return false;
        }
    }
@@ -402,7 +400,7 @@ function findStackingPools(pool_class, consumer, compliance) {
             }
         }
     }
-    
+
     not_stacked_pool_map.dump("not_stacked_pool_map");
 
     // if an unstacked pool can cover all our products, take that.
@@ -897,17 +895,6 @@ function is_stacked(ent) {
     return false;
 }
 
-// TODO: remove this once entitlement namespace is ported to json in/out
-function old_get_consumer_ram(consumer) {
-    var consumerRam = 1;
-    if (consumer.hasFact(RAM_FACT)) {
-        var ramGb = parseInt(consumer.getFact(RAM_FACT)) / 1024 / 1024;
-        consumerRam = Math.round(ramGb);
-    }
-    return consumerRam;
-}
-
-
 function get_consumer_ram(consumer) {
     var consumerRam = 1;
     if (!(typeof consumer.facts[RAM_FACT] === undefined)) {
@@ -953,7 +940,6 @@ var Compliance = {
         // Add some methods to the various Pool objects:
         for (var k = 0; k < ((context.entitlements) ? context.entitlements.length : 0); k++) {
             var e = context.entitlements[k];
-
             e.pool = createPool(e.pool);
         }
         if ("entitlement" in context) {
@@ -1085,8 +1071,8 @@ var Compliance = {
 
         // Track the stack IDs we've already checked to save some time:
         // TODO: don't use java sets
-        var compliant_stack_ids = new java.util.HashSet();
-        var non_compliant_stack_ids = new java.util.HashSet();
+        var compliant_stack_ids = [];
+        var non_compliant_stack_ids = [];
 
         log.debug("Checking compliance status for consumer: " + consumer.uuid + " on date: " + ondate);
         var entitlementsOnDate = Compliance.filterEntitlementsByDate(entitlements, ondate);
@@ -1099,19 +1085,18 @@ var Compliance = {
 
             partially_stacked = false;
             var ent_is_stacked = is_stacked(e);
-            log.info("### ent is stacked: " + ent_is_stacked);
             // If the pool is stacked, check that the stack requirements are met:
             if (ent_is_stacked) {
                 var stack_id = e.pool.getProductAttribute("stacking_id");
                 log.debug("    pool has stack ID: " + stack_id);
 
                 // Shortcuts for stacks we've already checked:
-                if (non_compliant_stack_ids.contains(stack_id) > 0) {
+                if (Utils.inArray(non_compliant_stack_ids, stack_id)) {
                     log.debug("    stack already found to be non-compliant");
                     partially_stacked = true;
                     compStatus.add_partial_stack(stack_id, e);
                 }
-                else if (compliant_stack_ids.contains(stack_id) > 0) {
+                else if (Utils.inArray(compliant_stack_ids, stack_id)) {
                     log.debug("    stack already found to be compliant");
                 }
                 // Otherwise check the stack and add appropriately:
@@ -1119,11 +1104,11 @@ var Compliance = {
                     log.debug("    stack is non-compliant");
                     partially_stacked = true;
                     compStatus.add_partial_stack(stack_id, e);
-                    non_compliant_stack_ids.add(stack_id);
+                    non_compliant_stack_ids.push(stack_id);
                 }
                 else {
                     log.debug("    stack is compliant");
-                    compliant_stack_ids.add(stack_id);
+                    compliant_stack_ids.push(stack_id);
                 }
             }
 
@@ -1311,9 +1296,8 @@ var Utils = {
 
     /**
     *  This is used to collect some of the operations needed on the maps
-    *    so we do not iterate through the maps in the code above:
-    *    putAll, values, isEmpty, and dump.
-    *
+    *  so we do not iterate through the maps in the code above:
+    *  putAll, values, isEmpty, and dump.
     */
     getJsMap: function() {
         var js_map = {
@@ -1357,5 +1341,17 @@ var Utils = {
              }
          };
          return js_map;
-     }
- }
+     },
+
+    /**
+     * Checks if the given value is in the specified array
+     */
+    inArray: function(array, value) {
+        for (var idx = 0; idx < array.length; idx++) {
+            if (array[idx] == value) {
+                return true;
+            }
+        }
+        return false;
+    }
+}
