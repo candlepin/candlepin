@@ -697,7 +697,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Config mockConfig = mock(Config.class);
         when(mockConfig.certV3IsEnabled()).thenReturn(true);
 
-        when(consumer.getFact(eq("system.certificate_version"))).thenReturn("3.1");
+        when(consumer.getFact(eq("system.certificate_version"))).thenReturn("3.2");
         ProductAttribute attr = new ProductAttribute("ram", "4");
         subscription.getProduct().addAttribute(attr);
 
@@ -837,7 +837,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<Product> products = new HashSet<Product>();
         products.add(product);
         when(entitlement.getConsumer().getFact("system.certificate_version"))
-            .thenReturn("3.1");
+            .thenReturn("3.2");
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
 
         subscription.getProduct().setAttribute("warning_period", "20");
@@ -865,7 +865,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             map.put(ext.getOid(), ext);
         }
         assertTrue(map.containsKey("1.3.6.1.4.1.2312.9.6"));
-        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("3.1"));
+        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("3.2"));
 
         byte[] payload = v3extensionUtil.createEntitlementDataPayload(products, entitlement,
             "prefix", null, subscription);
@@ -944,7 +944,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<Product> products = new HashSet<Product>();
         products.add(product);
         when(entitlement.getConsumer().getFact("system.certificate_version"))
-            .thenReturn("3.1");
+            .thenReturn("3.2");
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
 
         subscription.getProduct().setAttribute("warning_period", "0");
@@ -963,7 +963,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             map.put(ext.getOid(), ext);
         }
         assertTrue(map.containsKey("1.3.6.1.4.1.2312.9.6"));
-        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("3.1"));
+        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("3.2"));
 
         byte[] payload = v3extensionUtil.createEntitlementDataPayload(products, entitlement,
             "prefix", null, subscription);
@@ -999,7 +999,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<Product> products = new HashSet<Product>();
         products.add(product);
         when(entitlement.getConsumer().getFact("system.certificate_version"))
-            .thenReturn("3.1");
+            .thenReturn("3.2");
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
 
         subscription.getProduct().setAttribute("management_enabled", "1");
@@ -1014,7 +1014,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             map.put(ext.getOid(), ext);
         }
         assertTrue(map.containsKey("1.3.6.1.4.1.2312.9.6"));
-        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("3.1"));
+        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("3.2"));
 
         byte[] payload = v3extensionUtil.createEntitlementDataPayload(products, entitlement,
             "prefix", null, subscription);
@@ -1063,7 +1063,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         products.add(product);
         product.setContent(superContent);
         when(entitlement.getConsumer().getFact("system.certificate_version"))
-            .thenReturn("3.1");
+            .thenReturn("3.2");
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
 
         Set<X509ByteExtensionWrapper> byteExtensions =
@@ -1099,7 +1099,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         products.add(largeContentProduct);
         largeContentProduct.setContent(largeContent);
         when(largeContentEntitlement.getConsumer().getFact("system.certificate_version"))
-            .thenReturn("3.1");
+            .thenReturn("3.2");
         when(largeContentEntitlement.getConsumer().getUuid()).thenReturn("test-consumer");
 
         Set<X509ByteExtensionWrapper> byteExtensions =
@@ -1147,7 +1147,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         }
         extremeProduct.setContent(extremeContent);
         when(entitlement.getConsumer().getFact("system.certificate_version"))
-            .thenReturn("3.1");
+            .thenReturn("3.2");
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
 
         Set<X509ExtensionWrapper> extensions =
