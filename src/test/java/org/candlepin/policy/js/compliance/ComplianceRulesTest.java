@@ -35,6 +35,7 @@ import java.util.Set;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerInstalledProduct;
+import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
@@ -84,8 +85,9 @@ public class ComplianceRulesTest {
         owner = new Owner("test");
     }
 
-    private Consumer mockConsumer(String [] installedProducts) {
+    private Consumer mockConsumer(String ... installedProducts) {
         Consumer c = new Consumer();
+        c.setType(new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM));
         for (String pid : installedProducts) {
             c.addInstalledProduct(new ConsumerInstalledProduct(pid, pid));
         }
@@ -132,11 +134,11 @@ public class ComplianceRulesTest {
     }
 
     private Consumer mockConsumerWithTwoProductsAndNoEntitlements() {
-        return mockConsumer(new String [] {PRODUCT_1, PRODUCT_2});
+        return mockConsumer(PRODUCT_1, PRODUCT_2);
     }
 
     private Consumer mockFullyEntitledConsumer() {
-        Consumer c = mockConsumer(new String [] {PRODUCT_1, PRODUCT_2});
+        Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
         List<Entitlement> ents = new LinkedList<Entitlement>();
         ents.add(mockEntitlement(c, "Awesome Product", PRODUCT_1, PRODUCT_2));
         when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
@@ -155,7 +157,7 @@ public class ComplianceRulesTest {
 
     @Test
     public void entitledProducts() {
-        Consumer c = mockConsumer(new String [] {PRODUCT_1, PRODUCT_2});
+        Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
         List<Entitlement> ents = new LinkedList<Entitlement>();
         ents.add(mockEntitlement(c, "Awesome Product", PRODUCT_1));
         when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
@@ -193,7 +195,7 @@ public class ComplianceRulesTest {
      */
     @Test
     public void regularEntButLackingSocketCoverage() {
-        Consumer c = mockConsumer(new String [] {PRODUCT_1});
+        Consumer c = mockConsumer(PRODUCT_1);
         List<Entitlement> ents = new LinkedList<Entitlement>();
         ents.add(mockEntitlement(c, "Awesome Product", PRODUCT_1));
         ents.get(0).getPool().addProductAttribute(new ProductPoolAttribute("sockets",
@@ -219,7 +221,7 @@ public class ComplianceRulesTest {
     @Test
     public void regularEntsOneLackingSocketCoverage() {
         // Consumer with 8 sockets:
-        Consumer c = mockConsumer(new String [] {PRODUCT_1});
+        Consumer c = mockConsumer(PRODUCT_1);
         List<Entitlement> ents = new LinkedList<Entitlement>();
 
         // One entitlement that only provides four sockets:
@@ -251,7 +253,7 @@ public class ComplianceRulesTest {
     @Test
     public void regularEntsBothLackingSocketCoverage() {
         // Consumer with 8 sockets:
-        Consumer c = mockConsumer(new String [] {PRODUCT_1});
+        Consumer c = mockConsumer(PRODUCT_1);
         List<Entitlement> ents = new LinkedList<Entitlement>();
 
         // One entitlement that only provides four sockets:
@@ -282,7 +284,7 @@ public class ComplianceRulesTest {
      */
     @Test
     public void regularEntPlusPartialStack() {
-        Consumer c = mockConsumer(new String [] {PRODUCT_1});
+        Consumer c = mockConsumer(PRODUCT_1);
         List<Entitlement> ents = new LinkedList<Entitlement>();
         ents.add(mockEntitlement(c, "Awesome Product", PRODUCT_1));
         ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
@@ -303,7 +305,7 @@ public class ComplianceRulesTest {
     @Test
     public void testComplianceCountsZeroPoolSocketsAsInfinite() {
         // Consumer with 8 sockets:
-        Consumer c = mockConsumer(new String [] {PRODUCT_1});
+        Consumer c = mockConsumer(PRODUCT_1);
         List<Entitlement> ents = new LinkedList<Entitlement>();
 
         ents.add(mockEntitlement(c, "Awesome Product", PRODUCT_1));
@@ -325,7 +327,7 @@ public class ComplianceRulesTest {
     @Test
     public void testComplianceCountsUndefinedPoolSocketsAsInfinite() {
         // Consumer with 8 sockets:
-        Consumer c = mockConsumer(new String [] {PRODUCT_1});
+        Consumer c = mockConsumer(PRODUCT_1);
         List<Entitlement> ents = new LinkedList<Entitlement>();
 
         // One entitlement that only provides four sockets:
@@ -346,7 +348,7 @@ public class ComplianceRulesTest {
     // Test a fully stacked scenario:
     @Test
     public void compliantStack() {
-        Consumer c = mockConsumer(new String [] {PRODUCT_1, PRODUCT_2});
+        Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
         List<Entitlement> ents = new LinkedList<Entitlement>();
         ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
             PRODUCT_1, PRODUCT_2));
@@ -374,7 +376,7 @@ public class ComplianceRulesTest {
     // Test a partially stacked scenario:
     @Test
     public void partiallyCompliantStack() {
-        Consumer c = mockConsumer(new String [] {PRODUCT_1, PRODUCT_2});
+        Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
         List<Entitlement> ents = new LinkedList<Entitlement>();
 
         // Three entitlements, 2 sockets each, is not enough for our 8 sockets:
@@ -402,7 +404,7 @@ public class ComplianceRulesTest {
     // Test having more stacked entitlements than we need:
     @Test
     public void overCompliantStack() {
-        Consumer c = mockConsumer(new String [] {PRODUCT_1, PRODUCT_2});
+        Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
         List<Entitlement> ents = new LinkedList<Entitlement>();
         ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
             PRODUCT_1, PRODUCT_2));
@@ -439,7 +441,7 @@ public class ComplianceRulesTest {
     public void notInstalledButPartiallyStacked() {
         // TODO: spoke to PM, this is considered invalid even though the product is
         // not technically installed. (yet)
-        Consumer c = mockConsumer(new String [] {}); // nothing installed
+        Consumer c = mockConsumer(); // nothing installed
         List<Entitlement> ents = new LinkedList<Entitlement>();
         ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
             PRODUCT_1, PRODUCT_2));
@@ -459,7 +461,7 @@ public class ComplianceRulesTest {
 
     @Test
     public void partialStackProvidingDiffProducts() {
-        Consumer c = mockConsumer(new String [] {PRODUCT_1, PRODUCT_2, PRODUCT_3});
+        Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2, PRODUCT_3);
         List<Entitlement> ents = new LinkedList<Entitlement>();
 
         ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
@@ -486,7 +488,7 @@ public class ComplianceRulesTest {
 
     @Test
     public void fullStackProvidingDiffProducts() {
-        Consumer c = mockConsumer(new String [] {PRODUCT_1, PRODUCT_2, PRODUCT_3});
+        Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2, PRODUCT_3);
         List<Entitlement> ents = new LinkedList<Entitlement>();
 
         ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product",
@@ -519,7 +521,7 @@ public class ComplianceRulesTest {
 
     @Test
     public void partialStackAndFullStack() {
-        Consumer c = mockConsumer(new String [] {PRODUCT_1, PRODUCT_2});
+        Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
         List<Entitlement> ents = new LinkedList<Entitlement>();
 
         // Partial stack:
@@ -552,14 +554,14 @@ public class ComplianceRulesTest {
 
     @Test
     public void compliantUntilDateIsNullWhenNoInstalledProductsAndNoEntitlements() {
-        Consumer consumer = mockConsumer(new String[0]);
+        Consumer consumer = mockConsumer();
         ComplianceStatus status = compliance.getStatus(consumer, new Date());
         assertNull(status.getCompliantUntil());
     }
 
     @Test
     public void compliantUntilDateIsOnDateWhenInstalledProductsButNoEntitlements() {
-        Consumer consumer = mockConsumer(new String[]{ "Only One Installed Prod"});
+        Consumer consumer = mockConsumer("Only One Installed Prod");
         Date expectedOnDate = TestUtil.createDate(9999, 4, 12);
         ComplianceStatus status = compliance.getStatus(consumer, expectedOnDate);
         assertEquals(expectedOnDate, status.getCompliantUntil());
@@ -567,7 +569,7 @@ public class ComplianceRulesTest {
 
     @Test
     public void compliantUntilDateIsDateOfFirstEntitlementToExpireCausingNonCompliant() {
-        Consumer consumer = mockConsumer(new String[]{ PRODUCT_1, PRODUCT_2 });
+        Consumer consumer = mockConsumer(PRODUCT_1, PRODUCT_2);
 
         Date start = TestUtil.createDate(2005, 6, 12);
 
@@ -614,7 +616,7 @@ public class ComplianceRulesTest {
 
     @Test
     public void compliantUntilDateIsOnDateWhenPartialStack() {
-        Consumer c = mockConsumer(new String [] {PRODUCT_1, PRODUCT_2});
+        Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
         List<Entitlement> ents = new LinkedList<Entitlement>();
 
         // Partial stack: covers only 4 sockets... consumer has 8.
@@ -635,7 +637,7 @@ public class ComplianceRulesTest {
     //       test the guard clauses in the ComplianceRulesHelper in case it ever happened.
     @Test
     public void expiredEntitlementIsIgnoredWhenCalculatingCompliantUntilDate() {
-        Consumer consumer = mockConsumer(new String[]{ PRODUCT_1 });
+        Consumer consumer = mockConsumer(PRODUCT_1);
 
         Date start = TestUtil.createDate(2005, 6, 12);
 
@@ -656,7 +658,7 @@ public class ComplianceRulesTest {
 
     @Test
     public void statusGreenWhenConsumerHasNoInstalledProducts() {
-        Consumer c = mockConsumer(new String [] {});
+        Consumer c = mockConsumer();
         List<Entitlement> ents = new LinkedList<Entitlement>();
         when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(ents);
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
@@ -672,7 +674,7 @@ public class ComplianceRulesTest {
 
     @Test
     public void statusYellowWhenNoNonCompliantAndHasPartiallyCoveredProducts() {
-        Consumer c = mockConsumer(new String [] {PRODUCT_1});
+        Consumer c = mockConsumer(PRODUCT_1);
         List<Entitlement> ents = new LinkedList<Entitlement>();
 
         ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product", PRODUCT_1));
@@ -692,7 +694,7 @@ public class ComplianceRulesTest {
 
     @Test
     public void statusRedWhenNonCompliantProductAndCompliantProduct() {
-        Consumer c = mockConsumer(new String [] {PRODUCT_1, PRODUCT_2});
+        Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
         List<Entitlement> ents = new LinkedList<Entitlement>();
         ents.add(mockEntitlement(c, "Awesome Product", PRODUCT_1));
         when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
@@ -705,7 +707,7 @@ public class ComplianceRulesTest {
 
     @Test
     public void statusRedWhenNonCompliantProductAndPartialProduct() {
-        Consumer c = mockConsumer(new String [] {PRODUCT_1, PRODUCT_2});
+        Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
         List<Entitlement> ents = new LinkedList<Entitlement>();
 
         ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product", PRODUCT_1));
@@ -719,7 +721,7 @@ public class ComplianceRulesTest {
 
     @Test
     public void statusRedOneWhenNonCompliantProductAndCompliantAndPartial() {
-        Consumer c = mockConsumer(new String [] {PRODUCT_1, PRODUCT_2, PRODUCT_3});
+        Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2, PRODUCT_3);
         List<Entitlement> ents = new LinkedList<Entitlement>();
         ents.add(mockStackedEntitlement(c, STACK_ID_1, "Awesome Product", PRODUCT_1));
         ents.add(mockEntitlement(c, "Another Product", PRODUCT_3));
@@ -734,7 +736,7 @@ public class ComplianceRulesTest {
 
     @Test
     public void stackIsCompliant() {
-        Consumer c = new Consumer();
+        Consumer c = mockConsumer(PRODUCT_1);
         c.setFact("cpu.cpu_socket(s)", "2");
 
         List<Entitlement> ents = new LinkedList<Entitlement>();
@@ -744,7 +746,7 @@ public class ComplianceRulesTest {
 
     @Test
     public void stackIsNotCompliant() {
-        Consumer c = new Consumer();
+        Consumer c = mockConsumer(PRODUCT_1);
         c.setFact("cpu.cpu_socket(s)", "4");
 
         List<Entitlement> ents = new LinkedList<Entitlement>();
@@ -755,7 +757,7 @@ public class ComplianceRulesTest {
 
     @Test
     public void entIsCompliantIfSocketsNotSetOnEntPool() {
-        Consumer c = new Consumer();
+        Consumer c = mockConsumer(PRODUCT_1);
         c.setFact("cpu.cpu_socket(s)", "2");
 
         Entitlement ent = mockEntitlement(c, PRODUCT_1);
@@ -764,7 +766,7 @@ public class ComplianceRulesTest {
 
     @Test
     public void entIsCompliantWhenSocketsAreCovered() {
-        Consumer c = new Consumer();
+        Consumer c = mockConsumer(new String[]{ PRODUCT_1 });
         c.setFact("cpu.cpu_socket(s)", "4");
 
         Entitlement ent = mockEntitlement(c, PRODUCT_1);
@@ -774,7 +776,7 @@ public class ComplianceRulesTest {
 
     @Test
     public void entIsNotCompliantWhenSocketsAreNotCovered() {
-        Consumer c = new Consumer();
+        Consumer c = mockConsumer(new String[]{ PRODUCT_1 });
         c.setFact("cpu.cpu_socket(s)", "8");
 
         Entitlement ent = mockEntitlement(c, PRODUCT_1);

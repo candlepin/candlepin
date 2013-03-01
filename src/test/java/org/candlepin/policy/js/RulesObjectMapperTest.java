@@ -25,6 +25,7 @@ import java.util.Set;
 import static org.junit.Assert.assertFalse;
 
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.IdentityCertificate;
@@ -50,6 +51,7 @@ public class RulesObjectMapperTest {
     @Test
     public void filterConsumerIdCert() {
         Consumer c = new Consumer();
+        c.setType(new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM));
         IdentityCertificate cert = new IdentityCertificate();
         cert.setCert("FILTERMEPLEASE");
         cert.setKey("KEY");
