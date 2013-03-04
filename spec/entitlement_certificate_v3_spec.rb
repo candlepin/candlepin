@@ -56,21 +56,21 @@ describe 'Entitlement Certificate V3' do
     @entitlement = @system.consume_product(@product.id)[0]
   end
 
-  it 'generated a version 3.1 certificate when requesting a 3.0 certificate' do
+  it 'generated a version 3.2 certificate when requesting a 3.0 certificate' do
     # NOTE: This test covers the case where the system supports 3.0 certs, but
-    # the server is creating 3.1 certs, and the product contains attributes
+    # the server is creating 3.2 certs, and the product contains attributes
     # supported by 3.0.
     v3_system = consumer_client(@user, random_string('v3system'), :candlepin, nil,
                                   {'system.certificate_version' => '3.0',
                                    'system.testing' => 'true'})
     v3_system.consume_product(@product.id)
     value = extension_from_cert(v3_system.list_certificates[0]['cert'], "1.3.6.1.4.1.2312.9.6")
-    value.should == "3.1"
+    value.should == "3.2"
   end
 
   it 'generated a version 3.1 certificate' do
     value = extension_from_cert(@system.list_certificates[0]['cert'], "1.3.6.1.4.1.2312.9.6")
-    value.should == "3.1"
+    value.should == "3.2"
   end
 
   it 'generated the correct body in the blob' do
@@ -78,6 +78,7 @@ describe 'Entitlement Certificate V3' do
 
     json_body['consumer'].should == @system.get_consumer()['uuid']
     json_body['quantity'].should == 1
+    json_body['pool']['id'].should_not be_nil
     json_body['subscription']['sku'].should == @product.id
     json_body['subscription']['name'].should == @product.name
     json_body['subscription']['warning'].should == 15

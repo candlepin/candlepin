@@ -31,6 +31,7 @@ import java.util.Set;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerInstalledProduct;
+import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
@@ -450,6 +451,7 @@ public class InstalledProductStatusCalculatorTest {
 
     private Consumer mockConsumer(String ... installedProducts) {
         Consumer c = new Consumer();
+        c.setType(new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM));
         for (String pid : installedProducts) {
             c.addInstalledProduct(new ConsumerInstalledProduct(pid, pid));
         }

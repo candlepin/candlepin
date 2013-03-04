@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+
+    <changeSet id="20130206153101" author="wpoteat">
+        <comment>Record upstream entitlement id and consumer to subscription information</comment>
+        <addColumn tableName="cp_subscription">
+            <column name="upstream_entitlement_id" type="varchar(32)"/>
+            <column name="upstream_consumer_id" type="varchar(255)"/>
+        </addColumn>
+        <!-- See http://www.liquibase.org/manual/refactoring_commands -->
+    </changeSet>
+
+</databaseChangeLog>
