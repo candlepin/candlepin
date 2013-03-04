@@ -74,8 +74,20 @@ public class CriteriaRules  {
         }
 
         List<Criterion> criteriaFilters = new LinkedList<Criterion>();
-        // Don't load virt_only pools if this consumer isn't a guest:
-        if (!"true".equalsIgnoreCase(consumer.getFact("virt.is_guest"))) {
+
+        // Don't load virt_only pools if this consumer isn't a guest
+        // or a manifest consumer
+        if (consumer.isManifest()) {
+            DetachedCriteria noRequiresHost = DetachedCriteria.forClass(
+                    PoolAttribute.class, "attr")
+                .add(Restrictions.eq("name", "requires_host"))
+                .add(Property.forName("this.id").eqProperty("attr.pool.id"))
+                .setProjection(Projections.property("attr.id"));
+
+            // we do want everything else
+            criteriaFilters.add(Subqueries.notExists(noRequiresHost));
+        }
+        else if (!"true".equalsIgnoreCase(consumer.getFact("virt.is_guest"))) {
             // not a guest
             DetachedCriteria noVirtOnlyPoolAttr =
                 DetachedCriteria.forClass(

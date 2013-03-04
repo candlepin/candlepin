@@ -108,6 +108,25 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void caseInsensitiveVirtUuidMatchingDifferentOwners() {
+        Consumer host = new Consumer("hostConsumer", "testUser", owner, ct);
+        consumerCurator.create(host);
+
+        owner = new Owner("test-owner2", "Test Owner2");
+        owner = ownerCurator.create(owner);
+
+        Consumer gConsumer1 = new Consumer("guestConsumer1", "testUser", owner, ct);
+        gConsumer1.getFacts().put("virt.uuid", "daf0fe10-956b-7b4e-b7dc-b383ce681ba8");
+        consumerCurator.create(gConsumer1);
+
+        host.addGuestId(new GuestId("DAF0FE10-956B-7B4E-B7DC-B383CE681BA8"));
+        consumerCurator.update(host);
+
+        List<Consumer> guests = consumerCurator.getGuests(host);
+        assertTrue(guests.size() == 0);
+    }
+
+    @Test
     public void addGuestsNotConsumers() {
         Consumer consumer = new Consumer("hostConsumer", "testUser", owner, ct);
         consumerCurator.create(consumer);

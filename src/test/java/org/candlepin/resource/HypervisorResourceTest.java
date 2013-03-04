@@ -174,8 +174,11 @@ public class HypervisorResourceTest {
         Map<String, List<GuestId>> hostGuestMap = new HashMap<String, List<GuestId>>();
         hostGuestMap.put("test-host", Arrays.asList(new GuestId("GUEST_B")));
 
+        Owner o = new Owner();
+        o.setId("owner-id");
         Consumer existing = new Consumer();
         existing.setUuid("test-host");
+        existing.setOwner(o);
         existing.addGuestId(new GuestId("GUEST_A"));
 
         when(consumerCurator.findByUuid(eq("test-host"))).thenReturn(existing);
