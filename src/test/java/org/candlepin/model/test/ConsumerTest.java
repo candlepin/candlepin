@@ -20,12 +20,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.persistence.PersistenceException;
-
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Config;
@@ -47,6 +41,12 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.persistence.PersistenceException;
 
 public class ConsumerTest extends DatabaseTestFixture {
 
@@ -491,6 +491,22 @@ public class ConsumerTest extends DatabaseTestFixture {
         consumerCurator.update(lookedUp);
         lookedUp = consumerCurator.find(consumer.getId());
         assertEquals(1, lookedUp.getGuestIds().size());
+    }
+
+    @Test
+    public void nullType() {
+        Consumer c = new Consumer();
+        c.setType(null);
+        assertFalse(c.isManifest());
+    }
+
+    @Test
+    public void isManifest() {
+        Consumer c = new Consumer();
+        ConsumerType type = new ConsumerType(
+            ConsumerType.ConsumerTypeEnum.CANDLEPIN);
+        c.setType(type);
+        assertTrue(c.isManifest());
     }
 
 }

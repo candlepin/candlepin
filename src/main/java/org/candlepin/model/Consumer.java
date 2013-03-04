@@ -562,6 +562,6 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     @Transient
     public boolean isManifest() {
-        return getType().isManifest();
+        return getType() == null ? false : getType().isManifest();
     }
 }
