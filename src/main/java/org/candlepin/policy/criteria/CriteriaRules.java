@@ -41,7 +41,6 @@ import com.google.inject.Inject;
  *
  */
 public class CriteriaRules  {
-    protected Logger rulesLogger = null;
 
     protected Config config;
     protected ConsumerCurator consumerCurator;
@@ -52,8 +51,6 @@ public class CriteriaRules  {
             ConsumerCurator consumerCurator) {
         this.config = config;
         this.consumerCurator = consumerCurator;
-        this.rulesLogger = Logger.getLogger(
-            CriteriaRules.class.getCanonicalName() + ".rules");
     }
 
     /**
