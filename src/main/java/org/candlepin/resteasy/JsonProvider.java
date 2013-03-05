@@ -44,44 +44,44 @@ import com.google.inject.Inject;
 @Consumes({"application/*+json", "text/json"})
 public class JsonProvider extends JacksonJsonProvider {
 
-	public static void register(boolean indentJson){
-		ResteasyProviderFactory rpf = ResteasyProviderFactory.getInstance();
-		JsonProvider jsonprovider = new JsonProvider(indentJson);
-		rpf.addMessageBodyReader(jsonprovider);
-		rpf.addMessageBodyWriter(jsonprovider);
-		RegisterBuiltin.register(rpf);
-	}
+    public static void register(boolean indentJson) {
+        ResteasyProviderFactory rpf = ResteasyProviderFactory.getInstance();
+        JsonProvider jsonprovider = new JsonProvider(indentJson);
+        rpf.addMessageBodyReader(jsonprovider);
+        rpf.addMessageBodyWriter(jsonprovider);
+        RegisterBuiltin.register(rpf);
+    }
 
-	@Inject
-	public JsonProvider(Config config){
-		this(config.indentJson());
-	}
+    @Inject
+    public JsonProvider(Config config) {
+        this(config.indentJson());
+    }
 
-	public JsonProvider(boolean indentJson) {
-		// Prefer jackson annotations, but use jaxb if no jackson.
-		super(Annotations.JACKSON, Annotations.JAXB);
+    public JsonProvider(boolean indentJson) {
+        // Prefer jackson annotations, but use jaxb if no jackson.
+        super(Annotations.JACKSON, Annotations.JAXB);
 
-		ObjectMapper mapper = _mapperConfig.getDefaultMapper();
-		configureHateoasObjectMapper(mapper, indentJson);
-		setMapper(mapper);
-	}
+        ObjectMapper mapper = _mapperConfig.getDefaultMapper();
+        configureHateoasObjectMapper(mapper, indentJson);
+        setMapper(mapper);
+    }
 
-	private void configureHateoasObjectMapper(ObjectMapper mapper, boolean indentJson) {
-		mapper.configure(SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS, false);
+    private void configureHateoasObjectMapper(ObjectMapper mapper, boolean indentJson) {
+        mapper.configure(SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS, false);
 
-		if (indentJson) {
-			mapper.configure(SerializationConfig.Feature.INDENT_OUTPUT, true);
-		}
+        if (indentJson) {
+            mapper.configure(SerializationConfig.Feature.INDENT_OUTPUT, true);
+        }
 
-		SimpleFilterProvider filterProvider = new SimpleFilterProvider();
-		filterProvider = filterProvider.addFilter("ApiHateoas",
-				new HateoasBeanPropertyFilter());
-		filterProvider.setFailOnUnknownId(false);
-		mapper.setFilters(filterProvider);
+        SimpleFilterProvider filterProvider = new SimpleFilterProvider();
+        filterProvider = filterProvider.addFilter("ApiHateoas",
+                new HateoasBeanPropertyFilter());
+        filterProvider.setFailOnUnknownId(false);
+        mapper.setFilters(filterProvider);
 
-		AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
-		AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
-		AnnotationIntrospector pair = new AnnotationIntrospector.Pair(primary, secondary);
-		mapper.setAnnotationIntrospector(pair);
-	}
+        AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
+        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
+        AnnotationIntrospector pair = new AnnotationIntrospector.Pair(primary, secondary);
+        mapper.setAnnotationIntrospector(pair);
+    }
 }
