@@ -40,7 +40,7 @@ import org.hibernate.annotations.GenericGenerator;
 public class Rules extends AbstractHibernateObject {
 
     private static final Pattern VERSION_REGEX =
-        Pattern.compile(".*[V|v]ersion:.((?:(\\d+)\\.)?(?:(\\d+)\\.)?(\\*|\\d+)).*");
+        Pattern.compile("[//|#]+ *[V|v]ersion: *([0-9]+(\\.[0-9]+)*) *");
 
     @Id
     @GeneratedValue(generator = "system-uuid")

@@ -68,7 +68,7 @@ public class RulesImporterTest {
         Rules currentRules = new Rules("// Version: 2.1");
         when(curator.getRules()).thenReturn(currentRules);
 
-        importer.importObject(new StringReader("//Version: 1.0//rules"));
+        importer.importObject(new StringReader("//Version: 1.0\n//rules"));
         verify(curator, never()).update(any(Rules.class));
     }
 

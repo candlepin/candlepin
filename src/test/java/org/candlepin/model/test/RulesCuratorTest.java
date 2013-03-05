@@ -39,26 +39,6 @@ public class RulesCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void versionParsing() {
-        Rules rules = new Rules("// Version: 2.0.0\n//oldrules");
-        assertEquals("2.0.0", rules.getVersion());
-        rules = new Rules("//Version: 2.0.0\n//oldrules");
-        assertEquals("2.0.0", rules.getVersion());
-        rules = new Rules("// Version: 2.0.0  \n//oldrules");
-        assertEquals("2.0.0", rules.getVersion());
-        rules = new Rules("// version: 2.0\n//oldrules");
-        assertEquals("2.0", rules.getVersion());
-        rules = new Rules("# Version: 2.0\n//oldrules");
-        assertEquals("2.0", rules.getVersion());
-    }
-
-    @Test(expected = RuleParseException.class)
-    public void
-    missingVersion() {
-        Rules rules = new Rules("// version:\n//something else");
-    }
-
-    @Test
     public void ignoreOldRulesInDb() throws Exception {
         Rules oldRules = new Rules("// Version: 1.9\n//oldrules");
         rulesCurator.create(oldRules);
