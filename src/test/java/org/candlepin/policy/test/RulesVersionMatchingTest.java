@@ -52,6 +52,7 @@ public class RulesVersionMatchingTest {
             { "// Version: 1.0.0\n// This is a new line", "1.0.0", true },
 
             // invalid version strings.
+            { "", "", false },
             { "// Version:  ", "", false },
             { "// Version 1.0", "", false },
             { "Version 1.0", "", false },
