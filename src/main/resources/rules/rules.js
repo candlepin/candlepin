@@ -519,7 +519,7 @@ var Entitlement = {
     },
 
     get_attribute_context: function() {
-        context = eval(json_context);
+        context = JSON.parse(json_context);
 
         if ("pool" in context) {
             context.pool = createPool(context.pool);
@@ -702,7 +702,7 @@ var Autobind = {
         // same subset of products which are applicable to the requested products.
         // further, each array is sorted, from best to worst. (pool fitness is determined
         // arbitrarily by rules herein.
-        var context = eval(json_context);
+        var context = JSON.parse(json_context);
         var pools_by_class = [];
 
         // "pools" is a list of all the owner's pools which are compatible for the system:
@@ -934,7 +934,7 @@ function find_relevant_pids(entitlement, consumer) {
  */
 var Compliance = {
     get_status_context: function() {
-        context = eval(json_context);
+        context = JSON.parse(json_context);
         context.ondate = new Date(context.ondate);
 
         // Add some methods to the various Pool objects:

@@ -84,8 +84,7 @@ public class RulesObjectMapper {
         }
 
         try {
-            // Brackets required by JS when processing JSON.
-            return '(' + this.mapper.writeValueAsString(mainNode) + ')';
+            return this.mapper.writeValueAsString(mainNode);
         }
         catch (Exception e) {
             throw new IseException("Unable to serialize objects to JSON.", e);
