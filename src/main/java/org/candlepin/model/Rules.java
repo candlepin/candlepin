@@ -72,7 +72,6 @@ public class Rules extends AbstractHibernateObject {
                 " version not defined");
         }
 
-        System.err.println("LINE: " + versionLine);
         Matcher m = VERSION_REGEX.matcher(versionLine);
         if (!m.matches()) {
             throw new RuleParseException("Unable to read version from rules file. " +
@@ -111,7 +110,6 @@ public class Rules extends AbstractHibernateObject {
 
     private String getVersionLine() {
         int firstLineEndIdx = this.rules.indexOf("\n");
-        System.err.println("First Index: " + firstLineEndIdx);
         firstLineEndIdx = firstLineEndIdx < 0 ? this.rules.length() : firstLineEndIdx;
         return this.rules.substring(0, firstLineEndIdx);
     }
