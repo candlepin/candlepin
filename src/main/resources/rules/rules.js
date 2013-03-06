@@ -32,7 +32,7 @@ function autobind_name_space() {
 
 function createPool(pool) {
 
-    pool.product_list = []
+    pool.product_list = [];
 
     // General function to look for an attribute in the specified
     // attribute collection.
