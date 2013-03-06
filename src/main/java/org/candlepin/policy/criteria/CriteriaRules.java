@@ -55,8 +55,8 @@ public class CriteriaRules  {
 
     /**
      * Create a List of jpa criterion that can filter out pools that are not
-     * applicable to consumer. Helps to scale down large numbers of pools specifically
-     * with virt_limit subscriptions.
+     * applicable to consumer. Helps to scale down large numbers of pools
+     * specifically with virt_limit subscriptions.
      *
      * @param consumer The consumer we are filtering pools for
      * @return List of Criterion

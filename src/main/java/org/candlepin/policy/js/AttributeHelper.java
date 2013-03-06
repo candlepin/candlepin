@@ -30,12 +30,14 @@ import org.candlepin.model.ProductAttribute;
  */
 public class AttributeHelper {
     /**
-     * Both products and pools can carry attributes, we need to trigger rules for each.
-     * In this map, pool attributes will override product attributes, should the same
-     * key be set for both.
+     * Both products and pools can carry attributes, we need to
+     * trigger rules for each. In this map, pool attributes will
+     * override product attributes, should the same key be set
+     * for both.
      *
      * @param pool Pool can be null.
-     * @return Map of all attribute names and values. Pool attributes have priority.
+     * @return Map of all attribute names and values. Pool attributes
+     *         have priority.
      */
     public Map<String, String> getFlattenedAttributes(Pool pool) {
         Map<String, String> allAttributes = new HashMap<String, String>();
