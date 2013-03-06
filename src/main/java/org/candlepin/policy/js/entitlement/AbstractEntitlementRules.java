@@ -50,7 +50,6 @@ import org.xnap.commons.i18n.I18n;
 public abstract class AbstractEntitlementRules implements Enforcer {
 
     protected Logger log = null;
-    protected Logger rulesLogger = null;
     protected DateSource dateSource;
 
     protected ProductCache productCache;

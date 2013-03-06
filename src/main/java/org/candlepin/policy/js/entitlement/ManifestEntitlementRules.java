@@ -49,8 +49,6 @@ public class ManifestEntitlementRules extends AbstractEntitlementRules implement
         this.consumerCurator = consumerCurator;
 
         log = Logger.getLogger(ManifestEntitlementRules.class);
-        rulesLogger =
-            Logger.getLogger(ManifestEntitlementRules.class.getCanonicalName() + ".rules");
     }
 
     @Override
@@ -88,7 +86,7 @@ public class ManifestEntitlementRules extends AbstractEntitlementRules implement
         args.put("standalone", config.standalone());
 
         // Can't serialize these objects.
-        args.put("log", rulesLogger, false);
+        args.put("log", log, false);
 
         log.debug("Running pre-entitlement global rule for: " + consumer.getUuid() +
             " product: " + topLevelProductId);

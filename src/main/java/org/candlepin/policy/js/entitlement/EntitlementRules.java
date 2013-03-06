@@ -53,8 +53,6 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         this.consumerCurator = consumerCurator;
 
         log = Logger.getLogger(EntitlementRules.class);
-        rulesLogger =
-            Logger.getLogger(EntitlementRules.class.getCanonicalName() + ".rules");
     }
 
     @Override
@@ -98,7 +96,7 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         }
 
         // Add all non-serializable objects to the context.
-        context.put("log", rulesLogger, false);
+        context.put("log", log, false);
 
         log.debug("Running pre-entitlement rules for: " + consumer.getUuid() +
             " product: " + pool.getProductId());
