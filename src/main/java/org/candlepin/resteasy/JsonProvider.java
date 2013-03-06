@@ -14,11 +14,12 @@
  */
 package org.candlepin.resteasy;
 
-import com.google.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.ext.Provider;
 
+import org.candlepin.config.Config;
+import org.candlepin.jackson.HateoasBeanPropertyFilter;
 import org.codehaus.jackson.jaxrs.Annotations;
 import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
 import org.codehaus.jackson.map.AnnotationIntrospector;
@@ -27,8 +28,10 @@ import org.codehaus.jackson.map.SerializationConfig;
 import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
 import org.codehaus.jackson.map.ser.impl.SimpleFilterProvider;
 import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
-import org.candlepin.config.Config;
-import org.candlepin.jackson.HateoasBeanPropertyFilter;
+import org.jboss.resteasy.plugins.providers.RegisterBuiltin;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
+
+import com.google.inject.Inject;
 
 /**
  * JsonProvider
@@ -41,26 +44,38 @@ import org.candlepin.jackson.HateoasBeanPropertyFilter;
 @Consumes({"application/*+json", "text/json"})
 public class JsonProvider extends JacksonJsonProvider {
 
+    public static void register(boolean indentJson) {
+        ResteasyProviderFactory rpf = ResteasyProviderFactory.getInstance();
+        JsonProvider jsonprovider = new JsonProvider(indentJson);
+        rpf.addMessageBodyReader(jsonprovider);
+        rpf.addMessageBodyWriter(jsonprovider);
+        RegisterBuiltin.register(rpf);
+    }
+
     @Inject
     public JsonProvider(Config config) {
+        this(config.indentJson());
+    }
+
+    public JsonProvider(boolean indentJson) {
         // Prefer jackson annotations, but use jaxb if no jackson.
         super(Annotations.JACKSON, Annotations.JAXB);
 
         ObjectMapper mapper = _mapperConfig.getDefaultMapper();
-        configureHateoasObjectMapper(mapper, config);
+        configureHateoasObjectMapper(mapper, indentJson);
         setMapper(mapper);
     }
 
-    private void configureHateoasObjectMapper(ObjectMapper mapper, Config config) {
+    private void configureHateoasObjectMapper(ObjectMapper mapper, boolean indentJson) {
         mapper.configure(SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS, false);
 
-        if (config.indentJson()) {
+        if (indentJson) {
             mapper.configure(SerializationConfig.Feature.INDENT_OUTPUT, true);
         }
 
         SimpleFilterProvider filterProvider = new SimpleFilterProvider();
         filterProvider = filterProvider.addFilter("ApiHateoas",
-            new HateoasBeanPropertyFilter());
+                new HateoasBeanPropertyFilter());
         filterProvider.setFailOnUnknownId(false);
         mapper.setFilters(filterProvider);
 
