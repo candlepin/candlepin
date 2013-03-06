@@ -28,6 +28,18 @@ import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
 
 /**
  * RulesObjectMapper
+ *
+ * A wrapper around a jackson ObjectMapper that is used to
+ * serialize our model objects into JSON and to recreate them
+ * from a JSON string.
+ *
+ * The mapper is configured with filters to filter out any info
+ * on our model objects that is not useful to the rules.
+ *
+ * This class is implemented as a singleton because it is very
+ * expensive to create a jackson ObjectMapper and it is preferred
+ * to have it instantiated once.
+ *
  */
 public class RulesObjectMapper {
 
