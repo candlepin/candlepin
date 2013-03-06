@@ -101,7 +101,7 @@ public class AutobindRules {
         // Convert the JSON returned into a Map object:
         Map<String, Integer> result = null;
         try {
-            String json = runJsFunction(String.class, SELECT_POOL_FUNCTION, args);
+            String json = jsRules.invokeMethod(SELECT_POOL_FUNCTION, args);
             result = mapper.toObject(json, Map.class);
             if (log.isDebugEnabled()) {
                 log.debug("Excuted javascript rule: " + SELECT_POOL_FUNCTION);
@@ -138,9 +138,7 @@ public class AutobindRules {
         if (bestPools.size() > 0) {
             return bestPools;
         }
-        else {
-            return null;
-        }
+        return null;
     }
 
     /**
@@ -196,13 +194,6 @@ public class AutobindRules {
 
         // Otherwise return the list of pools as is:
         return pools;
-    }
-
-    private <T extends Object> T runJsFunction(Class<T> clazz, String function,
-        JsContext context) throws NoSuchMethodException, RhinoException {
-        T returner = null;
-        returner = jsRules.invokeMethod(function, context);
-        return returner;
     }
 
 }
