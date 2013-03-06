@@ -507,12 +507,8 @@ public abstract class AbstractEntitlementRules implements Enforcer {
     @Override
     public ValidationResult preEntitlement(Consumer consumer, Pool entitlementPool,
         Integer quantity) {
-
         jsRules.reinitTo("entitlement_name_space");
         rulesInit();
-
-        //return new PreEntHelper(1, null);
-        // FIXME MSTEAD
         return new ValidationResult();
     }
 
