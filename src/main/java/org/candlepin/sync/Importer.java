@@ -219,7 +219,7 @@ public class Importer {
             }
 
             exportStream = new FileInputStream(new File(tmpDir, "consumer_export.zip"));
-            boolean verifiedSignature = pki.verifySHA256WithRSAHashWithUpstreamCACert(
+            boolean verifiedSignature = pki.verifySHA256WithRSAHashAgainstCACerts(
                 exportStream,
                 loadSignature(new File(tmpDir, "signature")));
             if (!verifiedSignature) {

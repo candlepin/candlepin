@@ -42,7 +42,6 @@ import java.util.Set;
 
 
 import org.apache.log4j.Logger;
-import org.candlepin.config.ConfigProperties;
 
 /**
  * PKIUtility
@@ -134,9 +133,18 @@ public abstract class PKIUtility {
         }
     }
 
-    public boolean verifySHA256WithRSAHashWithUpstreamCACert(
+    public boolean verifySHA256WithRSAHashAgainstCACerts(
         InputStream input, byte[] signedHash) throws CertificateException, IOException {
-        return verifySHA256WithRSAHash(input, signedHash, reader.getUpstreamCACert());
+
+        if (verifySHA256WithRSAHash(input, signedHash, reader.getCACert())) {
+            return true;
+        }
+        for (X509Certificate cert : reader.getUpstreamCACerts()) {
+            if (verifySHA256WithRSAHash(input, signedHash, cert)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public boolean verifySHA256WithRSAHash(
@@ -149,13 +157,6 @@ public abstract class PKIUtility {
             return signature.verify(signedHash);
         }
         catch (SignatureException se) {
-            /*
-             * Can happen if your candlepin upstream cert is not the same length as the one
-             * which signed the manifest. Treat it like a bad signature check failure.
-             */
-            log.error("SignatureException:", se);
-            log.warn(ConfigProperties.CA_CERT_UPSTREAM + " may not match the server" +
-                " that signed manifest.");
             return false;
         }
         catch (Exception e) {

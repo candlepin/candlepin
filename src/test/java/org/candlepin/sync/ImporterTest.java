@@ -389,7 +389,7 @@ public class ImporterTest {
         ConflictOverrides co = mock(ConflictOverrides.class);
 
         // Mock a passed signature check:
-        when(pki.verifySHA256WithRSAHashWithUpstreamCACert(any(InputStream.class),
+        when(pki.verifySHA256WithRSAHashAgainstCACerts(any(InputStream.class),
             any(byte [].class))).thenReturn(true);
 
         File archive = new File("/tmp/file.zip");
@@ -426,7 +426,7 @@ public class ImporterTest {
         ConflictOverrides co = mock(ConflictOverrides.class);
 
         // Mock a passed signature check:
-        when(pki.verifySHA256WithRSAHashWithUpstreamCACert(any(InputStream.class),
+        when(pki.verifySHA256WithRSAHashAgainstCACerts(any(InputStream.class),
             any(byte [].class))).thenReturn(true);
 
         File archive = new File("/tmp/file.zip");

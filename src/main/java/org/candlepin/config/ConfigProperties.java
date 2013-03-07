@@ -153,8 +153,7 @@ public class ConfigProperties {
 
                 this.put(CA_KEY, "/etc/candlepin/certs/candlepin-ca.key");
                 this.put(CA_CERT, "/etc/candlepin/certs/candlepin-ca.crt");
-                this.put(CA_CERT_UPSTREAM,
-                    "/etc/candlepin/certs/candlepin-upstream-ca.crt");
+                this.put(CA_CERT_UPSTREAM, "/etc/candlepin/certs/upstream");
 
                 this.put(ACTIVATION_DEBUG_PREFIX, "");
 
