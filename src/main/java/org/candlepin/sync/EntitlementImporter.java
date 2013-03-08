@@ -193,7 +193,7 @@ public class EntitlementImporter {
                 map = new HashMap<String, Subscription>();
             }
             for (Subscription localSub : map.values()) {
-                if (localSub.getQuantity() == subscription.getQuantity()) {
+                if (localSub.getQuantity().equals(subscription.getQuantity())) {
                     local = localSub;
                     break;
                 }
