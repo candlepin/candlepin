@@ -142,15 +142,15 @@
     <jar destfile="${api.jar}">
       <fileset dir="${target.dir}/classes">
         <exclude name="**/pinsetter/**" />
-        <include name="**/auth/**"/>
-        <include name="**/config/**"/>
-        <include name="**/service/**"/>
-        <include name="**/model/**"/>
-        <include name="**/pki/**"/>
-        <include name="**/exceptions/**"/>
-        <include name="**/util/**"/>
-        <include name="**/resteasy/**"/>
-        <include name="**/jackson/**"/>
+        <include name="**/candlepin/auth/**"/>
+        <include name="**/candlepin/config/**"/>
+        <include name="**/candlepin/service/**"/>
+        <include name="**/candlepin/model/**"/>
+        <include name="**/candlepin/pki/**"/>
+        <include name="**/candlepin/exceptions/**"/>
+        <include name="**/candlepin/util/**"/>
+        <include name="**/candlepin/resteasy/**"/>
+        <include name="**/candlepin/jackson/**"/>
       </fileset>
       <manifest>
         <attribute name="Implementation-Vendor" value="" />
