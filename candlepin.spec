@@ -17,7 +17,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.7.27
+Version: 0.7.28
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -326,6 +326,9 @@ fi
 
 
 %changelog
+* Fri Mar 08 2013 jesus m. rodriguez <jesusr@redhat.com> 0.7.28-1
+- get resteasy and jackson classes in candlepin-api.jar of rpm (jesusr@redhat.com)
+
 * Thu Mar 07 2013 William Poteat <wpoteat@redhat.com> 0.7.27-1
 - Update of zanata strings (wpoteat@redhat.com)
 - add packages to candlepin_api (dcrissma@redhat.com)
