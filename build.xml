@@ -149,6 +149,8 @@
         <include name="**/pki/**"/>
         <include name="**/exceptions/**"/>
         <include name="**/util/**"/>
+        <include name="**/resteasy/**"/>
+        <include name="**/jackson/**"/>
       </fileset>
       <manifest>
         <attribute name="Implementation-Vendor" value="" />
