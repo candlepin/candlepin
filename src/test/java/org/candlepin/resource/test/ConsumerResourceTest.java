@@ -426,6 +426,23 @@ public class ConsumerResourceTest {
             null, false, null);
     }
 
+    @Test
+    public void testUpdateLastCheckinTime() {
+        // this test is to make sure ConsumerResource is calling the curator correctly
+        ConsumerCurator consumerCurator = mock(ConsumerCurator.class);
+        ConsumerResource consumerResource = new ConsumerResource(consumerCurator, null,
+            null, null, null, null, null, i18n, null, null, null, null,
+            null, null, null, null, null, null, null, null, null, null, null, null,
+            new Config());
+        Consumer c = mock(Consumer.class);
+        String dtStr = "2011-09-26T18:10:50.184081+00:00";
+        Date dt = ResourceDateParser.parseDateString(dtStr);
+        when(consumerCurator.findByUuid("123123")).thenReturn(c);
+        when(consumerCurator.updateLastCheckin(c, dt)).thenReturn(c);
+        consumerResource.updateLastCheckin("123123", dtStr);
+        verify(consumerCurator).updateLastCheckin(eq(c), eq(dt));
+    }
+
     /**
      * Basic test. If invalid id is given, should throw
      * {@link NotFoundException}
