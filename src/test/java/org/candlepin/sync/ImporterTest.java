@@ -555,6 +555,7 @@ public class ImporterTest {
         importFiles.put(ImportFile.RULES_FILE.fileName(), rulesFiles[0]);
         importFiles.put(ImportFile.PRODUCTS.fileName(), null);
         importFiles.put(ImportFile.ENTITLEMENTS.fileName(), null);
+        importFiles.put(ImportFile.UPSTREAM_CONSUMER.fileName(), mock(File.class));
 
         try {
             i.importObjects(owner, importFiles, co);
