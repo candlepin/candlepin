@@ -42,7 +42,7 @@ public class CriteriaRules  {
     protected JsRunner jsRules;
     protected Config config;
     protected ConsumerCurator consumerCurator;
-    protected static Logger log = Logger.getLogger(CriteriaRules.class);
+    private static Logger log = Logger.getLogger(CriteriaRules.class);
 
     private static String jsNameSpace = "criteria_name_space";
     @Inject

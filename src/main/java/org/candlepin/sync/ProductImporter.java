@@ -109,7 +109,7 @@ public class ProductImporter {
             return true;
         }
 
-        if (existingProd.getMultiplier() != importedProd.getMultiplier()) {
+        if (!existingProd.getMultiplier().equals(importedProd.getMultiplier())) {
             return true;
         }
 
