@@ -126,7 +126,8 @@ public class ConfigProperties {
     private static final String NON_NEG_INTEGER_ATTRIBUTE_LIST =
         "sockets," +
         "warning_period," +
-        "ram";
+        "ram," +
+        "cores";
 
     public static final String LONG_ATTRIBUTES =
         "candlepin.long_attributes";

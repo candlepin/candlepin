@@ -11,6 +11,7 @@
 
 var SOCKET_FACT="cpu.cpu_socket(s)";
 var RAM_FACT = "memory.memtotal";
+var CORES_FACT = "cpu.core(s)_per_socket";
 var PROD_ARCHITECTURE_SEPARATOR = ",";
 
 function entitlement_name_space() {
@@ -224,27 +225,37 @@ function architectureMatches(productArchStr, consumerUnameMachine, consumerType)
    return true;
 }
 
-// get the number of sockets that each entitlement from a pool covers.
-// if sockets is set to 0 or is not set, it is considered to be unlimited.
-//
-function get_pool_sockets(pool) {
+/**
+ * Get the quantity of the specified attribute that each
+ * entitlement from a pool covers. If the attribute is
+ * set to 0 or is not set, it is considered to be unlimited.
+ */
+function getPoolQuantity(pool, attributeName) {
     for (var j = 0; j < pool.productAttributes.length; j++) {
         var prodAttr = pool.productAttributes[j];
 
-        if (prodAttr.name == "sockets") {
-            var sockets = prodAttr.value;
+        if (prodAttr.name == attributeName) {
+            var initialQuantity = prodAttr.value;
             // TODO: is this 0 right? We would have a string here...
-            if (sockets == 0) {
+            if (initialQuantity == 0) {
                 return Infinity;
             }
             else {
-                return parseInt(sockets);
+                return parseInt(initialQuantity);
             }
         }
     }
     return Infinity;
 }
 
+
+function get_pool_sockets(pool) {
+    return getPoolQuantity(pool, "sockets");
+}
+
+function getPoolCores(pool) {
+    return getPoolQuantity(pool, "cores");
+}
 
 // assumptions: number of pools consumed from is not considered, so we might not be taking from the smallest amount.
 // we only stack within the same pool_class. if you have stacks that provide different sets of products,
@@ -263,7 +274,7 @@ function findStackingPools(pool_class, consumer, compliance) {
     var consumer_sockets = 1;
     if (consumer.facts[SOCKET_FACT]) {
         consumer_sockets = consumer.facts[SOCKET_FACT];
-     }
+    }
 
     var stackToEntitledSockets = {};
     var stackToPoolMap = {};
@@ -495,6 +506,7 @@ var Entitlement = {
         return  "architecture:1:arch," +
             "sockets:1:sockets," +
             "ram:1:ram," +
+            "cores:1:cores," +
             "requires_consumer_type:1:requires_consumer_type," +
             "user_license:1:user_license," +
             "virt_only:1:virt_only," +
@@ -629,6 +641,26 @@ var Entitlement = {
             if ((parseInt(pool.getProductAttribute("sockets")) > 0) &&
                 (parseInt(pool.getProductAttribute("sockets")) < parseInt(consumer.facts[SOCKET_FACT]))) {
                 result.addWarning("rulewarning.unsupported.number.of.sockets");
+            }
+        }
+        return JSON.stringify(result);
+    },
+
+    pre_cores: function() {
+        var result = Entitlement.ValidationResult();
+        context = Entitlement.get_attribute_context();
+
+        var consumer = context.consumer;
+        var pool = context.pool;
+
+        var consumerCores = consumer.facts[CORES_FACT];
+        log.debug("### Consumer has " + consumerCores + " cores");
+
+        if (consumerCores && !pool.getProductAttribute("stacking_id")) {
+            var poolCores = parseInt(pool.getProductAttribute("cores"));
+            log.debug("#### Product has " + poolCores + " cores.");
+            if (poolCores > 0 && poolCores < consumer.facts[CORES_FACT]) {
+                result.addWarning("rulewarning.unsupported.number.of.cores");
             }
         }
         return JSON.stringify(result);
@@ -1191,7 +1223,7 @@ var Compliance = {
         }
         return null;
     },
- 
+
     /*
      * Check an entitlement to see if it provides the proper architecture
      */
@@ -1241,7 +1273,8 @@ var Compliance = {
     },
 
     /*
-     * Check an entitlement to see if it provides sufficent CPU sockets a consumer.
+     * Check an entitlement to see if it covers the system based on
+     * its specifications.
      */
     ent_is_compliant: function(consumer, ent, log) {
         log.debug("Checking entitlement compliance: " + ent.id);
@@ -1280,6 +1313,21 @@ var Compliance = {
             else {
                 log.debug("  Pool's RAM attribute was empty. Skipping RAM check.");
             }
+        }
+
+        // Verify Cores coverage
+        var consumerCores = 1;
+        if (!(typeof consumer.facts[CORES_FACT] === undefined)) {
+            consumerCores = parseInt(consumer.facts[CORES_FACT]);
+        }
+        log.debug("  Consumer cores found: " + consumerCores);
+
+        var coveredCores = getPoolCores(ent.pool);
+        log.debug("  Cores covered by pool: " + coveredCores);
+
+        if (coveredCores < consumerCores) {
+            log.debug("  Entitlement does not cover system cores.");
+            return false;
         }
 
         return true

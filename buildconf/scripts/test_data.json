@@ -278,7 +278,7 @@
         }
     ],
     "roles": [
-	    {
+        {
             "name": "admin-all",
             "permissions": [
                 {
@@ -1071,7 +1071,7 @@
                 "support_level_exempt": "true"
             }
         },
-      {
+        {
             "name": "RAM Limiting Product",
             "id": "801",
             "version": "1.0",
@@ -1116,7 +1116,29 @@
             "provided_products": [
                 "801"
             ]
+        },
+        {
+            "name": "Core Limiting Product",
+            "id": "806",
+            "version": "1.0",
+            "arch": "x86_64",
+            "attributes": {
+            },
+            "content": [
+                [1, true],
+                [11124, false]
+            ]
+        },
+        {
+            "name": "Cores Package (2 cores)",
+            "id": "cores-2",
+            "type": "MKT",
+            "attributes": {
+                "cores": 2
+            },
+            "provided_products": [
+                "806"
+            ]
         }
-
     ]
 }
