@@ -25,7 +25,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.7.29
+Version: 0.8.0
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -344,6 +344,33 @@ fi
 
 
 %changelog
+* Wed Mar 13 2013 Devan Goodwin <dgoodwin@rm-rf.ca> 0.8.0-1
+- Introduce candlepin software collection. (dgoodwin@rm-rf.ca)
+- converted != to equals instead of !...equals (jesusr@redhat.com)
+- findbugs: Suspicious comparison of Long references (jesusr@redhat.com)
+- New versioned rules v2 implementation. (dgoodwin@redhat.com / mstead@redhat.com)
+- Removed ReadOnly* objects as they are no longer used in rules
+  (mstead@redhat.com)
+- Change of Autobind namespace to use JSON objects (wpoteat@redhat.com)
+- Return JSON from PreEntitlement rules. (mstead@redhat.com)
+- Entitlement rules namespace now supports JSON in (mstead@redhat.com)
+- Add rules version to server status API. (dgoodwin@redhat.com)
+- Move select best pools to it's own Autobind namespace. (dgoodwin@redhat.com)
+- Bump rhino requirement to 0.7R3. (dgoodwin@redhat.com)
+- Moved Pool rules namespace back to Java code (mstead@redhat.com)
+- Move export/criteria rules to Java. (dgoodwin@redhat.com)
+- Move consumer delete namespace back to java. (dgoodwin@redhat.com)
+- More post-bind/unbind logic back into Java. (dgoodwin@redhat.com)
+- Define better filters on model objects. (dgoodwin@redhat.com)
+- Filter timestamps for attributes in rules serialization.
+  (dgoodwin@redhat.com)
+- Add support for skipping attributes when serializating for rules.
+  (dgoodwin@redhat.com)
+- Rename SkipExport to ExportExclude for consistency. (dgoodwin@redhat.com)
+- Export both new and old rules. (dgoodwin@redhat.com)
+- Import specific rules file, not any. (dgoodwin@redhat.com)
+- Add versioning of rules files. (dgoodwin@redhat.com)
+
 * Fri Mar 08 2013 jesus m. rodriguez <jesusr@redhat.com> 0.7.29-1
 - pair down the classes that go in jar to match buildr generated jar (jesusr@redhat.com)
 
