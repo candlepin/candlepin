@@ -67,7 +67,7 @@ import org.hibernate.annotations.MapKeyManyToMany;
 @Entity
 @Table(name = "cp_consumer")
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonFilter("ApiHateoas")
+@JsonFilter("ConsumerFilter")
 public class Consumer extends AbstractHibernateObject implements Linkable, Owned {
 
     public static final String UEBER_CERT_CONSUMER = "ueber_cert_consumer";
@@ -562,6 +562,6 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     @Transient
     public boolean isManifest() {
-        return getType().isManifest();
+        return getType() == null ? false : getType().isManifest();
     }
 }

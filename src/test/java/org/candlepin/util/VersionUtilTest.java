@@ -57,29 +57,25 @@ public class VersionUtilTest {
     }
 
     @Test
-    // moved tests from old VersionTest to here
     public void rulesCompatibility() throws Exception {
-        writeoutVersion("0.4.0", "1");
-        assertTrue(VersionUtil.getRulesVersionCompatibility("0.4.0"));
-        assertTrue(VersionUtil.getRulesVersionCompatibility("0.5.1"));
-        assertFalse(VersionUtil.getRulesVersionCompatibility("0.3.99"));
+        assertTrue(VersionUtil.getRulesVersionCompatibility("0.4.0", "0.4.0"));
+        assertTrue(VersionUtil.getRulesVersionCompatibility("0.4.0", "0.5.1"));
+        assertFalse(VersionUtil.getRulesVersionCompatibility("0.4.0", "0.3.99"));
     }
 
     @Test
     public void rulesCompatibilityComplex() throws Exception {
-        writeoutVersion("0.5.15", "1");
-        assertFalse(VersionUtil.getRulesVersionCompatibility("0.5.2"));
-        assertFalse(VersionUtil.getRulesVersionCompatibility("0.5.5.2-1"));
-        assertFalse(VersionUtil.getRulesVersionCompatibility("adf25d9c"));
-        assertFalse(VersionUtil.getRulesVersionCompatibility("0a4d52b0"));
-        assertTrue(VersionUtil.getRulesVersionCompatibility("0.5.15-1hotfix"));
-        assertTrue(VersionUtil.getRulesVersionCompatibility("0.5.20"));
+        assertFalse(VersionUtil.getRulesVersionCompatibility("0.5.15", "0.5.2"));
+        assertFalse(VersionUtil.getRulesVersionCompatibility("0.5.15", "0.5.5.2-1"));
+        assertFalse(VersionUtil.getRulesVersionCompatibility("0.5.15", "adf25d9c"));
+        assertFalse(VersionUtil.getRulesVersionCompatibility("0.5.15", "0a4d52b0"));
+        assertTrue(VersionUtil.getRulesVersionCompatibility("0.5.15", "0.5.15-1hotfix"));
+        assertTrue(VersionUtil.getRulesVersionCompatibility("0.5.15", "0.5.20"));
     }
 
     @Test
     public void rulesCompatibilityVsNull() throws Exception {
-        writeoutVersion("0.5.15", "1");
-        assertFalse(VersionUtil.getRulesVersionCompatibility(null));
+        assertFalse(VersionUtil.getRulesVersionCompatibility("0.5.15", null));
     }
 
     public static void writeoutVersion(String version, String release) throws Exception {

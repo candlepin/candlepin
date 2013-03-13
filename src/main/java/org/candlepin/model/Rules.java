@@ -15,6 +15,8 @@
 package org.candlepin.model;
 
 import java.io.Serializable;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -26,6 +28,7 @@ import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.Table;
 
+import org.candlepin.policy.js.RuleParseException;
 import org.hibernate.annotations.GenericGenerator;
 
 /**
@@ -35,6 +38,9 @@ import org.hibernate.annotations.GenericGenerator;
 @Table(name = "cp_rules")
 @Embeddable
 public class Rules extends AbstractHibernateObject {
+
+    private static final Pattern VERSION_REGEX =
+        Pattern.compile("[//|#]+ *[V|v]ersion: *([0-9]+(\\.[0-9]+)*) *");
 
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -47,17 +53,32 @@ public class Rules extends AbstractHibernateObject {
     @Column(name = "rules_blob")
     private String rules;
 
-    @Column(name = "candlepin_version", nullable = false, length = 255)
-    private String candlepinVersion;
+    @Column(name = "version", nullable = false, length = 20)
+    private String version;
 
     /**
      * ctor
      * @param rulesBlob Rules script
-     * @param candlepinVersion Version of Candlepin these rules are from.
      */
-    public Rules(String rulesBlob, String candlepinVersion) {
+    public Rules(String rulesBlob) {
         this.rules = rulesBlob;
-        this.candlepinVersion = candlepinVersion;
+
+        this.version = "";
+        // Look for a "version" in the first line of the rules file:
+
+        String versionLine = getVersionLine();
+        if (versionLine.isEmpty()) {
+            throw new RuleParseException("Unable to read version from rules file: " +
+                " version not defined");
+        }
+
+        Matcher m = VERSION_REGEX.matcher(versionLine);
+        if (!m.matches()) {
+            throw new RuleParseException("Unable to read version from rules file. " +
+                "Rules version must be specified on the top of the rules file. " +
+                "For example: // Version: x.y");
+        }
+        this.version = m.group(1);
     }
 
     /**
@@ -79,17 +100,18 @@ public class Rules extends AbstractHibernateObject {
         return this.id;
     }
 
-    /**
-     * @return Version of Candlepin which exported these rules. If the rules were
-     * manually uploaded by an admin, the version will be set to the current version
-     * of that Candlepin server.
-     */
-    public String getCandlepinVersion() {
-        return candlepinVersion;
+    public String getVersion() {
+        return version;
     }
 
-    public void setCandlepinVersion(String candlepinVersion) {
-        this.candlepinVersion = candlepinVersion;
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
+    private String getVersionLine() {
+        int firstLineEndIdx = this.rules.indexOf("\n");
+        firstLineEndIdx = firstLineEndIdx < 0 ? this.rules.length() : firstLineEndIdx;
+        return this.rules.substring(0, firstLineEndIdx);
     }
 
 }

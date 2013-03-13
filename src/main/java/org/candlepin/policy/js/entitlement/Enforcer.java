@@ -17,13 +17,8 @@ package org.candlepin.policy.js.entitlement;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
-import org.candlepin.model.PoolQuantity;
-import org.candlepin.policy.js.RuleExecutionException;
-import org.candlepin.policy.js.compliance.ComplianceStatus;
+import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.pool.PoolHelper;
-
-import java.util.List;
-import java.util.Set;
 
 /**
  * Enforces the entitlement rules definitions.
@@ -43,9 +38,10 @@ public interface Enforcer {
      * @param consumer Consumer who wishes to consume an entitlement.
      * @param entitlementPool Entitlement pool to consume from.
      * @param quantity number of entitlements to consume.
-     * @return TODO
+     * @return {@link ValidationResult} a validation result from the pre-entitlement run.
      */
-    PreEntHelper preEntitlement(Consumer consumer, Pool entitlementPool, Integer quantity);
+    ValidationResult preEntitlement(Consumer consumer, Pool entitlementPool,
+        Integer quantity);
 
     /**
      * Run post-entitlement actions.
@@ -55,42 +51,6 @@ public interface Enforcer {
      * @return post-entitlement processor
      */
     PoolHelper postEntitlement(Consumer c, PoolHelper postEntHelper, Entitlement ent);
-
-    /**
-     * Select the best entitlement pools available for the given product IDs.
-     *
-     * If no pools are available for all products, null will be returned.
-     *
-     * Will throw RuleExecutionException if both pools and a rule exist, but no pool
-     * is returned from the rule.
-     *
-     * @param consumer the consumer to fetch best pools for.
-     * @param productIds Product IDs
-     * @param pools List of pools to select from.
-     * @return best pools as determined by the rules, and the quantity to take from each
-     * @throws RuleExecutionException Thrown if both pools and a rule exist, but no
-     * pool is returned.
-     */
-    List<PoolQuantity> selectBestPools(Consumer consumer,
-        String[] productIds, List<Pool> pools, ComplianceStatus compliance,
-        String serviceLevelOverride, Set<String> exemptList)
-        throws RuleExecutionException;
-
-
-    /**
-     * Run pre-entitlement checks.
-     *
-     * Ensures sufficient entitlements remain, but also verifies all attributes
-     * on the product and relevant entitlement pool pass using the current
-     * policy.
-     *
-     * This is run prior to granting an entitlement.
-     *
-     * @param consumer Consumer who wishes to consume an entitlement.
-     * @param entitlementPool Entitlement pool to consume from.
-     * @return TODO
-     */
-    PreUnbindHelper preUnbind(Consumer consumer, Pool entitlementPool);
 
     /**
      * Run post-entitlement actions.

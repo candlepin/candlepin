@@ -31,6 +31,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProvidedProduct;
+import org.candlepin.model.RulesCurator;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.User;
 
@@ -285,6 +286,14 @@ public class TestUtil {
         }
 
         return key;
+    }
+
+    /*
+     * Creates a fake rules blob with a version that matches the current API number.
+     */
+    public static String createRulesBlob(int minorVersion) {
+        return "// Version: " + RulesCurator.RULES_API_VERSION + "." + minorVersion +
+            "\n//somerules";
     }
 
 }

@@ -10,10 +10,18 @@
   <property name="res.test.dir" location="${cp-home}/src/test/resources" />
   <property name="webapp.test.dir" location="${cp-home}/src/test/webapp" />
   <property name="target.dir" location="${cp-home}/target" />
-  <property name="lib.dir" location="${libdir}" />
-  <property name="dist.lib.dir" location="${distlibdir}" />
   <property name="pkgname" value="org.candlepin" />
-  <!-- jpackage format -->
+
+  <!-- Location of libraries when doing a candlepin-deps build. -->
+  <property name="lib.dir" location="${libdir}" />
+
+  <!-- Destination for Candlepin jar dependencies in a regular build. -->
+  <property name="dist.lib.dir" location="${distlibdir}" />
+
+  <!-- Source location for Candlepin software collection jar dependencies in a regular build. -->
+  <property name="scl.lib.dir" location="${scllibdir}" />
+
+  <!-- List of jars we expect to install from /usr/share/java in a regular build. -->
   <property name="jar.deps" value="antlr aopalliance apache-mime4j bcprov-jdk16 c3p0
     cglib codehaus-jackson/jackson-core-lgpl codehaus-jackson/jackson-jaxrs
     codehaus-jackson/jackson-mapper-lgpl codehaus-jackson/jackson-xc
@@ -24,12 +32,15 @@
     guice-throwingproviders hibernate-annotations hibernate-commons-annotations
     hibernate-core hibernate-entitymanager hornetq/hornetq-core
     hornetq/hornetq-core-client javassist javax.inject jaxb-impl
-    jboss-logging jpa_1_0_api js jta log4j netty oauth oauth-provider
+    jboss-logging jpa_1_0_api jta log4j netty oauth oauth-provider
     postgresql-jdbc quartz resteasy/resteasy-atom-provider
     resteasy/resteasy-guice resteasy/resteasy-jaxb-provider
     resteasy/resteasy-jaxrs resteasy/jaxrs-api
     resteasy/resteasy-multipart-provider scannotation servlet
     slf4j-api slf4j-log4j12" />
+
+  <!-- List of jars that are part of the candlepin software collection in regular build. -->
+  <property name="scl.jar.deps" value="js" />
 
   <macrodef name="grepfromspec">
     <attribute name="text" />
@@ -135,7 +146,16 @@
   </target>
 
   <target name="initjars" unless="usecpdeps">
+      <echo>Initializing jars</echo>
+      <echo>dist.lib.dir: ${dist.lib.dir}</echo>
+      <echo>scl.lib.dir: ${scl.lib.dir}</echo>
+
+    <!-- Handle the jars in /usr/share/java -->
     <jpackage-deps jars="${jar.deps}" dir="${dist.lib.dir}" />
+
+    <!-- Handle the jars in the software collection under /opt/rh/candlepin-scl/ -->
+    <candlepin-scl-deps jars="${scl.jar.deps}" dir="${dist.lib.dir}" />
+
   </target>
 
   <target name="package" depends="initjars,compile,compile_withcpdeps">
@@ -219,7 +239,7 @@
   -->
   <macrodef name="jpackage-deps">
     <attribute name="jars" />
-    <attribute name="dir" />
+    <attribute name="dir" /> <!-- destination -->
 
     <sequential>
       <echo message="Symlinking @{jars}" />
@@ -230,5 +250,19 @@
       </exec>
     </sequential>
   </macrodef>
+
+  <!--
+    creates symlinks for candlepin software collection jars
+  -->
+  <macrodef name="candlepin-scl-deps">
+    <attribute name="jars" />
+    <attribute name="dir" /> <!-- destination -->
+
+    <sequential>
+      <echo message="Symlinking SCL @{jars}" />
+      <symlink link="${dist.lib.dir}/@{jars}.jar" resource="${scl.lib.dir}/@{jars}.jar" />
+    </sequential>
+  </macrodef>
+
 
 </project>

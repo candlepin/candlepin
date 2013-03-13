@@ -51,11 +51,10 @@ import org.candlepin.model.Subscription;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.ProductCache;
+import org.candlepin.policy.js.autobind.AutobindRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.entitlement.Enforcer;
-import org.candlepin.policy.js.entitlement.PreEntHelper;
-import org.candlepin.policy.js.entitlement.PreUnbindHelper;
 import org.candlepin.policy.js.pool.PoolHelper;
 import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.policy.js.pool.PoolUpdate;
@@ -89,6 +88,7 @@ public class CandlepinPoolManager implements PoolManager {
     private ComplianceRules complianceRules;
     private ProductCache productCache;
     private EnvironmentCurator envCurator;
+    private AutobindRules autobindRules;
 
     /**
      * @param poolCurator
@@ -105,7 +105,7 @@ public class CandlepinPoolManager implements PoolManager {
         EventFactory eventFactory, Config config, Enforcer enforcer,
         PoolRules poolRules, EntitlementCurator curator1, ConsumerCurator consumerCurator,
         EntitlementCertificateCurator ecC, ComplianceRules complianceRules,
-        EnvironmentCurator envCurator) {
+        EnvironmentCurator envCurator, AutobindRules autobindRules) {
 
         this.poolCurator = poolCurator;
         this.subAdapter = subAdapter;
@@ -121,6 +121,7 @@ public class CandlepinPoolManager implements PoolManager {
         this.complianceRules = complianceRules;
         this.productCache = productCache;
         this.envCurator = envCurator;
+        this.autobindRules = autobindRules;
     }
 
     Set<Entitlement> refreshPoolsWithoutRegeneration(Owner owner) {
@@ -411,8 +412,7 @@ public class CandlepinPoolManager implements PoolManager {
                 }
             }
             if (providesProduct) {
-                PreEntHelper preHelper = enforcer.preEntitlement(consumer, pool, 1);
-                ValidationResult result = preHelper.getResult();
+                ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
 
                 if (result.hasErrors() || result.hasWarnings()) {
                     // Just keep the last one around, if we need it
@@ -454,7 +454,7 @@ public class CandlepinPoolManager implements PoolManager {
             }
         }
 
-        List<PoolQuantity> enforced = enforcer.selectBestPools(consumer,
+        List<PoolQuantity> enforced = autobindRules.selectBestPools(consumer,
             productIds, filteredPools, compliance, serviceLevelOverride,
             poolCurator.retrieveServiceLevelsForOwner(owner, true));
         return enforced;
@@ -509,8 +509,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         if (quantity > 0) {
             // XXX preEntitlement is run twice for new entitlement creation
-            PreEntHelper preHelper = enforcer.preEntitlement(consumer, pool, quantity);
-            ValidationResult result = preHelper.getResult();
+            ValidationResult result = enforcer.preEntitlement(consumer, pool, quantity);
 
             if (!result.isSuccessful()) {
                 log.warn("Entitlement not granted: " +
@@ -777,18 +776,6 @@ public class CandlepinPoolManager implements PoolManager {
         // This won't do anything for over/under consumption, but it will prevent
         // concurrency issues if someone else is operating on the pool.
         pool = poolCurator.lockAndLoad(pool);
-
-        PreUnbindHelper preHelper = enforcer.preUnbind(consumer,
-            pool);
-        ValidationResult result = preHelper.getResult();
-
-        if (!result.isSuccessful()) {
-            if (log.isDebugEnabled()) {
-                log.debug("Unbind failure from pool: " +
-                    pool.getId() + ", error: " +
-                    result.getErrors());
-            }
-        }
 
         consumer.removeEntitlement(entitlement);
 

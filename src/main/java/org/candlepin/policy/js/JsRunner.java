@@ -14,11 +14,6 @@
  */
 package org.candlepin.policy.js;
 
-import org.candlepin.model.Attribute;
-import org.candlepin.model.Pool;
-import org.candlepin.model.Product;
-import org.candlepin.model.ProductAttribute;
-
 import org.apache.log4j.Logger;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
@@ -27,11 +22,6 @@ import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 import org.mozilla.javascript.Undefined;
 import org.mozilla.javascript.Wrapper;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 
 /**
  * JsRunner - Responsible for running the javascript rules methods in all namespaces.
@@ -111,19 +101,18 @@ public class JsRunner {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T invokeMethod(String method, Map<String, Object> args)
+    public <T> T invokeMethod(String method, JsContext context)
         throws NoSuchMethodException, RhinoException {
-        for (Entry<String, Object> entry : args.entrySet()) {
-            scope.put(entry.getKey(), scope, entry.getValue());
-        }
+        context.applyTo(scope);
         return (T) invokeMethod(method);
     }
 
-    public void invokeRule(String ruleName) {
+    public <T> T invokeRule(String ruleName) {
         log.debug("Running rule: " + ruleName + " in namespace: " + namespace);
 
+        T returner = null;
         try {
-            this.invokeMethod(ruleName);
+            returner = this.invokeMethod(ruleName);
         }
         catch (NoSuchMethodException ex) {
             log.warn("No rule found: " + ruleName + " in namespace: " + namespace);
@@ -131,77 +120,12 @@ public class JsRunner {
         catch (RhinoException ex) {
             throw new RuleExecutionException(ex);
         }
+        return returner;
     }
 
-    public void invokeRule(String ruleName, Map<String, Object> args) {
-        for (Entry<String, Object> entry : args.entrySet()) {
-            scope.put(entry.getKey(), scope, entry.getValue());
-
-        }
-        invokeRule(ruleName);
+    public <T> T invokeRule(String ruleName, JsContext context) {
+        context.applyTo(scope);
+        return invokeRule(ruleName);
     }
 
-    /**
-     * Both products and pools can carry attributes, we need to trigger rules for each.
-     * In this map, pool attributes will override product attributes, should the same
-     * key be set for both.
-     *
-     * @param pool Pool can be null.
-     * @return Map of all attribute names and values. Pool attributes have priority.
-     */
-    public Map<String, String> getFlattenedAttributes(Pool pool) {
-        Map<String, String> allAttributes = new HashMap<String, String>();
-        if (pool != null) {
-            allAttributes.putAll(getFlattenedAttributes(pool.getProductAttributes()));
-            allAttributes.putAll(getFlattenedAttributes(pool.getAttributes()));
-        }
-        return allAttributes;
-    }
-
-    public Map<String, String> getFlattenedAttributes(Set<? extends Attribute> attrs) {
-        Map<String, String> flattened = new HashMap<String, String>();
-        for (Attribute a : attrs) {
-            flattened.put(a.getName(), a.getValue());
-        }
-        return flattened;
-    }
-
-    public Map<String, String> getFlattenedAttributes(Product product) {
-        Map<String, String> attributes = new HashMap<String, String>();
-        for (ProductAttribute attr : product.getAttributes()) {
-            attributes.put(attr.getName(), attr.getValue());
-        }
-        return attributes;
-    }
-
-    public ReadOnlyPool[] convertArray(Object output) {
-        return (ReadOnlyPool[]) Context.jsToJava(output, ReadOnlyPool[].class);
-    }
-
-    public Map<ReadOnlyPool, Integer> convertMap(Object output) {
-        Map<ReadOnlyPool, Integer> toReturn = new HashMap<ReadOnlyPool, Integer>();
-
-        @SuppressWarnings("unchecked")
-        Map<ReadOnlyPool, Double> result =
-            (Map<ReadOnlyPool, Double>) Context.jsToJava(output, Map.class);
-
-        for (Entry<ReadOnlyPool, Double> entry : result.entrySet()) {
-            try {
-                Integer count = entry.getValue().intValue();
-                toReturn.put(entry.getKey(), count);
-            }
-            catch (ClassCastException e) {
-                // this is safe, as we'll have javascript specific ids in here
-                // that we can ignore
-                log.debug("CONVERT id is not readonly pool, ignoring: " + e);
-            }
-        }
-
-        if (toReturn.isEmpty()) {
-            return null;
-        }
-
-        log.debug("CONVERT returning hashmap");
-        return toReturn;
-    }
 }

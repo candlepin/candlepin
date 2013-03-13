@@ -89,10 +89,10 @@ public class ConsumerResourceUpdateTest {
         this.resource = new ConsumerResource(this.consumerCurator,
             this.consumerTypeCurator, null, this.subscriptionService, null,
             this.idCertService, null, this.i18n, this.sink, this.eventFactory, null, null,
-            this.userService, null, poolManager, null, null, null, null,
-            this.activationKeyCurator, this.entitler, this.complianceRules,
-            this.deletedConsumerCurator, this.environmentCurator,
-            new Config());
+            this.userService, null, poolManager, null, null, null,
+            this.activationKeyCurator,
+            this.entitler, this.complianceRules, this.deletedConsumerCurator,
+            this.environmentCurator, new Config());
 
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class)))
             .thenReturn(new ComplianceStatus(new Date()));

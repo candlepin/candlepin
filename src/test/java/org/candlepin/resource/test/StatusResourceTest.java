@@ -56,6 +56,7 @@ public class StatusResourceTest {
     public void setUp() {
         MockitoAnnotations.initMocks(this);
         when(rulesCurator.listAll()).thenReturn(new ArrayList<Rules>());
+        when(rulesCurator.getRules()).thenReturn(new Rules("// Version: 2.0\nBLAH"));
     }
 
     @Test
@@ -116,7 +117,7 @@ public class StatusResourceTest {
             .getClassLoader().getResource("candlepin_info.properties").toURI()));
         ps.println("version=${version}");
         ps.println("release=${release}");
-        StatusResource sr = new StatusResource(null, null);
+        StatusResource sr = new StatusResource(rulesCurator, null);
         Status s = sr.status();
         ps.close();
 

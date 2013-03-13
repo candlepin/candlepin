@@ -17,17 +17,11 @@ package org.candlepin.test;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
-import org.candlepin.model.PoolQuantity;
-import org.candlepin.policy.js.RuleExecutionException;
-import org.candlepin.policy.js.compliance.ComplianceStatus;
+import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.entitlement.Enforcer;
-import org.candlepin.policy.js.entitlement.PreEntHelper;
 import org.candlepin.policy.js.entitlement.PreUnbindHelper;
 import org.candlepin.policy.js.pool.PoolHelper;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 
 /**
  * EnforcerForTesting
@@ -41,25 +35,9 @@ public class EnforcerForTesting implements Enforcer {
     }
 
     @Override
-    public PreEntHelper preEntitlement(Consumer consumer, Pool enitlementPool,
+    public ValidationResult preEntitlement(Consumer consumer, Pool enitlementPool,
             Integer quantity) {
-        return new PreEntHelper(1, null);
-    }
-
-    @Override
-    public List<PoolQuantity> selectBestPools(Consumer consumer, String[] productIds,
-        List<Pool> pools, ComplianceStatus compliance, String serviceLevelOverride,
-        Set<String> exemptList)
-        throws RuleExecutionException {
-        if (pools.isEmpty()) {
-            return null;
-        }
-
-        List<PoolQuantity> best = new ArrayList<PoolQuantity>();
-        for (Pool pool : pools) {
-            best.add(new PoolQuantity(pool, 1));
-        }
-        return best;
+        return new ValidationResult();
     }
 
     public PreUnbindHelper preUnbind(Consumer consumer, Pool entitlementPool) {

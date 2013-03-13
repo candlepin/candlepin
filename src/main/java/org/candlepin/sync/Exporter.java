@@ -16,6 +16,7 @@ package org.candlepin.sync;
 
 import com.google.inject.Inject;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.candlepin.config.Config;
@@ -75,6 +76,8 @@ public class Exporter {
     private Config config;
     private ExportRules exportRules;
     private PrincipalProvider principalProvider;
+
+    private static final String LEGACY_RULES_FILE = "/rules/default-rules.js";
 
     @Inject
     public Exporter(ConsumerTypeCurator consumerTypeCurator, MetaExporter meta,
@@ -429,12 +432,30 @@ public class Exporter {
     }
 
     private void exportRules(File baseDir) throws IOException {
-        File file = new File(baseDir.getCanonicalPath(), "rules");
-        file.mkdir();
-
-        file = new File(file.getCanonicalPath(), "rules.js");
-        FileWriter writer = new FileWriter(file);
+        // Because old candlepin servers assume to import a file in rules dir, we had to
+        // move to a new directory for versioned rules file:
+        File newRulesDir = new File(baseDir.getCanonicalPath(), "rules2");
+        newRulesDir.mkdir();
+        File newRulesFile = new File(newRulesDir.getCanonicalPath(), "rules.js");
+        FileWriter writer = new FileWriter(newRulesFile);
         rules.export(writer);
         writer.close();
+
+        exportLegacyRules(baseDir);
+    }
+
+    /*
+     * We still need to export a copy of the deprecated default-rules.js so new manifests
+     * can still be imported by old candlepin servers.
+     */
+    private void exportLegacyRules(File baseDir) throws IOException {
+        File oldRulesDir = new File(baseDir.getCanonicalPath(), "rules");
+        oldRulesDir.mkdir();
+        File oldRulesFile = new File(oldRulesDir.getCanonicalPath(), "default-rules.js");
+
+        // TODO: does this need a "exporter" object as well?
+        FileUtils.copyFile(new File(
+            this.getClass().getResource(LEGACY_RULES_FILE).getPath()),
+            oldRulesFile);
     }
 }

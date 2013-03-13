@@ -84,6 +84,11 @@ public class ValidationResult {
         warnings.add(new ValidationWarning(resourceKey));
     }
 
+    public void add(ValidationResult result) {
+        errors.addAll(result.getErrors());
+        warnings.addAll(result.getWarnings());
+    }
+
     /**
      * Returns true if there were any errors during validation.
      * @return true if there were any errors during validation.

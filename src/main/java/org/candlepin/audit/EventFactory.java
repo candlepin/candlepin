@@ -51,9 +51,13 @@ public class EventFactory {
         // of fields nested objects, so enable the event and API HATEOAS filters:
         SimpleFilterProvider filterProvider = new SimpleFilterProvider();
         filterProvider.setFailOnUnknownId(false);
-        filterProvider = filterProvider.addFilter("EventHateoas",
+        filterProvider = filterProvider.addFilter("PoolFilter",
             new HateoasBeanPropertyFilter());
-        filterProvider = filterProvider.addFilter("ApiHateoas",
+        filterProvider = filterProvider.addFilter("ConsumerFilter",
+            new HateoasBeanPropertyFilter());
+        filterProvider = filterProvider.addFilter("EntitlementFilter",
+            new HateoasBeanPropertyFilter());
+        filterProvider = filterProvider.addFilter("OwnerFilter",
             new HateoasBeanPropertyFilter());
         mapper.setFilters(filterProvider);
 

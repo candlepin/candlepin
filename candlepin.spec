@@ -6,8 +6,16 @@
 %global selinux_variants mls strict targeted
 %global selinux_policyver %(%{__sed} -e 's,.*selinux-policy-\\([^/]*\\)/.*,\\1,' /usr/share/selinux/devel/policyhelp || echo 0.0.0)
 %global modulename candlepin
-%define distlibdir %{_tmppath}/distlibdir/
+
+# This is technically just a temporary directory to get us through
+# the compilation phase. It is later destroyed and the spec file will
+# re-call initjars with the correct destination for both tomcat and jboss.
+%define distlibdir $RPM_BUILD_ROOT/%{_tmppath}/distlibdir/
 %define libdir %{_datadir}/java/
+
+# We require the Candlepin SCL, but because we are not an SCL package
+# ourselves, we need to point to deps in the expected location.
+%define scllibdir /opt/rh/candlepin-scl/root
 
 %if 0%{?fedora}
 %define reqcpdeps 1
@@ -28,6 +36,7 @@ BuildArch: noarch
 
 BuildRequires: java-devel >= 0:1.6.0
 BuildRequires: ant >= 0:1.7.0
+BuildRequires: ant-nodeps >= 0:1.7.0
 BuildRequires: gettext
 BuildRequires: selinux-policy-doc
 
@@ -39,13 +48,20 @@ BuildRequires: selinux-policy-doc
 BuildRequires: candlepin-deps
 %else
 %define usecpdeps ""
+
+# Require the candlepin software collection for packages we use that may
+# conflict with other projects/releases:
+BuildRequires: scl-utils-build
+BuildRequires: candlepin-scl
+
 BuildRequires: bouncycastle
 BuildRequires: hibernate3 >= 3.3.2
 BuildRequires: hibernate3-annotations >= 0:3.4.0
+
 # for schema
 BuildRequires: hibernate3-entitymanager >= 0:3.4.0
 BuildRequires: hibernate3-commons-annotations
-# end for schema
+
 BuildRequires: google-collections >= 0:1.0
 BuildRequires: resteasy >= 0:2.3.1
 BuildRequires: hornetq >= 0:2.2.11
@@ -65,17 +81,19 @@ BuildRequires: netty
 BuildRequires: glassfish-jaxb
 BuildRequires: jms >= 0:1.1
 BuildRequires: oauth
-BuildRequires: rhino
 BuildRequires: slf4j >= 0:1.6.1
 BuildRequires: quartz >= 0:2.1.5
+
 # needed to setup runtime deps, not for compilation
 BuildRequires: c3p0
 BuildRequires: scannotation
 BuildRequires: postgresql-jdbc
 BuildRequires: servlet
 BuildRequires: gettext-commons
+
 # resteasy multipart requires this at runtime
 BuildRequires: apache-mime4j
+
 %endif
 
 # Common requires go here
@@ -104,7 +122,6 @@ Requires: codehaus-jackson-jaxrs
 Requires: hornetq >= 0:2.2.11
 Requires: netty
 Requires: oauth
-Requires: rhino
 Requires: quartz >= 0:2.1.5
 Requires: log4j
 Requires: glassfish-jaxb
@@ -181,7 +198,7 @@ SELinux policy module supporting candlepin
 mkdir -p %{distlibdir}
 
 %build
-ant -Dlibdir=%{libdir} -Ddistlibdir=%{distlibdir} clean %{usecpdeps} package
+ant -Dlibdir=%{libdir} -Ddistlibdir=%{distlibdir} -Dscllibdir=%{scllibdir}/%{_datadir}/java/ clean %{usecpdeps} package
 
 cd selinux
 for selinuxvariant in %{selinux_variants}
@@ -214,7 +231,8 @@ unzip target/%{name}-%{version}.war -d $RPM_BUILD_ROOT/%{_localstatedir}/lib/tom
 %if !0%{?reqcpdeps}
 #remove the copied jars and resymlink
 rm $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat6/webapps/%{name}/WEB-INF/lib/*.jar
-ant -Ddistlibdir=$RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat6/webapps/%{name}/WEB-INF/lib/ initjars
+ant -Ddistlibdir=$RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat6/webapps/%{name}/WEB-INF/lib/ -Dscllibdir=%{scllibdir}/%{_datadir}/java/ initjars
+
 %endif
 ln -s /etc/candlepin/certs/keystore $RPM_BUILD_ROOT/%{_sysconfdir}/tomcat6/keystore
 
@@ -226,7 +244,7 @@ unzip target/%{name}-%{version}.war -d $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbo
 %if !0%{?reqcpdeps}
 #remove the copied jars and resymlink
 rm $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/%{name}.war/WEB-INF/lib/*.jar
-ant -Ddistlibdir=$RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/%{name}.war/WEB-INF/lib/ initjars
+ant -Ddistlibdir=$RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/%{name}.war/WEB-INF/lib/ -Dscllibdir=%{scllibdir}/%{_datadir}/java/ initjars
 %endif
 
 # devel
