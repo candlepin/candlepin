@@ -23,7 +23,6 @@ import java.io.StringWriter;
 
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
-import org.candlepin.util.VersionUtil;
 import org.junit.Test;
 
 /**
@@ -31,13 +30,12 @@ import org.junit.Test;
  */
 public class RulesExporterTest {
 
-    private String FAKE_RULES = "HELLO WORLD";
+    private String FAKE_RULES = "//Version: 2.0\nHELLO WORLD";
 
     @Test
     public void testMetaExporter() throws IOException {
         RulesCurator rulesCurator = mock(RulesCurator.class);
-        when(rulesCurator.getRules()).thenReturn(new Rules(FAKE_RULES,
-            VersionUtil.getVersionString()));
+        when(rulesCurator.getRules()).thenReturn(new Rules(FAKE_RULES));
         RulesExporter exporter = new RulesExporter(rulesCurator);
         StringWriter writer = new StringWriter();
         exporter.export(writer);

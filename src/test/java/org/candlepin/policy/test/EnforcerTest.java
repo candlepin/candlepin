@@ -38,7 +38,6 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
-import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
@@ -47,7 +46,6 @@ import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.RuleExecutionException;
-import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.service.ProductServiceAdapter;
@@ -65,16 +63,12 @@ public class EnforcerTest extends DatabaseTestFixture {
     @Mock private ProductServiceAdapter productAdapter;
     @Mock private RulesCurator rulesCurator;
     @Mock private Config config;
-    @Mock private ComplianceStatus compliance;
 
     private Enforcer enforcer;
     private Owner owner;
     private Consumer consumer;
     private ProductCache productCache;
 
-    private static final String LONGEST_EXPIRY_PRODUCT = "LONGEST001";
-    private static final String HIGHEST_QUANTITY_PRODUCT = "QUANTITY001";
-    private static final String BAD_RULE_PRODUCT = "BADRULE001";
     private static final String PRODUCT_CPULIMITED = "CPULIMITED001";
 
     @Before
@@ -233,7 +227,7 @@ public class EnforcerTest extends DatabaseTestFixture {
             createConsumer(owner),
             entitlementPoolWithMembersAndExpiration(owner, product, 1, 2,
                 expiryDate(2010, 10, 10)),
-            1).getResult();
+            1);
         assertTrue(result.isSuccessful());
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
@@ -250,7 +244,7 @@ public class EnforcerTest extends DatabaseTestFixture {
             createConsumer(owner),
             entitlementPoolWithMembersAndExpiration(owner, product, 1, 1,
                 expiryDate(2010, 10, 10)),
-            1).getResult();
+            1);
 
         assertFalse(result.isSuccessful());
         assertTrue(result.hasErrors());
@@ -267,7 +261,7 @@ public class EnforcerTest extends DatabaseTestFixture {
         ValidationResult result = enforcer.preEntitlement(
             createConsumer(owner),
             entitlementPoolWithMembersAndExpiration(owner, product, 1, 2,
-                expiryDate(2000, 1, 1)), 1).getResult();
+                expiryDate(2000, 1, 1)), 1);
         assertFalse(result.isSuccessful());
         assertTrue(result.hasErrors());
         assertFalse(result.hasWarnings());
@@ -286,127 +280,11 @@ public class EnforcerTest extends DatabaseTestFixture {
             TestUtil.createConsumer(),
             entitlementPoolWithMembersAndExpiration(owner, product, 1, 2,
                 expiryDate(2000, 1, 1)),
-            1).getResult();
+            1);
 
         assertFalse(result.isSuccessful());
         assertTrue(result.hasErrors());
         assertFalse(result.hasWarnings());
-    }
-
-    @Test
-    public void testSelectBestPoolLongestExpiry() {
-        Product product = new Product("a-product", "A product for testing");
-        product.setAttribute(LONGEST_EXPIRY_PRODUCT, "");
-        productCurator.create(product);
-
-        Pool pool1 = createPoolAndSub(owner, product, 5L,
-            TestUtil.createDate(2000, 02, 26), TestUtil
-                .createDate(2050, 02, 26));
-        Pool pool2 = createPoolAndSub(owner, product, 5L,
-            TestUtil.createDate(2000, 02, 26), TestUtil
-                .createDate(2051, 02, 26));
-        Pool desired = createPoolAndSub(owner, product, 5L,
-            TestUtil.createDate(2000, 02, 26), TestUtil
-                .createDate(2060, 02, 26));
-        Pool pool3 = createPoolAndSub(owner, product, 5L,
-            TestUtil.createDate(2000, 02, 26), TestUtil
-                .createDate(2055, 02, 26));
-
-        when(this.productAdapter.getProductById("a-product"))
-            .thenReturn(product);
-
-        List<Pool> availablePools
-            = Arrays.asList(new Pool[] {pool1, pool2, desired, pool3});
-
-        List<PoolQuantity> result = enforcer.selectBestPools(consumer,
-            new String[] {"a-product"}, availablePools, compliance, null,
-            new HashSet<String>());
-        assertTrue(result.contains(new PoolQuantity(desired, 1)));
-    }
-
-    @Test
-    public void testSelectBestPoolMostAvailable() {
-        Product product = new Product("a-product", "A product for testing");
-        product.setAttribute(HIGHEST_QUANTITY_PRODUCT, "");
-        productCurator.create(product);
-
-        Pool pool1 = createPoolAndSub(owner, product, 5L,
-            TestUtil.createDate(2000, 02, 26), TestUtil
-                .createDate(2050, 02, 26));
-        Pool desired = createPoolAndSub(owner, product, 500L,
-            TestUtil.createDate(2000, 02, 26), TestUtil
-                .createDate(2051, 02, 26));
-        Pool pool2 = createPoolAndSub(owner, product, 5L,
-            TestUtil.createDate(2000, 02, 26), TestUtil
-                .createDate(2060, 02, 26));
-
-        when(this.productAdapter.getProductById("a-product"))
-            .thenReturn(product);
-
-        List<Pool> availablePools
-            = Arrays.asList(new Pool[] {pool1, pool2, desired});
-
-        List<PoolQuantity> result = enforcer.selectBestPools(consumer,
-            new String[] {"a-product"}, availablePools, compliance, null,
-            new HashSet<String>());
-        assertTrue(result.contains(new PoolQuantity(desired, 1)));
-    }
-
-    @Test
-    public void shouldUseHighestPriorityRule() {
-        Product product = new Product("a-product", "A product for testing");
-        product.setAttribute(HIGHEST_QUANTITY_PRODUCT, "");
-        product.setAttribute(LONGEST_EXPIRY_PRODUCT, "");
-        productCurator.create(product);
-
-        Pool pool1 = createPoolAndSub(owner, product, 5L,
-            TestUtil.createDate(2000, 02, 26), TestUtil.createDate(2050, 02, 26));
-        Pool desired = createPoolAndSub(owner, product, 5L,
-            TestUtil.createDate(2000, 02, 26), TestUtil.createDate(2051, 02, 26));
-        Pool pool2 = createPoolAndSub(owner, product, 500L,
-            TestUtil.createDate(2000, 02, 26), TestUtil.createDate(2020, 02, 26));
-
-        when(this.productAdapter.getProductById("a-product")).thenReturn(product);
-
-        List<Pool> availablePools = Arrays.asList(new Pool[] {pool1, pool2, desired});
-
-        List<PoolQuantity> result = enforcer.selectBestPools(consumer,
-            new String[] {"a-product"}, availablePools, compliance, null,
-            new HashSet<String>());
-        assertTrue(result.contains(new PoolQuantity(desired, 1)));
-    }
-
-    @Test(expected = RuntimeException.class)
-    public void testSelectBestPoolNoPools() {
-        when(this.productAdapter.getProductById(HIGHEST_QUANTITY_PRODUCT))
-            .thenReturn(new Product(HIGHEST_QUANTITY_PRODUCT, HIGHEST_QUANTITY_PRODUCT));
-
-        // There are no pools for the product in this case:
-        enforcer.selectBestPools(consumer,
-            new String[] {HIGHEST_QUANTITY_PRODUCT}, new LinkedList<Pool>(), compliance,
-            null, new HashSet<String>());
-    }
-
-    @Test
-    public void testSelectBestPoolDefaultRule() {
-        Product product = new Product("a-product", "A product for testing");
-        productCurator.create(product);
-
-        Pool pool1 = createPoolAndSub(owner, product, 5L, TestUtil
-            .createDate(2000, 02, 26), TestUtil.createDate(2050, 02, 26));
-        Pool pool2 = createPoolAndSub(owner, product, 5L, TestUtil
-            .createDate(2000, 02, 26), TestUtil.createDate(2060, 02, 26));
-
-        when(this.productAdapter.getProductById("a-product"))
-            .thenReturn(product);
-
-        List<Pool> availablePools
-            = Arrays.asList(new Pool[] {pool1, pool2});
-
-        List<PoolQuantity> result = enforcer.selectBestPools(consumer,
-            new String[] {product.getId()}, availablePools, compliance, null,
-            new HashSet<String>());
-        assertTrue(result.contains(new PoolQuantity(pool1, 1)));
     }
 
     private EntitlementRules.Rule rule(String name, int priority, String... attrs) {

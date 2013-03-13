@@ -15,6 +15,7 @@
 package org.candlepin.resource.test;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -215,7 +216,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
         consumerResource.bind(manifestConsumer.getUuid(), parentPool.getId(), null, 3, null,
             null, false, null);
         for (Pool p : subscribedTo) {
-            assertTrue(p.getConsumed() == 0);
+            assertEquals(new Long(0), p.getConsumed());
             assertTrue(p.getQuantity() == 0);
         }
     }

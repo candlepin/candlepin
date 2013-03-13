@@ -19,12 +19,15 @@ import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 
+import org.codehaus.jackson.map.annotate.JsonFilter;
+
 /**
  * ProductProvidedPoolAttribute
  */
 @Entity
 @Table(name = "cp_product_pool_attribute")
 @Embeddable
+@JsonFilter("ProductPoolAttributeFilter")
 public class ProductPoolAttribute extends AbstractPoolAttribute {
 
     @Column(nullable = false)

@@ -17,9 +17,10 @@ package org.candlepin.resource.test;
 import static org.junit.Assert.assertEquals;
 
 import org.candlepin.model.Rules;
+import org.candlepin.model.RulesCurator;
 import org.candlepin.resource.RulesResource;
 import org.candlepin.test.DatabaseTestFixture;
-import org.candlepin.util.VersionUtil;
+import org.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
 import org.apache.commons.codec.binary.Base64;
@@ -38,29 +39,30 @@ public class RulesResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testUpload() {
-        String rulesBuffer = new String(Base64.encodeBase64String(("//foobar"
-            .getBytes())));
+        String rulesBuffer = new String(Base64.encodeBase64String((
+            TestUtil.createRulesBlob(10000).getBytes())));
         rulesResource.upload(rulesBuffer);
         Rules rules = rulesCurator.getRules();
-        assertEquals(VersionUtil.getVersionString(), rules.getCandlepinVersion());
+        String expected = "" + RulesCurator.RULES_API_VERSION + "." + 10000;
+        assertEquals(expected, rules.getVersion());
     }
 
     @Test
     public void testGet() {
-
-        String rulesBuffer = new String(Base64.encodeBase64String(("//foobar"
-            .getBytes())));
+        String rulesBuffer = new String(Base64.encodeBase64String((
+            TestUtil.createRulesBlob(10000).getBytes())));
         rulesResource.upload(rulesBuffer);
-        String rules = rulesResource.get();
-        assertEquals(rules, rulesBuffer);
+        Rules rules = rulesCurator.getRules();
+        String rulesBlob = rulesResource.get();
+        assertEquals(rulesBlob, rulesBuffer);
     }
 
     @Test
     public void testDelete() {
         String origRules = rulesResource.get();
-        String newRules = new String(Base64.encodeBase64String(("//foobar"
-            .getBytes())));
-        rulesResource.upload(newRules);
+        String rulesBuffer = new String(Base64.encodeBase64String((
+            TestUtil.createRulesBlob(10000).getBytes())));
+        rulesResource.upload(rulesBuffer);
         rulesResource.delete();
         String rulesAfterDelete = rulesResource.get();
         assertEquals(rulesAfterDelete, origRules);

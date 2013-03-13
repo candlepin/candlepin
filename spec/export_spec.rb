@@ -144,7 +144,10 @@ describe 'Candlepin Export' do
 
   it 'exports rules' do
     Base64.decode64(@cp.list_rules).should == File.read(
-      File.join(@export_dir, "rules/rules.js"))
+      File.join(@export_dir, "rules2/rules.js"))
+
+    # Should also contain legacy rules file:
+    File.exists?(File.join(@export_dir, "rules/default-rules.js")).should be_true
   end
 
 end

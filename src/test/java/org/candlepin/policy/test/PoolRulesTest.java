@@ -42,14 +42,12 @@ import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.Subscription;
-import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.policy.js.pool.PoolUpdate;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
-import org.candlepin.util.VersionUtil;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -65,8 +63,6 @@ public class PoolRulesTest {
 
     private PoolRules poolRules;
 
-    private static final String RULES_FILE = "/rules/default-rules.js";
-
     @Mock private RulesCurator rulesCuratorMock;
     @Mock private ProductServiceAdapter productAdapterMock;
     @Mock private PoolManager poolManagerMock;
@@ -80,8 +76,9 @@ public class PoolRulesTest {
     public void setUp() {
 
         // Load the default production rules:
-        InputStream is = this.getClass().getResourceAsStream(RULES_FILE);
-        Rules rules = new Rules(Util.readFile(is), VersionUtil.getVersionString());
+        InputStream is = this.getClass().getResourceAsStream(
+            RulesCurator.DEFAULT_RULES_FILE);
+        Rules rules = new Rules(Util.readFile(is));
 
         when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
         when(rulesCuratorMock.getRules()).thenReturn(rules);
@@ -89,9 +86,7 @@ public class PoolRulesTest {
         when(configMock.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
         productCache = new ProductCache(configMock, productAdapterMock);
 
-        JsRunnerProvider provider = new JsRunnerProvider(rulesCuratorMock);
-        poolRules = new PoolRules(provider.get(), poolManagerMock,
-                                    productCache, configMock);
+        poolRules = new PoolRules(poolManagerMock, productCache, configMock);
         principal = TestUtil.createOwnerPrincipal();
         owner = principal.getOwners().get(0);
     }

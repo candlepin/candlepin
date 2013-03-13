@@ -93,7 +93,6 @@ import org.candlepin.model.User;
 import org.candlepin.pinsetter.tasks.EntitlerJob;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
-import org.candlepin.policy.js.consumer.ConsumerDeleteHelper;
 import org.candlepin.policy.js.consumer.ConsumerRules;
 import org.candlepin.resource.util.ConsumerInstalledProductEnricher;
 import org.candlepin.resource.util.ResourceDateParser;
@@ -140,7 +139,6 @@ public class ConsumerResource {
     private PoolManager poolManager;
     private PoolCurator poolCurator;
     private ConsumerRules consumerRules;
-    private ConsumerDeleteHelper consumerDeleteHelper;
     private OwnerCurator ownerCurator;
     private ActivationKeyCurator activationKeyCurator;
     private Entitler entitler;
@@ -160,11 +158,11 @@ public class ConsumerResource {
         EventSink sink, EventFactory eventFactory, EventCurator eventCurator,
         EventAdapter eventAdapter, UserServiceAdapter userService,
         Exporter exporter, PoolManager poolManager, PoolCurator poolCurator,
-        ConsumerRules consumerRules, ConsumerDeleteHelper consumerDeleteHelper,
-        OwnerCurator ownerCurator, ActivationKeyCurator activationKeyCurator,
-        Entitler entitler, ComplianceRules complianceRules,
-        DeletedConsumerCurator deletedConsumerCurator,
-        EnvironmentCurator environmentCurator, Config config) {
+        ConsumerRules consumerRules, OwnerCurator ownerCurator,
+        ActivationKeyCurator activationKeyCurator, Entitler entitler,
+        ComplianceRules complianceRules, DeletedConsumerCurator deletedConsumerCurator,
+        EnvironmentCurator environmentCurator,
+        Config config) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -182,7 +180,6 @@ public class ConsumerResource {
         this.poolManager = poolManager;
         this.poolCurator = poolCurator;
         this.consumerRules = consumerRules;
-        this.consumerDeleteHelper = consumerDeleteHelper;
         this.ownerCurator = ownerCurator;
         this.eventAdapter = eventAdapter;
         this.activationKeyCurator = activationKeyCurator;
@@ -1027,7 +1024,7 @@ public class ConsumerResource {
                     .getType().getLabel(), toDelete.getName(), msg), e);
 
         }
-        consumerRules.onConsumerDelete(consumerDeleteHelper, toDelete);
+        consumerRules.onConsumerDelete(toDelete);
 
         Event event = eventFactory.consumerDeleted(toDelete);
         consumerCurator.delete(toDelete);

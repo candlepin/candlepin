@@ -14,15 +14,10 @@
  */
 package org.candlepin.policy.js.entitlement;
 
-import java.util.List;
-import java.util.Set;
-
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
-import org.candlepin.model.PoolQuantity;
-import org.candlepin.policy.js.RuleExecutionException;
-import org.candlepin.policy.js.compliance.ComplianceStatus;
+import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.pool.PoolHelper;
 
 import com.google.inject.Inject;
@@ -53,7 +48,7 @@ public class EnforcerDispatcher implements Enforcer {
     }
 
     @Override
-    public PreEntHelper preEntitlement(Consumer consumer, Pool entitlementPool,
+    public ValidationResult preEntitlement(Consumer consumer, Pool entitlementPool,
         Integer quantity) {
 
         if (consumer.getType().isManifest()) {
@@ -62,28 +57,6 @@ public class EnforcerDispatcher implements Enforcer {
         }
 
         return jsEnforcer.preEntitlement(consumer, entitlementPool, quantity);
-    }
-
-
-    @Override
-    public List<PoolQuantity> selectBestPools(Consumer consumer, String[] productIds,
-        List<Pool> pools, ComplianceStatus compliance, String serviceLevelOverride,
-        Set<String> exemptList)
-        throws RuleExecutionException {
-        if (consumer.getType().isManifest()) {
-            return manifestEnforcer.selectBestPools(consumer, productIds, pools,
-                compliance, serviceLevelOverride, exemptList);
-        }
-        return jsEnforcer.selectBestPools(consumer, productIds, pools,
-            compliance, serviceLevelOverride, exemptList);
-    }
-
-    public PreUnbindHelper preUnbind(Consumer consumer, Pool entitlementPool) {
-        if (consumer.getType().isManifest()) {
-            return manifestEnforcer.preUnbind(consumer, entitlementPool);
-        }
-
-        return jsEnforcer.preUnbind(consumer, entitlementPool);
     }
 
     public PoolHelper postUnbind(Consumer consumer, PoolHelper postEntHelper,

@@ -12,14 +12,9 @@ describe 'Rules Import' do
     js_rules = @cp.list_rules
   end
 
-  it 'posts rules' do
-    rules = 'log.debug("rules loaded");'
-    result = @cp.upload_rules(Base64.encode64(rules))
-    @cp.delete_rules()
-  end
-
   it "posts and gets rules" do
-    rules = "var a=1.0;"
+    rules_major_ver = @cp.get_status()['rulesVersion'].split(".")[0]
+    rules = "//Version: #{rules_major_ver}.10000\nvar a=1.0;"
     encoded_rules = Base64.encode64(rules)
     result = @cp.upload_rules(encoded_rules)
     fetched_rules = @cp.list_rules

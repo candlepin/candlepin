@@ -19,11 +19,11 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doThrow;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -235,44 +235,6 @@ public class ImporterTest {
         assertEquals(importDate, em.getExported());
     }
 
-    @Test
-    public void newerVersionImport() throws Exception {
-        // if we do are importing candlepin 0.0.10 data into candlepin 0.0.3,
-        // import the rules.
-
-        String version = "0.0.10";
-        File actualmeta = createFile("/tmp/meta.json", version, new Date(),
-            "test_user", "prefix");
-        File[] jsArray = createMockJsFile(MOCK_JS_PATH);
-        ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
-        RulesImporter ri = mock(RulesImporter.class);
-        when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(null);
-        Importer i = new Importer(null, null, ri, null, null, null, null,
-            null, null, emc, null, null, i18n);
-        i.importRules(jsArray, actualmeta);
-
-        //verify that rules were imported
-        verify(ri).importObject(any(Reader.class), eq(version));
-    }
-
-    @Test
-    public void olderVersionImport() throws Exception {
-        // if we are importing candlepin 0.0.1 data into
-        // candlepin 0.0.3, do not import the rules
-        File actualmeta = createFile("/tmp/meta.json", "0.0.1", new Date(),
-            "test_user", "prefix");
-        ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
-        RulesImporter ri = mock(RulesImporter.class);
-
-        when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(null);
-        Importer i = new Importer(null, null, ri, null, null, null, null,
-            null, null, emc, null, null, i18n);
-        i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta,
-            new ConflictOverrides());
-        //verify that rules were not imported
-        verify(ri, never()).importObject(any(Reader.class), any(String.class));
-    }
-
     @Test(expected = ImporterException.class)
     public void nullType() throws ImporterException, IOException {
         File actualmeta = createFile("/tmp/meta.json", "0.0.3", new Date(),
@@ -450,6 +412,17 @@ public class ImporterTest {
         fail();
     }
 
+    private Map<String, File> getTestImportFiles() {
+        Map<String, File> importFiles = new HashMap<String, File>();
+        importFiles.put(ImportFile.META.fileName(), mock(File.class));
+        importFiles.put(ImportFile.RULES_FILE.fileName(), mock(File.class));
+        importFiles.put(ImportFile.CONSUMER_TYPE.fileName(), mock(File.class));
+        importFiles.put(ImportFile.CONSUMER.fileName(), mock(File.class));
+        importFiles.put(ImportFile.PRODUCTS.fileName(), mock(File.class));
+        importFiles.put(ImportFile.ENTITLEMENTS.fileName(), mock(File.class));
+        return importFiles;
+    }
+
     @Test
     public void testImportNoMeta()
         throws IOException, ImporterException {
@@ -457,17 +430,9 @@ public class ImporterTest {
             null, config, null, null, null, i18n);
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
-        Map<String, File> importFiles = new HashMap<String, File>();
-        File ruleDir = mock(File.class);
-        File[] rulesFiles = new File[]{mock(File.class)};
-        when(ruleDir.listFiles()).thenReturn(rulesFiles);
 
+        Map<String, File> importFiles = getTestImportFiles();
         importFiles.put(ImportFile.META.fileName(), null);
-        importFiles.put(ImportFile.RULES.fileName(), ruleDir);
-        importFiles.put(ImportFile.CONSUMER_TYPE.fileName(), mock(File.class));
-        importFiles.put(ImportFile.CONSUMER.fileName(), mock(File.class));
-        importFiles.put(ImportFile.PRODUCTS.fileName(), mock(File.class));
-        importFiles.put(ImportFile.ENTITLEMENTS.fileName(), mock(File.class));
 
         try {
             i.importObjects(owner, importFiles, co);
@@ -481,79 +446,15 @@ public class ImporterTest {
     }
 
     @Test
-    public void testImportNoRulesDir()
-        throws IOException, ImporterException {
-        Importer i = new Importer(null, null, null, null, null, null, null,
-            null, config, null, null, null, i18n);
-        Owner owner = mock(Owner.class);
-        ConflictOverrides co = mock(ConflictOverrides.class);
-        Map<String, File> importFiles = new HashMap<String, File>();
-
-        importFiles.put(ImportFile.META.fileName(), mock(File.class));
-        importFiles.put(ImportFile.RULES.fileName(), null);
-        importFiles.put(ImportFile.CONSUMER_TYPE.fileName(), mock(File.class));
-        importFiles.put(ImportFile.CONSUMER.fileName(), mock(File.class));
-        importFiles.put(ImportFile.PRODUCTS.fileName(), mock(File.class));
-        importFiles.put(ImportFile.ENTITLEMENTS.fileName(), mock(File.class));
-
-        try {
-            i.importObjects(owner, importFiles, co);
-        }
-        catch (ImporterException e) {
-            assertEquals(e.getMessage(), i18n.tr("The archive does not contain the " +
-                "required rules directory"));
-            return;
-        }
-        fail();
-    }
-
-    @Test
-    public void testImportNoRulesFile()
-        throws IOException, ImporterException {
-        Importer i = new Importer(null, null, null, null, null, null, null,
-            null, config, null, null, null, i18n);
-        Owner owner = mock(Owner.class);
-        ConflictOverrides co = mock(ConflictOverrides.class);
-        Map<String, File> importFiles = new HashMap<String, File>();
-        File ruleDir = mock(File.class);
-        when(ruleDir.listFiles()).thenReturn(new File[0]);
-
-        importFiles.put(ImportFile.META.fileName(), mock(File.class));
-        importFiles.put(ImportFile.RULES.fileName(), ruleDir);
-        importFiles.put(ImportFile.CONSUMER_TYPE.fileName(), mock(File.class));
-        importFiles.put(ImportFile.CONSUMER.fileName(), mock(File.class));
-        importFiles.put(ImportFile.PRODUCTS.fileName(), mock(File.class));
-        importFiles.put(ImportFile.ENTITLEMENTS.fileName(), mock(File.class));
-
-        try {
-            i.importObjects(owner, importFiles, co);
-        }
-        catch (ImporterException e) {
-            assertEquals(e.getMessage(), i18n.tr("The archive does not contain the " +
-                "required rules file(s)"));
-            return;
-        }
-        fail();
-    }
-
-    @Test
     public void testImportNoConsumerTypesDir()
         throws IOException, ImporterException {
         Importer i = new Importer(null, null, null, null, null, null, null,
             null, config, null, null, null, i18n);
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
-        Map<String, File> importFiles = new HashMap<String, File>();
-        File ruleDir = mock(File.class);
-        File[] rulesFiles = new File[]{mock(File.class)};
-        when(ruleDir.listFiles()).thenReturn(rulesFiles);
+        Map<String, File> importFiles = getTestImportFiles();
 
-        importFiles.put(ImportFile.META.fileName(), mock(File.class));
-        importFiles.put(ImportFile.RULES.fileName(), ruleDir);
         importFiles.put(ImportFile.CONSUMER_TYPE.fileName(), null);
-        importFiles.put(ImportFile.CONSUMER.fileName(), mock(File.class));
-        importFiles.put(ImportFile.PRODUCTS.fileName(), mock(File.class));
-        importFiles.put(ImportFile.ENTITLEMENTS.fileName(), mock(File.class));
 
         try {
             i.importObjects(owner, importFiles, co);
@@ -573,17 +474,9 @@ public class ImporterTest {
             null, config, null, null, null, i18n);
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
-        Map<String, File> importFiles = new HashMap<String, File>();
-        File ruleDir = mock(File.class);
-        File[] rulesFiles = new File[]{mock(File.class)};
-        when(ruleDir.listFiles()).thenReturn(rulesFiles);
+        Map<String, File> importFiles = getTestImportFiles();
 
-        importFiles.put(ImportFile.META.fileName(), mock(File.class));
-        importFiles.put(ImportFile.RULES.fileName(), ruleDir);
-        importFiles.put(ImportFile.CONSUMER_TYPE.fileName(), mock(File.class));
         importFiles.put(ImportFile.CONSUMER.fileName(), null);
-        importFiles.put(ImportFile.PRODUCTS.fileName(), mock(File.class));
-        importFiles.put(ImportFile.ENTITLEMENTS.fileName(), mock(File.class));
 
         try {
             i.importObjects(owner, importFiles, co);
@@ -604,7 +497,7 @@ public class ImporterTest {
             null, config, null, null, null, i18n);
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
-        Map<String, File> importFiles = new HashMap<String, File>();
+        Map<String, File> importFiles = getTestImportFiles();
         File ruleDir = mock(File.class);
         File[] rulesFiles = createMockJsFile(MOCK_JS_PATH);
         when(ruleDir.listFiles()).thenReturn(rulesFiles);
@@ -613,13 +506,11 @@ public class ImporterTest {
         // this is the hook to stop testing. we confirm that the archive component tests
         //  are passed and then jump out instead of trying to fake the actual file
         //  processing.
-        when(ri.importObject(any(Reader.class), any(String.class))).thenThrow(
-            new RuntimeException("Done with the test"));
+        doThrow(new RuntimeException("Done with the test")).when(ri).importObject(
+            any(Reader.class));
 
         importFiles.put(ImportFile.META.fileName(), actualmeta);
-        importFiles.put(ImportFile.RULES.fileName(), ruleDir);
-        importFiles.put(ImportFile.CONSUMER_TYPE.fileName(), mock(File.class));
-        importFiles.put(ImportFile.CONSUMER.fileName(), mock(File.class));
+        importFiles.put(ImportFile.RULES_FILE.fileName(), rulesFiles[0]);
         importFiles.put(ImportFile.PRODUCTS.fileName(), null);
         importFiles.put(ImportFile.ENTITLEMENTS.fileName(), null);
 
@@ -641,16 +532,8 @@ public class ImporterTest {
             null, config, null, null, null, i18n);
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
-        Map<String, File> importFiles = new HashMap<String, File>();
-        File ruleDir = mock(File.class);
-        File[] rulesFiles = new File[]{mock(File.class)};
-        when(ruleDir.listFiles()).thenReturn(rulesFiles);
+        Map<String, File> importFiles = getTestImportFiles();
 
-        importFiles.put(ImportFile.META.fileName(), mock(File.class));
-        importFiles.put(ImportFile.RULES.fileName(), ruleDir);
-        importFiles.put(ImportFile.CONSUMER_TYPE.fileName(), mock(File.class));
-        importFiles.put(ImportFile.CONSUMER.fileName(), mock(File.class));
-        importFiles.put(ImportFile.PRODUCTS.fileName(), mock(File.class));
         importFiles.put(ImportFile.ENTITLEMENTS.fileName(), null);
 
         try {

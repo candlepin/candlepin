@@ -19,17 +19,14 @@ package org.candlepin.policy.js;
  */
 public class RuleParseException extends RuntimeException {
 
-    /**
-     *
-     */
     private static final long serialVersionUID = -1089224966478743419L;
 
-    /**
-     * default ctor
-     * @param t actual cause of the error.
-     */
     public RuleParseException(Throwable t) {
         super(t);
+    }
+
+    public RuleParseException(String msg) {
+        super(msg);
     }
 
 }

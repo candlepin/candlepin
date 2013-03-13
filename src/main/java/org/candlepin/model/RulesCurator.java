@@ -33,6 +33,13 @@ import java.util.List;
  */
 public class RulesCurator extends AbstractHibernateCurator<Rules> {
     private static Logger log = Logger.getLogger(RulesCurator.class);
+    public static final String DEFAULT_RULES_FILE = "/rules/rules.js";
+
+    /*
+     * Current rules API major version number. (the x in x.y) If a rules file does not
+     * match this major version number exactly, we do not import the rules.
+     */
+    public static final int RULES_API_VERSION = 2;
 
     protected RulesCurator() {
         super(Rules.class);
@@ -61,22 +68,29 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
      * @return the rules
      */
     public Rules getRules() {
-        List<Rules> existingRuleSet = listAll();
+        List<Rules> dbRuleSet = listAll();
+        // Load rules from RPM, we need to know it's version before we know which
+        // rules to use:
+        Rules rpmRules = rulesFromFile(getDefaultRulesFile());
+        log.debug("RPM Rules version: " + rpmRules.getVersion());
+
         // If there are rules in the database and their version is not less than the
-        // candlepin version this server is currently running, we'll use them:
-        if (!existingRuleSet.isEmpty() &&
-            VersionUtil.getRulesVersionCompatibility(
-                existingRuleSet.get(0).getCandlepinVersion())) {
-            return existingRuleSet.get(0);
+        // version this server is currently running, we'll use them:
+        if (!dbRuleSet.isEmpty() &&
+            VersionUtil.getRulesVersionCompatibility(rpmRules.getVersion(),
+                dbRuleSet.get(0).getVersion())) {
+            log.debug("Using rules from database, version: " +
+                dbRuleSet.get(0).getVersion());
+            return dbRuleSet.get(0);
         }
 
-        if (!existingRuleSet.isEmpty()) {
-            log.warn("Ignoring older rules in database, candlepin version: " +
-                existingRuleSet.get(0).getCandlepinVersion());
+        if (!dbRuleSet.isEmpty()) {
+            log.warn("Ignoring older rules in database, version: " +
+                dbRuleSet.get(0).getVersion());
         }
 
-        log.info("Loading default rules.");
-        return rulesFromFile(getDefaultRulesFile());
+        log.debug("Using default rules from RPM.");
+        return rpmRules;
 
     }
 
@@ -134,10 +148,10 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
 
     private Rules rulesFromFile(String path) {
         InputStream is = this.getClass().getResourceAsStream(path);
-        return new Rules(Util.readFile(is), VersionUtil.getVersionString());
+        return new Rules(Util.readFile(is));
     }
 
     protected String getDefaultRulesFile() {
-        return "/rules/default-rules.js";
+        return DEFAULT_RULES_FILE;
     }
 }
