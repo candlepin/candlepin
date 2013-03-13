@@ -25,7 +25,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: Internet/Applications
 License: GPLv2
-Version: 0.7.25
+Version: 0.7.29
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -344,6 +344,24 @@ fi
 
 
 %changelog
+* Fri Mar 08 2013 jesus m. rodriguez <jesusr@redhat.com> 0.7.29-1
+- pair down the classes that go in jar to match buildr generated jar (jesusr@redhat.com)
+
+* Fri Mar 08 2013 jesus m. rodriguez <jesusr@redhat.com> 0.7.28-1
+- get resteasy and jackson classes in candlepin-api.jar of rpm (jesusr@redhat.com)
+
+* Thu Mar 07 2013 William Poteat <wpoteat@redhat.com> 0.7.27-1
+- Update of zanata strings (wpoteat@redhat.com)
+- add packages to candlepin_api (dcrissma@redhat.com)
+- Make JsonProvider more re-usable (dcrissma@redhat.com)
+- increase test coverage (jmrodri@gmail.com)
+
+* Fri Mar 01 2013 jesus m. rodriguez <jesusr@redhat.com> 0.7.26-1
+- 909495: Virt-only subscriptions are not exportable (jesusr@redhat.com)
+- add F18 support (jesusr@redhat.com)
+- 908671: Add pool ID to entitlement certificate. (awood@redhat.com)
+- Improve the performance is checking for guests for a given host. (bkearney@redhat.com)
+
 * Thu Feb 14 2013 William Poteat <wpoteat@redhat.com> 0.7.25-1
 - 908483: Add consumer types for katello. (bkearney@redhat.com)
 - 886726: Add translation calls to two exceptions which can be thrown during

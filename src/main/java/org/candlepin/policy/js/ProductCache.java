@@ -134,7 +134,7 @@ public class ProductCache {
          */
         @Override
         protected boolean removeEldestEntry(Entry<String, ProductReference> eldest) {
-            return this.size() > max;
+            return super.size() > max;
         }
 
     }

@@ -187,7 +187,7 @@ public class EntitlementResource {
         Entitlement entitlement = entitlementCurator.find(id);
         if (entitlement != null) {
             // make sure that this will be a change
-            if (entitlement.getQuantity() != update.getQuantity()) {
+            if (!entitlement.getQuantity().equals(update.getQuantity())) {
                 Consumer consumer = entitlement.getConsumer();
                 entitler.adjustEntitlementQuantity(consumer, entitlement,
                     update.getQuantity());
