@@ -53,8 +53,31 @@ public class Rules extends AbstractHibernateObject {
     @Column(name = "rules_blob")
     private String rules;
 
+    /**
+     * @return the rulesSource
+     */
+    public RulesSource getRulesSource() {
+        return rulesSource;
+    }
+
+    /**
+     * @param rulesSource the rulesSource to set
+     */
+    public void setRulesSource(RulesSource rulesSource) {
+        this.rulesSource = rulesSource;
+    }
+
     @Column(name = "version", nullable = false, length = 20)
     private String version;
+
+    /**
+     * RulesSource enumerates the possible sources
+     * of rules.
+     */
+    public enum RulesSource {UNDEFINED, DATABASE, RPM}
+
+    @Column(name = "rulessource")
+    private RulesSource rulesSource = RulesSource.UNDEFINED;
 
     /**
      * ctor
@@ -79,6 +102,7 @@ public class Rules extends AbstractHibernateObject {
                 "For example: // Version: x.y");
         }
         this.version = m.group(1);
+
     }
 
     /**

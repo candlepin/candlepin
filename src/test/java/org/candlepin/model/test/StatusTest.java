@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Date;
 
+import org.candlepin.model.Rules;
 import org.candlepin.model.Status;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,11 +31,17 @@ import org.junit.Test;
  * StatusTest
  */
 public class StatusTest {
-    private Status status;
+    private Status status, statusRpm, statusDb, statusRpmString;
 
     @Before
     public void init() {
         status = new Status(Boolean.TRUE, "1.0", "2", Boolean.TRUE, "2.0");
+        statusRpm = new Status(Boolean.TRUE, "1.0", "2",
+            Boolean.TRUE, "2.0", Rules.RulesSource.RPM);
+        statusRpmString = new Status(Boolean.TRUE, "1.0", "2",
+            Boolean.TRUE, "2.0", "rpm");
+        statusDb = new Status(Boolean.TRUE, "1.0", "2",
+            Boolean.TRUE, "2.0", Rules.RulesSource.DATABASE);
     }
 
     @Test
@@ -71,5 +78,17 @@ public class StatusTest {
         Date date = new Date();
         status.setTimeUTC(date);
         assertEquals(status.getTimeUTC(), date);
+    }
+
+    @Test
+    public void rulesSource() {
+        assertEquals(status.getRulesSource(), "undefined");
+        assertEquals(statusRpm.getRulesSource(), "rpm");
+        assertEquals(statusRpmString.getRulesSource(), "rpm");
+        assertEquals(statusDb.getRulesSource(), "database");
+        status.setRulesSource("database");
+        statusRpmString.setRulesSource(Rules.RulesSource.DATABASE);
+        assertEquals(status.getRulesSource(), "database");
+        assertEquals(statusRpmString.getRulesSource(), "database");
     }
 }

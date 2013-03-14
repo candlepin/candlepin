@@ -82,8 +82,11 @@ public class StatusResource {
         catch (Exception e) {
             good = false;
         }
-        Status status = new Status(good, version, release, standalone,
+        /*Status status = new Status(good, version, release, standalone,
             rulesCurator.getRules().getVersion());
+            */
+        Status status = new Status(good, version, release, standalone,
+            rulesCurator.getRules().getVersion(), rulesCurator.getRules().getRulesSource());
         return status;
     }
 }

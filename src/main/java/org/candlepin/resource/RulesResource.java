@@ -95,6 +95,7 @@ public class RulesResource {
     public String get() {
         try {
             String rules = rulesCurator.getRules().getRules();
+
             if ((rules != null) && (rules.length() > 0)) {
                 return Base64.encodeBase64String(rules.getBytes());
             }

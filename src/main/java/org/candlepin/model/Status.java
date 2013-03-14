@@ -35,6 +35,9 @@ public class Status {
     private boolean standalone;
     private Date timeUTC;
 
+    private String rulesSource;
+
+
     /**
      * default ctor
      */
@@ -50,6 +53,29 @@ public class Status {
         this.standalone = standalone;
         this.timeUTC = new Date();
         this.rulesVersion = rulesVersion;
+        this.setRulesSource(Rules.RulesSource.UNDEFINED);
+    }
+
+    public Status(Boolean result, String version, String release, Boolean standalone,
+        String rulesVersion, String rulesSource) {
+        this.result = result;
+        this.version = version;
+        this.release = release;
+        this.standalone = standalone;
+        this.timeUTC = new Date();
+        this.rulesVersion = rulesVersion;
+        this.setRulesSource(rulesSource);
+    }
+
+    public Status(Boolean result, String version, String release, Boolean standalone,
+        String rulesVersion, Rules.RulesSource rulesSource) {
+        this.result = result;
+        this.version = version;
+        this.release = release;
+        this.standalone = standalone;
+        this.timeUTC = new Date();
+        this.rulesVersion = rulesVersion;
+        this.setRulesSource(rulesSource);
     }
 
     public boolean getResult() {
@@ -97,5 +123,39 @@ public class Status {
 
     public void setRulesVersion(String rulesVersion) {
         this.rulesVersion = rulesVersion;
+    }
+
+    /**
+     * @return the rulesSource
+     */
+    public String getRulesSource() {
+        return rulesSource;
+    }
+
+    /**
+     * @param rulesSource the rulesSource to set
+     */
+    public void setRulesSource(String rulesSource) {
+        this.rulesSource = rulesSource;
+    }
+
+    /**
+     * @param nRulesSource the rulesSource to set
+     */
+    public void setRulesSource(Rules.RulesSource nRulesSource) {
+        switch(nRulesSource) {
+            case UNDEFINED:
+                this.rulesSource = "undefined";
+                break;
+            case DATABASE:
+                this.rulesSource = "database";
+                break;
+            case RPM:
+                this.rulesSource = "rpm";
+                break;
+            default:
+                this.rulesSource = "unknown";
+                break;
+        }
     }
 }
