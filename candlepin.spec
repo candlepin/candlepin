@@ -56,7 +56,7 @@ BuildRequires: jakarta-commons-io
 BuildRequires: apache-commons-codec
 BuildRequires: codehaus-jackson >= 0:1.9.2
 # Configure Datasources
-e============================================================================
+============================================================================
 BuildRequires: codehaus-jackson-core-lgpl
 BuildRequires: codehaus-jackson-mapper-lgpl
 BuildRequires: codehaus-jackson-xc

@@ -15,6 +15,8 @@
 package org.candlepin.pki;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
@@ -39,7 +41,6 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
-
 
 import org.apache.log4j.Logger;
 
@@ -134,13 +135,16 @@ public abstract class PKIUtility {
     }
 
     public boolean verifySHA256WithRSAHashAgainstCACerts(
-        InputStream input, byte[] signedHash) throws CertificateException, IOException {
-
-        if (verifySHA256WithRSAHash(input, signedHash, reader.getCACert())) {
+        File input, byte[] signedHash) throws CertificateException, IOException {
+        log.debug("Verify against: " + reader.getCACert().getSerialNumber());
+        if (verifySHA256WithRSAHash(new FileInputStream(input), signedHash,
+            reader.getCACert())) {
             return true;
         }
         for (X509Certificate cert : reader.getUpstreamCACerts()) {
-            if (verifySHA256WithRSAHash(input, signedHash, cert)) {
+            log.debug("Verify against: " + cert.getSerialNumber());
+            if (verifySHA256WithRSAHash(new FileInputStream(input), signedHash,
+                cert)) {
                 return true;
             }
         }
@@ -151,7 +155,7 @@ public abstract class PKIUtility {
             InputStream input, byte[] signedHash, Certificate certificate) {
         try {
             Signature signature = Signature.getInstance("SHA256withRSA");
-            signature.initVerify(certificate.getPublicKey());
+            signature.initVerify(certificate);
 
             updateSignature(input, signature);
             return signature.verify(signedHash);

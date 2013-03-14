@@ -218,9 +218,8 @@ public class Importer {
                                           "contain the required signature file"));
             }
 
-            exportStream = new FileInputStream(new File(tmpDir, "consumer_export.zip"));
             boolean verifiedSignature = pki.verifySHA256WithRSAHashAgainstCACerts(
-                exportStream,
+                new File(tmpDir, "consumer_export.zip"),
                 loadSignature(new File(tmpDir, "signature")));
             if (!verifiedSignature) {
                 log.warn("Archive signature check failed.");

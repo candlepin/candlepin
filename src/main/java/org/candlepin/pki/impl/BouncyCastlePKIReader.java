@@ -87,8 +87,6 @@ public class BouncyCastlePKIReader implements PKIReader, PasswordFinder {
         this.caKeyPath = config.getString(ConfigProperties.CA_KEY);
         Util.assertNotNull(this.caCertPath,
             "caCertPath cannot be null. Unable to load CA Certificate");
-        Util.assertNotNull(this.upstreamCaCertPath,
-            "upstreamCaCertPath cannot be null. Unable to load upstream CA Certificate");
         Util.assertNotNull(this.caKeyPath,
             "caKeyPath cannot be null. Unable to load PrivateKey");
         this.caKeyPassword = config.getString(ConfigProperties.CA_KEY_PASSWORD);
@@ -128,28 +126,37 @@ public class BouncyCastlePKIReader implements PKIReader, PasswordFinder {
         Set<X509Certificate> result = new HashSet<X509Certificate>();
         try {
             File dir = new File(path);
-            for (File file : dir.listFiles()) {
-                inStream = new FileInputStream(file.getCanonicalPath());
-                X509Certificate cert = (X509Certificate) this.certFactory
-                    .generateCertificate(inStream);
-                inStream.close();
-                result.add(cert);
+            if (!dir.exists()) {
+                return result;
             }
-            return result;
+            for (File file : dir.listFiles()) {
+                try {
+                    inStream = new FileInputStream(file.getAbsolutePath());
+                    X509Certificate cert = (X509Certificate) this.certFactory
+                        .generateCertificate(inStream);
+                    inStream.close();
+                    result.add(cert);
+                }
+                catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                finally {
+                    try {
+                        if (inStream != null) {
+                            inStream.close();
+                        }
+                    }
+                    catch (IOException e) {
+                        // ignore. there's nothing we can do.
+                    }
+                }
+            }
         }
         catch (Exception e) {
             throw new RuntimeException(e);
         }
-        finally {
-            try {
-                if (inStream != null) {
-                    inStream.close();
-                }
-            }
-            catch (IOException e) {
-                // ignore. there's nothing we can do.
-            }
-        }
+
+        return result;
     }
 
     /**
