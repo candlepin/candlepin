@@ -666,7 +666,7 @@ public class ConsumerResource {
     @Path("{consumer_uuid}/checkin")
     @Transactional
     public void updateLastCheckin(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid,
+        @PathParam("consumer_uuid") String uuid,
         @QueryParam("checkin_date") String checkinDateStr) {
         Date checkinDate = null;
         if (checkinDateStr != null) {
@@ -674,6 +674,9 @@ public class ConsumerResource {
         }
         log.debug("parsed " + checkinDateStr + " to " + checkinDate);
         Consumer c = consumerCurator.findByUuid(uuid);
+        if (c == null) {
+            throw new BadRequestException("Consumer with uuid " + uuid + " does not exist");
+        }
         if (checkinDate != null) {
             consumerCurator.updateLastCheckin(c, checkinDate);
         }

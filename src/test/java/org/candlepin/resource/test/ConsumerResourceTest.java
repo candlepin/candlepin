@@ -442,6 +442,18 @@ public class ConsumerResourceTest {
         consumerResource.updateLastCheckin("123123", dtStr);
         verify(consumerCurator).updateLastCheckin(eq(c), eq(dt));
     }
+    
+    @Test(expected = BadRequestException.class)
+    public void testUpdateLastCheckinTimeBadUUID() {
+        ConsumerCurator consumerCurator = mock(ConsumerCurator.class);
+        ConsumerResource consumerResource = new ConsumerResource(consumerCurator, null,
+            null, null, null, null, null, i18n, null, null, null, null,
+            null, null, null, null, null, null, null, null, null, null, null, null,
+            new Config());
+        String dtStr = "2011-09-26T18:10:50.184081+00:00";
+        Date dt = ResourceDateParser.parseDateString(dtStr);
+        consumerResource.updateLastCheckin("not-a-valid-uuid", dtStr);
+    }
 
     /**
      * Basic test. If invalid id is given, should throw

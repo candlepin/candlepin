@@ -25,7 +25,7 @@
     hibernate-core hibernate-entitymanager hornetq/hornetq-core
     hornetq/hornetq-core-client javassist javax.inject jaxb-impl
     jboss-logging jpa_1_0_api js jta log4j netty oauth oauth-provider
-    postgresql-jdbc quartz resteasy/resteasy-atom-provider
+    postgresql-jdbc quartz2 resteasy/resteasy-atom-provider
     resteasy/resteasy-guice resteasy/resteasy-jaxb-provider
     resteasy/resteasy-jaxrs resteasy/jaxrs-api
     resteasy/resteasy-multipart-provider scannotation servlet
