@@ -1139,6 +1139,19 @@
             "provided_products": [
                 "806"
             ]
+        },
+        {
+            "name": "Stackable Cores Package (2 cores)",
+            "id": "cores-2-stackable",
+            "type": "MKT",
+            "attributes": {
+                "cores": 2,
+                "multi-entitlement": "yes",
+                "stacking_id": "cores-2-stackable"
+            },
+            "provided_products": [
+                "806"
+            ]
         }
     ]
 }

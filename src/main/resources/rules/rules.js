@@ -271,12 +271,10 @@ function getPoolCores(pool) {
 //
 //
 function findStackingPools(pool_class, consumer, compliance) {
-    var consumer_sockets = 1;
-    if (consumer.facts[SOCKET_FACT]) {
-        consumer_sockets = consumer.facts[SOCKET_FACT];
-    }
+    var consumer_sockets = consumer.facts[SOCKET_FACT] ? consumer.facts[SOCKET_FACT] : 1;
+    var consumerCores = consumer.facts[CORES_FACT] ? consumer.facts[CORES_FACT] : 1;
 
-    var stackToEntitledSockets = {};
+    var stackCounts = {};
     var stackToPoolMap = {};
     var notStackable = [];
 
@@ -293,21 +291,25 @@ function findStackingPools(pool_class, consumer, compliance) {
         var stack_id = stack_ids[j];
         log.debug("stack_id: " + stack_id);
 
-        var covered_sockets = 0;
+        // Track our attribute counts.
+        var attributeCounts = defaultAttributeCounts();
         var entitlements = partialStacks[stack_id];
         for (var k = 0; k < entitlements.length; k++) {
             var entitlement = entitlements[k];
 
-            covered_sockets += entitlement.quantity * get_pool_sockets(entitlement.pool);
-            productIdToStackId[entitlement.pool.productId] = stack_id;
-            for (var m = 0; m < entitlement.pool.providedProducts.length; m++) {
-                var product = entitlement.pool.providedProducts[m];
+            // Update attribute counts.
+            attributeCounts.sockets += entitlement.quantity * get_pool_sockets(entitlement.pool);
+            attributeCounts.cores += entitlement.quantity * getPoolCores(entitlement.pool);
 
-                productIdToStackId[product.productId] = stack_id;
+            productIdToStackId[entitlement.pool.productId] = stack_id;
+
+            // Ensure that we map our provided products to the stack.
+            for (var m = 0; m < entitlement.pool.providedProducts.length; m++) {
+                productIdToStackId[entitlement.pool.providedProducts[m].productId] = stack_id;
             }
         }
         // we can start entitling from the partial stack
-        stackToEntitledSockets[stack_id] = covered_sockets;
+        stackCounts[stack_id] = attributeCounts;
     }
 
     for (var j = 0; j < pool_class.length; j++) {
@@ -356,26 +358,31 @@ function findStackingPools(pool_class, consumer, compliance) {
                 continue;
             }
 
-
             if (!stackToPoolMap.hasOwnProperty(stack_id)) {
                 stackToPoolMap[stack_id] = Utils.getJsMap();
 
                 // we might already have the partial stack from compliance
-                if (!stackToEntitledSockets.hasOwnProperty(stack_id)) {
-                    stackToEntitledSockets[stack_id] = 0;
+                if (!stackCounts.hasOwnProperty(stack_id)) {
+                    stackCounts[stack_id] = defaultAttributeCounts();
                 }
             }
 
             // if this stack is already done, no need to add more to it.
-            if (stackToEntitledSockets[stack_id] >= consumer_sockets) {
+            if (stackCounts[stack_id].sockets >= consumer_sockets &&
+                stackCounts[stack_id].cores >= consumerCores) {
                 continue;
             }
 
             var product_sockets = 0;
             var pool_sockets = get_pool_sockets(pool);
 
-            while (stackToEntitledSockets[stack_id] + product_sockets < consumer_sockets) {
+            var productCores = 0;
+            var poolCores = getPoolCores(pool);
+
+            while (stackCounts[stack_id].sockets + product_sockets < consumer_sockets ||
+                   stackCounts[stack_id].cores + productCores < consumerCores) {
                 product_sockets += pool_sockets;
+                productCores += poolCores;
                 quantity++;
             }
 
@@ -384,8 +391,8 @@ function findStackingPools(pool_class, consumer, compliance) {
                 quantity = pool.quantity - pool.consumed;
             }
 
-            stackToEntitledSockets[stack_id] += quantity * pool_sockets;
-
+            stackCounts[stack_id].sockets += quantity * pool_sockets;
+            stackCounts[stack_id].cores += quantity * poolCores;
             stackToPoolMap[stack_id].put(pool.id, quantity);
         } else {
             // not stackable, just take one.
@@ -397,6 +404,7 @@ function findStackingPools(pool_class, consumer, compliance) {
     var found_pool = false;
 
     var not_stacked_sockets = 0;
+    var notStackedCores = 0;
     var not_stacked_pool_map = Utils.getJsMap();
     // We have a not stackable pool.
     if (notStackable.length > 0) {
@@ -404,11 +412,14 @@ function findStackingPools(pool_class, consumer, compliance) {
             var pool = notStackable[k];
 
             var covered_sockets = get_pool_sockets(pool);
-            if (covered_sockets > not_stacked_sockets) {
+            var coveredCores = getPoolCores(pool);
+            if (covered_sockets > not_stacked_sockets && coveredCores > notStackedCores) {
                 found_pool = true;
                 not_stacked_pool_map = Utils.getJsMap();
                 not_stacked_pool_map.put(pool.id, 1);
+
                 not_stacked_sockets = covered_sockets;
+                notStackedCores = coveredCores;
             }
         }
     }
@@ -416,22 +427,31 @@ function findStackingPools(pool_class, consumer, compliance) {
     not_stacked_pool_map.dump("not_stacked_pool_map");
 
     // if an unstacked pool can cover all our products, take that.
-    if (not_stacked_sockets >= consumer_sockets) {
+    if (not_stacked_sockets >= consumer_sockets && notStackedCores >= consumerCores) {
         return not_stacked_pool_map;
     }
 
-    // loop over our potential stacks, and just take the first stack that covers all sockets.
-    // else take the stack that covers the most sockets.
-    var best_sockets = 0;
+    // loop over our potential stacks, and just take the first stack that covers all
+    // stackable attributes. Else take the stack that covers the most.
+    var bestAttributeCounts = defaultAttributeCounts();
+    var bestStackCoverage = 0;
     var best_stack;
     for (stack_id in stackToPoolMap) {
         found_pool = true;
-        if (stackToEntitledSockets[stack_id] >= consumer_sockets) {
+        var socketsCovered = stackCounts[stack_id].sockets >= consumer_sockets;
+        var coresCovered = stackCounts[stack_id].cores >= consumerCores;
+
+        // If the stack fully covers all attributes, we have our pool.
+        if (stackCounts[stack_id].sockets >= consumer_sockets &&
+            stackCounts[stack_id].cores >= consumerCores) {
             return stackToPoolMap[stack_id];
         }
-        else if (stackToEntitledSockets[stack_id] > best_sockets) {
+
+        // Check if the stack contains the best coverage thus far.
+        var coverage = getPercentCoveredByStack(socketsCovered, coresCovered);
+        if (coverage > bestStackCoverage) {
             best_stack = stack_id;
-            best_sockets = stackToEntitledSockets[stack_id];
+            bestStackCoverage = coverage;
         }
     }
 
@@ -441,15 +461,30 @@ function findStackingPools(pool_class, consumer, compliance) {
         return Utils.getJsMap();
     }
 
-    // we can't fully cover the product. either select the best non stacker, or the best stacker.
-    if (not_stacked_sockets >= best_sockets) {
+    // we can't fully cover the product. either select the best non stacker,
+    // or the best stacker.
+    var nonStackedCoversSockets = not_stacked_sockets >= consumer_sockets;
+    var nonStackedCoversCores = notStackedCores >= consumerCores;
+    var nonStackCoverage = getPercentCoveredByStack(nonStackedCoversSockets,
+                                                    nonStackedCoversCores);
+    if (nonStackCoverage >= bestStackCoverage) {
         return not_stacked_pool_map;
     }
-    else {
-        return stackToPoolMap[best_stack];
-    }
+    return stackToPoolMap[best_stack];
 }
 
+function defaultAttributeCounts() {
+    return {
+        sockets: 0,
+        cores: 0
+    };
+}
+
+function getPercentCoveredByStack(socketsAreCovered, coresAreCovered) {
+    var coverageCount = socketsAreCovered ? 1 : 0;
+    coverageCount += coresAreCovered ? 1 : 0;
+    return coverageCount / 2;
+}
 
 // given 2 pools, select the best one. It is a assumed that the pools offer the
 // same selection of products.
@@ -1246,13 +1281,15 @@ var Compliance = {
      */
     stack_is_compliant: function(consumer, stack_id, ents, log) {
         log.debug("Checking stack compliance for: " + stack_id);
-        var consumer_sockets = 1;
-        if (consumer.facts[SOCKET_FACT]) {
-            consumer_sockets = parseInt(consumer.facts[SOCKET_FACT]);
-        }
+
+        var consumer_sockets = consumer.facts[SOCKET_FACT] ? consumer.facts[SOCKET_FACT] : 1;
         log.debug("Consumer sockets: " + consumer_sockets);
 
+        var consumerCores = consumer.facts[CORES_FACT] ? consumer.facts[CORES_FACT] : 1;
+        log.debug("Consumer cores: " + consumerCores);
+
         var covered_sockets = 0;
+        var coveredCores = 0;
         for (var k = 0; k < ents.length; k++) {
             var ent = ents[k];
 
@@ -1264,12 +1301,14 @@ var Compliance = {
                 var currentStackId = ent.pool.getProductAttribute("stacking_id");
                 if (currentStackId == stack_id) {
                     covered_sockets += get_pool_sockets(ent.pool) * ent.quantity;
+                    coveredCores += getPoolCores(ent.pool) * ent.quantity;
                     log.debug("Ent " + ent.id + " took covered sockets to: " + covered_sockets);
+                    log.debug("Ent " + ent.id + " took covered cores to: " + coveredCores);
                 }
             }
         }
 
-        return covered_sockets >= consumer_sockets;
+        return covered_sockets >= consumer_sockets && coveredCores >= consumerCores;
     },
 
     /*

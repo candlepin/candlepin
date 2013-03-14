@@ -23,9 +23,11 @@ import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.any;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -115,7 +117,7 @@ public class ComplianceRulesTest {
         return e;
     }
 
-    private Entitlement mockStackedEntitlement(Consumer consumer, String stackId,
+    private Entitlement mockBaseStackedEntitlement(Consumer consumer, String stackId,
         String productId, String ... providedProductIds) {
 
         Entitlement e = mockEntitlement(consumer, productId, providedProductIds);
@@ -128,9 +130,16 @@ public class ComplianceRulesTest {
 
         // Setup the attributes for stacking:
         p.addProductAttribute(new ProductPoolAttribute("stacking_id", stackId, productId));
-        p.addProductAttribute(new ProductPoolAttribute("sockets", "2", productId));
 
         return e;
+    }
+
+    private Entitlement mockStackedEntitlement(Consumer consumer, String stackId,
+        String productId, String ... providedProductIds) {
+        Entitlement ent = this.mockBaseStackedEntitlement(consumer, stackId, productId,
+            providedProductIds);
+        ent.getPool().setProductAttribute("sockets", "2", productId);
+        return ent;
     }
 
     private Consumer mockConsumerWithTwoProductsAndNoEntitlements() {
@@ -938,5 +947,201 @@ public class ComplianceRulesTest {
 
         assertTrue(status.getPartialStacks().keySet().contains(STACK_ID_1));
         assertEquals("valid", status.getStatus());
+    }
+
+    // Cores with not-stackable entitlement tests
+    @Test
+    public void productCoveredWhenSingleEntitlementCoversCores() {
+        Consumer c = mockConsumer(new String[]{ PRODUCT_1 });
+        c.setFact("cpu.core(s)_per_socket", "4");
+
+        Entitlement ent = mockEntitlement(c, PRODUCT_1);
+        ent.getPool().setProductAttribute("cores", "4", PRODUCT_1);
+        when(entCurator.listByConsumer(eq(c))).thenReturn(Arrays.asList(ent));
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(0, status.getPartiallyCompliantProducts().size());
+        assertEquals(1, status.getCompliantProducts().size());
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_1));
+        assertEquals(ComplianceStatus.GREEN, status.getStatus());
+    }
+
+    @Test
+    public void productPartiallyCoveredWhenSingleEntitlementDoesNotCoverAllCores() {
+        Consumer c = mockConsumer(new String[]{ PRODUCT_1 });
+        c.setFact("cpu.core(s)_per_socket", "8");
+
+        Entitlement ent = mockEntitlement(c, PRODUCT_1);
+        ent.getPool().setProductAttribute("cores", "4", PRODUCT_1);
+        when(entCurator.listByConsumer(eq(c))).thenReturn(Arrays.asList(ent));
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(1, status.getPartiallyCompliantProducts().size());
+        assertEquals(0, status.getCompliantProducts().size());
+        assertTrue(status.getPartiallyCompliantProducts().keySet().contains(PRODUCT_1));
+        assertEquals(ComplianceStatus.YELLOW, status.getStatus());
+    }
+
+    // Cores stacking tests
+    @Test
+    public void productCoveredWhenStackedEntsCoverCores() {
+        Consumer c = mockConsumer(new String[]{ PRODUCT_3 });
+        c.setFact("cpu.core(s)_per_socket", "8");
+
+        Entitlement ent1 = mockBaseStackedEntitlement(c, STACK_ID_1, PRODUCT_1, PRODUCT_3);
+        ent1.getPool().setProductAttribute("cores", "4", PRODUCT_1);
+
+        Entitlement ent2 = mockBaseStackedEntitlement(c, STACK_ID_1, PRODUCT_2, PRODUCT_3);
+        ent2.getPool().setProductAttribute("cores", "4", PRODUCT_2);
+
+        when(entCurator.listByConsumer(eq(c))).thenReturn(Arrays.asList(ent1, ent2));
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(0, status.getPartiallyCompliantProducts().size());
+        assertEquals(1, status.getCompliantProducts().size());
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_3));
+        assertEquals(ComplianceStatus.GREEN, status.getStatus());
+    }
+
+    @Test
+    public void productPartiallyCoveredWhenStackingEntsDoesNotCoverCores() {
+        Consumer c = mockConsumer(new String[]{ PRODUCT_3 });
+        c.setFact("cpu.core(s)_per_socket", "8");
+
+        Entitlement ent1 = mockBaseStackedEntitlement(c, STACK_ID_1, PRODUCT_1, PRODUCT_3);
+        // Cores are not covered.
+        ent1.getPool().setProductAttribute("cores", "4", PRODUCT_1);
+
+        Entitlement ent2 = mockBaseStackedEntitlement(c, STACK_ID_1, PRODUCT_2, PRODUCT_3);
+        // Mock consumer has 8 sockets by default.
+        ent2.getPool().setProductAttribute("cores", "1", PRODUCT_1);
+
+        when(entCurator.listByConsumer(eq(c))).thenReturn(Arrays.asList(ent1, ent2));
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(1, status.getPartiallyCompliantProducts().size());
+        assertTrue(status.getPartiallyCompliantProducts().keySet().contains(PRODUCT_3));
+        assertEquals(0, status.getCompliantProducts().size());
+        assertEquals(ComplianceStatus.YELLOW, status.getStatus());
+    }
+
+    // Multi-attribute stacking tests.
+    @Test
+    public void productCoveredWhenStackedEntitlementCoversBothSocketsAndCores() {
+        Consumer c = mockConsumer(new String[]{ PRODUCT_3 });
+        c.setFact("cpu.cpu_socket(s)", "4");
+        c.setFact("cpu.core(s)_per_socket", "8");
+
+
+        Entitlement ent1 = mockBaseStackedEntitlement(c, STACK_ID_1, PRODUCT_1, PRODUCT_3);
+        ent1.getPool().setProductAttribute("cores", "8", PRODUCT_1);
+        ent1.getPool().setProductAttribute("sockets", "4", PRODUCT_1);
+
+        when(entCurator.listByConsumer(eq(c))).thenReturn(Arrays.asList(ent1));
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(0, status.getPartiallyCompliantProducts().size());
+        assertEquals(1, status.getCompliantProducts().size());
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_3));
+        assertEquals(ComplianceStatus.GREEN, status.getStatus());
+    }
+
+    @Test
+    public void productCoveredWhenTwoStackedEntsCoversBothSocketsAndCores() {
+        Consumer c = mockConsumer(new String[]{ PRODUCT_3 });
+        c.setFact("cpu.cpu_socket(s)", "4");
+        c.setFact("cpu.core(s)_per_socket", "8");
+
+
+        Entitlement ent1 = mockBaseStackedEntitlement(c, STACK_ID_1, PRODUCT_1, PRODUCT_3);
+        ent1.getPool().setProductAttribute("cores", "4", PRODUCT_1);
+        ent1.getPool().setProductAttribute("sockets", "2", PRODUCT_1);
+
+        Entitlement ent2 = mockBaseStackedEntitlement(c, STACK_ID_1, PRODUCT_2, PRODUCT_3);
+        ent2.getPool().setProductAttribute("cores", "4", PRODUCT_2);
+        ent2.getPool().setProductAttribute("sockets", "2", PRODUCT_2);
+
+        when(entCurator.listByConsumer(eq(c))).thenReturn(Arrays.asList(ent1, ent2));
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(0, status.getPartiallyCompliantProducts().size());
+        assertEquals(1, status.getCompliantProducts().size());
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_3));
+        assertEquals(ComplianceStatus.GREEN, status.getStatus());
+    }
+
+    @Test
+    public void productCoveredWhenTwoStackedEntsCoverBothSocketsAndCoresSeperately() {
+        Consumer c = mockConsumer(new String[]{ PRODUCT_3 });
+        c.setFact("cpu.cpu_socket(s)", "4");
+        c.setFact("cpu.core(s)_per_socket", "8");
+
+
+        Entitlement ent1 = mockBaseStackedEntitlement(c, STACK_ID_1, PRODUCT_1, PRODUCT_3);
+        ent1.getPool().setProductAttribute("sockets", "4", PRODUCT_1);
+
+        Entitlement ent2 = mockBaseStackedEntitlement(c, STACK_ID_1, PRODUCT_2, PRODUCT_3);
+        ent2.getPool().setProductAttribute("cores", "8", PRODUCT_2);
+
+        when(entCurator.listByConsumer(eq(c))).thenReturn(Arrays.asList(ent1, ent2));
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(0, status.getPartiallyCompliantProducts().size());
+        assertEquals(1, status.getCompliantProducts().size());
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_3));
+        assertEquals(ComplianceStatus.GREEN, status.getStatus());
+    }
+
+    @Test
+    public void productPartiallyCoveredWhenTwoStackedEntsCoverOnlyCores() {
+        Consumer c = mockConsumer(new String[]{ PRODUCT_3 });
+        c.setFact("cpu.cpu_socket(s)", "4");
+        c.setFact("cpu.core(s)_per_socket", "8");
+
+
+        Entitlement ent1 = mockBaseStackedEntitlement(c, STACK_ID_1, PRODUCT_1, PRODUCT_3);
+        ent1.getPool().setProductAttribute("sockets", "2", PRODUCT_1);
+
+        Entitlement ent2 = mockBaseStackedEntitlement(c, STACK_ID_1, PRODUCT_2, PRODUCT_3);
+        ent2.getPool().setProductAttribute("cores", "8", PRODUCT_2);
+
+        when(entCurator.listByConsumer(eq(c))).thenReturn(Arrays.asList(ent1, ent2));
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(1, status.getPartiallyCompliantProducts().size());
+        assertTrue(status.getPartiallyCompliantProducts().keySet().contains(PRODUCT_3));
+        assertEquals(0, status.getCompliantProducts().size());
+        assertEquals(ComplianceStatus.YELLOW, status.getStatus());
+    }
+
+    @Test
+    public void productPartiallyCoveredWhenStackedEntsCoverSocketsOnly() {
+        Consumer c = mockConsumer(new String[]{ PRODUCT_3 });
+        c.setFact("cpu.cpu_socket(s)", "4");
+        c.setFact("cpu.core(s)_per_socket", "8");
+
+
+        Entitlement ent1 = mockBaseStackedEntitlement(c, STACK_ID_1, PRODUCT_1, PRODUCT_3);
+        ent1.getPool().setProductAttribute("sockets", "4", PRODUCT_1);
+
+        Entitlement ent2 = mockBaseStackedEntitlement(c, STACK_ID_1, PRODUCT_2, PRODUCT_3);
+        ent2.getPool().setProductAttribute("cores", "4", PRODUCT_2);
+
+        when(entCurator.listByConsumer(eq(c))).thenReturn(Arrays.asList(ent1, ent2));
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(1, status.getPartiallyCompliantProducts().size());
+        assertTrue(status.getPartiallyCompliantProducts().keySet().contains(PRODUCT_3));
+        assertEquals(0, status.getCompliantProducts().size());
+        assertEquals(ComplianceStatus.YELLOW, status.getStatus());
     }
 }
