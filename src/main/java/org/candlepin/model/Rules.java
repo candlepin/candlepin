@@ -53,52 +53,8 @@ public class Rules extends AbstractHibernateObject {
     @Column(name = "rules_blob")
     private String rules;
 
-    /**
-     * @return the rulesSource
-     */
-    public RulesSource getRulesSource() {
-        return rulesSource;
-    }
-
-    /**
-     * @return the rulesSource String
-     */
-    public String getRulesSourceString() {
-        return rulesSourceToString(this.rulesSource);
-    }
-
-    /**
-     * @param rulesSource the rulesSource to set
-     */
-    public void setRulesSource(String rulesSource) {
-        if (rulesSource.equals("database")) {
-            this.rulesSource = RulesSource.DATABASE;
-        }
-        else if (rulesSource.equals("default")) {
-            this.rulesSource = RulesSource.DEFAULT;
-        }
-        else {
-            this.rulesSource = RulesSource.UNDEFINED;
-        }
-    }
-
-    public static String rulesSourceToString(RulesSource rulesSource) {
-        switch(rulesSource) {
-            case DATABASE:
-                return "database";
-            case DEFAULT:
-                return "default";
-            default:
-                return "undefined";
-        }
-    }
-
-    /**
-     * @param rulesSource the rulesSource to set
-     */
-    public void setRulesSource(RulesSource rulesSource) {
-        this.rulesSource = rulesSource;
-    }
+    @Column(name = "rules_source")
+    private RulesSourceEnum rulesSource = RulesSourceEnum.UNDEFINED;
 
     @Column(name = "version", nullable = false, length = 20)
     private String version;
@@ -107,10 +63,51 @@ public class Rules extends AbstractHibernateObject {
      * RulesSource enumerates the possible sources
      * of rules.
      */
-    public enum RulesSource {UNDEFINED, DATABASE, DEFAULT}
+    public enum RulesSourceEnum {
+        UNDEFINED("undefined"),
+        DATABASE("database"),
+        DEFAULT("default");
 
-    @Column(name = "rules_source")
-    private RulesSource rulesSource = RulesSource.UNDEFINED;
+        private String label;
+
+        RulesSourceEnum(String label) {
+            this.label = label;
+        }
+
+        @Override
+        public String toString() {
+            return this.label;
+        }
+    }
+
+   /**
+    * default ctor
+    */
+    public Rules() {
+    }
+
+    /**
+     * @return the rulesSource
+     */
+    public RulesSourceEnum getRulesSource() {
+        return rulesSource;
+    }
+
+    /**
+     * @return the rulesSource String
+     */
+    public String getRulesSourceString() {
+        return this.rulesSource.toString();
+    }
+
+
+    /**
+     * @param rulesSource the rulesSource to set
+     */
+    public void setRulesSource(RulesSourceEnum rulesSourceEnum) {
+        this.rulesSource = rulesSourceEnum;
+    }
+
 
     /**
      * ctor
@@ -138,11 +135,6 @@ public class Rules extends AbstractHibernateObject {
 
     }
 
-    /**
-     * default ctor
-     */
-    public Rules() {
-    }
 
     /**
      * @return rules blob
