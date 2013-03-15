@@ -53,64 +53,17 @@ public class Rules extends AbstractHibernateObject {
     @Column(name = "rules_blob")
     private String rules;
 
-    /**
-     * @return the rulesSource
-     */
-    public RulesSource getRulesSource() {
-        return rulesSource;
-    }
-
-    /**
-     * @return the rulesSource String
-     */
-    public String getRulesSourceString() {
-        return rulesSourceToString(this.rulesSource);
-    }
-
-    /**
-     * @param rulesSource the rulesSource to set
-     */
-    public void setRulesSource(String rulesSource) {
-        if (rulesSource.equals("database")) {
-            this.rulesSource = RulesSource.DATABASE;
-        }
-        else if (rulesSource.equals("default")) {
-            this.rulesSource = RulesSource.DEFAULT;
-        }
-        else {
-            this.rulesSource = RulesSource.UNDEFINED;
-        }
-    }
-
-    public static String rulesSourceToString(RulesSource rulesSource) {
-        switch(rulesSource) {
-            case DATABASE:
-                return "database";
-            case DEFAULT:
-                return "default";
-            default:
-                return "undefined";
-        }
-    }
-
-    /**
-     * @param rulesSource the rulesSource to set
-     */
-    public void setRulesSource(RulesSource rulesSource) {
-        this.rulesSource = rulesSource;
-    }
-
     @Column(name = "version", nullable = false, length = 20)
     private String version;
+
+    @Column(name = "rules_source")
+    private RulesSource rulesSource = RulesSource.UNDEFINED;
 
     /**
      * RulesSource enumerates the possible sources
      * of rules.
      */
     public enum RulesSource {UNDEFINED, DATABASE, DEFAULT}
-
-    @Column(name = "rules_source")
-    private RulesSource rulesSource = RulesSource.UNDEFINED;
 
     /**
      * ctor
@@ -163,6 +116,57 @@ public class Rules extends AbstractHibernateObject {
 
     public void setVersion(String version) {
         this.version = version;
+    }
+
+    /**
+     * @return the rulesSource
+     */
+    public RulesSource getRulesSource() {
+        return rulesSource;
+    }
+
+    /**
+     * @return the rulesSource String
+     */
+    public String getRulesSourceString() {
+        return rulesSourceToString(this.rulesSource);
+    }
+
+    /**
+     * @param rulesSource the rulesSource to set
+     */
+    public void setRulesSource(String rulesSource) {
+        if (rulesSource.equals("database")) {
+            this.rulesSource = RulesSource.DATABASE;
+        }
+        else if (rulesSource.equals("default")) {
+            this.rulesSource = RulesSource.DEFAULT;
+        }
+        else {
+            this.rulesSource = RulesSource.UNDEFINED;
+        }
+    }
+
+    /**
+     * @param rulesSource the rulesSource to set
+     */
+    public void setRulesSource(RulesSource rulesSource) {
+        this.rulesSource = rulesSource;
+    }
+
+    /**
+     * @param rulesSource Rules.RulesSource value
+     * @return String value of the rules source
+     */
+    public static String rulesSourceToString(RulesSource rulesSource) {
+        switch(rulesSource) {
+            case DATABASE:
+                return "database";
+            case DEFAULT:
+                return "default";
+            default:
+                return "undefined";
+        }
     }
 
     private String getVersionLine() {
