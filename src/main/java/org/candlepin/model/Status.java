@@ -118,7 +118,7 @@ public class Status {
     }
 
     /**
-     * @param nRulesSource the rulesSource to set
+     * @param rulesSource the rulesSource to set
      */
     public void setRulesSource(Rules.RulesSource rulesSource) {
         this.rulesSource = Rules.rulesSourceToString(rulesSource);

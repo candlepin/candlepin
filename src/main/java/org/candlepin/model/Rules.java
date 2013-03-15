@@ -71,11 +71,13 @@ public class Rules extends AbstractHibernateObject {
      * @param rulesSource the rulesSource to set
      */
     public void setRulesSource(String rulesSource) {
-        if(rulesSource.equals("database")) {
+        if (rulesSource.equals("database")) {
             this.rulesSource = RulesSource.DATABASE;
-        } else if (rulesSource.equals("default")) {
+        }
+        else if (rulesSource.equals("default")) {
             this.rulesSource = RulesSource.DEFAULT;
-        } else {
+        }
+        else {
             this.rulesSource = RulesSource.UNDEFINED;
         }
     }
