@@ -442,7 +442,7 @@ public class ConsumerResourceTest {
         consumerResource.updateLastCheckin("123123", dtStr);
         verify(consumerCurator).updateLastCheckin(eq(c), eq(dt));
     }
-    
+
     @Test(expected = NotFoundException.class)
     public void testUpdateLastCheckinTimeBadUUID() {
         ConsumerCurator consumerCurator = mock(ConsumerCurator.class);
