@@ -673,10 +673,9 @@ public class ConsumerResource {
             checkinDate = ResourceDateParser.parseDateString(checkinDateStr);
         }
         log.debug("parsed " + checkinDateStr + " to " + checkinDate);
-        Consumer c = consumerCurator.findByUuid(uuid);
-        if (c == null) {
-            throw new BadRequestException("Consumer with uuid " + uuid + " does not exist");
-        }
+
+        Consumer c = verifyAndLookupConsumer(uuid);
+
         if (checkinDate != null) {
             consumerCurator.updateLastCheckin(c, checkinDate);
         }

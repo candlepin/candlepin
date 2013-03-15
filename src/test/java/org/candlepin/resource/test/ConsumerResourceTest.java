@@ -443,7 +443,7 @@ public class ConsumerResourceTest {
         verify(consumerCurator).updateLastCheckin(eq(c), eq(dt));
     }
     
-    @Test(expected = BadRequestException.class)
+    @Test(expected = NotFoundException.class)
     public void testUpdateLastCheckinTimeBadUUID() {
         ConsumerCurator consumerCurator = mock(ConsumerCurator.class);
         ConsumerResource consumerResource = new ConsumerResource(consumerCurator, null,
