@@ -31,15 +31,16 @@ import org.junit.Test;
  * StatusTest
  */
 public class StatusTest {
-    private Status status, statusRpm, statusDb, statusRpmString;
+    private Status status;
+    private Status statusUndef;
+    private Status statusDb;
 
     @Before
     public void init() {
-        status = new Status(Boolean.TRUE, "1.0", "2", Boolean.TRUE, "2.0");
-        statusRpm = new Status(Boolean.TRUE, "1.0", "2",
-            Boolean.TRUE, "2.0", Rules.RulesSource.RPM);
-        statusRpmString = new Status(Boolean.TRUE, "1.0", "2",
-            Boolean.TRUE, "2.0", "rpm");
+        status = new Status(Boolean.TRUE, "1.0", "2", Boolean.TRUE, "2.0", Rules.RulesSource.DEFAULT);
+        statusUndef = new Status(Boolean.TRUE, "1.0", "2",
+            Boolean.TRUE, "2.0", Rules.RulesSource.UNDEFINED);
+
         statusDb = new Status(Boolean.TRUE, "1.0", "2",
             Boolean.TRUE, "2.0", Rules.RulesSource.DATABASE);
     }
@@ -82,13 +83,12 @@ public class StatusTest {
 
     @Test
     public void rulesSource() {
-        assertEquals(status.getRulesSource(), "undefined");
-        assertEquals(statusRpm.getRulesSource(), "rpm");
-        assertEquals(statusRpmString.getRulesSource(), "rpm");
+        assertEquals(status.getRulesSource(), "default");
+        assertEquals(statusUndef.getRulesSource(), "undefined");
         assertEquals(statusDb.getRulesSource(), "database");
         status.setRulesSource("database");
-        statusRpmString.setRulesSource(Rules.RulesSource.DATABASE);
+        statusUndef.setRulesSource(Rules.RulesSource.DATABASE);
         assertEquals(status.getRulesSource(), "database");
-        assertEquals(statusRpmString.getRulesSource(), "database");
+        assertEquals(statusUndef.getRulesSource(), "database");
     }
 }

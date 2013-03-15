@@ -61,6 +61,37 @@ public class Rules extends AbstractHibernateObject {
     }
 
     /**
+     * @return the rulesSource String
+     */
+    public String getRulesSourceString() {
+        return rulesSourceToString(this.rulesSource);
+    }
+
+    /**
+     * @param rulesSource the rulesSource to set
+     */
+    public void setRulesSource(String rulesSource) {
+        if(rulesSource.equals("database")) {
+            this.rulesSource = RulesSource.DATABASE;
+        } else if (rulesSource.equals("default")) {
+            this.rulesSource = RulesSource.DEFAULT;
+        } else {
+            this.rulesSource = RulesSource.UNDEFINED;
+        }
+    }
+
+    public static String rulesSourceToString(RulesSource rulesSource) {
+        switch(rulesSource) {
+            case DATABASE:
+                return "database";
+            case DEFAULT:
+                return "default";
+            default:
+                return "undefined";
+        }
+    }
+
+    /**
      * @param rulesSource the rulesSource to set
      */
     public void setRulesSource(RulesSource rulesSource) {
@@ -74,9 +105,9 @@ public class Rules extends AbstractHibernateObject {
      * RulesSource enumerates the possible sources
      * of rules.
      */
-    public enum RulesSource {UNDEFINED, DATABASE, RPM}
+    public enum RulesSource {UNDEFINED, DATABASE, DEFAULT}
 
-    @Column(name = "rulessource")
+    @Column(name = "rules_source")
     private RulesSource rulesSource = RulesSource.UNDEFINED;
 
     /**

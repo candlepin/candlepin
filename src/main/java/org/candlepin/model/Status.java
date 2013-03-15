@@ -46,28 +46,6 @@ public class Status {
     }
 
     public Status(Boolean result, String version, String release, Boolean standalone,
-        String rulesVersion) {
-        this.result = result;
-        this.version = version;
-        this.release = release;
-        this.standalone = standalone;
-        this.timeUTC = new Date();
-        this.rulesVersion = rulesVersion;
-        this.setRulesSource(Rules.RulesSource.UNDEFINED);
-    }
-
-    public Status(Boolean result, String version, String release, Boolean standalone,
-        String rulesVersion, String rulesSource) {
-        this.result = result;
-        this.version = version;
-        this.release = release;
-        this.standalone = standalone;
-        this.timeUTC = new Date();
-        this.rulesVersion = rulesVersion;
-        this.setRulesSource(rulesSource);
-    }
-
-    public Status(Boolean result, String version, String release, Boolean standalone,
         String rulesVersion, Rules.RulesSource rulesSource) {
         this.result = result;
         this.version = version;
@@ -142,20 +120,7 @@ public class Status {
     /**
      * @param nRulesSource the rulesSource to set
      */
-    public void setRulesSource(Rules.RulesSource nRulesSource) {
-        switch(nRulesSource) {
-            case UNDEFINED:
-                this.rulesSource = "undefined";
-                break;
-            case DATABASE:
-                this.rulesSource = "database";
-                break;
-            case RPM:
-                this.rulesSource = "rpm";
-                break;
-            default:
-                this.rulesSource = "unknown";
-                break;
-        }
+    public void setRulesSource(Rules.RulesSource rulesSource) {
+        this.rulesSource = Rules.rulesSourceToString(rulesSource);
     }
 }
