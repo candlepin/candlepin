@@ -27,6 +27,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import org.candlepin.policy.js.RuleParseException;
 import org.hibernate.annotations.GenericGenerator;
@@ -53,8 +54,38 @@ public class Rules extends AbstractHibernateObject {
     @Column(name = "rules_blob")
     private String rules;
 
+    @Transient
+    private RulesSourceEnum rulesSource = RulesSourceEnum.UNDEFINED;
+
     @Column(name = "version", nullable = false, length = 20)
     private String version;
+
+    /**
+     * RulesSource enumerates the possible sources
+     * of rules.
+     */
+    public enum RulesSourceEnum {
+        UNDEFINED("undefined"),
+        DATABASE("database"),
+        DEFAULT("default");
+
+        private String label;
+
+        RulesSourceEnum(String label) {
+            this.label = label;
+        }
+
+        @Override
+        public String toString() {
+            return this.label;
+        }
+    }
+
+   /**
+    * default ctor
+    */
+    public Rules() {
+    }
 
     /**
      * ctor
@@ -79,12 +110,29 @@ public class Rules extends AbstractHibernateObject {
                 "For example: // Version: x.y");
         }
         this.version = m.group(1);
+
+    }
+
+
+    /**
+     * @return the rulesSource
+     */
+    public RulesSourceEnum getRulesSource() {
+        return rulesSource;
     }
 
     /**
-     * default ctor
+     * @return the rulesSource String
      */
-    public Rules() {
+    public String getRulesSourceString() {
+        return this.rulesSource.toString();
+    }
+
+    /**
+     * @param rulesSourceEnum the rulesSourceEnum to set
+     */
+    public void setRulesSource(RulesSourceEnum rulesSourceEnum) {
+        this.rulesSource = rulesSourceEnum;
     }
 
     /**
