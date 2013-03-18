@@ -33,6 +33,7 @@ import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
+import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.test.DatabaseTestFixture;
 import org.junit.Before;
 import org.junit.Test;
@@ -185,6 +186,15 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         assertTrue(guests.size() == 0);
     }
 
+    @Test
+    public void updateCheckinTime() {
+        Consumer consumer = new Consumer("hostConsumer", "testUser", owner, ct);
+        consumer = consumerCurator.create(consumer);
+        Date dt = ResourceDateParser.parseDateString("2011-09-26T18:10:50.184081+00:00");
+        consumerCurator.updateLastCheckin(consumer, dt);
+
+        assertEquals(consumer.getLastCheckin(), dt);
+    }
     @Test
     public void updatelastCheckin() throws Exception {
         Date date = new Date();

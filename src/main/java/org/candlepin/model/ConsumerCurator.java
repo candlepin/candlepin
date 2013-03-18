@@ -284,6 +284,13 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         return consumer;
     }
 
+    @Transactional
+    public Consumer updateLastCheckin(Consumer consumer, Date checkinDate) {
+        consumer.setLastCheckin(checkinDate);
+        save(consumer);
+        return consumer;
+    }
+
     private boolean factsChanged(Map<String, String> updatedFacts,
         Map<String, String> existingFacts) {
         return !existingFacts.equals(updatedFacts);
