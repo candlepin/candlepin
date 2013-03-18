@@ -27,6 +27,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import org.candlepin.policy.js.RuleParseException;
 import org.hibernate.annotations.GenericGenerator;
@@ -53,17 +54,38 @@ public class Rules extends AbstractHibernateObject {
     @Column(name = "rules_blob")
     private String rules;
 
+    @Transient
+    private RulesSourceEnum rulesSource = RulesSourceEnum.UNDEFINED;
+
     @Column(name = "version", nullable = false, length = 20)
     private String version;
-
-    @Column(name = "rules_source")
-    private RulesSource rulesSource = RulesSource.UNDEFINED;
 
     /**
      * RulesSource enumerates the possible sources
      * of rules.
      */
-    public enum RulesSource {UNDEFINED, DATABASE, DEFAULT}
+    public enum RulesSourceEnum {
+        UNDEFINED("undefined"),
+        DATABASE("database"),
+        DEFAULT("default");
+
+        private String label;
+
+        RulesSourceEnum(String label) {
+            this.label = label;
+        }
+
+        @Override
+        public String toString() {
+            return this.label;
+        }
+    }
+
+   /**
+    * default ctor
+    */
+    public Rules() {
+    }
 
     /**
      * ctor
@@ -91,10 +113,26 @@ public class Rules extends AbstractHibernateObject {
 
     }
 
+
     /**
-     * default ctor
+     * @return the rulesSource
      */
-    public Rules() {
+    public RulesSourceEnum getRulesSource() {
+        return rulesSource;
+    }
+
+    /**
+     * @return the rulesSource String
+     */
+    public String getRulesSourceString() {
+        return this.rulesSource.toString();
+    }
+
+    /**
+     * @param rulesSourceEnum the rulesSourceEnum to set
+     */
+    public void setRulesSource(RulesSourceEnum rulesSourceEnum) {
+        this.rulesSource = rulesSourceEnum;
     }
 
     /**
@@ -116,57 +154,6 @@ public class Rules extends AbstractHibernateObject {
 
     public void setVersion(String version) {
         this.version = version;
-    }
-
-    /**
-     * @return the rulesSource
-     */
-    public RulesSource getRulesSource() {
-        return rulesSource;
-    }
-
-    /**
-     * @return the rulesSource String
-     */
-    public String getRulesSourceString() {
-        return rulesSourceToString(this.rulesSource);
-    }
-
-    /**
-     * @param rulesSource the rulesSource to set
-     */
-    public void setRulesSource(String rulesSource) {
-        if (rulesSource.equals("database")) {
-            this.rulesSource = RulesSource.DATABASE;
-        }
-        else if (rulesSource.equals("default")) {
-            this.rulesSource = RulesSource.DEFAULT;
-        }
-        else {
-            this.rulesSource = RulesSource.UNDEFINED;
-        }
-    }
-
-    /**
-     * @param rulesSource the rulesSource to set
-     */
-    public void setRulesSource(RulesSource rulesSource) {
-        this.rulesSource = rulesSource;
-    }
-
-    /**
-     * @param rulesSource Rules.RulesSource value
-     * @return String value of the rules source
-     */
-    public static String rulesSourceToString(RulesSource rulesSource) {
-        switch(rulesSource) {
-            case DATABASE:
-                return "database";
-            case DEFAULT:
-                return "default";
-            default:
-                return "undefined";
-        }
     }
 
     private String getVersionLine() {

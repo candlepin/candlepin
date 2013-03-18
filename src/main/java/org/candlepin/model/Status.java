@@ -21,6 +21,8 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.candlepin.model.Rules.RulesSourceEnum;
+
 /**
  * Status
  */
@@ -35,7 +37,7 @@ public class Status {
     private boolean standalone;
     private Date timeUTC;
 
-    private String rulesSource;
+    private RulesSourceEnum rulesSource;
 
 
     /**
@@ -46,7 +48,7 @@ public class Status {
     }
 
     public Status(Boolean result, String version, String release, Boolean standalone,
-        String rulesVersion, Rules.RulesSource rulesSource) {
+        String rulesVersion, Rules.RulesSourceEnum rulesSource) {
         this.result = result;
         this.version = version;
         this.release = release;
@@ -106,21 +108,14 @@ public class Status {
     /**
      * @return the rulesSource
      */
-    public String getRulesSource() {
+    public RulesSourceEnum getRulesSource() {
         return rulesSource;
     }
 
     /**
      * @param rulesSource the rulesSource to set
      */
-    public void setRulesSource(String rulesSource) {
+    public void setRulesSource(Rules.RulesSourceEnum rulesSource) {
         this.rulesSource = rulesSource;
-    }
-
-    /**
-     * @param rulesSource the rulesSource to set
-     */
-    public void setRulesSource(Rules.RulesSource rulesSource) {
-        this.rulesSource = Rules.rulesSourceToString(rulesSource);
     }
 }
