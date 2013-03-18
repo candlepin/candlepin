@@ -124,38 +124,32 @@ public class BouncyCastlePKIReader implements PKIReader, PasswordFinder {
     private Set<X509Certificate> loadUpstreamCACertificates(String path) {
         InputStream inStream = null;
         Set<X509Certificate> result = new HashSet<X509Certificate>();
-        try {
-            File dir = new File(path);
-            if (!dir.exists()) {
-                return result;
+        File dir = new File(path);
+        if (!dir.exists()) {
+            return result;
+        }
+        for (File file : dir.listFiles()) {
+            try {
+                inStream = new FileInputStream(file.getAbsolutePath());
+                X509Certificate cert = (X509Certificate) this.certFactory
+                    .generateCertificate(inStream);
+                inStream.close();
+                result.add(cert);
             }
-            for (File file : dir.listFiles()) {
+            catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+            finally {
                 try {
-                    inStream = new FileInputStream(file.getAbsolutePath());
-                    X509Certificate cert = (X509Certificate) this.certFactory
-                        .generateCertificate(inStream);
-                    inStream.close();
-                    result.add(cert);
-                }
-                catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-                finally {
-                    try {
-                        if (inStream != null) {
-                            inStream.close();
-                        }
+                    if (inStream != null) {
+                        inStream.close();
                     }
-                    catch (IOException e) {
-                        // ignore. there's nothing we can do.
-                    }
+                }
+                catch (IOException e) {
+                    // ignore. there's nothing we can do.
                 }
             }
         }
-        catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
         return result;
     }
 
