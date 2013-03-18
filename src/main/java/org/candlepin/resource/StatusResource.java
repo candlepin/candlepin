@@ -83,7 +83,7 @@ public class StatusResource {
             good = false;
         }
         Status status = new Status(good, version, release, standalone,
-            rulesCurator.getRules().getVersion());
+            rulesCurator.getRules().getVersion(), rulesCurator.getRules().getRulesSource());
         return status;
     }
 }

@@ -72,6 +72,7 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
         // Load rules from RPM, we need to know it's version before we know which
         // rules to use:
         Rules rpmRules = rulesFromFile(getDefaultRulesFile());
+        rpmRules.setRulesSource(Rules.RulesSourceEnum.DEFAULT);
         log.debug("RPM Rules version: " + rpmRules.getVersion());
 
         // If there are rules in the database and their version is not less than the
@@ -81,6 +82,7 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
                 dbRuleSet.get(0).getVersion())) {
             log.debug("Using rules from database, version: " +
                 dbRuleSet.get(0).getVersion());
+            dbRuleSet.get(0).setRulesSource(Rules.RulesSourceEnum.DATABASE);
             return dbRuleSet.get(0);
         }
 

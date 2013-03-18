@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Date;
 
+import org.candlepin.model.Rules;
 import org.candlepin.model.Status;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,10 +32,17 @@ import org.junit.Test;
  */
 public class StatusTest {
     private Status status;
+    private Status statusUndef;
+    private Status statusDb;
 
     @Before
     public void init() {
-        status = new Status(Boolean.TRUE, "1.0", "2", Boolean.TRUE, "2.0");
+        status = new Status(Boolean.TRUE, "1.0", "2",
+            Boolean.TRUE, "2.0", Rules.RulesSourceEnum.DEFAULT);
+        statusUndef = new Status(Boolean.TRUE, "1.0", "2",
+            Boolean.TRUE, "2.0", Rules.RulesSourceEnum.UNDEFINED);
+        statusDb = new Status(Boolean.TRUE, "1.0", "2",
+            Boolean.TRUE, "2.0", Rules.RulesSourceEnum.DATABASE);
     }
 
     @Test
@@ -71,5 +79,16 @@ public class StatusTest {
         Date date = new Date();
         status.setTimeUTC(date);
         assertEquals(status.getTimeUTC(), date);
+    }
+
+    @Test
+    public void rulesSource() {
+        assertEquals("default", status.getRulesSource().toString());
+        assertEquals("undefined", statusUndef.getRulesSource().toString());
+        assertEquals("database", statusDb.getRulesSource().toString());
+        status.setRulesSource(Rules.RulesSourceEnum.DATABASE);
+        statusUndef.setRulesSource(Rules.RulesSourceEnum.DATABASE);
+        assertEquals("database", status.getRulesSource().toString());
+        assertEquals("database", statusUndef.getRulesSource().toString());
     }
 }
