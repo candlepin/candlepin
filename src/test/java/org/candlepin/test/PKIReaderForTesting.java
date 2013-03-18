@@ -19,6 +19,7 @@ import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.Set;
 
 import org.candlepin.pki.PKIReader;
 
@@ -38,7 +39,7 @@ public class PKIReaderForTesting implements PKIReader {
     }
 
     @Override
-    public X509Certificate getUpstreamCACert() throws IOException,
+    public Set<X509Certificate> getUpstreamCACerts() throws IOException,
         CertificateException {
         return null;
     }

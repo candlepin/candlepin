@@ -15,6 +15,8 @@
 package org.candlepin.pki;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
@@ -40,9 +42,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-
 import org.apache.log4j.Logger;
-import org.candlepin.config.ConfigProperties;
 
 /**
  * PKIUtility
@@ -134,28 +134,33 @@ public abstract class PKIUtility {
         }
     }
 
-    public boolean verifySHA256WithRSAHashWithUpstreamCACert(
-        InputStream input, byte[] signedHash) throws CertificateException, IOException {
-        return verifySHA256WithRSAHash(input, signedHash, reader.getUpstreamCACert());
+    public boolean verifySHA256WithRSAHashAgainstCACerts(
+        File input, byte[] signedHash) throws CertificateException, IOException {
+        log.debug("Verify against: " + reader.getCACert().getSerialNumber());
+        if (verifySHA256WithRSAHash(new FileInputStream(input), signedHash,
+            reader.getCACert())) {
+            return true;
+        }
+        for (X509Certificate cert : reader.getUpstreamCACerts()) {
+            log.debug("Verify against: " + cert.getSerialNumber());
+            if (verifySHA256WithRSAHash(new FileInputStream(input), signedHash,
+                cert)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public boolean verifySHA256WithRSAHash(
             InputStream input, byte[] signedHash, Certificate certificate) {
         try {
             Signature signature = Signature.getInstance("SHA256withRSA");
-            signature.initVerify(certificate.getPublicKey());
+            signature.initVerify(certificate);
 
             updateSignature(input, signature);
             return signature.verify(signedHash);
         }
         catch (SignatureException se) {
-            /*
-             * Can happen if your candlepin upstream cert is not the same length as the one
-             * which signed the manifest. Treat it like a bad signature check failure.
-             */
-            log.error("SignatureException:", se);
-            log.warn(ConfigProperties.CA_CERT_UPSTREAM + " may not match the server" +
-                " that signed manifest.");
             return false;
         }
         catch (Exception e) {

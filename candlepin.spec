@@ -214,7 +214,8 @@ rm -rf $RPM_BUILD_ROOT
 # Create the directory structure required to lay down our files
 # common
 install -d -m 755 $RPM_BUILD_ROOT/%{_sysconfdir}/%{name}/certs/
-install -m 644 conf/candlepin-upstream-ca.crt %{buildroot}%{_sysconfdir}/%{name}/certs
+install -d -m 755 $RPM_BUILD_ROOT/%{_sysconfdir}/%{name}/certs/upstream/
+install -m 644 conf/candlepin-redhat-ca.crt %{buildroot}%{_sysconfdir}/%{name}/certs/upstream/
 install -d -m 755 $RPM_BUILD_ROOT/%{_sysconfdir}/%{name}/
 install -d -m 755 $RPM_BUILD_ROOT/%{_datadir}/%{name}/
 install -m 755 code/setup/cpsetup $RPM_BUILD_ROOT/%{_datadir}/%{name}/cpsetup
@@ -301,11 +302,12 @@ fi
 %{_datadir}/%{name}/cpsetup
 %{_datadir}/%{name}/cpdb
 %{_sysconfdir}/%{name}/certs/
+%{_sysconfdir}/%{name}/certs/upstream
 %ghost %attr(644, root, root) %{_sysconfdir}/%{name}/certs/candlepin-ca.crt
 # Default is to track the rpm version of this cert for manifest signatures.
 # If a deployment is managing their own, they will need to restore from the
 # .rpmsave backup after upgrading the candlepin rpm.
-%config %attr(644, root, root) %{_sysconfdir}/%{name}/certs/candlepin-upstream-ca.crt
+%config %attr(644, root, root) %{_sysconfdir}/%{name}/certs/upstream/candlepin-redhat-ca.crt
 %doc LICENSE
 %doc README
 
