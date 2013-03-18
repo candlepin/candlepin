@@ -31,7 +31,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintStream;
 import java.io.Reader;
 import java.net.URISyntaxException;
@@ -351,7 +350,7 @@ public class ImporterTest {
         ConflictOverrides co = mock(ConflictOverrides.class);
 
         // Mock a passed signature check:
-        when(pki.verifySHA256WithRSAHashWithUpstreamCACert(any(InputStream.class),
+        when(pki.verifySHA256WithRSAHashAgainstCACerts(any(File.class),
             any(byte [].class))).thenReturn(true);
 
         File archive = new File("/tmp/file.zip");
@@ -388,7 +387,7 @@ public class ImporterTest {
         ConflictOverrides co = mock(ConflictOverrides.class);
 
         // Mock a passed signature check:
-        when(pki.verifySHA256WithRSAHashWithUpstreamCACert(any(InputStream.class),
+        when(pki.verifySHA256WithRSAHashAgainstCACerts(any(File.class),
             any(byte [].class))).thenReturn(true);
 
         File archive = new File("/tmp/file.zip");

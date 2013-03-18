@@ -40,7 +40,8 @@ public class CandlepinCommonTestConfig extends Config {
             String key = getClass().getResource("candlepin-ca.key").toURI().getPath();
 
             properties.put(ConfigProperties.CA_CERT, cert);
-            properties.put(ConfigProperties.CA_CERT_UPSTREAM, cert);
+            properties.put(ConfigProperties.CA_CERT_UPSTREAM,
+                "target/test/resources/certs/upstream");
             properties.put(ConfigProperties.CA_KEY, key);
         }
         catch (URISyntaxException e) {

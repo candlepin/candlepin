@@ -14,6 +14,7 @@
  */
 package org.candlepin.pki.impl;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,6 +26,8 @@ import java.security.Security;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMReader;
@@ -69,7 +72,7 @@ public class BouncyCastlePKIReader implements PKIReader, PasswordFinder {
     private String caKeyPath;
     private String caKeyPassword;
     private final X509Certificate x509Certificate;
-    private final X509Certificate upstreamX509Certificate;
+    private final Set<X509Certificate> upstreamX509Certificates;
     private final PrivateKey privateKey;
 
     static {
@@ -84,16 +87,13 @@ public class BouncyCastlePKIReader implements PKIReader, PasswordFinder {
         this.caKeyPath = config.getString(ConfigProperties.CA_KEY);
         Util.assertNotNull(this.caCertPath,
             "caCertPath cannot be null. Unable to load CA Certificate");
-        Util.assertNotNull(this.upstreamCaCertPath,
-            "upstreamCaCertPath cannot be null. Unable to load upstream CA Certificate");
         Util.assertNotNull(this.caKeyPath,
             "caKeyPath cannot be null. Unable to load PrivateKey");
         this.caKeyPassword = config.getString(ConfigProperties.CA_KEY_PASSWORD);
         this.x509Certificate = loadCACertificate(this.caCertPath);
-        this.upstreamX509Certificate = loadCACertificate(upstreamCaCertPath);
+        this.upstreamX509Certificates = loadUpstreamCACertificates(upstreamCaCertPath);
         this.privateKey = loadPrivateKey();
     }
-
     /**
      * @return
      */
@@ -119,6 +119,38 @@ public class BouncyCastlePKIReader implements PKIReader, PasswordFinder {
                 // ignore. there's nothing we can do.
             }
         }
+    }
+
+    private Set<X509Certificate> loadUpstreamCACertificates(String path) {
+        InputStream inStream = null;
+        Set<X509Certificate> result = new HashSet<X509Certificate>();
+        File dir = new File(path);
+        if (!dir.exists()) {
+            return result;
+        }
+        for (File file : dir.listFiles()) {
+            try {
+                inStream = new FileInputStream(file.getAbsolutePath());
+                X509Certificate cert = (X509Certificate) this.certFactory
+                    .generateCertificate(inStream);
+                inStream.close();
+                result.add(cert);
+            }
+            catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+            finally {
+                try {
+                    if (inStream != null) {
+                        inStream.close();
+                    }
+                }
+                catch (IOException e) {
+                    // ignore. there's nothing we can do.
+                }
+            }
+        }
+        return result;
     }
 
     /**
@@ -160,8 +192,9 @@ public class BouncyCastlePKIReader implements PKIReader, PasswordFinder {
     }
 
     @Override
-    public X509Certificate getUpstreamCACert() throws IOException, CertificateException {
-        return this.upstreamX509Certificate;
+    public Set<X509Certificate> getUpstreamCACerts()
+        throws IOException, CertificateException {
+        return this.upstreamX509Certificates;
     }
 
     /**

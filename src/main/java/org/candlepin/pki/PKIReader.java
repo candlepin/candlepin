@@ -19,6 +19,7 @@ import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.Set;
 
 /**
  * A generic mechanism for reading CA certificates from an underlying datastore.
@@ -34,7 +35,7 @@ public interface PKIReader {
      */
     X509Certificate getCACert() throws IOException, CertificateException;
 
-    X509Certificate getUpstreamCACert()  throws IOException, CertificateException;
+    Set<X509Certificate> getUpstreamCACerts()  throws IOException, CertificateException;
 
     /**
      * Supplies the CA's {@link PrivateKey}.
