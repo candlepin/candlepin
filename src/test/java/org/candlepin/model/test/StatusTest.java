@@ -41,7 +41,6 @@ public class StatusTest {
             Boolean.TRUE, "2.0", Rules.RulesSourceEnum.DEFAULT);
         statusUndef = new Status(Boolean.TRUE, "1.0", "2",
             Boolean.TRUE, "2.0", Rules.RulesSourceEnum.UNDEFINED);
-
         statusDb = new Status(Boolean.TRUE, "1.0", "2",
             Boolean.TRUE, "2.0", Rules.RulesSourceEnum.DATABASE);
     }
@@ -84,12 +83,12 @@ public class StatusTest {
 
     @Test
     public void rulesSource() {
-        assertEquals(status.getRulesSource().toString(), "default");
-        assertEquals(statusUndef.getRulesSource().toString(), "undefined");
-        assertEquals(statusDb.getRulesSource().toString(), "database");
+        assertEquals("default", status.getRulesSource().toString());
+        assertEquals("undefined", statusUndef.getRulesSource().toString());
+        assertEquals("database", statusDb.getRulesSource().toString());
         status.setRulesSource(Rules.RulesSourceEnum.DATABASE);
         statusUndef.setRulesSource(Rules.RulesSourceEnum.DATABASE);
-        assertEquals(status.getRulesSource().toString(), "database");
-        assertEquals(statusUndef.getRulesSource().toString(), "database");
+        assertEquals("database", status.getRulesSource().toString());
+        assertEquals("database", statusUndef.getRulesSource().toString());
     }
 }
