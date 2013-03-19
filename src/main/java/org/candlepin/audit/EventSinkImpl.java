@@ -24,6 +24,7 @@ import org.candlepin.model.ActivationKey;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
+import org.candlepin.model.Rules;
 import org.candlepin.model.Subscription;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.hornetq.api.core.HornetQException;
@@ -138,5 +139,15 @@ public class EventSinkImpl implements EventSink {
 
     public Event createSubscriptionDeleted(Subscription todelete) {
         return eventFactory.subscriptionDeleted(todelete);
+    }
+
+    @Override
+    public void emitRulesModified(Rules oldRules, Rules newRules) {
+        sendEvent(eventFactory.rulesUpdated(oldRules, newRules));
+    }
+
+    @Override
+    public void emitRulesDeleted(Rules rules) {
+        sendEvent(eventFactory.rulesDeleted(rules));
     }
 }

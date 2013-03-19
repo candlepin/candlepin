@@ -18,6 +18,7 @@ import org.candlepin.model.ActivationKey;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
+import org.candlepin.model.Rules;
 import org.candlepin.model.Subscription;
 
 /**
@@ -44,6 +45,10 @@ public interface EventSink {
     void emitSubscriptionModified(Subscription old, Subscription newSub);
 
     void emitActivationKeyCreated(ActivationKey key);
+
+    void emitRulesModified(Rules oldRules, Rules newRules);
+
+    void emitRulesDeleted(Rules rules);
 
     Event createSubscriptionDeleted(Subscription todelete);
 }

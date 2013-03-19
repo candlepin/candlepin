@@ -29,6 +29,7 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
+import org.candlepin.model.Rules;
 import org.candlepin.model.Subscription;
 
 import com.google.inject.Inject;
@@ -75,6 +76,26 @@ public class EventFactory {
             newConsumer.getName(), principal, newConsumer.getOwner().getId(),
             newConsumer.getId(), newConsumer.getId(), null, newEntityJson,
             null, null);
+        return e;
+    }
+
+    public Event rulesUpdated(Rules oldRules, Rules newRules) {
+        String olds = entityToJson(oldRules);
+        String news = entityToJson(newRules);
+        Principal principal = principalProvider.get();
+        Event e = new Event(Event.Type.MODIFIED, Event.Target.RULES,
+            null, principal, null,
+            null, (String) newRules.getId(), olds, news, null, null);
+        return e;
+    }
+
+    public Event rulesDeleted(Rules deletedRules) {
+        String oldEntityJson = entityToJson(deletedRules);
+        Principal principal = principalProvider.get();
+        Event e = new Event(Event.Type.DELETED, Event.Target.RULES,
+            null, principalProvider.get(), null,
+            null, (String) deletedRules.getId(),
+            oldEntityJson, null, null, null);
         return e;
     }
 

@@ -20,6 +20,7 @@ import org.candlepin.model.ActivationKey;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
+import org.candlepin.model.Rules;
 import org.candlepin.model.Subscription;
 
 /**
@@ -70,5 +71,13 @@ public class EventSinkForTesting implements EventSink {
 
     @Override
     public void emitActivationKeyCreated(ActivationKey key) {
+    }
+
+    @Override
+    public void emitRulesModified(Rules oldRules, Rules newRules) {
+    }
+
+    @Override
+    public void emitRulesDeleted(Rules rules) {
     }
 }
