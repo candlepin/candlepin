@@ -33,14 +33,11 @@
     hibernate-core hibernate-entitymanager hornetq/hornetq-core
     hornetq/hornetq-core-client javassist javax.inject jaxb-impl
     jboss-logging jpa_1_0_api jta log4j netty oauth oauth-provider
-    postgresql-jdbc quartz resteasy/resteasy-atom-provider
+    postgresql-jdbc resteasy/resteasy-atom-provider
     resteasy/resteasy-guice resteasy/resteasy-jaxb-provider
     resteasy/resteasy-jaxrs resteasy/jaxrs-api
     resteasy/resteasy-multipart-provider scannotation servlet
     slf4j-api slf4j-log4j12" />
-
-  <!-- List of jars that are part of the candlepin software collection in regular build. -->
-  <property name="scl.jar.deps" value="js" />
 
   <macrodef name="grepfromspec">
     <attribute name="text" />
@@ -154,7 +151,8 @@
     <jpackage-deps jars="${jar.deps}" dir="${dist.lib.dir}" />
 
     <!-- Handle the jars in the software collection under /opt/rh/candlepin-scl/ -->
-    <candlepin-scl-deps jars="${scl.jar.deps}" dir="${dist.lib.dir}" />
+    <candlepin-scl-deps jar="quartz" dir="${dist.lib.dir}" />
+    <candlepin-scl-deps jar="js" dir="${dist.lib.dir}" />
 
   </target>
 
@@ -255,12 +253,12 @@
     creates symlinks for candlepin software collection jars
   -->
   <macrodef name="candlepin-scl-deps">
-    <attribute name="jars" />
+    <attribute name="jar" />
     <attribute name="dir" /> <!-- destination -->
 
     <sequential>
-      <echo message="Symlinking SCL @{jars}" />
-      <symlink link="${dist.lib.dir}/@{jars}.jar" resource="${scl.lib.dir}/@{jars}.jar" />
+      <echo message="Symlinking SCL @{jar}" />
+      <symlink link="@{dir}/@{jar}.jar" resource="${scl.lib.dir}/@{jar}.jar" />
     </sequential>
   </macrodef>
 
