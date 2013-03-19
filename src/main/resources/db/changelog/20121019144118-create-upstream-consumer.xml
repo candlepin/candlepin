@@ -38,7 +38,6 @@
             <column name="upstream_id" type="VARCHAR(32)" />
         </addColumn>
         <addForeignKeyConstraint constraintName="fk_upstream_consumer_id" baseColumnNames="upstream_id" baseTableName="cp_owner" referencedTableName="cp_upstream_consumer" referencedColumnNames="id"/>
-        <dropColumn tableName="cp_owner" columnName="upstream_uuid"/>
     </changeSet>
 
 </databaseChangeLog>

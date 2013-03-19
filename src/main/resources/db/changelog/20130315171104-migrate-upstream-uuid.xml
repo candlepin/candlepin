@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+
+    <changeSet id="20130315171104" author="jesusr">
+        <comment>Create Upstream Consumer records</comment>
+        <!-- See http://www.liquibase.org/manual/refactoring_commands -->
+        insert into cp_upstream_consumer (id, uuid, name, owner_id, type_id) select ir.id, ir.upstream_id, ir.upstream_name, ir.owner_id, 1003 from cp_import_record ir;
+    </changeSet>
+
+</databaseChangeLog>
