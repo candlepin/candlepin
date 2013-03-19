@@ -20,6 +20,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -771,7 +772,7 @@ public class DefaultRulesTest {
         enf.postEntitlement(c, postHelper, e);
         verify(poolManagerMock).updatePoolQuantity(eq(virtBonusPool), eq(-10L));
 
-        enf.postUnbind(consumer, postHelper, e);
+        enf.postUnbind(c, postHelper, e);
         verify(poolManagerMock).updatePoolQuantity(eq(virtBonusPool), eq(10L));
     }
 
@@ -813,7 +814,7 @@ public class DefaultRulesTest {
         enf.postEntitlement(c, postHelper, e);
         verify(poolManagerMock, never()).updatePoolQuantity(any(Pool.class), anyInt());
 
-        enf.postUnbind(consumer, postHelper, e);
+        enf.postUnbind(c, postHelper, e);
         verify(poolManagerMock, never()).updatePoolQuantity(any(Pool.class), anyInt());
     }
 
@@ -837,6 +838,83 @@ public class DefaultRulesTest {
 
         assertEquals(new Long(10), physicalPool.getQuantity());
         assertEquals(0, physicalPool.getAttributes().size());
+    }
+
+    /*
+     * Bonus pools should not be created when performing distributor binds.
+     */
+    @Test
+    public void noBonusPoolsForDistributorBinds() {
+        when(config.standalone()).thenReturn(true);
+        Consumer c = new Consumer("test consumer", "test user", owner,
+            new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
+        Enforcer enf = new ManifestEntitlementRules(new DateSourceImpl(),
+            new JsRunnerProvider(rulesCurator).get(),
+            productCache, I18nFactory.getI18n(getClass(), Locale.US,
+                I18nFactory.FALLBACK), config, consumerCurator);
+        Subscription s = createVirtLimitSub("virtLimitProduct", 10, "unlimited");
+        List<Pool> pools = poolRules.createPools(s);
+        assertEquals(1, pools.size());
+
+        Pool physicalPool = pools.get(0);
+        physicalPool.setId("physical");
+
+        assertEquals(new Long(10), physicalPool.getQuantity());
+        assertEquals(0, physicalPool.getAttributes().size());
+
+        Entitlement e = new Entitlement(physicalPool, c, new Date(), new Date(),
+            1);
+        PoolHelper postHelper = new PoolHelper(poolManagerMock, productCache, e);
+
+        enf.postEntitlement(c, postHelper, e);
+        verify(poolManagerMock, never()).createPool(any(Pool.class));
+        verify(poolManagerMock, never()).updatePoolQuantity(any(Pool.class), anyInt());
+
+        enf.postUnbind(c, postHelper, e);
+        verify(poolManagerMock, never()).updatePoolQuantity(any(Pool.class), anyInt());
+        verify(poolManagerMock, never()).setPoolQuantity(any(Pool.class), anyLong());
+    }
+
+    /*
+     * Bonus pools should not be created when we are in a hosted scenario without
+     * distributor binds.
+     */
+    @Test
+    public void noBonusPoolsForHostedNonDistributorBinds() {
+        when(config.standalone()).thenReturn(false);
+        Enforcer enf = new ManifestEntitlementRules(new DateSourceImpl(),
+            new JsRunnerProvider(rulesCurator).get(),
+            productCache, I18nFactory.getI18n(getClass(), Locale.US,
+                I18nFactory.FALLBACK), config, consumerCurator);
+        Subscription s = createVirtLimitSub("virtLimitProduct", 10, "unlimited");
+        List<Pool> pools = poolRules.createPools(s);
+        assertEquals(2, pools.size());
+
+        Pool physicalPool = pools.get(0);
+        physicalPool.setId("physical");
+        Pool virtBonusPool = pools.get(1);
+        virtBonusPool.setId("virt");
+
+        assertEquals(new Long(10), physicalPool.getQuantity());
+        assertEquals(0, physicalPool.getAttributes().size());
+
+        // Quantity on bonus pool should be -1:
+        assertEquals(new Long(-1), virtBonusPool.getQuantity());
+        assertEquals("true", virtBonusPool.getAttributeValue("virt_only"));
+        assertEquals("unlimited", virtBonusPool.getProductAttribute("virt_limit")
+            .getValue());
+
+        Entitlement e = new Entitlement(physicalPool, consumer, new Date(), new Date(),
+            1);
+        PoolHelper postHelper = new PoolHelper(poolManagerMock, productCache, e);
+
+        enf.postEntitlement(consumer, postHelper, e);
+        verify(poolManagerMock, never()).createPool(any(Pool.class));
+        verify(poolManagerMock, never()).updatePoolQuantity(any(Pool.class), anyInt());
+
+        enf.postUnbind(consumer, postHelper, e);
+        verify(poolManagerMock, never()).updatePoolQuantity(any(Pool.class), anyInt());
+        verify(poolManagerMock, never()).setPoolQuantity(any(Pool.class), anyLong());
     }
 
     @Test
@@ -880,7 +958,7 @@ public class DefaultRulesTest {
         verify(poolManagerMock).setPoolQuantity(eq(virtBonusPool), eq(0L));
         virtBonusPool.setQuantity(0L);
 
-        enf.postUnbind(consumer, postHelper, e);
+        enf.postUnbind(c, postHelper, e);
         verify(poolManagerMock).setPoolQuantity(eq(virtBonusPool), eq(-1L));
     }
 
