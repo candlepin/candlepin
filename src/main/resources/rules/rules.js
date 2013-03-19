@@ -139,8 +139,9 @@ function powerSet(a, n) {
     }
 
     var res = [];
-    for (var j = 0; j < powerSet(a.slice(1), n).length; j++) {
-        var x = powerSet(a.slice(1), n)[j];
+    var tempSet = powerSet(a.slice(1), n);
+    for (var j = 0; j < tempSet.length; j++) {
+        var x = tempSet[j];
 
         if (x.length <= n) {
             res.push(x);
