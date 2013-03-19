@@ -16,25 +16,22 @@ package org.candlepin.policy.js.compliance;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.any;
 
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
-import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
@@ -46,6 +43,7 @@ import org.candlepin.model.ProductPoolAttribute;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
+import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 import org.junit.Before;
@@ -397,15 +395,12 @@ public class ComplianceRulesTest {
         assertEquals("valid", status.getStatus());
     }
 
-    @Test
-    public void testComplianceCountsZeroPoolSocketsAsInfinite() {
+    public void testComplianceDoesNotEnforceSocketsWhenAttributeNotSet() {
         // Consumer with 8 sockets:
         Consumer c = mockConsumer(PRODUCT_1);
         List<Entitlement> ents = new LinkedList<Entitlement>();
 
         ents.add(mockEntitlement(c, "Awesome Product", PRODUCT_1));
-        ents.get(0).getPool().addProductAttribute(new ProductPoolAttribute("sockets",
-            "0", PRODUCT_1));
 
         when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
 
