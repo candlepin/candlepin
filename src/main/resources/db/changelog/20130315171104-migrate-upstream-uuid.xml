@@ -7,7 +7,7 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
 
-    <changeSet id="20130315171104" author="jesusr">
+    <changeSet id="20130315171104-1" author="jesusr">
         <comment>Create Upstream Consumer records</comment>
         <!-- See http://www.liquibase.org/manual/refactoring_commands -->
         <!-- Copy only the successful records with consumer types -->
@@ -22,6 +22,16 @@
              cp_consumer_type ct
         WHERE ct.label = ir.upstream_type
           AND ir.status = 0;
+        </sql>
+    </changeSet>
+    <changeSet id="20130315171104-2" author="jesusr">
+        <comment>Link UpstreamConsumers to Owners</comment>
+        <sql>
+        UPDATE cp_owner o
+        SET upstream_id =
+          (SELECT uc.id
+             FROM cp_upstream_consumer uc
+                WHERE uc.owner_id = o.id);
         </sql>
     </changeSet>
 
