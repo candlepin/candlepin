@@ -184,6 +184,8 @@ public class ConfigProperties {
                 this.put(FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
 
                 // Pinsetter
+                // prevent Quartz from checking for updates
+                this.put("org.quartz.scheduler.skipUpdateCheck", "true");
                 this.put("org.quartz.threadPool.class",
                     "org.quartz.simpl.SimpleThreadPool");
                 this.put("org.quartz.threadPool.threadCount", "15");
