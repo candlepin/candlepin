@@ -409,7 +409,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
 
     private void postBindUserLicense(PoolHelper postHelper, Pool pool,
         Consumer c, Map<String, String> attributes) {
-        log.debug("Running user_license post-unbind.");
+        log.debug("Running user_license post-bind.");
         if (!c.isManifest()) {
             // Default to using the same product from the pool.
             String productId = pool.getProductId();
@@ -428,8 +428,9 @@ public abstract class AbstractEntitlementRules implements Enforcer {
     private void postBindVirtLimit(PoolHelper postHelper,
         Entitlement entitlement, Pool pool, Consumer c,
         Map<String, String> attributes) {
-        log.debug("Running virt_limit post-unbind.");
-        if (config.standalone()) {
+        log.debug("Running virt_limit post-bind.");
+        // Even standalone can deliver manifests
+        if (config.standalone() && !c.isManifest()) {
             String productId = pool.getProductId();
             String virtLimit = attributes.get("virt_limit");
             if ("unlimited".equals(virtLimit)) {
@@ -446,8 +447,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
             }
         }
         else {
-            // if we are exporting we need to deal with the bonus pools
-            if (c.isManifest()) {
+            if (!config.standalone() && c.isManifest()) {
                 String virtLimit = attributes.get("virt_limit");
                 if (!"unlimited".equals(virtLimit)) {
                     // if the bonus pool is not unlimited, then the bonus pool
