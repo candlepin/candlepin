@@ -10,7 +10,19 @@
     <changeSet id="20130315171104" author="jesusr">
         <comment>Create Upstream Consumer records</comment>
         <!-- See http://www.liquibase.org/manual/refactoring_commands -->
-        insert into cp_upstream_consumer (id, uuid, name, owner_id, type_id) select ir.id, ir.upstream_id, ir.upstream_name, ir.owner_id, 1003 from cp_import_record ir;
+        <!-- Copy only the successful records with consumer types -->
+        <sql>
+        INSERT INTO cp_upstream_consumer (id, uuid, name, owner_id, type_id)
+        SELECT ir.id,
+               ir.upstream_id,
+               ir.upstream_name,
+               ir.owner_id,
+               ct.id
+        FROM cp_import_record ir,
+             cp_consumer_type ct
+        WHERE ct.label = ir.upstream_type
+          AND ir.status = 0;
+        </sql>
     </changeSet>
 
 </databaseChangeLog>
