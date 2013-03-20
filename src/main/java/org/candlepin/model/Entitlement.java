@@ -102,6 +102,7 @@ public class Entitlement extends AbstractHibernateObject implements Linkable, Ow
 
     private String accountNumber;
     private String contractNumber;
+    private String orderNumber;
 
     private boolean dirty = false;
 
@@ -145,6 +146,7 @@ public class Entitlement extends AbstractHibernateObject implements Linkable, Ow
 
         this.accountNumber = pool.getAccountNumber();
         this.contractNumber = pool.getContractNumber();
+        this.orderNumber = pool.getOrderNumber();
     }
 
     /**
@@ -283,6 +285,14 @@ public class Entitlement extends AbstractHibernateObject implements Linkable, Ow
 
     public void setContractNumber(String contractNumber) {
         this.contractNumber = contractNumber;
+    }
+
+    public String getOrderNumber() {
+        return orderNumber;
+    }
+
+    public void setOrderNumber(String orderNumber) {
+        this.orderNumber = orderNumber;
     }
 
     @Override

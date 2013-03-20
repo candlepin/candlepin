@@ -99,6 +99,7 @@ public class DatabaseTestFixture {
 
     private static final String DEFAULT_CONTRACT = "SUB349923";
     private static final String DEFAULT_ACCOUNT = "ACC123";
+    private static final String DEFAULT_ORDER = "ORD222";
 
     protected EntityManagerFactory emf;
     protected Injector injector;
@@ -275,7 +276,7 @@ public class DatabaseTestFixture {
         Long quantity, Date startDate, Date endDate) {
         Pool p = new Pool(owner, product.getId(), product.getName(),
             new HashSet<ProvidedProduct>(), quantity, startDate, endDate,
-            DEFAULT_CONTRACT, DEFAULT_ACCOUNT);
+            DEFAULT_CONTRACT, DEFAULT_ACCOUNT, DEFAULT_ORDER);
         Subscription sub = new Subscription(owner, product,
             new HashSet<Product>(), quantity, startDate, endDate,
             TestUtil.createDate(2010, 2, 12));

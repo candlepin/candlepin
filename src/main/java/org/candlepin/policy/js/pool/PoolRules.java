@@ -64,7 +64,8 @@ public class PoolRules {
         Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
         Pool newPool = new Pool(sub.getOwner(), sub.getProduct().getId(),
                 sub.getProduct().getName(), providedProducts, quantity, sub.getStartDate(),
-                sub.getEndDate(), sub.getContractNumber(), sub.getAccountNumber());
+                sub.getEndDate(), sub.getContractNumber(), sub.getAccountNumber(),
+                sub.getOrderNumber());
 
         if (sub.getProvidedProducts() != null) {
             for (Product p : sub.getProvidedProducts()) {
