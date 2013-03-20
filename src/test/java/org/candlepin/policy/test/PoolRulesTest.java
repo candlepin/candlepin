@@ -325,6 +325,19 @@ public class PoolRulesTest {
         return s;
     }
 
+    /*
+     * Bonus pools should not be created at pool creation time if the
+     * host_limited attribute is present on the product.  Instead the bonus
+     * pools will be created during binding.
+     */
+    @Test
+    public void hostedVirtLimitWithHostLimitedSkipsBonusPools() {
+        when(configMock.standalone()).thenReturn(false);
+        Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);
+        s.getProduct().setAttribute("host_limited", "yes");
+        List<Pool> pools = poolRules.createPools(s);
+        assertEquals(1, pools.size());
+    }
 
     @Test
     public void hostedVirtLimitSubCreatesBonusVirtOnlyPool() {
