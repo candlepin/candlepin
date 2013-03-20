@@ -86,7 +86,7 @@ public class EventFactory {
         Event e = new Event(Event.Type.MODIFIED, Event.Target.RULES,
             newRules.getVersion(), principal, "",
             "", "" + (String) newRules.getId(),
-            olds, news, "", null);
+            olds, news, null, null);
         return e;
     }
 
