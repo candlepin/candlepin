@@ -142,7 +142,7 @@ public class Rules extends AbstractHibernateObject {
         return rules;
     }
 
-
+    //why is getId returning a Serializable rather than a String?
     @Override
     public Serializable getId() {
         return this.id;
