@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.io.Reader;
 
 import org.apache.log4j.Logger;
+import org.candlepin.audit.EventSink;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.util.VersionUtil;
@@ -31,10 +32,12 @@ public class RulesImporter {
     private static Logger log = Logger.getLogger(RulesImporter.class);
 
     private RulesCurator curator;
+    private EventSink sink;
 
     @Inject
-    RulesImporter(RulesCurator curator) {
+    RulesImporter(RulesCurator curator, EventSink sink) {
         this.curator = curator;
+        this.sink = sink;
     }
 
     public void importObject(Reader reader) throws IOException {
@@ -44,6 +47,7 @@ public class RulesImporter {
         // Only import if rules version is greater than what we currently have now:
         if (VersionUtil.getRulesVersionCompatibility(existingRules.getVersion(),
             newRules.getVersion())) {
+            sink.emitRulesModified(existingRules, newRules);
             log.info("Importing new rules from manifest, current version: " +
                 existingRules.getVersion() + " new version: " + newRules.getVersion());
             curator.update(newRules);
