@@ -14,8 +14,6 @@
  */
 package org.candlepin.audit;
 
-import java.util.Date;
-
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.AnnotationIntrospector;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -87,7 +85,7 @@ public class EventFactory {
         Principal principal = principalProvider.get();
         Event e = new Event(Event.Type.MODIFIED, Event.Target.RULES,
             newRules.getVersion(), principal, "",
-            "", ""+(String) newRules.getId(),
+            "", "" + (String) newRules.getId(),
             olds, news, "", null);
         return e;
     }
@@ -97,7 +95,7 @@ public class EventFactory {
         Principal principal = principalProvider.get();
         Event e = new Event(Event.Type.DELETED, Event.Target.RULES,
             deletedRules.getVersion(), principal, "",
-            null, ""+(String) deletedRules.getId(),
+            null, "" + (String) deletedRules.getId(),
             oldEntityJson, null, null, null);
         return e;
     }
