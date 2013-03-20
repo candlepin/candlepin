@@ -119,7 +119,8 @@ public class RulesResource {
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     public void delete() {
-        sink.emitRulesDeleted(rulesCurator.getRules());
-        rulesCurator.delete(rulesCurator.getRules());
+        Rules deleteRules = rulesCurator.getRules();
+        rulesCurator.delete(deleteRules);
+        sink.emitRulesDeleted(deleteRules);
     }
 }
