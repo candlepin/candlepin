@@ -84,8 +84,9 @@ public class RulesResource {
             throw new BadRequestException(
                 i18n.tr("Error decoding the rules. The text should be base 64 encoded"));
         }
-        sink.emitRulesModified(rulesCurator.getRules(), rules);
+        Rules oldRules = rulesCurator.getRules();
         rulesCurator.update(rules);
+        sink.emitRulesModified(oldRules, rules);
         return rulesBuffer;
     }
 

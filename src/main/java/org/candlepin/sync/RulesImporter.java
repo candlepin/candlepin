@@ -47,10 +47,10 @@ public class RulesImporter {
         // Only import if rules version is greater than what we currently have now:
         if (VersionUtil.getRulesVersionCompatibility(existingRules.getVersion(),
             newRules.getVersion())) {
-            sink.emitRulesModified(existingRules, newRules);
             log.info("Importing new rules from manifest, current version: " +
                 existingRules.getVersion() + " new version: " + newRules.getVersion());
             curator.update(newRules);
+            sink.emitRulesModified(existingRules, newRules);
         }
         else {
             log.info("Ignoring older rules in manifest, current version: " +
