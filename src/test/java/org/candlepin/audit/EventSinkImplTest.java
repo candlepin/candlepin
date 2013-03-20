@@ -35,6 +35,7 @@ import org.candlepin.model.ActivationKey;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
+import org.candlepin.model.Rules;
 import org.candlepin.test.TestUtil;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -205,6 +206,23 @@ public class EventSinkImplTest {
         pools.add(TestUtil.createPool(TestUtil.createProduct()));
         ActivationKey key = TestUtil.createActivationKey(new Owner("deadbeef"), pools);
         eventSinkImpl.emitActivationKeyCreated(key);
+        verify(mockClientProducer).send(any(ClientMessage.class));
+    }
+
+    @Test
+    public void rulesUpdatedShouldEmitSuccessfully()
+        throws Exception {
+        Rules oldRules = new Rules(TestUtil.createRulesBlob(1));
+        Rules newRules = new Rules(TestUtil.createRulesBlob(2));
+        eventSinkImpl.emitRulesModified(oldRules, newRules);
+        verify(mockClientProducer).send(any(ClientMessage.class));
+    }
+
+    @Test
+    public void rulesDeletedShouldEmitSuccessfully()
+        throws Exception {
+        Rules oldRules = new Rules(TestUtil.createRulesBlob(1));
+        eventSinkImpl.emitRulesDeleted(oldRules);
         verify(mockClientProducer).send(any(ClientMessage.class));
     }
 

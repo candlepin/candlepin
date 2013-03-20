@@ -26,6 +26,7 @@ import javax.ws.rs.core.Response;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
+import org.candlepin.audit.EventSink;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ServiceUnavailableException;
 import org.candlepin.model.CuratorException;
@@ -43,15 +44,18 @@ public class RulesResource {
     private static Logger log = Logger.getLogger(RulesResource.class);
     private RulesCurator rulesCurator;
     private I18n i18n;
+    private EventSink sink;
 
     /**
      * Default ctor
      * @param rulesCurator Curator used to interact with Rules.
      */
     @Inject
-    public RulesResource(RulesCurator rulesCurator, I18n i18n) {
+    public RulesResource(RulesCurator rulesCurator,
+        I18n i18n, EventSink sink) {
         this.rulesCurator = rulesCurator;
         this.i18n = i18n;
+        this.sink = sink;
     }
 
     /**
@@ -80,7 +84,9 @@ public class RulesResource {
             throw new BadRequestException(
                 i18n.tr("Error decoding the rules. The text should be base 64 encoded"));
         }
+        Rules oldRules = rulesCurator.getRules();
         rulesCurator.update(rules);
+        sink.emitRulesModified(oldRules, rules);
         return rulesBuffer;
     }
 
@@ -113,6 +119,8 @@ public class RulesResource {
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     public void delete() {
-        rulesCurator.delete(rulesCurator.getRules());
+        Rules deleteRules = rulesCurator.getRules();
+        rulesCurator.delete(deleteRules);
+        sink.emitRulesDeleted(deleteRules);
     }
 }

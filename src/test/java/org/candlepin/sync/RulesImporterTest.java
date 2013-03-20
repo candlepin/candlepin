@@ -22,8 +22,10 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 import java.io.StringReader;
 
+import org.candlepin.audit.EventSink;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
+import org.candlepin.test.DatabaseTestFixture;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,14 +37,14 @@ import org.mockito.runners.MockitoJUnitRunner;
  * RulesImporterTest
  */
 @RunWith(MockitoJUnitRunner.class)
-public class RulesImporterTest {
+public class RulesImporterTest extends DatabaseTestFixture {
 
     @Mock private RulesCurator curator;
     private RulesImporter importer;
 
     @Before
     public void setUp() {
-        importer = new RulesImporter(curator);
+        importer = new RulesImporter(curator, injector.getInstance(EventSink.class));
     }
 
     @Test
