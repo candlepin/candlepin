@@ -776,6 +776,32 @@ public class DefaultRulesTest {
         verify(poolManagerMock).updatePoolQuantity(eq(virtBonusPool), eq(10L));
     }
 
+    /*
+     * Bonus pools in hosted mode for products with the host_limited attribute
+     * are created during binding.
+     */
+    @Test
+    public void hostedVirtLimitWithHostLimitedCreatesBonusPoolsOnBind() {
+        when(config.standalone()).thenReturn(false);
+        Subscription s = createVirtLimitSub("virtLimitProduct", 10, "unlimited");
+        s.getProduct().setAttribute("host_limited", "yes");
+        List<Pool> pools = poolRules.createPools(s);
+        assertEquals(1, pools.size());
+
+        Pool physicalPool = pools.get(0);
+        physicalPool.setId("physical");
+
+        assertEquals(new Long(10), physicalPool.getQuantity());
+        assertEquals(0, physicalPool.getAttributes().size());
+
+        Entitlement e = new Entitlement(physicalPool, consumer, new Date(), new Date(),
+            1);
+        PoolHelper postHelper = new PoolHelper(poolManagerMock, productCache, e);
+
+        enforcer.postEntitlement(consumer, postHelper, e);
+        verify(poolManagerMock).createPool(any(Pool.class));
+    }
+
     @Test
     public void hostedVirtLimitUnlimitedBonusPoolQuantity() {
         when(config.standalone()).thenReturn(false);

@@ -91,7 +91,8 @@ public class PoolRules {
         pools.add(newPool);
 
         // Check if we need to create a virt-only pool for this subscription:
-        if (attributes.containsKey("virt_limit") && !config.standalone()) {
+        if (attributes.containsKey("virt_limit") && !config.standalone() &&
+            !attributes.containsKey("host_limited")) {
             HashMap<String, String> virtAttributes = new HashMap<String, String>();
             virtAttributes.put("virt_only", "true");
             virtAttributes.put("pool_derived", "true");
