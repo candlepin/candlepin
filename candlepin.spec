@@ -23,7 +23,7 @@
 
 Name: candlepin
 Summary: Candlepin is an open source entitlement management system
-Group: Internet/Applications
+Group: System Environment/Daemons
 License: GPLv2
 Version: 0.8.0
 Release: 1%{?dist}
@@ -71,6 +71,8 @@ BuildRequires: jakarta-commons-lang
 BuildRequires: jakarta-commons-io
 BuildRequires: apache-commons-codec
 BuildRequires: codehaus-jackson >= 0:1.9.2
+
+# Configure Datasources
 BuildRequires: codehaus-jackson-core-lgpl
 BuildRequires: codehaus-jackson-mapper-lgpl
 BuildRequires: codehaus-jackson-xc
@@ -143,7 +145,6 @@ Candlepin is an open source entitlement management system.
 Summary: Candlepin web application for tomcat6
 Requires: tomcat6
 Requires: candlepin = %{version}
-Group: Internet/Applications
 
 %description tomcat6
 Candlepin web application for tomcat6
@@ -152,7 +153,6 @@ Candlepin web application for tomcat6
 Summary: Candlepin web application for jboss
 Requires: jbossas >= 4.3
 Requires: candlepin = %{version}
-Group: Internet/Applications
 
 %description jboss
 Candlepin web application for jboss
@@ -166,7 +166,6 @@ Development libraries for candlepin integration
 
 %package certgen-lib
 Summary: candlepin certgen library for use by other apps
-Group: Internet/Applications
 
 %description certgen-lib
 candlepin library for use by other apps
@@ -297,6 +296,7 @@ fi
 
 
 %files
+%defattr(-,root,root)
 %dir %{_datadir}/%{name}/
 %{_datadir}/%{name}/cpsetup
 %{_datadir}/%{name}/cpdb
