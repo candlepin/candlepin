@@ -429,8 +429,8 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         Entitlement entitlement, Pool pool, Consumer c,
         Map<String, String> attributes) {
         log.debug("Running virt_limit post-bind.");
-        // Even standalone can deliver manifests
-        if (config.standalone() && !c.isManifest()) {
+        if (!c.isManifest() &&
+            (config.standalone() || attributes.containsKey("host_limited"))) {
             String productId = pool.getProductId();
             String virtLimit = attributes.get("virt_limit");
             if ("unlimited".equals(virtLimit)) {
