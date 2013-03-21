@@ -12,10 +12,6 @@
         <addColumn tableName="cp_pool">
             <column name="ordernumber" type="varchar(255)"/>
         </addColumn>
-        <comment>Record order number to entitlement information</comment>
-        <addColumn tableName="cp_entitlement">
-            <column name="ordernumber" type="varchar(255)"/>
-        </addColumn>
         <!-- See http://www.liquibase.org/manual/refactoring_commands -->
     </changeSet>
 
