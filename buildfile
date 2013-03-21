@@ -281,7 +281,10 @@ define "candlepin" do
     sh('cp -R target/apidoc website/')
   end
 
-
+  desc 'run rpmlint on the spec file'
+  task :rpmlint do
+      sh('rpmlint -f rpmlint.config candlepin.spec')
+  end
 
   #
   # coverity report generation
@@ -371,7 +374,7 @@ namespace "gettext" do
 end
 
 desc 'Make sure eventhing is working as it should'
-task :check_all => [:clean, :checkstyle, :test, :deploy, :spec]
+task :check_all => [:clean, :checkstyle, 'candlepin:rpmlint', :test, :deploy, :spec]
 
 #==========================================================================
 # Tomcat deployment
