@@ -6,8 +6,10 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
-
     <changeSet id="20130315171104-1" author="jesusr">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="cp_import_record" columnName="upstream_id" />
+        </preConditions>
         <comment>Create Upstream Consumer records</comment>
         <!-- See http://www.liquibase.org/manual/refactoring_commands -->
         <!-- Copy only the successful records with consumer types -->
@@ -24,7 +26,11 @@
           AND ir.status = 0;
         </sql>
     </changeSet>
+
     <changeSet id="20130315171104-2" author="jesusr">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="cp_import_record" columnName="upstream_id" />
+        </preConditions>
         <comment>Link UpstreamConsumers to Owners</comment>
         <sql>
         UPDATE cp_owner o
