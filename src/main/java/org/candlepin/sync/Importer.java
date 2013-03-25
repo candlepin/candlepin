@@ -341,11 +341,6 @@ public class Importer {
                                         "required entitlements directory"));
         }
 
-        File upstreamFile = importFiles.get(ImportFile.UPSTREAM_CONSUMER.fileName());
-        if (upstreamFile == null) {
-            throw new ImporterException(i18n.tr("The archive does not contain the " +
-                "required upstream_consumer.json file"));
-        }
 
         // system level elements
         /*
@@ -377,8 +372,13 @@ public class Importer {
 
         ConsumerDto consumer = null;
         try {
+            File upstreamFile = importFiles.get(ImportFile.UPSTREAM_CONSUMER.fileName());
+            File[] dafiles = new File[0];
+            if (upstreamFile != null) {
+                dafiles = upstreamFile.listFiles();
+            }
             consumer = importConsumer(owner, consumerFile,
-                upstreamFile.listFiles(), overrides);
+                dafiles, overrides);
         }
         catch (ImportConflictException e) {
             conflictExceptions.add(e);
@@ -493,6 +493,13 @@ public class Importer {
         try {
             reader = new FileReader(consumerFile);
             consumer = importer.createObject(mapper, reader);
+            // we can not rely on the actual ConsumerType in the ConsumerDto
+            // because it could have an id not in our database. We need to
+            // stick with the label. Hence we need to lookup the ACTUAL type
+            // by label here before attempting to store the UpstreamConsumer
+            ConsumerType type = consumerTypeCurator.lookupByLabel(
+                consumer.getType().getLabel());
+            consumer.setType(type);
             importer.store(owner, consumer, forcedConflicts, idcert);
         }
         finally {
