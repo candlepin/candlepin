@@ -123,6 +123,10 @@ if not findbugs.nil?
     require 'buildr-findBugs'
 end
 
+use_pmd = ENV['pmd']
+if not use_pmd.nil?
+    require 'buildr/pmd'
+end
 #############################################################################
 # PROJECT BUILD
 #############################################################################
@@ -150,6 +154,10 @@ define "candlepin" do
   # Resource Substitution
   resources.filter.using 'version'=>VERSION_NUMBER,
         'release'=>RELEASE_NUMBER
+
+  if not use_pmd.nil?
+      pmd.enabled = true
+  end
 
   # Hook in gettext bundle generation to compile
   nopo = ENV['nopo']
