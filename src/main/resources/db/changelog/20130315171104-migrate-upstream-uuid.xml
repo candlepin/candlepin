@@ -36,10 +36,9 @@
         <comment>Link UpstreamConsumers to Owners</comment>
         <sql>
         UPDATE cp_owner o
-        SET upstream_id =
-          (SELECT uc.id
-             FROM cp_upstream_consumer uc
-                WHERE uc.owner_id = o.id);
+        SET upstream_id = uc.id
+        FROM cp_upstream_consumer uc
+        WHERE uc.owner_id = o.id;
         </sql>
     </changeSet>
 
