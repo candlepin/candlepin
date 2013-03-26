@@ -14,12 +14,14 @@
         <!-- See http://www.liquibase.org/manual/refactoring_commands -->
         <!-- Copy only the successful records with consumer types -->
         <sql>
-        INSERT INTO cp_upstream_consumer (id, uuid, name, owner_id, type_id)
+        INSERT INTO cp_upstream_consumer (id, uuid, name, owner_id,
+               type_id, prefix_url_web)
         SELECT ir.id,
                ir.upstream_id,
                ir.upstream_name,
                ir.owner_id,
-               ct.id
+               ct.id,
+               ir.webapp_prefix
         FROM cp_import_record ir,
              cp_consumer_type ct
         WHERE ct.label = ir.upstream_type
