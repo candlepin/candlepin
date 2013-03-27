@@ -951,7 +951,7 @@ public class ComplianceRulesTest {
         c.setFact("cpu.core(s)_per_socket", "4");
 
         Entitlement ent = mockEntitlement(c, PRODUCT_1);
-        ent.getPool().setProductAttribute("cores", "4", PRODUCT_1);
+        ent.getPool().setProductAttribute("cores", "32", PRODUCT_1);
         when(entCurator.listByConsumer(eq(c))).thenReturn(Arrays.asList(ent));
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
@@ -986,10 +986,10 @@ public class ComplianceRulesTest {
         c.setFact("cpu.core(s)_per_socket", "8");
 
         Entitlement ent1 = mockBaseStackedEntitlement(c, STACK_ID_1, PRODUCT_1, PRODUCT_3);
-        ent1.getPool().setProductAttribute("cores", "4", PRODUCT_1);
+        ent1.getPool().setProductAttribute("cores", "32", PRODUCT_1);
 
         Entitlement ent2 = mockBaseStackedEntitlement(c, STACK_ID_1, PRODUCT_2, PRODUCT_3);
-        ent2.getPool().setProductAttribute("cores", "4", PRODUCT_2);
+        ent2.getPool().setProductAttribute("cores", "32", PRODUCT_2);
 
         when(entCurator.listByConsumer(eq(c))).thenReturn(Arrays.asList(ent1, ent2));
 
@@ -1033,7 +1033,7 @@ public class ComplianceRulesTest {
 
 
         Entitlement ent1 = mockBaseStackedEntitlement(c, STACK_ID_1, PRODUCT_1, PRODUCT_3);
-        ent1.getPool().setProductAttribute("cores", "8", PRODUCT_1);
+        ent1.getPool().setProductAttribute("cores", "32", PRODUCT_1);
         ent1.getPool().setProductAttribute("sockets", "4", PRODUCT_1);
 
         when(entCurator.listByConsumer(eq(c))).thenReturn(Arrays.asList(ent1));
@@ -1054,11 +1054,11 @@ public class ComplianceRulesTest {
 
 
         Entitlement ent1 = mockBaseStackedEntitlement(c, STACK_ID_1, PRODUCT_1, PRODUCT_3);
-        ent1.getPool().setProductAttribute("cores", "4", PRODUCT_1);
+        ent1.getPool().setProductAttribute("cores", "24", PRODUCT_1);
         ent1.getPool().setProductAttribute("sockets", "2", PRODUCT_1);
 
         Entitlement ent2 = mockBaseStackedEntitlement(c, STACK_ID_1, PRODUCT_2, PRODUCT_3);
-        ent2.getPool().setProductAttribute("cores", "4", PRODUCT_2);
+        ent2.getPool().setProductAttribute("cores", "8", PRODUCT_2);
         ent2.getPool().setProductAttribute("sockets", "2", PRODUCT_2);
 
         when(entCurator.listByConsumer(eq(c))).thenReturn(Arrays.asList(ent1, ent2));

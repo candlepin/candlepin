@@ -633,6 +633,7 @@ function findStackingPools(pool_class, consumer, compliance) {
     for (stack_id in stackToPoolMap) {
         log.debug(" ## Checking stack for coverage: " + stack_id);
         found_pool = true;
+
         var stackTracker = stackTrackers[stack_id];
 
         log.debug(" ### Checking stack for best coverage.");
@@ -961,7 +962,9 @@ var Entitlement = {
         var consumer = context.consumer;
         var pool = context.pool;
 
-        var consumerCores = consumer.facts[CORES_FACT];
+        var consumerSockets = consumer.facts[SOCKET_FACT] ? consumer.facts[SOCKET_FACT] : 1;
+        var consumerCores = consumer.facts[CORES_FACT] ? consumer.facts[CORES_FACT] : 1;
+        consumerCores *= consumerSockets;
         log.debug("### Consumer has " + consumerCores + " cores");
 
         if (consumerCores && !pool.getProductAttribute("stacking_id")) {
