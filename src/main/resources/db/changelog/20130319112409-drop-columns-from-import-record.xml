@@ -9,7 +9,6 @@
     <changeSet id="20130319112409" author="jesusr">
         <comment>Drop the upstream_uuid from owner after upgrade.</comment>
         <!-- See http://www.liquibase.org/manual/refactoring_commands -->
-        <dropColumn tableName="cp_import_record" columnName="upstream_id"/>
         <dropColumn tableName="cp_import_record" columnName="upstream_name"/>
         <dropColumn tableName="cp_import_record" columnName="webapp_prefix"/>
         <dropColumn tableName="cp_import_record" columnName="upstream_type"/>

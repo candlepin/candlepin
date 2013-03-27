@@ -67,6 +67,8 @@ public class ImportRecord extends AbstractHibernateObject {
     private String generatedBy;
     @Column(name = "generated_date", nullable = true)
     private Date generatedDate;
+    @Column(name = "upstream_id", nullable = true)
+    private String upstreamId;
 
     @SuppressWarnings("unused")
     private ImportRecord() {
@@ -133,5 +135,13 @@ public class ImportRecord extends AbstractHibernateObject {
 
     public void setGeneratedDate(Date generatedDate) {
         this.generatedDate = generatedDate;
+    }
+
+    public String getUpstreamId() {
+        return upstreamId;
+    }
+
+    public void setUpstreamId(String upstreamId) {
+        this.upstreamId = upstreamId;
     }
 }

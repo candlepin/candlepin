@@ -46,6 +46,7 @@ describe 'Candlepin Import' do
       consumer = @candlepin_client.get_consumer()
       import['generatedBy'].should == consumer['name']
       import['generatedDate'].should_not be_nil
+      import['upstreamId'].should == consumer['uuid']
       import['fileName'].should == @export_filename.split("/").last
     end
   end
