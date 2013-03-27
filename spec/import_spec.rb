@@ -46,11 +46,6 @@ describe 'Candlepin Import' do
       consumer = @candlepin_client.get_consumer()
       import['generatedBy'].should == consumer['name']
       import['generatedDate'].should_not be_nil
-      puts "FIX ME WHERE DOES THIS INFO GO"
-      #import['upstreamName'].should == consumer['name']
-      #import['upstreamId'].should == consumer['uuid']
-      #import['upstreamType'].should == consumer['type']['label']
-      #import.include?('webAppPrefix').should be_true
       import['fileName'].should == @export_filename.split("/").last
     end
   end
@@ -223,5 +218,17 @@ describe 'Candlepin Import' do
     entitlement = consumer.consume_pool(pool.id)[0]
     ent =  @cp.get_subscription_cert_by_ent_id entitlement.id
     cert.should == ent
+  end
+
+  it 'contains upstream consumer' do
+    # this information used to be on /imports but now exists on Owner
+    consumer = @candlepin_client.get_consumer()
+    upstream = @cp.get_owner(@import_owner['key'])['upstreamConsumer']
+    upstream.uuid.should == consumer['uuid']
+    upstream.include?('apiUrl').should be_true
+    upstream.id.should_not be_nil
+    upstream.idCert.should_not be_nil
+    upstream.name.should == consumer['name']
+    upstream.type.should == consumer['type']
   end
 end
