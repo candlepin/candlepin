@@ -18,6 +18,7 @@ import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.candlepin.audit.EventSink;
 import org.candlepin.config.Config;
@@ -372,13 +373,14 @@ public class Importer {
 
         ConsumerDto consumer = null;
         try {
+            Meta m = mapper.readValue(metadata, Meta.class);
             File upstreamFile = importFiles.get(ImportFile.UPSTREAM_CONSUMER.fileName());
             File[] dafiles = new File[0];
             if (upstreamFile != null) {
                 dafiles = upstreamFile.listFiles();
             }
             consumer = importConsumer(owner, consumerFile,
-                dafiles, overrides);
+                dafiles, overrides, m);
         }
         catch (ImportConflictException e) {
             conflictExceptions.add(e);
@@ -462,7 +464,7 @@ public class Importer {
     }
 
     public ConsumerDto importConsumer(Owner owner, File consumerFile,
-        File[] upstreamConsumer, ConflictOverrides forcedConflicts)
+        File[] upstreamConsumer, ConflictOverrides forcedConflicts, Meta meta)
         throws IOException, SyncDataFormatException {
 
         IdentityCertificate idcert = null;
@@ -500,6 +502,13 @@ public class Importer {
             ConsumerType type = consumerTypeCurator.lookupByLabel(
                 consumer.getType().getLabel());
             consumer.setType(type);
+
+            // in older manifests the web app prefix will not
+            // be on the consumer, we can use the one stored in
+            // the metadata
+            if (StringUtils.isEmpty(consumer.getUrlWeb())) {
+                consumer.setUrlWeb(meta.getWebAppPrefix());
+            }
             importer.store(owner, consumer, forcedConflicts, idcert);
         }
         finally {

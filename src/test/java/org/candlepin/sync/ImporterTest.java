@@ -19,11 +19,36 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.doThrow;
+
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.candlepin.config.CandlepinCommonTestConfig;
+import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.ExporterMetadata;
+import org.candlepin.model.ExporterMetadataCurator;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
+import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.impl.BouncyCastlePKIUtility;
+import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
+import org.candlepin.sync.Importer.ImportFile;
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -34,6 +59,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Reader;
 import java.net.URISyntaxException;
+import java.security.Security;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -42,29 +68,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.candlepin.config.CandlepinCommonTestConfig;
-import org.candlepin.config.Config;
-import org.candlepin.config.ConfigProperties;
-import org.candlepin.model.ExporterMetadata;
-import org.candlepin.model.ExporterMetadataCurator;
-import org.candlepin.model.Owner;
-import org.candlepin.pki.PKIUtility;
-import org.candlepin.sync.Importer.ImportFile;
-import org.candlepin.model.OwnerCurator;
-import org.candlepin.pki.impl.BouncyCastlePKIUtility;
-import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.xnap.commons.i18n.I18n;
-import org.xnap.commons.i18n.I18nFactory;
-
-import java.security.Security;
 
 /**
  * ImporterTest
@@ -656,8 +659,11 @@ public class ImporterTest {
             new DefaultSubjectKeyIdentifierWriter());
 
         OwnerCurator oc = mock(OwnerCurator.class);
+        ConsumerTypeCurator ctc = mock(ConsumerTypeCurator.class);
+        ConsumerType type = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
+        when(ctc.lookupByLabel(eq("candlepin"))).thenReturn(type);
 
-        Importer i = new Importer(null, null, null, oc, null, null, null,
+        Importer i = new Importer(ctc, null, null, oc, null, null, null,
             pki, null, null, null, null, i18n);
         File[] upstream = new File[2];
         File idcertfile = new File("target/test/resources/upstream/testidcert.json");
@@ -670,8 +676,10 @@ public class ImporterTest {
         ConflictOverrides forcedConflicts = mock(ConflictOverrides.class);
         when(forcedConflicts.isForced(any(Importer.Conflict.class))).thenReturn(false);
 
-        i.importConsumer(owner, consumerfile, upstream, forcedConflicts);
+        Meta meta = new Meta("1.0", new Date(), "admin", "/candlepin/owners");
 
-        //verify(uc).create(any(UpstreamConsumer.class));
+        i.importConsumer(owner, consumerfile, upstream, forcedConflicts, meta);
+
+        verify(oc).merge(any(Owner.class));
     }
 }
