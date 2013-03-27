@@ -473,8 +473,7 @@ public class ImporterTest {
     }
 
     @Test
-    public void testImportNoMeta()
-        throws IOException, ImporterException {
+    public void testImportNoMeta() throws IOException {
         Importer i = new Importer(null, null, null, null, null, null, null,
             null, config, null, null, null, i18n);
         Owner owner = mock(Owner.class);
@@ -495,8 +494,7 @@ public class ImporterTest {
     }
 
     @Test
-    public void testImportNoConsumerTypesDir()
-        throws IOException, ImporterException {
+    public void testImportNoConsumerTypesDir() throws IOException {
         Importer i = new Importer(null, null, null, null, null, null, null,
             null, config, null, null, null, i18n);
         Owner owner = mock(Owner.class);
@@ -517,8 +515,7 @@ public class ImporterTest {
     }
 
     @Test
-    public void testImportNoConsumer()
-        throws IOException, ImporterException {
+    public void testImportNoConsumer() throws IOException {
         Importer i = new Importer(null, null, null, null, null, null, null,
             null, config, null, null, null, i18n);
         Owner owner = mock(Owner.class);
@@ -576,8 +573,7 @@ public class ImporterTest {
     }
 
     @Test
-    public void testImportProductNoEntitlementDir()
-        throws IOException, ImporterException {
+    public void testImportProductNoEntitlementDir() throws IOException {
         Importer i = new Importer(null, null, null, null, null, null, null,
             null, config, null, null, null, i18n);
         Owner owner = mock(Owner.class);
