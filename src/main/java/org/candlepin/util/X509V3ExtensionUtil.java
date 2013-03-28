@@ -626,7 +626,7 @@ public class X509V3ExtensionUtil extends X509Util{
             for (NodePair np : parent.getChildren()) {
                 Integer count = segments.get(np.getName());
                 if (count == null) {
-                    count = new Integer(0);
+                    count = 0;
                 }
                 segments.put(np.getName(), ++count);
                 buildSegments(segments, nodes, np.getConnection());
