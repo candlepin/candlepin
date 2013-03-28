@@ -1,4 +1,4 @@
-// Version: 2.0
+// Version: 2.1
 
 /*
  * Default Candlepin rule set.
@@ -963,7 +963,7 @@ var Compliance = {
             }
             else {
                 compliantUntil = Compliance.determineCompliantUntilDate(context.consumer,
-                    context.entitlements, context.ondate, helper, log);
+                    context.entitlements, context.ondate, log);
             }
         }
         compStatus.compliantUntil = compliantUntil;
@@ -1161,7 +1161,7 @@ var Compliance = {
      * Determine the compliant until date for a consumer based on the specified start date
      * and entitlements.
      */
-    determineCompliantUntilDate: function(consumer, entitlements, startDate, complianceHelper, log) {
+    determineCompliantUntilDate: function(consumer, entitlements, startDate, log) {
         var initialEntitlements = Compliance.filterEntitlementsByDate(entitlements, startDate);
 
         // Get all end dates from current entitlements sorted ascending.
