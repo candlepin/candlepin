@@ -1017,7 +1017,6 @@ var Compliance = {
      * Checks compliance status for a consumer on a given date.
      */
     getComplianceStatusOnDate: function(consumer, entitlements, ondate, log) {
-        var status = new org.candlepin.policy.js.compliance.ComplianceStatus(ondate);
         var compStatus = {
 
             date: ondate,
