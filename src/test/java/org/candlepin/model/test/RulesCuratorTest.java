@@ -44,6 +44,17 @@ public class RulesCuratorTest extends DatabaseTestFixture {
         assertFalse("1.9".equals(rules.getVersion()));
     }
 
+    /*
+     * While this is a little unorthodox, we need to make sure we stop slipping in use
+     * of "for each", which is not a part of standard Javascript and thus a problem for
+     * those who are using our rules with other interpreters.
+     */
+    @Test
+    public void noForEachInRules() throws Exception {
+        Rules rules = rulesCurator.getRules();
+        assertEquals(-1, rules.getRules().indexOf("for each"));
+    }
+
     @Test
     public void ignoreOldRulesInDbDefaultVersion() throws Exception {
         // Default version set by upgrade script:

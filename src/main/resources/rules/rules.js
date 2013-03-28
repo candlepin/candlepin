@@ -527,7 +527,8 @@ var Entitlement = {
         }
 
         context.hasEntitlement = function(poolId) {
-            for each (var e in this.consumerEntitlements) {
+            for (var k = 0; k < this.consumerEntitlements.length; k++) {
+                var e = this.consumerEntitlements[k];
                 if (e.pool.id == poolId) {
                     return true;
                 }
