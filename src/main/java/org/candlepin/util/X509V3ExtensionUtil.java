@@ -891,8 +891,9 @@ public class X509V3ExtensionUtil extends X509Util{
         HuffNode pathTrie = makeTrie(triePathDictionary);
 
         StringBuffer nodeBits = new StringBuffer();
-        ByteArrayInputStream bais = new ByteArrayInputStream(payload,
-            (new Long(read)).intValue(), (new Long(payload.length - read).intValue()));
+        ByteArrayInputStream bais = new ByteArrayInputStream(payload,(int) read,
+            (int) (payload.length - read));
+
         int value = bais.read();
         // check for size bits
         int nodeCount = value;
