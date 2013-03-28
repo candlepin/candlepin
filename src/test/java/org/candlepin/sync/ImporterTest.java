@@ -242,48 +242,6 @@ public class ImporterTest {
         assertEquals(importDate, em.getExported());
     }
 
-/*
- * FIXME: with the rules changes this test is incorrect
- *
-    @Test
-    public void newerVersionImport() throws Exception {
-        // if we do are importing candlepin 0.0.10 data into candlepin 0.0.3,
-        // import the rules.
-
-        String version = "0.0.10";
-        File actualmeta = createFile("/tmp/meta.json", version, new Date(),
-            "test_user", "prefix");
-        File[] jsArray = createMockJsFile(MOCK_JS_PATH);
-        ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
-        RulesImporter ri = mock(RulesImporter.class);
-        when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(null);
-        Importer i = new Importer(null, null, ri, null, null, null, null,
-            null, null, emc, null, null, i18n);
-        i.importRules(jsArray[0], actualmeta);
-
-        //verify that rules were imported
-        verify(ri).importObject(any(Reader.class), eq(version));
-    }
-
-    @Test
-    public void olderVersionImport() throws Exception {
-        // if we are importing candlepin 0.0.1 data into
-        // candlepin 0.0.3, do not import the rules
-        File actualmeta = createFile("/tmp/meta.json", "0.0.1", new Date(),
-            "test_user", "prefix");
-        ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
-        RulesImporter ri = mock(RulesImporter.class);
-
-        when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(null);
-        Importer i = new Importer(null, null, ri, null, null, null, null,
-            null, null, emc, null, null, i18n);
-        i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta,
-            new ConflictOverrides());
-        //verify that rules were not imported
-        verify(ri, never()).importObject(any(Reader.class), any(String.class));
-    }
-    */
-
     @Test(expected = ImporterException.class)
     public void nullType() throws ImporterException, IOException {
         File actualmeta = createFile("/tmp/meta.json", "0.0.3", new Date(),
