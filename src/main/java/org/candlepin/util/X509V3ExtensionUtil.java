@@ -1161,12 +1161,14 @@ public class X509V3ExtensionUtil extends X509Util{
         }
 
         public String toString() {
-            String parentList =  "";
+            StringBuffer parentList = new StringBuffer("ID: ");
+            parentList.append(id).append(", Parents");
             for (PathNode parent : parents) {
-                parentList += ": " + parent.getId();
+                parentList.append(": ").append(parent.getId());
             }
-            parentList += "";
-            return "ID: " + id + ", Parents" + parentList + ", Children: " + children;
+
+            // "ID: " + id + ", Parents" + parentList + ", Children: " + children;
+            return parentList.append(", Children: ").append(children).toString();
         }
     }
 
