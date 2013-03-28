@@ -224,7 +224,7 @@ public class X509V3ExtensionUtil extends X509Util{
         String virtOnly = ent.getPool().getAttributeValue("virt_only");
         if (virtOnly != null && !virtOnly.trim().equals("")) {
             // only included if not the default value of false
-            Boolean vo = new Boolean(virtOnly.equalsIgnoreCase("true") ||
+            Boolean vo = Boolean.valueOf(virtOnly.equalsIgnoreCase("true") ||
                 virtOnly.equalsIgnoreCase("1"));
             if (vo) {
                 toReturn.setVirtOnly(vo);
