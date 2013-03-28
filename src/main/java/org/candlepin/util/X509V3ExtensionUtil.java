@@ -1177,7 +1177,7 @@ public class X509V3ExtensionUtil extends X509Util{
      * NodePair
      */
 
-    public class NodePair implements Comparable{
+    public static class NodePair implements Comparable{
         private String name;
         private PathNode connection;
 
