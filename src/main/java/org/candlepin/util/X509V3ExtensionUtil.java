@@ -1209,5 +1209,21 @@ public class X509V3ExtensionUtil extends X509Util{
         public int compareTo(Object other) {
             return this.name.compareTo(((NodePair) other).name);
         }
+
+        public boolean equals(Object other) {
+            if (this == other) {
+                return true;
+            }
+
+            if (!(other instanceof NodePair)) {
+                return false;
+            }
+
+            return this.name.equals(((NodePair) other).getName());
+        }
+
+        public int hashCode() {
+            return name.hashCode();
+        }
     }
 }
