@@ -200,6 +200,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         Date date = new Date();
         Consumer consumer = new Consumer("hostConsumer", "testUser", owner, ct);
         consumer.setLastCheckin(date);
+        Thread.sleep(5); // sleep for at 5ms to allow enough time to pass
         consumer = consumerCurator.create(consumer);
         consumerCurator.updateLastCheckin(consumer);
         assertTrue(consumer.getLastCheckin().after(date));
