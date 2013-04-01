@@ -1236,6 +1236,17 @@ var Compliance = {
             return false;
         }
 
+        //Verify architecture
+        var context = Entitlement.get_attribute_context();
+        log.debug("  Covered architectures: " + ent.pool.getProductAttribute('arch'));
+        if (!architectureMatches(ent.pool.getProductAttribute('arch'),
+                consumer.facts['uname.machine'],
+                consumer.type.label,
+                context.prodAttrSeparator)) {
+            log.debug("  Entitlement does not cover architecture: " + consumer.facts['uname.machine']);
+            return false;
+        }
+
         // Verify RAM coverage if required.
         // Default consumer RAM to 1 GB if not defined
         var consumerRam = get_consumer_ram(consumer);
