@@ -6,7 +6,7 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
-    <changeSet id="20130319112409" author="jesusr">
+    <changeSet id="20130319112409" author="jesusr" dbms="postgresql">
         <comment>Drop the upstream_uuid from owner after upgrade.</comment>
         <!-- See http://www.liquibase.org/manual/refactoring_commands -->
         <dropColumn tableName="cp_import_record" columnName="upstream_name"/>

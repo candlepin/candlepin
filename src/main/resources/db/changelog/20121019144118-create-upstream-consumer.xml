@@ -7,7 +7,7 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
 
-    <changeSet id="20121019144118-1" author="jesusr">
+    <changeSet id="20121019144118-1" author="jesusr" dbms="postgresql">
         <comment>New UpstreamConsumer model object used by manifests</comment>
         <!-- See http://www.liquibase.org/manual/refactoring_commands -->
         <createTable tableName="cp_upstream_consumer">
@@ -33,7 +33,7 @@
             <column name="prefix_url_api" type="VARCHAR(255)"/>
         </createTable>
     </changeSet>
-    <changeSet id="20121019144118-2" author="jesusr">
+    <changeSet id="20121019144118-2" author="jesusr" dbms="postgresql">
         <addColumn tableName="cp_owner">
             <column name="upstream_id" type="VARCHAR(32)" />
         </addColumn>

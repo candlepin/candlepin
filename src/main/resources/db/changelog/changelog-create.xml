@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
-    <changeSet author="dgoodwin" id="1332854949306-1000">
+    <changeSet author="dgoodwin" id="1332854949306-1000" dbms="postgresql">
         <createTable tableName="cp_activation_key">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_activation_key_pkey"/>
@@ -15,7 +15,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-1">
+    <changeSet author="dgoodwin" id="1332854949306-1" dbms="postgresql">
         <createTable tableName="cp_activationkey_pool">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_activationkey_pool_pkey"/>
@@ -33,7 +33,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-2">
+    <changeSet author="dgoodwin" id="1332854949306-2" dbms="postgresql">
         <createTable tableName="cp_cert_serial">
             <column name="id" type="int8">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_cert_serial_pkey"/>
@@ -49,7 +49,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-3">
+    <changeSet author="dgoodwin" id="1332854949306-3" dbms="postgresql">
         <createTable tableName="cp_certificate">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_certificate_pkey"/>
@@ -65,7 +65,7 @@
             <column name="serial_id" type="int8"/>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-4">
+    <changeSet author="dgoodwin" id="1332854949306-4" dbms="postgresql">
         <createTable tableName="cp_consumer">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_consumer_pkey"/>
@@ -97,7 +97,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-5">
+    <changeSet author="dgoodwin" id="1332854949306-5" dbms="postgresql">
         <createTable tableName="cp_consumer_facts">
             <column name="cp_consumer_id" type="VARCHAR(32)">
                 <constraints nullable="false"/>
@@ -108,7 +108,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-6">
+    <changeSet author="dgoodwin" id="1332854949306-6" dbms="postgresql">
         <createTable tableName="cp_consumer_guests">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_consumer_guests_pkey"/>
@@ -123,7 +123,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-7">
+    <changeSet author="dgoodwin" id="1332854949306-7" dbms="postgresql">
         <createTable tableName="cp_consumer_installed_products">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_consumer_installed_products_pkey"/>
@@ -139,7 +139,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-8">
+    <changeSet author="dgoodwin" id="1332854949306-8" dbms="postgresql">
         <createTable tableName="cp_consumer_type">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_consumer_type_pkey"/>
@@ -154,7 +154,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-9">
+    <changeSet author="dgoodwin" id="1332854949306-9" dbms="postgresql">
         <createTable tableName="cp_content">
             <column name="id" type="VARCHAR(255)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_content_pkey"/>
@@ -180,7 +180,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-10">
+    <changeSet author="dgoodwin" id="1332854949306-10" dbms="postgresql">
         <createTable tableName="cp_content_modified_products">
             <column name="cp_content_id" type="VARCHAR(255)">
                 <constraints nullable="false"/>
@@ -188,7 +188,7 @@
             <column name="element" type="VARCHAR(255)"/>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-11">
+    <changeSet author="dgoodwin" id="1332854949306-11" dbms="postgresql">
         <createTable tableName="cp_deleted_consumers">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_deleted_consumers_pkey"/>
@@ -203,7 +203,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-12">
+    <changeSet author="dgoodwin" id="1332854949306-12" dbms="postgresql">
         <createTable tableName="cp_ent_certificate">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_ent_certificate_pkey"/>
@@ -222,7 +222,7 @@
             <column name="serial_id" type="int8"/>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-13">
+    <changeSet author="dgoodwin" id="1332854949306-13" dbms="postgresql">
         <createTable tableName="cp_entitlement">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_entitlement_pkey"/>
@@ -243,7 +243,7 @@
             <column name="pool_id" type="VARCHAR(32)"/>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-14">
+    <changeSet author="dgoodwin" id="1332854949306-14" dbms="postgresql">
         <createTable tableName="cp_env_content">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_env_content_pkey"/>
@@ -259,7 +259,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-15">
+    <changeSet author="dgoodwin" id="1332854949306-15" dbms="postgresql">
         <createTable tableName="cp_environment">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_environment_pkey"/>
@@ -275,7 +275,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-16">
+    <changeSet author="dgoodwin" id="1332854949306-16" dbms="postgresql">
         <createTable tableName="cp_event">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_event_pkey"/>
@@ -304,7 +304,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-17">
+    <changeSet author="dgoodwin" id="1332854949306-17" dbms="postgresql">
         <createTable tableName="cp_export_metadata">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_export_metadata_pkey"/>
@@ -320,7 +320,7 @@
             <column name="owner_id" type="VARCHAR(32)"/>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-18">
+    <changeSet author="dgoodwin" id="1332854949306-18" dbms="postgresql">
         <createTable tableName="cp_id_cert">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_id_cert_pkey"/>
@@ -336,7 +336,7 @@
             <column name="serial_id" type="int8"/>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-19">
+    <changeSet author="dgoodwin" id="1332854949306-19" dbms="postgresql">
         <createTable tableName="cp_import_record">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_import_record_pkey"/>
@@ -348,7 +348,7 @@
             <column name="owner_id" type="VARCHAR(32)"/>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-20">
+    <changeSet author="dgoodwin" id="1332854949306-20" dbms="postgresql">
         <createTable tableName="cp_job">
             <column name="id" type="VARCHAR(255)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_job_pkey"/>
@@ -365,7 +365,7 @@
             <column name="targettype" type="int4"/>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-21">
+    <changeSet author="dgoodwin" id="1332854949306-21" dbms="postgresql">
         <createTable tableName="cp_key_pair">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_key_pair_pkey"/>
@@ -376,7 +376,7 @@
             <column name="publickey" type="bytea"/>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-22">
+    <changeSet author="dgoodwin" id="1332854949306-22" dbms="postgresql">
         <createTable tableName="cp_owner">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_owner_pkey"/>
@@ -395,7 +395,7 @@
             <column name="parent_owner" type="VARCHAR(32)"/>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-23">
+    <changeSet author="dgoodwin" id="1332854949306-23" dbms="postgresql">
         <createTable tableName="cp_owner_permission">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_owner_permission_pkey"/>
@@ -411,7 +411,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-24">
+    <changeSet author="dgoodwin" id="1332854949306-24" dbms="postgresql">
         <createTable tableName="cp_pool">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_pool_pkey"/>
@@ -446,7 +446,7 @@
             <column name="sourceentitlement_id" type="VARCHAR(32)"/>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-25">
+    <changeSet author="dgoodwin" id="1332854949306-25" dbms="postgresql">
         <createTable tableName="cp_pool_attribute">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_pool_attribute_pkey"/>
@@ -462,7 +462,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-26">
+    <changeSet author="dgoodwin" id="1332854949306-26" dbms="postgresql">
         <createTable tableName="cp_pool_products">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_pool_products_pkey"/>
@@ -478,7 +478,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-27">
+    <changeSet author="dgoodwin" id="1332854949306-27" dbms="postgresql">
         <createTable tableName="cp_product">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_product_pkey"/>
@@ -491,7 +491,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-28">
+    <changeSet author="dgoodwin" id="1332854949306-28" dbms="postgresql">
         <createTable tableName="cp_product_attribute">
             <column name="id" type="VARCHAR(255)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_product_attribute_pkey"/>
@@ -507,7 +507,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-29">
+    <changeSet author="dgoodwin" id="1332854949306-29" dbms="postgresql">
         <createTable tableName="cp_product_certificate">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_product_certificate_pkey"/>
@@ -525,7 +525,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-30">
+    <changeSet author="dgoodwin" id="1332854949306-30" dbms="postgresql">
         <createTable tableName="cp_product_content">
             <column name="product_id" type="VARCHAR(32)">
                 <constraints nullable="false"/>
@@ -538,7 +538,7 @@
             <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-31">
+    <changeSet author="dgoodwin" id="1332854949306-31" dbms="postgresql">
         <createTable tableName="cp_product_dependent_products">
             <column name="cp_product_id" type="VARCHAR(32)">
                 <constraints nullable="false"/>
@@ -546,7 +546,7 @@
             <column name="element" type="VARCHAR(255)"/>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-32">
+    <changeSet author="dgoodwin" id="1332854949306-32" dbms="postgresql">
         <createTable tableName="cp_product_pool_attribute">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_product_pool_attribute_pkey"/>
@@ -565,7 +565,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-33">
+    <changeSet author="dgoodwin" id="1332854949306-33" dbms="postgresql">
         <createTable tableName="cp_role">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_role_pkey"/>
@@ -577,7 +577,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-34">
+    <changeSet author="dgoodwin" id="1332854949306-34" dbms="postgresql">
         <createTable tableName="cp_role_users">
             <column name="role_id" type="VARCHAR(32)">
                 <constraints nullable="false"/>
@@ -587,7 +587,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-35">
+    <changeSet author="dgoodwin" id="1332854949306-35" dbms="postgresql">
         <createTable tableName="cp_rules">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_rules_pkey"/>
@@ -597,7 +597,7 @@
             <column name="rules_blob" type="TEXT"/>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-36">
+    <changeSet author="dgoodwin" id="1332854949306-36" dbms="postgresql">
         <createTable tableName="cp_stat_history">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_stat_history_pkey"/>
@@ -615,7 +615,7 @@
             <column name="value_type" type="VARCHAR(255)"/>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-37">
+    <changeSet author="dgoodwin" id="1332854949306-37" dbms="postgresql">
         <createTable tableName="cp_subscription">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_subscription_pkey"/>
@@ -644,7 +644,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-38">
+    <changeSet author="dgoodwin" id="1332854949306-38" dbms="postgresql">
         <createTable tableName="cp_subscription_products">
             <column name="subscription_id" type="VARCHAR(32)">
                 <constraints nullable="false"/>
@@ -654,7 +654,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-39">
+    <changeSet author="dgoodwin" id="1332854949306-39" dbms="postgresql">
         <createTable tableName="cp_user">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_user_pkey"/>
@@ -670,7 +670,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-42">
+    <changeSet author="dgoodwin" id="1332854949306-42" dbms="postgresql">
         <createTable tableName="qrtz_blob_triggers">
             <column name="trigger_name" type="VARCHAR(200)">
                 <constraints nullable="false"/>
@@ -681,7 +681,7 @@
             <column name="blob_data" type="bytea"/>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-43">
+    <changeSet author="dgoodwin" id="1332854949306-43" dbms="postgresql">
         <createTable tableName="qrtz_calendars">
             <column name="calendar_name" type="VARCHAR(200)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="qrtz_calendars_pkey"/>
@@ -691,7 +691,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-44">
+    <changeSet author="dgoodwin" id="1332854949306-44" dbms="postgresql">
         <createTable tableName="qrtz_cron_triggers">
             <column name="trigger_name" type="VARCHAR(200)">
                 <constraints nullable="false"/>
@@ -705,7 +705,7 @@
             <column name="time_zone_id" type="VARCHAR(80)"/>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-45">
+    <changeSet author="dgoodwin" id="1332854949306-45" dbms="postgresql">
         <createTable tableName="qrtz_fired_triggers">
             <column name="entry_id" type="VARCHAR(95)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="qrtz_fired_triggers_pkey"/>
@@ -737,7 +737,7 @@
             <column name="requests_recovery" type="bool"/>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-46">
+    <changeSet author="dgoodwin" id="1332854949306-46" dbms="postgresql">
         <createTable tableName="qrtz_job_details">
             <column name="job_name" type="VARCHAR(200)">
                 <constraints nullable="false"/>
@@ -764,7 +764,7 @@
             <column name="job_data" type="bytea"/>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-47">
+    <changeSet author="dgoodwin" id="1332854949306-47" dbms="postgresql">
         <createTable tableName="qrtz_job_listeners">
             <column name="job_name" type="VARCHAR(200)">
                 <constraints nullable="false"/>
@@ -777,21 +777,21 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-48">
+    <changeSet author="dgoodwin" id="1332854949306-48" dbms="postgresql">
         <createTable tableName="qrtz_locks">
             <column name="lock_name" type="VARCHAR(40)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="qrtz_locks_pkey"/>
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-49">
+    <changeSet author="dgoodwin" id="1332854949306-49" dbms="postgresql">
         <createTable tableName="qrtz_paused_trigger_grps">
             <column name="trigger_group" type="VARCHAR(200)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="qrtz_paused_trigger_grps_pkey"/>
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-50">
+    <changeSet author="dgoodwin" id="1332854949306-50" dbms="postgresql">
         <createTable tableName="qrtz_scheduler_state">
             <column name="instance_name" type="VARCHAR(200)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="qrtz_scheduler_state_pkey"/>
@@ -804,7 +804,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-51">
+    <changeSet author="dgoodwin" id="1332854949306-51" dbms="postgresql">
         <createTable tableName="qrtz_simple_triggers">
             <column name="trigger_name" type="VARCHAR(200)">
                 <constraints nullable="false"/>
@@ -823,7 +823,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-52">
+    <changeSet author="dgoodwin" id="1332854949306-52" dbms="postgresql">
         <createTable tableName="qrtz_trigger_listeners">
             <column name="trigger_name" type="VARCHAR(200)">
                 <constraints nullable="false"/>
@@ -836,7 +836,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-53">
+    <changeSet author="dgoodwin" id="1332854949306-53" dbms="postgresql">
         <createTable tableName="qrtz_triggers">
             <column name="trigger_name" type="VARCHAR(200)">
                 <constraints nullable="false"/>
@@ -872,223 +872,223 @@
             <column name="job_data" type="bytea"/>
         </createTable>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-54">
+    <changeSet author="dgoodwin" id="1332854949306-54" dbms="postgresql">
         <addPrimaryKey columnNames="cp_consumer_id, mapkey" constraintName="cp_consumer_facts_pkey" tableName="cp_consumer_facts"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-55">
+    <changeSet author="dgoodwin" id="1332854949306-55" dbms="postgresql">
         <addPrimaryKey columnNames="product_id, content_id" constraintName="cp_product_content_pkey" tableName="cp_product_content"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-56">
+    <changeSet author="dgoodwin" id="1332854949306-56" dbms="postgresql">
         <addPrimaryKey columnNames="role_id, user_id" constraintName="cp_role_users_pkey" tableName="cp_role_users"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-57">
+    <changeSet author="dgoodwin" id="1332854949306-57" dbms="postgresql">
         <addPrimaryKey columnNames="subscription_id, product_id" constraintName="cp_subscription_products_pkey" tableName="cp_subscription_products"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-58">
+    <changeSet author="dgoodwin" id="1332854949306-58" dbms="postgresql">
         <addPrimaryKey columnNames="trigger_name, trigger_group" constraintName="qrtz_blob_triggers_pkey" tableName="qrtz_blob_triggers"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-59">
+    <changeSet author="dgoodwin" id="1332854949306-59" dbms="postgresql">
         <addPrimaryKey columnNames="trigger_name, trigger_group" constraintName="qrtz_cron_triggers_pkey" tableName="qrtz_cron_triggers"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-60">
+    <changeSet author="dgoodwin" id="1332854949306-60" dbms="postgresql">
         <addPrimaryKey columnNames="job_name, job_group" constraintName="qrtz_job_details_pkey" tableName="qrtz_job_details"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-61">
+    <changeSet author="dgoodwin" id="1332854949306-61" dbms="postgresql">
         <addPrimaryKey columnNames="job_name, job_group, job_listener" constraintName="qrtz_job_listeners_pkey" tableName="qrtz_job_listeners"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-62">
+    <changeSet author="dgoodwin" id="1332854949306-62" dbms="postgresql">
         <addPrimaryKey columnNames="trigger_name, trigger_group" constraintName="qrtz_simple_triggers_pkey" tableName="qrtz_simple_triggers"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-63">
+    <changeSet author="dgoodwin" id="1332854949306-63" dbms="postgresql">
         <addPrimaryKey columnNames="trigger_name, trigger_group, trigger_listener" constraintName="qrtz_trigger_listeners_pkey" tableName="qrtz_trigger_listeners"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-64">
+    <changeSet author="dgoodwin" id="1332854949306-64" dbms="postgresql">
         <addPrimaryKey columnNames="trigger_name, trigger_group" constraintName="qrtz_triggers_pkey" tableName="qrtz_triggers"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-65-1">
+    <changeSet author="dgoodwin" id="1332854949306-65-1" dbms="postgresql">
         <addUniqueConstraint columnNames="name, owner_id" constraintName="cp_activation_key_name_owner_id_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_activation_key"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-65">
+    <changeSet author="dgoodwin" id="1332854949306-65" dbms="postgresql">
         <addUniqueConstraint columnNames="key_id, pool_id" constraintName="cp_activationkey_pool_key_id_pool_id_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_activationkey_pool"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-66">
+    <changeSet author="dgoodwin" id="1332854949306-66" dbms="postgresql">
         <addUniqueConstraint columnNames="uuid" constraintName="cp_consumer_uuid_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_consumer"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-67">
+    <changeSet author="dgoodwin" id="1332854949306-67" dbms="postgresql">
         <addUniqueConstraint columnNames="label" constraintName="cp_consumer_type_label_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_consumer_type"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-68">
+    <changeSet author="dgoodwin" id="1332854949306-68" dbms="postgresql">
         <addUniqueConstraint columnNames="label" constraintName="cp_content_label_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_content"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-69">
+    <changeSet author="dgoodwin" id="1332854949306-69" dbms="postgresql">
         <addUniqueConstraint columnNames="consumer_uuid" constraintName="cp_deleted_consumers_consumer_uuid_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_deleted_consumers"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-70">
+    <changeSet author="dgoodwin" id="1332854949306-70" dbms="postgresql">
         <addUniqueConstraint columnNames="environment_id, contentid" constraintName="cp_env_content_environment_id_contentid_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_env_content"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-71">
+    <changeSet author="dgoodwin" id="1332854949306-71" dbms="postgresql">
         <addUniqueConstraint columnNames="owner_id, name" constraintName="cp_environment_owner_id_name_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_environment"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-72">
+    <changeSet author="dgoodwin" id="1332854949306-72" dbms="postgresql">
         <addUniqueConstraint columnNames="account" constraintName="cp_owner_account_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_owner"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-73">
+    <changeSet author="dgoodwin" id="1332854949306-73" dbms="postgresql">
         <addUniqueConstraint columnNames="upstream_uuid" constraintName="cp_owner_upstream_uuid_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_owner"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-74">
+    <changeSet author="dgoodwin" id="1332854949306-74" dbms="postgresql">
         <addUniqueConstraint columnNames="subscriptionid, subscriptionsubkey" constraintName="cp_pool_subscriptionid_subscriptionsubkey_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_pool"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-75">
+    <changeSet author="dgoodwin" id="1332854949306-75" dbms="postgresql">
         <addUniqueConstraint columnNames="name" constraintName="cp_role_name_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_role"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-76">
+    <changeSet author="dgoodwin" id="1332854949306-76" dbms="postgresql">
         <addUniqueConstraint columnNames="username" constraintName="cp_user_username_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_user"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-77-1">
+    <changeSet author="dgoodwin" id="1332854949306-77-1" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_activation_key" baseTableSchemaName="public" constraintName="fk_activation_key_owner" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-77">
+    <changeSet author="dgoodwin" id="1332854949306-77" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="key_id" baseTableName="cp_activationkey_pool" baseTableSchemaName="public" constraintName="fk_activation_key_pool_k" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_activation_key" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-78">
+    <changeSet author="dgoodwin" id="1332854949306-78" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="pool_id" baseTableName="cp_activationkey_pool" baseTableSchemaName="public" constraintName="fk_activation_key_pool_p" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_pool" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-79">
+    <changeSet author="dgoodwin" id="1332854949306-79" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="serial_id" baseTableName="cp_certificate" baseTableSchemaName="public" constraintName="fk16370c54b9410fc" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_cert_serial" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-80">
+    <changeSet author="dgoodwin" id="1332854949306-80" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="consumer_idcert_id" baseTableName="cp_consumer" baseTableSchemaName="public" constraintName="fk58205388a0b39916" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_id_cert" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-81">
+    <changeSet author="dgoodwin" id="1332854949306-81" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="environment_id" baseTableName="cp_consumer" baseTableSchemaName="public" constraintName="fk_consumer_env" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_environment" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-82">
+    <changeSet author="dgoodwin" id="1332854949306-82" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="keypair_id" baseTableName="cp_consumer" baseTableSchemaName="public" constraintName="fk5820538861936445" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_key_pair" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-83">
+    <changeSet author="dgoodwin" id="1332854949306-83" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_consumer" baseTableSchemaName="public" constraintName="fk_consumer_owner" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-84">
+    <changeSet author="dgoodwin" id="1332854949306-84" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="type_id" baseTableName="cp_consumer" baseTableSchemaName="public" constraintName="fk_consumer_consumer_type" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer_type" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-85">
+    <changeSet author="dgoodwin" id="1332854949306-85" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="cp_consumer_id" baseTableName="cp_consumer_facts" baseTableSchemaName="public" constraintName="fk278ce810390317d" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-86">
+    <changeSet author="dgoodwin" id="1332854949306-86" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="consumer_id" baseTableName="cp_consumer_guests" baseTableSchemaName="public" constraintName="fk_consumer_guests" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-87">
+    <changeSet author="dgoodwin" id="1332854949306-87" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="consumer_id" baseTableName="cp_consumer_installed_products" baseTableSchemaName="public" constraintName="fk_consumer_installed_product" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-88">
+    <changeSet author="dgoodwin" id="1332854949306-88" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="cp_content_id" baseTableName="cp_content_modified_products" baseTableSchemaName="public" constraintName="fkc93d6a8232912b37" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_content" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-89">
+    <changeSet author="dgoodwin" id="1332854949306-89" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="entitlement_id" baseTableName="cp_ent_certificate" baseTableSchemaName="public" constraintName="fk_cert_entitlement" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_entitlement" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-90">
+    <changeSet author="dgoodwin" id="1332854949306-90" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="serial_id" baseTableName="cp_ent_certificate" baseTableSchemaName="public" constraintName="fke76508714b9410fc" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_cert_serial" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-91">
+    <changeSet author="dgoodwin" id="1332854949306-91" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="consumer_id" baseTableName="cp_entitlement" baseTableSchemaName="public" constraintName="fk_entitlement_consumer" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-92">
+    <changeSet author="dgoodwin" id="1332854949306-92" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_entitlement" baseTableSchemaName="public" constraintName="fk_entitlement_owner" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-93">
+    <changeSet author="dgoodwin" id="1332854949306-93" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="pool_id" baseTableName="cp_entitlement" baseTableSchemaName="public" constraintName="fk_entitlement_pool" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_pool" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-94">
+    <changeSet author="dgoodwin" id="1332854949306-94" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="environment_id" baseTableName="cp_env_content" baseTableSchemaName="public" constraintName="fk_env_content_env" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_environment" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-95">
+    <changeSet author="dgoodwin" id="1332854949306-95" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_environment" baseTableSchemaName="public" constraintName="fk_env_owner" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-96">
+    <changeSet author="dgoodwin" id="1332854949306-96" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_export_metadata" baseTableSchemaName="public" constraintName="fkf06f6b8872cc5ca5" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-97">
+    <changeSet author="dgoodwin" id="1332854949306-97" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="serial_id" baseTableName="cp_id_cert" baseTableSchemaName="public" constraintName="fk456324f64b9410fc" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_cert_serial" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-98">
+    <changeSet author="dgoodwin" id="1332854949306-98" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_import_record" baseTableSchemaName="public" constraintName="fk9349dd972cc5ca5" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-99">
+    <changeSet author="dgoodwin" id="1332854949306-99" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="parent_owner" baseTableName="cp_owner" baseTableSchemaName="public" constraintName="fkf93e9c616343755c" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-100">
+    <changeSet author="dgoodwin" id="1332854949306-100" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_owner_permission" baseTableSchemaName="public" constraintName="fk_permission_owner" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-101">
+    <changeSet author="dgoodwin" id="1332854949306-101" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="role_id" baseTableName="cp_owner_permission" baseTableSchemaName="public" constraintName="fk_permission_role" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_role" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-102">
+    <changeSet author="dgoodwin" id="1332854949306-102" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_pool" baseTableSchemaName="public" constraintName="fk_pool_owner" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-103">
+    <changeSet author="dgoodwin" id="1332854949306-103" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="sourceentitlement_id" baseTableName="cp_pool" baseTableSchemaName="public" constraintName="fk_pool_source_entitlement" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_entitlement" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-104">
+    <changeSet author="dgoodwin" id="1332854949306-104" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="pool_id" baseTableName="cp_pool_attribute" baseTableSchemaName="public" constraintName="fk_pool_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_pool" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-105">
+    <changeSet author="dgoodwin" id="1332854949306-105" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="pool_id" baseTableName="cp_pool_products" baseTableSchemaName="public" constraintName="fk_pool_provided_product" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_pool" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-106">
+    <changeSet author="dgoodwin" id="1332854949306-106" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="cp_product_attribute" baseTableSchemaName="public" constraintName="fk_product_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-107">
+    <changeSet author="dgoodwin" id="1332854949306-107" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="cp_product_certificate" baseTableSchemaName="public" constraintName="fk_cert_product" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-108">
+    <changeSet author="dgoodwin" id="1332854949306-108" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="content_id" baseTableName="cp_product_content" baseTableSchemaName="public" constraintName="fkce093157574ef825" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_content" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-109">
+    <changeSet author="dgoodwin" id="1332854949306-109" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="cp_product_content" baseTableSchemaName="public" constraintName="fkce09315764dd9c65" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-110">
+    <changeSet author="dgoodwin" id="1332854949306-110" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="cp_product_id" baseTableName="cp_product_dependent_products" baseTableSchemaName="public" constraintName="fk9ef75306401fcf77" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-111">
+    <changeSet author="dgoodwin" id="1332854949306-111" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="pool_id" baseTableName="cp_product_pool_attribute" baseTableSchemaName="public" constraintName="fk_pool_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_pool" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-112">
+    <changeSet author="dgoodwin" id="1332854949306-112" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="role_id" baseTableName="cp_role_users" baseTableSchemaName="public" constraintName="fk_user_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_role" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-113">
+    <changeSet author="dgoodwin" id="1332854949306-113" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="cp_role_users" baseTableSchemaName="public" constraintName="fk_role_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_user" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-114">
+    <changeSet author="dgoodwin" id="1332854949306-114" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="certificate_id" baseTableName="cp_subscription" baseTableSchemaName="public" constraintName="fk27d80fafd8564fd9" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_certificate" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-115">
+    <changeSet author="dgoodwin" id="1332854949306-115" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_subscription" baseTableSchemaName="public" constraintName="fk_subscription_owner" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-116">
+    <changeSet author="dgoodwin" id="1332854949306-116" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="cp_subscription" baseTableSchemaName="public" constraintName="fk_subscription_product" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-117">
+    <changeSet author="dgoodwin" id="1332854949306-117" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="cp_subscription_products" baseTableSchemaName="public" constraintName="fk_subscription_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-118">
+    <changeSet author="dgoodwin" id="1332854949306-118" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="subscription_id" baseTableName="cp_subscription_products" baseTableSchemaName="public" constraintName="fk_product_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_subscription" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-119">
+    <changeSet author="dgoodwin" id="1332854949306-119" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="trigger_name, trigger_group" baseTableName="qrtz_blob_triggers" baseTableSchemaName="public" constraintName="qrtz_blob_triggers_trigger_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="trigger_name, trigger_group" referencedTableName="qrtz_triggers" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-120">
+    <changeSet author="dgoodwin" id="1332854949306-120" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="trigger_name, trigger_group" baseTableName="qrtz_cron_triggers" baseTableSchemaName="public" constraintName="qrtz_cron_triggers_trigger_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="trigger_name, trigger_group" referencedTableName="qrtz_triggers" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-121">
+    <changeSet author="dgoodwin" id="1332854949306-121" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="job_name, job_group" baseTableName="qrtz_job_listeners" baseTableSchemaName="public" constraintName="qrtz_job_listeners_job_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="job_name, job_group" referencedTableName="qrtz_job_details" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-122">
+    <changeSet author="dgoodwin" id="1332854949306-122" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="trigger_name, trigger_group" baseTableName="qrtz_simple_triggers" baseTableSchemaName="public" constraintName="qrtz_simple_triggers_trigger_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="trigger_name, trigger_group" referencedTableName="qrtz_triggers" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-123">
+    <changeSet author="dgoodwin" id="1332854949306-123" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="trigger_name, trigger_group" baseTableName="qrtz_trigger_listeners" baseTableSchemaName="public" constraintName="qrtz_trigger_listeners_trigger_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="trigger_name, trigger_group" referencedTableName="qrtz_triggers" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
-    <changeSet author="dgoodwin" id="1332854949306-124">
+    <changeSet author="dgoodwin" id="1332854949306-124" dbms="postgresql">
         <addForeignKeyConstraint baseColumnNames="job_name, job_group" baseTableName="qrtz_triggers" baseTableSchemaName="public" constraintName="qrtz_triggers_job_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="job_name, job_group" referencedTableName="qrtz_job_details" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
     </changeSet>
     <include file="db/changelog/20120411152729-insert-quartz-locks.xml" />
