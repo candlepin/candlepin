@@ -67,14 +67,8 @@ public class ImportRecord extends AbstractHibernateObject {
     private String generatedBy;
     @Column(name = "generated_date", nullable = true)
     private Date generatedDate;
-    @Column(name = "upstream_name", nullable = true)
-    private String upstreamName;
     @Column(name = "upstream_id", nullable = true)
     private String upstreamId;
-    @Column(name = "upstream_type", nullable = true)
-    private String upstreamType;
-    @Column(name = "webapp_prefix", nullable = true)
-    private String webAppPrefix;
 
     @SuppressWarnings("unused")
     private ImportRecord() {
@@ -143,22 +137,6 @@ public class ImportRecord extends AbstractHibernateObject {
         this.generatedDate = generatedDate;
     }
 
-    public String getUpstreamName() {
-        return upstreamName;
-    }
-
-    public void setUpstreamName(String upstreamName) {
-        this.upstreamName = upstreamName;
-    }
-
-    public String getUpstreamType() {
-        return upstreamType;
-    }
-
-    public void setUpstreamType(String upstreamType) {
-        this.upstreamType = upstreamType;
-    }
-
     public String getUpstreamId() {
         return upstreamId;
     }
@@ -166,14 +144,4 @@ public class ImportRecord extends AbstractHibernateObject {
     public void setUpstreamId(String upstreamId) {
         this.upstreamId = upstreamId;
     }
-
-    public String getWebAppPrefix() {
-        return webAppPrefix;
-    }
-
-    public void setWebAppPrefix(String webAppPrefix) {
-        this.webAppPrefix = webAppPrefix;
-    }
-
-
 }

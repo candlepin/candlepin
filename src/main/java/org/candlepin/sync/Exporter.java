@@ -20,6 +20,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
@@ -27,6 +28,7 @@ import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProvidedProduct;
@@ -35,6 +37,7 @@ import org.candlepin.policy.js.export.ExportRules;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.util.VersionUtil;
+
 import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.File;
@@ -120,6 +123,7 @@ public class Exporter {
 
             exportMeta(baseDir);
             exportConsumer(baseDir, consumer);
+            exportIdentityCertificate(baseDir, consumer);
             exportEntitlements(baseDir, consumer);
             exportEntitlementsCerts(baseDir, consumer, null, true);
             exportProducts(baseDir, consumer);
@@ -280,20 +284,28 @@ public class Exporter {
         FileWriter writer = new FileWriter(file);
         Meta m = new Meta(getVersion(), new Date(),
             principalProvider.get().getPrincipalName(),
-            getWebAppPrefix());
+            getPrefixWebUrl());
         meta.export(mapper, writer, m);
         writer.close();
     }
 
-    private String getWebAppPrefix() {
-        String webAppPrefix = config.getString("candlepin.export.webapp.prefix");
-        if (webAppPrefix != null && webAppPrefix.trim().equals("")) {
-            webAppPrefix = null;
+    private String getPrefixWebUrl() {
+        String prefixWebUrl = config.getString(ConfigProperties.PREFIX_WEBURL);
+        if (prefixWebUrl != null && prefixWebUrl.trim().equals("")) {
+            prefixWebUrl = null;
         }
-        return webAppPrefix;
+        return prefixWebUrl;
     }
 
-    private String getVersion() throws IOException {
+    private String getPrefixApiUrl() {
+        String prefixApiUrl = config.getString(ConfigProperties.PREFIX_APIURL);
+        if (prefixApiUrl != null && prefixApiUrl.trim().equals("")) {
+            prefixApiUrl = null;
+        }
+        return prefixApiUrl;
+    }
+
+    private String getVersion() {
         Map<String, String> map = VersionUtil.getVersionMap();
         return map.get("version") + "-" + map.get("release");
     }
@@ -301,7 +313,8 @@ public class Exporter {
     private void exportConsumer(File baseDir, Consumer consumer) throws IOException {
         File file = new File(baseDir.getCanonicalPath(), "consumer.json");
         FileWriter writer = new FileWriter(file);
-        this.consumerExporter.export(mapper, writer, consumer);
+        this.consumerExporter.export(mapper, writer, consumer, getPrefixApiUrl(),
+            getPrefixWebUrl());
         writer.close();
     }
 
@@ -329,6 +342,30 @@ public class Exporter {
                     cert.getSerial().getId() + ".pem");
                 FileWriter writer = new FileWriter(file);
                 entCert.export(writer, cert);
+                writer.close();
+            }
+        }
+    }
+
+    private void exportIdentityCertificate(File baseDir, Consumer consumer)
+        throws IOException {
+
+        File idcertdir = new File(baseDir.getCanonicalPath(), "upstream_consumer");
+        idcertdir.mkdir();
+
+        IdentityCertificate cert = consumer.getIdCert();
+        File file = new File(idcertdir.getCanonicalPath(),
+            cert.getSerial().getId() + ".json");
+
+        // paradigm dictates this should go in an exporter.export method
+        FileWriter writer = null;
+
+        try {
+            writer = new FileWriter(file);
+            mapper.writeValue(writer, cert);
+        }
+        finally {
+            if (writer != null) {
                 writer.close();
             }
         }

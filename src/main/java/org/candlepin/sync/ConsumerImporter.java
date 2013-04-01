@@ -14,14 +14,16 @@
  */
 package org.candlepin.sync;
 
-import java.io.IOException;
-import java.io.Reader;
-
 import org.apache.log4j.Logger;
-import org.codehaus.jackson.map.ObjectMapper;
+import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.UpstreamConsumer;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.xnap.commons.i18n.I18n;
+
+import java.io.IOException;
+import java.io.Reader;
 
 /**
  * ConsumerImporter
@@ -41,7 +43,8 @@ public class ConsumerImporter {
         return mapper.readValue(reader, ConsumerDto.class);
     }
 
-    public void store(Owner owner, ConsumerDto consumer, ConflictOverrides forcedConflicts)
+    public void store(Owner owner, ConsumerDto consumer,
+        ConflictOverrides forcedConflicts, IdentityCertificate idcert)
         throws SyncDataFormatException {
 
         if (consumer.getUuid() == null) {
@@ -80,7 +83,14 @@ public class ConsumerImporter {
             }
         }
 
-        owner.setUpstreamUuid(consumer.getUuid());
+        // create an UpstreamConsumer from the imported ConsumerDto
+        UpstreamConsumer uc = new UpstreamConsumer(consumer.getName(),
+            consumer.getOwner(), consumer.getType(), consumer.getUuid());
+        uc.setWebUrl(consumer.getUrlWeb());
+        uc.setApiUrl(consumer.getUrlApi());
+        uc.setIdCert(idcert);
+        owner.setUpstreamConsumer(uc);
+
         curator.merge(owner);
     }
 
