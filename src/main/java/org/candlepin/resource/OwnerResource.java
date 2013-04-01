@@ -256,6 +256,11 @@ public class OwnerResource {
                 "Could not create the Owner: {0}. Parent {1} does not exist.",
                 owner, parent));
         }
+
+        if (ownerCurator.lookupByKey(owner.getKey()) != null) {
+            throw new BadRequestException(i18n.tr("Owner {0} already exists",
+                                                    owner.getKey()));
+        }
         Owner toReturn = ownerCurator.create(owner);
 
         sink.emitOwnerCreated(owner);
