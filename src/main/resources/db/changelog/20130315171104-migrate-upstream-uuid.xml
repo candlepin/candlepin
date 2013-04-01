@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <changeSet id="20130315171104-1" author="jesusr">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="cp_import_record" columnName="upstream_id" />
+        </preConditions>
+        <comment>Create Upstream Consumer records</comment>
+        <!-- See http://www.liquibase.org/manual/refactoring_commands -->
+        <!-- Copy only the successful records with consumer types -->
+        <sql>
+        INSERT INTO cp_upstream_consumer (id, uuid, name, owner_id,
+               type_id, prefix_url_web)
+        SELECT ir.id,
+               ir.upstream_id,
+               ir.upstream_name,
+               ir.owner_id,
+               ct.id,
+               ir.webapp_prefix
+        FROM cp_import_record ir,
+             cp_consumer_type ct
+        WHERE ct.label = ir.upstream_type
+          AND ir.status = 0;
+        </sql>
+    </changeSet>
+
+    <changeSet id="20130315171104-2" author="jesusr">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="cp_import_record" columnName="upstream_id" />
+        </preConditions>
+        <comment>Link UpstreamConsumers to Owners</comment>
+        <sql>
+        UPDATE cp_owner o
+        SET upstream_id = uc.id
+        FROM cp_upstream_consumer uc
+        WHERE uc.owner_id = o.id;
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>

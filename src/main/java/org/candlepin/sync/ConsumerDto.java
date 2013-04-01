@@ -16,6 +16,7 @@ package org.candlepin.sync;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
+import org.candlepin.model.Owner;
 
 /**
  * ConsumerDTO
@@ -24,14 +25,21 @@ public class ConsumerDto {
     private String uuid;
     private String name;
     private ConsumerType type;
+    private Owner owner;
+    private String prefixUrlWeb;
+    private String prefixUrlApi;
 
     public ConsumerDto() {
     }
 
-    ConsumerDto(String uuid, String name, ConsumerType type) {
+    ConsumerDto(String uuid, String name, ConsumerType type, Owner owner,
+        String prefixUrlWeb, String prefixUrlApi) {
         this.uuid = uuid;
         this.name = name;
         this.type = type;
+        this.owner = owner;
+        this.prefixUrlWeb = prefixUrlWeb;
+        this.prefixUrlApi = prefixUrlApi;
     }
 
     public String getUuid() {
@@ -58,11 +66,36 @@ public class ConsumerDto {
         this.type = type;
     }
 
+    public Owner getOwner() {
+        return owner;
+    }
+
+    public void setOwner(Owner owner) {
+        this.owner = owner;
+    }
+
+    public String getUrlWeb() {
+        return prefixUrlWeb;
+    }
+
+    public void setUrlWeb(String prefixUrlWeb) {
+        this.prefixUrlWeb = prefixUrlWeb;
+    }
+
+    public String getUrlApi() {
+        return prefixUrlApi;
+    }
+
+    public void setUrlApi(String prefixUrlApi) {
+        this.prefixUrlApi = prefixUrlApi;
+    }
+
     public Consumer consumer() {
         Consumer toReturn = new Consumer();
         toReturn.setUuid(uuid);
         toReturn.setName(name);
         toReturn.setType(type);
+        toReturn.setOwner(owner);
         return toReturn;
     }
 }

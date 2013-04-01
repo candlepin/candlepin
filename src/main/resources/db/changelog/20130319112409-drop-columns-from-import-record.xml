@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <changeSet id="20130319112409" author="jesusr">
+        <comment>Drop the upstream_uuid from owner after upgrade.</comment>
+        <!-- See http://www.liquibase.org/manual/refactoring_commands -->
+        <dropColumn tableName="cp_import_record" columnName="upstream_name"/>
+        <dropColumn tableName="cp_import_record" columnName="webapp_prefix"/>
+        <dropColumn tableName="cp_import_record" columnName="upstream_type"/>
+    </changeSet>
+
+</databaseChangeLog>

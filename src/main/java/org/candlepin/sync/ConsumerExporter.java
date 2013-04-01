@@ -31,10 +31,10 @@ public class ConsumerExporter {
     ConsumerExporter() {
     }
 
-    void export(ObjectMapper mapper, Writer writer, Consumer consumer)
-        throws IOException {
+    void export(ObjectMapper mapper, Writer writer, Consumer consumer,
+        String weburl, String apiurl) throws IOException {
         ConsumerDto dto = new ConsumerDto(consumer.getUuid(), consumer.getName(),
-            consumer.getType());
+            consumer.getType(), consumer.getOwner(), weburl, apiurl);
 
         mapper.writeValue(writer, dto);
     }

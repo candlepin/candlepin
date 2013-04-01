@@ -38,7 +38,7 @@ describe 'Candlepin Import' do
 
   it 'modifies owner to reference upstream consumer' do
     o = @cp.get_owner(@import_owner['key'])
-    o.upstreamUuid.should == @candlepin_client.uuid
+    o.upstreamConsumer.uuid.should == @candlepin_client.uuid
   end
 
   it "originating information should be populated in the import" do
@@ -46,10 +46,7 @@ describe 'Candlepin Import' do
       consumer = @candlepin_client.get_consumer()
       import['generatedBy'].should == consumer['name']
       import['generatedDate'].should_not be_nil
-      import['upstreamName'].should == consumer['name']
       import['upstreamId'].should == consumer['uuid']
-      import['upstreamType'].should == consumer['type']['label']
-      import.include?('webAppPrefix').should be_true
       import['fileName'].should == @export_filename.split("/").last
     end
   end
@@ -66,7 +63,7 @@ describe 'Candlepin Import' do
     pools.length.should == 1 # this is our custom pool
     pools[0]['subscriptionId'].should == custom_sub['id']
     o = @cp.get_owner(@import_owner['key'])
-    o['upstreamUuid'].should be_nil
+    o['upstreamConsumer'].should be_nil
 
     # Make sure this still exists:
     custom_sub = @cp.get_subscription(custom_sub['id'])
@@ -74,7 +71,7 @@ describe 'Candlepin Import' do
     # should be able to re-import without an "older than existing" error:
     @cp.import(@import_owner['key'], @export_filename)
     o = @cp.get_owner(@import_owner['key'])
-    o['upstreamUuid'].should == @candlepin_client.uuid
+    o['upstreamConsumer']['uuid'].should == @candlepin_client.uuid
 
     # Delete again and make sure another owner is clear to import the
     # same manifest:
@@ -147,7 +144,7 @@ describe 'Candlepin Import' do
   it 'should return 409 when importing manifest from different subscription management application' do
     create_candlepin_export()
     another_export = @export_filename
-    old_upstream_uuid = @cp.get_owner(@import_owner['key'])['upstreamUuid']
+    old_upstream_uuid = @cp.get_owner(@import_owner['key'])['upstreamConsumer']['uuid']
 
     begin
       @cp.import(@import_owner['key'], another_export)
@@ -159,7 +156,7 @@ describe 'Candlepin Import' do
         json["conflicts"].include?("DISTRIBUTOR_CONFLICT").should be_true
         e.http_code.should == 409
     end
-    @cp.get_owner(@import_owner['key'])['upstreamUuid'].should == old_upstream_uuid
+    @cp.get_owner(@import_owner['key'])['upstreamConsumer']['uuid'].should == old_upstream_uuid
 
     # Try again and make sure we don't see MANIFEST_SAME appear: (this was a bug)
     begin
@@ -175,12 +172,12 @@ describe 'Candlepin Import' do
     create_candlepin_export()
     another_export = @export_filename
 
-    old_upstream_uuid = @cp.get_owner(@import_owner['key'])['upstreamUuid']
+    old_upstream_uuid = @cp.get_owner(@import_owner['key'])['upstreamConsumer']['uuid']
     pools = @cp.list_owner_pools(@import_owner['key'])
     pool_ids = pools.collect { |p| p['id'] }
     @cp.import(@import_owner['key'], another_export,
       {:force => ['DISTRIBUTOR_CONFLICT']})
-    @cp.get_owner(@import_owner['key'])['upstreamUuid'].should_not == old_upstream_uuid
+    @cp.get_owner(@import_owner['key'])['upstreamConsumer']['uuid'].should_not == old_upstream_uuid
     pools = @cp.list_owner_pools(@import_owner['key'])
     new_pool_ids = pools.collect { |p| p['id'] }
     # compare without considering order, pools should have changed completely:
@@ -222,5 +219,18 @@ describe 'Candlepin Import' do
     entitlement = consumer.consume_pool(pool.id)[0]
     ent =  @cp.get_subscription_cert_by_ent_id entitlement.id
     cert.should == ent
+  end
+
+  it 'contains upstream consumer' do
+    # this information used to be on /imports but now exists on Owner
+    consumer = @candlepin_client.get_consumer()
+    upstream = @cp.get_owner(@import_owner['key'])['upstreamConsumer']
+    upstream.uuid.should == consumer['uuid']
+    upstream.include?('apiUrl').should be_true
+    upstream.id.should_not be_nil
+    upstream.idCert.should_not be_nil
+    upstream.name.should == consumer['name']
+    # upstream.type caused a failure on some machines
+    upstream['type'].should == consumer['type']
   end
 end
