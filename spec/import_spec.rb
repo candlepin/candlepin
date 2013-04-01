@@ -230,6 +230,7 @@ describe 'Candlepin Import' do
     upstream.id.should_not be_nil
     upstream.idCert.should_not be_nil
     upstream.name.should == consumer['name']
-    upstream.type.should == consumer['type']
+    # upstream.type caused a failure on some machines
+    upstream['type'].should == consumer['type']
   end
 end
