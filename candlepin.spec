@@ -25,7 +25,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.8.0
+Version: 0.8.1
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -345,6 +345,15 @@ fi
 
 
 %changelog
+* Mon Apr 01 2013 William Poteat <wpoteat@redhat.com> 0.8.1-1
+- Enable host to guest mapping for hosted mode via an attribute.
+  (awood@redhat.com)
+- Updates can now be emitted from RulesImporter (uploaded manifests).  Events
+  now stored in the database (fixed bug with non-nullable fields set null)
+  (ckozak@redhat.com)
+- New signature checking for manifests (wpoteat@redhat.com)
+- 916467: disable update checks in quartz (jesusr@redhat.com)
+
 * Wed Mar 13 2013 Devan Goodwin <dgoodwin@rm-rf.ca> 0.8.0-1
 - Introduce candlepin software collection. (dgoodwin@rm-rf.ca)
 - converted != to equals instead of !...equals (jesusr@redhat.com)
