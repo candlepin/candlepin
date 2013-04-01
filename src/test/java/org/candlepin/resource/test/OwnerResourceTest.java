@@ -584,6 +584,12 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     }
 
     @Test(expected = BadRequestException.class)
+    public void ownerWithDuplicateKeyCannotBeCreated() {
+        this.ownerResource.createOwner(owner);
+        this.ownerResource.createOwner(owner);
+    }
+
+    @Test(expected = BadRequestException.class)
     public void ownerWithInvalidParentWhoseIdIsNullCannotBeCreated() {
         Owner child = new Owner("name", "name1");
         Owner owner1 = new Owner("name2", "name3");
@@ -659,7 +665,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Owner parentOwner2 = new Owner("Paren Owner 2", "parentTest2");
         ownerResource.createOwner(parentOwner2);
         owner.setParentOwner(parentOwner1);
-        ownerResource.createOwner(owner);
 
         // Update with Display Name Only
         Owner upOwner1 = mock(Owner.class);
