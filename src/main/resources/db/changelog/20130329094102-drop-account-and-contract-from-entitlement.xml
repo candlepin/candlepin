@@ -6,13 +6,10 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
-
-    <changeSet id="20130321080354" author="wpoteat">
-        <comment>Record order number to entitlement information</comment>
-        <addColumn tableName="cp_entitlement">
-            <column name="ordernumber" type="varchar(255)"/>
-        </addColumn>
-        <!-- See http://www.liquibase.org/manual/refactoring_commands -->
+    <changeSet id="20130329094102" author="wpoteat">
+        <comment>Drop the account and contract from entitlement. Was redundant.</comment>
+        <dropColumn tableName="cp_entitlement" columnName="accountnumber"/>
+        <dropColumn tableName="cp_entitlement" columnName="contractnumber"/>
     </changeSet>
 
 </databaseChangeLog>
