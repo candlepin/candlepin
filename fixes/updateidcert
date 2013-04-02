@@ -14,7 +14,7 @@
 # in this software or its documentation.
 #
 
-""" A CLI utility for managing the Candlepin database. """
+""" A CLI utility for associating an idcert with an upstream consumer. """
 
 
 import simplejson as json
