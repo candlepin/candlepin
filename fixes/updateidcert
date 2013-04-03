@@ -1,0 +1,112 @@
+#!/usr/bin/python
+#
+# Copyright (c) 2012 Red Hat, Inc.
+#
+# This software is licensed to you under the GNU General Public License,
+# version 2 (GPLv2). There is NO WARRANTY for this software, express or
+# implied, including the implied warranties of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. You should have received a copy of GPLv2
+# along with this software; if not, see
+# http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
+#
+# Red Hat trademarks are not licensed under GPLv2. No permission is
+# granted to use or replicate Red Hat trademarks that are incorporated
+# in this software or its documentation.
+#
+
+""" A CLI utility for associating an idcert with an upstream consumer. """
+
+
+import simplejson as json
+import commands
+import sys
+from optparse import OptionParser
+
+
+def run_command(command, debug=False):
+    if (debug):
+        print("Running command: %s\n" % command)
+        return
+
+    (status, output) = commands.getstatusoutput(command)
+    if status > 0:
+        error_out(command, status, output)
+    return output
+
+
+def error_out(command, status, output):
+    sys.stderr.write("\n########## ERROR ############\n")
+    sys.stderr.write("Error running command: %s\n" % command)
+    sys.stderr.write("Status code: %s\n" % status)
+    sys.stderr.write("Command output: %s\n" % output)
+    raise Exception("Error running command")
+
+
+def run_psql(stmt, dbuser, db, debug=False):
+    cmd = "psql -U %s -c \"%s;\""
+    args = dbuser
+    if (db):
+        args += " -d " + db
+
+    run_command(cmd % (args, stmt), debug)
+
+if __name__ == "__main__":
+    parser = OptionParser()
+    parser.add_option("-f", "--filename",
+                      dest="inputfile",
+                      help="filename of consumer.json")
+    parser.add_option("--uuid",
+                      dest="uuid",
+                      help="uuid of upstream consumer")
+    parser.add_option("--debug",
+                      dest="debug", action="store_true", default=False,
+                      help="DO NOT RUN COMMANDS"),
+    parser.add_option("-u", "--user",
+                      dest="dbuser", default="candlepin",
+                      help="database user to use")
+    parser.add_option("-d", "--database",
+                      dest="db", default="candlepin",
+                      help="database name to use")
+
+    (options, args) = parser.parse_args()
+
+    if (not options.uuid):
+        print("ERROR: Please specify --uuid to be updated")
+        sys.exit(1)
+
+    json_str = ''
+    if (not options.inputfile):
+        for line in sys.stdin:
+            json_str += line
+    else:
+        f = open(options.inputfile)
+        json_str = f.read()
+        data = json.loads(json_str)
+        f.close()
+
+    data = json.loads(json_str)
+    cert = data['idCert']
+    serial = cert['serial']
+
+    # insert the CertificateSerial first
+    cert_serial_insert = """INSERT INTO cp_cert_serial (id, created, updated,
+        collected, expiration, revoked) VALUES (%s, '%s', '%s', %s, '%s', %s)
+        """
+    insert_stmt = cert_serial_insert % (
+        serial['id'], serial['created'], serial['updated'],
+        serial['collected'], serial['expiration'], serial['revoked'])
+    run_psql(insert_stmt, options.dbuser, options.db, options.debug)
+
+    # insert the IdentityCertificate (referencing the above serial)
+    cert_insert = """INSERT INTO cp_id_cert (id, created, updated, cert,
+        privatekey, serial_id) VALUES ('%s', '%s', '%s', '%s', '%s', %s)"""
+    insert_stmt = cert_insert % (
+        cert['id'], cert['created'], cert['updated'], cert['cert'],
+        cert['key'], cert['serial']['id'])
+    run_psql(insert_stmt, options.dbuser, options.db, options.debug)
+
+    # now associate the UpstreamConsumer with the IdentityCertificate
+    upstream_update = """UPDATE cp_upstream_consumer set consumer_idcert_id =
+    '%s' WHERE uuid = '%s'"""
+    update_stmt = upstream_update % (cert['id'], options.uuid)
+    run_psql(update_stmt, options.dbuser, options.db, options.debug)
