@@ -26,21 +26,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.io.IOException;
-import java.io.Serializable;
-import java.math.BigInteger;
-import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
-
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
+import org.candlepin.auth.Access;
 import org.candlepin.auth.NoAuthPrincipal;
+import org.candlepin.auth.UserPrincipal;
 import org.candlepin.config.Config;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.Entitler;
@@ -72,6 +62,7 @@ import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
+import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
@@ -81,6 +72,18 @@ import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
+
+import java.io.IOException;
+import java.io.Serializable;
+import java.math.BigInteger;
+import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 /**
  * ConsumerResourceTest
@@ -476,5 +479,29 @@ public class ConsumerResourceTest {
         toReturn.setCertAsBytes(cert.getBytes());
         toReturn.setSerial(certSerial);
         return toReturn;
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void testNullPerson() {
+        Consumer c = mock(Consumer.class);
+        Owner o = mock(Owner.class);
+        UserServiceAdapter usa = mock(UserServiceAdapter.class);
+        UserPrincipal up = mock(UserPrincipal.class);
+        OwnerCurator oc = mock(OwnerCurator.class);
+        ConsumerTypeCurator ctc = mock(ConsumerTypeCurator.class);
+        ConsumerType cType = new ConsumerType(ConsumerTypeEnum.PERSON);
+
+        when(o.getKey()).thenReturn("testOwner");
+        when(oc.lookupByKey(eq("testOwner"))).thenReturn(o);
+        when(c.getType()).thenReturn(cType);
+        when(c.getName()).thenReturn("testConsumer");
+        when(ctc.lookupByLabel(eq("person"))).thenReturn(cType);
+        when(up.canAccess(eq(o), eq(Access.ALL))).thenReturn(true);
+        // usa.findByLogin() will return null by default no need for a when
+
+        ConsumerResource cr = new ConsumerResource(null, ctc,
+            null, null, null, null, null, i18n, null, null, null, null,
+            usa, null, null, null, null, oc, null, null, null, null, null, new Config());
+        cr.create(c, up, null, "testOwner", null);
     }
 }
