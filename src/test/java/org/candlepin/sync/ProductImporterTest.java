@@ -31,7 +31,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.candlepin.config.Config;
-import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Product;
@@ -50,14 +49,12 @@ public class ProductImporterTest {
     private ProductImporter importer;
     private ProductCurator productCuratorMock;
     private ContentCurator contentCuratorMock;
-    private CandlepinPoolManager poolManagerMock;
     @Before
     public void setUp() throws IOException {
         mapper = SyncUtils.getObjectMapper(new Config(new HashMap<String, String>()));
         productCuratorMock = mock(ProductCurator.class);
         contentCuratorMock = mock(ContentCurator.class);
-        poolManagerMock = mock(CandlepinPoolManager.class);
-        importer = new ProductImporter(productCuratorMock, contentCuratorMock, poolManagerMock);
+        importer = new ProductImporter(productCuratorMock, contentCuratorMock);
     }
 
     @Test

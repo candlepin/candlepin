@@ -399,7 +399,7 @@ public class Importer {
         // This also implies there will be no entitlements to import.
         if (importFiles.get(ImportFile.PRODUCTS.fileName()) != null) {
             Refresher refresher = poolManager.getRefresher();
-            ProductImporter importer = new ProductImporter(productCurator, contentCurator, poolManager);
+            ProductImporter importer = new ProductImporter(productCurator, contentCurator);
 
             Set<Product> productsToImport = importProducts(
                 importFiles.get(ImportFile.PRODUCTS.fileName()).listFiles(),
