@@ -112,6 +112,7 @@ Requires: bouncycastle
 Requires: hibernate3 >= 3.3.2
 Requires: hibernate3-annotations >= 0:3.4.0
 Requires: hibernate3-entitymanager >= 0:3.4.0
+Requires: candlepin-scl
 Requires: c3p0
 Requires: resteasy >= 0:2.3.1
 Requires: google-guice >= 0:3.0
@@ -123,7 +124,6 @@ Requires: codehaus-jackson-jaxrs
 Requires: hornetq >= 0:2.2.11
 Requires: netty
 Requires: oauth
-Requires: quartz >= 0:2.1.5
 Requires: log4j
 Requires: glassfish-jaxb
 Requires: scannotation
