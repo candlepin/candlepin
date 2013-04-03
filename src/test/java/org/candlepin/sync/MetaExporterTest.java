@@ -14,9 +14,10 @@
  */
 package org.candlepin.sync;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.candlepin.config.Config;
+import org.candlepin.test.TestUtil;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 
@@ -47,9 +48,11 @@ public class MetaExporterTest {
 
         metaEx.export(mapper, writer, meta);
 
-        assertEquals("{\"version\":\"0.1.0\",\"created\":\"" + nowString +
-            "\",\"principalName\":\"myUsername\",\"webAppPrefix\":\"webapp_prefix\"}",
-            writer.toString());
+        StringBuffer json = new StringBuffer();
+        json.append("{\"version\":\"0.1.0\",\"created\":\"").append(nowString);
+        json.append("\",\"principalName\":\"myUsername\",");
+        json.append("\"webAppPrefix\":\"webapp_prefix\"}");
+        assertTrue(TestUtil.isJsonEqual(json.toString(), writer.toString()));
     }
 
 }
