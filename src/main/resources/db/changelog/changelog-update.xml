@@ -18,4 +18,8 @@
     <include file="db/changelog/20130206153101-add-upstream-ids-to-suscription.xml" />
     <include file="db/changelog/20130319175255-order-number-to-pool.xml" />
     <include file="db/changelog/20130329094102-drop-account-and-contract-from-entitlement.xml" />
+    <include file="db/changelog/20121019144118-create-upstream-consumer.xml" />
+    <include file="db/changelog/20130315171104-migrate-upstream-uuid.xml" />
+    <include file="db/changelog/20130319110704-drop-upstream-uuid.xml" />
+    <include file="db/changelog/20130319112409-drop-columns-from-import-record.xml" />
 </databaseChangeLog>

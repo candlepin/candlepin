@@ -123,6 +123,10 @@ if not findbugs.nil?
     require 'buildr-findBugs'
 end
 
+use_pmd = ENV['pmd']
+if not use_pmd.nil?
+    require 'buildr/pmd'
+end
 #############################################################################
 # PROJECT BUILD
 #############################################################################
@@ -150,6 +154,10 @@ define "candlepin" do
   # Resource Substitution
   resources.filter.using 'version'=>VERSION_NUMBER,
         'release'=>RELEASE_NUMBER
+
+  if not use_pmd.nil?
+      pmd.enabled = true
+  end
 
   # Hook in gettext bundle generation to compile
   nopo = ENV['nopo']
@@ -281,7 +289,10 @@ define "candlepin" do
     sh('cp -R target/apidoc website/')
   end
 
-
+  desc 'run rpmlint on the spec file'
+  task :rpmlint do
+      sh('rpmlint -f rpmlint.config candlepin.spec')
+  end
 
   #
   # coverity report generation
@@ -371,7 +382,7 @@ namespace "gettext" do
 end
 
 desc 'Make sure eventhing is working as it should'
-task :check_all => [:clean, :checkstyle, :test, :deploy, :spec]
+task :check_all => [:clean, :checkstyle, 'candlepin:rpmlint', :test, :deploy, :spec]
 
 #==========================================================================
 # Tomcat deployment

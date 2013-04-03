@@ -224,7 +224,7 @@ public class X509V3ExtensionUtil extends X509Util{
         String virtOnly = ent.getPool().getAttributeValue("virt_only");
         if (virtOnly != null && !virtOnly.trim().equals("")) {
             // only included if not the default value of false
-            Boolean vo = new Boolean(virtOnly.equalsIgnoreCase("true") ||
+            Boolean vo = Boolean.valueOf(virtOnly.equalsIgnoreCase("true") ||
                 virtOnly.equalsIgnoreCase("1"));
             if (vo) {
                 toReturn.setVirtOnly(vo);
@@ -626,7 +626,7 @@ public class X509V3ExtensionUtil extends X509Util{
             for (NodePair np : parent.getChildren()) {
                 Integer count = segments.get(np.getName());
                 if (count == null) {
-                    count = new Integer(0);
+                    count = 0;
                 }
                 segments.put(np.getName(), ++count);
                 buildSegments(segments, nodes, np.getConnection());
@@ -891,8 +891,9 @@ public class X509V3ExtensionUtil extends X509Util{
         HuffNode pathTrie = makeTrie(triePathDictionary);
 
         StringBuffer nodeBits = new StringBuffer();
-        ByteArrayInputStream bais = new ByteArrayInputStream(payload,
-            (new Long(read)).intValue(), (new Long(payload.length - read).intValue()));
+        ByteArrayInputStream bais = new ByteArrayInputStream(payload, (int) read,
+            (int) (payload.length - read));
+
         int value = bais.read();
         // check for size bits
         int nodeCount = value;
@@ -1160,12 +1161,14 @@ public class X509V3ExtensionUtil extends X509Util{
         }
 
         public String toString() {
-            String parentList =  "";
+            StringBuffer parentList = new StringBuffer("ID: ");
+            parentList.append(id).append(", Parents");
             for (PathNode parent : parents) {
-                parentList += ": " + parent.getId();
+                parentList.append(": ").append(parent.getId());
             }
-            parentList += "";
-            return "ID: " + id + ", Parents" + parentList + ", Children: " + children;
+
+            // "ID: " + id + ", Parents" + parentList + ", Children: " + children;
+            return parentList.append(", Children: ").append(children).toString();
         }
     }
 
@@ -1174,7 +1177,7 @@ public class X509V3ExtensionUtil extends X509Util{
      * NodePair
      */
 
-    public class NodePair implements Comparable{
+    public static class NodePair implements Comparable{
         private String name;
         private PathNode connection;
 
@@ -1205,6 +1208,22 @@ public class X509V3ExtensionUtil extends X509Util{
         @Override
         public int compareTo(Object other) {
             return this.name.compareTo(((NodePair) other).name);
+        }
+
+        public boolean equals(Object other) {
+            if (this == other) {
+                return true;
+            }
+
+            if (!(other instanceof NodePair)) {
+                return false;
+            }
+
+            return this.name.equals(((NodePair) other).getName());
+        }
+
+        public int hashCode() {
+            return name.hashCode();
         }
     }
 }

@@ -102,7 +102,7 @@ public class ProductCache {
      * here instead of WeakReference as they only get GC'd when memory
      * is getting low.
      */
-    protected class ProductReference extends SoftReference<Product> {
+    protected static class ProductReference extends SoftReference<Product> {
 
         public ProductReference(Product referent) {
             super(referent);
@@ -119,7 +119,7 @@ public class ProductCache {
      * a maximum of 100 mapped products. When an attempt is made to insert
      * more than 100, the eldest product reference will be removed.
      */
-    protected class ProductMapping extends LinkedHashMap<String, ProductReference> {
+    protected static class ProductMapping extends LinkedHashMap<String, ProductReference> {
 
         private int max;
 

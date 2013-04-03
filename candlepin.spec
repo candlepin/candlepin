@@ -23,9 +23,9 @@
 
 Name: candlepin
 Summary: Candlepin is an open source entitlement management system
-Group: Internet/Applications
+Group: System Environment/Daemons
 License: GPLv2
-Version: 0.8.0
+Version: 0.8.1
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -71,6 +71,8 @@ BuildRequires: jakarta-commons-lang
 BuildRequires: jakarta-commons-io
 BuildRequires: apache-commons-codec
 BuildRequires: codehaus-jackson >= 0:1.9.2
+
+# Configure Datasources
 BuildRequires: codehaus-jackson-core-lgpl
 BuildRequires: codehaus-jackson-mapper-lgpl
 BuildRequires: codehaus-jackson-xc
@@ -82,7 +84,6 @@ BuildRequires: glassfish-jaxb
 BuildRequires: jms >= 0:1.1
 BuildRequires: oauth
 BuildRequires: slf4j >= 0:1.6.1
-BuildRequires: quartz >= 0:2.1.5
 
 # needed to setup runtime deps, not for compilation
 BuildRequires: c3p0
@@ -144,7 +145,6 @@ Candlepin is an open source entitlement management system.
 Summary: Candlepin web application for tomcat6
 Requires: tomcat6
 Requires: candlepin = %{version}
-Group: Internet/Applications
 
 %description tomcat6
 Candlepin web application for tomcat6
@@ -153,7 +153,6 @@ Candlepin web application for tomcat6
 Summary: Candlepin web application for jboss
 Requires: jbossas >= 4.3
 Requires: candlepin = %{version}
-Group: Internet/Applications
 
 %description jboss
 Candlepin web application for jboss
@@ -167,7 +166,6 @@ Development libraries for candlepin integration
 
 %package certgen-lib
 Summary: candlepin certgen library for use by other apps
-Group: Internet/Applications
 
 %description certgen-lib
 candlepin library for use by other apps
@@ -298,6 +296,7 @@ fi
 
 
 %files
+%defattr(-,root,root)
 %dir %{_datadir}/%{name}/
 %{_datadir}/%{name}/cpsetup
 %{_datadir}/%{name}/cpdb
@@ -346,6 +345,15 @@ fi
 
 
 %changelog
+* Mon Apr 01 2013 William Poteat <wpoteat@redhat.com> 0.8.1-1
+- Enable host to guest mapping for hosted mode via an attribute.
+  (awood@redhat.com)
+- Updates can now be emitted from RulesImporter (uploaded manifests).  Events
+  now stored in the database (fixed bug with non-nullable fields set null)
+  (ckozak@redhat.com)
+- New signature checking for manifests (wpoteat@redhat.com)
+- 916467: disable update checks in quartz (jesusr@redhat.com)
+
 * Wed Mar 13 2013 Devan Goodwin <dgoodwin@rm-rf.ca> 0.8.0-1
 - Introduce candlepin software collection. (dgoodwin@rm-rf.ca)
 - converted != to equals instead of !...equals (jesusr@redhat.com)

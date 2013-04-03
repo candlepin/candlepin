@@ -19,37 +19,27 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.doThrow;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.io.Reader;
-import java.net.URISyntaxException;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
-
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.impl.BouncyCastlePKIUtility;
+import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
 import org.candlepin.sync.Importer.ImportFile;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
@@ -60,6 +50,24 @@ import org.junit.Test;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.io.Reader;
+import java.net.URISyntaxException;
+import java.security.Security;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /**
  * ImporterTest
@@ -423,8 +431,7 @@ public class ImporterTest {
     }
 
     @Test
-    public void testImportNoMeta()
-        throws IOException, ImporterException {
+    public void testImportNoMeta() throws IOException {
         Importer i = new Importer(null, null, null, null, null, null, null,
             null, config, null, null, null, i18n);
         Owner owner = mock(Owner.class);
@@ -445,8 +452,7 @@ public class ImporterTest {
     }
 
     @Test
-    public void testImportNoConsumerTypesDir()
-        throws IOException, ImporterException {
+    public void testImportNoConsumerTypesDir() throws IOException {
         Importer i = new Importer(null, null, null, null, null, null, null,
             null, config, null, null, null, i18n);
         Owner owner = mock(Owner.class);
@@ -467,8 +473,7 @@ public class ImporterTest {
     }
 
     @Test
-    public void testImportNoConsumer()
-        throws IOException, ImporterException {
+    public void testImportNoConsumer() throws IOException {
         Importer i = new Importer(null, null, null, null, null, null, null,
             null, config, null, null, null, i18n);
         Owner owner = mock(Owner.class);
@@ -512,6 +517,7 @@ public class ImporterTest {
         importFiles.put(ImportFile.RULES_FILE.fileName(), rulesFiles[0]);
         importFiles.put(ImportFile.PRODUCTS.fileName(), null);
         importFiles.put(ImportFile.ENTITLEMENTS.fileName(), null);
+        importFiles.put(ImportFile.UPSTREAM_CONSUMER.fileName(), mock(File.class));
 
         try {
             i.importObjects(owner, importFiles, co);
@@ -525,8 +531,7 @@ public class ImporterTest {
     }
 
     @Test
-    public void testImportProductNoEntitlementDir()
-        throws IOException, ImporterException {
+    public void testImportProductNoEntitlementDir() throws IOException {
         Importer i = new Importer(null, null, null, null, null, null, null,
             null, config, null, null, null, i18n);
         Owner owner = mock(Owner.class);
@@ -601,4 +606,34 @@ public class ImporterTest {
         in.close();
     }
 
+    @Test
+    public void importConsumer() throws Exception {
+        Security.addProvider(new BouncyCastleProvider());
+        PKIUtility pki = new BouncyCastlePKIUtility(null,
+            new DefaultSubjectKeyIdentifierWriter());
+
+        OwnerCurator oc = mock(OwnerCurator.class);
+        ConsumerTypeCurator ctc = mock(ConsumerTypeCurator.class);
+        ConsumerType type = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
+        when(ctc.lookupByLabel(eq("candlepin"))).thenReturn(type);
+
+        Importer i = new Importer(ctc, null, null, oc, null, null, null,
+            pki, null, null, null, null, i18n);
+        File[] upstream = new File[2];
+        File idcertfile = new File("target/test/resources/upstream/testidcert.json");
+        File kpfile = new File("target/test/resources/upstream/keypair.pem");
+        upstream[0] = idcertfile;
+        upstream[1] = kpfile;
+        File consumerfile = new File("target/test/resources/upstream/consumer.json");
+
+        Owner owner = mock(Owner.class);
+        ConflictOverrides forcedConflicts = mock(ConflictOverrides.class);
+        when(forcedConflicts.isForced(any(Importer.Conflict.class))).thenReturn(false);
+
+        Meta meta = new Meta("1.0", new Date(), "admin", "/candlepin/owners");
+
+        i.importConsumer(owner, consumerfile, upstream, forcedConflicts, meta);
+
+        verify(oc).merge(any(Owner.class));
+    }
 }

@@ -44,6 +44,17 @@ public class RulesCuratorTest extends DatabaseTestFixture {
         assertFalse("1.9".equals(rules.getVersion()));
     }
 
+    /*
+     * While this is a little unorthodox, we need to make sure we stop slipping in use
+     * of "for each", which is not a part of standard Javascript and thus a problem for
+     * those who are using our rules with other interpreters.
+     */
+    @Test
+    public void noForEachInRules() throws Exception {
+        Rules rules = rulesCurator.getRules();
+        assertEquals(-1, rules.getRules().indexOf("for each"));
+    }
+
     @Test
     public void ignoreOldRulesInDbDefaultVersion() throws Exception {
         // Default version set by upgrade script:
@@ -67,7 +78,7 @@ public class RulesCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void uploadRules() {
-        Rules rules = new Rules("// Version: 2.0\n//these are the new rules");
+        Rules rules = new Rules("// Version: 2.1000\n//these are the new rules");
         Rules newRules = rulesCurator.update(rules);
         Rules updateRules = rulesCurator.getRules();
         assertEquals(rules.getRules(), updateRules.getRules());
@@ -75,9 +86,9 @@ public class RulesCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void uploadMultipleRules() {
-        Rules rules = new Rules("// Version: 2.0\n// rules1 ");
+        Rules rules = new Rules("// Version: 2.1000\n// rules1 ");
         Rules newRules = rulesCurator.update(rules);
-        Rules rules2 = new Rules("// Version: 2.0\n// rules2 ");
+        Rules rules2 = new Rules("// Version: 2.1001\n// rules2 ");
         Rules newRules2 = rulesCurator.update(rules2);
         Rules updateRules = rulesCurator.getRules();
         assertEquals(rules2.getRules(), updateRules.getRules());

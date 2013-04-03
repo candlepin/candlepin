@@ -27,7 +27,6 @@ import org.candlepin.model.ProductCurator;
 import org.candlepin.util.Util;
 
 import com.google.common.collect.Sets;
-import org.candlepin.controller.PoolManager;
 
 /**
  * ProductImporter
@@ -36,13 +35,10 @@ public class ProductImporter {
 
     private ProductCurator curator;
     private ContentCurator contentCurator;
-    private PoolManager poolManager;
 
-    public ProductImporter(ProductCurator curator, ContentCurator contentCurator,
-        PoolManager poolManager) {
+    public ProductImporter(ProductCurator curator, ContentCurator contentCurator) {
         this.curator = curator;
         this.contentCurator = contentCurator;
-        this.poolManager = poolManager;
     }
 
     public Product createObject(ObjectMapper mapper, Reader reader)

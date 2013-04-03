@@ -14,15 +14,13 @@
  */
 package org.candlepin.test;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashSet;
-
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.servlet.http.HttpServletRequest;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Module;
+import com.google.inject.persist.PersistFilter;
+import com.google.inject.persist.PersistService;
+import com.google.inject.persist.UnitOfWork;
+import com.google.inject.util.Modules;
 
 import org.candlepin.CandlepinCommonTestingModule;
 import org.candlepin.CandlepinNonServletEnvironmentTestingModule;
@@ -55,8 +53,8 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerPermission;
 import org.candlepin.model.OwnerPermissionCurator;
 import org.candlepin.model.Pool;
-import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolAttributeCurator;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductAttributeCurator;
@@ -84,13 +82,15 @@ import org.junit.After;
 import org.junit.Before;
 import org.xnap.commons.i18n.I18n;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Module;
-import com.google.inject.util.Modules;
-import com.google.inject.persist.PersistFilter;
-import com.google.inject.persist.PersistService;
-import com.google.inject.persist.UnitOfWork;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashSet;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * Test fixture for test classes requiring access to the database.

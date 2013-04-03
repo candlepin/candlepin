@@ -14,6 +14,34 @@
  */
 package org.candlepin.sync;
 
+import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+import org.candlepin.audit.EventSink;
+import org.candlepin.config.Config;
+import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.Refresher;
+import org.candlepin.model.CertificateSerialCurator;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.ContentCurator;
+import org.candlepin.model.ExporterMetadata;
+import org.candlepin.model.ExporterMetadataCurator;
+import org.candlepin.model.IdentityCertificate;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
+import org.candlepin.model.Subscription;
+import org.candlepin.model.SubscriptionCurator;
+import org.candlepin.pki.PKIUtility;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.hibernate.exception.ConstraintViolationException;
+import org.xnap.commons.i18n.I18n;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -34,32 +62,6 @@ import java.util.zip.ZipInputStream;
 
 import javax.persistence.PersistenceException;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
-import org.candlepin.audit.EventSink;
-import org.candlepin.config.Config;
-import org.candlepin.controller.PoolManager;
-import org.candlepin.controller.Refresher;
-import org.candlepin.model.CertificateSerialCurator;
-import org.candlepin.model.ConsumerType;
-import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.ContentCurator;
-import org.candlepin.model.ExporterMetadata;
-import org.candlepin.model.ExporterMetadataCurator;
-import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
-import org.candlepin.model.Subscription;
-import org.candlepin.model.SubscriptionCurator;
-import org.candlepin.pki.PKIUtility;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.hibernate.exception.ConstraintViolationException;
-import org.xnap.commons.i18n.I18n;
-
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
-
 
 /**
  * Importer
@@ -78,7 +80,8 @@ public class Importer {
         ENTITLEMENTS("entitlements"),
         ENTITLEMENT_CERTIFICATES("entitlement_certificates"),
         PRODUCTS("products"),
-        RULES_FILE("rules2/rules.js");
+        RULES_FILE("rules2/rules.js"),
+        UPSTREAM_CONSUMER("upstream_consumer");
 
         private String fileName;
         ImportFile(String fileName) {
@@ -339,6 +342,7 @@ public class Importer {
                                         "required entitlements directory"));
         }
 
+
         // system level elements
         /*
          * Checking a system wide last import date breaks multi-tenant deployments whenever
@@ -369,7 +373,14 @@ public class Importer {
 
         ConsumerDto consumer = null;
         try {
-            consumer = importConsumer(owner, consumerFile, overrides);
+            Meta m = mapper.readValue(metadata, Meta.class);
+            File upstreamFile = importFiles.get(ImportFile.UPSTREAM_CONSUMER.fileName());
+            File[] dafiles = new File[0];
+            if (upstreamFile != null) {
+                dafiles = upstreamFile.listFiles();
+            }
+            consumer = importConsumer(owner, consumerFile,
+                dafiles, overrides, m);
         }
         catch (ImportConflictException e) {
             conflictExceptions.add(e);
@@ -388,7 +399,7 @@ public class Importer {
         // This also implies there will be no entitlements to import.
         if (importFiles.get(ImportFile.PRODUCTS.fileName()) != null) {
             Refresher refresher = poolManager.getRefresher();
-            ProductImporter importer = new ProductImporter(productCurator, contentCurator, poolManager);
+            ProductImporter importer = new ProductImporter(productCurator, contentCurator);
 
             Set<Product> productsToImport = importProducts(
                 importFiles.get(ImportFile.PRODUCTS.fileName()).listFiles(),
@@ -453,15 +464,52 @@ public class Importer {
     }
 
     public ConsumerDto importConsumer(Owner owner, File consumerFile,
-        ConflictOverrides forcedConflicts)
+        File[] upstreamConsumer, ConflictOverrides forcedConflicts, Meta meta)
         throws IOException, SyncDataFormatException {
+
+        IdentityCertificate idcert = null;
+        for (File uc : upstreamConsumer) {
+            if (uc.getName().endsWith(".json")) {
+                log.debug("Import upstream consumeridentity certificate: " +
+                    uc.getName());
+                Reader reader = null;
+                try {
+                    reader = new FileReader(uc);
+                    idcert = mapper.readValue(reader, IdentityCertificate.class);
+                }
+                finally {
+                    if (reader != null) {
+                        reader.close();
+                    }
+                }
+            }
+            else {
+                log.warn("Extra file found in upstream_consumer directory: " +
+                    (uc != null ? uc.getName() : "null"));
+            }
+        }
+
         ConsumerImporter importer = new ConsumerImporter(ownerCurator, i18n);
         Reader reader = null;
         ConsumerDto consumer = null;
         try {
             reader = new FileReader(consumerFile);
             consumer = importer.createObject(mapper, reader);
-            importer.store(owner, consumer, forcedConflicts);
+            // we can not rely on the actual ConsumerType in the ConsumerDto
+            // because it could have an id not in our database. We need to
+            // stick with the label. Hence we need to lookup the ACTUAL type
+            // by label here before attempting to store the UpstreamConsumer
+            ConsumerType type = consumerTypeCurator.lookupByLabel(
+                consumer.getType().getLabel());
+            consumer.setType(type);
+
+            // in older manifests the web app prefix will not
+            // be on the consumer, we can use the one stored in
+            // the metadata
+            if (StringUtils.isEmpty(consumer.getUrlWeb())) {
+                consumer.setUrlWeb(meta.getWebAppPrefix());
+            }
+            importer.store(owner, consumer, forcedConflicts, idcert);
         }
         finally {
             if (reader != null) {

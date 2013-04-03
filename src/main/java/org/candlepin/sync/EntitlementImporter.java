@@ -311,7 +311,7 @@ public class EntitlementImporter {
      * descending quantity sort on Subscriptions
      */
 
-    public class QuantityComparator implements Comparator<Subscription> {
+    public static class QuantityComparator implements Comparator<Subscription> {
         @Override
         public int compare(Subscription s1, Subscription s2) {
             return s2.getQuantity().compareTo(s1.getQuantity());
