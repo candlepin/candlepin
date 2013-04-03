@@ -14,10 +14,11 @@
  */
 package org.candlepin.sync;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.candlepin.config.Config;
 import org.candlepin.model.ConsumerType;
+import org.candlepin.test.TestUtil;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
@@ -44,8 +45,10 @@ public class ConsumerTypeExporterTest {
 
         consumerType.export(mapper, writer, type);
 
-        assertEquals("{\"id\":null,\"label\":\"TESTTYPE\",\"manifest\":false}",
-                     writer.toString());
+        StringBuffer json = new StringBuffer();
+        json.append("{\"id\":null,\"label\":\"TESTTYPE\",");
+        json.append("\"manifest\":false}");
+        assertTrue(TestUtil.isJsonEqual(json.toString(), writer.toString()));
     }
 
 }
