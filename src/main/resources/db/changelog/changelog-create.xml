@@ -1114,4 +1114,5 @@
     <include file="db/changelog/20121019144118-create-upstream-consumer.xml" />
     <include file="db/changelog/20130319110704-drop-upstream-uuid.xml" />
     <include file="db/changelog/20130319112409-drop-columns-from-import-record.xml" />
+    <include file="db/changelog/20130402153704-add-upstream-consumer-fk.xml" />
 </databaseChangeLog>
