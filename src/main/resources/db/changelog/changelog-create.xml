@@ -1115,4 +1115,6 @@
     <include file="db/changelog/20130319110704-drop-upstream-uuid.xml" />
     <include file="db/changelog/20130319112409-drop-columns-from-import-record.xml" />
     <include file="db/changelog/20130402153704-add-upstream-consumer-fk.xml" />
+    <include file="db/changelog/20130402164325-create-oracle-schema.xml" />
+    <include file="db/changelog/20130403095818-reconcile-postgresql-with-oracle.xml" />
 </databaseChangeLog>
