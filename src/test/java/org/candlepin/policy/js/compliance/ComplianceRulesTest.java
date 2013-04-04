@@ -110,7 +110,7 @@ public class ComplianceRulesTest {
             provided.add(new ProvidedProduct(pid, pid));
         }
         Pool p = new Pool(owner, productId, productId, provided,
-            new Long(1000), start, end, "1000", "1000");
+            new Long(1000), start, end, "1000", "1000", "1000");
         Entitlement e = new Entitlement(p, consumer, p.getStartDate(), p.getEndDate(), 1);
         return e;
     }

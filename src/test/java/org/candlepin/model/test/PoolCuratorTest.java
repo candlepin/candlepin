@@ -268,7 +268,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Pool derivedPool = new Pool(owner, product.getId(), product.getName(),
             new HashSet<ProvidedProduct>(), 1L, TestUtil.createDate(2011, 3, 2),
             TestUtil.createDate(2055, 3, 2),
-            "", "");
+            "", "", "");
         derivedPool.setSourceEntitlement(sourceEnt);
         derivedPool.setSubscriptionId(subid);
         poolCurator.create(derivedPool);

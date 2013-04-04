@@ -77,8 +77,8 @@ public class EntitlementImporter {
         subscription.setStartDate(entitlement.getStartDate());
         subscription.setEndDate(entitlement.getEndDate());
 
-        subscription.setAccountNumber(entitlement.getAccountNumber());
-        subscription.setContractNumber(entitlement.getContractNumber());
+        subscription.setAccountNumber(entitlement.getPool().getAccountNumber());
+        subscription.setContractNumber(entitlement.getPool().getContractNumber());
 
         subscription.setQuantity(entitlement.getQuantity().longValue());
 
