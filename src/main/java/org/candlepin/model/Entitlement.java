@@ -100,9 +100,6 @@ public class Entitlement extends AbstractHibernateObject implements Linkable, Ow
 
     private Integer quantity;
 
-    private String accountNumber;
-    private String contractNumber;
-
     private boolean dirty = false;
 
     /**
@@ -142,9 +139,6 @@ public class Entitlement extends AbstractHibernateObject implements Linkable, Ow
         endDate = endDateIn;
         quantity = quantityIn == null || quantityIn.intValue() < 1 ?
             1 : quantityIn;
-
-        this.accountNumber = pool.getAccountNumber();
-        this.contractNumber = pool.getContractNumber();
     }
 
     /**
@@ -267,22 +261,6 @@ public class Entitlement extends AbstractHibernateObject implements Linkable, Ow
          * No-op, here to aid with updating objects which have nested objects that were
          * originally sent down to the client in HATEOAS form.
          */
-    }
-
-    public String getAccountNumber() {
-        return accountNumber;
-    }
-
-    public void setAccountNumber(String accountNumber) {
-        this.accountNumber = accountNumber;
-    }
-
-    public String getContractNumber() {
-        return contractNumber;
-    }
-
-    public void setContractNumber(String contractNumber) {
-        this.contractNumber = contractNumber;
     }
 
     @Override

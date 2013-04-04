@@ -66,7 +66,8 @@ public class PoolHelper extends AttributeHelper {
 
         Pool consumerSpecificPool = createPool(productId, pool.getOwner(), quantity,
             pool.getStartDate(), pool.getEndDate(), pool.getContractNumber(),
-            pool.getAccountNumber(), pool.getProvidedProducts());
+            pool.getAccountNumber(), pool.getOrderNumber(),
+            pool.getProvidedProducts());
 
         consumerSpecificPool.setRestrictedToUsername(
                 this.sourceEntitlement.getConsumer().getUsername());
@@ -89,7 +90,7 @@ public class PoolHelper extends AttributeHelper {
 
         Pool consumerSpecificPool = createPool(productId, pool.getOwner(), quantity,
             pool.getStartDate(), pool.getEndDate(), pool.getContractNumber(),
-            pool.getAccountNumber(), pool.getProvidedProducts());
+            pool.getAccountNumber(), pool.getOrderNumber(), pool.getProvidedProducts());
 
         consumerSpecificPool.setAttribute("requires_host",
             sourceEntitlement.getConsumer().getUuid());
@@ -157,7 +158,7 @@ public class PoolHelper extends AttributeHelper {
 
         Pool pool = createPool(productId, sub.getOwner(), quantity, sub.getStartDate(),
             sub.getEndDate(), sub.getContractNumber(), sub.getAccountNumber(),
-            new HashSet<ProvidedProduct>());
+            sub.getOrderNumber(), new HashSet<ProvidedProduct>());
         pool.setSubscriptionId(sub.getId());
 
         copyProvidedProducts(sub, pool);
@@ -249,7 +250,7 @@ public class PoolHelper extends AttributeHelper {
     }
 
     private Pool createPool(String productId, Owner owner, String quantity, Date startDate,
-        Date endDate, String contractNumber, String accountNumber,
+        Date endDate, String contractNumber, String accountNumber, String orderNumber,
         Set<ProvidedProduct> providedProducts) {
 
         Long q = null;
@@ -270,7 +271,7 @@ public class PoolHelper extends AttributeHelper {
             derivedProduct.getName(),
             new HashSet<ProvidedProduct>(), q,
             startDate, endDate,
-            contractNumber, accountNumber);
+            contractNumber, accountNumber, orderNumber);
 
         // Must be sure to copy the provided products, not try to re-use them directly:
         for (ProvidedProduct pp : providedProducts) {

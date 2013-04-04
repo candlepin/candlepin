@@ -95,7 +95,8 @@ public class PoolRulesTest {
         Pool p = new Pool(sub.getOwner(), sub.getProduct().getId(),
             sub.getProduct().getName(), new HashSet<ProvidedProduct>(),
             sub.getQuantity(), sub.getStartDate(),
-            sub.getEndDate(), sub.getContractNumber(), sub.getAccountNumber());
+            sub.getEndDate(), sub.getContractNumber(), sub.getAccountNumber(),
+            sub.getOrderNumber());
         p.setSubscriptionId(sub.getId());
 
         for (ProductAttribute attr : sub.getProduct().getAttributes()) {
