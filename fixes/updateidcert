@@ -68,7 +68,7 @@ if __name__ == "__main__":
                       dest="db", default="candlepin",
                       help="database name to use")
     parser.add_option("-r", "--relink",
-                      dest="relink", action="store_true", default="False",
+                      dest="relink", action="store_true", default=False,
                       help="relink an existing identity cert")
 
     (options, args) = parser.parse_args()
@@ -90,6 +90,9 @@ if __name__ == "__main__":
     data = json.loads(json_str)
     cert = data['idCert']
     serial = cert['serial']
+
+    print "relink: %s" % options.relink
+    print "not relink: %s" % (not options.relink)
 
     # insert the CertificateSerial first
     cert_serial_insert = """INSERT INTO cp_cert_serial (id, created, updated,
