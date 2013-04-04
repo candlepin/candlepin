@@ -627,7 +627,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
         throws Exception {
 
         Config mockConfig = mock(Config.class);
-        when(mockConfig.certV3IsEnabled()).thenReturn(true);
 
         // RAM requires 3.1, so an exception should be thrown for cert V1 clients.
         when(consumer.getFact(eq("system.certificate_version"))).thenReturn("1.0");
@@ -661,7 +660,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void ensureV3CertificateCreationFailsWithUnsupportedConsumerCertVersion()
         throws Exception {
         Config mockConfig = mock(Config.class);
-        when(mockConfig.certV3IsEnabled()).thenReturn(true);
 
         // RAM requires 3.1, so an exception should be thrown.
         when(consumer.getFact(eq("system.certificate_version"))).thenReturn("3.0");
@@ -695,7 +693,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void ensureV3CertificateCreationOkWhenConsumerSupportsV3Dot1Certs()
         throws Exception {
         Config mockConfig = mock(Config.class);
-        when(mockConfig.certV3IsEnabled()).thenReturn(true);
 
         when(consumer.getFact(eq("system.certificate_version"))).thenReturn("3.2");
         ProductAttribute attr = new ProductAttribute("ram", "4");
@@ -713,37 +710,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         entAdapter.createX509Certificate(entitlement, subscription, product,
             new BigInteger("1234"), keyPair(), true);
-    }
-
-    @Test
-    public void ensureV3ProductCreationNotOkWhenV3SupportIsDisabledOnServer()
-        throws Exception {
-        Config mockConfig = mock(Config.class);
-        when(mockConfig.certV3IsEnabled()).thenReturn(false);
-
-        when(consumer.getFact(eq("system.certificate_version"))).thenReturn("3.0");
-
-        X509V3ExtensionUtil mockV3extensionUtil = mock(X509V3ExtensionUtil.class);
-        X509ExtensionUtil mockExtensionUtil = mock(X509ExtensionUtil.class);
-
-        ProductAttribute attr = new ProductAttribute("ram", "4");
-        subscription.getProduct().addAttribute(attr);
-
-        DefaultEntitlementCertServiceAdapter entAdapter =
-            new DefaultEntitlementCertServiceAdapter(mockedPKI, mockExtensionUtil,
-                mockV3extensionUtil, mock(EntitlementCertificateCurator.class),
-                keyPairCurator, serialCurator, productAdapter, entCurator,
-                I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
-                mockConfig);
-        try {
-            entAdapter.createX509Certificate(entitlement, subscription, product,
-                new BigInteger("1234"), keyPair(), true);
-            fail("Expected CertVersionConflictException to be thrown.");
-        }
-        catch (CertVersionConflictException e) {
-            assertEquals("The server does not support subscriptions requiring " +
-                         "V3 certificates.", e.getMessage());
-        }
     }
 
     @Test
@@ -766,7 +732,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
     @Test
     public void ensureV3CertIsCreatedWhenEnableCertV3ConfigIsTrue() throws Exception {
         Config mockConfig = mock(Config.class);
-        when(mockConfig.certV3IsEnabled()).thenReturn(true);
 
         when(consumer.getFact(eq("system.certificate_version"))).thenReturn("3.0");
 
@@ -787,35 +752,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
         verify(mockV3extensionUtil).getByteExtensions(any(Set.class),
             eq(entitlement), any(String.class), any(Map.class), eq(subscription));
         verifyZeroInteractions(mockExtensionUtil);
-    }
-
-    @Test
-    public void ensureV1CertIsCreatedWhenEnableCertV3ConfigIsFalse() throws Exception {
-        Config mockConfig = mock(Config.class);
-        when(mockConfig.certV3IsEnabled()).thenReturn(false);
-        // Ensure that the consumer is still at V3.
-        when(consumer.getFact(eq("system.certificate_version"))).thenReturn("3.0");
-
-        X509V3ExtensionUtil mockV3extensionUtil = mock(X509V3ExtensionUtil.class);
-        X509ExtensionUtil mockExtensionUtil = mock(X509ExtensionUtil.class);
-
-        DefaultEntitlementCertServiceAdapter entAdapter =
-            new DefaultEntitlementCertServiceAdapter(mockedPKI, mockExtensionUtil,
-                mockV3extensionUtil, mock(EntitlementCertificateCurator.class),
-                keyPairCurator, serialCurator, productAdapter, entCurator,
-                I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
-                mockConfig);
-
-        entAdapter.createX509Certificate(entitlement, subscription,
-            product, new BigInteger("1234"), keyPair(), true);
-        verify(mockExtensionUtil).productExtensions(eq(product));
-        verify(mockExtensionUtil).contentExtensions(any(Set.class), any(String.class),
-            any(Map.class), eq(consumer));
-        verify(mockExtensionUtil).subscriptionExtensions(eq(subscription),
-            eq(entitlement));
-        verify(mockExtensionUtil).entitlementExtensions(eq(entitlement));
-        verify(mockExtensionUtil).consumerExtensions(eq(consumer));
-        verifyZeroInteractions(mockV3extensionUtil);
     }
 
     @Test

@@ -37,18 +37,14 @@ describe 'RAM Limiting' do
 
   it 'can consume ram entitlement if requesting v3.1 certificate' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '3.1',
-                 # Since cert v3 is disabled by default, configure consumer bypass.
-                 'system.testing' => 'true'})
+                {'system.certificate_version' => '3.1'})
     entitlement = system.consume_product(@ram_product.id)[0]
     entitlement.should_not == nil
   end
 
   it 'can not consume ram entitlement when requesting less than v3.1 certificate' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '3.0',
-                 # Since cert v3 is disabled by default, configure consumer bypass.
-                 'system.testing' => 'true'})
+                {'system.certificate_version' => '3.0'})
 
     installed = [
         {'productId' => @ram_sub.id,
@@ -71,38 +67,11 @@ describe 'RAM Limiting' do
     end
   end
 
-  it 'can not consume ram entitlement when server does not support cert V3' do
-    system = consumer_client(@user, random_string('system1'), :system, nil,
-                # cert v3 is currently disabled by default.
-                {'system.certificate_version' => '3.1'})
-
-    installed = [
-        {'productId' => @ram_sub.id,
-        'productName' => @ram_sub.name}
-    ]
-    system.update_consumer({:installedProducts => installed})
-
-    pool = find_pool(@owner.id, @ram_sub.id)
-    pool.should_not == nil
-
-    expected_error = "The server does not support subscriptions requiring V3 certificates."
-    begin
-      response = system.consume_pool(pool.id)
-      #end.should raise_exception(RestClient::Conflict)
-      fail("Conflict error should have been raised since system's certificate version is incorrect.")
-    rescue RestClient::Conflict => e
-      message = JSON.parse(e.http_body)['displayMessage']
-      message.should == expected_error
-    end
-  end
-
   it 'consumer status should be valid when consumer RAM is covered' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
                 {'system.certificate_version' => '3.1',
                  # Simulate 8 GB of RAM as would be returned from system fact (kb)
-                 'memory.memtotal' => '8000000',
-                 # Since cert v3 is disabled by default, configure consumer bypass.
-                 'system.testing' => 'true'})
+                 'memory.memtotal' => '8000000'})
     installed = [
         {'productId' => @ram_product.id, 'productName' => @ram_product.name}
     ]
@@ -122,9 +91,7 @@ describe 'RAM Limiting' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
                 {'system.certificate_version' => '3.1',
                  # Simulate 16 GB of RAM as would be returned from system fact (kb)
-                 'memory.memtotal' => '16000000',
-                 # Since cert v3 is disabled by default, configure consumer bypass.
-                 'system.testing' => 'true'})
+                 'memory.memtotal' => '16000000'})
     installed = [
         {'productId' => @ram_product.id, 'productName' => @ram_product.name}
     ]
@@ -151,9 +118,7 @@ describe 'RAM Limiting' do
                  'memory.memtotal' => '8000000',
                  # Simulate system having 12 sockets which won't be covered after consuming
                  # the entitlement
-                 'cpu.cpu_socket(s)' => '12',
-                 # Since cert v3 is disabled by default, configure consumer bypass.
-                 'system.testing' => 'true'})
+                 'cpu.cpu_socket(s)' => '12'})
     installed = [
         {'productId' => @ram_and_socket_product.id,
         'productName' => @ram_and_socket_product.name}
@@ -181,9 +146,7 @@ describe 'RAM Limiting' do
                  'memory.memtotal' => '16000000',
                  # Simulate system having 4 sockets which will be covered after consuming
                  # the entitlement
-                 'cpu.cpu_socket(s)' => '4',
-                 # Since cert v3 is disabled by default, configure consumer bypass.
-                 'system.testing' => 'true'})
+                 'cpu.cpu_socket(s)' => '4'})
     installed = [
         {'productId' => @ram_and_socket_product.id,
         'productName' => @ram_and_socket_product.name}
@@ -211,9 +174,7 @@ describe 'RAM Limiting' do
                  'memory.memtotal' => '8000000',
                  # Simulate system having 4 sockets which will be covered after consuming
                  # the entitlement
-                 'cpu.cpu_socket(s)' => '4',
-                 # Since cert v3 is disabled by default, configure consumer bypass.
-                 'system.testing' => 'true'})
+                 'cpu.cpu_socket(s)' => '4'})
     installed = [
         {'productId' => @ram_and_socket_product.id,
         'productName' => @ram_and_socket_product.name}
@@ -233,9 +194,7 @@ describe 'RAM Limiting' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
                 {'system.certificate_version' => '3.1',
                  # Simulate 8 GB of RAM as would be returned from system fact (kb)
-                 'memory.memtotal' => '8000000',
-                 # Since cert v3 is disabled by default, configure consumer bypass.
-                 'system.testing' => 'true'})
+                 'memory.memtotal' => '8000000'})
     installed = [
         {'productId' => @ram_product.id, 'productName' => @ram_product.name}
     ]
@@ -250,9 +209,7 @@ describe 'RAM Limiting' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
                 {'system.certificate_version' => '3.1',
                  # Simulate 12 GB of RAM as would be returned from system fact (kb)
-                 'memory.memtotal' => '12000000',
-                 # Since cert v3 is disabled by default, configure consumer bypass.
-                 'system.testing' => 'true'})
+                 'memory.memtotal' => '12000000'})
     installed = [
         {'productId' => @ram_product.id, 'productName' => @ram_product.name}
     ]
@@ -271,9 +228,7 @@ describe 'RAM Limiting' do
                  'memory.memtotal' => '8000000',
                  # Simulate system having 4 sockets which will be covered after consuming
                  # the entitlement
-                 'cpu.cpu_socket(s)' => '4',
-                 # Since cert v3 is disabled by default, configure consumer bypass.
-                 'system.testing' => 'true'})
+                 'cpu.cpu_socket(s)' => '4'})
     installed = [
         {'productId' => @ram_and_socket_product.id,
         'productName' => @ram_and_socket_product.name}

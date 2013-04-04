@@ -424,18 +424,9 @@ public class CandlepinPoolManager implements PoolManager {
                     }
                 }
                 else {
-
-                    // If cert V3 is disabled, do not create a certificate with anything
-                    // considered V3+ as it is not supported in V1.
-                    if (!ProductVersionValidator.verifyServerSupport(config, consumer,
-                        pool.getProductAttributes())) {
-                        log.debug("Pool filtered from candidates because the server " +
-                                  "does not support subscriptions requiring V3 " +
-                                  "certificates.");
-                    }
                     // Check to make sure that the consumer supports the required cert
                     // versions for all attributes.
-                    else if (!ProductVersionValidator.verifyClientSupport(consumer,
+                    if (!ProductVersionValidator.verifyClientSupport(consumer,
                         pool.getProductAttributes())) {
                         log.debug("Pool filtered from candidates because it is " +
                                   "unsupported by the consumer. Upgrade client to use.");

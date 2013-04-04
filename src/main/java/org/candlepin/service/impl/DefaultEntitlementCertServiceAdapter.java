@@ -186,14 +186,6 @@ public class DefaultEntitlementCertServiceAdapter extends
     }
 
     private void verifySubscriptionSupport(Entitlement ent, Subscription sub) {
-        // If cert V3 is disabled, do not create a certificate with anything
-        // considered V3+ as it is not supported in V1.
-        if (!ProductVersionValidator.verifyServerSupport(config, ent.getConsumer(),
-            sub.getProduct().getAttributes())) {
-            throw new CertVersionConflictException(i18n.tr("The server does not support " +
-                "subscriptions requiring V3 certificates."));
-        }
-
         // Check to make sure that the consumer supports the required cert
         // versions for all attributes.
         if (!ProductVersionValidator.verifyClientSupport(ent.getConsumer(),
@@ -209,22 +201,6 @@ public class DefaultEntitlementCertServiceAdapter extends
     private boolean shouldGenerateV3(Entitlement entitlement) {
         String entitlementVersion = entitlement.getConsumer()
             .getFact("system.certificate_version");
-
-        // REMOVE ME: This fact is being provided by our spec tests
-        // in order to bypass the default disableCertV3=true config
-        // property. There is no way for the spec tests to determine
-        // if v3 is disabled, so this is a TEMPORARY HACK to allow
-        // the tests to run correctly.
-        //
-        // This should be removed along with certV3IsEnabled once all
-        // other services ready for V3 certificates.
-        boolean testConsumer = entitlement.getConsumer()
-            .hasFact("system.testing");
-
-        if (!testConsumer && !this.config.certV3IsEnabled()) {
-            return false;
-        }
-
         return entitlementVersion != null && entitlementVersion.startsWith("3.");
     }
 
@@ -296,21 +272,10 @@ public class DefaultEntitlementCertServiceAdapter extends
         // likely going to generate a certificate too large for the CDN, and return an
         // informative error message to the user.
         if (contentCounter > X509ExtensionUtil.V1_CONTENT_LIMIT) {
-            String cause;
-            if (config.certV3IsEnabled()) {
-                cause = i18n.tr("Too many content sets for certificate {0}. A newer " +
+            String cause = i18n.tr("Too many content sets for certificate {0}. A newer " +
                     "client may be available to address this problem. " +
                     "See kbase https://access.redhat.com/knowledge/node/129003 for more " +
                     "information.", ent.getPool().getProductName());
-            }
-            // TODO This can be removed once the candlepin.enable_cert_v3 config
-            //      option is removed.
-            else {
-                cause = i18n.tr("The support of V3 certificates is not enabled on the " +
-                                "server and is required for large content set " +
-                                "subscription: {0}", ent.getPool().getProductName());
-            }
-
             throw new CertificateSizeException(cause);
         }
 
