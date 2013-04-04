@@ -14,17 +14,18 @@
  */
 package org.candlepin.sync;
 
-import static org.junit.Assert.assertEquals;
-
-import org.candlepin.config.Config;
-import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerType;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.junit.Test;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.HashMap;
+
+import org.candlepin.config.Config;
+import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.test.TestUtil;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.junit.Test;
 
 /**
  * ConsumerExporterTest
@@ -49,15 +50,29 @@ public class ConsumerExporterTest {
 
         exporter.export(mapper, writer, consumer, "/subscriptions", "/candlepin");
 
-        assertEquals("{\"uuid\":\"" + consumer.getUuid() + "\"," +
-                     "\"name\":\"" + consumer.getName() + "\"," +
-                     "\"type\":" +
-                     "{\"id\":\"" + ctype.getId() + "\"," +
-                     "\"label\":\"" + ctype.getLabel() + "\"," +
-                     "\"manifest\":" + ctype.isManifest() + "}," +
-                     "\"owner\":null," +
-                     "\"urlWeb\":\"/subscriptions\"," +
-                     "\"urlApi\":\"/candlepin\"}",
-            writer.toString());
+        StringBuffer json = new StringBuffer();
+        json.append("{\"uuid\":\"").append(consumer.getUuid()).append("\",");
+        json.append("\"name\":\"").append(consumer.getName()).append("\",");
+        json.append("\"type\":");
+        json.append("{\"id\":\"").append(ctype.getId()).append("\",");
+        json.append("\"label\":\"").append(ctype.getLabel()).append("\",");
+        json.append("\"manifest\":").append(ctype.isManifest()).append("},");
+        json.append("\"owner\":null,");
+        json.append("\"urlWeb\":\"/subscriptions\",");
+        json.append("\"urlApi\":\"/candlepin\"}");
+        assertTrue(TestUtil.isJsonEqual(json.toString(), writer.toString()));
+
+        // change sibling order to ensure that isJsonEqual can reconcile
+        json = new StringBuffer();
+        json.append("{\"uuid\":\"").append(consumer.getUuid()).append("\",");
+        json.append("\"type\":");
+        json.append("{\"id\":\"").append(ctype.getId()).append("\",");
+        json.append("\"label\":\"").append(ctype.getLabel()).append("\",");
+        json.append("\"manifest\":").append(ctype.isManifest()).append("},");
+        json.append("\"owner\":null,");
+        json.append("\"name\":\"").append(consumer.getName()).append("\",");
+        json.append("\"urlApi\":\"/candlepin\",");
+        json.append("\"urlWeb\":\"/subscriptions\"}");
+        assertTrue(TestUtil.isJsonEqual(json.toString(), writer.toString()));
     }
 }
