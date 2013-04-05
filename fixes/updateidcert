@@ -67,6 +67,9 @@ if __name__ == "__main__":
     parser.add_option("-d", "--database",
                       dest="db", default="candlepin",
                       help="database name to use")
+    parser.add_option("-r", "--relink",
+                      dest="relink", action="store_true", default=False,
+                      help="relink an existing identity cert")
 
     (options, args) = parser.parse_args()
 
@@ -88,6 +91,9 @@ if __name__ == "__main__":
     cert = data['idCert']
     serial = cert['serial']
 
+    print "relink: %s" % options.relink
+    print "not relink: %s" % (not options.relink)
+
     # insert the CertificateSerial first
     cert_serial_insert = """INSERT INTO cp_cert_serial (id, created, updated,
         collected, expiration, revoked) VALUES (%s, '%s', '%s', %s, '%s', %s)
@@ -95,7 +101,9 @@ if __name__ == "__main__":
     insert_stmt = cert_serial_insert % (
         serial['id'], serial['created'], serial['updated'],
         serial['collected'], serial['expiration'], serial['revoked'])
-    run_psql(insert_stmt, options.dbuser, options.db, options.debug)
+
+    if (not options.relink):
+        run_psql(insert_stmt, options.dbuser, options.db, options.debug)
 
     # insert the IdentityCertificate (referencing the above serial)
     cert_insert = """INSERT INTO cp_id_cert (id, created, updated, cert,
@@ -103,7 +111,9 @@ if __name__ == "__main__":
     insert_stmt = cert_insert % (
         cert['id'], cert['created'], cert['updated'], cert['cert'],
         cert['key'], cert['serial']['id'])
-    run_psql(insert_stmt, options.dbuser, options.db, options.debug)
+
+    if (not options.relink):
+        run_psql(insert_stmt, options.dbuser, options.db, options.debug)
 
     # now associate the UpstreamConsumer with the IdentityCertificate
     upstream_update = """UPDATE cp_upstream_consumer set consumer_idcert_id =
