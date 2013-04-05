@@ -25,7 +25,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.8.1
+Version: 0.8.2
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -345,6 +345,24 @@ fi
 
 
 %changelog
+* Fri Apr 05 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.2-1
+- remove Fedora 16 and Fedora 17 releaser for Katello (msuchy@redhat.com)
+- require candlepin-deps 0.1.5 or greater (jesusr@redhat.com)
+- Proper comparison between 2 strings of json data (wpoteat@redhat.com)
+- 909467: Now checks stacked entitlements.  Added tests (ckozak@redhat.com)
+- fix scl deps in spec file (cduryee@redhat.com)
+- fix file docstring (jesusr@redhat.com)
+- A developer script used to attach idcert to upstream consumer (jesusr@redhat.com)
+- 909467: warning on architecture mismatch (ckozak@redhat.com)
+- Updates to manifest data. (wpoteat@redhat.com)
+- findbugs: make inner classes static (jmrodri@gmail.com)
+- findbugs: remove unread field: poolManager (jmrodri@gmail.com)
+- findbugs: Possible null pointer dereference of user (jmrodri@gmail.com)
+- findbugs: implement equals() when implementing compareTo (jmrodri@gmail.com)
+- Changes to database update scripts (wpoteat@redhat.com)
+- 914717: rct cat-manifest fails to report Contract from the embedded
+  entitlement cert (wpoteat@redhat.com)
+
 * Mon Apr 01 2013 William Poteat <wpoteat@redhat.com> 0.8.1-1
 - Enable host to guest mapping for hosted mode via an attribute.
   (awood@redhat.com)
