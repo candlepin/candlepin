@@ -18,14 +18,6 @@ blacklist =
 disttag = .el6
 blacklist =
 
-[katello-thirdparty-candlepin-fedora16]
-disttag = .fc16
-blacklist =
-
-[katello-thirdparty-candlepin-fedora17]
-disttag = .fc17
-blacklist =
-
 [katello-thirdparty-candlepin-fedora18]
 disttag = .fc18
 blacklist =
