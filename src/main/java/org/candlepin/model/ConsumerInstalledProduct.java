@@ -41,7 +41,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_consumer_installed_products")
+@Table(name = "cp_cnsmr_installed_products")
 public class ConsumerInstalledProduct extends AbstractHibernateObject {
 
     @Id
