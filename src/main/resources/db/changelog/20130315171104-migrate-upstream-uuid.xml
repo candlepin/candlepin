@@ -8,7 +8,7 @@
 
     <changeSet id="20130315171104-1" author="jesusr">
         <preConditions onFail="MARK_RAN">
-            <columnExists tableName="cp_import_record" columnName="upstream_id" />
+            <columnExists tableName="cp_import_record" columnName="upstream_name" />
         </preConditions>
         <comment>Create Upstream Consumer records</comment>
         <!-- See http://www.liquibase.org/manual/refactoring_commands -->
@@ -31,7 +31,7 @@
 
     <changeSet id="20130315171104-2" author="jesusr">
         <preConditions onFail="MARK_RAN">
-            <columnExists tableName="cp_import_record" columnName="upstream_id" />
+            <columnExists tableName="cp_import_record" columnName="upstream_name" />
         </preConditions>
         <comment>Link UpstreamConsumers to Owners</comment>
         <sql>
