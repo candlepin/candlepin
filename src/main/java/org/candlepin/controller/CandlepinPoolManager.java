@@ -194,7 +194,8 @@ public class CandlepinPoolManager implements PoolManager {
                 .retrieveFreeEntitlementsOfPool(existingPool, lifo).iterator();
 
             long consumed = existingPool.getConsumed();
-            while ((consumed > existingPool.getQuantity()) && iter.hasNext()) {
+            long existing = existingPool.getQuantity();
+            while (consumed > existing && iter.hasNext()) {
                 Entitlement e = iter.next();
                 revokeEntitlement(e);
                 consumed -= e.getQuantity();
