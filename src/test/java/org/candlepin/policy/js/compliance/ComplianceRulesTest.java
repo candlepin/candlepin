@@ -213,6 +213,30 @@ public class ComplianceRulesTest {
         assertEquals("partial", status.getStatus());
     }
 
+    @Test
+    public void testMultiArchitectureMatch() {
+        Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
+        c.setFact("uname.machine", "x86_64");
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+        ents.add(mockEntitlement(c, "Awesome Product", PRODUCT_1));
+        ents.get(0).getPool().addProductAttribute(new ProductPoolAttribute("arch",
+            "PPC64,x86_64", "Awesome Product"));
+        ents.add(mockEntitlement(c, "Awesome Product", PRODUCT_2));
+        ents.get(1).getPool().addProductAttribute(new ProductPoolAttribute("arch",
+            "x86_64", "Awesome Product"));
+        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+
+        // Our one entitlement should not cover both of these:
+        assertEquals(2, status.getCompliantProducts().size());
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(0, status.getPartiallyCompliantProducts().size());
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_2));
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_1));
+        assertEquals("valid", status.getStatus());
+    }
+
     /*
      * Test an installed product which has a normal non-stacked entitlement, but to a
      * product which does not cover sufficient sockets for the system.
