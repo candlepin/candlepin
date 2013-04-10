@@ -1,4 +1,4 @@
-// Version: 2.1
+// Version: 2.2
 
 /*
  * Default Candlepin rule set.
@@ -1074,13 +1074,15 @@ var Compliance = {
         // TODO: don't use java sets
         var compliant_stack_ids = [];
         var non_compliant_stack_ids = [];
-
         var separator = Entitlement.get_attribute_context().prodAttrSeparator;
+        if (typeof separator == "undefined") {
+            separator = ",";
+        }
         log.debug("Checking compliance status for consumer: " + consumer.uuid + " on date: " + ondate);
         var entitlementsOnDate = Compliance.filterEntitlementsByDate(entitlements, ondate);
         for (var k = 0; k < entitlementsOnDate.length; k++) {
             var e = entitlementsOnDate[k];
-
+            log.debug("SEPARATOR: " + separator);
             log.debug("  checking entitlement: " + e.id);
             relevant_pids = find_relevant_pids(e, consumer);
             log.debug("    relevant products: " + relevant_pids);
@@ -1205,7 +1207,7 @@ var Compliance = {
         if (!architectureMatches(ent.pool.getProductAttribute('arch'),
                 consumer.facts['uname.machine'],
                 consumer.type.label,
-                context.prodAttrSeparator)) {
+                separator)) {
             log.debug("  Entitlement does not cover architecture: " + consumer.facts['uname.machine']);
             return false;
         }

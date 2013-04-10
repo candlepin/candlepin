@@ -78,20 +78,29 @@ public class ImporterTest {
     private I18n i18n;
     private static final String MOCK_JS_PATH = "/tmp/empty.js";
     private CandlepinCommonTestConfig config;
+    private File tempDir;
 
     @Before
-    public void init() throws FileNotFoundException, URISyntaxException {
+    public void init() throws URISyntaxException, IOException {
         mapper = SyncUtils.getObjectMapper(new Config(new HashMap<String, String>()));
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         config = new CandlepinCommonTestConfig();
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp");
+        tempDir = new SyncUtils(config).makeTempDir("ImporterTest");
 
         PrintStream ps = new PrintStream(new File(this.getClass()
             .getClassLoader().getResource("candlepin_info.properties").toURI()));
         ps.println("version=0.0.3");
         ps.println("release=1");
         ps.close();
+    }
 
+    @After
+    public void cleanup() {
+        for (File f : tempDir.listFiles()) {
+            f.delete();
+        }
+        tempDir.delete();
     }
 
     @Test
@@ -103,9 +112,9 @@ public class ImporterTest {
          * make sure version is > ABC
          */
         Date now = new Date();
-        File file = createFile("/tmp/meta", "0.0.3", now,
+        File file = createFile("meta", "0.0.3", now,
             "test_user", "prefix");
-        File actual = createFile("/tmp/meta.json", "0.0.3", now,
+        File actual = createFile("meta.json", "0.0.3", now,
             "test_user", "prefix");
         ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
         ExporterMetadata em = new ExporterMetadata();
@@ -132,9 +141,9 @@ public class ImporterTest {
 
     @Test
     public void firstRun() throws Exception {
-        File f = createFile("/tmp/meta", "0.0.3", new Date(),
+        File f = createFile("meta", "0.0.3", new Date(),
             "test_user", "prefix");
-        File actualmeta = createFile("/tmp/meta.json", "0.0.3", new Date(),
+        File actualmeta = createFile("meta.json", "0.0.3", new Date(),
             "test_user", "prefix");
         ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(null);
@@ -150,7 +159,7 @@ public class ImporterTest {
     @Test
     public void oldImport() throws Exception {
         // actualmeta is the mock for the import itself
-        File actualmeta = createFile("/tmp/meta.json", "0.0.3", getDateBeforeDays(10),
+        File actualmeta = createFile("meta.json", "0.0.3", getDateBeforeDays(10),
             "test_user", "prefix");
         ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
         // emc is the mock for lastrun (i.e., the most recent import in CP)
@@ -178,7 +187,7 @@ public class ImporterTest {
     public void sameImport() throws Exception {
         // actualmeta is the mock for the import itself
         Date date = getDateBeforeDays(10);
-        File actualmeta = createFile("/tmp/meta.json", "0.0.3", date,
+        File actualmeta = createFile("meta.json", "0.0.3", date,
             "test_user", "prefix");
         ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
         // emc is the mock for lastrun (i.e., the most recent import in CP)
@@ -226,7 +235,7 @@ public class ImporterTest {
         // this tests bz #790751
         Date importDate = getDateBeforeDays(10);
         // actualmeta is the mock for the import itself
-        File actualmeta = createFile("/tmp/meta.json", "0.0.3", importDate,
+        File actualmeta = createFile("meta.json", "0.0.3", importDate,
             "test_user", "prefix");
         ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
         // em is the mock for lastrun (i.e., the most recent import in CP)
@@ -244,7 +253,7 @@ public class ImporterTest {
 
     @Test(expected = ImporterException.class)
     public void nullType() throws ImporterException, IOException {
-        File actualmeta = createFile("/tmp/meta.json", "0.0.3", new Date(),
+        File actualmeta = createFile("meta.json", "0.0.3", new Date(),
             "test_user", "prefix");
         try {
             Importer i = new Importer(null, null, null, null, null, null, null,
@@ -260,7 +269,7 @@ public class ImporterTest {
 
     @Test(expected = ImporterException.class)
     public void expectOwner() throws ImporterException, IOException {
-        File actualmeta = createFile("/tmp/meta.json", "0.0.3", new Date(),
+        File actualmeta = createFile("meta.json", "0.0.3", new Date(),
             "test_user", "prefix");
         ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
         when(emc.lookupByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, null))
@@ -310,7 +319,7 @@ public class ImporterTest {
 
         File archive = new File("/tmp/file.zip");
         ZipOutputStream out = new ZipOutputStream(new FileOutputStream(archive));
-        out.putNextEntry(new ZipEntry("This is just a zip file with no content"));
+        out.putNextEntry(new ZipEntry("no_content"));
         out.close();
 
         try {
@@ -404,7 +413,7 @@ public class ImporterTest {
         out.write("This is the placeholder for the signature file".getBytes());
         File ceArchive = new File("/tmp/consumer_export.zip");
         ZipOutputStream cezip = new ZipOutputStream(new FileOutputStream(ceArchive));
-        cezip.putNextEntry(new ZipEntry("This is just a zip file with no content"));
+        cezip.putNextEntry(new ZipEntry("no_content"));
         cezip.close();
         addFileToArchive(out, ceArchive);
         out.close();
@@ -505,7 +514,7 @@ public class ImporterTest {
         File ruleDir = mock(File.class);
         File[] rulesFiles = createMockJsFile(MOCK_JS_PATH);
         when(ruleDir.listFiles()).thenReturn(rulesFiles);
-        File actualmeta = createFile("/tmp/meta.json", "0.0.3", new Date(),
+        File actualmeta = createFile("meta.json", "0.0.3", new Date(),
             "test_user", "prefix");
         // this is the hook to stop testing. we confirm that the archive component tests
         //  are passed and then jump out instead of trying to fake the actual file
@@ -566,7 +575,7 @@ public class ImporterTest {
                  String username, String prefix)
         throws JsonGenerationException, JsonMappingException, IOException {
 
-        File f = new File(filename);
+        File f = new File(tempDir, filename);
         Meta meta = new Meta(version, date, username, prefix);
         mapper.writeValue(f, meta);
         return f;
