@@ -1076,6 +1076,9 @@ var Compliance = {
         var non_compliant_stack_ids = [];
 
         var separator = Entitlement.get_attribute_context().prodAttrSeparator;
+        if (typeof separator === "undefined") {
+            separator = ",";
+        }
         log.debug("Checking compliance status for consumer: " + consumer.uuid + " on date: " + ondate);
         var entitlementsOnDate = Compliance.filterEntitlementsByDate(entitlements, ondate);
         for (var k = 0; k < entitlementsOnDate.length; k++) {
@@ -1205,7 +1208,7 @@ var Compliance = {
         if (!architectureMatches(ent.pool.getProductAttribute('arch'),
                 consumer.facts['uname.machine'],
                 consumer.type.label,
-                context.prodAttrSeparator)) {
+                separator)) {
             log.debug("  Entitlement does not cover architecture: " + consumer.facts['uname.machine']);
             return false;
         }
