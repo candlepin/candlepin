@@ -98,19 +98,41 @@ describe 'Entitlement Certificate' do
     sub.endDate.should == ent.endDate.to_date
   end
 
-  it 'those in excess will be deleted when existing subscription quantity is decreased' do
+  it 'single entitlement in excess will be deleted when existing subscription quantity is decreased' do
+      # this entitlement makes the counts inconclusive
+      @system.unbind_entitlement(@entitlement.id)
       prod = create_product(nil, nil, {:attributes => {"multi-entitlement" => "yes"}})
       sub = @cp.create_subscription(@owner['key'], prod.id, 10)
       @cp.refresh_pools(@owner['key'])
       pool = @cp.list_pools({:owner => @owner['id'], :product => prod['id']})[0]
 
       @system.consume_pool(pool['id'], {:quantity => 6})
+      @system.list_certificates().size.should == 1
       sub.quantity = sub.quantity.to_i - 5
       @cp.update_subscription(sub)
 
       @cp.refresh_pools(@owner['key'])
 
-      @system.list_certificates().size.should == 1
+      @system.list_certificates().size.should == 0
+  end
+
+  it 'multiple entitlement in excess will be deleted when existing subscription quantity is decreased' do
+      # this entitlement makes the counts inconclusive
+      @system.unbind_entitlement(@entitlement.id)
+      prod = create_product(nil, nil, {:attributes => {"multi-entitlement" => "yes"}})
+      sub = @cp.create_subscription(@owner['key'], prod.id, 10)
+      @cp.refresh_pools(@owner['key'])
+      pool = @cp.list_pools({:owner => @owner['id'], :product => prod['id']})[0]
+
+      for i in 0..4
+          @system.consume_pool(pool['id'], {:quantity => 2})
+      end
+      @system.list_certificates().size.should == 5
+
+      sub.quantity = sub.quantity.to_i - 5
+      @cp.update_subscription(sub)
+      @cp.refresh_pools(@owner['key'])
+      @system.list_certificates().size.should == 2
   end
 
   it 'will be regenerated when existing subscription\'s quantity and dates are changed' do
