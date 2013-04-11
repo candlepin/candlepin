@@ -100,7 +100,7 @@ describe 'Entitlement Certificate' do
 
   it 'single entitlement in excess will be deleted when existing subscription quantity is decreased' do
       # this entitlement makes the counts inconclusive
-      @cp.unbind_entitlement(@entitlement.id)
+      @system.unbind_entitlement(@entitlement.id)
       prod = create_product(nil, nil, {:attributes => {"multi-entitlement" => "yes"}})
       sub = @cp.create_subscription(@owner['key'], prod.id, 10)
       @cp.refresh_pools(@owner['key'])
@@ -118,7 +118,7 @@ describe 'Entitlement Certificate' do
 
   it 'multiple entitlement in excess will be deleted when existing subscription quantity is decreased' do
       # this entitlement makes the counts inconclusive
-      @cp.unbind_entitlement(@entitlement.id)
+      @system.unbind_entitlement(@entitlement.id)
       prod = create_product(nil, nil, {:attributes => {"multi-entitlement" => "yes"}})
       sub = @cp.create_subscription(@owner['key'], prod.id, 10)
       @cp.refresh_pools(@owner['key'])

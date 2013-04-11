@@ -595,7 +595,7 @@ class Candlepin
 
   def unbind_entitlement(eid, params={})
     uuid = params[:uuid] || @uuid
-    delete("/entitlements/#{eid}")
+    delete("/consumers/#{uuid}/entitlements/#{eid}")
   end
 
   def autobind_dryrun(consumer_id, service_level=nil)
