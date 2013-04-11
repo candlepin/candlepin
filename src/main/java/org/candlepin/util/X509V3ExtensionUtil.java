@@ -442,11 +442,6 @@ public class X509V3ExtensionUtil extends X509Util{
         for (Content c : contents) {
             String path = c.getPath();
 
-            // Oracle stores the empty string as NULL.
-            if (path == null) {
-                path = "";
-            }
-
             if (treeDebug) {
                 log.debug(path);
             }
