@@ -1082,7 +1082,7 @@ public class ComplianceRulesTest {
         ent1.getPool().setProductAttribute("sockets", "4", PRODUCT_1);
 
         Entitlement ent2 = mockBaseStackedEntitlement(c, STACK_ID_1, PRODUCT_2, PRODUCT_3);
-        ent2.getPool().setProductAttribute("cores", "8", PRODUCT_2);
+        ent2.getPool().setProductAttribute("cores", "32", PRODUCT_2);
 
         when(entCurator.listByConsumer(eq(c))).thenReturn(Arrays.asList(ent1, ent2));
 

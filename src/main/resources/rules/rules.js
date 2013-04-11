@@ -311,6 +311,19 @@ var FactValueCalculator = {
                     consumer.facts[ATTRIBUTES_TO_CONSUMER_FACTS[attr]] : 1
             var ramGb = parseInt(consumerRam) / 1024 / 1024;
             return Math.round(ramGb);
+        },
+
+        cores: function (attr, consumer) {
+            log.debug("Calculating cores fact value.");
+            var consumerSockets = FactValueCalculator.getFact(SOCKETS_ATTRIBUTE, consumer);
+
+            // Use the 'default' calculator to get the RAW cores value from the consumer.
+            var consumerCoresPerSocket =
+                FactValueCalculator.calculators.default(attr, consumer);
+
+            var cores = consumerCoresPerSocket * consumerSockets;
+            log.debug("Consumer has " + cores + " cores.");
+            return cores;
         }
     },
 
