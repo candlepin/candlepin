@@ -415,6 +415,28 @@ public class ComplianceRulesTest {
     }
 
     @Test
+    public void testComplianceCountsZeroPoolSocketsAsNotSet() {
+        // Consumer with 8 sockets:
+        Consumer c = mockConsumer(PRODUCT_1);
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+
+        ents.add(mockEntitlement(c, "Awesome Product", PRODUCT_1));
+        ents.get(0).getPool().addProductAttribute(new ProductPoolAttribute("sockets",
+            "0", PRODUCT_1));
+
+        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(0, status.getPartiallyCompliantProducts().size());
+        assertEquals(1, status.getCompliantProducts().size());
+        assertEquals(0, status.getPartialStacks().size());
+
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_1));
+    }
+
+    @Test
     public void testComplianceCountsUndefinedPoolSocketsAsInfinite() {
         // Consumer with 8 sockets:
         Consumer c = mockConsumer(PRODUCT_1);

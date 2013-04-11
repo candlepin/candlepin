@@ -75,7 +75,14 @@ function createPool(pool) {
         for (var k = 0; k < attrs.length; k++) {
             var attr = attrs[k];
             if (attrName == attr.name) {
-                return attr.value;
+                var value = attr.value;
+
+                // An attribute is considered not set if it
+                // it has a value of 0.
+                if (value === 0 || value === "0") {
+                    return null;
+                }
+                return value;
             }
         }
         return null;
