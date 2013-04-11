@@ -194,9 +194,6 @@ public class Config {
         return getBoolean(ConfigProperties.ENV_CONTENT_FILTERING);
     }
 
-    public boolean certV3IsEnabled() {
-        return getBoolean(ConfigProperties.ENABLE_CERT_V3);
-    }
 
     protected Map<String, String> loadProperties() {
         try {

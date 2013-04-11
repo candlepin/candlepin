@@ -20,7 +20,6 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import static org.hamcrest.collection.IsCollectionContaining.hasItem;
-import static org.junit.Assert.assertThat;
 
 
 /**

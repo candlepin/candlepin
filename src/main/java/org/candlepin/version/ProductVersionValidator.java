@@ -48,6 +48,7 @@ public class ProductVersionValidator {
     // Add any product atttribute version requirements here.
     static {
         PRODUCT_ATTR_VERSION_REQUIREMENTS.put("ram", "3.1");
+        PRODUCT_ATTR_VERSION_REQUIREMENTS.put("cores", "3.1");
     }
 
     private ProductVersionValidator() {
@@ -72,8 +73,7 @@ public class ProductVersionValidator {
     public static boolean verifyServerSupport(Config config, Consumer consumer,
         Set<? extends Attribute> productAttributes) {
         String min = ProductVersionValidator.getMin(productAttributes);
-        if ((!config.certV3IsEnabled() && !consumer.hasFact("system.testing")) &&
-            ProductVersionValidator.compareVersion(min, "1.0") > 0) {
+        if (ProductVersionValidator.compareVersion(min, "1.0") > 0) {
             return false;
         }
         return true;
