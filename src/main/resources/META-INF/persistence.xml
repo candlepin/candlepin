@@ -14,7 +14,7 @@
             <property name="hibernate.connection.username" value="sa"/>
             <property name="hibernate.connection.password" value=""/>
             <property name="hibernate.show_sql" value="false" />
-
+            <property name="hibernate.ejb.interceptor" value="org.candlepin.hibernate.EmptyStringInterceptor"/>
         </properties>
     </persistence-unit>
 
@@ -40,7 +40,7 @@
             <property name="hibernate.c3p0.idle_test_period" value="300" />
             <!-- max_statements should always be 0 -->
             <property name="hibernate.c3p0.max_statements" value="0" />
-
+            <property name="hibernate.ejb.interceptor" value="org.candlepin.hibernate.EmptyStringInterceptor"/>
         </properties>
     </persistence-unit>
 
