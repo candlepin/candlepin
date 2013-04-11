@@ -52,7 +52,7 @@ import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
 import org.hibernate.annotations.MapKeyManyToMany;
-
+import org.hibernate.annotations.Type;
 
 /**
  * A Consumer is the entity that uses a given Entitlement. It can be a user,
@@ -91,7 +91,8 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @Column(length = 32)
     private String entitlementStatus;
 
-    @Column(length = 32, nullable = false)
+    @Column(length = 32, nullable = true)
+    @Type(type = "org.candlepin.hibernate.EmptyStringUserType")
     private String serviceLevel;
 
     // for selecting Y/Z strean
