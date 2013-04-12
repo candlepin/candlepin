@@ -99,8 +99,6 @@ public class ConfigProperties {
 
     public static final String PRODUCT_CACHE_MAX = "candlepin.cache.product_cache_max";
 
-    public static final String ENABLE_CERT_V3 = "candlepin.enable_cert_v3";
-
     public static final String INTEGER_FACTS =
         "candlepin.integer_facts";
     private static final String INTEGER_FACT_LIST =
@@ -224,10 +222,6 @@ public class ConfigProperties {
                  */
                 this.put(PRODUCT_CACHE_MAX, "100");
 
-                /**
-                 * By default, disable cert v3.
-                 */
-                this.put(ENABLE_CERT_V3, "false");
                 /**
                  * As we do math on some facts and attributes, we need to constrain
                  * some values
