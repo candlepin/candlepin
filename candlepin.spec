@@ -101,7 +101,7 @@ BuildRequires: apache-mime4j
 Requires: java >= 0:1.6.0
 #until cpsetup is removed
 Requires: wget
-Requires: liquibase >= 2.0.3
+Requires: liquibase >= 2.0.5
 Requires: postgresql-jdbc
 
 # specific requires
