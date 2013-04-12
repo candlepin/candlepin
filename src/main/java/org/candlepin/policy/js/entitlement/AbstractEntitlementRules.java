@@ -62,7 +62,6 @@ public abstract class AbstractEntitlementRules implements Enforcer {
 
     protected RulesObjectMapper objectMapper = RulesObjectMapper.instance();
 
-    protected static final String PROD_ARCHITECTURE_SEPARATOR = ",";
     protected static final String PRE_PREFIX = "pre_";
     protected static final String POST_PREFIX = "post_";
     protected static final String GLOBAL_PRE_FUNCTION = PRE_PREFIX + "global";

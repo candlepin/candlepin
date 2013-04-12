@@ -82,7 +82,6 @@ public class ManifestEntitlementRules extends AbstractEntitlementRules implement
         // not get serialized along with the Consumer.
         args.put("consumerEntitlements", consumer.getEntitlements());
         args.put("pool", pool);
-        args.put("prodAttrSeparator", PROD_ARCHITECTURE_SEPARATOR);
         args.put("standalone", config.standalone());
 
         // Can't serialize these objects.
