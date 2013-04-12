@@ -37,8 +37,6 @@ import com.google.inject.Inject;
  */
 public class ComplianceRules {
 
-    protected static final String PROD_ARCHITECTURE_SEPARATOR = ",";
-
     private EntitlementCurator entCurator;
     private JsRunner jsRules;
     private RulesObjectMapper mapper;
@@ -68,7 +66,6 @@ public class ComplianceRules {
         args.put("consumer", c);
         args.put("entitlements", ents);
         args.put("ondate", date);
-        args.put("prodAttrSeparator", PROD_ARCHITECTURE_SEPARATOR);
         args.put("log", log, false);
 
         // Convert the JSON returned into a ComplianceStatus object:

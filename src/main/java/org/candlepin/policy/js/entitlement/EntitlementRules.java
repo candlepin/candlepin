@@ -84,7 +84,6 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         // not get serialized along with the Consumer.
         context.put("consumerEntitlements", consumer.getEntitlements());
         context.put("pool", pool);
-        context.put("prodAttrSeparator", PROD_ARCHITECTURE_SEPARATOR);
         context.put("standalone", config.standalone());
         context.put("quantity", quantity);
 
