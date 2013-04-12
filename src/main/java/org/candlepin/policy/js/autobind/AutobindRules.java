@@ -47,7 +47,6 @@ import com.google.inject.Inject;
 public class AutobindRules {
 
     protected static final String SELECT_POOL_FUNCTION = "select_pools";
-    protected static final String PROD_ARCHITECTURE_SEPARATOR = ",";
 
     private JsRunner jsRules;
     private static Logger log = Logger.getLogger(AutobindRules.class);
@@ -92,7 +91,6 @@ public class AutobindRules {
         args.put("serviceLevelOverride", serviceLevelOverride);
         args.put("pools", pools.toArray());
         args.put("products", productIds);
-        args.put("prodAttrSeparator", PROD_ARCHITECTURE_SEPARATOR);
         args.put("log", log, false);
         args.put("compliance", compliance);
         args.put("exemptList", exemptLevels);
