@@ -21,8 +21,17 @@ var CORES_ATTRIBUTE = "cores";
 var ARCH_ATTRIBUTE = "arch";
 var RAM_ATTRIBUTE = "ram";
 
-// These product attributes are considered when
-// determining coverage of a non stacked entitlement.
+
+/**
+ *  These product attributes are considered when
+ *  determining coverage of a consumer. Adding an
+ *  attribute here, tells the CoverageCalculator
+ *  to enforce the attribute.
+ *
+ *  NOTE: If you add an attribute to here, you MUST
+ *        map it to a corresponding fact in
+ *        ATTRIBUTES_TO_CONSUMER_FACTS.
+ */
 var ATTRIBUTES_AFFECTING_COVERAGE = [
     ARCH_ATTRIBUTE,
     SOCKETS_ATTRIBUTE,
@@ -30,22 +39,40 @@ var ATTRIBUTES_AFFECTING_COVERAGE = [
     RAM_ATTRIBUTE
 ];
 
-// These product attributes are considered when determining
-// coverage of a stack of entitlements.
+/**
+ * A FactValueCalculator allows the rules to determine which
+ * consumer fact is associated with a particular product
+ * attribute, and determines the calculated fact value
+ * that should be used when determining coverage. The attribute
+ * should be mapped to the fact here.
+ *
+ * NOTE: Can't define these inside object creation.
+ *       JS is funny in that you can't seem to use
+ *       a var for the key inside.
+ *
+ */
+var ATTRIBUTES_TO_CONSUMER_FACTS = {};
+ATTRIBUTES_TO_CONSUMER_FACTS[SOCKETS_ATTRIBUTE] = SOCKET_FACT;
+ATTRIBUTES_TO_CONSUMER_FACTS[CORES_ATTRIBUTE] = CORES_FACT;
+ATTRIBUTES_TO_CONSUMER_FACTS[ARCH_ATTRIBUTE] = ARCH_FACT;
+ATTRIBUTES_TO_CONSUMER_FACTS[RAM_ATTRIBUTE] = RAM_FACT;
+
+
+/**
+ *  These product attributes are considered when determining
+ *  coverage of a consumer by a stack. Add an attribute here
+ *  to enable stacking on the product attribute.
+ *
+ *  NOTE: If adding an attribute, be sure to also add it to
+ *        ATTRIBUTES_AFFECTING_COVERAGE so that the
+ *        CoverageCalculator knows to enforce it.
+ */
 var STACKABLE_ATTRIBUTES = [
     SOCKETS_ATTRIBUTE,
     CORES_ATTRIBUTE,
     ARCH_ATTRIBUTE
 ];
 
-// NOTE: Can't define these inside object creation.
-//       JS is funny in that you can't seem to use
-//       a var for the key inside.
-var ATTRIBUTES_TO_CONSUMER_FACTS = {};
-ATTRIBUTES_TO_CONSUMER_FACTS[SOCKETS_ATTRIBUTE] = SOCKET_FACT;
-ATTRIBUTES_TO_CONSUMER_FACTS[CORES_ATTRIBUTE] = CORES_FACT;
-ATTRIBUTES_TO_CONSUMER_FACTS[ARCH_ATTRIBUTE] = ARCH_FACT;
-ATTRIBUTES_TO_CONSUMER_FACTS[RAM_ATTRIBUTE] = RAM_FACT;
 
 function entitlement_name_space() {
     return Entitlement;
@@ -296,37 +323,66 @@ function getPoolCores(pool) {
     return getPoolQuantity(pool, CORES_ATTRIBUTE);
 }
 
+/**
+ * A FactValueCalculator allows the rules to determine which
+ * consumer fact is associated with a particular product
+ * attribute, and determines the calculated fact value
+ * that should be used when determining coverage.
+ */
 var FactValueCalculator = {
+    /**
+     * 'calculators': Defines a mapping of product attribute to a function that
+     *                calculates the consumer value that should be used for
+     *                comparison when determining coverage.
+     *
+     *                The mapped function should have the following signature:
+     *                     function (prodAttr, consumer)
+     */
     calculators: {
-        // By default, get the raw fact, or return 1.
-        default: function (attr, consumer) {
+        /*
+         * The default calculator used if there is no custom calculator
+         * defined for the product attribute. The RAW consumer fact value
+         * is returned, or otherwise 1.
+         */
+        default: function (prodAttr, consumer) {
             log.debug(JSON.stringify(ATTRIBUTES_TO_CONSUMER_FACTS));
-            var factKey = ATTRIBUTES_TO_CONSUMER_FACTS[attr];
+            var factKey = ATTRIBUTES_TO_CONSUMER_FACTS[prodAttr];
             var factVal = consumer.facts[factKey];
             log.debug("  #FACT# Looking for " + factKey + " and found " + factVal);
 
-            return consumer.facts[ATTRIBUTES_TO_CONSUMER_FACTS[attr]] ?
-                    consumer.facts[ATTRIBUTES_TO_CONSUMER_FACTS[attr]] : 1;
+            return consumer.facts[ATTRIBUTES_TO_CONSUMER_FACTS[prodAttr]] ?
+                    consumer.facts[ATTRIBUTES_TO_CONSUMER_FACTS[prodAttr]] : 1;
         },
 
-        ram: function (attr, consumer) {
-            var factKey = ATTRIBUTES_TO_CONSUMER_FACTS[attr];
+        /**
+         * Calculates the consumer's RAM value based on its "ram" fact.
+         * RAM from the consumer must be converted to GB so that it can
+         * be compared to that specified on the product.
+         */
+        ram: function (prodAttr, consumer) {
+            var factKey = ATTRIBUTES_TO_CONSUMER_FACTS[prodAttr];
             var factVal = consumer.facts[factKey];
             log.debug("  #FACT# Looking for " + factKey + " and found " + factVal);
 
-            var consumerRam = consumer.facts[ATTRIBUTES_TO_CONSUMER_FACTS[attr]] ?
-                    consumer.facts[ATTRIBUTES_TO_CONSUMER_FACTS[attr]] : 1
+            var consumerRam = consumer.facts[ATTRIBUTES_TO_CONSUMER_FACTS[prodAttr]] ?
+                    consumer.facts[ATTRIBUTES_TO_CONSUMER_FACTS[prodAttr]] : 1
             var ramGb = parseInt(consumerRam) / 1024 / 1024;
             return Math.round(ramGb);
         },
 
-        cores: function (attr, consumer) {
+        /**
+         * Calculates the total number of cores associated with a consumer.
+         * The consumer provides us with the number of cores per socket, so
+         * we need to multiply that by the number of sockets we have to
+         * determine the total number of cores.
+         */
+        cores: function (prodAttr, consumer) {
             log.debug("Calculating cores fact value.");
             var consumerSockets = FactValueCalculator.getFact(SOCKETS_ATTRIBUTE, consumer);
 
             // Use the 'default' calculator to get the RAW cores value from the consumer.
             var consumerCoresPerSocket =
-                FactValueCalculator.calculators.default(attr, consumer);
+                FactValueCalculator.calculators.default(prodAttr, consumer);
 
             var cores = consumerCoresPerSocket * consumerSockets;
             log.debug("Consumer has " + cores + " cores.");
@@ -334,21 +390,37 @@ var FactValueCalculator = {
         }
     },
 
-    getFact: function(attr, consumer) {
-        log.debug(" #FACT# Finding for " + attr);
+    getFact: function(prodAttr, consumer) {
+        log.debug(" #FACT# Finding for " + prodAttr);
         var calculate = this.calculators.default;
-        if (attr in this.calculators) {
-            calculate = this.calculators[attr];
+        if (prodAttr in this.calculators) {
+            calculate = this.calculators[prodAttr];
             log.debug(" #FACT# Selecting custom calculator");
         }
-        return calculate(attr, consumer);
+        return calculate(prodAttr, consumer);
     }
 }
 
+/**
+ *  Determines the coverage of a consumer based on a single pool, or a stack.
+ *  Product attributes are checked based on 'conditions' and whether or not
+ *  a product attribute was set.
+ */
 var CoverageCalculator = {
 
+    /**
+     *  Returns an object that defines the conditions that are checked against
+     *  a defined product attribute. If special conditions should be checked
+     *  for a particular attribute, map the attribute to a function that checks
+     *  the condition.
+     *
+     *  NOTE: Be sure that any new function has the same signature.
+     */
     getDefaultConditions: function() {
         return {
+            /**
+             *  Checks to make sure that the architecture matches that of the consumer.
+             */
             arch: function (prodAttr, productValues, consumer) {
                 log.debug("  ### CHECKING " + prodAttr + " via arch condition");
                 var context = Entitlement.get_attribute_context();
@@ -363,6 +435,14 @@ var CoverageCalculator = {
                 return covered;
             },
 
+            /**
+             *  The default condition checks is a simple *integer* comparison that makes
+             *  sure that the specified product attribute value is >= that of the
+             *  consumer's calculated value.
+             *
+             *  NOTE: If comparing non integer attributes, a special condition should
+             *        be added to handle that case.
+             */
             default: function(prodAttr, productValues, consumer) {
                 var consumerQuantity = FactValueCalculator.getFact(prodAttr, consumer);
                 log.debug(" ## Found " + consumerQuantity + " " + prodAttr + " for consumer");
@@ -375,30 +455,60 @@ var CoverageCalculator = {
         };
     },
 
+    /**
+     *  Determines the percentage of the consumer covered by the specified pool.
+     *  The percentage is expressed in a value ranging from 0 to 1, where 1 is
+     *  100%.
+     */
     getPoolCoveragePercentage: function(pool, consumer) {
         var poolValues = this.getValues(pool, "hasProductAttribute", "getProductAttribute");
         return this.getCoveragePercentage(consumer, poolValues, this.getDefaultConditions());
     },
 
-    getStackCoveragePercentage: function(stack, consumer) {
+    /**
+     *  Determines the percentage of the consumer covered by the specified stack tracker.
+     *  The percentage is expressed in a value ranging from 0 to 1, where 1 is
+     *  100%.
+     */
+    getStackCoveragePercentage: function(stackTracker, consumer) {
         log.debug("Checking stack coverage...");
-        var stackValues = this.getValues(stack, "enforces", "getAccumulatedValue");
+        var stackValues = this.getValues(stackTracker, "enforces", "getAccumulatedValue");
         var conditions = this.getDefaultConditions();
         // TODO MS: Extend default conditions here.
         return this.getCoveragePercentage(consumer, stackValues, conditions);
     },
 
-    getValues: function (source, checkIfExists, getValue) {
+    /**
+     *  Returns the product attribute values that the source object will cover.
+     *  The values are returned as an object which maps each attribute to its value.
+     *
+     *  This function is very dynamic in nature:
+     *      source:
+     *            Can be any JS object but must define both functions below.
+     *      sourceContainsAttributeValueFunctionName:
+     *            Name of the source's function that checks if the specified attribute exists.
+     *      getValueFromSourceFunctionName:
+     *            Name of the source's function that fetchs the value of the specified attribute.
+     */
+    getValues: function (source, sourceContainsAttributeValueFunctionName, getValueFromSourceFunctionName) {
         var values = {};
         for (var attrIdx in ATTRIBUTES_AFFECTING_COVERAGE) {
             var nextAttr = ATTRIBUTES_AFFECTING_COVERAGE[attrIdx];
-            if (source[checkIfExists](nextAttr)) {
-                values[nextAttr] = source[getValue](nextAttr);
+            if (source[sourceContainsAttributeValueFunctionName](nextAttr)) {
+                values[nextAttr] = source[getValueFromSourceFunctionName](nextAttr);
             }
         }
         return values;
     },
 
+    /**
+     *  Determines the percentage of the consumer covered by the specified source
+     *  values. The supplied conditions are checked to determine coverage. Only
+     *  attribute values defined in ATTRIBUTES_AFFECTING_COVERAGE are checked.
+     *
+     *  If an attribute value is not found in the sourceValues, it is considered
+     *  to be covered.
+     */
     getCoveragePercentage: function (consumer, sourceValues, conditions) {
         var coverageCount = 0;
         for (var attrIdx in ATTRIBUTES_AFFECTING_COVERAGE) {
@@ -422,7 +532,11 @@ var CoverageCalculator = {
         return coverageCount / ATTRIBUTES_AFFECTING_COVERAGE.length;
     },
 
-    getQuantityToCoverStack : function(stack, pool, consumer) {
+    /**
+     *  Determines the quantity of entitlements needed from a pool in order
+     *  for the stack to cover a consumer.
+     */
+    getQuantityToCoverStack : function(stackTracker, pool, consumer) {
         // Check the number required for every attribute
         // and take the max.
 
@@ -445,12 +559,12 @@ var CoverageCalculator = {
             log.debug("  ## Checking quantity for " + attr);
             // No need to check this attr if it
             // is not being enforced by the stack.
-            if (!stack.enforces(attr)) {
+            if (!stackTracker.enforces(attr)) {
                 log.debug("    ## Skipping attribute because it is not being enforced.");
                 continue;
             }
 
-            var currentCovered = stack.getAccumulatedValue(attr);
+            var currentCovered = stackTracker.getAccumulatedValue(attr);
             log.debug("    ## Currently covered by stack: " + currentCovered);
             var poolQuantity = pool.getProductAttribute(attr);
             log.debug("    ## Quantity provided by pool: " + poolQuantity);
@@ -686,15 +800,35 @@ function findStackingPools(pool_class, consumer, compliance) {
     return stackToPoolMap[best_stack];
 }
 
+/**
+ *   A stack tracker is an Object that helps to track the state of
+ *   stacked entitlements. A stack changes what it provides based
+ *   on what entitlements make up the stack. For example, if we have
+ *   2 stacked entitlements providing 4 sockets, and we add another
+ *   stackable entitlement providing 4GB of RAM, then the stack
+ *   will provide 4 sockets and 4GB of ram. A stack tracker tracks
+ *   these accumulated values as entitlements are added.
+ */
 function createStackTracker() {
     return {
+        // The IDs of entitlements that have been added to this tracker.
         entitlementIds: [],
+
+        /**
+         *  The accumulated values from adding entitlements to this tracker.
+         *  This is a mapping of product attribute to the accumulated value.
+         */
         accumulatedValues: {},
 
+        // Sets the accumulated value for the specified product attribute.
         setAccumulatedValue: function(attribute, value) {
             this.accumulatedValues[attribute] = value;
         },
 
+        /**
+         *   Retrieves the accumulated value for the specified product
+         *   attribute. Returns null if it does not exist.
+         */
         getAccumulatedValue: function(attribute) {
             if (attribute in this.accumulatedValues) {
                 return this.accumulatedValues[attribute];
@@ -704,13 +838,37 @@ function createStackTracker() {
             return null;
         },
 
+        /**
+         *  Determines whether the specified product attribute is being enforced
+         *  by the stack. An attribute is being enforced if the tracker has
+         *  an accumulated value set.
+         */
         enforces: function(attribute) {
             return attribute in this.accumulatedValues;
         },
 
+        /**
+         *  Gets the set of accumulation strategies for the tracker. Strategies are
+         *  mapped product attribute to strategy function.
+         *
+         *  A strategy should define how a product attribute's value should be
+         *  accumulated for a stack. For example, the default strategy assumes
+         *  an integer value, and simply multiplys the product attribute's value
+         *  by the specified quantity and appends it to the trackers current
+         *  accumulated value for that attribute.
+         *
+         *  A strategy function must be defined with the following signature:
+         *       function (currentStackValue, poolValue, quantity);
+         *
+         *       currentStackValue: The current accumulated value in this tracker.
+         *       poolValue: The value defined by the product attribute.
+         *       quantity: The quantity to apply.
+         *
+         */
         getAccumulationStrategy: function (attr) {
 
             var strategies = {
+
                 // Assumes dealing with integers.
                 default: function (currentStackValue, poolValue, quantity) {
                     var stackValue = currentStackValue | 0;
@@ -718,6 +876,14 @@ function createStackTracker() {
                     return stackValue;
                 },
 
+                /**
+                 *  Architecture is accumulated by creating a single string of
+                 *  arch values, concatinated by the seperator. It may contain
+                 *  duplicates. This value is not affected by the quantity taken.
+                 *
+                 *  Note: Perhaps in the future, we might consider a set as the
+                 *        accumulated value.
+                 */
                 arch: function (currentStackValue, poolValue, quantity) {
                     var stackValue = currentStackValue || "";
                     if (stackValue && poolValue) {
@@ -738,6 +904,16 @@ function createStackTracker() {
             return strategy;
         },
 
+        /**
+         *  Updates the tracker's accumulated values based on the provided pool.
+         *
+         *  Accumulated values are calculated from the product attributes on a
+         *  pool. Can be used to simulate adding x entitlements to this tracker
+         *  without an actual entitlement being needed. This is helpful
+         *  when Autobind wants to track a stack without having actual entitlements
+         *  to apply. i.e I already have 4 entitlements, but I want this tracker
+         *  to behave as if I gave it x entitlement from the specified pool.
+         */
         updateAccumulatedFromPool: function (pool, quantityToTake) {
             for (var attrIdx in STACKABLE_ATTRIBUTES) {
                 var nextAttr = STACKABLE_ATTRIBUTES[attrIdx];
@@ -752,6 +928,10 @@ function createStackTracker() {
             }
         },
 
+        /**
+         *  Updates the tracker's accumulated values based on the provided
+         *  entitlement. Entitlements that are added can only be added once.
+         */
         updateAccumulatedFromEnt: function(ent) {
             if (ent.id in this.entitlementIds) {
                 // This entitlement was already added.
@@ -768,6 +948,16 @@ function createStackTracker() {
     };
 }
 
+/**
+ *  Creates a stack tracker from the specified pool and sets the
+ *  accumulated values of the pool's product attributes and sets
+ *  them to empty. This is useful for Autobind in a situation where
+ *  it comes across a stackable pool, but there are no entitlements
+ *  consumed from it. It can create a tracker based on that pool,
+ *  and the Coverage Calculator can then use it to determine how
+ *  many entitlements from this pool have to be stacked in order
+ *  to cover the consumer.
+ */
 function createStackTrackerFromPool(pool) {
     var stackTracker = createStackTracker();
     // There are no entitlements for this stack, but
