@@ -105,4 +105,17 @@
     <changeSet id="20130403095818-20" author="awood" dbms="postgresql">
         <dropNotNullConstraint tableName="cp_consumer" columnName="servicelevel"/>
     </changeSet>
+
+    <!-- Using straight SQL here since Liquibase is a little unclear on how to update columns to null -->
+    <changeSet id="20130403095818-21" author="awood" dbms="postgresql">
+        <sql>UPDATE cp_consumer SET servicelevel=null WHERE servicelevel=''</sql>
+    </changeSet>
+
+    <changeSet id="20130403095818-22" author="awood" dbms="postgresql">
+        <sql>UPDATE cp_content SET gpgurl=null WHERE gpgurl=''</sql>
+    </changeSet>
+
+    <changeSet id="20130403095818-23" author="awood" dbms="postgresql">
+        <sql>UPDATE cp_content SET contenturl=null WHERE contenturl=''</sql>
+    </changeSet>
 </databaseChangeLog>
