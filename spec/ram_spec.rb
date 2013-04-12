@@ -29,6 +29,18 @@ describe 'RAM Limiting' do
     @ram_socket_sub = @cp.create_subscription(@owner['key'], @ram_and_socket_product.id, 5,
                                               [], '18881', '1222')
 
+    # Create a stackable RAM product.
+    @stackable_ram_product = create_product(nil, random_string("Product1"), :attributes =>
+                {:version => '1.2',
+                 :ram => 2,
+                 :warning_period => 15,
+                 :support_level => 'standard',
+                 :support_type => 'excellent',
+                 :'multi-entitlement' => 'yes',
+                 :stacking_id => '2421'})
+    @stackable_ram_sub = @cp.create_subscription(@owner['key'], @stackable_ram_product.id, 10)
+
+
     # Refresh pools so that the subscription pools will be available to the test systems.
     @cp.refresh_pools(@owner['key'])
 
@@ -240,5 +252,126 @@ describe 'RAM Limiting' do
     ents.size.should == 1
   end
 
+  #
+  # Ram stacking tests
+  #
+  it 'consumer status should be green when stacking a single ram entitlement' do
+    system = consumer_client(@user, random_string('system1'), :system, nil,
+                {'system.certificate_version' => '3.1',
+                 # Simulate 2 GB of RAM as would be returned from system fact (kb)
+                 # which will be covered by the enitlement when consumed.
+                 'memory.memtotal' => '2000000',
+                 # Since cert v3 is disabled by default, configure consumer bypass.
+                 'system.testing' => 'true'})
+    installed = [
+        {'productId' => @stackable_ram_product.id,
+        'productName' => @stackable_ram_product.name}
+    ]
+    system.update_consumer({:installedProducts => installed})
+    
+    pool = find_pool(@owner.id, @stackable_ram_sub.id)
+    pool.should_not == nil
+
+    entitlement = system.consume_pool(pool.id)
+    entitlement.should_not == nil
+
+    compliance_status = @cp.get_compliance(consumer_id=system.uuid)
+    compliance_status['status'].should == 'valid'
+    compliance_status['compliant'].should == true
+    compliant_products = compliance_status['compliantProducts']
+    compliant_products.should have_key(@stackable_ram_product.id)
+    
+  end
+  
+  it 'consumer status should be green when stacking a single ram entitlement with proper quantity' do
+    system = consumer_client(@user, random_string('system1'), :system, nil,
+                {'system.certificate_version' => '3.1',
+                 # Simulate 4 GB of RAM as would be returned from system fact (kb)
+                 # which will be covered by the enitlement when consumed.
+                 'memory.memtotal' => '4000000',
+                 # Since cert v3 is disabled by default, configure consumer bypass.
+                 'system.testing' => 'true'})
+    installed = [
+        {'productId' => @stackable_ram_product.id,
+        'productName' => @stackable_ram_product.name}
+    ]
+    system.update_consumer({:installedProducts => installed})
+    
+    pool = find_pool(@owner.id, @stackable_ram_sub.id)
+    pool.should_not == nil
+
+    entitlement = system.consume_pool(pool.id, {:quantity => 2})
+    entitlement.should_not == nil
+    
+    compliance_status = @cp.get_compliance(consumer_id=system.uuid)
+    compliance_status['status'].should == 'valid'
+    compliance_status['compliant'].should == true
+    compliant_products = compliance_status['compliantProducts']
+    compliant_products.should have_key(@stackable_ram_product.id)
+    
+  end
+
+  it 'autobind should completely cover ram products' do
+    system = consumer_client(@user, random_string('system1'), :system, nil,
+                {'system.certificate_version' => '3.1',
+                 # Simulate 4 GB of RAM as would be returned from system fact (kb)
+                 # which will be covered by the enitlement when consumed.
+                 'memory.memtotal' => '4000000',
+                 # Since cert v3 is disabled by default, configure consumer bypass.
+                 'system.testing' => 'true'})
+    installed = [
+        {'productId' => @stackable_ram_product.id,
+        'productName' => @stackable_ram_product.name}
+    ]
+    system.update_consumer({:installedProducts => installed})
+    
+    entitlements = system.consume_product()
+    entitlements.size.should == 1
+    
+    entitlement = entitlements[0]
+    entitlement.should_not == nil
+    entitlement.quantity.should == 2
+
+    compliance_status = @cp.get_compliance(consumer_id=system.uuid)
+    compliance_status['status'].should == 'valid'
+    compliance_status['compliant'].should == true
+    compliant_products = compliance_status['compliantProducts']
+    compliant_products.should have_key(@stackable_ram_product.id)
+  end
+
+  it 'healing should add ram entitlements to cover consumer' do
+    system = consumer_client(@user, random_string('system1'), :system, nil,
+                {'system.certificate_version' => '3.1',
+                 # Simulate 4 GB of RAM as would be returned from system fact (kb)
+                 # which will be covered by the enitlement when consumed.
+                 'memory.memtotal' => '4000000',
+                 # Since cert v3 is disabled by default, configure consumer bypass.
+                 'system.testing' => 'true'})
+    installed = [
+        {'productId' => @stackable_ram_product.id,
+        'productName' => @stackable_ram_product.name}
+    ]
+    system.update_consumer({:installedProducts => installed})
+    
+    pool = find_pool(@owner.id, @stackable_ram_sub.id)
+    pool.should_not == nil
+
+    entitlement = system.consume_pool(pool.id)
+    entitlement.should_not == nil
+    
+    entitlements = system.consume_product()
+    entitlements.size.should == 1
+    
+    entitlement = entitlements[0]
+    entitlement.should_not == nil
+    entitlement.quantity.should == 1
+
+    compliance_status = @cp.get_compliance(consumer_id=system.uuid)
+    compliance_status['status'].should == 'valid'
+    compliance_status['compliant'].should == true
+    compliant_products = compliance_status['compliantProducts']
+    compliant_products.should have_key(@stackable_ram_product.id)
+  end
+  
 end
 

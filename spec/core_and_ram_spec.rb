@@ -173,14 +173,19 @@ describe 'Core and RAM Limiting' do
     ]
     system.update_consumer({:installedProducts => installed})
 
-    entitlements = system.consume_product(@core_and_socket_product_2.id)
-    entitlements.should == nil
+
+    pool = find_pool(@owner.id, @core_socket_sub_2.id)
+    pool.should_not == nil
+
+    entitlement = system.consume_pool(pool.id)
+    entitlement.should_not == nil
 
     compliance_status = @cp.get_compliance(consumer_id=system.uuid)
-    compliance_status['status'].should == 'invalid'
+    compliance_status['status'].should == 'partial'
     compliance_status['compliant'].should == false
-    non_compliant_products = compliance_status['nonCompliantProducts']
-    non_compliant_products[0].should == @core_and_socket_product_2.id
+    partially_compliant_products = compliance_status['partiallyCompliantProducts']
+    partially_compliant_products.size.should == 1
+    partially_compliant_products.should have_key(@core_and_socket_product_2.id)
   end
 
   it 'consumer status should be valid when consumer socket requires extra entitlement' do

@@ -1161,4 +1161,50 @@ public class ComplianceRulesTest {
         assertEquals(0, status.getCompliantProducts().size());
         assertEquals(ComplianceStatus.YELLOW, status.getStatus());
     }
+
+    // RAM stacking tests
+    @Test
+    public void productCoveredWhenStackedEntsCoverRam() {
+        Consumer c = mockConsumer(new String[]{ PRODUCT_3 });
+        c.setFact("memory.memtotal", "8000000"); // 8GB RAM
+
+        Entitlement ent1 = mockBaseStackedEntitlement(c, STACK_ID_1, PRODUCT_1, PRODUCT_3);
+        ent1.getPool().setProductAttribute("ram", "4", PRODUCT_1);
+
+        Entitlement ent2 = mockBaseStackedEntitlement(c, STACK_ID_1, PRODUCT_2, PRODUCT_3);
+        ent2.getPool().setProductAttribute("ram", "4", PRODUCT_2);
+
+        when(entCurator.listByConsumer(eq(c))).thenReturn(Arrays.asList(ent1, ent2));
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+        assertEquals(ComplianceStatus.GREEN, status.getStatus());
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(0, status.getPartiallyCompliantProducts().size());
+        assertEquals(1, status.getCompliantProducts().size());
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_3));
+    }
+
+    @Test
+    public void productPartiallyCoveredWhenStackingEntsDoesNotCoverRam() {
+        Consumer c = mockConsumer(new String[]{ PRODUCT_3 });
+        c.setFact("memory.memtotal", "8000000"); // 8GB
+
+        Entitlement ent1 = mockBaseStackedEntitlement(c, STACK_ID_1, PRODUCT_1, PRODUCT_3);
+        // Cores are not covered.
+        ent1.getPool().setProductAttribute("ram", "4", PRODUCT_1);
+
+        Entitlement ent2 = mockBaseStackedEntitlement(c, STACK_ID_1, PRODUCT_2, PRODUCT_3);
+        // Mock consumer has 8 sockets by default.
+        ent2.getPool().setProductAttribute("ram", "1", PRODUCT_1);
+
+        when(entCurator.listByConsumer(eq(c))).thenReturn(Arrays.asList(ent1, ent2));
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+        assertEquals(ComplianceStatus.YELLOW, status.getStatus());
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(1, status.getPartiallyCompliantProducts().size());
+        assertTrue(status.getPartiallyCompliantProducts().keySet().contains(PRODUCT_3));
+        assertEquals(0, status.getCompliantProducts().size());
+    }
+
 }

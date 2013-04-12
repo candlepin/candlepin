@@ -83,6 +83,7 @@ ATTRIBUTES_TO_CONSUMER_FACTS[RAM_ATTRIBUTE] = RAM_FACT;
 var STACKABLE_ATTRIBUTES = [
     SOCKETS_ATTRIBUTE,
     CORES_ATTRIBUTE,
+    RAM_ATTRIBUTE,
     ARCH_ATTRIBUTE
 ];
 
@@ -1193,7 +1194,7 @@ var Entitlement = {
 
         var productRam = parseInt(context.pool.getProductAttribute(RAM_ATTRIBUTE));
         log.debug("Product has " + productRam + "GB of RAM");
-        if (consumerRam > productRam) {
+        if (consumerRam > productRam && !context.pool.getProductAttribute("stacking_id")) {
             result.addWarning("rulewarning.unsupported.ram");
         }
         return JSON.stringify(result);
