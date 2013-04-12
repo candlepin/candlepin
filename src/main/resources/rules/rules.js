@@ -8,6 +8,21 @@
  */
 
 
+// Define our namespaces
+
+function entitlement_name_space() {
+    return Entitlement;
+}
+
+function compliance_name_space() {
+    return Compliance;
+}
+
+function autobind_name_space() {
+    return Autobind;
+}
+
+
 // Consumer fact names
 var SOCKET_FACT="cpu.cpu_socket(s)";
 var RAM_FACT = "memory.memtotal";
@@ -20,7 +35,6 @@ var SOCKETS_ATTRIBUTE = "sockets";
 var CORES_ATTRIBUTE = "cores";
 var ARCH_ATTRIBUTE = "arch";
 var RAM_ATTRIBUTE = "ram";
-
 
 /**
  *  These product attributes are considered when
@@ -57,7 +71,6 @@ ATTRIBUTES_TO_CONSUMER_FACTS[CORES_ATTRIBUTE] = CORES_FACT;
 ATTRIBUTES_TO_CONSUMER_FACTS[ARCH_ATTRIBUTE] = ARCH_FACT;
 ATTRIBUTES_TO_CONSUMER_FACTS[RAM_ATTRIBUTE] = RAM_FACT;
 
-
 /**
  *  These product attributes are considered when determining
  *  coverage of a consumer by a stack. Add an attribute here
@@ -72,20 +85,6 @@ var STACKABLE_ATTRIBUTES = [
     CORES_ATTRIBUTE,
     ARCH_ATTRIBUTE
 ];
-
-
-function entitlement_name_space() {
-    return Entitlement;
-}
-
-function compliance_name_space() {
-    return Compliance;
-}
-
-function autobind_name_space() {
-    return Autobind;
-}
-
 
 
 /*
