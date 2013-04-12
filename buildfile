@@ -59,6 +59,7 @@ HIBERNATE = ['org.hibernate:hibernate-core:jar:3.3.2.GA',
              'c3p0:c3p0:jar:0.9.0',
              'dom4j:dom4j:jar:1.6.1']
 DB = 'postgresql:postgresql:jar:9.0-801.jdbc4'
+ORACLE = 'com.oracle:ojdbc6:jar:11.2.0'
 COMMONS = ['commons-codec:commons-codec:jar:1.4',
            'commons-collections:commons-collections:jar:3.1',
            'commons-io:commons-io:jar:1.3.2',
@@ -127,6 +128,9 @@ use_pmd = ENV['pmd']
 if not use_pmd.nil?
     require 'buildr/pmd'
 end
+
+use_logdriver = ENV['logdriver']
+
 #############################################################################
 # PROJECT BUILD
 #############################################################################
@@ -149,7 +153,7 @@ define "candlepin" do
 
   # download the stuff we do not have in the repositories
   download artifact(SCHEMASPY) => 'http://downloads.sourceforge.net/project/schemaspy/schemaspy/SchemaSpy%204.1.1/schemaSpy_4.1.1.jar'
-  download artifact(LOGDRIVER) => 'http://jmrodri.fedorapeople.org/ivy/candlepin/logdriver/logdriver/1.0/logdriver-1.0.jar' if Buildr.environment == 'logdriver'
+  download artifact(LOGDRIVER) => 'http://jmrodri.fedorapeople.org/ivy/candlepin/logdriver/logdriver/1.0/logdriver-1.0.jar' if use_logdriver
 
   # Resource Substitution
   resources.filter.using 'version'=>VERSION_NUMBER,
@@ -178,10 +182,15 @@ define "candlepin" do
   #
   compile.options.target = '1.6'
   compile.options.source = '1.6'
-  compile_classpath = [COMMONS, DB, RESTEASY, LOG4J, HIBERNATE, BOUNCYCASTLE,
+  compile_classpath = [COMMONS, RESTEASY, LOG4J, HIBERNATE, BOUNCYCASTLE,
     GUICE, JACKSON, QUARTZ, GETTEXT_COMMONS, HORNETQ, SUN_JAXB, MIME4J, OAUTH, RHINO, COLLECTIONS]
   compile.with compile_classpath
-  compile.with LOGDRIVER if Buildr.environment == 'logdriver'
+  compile.with LOGDRIVER if use_logdriver
+  if Buildr.environment == 'oracle'
+    compile.with ORACLE
+  else
+    compile.with DB
+  end
 
   #
   # testing
@@ -192,7 +201,7 @@ define "candlepin" do
     filter('src/main/resources/META-INF').into('target/classes/META-INF').run
   end
   test.with COMMONS, DB, RESTEASY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE, HSQLDB, GUICE, QUARTZ, GETTEXT_COMMONS, MIME4J, RHINO, COLLECTIONS, generate
-  test.with LOGDRIVER if Buildr.environment == 'logdriver'
+  test.with LOGDRIVER if use_logdriver
   test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
 
 
