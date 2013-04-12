@@ -37,6 +37,20 @@ public class Arch extends AbstractHibernateObject {
 
     private String label;
 
+    public Arch() {
+
+    }
+
+    public Arch(String id, String label) {
+        this.setLabel(label);
+        this.setId(id);
+    }
+
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
     /** {@inheritDoc} */
     public String getId() {
         return id;
