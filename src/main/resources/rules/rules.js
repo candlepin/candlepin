@@ -418,8 +418,7 @@ var CoverageCalculator = {
                 var consumerArch = ARCH_FACT in consumer.facts ?
                     consumer.facts[ARCH_FACT] : null;
 
-                var covered = architectureMatches(supportedArchs, consumerArch,
-                                           consumer.type.label, context.prodAttrSeparator);
+                var covered = architectureMatches(supportedArchs, consumerArch, consumer.type.label);
                 log.debug("  System architecture covered: " + covered);
                 return covered;
             },
@@ -463,7 +462,24 @@ var CoverageCalculator = {
         var stackValues = this.getValues(stackTracker, "enforces", "getAccumulatedValue");
         var conditions = this.getDefaultConditions();
 
-        // TODO: Extend default conditions here for stacks, if required.
+        /**
+         *  NOTE: Extend default conditions here for stacks, if required.
+         */
+        conditions.arch = function (prodAttr, productValues, consumer) {
+            var supportedArchs = prodAttr in productValues ? productValues[prodAttr] : [];
+            var consumerArch = ARCH_FACT in consumer.facts ?
+                consumer.facts[ARCH_FACT] : null;
+
+            for (var archStringIdx in supportedArchs) {
+                var archString = supportedArchs[archStringIdx];
+                if (!architectureMatches(archString, consumerArch, consumer.type.label)) {
+                    log.debug("  System architecture not covered by: " + archString);
+                    return false;
+                }
+            }
+            log.debug("  System architecture is covered.");
+            return true;
+        };
 
         var coveragePercent = this.getCoveragePercentage(consumer, stackValues, conditions);
         log.debug("Stack coverage: " + coveragePercent);
@@ -860,21 +876,13 @@ function createStackTracker() {
                 },
 
                 /**
-                 *  Architecture is accumulated by creating a single string of
-                 *  arch values, concatinated by the seperator. It may contain
-                 *  duplicates. This value is not affected by the quantity taken.
-                 *
-                 *  Note: Perhaps in the future, we might consider a set as the
-                 *        accumulated value.
+                 *  Architecture is accumulated by adding each pool value to
+                 *  a list of arch strings. Each pool value is a , seperated
+                 *  string of supported archs.
                  */
                 arch: function (currentStackValue, poolValue, quantity) {
-                    var stackValue = currentStackValue || "";
-                    if (stackValue && poolValue) {
-                        stackValue += "," + poolValue;
-                    }
-                    else if (poolValue) {
-                       stackValue = poolValue;
-                    }
+                    var stackValue = currentStackValue || [];
+                    stackValue.push(poolValue);
                     return stackValue;
                 }
             };
