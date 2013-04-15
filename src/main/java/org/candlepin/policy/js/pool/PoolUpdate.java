@@ -26,13 +26,15 @@ public class PoolUpdate {
     private Boolean datesChanged;
     private Boolean quantityChanged;
     private Boolean productsChanged;
+    private Boolean orderChanged;
 
     public PoolUpdate(Pool pool, Boolean datesChanged, Boolean quantityChanged,
-        Boolean productsChanged) {
+        Boolean productsChanged, Boolean orderChanged) {
         this.pool = pool;
         this.datesChanged = datesChanged;
         this.quantityChanged = quantityChanged;
         this.productsChanged = productsChanged;
+        this.orderChanged = orderChanged;
     }
 
     public Pool getPool() {
@@ -46,6 +48,7 @@ public class PoolUpdate {
     public Boolean getDatesChanged() {
         return datesChanged;
     }
+
 
     public void setDatesChanged(Boolean datesChanged) {
         this.datesChanged = datesChanged;
@@ -65,5 +68,13 @@ public class PoolUpdate {
 
     public void setProductsChanged(Boolean productsChanged) {
         this.productsChanged = productsChanged;
+    }
+
+    public Boolean getOrderChanged() {
+        return orderChanged;
+    }
+
+    public void setOrderChanged(Boolean orderChanged) {
+        this.orderChanged = orderChanged;
     }
 }
