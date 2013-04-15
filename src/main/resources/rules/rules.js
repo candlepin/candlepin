@@ -1155,11 +1155,7 @@ var Entitlement = {
         var consumer = context.consumer;
         var pool = context.pool;
 
-        var consumerSockets = consumer.facts[SOCKET_FACT] ? consumer.facts[SOCKET_FACT] : 1;
-        var consumerCores = consumer.facts[CORES_FACT] ? consumer.facts[CORES_FACT] : 1;
-        consumerCores *= consumerSockets;
-        log.debug("### Consumer has " + consumerCores + " cores");
-
+        var consumerCores = FactValueCalculator.getFact(CORES_ATTRIBUTE, consumer);
         if (consumerCores && !pool.getProductAttribute("stacking_id")) {
             var poolCores = parseInt(pool.getProductAttribute(CORES_ATTRIBUTE));
             if (poolCores > 0 && poolCores < consumer.facts[CORES_FACT]) {
