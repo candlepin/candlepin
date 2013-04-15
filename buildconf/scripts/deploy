@@ -17,7 +17,7 @@ function recreate_postgresql ()
 
 function recreate_oracle ()
 {
-    sqlplus  'sys/password@//localhost/XE as sysdba' @`dirname $0`/recreate-candlepin.sql
+    sqlplus -s 'sys/password@//localhost/XE as sysdba' @`dirname $0`/recreate-candlepin.sql
     evalrc $? "Creating Candlepin user failed"
 }
 
