@@ -99,5 +99,24 @@ public abstract class X509Util {
         return filtered;
     }
 
+    /**
+     * Creates a Content url from the prefix and the path
+     * @param contentPrefix to prepend to the path
+     * @param pc the product content
+     * @return the complete content path
+     */
+    public String createFullContentPath(String contentPrefix, ProductContent pc) {
+        String contentPath = pc.getContent().getContentUrl();
+        if (contentPrefix != null) {
+            // Ensure there is no double // in the URL. See BZ952735
+            if (contentPrefix.endsWith("/") && (contentPath.startsWith("/"))) {
+                contentPath = contentPath.substring(1);
+            }
+            contentPath = contentPrefix + contentPath;
+        }
+
+        return contentPath;
+    }
+
 
 }

@@ -21,6 +21,9 @@ import static org.mockito.Mockito.mock;
 
 import org.candlepin.config.Config;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.Product;
+import org.candlepin.model.Content;
+import org.candlepin.model.ProductContent;
 import org.candlepin.util.X509V3ExtensionUtil.NodePair;
 import org.candlepin.util.X509V3ExtensionUtil.PathNode;
 import org.junit.Test;
@@ -83,5 +86,21 @@ public class X509V3ExtensionUtilTest {
         NodePair np1 = new NodePair("diff", pn);
         assertTrue(np.compareTo(np1) > 0);
         assertFalse(np.equals(np1));
+    }
+
+    @Test
+    public void testPrefixLogic() {
+        Product p = new Product("JarJar", "Binks");
+        Content c = new Content();
+        c.setContentUrl("/some/path");
+        ProductContent pc = new ProductContent(p, c, true);
+        Config config = mock(Config.class);
+        EntitlementCurator ec = mock(EntitlementCurator.class);
+        X509V3ExtensionUtil util = new X509V3ExtensionUtil(config, ec);
+
+        assertEquals("/this/is/some/path", util.createFullContentPath("/this/is", pc));
+        assertEquals("/this/is/some/path", util.createFullContentPath("/this/is/", pc));
+        c.setContentUrl("some/path");
+        assertEquals("/this/is/some/path", util.createFullContentPath("/this/is/", pc));
     }
 }

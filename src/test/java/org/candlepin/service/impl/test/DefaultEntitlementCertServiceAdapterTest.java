@@ -347,7 +347,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         verify(mockedPKI).createX509Certificate(
             any(String.class),
-            argThat(new ListContainsContentUrl("/somePrefix/" + CONTENT_URL,
+            argThat(new ListContainsContentUrl("/somePrefix" + CONTENT_URL,
                 CONTENT_ID)), any(Set.class), any(Date.class), any(Date.class),
             any(KeyPair.class), any(BigInteger.class), any(String.class));
     }
@@ -366,7 +366,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         verify(mockedPKI).createX509Certificate(
             any(String.class),
-            argThat(new ListContainsContentUrl("/someorg/Awesome+Environment+%231/" +
+            argThat(new ListContainsContentUrl("/someorg/Awesome+Environment+%231" +
                 CONTENT_URL, CONTENT_ID)), any(Set.class), any(Date.class),
                 any(Date.class), any(KeyPair.class), any(BigInteger.class),
                 any(String.class));
@@ -386,7 +386,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         verify(mockedPKI).createX509Certificate(
             any(String.class),
-            argThat(new ListContainsContentUrl("/some+org/Awesome+Environment+%231/" +
+            argThat(new ListContainsContentUrl("/some+org/Awesome+Environment+%231" +
                 CONTENT_URL, CONTENT_ID)), any(Set.class), any(Date.class), any(Date.class),
                 any(KeyPair.class), any(BigInteger.class), any(String.class));
     }
@@ -400,7 +400,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         verify(mockedPKI).createX509Certificate(
             any(String.class),
-            argThat(new ListContainsContentUrl("/someorg/$env/" + CONTENT_URL,
+            argThat(new ListContainsContentUrl("/someorg/$env" + CONTENT_URL,
                 CONTENT_ID)), any(Set.class), any(Date.class), any(Date.class),
             any(KeyPair.class), any(BigInteger.class), any(String.class));
     }
