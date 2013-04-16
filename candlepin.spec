@@ -25,7 +25,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.8.2
+Version: 0.8.3
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -345,6 +345,17 @@ fi
 
 
 %changelog
+* Tue Apr 16 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.3-1
+- Hard code product attribute separator into rules.js (ckozak@redhat.com)
+- Change to use correct REST call (wpoteat@redhat.com)
+- fix parsing of entitlements with multiple architectures (ckozak@redhat.com)
+- 928045: delete excessive fails to remove all excessive entitlements (wpoteat@redhat.com)
+- 952681: look at upstream_name *NOT* upstream_id (jesusr@redhat.com)
+- Updating the tests to be more robust in Hudson (wpoteat@redhat.com)
+- Removing the Cert V3 Enable flag from configuration (wpoteat@redhat.com)
+- False the boolean not "False" the string (jesusr@redhat.com)
+- add relink option (jesusr@redhat.com)
+
 * Fri Apr 05 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.2-1
 - remove Fedora 16 and Fedora 17 releaser for Katello (msuchy@redhat.com)
 - require candlepin-deps 0.1.5 or greater (jesusr@redhat.com)
