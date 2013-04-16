@@ -817,7 +817,7 @@ describe 'Consumer Resource' do
     facts = {
       'system.machine' => 'x86_64',
       'lscpu.socket(s)' => '4',
-      'cpu.cpu(s)' => '12'
+      'cpu.cpu(s)' => '12',
     }
     consumer = user.register('machine1', :system, nil, facts, nil, nil, [], nil)
 
@@ -825,8 +825,11 @@ describe 'Consumer Resource' do
     facts = {
       'system.machine' => 'x86_64',
       'lscpu.socket(s)' => 'four',
-      'cpu.cpu(s)' => '8'
-    }
+      'cpu.cpu(s)' => '8',
+       # these facts dont need to be an int, they are ranges
+      'lscpu.numa_node0_cpu(s)' => '0-3',
+      'lscpu.on-line_cpu(s)_list' => '0-3'
+   }
 
     consumer_client = Candlepin.new(username=nil, password=nil,
         cert=consumer['idCert']['cert'],
@@ -838,6 +841,10 @@ describe 'Consumer Resource' do
     consumer['facts']['system.machine'].should == 'x86_64'
     consumer['facts']['lscpu.socket(s)'].should be_nil
     consumer['facts']['cpu.cpu(s)'].should == '8'
+    # range facts should be left alone, rhbz #950462 shows
+    # them being ignored
+    consumer['facts']['lscpu.on-line_cpu(s)_list'].should == '0-3'
+    consumer['facts']['lscpu.numa_node0_cpu(s)'].should == '0-3'
   end
 
 end
