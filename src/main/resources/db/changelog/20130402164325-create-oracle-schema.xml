@@ -220,15 +220,13 @@
             <column name="serial_id" type="BIGINT"/>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1364932903575-13" dbms="oracle">
+    <changeSet author="awood" id="1364932903575-13" dbms="oracle">
         <createTable tableName="cp_entitlement">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_entitlement_pkey"/>
             </column>
             <column name="created" type="TIMESTAMP WITH TIME ZONE"/>
             <column name="updated" type="TIMESTAMP WITH TIME ZONE"/>
-            <column name="accountnumber" type="VARCHAR(255)"/>
-            <column name="contractnumber" type="VARCHAR(255)"/>
             <column name="enddate" type="TIMESTAMP WITH TIME ZONE"/>
             <column name="quantity" type="java.sql.Types.INTEGER"/>
             <column name="startdate" type="TIMESTAMP WITH TIME ZONE"/>
@@ -412,7 +410,7 @@
             </column>
         </createTable>
     </changeSet>
-    <changeSet author="awood (generated)" id="1364932903575-24" dbms="oracle">
+    <changeSet author="awood" id="1364932903575-24" dbms="oracle">
         <createTable tableName="cp_pool">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_pool_pkey"/>
@@ -445,6 +443,7 @@
                 <constraints nullable="false"/>
             </column>
             <column name="sourceentitlement_id" type="VARCHAR(32)"/>
+            <column name="ordernumber" type="VARCHAR(255)"/>
         </createTable>
     </changeSet>
     <changeSet author="awood (generated)" id="1364932903575-25" dbms="oracle">
