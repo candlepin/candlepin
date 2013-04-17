@@ -102,6 +102,8 @@ public class X509V3ExtensionUtilTest {
         assertEquals("/this/is/some/path", util.createFullContentPath("/this/is/", pc));
         assertEquals("/this/is/some/path", util.createFullContentPath("/this/is///", pc));
         c.setContentUrl("some/path");
+        assertEquals("/some/path", util.createFullContentPath(null, pc));
+        assertEquals("/some/path", util.createFullContentPath("", pc));
         assertEquals("/this/is/some/path", util.createFullContentPath("/this/is/", pc));
         assertEquals("/this/is/some/path", util.createFullContentPath("/this/is", pc));
         assertEquals("/this/is/some/path", util.createFullContentPath("/this/is///", pc));
@@ -109,5 +111,7 @@ public class X509V3ExtensionUtilTest {
         assertEquals("/this/is/some/path", util.createFullContentPath("/this/is/", pc));
         assertEquals("/this/is/some/path", util.createFullContentPath("/this/is", pc));
         assertEquals("/this/is/some/path", util.createFullContentPath("/this/is///", pc));
+        assertEquals("/some/path", util.createFullContentPath(null, pc));
+        assertEquals("/some/path", util.createFullContentPath("", pc));
     }
 }

@@ -106,24 +106,15 @@ public abstract class X509Util {
      * @return the complete content path
      */
     public String createFullContentPath(String contentPrefix, ProductContent pc) {
+        String prefix = "/";
         String contentPath = pc.getContent().getContentUrl();
-        if (contentPrefix != null) {
+        if (!StringUtils.isEmpty(contentPrefix)) {
             // Ensure there is no double // in the URL. See BZ952735
-            while (contentPrefix.endsWith("/")) {
-                contentPrefix.substring(0, contentPrefix.length() - 1);
-            }
-            if (contentPath.startsWith("/")) {
-                while (contentPath.charAt(1) == '/') {
-                    contentPath = contentPath.substring(1);
-                }
-            }
-            else {
-                contentPath = "/" + contentPath;
-            }
-            contentPath = contentPrefix + contentPath;
+            // remove them all except one.
+            prefix = StringUtils.stripEnd(contentPrefix, "/") + prefix;
         }
-
-        return contentPath;
+        contentPath = StringUtils.stripStart(contentPath, "/");
+        return prefix + contentPath;
     }
 
 
