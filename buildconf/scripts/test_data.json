@@ -1106,6 +1106,32 @@
             ]
         },
         {
+            "name": "RAM Limiting Package (4GB stackable)",
+            "id": "ram-4gb-stackable",
+            "type": "MKT",
+            "attributes": {
+                "ram": 4,
+                "multi-entitlement": "yes",
+                "stacking_id": "ram-stackable"
+            },
+            "provided_products": [
+                "801"
+            ]
+        },
+        {
+            "name": "RAM Limiting Package (2GB stackable)",
+            "id": "ram-2gb-stackable",
+            "type": "MKT",
+            "attributes": {
+                "ram": 2,
+                "multi-entitlement": "yes",
+                "stacking_id": "ram-stackable"
+            },
+            "provided_products": [
+                "801"
+            ]
+        },
+        {
             "name": "RAM/Sockets Package (8GB)",
             "id": "ram-sockets-8gb",
             "type": "MKT",
@@ -1130,27 +1156,147 @@
             ]
         },
         {
-            "name": "Cores Package (2 cores)",
-            "id": "cores-2",
+            "name": "Cores Package (26 cores)",
+            "id": "cores-26",
             "type": "MKT",
             "attributes": {
-                "cores": 2
+                "cores": 26
             },
             "provided_products": [
                 "806"
             ]
         },
         {
-            "name": "Stackable Cores Package (2 cores)",
-            "id": "cores-2-stackable",
+            "name": "Stackable Cores Package (8 cores)",
+            "id": "cores-8-stackable",
             "type": "MKT",
             "attributes": {
-                "cores": 2,
+                "cores": 8,
                 "multi-entitlement": "yes",
-                "stacking_id": "cores-2-stackable"
+                "stacking_id": "cores-8-stackable"
             },
             "provided_products": [
                 "806"
+            ]
+        },
+        // Test products for multi-attribute stacking tests.
+        {
+            "name": "Multi-Attribute Limited Product",
+            "id": "900",
+            "version": "1.0",
+            "arch": "x86_64",
+            "attributes": {
+            },
+            "content": [
+                [1, true]
+            ]
+        },
+        // Test MKT products for multi-attribute stacking tests.
+        {
+            "name": "Multi-Attribute Stackable (2 sockets)",
+            "id": "sock2-multiattr",
+            "type": "MKT",
+            "attributes": {
+                "sockets": 2,
+                "multi-entitlement": "yes",
+                "stacking_id": "multiattr-stack-test",
+                "support_level" : "Premium",
+                "support_type" : "Level 3"
+            },
+            "provided_products": [
+                "900"
+            ]
+        },
+        {
+            "name": "Multi-Attribute Stackable (4 cores)",
+            "id": "cores4-multiattr",
+            "type": "MKT",
+            "attributes": {
+                "cores": 4,
+                "multi-entitlement": "yes",
+                "stacking_id": "multiattr-stack-test",
+                "support_level" : "Premium",
+                "support_type" : "Level 3"
+            },
+            "provided_products": [
+                "900"
+            ]
+        },
+        {
+            "name": "Multi-Attribute Stackable (2 GB)",
+            "id": "ram2-multiattr",
+            "type": "MKT",
+            "attributes": {
+                "ram": 2,
+                "multi-entitlement": "yes",
+                "stacking_id": "multiattr-stack-test",
+                "support_level" : "Premium",
+                "support_type" : "Level 3"
+            },
+            "provided_products": [
+                "900"
+            ]
+        },
+        {
+            "name": "Multi-Attribute Stackable (2 sockets, 2 GB)",
+            "id": "2sock-2ram-multiattr",
+            "type": "MKT",
+            "attributes": {
+                "sockets": 2,
+                "ram": 2,
+                "multi-entitlement": "yes",
+                "stacking_id": "multiattr-stack-test",
+                "support_level" : "Premium",
+                "support_type" : "Level 3"
+            },
+            "provided_products": [
+                "900"
+            ]
+        },
+        {
+            "name": "Multi-Attribute Stackable (16 cores, 4 sockets, 8GB RAM)",
+            "id": "sock-core-ram-multiattr",
+            "type": "MKT",
+            "attributes": {
+                "sockets": 4,
+                "ram": 8,
+                "cores": 16,
+                "multi-entitlement": "yes",
+                "stacking_id": "multiattr-stack-test",
+                "support_level" : "Super",
+                "support_type" : "Level 3"
+            },
+            "provided_products": [
+                "900"
+            ]
+        },
+        {
+            "name": "Multi-Attribute (non-stackable) (6 sockets, 8GB)",
+            "id": "non-stacked-6sock8ram-multiattr",
+            "type": "MKT",
+            "attributes": {
+                "sockets": 6,
+                "ram": 8,
+                "support_level" : "Super",
+                "support_type" : "Level 3"
+            },
+            "provided_products": [
+                "900"
+            ]
+        },
+        {
+            "name": "Multi-Attribute (non-stackable) (24 cores, 6 sockets, 8GB RAM)",
+            "id": "non-stacked-multiattr",
+            "type": "MKT",
+            "attributes": {
+                "sockets": 6,
+                "ram": 8,
+                "cores": 24,
+                "support_level" : "Super",
+                "support_type" : "Level 3"
+            },
+            "provided_products": [
+                "900"
             ]
         }
     ]
