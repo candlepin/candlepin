@@ -109,8 +109,16 @@ public abstract class X509Util {
         String contentPath = pc.getContent().getContentUrl();
         if (contentPrefix != null) {
             // Ensure there is no double // in the URL. See BZ952735
-            if (contentPrefix.endsWith("/") && (contentPath.startsWith("/"))) {
-                contentPath = contentPath.substring(1);
+            while (contentPrefix.endsWith("/")) {
+                contentPrefix.substring(0, contentPrefix.length() - 1);
+            }
+            if (contentPath.startsWith("/")) {
+                while (contentPath.charAt(1) == '/') {
+                    contentPath = contentPath.substring(1);
+                }
+            }
+            else {
+                contentPath = "/" + contentPath;
             }
             contentPath = contentPrefix + contentPath;
         }
