@@ -336,10 +336,7 @@ public class X509V3ExtensionUtil extends X509Util{
             }
 
             // augment the content path with the prefix if it is passed in
-            String contentPath = pc.getContent().getContentUrl();
-            if (contentPrefix != null) {
-                contentPath = contentPrefix + contentPath;
-            }
+            String contentPath = this.createFullContentPath(contentPrefix, pc);
 
             content.setId(pc.getContent().getId());
             content.setType(pc.getContent().getType());

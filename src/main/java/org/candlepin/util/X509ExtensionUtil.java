@@ -216,10 +216,7 @@ public class X509ExtensionUtil  extends X509Util{
         // informative error message to the user.
         for (ProductContent pc : productContent) {
             // augment the content path with the prefix if it is passed in
-            String contentPath = pc.getContent().getContentUrl();
-            if (contentPrefix != null) {
-                contentPath = contentPrefix + contentPath;
-            }
+            String contentPath = this.createFullContentPath(contentPrefix, pc);
 
             String contentOid = OIDUtil.REDHAT_OID +
                 "." +
