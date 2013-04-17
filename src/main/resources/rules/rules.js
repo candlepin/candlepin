@@ -561,7 +561,7 @@ var CoverageCalculator = {
 
             // if the attribute does not affect the quantity,
             // we can skip it.
-            if (attr in stackableAttrsNotAffectingQuantity) {
+            if (Utils.inArray(stackableAttrsNotAffectingQuantity, attr)) {
                 log.debug("  Skipping " + attr + " because it does not affect the quantity.");
                 continue;
             }
@@ -574,10 +574,16 @@ var CoverageCalculator = {
             }
 
             log.debug("  Checking quantity required for " + attr);
+
+            var poolQuantity = pool.getProductAttribute(attr);
+            if (!poolQuantity) {
+                log.debug("  Skipping " + attr + ". Pool does not cover attribute.");
+                continue;
+            }
+            log.debug("    Quantity provided by pool: " + poolQuantity);
+
             var currentCovered = stackTracker.getAccumulatedValue(attr);
             log.debug("    Quantity currently covered by stack: " + currentCovered);
-            var poolQuantity = pool.getProductAttribute(attr);
-            log.debug("    Quantity provided by pool: " + poolQuantity);
 
             var consumerQuantity = FactValueCalculator.getFact(attr, consumer);
             log.debug("    Quantity to be covered on consumer: " + consumerQuantity);
@@ -721,11 +727,11 @@ function findStackingPools(pool_class, consumer, compliance) {
             if (quantity > pool.quantity - pool.consumed) {
                 quantity = pool.quantity - pool.consumed;
             }
+            log.debug("Incrementing pool quantity for stack to: " + quantity);
 
             // Update the stack accumulated values to simulate attaching X
             // entitlements.
             stackTrackerToProcess.updateAccumulatedFromPool(pool, quantity);
-
             stackToPoolMap[stack_id].put(pool.id, quantity);
         } else {
             // not stackable, just take one.
