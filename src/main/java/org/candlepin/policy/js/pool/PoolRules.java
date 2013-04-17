@@ -246,7 +246,7 @@ public class PoolRules {
             }
 
             if (productsChanged) {
-                this.updateDatesChanged(existingPool, sub);
+                this.updateProductsChagned(existingPool, sub);
             }
             poolsUpdated.add(new org.candlepin.policy.js.pool.PoolUpdate(existingPool,
                 datesChanged, quantityChanged, productsChanged, orderDataChanged));
