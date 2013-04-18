@@ -215,7 +215,7 @@ public class PoolManagerTest {
                 anyBoolean(), anyBoolean())).thenReturn(pools);
 
         List<PoolUpdate> updates = new LinkedList();
-        updates.add(new PoolUpdate(p, false, true, false));
+        updates.add(new PoolUpdate(p, false, true, false, true));
         when(poolRulesMock.updatePools(s, pools)).thenReturn(updates);
 
         this.manager.getRefresher().add(getOwner()).run();

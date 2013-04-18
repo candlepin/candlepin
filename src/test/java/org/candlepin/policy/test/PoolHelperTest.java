@@ -98,6 +98,58 @@ public class PoolHelperTest {
     }
 
     @Test
+    public void orderDataChangedOrderNumber() {
+        when(pool.getOrderNumber()).thenReturn("123A");
+        when(pool.getAccountNumber()).thenReturn("456");
+        when(pool.getContractNumber()).thenReturn("789");
+        when(sub.getOrderNumber()).thenReturn("123");
+        when(sub.getAccountNumber()).thenReturn("456");
+        when(sub.getContractNumber()).thenReturn("789");
+
+        PoolHelper ph = new PoolHelper(pm, productCache, null);
+        assertTrue(ph.checkForOrderChanges(pool, sub));
+    }
+
+    @Test
+    public void orderDataChangedAccountNumber() {
+        when(pool.getOrderNumber()).thenReturn("123");
+        when(pool.getAccountNumber()).thenReturn("456A");
+        when(pool.getContractNumber()).thenReturn("789");
+        when(sub.getOrderNumber()).thenReturn("123");
+        when(sub.getAccountNumber()).thenReturn("456");
+        when(sub.getContractNumber()).thenReturn("789");
+
+        PoolHelper ph = new PoolHelper(pm, productCache, null);
+        assertTrue(ph.checkForOrderChanges(pool, sub));
+    }
+
+    @Test
+    public void orderDataChangedContractNumber() {
+        when(pool.getOrderNumber()).thenReturn("123");
+        when(pool.getAccountNumber()).thenReturn("456");
+        when(pool.getContractNumber()).thenReturn("789A");
+        when(sub.getOrderNumber()).thenReturn("123");
+        when(sub.getAccountNumber()).thenReturn("456");
+        when(sub.getContractNumber()).thenReturn("789");
+
+        PoolHelper ph = new PoolHelper(pm, productCache, null);
+        assertTrue(ph.checkForOrderChanges(pool, sub));
+    }
+
+    @Test
+    public void orderDataChanged() {
+        when(pool.getOrderNumber()).thenReturn("123");
+        when(pool.getAccountNumber()).thenReturn("456");
+        when(pool.getContractNumber()).thenReturn("789");
+        when(sub.getOrderNumber()).thenReturn("123");
+        when(sub.getAccountNumber()).thenReturn("456");
+        when(sub.getContractNumber()).thenReturn("789");
+
+        PoolHelper ph = new PoolHelper(pm, productCache, null);
+        assertFalse(ph.checkForOrderChanges(pool, sub));
+    }
+
+    @Test
     public void productIdDifferent() {
         when(pool.getProductId()).thenReturn("prodid123");
         when(pool.getProductName()).thenReturn("Awesome Product");

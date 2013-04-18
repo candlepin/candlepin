@@ -220,45 +220,70 @@ public class PoolRules {
 
             boolean prodAttrsChanged = helper.copyProductAttributesOntoPool(sub,
                 existingPool);
+            boolean orderDataChanged = helper.checkForOrderChanges(existingPool, sub);
+
             if (prodAttrsChanged) {
                 log.info("Updated product attributes from subscription.");
             }
 
             if (!(quantityChanged || datesChanged || productsChanged ||
-                  prodAttrsChanged)) {
+                  prodAttrsChanged || orderDataChanged)) {
                 //TODO: Should we check whether pool is overflowing here?
                 log.info("   No updates required.");
                 continue;
             }
 
             if (quantityChanged) {
-                log.info("   Quantity changed to: " + expectedQuantity);
-                existingPool.setQuantity(expectedQuantity);
+                this.updateQuantityChanged(existingPool, expectedQuantity);
+            }
+
+            if (orderDataChanged) {
+                this.updateOrderChanged(existingPool, sub);
             }
 
             if (datesChanged) {
-                log.info("   Subscription dates changed.");
-                existingPool.setStartDate(sub.getStartDate());
-                existingPool.setEndDate(sub.getEndDate());
+                this.updateDatesChanged(existingPool, sub);
             }
 
             if (productsChanged) {
-                log.info("   Subscription products changed.");
-                existingPool.setProductName(sub.getProduct().getName());
-                existingPool.setProductId(sub.getProduct().getId());
-                existingPool.getProvidedProducts().clear();
-
-                if (sub.getProvidedProducts() != null) {
-                    for (Product p : sub.getProvidedProducts()) {
-                        existingPool.addProvidedProduct(new ProvidedProduct(p.getId(),
-                            p.getName()));
-                    }
-                }
+                this.updateProductsChanged(existingPool, sub);
             }
             poolsUpdated.add(new org.candlepin.policy.js.pool.PoolUpdate(existingPool,
-                datesChanged, quantityChanged, productsChanged));
+                datesChanged, quantityChanged, productsChanged, orderDataChanged));
         }
 
         return poolsUpdated;
+    }
+
+    protected void updateQuantityChanged(Pool existingPool, Long expectedQuantity) {
+        log.info("   Quantity changed to: " + expectedQuantity);
+        existingPool.setQuantity(expectedQuantity);
+    }
+
+    protected void updateOrderChanged(Pool existingPool, Subscription sub) {
+        log.info("   Order Data Changed");
+        existingPool.setAccountNumber(sub.getAccountNumber());
+        existingPool.setOrderNumber(sub.getOrderNumber());
+        existingPool.setContractNumber(sub.getContractNumber());
+    }
+
+    protected void updateDatesChanged(Pool existingPool, Subscription sub) {
+        log.info("   Subscription dates changed.");
+        existingPool.setStartDate(sub.getStartDate());
+        existingPool.setEndDate(sub.getEndDate());
+    }
+
+    protected void updateProductsChanged(Pool existingPool, Subscription sub) {
+        log.info("   Subscription products changed.");
+        existingPool.setProductName(sub.getProduct().getName());
+        existingPool.setProductId(sub.getProduct().getId());
+        existingPool.getProvidedProducts().clear();
+
+        if (sub.getProvidedProducts() != null) {
+            for (Product p : sub.getProvidedProducts()) {
+                existingPool.addProvidedProduct(new ProvidedProduct(p.getId(),
+                    p.getName()));
+            }
+        }
     }
 }
