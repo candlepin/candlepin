@@ -608,4 +608,64 @@ public class PoolRulesTest {
         assertTrue(update.getQuantityChanged());
         assertEquals(Long.valueOf(10), update.getPool().getQuantity());
     }
+
+    @Test
+    public void contractNumberChanged() {
+        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
+        s.setContractNumber("123");
+
+        // Setup a pool with a single (different) provided product:
+        Pool p = copyFromSub(s);
+        p.setQuantity(2000L);
+        p.setContractNumber("ABC");
+
+        List<Pool> existingPools = new java.util.LinkedList<Pool>();
+        existingPools.add(p);
+        List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools);
+
+        assertEquals(1, updates.size());
+        PoolUpdate update = updates.get(0);
+        assertTrue(update.getOrderChanged());
+        assertEquals("123", update.getPool().getContractNumber());
+    }
+
+    @Test
+    public void orderNumberChanged() {
+        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
+        s.setOrderNumber("123");
+
+        // Setup a pool with a single (different) provided product:
+        Pool p = copyFromSub(s);
+        p.setQuantity(2000L);
+        p.setOrderNumber("ABC");
+
+        List<Pool> existingPools = new java.util.LinkedList<Pool>();
+        existingPools.add(p);
+        List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools);
+
+        assertEquals(1, updates.size());
+        PoolUpdate update = updates.get(0);
+        assertTrue(update.getOrderChanged());
+        assertEquals("123", update.getPool().getOrderNumber());
+    }
+
+    @Test
+    public void accountNumberChanged() {
+        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
+        s.setAccountNumber("123");
+
+        // Setup a pool with a single (different) provided product:
+        Pool p = copyFromSub(s);
+        p.setQuantity(2000L);
+        p.setAccountNumber("ABC");
+
+        List<Pool> existingPools = new java.util.LinkedList<Pool>();
+        existingPools.add(p);
+        List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools);
+
+        assertEquals(1, updates.size());
+        PoolUpdate update = updates.get(0);
+        assertTrue(update.getOrderChanged());
+        assertEquals("123", update.getPool().getAccountNumber());
+    }
 }
