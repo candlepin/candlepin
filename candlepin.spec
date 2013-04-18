@@ -25,7 +25,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.8.3
+Version: 0.8.4
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -345,6 +345,40 @@ fi
 
 
 %changelog
+* Thu Apr 18 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.4-1
+- also copy over created/updated. (jesusr@redhat.com)
+- Bumped minor version of the rules. (mstead@redhat.com)
+- typo: Chagned -> Changed (jmrodri@gmail.com)
+- 949684: Fix unit test failures due to copy paste error when refactoring the
+  code for checkstyle (bkearney@redhat.com)
+- 949684: Update the contract information on pools when subcriptions changed.
+  (bkearney@redhat.com)
+- ensure null/empty contentPrefix handled. remove endless loop.
+  (jmrodri@gmail.com)
+- Adding test data for multi-attribute stacking (mstead@redhat.com)
+- When determining coverage skip prod attributes not set. (mstead@redhat.com)
+- Properly track arch on stacks and calculate compliance. (mstead@redhat.com)
+- In pre_cores use FactValueCalculator to get consumer cores.
+  (mstead@redhat.com)
+- Removed debugging debug statements that were cluttering logs.
+  (mstead@redhat.com)
+- 907315: Added capability to stack on RAM. (mstead@redhat.com)
+- Moved rules namespaces to top of file (mstead@redhat.com)
+- Added comments to rules file. (mstead@redhat.com)
+- A product attribute that has a value of '0' is considered not set.
+  (mstead@redhat.com)
+- Adding cores fact calculation to FactValueCalculator (mstead@redhat.com)
+- Unit and spec tests with corrections to code (wpoteat@redhat.com)
+- Properly support multi-attribute compliance/stacking (mstead@redhat.com)
+- Include cores when finding stacking pools (mstead@redhat.com)
+- Basic cores check for entitlements (mstead@redhat.com)
+- 952735: Add additional checks with content prefixes with many trailing / and
+  content urls with many leading / (bkearney@redhat.com)
+- 952735: Ensure that prefixes plus content urls do not result in double
+  slashes (bkearney@redhat.com)
+- 950462: do not expect numa cpu list to be an int (alikins@redhat.com)
+- only get latest import record (jesusr@redhat.com)
+
 * Tue Apr 16 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.3-1
 - Hard code product attribute separator into rules.js (ckozak@redhat.com)
 - Change to use correct REST call (wpoteat@redhat.com)
