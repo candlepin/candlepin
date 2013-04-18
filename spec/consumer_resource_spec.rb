@@ -222,7 +222,7 @@ describe 'Consumer Resource' do
     @cp.get_consumer(consumer['uuid'])['updated'].should_not == old_updated
   end
 
-  it 'should allow consumer to bind to products based on product quantity across pools' do
+  it 'should allow consumer to bind to products based on product socket quantity across pools' do
     owner = create_owner random_string('owner')
     owner_client = user_client(owner, random_string('testowner'))
     cp_client = consumer_client(owner_client, random_string('consumer123'), :system,
@@ -231,10 +231,9 @@ describe 'Consumer Resource' do
                           :attributes => { :sockets => '2', :'multi-entitlement' => 'yes', :stacking_id => '8888'})
     prod2 = create_product(random_string('product'), random_string('product-stackable'),
                           :attributes => { :sockets => '2', :'multi-entitlement' => 'yes', :stacking_id => '8888'})
-    @cp.create_subscription(owner['key'], prod1.id, 2)
-    @cp.create_subscription(owner['key'], prod1.id, 8)
-    @cp.create_subscription(owner['key'], prod2.id, 5)
-
+    @cp.create_subscription(owner['key'], prod1.id, 1)
+    @cp.create_subscription(owner['key'], prod1.id, 1)
+    @cp.create_subscription(owner['key'], prod2.id, 1)
 
     @cp.refresh_pools(owner['key'])
 
@@ -243,7 +242,6 @@ describe 'Consumer Resource' do
     total.should == 2
 
   end
-
 
   it 'should allow a consumer to specify their own UUID' do
     owner = create_owner random_string('owner')
