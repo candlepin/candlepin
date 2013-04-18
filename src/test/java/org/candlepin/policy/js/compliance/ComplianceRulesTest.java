@@ -32,6 +32,8 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
+import org.candlepin.CandlepinCommonTestingModule;
+import org.candlepin.CandlepinNonServletEnvironmentTestingModule;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
@@ -51,6 +53,9 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+
 
 
 /**
@@ -69,6 +74,7 @@ public class ComplianceRulesTest {
     @Mock private EntitlementCurator entCurator;
     @Mock private RulesCurator rulesCuratorMock;
     private JsRunnerProvider provider;
+    private Injector injector;
 
     @Before
     public void setUp() {
@@ -82,6 +88,11 @@ public class ComplianceRulesTest {
         when(rulesCuratorMock.getRules()).thenReturn(rules);
         provider = new JsRunnerProvider(rulesCuratorMock);
         compliance = new ComplianceRules(provider.get(), entCurator);
+        CandlepinCommonTestingModule testingModule =
+            new CandlepinCommonTestingModule();
+        injector = Guice.createInjector(testingModule,
+            new CandlepinNonServletEnvironmentTestingModule());
+        injector.injectMembers(compliance);
         owner = new Owner("test");
     }
 

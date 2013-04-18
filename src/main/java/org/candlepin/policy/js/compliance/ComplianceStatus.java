@@ -39,6 +39,7 @@ public class ComplianceStatus {
     private Map<String, Set<Entitlement>> compliantProducts;
     private Map<String, Set<Entitlement>> partiallyCompliantProducts; // stacked
     private Map<String, Set<Entitlement>> partialStacks;
+    private Set<ComplianceReason> reasons;
 
     public ComplianceStatus() {
         this.nonCompliantProducts = new HashSet<String>();
@@ -146,4 +147,11 @@ public class ComplianceStatus {
         return RED;
     }
 
+    public Set<ComplianceReason> getReasons() {
+        return reasons;
+    }
+
+    public void setReasons(Set<ComplianceReason> reasons) {
+        this.reasons = reasons;
+    }
 }

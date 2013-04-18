@@ -1599,6 +1599,23 @@ var Compliance = {
             // List of non-compliant product IDs:
             nonCompliantProducts: [],
 
+            reasons: [],
+
+            add_reason: function (reason_key, id, has, covered, stacked) {
+                var reason = {};
+                var attributes = {};
+                attributes["has"] = has; 
+                attributes["covered"] = covered;
+                if (stacked) {
+                    attributes["stack_id"] = id;
+                } else {
+                    attributes["entitlement_id"] = id;
+                }
+                reason["key"] = reason_key;
+                reason["message"] = reason_key;
+                reason["attributes"] = attributes;
+                this.reasons.push(reason);
+            },
             /*
              * Add entitlement to partial stack list, or create list if it does not
              * already exist.
@@ -1676,7 +1693,7 @@ var Compliance = {
                     compliant_stack_ids.push(stack_id);
                 }
             }
-
+            compStatus.add_reason("SOCKETS", e.id, 8, 4, false);
             for (var m = 0; m < relevant_pids.length; m++) {
                 var relevant_pid = relevant_pids[m];
                 if (partially_stacked) {

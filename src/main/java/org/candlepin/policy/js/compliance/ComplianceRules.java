@@ -29,6 +29,7 @@ import org.candlepin.policy.js.RulesObjectMapper;
 import org.mozilla.javascript.RhinoException;
 
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 
 /**
  * Compliance
@@ -41,6 +42,7 @@ public class ComplianceRules {
     private JsRunner jsRules;
     private RulesObjectMapper mapper;
     private static Logger log = Logger.getLogger(ComplianceRules.class);
+    @Inject private Injector injector;
 
     @Inject
     public ComplianceRules(JsRunner jsRules, EntitlementCurator entCurator) {
@@ -71,7 +73,12 @@ public class ComplianceRules {
         // Convert the JSON returned into a ComplianceStatus object:
         String json = runJsFunction(String.class, "get_status", args);
         try {
-            return mapper.toObject(json, ComplianceStatus.class);
+            ComplianceStatus result = mapper.toObject(json, ComplianceStatus.class);
+            for (ComplianceReason reason : result.getReasons()) {
+                injector.injectMembers(reason);
+                reason.setConsumer(c); //order of these two matters.  Must inject first.
+            }
+            return result;
         }
         catch (Exception e) {
             throw new RuleExecutionException(e);
