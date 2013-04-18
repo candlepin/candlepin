@@ -246,7 +246,7 @@ public class PoolRules {
             }
 
             if (productsChanged) {
-                this.updateProductsChagned(existingPool, sub);
+                this.updateProductsChanged(existingPool, sub);
             }
             poolsUpdated.add(new org.candlepin.policy.js.pool.PoolUpdate(existingPool,
                 datesChanged, quantityChanged, productsChanged, orderDataChanged));
@@ -273,7 +273,7 @@ public class PoolRules {
         existingPool.setEndDate(sub.getEndDate());
     }
 
-    protected void updateProductsChagned(Pool existingPool, Subscription sub) {
+    protected void updateProductsChanged(Pool existingPool, Subscription sub) {
         log.info("   Subscription products changed.");
         existingPool.setProductName(sub.getProduct().getName());
         existingPool.setProductId(sub.getProduct().getId());
