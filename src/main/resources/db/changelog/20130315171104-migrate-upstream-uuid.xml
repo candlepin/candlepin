@@ -15,17 +15,23 @@
         <!-- Copy only the successful records with consumer types -->
         <sql>
         INSERT INTO cp_upstream_consumer (id, uuid, name, owner_id,
-               type_id, prefix_url_web)
+               type_id, prefix_url_web, created, updated)
         SELECT ir.id,
                ir.upstream_id,
                ir.upstream_name,
                ir.owner_id,
                ct.id,
-               ir.webapp_prefix
+               ir.webapp_prefix,
+               ir.created,
+               ir.updated
         FROM cp_import_record ir,
              cp_consumer_type ct
         WHERE ct.label = ir.upstream_type
-          AND ir.status = 0;
+          AND ir.status = 0
+          AND ir.updated =
+            (SELECT max(updated)
+             FROM cp_import_record
+             WHERE owner_id = ir.owner_id);
         </sql>
     </changeSet>
 
