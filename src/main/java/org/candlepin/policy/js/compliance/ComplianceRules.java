@@ -27,9 +27,7 @@ import org.candlepin.policy.js.JsonJsContext;
 import org.candlepin.policy.js.RuleExecutionException;
 import org.candlepin.policy.js.RulesObjectMapper;
 import org.mozilla.javascript.RhinoException;
-
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 
 /**
  * Compliance
@@ -42,7 +40,7 @@ public class ComplianceRules {
     private JsRunner jsRules;
     private RulesObjectMapper mapper;
     private static Logger log = Logger.getLogger(ComplianceRules.class);
-    @Inject private Injector injector;
+    @Inject private StatusReasonMessageGenerator generator;
 
     @Inject
     public ComplianceRules(JsRunner jsRules, EntitlementCurator entCurator) {
@@ -75,8 +73,7 @@ public class ComplianceRules {
         try {
             ComplianceStatus result = mapper.toObject(json, ComplianceStatus.class);
             for (ComplianceReason reason : result.getReasons()) {
-                injector.injectMembers(reason);
-                reason.setConsumer(c); //order of these two matters.  Must inject first.
+                generator.setMessage(c, reason);
             }
             return result;
         }
