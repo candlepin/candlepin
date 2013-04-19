@@ -115,4 +115,8 @@ public class ComplianceRules {
         return returner;
     }
 
+    public void setGenerator(StatusReasonMessageGenerator generator) {
+        this.generator = generator;
+    }
+
 }

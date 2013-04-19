@@ -46,7 +46,12 @@ public class StatusReasonMessageGenerator {
         }
     };
 
-    @Inject private I18n i18n;
+    private I18n i18n;
+
+    @Inject
+    public StatusReasonMessageGenerator(I18n i18n) {
+        this.i18n = i18n;
+    }
 
     public void setMessage(Consumer c, ComplianceReason reason) {
         String base = KEYS.get(reason.getKey());
