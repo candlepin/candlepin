@@ -16,6 +16,7 @@ package org.candlepin.policy.js.compliance;
 
 import java.util.HashMap;
 import java.util.Map;
+import javax.xml.bind.annotation.XmlTransient;
 
 /**
  * ComplianceReason
@@ -54,10 +55,12 @@ public class ComplianceReason {
         this.attributes = attributes;
     }
 
+    @XmlTransient
     public boolean isStacked() {
         return attributes.containsKey("stack_id");
     }
 
+    @XmlTransient
     public boolean isNonCovered() {
         return attributes.containsKey("product_id");
     }
