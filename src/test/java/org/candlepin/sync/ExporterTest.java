@@ -30,6 +30,8 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
@@ -341,6 +343,50 @@ public class ExporterTest {
             new VerifyIdentityCert("10.pem"));
     }
 
+    @Test
+    public void exportConsumer() throws ExportCreationException, IOException {
+        config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+        config.setProperty(ConfigProperties.PREFIX_WEBURL, "localhost:8443/weburl");
+        config.setProperty(ConfigProperties.PREFIX_APIURL, "localhost:8443/apiurl");
+        Rules mrules = mock(Rules.class);
+        Consumer consumer = mock(Consumer.class);
+        Principal principal = mock(Principal.class);
+
+        when(mrules.getRules()).thenReturn("foobar");
+        when(pki.getSHA256WithRSAHash(any(InputStream.class))).thenReturn(
+            "signature".getBytes());
+        when(rc.getRules()).thenReturn(mrules);
+        when(pprov.get()).thenReturn(principal);
+        when(principal.getUsername()).thenReturn("testUser");
+
+        // specific to this test
+        IdentityCertificate idcert = new IdentityCertificate();
+        idcert.setSerial(new CertificateSerial(10L, new Date()));
+        idcert.setKey("euh0876puhapodifbvj094");
+        idcert.setCert("hpj-08ha-w4gpoknpon*)&^%#");
+        idcert.setCreated(new Date());
+        idcert.setUpdated(new Date());
+        when(consumer.getIdCert()).thenReturn(idcert);
+
+        KeyPair keyPair = createKeyPair();
+        when(consumer.getKeyPair()).thenReturn(keyPair);
+        when(pki.getPemEncoded(keyPair.getPrivateKey()))
+            .thenReturn("privateKey".getBytes());
+        when(pki.getPemEncoded(keyPair.getPublicKey()))
+            .thenReturn("publicKey".getBytes());
+        when(consumer.getUuid()).thenReturn("8auuid");
+        when(consumer.getName()).thenReturn("consumer_name");
+        when(consumer.getType()).thenReturn(new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
+
+        // FINALLY test this badboy
+        Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
+            pce, ec, ee, pki, config, exportRules, pprov);
+        File export = e.getFullExport(consumer);
+
+        verifyContent(export, "export/consumer.json",
+            new VerifyConsumer("consumer.json"));
+    }
+
     /**
      * return true if export has a given entry named name.
      * @param export zip file to inspect
@@ -531,6 +577,35 @@ public class ExporterTest {
             BufferedReader br = new BufferedReader(new FileReader("/tmp/" + filename));
             assertEquals("privateKeypublicKey", br.readLine());
             br.close();
+        }
+    }
+
+    public static class VerifyConsumer implements Verify {
+        private String filename;
+        public VerifyConsumer(String filename) {
+            this.filename = filename;
+        }
+
+        public void verify(ZipInputStream zis, byte[] buf) throws IOException {
+            OutputStream os = new FileOutputStream("/tmp/" + filename);
+            int n;
+            while ((n = zis.read(buf, 0, 1024)) > -1) {
+                os.write(buf, 0, n);
+            }
+            os.flush();
+            os.close();
+
+            ObjectMapper om = SyncUtils.getObjectMapper(
+                new Config(new HashMap<String, String>()));
+
+            ConsumerDto c = om.readValue(
+                new FileInputStream("/tmp/" + filename), ConsumerDto.class);
+
+            assertEquals("localhost:8443/apiurl", c.getUrlApi());
+            assertEquals("localhost:8443/weburl", c.getUrlWeb());
+            assertEquals("8auuid", c.getUuid());
+            assertEquals("consumer_name", c.getName());
+            assertEquals(new ConsumerType(ConsumerTypeEnum.CANDLEPIN), c.getType());
         }
     }
 
