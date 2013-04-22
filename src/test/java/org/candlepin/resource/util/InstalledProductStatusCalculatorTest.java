@@ -86,7 +86,8 @@ public class InstalledProductStatusCalculatorTest {
         Locale locale = new Locale("en_US");
         i18n = I18nFactory.getI18n(getClass(), "org.candlepin.i18n.Messages", locale,
             I18nFactory.FALLBACK);
-        compliance = new ComplianceRules(provider.get(), entCurator, new StatusReasonMessageGenerator(i18n));
+        compliance = new ComplianceRules(provider.get(),
+            entCurator, new StatusReasonMessageGenerator(i18n));
         owner = new Owner("test");
     }
 

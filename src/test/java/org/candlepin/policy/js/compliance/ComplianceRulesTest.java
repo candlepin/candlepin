@@ -86,7 +86,8 @@ public class ComplianceRulesTest {
         when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
         when(rulesCuratorMock.getRules()).thenReturn(rules);
         provider = new JsRunnerProvider(rulesCuratorMock);
-        compliance = new ComplianceRules(provider.get(), entCurator, new StatusReasonMessageGenerator(i18n));
+        compliance = new ComplianceRules(provider.get(),
+            entCurator, new StatusReasonMessageGenerator(i18n));
         owner = new Owner("test");
     }
 

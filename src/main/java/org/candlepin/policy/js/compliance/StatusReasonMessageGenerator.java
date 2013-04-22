@@ -61,7 +61,8 @@ public class StatusReasonMessageGenerator {
             id = reason.getAttributes().get("stack_id");
             marketingName = getStackedMarketingName(id, c);
             reason.setMessage(i18n.tr(base, marketingName,
-                reason.getAttributes().get("covered"), reason.getAttributes().get("has"), reason.getKey()));
+                reason.getAttributes().get("covered"),
+                reason.getAttributes().get("has"), reason.getKey()));
         }
         else if (reason.isNonCovered()) {
             id = reason.getAttributes().get("product_id");
@@ -72,7 +73,8 @@ public class StatusReasonMessageGenerator {
             id = reason.getAttributes().get("entitlement_id");
             marketingName = getMarketingName(id, c);
             reason.setMessage(i18n.tr(base, marketingName,
-                reason.getAttributes().get("covered"), reason.getAttributes().get("has"), reason.getKey()));
+                reason.getAttributes().get("covered"),
+                reason.getAttributes().get("has"), reason.getKey()));
         }
     }
 
@@ -80,15 +82,18 @@ public class StatusReasonMessageGenerator {
         String result = "";
         for (Entitlement e : consumer.getEntitlements()) {
             if (e.getPool().getProductAttribute("stacking_id") != null) {
-                if (e.getPool().getProductAttribute("stacking_id").getValue().equals(stackId)) {
+                if (e.getPool().getProductAttribute("stacking_id")
+                    .getValue().equals(stackId)) {
                     result += e.getPool().getProductName() + "/";
                 }
             }
         }
-        if(result.length() > 0) {
+        if (result.length() > 0) {
             return result.substring(0, result.length() - 1);
         }
-        else return "UNABLE_TO_GET_NAME";
+        else {
+            return "UNABLE_TO_GET_NAME";
+        }
     }
 
     private String getMarketingName(String id, Consumer consumer) {
