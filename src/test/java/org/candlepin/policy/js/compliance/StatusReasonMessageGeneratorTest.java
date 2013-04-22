@@ -66,7 +66,7 @@ public class StatusReasonMessageGeneratorTest {
 
     @Test
     public void testSocketsMessage() {
-        ComplianceReason reason = buildReason("SOCKETS", buildGeneralAttributes());
+        ComplianceReason reason = buildReason("SOCKETS", buildGeneralAttributes("8","4"));
         generator.setMessage(consumer, reason);
         assertEquals(
             "Subscriptions for Nonstacked Product only cover 4 of 8 sockets.",
@@ -75,7 +75,7 @@ public class StatusReasonMessageGeneratorTest {
 
     @Test
     public void testStackedSubs() {
-        ComplianceReason reason = buildReason("SOCKETS", buildStackedAttributes());
+        ComplianceReason reason = buildReason("SOCKETS", buildStackedAttributes("8","4"));
         generator.setMessage(consumer, reason);
         String message = reason.getMessage();
         assertTrue(message.indexOf("Stack Subscription Two") > 0 &&
@@ -84,7 +84,7 @@ public class StatusReasonMessageGeneratorTest {
 
     @Test
     public void testArchMessage() {
-        ComplianceReason reason = buildReason("ARCH", buildArchAttributes());
+        ComplianceReason reason = buildReason("ARCH", buildGeneralAttributes("x86_64", "ppc64"));
         generator.setMessage(consumer, reason);
         assertEquals(
             "Subscriptions for Nonstacked Product cover architecture ppc64 but" +
@@ -93,7 +93,7 @@ public class StatusReasonMessageGeneratorTest {
 
     @Test
     public void testRamMessage() {
-        ComplianceReason reason = buildReason("RAM", buildGeneralAttributes());
+        ComplianceReason reason = buildReason("RAM", buildGeneralAttributes("8","4"));
         generator.setMessage(consumer, reason);
         assertEquals(
             "Subscriptions for Nonstacked Product only cover 4gb of systems 8gb of ram.",
@@ -102,7 +102,7 @@ public class StatusReasonMessageGeneratorTest {
 
     @Test
     public void testCoresMessage() {
-        ComplianceReason reason = buildReason("CORES", buildGeneralAttributes());
+        ComplianceReason reason = buildReason("CORES", buildGeneralAttributes("8","4"));
         generator.setMessage(consumer, reason);
         assertEquals(
             "Subscriptions for Nonstacked Product only cover 4 of 8 cores.",
@@ -111,7 +111,7 @@ public class StatusReasonMessageGeneratorTest {
 
     @Test
     public void testDefaultMessage() {
-        ComplianceReason reason = buildReason("NOT_A_KEY", buildGeneralAttributes());
+        ComplianceReason reason = buildReason("NOT_A_KEY", buildGeneralAttributes("8","4"));
         generator.setMessage(consumer, reason);
         assertEquals(
             "NOT_A_KEY COVERAGE PROBLEM.  Subscription for" +
@@ -126,34 +126,20 @@ public class StatusReasonMessageGeneratorTest {
         return reason;
     }
 
-    private Map<String, String> buildGeneralAttributes() {
-        return new HashMap<String, String>() {
-            {
-                put("entitlement_id", "ent1");
-                put("has", "8");
-                put("covered", "4");
-            }
-        };
+    private Map<String, String> buildGeneralAttributes(String has, String covered) {
+        HashMap<String, String> result = new HashMap<String, String>();
+        result.put("entitlement_id", "ent1");
+        result.put("has", has);
+        result.put("covered", covered);
+        return result;
     }
 
-    private Map<String, String> buildArchAttributes() {
-        return new HashMap<String, String>() {
-            {
-                put("entitlement_id", "ent1");
-                put("has", "x86_64");
-                put("covered", "ppc64");
-            }
-        };
-    }
-
-    private Map<String, String> buildStackedAttributes() {
-        return new HashMap<String, String>() {
-            {
-                put("stack_id", "stack");
-                put("has", "8");
-                put("covered", "4");
-            }
-        };
+    private Map<String, String> buildStackedAttributes(String has, String covered) {
+        HashMap<String, String> result = new HashMap<String, String>();
+        result.put("stack_id", "stack");
+        result.put("has", has);
+        result.put("covered", covered);
+        return result;
     }
 
     private Entitlement mockBaseStackedEntitlement(Consumer consumer, String stackId,
