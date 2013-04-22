@@ -102,7 +102,7 @@ public class StatusReasonMessageGenerator {
 
     private String getInstalledMarketingName(String id, Consumer consumer) {
         for (ConsumerInstalledProduct prod : consumer.getInstalledProducts()) {
-            if (prod.getId().equals(id)) {
+            if (prod.getProductId().equals(id)) {
                 return prod.getProductName();
             }
         }
