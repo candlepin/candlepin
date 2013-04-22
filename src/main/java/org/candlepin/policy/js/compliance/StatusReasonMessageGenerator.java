@@ -16,12 +16,10 @@ package org.candlepin.policy.js.compliance;
 
 import java.util.HashMap;
 import java.util.Map;
-
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.Entitlement;
 import org.xnap.commons.i18n.I18n;
-
 import com.google.inject.Inject;
 
 /**
@@ -81,9 +79,10 @@ public class StatusReasonMessageGenerator {
     private String getStackedMarketingName(String stackId, Consumer consumer) {
         String result = "";
         for (Entitlement e : consumer.getEntitlements()) {
-            if (e.getPool().getProductAttributes().contains("stacking_id") &&
-                e.getPool().getProductAttribute("stacking_id").getId().equals(stackId)) {
-                result += e.getPool().getProductName() + "/";
+            if (e.getPool().getProductAttribute("stacking_id") != null) {
+                if (e.getPool().getProductAttribute("stacking_id").getValue().equals(stackId)) {
+                    result += e.getPool().getProductName() + "/";
+                }
             }
         }
         if(result.length() > 0) {
