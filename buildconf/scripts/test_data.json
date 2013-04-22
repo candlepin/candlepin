@@ -634,6 +634,27 @@
             }
         },
         {
+            "name": "Awesome OS Instance Based (Standard Support)",
+            "id": "awesomeos-instancebased",
+            "type": "MKT",
+            "provided_products": [
+                "37065",
+                "37070",
+                "37067",
+                "37068",
+                "37069",
+                "37060"
+            ],
+            "attributes": {
+                "instance_multiplier": 2,
+                "sockets": 2,
+                "stacking_id": 15,
+                "multi-entitlement": "yes",
+                "support_level" : "Standard",
+                "support_type" : "L1-L3"
+            }
+        },
+        {
             "name": "Awesome OS Premium Architecture Bits",
             "id": "37062",
             "version": "6.1",
