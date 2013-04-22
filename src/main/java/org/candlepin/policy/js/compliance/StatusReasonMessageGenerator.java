@@ -61,7 +61,7 @@ public class StatusReasonMessageGenerator {
             id = reason.getAttributes().get("stack_id");
             marketingName = getStackedMarketingName(id, c);
             reason.setMessage(i18n.tr(base, marketingName,
-                reason.getAttributes().get("covered"), reason.getAttributes().get("has")));
+                reason.getAttributes().get("covered"), reason.getAttributes().get("has"), reason.getKey()));
         }
         else if (reason.isNonCovered()) {
             id = reason.getAttributes().get("product_id");
@@ -72,7 +72,7 @@ public class StatusReasonMessageGenerator {
             id = reason.getAttributes().get("entitlement_id");
             marketingName = getMarketingName(id, c);
             reason.setMessage(i18n.tr(base, marketingName,
-                reason.getAttributes().get("covered"), reason.getAttributes().get("has")));
+                reason.getAttributes().get("covered"), reason.getAttributes().get("has"), reason.getKey()));
         }
     }
 
