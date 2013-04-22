@@ -22,6 +22,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
@@ -116,6 +117,20 @@ public class StatusReasonMessageGeneratorTest {
         assertEquals(
             "NOT_A_KEY COVERAGE PROBLEM.  Subscription for" +
             " Nonstacked Product covers 4 of 8", reason.getMessage());
+    }
+
+    @Test
+    public void testNonInstalled() {
+        HashMap<String, String> attrs = new HashMap<String, String>();
+        attrs.put("product_id", "prod1");
+        ComplianceReason reason = buildReason("NOTCOVERED", attrs);
+        ConsumerInstalledProduct installed = new ConsumerInstalledProduct();
+        installed.setProductId("prod1");
+        installed.setProductName("NonCovered Product");
+        consumer.addInstalledProduct(installed);
+        generator.setMessage(consumer, reason);
+        assertEquals("The system does not have subscriptions " +
+        		"that cover NonCovered Product.", reason.getMessage());
     }
 
     private ComplianceReason buildReason(String key, Map<String, String> attributes) {
