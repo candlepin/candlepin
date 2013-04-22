@@ -76,7 +76,7 @@ public class ComplianceRulesTest {
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        Locale locale = new Locale.Builder().setLanguage("en").setRegion("US").build();
+        Locale locale = new Locale("en_US");
         i18n = I18nFactory.getI18n(getClass(), "org.candlepin.i18n.Messages", locale,
             I18nFactory.FALLBACK);
         // Load the default production rules:
@@ -86,8 +86,7 @@ public class ComplianceRulesTest {
         when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
         when(rulesCuratorMock.getRules()).thenReturn(rules);
         provider = new JsRunnerProvider(rulesCuratorMock);
-        compliance = new ComplianceRules(provider.get(), entCurator);
-        compliance.setGenerator(new StatusReasonMessageGenerator(i18n));
+        compliance = new ComplianceRules(provider.get(), entCurator, new StatusReasonMessageGenerator(i18n));
         owner = new Owner("test");
     }
 

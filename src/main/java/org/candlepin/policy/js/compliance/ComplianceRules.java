@@ -40,12 +40,14 @@ public class ComplianceRules {
     private JsRunner jsRules;
     private RulesObjectMapper mapper;
     private static Logger log = Logger.getLogger(ComplianceRules.class);
-    @Inject private StatusReasonMessageGenerator generator;
+    private StatusReasonMessageGenerator generator;
 
     @Inject
-    public ComplianceRules(JsRunner jsRules, EntitlementCurator entCurator) {
+    public ComplianceRules(JsRunner jsRules, EntitlementCurator entCurator,
+        StatusReasonMessageGenerator generator) {
         this.entCurator = entCurator;
         this.jsRules = jsRules;
+        this.generator = generator;
 
         mapper = RulesObjectMapper.instance();
         jsRules.init("compliance_name_space");
@@ -114,9 +116,4 @@ public class ComplianceRules {
         }
         return returner;
     }
-
-    public void setGenerator(StatusReasonMessageGenerator generator) {
-        this.generator = generator;
-    }
-
 }
