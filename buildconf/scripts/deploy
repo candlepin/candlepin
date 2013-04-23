@@ -10,6 +10,11 @@ function evalrc ()
 
 function recreate_postgresql ()
 {
+    # need to setup .pgpass for this to use passwds
+    # something like:
+    #   *:*:candlepin:candlepin:candlepinpasswd
+    #   *:*:postgres:candlepin:candlepinpasswd 
+
     dropdb -w -U "$DBUSER" candlepin
     createdb -w -U "$DBUSER" candlepin
     evalrc $? "createdb failed"
@@ -17,7 +22,13 @@ function recreate_postgresql ()
 
 function recreate_oracle ()
 {
-    sqlplus -s 'sys/password@//localhost/XE as sysdba' @`dirname $0`/recreate-candlepin.sql
+    #sqlplus -s 'sys/password@//localhost/XE as sysdba' @`dirname $0`/recreate-candlepin.sql
+    sqlplus -s 'sys/password@//localhost/XE as sysdba'<<EOF
+drop user candlepin cascade;
+create user candlepin identified by candlepin default tablespace users;
+grant dba to candlepin;
+quit
+EOF
     evalrc $? "Creating Candlepin user failed"
 }
 
@@ -206,10 +217,12 @@ fi
 
 if [ "$USE_ORACLE" == "1" ]; then
     echo "building with Oracle JDBC jar"
-    buildr -e oracle clean package test=no $LOGDRIVER
+    ENV_ORACLE="-e oracle"
 else
-    buildr clean package test=no $LOGDRIVER
+    ENV_ORACLE=""
 fi
+
+buildr $ENV_ORACLE clean package test=no $LOGDRIVER
 
 if [ "$?" -ne "0" ]; then
   echo "ERROR: Compile failed."
