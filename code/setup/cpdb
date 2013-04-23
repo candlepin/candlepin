@@ -194,17 +194,12 @@ if __name__ == "__main__":
             help="run against an Oracle installation")
     parser.add_option("--oracle-user",
             dest="oracle_user", default="sys",
-            help="Oracle DBA user")
+            help="Oracle DBA user. Defaults to 'sys'")
     parser.add_option("--oracle-password",
             dest="oracle_password",
             help="Oracle DBA password")
 
     (options, args) = parser.parse_args()
-
-    # If they specify an oracle user or password, then they probably want
-    # to run against Oracle.
-    if options.oracle_user or options.oracle_password:
-        options.oracle = True
 
     if options.oracle:
         if not options.oracle_password:
