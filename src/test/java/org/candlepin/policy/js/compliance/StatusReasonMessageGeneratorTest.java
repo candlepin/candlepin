@@ -67,7 +67,7 @@ public class StatusReasonMessageGeneratorTest {
 
     @Test
     public void testSocketsMessage() {
-        ComplianceReason reason = buildReason("SOCKETS", buildGeneralAttributes("8","4"));
+        ComplianceReason reason = buildReason("SOCKETS", buildGeneralAttributes("8", "4"));
         generator.setMessage(consumer, reason);
         assertEquals(
             "Subscriptions for Nonstacked Product only cover 4 of 8 sockets.",
@@ -76,7 +76,7 @@ public class StatusReasonMessageGeneratorTest {
 
     @Test
     public void testStackedSubs() {
-        ComplianceReason reason = buildReason("SOCKETS", buildStackedAttributes("8","4"));
+        ComplianceReason reason = buildReason("SOCKETS", buildStackedAttributes("8", "4"));
         generator.setMessage(consumer, reason);
         String message = reason.getMessage();
         assertTrue(message.indexOf("Stack Subscription Two") > 0 &&
@@ -85,7 +85,8 @@ public class StatusReasonMessageGeneratorTest {
 
     @Test
     public void testArchMessage() {
-        ComplianceReason reason = buildReason("ARCH", buildGeneralAttributes("x86_64", "ppc64"));
+        ComplianceReason reason = buildReason("ARCH",
+            buildGeneralAttributes("x86_64", "ppc64"));
         generator.setMessage(consumer, reason);
         assertEquals(
             "Subscriptions for Nonstacked Product cover architecture ppc64 but" +
@@ -94,7 +95,7 @@ public class StatusReasonMessageGeneratorTest {
 
     @Test
     public void testRamMessage() {
-        ComplianceReason reason = buildReason("RAM", buildGeneralAttributes("8","4"));
+        ComplianceReason reason = buildReason("RAM", buildGeneralAttributes("8", "4"));
         generator.setMessage(consumer, reason);
         assertEquals(
             "Subscriptions for Nonstacked Product only cover 4gb of systems 8gb of ram.",
@@ -103,7 +104,7 @@ public class StatusReasonMessageGeneratorTest {
 
     @Test
     public void testCoresMessage() {
-        ComplianceReason reason = buildReason("CORES", buildGeneralAttributes("8","4"));
+        ComplianceReason reason = buildReason("CORES", buildGeneralAttributes("8", "4"));
         generator.setMessage(consumer, reason);
         assertEquals(
             "Subscriptions for Nonstacked Product only cover 4 of 8 cores.",
@@ -112,7 +113,8 @@ public class StatusReasonMessageGeneratorTest {
 
     @Test
     public void testDefaultMessage() {
-        ComplianceReason reason = buildReason("NOT_A_KEY", buildGeneralAttributes("8","4"));
+        ComplianceReason reason = buildReason("NOT_A_KEY",
+            buildGeneralAttributes("8", "4"));
         generator.setMessage(consumer, reason);
         assertEquals(
             "NOT_A_KEY COVERAGE PROBLEM.  Subscription for" +
@@ -130,7 +132,7 @@ public class StatusReasonMessageGeneratorTest {
         consumer.addInstalledProduct(installed);
         generator.setMessage(consumer, reason);
         assertEquals("The system does not have subscriptions " +
-        		"that cover NonCovered Product.", reason.getMessage());
+                "that cover NonCovered Product.", reason.getMessage());
     }
 
     private ComplianceReason buildReason(String key, Map<String, String> attributes) {
