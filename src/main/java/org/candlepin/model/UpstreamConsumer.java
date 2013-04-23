@@ -62,7 +62,7 @@ public class UpstreamConsumer extends AbstractHibernateObject {
 
     @ManyToOne
     @JoinColumn(nullable = false)
-    @ForeignKey(name = "fk_upstream_cnsmr_cnsmr_type")
+    @ForeignKey(name = "fk_upstream_consumer_type")
     private ConsumerType type;
 
     @Column(name = "owner_id", length = 32, nullable = false)

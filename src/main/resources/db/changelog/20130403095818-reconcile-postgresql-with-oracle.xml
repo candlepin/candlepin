@@ -8,7 +8,7 @@
 
     <!-- Most of these changes are simply reducing a name to fit within Oracle's 30 character limit. -->
     <changeSet id="20130403095818-1" author="awood" dbms="postgresql">
-        <renameTable oldTableName="cp_consumer_installed_products" newTableName="cp_cnsmr_installed_products"/>
+        <renameTable oldTableName="cp_consumer_installed_products" newTableName="cp_installed_products"/>
     </changeSet>
 
     <changeSet id="20130403095818-2" author="awood" dbms="postgresql">
@@ -17,7 +17,7 @@
     </changeSet>
 
     <changeSet id="20130403095818-3" author="awood" dbms="postgresql">
-        <sql>ALTER INDEX cp_consumer_installed_products_pkey RENAME TO cp_cnsmr_instlld_prdcts_pkey</sql>
+        <sql>ALTER INDEX cp_consumer_installed_products_pkey RENAME TO cp_installed_products_pkey</sql>
     </changeSet>
     
     <changeSet id="20130403095818-4" author="awood" dbms="postgresql">
@@ -117,5 +117,10 @@
 
     <changeSet id="20130403095818-23" author="awood" dbms="postgresql">
         <sql>UPDATE cp_content SET contenturl=null WHERE contenturl=''</sql>
+    </changeSet>
+
+    <changeSet id="20130403095818-24" author="awood" dbms="postgresql">
+        <addForeignKeyConstraint baseColumnNames="consumer_id" baseTableName="cp_installed_products" constraintName="fk_installed_product" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer" referencesUniqueColumn="false"/>
+        <dropForeignKeyConstraint baseTableName="cp_installed_products" constraintName="fk_consumer_installed_product"/>
     </changeSet>
 </databaseChangeLog>

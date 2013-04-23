@@ -8,7 +8,7 @@
 
 
     <changeSet id="20130402153704-1" author="awood" dbms="postgresql">
-        <addForeignKeyConstraint baseColumnNames="type_id" baseTableName="cp_upstream_consumer" constraintName="fk_upstream_cnsmr_cnsmr_type" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer_type" referencesUniqueColumn="false"/>
+        <addForeignKeyConstraint baseColumnNames="type_id" baseTableName="cp_upstream_consumer" constraintName="fk_upstream_consumer_type" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer_type" referencesUniqueColumn="false"/>
     </changeSet>
 
     <changeSet id="20130402153704-2" author="awood" dbms="postgresql">

@@ -122,9 +122,9 @@
         </createTable>
     </changeSet>
     <changeSet author="awood (generated)" id="1364932903575-7" dbms="oracle">
-        <createTable tableName="cp_cnsmr_installed_products">
+        <createTable tableName="cp_installed_products">
             <column name="id" type="VARCHAR(32)">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_cnsmr_instlld_prdcts_pkey"/>
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_installed_products_pkey"/>
             </column>
             <column name="created" type="TIMESTAMP WITH TIME ZONE"/>
             <column name="updated" type="TIMESTAMP WITH TIME ZONE"/>
@@ -1046,7 +1046,7 @@
         <addForeignKeyConstraint baseColumnNames="consumer_id" baseTableName="cp_consumer_guests" constraintName="fk_consumer_guests" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer" referencesUniqueColumn="false"/>
     </changeSet>
     <changeSet author="awood (generated)" id="1364932903575-89" dbms="oracle">
-        <addForeignKeyConstraint baseColumnNames="consumer_id" baseTableName="cp_cnsmr_installed_products" constraintName="fk_consumer_installed_product" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer" referencesUniqueColumn="false"/>
+        <addForeignKeyConstraint baseColumnNames="consumer_id" baseTableName="cp_installed_products" constraintName="fk_installed_product" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer" referencesUniqueColumn="false"/>
     </changeSet>
     <changeSet author="awood (generated)" id="1364932903575-90" dbms="oracle">
         <addForeignKeyConstraint baseColumnNames="cp_content_id" baseTableName="cp_content_modified_products" constraintName="fkc93d6a8232912b37" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_content" referencesUniqueColumn="false"/>
@@ -1151,7 +1151,7 @@
         <addForeignKeyConstraint baseColumnNames="consumer_idcert_id" baseTableName="cp_upstream_consumer" constraintName="fk54b0f288a0b39916" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_id_cert" referencesUniqueColumn="false"/>
     </changeSet>
     <changeSet author="awood (generated)" id="1364932903575-124" dbms="oracle">
-        <addForeignKeyConstraint baseColumnNames="type_id" baseTableName="cp_upstream_consumer" constraintName="fk_upstream_cnsmr_cnsmr_type" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer_type" referencesUniqueColumn="false"/>
+        <addForeignKeyConstraint baseColumnNames="type_id" baseTableName="cp_upstream_consumer" constraintName="fk_upstream_consumer_type" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer_type" referencesUniqueColumn="false"/>
     </changeSet>
     <changeSet author="awood (generated)" id="1364932903575-125" dbms="oracle">
         <addForeignKeyConstraint baseColumnNames="sched_name, trigger_name, trigger_group" baseTableName="qrtz_blob_triggers" constraintName="qrtz_blob_trg_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="sched_name, trigger_name, trigger_group" referencedTableName="qrtz_triggers" referencesUniqueColumn="false"/>
