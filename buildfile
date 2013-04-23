@@ -59,7 +59,7 @@ HIBERNATE = ['org.hibernate:hibernate-core:jar:3.3.2.GA',
              'c3p0:c3p0:jar:0.9.0',
              'dom4j:dom4j:jar:1.6.1']
 DB = 'postgresql:postgresql:jar:9.0-801.jdbc4'
-ORACLE = 'com.oracle:ojdbc6:jar:11.2.0'
+ORACLE = ['com.oracle:ojdbc6:jar:11.2.0', 'org.quartz-scheduler:quartz-oracle:jar:2.1.5']
 COMMONS = ['commons-codec:commons-codec:jar:1.4',
            'commons-collections:commons-collections:jar:3.1',
            'commons-io:commons-io:jar:1.3.2',
@@ -86,7 +86,6 @@ OAUTH= [group('oauth',
               :version => '20100527')]
 
 QUARTZ = 'org.quartz-scheduler:quartz:jar:2.1.5'
-QUARTZ_ORACLE = 'org.quartz-scheduler:quartz-oracle:jar:2.1.5'
 
 HORNETQ = [group('hornetq-core',
                  'hornetq-core-client',
@@ -190,7 +189,6 @@ define "candlepin" do
   compile.with LOGDRIVER if use_logdriver
   if Buildr.environment == 'oracle'
     compile.with ORACLE
-    compile.with QUARTZ_ORACLE
   else
     compile.with DB
   end
