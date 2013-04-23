@@ -35,6 +35,8 @@ var SOCKETS_ATTRIBUTE = "sockets";
 var CORES_ATTRIBUTE = "cores";
 var ARCH_ATTRIBUTE = "arch";
 var RAM_ATTRIBUTE = "ram";
+var INSTANCE_ATTRIBUTE = "instance_multiplier";
+var REQUIRES_HOST_ATTRIBUTE = "requires_host";
 
 /**
  *  These product attributes are considered when
@@ -514,8 +516,78 @@ var CoverageCalculator = {
                                                                sourceValue);
                 }
                 return reason;
+            },
+
+            sockets: function(sourceData, prodAttr, consumer) {
+                var consumerQuantity = FactValueCalculator.getFact(prodAttr, consumer);
+
+                // The number of sockets covered by a non-stacked entitlement/pool, or
+                // the accumulated value covered currently by a stack.
+                var socketsValue = parseInt(sourceData.values[prodAttr]);
+
+
+                socketsValue = CoverageCalculator.adjustSocketsCovered(consumer, socketsValue,
+                                                    sourceData.instanceMultiplier);
+                var isCovered = (socketsValue == -1) || (socketsValue >= consumerQuantity);
+
+                log.debug("  System's " + prodAttr + " covered: " + isCovered);
+
+                var reason = null;
+                if (!isCovered) {
+                    reason = StatusReasonGenerator.buildReason(prodAttr.toUpperCase(),
+                                                               sourceData.type,
+                                                               sourceData.id,
+                                                               consumerQuantity,
+                                                               socketsValue);
+                }
+                return reason;
             }
         };
+    },
+
+    /**
+     * Adjusts the value for sockets covered based on the consumer some
+     * product attributes which alter this value from it's normal behaviour.
+     * In cases where the attribute is not enforced for a given conditon, this
+     * function will return -1.
+     *
+     *      consumer - consumer in question
+     *      socketsValue - sockets covered by normal accumulation rules
+     *                     (sockets attribute * quantity)
+     *      instanceMultiplier - Product attribute, may be null.
+     *
+     *      Return: actual number of sockets covered, -1 if infinite.
+     */
+    adjustSocketsCovered: function(consumer, socketsValue, instanceMultiplier) {
+        if (instanceMultiplier) {
+            var instanceMultiplier = parseInt(instanceMultiplier);
+            // Virt guests only need a quantity of 1 from instance based subscriptions:
+            if (consumer.facts['virt.is_guest']) {
+                if (socketsValue > 0) {
+                    log.debug("  Guest system using instance based subscription, covered.");
+                    return -1;
+                }
+            }
+            else {
+                // For a physical system, adjust the quantity covered based on the
+                // instance multiplier. We need to round down by instance multiplier,
+                //
+                // i.e. for a physical system:
+                //      8 sockets accumulated = 4 covered
+                //      9 sockets accumulated = 4 covered
+                //      1 socket accumulated = 0 covered
+                log.debug("  Physical system using instance based subscription.");
+                initialValue = socketsValue; // just so we can log accurately
+                socketsValue = socketsValue / instanceMultiplier;
+                // Round uneven multiples down:
+                socketsValue = socketsValue - (socketsValue % instanceMultiplier);
+
+                log.debug("  Adjusting sockets covered from: "
+                          + initialValue + " to: " + socketsValue);
+                return socketsValue;
+            }
+        }
+        return socketsValue;
     },
 
     /**
@@ -524,7 +596,8 @@ var CoverageCalculator = {
      */
     getEntitlementCoverage: function(entitlement, consumer) {
         var poolValues = this.getValues(entitlement.pool, "hasProductAttribute", "getProductAttribute");
-        var sourceData = this.buildSourceData("ENTITLEMENT", entitlement.id, poolValues);
+        var sourceData = this.buildSourceData("ENTITLEMENT", entitlement.id,
+                                              poolValues, entitlement.pool.getProductAttribute(INSTANCE_ATTRIBUTE));
         var coverage = this.getCoverageForSource(sourceData, consumer, this.getDefaultConditions());
         log.debug("Entitlement covered: " + coverage.percentage);
         return coverage;
@@ -536,7 +609,8 @@ var CoverageCalculator = {
      */
     getPoolCoverage: function(pool, consumer) {
         var poolValues = this.getValues(pool, "hasProductAttribute", "getProductAttribute");
-        var sourceData = this.buildSourceData("POOL", pool.id, poolValues);
+        var sourceData = this.buildSourceData("POOL", pool.id,
+                                              poolValues, pool.getProductAttribute(INSTANCE_ATTRIBUTE));
         var coverage = this.getCoverageForSource(sourceData, consumer, this.getDefaultConditions());
         log.debug("Pool covered: " + coverage.percentage);
         return coverage;
@@ -574,7 +648,9 @@ var CoverageCalculator = {
             return null;
         };
 
-        var sourceData = this.buildSourceData("STACK", stackTracker.stackId, stackValues);
+        var sourceData = this.buildSourceData("STACK", stackTracker.stackId,
+                                              stackValues,
+                                              stackTracker.instanceMultiplier);
         var coverage = this.getCoverageForSource(sourceData, consumer, conditions);
         log.debug("Stack coverage: " + coverage.percentage);
         return coverage;
@@ -606,11 +682,15 @@ var CoverageCalculator = {
     /**
      * Builds the source data required for checking coverage of a source.
      */
-    buildSourceData: function(sourceType, sourceId, sourceValues) {
+    buildSourceData: function(sourceType, sourceId, sourceValues, instanceMultiplier) {
         return {
             type: sourceType,
             id: sourceId,
-            values: sourceValues
+            values: sourceValues,
+
+            // Could be none if not set:
+            instanceMultiplier: instanceMultiplier
+
         };
     },
 
@@ -697,24 +777,39 @@ var CoverageCalculator = {
 
             log.debug("  Checking quantity required for " + attr);
 
-            var poolQuantity = pool.getProductAttribute(attr);
-            if (!poolQuantity) {
+            var prodAttrValue = pool.getProductAttribute(attr);
+            if (!prodAttrValue) {
                 log.debug("  Skipping " + attr + ". Pool does not cover attribute.");
                 continue;
             }
-            log.debug("    Quantity provided by pool: " + poolQuantity);
+            log.debug("    Quantity provided by pool: " + prodAttrValue);
 
             var currentCovered = stackTracker.getAccumulatedValue(attr);
             log.debug("    Quantity currently covered by stack: " + currentCovered);
 
-            var consumerQuantity = FactValueCalculator.getFact(attr, consumer);
+            var consumerQuantity = parseInt(FactValueCalculator.getFact(attr, consumer));
+
             log.debug("    Quantity to be covered on consumer: " + consumerQuantity);
 
             // Figure out the max required from the pool to cover
             // the consumers fact.
             var amountRequiredFromPool = 0;
-            while (currentCovered + (amountRequiredFromPool * poolQuantity) < consumerQuantity) {
-                amountRequiredFromPool++;
+            if (attr == SOCKETS_ATTRIBUTE) {
+                var coveredCounter = currentCovered + (amountRequiredFromPool * prodAttrValue);
+                var actualCovered = CoverageCalculator.adjustSocketsCovered(consumer, coveredCounter,
+                                                                            stackTracker.instanceMultiplier);
+                // Watch out for -1 indicating any number of sockets are covered:
+                while (actualCovered < consumerQuantity && actualCovered != -1) {
+                    amountRequiredFromPool++;
+                    coveredCounter = currentCovered + (amountRequiredFromPool * prodAttrValue);
+                    actualCovered = CoverageCalculator.adjustSocketsCovered(consumer, coveredCounter,
+                                                                            stackTracker.instanceMultiplier);
+                }
+            }
+            else {
+                while (currentCovered + (amountRequiredFromPool * prodAttrValue) < consumerQuantity) {
+                    amountRequiredFromPool++;
+                }
             }
 
             if (maxQuantity < amountRequiredFromPool) {
@@ -759,7 +854,7 @@ function findStackingPools(pool_class, consumer, compliance) {
         log.debug("stack_id: " + stack_id);
 
         // Track our attribute counts.
-        var stackTracker = createStackTracker(stack_id);
+        var stackTracker = createStackTracker(consumer, stack_id);
         var entitlements = partialStacks[stack_id];
         for (var k = 0; k < entitlements.length; k++) {
             var entitlement = entitlements[k];
@@ -830,7 +925,7 @@ function findStackingPools(pool_class, consumer, compliance) {
                     // not have any entitlements associated with it,
                     // but will track any attributes that must be enforced
                     // when compliance is checked.
-                    var poolStackTracker = createStackTrackerFromPool(pool);
+                    var poolStackTracker = createStackTrackerFromPool(pool, consumer);
                     stackTrackers[stack_id] = poolStackTracker;
                 }
             }
@@ -937,12 +1032,17 @@ function findStackingPools(pool_class, consumer, compliance) {
  *   will provide 4 sockets and 4GB of ram. A stack tracker tracks
  *   these accumulated values as entitlements are added.
  */
-function createStackTracker(stackId) {
+function createStackTracker(consumer, stackId) {
     return {
         stackId: stackId,
+        consumer: consumer,
 
         // The IDs of entitlements that have been added to this tracker.
         entitlementIds: [],
+
+        // Carry the instance multiplier if we detect one when accumulating
+        // values for the stack.
+        instanceMultiplier: null,
 
         /**
          *  The accumulated values from adding entitlements to this tracker.
@@ -999,8 +1099,7 @@ function createStackTracker(stackId) {
 
             var strategies = {
 
-                // Assumes dealing with integers.
-                default: function (currentStackValue, poolValue, quantity) {
+                default: function (currentStackValue, poolValue, pool, quantity) {
                     var stackValue = currentStackValue | 0;
                     stackValue = stackValue + (parseInt(poolValue) * quantity);
                     return stackValue;
@@ -1011,7 +1110,7 @@ function createStackTracker(stackId) {
                  *  a list of arch strings. Each pool value is a , seperated
                  *  string of supported archs.
                  */
-                arch: function (currentStackValue, poolValue, quantity) {
+                arch: function (currentStackValue, poolValue, pool, quantity) {
                     var stackValue = currentStackValue || [];
                     stackValue.push(poolValue);
                     return stackValue;
@@ -1037,13 +1136,19 @@ function createStackTracker(stackId) {
          */
         updateAccumulatedFromPool: function (pool, quantityToTake) {
             log.debug("Updating stack tracker's values from pool...");
+
+            // Store instance multiplier if we spot it:
+            if (pool.getProductAttribute(INSTANCE_ATTRIBUTE)) {
+                this.instanceMultiplier = pool.getProductAttribute(INSTANCE_ATTRIBUTE);
+            }
+
             for (var attrIdx in STACKABLE_ATTRIBUTES) {
                 var nextAttr = STACKABLE_ATTRIBUTES[attrIdx];
                 var poolValue = pool.getProductAttribute(nextAttr);
                 if (poolValue != null) {
                     var stackValue = this.enforces(nextAttr) ? this.getAccumulatedValue(nextAttr) : null;
                     var accumulate = this.getAccumulationStrategy(nextAttr);
-                    this.setAccumulatedValue(nextAttr, accumulate(stackValue, poolValue, quantityToTake));
+                    this.setAccumulatedValue(nextAttr, accumulate(stackValue, poolValue, pool, quantityToTake));
                     log.debug("  Set " + nextAttr + " quantity on stack to " +
                         this.getAccumulatedValue(nextAttr));
                 }
@@ -1080,8 +1185,8 @@ function createStackTracker(stackId) {
  *  many entitlements from this pool have to be stacked in order
  *  to cover the consumer.
  */
-function createStackTrackerFromPool(pool) {
-    var stackTracker = createStackTracker(pool.getProductAttribute("stacking_id"));
+function createStackTrackerFromPool(pool, consumer) {
+    var stackTracker = createStackTracker(consumer, pool.getProductAttribute("stacking_id"));
     // There are no entitlements for this stack, but
     // we have to tell the stack what attributes it must
     // enforce. This is determined by attributes that are
@@ -1111,10 +1216,10 @@ function comparePools(pool1, pool2) {
     // for a reason to pick one or the other. We know that the host must match
     // as pools are filtered before even being passed to select best pools.
     if (pool1.getProductAttribute("virt_only") == "true" && pool2.getProductAttribute("virt_only") == "true") {
-        if (pool1.getProductAttribute("requires_host") != null && pool2.getProductAttribute("requires_host") == null) {
+        if (pool1.getProductAttribute(REQUIRES_HOST_ATTRIBUTE) != null && pool2.getProductAttribute(REQUIRES_HOST_ATTRIBUTE) == null) {
             return true;
         }
-        if (pool2.getProductAttribute("requires_host") != null && pool1.getProductAttribute("requires_host") == null) {
+        if (pool2.getProductAttribute(REQUIRES_HOST_ATTRIBUTE) != null && pool1.getProductAttribute(REQUIRES_HOST_ATTRIBUTE) == null) {
             return false;
         }
         // If neither condition is true, no preference...
@@ -1922,7 +2027,7 @@ var Compliance = {
      */
     getStackCoverage: function(consumer, stack_id, ents) {
         log.debug("Checking stack compliance for: " + stack_id);
-        var stackTracker = createStackTracker(stack_id);
+        var stackTracker = createStackTracker(consumer, stack_id);
         for (var k = 0; k < ents.length; k++) {
             var ent = ents[k];
 

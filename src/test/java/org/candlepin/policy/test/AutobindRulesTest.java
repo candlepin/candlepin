@@ -1,4 +1,4 @@
-/**
+ /**
  * Copyright (c) 2009 - 2012 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
@@ -431,12 +431,91 @@ public class AutobindRulesTest {
         return p;
     }
 
-    private Product mockProductSockets(String pid, String productName, String sockets) {
-        Product product = new Product(pid, productName);
-        product.setAttribute("sockets", sockets);
-        product.setAttribute("multi-entitlement", "no");
-        when(this.prodAdapter.getProductById(pid)).thenReturn(product);
-        return product;
+    @Test
+    public void instanceAutobindForPhysicalNoSocketFact() {
+        List<Pool> pools = createInstanceBasedPool();
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>());
+
+        assertEquals(1, bestPools.size());
+        PoolQuantity q = bestPools.get(0);
+        assertEquals(new Integer(2), q.getQuantity());
     }
 
+    @Test
+    public void instanceAutobindForPhysical8Socket() {
+        List<Pool> pools = createInstanceBasedPool();
+        setupConsumer("8", false);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>());
+
+        assertEquals(1, bestPools.size());
+        PoolQuantity q = bestPools.get(0);
+        assertEquals(new Integer(8), q.getQuantity());
+    }
+
+    @Test
+    public void instanceAutobindForPhysical8SocketCompletePartialStack() {
+        List<Pool> pools = createInstanceBasedPool();
+        setupConsumer("8", false);
+
+        // Create a pre-existing entitlement which only covers half of the sockets:
+        Entitlement mockEnt = mockEntitlement(pools.get(0), 4);
+        consumer.addEntitlement(mockEnt);
+        compliance.addPartiallyCompliantProduct(productId, mockEnt);
+        compliance.addPartialStack("1", mockEnt);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>());
+
+        assertEquals(1, bestPools.size());
+        PoolQuantity q = bestPools.get(0);
+        assertEquals(new Integer(4), q.getQuantity());
+    }
+
+    /*
+     * Simple utility to simulate a pre-existing entitlement for a pool.
+     */
+    private Entitlement mockEntitlement(Pool p, int quantity) {
+        Entitlement e = TestUtil.createEntitlement(owner, consumer, p, null);
+        e.setQuantity(quantity);
+        return e;
+    }
+
+    @Test
+    public void instanceAutobindForVirt8Vcpu() {
+        List<Pool> pools = createInstanceBasedPool();
+        setupConsumer("8", true);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>());
+
+        assertEquals(1, bestPools.size());
+        PoolQuantity q = bestPools.get(0);
+        assertEquals(new Integer(1), q.getQuantity());
+    }
+
+    private void setupConsumer(String socketFact, boolean isVirt) {
+        this.consumer.setFact("cpu.cpu_socket(s)", socketFact);
+        if (isVirt) {
+            this.consumer.setFact("virt.is_guest", "true");
+        }
+    }
+
+    private List<Pool> createInstanceBasedPool() {
+        Product product = new Product(productId, "A test product");
+        product.setAttribute("instance_multiplier", "2");
+        product.setAttribute("stacking_id", "1");
+        product.setAttribute("multi-entitlement", "yes");
+        product.setAttribute("sockets", "2");
+        Pool pool = TestUtil.createPool(owner, product, 100);
+        pool.setId("DEAD-BEEF");
+        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool);
+        return pools;
+    }
 }
