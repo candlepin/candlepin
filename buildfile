@@ -86,6 +86,8 @@ OAUTH= [group('oauth',
               :version => '20100527')]
 
 QUARTZ = 'org.quartz-scheduler:quartz:jar:2.1.5'
+QUARTZ_ORACLE = 'org.quartz-scheduler:quartz-oracle:jar:2.1.5'
+
 HORNETQ = [group('hornetq-core',
                  'hornetq-core-client',
 #                 'hornetq-resources', #Native libs for libaio
@@ -188,6 +190,7 @@ define "candlepin" do
   compile.with LOGDRIVER if use_logdriver
   if Buildr.environment == 'oracle'
     compile.with ORACLE
+    compile.with QUARTZ_ORACLE
   else
     compile.with DB
   end
