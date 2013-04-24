@@ -52,7 +52,7 @@ public class ProductAttribute extends AbstractHibernateObject implements Attribu
 
 
     @ManyToOne
-    @ForeignKey(name = "fk_product_id")
+    @ForeignKey(name = "fk_product_attrib_product_id")
     @JoinColumn(nullable = false)
     @Index(name = "cp_prodattribute_prod_fk_idx")
     private Product product;

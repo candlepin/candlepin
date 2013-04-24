@@ -153,6 +153,28 @@ class CertSetup(object):
         run_command_with_sudo('chmod a+r %s' % self.keystore)
 
 
+class OracleConf(object):
+    def get_dialect(self):
+        return "org.hibernate.dialect.Oracle10gDialect"
+
+    def get_driver(self):
+        return "oracle.jdbc.OracleDriver"
+
+    def get_jdbc_url(self, db):
+        return "jdbc:oracle:thin:@//%s" % db
+
+
+class PostgresqlConf(object):
+    def get_dialect(self):
+        return "org.hibernate.dialect.PostgreSQLDialect"
+
+    def get_driver(self):
+        return "org.postgresql.Driver"
+
+    def get_jdbc_url(self, db):
+        return "jdbc:postgresql:%s" % db
+
+
 def write_candlepin_conf(options):
     """
     Write configuration to candlepin.conf.
@@ -165,13 +187,18 @@ def write_candlepin_conf(options):
         return
 
     print("Writing configuration file")
+
+    if options.oracle:
+        dbconf = OracleConf()
+    else:
+        dbconf = PostgresqlConf()
+
     f = open(CANDLEPIN_CONF, 'w')
-    f.write('jpa.config.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect\n')
-    f.write('jpa.config.hibernate.connection.driver_class=org.postgresql.Driver\n')
-    f.write('jpa.config.hibernate.connection.url=jdbc:postgresql:%s\n' % options.db)
-    f.write('jpa.config.hibernate.hbm2ddl.auto=validate\n')
+    f.write('jpa.config.hibernate.dialect=%s\n' % dbconf.get_dialect())
+    f.write('jpa.config.hibernate.connection.driver_class=%s\n' % dbconf.get_driver())
+    f.write('jpa.config.hibernate.connection.url=%s\n' % dbconf.get_jdbc_url(options.db))
     f.write('jpa.config.hibernate.connection.username=%s\n' % options.dbuser)
-    f.write('jpa.config.hibernate.connection.password=candlepin\n')
+    f.write('jpa.config.hibernate.connection.password=%s\n' % options.password)
     if options.webapp_prefix:
         f.write('\ncandlepin.export.webapp.prefix=%s\n' % options.webapp_prefix)
     f.close()
@@ -195,8 +222,24 @@ def main(argv):
     parser.add_option("-k", "--keystorepwd",
                   dest="keystorepwd", default="password",
                   help="the keystore password to use for the tomcat configuration")
+    parser.add_option("-p", "--password",
+                  dest="password", default="candlepin",
+                  help="Database password. Defaults to 'candlepin'")
+    parser.add_option("--oracle",
+                  action="store_true", dest="oracle", default=False,
+                  help="set up Candlepin to run against Oracle")
+    parser.add_option("--oracle-user",
+                  dest="oracle_user", default="sys",
+                  help="Oracle DBA user. Defaults to 'sys'")
+    parser.add_option("--oracle-password",
+                  dest="oracle_password",
+                  help="Oracle DBA password")
 
     (options, args) = parser.parse_args()
+
+    if options.oracle and not options.oracle_password:
+        print("ERROR: Please provide the DBA password.")
+        sys.exit(1)
 
     # Stop tomcat before we wipe the DB otherwise you get errors from pg
     tsetup = TomcatSetup('/etc/tomcat6', options.keystorepwd)
@@ -208,8 +251,13 @@ def main(argv):
     # it out if cpsetup is re-run.
     script_dir = os.path.dirname(__file__)
     cpdb_script = os.path.join(script_dir, "cpdb")
-    run_command("%s --create -u %s --database %s" % (cpdb_script,
-        options.dbuser, options.db))
+    command = "%s --create -u %s --database %s --password %s" % (cpdb_script,
+        options.dbuser, options.db, options.password)
+    if options.oracle:
+        command = " ".join([command, "--oracle --oracle-user %s --oracle-password %s" %
+            (options.oracle_user, options.oracle_password)])
+
+    run_command(command)
 
     if not options.skipdbcfg:
         write_candlepin_conf(options)

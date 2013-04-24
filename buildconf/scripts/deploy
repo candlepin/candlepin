@@ -1,4 +1,5 @@
 #!/bin/sh
+
 function evalrc ()
 {
     if [ "$1" -ne "0" ] ; then
@@ -7,43 +8,64 @@ function evalrc ()
     fi
 }
 
-function gendb ()
+function recreate_postgresql ()
 {
-	echo "============ generating a new db =============="
-
-
     # need to setup .pgpass for this to use passwds
     # something like:
     #   *:*:candlepin:candlepin:candlepinpasswd
-    #   *:*:postgres:candlepin:candlepinpasswd
+    #   *:*:postgres:candlepin:candlepinpasswd 
 
     dropdb -w -U "$DBUSER" candlepin
     createdb -w -U "$DBUSER" candlepin
     evalrc $? "createdb failed"
+} 
 
-    LQCOMMAND="liquibase --driver=org.postgresql.Driver --classpath=src/main/resources/:target/classes/:/usr/share/java/postgresql-jdbc.jar --changeLogFile=db/changelog/changelog-create.xml --url=jdbc:postgresql:candlepin --username=candlepin"
-    if [ -n "$DBPASSWORD" ] ; then
-        LQCOMMAND="$LQCOMMAND --password=$DBPASSWORD "
-    fi
-    LQCOMMAND="$LQCOMMAND update -Dcommunity=True"
-    $LQCOMMAND
-    evalrc $? "schema creation failed"
-}
-
-function updatedb ()
+function recreate_oracle ()
 {
-	echo "============ updating db =============="
+    #sqlplus -s 'sys/password@//localhost/XE as sysdba' @`dirname $0`/recreate-candlepin.sql
+    sqlplus -s 'sys/password@//localhost/XE as sysdba'<<EOF
+drop user candlepin cascade;
+create user candlepin identified by candlepin default tablespace users;
+grant dba to candlepin;
+quit
+EOF
+    evalrc $? "Creating Candlepin user failed"
+}
 
-    LQCOMMAND="liquibase  --driver=org.postgresql.Driver --classpath=src/main/resources/:target/classes/:/usr/share/java/postgresql-jdbc.jar --changeLogFile=db/changelog/changelog-update.xml --url=jdbc:postgresql:candlepin --username=candlepin"
+function gendb ()
+{
+if [ "$GENDB" == "1" ]; then
+    MESSAGE="generating a new db"
+    CHANGELOG="changelog-create.xml"
+    if [ "$USE_ORACLE" == "1" ]; then
+        recreate_oracle
+    else
+        recreate_postgresql
+    fi
+else
+    MESSAGE="updating db"
+    CHANGELOG="changelog-update.xml"
+fi
+
+if [ "$USE_ORACLE" == "1" ]; then
+    DRIVER="oracle.jdbc.OracleDriver"
+    JDBC_JAR="/usr/lib/oracle/11.2/client64/lib/ojdbc6.jar"
+    JDBC_URL="jdbc:oracle:thin:@//localhost:1521/XE "
+else
+    DRIVER="org.postgresql.Driver"
+    JDBC_JAR="/usr/share/java/postgresql-jdbc.jar"
+    JDBC_URL="jdbc:postgresql:candlepin"
+fi
+
+	echo "============ $MESSAGE =============="
+    LQCOMMAND="liquibase --driver=$DRIVER --classpath=src/main/resources/:target/classes/:$JDBC_JAR --changeLogFile=db/changelog/$CHANGELOG --url=$JDBC_URL --username=candlepin"
     if [ -n "$DBPASSWORD" ] ; then
         LQCOMMAND="$LQCOMMAND --password=$DBPASSWORD "
     fi
     LQCOMMAND="$LQCOMMAND update -Dcommunity=True"
     $LQCOMMAND
-    evalrc $? "schema update failed"
+    evalrc $? "Liquibase command failed"
 }
-
-
 
 function deploy ()
 {
@@ -115,6 +137,8 @@ function usage
         -f  force cert regeneration
         -g  generate database
         -t  import test data
+        -o  use Oracle
+        -l  use Logdriver
 HELP
 }
 
@@ -125,11 +149,13 @@ fi
 
 DBUSER="candlepin"
 
-while getopts ":fgt" opt; do
+while getopts ":fgtol" opt; do
     case $opt in
         f  ) FORCECERT="1" ;;
         g  ) GENDB="1";;
         t  ) TESTDATA="1";;
+        o  ) USE_ORACLE="1";;
+        l  ) LOGDRIVER="logdriver";;
         ?  ) usage; exit;;
     esac
 done
@@ -183,22 +209,27 @@ eval $STOP
 
 if [ "$LOGDRIVER" == "logdriver" ]; then
     echo "using logdriver"
-    buildr -e logdriver clean package test=no
+    LOGDRIVER="logdriver=yes"
 else
     echo "using NO logdriver"
-    buildr clean package test=no
+    LOGDRIVER=""
 fi
+
+if [ "$USE_ORACLE" == "1" ]; then
+    echo "building with Oracle JDBC jar"
+    ENV_ORACLE="-e oracle"
+else
+    ENV_ORACLE=""
+fi
+
+buildr $ENV_ORACLE clean package test=no $LOGDRIVER
 
 if [ "$?" -ne "0" ]; then
   echo "ERROR: Compile failed."
   exit 1
 fi
 
-if [ "$GENDB" == "1" ]; then
-	gendb
-else
-    updatedb
-fi
+gendb
 
 if [ "$FORCECERT" == "1" ]; then
     GEN_CERTS_ARGS="-f"

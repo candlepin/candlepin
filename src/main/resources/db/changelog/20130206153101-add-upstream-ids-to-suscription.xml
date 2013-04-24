@@ -7,7 +7,7 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
 
-    <changeSet id="20130206153101" author="wpoteat">
+    <changeSet id="20130206153101" author="wpoteat" dbms="postgresql">
         <comment>Record upstream entitlement id and consumer to subscription information</comment>
         <addColumn tableName="cp_subscription">
             <column name="upstream_entitlement_id" type="varchar(32)"/>

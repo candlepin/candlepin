@@ -22,6 +22,7 @@ import sys
 import os
 
 from optparse import OptionParser
+from subprocess import Popen, PIPE
 
 JBOSS_CLASSPATH = "/var/lib/jbossas/server/production/deploy/candlepin.war/WEB-INF/classes/"
 TOMCAT_CLASSPATH = "/var/lib/tomcat6/webapps/candlepin/WEB-INF/classes/"
@@ -41,12 +42,100 @@ def error_out(command, status, output):
 
 
 class DbSetup(object):
-
     def __init__(self, username, password, db, community):
         self.username = username
         self.db = db
         self.password = password
         self.community = community
+
+    def create(self):
+        raise NotImplementedError("Implemented by subclasses")
+
+    def drop(self):
+        raise NotImplementedError("Implemented by subclasses")
+
+    def update(self):
+        """ Upgrades an existing candlepin database. """
+        print("Migrating candlepin database")
+        self._run_liquibase("db/changelog/changelog-update.xml")
+
+    def _run_liquibase(self, changelog_path):
+        # Figure out what to append to the classpath for liquibase:
+        classpath = self.jdbc_jar
+        if os.path.exists(TOMCAT_CLASSPATH):
+            classpath = "%s:%s" % (classpath, TOMCAT_CLASSPATH)
+        if os.path.exists(JBOSS_CLASSPATH):
+            classpath = "%s:%s" % (classpath, JBOSS_CLASSPATH)
+        liquibase_options = "--driver=%s --classpath=%s " \
+                "--changeLogFile=%s --url=%s --username=%s " % (
+            self.driver_class,
+            classpath,
+            changelog_path,
+            self.jdbc_url,
+            self.username
+        )
+
+        if self.password:
+            liquibase_options += " --password=%s" % self.password
+
+        output = run_command("liquibase %s migrate -Dcommunity=%s" % (
+            liquibase_options,
+            self.community))
+        print output
+
+
+class OracleSetup(DbSetup):
+    def __init__(self, username, password, db, community, oracle_user, oracle_password):
+        super(OracleSetup, self).__init__(username, password, db, community)
+        self.jdbc_jar = "/usr/lib/oracle/11.2/client64/lib/ojdbc6.jar"
+        self.driver_class = "oracle.jdbc.OracleDriver"
+        self.jdbc_url = "jdbc:oracle:thin:@//%s" % db
+        self.oracle_user = oracle_user
+        self.oracle_password = oracle_password
+
+    def _runSql(self, sql):
+        connect_string = "%s/%s@//%s as sysdba" % (self.oracle_user, self.oracle_password, self.db)
+        session = Popen(['sqlplus', '-S', connect_string], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        session.stdin.write(sql)
+        out, err = session.communicate()
+
+        # SQL*Plus doesn't write to stderr apparently
+        if "ERROR" in out:
+            sys.stderr.write("\n########## ERROR ############\n")
+            sys.stderr.write("Error communicating with Oracle: %s\n" % out)
+            raise Exception("Error running command")
+
+        return out
+
+    def create(self):
+        out = self._runSql("select 'user exists' from all_users where username='%s';" % self.username.upper())
+        if 'user exists' in out:
+            print("%s user already exists.  Skipping..." % self.username)
+            return
+
+        print("Creating candlepin database")
+        out = self._runSql('create user %s identified by %s default tablespace users;' %
+            (self.username, self.password))
+        print out
+
+        out = self._runSql('grant dba to %s;' % self.username)
+        print out
+
+        print("Loading candlepin schema")
+        self._run_liquibase("db/changelog/changelog-create.xml")
+
+    def drop(self):
+        print("Dropping candlepin database")
+        out = self._runSql('drop user %s cascade;' % self.username)
+        print out
+
+
+class PostgresqlSetup(DbSetup):
+    def __init__(self, username, password, db, community):
+        super(PostgresqlSetup, self).__init__(username, password, db, community)
+        self.jdbc_jar = "/usr/share/java/postgresql-jdbc.jar"
+        self.driver_class = "org.postgresql.Driver"
+        self.jdbc_url = "jdbc:postgresql:%s" % (self.db)
         if password:
             os.environ["PGPASSWORD"] = password
 
@@ -64,7 +153,6 @@ class DbSetup(object):
         print("Loading candlepin schema")
         self._run_liquibase("db/changelog/changelog-create.xml")
 
-
     def drop(self):
         print("Dropping candlepin database")
         command = "dropdb -U %s %s" % (self.username, self.db)
@@ -73,35 +161,6 @@ class DbSetup(object):
             return
         elif status > 0:
             error_out(command, status, output)
-
-    def update(self):
-        """ Upgrades an existing candlepin database. """
-        print("Migrating candlepin database")
-        self._run_liquibase("db/changelog/changelog-update.xml")
-
-    def _run_liquibase(self, changelog_path):
-        # Figure out what to append to the classpath for liquibase:
-        classpath = "/usr/share/java/postgresql-jdbc.jar"
-        if os.path.exists(TOMCAT_CLASSPATH):
-            classpath = "%s:%s" % (classpath, TOMCAT_CLASSPATH)
-        if os.path.exists(JBOSS_CLASSPATH):
-            classpath = "%s:%s" % (classpath, JBOSS_CLASSPATH)
-        liquibase_options = "--driver=org.postgresql.Driver " \
-                "--classpath=%s --changeLogFile=%s " \
-                "--url=jdbc:postgresql:%s --username=%s " % (
-            classpath,
-            changelog_path,
-            self.db,
-            self.username
-        )
-
-        if self.password:
-            liquibase_options += " --password=%s" % self.password
-
-        output = run_command("liquibase %s migrate -Dcommunity=%s" % (
-            liquibase_options,
-            self.community))
-        print output
 
 
 if __name__ == "__main__":
@@ -129,15 +188,38 @@ if __name__ == "__main__":
             action="store_true", default=False,
             dest="community",
             help="true if used in a community fashion")
+    parser.add_option("--oracle",
+            action="store_true", default=False,
+            dest="oracle",
+            help="run against an Oracle installation")
+    parser.add_option("--oracle-user",
+            dest="oracle_user", default="sys",
+            help="Oracle DBA user. Defaults to 'sys'")
+    parser.add_option("--oracle-password",
+            dest="oracle_password",
+            help="Oracle DBA password")
 
     (options, args) = parser.parse_args()
+
+    if options.oracle:
+        if not options.oracle_password:
+            print("ERROR: Please provide the DBA password.")
+            sys.exit(1)
+        if not options.dbpassword:
+            print("ERROR: Please provide a password for the Candlepin database user.")
+            sys.exit(1)
 
     if (not options.create and not options.update) or \
         (options.create and options.update):
         print("ERROR: Please specify --create or --update.")
         sys.exit(1)
 
-    dbsetup = DbSetup(options.dbuser, options.dbpassword, options.db, options.community)
+    if options.oracle:
+        dbsetup = OracleSetup(options.dbuser, options.dbpassword, options.db,
+                options.community, options.oracle_user, options.oracle_password)
+    else:
+        dbsetup = PostgresqlSetup(options.dbuser, options.dbpassword, options.db, options.community)
+
     if options.create:
         if options.drop:
             dbsetup.drop()

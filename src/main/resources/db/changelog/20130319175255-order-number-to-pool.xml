@@ -7,7 +7,7 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
 
-    <changeSet id="20130319175255" author="wpoteat">
+    <changeSet id="20130319175255" author="wpoteat" dbms="postgresql">
         <comment>Record order number to pool information</comment>
         <addColumn tableName="cp_pool">
             <column name="ordernumber" type="varchar(255)"/>

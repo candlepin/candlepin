@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+
+    <changeSet id="20130402153704-1" author="awood" dbms="postgresql">
+        <addForeignKeyConstraint baseColumnNames="type_id" baseTableName="cp_upstream_consumer" constraintName="fk_upstream_consumer_type" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer_type" referencesUniqueColumn="false"/>
+    </changeSet>
+
+    <changeSet id="20130402153704-2" author="awood" dbms="postgresql">
+        <addForeignKeyConstraint baseColumnNames="consumer_idcert_id" baseTableName="cp_upstream_consumer" constraintName="fk54b0f288a0b39916" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_id_cert" referencesUniqueColumn="false"/>
+    </changeSet>
+</databaseChangeLog>

@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <!-- Most of these changes are simply reducing a name to fit within Oracle's 30 character limit. -->
+    <changeSet id="20130403095818-1" author="awood" dbms="postgresql">
+        <renameTable oldTableName="cp_consumer_installed_products" newTableName="cp_installed_products"/>
+    </changeSet>
+
+    <changeSet id="20130403095818-2" author="awood" dbms="postgresql">
+        <comment>The word "access" is an Oracle reserved word</comment>
+        <renameColumn tableName="cp_owner_permission" oldColumnName="access" newColumnName="owner_access"/>
+    </changeSet>
+
+    <changeSet id="20130403095818-3" author="awood" dbms="postgresql">
+        <sql>ALTER INDEX cp_consumer_installed_products_pkey RENAME TO cp_installed_products_pkey</sql>
+    </changeSet>
+    
+    <changeSet id="20130403095818-4" author="awood" dbms="postgresql">
+        <comment>A key with the same name was defined twice so we must give one of them a different name</comment>
+        <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="cp_product_attribute" constraintName="fk_product_attrib_product_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" referencesUniqueColumn="false"/>
+        <dropForeignKeyConstraint baseTableName="cp_product_attribute" constraintName="fk_product_id"/>
+    </changeSet>
+
+    <changeSet id="20130403095818-5" author="awood" dbms="postgresql">
+        <comment>A key with the same name was defined twice so we must give one of them a different name</comment>
+        <addForeignKeyConstraint baseColumnNames="pool_id" baseTableName="cp_product_pool_attribute" constraintName="fk_prdct_pool_attrib_pool_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_pool" referencesUniqueColumn="false"/>
+        <dropForeignKeyConstraint baseTableName="cp_product_pool_attribute" constraintName="fk_pool_id"/>
+    </changeSet>
+
+    <changeSet id="20130403095818-6" author="awood" dbms="postgresql">
+        <sql>ALTER INDEX cp_activationkey_pool_key_id_pool_id_key RENAME TO cp_ak_pool_key_id_pool_id_key</sql>
+    </changeSet>
+
+    <changeSet id="20130403095818-7" author="awood" dbms="postgresql">
+        <sql>ALTER INDEX cp_deleted_consumers_consumer_uuid_key RENAME TO cp_dltd_cnsmrs_cnsmr_uuid_key</sql>
+    </changeSet>
+
+    <changeSet id="20130403095818-8" author="awood" dbms="postgresql">
+        <sql>ALTER INDEX cp_env_content_environment_id_contentid_key RENAME TO cp_env_cnt_env_id_cntid_ky</sql>
+    </changeSet>
+
+    <changeSet id="20130403095818-9" author="awood" dbms="postgresql">
+        <addUniqueConstraint columnNames="id, subscriptionid, subscriptionsubkey" constraintName="cp_pool_subid_subsubkey_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_pool"/>
+        <dropUniqueConstraint tableName="cp_pool" constraintName="cp_pool_subscriptionid_subscriptionsubkey_key"/>
+    </changeSet>
+
+    <changeSet id="20130403095818-10" author="awood" dbms="postgresql">
+        <sql>ALTER INDEX cp_environment_owner_id_name_key RENAME TO cp_env_owner_id_name_key</sql>
+    </changeSet>
+
+    <changeSet id="20130403095818-11" author="awood" dbms="postgresql">
+        <sql>ALTER INDEX cp_activation_key_name_owner_id_key RENAME TO cp_ak_name_owner_id_key</sql>
+    </changeSet>
+
+    <changeSet id="20130403095818-12" author="awood" dbms="postgresql">
+        <addForeignKeyConstraint baseColumnNames="sched_name, trigger_name, trigger_group" baseTableName="qrtz_blob_triggers" constraintName="qrtz_blob_trg_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="sched_name, trigger_name, trigger_group" referencedTableName="qrtz_triggers" referencesUniqueColumn="false"/>
+        <dropForeignKeyConstraint baseTableName="qrtz_blob_triggers" constraintName="qrtz_blob_triggers_trigger_name_fkey"/>
+    </changeSet>
+
+    <changeSet id="20130403095818-13" author="awood" dbms="postgresql">
+        <addForeignKeyConstraint baseColumnNames="sched_name, trigger_name, trigger_group" baseTableName="qrtz_cron_triggers" constraintName="qrtz_cron_trg_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="sched_name, trigger_name, trigger_group" referencedTableName="qrtz_triggers" referencesUniqueColumn="false"/>
+        <dropForeignKeyConstraint baseTableName="qrtz_cron_triggers" constraintName="qrtz_cron_triggers_trigger_name_fkey"/>
+    </changeSet>
+
+    <changeSet id="20130403095818-14" author="awood" dbms="postgresql">
+        <addForeignKeyConstraint baseColumnNames="sched_name, trigger_name, trigger_group" baseTableName="qrtz_simple_triggers" constraintName="qrtz_simple_trg_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="sched_name, trigger_name, trigger_group" referencedTableName="qrtz_triggers" referencesUniqueColumn="false"/>
+        <dropForeignKeyConstraint baseTableName="qrtz_simple_triggers" constraintName="qrtz_simple_triggers_trigger_name_fkey"/>
+    </changeSet>
+
+    <changeSet id="20130403095818-15" author="awood" dbms="postgresql">
+        <addForeignKeyConstraint baseColumnNames="sched_name, trigger_name, trigger_group" baseTableName="qrtz_simprop_triggers" constraintName="qrtz_simprop_trg_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="sched_name, trigger_name, trigger_group" referencedTableName="qrtz_triggers" referencesUniqueColumn="false"/>
+        <dropForeignKeyConstraint baseTableName="qrtz_simprop_triggers" constraintName="qrtz_simprop_triggers_trigger_name_fkey"/>
+    </changeSet>
+
+    <changeSet id="20130403095818-16" author="awood" dbms="postgresql">
+        <createIndex indexName="cp_cnsmr_guests_guest_id_idx" tableName="cp_consumer_guests" unique="false">
+            <column name="guest_id"/>
+        </createIndex>
+        <dropIndex indexName="cp_consumer_guests_guest_id_idx" tableName="cp_consumer_guests"/>
+    </changeSet>
+
+    <changeSet id="20130403095818-17" author="awood" dbms="postgresql">
+        <createIndex indexName="cp_dltd_cnsmrs_owner_id_idx" tableName="cp_deleted_consumers" unique="false">
+            <column name="owner_id"/>
+        </createIndex>
+        <dropIndex indexName="cp_deleted_consumers_owner_id_idx" tableName="cp_deleted_consumers"/>
+    </changeSet>
+
+    <changeSet id="20130403095818-18" author="awood" dbms="postgresql">
+        <createIndex indexName="cp_subs_upstream_pool_id_idx" tableName="cp_subscription" unique="false">
+            <column name="upstream_pool_id"/>
+        </createIndex>
+        <dropIndex indexName="cp_subscription_upstream_pool_id_idx" tableName="cp_subscription"/>
+    </changeSet>
+
+    <changeSet id="20130403095818-19" author="awood" dbms="postgresql">
+        <dropNotNullConstraint tableName="cp_event" columnName="ownerid"/>
+    </changeSet>
+
+    <changeSet id="20130403095818-20" author="awood" dbms="postgresql">
+        <dropNotNullConstraint tableName="cp_consumer" columnName="servicelevel"/>
+    </changeSet>
+
+    <!-- Using straight SQL here since Liquibase is a little unclear on how to update columns to null -->
+    <changeSet id="20130403095818-21" author="awood" dbms="postgresql">
+        <sql>UPDATE cp_consumer SET servicelevel=null WHERE servicelevel=''</sql>
+    </changeSet>
+
+    <changeSet id="20130403095818-22" author="awood" dbms="postgresql">
+        <sql>UPDATE cp_content SET gpgurl=null WHERE gpgurl=''</sql>
+    </changeSet>
+
+    <changeSet id="20130403095818-23" author="awood" dbms="postgresql">
+        <sql>UPDATE cp_content SET contenturl=null WHERE contenturl=''</sql>
+    </changeSet>
+
+    <changeSet id="20130403095818-24" author="awood" dbms="postgresql">
+        <addForeignKeyConstraint baseColumnNames="consumer_id" baseTableName="cp_installed_products" constraintName="fk_installed_product" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer" referencesUniqueColumn="false"/>
+        <dropForeignKeyConstraint baseTableName="cp_installed_products" constraintName="fk_consumer_installed_product"/>
+    </changeSet>
+</databaseChangeLog>

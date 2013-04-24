@@ -7,7 +7,7 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
 
-    <changeSet id="20121004150608" author="wpoteat">
+    <changeSet id="20121004150608" author="wpoteat" dbms="postgresql">
         <comment>Record filename from imported manifest</comment>
         <addColumn tableName="cp_import_record">
             <column name="file_name" type="varchar(255)"/>

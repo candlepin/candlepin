@@ -104,7 +104,7 @@ public class Event implements Persisted {
     @Column(nullable = false)
     private String entityId;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String ownerId;
 
     @Column(nullable = true)

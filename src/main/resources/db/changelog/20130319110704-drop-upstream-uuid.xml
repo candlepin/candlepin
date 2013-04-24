@@ -7,7 +7,7 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
 
-    <changeSet id="2013031911070" author="jesusr">
+    <changeSet id="2013031911070" author="jesusr" dbms="postgresql">
         <comment>Drop the upstream_uuid from owner after upgrade.</comment>
         <!-- See http://www.liquibase.org/manual/refactoring_commands -->
         <dropColumn tableName="cp_owner" columnName="upstream_uuid"/>

@@ -84,8 +84,8 @@ public class EventFactory {
         String news = entityToJson(newRules);
         Principal principal = principalProvider.get();
         Event e = new Event(Event.Type.MODIFIED, Event.Target.RULES,
-            newRules.getVersion(), principal, "",
-            "", "" + (String) newRules.getId(),
+            newRules.getVersion(), principal, null,
+            null, "" + (String) newRules.getId(),
             olds, news, null, null);
         return e;
     }
@@ -94,7 +94,7 @@ public class EventFactory {
         String oldEntityJson = entityToJson(deletedRules);
         Principal principal = principalProvider.get();
         Event e = new Event(Event.Type.DELETED, Event.Target.RULES,
-            deletedRules.getVersion(), principal, "",
+            deletedRules.getVersion(), principal, null,
             null, "" + (String) deletedRules.getId(),
             oldEntityJson, null, null, null);
         return e;

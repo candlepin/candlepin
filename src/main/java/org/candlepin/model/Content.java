@@ -30,6 +30,7 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.candlepin.service.UniqueIdGenerator;
 import org.hibernate.annotations.CollectionOfElements;
+import org.hibernate.annotations.Type;
 
 /**
  * ProductContent
@@ -60,6 +61,7 @@ public class Content extends AbstractHibernateObject {
     private String vendor;
 
     @Column(nullable = true)
+    @Type(type = "org.candlepin.hibernate.EmptyStringUserType")
     private String contentUrl;
 
     @Column(nullable = true)
@@ -71,6 +73,7 @@ public class Content extends AbstractHibernateObject {
 
     // attribute?
     @Column(nullable = true)
+    @Type(type = "org.candlepin.hibernate.EmptyStringUserType")
     private String gpgUrl;
 
     @Column(nullable = true)

@@ -1,0 +1,1436 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+    <changeSet author="awood" id="1364932903575-1-1" dbms="oracle">
+        <createTable tableName="cp_activation_key">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_activation_key_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="owner_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>   
+    <changeSet author="awood (generated)" id="1364932903575-1" dbms="oracle">
+        <createTable tableName="cp_activationkey_pool">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_activationkey_pool_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="quantity" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="key_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pool_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-2" dbms="oracle">
+        <createTable tableName="cp_cert_serial">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_cert_serial_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="collected" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="expiration" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="revoked" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-3" dbms="oracle">
+        <createTable tableName="cp_certificate">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_certificate_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="cert" type="BLOB">
+                <constraints nullable="false"/>
+            </column>
+            <column name="privatekey" type="BLOB">
+                <constraints nullable="false"/>
+            </column>
+            <column name="serial_id" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-4" dbms="oracle">
+        <createTable tableName="cp_consumer">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_consumer_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="autoheal" type="BOOLEAN"/>
+            <column name="entitlementstatus" type="VARCHAR(32)"/>
+            <column name="lastcheckin" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="servicelevel" type="VARCHAR(32)"/>
+            <column name="username" type="VARCHAR(255)"/>
+            <column name="uuid" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="environment_id" type="VARCHAR(32)"/>
+            <column name="consumer_idcert_id" type="VARCHAR(32)"/>
+            <column name="keypair_id" type="VARCHAR(32)"/>
+            <column name="owner_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="releasever" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-5" dbms="oracle">
+        <createTable tableName="cp_consumer_facts">
+            <column name="cp_consumer_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="element" type="VARCHAR(255)"/>
+            <column name="mapkey" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-6" dbms="oracle">
+        <createTable tableName="cp_consumer_guests">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_consumer_guests_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="guest_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="consumer_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-7" dbms="oracle">
+        <createTable tableName="cp_installed_products">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_installed_products_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="product_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_name" type="VARCHAR(255)"/>
+            <column name="consumer_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-8" dbms="oracle">
+        <createTable tableName="cp_consumer_type">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_consumer_type_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="label" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="manifest" type="char(1)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-9" dbms="oracle">
+        <createTable tableName="cp_content">
+            <column name="id" type="VARCHAR(255)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_content_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="contenturl" type="VARCHAR(255)"/>
+            <column name="gpgurl" type="VARCHAR(255)"/>
+            <column name="label" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="metadataexpire" type="BIGINT"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="releasever" type="VARCHAR(255)"/>
+            <column name="requiredtags" type="VARCHAR(255)"/>
+            <column name="type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="vendor" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-10" dbms="oracle">
+        <createTable tableName="cp_content_modified_products">
+            <column name="cp_content_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="element" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-11" dbms="oracle">
+        <createTable tableName="cp_deleted_consumers">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_deleted_consumers_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="consumer_uuid" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="owner_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-12" dbms="oracle">
+        <createTable tableName="cp_ent_certificate">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_ent_certificate_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="cert" type="BLOB">
+                <constraints nullable="false"/>
+            </column>
+            <column name="privatekey" type="BLOB">
+                <constraints nullable="false"/>
+            </column>
+            <column name="entitlement_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="serial_id" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood" id="1364932903575-13" dbms="oracle">
+        <createTable tableName="cp_entitlement">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_entitlement_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="enddate" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="quantity" type="java.sql.Types.INTEGER"/>
+            <column name="startdate" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="consumer_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="owner_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pool_id" type="VARCHAR(32)"/>
+            <column defaultValueBoolean="false" name="dirty" type="BOOLEAN"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-14" dbms="oracle">
+        <createTable tableName="cp_env_content">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_env_content_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="contentid" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="enabled" type="BOOLEAN"/>
+            <column name="environment_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-15" dbms="oracle">
+        <createTable tableName="cp_environment">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_environment_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="description" type="VARCHAR(255)"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="owner_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-16" dbms="oracle">
+        <createTable tableName="cp_event">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_event_pkey"/>
+            </column>
+            <column name="consumerid" type="VARCHAR(255)"/>
+            <column name="entityid" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ownerid" type="VARCHAR(255)"/>
+            <column name="principal" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="referenceid" type="VARCHAR(255)"/>
+            <column name="referencetype" type="VARCHAR(255)"/>
+            <column name="target" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="targetname" type="VARCHAR(255)"/>
+            <column name="timestamp" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-17" dbms="oracle">
+        <createTable tableName="cp_export_metadata">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_export_metadata_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="exported" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="owner_id" type="VARCHAR(32)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-18" dbms="oracle">
+        <createTable tableName="cp_id_cert">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_id_cert_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="cert" type="BLOB">
+                <constraints nullable="false"/>
+            </column>
+            <column name="privatekey" type="BLOB">
+                <constraints nullable="false"/>
+            </column>
+            <column name="serial_id" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-19" dbms="oracle">
+        <createTable tableName="cp_import_record">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_import_record_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="status" type="java.sql.Types.INTEGER"/>
+            <column name="statusmessage" type="VARCHAR(255)"/>
+            <column name="owner_id" type="VARCHAR(32)"/>
+            <column name="generated_by" type="VARCHAR(255)"/>
+            <column name="generated_date" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="upstream_id" type="VARCHAR(255)"/>
+            <column name="file_name" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-20" dbms="oracle">
+        <createTable tableName="cp_job">
+            <column name="id" type="VARCHAR(255)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_job_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="finishtime" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="jobgroup" type="VARCHAR(15)"/>
+            <column name="principalname" type="VARCHAR(255)"/>
+            <column name="result" type="VARCHAR(255)"/>
+            <column name="starttime" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="state" type="java.sql.Types.INTEGER"/>
+            <column name="targetid" type="VARCHAR(255)"/>
+            <column name="targettype" type="java.sql.Types.INTEGER"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-21" dbms="oracle">
+        <createTable tableName="cp_key_pair">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_key_pair_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="privatekey" type="BLOB"/>
+            <column name="publickey" type="BLOB"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-22" dbms="oracle">
+        <createTable tableName="cp_owner">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_owner_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="contentprefix" type="VARCHAR(255)"/>
+            <column name="defaultservicelevel" type="VARCHAR(255)"/>
+            <column name="displayname" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="account" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="parent_owner" type="VARCHAR(32)"/>
+            <column name="upstream_id" type="VARCHAR(32)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-23" dbms="oracle">
+        <createTable tableName="cp_owner_permission">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_owner_permission_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="owner_access" type="java.sql.Types.INTEGER"/>
+            <column name="owner_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="role_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood" id="1364932903575-24" dbms="oracle">
+        <createTable tableName="cp_pool">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_pool_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="accountnumber" type="VARCHAR(255)"/>
+            <column name="activesubscription" type="BOOLEAN"/>
+            <column name="contractnumber" type="VARCHAR(255)"/>
+            <column name="enddate" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="productid" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="productname" type="VARCHAR(255)"/>
+            <column name="quantity" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="restrictedtousername" type="VARCHAR(255)"/>
+            <column name="startdate" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="subscriptionid" type="VARCHAR(255)"/>
+            <column name="subscriptionsubkey" type="VARCHAR(255)"/>
+            <column name="version" type="java.sql.Types.INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="owner_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sourceentitlement_id" type="VARCHAR(32)"/>
+            <column name="ordernumber" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-25" dbms="oracle">
+        <createTable tableName="cp_pool_attribute">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_pool_attribute_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="value" type="VARCHAR(255)"/>
+            <column name="pool_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-26" dbms="oracle">
+        <createTable tableName="cp_pool_products">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_pool_products_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="product_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_name" type="VARCHAR(255)"/>
+            <column name="pool_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-27" dbms="oracle">
+        <createTable tableName="cp_product">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_product_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="multiplier" type="BIGINT"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-28" dbms="oracle">
+        <createTable tableName="cp_product_attribute">
+            <column name="id" type="VARCHAR(255)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_product_attribute_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="value" type="VARCHAR(255)"/>
+            <column name="product_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-29" dbms="oracle">
+        <createTable tableName="cp_product_certificate">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_product_certificate_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="cert" type="BLOB">
+                <constraints nullable="false"/>
+            </column>
+            <column name="privatekey" type="BLOB">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-30" dbms="oracle">
+        <createTable tableName="cp_product_content">
+            <column name="product_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="enabled" type="BOOLEAN"/>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITH TIME ZONE"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-31" dbms="oracle">
+        <createTable tableName="cp_product_dependent_products">
+            <column name="cp_product_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="element" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-32" dbms="oracle">
+        <createTable tableName="cp_product_pool_attribute">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_product_pool_attribute_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="value" type="VARCHAR(255)"/>
+            <column name="productid" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pool_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-33" dbms="oracle">
+        <createTable tableName="cp_product_reliance">
+            <column name="parent_product_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="child_product_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-34" dbms="oracle">
+        <createTable tableName="cp_role">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_role_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-35" dbms="oracle">
+        <createTable tableName="cp_role_users">
+            <column name="role_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-36" dbms="oracle">
+        <createTable tableName="cp_rules">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_rules_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="rules_blob" type="TEXT"/>
+            <column name="version" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-37" dbms="oracle">
+        <createTable tableName="cp_stat_history">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_stat_history_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="entry_type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="owner_id" type="VARCHAR(255)"/>
+            <column name="value" type="java.sql.Types.INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="value_reference" type="VARCHAR(255)"/>
+            <column name="value_type" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-38" dbms="oracle">
+        <createTable tableName="cp_subscription">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_subscription_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="accountnumber" type="VARCHAR(255)"/>
+            <column name="contractnumber" type="VARCHAR(255)"/>
+            <column name="enddate" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="quantity" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="startdate" type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="upstream_pool_id" type="VARCHAR(255)"/>
+            <column name="certificate_id" type="VARCHAR(32)"/>
+            <column name="owner_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ordernumber" type="VARCHAR(255)"/>
+            <column name="upstream_entitlement_id" type="VARCHAR(32)"/>
+            <column name="upstream_consumer_id" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-39" dbms="oracle">
+        <createTable tableName="cp_subscription_products">
+            <column name="subscription_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-40" dbms="oracle">
+        <createTable tableName="cp_upstream_consumer">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_upstream_consumer_pkey"/>
+            </column>
+            <column name="uuid" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="owner_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="consumer_idcert_id" type="VARCHAR(32)"/>
+            <column name="prefix_url_web" type="VARCHAR(255)"/>
+            <column name="prefix_url_api" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-41" dbms="oracle">
+        <createTable tableName="cp_user">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_user_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITH TIME ZONE"/>
+            <column name="hashedpassword" type="VARCHAR(255)"/>
+            <column name="superadmin" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="username" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood" id="1364932903575-42" dbms="oracle">
+        <createTable tableName="qrtz_blob_triggers">
+            <column name="sched_name" type="VARCHAR(120)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trigger_name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trigger_group" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="blob_data" type="BLOB"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood" id="1364932903575-43" dbms="oracle">
+        <createTable tableName="qrtz_calendars">
+            <column name="sched_name" type="VARCHAR(120)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="calendar_name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="calendar" type="BLOB">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood" id="1364932903575-44" dbms="oracle">
+        <createTable tableName="qrtz_cron_triggers">
+            <column name="sched_name" type="VARCHAR(120)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trigger_name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trigger_group" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="cron_expression" type="VARCHAR(120)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="time_zone_id" type="VARCHAR(80)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood" id="1364932903575-45" dbms="oracle">
+        <createTable tableName="qrtz_fired_triggers">
+            <column name="sched_name" type="VARCHAR(120)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="entry_id" type="VARCHAR(95)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trigger_name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trigger_group" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="instance_name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="fired_time" type="NUMBER(13)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="priority" type="NUMBER(13)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="state" type="VARCHAR(16)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="job_name" type="VARCHAR(200)"/>
+            <column name="job_group" type="VARCHAR(200)"/>
+            <column name="requests_recovery" type="VARCHAR(1)"/>
+            <column name="is_nonconcurrent" type="VARCHAR(1)"/>
+            <column name="is_update_data" type="VARCHAR(1)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood" id="1364932903575-46" dbms="oracle">
+        <createTable tableName="qrtz_job_details">
+            <column name="sched_name" type="VARCHAR(120)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="job_name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="job_group" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="VARCHAR(250)"/>
+            <column name="job_class_name" type="VARCHAR(250)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_durable" type="VARCHAR(1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="requests_recovery" type="VARCHAR(1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="job_data" type="BLOB"/>
+            <column name="is_nonconcurrent" type="VARCHAR(1)"/>
+            <column name="is_update_data" type="VARCHAR(1)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood" id="1364932903575-47" dbms="oracle">
+        <createTable tableName="qrtz_locks">
+            <column name="sched_name" type="VARCHAR(120)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="lock_name" type="VARCHAR(40)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood" id="1364932903575-48" dbms="oracle">
+        <createTable tableName="qrtz_paused_trigger_grps">
+            <column name="sched_name" type="VARCHAR(120)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trigger_group" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood" id="1364932903575-49" dbms="oracle">
+        <createTable tableName="qrtz_scheduler_state">
+            <column name="sched_name" type="VARCHAR(120)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="instance_name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_checkin_time" type="NUMBER(13)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="checkin_interval" type="NUMBER(13)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood" id="1364932903575-50" dbms="oracle">
+        <createTable tableName="qrtz_simple_triggers">
+            <column name="sched_name" type="VARCHAR(120)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trigger_name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trigger_group" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="repeat_count" type="NUMBER(7)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="repeat_interval" type="NUMBER(12)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="times_triggered" type="NUMBER(10)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood" id="1364932903575-51" dbms="oracle">
+        <createTable tableName="qrtz_simprop_triggers">
+            <column name="sched_name" type="VARCHAR(120)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trigger_name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trigger_group" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="str_prop_1" type="VARCHAR(512)"/>
+            <column name="str_prop_2" type="VARCHAR(512)"/>
+            <column name="str_prop_3" type="VARCHAR(512)"/>
+            <column name="int_prop_1" type="NUMBER(10)"/>
+            <column name="int_prop_2" type="NUMBER(10)"/>
+            <column name="long_prop_1" type="NUMBER(13)"/>
+            <column name="long_prop_2" type="NUMBER(13)"/>
+            <column name="dec_prop_1" type="NUMERIC(13,4)"/>
+            <column name="dec_prop_2" type="NUMERIC(13,4)"/>
+            <column name="bool_prop_1" type="VARCHAR(1)"/>
+            <column name="bool_prop_2" type="VARCHAR(1)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="awood" id="1364932903575-52" dbms="oracle">
+        <createTable tableName="qrtz_triggers">
+            <column name="sched_name" type="VARCHAR(120)">
+                <constraints nullable="false"/>
+            </column>
+             <column name="trigger_name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trigger_group" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="job_name" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="job_group" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="VARCHAR(250)"/>
+            <column name="next_fire_time" type="NUMBER(13)"/>
+            <column name="prev_fire_time" type="NUMBER(13)"/>
+            <column name="priority" type="NUMBER(13)"/>
+            <column name="trigger_state" type="VARCHAR(16)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trigger_type" type="VARCHAR(8)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="start_time" type="NUMBER(13)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="end_time" type="NUMBER(13)"/>
+            <column name="calendar_name" type="VARCHAR(200)"/>
+            <column name="misfire_instr" type="NUMBER(2)"/>
+            <column name="job_data" type="BLOB"/>
+       </createTable>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-53" dbms="oracle">
+        <addPrimaryKey columnNames="cp_consumer_id, mapkey" constraintName="cp_consumer_facts_pkey" tableName="cp_consumer_facts"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-54" dbms="oracle">
+        <addPrimaryKey columnNames="product_id, content_id" constraintName="cp_product_content_pkey" tableName="cp_product_content"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-55" dbms="oracle">
+        <addPrimaryKey columnNames="role_id, user_id" constraintName="cp_role_users_pkey" tableName="cp_role_users"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-56" dbms="oracle">
+        <addPrimaryKey columnNames="subscription_id, product_id" constraintName="cp_subscription_products_pkey" tableName="cp_subscription_products"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-57" dbms="oracle">
+        <addPrimaryKey columnNames="sched_name, trigger_name, trigger_group" constraintName="qrtz_blob_triggers_pkey" tableName="qrtz_blob_triggers"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-58" dbms="oracle">
+        <addPrimaryKey columnNames="sched_name, calendar_name" constraintName="qrtz_calendars_pkey" tableName="qrtz_calendars"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-59" dbms="oracle">
+        <addPrimaryKey columnNames="sched_name, trigger_name, trigger_group" constraintName="qrtz_cron_triggers_pkey" tableName="qrtz_cron_triggers"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-60" dbms="oracle">
+        <addPrimaryKey columnNames="sched_name, entry_id" constraintName="qrtz_fired_triggers_pkey" tableName="qrtz_fired_triggers"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-61" dbms="oracle">
+        <addPrimaryKey columnNames="sched_name, job_name, job_group" constraintName="qrtz_job_details_pkey" tableName="qrtz_job_details"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-62" dbms="oracle">
+        <addPrimaryKey columnNames="sched_name, lock_name" constraintName="qrtz_locks_pkey" tableName="qrtz_locks"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-63" dbms="oracle">
+        <addPrimaryKey columnNames="sched_name, trigger_group" constraintName="qrtz_paused_trigger_grps_pkey" tableName="qrtz_paused_trigger_grps"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-64" dbms="oracle">
+        <addPrimaryKey columnNames="sched_name, instance_name" constraintName="qrtz_scheduler_state_pkey" tableName="qrtz_scheduler_state"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-65" dbms="oracle">
+        <addPrimaryKey columnNames="sched_name, trigger_name, trigger_group" constraintName="qrtz_simple_triggers_pkey" tableName="qrtz_simple_triggers"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-66" dbms="oracle">
+        <addPrimaryKey columnNames="sched_name, trigger_name, trigger_group" constraintName="qrtz_simprop_triggers_pkey" tableName="qrtz_simprop_triggers"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-67" dbms="oracle">
+        <addPrimaryKey columnNames="sched_name, trigger_name, trigger_group" constraintName="qrtz_triggers_pkey" tableName="qrtz_triggers"/>
+    </changeSet>
+    <changeSet author="awood" id="1364932903575-68-1" dbms="oracle">
+        <addUniqueConstraint columnNames="name, owner_id" constraintName="cp_ak_name_owner_id_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_activation_key"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-68" dbms="oracle">
+        <addUniqueConstraint columnNames="key_id, pool_id" constraintName="cp_ak_pool_key_id_pool_id_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_activationkey_pool"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-69" dbms="oracle">
+        <addUniqueConstraint columnNames="uuid" constraintName="cp_consumer_uuid_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_consumer"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-70" dbms="oracle">
+        <addUniqueConstraint columnNames="label" constraintName="cp_consumer_type_label_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_consumer_type"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-71" dbms="oracle">
+        <addUniqueConstraint columnNames="label" constraintName="cp_content_label_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_content"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-72" dbms="oracle">
+        <addUniqueConstraint columnNames="consumer_uuid" constraintName="cp_dltd_cnsmrs_cnsmr_uuid_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_deleted_consumers"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-73" dbms="oracle">
+        <addUniqueConstraint columnNames="environment_id, contentid" constraintName="cp_env_cnt_env_id_cntid_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_env_content"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-74" dbms="oracle">
+        <addUniqueConstraint columnNames="owner_id, name" constraintName="cp_env_owner_id_name_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_environment"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-75" dbms="oracle">
+        <addUniqueConstraint columnNames="account" constraintName="cp_owner_account_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_owner"/>
+    </changeSet>
+    <changeSet author="awood" id="1364932903575-76" dbms="oracle">
+        <addUniqueConstraint columnNames="id, subscriptionid, subscriptionsubkey" constraintName="cp_pool_subid_subsubkey_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_pool"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-77" dbms="oracle">
+        <addUniqueConstraint columnNames="name" constraintName="cp_role_name_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_role"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-78" dbms="oracle">
+        <addUniqueConstraint columnNames="username" constraintName="cp_user_username_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_user"/>
+    </changeSet>
+    <changeSet author="awood" id="1364932903575-79-1" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_activation_key" constraintName="fk_activation_key_owner" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-79" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="key_id" baseTableName="cp_activationkey_pool" constraintName="fk_activation_key_pool_k" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_activation_key" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-80" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="pool_id" baseTableName="cp_activationkey_pool" constraintName="fk_activation_key_pool_p" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_pool" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-81" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="serial_id" baseTableName="cp_certificate" constraintName="fk16370c54b9410fc" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_cert_serial" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-82" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="consumer_idcert_id" baseTableName="cp_consumer" constraintName="fk58205388a0b39916" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_id_cert" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-83" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="environment_id" baseTableName="cp_consumer" constraintName="fk_consumer_env" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_environment" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-84" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="keypair_id" baseTableName="cp_consumer" constraintName="fk5820538861936445" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_key_pair" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-85" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_consumer" constraintName="fk_consumer_owner" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-86" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="type_id" baseTableName="cp_consumer" constraintName="fk_consumer_consumer_type" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer_type" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-87" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="cp_consumer_id" baseTableName="cp_consumer_facts" constraintName="fk278ce810390317d" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-88" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="consumer_id" baseTableName="cp_consumer_guests" constraintName="fk_consumer_guests" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-89" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="consumer_id" baseTableName="cp_installed_products" constraintName="fk_installed_product" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-90" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="cp_content_id" baseTableName="cp_content_modified_products" constraintName="fkc93d6a8232912b37" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_content" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-91" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="entitlement_id" baseTableName="cp_ent_certificate" constraintName="fk_cert_entitlement" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_entitlement" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-92" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="serial_id" baseTableName="cp_ent_certificate" constraintName="fke76508714b9410fc" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_cert_serial" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-93" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="consumer_id" baseTableName="cp_entitlement" constraintName="fk_entitlement_consumer" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-94" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_entitlement" constraintName="fk_entitlement_owner" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-95" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="pool_id" baseTableName="cp_entitlement" constraintName="fk_entitlement_pool" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_pool" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-96" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="environment_id" baseTableName="cp_env_content" constraintName="fk_env_content_env" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_environment" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-97" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_environment" constraintName="fk_env_owner" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-98" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_export_metadata" constraintName="fkf06f6b8872cc5ca5" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-99" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="serial_id" baseTableName="cp_id_cert" constraintName="fk456324f64b9410fc" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_cert_serial" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-100" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_import_record" constraintName="fk9349dd972cc5ca5" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-101" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="parent_owner" baseTableName="cp_owner" constraintName="fkf93e9c616343755c" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-102" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="upstream_id" baseTableName="cp_owner" constraintName="fk_upstream_consumer_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_upstream_consumer" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-103" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_owner_permission" constraintName="fk_permission_owner" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-104" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="role_id" baseTableName="cp_owner_permission" constraintName="fk_permission_role" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_role" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-105" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_pool" constraintName="fk_pool_owner" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-106" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="sourceentitlement_id" baseTableName="cp_pool" constraintName="fk_pool_source_entitlement" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_entitlement" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-107" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="pool_id" baseTableName="cp_pool_attribute" constraintName="fk_pool_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_pool" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-108" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="pool_id" baseTableName="cp_pool_products" constraintName="fk_pool_provided_product" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_pool" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-109" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="cp_product_attribute" constraintName="fk_product_attrib_product_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-110" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="cp_product_certificate" constraintName="fk_cert_product" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-111" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="content_id" baseTableName="cp_product_content" constraintName="fkce093157574ef825" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_content" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-112" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="cp_product_content" constraintName="fkce09315764dd9c65" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-113" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="cp_product_id" baseTableName="cp_product_dependent_products" constraintName="fk9ef75306401fcf77" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-114" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="pool_id" baseTableName="cp_product_pool_attribute" constraintName="fk_prdct_pool_attrib_pool_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_pool" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-115" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="parent_product_id" baseTableName="cp_product_reliance" constraintName="fk_product_reliance" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-116" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="role_id" baseTableName="cp_role_users" constraintName="fk_user_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_role" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-117" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="cp_role_users" constraintName="fk_role_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_user" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-118" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="certificate_id" baseTableName="cp_subscription" constraintName="fk27d80fafd8564fd9" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_certificate" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-119" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="cp_subscription" constraintName="fk_subscription_owner" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_owner" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-120" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="cp_subscription" constraintName="fk_subscription_product" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-121" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="cp_subscription_products" constraintName="fk_subscription_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-122" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="subscription_id" baseTableName="cp_subscription_products" constraintName="fk_product_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_subscription" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-123" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="consumer_idcert_id" baseTableName="cp_upstream_consumer" constraintName="fk54b0f288a0b39916" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_id_cert" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-124" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="type_id" baseTableName="cp_upstream_consumer" constraintName="fk_upstream_consumer_type" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer_type" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-125" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="sched_name, trigger_name, trigger_group" baseTableName="qrtz_blob_triggers" constraintName="qrtz_blob_trg_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="sched_name, trigger_name, trigger_group" referencedTableName="qrtz_triggers" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-126" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="sched_name, trigger_name, trigger_group" baseTableName="qrtz_cron_triggers" constraintName="qrtz_cron_trg_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="sched_name, trigger_name, trigger_group" referencedTableName="qrtz_triggers" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-127" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="sched_name, trigger_name, trigger_group" baseTableName="qrtz_simple_triggers" constraintName="qrtz_simple_trg_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="sched_name, trigger_name, trigger_group" referencedTableName="qrtz_triggers" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-128" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="sched_name, trigger_name, trigger_group" baseTableName="qrtz_simprop_triggers" constraintName="qrtz_simprop_trg_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="sched_name, trigger_name, trigger_group" referencedTableName="qrtz_triggers" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-129" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="sched_name, job_name, job_group" baseTableName="qrtz_triggers" constraintName="qrtz_triggers_job_name_fkey" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="sched_name, job_name, job_group" referencedTableName="qrtz_job_details" referencesUniqueColumn="false"/>
+    </changeSet>
+    <changeSet author="awood" id="1364932903575-130-1" dbms="oracle">
+        <createIndex indexName="cp_activation_key_owner_id_idx" tableName="cp_activation_key" unique="false">
+            <column name="owner_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-130" dbms="oracle">
+        <createIndex indexName="cp_cnsmr_guests_guest_id_idx" tableName="cp_consumer_guests" unique="false">
+            <column name="guest_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-131" dbms="oracle">
+        <createIndex indexName="cp_dltd_cnsmrs_owner_id_idx" tableName="cp_deleted_consumers" unique="false">
+            <column name="owner_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-132" dbms="oracle">
+        <createIndex indexName="cp_event_consumerid_idx" tableName="cp_event" unique="false">
+            <column name="consumerid"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-133" dbms="oracle">
+        <createIndex indexName="cp_event_ownerid_idx" tableName="cp_event" unique="false">
+            <column name="ownerid"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-134" dbms="oracle">
+        <createIndex indexName="cp_pool_productid_idx" tableName="cp_pool" unique="false">
+            <column name="productid"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-135" dbms="oracle">
+        <createIndex indexName="cp_pool_subscriptionid_idx" tableName="cp_pool" unique="false">
+            <column name="subscriptionid"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-136" dbms="oracle">
+        <createIndex indexName="cp_stat_history_owner_id_idx" tableName="cp_stat_history" unique="false">
+            <column name="owner_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-137" dbms="oracle">
+        <createIndex indexName="cp_subs_upstream_pool_id_idx" tableName="cp_subscription" unique="false">
+            <column name="upstream_pool_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-138" dbms="oracle">
+        <createIndex indexName="idx_qrtz_ft_inst_job_req_rcvry" tableName="qrtz_fired_triggers" unique="false">
+            <column name="sched_name"/>
+            <column name="instance_name"/>
+            <column name="requests_recovery"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-139" dbms="oracle">
+        <createIndex indexName="idx_qrtz_ft_j_g" tableName="qrtz_fired_triggers" unique="false">
+            <column name="sched_name"/>
+            <column name="job_name"/>
+            <column name="job_group"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-140" dbms="oracle">
+        <createIndex indexName="idx_qrtz_ft_jg" tableName="qrtz_fired_triggers" unique="false">
+            <column name="sched_name"/>
+            <column name="job_group"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-141" dbms="oracle">
+        <createIndex indexName="idx_qrtz_ft_t_g" tableName="qrtz_fired_triggers" unique="false">
+            <column name="sched_name"/>
+            <column name="trigger_name"/>
+            <column name="trigger_group"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-142" dbms="oracle">
+        <createIndex indexName="idx_qrtz_ft_tg" tableName="qrtz_fired_triggers" unique="false">
+            <column name="sched_name"/>
+            <column name="trigger_group"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-143" dbms="oracle">
+        <createIndex indexName="idx_qrtz_ft_trig_inst_name" tableName="qrtz_fired_triggers" unique="false">
+            <column name="sched_name"/>
+            <column name="instance_name"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-144" dbms="oracle">
+        <createIndex indexName="idx_qrtz_j_grp" tableName="qrtz_job_details" unique="false">
+            <column name="sched_name"/>
+            <column name="job_group"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-145" dbms="oracle">
+        <createIndex indexName="idx_qrtz_j_req_recovery" tableName="qrtz_job_details" unique="false">
+            <column name="sched_name"/>
+            <column name="requests_recovery"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-146" dbms="oracle">
+        <createIndex indexName="idx_qrtz_t_c" tableName="qrtz_triggers" unique="false">
+            <column name="sched_name"/>
+            <column name="calendar_name"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-147" dbms="oracle">
+        <createIndex indexName="idx_qrtz_t_g" tableName="qrtz_triggers" unique="false">
+            <column name="sched_name"/>
+            <column name="trigger_group"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-148" dbms="oracle">
+        <createIndex indexName="idx_qrtz_t_jg" tableName="qrtz_triggers" unique="false">
+            <column name="sched_name"/>
+            <column name="job_group"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-149" dbms="oracle">
+        <createIndex indexName="idx_qrtz_t_n_g_state" tableName="qrtz_triggers" unique="false">
+            <column name="sched_name"/>
+            <column name="trigger_group"/>
+            <column name="trigger_state"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-150" dbms="oracle">
+        <createIndex indexName="idx_qrtz_t_n_state" tableName="qrtz_triggers" unique="false">
+            <column name="sched_name"/>
+            <column name="trigger_name"/>
+            <column name="trigger_group"/>
+            <column name="trigger_state"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-151" dbms="oracle">
+        <createIndex indexName="idx_qrtz_t_next_fire_time" tableName="qrtz_triggers" unique="false">
+            <column name="sched_name"/>
+            <column name="next_fire_time"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-152" dbms="oracle">
+        <createIndex indexName="idx_qrtz_t_nft_misfire" tableName="qrtz_triggers" unique="false">
+            <column name="sched_name"/>
+            <column name="misfire_instr"/>
+            <column name="next_fire_time"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-153" dbms="oracle">
+        <createIndex indexName="idx_qrtz_t_nft_st" tableName="qrtz_triggers" unique="false">
+            <column name="sched_name"/>
+            <column name="trigger_state"/>
+            <column name="next_fire_time"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-154" dbms="oracle">
+        <createIndex indexName="idx_qrtz_t_nft_st_misfire" tableName="qrtz_triggers" unique="false">
+            <column name="sched_name"/>
+            <column name="misfire_instr"/>
+            <column name="next_fire_time"/>
+            <column name="trigger_state"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-155" dbms="oracle">
+        <createIndex indexName="idx_qrtz_t_nft_st_misfire_grp" tableName="qrtz_triggers" unique="false">
+            <column name="sched_name"/>
+            <column name="misfire_instr"/>
+            <column name="next_fire_time"/>
+            <column name="trigger_group"/>
+            <column name="trigger_state"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="awood (generated)" id="1364932903575-156" dbms="oracle">
+        <createIndex indexName="idx_qrtz_t_state" tableName="qrtz_triggers" unique="false">
+            <column name="sched_name"/>
+            <column name="trigger_state"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet author="awood" id="1364932903575-157" dbms="oracle">
+        <comment>Add the default quartz lock columns.</comment>
+        <insert tableName="qrtz_locks">
+            <column name="LOCK_NAME" value="TRIGGER_ACCESS"/>
+            <column name="SCHED_NAME" value="TestScheduler"/>
+        </insert>
+        <insert tableName="qrtz_locks">
+            <column name="LOCK_NAME" value="JOB_ACCESS"/>
+            <column name="SCHED_NAME" value="TestScheduler"/>
+        </insert>
+        <insert tableName="qrtz_locks">
+            <column name="LOCK_NAME" value="CALENDAR_ACCESS"/>
+            <column name="SCHED_NAME" value="TestScheduler"/>
+        </insert>
+        <insert tableName="qrtz_locks">
+            <column name="LOCK_NAME" value="STATE_ACCESS"/>
+            <column name="SCHED_NAME" value="TestScheduler"/>
+        </insert>
+        <insert tableName="qrtz_locks">
+            <column name="LOCK_NAME" value="MISFIRE_ACCESS"/>
+            <column name="SCHED_NAME" value="TestScheduler"/>
+        </insert>
+    </changeSet>
+
+    <changeSet author="awood" id="1364932903575-158" dbms="oracle">
+        <comment>Insert the default consumer types.</comment>
+        <insert tableName="cp_consumer_type">
+            <column name="id" value="1000"/>
+            <column name="label" value="system"/>
+            <column name="manifest" value="N"/>
+        </insert>
+        <insert tableName="cp_consumer_type">
+            <column name="id" value="1001"/>
+            <column name="label" value="person"/>
+            <column name="manifest" value="N"/>
+        </insert>
+        <insert tableName="cp_consumer_type">
+            <column name="id" value="1002"/>
+            <column name="label" value="domain"/>
+            <column name="manifest" value="N"/>
+        </insert>
+        <insert tableName="cp_consumer_type">
+            <column name="id" value="1003"/>
+            <column name="label" value="candlepin"/>
+            <column name="manifest" value="Y"/>
+        </insert>
+        <insert tableName="cp_consumer_type">
+            <column name="id" value="1004"/>
+            <column name="label" value="hypervisor"/>
+            <column name="manifest" value="N"/>
+        </insert>
+        <insert tableName="cp_consumer_type">
+            <column name="id" value="1005"/>
+            <column name="label" value="uebercert"/>
+            <column name="manifest" value="N"/>
+        </insert>
+    </changeSet>
+
+    <changeSet author="awood" id="1364932903575-159" dbms="oracle">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="community" value="True"/>
+        </preConditions>
+        <comment>Add community friendly names for Headpin and Katello</comment>
+        <insert tableName="cp_consumer_type">
+            <column name="id" value="1006"/>
+            <column name="label" value="headpin"/>
+            <column name="manifest" value="Y"/>
+        </insert>
+        <insert tableName="cp_consumer_type">
+            <column name="id" value="1007"/>
+            <column name="label" value="katello"/>
+            <column name="manifest" value="Y"/>
+        </insert>
+    </changeSet>
+
+    <changeSet author="awood" id="1364932903575-160" dbms="oracle">
+        <preConditions onFail="MARK_RAN">
+            <changeLogPropertyDefined property="community" value="False"/>
+        </preConditions>
+        <comment>Add product friendly names for Headpin and Katello</comment>
+        <insert tableName="cp_consumer_type">
+            <column name="id" value="1006"/>
+            <column name="label" value="sam"/>
+            <column name="manifest" value="Y"/>
+        </insert>
+        <insert tableName="cp_consumer_type">
+            <column name="id" value="1007"/>
+            <column name="label" value="system engine"/>
+            <column name="manifest" value="Y"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

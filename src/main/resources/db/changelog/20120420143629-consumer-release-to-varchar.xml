@@ -7,7 +7,7 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
 
-    <changeSet id="20120420143629" author="alikins">
+    <changeSet id="20120420143629" author="alikins" dbms="postgresql">
         <comment>Change releasever to varchar</comment>
        <dropColumn tableName="cp_consumer" columnName="releasever"/>
        <addColumn tableName="cp_consumer">
