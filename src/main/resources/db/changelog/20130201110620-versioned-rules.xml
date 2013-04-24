@@ -7,7 +7,7 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
 
-    <changeSet id="20130201110620" author="dgoodwin">
+    <changeSet id="20130201110620" author="dgoodwin" dbms="postgresql">
         <comment>Add a column in rules table for the version of the rules.</comment>
         <addColumn tableName="cp_rules">
             <column name="version" type="varchar(20)"/>

@@ -46,6 +46,11 @@ public abstract class AbstractPoolAttribute extends AbstractHibernateObject
     protected String value;
 
     @ManyToOne
+    /* The @ForeignKey annotation is only used by HBM2DDL.  Please note that
+     * this particular annotation will create keys with the same name because
+     * there are two classes that extend this abstract class.  This duplication
+     * is okay for PostgreSQL but is a no-no for Oracle.
+     */
     @ForeignKey(name = "fk_pool_id", inverseName = "fk_pool_attribute_id")
     @JoinColumn(nullable = false)
     @Index(name = "cp_poolattribute_pool_fk_idx")

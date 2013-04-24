@@ -438,6 +438,7 @@ public class X509V3ExtensionUtil extends X509Util{
         PathNode endMarker = new PathNode();
         for (Content c : contents) {
             String path = c.getPath();
+
             if (treeDebug) {
                 log.debug(path);
             }

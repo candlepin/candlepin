@@ -55,6 +55,7 @@ public class OwnerPermission extends AbstractHibernateObject implements Permissi
     @Index(name = "cp_permission_role_fk_idx")
     private Role role;
 
+    @Column(name = "owner_access")
     private Access access;
 
     public OwnerPermission(Owner owner, Access access) {

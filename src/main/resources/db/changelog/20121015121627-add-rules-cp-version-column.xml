@@ -7,7 +7,7 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
 
-    <changeSet id="20121015121627" author="dgoodwin">
+    <changeSet id="20121015121627" author="dgoodwin" dbms="postgresql">
         <comment>Add a column in rules table for the version of candlepin they came from.</comment>
         <addColumn tableName="cp_rules">
             <column name="candlepin_version" type="varchar(255)"/>

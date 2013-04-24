@@ -6,7 +6,7 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
-    <changeSet id="20120411152729" author="dgoodwin">
+    <changeSet id="20120411152729" author="dgoodwin" dbms="postgresql">
         <comment>Add the default quartz lock columns.</comment>
         <insert tableName="qrtz_locks">
             <column name="LOCK_NAME" value="TRIGGER_ACCESS"/>

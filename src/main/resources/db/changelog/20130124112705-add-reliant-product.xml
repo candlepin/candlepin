@@ -7,7 +7,7 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
 
-    <changeSet id="20130124112705" author="wpoteat">
+    <changeSet id="20130124112705" author="wpoteat" dbms="postgresql">
         <createTable tableName="cp_product_reliance">
             <column name="parent_product_id" type="VARCHAR(32)">
                 <constraints nullable="false"/>
@@ -18,7 +18,7 @@
         </createTable>
         <!-- See http://www.liquibase.org/manual/refactoring_commands -->
     </changeSet>
-    <changeSet id="20130124112705-1" author="wpoteat">
+    <changeSet id="20130124112705-1" author="wpoteat" dbms="postgresql">
         <createIndex tableName="cp_product_reliance" indexName="cp_product_reliance_parent_product_id_idx">
             <column name="parent_product_id"/>
         </createIndex>
