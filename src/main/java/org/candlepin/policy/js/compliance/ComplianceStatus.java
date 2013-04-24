@@ -134,7 +134,7 @@ public class ComplianceStatus {
     }
 
     public boolean isCompliant() {
-        return nonCompliantProducts.isEmpty() && partiallyCompliantProducts.isEmpty();
+        return reasons.isEmpty();
     }
 
     public String getStatus() {
