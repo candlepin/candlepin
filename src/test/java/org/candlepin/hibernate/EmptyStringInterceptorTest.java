@@ -125,6 +125,25 @@ public class EmptyStringInterceptorTest {
         assertEquals(null, p.getName());
     }
 
+    @Test
+    public void testInterceptedNullStringPersistence() {
+        props.put("hibernate.ejb.interceptor",
+            "org.candlepin.hibernate.EmptyStringInterceptor");
+
+        cfg.addProperties(props);
+        emf = cfg.buildEntityManagerFactory();
+        em = emf.createEntityManager();
+
+        Person p = new Person();
+        p.setName(null);
+        p.setId(1);
+
+        persist(p);
+
+        p = em.find(Person.class, 1);
+        assertEquals(null, p.getName());
+    }
+
     private void persist(Person p) {
         em.getTransaction().begin();
         em.persist(p);
