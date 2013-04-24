@@ -38,7 +38,7 @@ public class StatusReasonMessageGenerator {
             put("CORES",
                 "{0} only covers {1} of {2} cores.");
             put("RAM",
-                "{0} only covers {1}GB of systems {2}GB of RAM.");
+                "{0} only covers {1}GB of {2}GB of RAM.");
             put("DEFAULT",
                 "{3} COVERAGE PROBLEM.  Subscription for {0} covers {1} of {2}");
         }
