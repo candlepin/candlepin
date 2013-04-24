@@ -32,13 +32,13 @@ public class StatusReasonMessageGenerator {
             put("NOTCOVERED",
                 "The system does not have subscriptions that cover {0}.");
             put("ARCH",
-                "Subscriptions for {0} cover architecture {1} but the system is {2}.");
+                "{0} covers architecture {1} but the system is {2}.");
             put("SOCKETS",
-                "Subscriptions for {0} only cover {1} of {2} sockets.");
+                "{0} only covers {1} of {2} sockets.");
             put("CORES",
-                "Subscriptions for {0} only cover {1} of {2} cores.");
+                "{0} only covers {1} of {2} cores.");
             put("RAM",
-                "Subscriptions for {0} only cover {1}gb of systems {2}gb of ram.");
+                "{0} only covers {1}GB of systems {2}GB of RAM.");
             put("DEFAULT",
                 "{3} COVERAGE PROBLEM.  Subscription for {0} covers {1} of {2}");
         }
