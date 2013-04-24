@@ -313,8 +313,8 @@ public class Exporter {
     private void exportConsumer(File baseDir, Consumer consumer) throws IOException {
         File file = new File(baseDir.getCanonicalPath(), "consumer.json");
         FileWriter writer = new FileWriter(file);
-        this.consumerExporter.export(mapper, writer, consumer, getPrefixApiUrl(),
-            getPrefixWebUrl());
+        this.consumerExporter.export(mapper, writer, consumer, getPrefixWebUrl(),
+            getPrefixApiUrl());
         writer.close();
     }
 
