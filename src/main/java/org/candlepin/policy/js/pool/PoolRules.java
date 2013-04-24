@@ -52,6 +52,22 @@ public class PoolRules {
         this.config = config;
     }
 
+    private long calculateQuantity(Subscription sub) {
+        long quantity = sub.getQuantity() * sub.getProduct().getMultiplier();
+
+        // In hosted, we increase the quantity on the subscription. However in standalone,
+        // we assume this already has happened in hosted and the accurate quantity was
+        // exported:
+        if (sub.getProduct().hasAttribute("instance_multiplier") && !config.standalone()) {
+            int instanceMultiplier = Integer.parseInt(
+                sub.getProduct().getAttribute("instance_multiplier").getValue());
+            log.info("Increasing pool quantity for instance multiplier: " +
+                instanceMultiplier);
+            quantity = quantity * instanceMultiplier;
+        }
+        return quantity;
+    }
+
     public List<Pool> createPools(Subscription sub) {
         log.info("Creating pools for new subscription: " + sub);
         PoolHelper helper = new PoolHelper(this.poolManager,
@@ -60,7 +76,7 @@ public class PoolRules {
         List<Pool> pools = new LinkedList<Pool>();
         Map<String, String> attributes =
             helper.getFlattenedAttributes(sub.getProduct());
-        long quantity = sub.getQuantity() * sub.getProduct().getMultiplier();
+        long quantity = calculateQuantity(sub);
         Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
         Pool newPool = new Pool(sub.getOwner(), sub.getProduct().getId(),
                 sub.getProduct().getName(), providedProducts, quantity, sub.getStartDate(),
@@ -142,9 +158,10 @@ public class PoolRules {
             boolean datesChanged = (!sub.getStartDate().equals(
                 existingPool.getStartDate())) ||
                 (!sub.getEndDate().equals(existingPool.getEndDate()));
+
             // Expected quantity is normally the subscription's quantity, but for
             // virt only pools we expect it to be sub quantity * virt_limit:
-            long expectedQuantity = sub.getQuantity() * sub.getProduct().getMultiplier();
+            long expectedQuantity = calculateQuantity(sub);
 
             /*
              *  WARNING: when updating pools, we have the added complication of having to
