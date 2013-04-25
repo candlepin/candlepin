@@ -74,7 +74,7 @@ public class CriteriaRules  {
 
         // Don't load virt_only pools if this consumer isn't a guest
         // or a manifest consumer
-        if (consumer.isManifest()) {
+        if (consumer.getType().isManifest()) {
             DetachedCriteria noRequiresHost = DetachedCriteria.forClass(
                     PoolAttribute.class, "attr")
                 .add(Restrictions.eq("name", "requires_host"))
