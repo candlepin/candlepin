@@ -46,6 +46,7 @@ public class ComplianceStatus {
         this.compliantProducts = new HashMap<String, Set<Entitlement>>();
         this.partiallyCompliantProducts = new HashMap<String, Set<Entitlement>>();
         this.partialStacks = new HashMap<String, Set<Entitlement>>();
+        this.reasons = new HashSet<ComplianceReason>();
     }
 
     public ComplianceStatus(Date date) {
@@ -54,6 +55,7 @@ public class ComplianceStatus {
         this.compliantProducts = new HashMap<String, Set<Entitlement>>();
         this.partiallyCompliantProducts = new HashMap<String, Set<Entitlement>>();
         this.partialStacks = new HashMap<String, Set<Entitlement>>();
+        this.reasons = new HashSet<ComplianceReason>();
     }
 
     /**
