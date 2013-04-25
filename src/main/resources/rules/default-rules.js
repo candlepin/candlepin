@@ -808,7 +808,7 @@ var PoolCriteria = {
         // Don't load virt_only pools if this consumer isn't a guest:
         // or it isn't a manifest consumer
 
-        if (consumer.isManifest()) {
+        if (consumer.getType().isManifest()) {
             var noRequiresHost = org.hibernate.criterion.DetachedCriteria.forClass(
                     org.candlepin.model.PoolAttribute, "attr")
                     .add(org.hibernate.criterion.Restrictions.eq("name", "requires_host"))

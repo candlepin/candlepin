@@ -493,20 +493,4 @@ public class ConsumerTest extends DatabaseTestFixture {
         assertEquals(1, lookedUp.getGuestIds().size());
     }
 
-    @Test
-    public void nullType() {
-        Consumer c = new Consumer();
-        c.setType(null);
-        assertFalse(c.isManifest());
-    }
-
-    @Test
-    public void isManifest() {
-        Consumer c = new Consumer();
-        ConsumerType type = new ConsumerType(
-            ConsumerType.ConsumerTypeEnum.CANDLEPIN);
-        c.setType(type);
-        assertTrue(c.isManifest());
-    }
-
 }
