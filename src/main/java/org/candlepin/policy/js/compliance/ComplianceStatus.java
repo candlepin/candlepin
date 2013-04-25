@@ -50,12 +50,8 @@ public class ComplianceStatus {
     }
 
     public ComplianceStatus(Date date) {
+        this();
         this.date = date;
-        this.nonCompliantProducts = new HashSet<String>();
-        this.compliantProducts = new HashMap<String, Set<Entitlement>>();
-        this.partiallyCompliantProducts = new HashMap<String, Set<Entitlement>>();
-        this.partialStacks = new HashMap<String, Set<Entitlement>>();
-        this.reasons = new HashSet<ComplianceReason>();
     }
 
     /**
