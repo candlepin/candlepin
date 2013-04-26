@@ -366,7 +366,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         Entitlement entitlement, Pool pool, Consumer c,
         Map<String, String> attributes) {
         log.debug("Running virt_limit post unbind.");
-        if (!config.standalone() && c.isManifest()) {
+        if (!config.standalone() && c.getType().isManifest()) {
             String virtLimit = attributes.get("virt_limit");
             if (!"unlimited".equals(virtLimit)) {
                 // As we have unbound an entitlement from a physical pool that
@@ -409,7 +409,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
     private void postBindUserLicense(PoolHelper postHelper, Pool pool,
         Consumer c, Map<String, String> attributes) {
         log.debug("Running user_license post-bind.");
-        if (!c.isManifest()) {
+        if (!c.getType().isManifest()) {
             // Default to using the same product from the pool.
             String productId = pool.getProductId();
 
@@ -428,7 +428,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         Entitlement entitlement, Pool pool, Consumer c,
         Map<String, String> attributes) {
         log.debug("Running virt_limit post-bind.");
-        if (!c.isManifest() &&
+        if (!c.getType().isManifest() &&
             (config.standalone() || attributes.containsKey("host_limited"))) {
             String productId = pool.getProductId();
             String virtLimit = attributes.get("virt_limit");
@@ -446,7 +446,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
             }
         }
         else {
-            if (!config.standalone() && c.isManifest()) {
+            if (!config.standalone() && c.getType().isManifest()) {
                 String virtLimit = attributes.get("virt_limit");
                 if (!"unlimited".equals(virtLimit)) {
                     // if the bonus pool is not unlimited, then the bonus pool
