@@ -2,7 +2,7 @@
 require 'candlepin_scenarios'
 
 def assert_reason(reason, expected_key, expected_message, expected_attributes)
-  reason.key.should == expected_key
+  reason["key"].should == expected_key
   reason.message.should == expected_message
 
   # Check for expected attributes
@@ -306,10 +306,10 @@ describe 'Single Entitlement Compliance Reasons' do
             },
             "message" => expected_message
     }
-    for reason in reasons:
-        reason_expectations.should have_key(reason.key)
-        expectation = reason_expectations[reason.key]
-        assert_reason(reason, expectation.key, expectation.message, expectation.attributes)
+    for reason in reasons
+        reason_expectations.should have_key(reason["key"])
+        expectation = reason_expectations[reason["key"]]
+        assert_reason(reason, expectation["key"], expectation.message, expectation.attributes)
     end
     
   end
@@ -635,10 +635,10 @@ describe 'Stacking Compliance Reasons' do
 
     reasons = compliance_status['reasons']
     reasons.size.should == 4
-    for reason in reasons:
-        reason_expectations.should have_key(reason.key)
-        expectation = reason_expectations[reason.key]
-        assert_reason(reason, expectation.key, expectation.message, expectation.attributes)
+    for reason in reasons
+        reason_expectations.should have_key(reason["key"])
+        expectation = reason_expectations[reason["key"]]
+        assert_reason(reason, expectation["key"], expectation.message, expectation.attributes)
     end
   end
 end
