@@ -25,12 +25,14 @@ import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Statistic;
 import org.candlepin.model.StatisticCurator;
+import org.candlepin.policy.js.quantity.QuantityRules;
 import org.candlepin.resource.util.ResourceDateParser;
 
 import com.google.inject.Inject;
@@ -40,6 +42,7 @@ import org.xnap.commons.i18n.I18n;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -64,12 +67,13 @@ public class PoolResource {
     private StatisticCurator statisticCurator;
     private I18n i18n;
     private PoolManager poolManager;
+    private QuantityRules quantityRules;
 
     @Inject
     public PoolResource(PoolCurator poolCurator,
         ConsumerCurator consumerCurator, OwnerCurator ownerCurator,
         StatisticCurator statisticCurator, I18n i18n,
-        EventSink eventSink, PoolManager poolManager) {
+        EventSink eventSink, PoolManager poolManager, QuantityRules quantityRules) {
 
         this.poolCurator = poolCurator;
         this.consumerCurator = consumerCurator;
@@ -77,6 +81,7 @@ public class PoolResource {
         this.statisticCurator = statisticCurator;
         this.i18n = i18n;
         this.poolManager = poolManager;
+        this.quantityRules = quantityRules;
     }
 
     /**
@@ -180,15 +185,57 @@ public class PoolResource {
     @GET
     @Path("/{pool_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Pool getPool(@PathParam("pool_id") @Verify(Pool.class) String id) {
+    public Pool getPool(@PathParam("pool_id") @Verify(Pool.class) String id,
+        @QueryParam("consumer") String consumerUuid,
+        @Context Principal principal) {
         Pool toReturn = poolCurator.find(id);
 
         if (toReturn != null) {
+            addCalculatedAttributes(toReturn, consumerUuid, principal);
             return toReturn;
         }
 
         throw new NotFoundException(i18n.tr(
             "Subscription Pool with ID ''{0}'' could not be found.", id));
+    }
+
+    private void addCalculatedAttributes(Pool p, String consumerUuid, Principal principal) {
+        if (consumerUuid == null) {
+            return;
+        }
+
+        Consumer c = consumerCurator.findByUuid(consumerUuid);
+        if (c == null) {
+            throw new NotFoundException(i18n.tr("consumer: {0} not found",
+                consumerUuid));
+        }
+
+        if (!principal.canAccess(c, Access.READ_ONLY)) {
+            throw new ForbiddenException(i18n.tr("User {0} cannot access consumer {1}",
+                principal.getPrincipalName(), consumerUuid));
+        }
+
+        // Check that Pool p actually has consumerUuid in it.
+        Set<Entitlement> entitlements = p.getEntitlements();
+        boolean found = false;
+        for (Entitlement e : entitlements) {
+            if (c.equals(e.getConsumer())) {
+                found = true;
+                break;
+            }
+        }
+
+        if (found) {
+            p.addCalculatedAttribute("suggested_quantity",
+                String.valueOf(quantityRules.getSuggestedQuantity(p, c)));
+
+            //TODO set with value of instance_multiplier
+            p.addCalculatedAttribute("quantity_increment", null);
+        }
+        else {
+            throw new NotFoundException(i18n.tr("Pool {0} does not contain consumer {1}",
+                p.getId(), consumerUuid));
+        }
     }
 
     /**

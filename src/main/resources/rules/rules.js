@@ -22,12 +22,18 @@ function autobind_name_space() {
     return Autobind;
 }
 
+function quantity_name_space() {
+    return Quantity;
+}
+
 
 // Consumer fact names
 var SOCKET_FACT="cpu.cpu_socket(s)";
 var RAM_FACT = "memory.memtotal";
 var CORES_FACT = "cpu.core(s)_per_socket";
 var ARCH_FACT = "uname.machine";
+var IS_VIRT_GUEST_FACT = "virt.is_guest";
+var CPUS_FACT = "cpu.cpu(s)"
 var PROD_ARCHITECTURE_SEPARATOR = ",";
 
 // Product attribute names
@@ -37,6 +43,7 @@ var ARCH_ATTRIBUTE = "arch";
 var RAM_ATTRIBUTE = "ram";
 var INSTANCE_ATTRIBUTE = "instance_multiplier";
 var REQUIRES_HOST_ATTRIBUTE = "requires_host";
+var CPUS_ATTRIBUTE = "vcpu";
 
 /**
  *  These product attributes are considered when
@@ -2047,8 +2054,78 @@ var Compliance = {
 
 }
 
+var Quantity = {
+    get_quantity_context: function() {
+        context = JSON.parse(json_context);
+        return context;
+    },
+
+    get_suggested_quantity: function() {
+        var context = Quantity.get_quantity_context();
+        var facts = context.consumerFacts;
+        var product_attrs = context.productAttributes;
+        var total_consumed = context.totalConsumed;
+        var quantity = 1;
+
+        if (!Quantity.allows_multi_entitlement(product_attrs)) {
+            return quantity.toString();
+        }
+
+        if (Quantity.is_virtual_machine(facts)) {
+            var allowed = Quantity.get_allowed_quantity_for_virtual(facts, product_attrs);
+        }
+        else {
+            var allowed = Quantity.get_allowed_quantity_for_physical(facts, product_attrs);
+        }
+
+        quantity = allowed - total_consumed;
+        if (quantity < 0) {
+            quantity = 0;
+        }
+        return quantity.toString();
+    },
+
+    allows_multi_entitlement: function(attrs) {
+        return "multi-entitlement" in attrs &&
+                Utils.equalsIgnoreCase(attrs["multi-entitlement"], "yes");
+    },
+
+    is_virtual_machine: function(facts) {
+        return (IS_VIRT_GUEST_FACT in facts && Utils.equalsIgnoreCase(
+                facts[IS_VIRT_GUEST_FACT], "true"));
+    },
+
+    get_allowed_quantity_for_virtual: function(facts, attrs) {
+        if (CPUS_ATTRIBUTE in attrs) {
+            var machine_val = Utils.get_float(facts, CPUS_FACT);
+            var product_val = Utils.get_float(attrs, CPUS_ATTRIBUTE);
+        }
+        else if (SOCKETS_ATTRIBUTE in attrs) {
+            var machine_val = Utils.get_float(facts, SOCKET_FACT);
+            var product_val = Utils.get_float(attrs, SOCKETS_ATTRIBUTE);
+        }
+        else {
+            return 1;
+        }
+        return Math.ceil(machine_val / product_val);
+    },
+
+    get_allowed_quantity_for_physical: function(facts, attrs) {
+        var machine_sockets = Utils.get_float(facts, SOCKET_FACT);
+        var product_sockets = Utils.get_float(attrs, SOCKETS_ATTRIBUTE);
+        return Math.ceil(machine_sockets / product_sockets);
+    },
+}
 
 var Utils = {
+
+    get_float: function(map, name) {
+        value = "1";
+        if (name in map && map[name]) {
+            value = map[name];
+        }
+        return parseFloat(value);
+    },
 
     date_compare: function(d1, d2) {
         if (d1 - d2 > 0) {
