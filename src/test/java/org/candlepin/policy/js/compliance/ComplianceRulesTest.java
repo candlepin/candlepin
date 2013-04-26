@@ -398,7 +398,7 @@ public class ComplianceRulesTest {
         assertEquals(1, status.getPartialStacks().size());
 
         assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_1));
-        assertEquals("invalid", status.getStatus());
+        assertEquals("partial", status.getStatus());
     }
 
     public void testComplianceDoesNotEnforceSocketsWhenAttributeNotSet() {
@@ -610,7 +610,7 @@ public class ComplianceRulesTest {
         assertEquals(1, status.getPartialStacks().size());
 
         assertTrue(status.getPartialStacks().keySet().contains(STACK_ID_1));
-        assertEquals("invalid", status.getStatus());
+        assertEquals("partial", status.getStatus());
     }
 
     @Test
@@ -969,7 +969,7 @@ public class ComplianceRulesTest {
         assertEquals(1, status.getPartialStacks().size());
 
         assertTrue(status.getPartialStacks().keySet().contains(STACK_ID_1));
-        assertEquals("invalid", status.getStatus());
+        assertEquals("partial", status.getStatus());
     }
 
     // Cores with not-stackable entitlement tests

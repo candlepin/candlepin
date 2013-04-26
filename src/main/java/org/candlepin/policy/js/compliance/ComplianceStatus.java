@@ -139,7 +139,7 @@ public class ComplianceStatus {
         if (isCompliant()) {
             return GREEN;
         }
-        if (!partiallyCompliantProducts.isEmpty() && nonCompliantProducts.isEmpty()) {
+        if (nonCompliantProducts.isEmpty()) {
             return YELLOW;
         }
         return RED;
