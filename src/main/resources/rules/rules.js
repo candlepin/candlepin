@@ -1295,6 +1295,9 @@ var Autobind = {
         var consumerSLA = context.serviceLevelOverride;
         if (!consumerSLA || consumerSLA.equals("")) {
             consumerSLA = context.consumer.serviceLevel;
+                if (!consumerSLA || consumerSLA.equals("")) {
+                    consumerSLA = context.owner.defaultServiceLevel;
+                }
         }
 
         // Builds out the pools_by_class by iterating each pool, checking which products it provides (that

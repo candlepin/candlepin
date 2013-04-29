@@ -65,6 +65,8 @@ public class RulesObjectMapper {
             SimpleBeanPropertyFilter.serializeAllExcept("idCert"));
         filterProvider = filterProvider.addFilter("EntitlementFilter",
             SimpleBeanPropertyFilter.serializeAllExcept("certificates", "consumer"));
+        filterProvider = filterProvider.addFilter("OwnerFilter",
+            SimpleBeanPropertyFilter.serializeAllExcept("parentOwner", "consumers", "activationKeys", "environments", "pools"));
         this.mapper.setFilters(filterProvider);
 
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
