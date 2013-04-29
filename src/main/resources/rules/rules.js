@@ -1822,6 +1822,16 @@ var Compliance = {
                     }
                 }
             }
+
+            // If we have no installed products and the entitlement
+            // is partially covered, we want the system to be partial.
+            if (relevant_pids.length == 0 && !ent_is_stacked) {
+                var entCoverage = CoverageCalculator.getEntitlementCoverage(e, consumer);
+                if (!entCoverage.covered) {
+                    compStatus.add_reasons(entCoverage.reasons);
+                }
+            }
+
             for (var m = 0; m < relevant_pids.length; m++) {
                 var relevant_pid = relevant_pids[m];
                 if (partially_stacked) {

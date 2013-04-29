@@ -60,6 +60,41 @@ describe 'Single Entitlement Compliance Reasons' do
     assert_reason(reasons[0], "NOTCOVERED", expected_message, {"product_id" => @product1.id})
   end
   
+  it 'reports ram not covered but no installed product' do
+    system = consumer_client(@user, random_string('system1'), :system, nil,
+                {'system.certificate_version' => '3.1',
+                 'uname.machine' => 'x86_64',
+                 # Bump RAM so that it is not covered.
+                 'memory.memtotal' => '16777216'})
+    installed = []
+    system.update_consumer({:installedProducts => installed})
+    
+    pool = find_pool(@owner.id, @product1_sub.id)
+    pool.should_not == nil
+
+    entitlements = system.consume_pool(pool.id)
+    entitlements.should_not == nil
+    entitlements.size.should == 1
+    entitlement = entitlements[0]
+
+    compliance_status = @cp.get_compliance(consumer_id=system.uuid)
+    compliance_status['status'].should == 'partial'
+    compliance_status['compliant'].should == false
+    compliance_status.should have_key('reasons')
+
+    expected_has = "16"
+    expected_covered = "8"
+    expected_message = "%s only covers %sGB of %sGB of RAM." % [@product1.name,
+                                                           expected_covered,
+                                                           expected_has]
+
+    reasons = compliance_status['reasons']
+    reasons.size.should == 1
+    assert_reason(reasons[0], 'RAM', expected_message, {'entitlement_id' => entitlement.id,
+                                                        'covered' => expected_covered,
+                                                        'has' => expected_has})
+  end
+
   it 'reports ram not covered' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
                 {'system.certificate_version' => '3.1',
@@ -361,6 +396,42 @@ describe 'Stacking Compliance Reasons' do
     installed = [
         {'productId' => @stackable_product_1.id, 'productName' => @stackable_product_1.name}
     ]
+    system.update_consumer({:installedProducts => installed})
+    
+    pool = find_pool(@owner.id, @stackable_sub_1.id)
+    pool.should_not == nil
+
+    entitlements = system.consume_pool(pool.id, {:quantity => 2})
+    entitlements.should_not == nil
+    entitlements.size.should == 1
+    entitlement = entitlements[0]
+    entitlement.quantity.should == 2
+
+    compliance_status = @cp.get_compliance(consumer_id=system.uuid)
+    compliance_status['status'].should == 'partial'
+    compliance_status['compliant'].should == false
+    compliance_status.should have_key('reasons')
+    
+    expected_has = "16"
+    expected_covered = "8"
+    expected_message = "%s only covers %sGB of %sGB of RAM." % [@stackable_product_1.name,
+                                                                expected_covered,
+                                                                expected_has]
+
+    reasons = compliance_status['reasons']
+    reasons.size.should == 1
+    assert_reason(reasons[0], 'RAM', expected_message, {'stack_id' => @stack_id,
+                                                        'covered' => expected_covered,
+                                                        'has' => expected_has})
+  end
+  
+  it 'report partial for stack that does not cover ram and has no installed products' do
+    system = consumer_client(@user, random_string('system1'), :system, nil,
+                {'system.certificate_version' => '3.1',
+                 'uname.machine' => 'x86_64',
+                 'memory.memtotal' => '16777216',
+                 'cpu.cpu_socket(s)' => '4'})
+    installed = []
     system.update_consumer({:installedProducts => installed})
     
     pool = find_pool(@owner.id, @stackable_sub_1.id)
