@@ -25,7 +25,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.8.4
+Version: 0.8.5
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -345,6 +345,49 @@ fi
 
 
 %changelog
+* Mon Apr 29 2013 Bryan Kearney <bkearney@redhat.com> 0.8.5-1
+- 956873: Fix broken rules on older Candlepin servers. (dgoodwin@redhat.com)
+- Add additional EmptyStringInterceptor test. (awood@redhat.com)
+- Remove the term 'cnsmr' to the extent possible. (awood@redhat.com)
+- Consolidate Oracle dependencies. (awood@redhat.com)
+- Refactoring deploy script to remove dependency on external file.
+  (awood@redhat.com)
+- Add Quartz's Oracle JAR to the buildfile. (awood@redhat.com)
+- Add Oracle support to cpsetup. (awood@redhat.com)
+- Add Oracle support to cpdb. (awood@redhat.com)
+- Add refresh pools support for instance based subscriptions.
+  (dgoodwin@redhat.com)
+- web and api url transposed. (jesusr@redhat.com)
+- Pull in the latest strings (bkearney@redhat.com)
+- Updating Oracle schema creation script. (awood@redhat.com)
+- Small corrections to deployment script. (awood@redhat.com)
+- Add unit tests for EmptyStringUserType. (awood@redhat.com)
+- Add unit tests for EmptyStringInterceptor. (awood@redhat.com)
+- Require newer version of Liquibase (awood@redhat.com)
+- Add Oracle as a deployment option. (awood@redhat.com)
+- Set empty string values in the database to null with liquibase.
+  (awood@redhat.com)
+- For Content objects, read content and GPG URLs stored as null as the empty
+  string. (awood@redhat.com)
+- Adding Hibernate interceptor to prevent writing empty strings to the
+  database. (awood@redhat.com)
+- Add UserType that will convert nulls to empty strings on database reads.
+  (awood@redhat.com)
+- Removing code that is a no-op in Oracle. (awood@redhat.com)
+- Handle null Content paths when writing to a V3 certificate.
+  (awood@redhat.com)
+- The name 'fk_product_id' was being used twice. (awood@redhat.com)
+- The word 'access' is an Oracle reserved word. (awood@redhat.com)
+- Shorten cp_consumer_installed_products table name to less than 30 characters.
+  (awood@redhat.com)
+- Add a comment explaining the consequences of using HBM2DDL for Oracle.
+  (awood@redhat.com)
+- Allow the ownerId in the cp_event table to be null. (awood@redhat.com)
+- Create the Oracle schema and reconcile the PostgreSQL schema.
+  (awood@redhat.com)
+- Add upstream consumer foreign key. (awood@redhat.com)
+- Configure existing changesets to run only on PostgreSQL. (awood@redhat.com)
+
 * Thu Apr 18 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.4-1
 - also copy over created/updated. (jesusr@redhat.com)
 - Bumped minor version of the rules. (mstead@redhat.com)
