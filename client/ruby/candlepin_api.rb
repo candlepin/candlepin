@@ -115,6 +115,9 @@ class Candlepin
         params[:guestIds] if params[:guestIds]
     consumer[:autoheal] = params[:autoheal] if params.has_key?(:autoheal)
     consumer[:serviceLevel] = params[:serviceLevel] if params.has_key?(:serviceLevel)
+    consumer[:capabilities] = params[:capabilities].collect { |name| {'name' => name} } if params[:capabilities]
+
+    
 
     path = get_path("consumers")
     put("#{path}/#{uuid}", consumer)
@@ -872,6 +875,22 @@ class Candlepin
     response = get_client(uri, Net::HTTP::Get, :get)[URI.escape(uri)].get \
       :accept => accept_header
     return JSON.parse(response.body)
+  end
+
+  def create_or_update_distributor_version(name, capabilities=[])
+    version =  {
+      'name' => name,
+      'capabilities' => capabilities.collect { |name| {'name' => name} }
+    }
+    post('/distributor_versions', version)
+  end
+
+  def delete_distributor_version(version_name)
+    delete("/distributor_versions/#{version_name}")
+  end
+
+  def get_distributor_versions()
+    get("/distributor_versions")
   end
 
   # Assumes a zip archive currently. Returns filename (random#.zip) of the

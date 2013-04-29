@@ -66,6 +66,7 @@ import org.candlepin.resource.ConsumerResource;
 import org.candlepin.resource.ConsumerTypeResource;
 import org.candlepin.resource.ContentResource;
 import org.candlepin.resource.CrlResource;
+import org.candlepin.resource.DistributorVersionResource;
 import org.candlepin.resource.EntitlementResource;
 import org.candlepin.resource.EnvironmentResource;
 import org.candlepin.resource.EventResource;
@@ -183,6 +184,7 @@ public class CandlepinModule extends AbstractModule {
         bind(JsRunner.class).toProvider(JsRunnerProvider.class);
         bind(UserResource.class);
         bind(UniqueIdGenerator.class).to(DefaultUniqueIdGenerator.class);
+        bind(DistributorVersionResource.class);
 
         bind(I18n.class).toProvider(I18nProvider.class);
         bind(AuthInterceptor.class);

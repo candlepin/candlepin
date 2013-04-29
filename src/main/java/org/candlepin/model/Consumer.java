@@ -159,6 +159,12 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     private List<GuestId> guestIds;
 
+    @OneToMany(mappedBy = "consumer", targetEntity = ConsumerCapability.class)
+    @Cascade({org.hibernate.annotations.CascadeType.ALL,
+        org.hibernate.annotations.CascadeType.MERGE,
+        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    private Set<ConsumerCapability> capabilities;
+
     // An instruction for the client to initiate an autoheal request.
     // WARNING: can't initialize to a default value here, we need to be able to see
     // if it was specified on an incoming update, so it must be null if no value came in.
@@ -564,5 +570,29 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @Transient
     public boolean isManifest() {
         return getType() == null ? false : getType().isManifest();
+    }
+
+    /**
+     * @return the capabilities
+     */
+    public Set<ConsumerCapability> getCapabilities() {
+        return capabilities;
+    }
+
+    /**
+     * @param capabilities the capabilities to set
+     */
+    public void setCapabilities(Set<ConsumerCapability> capabilities) {
+        if (this.capabilities == null) {
+            this.capabilities = new HashSet<ConsumerCapability>();
+        }
+        if (!this.capabilities.equals(capabilities)) {
+            this.capabilities.clear();
+            this.capabilities.addAll(capabilities);
+            this.setUpdated(new Date());
+            for (ConsumerCapability cc : this.capabilities) {
+                cc.setConsumer(this);
+            }
+        }
     }
 }

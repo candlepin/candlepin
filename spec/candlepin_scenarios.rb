@@ -13,6 +13,7 @@ module CandlepinScenarios
         @cp = Candlepin.new('admin', 'admin')
         @owners = []
         @products = []
+        @dist_versions = []
         @users = []
         @roles = []
         @rules = Base64.encode64("")
@@ -23,6 +24,7 @@ module CandlepinScenarios
         @owners.reverse_each { |owner| @cp.delete_owner owner['key'] }
         @users.reverse_each { |user| @cp.delete_user user['username'] }
         @products.reverse_each { |product| @cp.delete_product product['id'] }
+        @dist_versions.reverse_each { |dist_version| @cp.delete_distributor_version dist_version['name'] }
 
         # restore the original rules
         if (@rules)
@@ -84,6 +86,16 @@ module CandlepinMethods
     # each one out and putting it into a new hash.
     @cp.create_content(random_str, random_str, random_str, "yum",
       random_str, params)
+  end
+
+  # Wrapper for ruby API so we can track all distributors we created and clean them
+  # up. Note that this entails cleanup of all objects beneath that owner, so
+  # most other objects can be created using the ruby API.
+  def create_or_update_distributor_version(dist_name, capabilities=[])
+    dist_version = @cp.create_or_update_distributor_version(dist_name, capabilities)
+    @dist_versions << dist_version
+
+    return dist_version
   end
 
   def user_client(owner, user_name, readonly=false)

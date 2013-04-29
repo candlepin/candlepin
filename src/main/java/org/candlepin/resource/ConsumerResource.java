@@ -14,8 +14,32 @@
  */
 package org.candlepin.resource;
 
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
+import java.io.File;
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
 import org.candlepin.audit.Event;
@@ -42,6 +66,7 @@ import org.candlepin.model.ActivationKeyCurator;
 import org.candlepin.model.ActivationKeyPool;
 import org.candlepin.model.CertificateSerialDto;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCapability;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
@@ -50,6 +75,9 @@ import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.DeleteResult;
 import org.candlepin.model.DeletedConsumer;
 import org.candlepin.model.DeletedConsumerCurator;
+import org.candlepin.model.DistributorVersion;
+import org.candlepin.model.DistributorVersionCapability;
+import org.candlepin.model.DistributorVersionCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCurator;
@@ -85,32 +113,8 @@ import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
 
-import java.io.File;
-import java.io.IOException;
-import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
 /**
  * API Gateway for Consumers
@@ -145,6 +149,7 @@ public class ConsumerResource {
     private ComplianceRules complianceRules;
     private DeletedConsumerCurator deletedConsumerCurator;
     private EnvironmentCurator environmentCurator;
+    private DistributorVersionCurator distributorVersionCurator;
     private Config config;
 
     @Inject
@@ -162,6 +167,7 @@ public class ConsumerResource {
         ActivationKeyCurator activationKeyCurator, Entitler entitler,
         ComplianceRules complianceRules, DeletedConsumerCurator deletedConsumerCurator,
         EnvironmentCurator environmentCurator,
+        DistributorVersionCurator distributorVersionCurator,
         Config config) {
 
         this.consumerCurator = consumerCurator;
@@ -187,6 +193,7 @@ public class ConsumerResource {
         this.complianceRules = complianceRules;
         this.deletedConsumerCurator = deletedConsumerCurator;
         this.environmentCurator = environmentCurator;
+        this.distributorVersionCurator = distributorVersionCurator;
         this.consumerPersonNamePattern =
             Pattern.compile(config.getString("candlepin.consumer_person_name_pattern"));
         this.consumerSystemNamePattern =
@@ -366,6 +373,7 @@ public class ConsumerResource {
             owner.getDefaultServiceLevel() != null) {
             consumer.setServiceLevel(owner.getDefaultServiceLevel());
         }
+        setCapabilitiesByVersion(consumer);
 
         logNewConsumerDebugInfo(consumer, keys, type);
 
@@ -439,6 +447,59 @@ public class ConsumerResource {
         }
         return userName;
     }
+
+    /**
+     * @param consumer
+     * @return
+     */
+    private void setCapabilitiesByVersion(Consumer consumer) {
+        if (consumer.isManifest() && consumer.getFact("distributor_version") != null) {
+            DistributorVersion dv = distributorVersionCurator.findByName(
+                consumer.getFact("distributor_version"));
+            if (dv != null) {
+                Set<ConsumerCapability> ccaps = new HashSet<ConsumerCapability>();
+                for (DistributorVersionCapability dvc : dv.getCapabilities()) {
+                    ConsumerCapability cc = new ConsumerCapability(consumer, dvc.getName());
+                    ccaps.add(cc);
+                }
+                consumer.setCapabilities(ccaps);
+            }
+        }
+    }
+
+    /**
+     * @param existing
+     * @param update
+     * @return
+     */
+    private boolean updateCapabilities(Consumer existing, Consumer update) {
+        boolean change = false;
+        if (!existing.isManifest()) { return false; }
+        String updateVersion = update.getFact("distributor_version");
+        if (existing.getLastCheckin() == null && updateVersion != null &&
+            !updateVersion.isEmpty()) {
+            if (!updateVersion.equals(existing.getFact("distributor_version"))) {
+                DistributorVersion dv = distributorVersionCurator.findByName(updateVersion);
+                if (dv != null) {
+                    Set<ConsumerCapability> ccaps = new HashSet<ConsumerCapability>();
+                    for (DistributorVersionCapability dvc : dv.getCapabilities()) {
+                        ConsumerCapability cc =
+                            new ConsumerCapability(existing, dvc.getName());
+                        ccaps.add(cc);
+                    }
+                    existing.setCapabilities(ccaps);
+                }
+                change = true;
+            }
+        }
+        else if (update.getCapabilities() != null &&
+                 !update.getCapabilities().isEmpty()) {
+            change = update.getCapabilities().equals(existing.getCapabilities());
+            existing.setCapabilities(update.getCapabilities());
+        }
+        return change;
+    }
+
     /**
      * @param consumer
      * @param principal
@@ -699,7 +760,11 @@ public class ConsumerResource {
         // If nothing changes we won't send.
         Event event = eventFactory.consumerModified(toUpdate, updated);
 
-        boolean changesMade = checkForFactsUpdate(toUpdate, updated);
+        // version changed on non-checked in consumer, or list of capabilities
+        // changed on checked in consumer
+        boolean changesMade = updateCapabilities(toUpdate, updated);
+
+        changesMade = checkForFactsUpdate(toUpdate, updated) || changesMade;
         changesMade = checkForInstalledProductsUpdate(toUpdate, updated) || changesMade;
         changesMade = checkForGuestsUpdate(toUpdate, updated) || changesMade;
 
