@@ -113,5 +113,13 @@ public class X509V3ExtensionUtilTest {
         assertEquals("/this/is/some/path", util.createFullContentPath("/this/is///", pc));
         assertEquals("/some/path", util.createFullContentPath(null, pc));
         assertEquals("/some/path", util.createFullContentPath("", pc));
+        c.setContentUrl("http://some/path");
+        assertEquals("http://some/path", util.createFullContentPath("/this/is", pc));
+        c.setContentUrl("https://some/path");
+        assertEquals("https://some/path", util.createFullContentPath("/this/is", pc));
+        c.setContentUrl("ftp://some/path");
+        assertEquals("ftp://some/path", util.createFullContentPath("/this/is", pc));
+        c.setContentUrl("file://some/path");
+        assertEquals("file://some/path", util.createFullContentPath("/this/is", pc));
     }
 }
