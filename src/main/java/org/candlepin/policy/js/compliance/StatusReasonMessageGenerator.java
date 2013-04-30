@@ -60,6 +60,7 @@ public class StatusReasonMessageGenerator {
         if (reason.isStacked()) {
             id = reason.getAttributes().get("stack_id");
             marketingName = getStackedMarketingName(id, c);
+            reason.getAttributes().put("name", marketingName);
             reason.setMessage(i18n.tr(base,
                 reason.getAttributes().get("covered"),
                 reason.getAttributes().get("has"), reason.getKey()));
@@ -67,6 +68,7 @@ public class StatusReasonMessageGenerator {
         else if (reason.isNonCovered()) {
             id = reason.getAttributes().get("product_id");
             marketingName = getInstalledMarketingName(id, c);
+            reason.getAttributes().put("name", marketingName);
             reason.setMessage(i18n.tr(base));
         }
         else { //nonstacked regular ent

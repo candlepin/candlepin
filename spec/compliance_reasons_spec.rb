@@ -6,7 +6,7 @@ def assert_reason(reason, expected_key, expected_message, expected_attributes)
   reason.message.should == expected_message
 
   # Check for expected attributes
-  reason.attributes.size.should == expected_attributes.size    
+  reason.attributes.size.should == expected_attributes.size
   for attribute in expected_attributes.keys()
     reason.attributes.should have_key(attribute)
     reason.attributes[attribute].should == expected_attributes[attribute]
@@ -56,8 +56,9 @@ describe 'Single Entitlement Compliance Reasons' do
     reasons = compliance_status['reasons']
     reasons.size.should == 1
     
-    expected_message = "The system does not have subscriptions that cover " + @product1.name + "."
-    assert_reason(reasons[0], "NOTCOVERED", expected_message, {"product_id" => @product1.id})
+    expected_message = "Not covered by a valid subscription."
+    assert_reason(reasons[0], "NOTCOVERED", expected_message, {"product_id" => @product1.id,
+                                                                "name" => @product1.name})
   end
   
   it 'reports ram not covered but no installed product' do
@@ -84,15 +85,15 @@ describe 'Single Entitlement Compliance Reasons' do
 
     expected_has = "16"
     expected_covered = "8"
-    expected_message = "%s only covers %sGB of %sGB of RAM." % [@product1.name,
-                                                           expected_covered,
+    expected_message = "Only covers %sGB of %sGB of RAM." % [expected_covered,
                                                            expected_has]
 
     reasons = compliance_status['reasons']
     reasons.size.should == 1
     assert_reason(reasons[0], 'RAM', expected_message, {'entitlement_id' => entitlement.id,
                                                         'covered' => expected_covered,
-                                                        'has' => expected_has})
+                                                        'has' => expected_has,
+                                                        'name' => @product1.name})
   end
 
   it 'reports ram not covered' do
@@ -121,15 +122,15 @@ describe 'Single Entitlement Compliance Reasons' do
 
     expected_has = "16"
     expected_covered = "8"
-    expected_message = "%s only covers %sGB of %sGB of RAM." % [@product1.name,
-                                                           expected_covered,
+    expected_message = "Only covers %sGB of %sGB of RAM." % [expected_covered,
                                                            expected_has]
 
     reasons = compliance_status['reasons']
     reasons.size.should == 1
     assert_reason(reasons[0], 'RAM', expected_message, {'entitlement_id' => entitlement.id,
                                                         'covered' => expected_covered,
-                                                        'has' => expected_has})
+                                                        'has' => expected_has,
+                                                        'name' => @product1.name})
   end
   
   it 'reports sockets not covered' do
@@ -159,15 +160,15 @@ describe 'Single Entitlement Compliance Reasons' do
 
     expected_has = "12"
     expected_covered = "2"
-    expected_message = "%s only covers %s of %s sockets." % [@product1.name,
-                                                           expected_covered,
+    expected_message = "Only covers %s of %s sockets." % [expected_covered,
                                                            expected_has]
 
     reasons = compliance_status['reasons']
     reasons.size.should == 1
     assert_reason(reasons[0], 'SOCKETS', expected_message, {'entitlement_id' => entitlement.id,
                                                         'covered' => expected_covered,
-                                                        'has' => expected_has})
+                                                        'has' => expected_has,
+                                                        'name' => @product1.name})
   end
   
   it 'reports cores not covered' do
@@ -198,15 +199,15 @@ describe 'Single Entitlement Compliance Reasons' do
 
     expected_has = "24"
     expected_covered = "22"
-    expected_message = "%s only covers %s of %s cores." % [@product1.name,
-                                                           expected_covered,
+    expected_message = "Only covers %s of %s cores." % [expected_covered,
                                                            expected_has]
 
     reasons = compliance_status['reasons']
     reasons.size.should == 1
     assert_reason(reasons[0], 'CORES', expected_message, {'entitlement_id' => entitlement.id,
                                                         'covered' => expected_covered,
-                                                        'has' => expected_has})
+                                                        'has' => expected_has,
+                                                        'name' => @product1.name})
   end
   
   it 'reports arch not covered' do
@@ -235,15 +236,15 @@ describe 'Single Entitlement Compliance Reasons' do
 
     expected_has = "ppc64"
     expected_covered = "x86_64"
-    expected_message = "%s covers architecture %s but the system is %s." % [@product1.name,
-                                                                           expected_covered,
+    expected_message = "Covers architecture %s but the system is %s." % [expected_covered,
                                                                            expected_has]
 
     reasons = compliance_status['reasons']
     reasons.size.should == 1
     assert_reason(reasons[0], 'ARCH', expected_message, {'entitlement_id' => entitlement.id,
                                                         'covered' => expected_covered,
-                                                        'has' => expected_has})
+                                                        'has' => expected_has,
+                                                        'name' => @product1.name})
   end
   
   it 'reports multiple reasons' do
@@ -282,15 +283,15 @@ describe 'Single Entitlement Compliance Reasons' do
 
     expected_has = "ppc64"
     expected_covered = "x86_64"
-    expected_message = "%s covers architecture %s but the system is %s." % [@product1.name,
-                                                                           expected_covered,
+    expected_message = "Covers architecture %s but the system is %s." % [expected_covered,
                                                                            expected_has]
     reason_expectations["ARCH"] = {
             "key" => "ARCH",
             "attributes" => {
                               "entitlement_id" => entitlement.id,
                               "has" => expected_has,
-                              "covered" => expected_covered
+                              "covered" => expected_covered,
+                              "name" => @product1.name
             },
             "message" => expected_message
                          
@@ -299,45 +300,45 @@ describe 'Single Entitlement Compliance Reasons' do
     
     expected_has = "16"
     expected_covered = "8"
-    expected_message = "%s only covers %sGB of %sGB of RAM." % [@product1.name,
-                                                              expected_covered,
+    expected_message = "Only covers %sGB of %sGB of RAM." % [expected_covered,
                                                               expected_has]
     reason_expectations["RAM"] = {
             "key" => "RAM",
             "attributes" => {
                               "entitlement_id" => entitlement.id,
                               "has" => expected_has,
-                              "covered" => expected_covered
+                              "covered" => expected_covered,
+                              "name" => @product1.name
             },
             "message" => expected_message
     }
 
     expected_has = "20"
     expected_covered = "2"
-    expected_message = "%s only covers %s of %s sockets." % [@product1.name,
-                                                              expected_covered,
+    expected_message = "Only covers %s of %s sockets." % [expected_covered,
                                                               expected_has]
     reason_expectations["SOCKETS"] = {
             "key" => "SOCKETS",
             "attributes" => {
                               "entitlement_id" => entitlement.id,
                               "has" => expected_has,
-                              "covered" => expected_covered
+                              "covered" => expected_covered,
+                              "name" => @product1.name
             },
             "message" => expected_message
     }
     
     expected_has = "240"
     expected_covered = "22"
-    expected_message = "%s only covers %s of %s cores." % [@product1.name,
-                                                              expected_covered,
+    expected_message = "Only covers %s of %s cores." % [expected_covered,
                                                               expected_has]
     reason_expectations["CORES"] = {
             "key" => "CORES",
             "attributes" => {
                               "entitlement_id" => entitlement.id,
                               "has" => expected_has,
-                              "covered" => expected_covered
+                              "covered" => expected_covered,
+                              "name" => @product1.name
             },
             "message" => expected_message
     }
@@ -414,15 +415,15 @@ describe 'Stacking Compliance Reasons' do
     
     expected_has = "16"
     expected_covered = "8"
-    expected_message = "%s only covers %sGB of %sGB of RAM." % [@stackable_product_1.name,
-                                                                expected_covered,
+    expected_message = "Only covers %sGB of %sGB of RAM." % [expected_covered,
                                                                 expected_has]
 
     reasons = compliance_status['reasons']
     reasons.size.should == 1
     assert_reason(reasons[0], 'RAM', expected_message, {'stack_id' => @stack_id,
                                                         'covered' => expected_covered,
-                                                        'has' => expected_has})
+                                                        'has' => expected_has,
+                                                        'name' => @stackable_product_1.name})
   end
   
   it 'report partial for stack that does not cover ram and has no installed products' do
@@ -450,15 +451,15 @@ describe 'Stacking Compliance Reasons' do
     
     expected_has = "16"
     expected_covered = "8"
-    expected_message = "%s only covers %sGB of %sGB of RAM." % [@stackable_product_1.name,
-                                                                expected_covered,
+    expected_message = "Only covers %sGB of %sGB of RAM." % [expected_covered,
                                                                 expected_has]
 
     reasons = compliance_status['reasons']
     reasons.size.should == 1
     assert_reason(reasons[0], 'RAM', expected_message, {'stack_id' => @stack_id,
                                                         'covered' => expected_covered,
-                                                        'has' => expected_has})
+                                                        'has' => expected_has,
+                                                        'name' => @stackable_product_1.name})
   end
   
   it 'report stack does not cover sockets' do
@@ -488,15 +489,15 @@ describe 'Stacking Compliance Reasons' do
     
     expected_has = "6"
     expected_covered = "4"
-    expected_message = "%s only covers %s of %s sockets." % [@stackable_product_1.name,
-                                                             expected_covered,
+    expected_message = "Only covers %s of %s sockets." % [expected_covered,
                                                              expected_has]
 
     reasons = compliance_status['reasons']
     reasons.size.should == 1
     assert_reason(reasons[0], 'SOCKETS', expected_message, {'stack_id' => @stack_id,
                                                         'covered' => expected_covered,
-                                                        'has' => expected_has})
+                                                        'has' => expected_has,
+                                                        'name' => @stackable_product_1.name})
   end
   
   it 'report stack does not cover cores' do
@@ -528,15 +529,15 @@ describe 'Stacking Compliance Reasons' do
     
     expected_has = "30"
     expected_covered = "20"
-    expected_message = "%s only covers %s of %s cores." % [@stackable_product_1.name,
-                                                           expected_covered,
+    expected_message = "Only covers %s of %s cores." % [expected_covered,
                                                            expected_has]
 
     reasons = compliance_status['reasons']
     reasons.size.should == 1
     assert_reason(reasons[0], 'CORES', expected_message, {'stack_id' => @stack_id,
                                                         'covered' => expected_covered,
-                                                        'has' => expected_has})
+                                                        'has' => expected_has,
+                                                        'name' => @stackable_product_1.name})
   end
   
   it 'report stack does not cover arch' do
@@ -568,15 +569,15 @@ describe 'Stacking Compliance Reasons' do
     
     expected_has = "ppc64"
     expected_covered = "x86_64"
-    expected_message = "%s covers architecture %s but the system is %s." % [@stackable_product_1.name,
-                                                                           expected_covered,
+    expected_message = "Covers architecture %s but the system is %s." % [expected_covered,
                                                                            expected_has]
 
     reasons = compliance_status['reasons']
     reasons.size.should == 1
     assert_reason(reasons[0], 'ARCH', expected_message, {'stack_id' => @stack_id,
                                                         'covered' => expected_covered,
-                                                        'has' => expected_has})
+                                                        'has' => expected_has,
+                                                        'name' => @stackable_product_1.name})
   end
   
   it 'report stack does not cover all installed products' do
@@ -605,11 +606,12 @@ describe 'Stacking Compliance Reasons' do
     compliance_status['compliant'].should == false
     compliance_status.should have_key('reasons')
     
-    expected_message = "The system does not have subscriptions that cover " + @not_covered_product.name + "."
+    expected_message = "Not covered by a valid subscription."
 
     reasons = compliance_status['reasons']
     reasons.size.should == 1
-    assert_reason(reasons[0], 'NOTCOVERED', expected_message, {'product_id' => @not_covered_product.id})
+    assert_reason(reasons[0], 'NOTCOVERED', expected_message, {'product_id' => @not_covered_product.id,
+                                                                'name' => @not_covered_product.name})
   end
   
   it 'report stack does not cover multiple attributes' do
@@ -645,8 +647,7 @@ describe 'Stacking Compliance Reasons' do
     
     expected_has = "ppc64"
     expected_covered = "x86_64"
-    expected_message = "%s covers architecture %s but the system is %s." % [@stackable_product_1.name,
-                                                                            expected_covered,
+    expected_message = "Covers architecture %s but the system is %s." % [expected_covered,
                                                                             expected_has]
 
     reason_expectations["ARCH"] = {
@@ -654,52 +655,53 @@ describe 'Stacking Compliance Reasons' do
             "attributes" => {
                               'stack_id' => @stack_id,
                               "has" => expected_has,
-                              "covered" => expected_covered
+                              "covered" => expected_covered,
+                              "name" => @stackable_product_1.name
             },
             "message" => expected_message
     }
     
     expected_has = "16"
     expected_covered = "8"
-    expected_message = "%s only covers %sGB of %sGB of RAM." % [@stackable_product_1.name,
-                                                                expected_covered,
+    expected_message = "Only covers %sGB of %sGB of RAM." % [expected_covered,
                                                                 expected_has]
     reason_expectations["RAM"] = {
             "key" => "RAM",
             "attributes" => {
                               'stack_id' => @stack_id,
                               "has" => expected_has,
-                              "covered" => expected_covered
+                              "covered" => expected_covered,
+                              "name" => @stackable_product_1.name
             },
             "message" => expected_message
     }
     
     expected_has = "20"
     expected_covered = "4"
-    expected_message = "%s only covers %s of %s sockets." % [@stackable_product_1.name,
-                                                           expected_covered,
+    expected_message = "Only covers %s of %s sockets." % [expected_covered,
                                                            expected_has]
     reason_expectations["SOCKETS"] = {
             "key" => "SOCKETS",
             "attributes" => {
                               'stack_id' => @stack_id,
                               "has" => expected_has,
-                              "covered" => expected_covered
+                              "covered" => expected_covered,
+                              "name" => @stackable_product_1.name
             },
             "message" => expected_message
     }
     
     expected_has = "240"
     expected_covered = "20"
-    expected_message = "%s only covers %s of %s cores." % [@stackable_product_1.name,
-                                                           expected_covered,
+    expected_message = "Only covers %s of %s cores." % [expected_covered,
                                                            expected_has]
     reason_expectations["CORES"] = {
             "key" => "CORES",
             "attributes" => {
                               'stack_id' => @stack_id,
                               "has" => expected_has,
-                              "covered" => expected_covered
+                              "covered" => expected_covered,
+                              "name" => @stackable_product_1.name
             },
             "message" => expected_message
     }
