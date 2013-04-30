@@ -537,10 +537,10 @@ public class AutobindRulesTest {
         product.setAttribute("stacking_id", "1");
         product.setAttribute("multi-entitlement", "yes");
         product.setAttribute("sockets", "2");
-        product.setAttribute("requires_host", "BLAH");
-        product.setAttribute("virt_only", "true");
         Pool pool = TestUtil.createPool(owner, product, 100);
         pool.setId("DEAD-BEEF");
+        pool.setAttribute("virt_only", "true");
+        pool.setAttribute("requires_host", "BLAH");
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
 
         List<Pool> pools = new LinkedList<Pool>();

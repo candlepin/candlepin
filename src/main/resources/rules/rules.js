@@ -525,10 +525,9 @@ var CoverageCalculator = {
                 // the accumulated value covered currently by a stack.
                 var socketsValue = parseInt(sourceData.values[prodAttr]);
 
-
                 socketsValue = CoverageCalculator.adjustSocketsCovered(consumer, socketsValue,
                                                     sourceData.instanceMultiplier);
-                var isCovered = (socketsValue == -1) || (socketsValue >= consumerQuantity);
+                var isCovered = socketsValue >= consumerQuantity;
 
                 log.debug("  System's " + prodAttr + " covered: " + isCovered);
 
@@ -546,9 +545,8 @@ var CoverageCalculator = {
     },
 
     /**
-     * Adjusts the value for sockets covered based on the consumer some
-     * product attributes which alter this value from it's normal behaviour.
-     * In cases where the attribute is not enforced for a given conditon, this
+     * Adjusts the value for sockets covered based on certain attributes.
+     * In cases where the attribute provides unlimited socket coverage, this
      * function will return -1.
      *
      *      consumer - consumer in question
@@ -561,31 +559,24 @@ var CoverageCalculator = {
     adjustSocketsCovered: function(consumer, socketsValue, instanceMultiplier) {
         if (instanceMultiplier) {
             var instanceMultiplier = parseInt(instanceMultiplier);
-            // Virt guests only need a quantity of 1 from instance based subscriptions:
-            if (consumer.facts['virt.is_guest']) {
-                if (socketsValue > 0) {
-                    log.debug("  Guest system using instance based subscription, covered.");
-                    return -1;
-                }
-            }
-            else {
-                // For a physical system, adjust the quantity covered based on the
-                // instance multiplier. We need to round down by instance multiplier,
-                //
-                // i.e. for a physical system:
-                //      8 sockets accumulated = 4 covered
-                //      9 sockets accumulated = 4 covered
-                //      1 socket accumulated = 0 covered
-                log.debug("  Physical system using instance based subscription.");
-                initialValue = socketsValue; // just so we can log accurately
-                socketsValue = socketsValue / instanceMultiplier;
-                // Round uneven multiples down:
-                socketsValue = socketsValue - (socketsValue % instanceMultiplier);
+            // Stack tracker "enforces" method means we can assume here that
+            // the system must be physical:
+            // Adjust the quantity covered based on the instance multiplier,
+            // and then round down to the nearest multipler of that instance
+            // multiplier.
+            //
+            // i.e. for a physical system:
+            //      8 sockets accumulated = 4 covered
+            //      9 sockets accumulated = 4 covered
+            //      1 socket accumulated = 0 covered
+            log.debug("  Physical system using instance based subscription.");
+            initialValue = socketsValue; // just so we can log accurately
+            socketsValue = socketsValue / instanceMultiplier;
+            // Round uneven multiples down:
+            socketsValue = socketsValue - (socketsValue % instanceMultiplier);
 
-                log.debug("  Adjusting sockets covered from: "
-                          + initialValue + " to: " + socketsValue);
-                return socketsValue;
-            }
+            log.debug("  Adjusting sockets covered from: "
+                      + initialValue + " to: " + socketsValue);
         }
         return socketsValue;
     },
@@ -757,7 +748,9 @@ var CoverageCalculator = {
 
         log.debug("Determining number of entitlements to cover consumer...");
 
-        var maxQuantity = 0;
+        // We can assume we need at least one if we're reached the point
+        // where we're looking for a quantity to cover the stack:
+        var maxQuantity = 1;
         for (var attrIdx in STACKABLE_ATTRIBUTES) {
             var attr = STACKABLE_ATTRIBUTES[attrIdx];
 
@@ -798,7 +791,6 @@ var CoverageCalculator = {
                 var coveredCounter = currentCovered + (amountRequiredFromPool * prodAttrValue);
                 var actualCovered = CoverageCalculator.adjustSocketsCovered(consumer, coveredCounter,
                                                                             stackTracker.instanceMultiplier);
-                // Watch out for -1 indicating any number of sockets are covered:
                 while (actualCovered < consumerQuantity && actualCovered != -1) {
                     amountRequiredFromPool++;
                     coveredCounter = currentCovered + (amountRequiredFromPool * prodAttrValue);
@@ -934,9 +926,12 @@ function findStackingPools(pool_class, consumer, compliance) {
 
             // if this stack is already done, no need to add more to it.
             var stackCoverage = CoverageCalculator.getStackCoverage(stackTrackerToProcess, consumer);
-            if (stackCoverage.covered) {
+            if (stackCoverage.covered && !stackTrackerToProcess.empty) {
                 log.debug("Stack " + stack_id + " already covers consumer. No need to increment quantity.");
                 continue;
+            }
+            else if (stackTrackerToProcess.empty) {
+                log.debug("Stack is not enforcing any attributes but has no entitlements.");
             }
 
             // don't take more entitlements than are available!
@@ -1044,11 +1039,22 @@ function createStackTracker(consumer, stackId) {
         // values for the stack.
         instanceMultiplier: null,
 
+        // Did we detect a "host restricted" pool anywhere in the stack?
+        hostRestricted: null,
+
         /**
          *  The accumulated values from adding entitlements to this tracker.
          *  This is a mapping of product attribute to the accumulated value.
          */
         accumulatedValues: {},
+
+        /**
+         * Has *anything* been added to this stack, flips to true as soon as
+         * we add something to the tracker. This is to cover situations where
+         * no attributes are being enforced. (i.e. consumer may be a guest,
+         * certain types of subscriptions, etc)
+         */
+        empty: true,
 
         // Sets the accumulated value for the specified product attribute.
         setAccumulatedValue: function(attribute, value) {
@@ -1074,7 +1080,23 @@ function createStackTracker(consumer, stackId) {
          *  an accumulated value set.
          */
         enforces: function(attribute) {
-            return attribute in this.accumulatedValues;
+            // Guests are not subjected to socket stacking rules for instance based subs:
+            if (attribute == SOCKETS_ATTRIBUTE && this.instanceMultiplier &&
+                this.consumer.facts['virt.is_guest']) {
+                log.debug("Not enforcing " + attribute + ": guest / instance based sub");
+                return false;
+            }
+
+            // Guests are not subjected to CPU/RAM/Core stacking rules if
+            // using a host-restricted sub-pool:
+            if (this.hostRestricted && this.consumer.facts['virt.is_guest']) {
+                log.debug("Not enforcing " + attribute + ": guest / host restricted pool");
+                return false;
+            }
+
+            var enforcing = attribute in this.accumulatedValues;
+            log.debug("Enfocing " + attribute + ": " + enforcing);
+            return enforcing;
         },
 
         /**
@@ -1135,11 +1157,18 @@ function createStackTracker(consumer, stackId) {
          *  to behave as if I gave it x entitlement from the specified pool.
          */
         updateAccumulatedFromPool: function (pool, quantityToTake) {
-            log.debug("Updating stack tracker's values from pool...");
+            log.debug("Updating stack tracker's values from pool, quantity: " + quantityToTake);
+            if (quantityToTake > 0) {
+                this.empty = false;
+            }
 
             // Store instance multiplier if we spot it:
             if (pool.getProductAttribute(INSTANCE_ATTRIBUTE)) {
                 this.instanceMultiplier = pool.getProductAttribute(INSTANCE_ATTRIBUTE);
+            }
+
+            if (pool.getAttribute(REQUIRES_HOST_ATTRIBUTE)) {
+                this.hostRestricted = pool.getAttribute(REQUIRES_HOST_ATTRIBUTE);
             }
 
             for (var attrIdx in STACKABLE_ATTRIBUTES) {
@@ -1160,10 +1189,12 @@ function createStackTracker(consumer, stackId) {
          *  entitlement. Entitlements that are added can only be added once.
          */
         updateAccumulatedFromEnt: function(ent) {
+            log.debug("Updating stack tracker's values from entitlement.");
             if (ent.id in this.entitlementIds) {
                 // This entitlement was already added.
                 return;
             }
+            this.empty = false;
 
             // Keep track of any entitlements that we've already
             // added to the stack so that our accumulated values do not
