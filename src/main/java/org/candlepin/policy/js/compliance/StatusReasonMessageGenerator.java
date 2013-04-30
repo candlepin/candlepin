@@ -30,17 +30,17 @@ public class StatusReasonMessageGenerator {
     private static final Map<String, String> KEYS = new HashMap<String, String>() {
         {
             put("NOTCOVERED",
-                "The system does not have subscriptions that cover {0}.");
+                "Not covered by a valid subscription.");
             put("ARCH",
-                "{0} covers architecture {1} but the system is {2}.");
+                "Covers architecture {0} but the system is {1}.");
             put("SOCKETS",
-                "{0} only covers {1} of {2} sockets.");
+                "Only covers {0} of {1} sockets.");
             put("CORES",
-                "{0} only covers {1} of {2} cores.");
+                "Only covers {0} of {1} cores.");
             put("RAM",
-                "{0} only covers {1}GB of {2}GB of RAM.");
+                "Only covers {0}GB of {1}GB of RAM.");
             put("DEFAULT",
-                "{3} COVERAGE PROBLEM.  Subscription for {0} covers {1} of {2}");
+                "{2} COVERAGE PROBLEM.  Covers {0} of {1}");
         }
     };
 
@@ -60,19 +60,20 @@ public class StatusReasonMessageGenerator {
         if (reason.isStacked()) {
             id = reason.getAttributes().get("stack_id");
             marketingName = getStackedMarketingName(id, c);
-            reason.setMessage(i18n.tr(base, marketingName,
+            reason.setMessage(i18n.tr(base,
                 reason.getAttributes().get("covered"),
                 reason.getAttributes().get("has"), reason.getKey()));
         }
         else if (reason.isNonCovered()) {
             id = reason.getAttributes().get("product_id");
             marketingName = getInstalledMarketingName(id, c);
-            reason.setMessage(i18n.tr(base, marketingName));
+            reason.setMessage(i18n.tr(base));
         }
         else { //nonstacked regular ent
             id = reason.getAttributes().get("entitlement_id");
             marketingName = getMarketingName(id, c);
-            reason.setMessage(i18n.tr(base, marketingName,
+            reason.getAttributes().put("name", marketingName);
+            reason.setMessage(i18n.tr(base,
                 reason.getAttributes().get("covered"),
                 reason.getAttributes().get("has"), reason.getKey()));
         }
