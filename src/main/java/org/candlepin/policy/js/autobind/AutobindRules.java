@@ -88,6 +88,7 @@ public class AutobindRules {
         // Provide objects for the script:
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("consumer", consumer);
+        args.put("owner", consumer.getOwner());
         args.put("serviceLevelOverride", serviceLevelOverride);
         args.put("pools", pools.toArray());
         args.put("products", productIds);
