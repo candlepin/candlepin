@@ -14,8 +14,6 @@
  */
 package org.candlepin.policy.js.compliance;
 
-import java.util.HashMap;
-import java.util.Map;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.Entitlement;
@@ -27,23 +25,6 @@ import com.google.inject.Inject;
  */
 public class StatusReasonMessageGenerator {
 
-    private static final Map<String, String> KEYS = new HashMap<String, String>() {
-        {
-            put("NOTCOVERED",
-                "Not covered by a valid subscription.");
-            put("ARCH",
-                "Covers architecture {0} but the system is {1}.");
-            put("SOCKETS",
-                "Only covers {0} of {1} sockets.");
-            put("CORES",
-                "Only covers {0} of {1} cores.");
-            put("RAM",
-                "Only covers {0}GB of {1}GB of RAM.");
-            put("DEFAULT",
-                "{2} COVERAGE PROBLEM.  Covers {0} of {1}");
-        }
-    };
-
     private I18n i18n;
 
     @Inject
@@ -52,30 +33,47 @@ public class StatusReasonMessageGenerator {
     }
 
     public void setMessage(Consumer c, ComplianceReason reason) {
-        String base = KEYS.get(reason.getKey());
-        if (base == null) {
-            base = KEYS.get("DEFAULT");
-        }
         String marketingName, id;
         if (reason.isStacked()) {
             id = reason.getAttributes().get("stack_id");
             marketingName = getStackedMarketingName(id, c);
             reason.getAttributes().put("name", marketingName);
-            reason.setMessage(i18n.tr(base,
-                reason.getAttributes().get("covered"),
-                reason.getAttributes().get("has"), reason.getKey()));
         }
         else if (reason.isNonCovered()) {
             id = reason.getAttributes().get("product_id");
             marketingName = getInstalledMarketingName(id, c);
             reason.getAttributes().put("name", marketingName);
-            reason.setMessage(i18n.tr(base));
         }
         else { //nonstacked regular ent
             id = reason.getAttributes().get("entitlement_id");
             marketingName = getMarketingName(id, c);
             reason.getAttributes().put("name", marketingName);
-            reason.setMessage(i18n.tr(base,
+        }
+        if (reason.getKey().equals("NOTCOVERED")) {
+            reason.setMessage(i18n.tr("Not covered by a valid subscription."));
+        }
+        else if (reason.getKey().equals("ARCH")) {
+            reason.setMessage(i18n.tr("Covers architecture {0} but the system is {1}.",
+                reason.getAttributes().get("covered"),
+                reason.getAttributes().get("has")));
+        }
+        else if (reason.getKey().equals("SOCKETS")) {
+            reason.setMessage(i18n.tr("Only covers {0} of {1} sockets.",
+                reason.getAttributes().get("covered"),
+                reason.getAttributes().get("has")));
+        }
+        else if (reason.getKey().equals("CORES")) {
+            reason.setMessage(i18n.tr("Only covers {0} of {1} cores.",
+                reason.getAttributes().get("covered"),
+                reason.getAttributes().get("has")));
+        }
+        else if (reason.getKey().equals("RAM")) {
+            reason.setMessage(i18n.tr("Only covers {0}GB of {1}GB of RAM.",
+                reason.getAttributes().get("covered"),
+                reason.getAttributes().get("has")));
+        }
+        else { //default fallback
+            reason.setMessage(i18n.tr("{2} COVERAGE PROBLEM.  Covers {0} of {1}",
                 reason.getAttributes().get("covered"),
                 reason.getAttributes().get("has"), reason.getKey()));
         }
