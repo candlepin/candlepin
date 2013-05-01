@@ -16,9 +16,9 @@ package org.candlepin.resource.test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -30,12 +30,11 @@ import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.policy.js.quantity.QuantityRules;
 import org.candlepin.resource.PoolResource;
+import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
@@ -45,10 +44,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 
 /**
@@ -72,7 +68,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
     private static final int END_YEAR = 3000;
     private Principal adminPrincipal;
 
-    @Mock private QuantityRules quantityRules;
+    @Mock private CalculatedAttributesUtil attrUtil;
 
     @Before
     public void setUp() {
@@ -98,9 +94,16 @@ public class PoolResourceTest extends DatabaseTestFixture {
         poolCurator.create(pool2);
         poolCurator.create(pool3);
 
+        when(attrUtil.addCalculatedAttributes(eq(pool1), any(Consumer.class),
+            eq(adminPrincipal))).thenReturn(pool1);
+        when(attrUtil.addCalculatedAttributes(eq(pool2), any(Consumer.class),
+            eq(adminPrincipal))).thenReturn(pool2);
+        when(attrUtil.addCalculatedAttributes(eq(pool3), any(Consumer.class),
+            eq(adminPrincipal))).thenReturn(pool3);
+
         poolResource = new PoolResource(poolCurator, consumerCurator, ownerCurator,
             statisticCurator, i18n, injector.getInstance(EventSink.class), poolManager,
-            quantityRules);
+            attrUtil);
 
         // Consumer system with too many cpu cores:
 
@@ -177,6 +180,9 @@ public class PoolResourceTest extends DatabaseTestFixture {
         List<Pool> pools = poolResource.list(null, passConsumer.getUuid(),
             product1.getId(), false, null, adminPrincipal);
         assertEquals(1, pools.size());
+
+        verify(attrUtil).addCalculatedAttributes(any(Pool.class),
+            eq(passConsumer), eq(adminPrincipal));
     }
 
     @Test(expected = ForbiddenException.class)
@@ -200,6 +206,9 @@ public class PoolResourceTest extends DatabaseTestFixture {
         List<Pool> pools = poolResource.list(null, passConsumer.getUuid(), null, false,
             null, adminPrincipal);
         assertEquals(2, pools.size());
+
+        verify(attrUtil, times(2)).addCalculatedAttributes(any(Pool.class),
+            eq(passConsumer), eq(adminPrincipal));
     }
 
     @Test(expected = NotFoundException.class)
@@ -276,54 +285,9 @@ public class PoolResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testCalculatedAttributesAbsent() {
+        when(attrUtil.addCalculatedAttributes(eq(pool1), any(String.class),
+            eq(adminPrincipal))).thenReturn(pool1);
         Pool p = poolResource.getPool(pool1.getId(), null, adminPrincipal);
         assertNull(p.getCalculatedAttributes());
-    }
-
-    @Test(expected = NotFoundException.class)
-    public void testBadConsumerId() {
-        poolResource.getPool(pool1.getId(), "xyzzy", adminPrincipal);
-    }
-
-    @Test
-    public void testCalculatedAttributesPresent() {
-        Consumer consumer = createConsumer(owner1);
-        Entitlement e = createEntitlement(owner1, consumer, pool1,
-            createEntitlementCertificate("fake", "fake"));
-
-        Set<Entitlement> entSet = new HashSet<Entitlement>();
-        entSet.add(e);
-
-        pool1.setEntitlements(entSet);
-
-        when(quantityRules.getSuggestedQuantity(any(Pool.class), any(Consumer.class))).
-            thenReturn(1L);
-
-        Pool p = poolResource.getPool(pool1.getId(), consumer.getUuid(), adminPrincipal);
-        Map<String, String> attrs = p.getCalculatedAttributes();
-        assertTrue(attrs.containsKey("suggested_quantity"));
-        verify(quantityRules).getSuggestedQuantity(p, consumer);
-    }
-
-    @Test(expected = NotFoundException.class)
-    public void testConsumerNotFoundInPool() {
-        // Create a consumer that is not in the Pool we are getting
-        Consumer consumer = createConsumer(owner1);
-        poolResource.getPool(pool1.getId(), consumer.getUuid(), adminPrincipal);
-    }
-
-    @Test(expected = ForbiddenException.class)
-    public void testUnauthorizedUserRequestingPool() {
-        Consumer consumer = createConsumer(owner1);
-        Entitlement e = createEntitlement(owner1, consumer, pool1,
-            createEntitlementCertificate("fake", "fake"));
-
-        Set<Entitlement> entSet = new HashSet<Entitlement>();
-        entSet.add(e);
-
-        pool1.setEntitlements(entSet);
-
-        poolResource.getPool(pool1.getId(), consumer.getUuid(),
-            setupPrincipal(owner2, Access.NONE));
     }
 }

@@ -1,0 +1,125 @@
+/**
+ * Copyright (c) 2009 - 2012 Red Hat, Inc.
+ *
+ * This software is licensed to you under the GNU General Public License,
+ * version 2 (GPLv2). There is NO WARRANTY for this software, express or
+ * implied, including the implied warranties of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. You should have received a copy of GPLv2
+ * along with this software; if not, see
+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
+ *
+ * Red Hat trademarks are not licensed under GPLv2. No permission is
+ * granted to use or replicate Red Hat trademarks that are incorporated
+ * in this software or its documentation.
+ */
+package org.candlepin.resource.util;
+
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import org.candlepin.auth.Access;
+import org.candlepin.auth.Principal;
+import org.candlepin.exceptions.ForbiddenException;
+import org.candlepin.exceptions.NotFoundException;
+import org.candlepin.model.Consumer;
+import org.candlepin.model.Entitlement;
+import org.candlepin.model.Owner;
+import org.candlepin.model.Pool;
+import org.candlepin.model.Product;
+import org.candlepin.policy.js.quantity.QuantityRules;
+import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.test.TestUtil;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * CalculatedAttributesUtilTest
+ */
+public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
+
+    private CalculatedAttributesUtil attrUtil;
+    private Owner owner1;
+    private Product product1;
+    private Pool pool1;
+    private Principal adminPrincipal;
+
+    @Mock private QuantityRules quantityRules;
+
+    @Before
+    public void setUp() throws Exception {
+        MockitoAnnotations.initMocks(this);
+
+        owner1 = createOwner();
+        ownerCurator.create(owner1);
+
+        product1 = new Product("xyzzy", "xyzzy");
+        productCurator.create(product1);
+
+        pool1 = createPoolAndSub(owner1, product1, 500L,
+            TestUtil.createDate(2000, 1, 1), TestUtil.createDate(3000, 1, 1));
+
+        adminPrincipal = setupPrincipal(owner1, Access.ALL);
+
+        attrUtil = new CalculatedAttributesUtil(i18n, consumerCurator, quantityRules);
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void testBadConsumerId() {
+        attrUtil.addCalculatedAttributes(pool1, "xyzzy", adminPrincipal);
+    }
+
+    @Test
+    public void testCalculatedAttributesPresent() {
+        Consumer consumer = createConsumer(owner1);
+        Entitlement e = createEntitlement(owner1, consumer, pool1,
+            createEntitlementCertificate("fake", "fake"));
+
+        Set<Entitlement> entSet = new HashSet<Entitlement>();
+        entSet.add(e);
+
+        pool1.setEntitlements(entSet);
+
+        when(quantityRules.getSuggestedQuantity(any(Pool.class), any(Consumer.class))).
+            thenReturn(1L);
+
+        Pool p = attrUtil.addCalculatedAttributes(pool1, consumer.getUuid(),
+            adminPrincipal);
+        Map<String, String> attrs = p.getCalculatedAttributes();
+        assertTrue(attrs.containsKey("suggested_quantity"));
+        verify(quantityRules).getSuggestedQuantity(p, consumer);
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void testConsumerNotFoundInPool() {
+        // Create a consumer that is not in the Pool we are getting
+        Consumer consumer = createConsumer(owner1);
+        attrUtil.addCalculatedAttributes(pool1, consumer.getUuid(), adminPrincipal);
+    }
+
+    @Test(expected = ForbiddenException.class)
+    public void testUnauthorizedUserRequestingPool() {
+        Consumer consumer = createConsumer(owner1);
+        Entitlement e = createEntitlement(owner1, consumer, pool1,
+            createEntitlementCertificate("fake", "fake"));
+
+        Set<Entitlement> entSet = new HashSet<Entitlement>();
+        entSet.add(e);
+
+        pool1.setEntitlements(entSet);
+
+        Owner owner2 = createOwner();
+        ownerCurator.create(owner2);
+
+        attrUtil.addCalculatedAttributes(pool1, consumer.getUuid(),
+            setupPrincipal(owner2, Access.NONE));
+    }
+}
