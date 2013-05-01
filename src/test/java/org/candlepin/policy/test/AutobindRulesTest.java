@@ -547,4 +547,32 @@ public class AutobindRulesTest {
         pools.add(pool);
         return pools;
     }
+
+    private List<Pool> createStackedPoolEnforcingNothing() {
+        Product product = new Product(productId, "A test product");
+        product.setAttribute("stacking_id", "1");
+        product.setAttribute("multi-entitlement", "yes");
+        Pool pool = TestUtil.createPool(owner, product, 100);
+        pool.setId("DEAD-BEEF");
+        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool);
+        return pools;
+    }
+
+    // Testing an edge case, stacking ID defined, but no attributes specified to enforce:
+    @Test
+    public void unenforcedStackedAutobindForPhysical8Socket() {
+        List<Pool> pools = createStackedPoolEnforcingNothing();
+        setupConsumer("8", false);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>());
+
+        assertEquals(1, bestPools.size());
+        PoolQuantity q = bestPools.get(0);
+        assertEquals(new Integer(1), q.getQuantity());
+    }
+
 }
