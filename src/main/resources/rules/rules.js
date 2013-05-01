@@ -503,6 +503,10 @@ var CoverageCalculator = {
             default: function(sourceData, prodAttr, consumer) {
                 var consumerQuantity = FactValueCalculator.getFact(prodAttr, consumer);
                 var sourceValue = sourceData.values[prodAttr];
+
+                sourceValue = CoverageCalculator.adjustCoverage(prodAttr, consumer, sourceValue,
+                                                    sourceData.instanceMultiplier);
+
                 // We assume that the value coming back is an int right now.
                 var covered = parseInt(sourceValue) >= consumerQuantity;
                 log.debug("  System's " + prodAttr + " covered: " + covered);
@@ -516,48 +520,24 @@ var CoverageCalculator = {
                                                                sourceValue);
                 }
                 return reason;
-            },
-
-            sockets: function(sourceData, prodAttr, consumer) {
-                var consumerQuantity = FactValueCalculator.getFact(prodAttr, consumer);
-
-                // The number of sockets covered by a non-stacked entitlement/pool, or
-                // the accumulated value covered currently by a stack.
-                var socketsValue = parseInt(sourceData.values[prodAttr]);
-
-                socketsValue = CoverageCalculator.adjustSocketsCovered(consumer, socketsValue,
-                                                    sourceData.instanceMultiplier);
-                var isCovered = socketsValue >= consumerQuantity;
-
-                log.debug("  System's " + prodAttr + " covered: " + isCovered);
-
-                var reason = null;
-                if (!isCovered) {
-                    reason = StatusReasonGenerator.buildReason(prodAttr.toUpperCase(),
-                                                               sourceData.type,
-                                                               sourceData.id,
-                                                               consumerQuantity,
-                                                               socketsValue);
-                }
-                return reason;
             }
         };
     },
 
     /**
-     * Adjusts the value for sockets covered based on certain attributes.
-     * In cases where the attribute provides unlimited socket coverage, this
-     * function will return -1.
+     * Adjusts the value of what is covered for a specific attribute based on
+     * the consumer and certain pool/product attributes.
      *
+     *      attribute - Attribute we are enforcing.
      *      consumer - consumer in question
-     *      socketsValue - sockets covered by normal accumulation rules
+     *      attributeValue - sockets covered by normal accumulation rules
      *                     (sockets attribute * quantity)
      *      instanceMultiplier - Product attribute, may be null.
      *
-     *      Return: actual number of sockets covered, -1 if infinite.
+     *      Return: actual value covered
      */
-    adjustSocketsCovered: function(consumer, socketsValue, instanceMultiplier) {
-        if (instanceMultiplier) {
+    adjustCoverage: function(attribute, consumer, attributeValue, instanceMultiplier) {
+        if (attribute == SOCKETS_ATTRIBUTE && instanceMultiplier) {
             var instanceMultiplier = parseInt(instanceMultiplier);
             // Stack tracker "enforces" method means we can assume here that
             // the system must be physical:
@@ -570,15 +550,15 @@ var CoverageCalculator = {
             //      9 sockets accumulated = 4 covered
             //      1 socket accumulated = 0 covered
             log.debug("  Physical system using instance based subscription.");
-            initialValue = socketsValue; // just so we can log accurately
-            socketsValue = socketsValue / instanceMultiplier;
+            initialValue = attributeValue; // just so we can log accurately
+            attributeValue = attributeValue / instanceMultiplier;
             // Round uneven multiples down:
-            socketsValue = socketsValue - (socketsValue % instanceMultiplier);
+            attributeValue = attributeValue - (attributeValue % instanceMultiplier);
 
             log.debug("  Adjusting sockets covered from: "
-                      + initialValue + " to: " + socketsValue);
+                      + initialValue + " to: " + attributeValue);
         }
-        return socketsValue;
+        return attributeValue;
     },
 
     /**
@@ -787,21 +767,13 @@ var CoverageCalculator = {
             // Figure out the max required from the pool to cover
             // the consumers fact.
             var amountRequiredFromPool = 0;
-            if (attr == SOCKETS_ATTRIBUTE) {
-                var coveredCounter = currentCovered + (amountRequiredFromPool * prodAttrValue);
-                var actualCovered = CoverageCalculator.adjustSocketsCovered(consumer, coveredCounter,
-                                                                            stackTracker.instanceMultiplier);
-                while (actualCovered < consumerQuantity && actualCovered != -1) {
-                    amountRequiredFromPool++;
-                    coveredCounter = currentCovered + (amountRequiredFromPool * prodAttrValue);
-                    actualCovered = CoverageCalculator.adjustSocketsCovered(consumer, coveredCounter,
-                                                                            stackTracker.instanceMultiplier);
-                }
-            }
-            else {
-                while (currentCovered + (amountRequiredFromPool * prodAttrValue) < consumerQuantity) {
-                    amountRequiredFromPool++;
-                }
+            var coveredCounter = currentCovered + (amountRequiredFromPool * prodAttrValue);
+            while (CoverageCalculator
+                   .adjustCoverage(attr, consumer, coveredCounter,
+                                   stackTracker.instanceMultiplier)
+                   < consumerQuantity) {
+                amountRequiredFromPool++;
+                coveredCounter = currentCovered + (amountRequiredFromPool * prodAttrValue);
             }
 
             if (maxQuantity < amountRequiredFromPool) {
