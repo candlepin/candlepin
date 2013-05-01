@@ -42,6 +42,7 @@ public class Content {
     private Long metadataExpire;
     @JsonProperty("required_tags")
     private List<String> requiredTags;
+    private List<Arch> arches;
 
     /**
      * @param id
