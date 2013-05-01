@@ -39,20 +39,19 @@ public class ComplianceStatus {
     private Map<String, Set<Entitlement>> compliantProducts;
     private Map<String, Set<Entitlement>> partiallyCompliantProducts; // stacked
     private Map<String, Set<Entitlement>> partialStacks;
+    private Set<ComplianceReason> reasons;
 
     public ComplianceStatus() {
         this.nonCompliantProducts = new HashSet<String>();
         this.compliantProducts = new HashMap<String, Set<Entitlement>>();
         this.partiallyCompliantProducts = new HashMap<String, Set<Entitlement>>();
         this.partialStacks = new HashMap<String, Set<Entitlement>>();
+        this.reasons = new HashSet<ComplianceReason>();
     }
 
     public ComplianceStatus(Date date) {
+        this();
         this.date = date;
-        this.nonCompliantProducts = new HashSet<String>();
-        this.compliantProducts = new HashMap<String, Set<Entitlement>>();
-        this.partiallyCompliantProducts = new HashMap<String, Set<Entitlement>>();
-        this.partialStacks = new HashMap<String, Set<Entitlement>>();
     }
 
     /**
@@ -133,17 +132,24 @@ public class ComplianceStatus {
     }
 
     public boolean isCompliant() {
-        return nonCompliantProducts.isEmpty() && partiallyCompliantProducts.isEmpty();
+        return reasons.isEmpty();
     }
 
     public String getStatus() {
         if (isCompliant()) {
             return GREEN;
         }
-        if (!partiallyCompliantProducts.isEmpty() && nonCompliantProducts.isEmpty()) {
+        if (nonCompliantProducts.isEmpty()) {
             return YELLOW;
         }
         return RED;
     }
 
+    public Set<ComplianceReason> getReasons() {
+        return reasons;
+    }
+
+    public void setReasons(Set<ComplianceReason> reasons) {
+        this.reasons = reasons;
+    }
 }
