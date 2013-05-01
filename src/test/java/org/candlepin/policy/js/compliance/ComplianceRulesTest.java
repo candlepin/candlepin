@@ -29,9 +29,9 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 import java.util.Set;
-
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
@@ -50,6 +50,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
 
 
 
@@ -68,12 +70,15 @@ public class ComplianceRulesTest {
 
     @Mock private EntitlementCurator entCurator;
     @Mock private RulesCurator rulesCuratorMock;
+    private I18n i18n;
     private JsRunnerProvider provider;
 
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-
+        Locale locale = new Locale("en_US");
+        i18n = I18nFactory.getI18n(getClass(), "org.candlepin.i18n.Messages", locale,
+            I18nFactory.FALLBACK);
         // Load the default production rules:
         InputStream is = this.getClass().getResourceAsStream(
             RulesCurator.DEFAULT_RULES_FILE);
@@ -81,7 +86,8 @@ public class ComplianceRulesTest {
         when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
         when(rulesCuratorMock.getRules()).thenReturn(rules);
         provider = new JsRunnerProvider(rulesCuratorMock);
-        compliance = new ComplianceRules(provider.get(), entCurator);
+        compliance = new ComplianceRules(provider.get(),
+            entCurator, new StatusReasonMessageGenerator(i18n));
         owner = new Owner("test");
     }
 
@@ -392,7 +398,7 @@ public class ComplianceRulesTest {
         assertEquals(1, status.getPartialStacks().size());
 
         assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_1));
-        assertEquals("valid", status.getStatus());
+        assertEquals("partial", status.getStatus());
     }
 
     public void testComplianceDoesNotEnforceSocketsWhenAttributeNotSet() {
@@ -604,7 +610,7 @@ public class ComplianceRulesTest {
         assertEquals(1, status.getPartialStacks().size());
 
         assertTrue(status.getPartialStacks().keySet().contains(STACK_ID_1));
-        assertEquals("valid", status.getStatus());
+        assertEquals("partial", status.getStatus());
     }
 
     @Test
@@ -963,7 +969,7 @@ public class ComplianceRulesTest {
         assertEquals(1, status.getPartialStacks().size());
 
         assertTrue(status.getPartialStacks().keySet().contains(STACK_ID_1));
-        assertEquals("valid", status.getStatus());
+        assertEquals("partial", status.getStatus());
     }
 
     // Cores with not-stackable entitlement tests

@@ -27,7 +27,6 @@ import org.candlepin.policy.js.JsonJsContext;
 import org.candlepin.policy.js.RuleExecutionException;
 import org.candlepin.policy.js.RulesObjectMapper;
 import org.mozilla.javascript.RhinoException;
-
 import com.google.inject.Inject;
 
 /**
@@ -41,11 +40,14 @@ public class ComplianceRules {
     private JsRunner jsRules;
     private RulesObjectMapper mapper;
     private static Logger log = Logger.getLogger(ComplianceRules.class);
+    private StatusReasonMessageGenerator generator;
 
     @Inject
-    public ComplianceRules(JsRunner jsRules, EntitlementCurator entCurator) {
+    public ComplianceRules(JsRunner jsRules, EntitlementCurator entCurator,
+        StatusReasonMessageGenerator generator) {
         this.entCurator = entCurator;
         this.jsRules = jsRules;
+        this.generator = generator;
 
         mapper = RulesObjectMapper.instance();
         jsRules.init("compliance_name_space");
@@ -71,7 +73,11 @@ public class ComplianceRules {
         // Convert the JSON returned into a ComplianceStatus object:
         String json = runJsFunction(String.class, "get_status", args);
         try {
-            return mapper.toObject(json, ComplianceStatus.class);
+            ComplianceStatus result = mapper.toObject(json, ComplianceStatus.class);
+            for (ComplianceReason reason : result.getReasons()) {
+                generator.setMessage(c, reason);
+            }
+            return result;
         }
         catch (Exception e) {
             throw new RuleExecutionException(e);
@@ -110,5 +116,4 @@ public class ComplianceRules {
         }
         return returner;
     }
-
 }
