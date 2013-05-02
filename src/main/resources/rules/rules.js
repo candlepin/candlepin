@@ -504,9 +504,6 @@ var CoverageCalculator = {
                 var consumerQuantity = FactValueCalculator.getFact(prodAttr, consumer);
                 var sourceValue = sourceData.values[prodAttr];
 
-                sourceValue = CoverageCalculator.adjustCoverage(prodAttr, consumer, sourceValue,
-                                                    sourceData.instanceMultiplier);
-
                 // We assume that the value coming back is an int right now.
                 var covered = parseInt(sourceValue) >= consumerQuantity;
                 log.debug("  System's " + prodAttr + " covered: " + covered);
@@ -566,7 +563,8 @@ var CoverageCalculator = {
      *  entitlement.
      */
     getEntitlementCoverage: function(entitlement, consumer) {
-        var poolValues = this.getValues(entitlement.pool, "hasProductAttribute", "getProductAttribute");
+        var poolValues = this.getValues(entitlement.pool, "hasProductAttribute", "getProductAttribute",
+                                        consumer, entitlement.pool.getProductAttribute(INSTANCE_ATTRIBUTE));
         var sourceData = this.buildSourceData("ENTITLEMENT", entitlement.id,
                                               poolValues, entitlement.pool.getProductAttribute(INSTANCE_ATTRIBUTE));
         var coverage = this.getCoverageForSource(sourceData, consumer, this.getDefaultConditions());
@@ -579,7 +577,8 @@ var CoverageCalculator = {
      *  pool.
      */
     getPoolCoverage: function(pool, consumer) {
-        var poolValues = this.getValues(pool, "hasProductAttribute", "getProductAttribute");
+        var poolValues = this.getValues(pool, "hasProductAttribute", "getProductAttribute", consumer,
+                                        pool.getProductAttribute(INSTANCE_ATTRIBUTE));
         var sourceData = this.buildSourceData("POOL", pool.id,
                                               poolValues, pool.getProductAttribute(INSTANCE_ATTRIBUTE));
         var coverage = this.getCoverageForSource(sourceData, consumer, this.getDefaultConditions());
@@ -593,7 +592,8 @@ var CoverageCalculator = {
      */
     getStackCoverage: function(stackTracker, consumer) {
         log.debug("Coverage calculator is checking stack coverage...");
-        var stackValues = this.getValues(stackTracker, "enforces", "getAccumulatedValue");
+        var stackValues = this.getValues(stackTracker, "enforces", "getAccumulatedValue",
+                                         consumer, stackTracker.instanceMultiplier);
         var conditions = this.getDefaultConditions();
 
         /**
@@ -639,12 +639,15 @@ var CoverageCalculator = {
      *      getValueFromSourceFunctionName:
      *            Name of the source's function that fetchs the value of the specified attribute.
      */
-    getValues: function (source, sourceContainsAttributeValueFunctionName, getValueFromSourceFunctionName) {
+    getValues: function (source, sourceContainsAttributeValueFunctionName, getValueFromSourceFunctionName,
+                         consumer, instanceMultiplier) {
         var values = {};
         for (var attrIdx in ATTRIBUTES_AFFECTING_COVERAGE) {
             var nextAttr = ATTRIBUTES_AFFECTING_COVERAGE[attrIdx];
             if (source[sourceContainsAttributeValueFunctionName](nextAttr)) {
-                values[nextAttr] = source[getValueFromSourceFunctionName](nextAttr);
+                values[nextAttr] = this.adjustCoverage(nextAttr, consumer,
+                                                       source[getValueFromSourceFunctionName](nextAttr),
+                                                       instanceMultiplier);
             }
         }
         return values;
