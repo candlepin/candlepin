@@ -35,12 +35,14 @@ import java.util.zip.InflaterOutputStream;
 
 import org.apache.log4j.Logger;
 import org.candlepin.config.Config;
+import org.candlepin.json.model.Arch;
 import org.candlepin.json.model.Content;
 import org.candlepin.json.model.EntitlementBody;
 import org.candlepin.json.model.Order;
 import org.candlepin.json.model.Service;
 import org.candlepin.json.model.Subscription;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ContentArch;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EnvironmentContent;
@@ -316,6 +318,16 @@ public class X509V3ExtensionUtil extends X509Util{
         return toReturn;
     }
 
+    protected List<Arch> createArches(Set<ContentArch> contentArches) {
+        List<Arch> archList = new ArrayList<Arch>();
+        for (ContentArch ca : contentArches) {
+                Arch arch = new Arch();
+                arch.setLabel(ca.getArch().getLabel());
+                archList.add(arch);
+            }
+        return archList;
+    }
+
     public List<Content> createContent(
         Set<ProductContent> productContent, String contentPrefix,
         Map<String, EnvironmentContent> promotedContent, Consumer consumer) {
@@ -335,6 +347,8 @@ public class X509V3ExtensionUtil extends X509Util{
                 }
             }
 
+            // Filter non applicable arches here?
+
             // augment the content path with the prefix if it is passed in
             String contentPath = this.createFullContentPath(contentPrefix, pc);
 
@@ -345,6 +359,7 @@ public class X509V3ExtensionUtil extends X509Util{
             content.setVendor(pc.getContent().getVendor());
             content.setPath(contentPath);
             content.setGpgUrl(pc.getContent().getGpgUrl());
+            content.setArches(createArches(pc.getContent().getContentArches()));
 
             // Check if we should override the enabled flag due to setting on promoted
             // content:
