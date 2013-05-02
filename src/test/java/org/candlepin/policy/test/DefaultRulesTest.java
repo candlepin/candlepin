@@ -776,6 +776,39 @@ public class DefaultRulesTest {
         verify(poolManagerMock).updatePoolQuantity(eq(virtBonusPool), eq(10L));
     }
 
+    @Test
+    public void hostedVirtLimitDoesNotAlterQuantitiesForHostLimited() {
+        when(config.standalone()).thenReturn(false);
+        Consumer c = new Consumer("test consumer", "test user", owner,
+            new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
+        Enforcer enf = new ManifestEntitlementRules(new DateSourceImpl(),
+            new JsRunnerProvider(rulesCurator).get(),
+            productCache, I18nFactory.getI18n(getClass(), Locale.US,
+                I18nFactory.FALLBACK), config, consumerCurator);
+
+        Pool virtBonusPool = setupVirtLimitPool();
+        virtBonusPool.setQuantity(100L);
+        virtBonusPool.setAttribute("host_limited", "true");
+        virtBonusPool.setAttribute("virt_only", "true");
+        virtBonusPool.setAttribute("virt_limit", "10");
+        virtBonusPool.setAttribute("pool_derived", "true");
+
+        Entitlement e = new Entitlement(virtBonusPool, c, new Date(), new Date(),
+            1);
+        PoolHelper postHelper = new PoolHelper(poolManagerMock, productCache, e);
+        List<Pool> poolList = new ArrayList<Pool>();
+        poolList.add(virtBonusPool);
+        when(poolManagerMock.lookupBySubscriptionId(eq(virtBonusPool.getSubscriptionId())))
+            .thenReturn(poolList);
+
+        enf.postEntitlement(c, postHelper, e);
+        verify(poolManagerMock, never()).updatePoolQuantity(eq(virtBonusPool), eq(-10L));
+
+        enf.postUnbind(c, postHelper, e);
+        verify(poolManagerMock, never()).updatePoolQuantity(eq(virtBonusPool), eq(10L));
+    }
+
+
     /*
      * Bonus pools in hosted mode for products with the host_limited attribute
      * are created during binding.
