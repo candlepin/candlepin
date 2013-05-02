@@ -78,7 +78,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import javax.ws.rs.core.MultivaluedMap;
 /**
@@ -442,13 +441,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Consumer c = TestUtil.createConsumer(owner);
         consumerTypeCurator.create(c.getType());
         consumerCurator.create(c);
-
-        Entitlement e1 = TestUtil.createEntitlement(owner, c, pool1, null);
-        entitlementCurator.create(e1);
-
-        Set<Entitlement> entSet = new HashSet<Entitlement>();
-        entSet.add(e1);
-        pool1.setEntitlements(entSet);
 
         Principal principal = setupPrincipal(new ConsumerPrincipal(c));
         securityInterceptor.enable();

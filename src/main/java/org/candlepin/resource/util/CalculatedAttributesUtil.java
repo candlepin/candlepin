@@ -20,15 +20,12 @@ import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
-import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.policy.js.quantity.QuantityRules;
 
 import com.google.inject.Inject;
 
 import org.xnap.commons.i18n.I18n;
-
-import java.util.Set;
 
 /**
  * CalculatedAttributesUtil
@@ -56,28 +53,12 @@ public class CalculatedAttributesUtil {
                 principal.getPrincipalName(), c.getUuid()));
         }
 
-        // Check that Pool p actually has consumerUuid in it.
-        Set<Entitlement> entitlements = p.getEntitlements();
-        boolean found = false;
-        for (Entitlement e : entitlements) {
-            if (c.equals(e.getConsumer())) {
-                found = true;
-                break;
-            }
-        }
+        p.addCalculatedAttribute("suggested_quantity",
+            String.valueOf(quantityRules.getSuggestedQuantity(p, c)));
 
-        if (found) {
-            p.addCalculatedAttribute("suggested_quantity",
-                String.valueOf(quantityRules.getSuggestedQuantity(p, c)));
-
-            //TODO set with value of instance_multiplier
-            p.addCalculatedAttribute("quantity_increment", null);
-            return p;
-        }
-        else {
-            throw new NotFoundException(i18n.tr("Pool {0} does not contain consumer {1}",
-                p.getId(), c.getUuid()));
-        }
+        //TODO set with value of instance_multiplier
+        p.addCalculatedAttribute("quantity_increment", null);
+        return p;
     }
 
     public Pool addCalculatedAttributes(Pool p, String consumerUuid, Principal principal) {

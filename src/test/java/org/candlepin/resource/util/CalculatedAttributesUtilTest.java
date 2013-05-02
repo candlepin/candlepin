@@ -24,7 +24,6 @@ import org.candlepin.auth.Principal;
 import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
@@ -37,9 +36,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * CalculatedAttributesUtilTest
@@ -80,13 +77,6 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
     @Test
     public void testCalculatedAttributesPresent() {
         Consumer consumer = createConsumer(owner1);
-        Entitlement e = createEntitlement(owner1, consumer, pool1,
-            createEntitlementCertificate("fake", "fake"));
-
-        Set<Entitlement> entSet = new HashSet<Entitlement>();
-        entSet.add(e);
-
-        pool1.setEntitlements(entSet);
 
         when(quantityRules.getSuggestedQuantity(any(Pool.class), any(Consumer.class))).
             thenReturn(1L);
@@ -98,23 +88,9 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
         verify(quantityRules).getSuggestedQuantity(p, consumer);
     }
 
-    @Test(expected = NotFoundException.class)
-    public void testConsumerNotFoundInPool() {
-        // Create a consumer that is not in the Pool we are getting
-        Consumer consumer = createConsumer(owner1);
-        attrUtil.addCalculatedAttributes(pool1, consumer.getUuid(), adminPrincipal);
-    }
-
     @Test(expected = ForbiddenException.class)
     public void testUnauthorizedUserRequestingPool() {
         Consumer consumer = createConsumer(owner1);
-        Entitlement e = createEntitlement(owner1, consumer, pool1,
-            createEntitlementCertificate("fake", "fake"));
-
-        Set<Entitlement> entSet = new HashSet<Entitlement>();
-        entSet.add(e);
-
-        pool1.setEntitlements(entSet);
 
         Owner owner2 = createOwner();
         ownerCurator.create(owner2);
