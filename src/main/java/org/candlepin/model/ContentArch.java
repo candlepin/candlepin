@@ -29,6 +29,7 @@ import org.hibernate.annotations.Parent;
 @Embeddable
 public class ContentArch extends AbstractHibernateObject {
 
+
     @Parent
     private Content content;
 
@@ -59,6 +60,11 @@ public class ContentArch extends AbstractHibernateObject {
         return;
     }
 
+    public Arch getArch() {
+        return arch;
+    }
+
+
     /**
      * @param arch
      */
@@ -72,5 +78,11 @@ public class ContentArch extends AbstractHibernateObject {
     private void setContent(Content content) {
         this.content = content;
     }
+
+
+    public Content getContent() {
+        return content;
+    }
+
 
 }
