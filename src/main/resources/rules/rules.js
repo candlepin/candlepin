@@ -728,9 +728,11 @@ var CoverageCalculator = {
 
         log.debug("Determining number of entitlements to cover consumer...");
 
-        // We can assume we need at least one if we're reached the point
-        // where we're looking for a quantity to cover the stack:
-        var maxQuantity = 1;
+        // If the stack is empty, we can assume at least one is needed. This is to
+        // work around situations where the coverage comes back as 100% because no
+        // attributes are being enforced.
+        var maxQuantity = stackTracker.empty ? 1 : 0;
+
         for (var attrIdx in STACKABLE_ATTRIBUTES) {
             var attr = STACKABLE_ATTRIBUTES[attrIdx];
 
