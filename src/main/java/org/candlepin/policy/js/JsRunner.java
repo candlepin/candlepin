@@ -115,7 +115,7 @@ public class JsRunner {
             returner = this.invokeMethod(ruleName);
         }
         catch (NoSuchMethodException ex) {
-            log.warn("No rule found: " + ruleName + " in namespace: " + namespace);
+            log.info("No rule found: " + ruleName + " in namespace: " + namespace);
         }
         catch (RhinoException ex) {
             throw new RuleExecutionException(ex);

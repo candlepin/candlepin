@@ -185,7 +185,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         }
         catch (NoSuchMethodException ex) {
             // This is fine, I hope...
-            log.warn("No default rule found: " + GLOBAL_POST_FUNCTION);
+            log.info("No default rule found: " + GLOBAL_POST_FUNCTION);
         }
         catch (RhinoException ex) {
             throw new RuleExecutionException(ex);
@@ -202,7 +202,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         }
         catch (NoSuchMethodException ex) {
             // This is fine, I hope...
-            log.warn("No default rule found: " + GLOBAL_PRE_FUNCTION);
+            log.info("No default rule found: " + GLOBAL_PRE_FUNCTION);
         }
         catch (Exception ex) {
             throw new RuleExecutionException(ex);
@@ -225,7 +225,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         }
         catch (NoSuchMethodException ex) {
             // This is fine, I hope...
-            log.warn("No default rule found: " + GLOBAL_POST_FUNCTION);
+            log.info("No default rule found: " + GLOBAL_POST_FUNCTION);
         }
         catch (RhinoException ex) {
             throw new RuleExecutionException(ex);
