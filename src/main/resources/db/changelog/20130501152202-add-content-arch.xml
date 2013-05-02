@@ -7,11 +7,25 @@
             http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
 
 
-            <changeSet id="20130501152202" author="adrian">
+            <changeSet id="20130501152202-1" author="alikins">
                 <comment>Add a cp_content_arch for content/arch mapping</comment>
-                <createTable tableName="cp_content_arch">
-                    <column name="content_id" type="VARCHAR(255)">
+                <createTable tableName="cp_arch">
+
+                    <column name="id" type="VARCHAR(255)">
+                        <constraints nullable="false" primaryKey="true" primaryKeyName="cp_arch_pkey"/>
+                    </column>
+                    <column name="label" type="VARCHAR(255)">
                         <constraints nullable="false"/>
+                    </column>
+                   <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+                   <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+               </createTable>
+            </changeSet>
+
+            <changeSet id="20130501152202-2" author="alikins">
+            <createTable tableName="cp_content_arch">
+                    <column name="content_id" type="VARCHAR(255)">
+                        <constraints nullable="false" primaryKey="true" primaryKeyName="cp_content_arch_pkey"/>
                     </column>
                     <column name="arch_id" type="VARCHAR(255)">
                         <constraints nullable="false"/>
@@ -20,4 +34,12 @@
                    <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
                </createTable>
            </changeSet>
+
+            <changeSet id="20130501152202-3" author="alikins" dbms="postgressql">
+                <addForeignKeyConstraint baseColumnNames="arch_id" baseTableName="cp_content_arch" baseTableSchemaName="public" constraintName="fk_content_arch_arch" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_arch" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+            </changeSet>
+
+            <changeSet id="20130501152202-4" author="alikins" dbms="postgressql">
+                <addForeignKeyConstraint baseColumnNames="content_id" baseTableName="cp_content_arch" baseTableSchemaName="public" constraintName="fk_content_arch_content" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_content" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+            </changeSet>
 </databaseChangeLog>
