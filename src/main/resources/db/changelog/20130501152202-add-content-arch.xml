@@ -19,5 +19,5 @@
                    <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
                    <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
                </createTable>
-
+           </changeSet>
 </databaseChangeLog>
