@@ -120,4 +120,18 @@ public class Content {
     public void setRequiredTags(List<String> requiredTags) {
         this.requiredTags = requiredTags;
     }
+
+    /**
+     * @return the arches
+     */
+    public List<Arch> getArches() {
+        return arches;
+    }
+
+    /**
+     * @param arches the arches to set
+     */
+    public void setArches(List<Arch> arches) {
+        this.arches = arches;
+    }
 }
