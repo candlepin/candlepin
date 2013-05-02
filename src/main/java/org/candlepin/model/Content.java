@@ -20,7 +20,9 @@ import java.util.Set;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -82,6 +84,13 @@ public class Content extends AbstractHibernateObject {
     @CollectionOfElements(targetElement = String.class)
     @JoinTable(name = "cp_content_modified_products")
     private Set<String> modifiedProductIds = new HashSet<String>();
+
+    @OneToMany(targetEntity = Arch.class)
+    @JoinTable(
+        name = "cp_content_arch",
+        joinColumns = @JoinColumn(name = "content_id"),
+        inverseJoinColumns = @JoinColumn(name = "arch_id"))
+    private Set<ContentArch> contentArches = new HashSet<ContentArch>();
 
     public Content(String name, String id, String label, String type,
         String vendor, String contentUrl, String gpgUrl) {
@@ -250,6 +259,28 @@ public class Content extends AbstractHibernateObject {
         return releaseVer;
     }
 
+    public void addContentArch(Arch arch) {
+        this.contentArches.add(new ContentArch(this, arch));
+    }
+
+    public Set<ContentArch> getContentArches() {
+        return contentArches;
+    }
+
+    public void setContentArches(Set<ContentArch> contentArches) {
+        this.contentArches = contentArches;
+    }
+
+    public void setArches(Set<Arch> arches) {
+        if (arches == null) {
+            return;
+        }
+
+        for (Arch arch : arches ) {
+            contentArches.add(new ContentArch(this, arch));
+        }
+    }
+
     /**
      * @param from Content object to copy properties from.
      * @return current Content object with updated properites
@@ -266,6 +297,7 @@ public class Content extends AbstractHibernateObject {
         setMetadataExpire(from.getMetadataExpire());
         setModifiedProductIds(defaultIfNull(from.getModifiedProductIds(),
             new HashSet<String>()));
+        setContentArches(from.getContentArches());
 
         return this;
     }
