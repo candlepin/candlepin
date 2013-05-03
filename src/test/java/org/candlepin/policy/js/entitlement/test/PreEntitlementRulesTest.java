@@ -34,7 +34,7 @@ import org.candlepin.policy.ValidationResult;
 import org.candlepin.test.TestUtil;
 import org.junit.Test;
 
-public class PreEntitlementRulesTest extends EntitlementRulesTextFixture {
+public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
 
     @Test
     public void testBindForSameProductNotAllowed() {

@@ -52,7 +52,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.xnap.commons.i18n.I18nFactory;
 
-public class EntitlementRulesTextFixture {
+public class EntitlementRulesTestFixture {
     protected Enforcer enforcer;
     @Mock
     protected RulesCurator rulesCurator;

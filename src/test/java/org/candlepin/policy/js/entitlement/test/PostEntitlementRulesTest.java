@@ -42,7 +42,7 @@ import org.junit.Test;
  * These tests only cover standalone/universal situations. See hosted specific test
  * suites for behaviour which is specific to hosted.
  */
-public class PostEntitlementRulesTest extends EntitlementRulesTextFixture {
+public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
 
     @Test
     public void userLicensePostCreatesSubPool() {

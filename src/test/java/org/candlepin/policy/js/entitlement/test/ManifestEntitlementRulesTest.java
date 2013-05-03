@@ -40,7 +40,7 @@ import org.junit.Test;
 /**
  * ManifestEntitlementRulesTest
  */
-public class ManifestEntitlementRulesTest extends EntitlementRulesTextFixture {
+public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
 
     @Test
     public void postEntitlement() {

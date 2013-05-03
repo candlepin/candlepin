@@ -47,7 +47,7 @@ import org.xnap.commons.i18n.I18nFactory;
  * HostedVirtLimitEntitlementRulesTest: Complex tests around the hosted virt limit
  * bonus pool functionality.
  */
-public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTextFixture {
+public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFixture {
 
     @Test
     public void hostedParentConsumerPostCreatesNoPool() {
