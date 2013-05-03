@@ -17,6 +17,7 @@ package org.candlepin.policy.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -105,6 +106,31 @@ public class PoolRulesTest {
         }
 
         return p;
+    }
+
+    @Test
+    public void hostedVirtLimitBadValueDoesntTraceBack() {
+        when(configMock.standalone()).thenReturn(false);
+        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
+        s.getProduct().addAttribute(new ProductAttribute("virt_limit", "badvalue"));
+        s.setQuantity(10L);
+
+
+        List<Pool> pools = null;
+        try {
+            pools = poolRules.createPools(s);
+        }
+        catch (Exception e) {
+            fail("Create pools should not have thrown an exception on bad value for " +
+                 "virt_limit. " + e.getMessage());
+        }
+        assertEquals(1, pools.size());
+
+        Pool physicalPool = pools.get(0);
+        physicalPool.setId("physical");
+
+        assertEquals(new Long(10), physicalPool.getQuantity());
+        assertEquals(0, physicalPool.getAttributes().size());
     }
 
     @Test
