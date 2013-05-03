@@ -22,92 +22,25 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.util.HashSet;
 
-import org.candlepin.config.Config;
-import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
-import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
-import org.candlepin.model.Rules;
-import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
-import org.candlepin.policy.js.JsRunner;
-import org.candlepin.policy.js.JsRunnerProvider;
-import org.candlepin.policy.js.ProductCache;
-import org.candlepin.policy.js.compliance.ComplianceStatus;
-import org.candlepin.policy.js.entitlement.ManifestEntitlementRules;
 import org.candlepin.policy.js.pool.PoolHelper;
-import org.candlepin.service.ProductServiceAdapter;
-import org.candlepin.test.DatabaseTestFixture;
-import org.candlepin.test.DateSourceForTesting;
-import org.candlepin.test.TestDateUtil;
 import org.candlepin.test.TestUtil;
-import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 /**
  * ManifestEntitlementRulesTest
  */
-public class ManifestEntitlementRulesTest extends DatabaseTestFixture {
-    // TODO: does this need database test fixture? Most of it is mocked...
-
-    @Mock private ProductServiceAdapter productAdapter;
-    @Mock private RulesCurator rulesCurator;
-    @Mock private Config config;
-    @Mock private ComplianceStatus compliance;
-
-    private ManifestEntitlementRules enforcer;
-    private Owner owner;
-    private Consumer consumer;
-    private JsRunner jsRules;
-    private ProductCache productCache;
-
-    @Before
-    public void createEnforcer() throws Exception {
-        MockitoAnnotations.initMocks(this);
-
-        owner = createOwner();
-        ownerCurator.create(owner);
-
-        consumer = TestUtil.createConsumer(owner);
-        consumerTypeCurator.create(consumer.getType());
-        consumerCurator.create(consumer);
-
-        BufferedReader reader
-            = new BufferedReader(new InputStreamReader(
-                getClass().getResourceAsStream("/rules/rules.js")));
-        StringBuilder builder = new StringBuilder();
-        String line = null;
-        while ((line = reader.readLine()) != null) {
-            builder.append(line + "\n");
-        }
-        reader.close();
-
-        Rules rules = mock(Rules.class);
-        when(rules.getRules()).thenReturn(builder.toString());
-        when(rulesCurator.getRules()).thenReturn(rules);
-        when(rulesCurator.getUpdated()).thenReturn(TestDateUtil.date(2010, 1, 1));
-
-        jsRules = new JsRunnerProvider(rulesCurator).get();
-
-        when(config.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
-        productCache = new ProductCache(config, productAdapter);
-
-        enforcer = new ManifestEntitlementRules(new DateSourceForTesting(2010, 1, 1),
-            jsRules, productCache, i18n, config, consumerCurator);
-
-    }
+public class ManifestEntitlementRulesTest extends EntitlementRulesTextFixture {
 
     @Test
     public void postEntitlement() {
@@ -123,7 +56,7 @@ public class ManifestEntitlementRulesTest extends DatabaseTestFixture {
         when(c.getType()).thenReturn(type);
         when(type.isManifest()).thenReturn(true);
         when(pool.getProductId()).thenReturn("testProd");
-        when(productAdapter.getProductById(eq("testProd"))).thenReturn(product);
+        when(prodAdapter.getProductById(eq("testProd"))).thenReturn(product);
         when(product.getAttributes()).thenReturn(new HashSet<ProductAttribute>());
         when(pool.getAttributes()).thenReturn(new HashSet<PoolAttribute>());
 
