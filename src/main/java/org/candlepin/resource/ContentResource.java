@@ -33,7 +33,6 @@ import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Arch;
 import org.candlepin.model.ArchCurator;
 import org.candlepin.model.Content;
-import org.candlepin.model.ContentArch;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
