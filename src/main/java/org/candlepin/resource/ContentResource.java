@@ -30,7 +30,10 @@ import javax.ws.rs.core.MediaType;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
+import org.candlepin.model.Arch;
+import org.candlepin.model.ArchCurator;
 import org.candlepin.model.Content;
+import org.candlepin.model.ContentArch;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
@@ -49,6 +52,7 @@ public class ContentResource {
     private I18n i18n;
     private UniqueIdGenerator idGenerator;
     private EnvironmentContentCurator envContentCurator;
+    private ArchCurator archCurator;
     private PoolManager poolManager;
 
     @Inject
@@ -97,6 +101,7 @@ public class ContentResource {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     public Content createContent(Content content) {
+        // FIXME: check if arches have changed
         if (content.getId() == null || content.getId().trim().length() == 0) {
             content.setId(idGenerator.generateId());
             return contentCurator.create(content);
@@ -106,6 +111,12 @@ public class ContentResource {
         if (lookedUp != null) {
             return lookedUp;
         }
+        // populate arches from arch labels from arches attribute
+        Set<Arch> arches = new HashSet<Arch>();
+        for (org.candlepin.model.Arch incoming : content.getArches()) {
+            arches.add(archCurator.find(incoming.getId()));
+        }
+        content.setArches(arches);
         return contentCurator.create(content);
     }
 
@@ -120,6 +131,7 @@ public class ContentResource {
                 i18n.tr("Content with id {0} could not be found.", contentId));
         }
 
+        // FIXME: needs arches handled as well?
         changes.setId(contentId);
         Content updated = contentCurator.createOrUpdate(changes);
         // require regeneration of entitlement certificates of affected consumers
