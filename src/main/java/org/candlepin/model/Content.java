@@ -22,6 +22,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -32,6 +33,7 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.candlepin.service.UniqueIdGenerator;
 import org.hibernate.annotations.CollectionOfElements;
+import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.Type;
 
 /**
@@ -85,12 +87,14 @@ public class Content extends AbstractHibernateObject {
     @JoinTable(name = "cp_content_modified_products")
     private Set<String> modifiedProductIds = new HashSet<String>();
 
-    @OneToMany(targetEntity = Arch.class)
+    @ManyToMany(targetEntity = Arch.class)
+    @ForeignKey(name = "fk_arch_id",
+                inverseName = "fk_content_id")
     @JoinTable(
         name = "cp_content_arch",
         joinColumns = @JoinColumn(name = "content_id"),
         inverseJoinColumns = @JoinColumn(name = "arch_id"))
-    private Set<ContentArch> contentArches = new HashSet<ContentArch>();
+    private Set<Arch> arches = new HashSet<Arch>();
 
     public Content(String name, String id, String label, String type,
         String vendor, String contentUrl, String gpgUrl) {
@@ -259,28 +263,15 @@ public class Content extends AbstractHibernateObject {
         return releaseVer;
     }
 
-    public void addContentArch(Arch arch) {
-        this.contentArches.add(new ContentArch(this, arch));
-    }
 
-    public Set<ContentArch> getContentArches() {
-        return contentArches;
-    }
-
-    public void setContentArches(Set<ContentArch> contentArches) {
-        this.contentArches = contentArches;
-    }
 
     public void setArches(Set<Arch> arches) {
-        if (arches == null) {
-            return;
-        }
-
-        for (Arch arch : arches ) {
-            contentArches.add(new ContentArch(this, arch));
-        }
+        this.arches = arches;
     }
 
+    public Set<Arch> getArches() {
+        return arches;
+    }
     /**
      * @param from Content object to copy properties from.
      * @return current Content object with updated properites
@@ -297,7 +288,7 @@ public class Content extends AbstractHibernateObject {
         setMetadataExpire(from.getMetadataExpire());
         setModifiedProductIds(defaultIfNull(from.getModifiedProductIds(),
             new HashSet<String>()));
-        setContentArches(from.getContentArches());
+        setArches(from.getArches());
 
         return this;
     }
@@ -305,4 +296,5 @@ public class Content extends AbstractHibernateObject {
     private <T> T defaultIfNull(T val, T dflt) {
         return val == null ? dflt : val;
     }
+
 }
