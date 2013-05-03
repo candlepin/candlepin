@@ -14,6 +14,7 @@
  */
 package org.candlepin.resource.util;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
@@ -27,6 +28,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductAttribute;
 import org.candlepin.policy.js.quantity.QuantityRules;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -48,6 +50,7 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
     private Product product1;
     private Pool pool1;
     private Principal adminPrincipal;
+    private Consumer consumer;
 
     @Mock private QuantityRules quantityRules;
 
@@ -67,6 +70,8 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
         adminPrincipal = setupPrincipal(owner1, Access.ALL);
 
         attrUtil = new CalculatedAttributesUtil(i18n, consumerCurator, quantityRules);
+
+        consumer = createConsumer(owner1);
     }
 
     @Test(expected = NotFoundException.class)
@@ -76,8 +81,6 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
 
     @Test
     public void testCalculatedAttributesPresent() {
-        Consumer consumer = createConsumer(owner1);
-
         when(quantityRules.getSuggestedQuantity(any(Pool.class), any(Consumer.class))).
             thenReturn(1L);
 
@@ -90,12 +93,29 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
 
     @Test(expected = ForbiddenException.class)
     public void testUnauthorizedUserRequestingPool() {
-        Consumer consumer = createConsumer(owner1);
-
         Owner owner2 = createOwner();
         ownerCurator.create(owner2);
 
         attrUtil.addCalculatedAttributes(pool1, consumer.getUuid(),
             setupPrincipal(owner2, Access.NONE));
+    }
+
+    @Test
+    public void testQuantityIncrement() {
+        Product product2 = new Product("blah", "blah");
+        product2.addAttribute(new ProductAttribute("instance_multiplier", "12"));
+        productCurator.create(product2);
+
+        Pool pool2 = createPoolAndSub(owner1, product2, 500L,
+            TestUtil.createDate(2000, 1, 1), TestUtil.createDate(3000, 1, 1));
+
+        when(quantityRules.getSuggestedQuantity(any(Pool.class), any(Consumer.class))).
+            thenReturn(1L);
+
+        Pool p = attrUtil.addCalculatedAttributes(pool2, consumer.getUuid(),
+            adminPrincipal);
+        Map<String, String> attrs = p.getCalculatedAttributes();
+        assertEquals("12", attrs.get("quantity_increment"));
+        verify(quantityRules).getSuggestedQuantity(p, consumer);
     }
 }

@@ -56,8 +56,10 @@ public class CalculatedAttributesUtil {
         p.addCalculatedAttribute("suggested_quantity",
             String.valueOf(quantityRules.getSuggestedQuantity(p, c)));
 
-        //TODO set with value of instance_multiplier
-        p.addCalculatedAttribute("quantity_increment", null);
+        if (p.hasProductAttribute("instance_multiplier")) {
+            p.addCalculatedAttribute("quantity_increment",
+                p.getProductAttribute("instance_multiplier").getValue());
+        }
         return p;
     }
 
