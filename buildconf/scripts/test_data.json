@@ -173,6 +173,17 @@
         },
 
         {
+            "name": "awesomeos-all-i386-content",
+            "id": 1113033,
+            "label": "awesomeos-all-i386-content",
+            "type": "yum",
+            "vendor": "Red Hat",
+            "content_url": "/path/to/awesomeos/all",
+            "gpg_url": "/path/to/awesomeos/gpg/",
+            "arches": ["2"],
+            "metadata_expire": 3600
+        },
+        {
             "name": "awesomeos-server-scalable-fs",
             "id": 3700,
             "label": "awesomeos-server-scalable-fs",
