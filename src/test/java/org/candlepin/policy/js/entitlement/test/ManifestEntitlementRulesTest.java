@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.policy.test;
+package org.candlepin.policy.js.entitlement.test;
 
 
 import static org.junit.Assert.assertEquals;
@@ -57,9 +57,10 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 /**
- * CandlepinConsumerTypeEnforcerTest
+ * ManifestEntitlementRulesTest
  */
 public class ManifestEntitlementRulesTest extends DatabaseTestFixture {
+    // TODO: does this need database test fixture? Most of it is mocked...
 
     @Mock private ProductServiceAdapter productAdapter;
     @Mock private RulesCurator rulesCurator;
