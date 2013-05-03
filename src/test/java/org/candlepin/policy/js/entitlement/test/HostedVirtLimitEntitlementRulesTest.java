@@ -27,21 +27,14 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
-import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Subscription;
-import org.candlepin.policy.js.JsRunnerProvider;
-import org.candlepin.policy.js.entitlement.Enforcer;
-import org.candlepin.policy.js.entitlement.ManifestEntitlementRules;
 import org.candlepin.policy.js.pool.PoolHelper;
-import org.candlepin.util.DateSourceImpl;
 import org.junit.Test;
-import org.xnap.commons.i18n.I18nFactory;
 
 /**
  * HostedVirtLimitEntitlementRulesTest: Complex tests around the hosted virt limit
