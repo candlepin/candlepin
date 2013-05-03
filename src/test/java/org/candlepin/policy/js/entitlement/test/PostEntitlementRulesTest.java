@@ -26,21 +26,14 @@ import static org.mockito.Mockito.when;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
-import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Subscription;
-import org.candlepin.policy.js.JsRunnerProvider;
-import org.candlepin.policy.js.entitlement.Enforcer;
-import org.candlepin.policy.js.entitlement.ManifestEntitlementRules;
 import org.candlepin.policy.js.pool.PoolHelper;
-import org.candlepin.util.DateSourceImpl;
 import org.junit.Test;
-import org.xnap.commons.i18n.I18nFactory;
 
 /**
  * PostEntitlementRulesTest: Tests for post-entitlement rules, as well as the post-unbind
@@ -125,12 +118,7 @@ public class PostEntitlementRulesTest extends EntitlementRulesTextFixture {
     @Test
     public void noBonusPoolsForDistributorBinds() {
         when(config.standalone()).thenReturn(true);
-        Consumer c = new Consumer("test consumer", "test user", owner,
-            new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
-        Enforcer enf = new ManifestEntitlementRules(new DateSourceImpl(),
-            new JsRunnerProvider(rulesCurator).get(),
-            productCache, I18nFactory.getI18n(getClass(), Locale.US,
-                I18nFactory.FALLBACK), config, consumerCurator);
+        consumer.setType(new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, "unlimited");
         List<Pool> pools = poolRules.createPools(s);
         assertEquals(1, pools.size());
@@ -141,15 +129,15 @@ public class PostEntitlementRulesTest extends EntitlementRulesTextFixture {
         assertEquals(new Long(10), physicalPool.getQuantity());
         assertEquals(0, physicalPool.getAttributes().size());
 
-        Entitlement e = new Entitlement(physicalPool, c, new Date(), new Date(),
+        Entitlement e = new Entitlement(physicalPool, consumer, new Date(), new Date(),
             1);
         PoolHelper postHelper = new PoolHelper(poolManagerMock, productCache, e);
 
-        enf.postEntitlement(c, postHelper, e);
+        enforcer.postEntitlement(consumer, postHelper, e);
         verify(poolManagerMock, never()).createPool(any(Pool.class));
         verify(poolManagerMock, never()).updatePoolQuantity(any(Pool.class), anyInt());
 
-        enf.postUnbind(c, postHelper, e);
+        enforcer.postUnbind(consumer, postHelper, e);
         verify(poolManagerMock, never()).updatePoolQuantity(any(Pool.class), anyInt());
         verify(poolManagerMock, never()).setPoolQuantity(any(Pool.class), anyLong());
     }

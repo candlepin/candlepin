@@ -21,7 +21,6 @@ import static org.mockito.Mockito.when;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Locale;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
@@ -32,13 +31,8 @@ import org.candlepin.model.PoolAttribute;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.policy.ValidationResult;
-import org.candlepin.policy.js.JsRunnerProvider;
-import org.candlepin.policy.js.entitlement.Enforcer;
-import org.candlepin.policy.js.entitlement.ManifestEntitlementRules;
 import org.candlepin.test.TestUtil;
-import org.candlepin.util.DateSourceImpl;
 import org.junit.Test;
-import org.xnap.commons.i18n.I18nFactory;
 
 public class PreEntitlementRulesTest extends EntitlementRulesTextFixture {
 
@@ -62,24 +56,19 @@ public class PreEntitlementRulesTest extends EntitlementRulesTextFixture {
     @Test
     public void manifestConsumerCannotBindToDerivedPool() {
         when(config.standalone()).thenReturn(false);
-        Consumer c = new Consumer("test consumer", "test user", owner,
-            new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
-        Enforcer enf = new ManifestEntitlementRules(new DateSourceImpl(),
-            new JsRunnerProvider(rulesCurator).get(),
-            productCache, I18nFactory.getI18n(getClass(), Locale.US,
-                I18nFactory.FALLBACK), config, consumerCurator);
+        consumer.setType(new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
 
         Product product = new Product(productId, "A product for testing");
         Pool pool = createPool(owner, product);
         pool.setAttribute("pool_derived", "true");
 
-        Entitlement e = new Entitlement(pool, c, new Date(), new Date(),
+        Entitlement e = new Entitlement(pool, consumer, new Date(), new Date(),
             1);
-        c.addEntitlement(e);
+        consumer.addEntitlement(e);
 
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
 
-        ValidationResult result = enf.preEntitlement(c, pool, 1);
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
 
         assertTrue(result.hasErrors());
         assertFalse(result.isSuccessful());
