@@ -30,6 +30,7 @@ import java.util.Set;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
+import org.candlepin.model.ArchCurator;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Environment;
@@ -51,6 +52,7 @@ public class ContentResourceTest {
     private ContentResource cr;
     private I18n i18n;
     private EnvironmentContentCurator envContentCurator;
+    private ArchCurator archCurator;
     private PoolManager poolManager;
 
     @Before
@@ -59,8 +61,9 @@ public class ContentResourceTest {
         cc = mock(ContentCurator.class);
         envContentCurator = mock(EnvironmentContentCurator.class);
         poolManager = mock(PoolManager.class);
+        archCurator = mock(ArchCurator.class);
         cr = new ContentResource(cc, i18n, new DefaultUniqueIdGenerator(),
-            envContentCurator, poolManager);
+            envContentCurator, archCurator, poolManager);
     }
 
     @Test
