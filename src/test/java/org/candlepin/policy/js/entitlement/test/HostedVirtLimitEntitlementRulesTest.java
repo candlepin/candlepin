@@ -28,13 +28,11 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Subscription;
-import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.pool.PoolHelper;
 import org.junit.Test;
 
