@@ -111,6 +111,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     private static final Long CONTENT_METADATA_EXPIRE = 3200L;
     private static final String ENTITLEMENT_QUANTITY = "10";
     private static final String REQUIRED_TAGS = "TAG1,TAG2";
+    private static final String ARCH_LABEL = "s390x";
 
     private DefaultEntitlementCertServiceAdapter certServiceAdapter;
     @Mock
@@ -170,20 +171,20 @@ public class DefaultEntitlementCertServiceAdapterTest {
             "version", "arch", "SVC");
 
         content = createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
-            CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL, CONTENT_GPG_URL);
+            CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL, CONTENT_GPG_URL, ARCH_LABEL);
         content.setMetadataExpire(CONTENT_METADATA_EXPIRE);
         content.setRequiredTags(REQUIRED_TAGS);
 
         superContent = new HashSet<Content>();
         for (String url : testUrls) {
             superContent.add(createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
-                CONTENT_TYPE, CONTENT_VENDOR, url, CONTENT_GPG_URL));
+                CONTENT_TYPE, CONTENT_VENDOR, url, CONTENT_GPG_URL, ARCH_LABEL));
         }
 
         largeContent = new HashSet<Content>();
         for (String url : largeTestUrls) {
             largeContent.add(createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
-                CONTENT_TYPE, CONTENT_VENDOR, url, CONTENT_GPG_URL));
+                CONTENT_TYPE, CONTENT_VENDOR, url, CONTENT_GPG_URL, ARCH_LABEL));
         }
 
         subscription = new Subscription(null, product, new HashSet<Product>(),
@@ -222,10 +223,12 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
 
     private Content createContent(String name, String id, String label,
-        String type, String vendor, String url, String gpgUrl) {
+        String type, String vendor, String url, String gpgUrl, String archLabel) {
         Content c = new Content(name, id, label, type, vendor, url, gpgUrl);
+
+        /* FIXME: use Arch we create in database test fixture */
         Arch arch = new Arch();
-        arch.setLabel("z80");
+        arch.setLabel(archLabel);
         c.setArches(Collections.singleton(arch));
         return c;
     }
@@ -258,7 +261,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
                                              CONTENT_TYPE,
                                              CONTENT_VENDOR,
                                              CONTENT_URL,
-                                             CONTENT_GPG_URL));
+                                             CONTENT_GPG_URL,
+                                             ARCH_LABEL));
         }
         return productContent;
     }
@@ -342,6 +346,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         assertTrue(isEncodedContentValid(encodedContent));
         assertFalse(encodedContent.containsKey(REQUIRED_TAGS.toString()));
     }
+
 
     @Test
     public void testPrefixesShouldBeUsed() throws Exception {
@@ -461,11 +466,11 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         Content normalContent = createContent(CONTENT_NAME, CONTENT_ID,
             CONTENT_LABEL, CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL,
-            CONTENT_GPG_URL);
+            CONTENT_GPG_URL, ARCH_LABEL);
         // Change label to prevent an equals match:
         Content modContent = createContent(CONTENT_NAME, CONTENT_ID + "_2",
             "differentlabel", CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL,
-            CONTENT_GPG_URL);
+            CONTENT_GPG_URL, ARCH_LABEL);
         modContent.setLabel("mod content");
         Set<String> modifiedProductIds = new HashSet<String>(
             Arrays.asList(new String[]{ "product1", "product2" }));
@@ -869,6 +874,9 @@ public class DefaultEntitlementCertServiceAdapterTest {
                 assertEquals(cont.get("path"), "prefix" + CONTENT_URL);
                 assertFalse((Boolean) cont.get("enabled"));
                 assertEquals(cont.get("metadata_expire"), 3200);
+                List<String> arches = new ArrayList<String>();
+                arches.add(ARCH_LABEL);
+                assertEquals(cont.get("arches"), arches);
 
                 String rTags = content.getRequiredTags();
                 st = new StringTokenizer(rTags, ",");
@@ -1084,7 +1092,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         for (int i = 0; i < 550; i++) {
             String url = "/content/dist" + i + "/jboss/source" + i;
             extremeContent.add(createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
-                CONTENT_TYPE, CONTENT_VENDOR, url, CONTENT_GPG_URL));
+                CONTENT_TYPE, CONTENT_VENDOR, url, CONTENT_GPG_URL, ARCH_LABEL));
         }
         extremeProduct.setContent(extremeContent);
         when(entitlement.getConsumer().getFact("system.certificate_version"))
