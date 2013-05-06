@@ -59,10 +59,18 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
     public ValidationResult preEntitlement(Consumer consumer, Pool entitlementPool,
         Integer quantity) {
 
+        return preEntitlement(consumer, entitlementPool, quantity, CallerType.UNKNOWN);
+    }
+
+    @Override
+    public ValidationResult preEntitlement(Consumer consumer, Pool entitlementPool,
+        Integer quantity, CallerType caller) {
+
         jsRules.reinitTo("entitlement_name_space");
         rulesInit();
 
-        ValidationResult result = runPreEntitlement(consumer, entitlementPool, quantity);
+        ValidationResult result = runPreEntitlement(consumer,
+            entitlementPool, quantity, caller);
         validatePoolQuantity(result, entitlementPool, quantity);
 
         if (entitlementPool.isExpired(dateSource)) {
@@ -76,7 +84,7 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
     }
 
     private ValidationResult runPreEntitlement(Consumer consumer, Pool pool,
-        Integer quantity) {
+        Integer quantity, CallerType caller) {
         // Provide objects for the script:
         JsonJsContext context = new JsonJsContext(this.objectMapper);
         context.put("consumer", consumer);
@@ -86,6 +94,7 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         context.put("pool", pool);
         context.put("standalone", config.standalone());
         context.put("quantity", quantity);
+        context.put("caller", caller.getLabel());
 
         // If the consumer is a guest, the rules may require the host
         // consumer.
@@ -104,7 +113,6 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         AttributeHelper attributeHelper = new AttributeHelper();
         Set<String> attributeNames = attributeHelper.getFlattenedAttributes(pool).keySet();
         List<Rule> matchingRules = rulesForAttributes(attributeNames, attributesToRules);
-
         ValidationResult result = callPreEntitlementRules(matchingRules, context);
         logResult(result);
 

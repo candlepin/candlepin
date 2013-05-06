@@ -55,6 +55,7 @@ import org.candlepin.policy.js.autobind.AutobindRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.entitlement.Enforcer;
+import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
 import org.candlepin.policy.js.pool.PoolHelper;
 import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.policy.js.pool.PoolUpdate;
@@ -365,7 +366,7 @@ public class CandlepinPoolManager implements PoolManager {
         // now make the entitlements
         for (PoolQuantity entry : bestPools) {
             entitlements.add(addOrUpdateEntitlement(consumer, entry.getPool(),
-                null, entry.getQuantity(), false));
+                null, entry.getQuantity(), false, CallerType.BIND));
         }
 
         return entitlements;
@@ -413,8 +414,12 @@ public class CandlepinPoolManager implements PoolManager {
                 }
             }
             if (providesProduct) {
-                ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
+                ValidationResult result = enforcer.preEntitlement(consumer,
+                    pool, 1, CallerType.BEST_POOLS);
 
+                if (result == null) {
+                    System.out.println("Null result :( ");
+                }
                 if (result.hasErrors() || result.hasWarnings()) {
                     // Just keep the last one around, if we need it
                     failedResult = result;
@@ -466,14 +471,15 @@ public class CandlepinPoolManager implements PoolManager {
     @Transactional
     public Entitlement entitleByPool(Consumer consumer, Pool pool,
         Integer quantity) throws EntitlementRefusedException {
-        return addOrUpdateEntitlement(consumer, pool, null, quantity, false);
+        return addOrUpdateEntitlement(consumer, pool, null, quantity,
+            false, CallerType.BIND);
     }
 
     @Override
     @Transactional
     public Entitlement ueberCertEntitlement(Consumer consumer, Pool pool,
         Integer quantity) throws EntitlementRefusedException {
-        return addOrUpdateEntitlement(consumer, pool, null, 1, true);
+        return addOrUpdateEntitlement(consumer, pool, null, 1, true, CallerType.UNKNOWN);
     }
 
     @Override
@@ -486,11 +492,12 @@ public class CandlepinPoolManager implements PoolManager {
             return entitlement;
         }
         return addOrUpdateEntitlement(consumer, entitlement.getPool(), entitlement,
-            change, true);
+            change, true, CallerType.UNKNOWN);
     }
 
     private Entitlement addOrUpdateEntitlement(Consumer consumer, Pool pool,
-        Entitlement entitlement, Integer quantity, boolean generateUeberCert)
+        Entitlement entitlement, Integer quantity, boolean generateUeberCert,
+        CallerType caller)
         throws EntitlementRefusedException {
         // Because there are several paths to this one place where entitlements
         // are granted, we cannot be positive the caller obtained a lock on the
@@ -501,7 +508,8 @@ public class CandlepinPoolManager implements PoolManager {
 
         if (quantity > 0) {
             // XXX preEntitlement is run twice for new entitlement creation
-            ValidationResult result = enforcer.preEntitlement(consumer, pool, quantity);
+            ValidationResult result = enforcer.preEntitlement(
+                consumer, pool, quantity, caller);
 
             if (!result.isSuccessful()) {
                 log.warn("Entitlement not granted: " +

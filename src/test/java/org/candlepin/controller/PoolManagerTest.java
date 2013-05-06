@@ -64,6 +64,7 @@ import org.candlepin.policy.js.autobind.AutobindRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.entitlement.Enforcer;
+import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
 import org.candlepin.policy.js.entitlement.PreUnbindHelper;
 import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.policy.js.pool.PoolUpdate;
@@ -357,8 +358,8 @@ public class PoolManagerTest {
             any(Owner.class), any(String.class), eq(now), anyBoolean(),
             anyBoolean())).thenReturn(pools);
         when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(pool1);
-        when(enforcerMock.preEntitlement(any(Consumer.class), any(Pool.class), anyInt()))
-            .thenReturn(result);
+        when(enforcerMock.preEntitlement(any(Consumer.class), any(Pool.class), anyInt(),
+            any(CallerType.class))).thenReturn(result);
 
         when(result.isSuccessful()).thenReturn(true);
 
@@ -498,8 +499,8 @@ public class PoolManagerTest {
             anyBoolean(), anyBoolean())).thenReturn(pools);
 
         when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(pool1);
-        when(enforcerMock.preEntitlement(any(Consumer.class), any(Pool.class), anyInt()))
-            .thenReturn(result);
+        when(enforcerMock.preEntitlement(any(Consumer.class), any(Pool.class), anyInt(),
+            any(CallerType.class))).thenReturn(result);
 
         when(result.isSuccessful()).thenReturn(true);
 
