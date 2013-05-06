@@ -349,13 +349,10 @@ public class X509V3ExtensionUtil extends X509Util{
             content.setVendor(pc.getContent().getVendor());
             content.setPath(contentPath);
             content.setGpgUrl(pc.getContent().getGpgUrl());
-            Set<Arch> archSet = new HashSet<Arch>();
 
-            List<Arch> archList = new ArrayList<Arch>();
+            List<String> archList = new ArrayList<String>();
             for (org.candlepin.model.Arch arch : pc.getContent().getArches()) {
-                Arch a = new Arch();
-                a.setLabel(arch.getLabel());
-                archList.add(a);
+                archList.add(arch.getLabel());
             }
             content.setArches(archList);
 
