@@ -37,4 +37,9 @@ public class ArchCurator extends AbstractHibernateCurator<Arch> {
             Arch.class).add(Restrictions.eq("label", label))
             .uniqueResult();
     }
+
+    /* FIXME: need a version of this that knows how to find
+     *        equilivent arches. ie, that i686 is also i586.
+     *        Ideally without needing to enumerate the known arches
+     */
 }
