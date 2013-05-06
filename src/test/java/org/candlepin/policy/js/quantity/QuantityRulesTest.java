@@ -86,6 +86,7 @@ public class QuantityRulesTest {
 
         pool.setEntitlements(entSet);
         pool.setProductAttribute("multi-entitlement", "yes", product.getId());
+        pool.setProductAttribute("stacking_id", "1", product.getId());
     }
 
     private Entitlement createValidEntitlement(Pool p) {

@@ -1079,7 +1079,7 @@ function createStackTracker(consumer, stackId) {
             }
 
             var enforcing = attribute in this.accumulatedValues;
-            log.debug("Enfocing " + attribute + ": " + enforcing);
+            log.debug("Enforcing " + attribute + ": " + enforcing);
             return enforcing;
         },
 
@@ -2057,64 +2057,46 @@ var Compliance = {
 var Quantity = {
     get_quantity_context: function() {
         context = JSON.parse(json_context);
+        context.pool = createPool(context.pool);
         return context;
     },
 
     get_suggested_quantity: function() {
         var context = Quantity.get_quantity_context();
-        var facts = context.consumerFacts;
-        var product_attrs = context.productAttributes;
-        var total_consumed = context.totalConsumed;
+        var pool = context.pool;
+        var consumer = context.consumer;
+
         var quantity = 1;
 
-        if (!Quantity.allows_multi_entitlement(product_attrs)) {
+        if (!Quantity.allows_multi_entitlement(pool)) {
             return quantity.toString();
         }
 
-        if (Quantity.is_virtual_machine(facts)) {
-            var allowed = Quantity.get_allowed_quantity_for_virtual(facts, product_attrs);
+        if (pool.hasProductAttribute("stacking_id")) {
+            var stackTracker = createStackTracker(consumer, pool.getProductAttribute("stacking_id"));
+
+            if (pool.getProductAttribute(INSTANCE_ATTRIBUTE)) {
+                stackTracker.instanceMultiplier = pool.getProductAttribute(INSTANCE_ATTRIBUTE);
+            }
+
+            if (pool.getAttribute(REQUIRES_HOST_ATTRIBUTE)) {
+                stackTracker.hostRestricted = pool.getAttribute(REQUIRES_HOST_ATTRIBUTE);
+            }
+
+            quantity = CoverageCalculator.getQuantityToCoverStack(stackTracker, pool, consumer);
         }
         else {
-            var allowed = Quantity.get_allowed_quantity_for_physical(facts, product_attrs);
+            quantity = 1;
         }
 
-        quantity = allowed - total_consumed;
-        if (quantity < 0) {
-            quantity = 0;
-        }
         return quantity.toString();
     },
 
-    allows_multi_entitlement: function(attrs) {
-        return "multi-entitlement" in attrs &&
-                Utils.equalsIgnoreCase(attrs["multi-entitlement"], "yes");
-    },
-
-    is_virtual_machine: function(facts) {
-        return (IS_VIRT_GUEST_FACT in facts && Utils.equalsIgnoreCase(
-                facts[IS_VIRT_GUEST_FACT], "true"));
-    },
-
-    get_allowed_quantity_for_virtual: function(facts, attrs) {
-        if (CPUS_ATTRIBUTE in attrs) {
-            var machine_val = Utils.get_float(facts, CPUS_FACT);
-            var product_val = Utils.get_float(attrs, CPUS_ATTRIBUTE);
-        }
-        else if (SOCKETS_ATTRIBUTE in attrs) {
-            var machine_val = Utils.get_float(facts, SOCKET_FACT);
-            var product_val = Utils.get_float(attrs, SOCKETS_ATTRIBUTE);
-        }
-        else {
-            return 1;
-        }
-        return Math.ceil(machine_val / product_val);
-    },
-
-    get_allowed_quantity_for_physical: function(facts, attrs) {
-        var machine_sockets = Utils.get_float(facts, SOCKET_FACT);
-        var product_sockets = Utils.get_float(attrs, SOCKETS_ATTRIBUTE);
-        return Math.ceil(machine_sockets / product_sockets);
-    },
+    allows_multi_entitlement: function(pool) {
+        return pool.hasProductAttribute("multi-entitlement") &&
+            Utils.equalsIgnoreCase(pool.getProductAttribute("multi-entitlement"),
+            "yes");
+    }
 }
 
 var Utils = {
