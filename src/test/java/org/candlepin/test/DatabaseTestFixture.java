@@ -34,6 +34,8 @@ import org.candlepin.guice.CandlepinSingletonScope;
 import org.candlepin.guice.TestPrincipalProviderSetter;
 import org.candlepin.model.ActivationKey;
 import org.candlepin.model.ActivationKeyCurator;
+import org.candlepin.model.Arch;
+import org.candlepin.model.ArchCurator;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
@@ -137,6 +139,7 @@ public class DatabaseTestFixture {
     protected EntitlementCertServiceAdapter entitlementCertService;
     protected CandlepinPoolManager poolManager;
     protected StatisticCurator statisticCurator;
+    protected ArchCurator archCurator;
     protected UniqueIdGenerator uniqueIdGenerator;
     protected UeberCertificateGenerator ueberCertGenerator;
     protected CandlepinSingletonScope cpSingletonScope;
@@ -207,6 +210,7 @@ public class DatabaseTestFixture {
             .getInstance(EntitlementCertServiceAdapter.class);
         poolManager = injector.getInstance(CandlepinPoolManager.class);
         statisticCurator = injector.getInstance(StatisticCurator.class);
+        archCurator = injector.getInstance(ArchCurator.class);
         i18n = injector.getInstance(I18n.class);
         uniqueIdGenerator = injector.getInstance(UniqueIdGenerator.class);
         ueberCertGenerator = injector.getInstance(UeberCertificateGenerator.class);
