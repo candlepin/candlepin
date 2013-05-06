@@ -29,7 +29,7 @@ import org.candlepin.util.RpmVersionComparator;
  *
  * Since the introduction of cert V3, we now have the concept of a certificate
  * version. When certificates are changed (i.e, new attributes), we will bump
- * the certificate's version.
+ * the certificate's version. See X509V3ExtenstionUtil
  *
  * This class defines what certificate version is required for a Product
  * based on its attributes. It has the ability to determine if a given
@@ -48,7 +48,7 @@ public class ProductVersionValidator {
     // Add any product atttribute version requirements here.
     static {
         PRODUCT_ATTR_VERSION_REQUIREMENTS.put("ram", "3.1");
-        PRODUCT_ATTR_VERSION_REQUIREMENTS.put("cores", "3.1");
+        PRODUCT_ATTR_VERSION_REQUIREMENTS.put("cores", "3.2");
     }
 
     private ProductVersionValidator() {
