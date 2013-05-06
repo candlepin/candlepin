@@ -198,9 +198,7 @@ public class PoolRules {
                             int virtLimit = Integer.parseInt(virtLimitStr);
                             if (config.standalone()) {
                                 // this is how we determined the quantity
-                                expectedQuantity =
-                                    existingPool.getSourceEntitlement().
-                                        getQuantity() * virtLimit;
+                                expectedQuantity = virtLimit;
                             }
                             else {
                                 // we need to see if a parent pool exists and has been

@@ -89,9 +89,9 @@ public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
         when(config.standalone()).thenReturn(true);
         enforcer.postEntitlement(consumer, postHelper, e);
 
-        // Pool quantity should be virt_limit * entitlement quantity:
+        // Pool quantity should be virt_limit:
         verify(postHelper).createHostRestrictedPool(eq(pool.getProductId()),
-            eq(pool), eq("50"));
+            eq(pool), eq("10"));
     }
 
     @Test
