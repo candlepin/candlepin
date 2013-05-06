@@ -28,11 +28,13 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Subscription;
+import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.pool.PoolHelper;
 import org.junit.Test;
 
@@ -231,4 +233,32 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         enforcer.postUnbind(consumer, postHelper, e);
         verify(poolManagerMock).setPoolQuantity(eq(virtBonusPool), eq(-1L));
     }
+
+    @Test
+    public void hostedVirtLimitDoesNotAlterQuantitiesForHostLimited() {
+        when(config.standalone()).thenReturn(false);
+        consumer.setType(new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
+
+        Pool virtBonusPool = setupVirtLimitPool();
+        virtBonusPool.setQuantity(100L);
+        virtBonusPool.setAttribute("host_limited", "true");
+        virtBonusPool.setAttribute("virt_only", "true");
+        virtBonusPool.setAttribute("virt_limit", "10");
+        virtBonusPool.setAttribute("pool_derived", "true");
+
+        Entitlement e = new Entitlement(virtBonusPool, consumer, new Date(), new Date(),
+            1);
+        PoolHelper postHelper = new PoolHelper(poolManagerMock, productCache, e);
+        List<Pool> poolList = new ArrayList<Pool>();
+        poolList.add(virtBonusPool);
+        when(poolManagerMock.lookupBySubscriptionId(eq(virtBonusPool.getSubscriptionId())))
+            .thenReturn(poolList);
+
+        enforcer.postEntitlement(consumer, postHelper, e);
+        verify(poolManagerMock, never()).updatePoolQuantity(eq(virtBonusPool), eq(-10L));
+
+        enforcer.postUnbind(consumer, postHelper, e);
+        verify(poolManagerMock, never()).updatePoolQuantity(eq(virtBonusPool), eq(10L));
+    }
+
 }
