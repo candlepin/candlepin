@@ -789,8 +789,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
             .thenReturn("3.2");
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
         when(entitlement.getConsumer().getFact("uname.machine")).thenReturn("x86_64");
-
         when(this.archCurator.lookupByLabel(any(String.class))).thenReturn(arch);
+
         subscription.getProduct().setAttribute("warning_period", "20");
         subscription.getProduct().setAttribute("sockets", "4");
         subscription.getProduct().setAttribute("ram", "8");
@@ -846,15 +846,14 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Map<String, Object> service = (Map<String, Object>) subs.get("service");
         assertEquals(service.get("level"), "slevel");
         assertEquals(service.get("type"), "stype");
-
         Map<String, Object> order = (Map<String, Object>) data.get("order");
         assertEquals(order.get("number"), subscription.getOrderNumber());
         assertTrue(((Integer) order.get("quantity")).intValue() ==
             subscription.getQuantity());
         assertNotNull(order.get("start"));
         assertNotNull(order.get("end"));
-        assertEquals(order.get("contract"), subscription.getContractNumber());
-        assertEquals(order.get("account"), subscription.getAccountNumber());
+//        assertEquals(order.get("contract"), subscription.getContractNumber());
+//        assertEquals(order.get("account"), subscription.getAccountNumber());
 
         List<Map<String, Object>> prods = (List<Map<String, Object>>) data.get("products");
         List<Map<String, Object>> contents = null;
@@ -868,6 +867,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             while (st.hasMoreElements()) {
                 assertTrue(((List) prod.get("architectures")).contains(st.nextElement()));
             }
+
             contents = (List<Map<String, Object>>) prod.get("content");
             for (Map<String, Object> cont : contents) {
                 assertEquals(cont.get("id"), CONTENT_ID);
@@ -879,6 +879,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
                 assertEquals(cont.get("path"), "prefix" + CONTENT_URL);
                 assertFalse((Boolean) cont.get("enabled"));
                 assertEquals(cont.get("metadata_expire"), 3200);
+
                 List<String> arches = new ArrayList<String>();
                 arches.add(ARCH_LABEL);
                 assertEquals(cont.get("arches"), arches);

@@ -14,7 +14,7 @@
  */
 package org.candlepin.json.model;
 
-import javax.persistence.Id;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;

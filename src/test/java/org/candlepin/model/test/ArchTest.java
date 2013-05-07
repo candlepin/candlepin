@@ -19,7 +19,6 @@ import static org.junit.Assert.*;
 import java.util.List;
 
 import org.candlepin.model.Arch;
-import org.candlepin.model.ConsumerType;
 import org.candlepin.test.DatabaseTestFixture;
 import org.junit.Test;
 
@@ -83,7 +82,7 @@ public class ArchTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testUsesContentFori686ForX86_64() {
+    public void testUsesContentFori686ForX8664() {
         Arch consumerArch = new Arch("x86_64", "x86_64");
         Arch contentArch = new Arch("i686", "i686");
         assertTrue(consumerArch.usesContentFor(contentArch));
@@ -106,7 +105,7 @@ public class ArchTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testUsesContentForx86_64ForAll() {
+    public void testUsesContentForx8664ForAll() {
         Arch consumerArch = new Arch("x86_64", "x86_64");
         // the magic "ALL" product arch
         Arch contentArch = new Arch("ALL", "ALL");

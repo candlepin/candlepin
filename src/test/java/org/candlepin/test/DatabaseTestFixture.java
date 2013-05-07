@@ -34,7 +34,6 @@ import org.candlepin.guice.CandlepinSingletonScope;
 import org.candlepin.guice.TestPrincipalProviderSetter;
 import org.candlepin.model.ActivationKey;
 import org.candlepin.model.ActivationKeyCurator;
-import org.candlepin.model.Arch;
 import org.candlepin.model.ArchCurator;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
