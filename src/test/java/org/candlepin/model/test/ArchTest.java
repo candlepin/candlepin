@@ -67,4 +67,29 @@ public class ArchTest extends DatabaseTestFixture {
                 "select arch from Arch as arch").getResultList();
         assertEquals(1, results.size());
     }
+
+    @Test
+    public void testUsesContentForExactMatch() {
+        Arch consumerArch = new Arch("i386", "i386");
+        Arch contentArch = new Arch("i386", "i386");
+        assertTrue(consumerArch.usesContentFor(contentArch));
+    }
+
+    @Test
+    public void testUsesContentForWrongArch() {
+        Arch consumerArch = new Arch("s390x", "s390x");
+        Arch contentArch = new Arch("x86_64", "x86_64");
+        assertFalse(consumerArch.usesContentFor(contentArch));
+    }
+
+    /* FIXME: other tests needed
+     * - i686 uses content for i386/i486/i586/i686
+     * - x86_64 uses content for i386/i486/i586/i686/x86_64
+     * - ppc64 uses content for ppc (?)
+     * - s390x uses content for s390?
+     * - any arch uses noarch content
+     *
+     * Can we reuse some of the test from say, PreEntitlementRulesTest.java ? They
+     * should probably get driven from the same data
+     */
 }

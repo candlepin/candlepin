@@ -71,5 +71,34 @@ public class Arch extends AbstractHibernateObject {
         this.label = label;
     }
 
+    /**
+     *
+     * @param incoming
+     * @return If the two arches are compatible
+     *
+     * Compare two Arch objects to see if they are considered
+     * compatible for the sake of running package content for
+     * one Arch
+     */
+    // I'm sure there is a better name here, but "isCompatible"
+    // isn't quite right.
+    public boolean usesContentFor(Arch incoming) {
+        boolean compatible = false;
+        // FIXME: hardcode exact matches on label
+        //        only atm
+        compatible = this.label.equals(incoming.label);
+
+        // FIXME: we may end up needing to compare to "ALL"
+        // as well.
+
+        // This could be some fancy db magic if someone were
+        // so included, but more than likely will just be
+        // some map look ups from a constant map.
+
+        // Use consumerArch.usesContentFor(contentArch), so
+        // i686Arch.usesContentFor(i386Arch) would return true, but
+        // i386Arch.usesContentFor(i686Arch) would return false.
+        return compatible;
+    }
 
 }
