@@ -103,6 +103,11 @@ public class Arch extends AbstractHibernateObject {
         String inLabel = incoming.getLabel();
         String ourLabel = this.getLabel();
 
+        // handle "ALL" arch, sigh
+        if (inLabel.equals("ALL")) {
+            return true;
+        }
+
         // Exact arch match
         if (ourLabel.equals(inLabel)) {
             return true;
