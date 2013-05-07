@@ -901,7 +901,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             .thenReturn("3.2");
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
         when(entitlement.getConsumer().getFact("uname.machine")).thenReturn("x86_64");
-        when(this.archCurator.lookupByLabel(ARCH_LABEL)).thenReturn(arch);
+        when(this.archCurator.lookupByLabel(any(String.class))).thenReturn(arch);
 
         subscription.getProduct().setAttribute("warning_period", "0");
         subscription.getProduct().setAttribute("management_enabled", "false");
@@ -958,7 +958,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             .thenReturn("3.2");
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
         when(entitlement.getConsumer().getFact("uname.machine")).thenReturn("x86_64");
-        when(this.archCurator.lookupByLabel(ARCH_LABEL)).thenReturn(arch);
+        when(this.archCurator.lookupByLabel(any(String.class))).thenReturn(arch);
 
         subscription.getProduct().setAttribute("management_enabled", "1");
         entitlement.getPool().setAttribute("virt_only", "1");
