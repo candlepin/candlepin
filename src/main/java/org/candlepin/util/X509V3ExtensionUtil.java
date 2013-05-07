@@ -444,9 +444,16 @@ public class X509V3ExtensionUtil extends X509Util{
                     canUse = true;
                 }
                 else {
-                    log.debug("can NOT use content " + pc.getContent().getLabel() +
+                    log.debug("_ca_ can NOT use content " + pc.getContent().getLabel() +
                               " for arch " + contentArch.getLabel());
                 }
+            }
+
+            if (arches.isEmpty()) {
+                // no arches specified, so we can use this for anything
+                log.debug("_ca_ content set " + pc.getContent().getLabel() +
+                    " does not specific content arches");
+                canUse = true;
             }
 
             // if we found a workable arch for this content, include it
