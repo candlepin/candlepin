@@ -171,11 +171,10 @@
             "gpg_url": "/path/to/awesomeos/gpg/",
             "metadata_expire": 3600
         },
-
         {
-            "name": "awesomeos-all-i386-content",
-            "id": 1113033,
-            "label": "awesomeos-all-i386-content",
+            "name": "awesomeos-i386-only-content",
+            "id": 38601,
+            "label": "awesomeos-i386-only-content",
             "type": "yum",
             "vendor": "Red Hat",
             "content_url": "/path/to/awesomeos/all",
@@ -184,14 +183,25 @@
             "metadata_expire": 3600
         },
         {
-            "name": "awesomeos-all-x86_64-content",
-            "id": 1113034,
-            "label": "awesomeos-all-x86_64-content",
+            "name": "awesomeos-x86_64-only-content",
+            "id": 6401,
+            "label": "awesomeos-x86_64-only-content",
             "type": "yum",
             "vendor": "Red Hat",
             "content_url": "/path/to/awesomeos/all",
             "gpg_url": "/path/to/awesomeos/gpg/",
             "arches": ["1"],
+            "metadata_expire": 3600
+        },
+        {
+            "name": "awesomeos-s390x-only--content",
+            "id": 39001,
+            "label": "awesomeos-s390x-only-content",
+            "type": "yum",
+            "vendor": "Red Hat",
+            "content_url": "/path/to/awesomeos/all",
+            "gpg_url": "/path/to/awesomeos/gpg/",
+            "arches": ["11"],
             "metadata_expire": 3600
         },
         {
@@ -777,7 +787,6 @@
                 "warning_period": 30
             },
             "content": [
-                [1113033, true],
                 [11113, true],
                 [0, false],
                 [1, true],
@@ -872,7 +881,6 @@
                 "multi-entitlement": "yes"
             },
             "content": [
-                [1113034, true],
                 [11113, true],
                 [0, false],
                 [1, true],
@@ -887,6 +895,74 @@
             "type": "MKT",
             "provided_products": [
                 "100000000000002"
+            ],
+            "attributes": {
+                "sockets": 1,
+                "warning_period": 30,
+                "stacking_id": 1,
+                "multi-entitlement": "yes"
+            }
+        },
+        {
+            "name": "Awesome OS for All Arch (ext no x86_64 content) Bits",
+            "id": "213412341234",
+            "version": "3.11",
+            "arch": "ALL",
+            "attributes": {
+                "sockets": 1,
+                "warning_period": 30,
+                "stacking_id": 1,
+                "multi-entitlement": "yes"
+            },
+            "content": [
+                [39001, true],
+                [0, false],
+                [1, true],
+                [11124, false]
+            ]
+        },
+        {
+            "name": "Awesome OS for All Arch (ext no x86_64 content)",
+            "id": "awesomeos-all-no-86_64-cont",
+            "version": "3.11",
+            "arch": "ALL",
+            "type": "MKT",
+            "provided_products": [
+                "213412341234"
+            ],
+            "attributes": {
+                "sockets": 1,
+                "warning_period": 30,
+                "stacking_id": 1,
+                "multi-entitlement": "yes"
+            }
+        },
+        {
+            "name": "Awesome OS for All Arch (just x86_64 content) Bits",
+            "id": "213412341235",
+            "version": "3.11",
+            "arch": "ALL",
+            "attributes": {
+                "sockets": 1,
+                "warning_period": 30,
+                "stacking_id": 1,
+                "multi-entitlement": "yes"
+            },
+            "content": [
+                [6401, true],
+                [0, false],
+                [1, true],
+                [11124, false]
+            ]
+        },
+        {
+            "name": "Awesome OS for All Arch (just x86_64 content)",
+            "id": "awesomeos-all-just-86_64-cont",
+            "version": "3.11",
+            "arch": "ALL",
+            "type": "MKT",
+            "provided_products": [
+                "213412341235"
             ],
             "attributes": {
                 "sockets": 1,
@@ -1021,9 +1097,7 @@
                 "warning_period": 30
             }
         },
-
-
-      {
+        {
             "name": "Awesome OS for x86_64/i686/ia64/ppc/ppc64/s390x/s390 Bits",
             "id": "100000000000011",
             "version": "3.11",
@@ -1238,7 +1312,6 @@
                 "806"
             ]
         },
-        // Test products for multi-attribute stacking tests.
         {
             "name": "Multi-Attribute Limited Product",
             "id": "900",
@@ -1250,7 +1323,6 @@
                 [1, true]
             ]
         },
-        // Test MKT products for multi-attribute stacking tests.
         {
             "name": "Multi-Attribute Stackable (2 sockets)",
             "id": "sock2-multiattr",
