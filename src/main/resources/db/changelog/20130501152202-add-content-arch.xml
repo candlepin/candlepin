@@ -46,6 +46,10 @@
             <changeSet id="20130501152202-5" author="alikins">
                 <comment>populate arch table</comment>
                 <insert tableName="cp_arch">
+                    <column name="id" value="0"/>
+                    <column name="label" value="ALL"/>
+                </insert>
+                <insert tableName="cp_arch">
                     <column name="id" value="1"/>
                     <column name="label" value="x86_64"/>
                 </insert>
