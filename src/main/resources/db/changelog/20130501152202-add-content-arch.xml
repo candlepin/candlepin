@@ -51,8 +51,43 @@
                 </insert>
                 <insert tableName="cp_arch">
                     <column name="id" value="2"/>
+                    <column name="label" value="i386"/>
+                </insert>
+                <insert tableName="cp_arch">
+                    <column name="id" value="3"/>
+                    <column name="label" value="i486"/>
+                </insert>
+                <insert tableName="cp_arch">
+                    <column name="id" value="4"/>
+                    <column name="label" value="i586"/>
+                </insert>
+                <insert tableName="cp_arch">
+                    <column name="id" value="5"/>
                     <column name="label" value="i686"/>
                 </insert>
-
+                <insert tableName="cp_arch">
+                    <column name="id" value="6"/>
+                    <column name="label" value="ppc"/>
+                </insert>
+                <insert tableName="cp_arch">
+                    <column name="id" value="7"/>
+                    <column name="label" value="ppc64"/>
+                </insert>
+                <insert tableName="cp_arch">
+                    <column name="id" value="8"/>
+                    <column name="label" value="ia64"/>
+                </insert>
+                <insert tableName="cp_arch">
+                    <column name="id" value="9"/>
+                    <column name="label" value="arm"/>
+                </insert>
+                <insert tableName="cp_arch">
+                    <column name="id" value="10"/>
+                    <column name="label" value="s390"/>
+                </insert>
+                <insert tableName="cp_arch">
+                    <column name="id" value="11"/>
+                    <column name="label" value="s390x"/>
+                </insert>
             </changeSet>
 </databaseChangeLog>
