@@ -254,8 +254,8 @@ public class QuantityRulesTest {
         pool.setProductAttribute(SOCKET_ATTRIBUTE, "2", product.getId());
 
         Entitlement e = TestUtil.createEntitlement(owner, consumer, pool, null);
-        e.setCreated(TestUtil.createDate(1985, 1, 1));
-        e.setEndDate(TestUtil.createDate(1986, 1, 1));
+        e.setCreated(TestUtil.createDate(9000, 1, 1));
+        e.setEndDate(TestUtil.createDate(9001, 1, 1));
         e.setQuantity(2);
 
         Set<Entitlement> ents = new HashSet<Entitlement>();

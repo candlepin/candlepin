@@ -15,6 +15,7 @@
 package org.candlepin.policy.js.quantity;
 
 import org.candlepin.model.Consumer;
+import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsonJsContext;
@@ -23,6 +24,10 @@ import org.candlepin.policy.js.RulesObjectMapper;
 import com.google.inject.Inject;
 
 import org.apache.log4j.Logger;
+
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * QuantityRules
@@ -43,8 +48,17 @@ public class QuantityRules {
 
     public long getSuggestedQuantity(Pool p, Consumer c) {
         JsonJsContext args = new JsonJsContext(mapper);
+
+        Set<Entitlement> validEntitlements = new HashSet<Entitlement>();
+        for (Entitlement e : c.getEntitlements()) {
+            if (e.getProductId().equals(p.getProductId()) && isValid(e)) {
+                validEntitlements.add(e);
+            }
+        }
+
         args.put("pool", p);
         args.put("consumer", c);
+        args.put("validEntitlements", validEntitlements);
         args.put("log", log, false);
 
         // Fun fact: All numbers in javascript (ECMAScript) are double-precision.
@@ -55,5 +69,10 @@ public class QuantityRules {
         // consistent.
         String q = jsRules.runJsFunction(String.class, "get_suggested_quantity", args);
         return Long.valueOf(q);
+    }
+
+    private boolean isValid(Entitlement e) {
+        Date now = new Date();
+        return now.after(e.getCreated()) && now.before(e.getEndDate());
     }
 }

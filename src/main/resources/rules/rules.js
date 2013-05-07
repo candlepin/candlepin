@@ -2065,6 +2065,7 @@ var Quantity = {
         var context = Quantity.get_quantity_context();
         var pool = context.pool;
         var consumer = context.consumer;
+        var validEntitlements = context.validEntitlements;
 
         var quantity = 1;
 
@@ -2073,14 +2074,12 @@ var Quantity = {
         }
 
         if (pool.hasProductAttribute("stacking_id")) {
-            var stackTracker = createStackTracker(consumer, pool.getProductAttribute("stacking_id"));
+            var stackTracker = createStackTrackerFromPool(pool, consumer);
 
-            if (pool.getProductAttribute(INSTANCE_ATTRIBUTE)) {
-                stackTracker.instanceMultiplier = pool.getProductAttribute(INSTANCE_ATTRIBUTE);
-            }
-
-            if (pool.getAttribute(REQUIRES_HOST_ATTRIBUTE)) {
-                stackTracker.hostRestricted = pool.getAttribute(REQUIRES_HOST_ATTRIBUTE);
+            for (var j = 0; j < validEntitlements.length; j++) {
+                var ent = validEntitlements[j];
+                ent.pool = createPool(ent.pool);
+                stackTracker.updateAccumulatedFromEnt(ent);
             }
 
             quantity = CoverageCalculator.getQuantityToCoverStack(stackTracker, pool, consumer);
