@@ -328,19 +328,24 @@ public class X509V3ExtensionUtil extends X509Util{
         Map<String, EnvironmentContent> promotedContent, Consumer consumer) {
 
         List<Content> toReturn = new ArrayList<Content>();
+        //List<String> archList = new ArrayList<String>();
 
         boolean enableEnvironmentFiltering = config.environmentFilteringEnabled();
-        /* FIXME: make this a feature flag in the config */
-        boolean enabledContentArchFiltering = true;
+
 
         // for comparison with content
 
 
         String consumerArchLabel = consumer.getFact(ARCH_FACT);
         org.candlepin.model.Arch consumerArch = archCurator.lookupByLabel(consumerArchLabel);
+        log.debug("_ca_ consumerArch: " + consumerArch);
+        log.debug("_ca_ consumerArchLabel: " + consumerArchLabel);
 
+        // filter productContent
+        //   return only the contents that are arch approriate
+        Set<ProductContent> archApproriateProductContent = filterProductContentByContentArch(productContent, consumerArch);
 
-        for (ProductContent pc : productContent) {
+        for (ProductContent pc : archApproriateProductContent) {
             Content content = new Content();
             if (enableEnvironmentFiltering) {
                 if (consumer.getEnvironment() != null && !promotedContent.containsKey(
@@ -351,22 +356,8 @@ public class X509V3ExtensionUtil extends X509Util{
                 }
             }
 
-            // Filter non applicable arches here?
-            // FIXME: We could potentially filter content by arch earlier than
-            //        this, potentially as early as ProductServiceAdapter
-            Set<org.candlepin.model.Arch> arches = pc.getContent().getArches();
-            if (enabledContentArchFiltering) {
-                for (org.candlepin.model.Arch contentArch : arches) {
-                    if (!consumerArch.usesContentFor(contentArch)) {
-                        // The arch of this consumer is not compatible with the
-                        // arch of this content, so dont include it in the entitlement cert
-                        // so we dont create a repo for it
-                        continue;
-                    }
-                }
-            }
 
-            // augment the content path with the prefix if it is passed in
+            // Augment the content path with the prefix if it is passed in
             String contentPath = this.createFullContentPath(contentPrefix, pc);
 
             content.setId(pc.getContent().getId());
@@ -377,6 +368,8 @@ public class X509V3ExtensionUtil extends X509Util{
             content.setPath(contentPath);
             content.setGpgUrl(pc.getContent().getGpgUrl());
 
+            // We filter content objects in filterProductContentByContentArch,
+            // do we need to still filter out arches?
             List<String> archList = new ArrayList<String>();
             for (org.candlepin.model.Arch arch : pc.getContent().getArches()) {
                 archList.add(arch.getLabel());
@@ -419,6 +412,60 @@ public class X509V3ExtensionUtil extends X509Util{
         }
         return toReturn;
     }
+
+    public Set<ProductContent> filterProductContentByContentArch(Set<ProductContent> pcSet,
+            org.candlepin.model.Arch consumerArch){
+        Set<ProductContent> filtered = new HashSet<ProductContent>();
+
+        /* FIXME: make this a feature flag in the config */
+        boolean enabledContentArchFiltering = true;
+        if (!enabledContentArchFiltering) {
+            return pcSet;
+        }
+
+        for (ProductContent pc : pcSet) {
+            boolean canUse = false;
+            Set<org.candlepin.model.Arch> arches = pc.getContent().getArches();
+
+            log.debug("_ca_ product_content arch list for " + pc.getContent().getLabel());
+            for (org.candlepin.model.Arch logArch: pc.getContent().getArches()) {
+                log.debug("_ca_ \t arch: " + logArch.toString());
+            }
+
+            for (org.candlepin.model.Arch contentArch : arches) {
+                log.debug("_ca_ Checking consumerArch " + consumerArch.getLabel() +
+                          " can use content for " + contentArch.getLabel());
+                log.debug("_ca_ consumerArch.usesContentFor(contentArch) " +
+                          consumerArch.usesContentFor(contentArch));
+                if (consumerArch.usesContentFor(contentArch)) {
+                    log.debug("_ca_ can use content " + pc.getContent().getLabel() +
+                        " for arch " + contentArch.getLabel());
+                    //filtered.add(pc);
+                    canUse = true;
+                }
+                else {
+                    log.debug("can NOT use content " + pc.getContent().getLabel() +
+                              " for arch " + contentArch.getLabel());
+                }
+            }
+
+            // if we found a workable arch for this content, include it
+            if (canUse) {
+                filtered.add(pc);
+                log.debug("_ca_ Including content " + pc.getContent().getLabel());
+            }
+            else {
+                log.debug("_ca_ Skipping content " + pc.getContent().getLabel());
+            }
+
+        }
+        log.debug("_ca_ arch approriate content for " + consumerArch.getLabel() + " includes: ");
+        for (ProductContent apc : filtered) {
+            log.debug("_ca_ \t " + apc.toString());
+        }
+        return filtered;
+    }
+
 
     /**
      * Scan the product content looking for any which modify some other product. If found
