@@ -47,8 +47,8 @@ public class QuantityRulesTest {
 
     private static final String SOCKET_ATTRIBUTE = "sockets";
     private static final String SOCKET_FACT = "cpu.cpu_socket(s)";
-    private static final String CPUS_ATTRIBUTE = "vcpu";
-    private static final String CPUS_FACT = "cpu.cpu(s)";
+    private static final String CORES_ATTRIBUTE = "cores";
+    private static final String CORES_FACT = "cpu.core(s)_per_socket";
     private static final String IS_VIRT = "virt.is_guest";
 
     private Consumer consumer;
@@ -146,8 +146,8 @@ public class QuantityRulesTest {
     @Test
     public void testVirtDefaultToNumCpusByVcpuCount() {
         consumer.setFact(IS_VIRT, "true");
-        consumer.setFact(CPUS_FACT, "8");
-        pool.setProductAttribute(CPUS_ATTRIBUTE, "4", product.getId());
+        consumer.setFact(CORES_FACT, "8");
+        pool.setProductAttribute(CORES_ATTRIBUTE, "4", product.getId());
         assertEquals(2L, quantityRules.getSuggestedQuantity(pool, consumer));
     }
 
@@ -163,23 +163,23 @@ public class QuantityRulesTest {
     public void testVirtUses1IfNoSocketsAndNoVcpu() {
         consumer.setFact(IS_VIRT, "true");
         consumer.setFact(SOCKET_FACT, "4");
-        consumer.setFact(CPUS_FACT, "8");
+        consumer.setFact(CORES_FACT, "8");
         assertEquals(1L, quantityRules.getSuggestedQuantity(pool, consumer));
     }
 
     @Test
     public void testVirtRoundsUp() {
         consumer.setFact(IS_VIRT, "true");
-        consumer.setFact(CPUS_FACT, "8");
-        pool.setProductAttribute(CPUS_ATTRIBUTE, "6", product.getId());
+        consumer.setFact(CORES_FACT, "8");
+        pool.setProductAttribute(CORES_ATTRIBUTE, "6", product.getId());
         assertEquals(2L, quantityRules.getSuggestedQuantity(pool, consumer));
     }
 
     @Test
     public void testVirtAccountsForCurrentlyConsumed() {
         consumer.setFact(IS_VIRT, "true");
-        consumer.setFact(CPUS_FACT, "4");
-        pool.setProductAttribute(CPUS_ATTRIBUTE, "1", product.getId());
+        consumer.setFact(CORES_FACT, "4");
+        pool.setProductAttribute(CORES_ATTRIBUTE, "1", product.getId());
 
         Entitlement e = createValidEntitlement(pool);
         e.setQuantity(2);
@@ -265,4 +265,5 @@ public class QuantityRulesTest {
 
         assertEquals(2L, quantityRules.getSuggestedQuantity(pool, consumer));
     }
+
 }

@@ -33,7 +33,6 @@ var RAM_FACT = "memory.memtotal";
 var CORES_FACT = "cpu.core(s)_per_socket";
 var ARCH_FACT = "uname.machine";
 var IS_VIRT_GUEST_FACT = "virt.is_guest";
-var CPUS_FACT = "cpu.cpu(s)"
 var PROD_ARCHITECTURE_SEPARATOR = ",";
 
 // Product attribute names
@@ -43,7 +42,6 @@ var ARCH_ATTRIBUTE = "arch";
 var RAM_ATTRIBUTE = "ram";
 var INSTANCE_ATTRIBUTE = "instance_multiplier";
 var REQUIRES_HOST_ATTRIBUTE = "requires_host";
-var CPUS_ATTRIBUTE = "vcpu";
 
 /**
  *  These product attributes are considered when
