@@ -82,6 +82,28 @@ public class ArchTest extends DatabaseTestFixture {
         assertFalse(consumerArch.usesContentFor(contentArch));
     }
 
+    @Test
+    public void testUsesContentFori686ForX86_64() {
+        Arch consumerArch = new Arch("x86_64", "x86_64");
+        Arch contentArch = new Arch("i686", "i686");
+        assertTrue(consumerArch.usesContentFor(contentArch));
+    }
+
+    @Test
+    public void testUsesContentFori386Fori686() {
+        Arch consumerArch = new Arch("i686", "i686");
+        Arch contentArch = new Arch("i386", "i386");
+        assertTrue(consumerArch.usesContentFor(contentArch));
+    }
+
+    @Test
+    public void testUsesContentFori686Fori586() {
+        // an i586 can't use i686 content. Not that
+        // RHEL or fedora run on an i586, but...
+        Arch consumerArch = new Arch("i586", "i586");
+        Arch contentArch = new Arch("i686", "i686");
+        assertFalse(consumerArch.usesContentFor(contentArch));
+    }
     /* FIXME: other tests needed
      * - i686 uses content for i386/i486/i586/i686
      * - x86_64 uses content for i386/i486/i586/i686/x86_64

@@ -15,6 +15,9 @@
 package org.candlepin.model;
 
 
+import java.util.Arrays;
+import java.util.List;
+
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -36,6 +39,11 @@ public class Arch extends AbstractHibernateObject {
     private String id;
 
     private String label;
+
+    private static String[] x86LabelStrs = {"i386", "i486", "i586", "i686"};
+    private static List<String> x86Labels = Arrays.asList(x86LabelStrs);
+    private static String[] ppcLabelStrs = {"ppc", "ppc64"};
+    private static List<String> ppcLabels = Arrays.asList(ppcLabelStrs);
 
     public Arch() {
 
@@ -91,7 +99,42 @@ public class Arch extends AbstractHibernateObject {
         boolean compatible = false;
         // FIXME: hardcode exact matches on label
         //        only atm
-        compatible = this.label.equals(incoming.label);
+
+        String inLabel = incoming.getLabel();
+        String ourLabel = this.getLabel();
+
+        // Exact arch match
+        if (ourLabel.equals(inLabel)) {
+            return true;
+        }
+
+        // x86_64 can use content for i386 etc
+        if (ourLabel.equals("x86_64")) {
+            if (x86Labels.contains(inLabel)) {
+                return true;
+            }
+        }
+
+        // i686 can run all x86 arches
+        if (ourLabel.equals("i686")) {
+            if (x86Labels.contains(inLabel)) {
+                return true;
+            }
+        }
+
+        // ppc64 can run ppc. Mostly...
+        if (ourLabel.equals("ppc64")) {
+            if (ppcLabels.contains(inLabel)) {
+                return true;
+            }
+        }
+
+        /* In theory, ia64 can run x86 and x86_64 content.
+         * I think s390x can use s390 content as well.
+         * ppc only runs ppc
+         *
+         * But for now, we only except exact matches.
+         */
 
         // FIXME: we may end up needing to compare to "ALL"
         // as well.
