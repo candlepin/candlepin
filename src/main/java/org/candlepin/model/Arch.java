@@ -71,6 +71,11 @@ public class Arch extends AbstractHibernateObject {
         this.label = label;
     }
 
+    @Override
+    public String toString() {
+        return "Arch [id = " + id + ", label = " + label + "]";
+    }
+
     /**
      *
      * @param incoming
