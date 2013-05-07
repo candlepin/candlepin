@@ -36,6 +36,7 @@ import java.util.zip.InflaterOutputStream;
 import org.apache.log4j.Logger;
 import org.candlepin.config.Config;
 import org.candlepin.json.model.Arch;
+import org.candlepin.model.ArchCurator;
 import org.candlepin.json.model.Content;
 import org.candlepin.json.model.EntitlementBody;
 import org.candlepin.json.model.Order;
@@ -65,18 +66,22 @@ public class X509V3ExtensionUtil extends X509Util{
     private static Logger log = Logger.getLogger(X509V3ExtensionUtil.class);
     private Config config;
     private EntitlementCurator entCurator;
+    private ArchCurator archCurator;
     private String thisVersion = "3.2";
 
     private long pathNodeId = 0;
     private long huffNodeId = 0;
     private static final Object END_NODE = new Object();
     private static boolean treeDebug = false;
+    public static final String ARCH_FACT = "uname.machine";
 
     @Inject
-    public X509V3ExtensionUtil(Config config, EntitlementCurator entCurator) {
+    public X509V3ExtensionUtil(Config config, EntitlementCurator entCurator,
+        ArchCurator archCurator) {
         // Output everything in UTC
         this.config = config;
         this.entCurator = entCurator;
+        this.archCurator = archCurator;
     }
 
     public Set<X509ExtensionWrapper> getExtensions(Set<Product> products,
@@ -325,6 +330,15 @@ public class X509V3ExtensionUtil extends X509Util{
         List<Content> toReturn = new ArrayList<Content>();
 
         boolean enableEnvironmentFiltering = config.environmentFilteringEnabled();
+        /* FIXME: make this a feature flag in the config */
+        boolean enabledContentArchFiltering = true;
+
+        // for comparison with content
+
+
+        String consumerArchLabel = consumer.getFact(ARCH_FACT);
+        org.candlepin.model.Arch consumerArch = archCurator.lookupByLabel(consumerArchLabel);
+
 
         for (ProductContent pc : productContent) {
             Content content = new Content();
@@ -338,6 +352,19 @@ public class X509V3ExtensionUtil extends X509Util{
             }
 
             // Filter non applicable arches here?
+            // FIXME: We could potentially filter content by arch earlier than
+            //        this, potentially as early as ProductServiceAdapter
+            Set<org.candlepin.model.Arch> arches = pc.getContent().getArches();
+            if (enabledContentArchFiltering) {
+                for (org.candlepin.model.Arch contentArch : arches) {
+                    if (!consumerArch.usesContentFor(contentArch)) {
+                        // The arch of this consumer is not compatible with the
+                        // arch of this content, so dont include it in the entitlement cert
+                        // so we dont create a repo for it
+                        continue;
+                    }
+                }
+            }
 
             // augment the content path with the prefix if it is passed in
             String contentPath = this.createFullContentPath(contentPrefix, pc);

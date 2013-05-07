@@ -54,6 +54,7 @@ import java.util.zip.InflaterOutputStream;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Config;
 import org.candlepin.model.Arch;
+import org.candlepin.model.ArchCurator;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
@@ -111,7 +112,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     private static final Long CONTENT_METADATA_EXPIRE = 3200L;
     private static final String ENTITLEMENT_QUANTITY = "10";
     private static final String REQUIRED_TAGS = "TAG1,TAG2";
-    private static final String ARCH_LABEL = "s390x";
+    private static final String ARCH_LABEL = "x86_64";
 
     private DefaultEntitlementCertServiceAdapter certServiceAdapter;
     @Mock
@@ -124,6 +125,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
     private EntitlementCurator entCurator;
     @Mock
     private KeyPairCurator keyPairCurator;
+    @Mock
+    private ArchCurator archCurator;
 
     @Mock
     private Consumer consumer;
@@ -142,6 +145,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     private Owner owner;
     private Set<Content> superContent;
     private Set<Content> largeContent;
+    private Arch arch;
 
     private String[] testUrls = {"/content/dist/rhel/$releasever/$basearch/os",
         "/content/dist/rhel/$releasever/$basearch/debug",
@@ -155,7 +159,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void setUp() {
         Config config = new CandlepinCommonTestConfig();
         extensionUtil = new X509ExtensionUtil(config);
-        v3extensionUtil = new X509V3ExtensionUtil(config, entCurator);
+        v3extensionUtil = new X509V3ExtensionUtil(config, entCurator, archCurator);
 
         certServiceAdapter = new DefaultEntitlementCertServiceAdapter(
             mockedPKI, extensionUtil, v3extensionUtil,
@@ -164,6 +168,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
             config);
 
+        arch = new Arch(ARCH_LABEL, ARCH_LABEL);
 
         product = new Product("12345", "a product", "variant", "version",
             "arch", "SVC");
@@ -227,8 +232,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Content c = new Content(name, id, label, type, vendor, url, gpgUrl);
 
         /* FIXME: use Arch we create in database test fixture */
-        Arch arch = new Arch();
-        arch.setLabel(archLabel);
         c.setArches(Collections.singleton(arch));
         return c;
     }
@@ -785,7 +788,9 @@ public class DefaultEntitlementCertServiceAdapterTest {
         when(entitlement.getConsumer().getFact("system.certificate_version"))
             .thenReturn("3.2");
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
+        when(entitlement.getConsumer().getFact("uname.machine")).thenReturn("x86_64");
 
+        when(this.archCurator.lookupByLabel(any(String.class))).thenReturn(arch);
         subscription.getProduct().setAttribute("warning_period", "20");
         subscription.getProduct().setAttribute("sockets", "4");
         subscription.getProduct().setAttribute("ram", "8");
@@ -895,6 +900,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         when(entitlement.getConsumer().getFact("system.certificate_version"))
             .thenReturn("3.2");
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
+        when(entitlement.getConsumer().getFact("uname.machine")).thenReturn("x86_64");
+        when(this.archCurator.lookupByLabel(ARCH_LABEL)).thenReturn(arch);
 
         subscription.getProduct().setAttribute("warning_period", "0");
         subscription.getProduct().setAttribute("management_enabled", "false");
@@ -950,6 +957,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         when(entitlement.getConsumer().getFact("system.certificate_version"))
             .thenReturn("3.2");
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
+        when(entitlement.getConsumer().getFact("uname.machine")).thenReturn("x86_64");
+        when(this.archCurator.lookupByLabel(ARCH_LABEL)).thenReturn(arch);
 
         subscription.getProduct().setAttribute("management_enabled", "1");
         entitlement.getPool().setAttribute("virt_only", "1");
@@ -1013,6 +1022,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         product.setContent(superContent);
         when(entitlement.getConsumer().getFact("system.certificate_version"))
             .thenReturn("3.2");
+        when(entitlement.getConsumer().getFact("uname.machine")).thenReturn("x86_64");
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
 
         Set<X509ByteExtensionWrapper> byteExtensions =
