@@ -35,7 +35,7 @@ import java.util.zip.InflaterOutputStream;
 
 import org.apache.log4j.Logger;
 import org.candlepin.config.Config;
-import org.candlepin.json.model.Arch;
+import org.candlepin.model.Arch;
 import org.candlepin.model.ArchCurator;
 import org.candlepin.json.model.Content;
 import org.candlepin.json.model.EntitlementBody;
@@ -307,43 +307,62 @@ public class X509V3ExtensionUtil extends X509Util{
             product.getAttributeValue("version") : "";
         toReturn.setVersion(version);
 
+        // upcast arch labels to arch objects
+        Set<Arch> productArchSet = new HashSet<Arch>();
+
         String arch = product.hasAttribute("arch") ?
             product.getAttributeValue("arch") : "";
+
+        log.debug("_ca_ product arch attribute value: " + arch);
+
         StringTokenizer st = new StringTokenizer(arch, ",");
         List<String> archList = new ArrayList<String>();
         while (st.hasMoreElements()) {
-            archList.add((String) st.nextElement());
+            String archLabel = (String) st.nextElement();
+            log.debug("_ca_ product arch attribute strink token: " + archLabel);
+            archList.add(archLabel);
+
+            log.debug("_ca_ product arch label " + archLabel);
+            Arch productArch = archCurator.lookupByLabel(archLabel);
+            if (productArch != null) {
+                productArchSet.add(productArch);
+            }
+            else {
+                log.debug("_ca_ archLabel " + archLabel + " not found by archCurator");
+            }
         }
         toReturn.setArchitectures(archList);
 
         toReturn.setContent(createContent(filterProductContent(product, ent),
-            contentPrefix, promotedContent, consumer));
+            contentPrefix, promotedContent, consumer, productArchSet));
 
         return toReturn;
     }
 
-
+    /*
+     * createContent
+     *
+     * productArchList is a list of arch strings parse from
+     *   product attributes.
+     */
     public List<Content> createContent(
         Set<ProductContent> productContent, String contentPrefix,
-        Map<String, EnvironmentContent> promotedContent, Consumer consumer) {
+        Map<String, EnvironmentContent> promotedContent,
+        Consumer consumer,
+        Set<Arch> productArchSet) {
 
         List<Content> toReturn = new ArrayList<Content>();
-        //List<String> archList = new ArrayList<String>();
 
         boolean enableEnvironmentFiltering = config.environmentFilteringEnabled();
 
-
-        // for comparison with content
-
-
         String consumerArchLabel = consumer.getFact(ARCH_FACT);
-        org.candlepin.model.Arch consumerArch = archCurator.lookupByLabel(consumerArchLabel);
+        Arch consumerArch = archCurator.lookupByLabel(consumerArchLabel);
         log.debug("_ca_ consumerArch: " + consumerArch);
         log.debug("_ca_ consumerArchLabel: " + consumerArchLabel);
 
-        // filter productContent
-        //   return only the contents that are arch approriate
-        Set<ProductContent> archApproriateProductContent = filterProductContentByContentArch(productContent, consumerArch);
+        //   Return only the contents that are arch approriate
+        Set<ProductContent> archApproriateProductContent =
+            filterContentByContentArch(productContent, consumerArch, productArchSet);
 
         for (ProductContent pc : archApproriateProductContent) {
             Content content = new Content();
@@ -355,7 +374,6 @@ public class X509V3ExtensionUtil extends X509Util{
                     continue;
                 }
             }
-
 
             // Augment the content path with the prefix if it is passed in
             String contentPath = this.createFullContentPath(contentPrefix, pc);
@@ -371,7 +389,7 @@ public class X509V3ExtensionUtil extends X509Util{
             // We filter content objects in filterProductContentByContentArch,
             // do we need to still filter out arches?
             List<String> archList = new ArrayList<String>();
-            for (org.candlepin.model.Arch arch : pc.getContent().getArches()) {
+            for (Arch arch : pc.getContent().getArches()) {
                 archList.add(arch.getLabel());
             }
             content.setArches(archList);
@@ -413,8 +431,8 @@ public class X509V3ExtensionUtil extends X509Util{
         return toReturn;
     }
 
-    public Set<ProductContent> filterProductContentByContentArch(Set<ProductContent> pcSet,
-            org.candlepin.model.Arch consumerArch){
+    public Set<ProductContent> filterContentByContentArch(Set<ProductContent> pcSet,
+            Arch consumerArch, Set<Arch> productArchSet) {
         Set<ProductContent> filtered = new HashSet<ProductContent>();
 
         /* FIXME: make this a feature flag in the config */
@@ -423,38 +441,49 @@ public class X509V3ExtensionUtil extends X509Util{
             return pcSet;
         }
 
+        log.debug("_ca_ productArchSet " + productArchSet.toString());
+
         for (ProductContent pc : pcSet) {
             boolean canUse = false;
-            Set<org.candlepin.model.Arch> arches = pc.getContent().getArches();
+            Set<Arch> arches = pc.getContent().getArches();
 
             log.debug("_ca_ product_content arch list for " + pc.getContent().getLabel());
-            for (org.candlepin.model.Arch logArch: pc.getContent().getArches()) {
+            for (Arch logArch : pc.getContent().getArches()) {
                 log.debug("_ca_ \t arch: " + logArch.toString());
             }
 
-            for (org.candlepin.model.Arch contentArch : arches) {
+            if (arches.isEmpty()) {
+                Product product = pc.getProduct();
+                // no arches specified
+                log.debug("_ca_ content set " + pc.getContent().getLabel() +
+                    " does not specific content arches");
+
+                // so use the arches from the product
+                arches.addAll(productArchSet);
+                log.debug("_ca_so using the arches from the product " + product.toString());
+                for (Arch productArch : arches) {
+                    log.debug("_ca_ \t arch from product: " + productArch.toString());
+                }
+            }
+
+            for (Arch contentArch : arches) {
                 log.debug("_ca_ Checking consumerArch " + consumerArch.getLabel() +
                           " can use content for " + contentArch.getLabel());
                 log.debug("_ca_ consumerArch.usesContentFor(contentArch) " +
                           consumerArch.usesContentFor(contentArch));
                 if (consumerArch.usesContentFor(contentArch)) {
-                    log.debug("_ca_ can use content " + pc.getContent().getLabel() +
+                    log.debug("_ca_ CAN use content " + pc.getContent().getLabel() +
                         " for arch " + contentArch.getLabel());
                     //filtered.add(pc);
                     canUse = true;
                 }
                 else {
-                    log.debug("_ca_ can NOT use content " + pc.getContent().getLabel() +
+                    log.debug("_ca_ CAN NOT use content " + pc.getContent().getLabel() +
                               " for arch " + contentArch.getLabel());
                 }
             }
 
-            if (arches.isEmpty()) {
-                // no arches specified, so we can use this for anything
-                log.debug("_ca_ content set " + pc.getContent().getLabel() +
-                    " does not specific content arches");
-                canUse = true;
-            }
+
 
             // if we found a workable arch for this content, include it
             if (canUse) {
@@ -466,7 +495,8 @@ public class X509V3ExtensionUtil extends X509Util{
             }
 
         }
-        log.debug("_ca_ arch approriate content for " + consumerArch.getLabel() + " includes: ");
+        log.debug("_ca_ arch approriate content for " +
+                  consumerArch.getLabel() + " includes: ");
         for (ProductContent apc : filtered) {
             log.debug("_ca_ \t " + apc.toString());
         }
