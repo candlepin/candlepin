@@ -94,12 +94,12 @@ public class PoolResourceTest extends DatabaseTestFixture {
         poolCurator.create(pool2);
         poolCurator.create(pool3);
 
-        when(attrUtil.addCalculatedAttributes(eq(pool1), any(Consumer.class),
-            eq(adminPrincipal))).thenReturn(pool1);
-        when(attrUtil.addCalculatedAttributes(eq(pool2), any(Consumer.class),
-            eq(adminPrincipal))).thenReturn(pool2);
-        when(attrUtil.addCalculatedAttributes(eq(pool3), any(Consumer.class),
-            eq(adminPrincipal))).thenReturn(pool3);
+        when(attrUtil.addCalculatedAttributes(eq(pool1), any(Consumer.class)))
+            .thenReturn(pool1);
+        when(attrUtil.addCalculatedAttributes(eq(pool2), any(Consumer.class)))
+            .thenReturn(pool2);
+        when(attrUtil.addCalculatedAttributes(eq(pool3), any(Consumer.class)))
+            .thenReturn(pool3);
 
         poolResource = new PoolResource(poolCurator, consumerCurator, ownerCurator,
             statisticCurator, i18n, injector.getInstance(EventSink.class), poolManager,
@@ -182,7 +182,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
         assertEquals(1, pools.size());
 
         verify(attrUtil).addCalculatedAttributes(any(Pool.class),
-            eq(passConsumer), eq(adminPrincipal));
+            eq(passConsumer));
     }
 
     @Test(expected = ForbiddenException.class)
@@ -208,7 +208,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
         assertEquals(2, pools.size());
 
         verify(attrUtil, times(2)).addCalculatedAttributes(any(Pool.class),
-            eq(passConsumer), eq(adminPrincipal));
+            eq(passConsumer));
     }
 
     @Test(expected = NotFoundException.class)
@@ -285,9 +285,22 @@ public class PoolResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testCalculatedAttributesAbsent() {
-        when(attrUtil.addCalculatedAttributes(eq(pool1), any(String.class),
-            eq(adminPrincipal))).thenReturn(pool1);
+        when(attrUtil.addCalculatedAttributes(eq(pool1), any(Consumer.class)))
+            .thenReturn(pool1);
         Pool p = poolResource.getPool(pool1.getId(), null, adminPrincipal);
         assertNull(p.getCalculatedAttributes());
+    }
+
+    @Test(expected = ForbiddenException.class)
+    public void testUnauthorizedUserRequestingPool() {
+        Owner owner2 = createOwner();
+        ownerCurator.create(owner2);
+        poolResource.getPool(pool1.getId(), passConsumer.getUuid(),
+            setupPrincipal(owner2, Access.NONE));
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void testUnknownConsumerRequestingPool() {
+        poolResource.getPool(pool1.getId(), "xyzzy", adminPrincipal);
     }
 }

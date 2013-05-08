@@ -28,6 +28,7 @@ import org.candlepin.auth.interceptor.Verify;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.CandlepinException;
+import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.IseException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.ActivationKey;
@@ -597,9 +598,15 @@ public class OwnerResource {
                 throw new NotFoundException(i18n.tr("consumer: {0} not found",
                     consumerUuid));
             }
+
             if (!c.getOwner().getId().equals(owner.getId())) {
                 throw new BadRequestException(
                     "Consumer specified does not belong to owner on path");
+            }
+
+            if (!principal.canAccess(c, Access.READ_ONLY)) {
+                throw new ForbiddenException(i18n.tr("User {0} cannot access consumer {1}",
+                    principal.getPrincipalName(), c.getUuid()));
             }
         }
 
@@ -608,7 +615,7 @@ public class OwnerResource {
 
         if (c != null) {
             for (Pool p : poolList) {
-                p = calculatedAttributesUtil.addCalculatedAttributes(p, c, principal);
+                p = calculatedAttributesUtil.addCalculatedAttributes(p, c);
             }
         }
 

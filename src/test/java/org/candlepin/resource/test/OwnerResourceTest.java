@@ -453,6 +453,27 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     }
 
     @Test(expected = ForbiddenException.class)
+    public void testConsumerListPoolsCannotAccessOtherConsumer() {
+        Product p = TestUtil.createProduct();
+        productCurator.create(p);
+        Pool pool1 = TestUtil.createPool(owner, p);
+        poolCurator.create(pool1);
+
+        Consumer c = TestUtil.createConsumer(owner);
+        consumerTypeCurator.create(c.getType());
+        consumerCurator.create(c);
+
+        Principal principal = setupPrincipal(new ConsumerPrincipal(c));
+        securityInterceptor.enable();
+
+        Owner owner2 = createOwner();
+        ownerCurator.create(owner2);
+
+        List<Pool> pools = ownerResource.getPools(owner.getKey(), c.getUuid(),
+            p.getId(), true, null, setupPrincipal(owner2, Access.NONE));
+    }
+
+    @Test(expected = ForbiddenException.class)
     public void ownerCannotAccessAnotherOwnersConsumerAtomFeed() {
         Owner owner2 = new Owner("anotherOwner");
         ownerCurator.create(owner2);

@@ -20,10 +20,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.auth.Access;
-import org.candlepin.auth.Principal;
-import org.candlepin.exceptions.ForbiddenException;
-import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
@@ -49,7 +45,6 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
     private Owner owner1;
     private Product product1;
     private Pool pool1;
-    private Principal adminPrincipal;
     private Consumer consumer;
 
     @Mock private QuantityRules quantityRules;
@@ -67,16 +62,9 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
         pool1 = createPoolAndSub(owner1, product1, 500L,
             TestUtil.createDate(2000, 1, 1), TestUtil.createDate(3000, 1, 1));
 
-        adminPrincipal = setupPrincipal(owner1, Access.ALL);
-
         attrUtil = new CalculatedAttributesUtil(i18n, consumerCurator, quantityRules);
 
         consumer = createConsumer(owner1);
-    }
-
-    @Test(expected = NotFoundException.class)
-    public void testBadConsumerId() {
-        attrUtil.addCalculatedAttributes(pool1, "xyzzy", adminPrincipal);
     }
 
     @Test
@@ -84,20 +72,10 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
         when(quantityRules.getSuggestedQuantity(any(Pool.class), any(Consumer.class))).
             thenReturn(1L);
 
-        Pool p = attrUtil.addCalculatedAttributes(pool1, consumer.getUuid(),
-            adminPrincipal);
+        Pool p = attrUtil.addCalculatedAttributes(pool1, consumer);
         Map<String, String> attrs = p.getCalculatedAttributes();
         assertTrue(attrs.containsKey("suggested_quantity"));
         verify(quantityRules).getSuggestedQuantity(p, consumer);
-    }
-
-    @Test(expected = ForbiddenException.class)
-    public void testUnauthorizedUserRequestingPool() {
-        Owner owner2 = createOwner();
-        ownerCurator.create(owner2);
-
-        attrUtil.addCalculatedAttributes(pool1, consumer.getUuid(),
-            setupPrincipal(owner2, Access.NONE));
     }
 
     @Test
@@ -112,8 +90,7 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
         when(quantityRules.getSuggestedQuantity(any(Pool.class), any(Consumer.class))).
             thenReturn(1L);
 
-        Pool p = attrUtil.addCalculatedAttributes(pool2, consumer.getUuid(),
-            adminPrincipal);
+        Pool p = attrUtil.addCalculatedAttributes(pool2, consumer);
         Map<String, String> attrs = p.getCalculatedAttributes();
         assertEquals("12", attrs.get("quantity_increment"));
         verify(quantityRules).getSuggestedQuantity(p, consumer);

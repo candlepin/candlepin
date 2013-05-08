@@ -14,10 +14,6 @@
  */
 package org.candlepin.resource.util;
 
-import org.candlepin.auth.Access;
-import org.candlepin.auth.Principal;
-import org.candlepin.exceptions.ForbiddenException;
-import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Pool;
@@ -43,14 +39,9 @@ public class CalculatedAttributesUtil {
         this.quantityRules = quantityRules;
     }
 
-    public Pool addCalculatedAttributes(Pool p, Consumer c, Principal principal) {
+    public Pool addCalculatedAttributes(Pool p, Consumer c) {
         if (c == null) {
             return p;
-        }
-
-        if (!principal.canAccess(c, Access.READ_ONLY)) {
-            throw new ForbiddenException(i18n.tr("User {0} cannot access consumer {1}",
-                principal.getPrincipalName(), c.getUuid()));
         }
 
         p.addCalculatedAttribute("suggested_quantity",
@@ -61,18 +52,5 @@ public class CalculatedAttributesUtil {
                 p.getProductAttribute("instance_multiplier").getValue());
         }
         return p;
-    }
-
-    public Pool addCalculatedAttributes(Pool p, String consumerUuid, Principal principal) {
-        if (consumerUuid == null) {
-            return p;
-        }
-
-        Consumer c = consumerCurator.findByUuid(consumerUuid);
-        if (c == null) {
-            throw new NotFoundException(i18n.tr("consumer: {0} not found",
-                consumerUuid));
-        }
-        return addCalculatedAttributes(p, c, principal);
     }
 }

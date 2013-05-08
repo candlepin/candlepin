@@ -173,7 +173,7 @@ public class PoolResource {
 
         if (c != null) {
             for (Pool p : poolList) {
-                p = calculatedAttributesUtil.addCalculatedAttributes(p, c, principal);
+                p = calculatedAttributesUtil.addCalculatedAttributes(p, c);
             }
         }
 
@@ -197,9 +197,22 @@ public class PoolResource {
         @Context Principal principal) {
         Pool toReturn = poolCurator.find(id);
 
+        Consumer c = null;
+        if (consumerUuid != null) {
+            c = consumerCurator.findByUuid(consumerUuid);
+            if (c == null) {
+                throw new NotFoundException(i18n.tr("consumer: {0} not found",
+                    consumerUuid));
+            }
+
+            if (!principal.canAccess(c, Access.READ_ONLY)) {
+                throw new ForbiddenException(i18n.tr("User {0} cannot access consumer {1}",
+                    principal.getPrincipalName(), c.getUuid()));
+            }
+        }
+
         if (toReturn != null) {
-            toReturn = calculatedAttributesUtil.addCalculatedAttributes(toReturn,
-                consumerUuid, principal);
+            toReturn = calculatedAttributesUtil.addCalculatedAttributes(toReturn, c);
             return toReturn;
         }
 
