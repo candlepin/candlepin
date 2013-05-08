@@ -483,6 +483,23 @@
             ]
         },
         {
+            "name": "Awesome OS Instance Server Bits",
+            "id": "32060",
+            "version": "6.1",
+            "attributes": {
+                "sockets": 2,
+                "warning_period": 30
+            },
+            "content": [
+                [1111, true],
+                [0, false],
+                [1, true],
+                [2, true],
+                [234, true],
+                [235, true]
+            ]
+        },
+        {
             "name": "Awesome OS Workstation Bits",
             "id": "27060",
             "version": "6.1",
@@ -638,12 +655,7 @@
             "id": "awesomeos-instancebased",
             "type": "MKT",
             "provided_products": [
-                "37065",
-                "37070",
-                "37067",
-                "37068",
-                "37069",
-                "37060"
+                "32060"
             ],
             "attributes": {
                 "instance_multiplier": 2,
