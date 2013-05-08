@@ -2098,14 +2098,6 @@ var Quantity = {
 
 var Utils = {
 
-    get_float: function(map, name) {
-        value = "1";
-        if (name in map && map[name]) {
-            value = map[name];
-        }
-        return parseFloat(value);
-    },
-
     date_compare: function(d1, d2) {
         if (d1 - d2 > 0) {
             return 1;
