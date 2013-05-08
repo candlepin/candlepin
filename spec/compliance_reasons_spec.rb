@@ -41,7 +41,7 @@ describe 'Single Entitlement Compliance Reasons' do
   
   it 'reports products not covered' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '3.1',
+                {'system.certificate_version' => '3.2',
                  'uname.machine' => 'x86_64',
                  'memory.memtotal' => '4194304'})
     installed = [
@@ -63,7 +63,7 @@ describe 'Single Entitlement Compliance Reasons' do
   
   it 'reports ram not covered but no installed product' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '3.1',
+                {'system.certificate_version' => '3.2',
                  'uname.machine' => 'x86_64',
                  # Bump RAM so that it is not covered.
                  'memory.memtotal' => '16777216'})
@@ -98,7 +98,7 @@ describe 'Single Entitlement Compliance Reasons' do
 
   it 'reports ram not covered' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '3.1',
+                {'system.certificate_version' => '3.2',
                  'uname.machine' => 'x86_64',
                  # Bump RAM so that it is not covered.
                  'memory.memtotal' => '16777216'})
@@ -135,7 +135,7 @@ describe 'Single Entitlement Compliance Reasons' do
   
   it 'reports sockets not covered' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '3.1',
+                {'system.certificate_version' => '3.2',
                  'uname.machine' => 'x86_64',
                  'memory.memtotal' => '4194304',
                  # Bump sockets so that it is not covered.
@@ -173,7 +173,7 @@ describe 'Single Entitlement Compliance Reasons' do
   
   it 'reports cores not covered' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '3.1',
+                {'system.certificate_version' => '3.2',
                  'uname.machine' => 'x86_64',
                  'memory.memtotal' => '4194304',
                  # Bump cores so that it is not covered.
@@ -212,7 +212,7 @@ describe 'Single Entitlement Compliance Reasons' do
   
   it 'reports arch not covered' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '3.1',
+                {'system.certificate_version' => '3.2',
                  # Set the arch so it doesn't match.
                  'uname.machine' => 'ppc64',
                  'cpu.cpu_socket(s)' => '2'})
@@ -249,7 +249,7 @@ describe 'Single Entitlement Compliance Reasons' do
   
   it 'reports multiple reasons' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '3.1',
+                {'system.certificate_version' => '3.2',
                  # Non of the following attributes will be covered.
                  'uname.machine' => 'ppc64',
                  'memory.memtotal' => '16777216',
@@ -390,7 +390,7 @@ describe 'Stacking Compliance Reasons' do
   
   it 'report stack does not cover ram' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '3.1',
+                {'system.certificate_version' => '3.2',
                  'uname.machine' => 'x86_64',
                  'memory.memtotal' => '16777216',
                  'cpu.cpu_socket(s)' => '4'})
@@ -428,7 +428,7 @@ describe 'Stacking Compliance Reasons' do
   
   it 'report partial for stack that does not cover ram and has no installed products' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '3.1',
+                {'system.certificate_version' => '3.2',
                  'uname.machine' => 'x86_64',
                  'memory.memtotal' => '16777216',
                  'cpu.cpu_socket(s)' => '4'})
@@ -464,7 +464,7 @@ describe 'Stacking Compliance Reasons' do
   
   it 'report stack does not cover sockets' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '3.1',
+                {'system.certificate_version' => '3.2',
                  'uname.machine' => 'x86_64',
                  'memory.memtotal' => '4194304',
                  'cpu.cpu_socket(s)' => '6'})
@@ -502,7 +502,7 @@ describe 'Stacking Compliance Reasons' do
   
   it 'report stack does not cover cores' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '3.1',
+                {'system.certificate_version' => '3.2',
                  'uname.machine' => 'x86_64',
                  'memory.memtotal' => '4194304',
                  'cpu.cpu_socket(s)' => '1',
@@ -542,7 +542,7 @@ describe 'Stacking Compliance Reasons' do
   
   it 'report stack does not cover arch' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '3.1',
+                {'system.certificate_version' => '3.2',
                  'uname.machine' => 'ppc64',
                  'memory.memtotal' => '4194304',
                  'cpu.cpu_socket(s)' => '1',
@@ -582,7 +582,7 @@ describe 'Stacking Compliance Reasons' do
   
   it 'report stack does not cover all installed products' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '3.1',
+                {'system.certificate_version' => '3.2',
                  'uname.machine' => 'x86_64',
                  'memory.memtotal' => '4194304',
                  'cpu.cpu_socket(s)' => '4'})
@@ -616,7 +616,7 @@ describe 'Stacking Compliance Reasons' do
   
   it 'report stack does not cover multiple attributes' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '3.1',
+                {'system.certificate_version' => '3.2',
                  # Non of the following attributes will be covered.
                  'uname.machine' => 'ppc64',
                  'memory.memtotal' => '16777216',
