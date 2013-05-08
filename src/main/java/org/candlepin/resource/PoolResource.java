@@ -31,6 +31,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Statistic;
 import org.candlepin.model.StatisticCurator;
+import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ResourceDateParser;
 
 import com.google.inject.Inject;
@@ -64,12 +65,14 @@ public class PoolResource {
     private StatisticCurator statisticCurator;
     private I18n i18n;
     private PoolManager poolManager;
+    private CalculatedAttributesUtil calculatedAttributesUtil;
 
     @Inject
     public PoolResource(PoolCurator poolCurator,
         ConsumerCurator consumerCurator, OwnerCurator ownerCurator,
         StatisticCurator statisticCurator, I18n i18n,
-        EventSink eventSink, PoolManager poolManager) {
+        EventSink eventSink, PoolManager poolManager,
+        CalculatedAttributesUtil calculatedAttributesUtil) {
 
         this.poolCurator = poolCurator;
         this.consumerCurator = consumerCurator;
@@ -77,6 +80,7 @@ public class PoolResource {
         this.statisticCurator = statisticCurator;
         this.i18n = i18n;
         this.poolManager = poolManager;
+        this.calculatedAttributesUtil = calculatedAttributesUtil;
     }
 
     /**
@@ -164,8 +168,16 @@ public class PoolResource {
                     principal.getPrincipalName()));
         }
 
-        return poolCurator.listAvailableEntitlementPools(c, o, productId,
+        List<Pool> poolList = poolCurator.listAvailableEntitlementPools(c, o, productId,
             activeOnDate, true, listAll);
+
+        if (c != null) {
+            for (Pool p : poolList) {
+                p = calculatedAttributesUtil.addCalculatedAttributes(p, c);
+            }
+        }
+
+        return poolList;
     }
 
     /**
@@ -180,10 +192,27 @@ public class PoolResource {
     @GET
     @Path("/{pool_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Pool getPool(@PathParam("pool_id") @Verify(Pool.class) String id) {
+    public Pool getPool(@PathParam("pool_id") @Verify(Pool.class) String id,
+        @QueryParam("consumer") String consumerUuid,
+        @Context Principal principal) {
         Pool toReturn = poolCurator.find(id);
 
+        Consumer c = null;
+        if (consumerUuid != null) {
+            c = consumerCurator.findByUuid(consumerUuid);
+            if (c == null) {
+                throw new NotFoundException(i18n.tr("consumer: {0} not found",
+                    consumerUuid));
+            }
+
+            if (!principal.canAccess(c, Access.READ_ONLY)) {
+                throw new ForbiddenException(i18n.tr("User {0} cannot access consumer {1}",
+                    principal.getPrincipalName(), c.getUuid()));
+            }
+        }
+
         if (toReturn != null) {
+            toReturn = calculatedAttributesUtil.addCalculatedAttributes(toReturn, c);
             return toReturn;
         }
 

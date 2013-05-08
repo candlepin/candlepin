@@ -1,4 +1,4 @@
-// Version: 3.0
+// Version: 3.1
 
 /*
  * Default Candlepin rule set.
@@ -22,12 +22,17 @@ function autobind_name_space() {
     return Autobind;
 }
 
+function quantity_name_space() {
+    return Quantity;
+}
+
 
 // Consumer fact names
 var SOCKET_FACT="cpu.cpu_socket(s)";
 var RAM_FACT = "memory.memtotal";
 var CORES_FACT = "cpu.core(s)_per_socket";
 var ARCH_FACT = "uname.machine";
+var IS_VIRT_GUEST_FACT = "virt.is_guest";
 var PROD_ARCHITECTURE_SEPARATOR = ",";
 
 // Product attribute names
@@ -1072,7 +1077,7 @@ function createStackTracker(consumer, stackId) {
             }
 
             var enforcing = attribute in this.accumulatedValues;
-            log.debug("Enfocing " + attribute + ": " + enforcing);
+            log.debug("Enforcing " + attribute + ": " + enforcing);
             return enforcing;
         },
 
@@ -2047,6 +2052,49 @@ var Compliance = {
 
 }
 
+var Quantity = {
+    get_quantity_context: function() {
+        context = JSON.parse(json_context);
+        context.pool = createPool(context.pool);
+        return context;
+    },
+
+    get_suggested_quantity: function() {
+        var context = Quantity.get_quantity_context();
+        var pool = context.pool;
+        var consumer = context.consumer;
+        var validEntitlements = context.validEntitlements;
+
+        var quantity = 1;
+
+        if (!Quantity.allows_multi_entitlement(pool)) {
+            return quantity.toString();
+        }
+
+        if (pool.hasProductAttribute("stacking_id")) {
+            var stackTracker = createStackTrackerFromPool(pool, consumer);
+
+            for (var j = 0; j < validEntitlements.length; j++) {
+                var ent = validEntitlements[j];
+                ent.pool = createPool(ent.pool);
+                stackTracker.updateAccumulatedFromEnt(ent);
+            }
+
+            quantity = CoverageCalculator.getQuantityToCoverStack(stackTracker, pool, consumer);
+        }
+        else {
+            quantity = 1;
+        }
+
+        return quantity.toString();
+    },
+
+    allows_multi_entitlement: function(pool) {
+        return pool.hasProductAttribute("multi-entitlement") &&
+            Utils.equalsIgnoreCase(pool.getProductAttribute("multi-entitlement"),
+            "yes");
+    }
+}
 
 var Utils = {
 

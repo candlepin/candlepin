@@ -16,9 +16,9 @@ package org.candlepin.model;
 
 import org.candlepin.jackson.HateoasInclude;
 import org.candlepin.util.DateSource;
+
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.annotate.JsonFilter;
-
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.Formula;
@@ -28,7 +28,9 @@ import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
@@ -40,6 +42,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 import javax.persistence.Version;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -153,6 +156,9 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
 
     @Version
     private int version;
+
+    @Transient
+    private Map<String, String> calculatedAttributes;
 
     public Pool() {
     }
@@ -640,5 +646,19 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
         this.subscriptionSubKey = subscriptionSubKey;
     }
 
+    public Map<String, String> getCalculatedAttributes() {
+        return calculatedAttributes;
+    }
 
+    public void setCalculatedAttributes(Map<String, String> calculatedAttributes) {
+        this.calculatedAttributes = calculatedAttributes;
+    }
+
+    public void addCalculatedAttribute(String name, String value) {
+        if (calculatedAttributes == null) {
+            calculatedAttributes = new HashMap<String, String>();
+        }
+
+        calculatedAttributes.put(name, value);
+    }
 }

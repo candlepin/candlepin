@@ -14,20 +14,20 @@
  */
 package org.candlepin.policy.js.compliance;
 
-import java.util.Date;
-import java.util.List;
-
-import org.apache.log4j.Logger;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
-import org.candlepin.policy.js.JsContext;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsonJsContext;
 import org.candlepin.policy.js.RuleExecutionException;
 import org.candlepin.policy.js.RulesObjectMapper;
-import org.mozilla.javascript.RhinoException;
+
 import com.google.inject.Inject;
+
+import org.apache.log4j.Logger;
+
+import java.util.Date;
+import java.util.List;
 
 /**
  * Compliance
@@ -71,7 +71,7 @@ public class ComplianceRules {
         args.put("log", log, false);
 
         // Convert the JSON returned into a ComplianceStatus object:
-        String json = runJsFunction(String.class, "get_status", args);
+        String json = jsRules.runJsFunction(String.class, "get_status", args);
         try {
             ComplianceStatus result = mapper.toObject(json, ComplianceStatus.class);
             for (ComplianceReason reason : result.getReasons()) {
@@ -91,7 +91,7 @@ public class ComplianceRules {
         args.put("consumer", consumer);
         args.put("entitlements", entsToConsider);
         args.put("log", log, false);
-        return runJsFunction(Boolean.class, "is_stack_compliant", args);
+        return jsRules.runJsFunction(Boolean.class, "is_stack_compliant", args);
     }
 
     public boolean isEntitlementCompliant(Consumer consumer, Entitlement ent) {
@@ -99,21 +99,6 @@ public class ComplianceRules {
         args.put("consumer", consumer);
         args.put("entitlement", ent);
         args.put("log", log, false);
-        return runJsFunction(Boolean.class, "is_ent_compliant", args);
-    }
-
-    private <T extends Object> T runJsFunction(Class<T> clazz, String function,
-        JsContext context) {
-        T returner = null;
-        try {
-            returner = jsRules.invokeMethod(function, context);
-        }
-        catch (NoSuchMethodException e) {
-            log.warn("No compliance javascript method found: " + function);
-        }
-        catch (RhinoException e) {
-            throw new RuleExecutionException(e);
-        }
-        return returner;
+        return jsRules.runJsFunction(Boolean.class, "is_ent_compliant", args);
     }
 }
