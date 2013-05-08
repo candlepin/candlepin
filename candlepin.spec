@@ -25,7 +25,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.8.5
+Version: 0.8.6
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -345,6 +345,55 @@ fi
 
 
 %changelog
+* Wed May 08 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.6-1
+- Fix rules guest detection. (dgoodwin@redhat.com)
+- Virt-limit sub-pool quantity should no longer use entitlement quantity.  (dgoodwin@redhat.com)
+- Make manifest rules much faster. (dgoodwin@redhat.com)
+- Entitlement rules refactor. (dgoodwin@redhat.com)
+- 892696: Turn down the logging so that missing rules are infos instead of
+  warns. (bkearney@redhat.com)
+- Move coverage adjustment inside a more generic method. (dgoodwin@redhat.com)
+- Change assumption about default quantity during autobind.
+  (dgoodwin@redhat.com)
+- 956367: do not update quantities for host_limited pools (mstead@redhat.com)
+- Instance based autobind cleanup. (dgoodwin@redhat.com)
+- Do not enforce attributes in some situations. (dgoodwin@redhat.com)
+- Autobind correct quantities for instance based subs. (dgoodwin@redhat.com)
+- fixed translations (ckozak@redhat.com)
+- 958182: Fix the prefix logic to not append hte prefix if the url starts with
+  a normal url prefix (bkearney@redhat.com)
+  (ckozak@redhat.com)
+- changed reason messages, add reason attribute name (ckozak@redhat.com)
+- 957218: Require 3.2 certs for cores enabled subscriptions (mstead@redhat.com)
+- 956200: Enable the owner default SLA usage if none is provided or defined on
+  the consumer (bkearney@redhat.com)
+- Bumping rules version to 3.0 (mstead@redhat.com)
+- System is partial with partial entitlement and no products (mstead@redhat.com)
+- make the next int more random (jesusr@redhat.com)
+- fixed compliance calculation (ckozak@redhat.com)
+- cleaned up ComplianceStatus constructors (ckozak@redhat.com)
+- status is valid if there are no reasons.  This makes the system yellow if
+  there's a partial stack (ckozak@redhat.com)
+- changed messages slightly again for RAM.  SUB covers xGB of yGB of RAM.
+  (reoved word systems to be consistent) (ckozak@redhat.com)
+- changed messages slightly for QE (ckozak@redhat.com)
+- fixed more styling (ckozak@redhat.com)
+- Return compliance status reasons for Compliance namespace (mstead@redhat.com)
+- rearranged StatusMreasonMessageGenerator setup helpers to be more generic
+  (ckozak@redhat.com)
+  StatusReasonMessageGenerator (ckozak@redhat.com)
+- fixed getting non-compliant product names (ckozak@redhat.com)
+- fixed multiple subscription names (ckozak@redhat.com)
+- removed StatusReasonMessageGenerator setter from compliancerules, inject
+  instead.  Added slash-separated subscription names in stack
+  (ckozak@redhat.com)
+- performance improvement on ComplianceRulesTest.  (ckozak@redhat.com)
+- marked helper fields xmltransient (ckozak@redhat.com)
+- refactored ComplianceReason, added StatusReasonMessageGenerator to help build
+  messages (ckozak@redhat.com)
+- candlepin accepts reason structures from javascript and builds translated
+  messages (ckozak@redhat.com)
+
 * Mon Apr 29 2013 Bryan Kearney <bkearney@redhat.com> 0.8.5-1
 - 956873: Fix broken rules on older Candlepin servers. (dgoodwin@redhat.com)
 - Add additional EmptyStringInterceptor test. (awood@redhat.com)
