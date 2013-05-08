@@ -571,7 +571,7 @@ public class PoolRulesTest {
         assertEquals(1, pools.size());
         s.setQuantity(new Long(20));
         Entitlement ent = mock(Entitlement.class);
-        when(ent.getQuantity()).thenReturn(1);
+        when(ent.getQuantity()).thenReturn(4);
 
         // Now make a pool that would have been created for guests only after a host
         // bound to the parent pool:

@@ -1059,14 +1059,14 @@ function createStackTracker(consumer, stackId) {
         enforces: function(attribute) {
             // Guests are not subjected to socket stacking rules for instance based subs:
             if (attribute == SOCKETS_ATTRIBUTE && this.instanceMultiplier &&
-                this.consumer.facts['virt.is_guest']) {
+                Utils.isGuest(this.consumer)) {
                 log.debug("Not enforcing " + attribute + ": guest / instance based sub");
                 return false;
             }
 
             // Guests are not subjected to CPU/RAM/Core stacking rules if
             // using a host-restricted sub-pool:
-            if (this.hostRestricted && this.consumer.facts['virt.is_guest']) {
+            if (this.hostRestricted && Utils.isGuest(this.consumer)) {
                 log.debug("Not enforcing " + attribute + ": guest / host restricted pool");
                 return false;
             }
@@ -1321,10 +1321,7 @@ var Entitlement = {
         context = Entitlement.get_attribute_context();
 
         var virt_pool = Utils.equalsIgnoreCase('true', context.getAttribute(context.pool, 'virt_only'));
-        var guest = false;
-        if (context.consumer.facts['virt.is_guest']) {
-            guest = Utils.equalsIgnoreCase('true', context.consumer.facts['virt.is_guest']);
-        }
+        var guest = Utils.isGuest(context.consumer);
 
         if (virt_pool && !guest) {
             result.addError("rulefailed.virt.only");
@@ -1434,7 +1431,6 @@ var Entitlement = {
     pre_global: function() {
         var result = Entitlement.ValidationResult();
         context = Entitlement.get_attribute_context();
-        log.debug("INPUT: " + JSON.stringify(context));
 
         var consumer = context.consumer;
         var pool = context.pool;
@@ -2141,5 +2137,15 @@ var Utils = {
             }
         }
         return false;
+    },
+
+    isGuest: function(consumer) {
+        if (!consumer.facts['virt.is_guest']) {
+            return false;
+        }
+
+        log.debug(consumer.facts['virt.is_guest']);
+        log.debug("is guest? " + Utils.equalsIgnoreCase('true', consumer.facts['virt.is_guest']));
+        return Utils.equalsIgnoreCase('true', consumer.facts['virt.is_guest']);
     }
 }
