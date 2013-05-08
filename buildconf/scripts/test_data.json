@@ -183,6 +183,17 @@
             "metadata_expire": 3600
         },
         {
+            "name": "awesomeos-x86_64-i386-content",
+            "id": 38664,
+            "label": "awesomeos-x86_64-i386-content",
+            "type": "yum",
+            "vendor": "Red Hat",
+            "content_url": "/path/to/awesomeos/all",
+            "gpg_url": "/path/to/awesomeos/gpg/",
+            "arches": ["1","2"],
+            "metadata_expire": 3600
+        },
+        {
             "name": "awesomeos-x86_64-only-content",
             "id": 6401,
             "label": "awesomeos-x86_64-only-content",
@@ -194,7 +205,7 @@
             "metadata_expire": 3600
         },
         {
-            "name": "awesomeos-s390x-only--content",
+            "name": "awesomeos-s390x-only-content",
             "id": 39001,
             "label": "awesomeos-s390x-only-content",
             "type": "yum",
@@ -202,6 +213,40 @@
             "content_url": "/path/to/awesomeos/all",
             "gpg_url": "/path/to/awesomeos/gpg/",
             "arches": ["11"],
+            "metadata_expire": 3600
+        },
+        {
+            "name": "awesomeos-ppc64-only-content",
+            "id": 68064,
+            "label": "awesomeos-ppc64-only-content",
+            "type": "yum",
+            "vendor": "Red Hat",
+            "content_url": "/path/to/awesomeos/all",
+            "gpg_url": "/path/to/awesomeos/gpg/",
+            "arches": ["7"],
+            "metadata_expire": 3600
+        },
+        {
+            "name": "awesomeos-ppc-only-content",
+            "id": 68000,
+            "label": "awesomeos-ppc-only-content",
+            "type": "yum",
+            "vendor": "Red Hat",
+            "content_url": "/path/to/awesomeos/all",
+            "gpg_url": "/path/to/awesomeos/gpg/",
+            "arches": ["6"],
+            "metadata_expire": 3600
+        },
+
+        {
+            "name": "awesomeos-ia64-only-content",
+            "id": 64000,
+            "label": "awesomeos-ia64-only-content",
+            "type": "yum",
+            "vendor": "Red Hat",
+            "content_url": "/path/to/awesomeos/all",
+            "gpg_url": "/path/to/awesomeos/gpg/",
+            "arches": ["8"],
             "metadata_expire": 3600
         },
         {
@@ -904,7 +949,7 @@
             }
         },
         {
-            "name": "Awesome OS for All Arch (ext no x86_64 content) Bits",
+            "name": "Awesome OS for All Arch (excpt for x86_64 content) Bits",
             "id": "213412341234",
             "version": "3.11",
             "arch": "ALL",
@@ -915,19 +960,93 @@
                 "multi-entitlement": "yes"
             },
             "content": [
+                [68064, true],
+                [68000, true],
+                [64000, true],
                 [39001, true],
                 [0, false],
                 [1, true]
             ]
         },
         {
-            "name": "Awesome OS for All Arch (ext no x86_64 content)",
+            "name": "Awesome OS for All Arch (excpt for x86_64 content)",
             "id": "awesomeos-all-no-86_64-cont",
             "version": "3.11",
             "arch": "ALL",
             "type": "MKT",
             "provided_products": [
                 "213412341234"
+            ],
+            "attributes": {
+                "sockets": 1,
+                "warning_period": 30,
+                "stacking_id": 1,
+                "multi-entitlement": "yes"
+            }
+        },
+        {
+            "name": "Awesome OS for All Arch (all per arch content) Bits",
+            "id": "213412341236",
+            "version": "3.11",
+            "arch": "ALL",
+            "attributes": {
+                "sockets": 1,
+                "warning_period": 30,
+                "stacking_id": 1,
+                "multi-entitlement": "yes"
+            },
+            "content": [
+                [6401, true],
+                [68064, true],
+                [68000, true],
+                [64000, true],
+                [39001, true],
+                [0, false],
+                [1, true]
+            ]
+        },
+        {
+            "name": "Awesome OS for All Arch (all per arch content)",
+            "id": "awesomeos-per-arch-cont",
+            "version": "3.11",
+            "arch": "ALL",
+            "type": "MKT",
+            "provided_products": [
+                "213412341236"
+            ],
+            "attributes": {
+                "sockets": 1,
+                "warning_period": 30,
+                "stacking_id": 1,
+                "multi-entitlement": "yes"
+            }
+        },
+
+        {
+            "name": "Awesome OS for All Arch (x86 content) Bits",
+            "id": "213412341237",
+            "version": "3.11",
+            "arch": "ALL",
+            "attributes": {
+                "sockets": 1,
+                "warning_period": 30,
+                "stacking_id": 1,
+                "multi-entitlement": "yes"
+            },
+            "content": [
+                [38664, true],
+                [0, false],
+                [1, true]
+            ]
+        },
+        {
+            "name": "Awesome OS for All Arch (x86content)",
+            "id": "awesomeos-all-x86-cont",
+            "version": "3.11",
+            "arch": "ALL",
+            "type": "MKT",
+            "provided_products": [
+                "213412341237"
             ],
             "attributes": {
                 "sockets": 1,
