@@ -54,11 +54,17 @@ public class ManifestEntitlementRules extends AbstractEntitlementRules implement
     @Override
     public ValidationResult preEntitlement(Consumer consumer, Pool entitlementPool,
         Integer quantity) {
+        return preEntitlement(consumer, entitlementPool, quantity, CallerType.UNKNOWN);
 
+    }
+
+    @Override
+    public ValidationResult preEntitlement(Consumer consumer,
+        Pool entitlementPool, Integer quantity, CallerType caller) {
         jsRules.reinitTo("entitlement_name_space");
         rulesInit();
 
-        return runPreEntitlement(consumer, entitlementPool, quantity);
+        return runPreEntitlement(consumer, entitlementPool, quantity, caller);
     }
 
     /**
@@ -71,7 +77,7 @@ public class ManifestEntitlementRules extends AbstractEntitlementRules implement
      * @return
      */
     private ValidationResult runPreEntitlement(Consumer consumer, Pool pool,
-        Integer quantity) {
+        Integer quantity, CallerType caller) {
 
         // Provide objects for the script:
         String topLevelProductId = pool.getProductId();
@@ -83,6 +89,7 @@ public class ManifestEntitlementRules extends AbstractEntitlementRules implement
         args.put("consumerEntitlements", consumer.getEntitlements());
         args.put("pool", pool);
         args.put("standalone", config.standalone());
+        args.put("caller", caller.getLabel());
 
         // Can't serialize these objects.
         args.put("log", log, false);
@@ -96,4 +103,6 @@ public class ManifestEntitlementRules extends AbstractEntitlementRules implement
 
         return result;
     }
+
+
 }

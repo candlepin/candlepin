@@ -25,6 +25,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
+import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
 import org.candlepin.policy.js.entitlement.EnforcerDispatcher;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.policy.js.entitlement.ManifestEntitlementRules;
@@ -101,7 +102,8 @@ public class EnforcerDispatcherTest {
 
         ed.preEntitlement(c, p, 10);
 
-        verify(rules, atLeastOnce()).preEntitlement(eq(c), eq(p), eq(10));
+        verify(rules, atLeastOnce()).preEntitlement(eq(c), eq(p), eq(10),
+            eq(CallerType.UNKNOWN));
         verify(ce, never()).preEntitlement(eq(c), eq(p), eq(10));
     }
 }

@@ -40,6 +40,12 @@ public class EnforcerForTesting implements Enforcer {
         return new ValidationResult();
     }
 
+    @Override
+    public ValidationResult preEntitlement(Consumer consumer, Pool enitlementPool,
+            Integer quantity, CallerType caller) {
+        return new ValidationResult();
+    }
+
     public PreUnbindHelper preUnbind(Consumer consumer, Pool entitlementPool) {
         return new PreUnbindHelper(null);
     }

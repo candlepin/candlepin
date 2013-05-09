@@ -29,6 +29,7 @@ import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.criteria.CriteriaRules;
 import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.entitlement.Enforcer;
+import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
 import org.hibernate.Criteria;
 import org.hibernate.Filter;
 import org.hibernate.LockMode;
@@ -257,7 +258,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         if (c != null) {
             List<Pool> newResults = new LinkedList<Pool>();
             for (Pool p : results) {
-                ValidationResult result = enforcer.preEntitlement(c, p, 1);
+                ValidationResult result = enforcer.preEntitlement(
+                    c, p, 1, CallerType.LIST_POOLS);
                 if (result.isSuccessful() && (!result.hasWarnings() || includeWarnings)) {
                     newResults.add(p);
                 }

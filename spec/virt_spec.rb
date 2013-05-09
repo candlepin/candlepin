@@ -200,4 +200,17 @@ describe 'Standalone Virt-Limit Subscriptions' do
         end
     end
   end
+
+  it 'should not block a virt guest' do
+    @instance_based = create_product(nil, random_string('instance_based'),
+                                    :attributes => { 'instance_multiplier' => 2,
+                                        'multi-entitlement' => 'yes' })
+    @cp.create_subscription(@owner['key'], @instance_based.id, 10)
+    @cp.refresh_pools(@owner['key'])
+
+    pool = @guest1_client.list_pools(:product => @instance_based.id,
+        :consumer => @guest1_client.uuid).first
+    @guest1_client.consume_pool(pool.id, {:quantity => 3})
+  end
+
 end
