@@ -417,9 +417,6 @@ public class CandlepinPoolManager implements PoolManager {
                 ValidationResult result = enforcer.preEntitlement(consumer,
                     pool, 1, CallerType.BEST_POOLS);
 
-                if (result == null) {
-                    System.out.println("Null result :( ");
-                }
                 if (result.hasErrors() || result.hasWarnings()) {
                     // Just keep the last one around, if we need it
                     failedResult = result;
