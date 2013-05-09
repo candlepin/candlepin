@@ -38,6 +38,12 @@ var RAM_ATTRIBUTE = "ram";
 var INSTANCE_ATTRIBUTE = "instance_multiplier";
 var REQUIRES_HOST_ATTRIBUTE = "requires_host";
 
+// caller types
+var BEST_POOLS_CALLER = "best_pools";
+var BIND_CALLER = "bind";
+var LIST_POOLS_CALLER = "list_pools";
+var UNKNOWN_CALLER = "unknown";
+
 /**
  *  These product attributes are considered when
  *  determiningToAdd coverage of a consumer. Adding an
@@ -1438,7 +1444,7 @@ var Entitlement = {
 
         // only block quantities that do not evenly divide the multiplier
         // and only on physical systems
-        if ("bind".equals(caller) && !Utils.isGuest(context.consumer)) {
+        if (BIND_CALLER.equals(caller) && !Utils.isGuest(context.consumer)) {
 
             var multiplier = pool.getProductAttribute(INSTANCE_ATTRIBUTE);
             log.debug("instance_multiplier: [" + multiplier + "]");
