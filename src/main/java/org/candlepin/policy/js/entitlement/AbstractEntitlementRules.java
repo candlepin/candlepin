@@ -156,6 +156,10 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         JsContext context) {
         ValidationResult result = new ValidationResult();
         for (Rule rule : matchingRules) {
+            if (log.isDebugEnabled()) {
+                log.debug("invoking rule: " + PRE_PREFIX + rule.getRuleName());
+            }
+
             String validationJson = jsRules.invokeRule(PRE_PREFIX + rule.getRuleName(),
                 context);
 

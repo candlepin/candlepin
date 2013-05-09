@@ -15,11 +15,16 @@ describe 'Entitlements' do
     @virt_limit = create_product(nil, random_string('virt_limit'),
       {:attributes => {"virt_limit" => "10"}})
 
+    @instance_based = create_product(nil, random_string('instance_based'),
+                                    :attributes => { 'instance_multiplier' => 2,
+                                        'multi-entitlement' => 'yes' })
+
     #entitle owner for the virt and monitoring products.
     @cp.create_subscription(@owner['key'], @virt.id, 20)
     @cp.create_subscription(@owner['key'], @monitoring.id, 4)
     @cp.create_subscription(@owner['key'], @super_awesome.id, 4)
     @cp.create_subscription(@owner['key'], @virt_limit.id, 5)
+    @cp.create_subscription(@owner['key'], @instance_based.id, 10)
 
     @cp.refresh_pools(@owner['key'])
 
@@ -111,6 +116,17 @@ describe 'Entitlements' do
     end.should raise_exception(RestClient::Forbidden)
   end
 
+  it 'should not allow consuming an odd quantity' do
+    pool = find_pool @instance_based
+    lambda do
+      @system.consume_pool(pool.id, {:quantity => 3})
+    end.should raise_exception(RestClient::Forbidden)
+  end
+
+  it 'should allow consuming an even quantity' do
+    pool = find_pool @instance_based
+    @system.consume_pool(pool.id, {:quantity => 2})
+  end
   private
 
   def find_pool(product, consumer=nil)

@@ -43,6 +43,12 @@ var RAM_ATTRIBUTE = "ram";
 var INSTANCE_ATTRIBUTE = "instance_multiplier";
 var REQUIRES_HOST_ATTRIBUTE = "requires_host";
 
+// caller types
+var BEST_POOLS_CALLER = "best_pools";
+var BIND_CALLER = "bind";
+var LIST_POOLS_CALLER = "list_pools";
+var UNKNOWN_CALLER = "unknown";
+
 /**
  *  These product attributes are considered when
  *  determiningToAdd coverage of a consumer. Adding an
@@ -1270,7 +1276,8 @@ var Entitlement = {
             "user_license:1:user_license," +
             "virt_only:1:virt_only," +
             "virt_limit:1:virt_limit," +
-            "requires_host:1:requires_host";
+            "requires_host:1:requires_host," +
+            "instance_multiplier:1:instance_multiplier";
     },
 
     ValidationResult: function () {
@@ -1433,12 +1440,42 @@ var Entitlement = {
         return JSON.stringify(result);
     },
 
+    pre_instance_multiplier: function() {
+        var result = Entitlement.ValidationResult();
+        context = Entitlement.get_attribute_context();
+        var pool = context.pool;
+        var caller = context.caller;
+        log.debug("pre_instance_multiplier being called by [" + caller + "]");
+
+        // only block quantities that do not evenly divide the multiplier
+        // and only on physical systems
+        if (BIND_CALLER.equals(caller) && !Utils.isGuest(context.consumer)) {
+
+            var multiplier = pool.getProductAttribute(INSTANCE_ATTRIBUTE);
+            log.debug("instance_multiplier: [" + multiplier + "]");
+
+            var mod = (context.quantity % multiplier);
+            log.debug("result [" + context.quantity  + " % " +
+                multiplier + " = " + mod + "]");
+            if (mod != 0) {
+                log.debug("quantity NOT divisible by multplier");
+                result.addError("rulefailed.quantity.mismatch");
+            }
+        }
+
+        return JSON.stringify(result);
+    },
+
     pre_global: function() {
         var result = Entitlement.ValidationResult();
         context = Entitlement.get_attribute_context();
 
         var consumer = context.consumer;
         var pool = context.pool;
+        var caller = context.caller;
+
+        log.debug("pre_global being called by [" + caller + "]");
+
         if (!consumer.type.manifest) {
             var isMultiEntitlement = pool.getProductAttribute("multi-entitlement");
             if (context.hasEntitlement(pool.id) && isMultiEntitlement != "yes") {
@@ -1448,6 +1485,7 @@ var Entitlement = {
             if (context.quantity > 1 && isMultiEntitlement != "yes") {
                 result.addError("rulefailed.pool.does.not.support.multi-entitlement");
             }
+
 
             // If the product has no required consumer type, assume it is restricted to "system".
             // "hypervisor"/"uebercert" type are essentially the same as "system".

@@ -50,13 +50,19 @@ public class EnforcerDispatcher implements Enforcer {
     @Override
     public ValidationResult preEntitlement(Consumer consumer, Pool entitlementPool,
         Integer quantity) {
+        return preEntitlement(consumer, entitlementPool, quantity, CallerType.UNKNOWN);
+    }
+
+    @Override
+    public ValidationResult preEntitlement(Consumer consumer, Pool entitlementPool,
+        Integer quantity, CallerType caller) {
 
         if (consumer.getType().isManifest()) {
             return manifestEnforcer.preEntitlement(consumer, entitlementPool,
                 quantity);
         }
 
-        return jsEnforcer.preEntitlement(consumer, entitlementPool, quantity);
+        return jsEnforcer.preEntitlement(consumer, entitlementPool, quantity, caller);
     }
 
     public PoolHelper postUnbind(Consumer consumer, PoolHelper postEntHelper,

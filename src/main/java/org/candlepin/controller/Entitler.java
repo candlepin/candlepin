@@ -133,6 +133,15 @@ public class Entitler {
                 msg = i18n.tr("Pool is restricted to virtual guests: ''{0}''.",
                     pool.getId());
             }
+            else if (error.equals("rulefailed.quantity.mismatch")) {
+                String multip = null;
+                if (pool.hasProductAttribute("instance_multiplier")) {
+                    multip = pool.getProductAttribute("instance_multiplier").getValue();
+                }
+                msg = i18n.tr(
+                    "Quantity ''{0}'' is not a multiple of instance multiplier ''{1}''",
+                    quantity, multip);
+            }
             else {
                 msg = i18n.tr("Unable to entitle consumer to the pool with " +
                     "id ''{0}''.: {1}", pool.getId().toString(), error);
