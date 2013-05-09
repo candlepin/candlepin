@@ -293,8 +293,10 @@ class Candlepin
     delete("/consumertypes/#{type_id}")
   end
 
-  def get_pool(poolid)
-    get("/pools/#{poolid}")
+  def get_pool(poolid, uuid=nil)
+    path = "/pools/#{poolid}?"
+    path += "consumer=#{uuid}" if uuid
+    get(path)
   end
 
   def delete_pool(pool_id)
