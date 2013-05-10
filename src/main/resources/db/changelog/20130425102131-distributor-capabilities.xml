@@ -36,6 +36,9 @@
             <column name="version_name" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
+            <column name="display_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
             <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
             <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
         </createTable>

@@ -77,6 +77,7 @@ public class DistributorVersionResource {
      */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
     public DistributorVersion createOrUpdate(DistributorVersion dv) {
         DistributorVersion existing = curator.findByName(dv.getName());
         if (existing != null) {

@@ -50,6 +50,9 @@ public class DistributorVersion extends AbstractHibernateObject {
     @Column(nullable = false, unique = true, name = "version_name")
     private String versionName;
 
+    @Column(nullable = false, unique = true, name = "display_name")
+    private String displayName;
+
     @OneToMany(mappedBy = "distributorVersion", targetEntity =
         DistributorVersionCapability.class)
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
@@ -90,6 +93,20 @@ public class DistributorVersion extends AbstractHibernateObject {
      */
     public void setName(String versionName) {
         this.versionName = versionName;
+    }
+
+    /**
+     * @return the display name
+     */
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    /**
+     * @param displayName the version name to set
+     */
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
     }
 
     /**

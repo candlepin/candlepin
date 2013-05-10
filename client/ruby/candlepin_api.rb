@@ -68,14 +68,15 @@ class Candlepin
   # TODO: need to switch to a params hash, getting to be too many arguments.
   def register(name, type=:system, uuid=nil, facts={}, username=nil,
               owner_key=nil, activation_keys=[], installedProducts=[],
-              environment=nil)
+              environment=nil, capabilities=[])
     consumer = {
       :type => {:label => type},
       :name => name,
       :facts => facts,
       :installedProducts => installedProducts
     }
-
+    consumer[:capabilities] = capabilities.collect { |name| {'name' => name} } if capabilities
+ 
     consumer[:uuid] = uuid if not uuid.nil?
 
     if environment.nil?
@@ -116,8 +117,6 @@ class Candlepin
     consumer[:autoheal] = params[:autoheal] if params.has_key?(:autoheal)
     consumer[:serviceLevel] = params[:serviceLevel] if params.has_key?(:serviceLevel)
     consumer[:capabilities] = params[:capabilities].collect { |name| {'name' => name} } if params[:capabilities]
-
-    
 
     path = get_path("consumers")
     put("#{path}/#{uuid}", consumer)
@@ -877,9 +876,10 @@ class Candlepin
     return JSON.parse(response.body)
   end
 
-  def create_or_update_distributor_version(name, capabilities=[])
+  def create_or_update_distributor_version(name, display_name, capabilities=[])
     version =  {
       'name' => name,
+      'displayName' => display_name,
       'capabilities' => capabilities.collect { |name| {'name' => name} }
     }
     post('/distributor_versions', version)

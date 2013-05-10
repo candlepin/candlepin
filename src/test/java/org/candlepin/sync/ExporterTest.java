@@ -54,6 +54,8 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.DistributorVersion;
+import org.candlepin.model.DistributorVersionCapability;
 import org.candlepin.model.DistributorVersionCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
@@ -119,7 +121,7 @@ public class ExporterTest {
         exportRules = mock(ExportRules.class);
         pprov = mock(PrincipalProvider.class);
         dvc = mock(DistributorVersionCurator.class);
-        dve = mock(DistributorVersionExporter.class);
+        dve = new DistributorVersionExporter();
 
         when(exportRules.canExport(any(Entitlement.class))).thenReturn(Boolean.TRUE);
     }
@@ -392,6 +394,60 @@ public class ExporterTest {
             new VerifyConsumer("consumer.json"));
     }
 
+    @Test
+    public void exportDistributorVersions() throws ExportCreationException, IOException {
+        config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+        config.setProperty(ConfigProperties.PREFIX_WEBURL, "localhost:8443/weburl");
+        config.setProperty(ConfigProperties.PREFIX_APIURL, "localhost:8443/apiurl");
+        Rules mrules = mock(Rules.class);
+        Consumer consumer = mock(Consumer.class);
+        Principal principal = mock(Principal.class);
+
+        when(mrules.getRules()).thenReturn("foobar");
+        when(pki.getSHA256WithRSAHash(any(InputStream.class))).thenReturn(
+            "signature".getBytes());
+        when(rc.getRules()).thenReturn(mrules);
+        when(pprov.get()).thenReturn(principal);
+        when(principal.getUsername()).thenReturn("testUser");
+
+        IdentityCertificate idcert = new IdentityCertificate();
+        idcert.setSerial(new CertificateSerial(10L, new Date()));
+        idcert.setKey("euh0876puhapodifbvj094");
+        idcert.setCert("hpj-08ha-w4gpoknpon*)&^%#");
+        idcert.setCreated(new Date());
+        idcert.setUpdated(new Date());
+        when(consumer.getIdCert()).thenReturn(idcert);
+
+        KeyPair keyPair = createKeyPair();
+        when(consumer.getKeyPair()).thenReturn(keyPair);
+        when(pki.getPemEncoded(keyPair.getPrivateKey()))
+            .thenReturn("privateKey".getBytes());
+        when(pki.getPemEncoded(keyPair.getPublicKey()))
+            .thenReturn("publicKey".getBytes());
+        when(consumer.getUuid()).thenReturn("8auuid");
+        when(consumer.getName()).thenReturn("consumer_name");
+        when(consumer.getType()).thenReturn(new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
+
+        DistributorVersion dv = new DistributorVersion("test-dist-ver");
+        Set<DistributorVersionCapability> dvcSet =
+            new HashSet<DistributorVersionCapability>();
+        dvcSet.add(new DistributorVersionCapability(dv, "capability-1"));
+        dvcSet.add(new DistributorVersionCapability(dv, "capability-2"));
+        dvcSet.add(new DistributorVersionCapability(dv, "capability-3"));
+        dv.setCapabilities(dvcSet);
+        List<DistributorVersion> dvList = new ArrayList<DistributorVersion>();
+        dvList.add(dv);
+        when(dvc.findAll()).thenReturn(dvList);
+
+        // FINALLY test this badboy
+        Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve);
+        File export = e.getFullExport(consumer);
+
+        verifyContent(export, "export/distributor_version/test-dist-ver.json",
+            new VerifyDistributorVersion("test-dist-ver.json"));
+    }
+
     /**
      * return true if export has a given entry named name.
      * @param export zip file to inspect
@@ -614,4 +670,29 @@ public class ExporterTest {
         }
     }
 
+    public static class VerifyDistributorVersion implements Verify {
+        private String filename;
+
+        public VerifyDistributorVersion(String filename) {
+            this.filename = filename;
+        }
+
+        public void verify(ZipInputStream zis, byte[] buf) throws IOException {
+            OutputStream os = new FileOutputStream("/tmp/" + filename);
+            int n;
+            while ((n = zis.read(buf, 0, 1024)) > -1) {
+                os.write(buf, 0, n);
+            }
+            os.flush();
+            os.close();
+            ObjectMapper om = SyncUtils.getObjectMapper(
+                new Config(new HashMap<String, String>()));
+            DistributorVersion dv = om.readValue(
+                new FileInputStream("/tmp/" + filename),
+                DistributorVersion.class);
+            assertNotNull(dv);
+            assertEquals("test-dist-ver", dv.getName());
+            assertEquals(3, dv.getCapabilities().size());
+        }
+    }
 }

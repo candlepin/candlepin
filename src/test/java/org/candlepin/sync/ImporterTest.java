@@ -26,30 +26,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.candlepin.config.CandlepinCommonTestConfig;
-import org.candlepin.config.Config;
-import org.candlepin.config.ConfigProperties;
-import org.candlepin.model.ConsumerType;
-import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
-import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.ExporterMetadata;
-import org.candlepin.model.ExporterMetadataCurator;
-import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerCurator;
-import org.candlepin.pki.PKIUtility;
-import org.candlepin.pki.impl.BouncyCastlePKIUtility;
-import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
-import org.candlepin.sync.Importer.ImportFile;
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.xnap.commons.i18n.I18n;
-import org.xnap.commons.i18n.I18nFactory;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -68,6 +44,32 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.candlepin.config.CandlepinCommonTestConfig;
+import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.DistributorVersion;
+import org.candlepin.model.DistributorVersionCurator;
+import org.candlepin.model.ExporterMetadata;
+import org.candlepin.model.ExporterMetadataCurator;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
+import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.impl.BouncyCastlePKIUtility;
+import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
+import org.candlepin.sync.Importer.ImportFile;
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
 
 /**
  * ImporterTest
@@ -436,6 +438,7 @@ public class ImporterTest {
         importFiles.put(ImportFile.CONSUMER.fileName(), mock(File.class));
         importFiles.put(ImportFile.PRODUCTS.fileName(), mock(File.class));
         importFiles.put(ImportFile.ENTITLEMENTS.fileName(), mock(File.class));
+        importFiles.put(ImportFile.DISTRIBUTOR_VERSIONS.fileName(), mock(File.class));
         return importFiles;
     }
 
@@ -644,5 +647,35 @@ public class ImporterTest {
         i.importConsumer(owner, consumerfile, upstream, forcedConflicts, meta);
 
         verify(oc).merge(any(Owner.class));
+    }
+
+    @Test
+    public void importDistributorVersionCreate() throws Exception {
+        DistributorVersionCurator dvc = mock(DistributorVersionCurator.class);
+        Importer i = new Importer(null, null, null, null, null, null, null,
+            null, null, null, null, null, i18n, dvc);
+        File[] distVer = new File[1];
+        distVer[0] = new File("target/test/resources/upstream/dist-ver.json");
+
+        i.importDistributorVersions(distVer);
+
+        verify(dvc).create(any(DistributorVersion.class));
+        verify(dvc, never()).merge(any(DistributorVersion.class));
+    }
+
+    @Test
+    public void importDistributorVersionUpdate() throws Exception {
+        DistributorVersionCurator dvc = mock(DistributorVersionCurator.class);
+        Importer i = new Importer(null, null, null, null, null, null, null,
+            null, null, null, null, null, i18n, dvc);
+        when(dvc.findByName("test-dist-ver")).thenReturn(
+            new DistributorVersion("test-dist-ver"));
+        File[] distVer = new File[1];
+        distVer[0] = new File("target/test/resources/upstream/dist-ver.json");
+
+        i.importDistributorVersions(distVer);
+
+        verify(dvc, never()).create(any(DistributorVersion.class));
+        verify(dvc).merge(any(DistributorVersion.class));
     }
 }
