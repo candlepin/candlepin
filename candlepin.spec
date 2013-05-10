@@ -25,7 +25,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.8.6
+Version: 0.8.7
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -345,6 +345,41 @@ fi
 
 
 %changelog
+* Fri May 10 2013 Michael Stead <mstead@redhat.com> 0.8.7-1
+- Merge pull request #248 from candlepin/alikins/syntastic_classpath
+  (mstead@redhat.com)
+- Add buildfile target to generate a .syntastic_class_path (alikins@redhat.com)
+- Update generate export script to work on arbitrary owner.
+  (dgoodwin@redhat.com)
+- latest strings from zanata (alikins@redhat.com)
+- Merge pull request #247 from candlepin/zeus/instancebased
+  (mstead@redhat.com)
+- minor version bump for rules.js (jesusr@redhat.com)
+- ensure virt guests are not blocked with odd quantity (jesusr@redhat.com)
+- move string to constants (jesusr@redhat.com)
+- remove left over System.out (jesusr@redhat.com)
+- Merge pull request #246 from candlepin/awood/server-side-quantity (dgoodwin
+  @rm-rf.ca)
+- Bump version of JS rules. (awood@redhat.com)
+- Removing dead JS code. (awood@redhat.com)
+- Move security constraints into the Resource layer. (awood@redhat.com)
+- Block physical binds with quantities not multiples of the instance
+  multiplier. (jesusr@redhat.com)
+- Correcting some failing unit tests. (awood@redhat.com)
+- Add calls to stackTracker's updateAccumulatedFromEnt. (awood@redhat.com)
+- Use CoverageCalculator to determine quantity suggested. (awood@redhat.com)
+- Fetch quantity_increment from product attributes. (awood@redhat.com)
+- Adding spec test for calculated attributes from owner resource.
+  (awood@redhat.com)
+- Remove some extra code from pool resource spec test. (awood@redhat.com)
+- Remove requirement that consumers must be in a pool to get calculated
+  attributes. (awood@redhat.com)
+- Adding calculated attributes to OwnerResource. (awood@redhat.com)
+- Move calculated attributes out to a separate class. (awood@redhat.com)
+- Adding spec test for calculated attributes. (awood@redhat.com)
+- Initial attempt at moving quantity calculations into Candlepin.
+  (awood@redhat.com)
+
 * Wed May 08 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.6-1
 - Fix rules guest detection. (dgoodwin@redhat.com)
 - Virt-limit sub-pool quantity should no longer use entitlement quantity.  (dgoodwin@redhat.com)
