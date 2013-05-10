@@ -62,7 +62,7 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
         pool1 = createPoolAndSub(owner1, product1, 500L,
             TestUtil.createDate(2000, 1, 1), TestUtil.createDate(3000, 1, 1));
 
-        attrUtil = new CalculatedAttributesUtil(i18n, consumerCurator, quantityRules);
+        attrUtil = new CalculatedAttributesUtil(quantityRules);
 
         consumer = createConsumer(owner1);
     }

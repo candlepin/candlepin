@@ -15,27 +15,19 @@
 package org.candlepin.resource.util;
 
 import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.policy.js.quantity.QuantityRules;
 
 import com.google.inject.Inject;
 
-import org.xnap.commons.i18n.I18n;
-
 /**
  * CalculatedAttributesUtil
  */
 public class CalculatedAttributesUtil {
-    private I18n i18n;
-    private ConsumerCurator consumerCurator;
     private QuantityRules quantityRules;
 
     @Inject
-    public CalculatedAttributesUtil(I18n i18n, ConsumerCurator consumerCurator,
-        QuantityRules quantityRules) {
-        this.i18n = i18n;
-        this.consumerCurator = consumerCurator;
+    public CalculatedAttributesUtil(QuantityRules quantityRules) {
         this.quantityRules = quantityRules;
     }
 
