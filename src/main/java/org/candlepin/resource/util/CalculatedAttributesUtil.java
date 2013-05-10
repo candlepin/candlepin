@@ -31,9 +31,9 @@ public class CalculatedAttributesUtil {
         this.quantityRules = quantityRules;
     }
 
-    public Pool addCalculatedAttributes(Pool p, Consumer c) {
+    public void addCalculatedAttributes(Pool p, Consumer c) {
         if (c == null) {
-            return p;
+            return;
         }
 
         p.addCalculatedAttribute("suggested_quantity",
@@ -43,6 +43,5 @@ public class CalculatedAttributesUtil {
             p.addCalculatedAttribute("quantity_increment",
                 p.getProductAttribute("instance_multiplier").getValue());
         }
-        return p;
     }
 }

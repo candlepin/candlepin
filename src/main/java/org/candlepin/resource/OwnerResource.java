@@ -615,7 +615,7 @@ public class OwnerResource {
 
         if (c != null) {
             for (Pool p : poolList) {
-                p = calculatedAttributesUtil.addCalculatedAttributes(p, c);
+                calculatedAttributesUtil.addCalculatedAttributes(p, c);
             }
         }
 

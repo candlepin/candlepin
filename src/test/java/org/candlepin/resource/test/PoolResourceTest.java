@@ -20,7 +20,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
@@ -93,13 +92,6 @@ public class PoolResourceTest extends DatabaseTestFixture {
         poolCurator.create(pool1);
         poolCurator.create(pool2);
         poolCurator.create(pool3);
-
-        when(attrUtil.addCalculatedAttributes(eq(pool1), any(Consumer.class)))
-            .thenReturn(pool1);
-        when(attrUtil.addCalculatedAttributes(eq(pool2), any(Consumer.class)))
-            .thenReturn(pool2);
-        when(attrUtil.addCalculatedAttributes(eq(pool3), any(Consumer.class)))
-            .thenReturn(pool3);
 
         poolResource = new PoolResource(poolCurator, consumerCurator, ownerCurator,
             statisticCurator, i18n, injector.getInstance(EventSink.class), poolManager,
@@ -285,8 +277,6 @@ public class PoolResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testCalculatedAttributesAbsent() {
-        when(attrUtil.addCalculatedAttributes(eq(pool1), any(Consumer.class)))
-            .thenReturn(pool1);
         Pool p = poolResource.getPool(pool1.getId(), null, adminPrincipal);
         assertNull(p.getCalculatedAttributes());
     }

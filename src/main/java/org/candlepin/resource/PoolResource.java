@@ -173,7 +173,7 @@ public class PoolResource {
 
         if (c != null) {
             for (Pool p : poolList) {
-                p = calculatedAttributesUtil.addCalculatedAttributes(p, c);
+                calculatedAttributesUtil.addCalculatedAttributes(p, c);
             }
         }
 
@@ -212,7 +212,7 @@ public class PoolResource {
         }
 
         if (toReturn != null) {
-            toReturn = calculatedAttributesUtil.addCalculatedAttributes(toReturn, c);
+            calculatedAttributesUtil.addCalculatedAttributes(toReturn, c);
             return toReturn;
         }
 
