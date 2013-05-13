@@ -15,12 +15,11 @@
 package org.candlepin.resource.test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
@@ -93,13 +92,6 @@ public class PoolResourceTest extends DatabaseTestFixture {
         poolCurator.create(pool1);
         poolCurator.create(pool2);
         poolCurator.create(pool3);
-
-        when(attrUtil.addCalculatedAttributes(eq(pool1), any(Consumer.class)))
-            .thenReturn(pool1);
-        when(attrUtil.addCalculatedAttributes(eq(pool2), any(Consumer.class)))
-            .thenReturn(pool2);
-        when(attrUtil.addCalculatedAttributes(eq(pool3), any(Consumer.class)))
-            .thenReturn(pool3);
 
         poolResource = new PoolResource(poolCurator, consumerCurator, ownerCurator,
             statisticCurator, i18n, injector.getInstance(EventSink.class), poolManager,
@@ -181,7 +173,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
             product1.getId(), false, null, adminPrincipal);
         assertEquals(1, pools.size());
 
-        verify(attrUtil).addCalculatedAttributes(any(Pool.class),
+        verify(attrUtil).buildCalculatedAttributes(any(Pool.class),
             eq(passConsumer));
     }
 
@@ -207,7 +199,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
             null, adminPrincipal);
         assertEquals(2, pools.size());
 
-        verify(attrUtil, times(2)).addCalculatedAttributes(any(Pool.class),
+        verify(attrUtil, times(2)).buildCalculatedAttributes(any(Pool.class),
             eq(passConsumer));
     }
 
@@ -284,11 +276,9 @@ public class PoolResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testCalculatedAttributesAbsent() {
-        when(attrUtil.addCalculatedAttributes(eq(pool1), any(Consumer.class)))
-            .thenReturn(pool1);
+    public void testCalculatedAttributesEmpty() {
         Pool p = poolResource.getPool(pool1.getId(), null, adminPrincipal);
-        assertNull(p.getCalculatedAttributes());
+        assertTrue(p.getCalculatedAttributes().isEmpty());
     }
 
     @Test(expected = ForbiddenException.class)
