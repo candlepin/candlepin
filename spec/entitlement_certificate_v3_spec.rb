@@ -62,28 +62,32 @@ describe 'Entitlement Certificate V3' do
 
     @user = user_client(@owner, random_string('billy'))
 
-    @system = consumer_client(@user, random_string('system1'), :candlepin, nil,
-				{'system.certificate_version' => '3.2'})
-    @entitlement = @system.consume_product(@product.id)[0]
+    @system = consumer_client(@user, random_string('system1'), :system, nil,
+				{'system.certificate_version' => '3.2',
+                                 'uname.machine' => 'i386'})
   end
 
   it 'generated a version 3.2 certificate when requesting a 3.0 certificate' do
     # NOTE: This test covers the case where the system supports 3.0 certs, but
     # the server is creating 3.2 certs, and the product contains attributes
     # supported by 3.0.
-    v3_system = consumer_client(@user, random_string('v3system'), :candlepin, nil,
-                                  {'system.certificate_version' => '3.0'})
+    v3_system = consumer_client(@user, random_string('v3system'), :system, nil,
+                                  {'system.certificate_version' => '3.0',
+                                   'uname.machine' => 'i386'})
     v3_system.consume_product(@product_30.id)
     value = extension_from_cert(v3_system.list_certificates[0]['cert'], "1.3.6.1.4.1.2312.9.6")
     value.should == "3.2"
   end
 
   it 'generated a version 3.2 certificate' do
+    entitlement = @system.consume_product(@product.id)[0]
     value = extension_from_cert(@system.list_certificates[0]['cert'], "1.3.6.1.4.1.2312.9.6")
     value.should == "3.2"
+    @system.unbind_entitlement entitlement.id
   end
 
   it 'generated the correct body in the blob' do
+    entitlement = @system.consume_product(@product.id)[0]
     json_body = extract_payload(@system.list_certificates[0]['cert'])
 
     json_body['consumer'].should == @system.get_consumer()['uuid']
@@ -120,6 +124,7 @@ describe 'Entitlement Certificate V3' do
     json_body['products'][0]['content'][0]['enabled'].should == false
     json_body['products'][0]['content'][0]['metadata_expire'].should == 6400
     json_body['products'][0]['content'][0]['required_tags'].size.should == 2
+    @system.unbind_entitlement entitlement.id
   end
 
   it 'encoded the content urls' do
@@ -141,7 +146,7 @@ describe 'Entitlement Certificate V3' do
     urls[1] = '/content/dist/rhel/$releasever/$basearch/debug'
     urls[2] = '/content/beta/rhel/$releasever/$basearch/source/SRPMS'
     are_content_urls_present(value, urls).should == true
-    @system.unbind_entitlement @entitlement.id
+    @system.unbind_entitlement entitlement.id
   end
 
   it 'encoded many content urls' do
@@ -171,6 +176,6 @@ describe 'Entitlement Certificate V3' do
     urls[3] = '/content/dist/rhel/$releasever75/$basearch75/debug75'
     urls[4] = '/content/dist/rhel/$releasever99/$basearch99/debug99'
     are_content_urls_present(value, urls).should == true
-    @system.unbind_entitlement @entitlement.id
+    @system.unbind_entitlement entitlement.id
   end
 end

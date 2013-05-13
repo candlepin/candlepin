@@ -91,8 +91,15 @@ module CandlepinMethods
   # Wrapper for ruby API so we can track all distributors we created and clean them
   # up. Note that this entails cleanup of all objects beneath that owner, so
   # most other objects can be created using the ruby API.
-  def create_or_update_distributor_version(dist_name, display_name, capabilities=[])
-    dist_version = @cp.create_or_update_distributor_version(dist_name, display_name, capabilities)
+  def create_distributor_version(dist_name, display_name, capabilities=[])
+    dist_version = @cp.create_distributor_version(dist_name, display_name, capabilities)
+    @dist_versions << dist_version
+
+    return dist_version
+  end
+
+  def update_distributor_version(dist_name, display_name, capabilities=[])
+    dist_version = @cp.update_distributor_version(dist_name, display_name, capabilities)
     @dist_versions << dist_version
 
     return dist_version

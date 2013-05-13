@@ -20,11 +20,14 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.DistributorVersion;
 import org.candlepin.model.DistributorVersionCurator;
 import org.xnap.commons.i18n.I18n;
@@ -78,16 +81,41 @@ public class DistributorVersionResource {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public DistributorVersion createOrUpdate(DistributorVersion dv) {
+    public DistributorVersion create(DistributorVersion dv) {
         DistributorVersion existing = curator.findByName(dv.getName());
         if (existing != null) {
-            existing.setCapabilities(dv.getCapabilities());
-            curator.merge(existing);
-            return existing;
+            throw new BadRequestException(
+                i18n.tr("A distributor version with name {0}" +
+                        "already exists", dv.getName()));
         }
         else {
             curator.create(dv);
             return dv;
         }
+    }
+
+    /**
+     * @return a DistributorVersion
+     * @httpcode 200
+     */
+    @PUT
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public DistributorVersion update(DistributorVersion dv) {
+        DistributorVersion existing = verifyAndLookupDistributorVersion(dv.getName());
+
+        existing.setCapabilities(dv.getCapabilities());
+        curator.merge(existing);
+        return existing;
+    }
+
+    private DistributorVersion verifyAndLookupDistributorVersion(String versionName) {
+        DistributorVersion dv = curator.findByName(versionName);
+
+        if (dv == null) {
+            throw new NotFoundException(i18n.tr("No such distributor version: {0}",
+                versionName));
+        }
+        return dv;
     }
 }

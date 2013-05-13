@@ -878,13 +878,22 @@ class Candlepin
     return JSON.parse(response.body)
   end
 
-  def create_or_update_distributor_version(name, display_name, capabilities=[])
+  def create_distributor_version(name, display_name, capabilities=[])
     version =  {
       'name' => name,
       'displayName' => display_name,
       'capabilities' => capabilities.collect { |name| {'name' => name} }
     }
     post('/distributor_versions', version)
+  end
+
+  def update_distributor_version(name, display_name, capabilities=[])
+    version =  {
+      'name' => name,
+      'displayName' => display_name,
+      'capabilities' => capabilities.collect { |name| {'name' => name} }
+    }
+    put('/distributor_versions', version)
   end
 
   def delete_distributor_version(version_name)

@@ -81,6 +81,7 @@ public class ProductVersionValidator {
 
     public static boolean verifyClientSupport(Consumer consumer,
         Set<? extends Attribute> productAttributes) {
+        if (consumer.getType().isManifest()) { return true; }
         String consumerVersion = consumer.getFact("system.certificate_version");
         return ProductVersionValidator.validate(productAttributes, consumerVersion);
     }

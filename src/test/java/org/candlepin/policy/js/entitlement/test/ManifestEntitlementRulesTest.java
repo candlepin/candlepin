@@ -23,8 +23,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.HashSet;
+import java.util.Set;
 
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCapability;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
@@ -33,6 +35,8 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
+import org.candlepin.policy.ValidationWarning;
+import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
 import org.candlepin.policy.js.pool.PoolHelper;
 import org.candlepin.test.TestUtil;
 import org.junit.Test;
@@ -64,7 +68,7 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
     }
 
     @Test
-    public void preEntitlementIgnoresAttributeChecking() {
+    public void preEntitlementIgnoresSocketAttributeChecking() {
         // Test with sockets to make sure that they are skipped.
         Consumer c = TestUtil.createConsumer();
         c.setFact("cpu.socket(s)", "12");
@@ -77,6 +81,187 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         ValidationResult results = enforcer.preEntitlement(c, p, 1);
         assertNotNull(results);
         assertTrue(results.getErrors().isEmpty());
+    }
+
+    @Test
+    public void preEntitlementNoCoreCapableBindError() {
+        // Test with sockets to make sure that they are skipped.
+        Consumer c = TestUtil.createConsumer();
+        c.setFact("cpu.core(s)_per_socket", "2");
+        Set<ConsumerCapability> caps = new HashSet<ConsumerCapability>();
+        c.setCapabilities(caps);
+        c.getType().setManifest(true);
+
+        Product prod = TestUtil.createProduct();
+        prod.setAttribute("cores", "2");
+        Pool p = TestUtil.createPool(prod);
+
+        ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.BIND);
+        assertNotNull(results);
+        assertEquals(0, results.getWarnings().size());
+        ValidationError error = results.getErrors().get(0);
+        assertEquals("rulefailed.cores.unsupported.by.consumer", error.getResourceKey());
+    }
+
+    @Test
+    public void preEntitlementNoCoreCapableListWarn() {
+        // Test with sockets to make sure that they are skipped.
+        Consumer c = TestUtil.createConsumer();
+        c.setFact("cpu.core(s)_per_socket", "2");
+        Set<ConsumerCapability> caps = new HashSet<ConsumerCapability>();
+        c.setCapabilities(caps);
+        c.getType().setManifest(true);
+
+        Product prod = TestUtil.createProduct();
+        prod.setAttribute("cores", "2");
+        Pool p = TestUtil.createPool(prod);
+
+        ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.LIST_POOLS);
+        assertNotNull(results);
+        assertEquals(0, results.getErrors().size());
+        ValidationWarning warning = results.getWarnings().get(0);
+        assertEquals("rulewarning.cores.unsupported.by.consumer", warning.getResourceKey());
+    }
+
+    @Test
+    public void preEntitlementSuccessCoreCapable() {
+        // Test with sockets to make sure that they are skipped.
+        Consumer c = TestUtil.createConsumer();
+        c.setFact("cpu.core(s)_per_socket", "2");
+        Set<ConsumerCapability> caps = new HashSet<ConsumerCapability>();
+        ConsumerCapability cc = new ConsumerCapability(c, "cores");
+        caps.add(cc);
+        c.setCapabilities(caps);
+        c.getType().setManifest(true);
+
+        Product prod = TestUtil.createProduct();
+        prod.setAttribute("cores", "2");
+        Pool p = TestUtil.createPool(prod);
+
+        ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.BEST_POOLS);
+        assertNotNull(results);
+        assertEquals(0, results.getErrors().size());
+        assertEquals(0, results.getWarnings().size());
+    }
+
+    @Test
+    public void preEntitlementNoRamCapableBindError() {
+        // Test with sockets to make sure that they are skipped.
+        Consumer c = TestUtil.createConsumer();
+        c.setFact("memory.memtotal", "2000000");
+        Set<ConsumerCapability> caps = new HashSet<ConsumerCapability>();
+        c.setCapabilities(caps);
+        c.getType().setManifest(true);
+
+        Product prod = TestUtil.createProduct();
+        prod.setAttribute("ram", "2");
+        Pool p = TestUtil.createPool(prod);
+
+        ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.BIND);
+        assertNotNull(results);
+        assertEquals(0, results.getWarnings().size());
+        ValidationError error = results.getErrors().get(0);
+        assertEquals("rulefailed.ram.unsupported.by.consumer", error.getResourceKey());
+    }
+
+    @Test
+    public void preEntitlementNoRamCapableListWarn() {
+        // Test with sockets to make sure that they are skipped.
+        Consumer c = TestUtil.createConsumer();
+        c.setFact("memory.memtotal", "2000000");
+        Set<ConsumerCapability> caps = new HashSet<ConsumerCapability>();
+        c.setCapabilities(caps);
+        c.getType().setManifest(true);
+
+        Product prod = TestUtil.createProduct();
+        prod.setAttribute("ram", "2");
+        Pool p = TestUtil.createPool(prod);
+
+        ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.LIST_POOLS);
+        assertNotNull(results);
+        assertEquals(0, results.getErrors().size());
+        ValidationWarning warning = results.getWarnings().get(0);
+        assertEquals("rulewarning.ram.unsupported.by.consumer", warning.getResourceKey());
+    }
+
+    @Test
+    public void preEntitlementSuccessRamCapable() {
+        // Test with sockets to make sure that they are skipped.
+        Consumer c = TestUtil.createConsumer();
+        c.setFact("memory.memtotal", "2000000");
+        Set<ConsumerCapability> caps = new HashSet<ConsumerCapability>();
+        ConsumerCapability cc = new ConsumerCapability(c, "ram");
+        caps.add(cc);
+        c.setCapabilities(caps);
+        c.getType().setManifest(true);
+
+        Product prod = TestUtil.createProduct();
+        prod.setAttribute("ram", "2");
+        Pool p = TestUtil.createPool(prod);
+
+        ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.BEST_POOLS);
+        assertNotNull(results);
+        assertEquals(0, results.getErrors().size());
+        assertEquals(0, results.getWarnings().size());
+    }
+
+    @Test
+    public void preEntitlementNoInstanceCapableBindError() {
+        // Test with sockets to make sure that they are skipped.
+        Consumer c = TestUtil.createConsumer();
+        Set<ConsumerCapability> caps = new HashSet<ConsumerCapability>();
+        c.setCapabilities(caps);
+        c.getType().setManifest(true);
+
+        Product prod = TestUtil.createProduct();
+        prod.setAttribute("instance_multiplier", "2");
+        Pool p = TestUtil.createPool(prod);
+
+        ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.BIND);
+        assertNotNull(results);
+        assertEquals(0, results.getWarnings().size());
+        ValidationError error = results.getErrors().get(0);
+        assertEquals("rulefailed.instance.unsupported.by.consumer", error.getResourceKey());
+    }
+
+    @Test
+    public void preEntitlementNoInstanceCapableListWarn() {
+        // Test with sockets to make sure that they are skipped.
+        Consumer c = TestUtil.createConsumer();
+        Set<ConsumerCapability> caps = new HashSet<ConsumerCapability>();
+        c.setCapabilities(caps);
+        c.getType().setManifest(true);
+
+        Product prod = TestUtil.createProduct();
+        prod.setAttribute("instance_multiplier", "2");
+        Pool p = TestUtil.createPool(prod);
+
+        ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.LIST_POOLS);
+        assertNotNull(results);
+        assertEquals(0, results.getErrors().size());
+        ValidationWarning warning = results.getWarnings().get(0);
+        assertEquals("rulewarning.instance.unsupported.by.consumer",
+            warning.getResourceKey());
+    }
+
+    @Test
+    public void preEntitlementSuccessInstanceCapable() {
+        // Test with sockets to make sure that they are skipped.
+        Consumer c = TestUtil.createConsumer();
+        Set<ConsumerCapability> caps = new HashSet<ConsumerCapability>();
+        ConsumerCapability cc = new ConsumerCapability(c, "instance_multiplier");
+        caps.add(cc);
+        c.setCapabilities(caps);
+        c.getType().setManifest(true);
+
+        Product prod = TestUtil.createProduct();
+        prod.setAttribute("instance_multiplier", "2");
+        Pool p = TestUtil.createPool(prod);
+
+        ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.BEST_POOLS);
+        assertNotNull(results);
+        assertEquals(0, results.getErrors().size());
+        assertEquals(0, results.getWarnings().size());
     }
 
     @Test

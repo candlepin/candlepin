@@ -449,35 +449,13 @@ public class ConsumerResource {
     }
 
     /**
-     * @param consumer
-     * @return
-     */
-    private void setCapabilitiesByVersion(Consumer consumer) {
-        if (!consumer.getType().isManifest()) { return; }
-
-        if (consumer.getFact("distributor_version") != null &&
-            (consumer.getCapabilities() == null ||
-            consumer.getCapabilities().isEmpty())) {
-            DistributorVersion dv = distributorVersionCurator.findByName(
-                consumer.getFact("distributor_version"));
-            if (dv != null) {
-                Set<ConsumerCapability> ccaps = new HashSet<ConsumerCapability>();
-                for (DistributorVersionCapability dvc : dv.getCapabilities()) {
-                    ConsumerCapability cc = new ConsumerCapability(consumer, dvc.getName());
-                    ccaps.add(cc);
-                }
-                consumer.setCapabilities(ccaps);
-            }
-        }
-    }
-
-    /**
      * @param existing
      * @param update
      * @return
      */
     private boolean updateCapabilities(Consumer existing, Consumer update) {
-        if (!existing.getType().isManifest()) { return false; }
+        if (existing.getType() == null ||
+            !existing.getType().isManifest()) { return false; }
         boolean change = false;
         if (update == null) {
             // create
@@ -1679,7 +1657,8 @@ public class ConsumerResource {
         @Verify(value = Consumer.class, require = Access.ALL) String consumerUuid) {
 
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
-        if (!consumer.getType().isManifest()) {
+        if (consumer.getType() == null ||
+            !consumer.getType().isManifest()) {
             throw new ForbiddenException(
                 i18n.tr(
                     "Consumer {0} cannot be exported. " +
