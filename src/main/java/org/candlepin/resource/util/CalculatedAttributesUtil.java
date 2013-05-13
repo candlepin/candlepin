@@ -20,6 +20,9 @@ import org.candlepin.policy.js.quantity.QuantityRules;
 
 import com.google.inject.Inject;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * CalculatedAttributesUtil
  */
@@ -31,17 +34,21 @@ public class CalculatedAttributesUtil {
         this.quantityRules = quantityRules;
     }
 
-    public void addCalculatedAttributes(Pool p, Consumer c) {
+    public Map<String, String> buildCalculatedAttributes(Pool p, Consumer c) {
+        Map<String, String> attrMap = new HashMap<String, String>();
+
         if (c == null) {
-            return;
+            return attrMap;
         }
 
-        p.addCalculatedAttribute("suggested_quantity",
+        attrMap.put("suggested_quantity",
             String.valueOf(quantityRules.getSuggestedQuantity(p, c)));
 
         if (p.hasProductAttribute("instance_multiplier")) {
-            p.addCalculatedAttribute("quantity_increment",
+            attrMap.put("quantity_increment",
                 p.getProductAttribute("instance_multiplier").getValue());
         }
+
+        return attrMap;
     }
 }
