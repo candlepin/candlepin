@@ -15,42 +15,40 @@
 package org.candlepin.resource.util;
 
 import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.policy.js.quantity.QuantityRules;
 
 import com.google.inject.Inject;
 
-import org.xnap.commons.i18n.I18n;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * CalculatedAttributesUtil
  */
 public class CalculatedAttributesUtil {
-    private I18n i18n;
-    private ConsumerCurator consumerCurator;
     private QuantityRules quantityRules;
 
     @Inject
-    public CalculatedAttributesUtil(I18n i18n, ConsumerCurator consumerCurator,
-        QuantityRules quantityRules) {
-        this.i18n = i18n;
-        this.consumerCurator = consumerCurator;
+    public CalculatedAttributesUtil(QuantityRules quantityRules) {
         this.quantityRules = quantityRules;
     }
 
-    public Pool addCalculatedAttributes(Pool p, Consumer c) {
+    public Map<String, String> buildCalculatedAttributes(Pool p, Consumer c) {
+        Map<String, String> attrMap = new HashMap<String, String>();
+
         if (c == null) {
-            return p;
+            return attrMap;
         }
 
-        p.addCalculatedAttribute("suggested_quantity",
+        attrMap.put("suggested_quantity",
             String.valueOf(quantityRules.getSuggestedQuantity(p, c)));
 
         if (p.hasProductAttribute("instance_multiplier")) {
-            p.addCalculatedAttribute("quantity_increment",
+            attrMap.put("quantity_increment",
                 p.getProductAttribute("instance_multiplier").getValue());
         }
-        return p;
+
+        return attrMap;
     }
 }
