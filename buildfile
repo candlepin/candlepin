@@ -354,7 +354,7 @@ define "candlepin" do
           ant.classpath :path=>_('target/classes')
           ant.jpaconfiguration :persistenceunit=>'production'
           ant.hbm2ddl :export=>'false', :update=>'false', :drop=>'false', :create=>'true',
-            :outputfilename=>'candlepin-proxy.sql', :delimiter=>';', :format=>'false', :haltonerror=>'true'
+            :outputfilename=>'candlepin-proxy.sql', :delimiter=>';', :format=>'true', :haltonerror=>'true'
         end
       end
     ensure
