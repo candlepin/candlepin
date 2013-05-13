@@ -266,6 +266,60 @@ public class AutobindRulesTest {
         assertTrue(bestPools.contains(new PoolQuantity(slaPremiumPool, 1)));
     }
 
+    @Test
+    public void ensureSelectBestPoolsFiltersPoolsBySLAWhenOrgHasSLASet() {
+        // Create Premium SLA prod
+        String slaPremiumProdId = "premium-sla-product";
+        Product slaPremiumProduct = new Product(slaPremiumProdId,
+                                         "Product with SLA Permium");
+        slaPremiumProduct.setAttribute("support_level", "Premium");
+
+        Pool slaPremiumPool = TestUtil.createPool(owner, slaPremiumProduct);
+        slaPremiumPool.setId("pool-with-premium-sla");
+        slaPremiumPool.setProductAttribute("support_level", "Premium",
+            slaPremiumProdId);
+
+        // Create Standard SLA Product
+        String slaStandardProdId = "standard-sla-product";
+        Product slaStandardProduct = new Product(slaStandardProdId,
+                                         "Product with SLA Standard");
+        slaStandardProduct.setAttribute("support_level", "Standard");
+
+        Pool slaStandardPool = TestUtil.createPool(owner, slaStandardProduct);
+        slaStandardPool.setId("pool-with-standard-sla");
+        slaStandardPool.setProductAttribute("support_level", "Standard",
+            slaStandardProdId);
+
+        // Create a product with no SLA.
+        Product noSLAProduct = new Product(productId, "A test product");
+        Pool noSLAPool = TestUtil.createPool(owner, noSLAProduct);
+        noSLAPool.setId("pool-1");
+
+        // Ensure correct products are returned when requested.
+        when(this.prodAdapter.getProductById(productId)).thenReturn(
+            noSLAProduct);
+        when(this.prodAdapter.getProductById(slaPremiumProdId)).thenReturn(
+            slaPremiumProduct);
+        when(this.prodAdapter.getProductById(slaStandardProdId)).thenReturn(
+            slaStandardProduct);
+
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(noSLAPool);
+        pools.add(slaPremiumPool);
+        pools.add(slaStandardPool);
+
+        // SLA filtering only occurs when consumer has SLA set.
+        consumer.setServiceLevel("");
+        consumer.getOwner().setDefaultServiceLevel("Premium");
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{ productId, slaPremiumProdId, slaStandardProdId},
+            pools, compliance, null, new HashSet<String>());
+
+        assertEquals(1, bestPools.size());
+        assertTrue(bestPools.contains(new PoolQuantity(slaPremiumPool, 1)));
+    }
+
     // we shouldn't be able to get any new entitlements
     @Test(expected = RuleExecutionException.class)
     public void testFindBestWillNotCompleteAPartialStackFromAnotherId() {
@@ -377,12 +431,148 @@ public class AutobindRulesTest {
         return p;
     }
 
-    private Product mockProductSockets(String pid, String productName, String sockets) {
-        Product product = new Product(pid, productName);
-        product.setAttribute("sockets", sockets);
-        product.setAttribute("multi-entitlement", "no");
-        when(this.prodAdapter.getProductById(pid)).thenReturn(product);
-        return product;
+    @Test
+    public void instanceAutobindForPhysicalNoSocketFact() {
+        List<Pool> pools = createInstanceBasedPool();
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>());
+
+        assertEquals(1, bestPools.size());
+        PoolQuantity q = bestPools.get(0);
+        assertEquals(new Integer(2), q.getQuantity());
+    }
+
+    @Test
+    public void instanceAutobindForPhysical8Socket() {
+        List<Pool> pools = createInstanceBasedPool();
+        setupConsumer("8", false);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>());
+
+        assertEquals(1, bestPools.size());
+        PoolQuantity q = bestPools.get(0);
+        assertEquals(new Integer(8), q.getQuantity());
+    }
+
+    @Test
+    public void instanceAutobindForPhysical8SocketCompletePartialStack() {
+        List<Pool> pools = createInstanceBasedPool();
+        setupConsumer("8", false);
+
+        // Create a pre-existing entitlement which only covers half of the sockets:
+        Entitlement mockEnt = mockEntitlement(pools.get(0), 4);
+        consumer.addEntitlement(mockEnt);
+        compliance.addPartiallyCompliantProduct(productId, mockEnt);
+        compliance.addPartialStack("1", mockEnt);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>());
+
+        assertEquals(1, bestPools.size());
+        PoolQuantity q = bestPools.get(0);
+        assertEquals(new Integer(4), q.getQuantity());
+    }
+
+     // Simple utility to simulate a pre-existing entitlement for a pool.
+    private Entitlement mockEntitlement(Pool p, int quantity) {
+        Entitlement e = TestUtil.createEntitlement(owner, consumer, p, null);
+        e.setQuantity(quantity);
+        return e;
+    }
+
+    @Test
+    public void instanceAutobindForVirt8Vcpu() {
+        List<Pool> pools = createInstanceBasedPool();
+        setupConsumer("8", true);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>());
+
+        assertEquals(1, bestPools.size());
+        PoolQuantity q = bestPools.get(0);
+        assertEquals(new Integer(1), q.getQuantity());
+    }
+
+    private void setupConsumer(String socketFact, boolean isVirt) {
+        this.consumer.setFact("cpu.cpu_socket(s)", socketFact);
+        if (isVirt) {
+            this.consumer.setFact("virt.is_guest", "true");
+        }
+    }
+
+    private List<Pool> createInstanceBasedPool() {
+        Product product = new Product(productId, "A test product");
+        product.setAttribute("instance_multiplier", "2");
+        product.setAttribute("stacking_id", "1");
+        product.setAttribute("multi-entitlement", "yes");
+        product.setAttribute("sockets", "2");
+        Pool pool = TestUtil.createPool(owner, product, 100);
+        pool.setId("DEAD-BEEF");
+        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool);
+        return pools;
+    }
+
+    @Test
+    public void hostRestrictedAutobindForVirt8Vcpu() {
+        List<Pool> pools = createHostRestrictedVirtLimitPool();
+        setupConsumer("8", true);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>());
+
+        assertEquals(1, bestPools.size());
+        PoolQuantity q = bestPools.get(0);
+        assertEquals(new Integer(1), q.getQuantity());
+    }
+
+    // Simulating the subpool you would get after a physical system binds:
+    private List<Pool> createHostRestrictedVirtLimitPool() {
+        Product product = new Product(productId, "A test product");
+        product.setAttribute("virt_limit", "4");
+        product.setAttribute("stacking_id", "1");
+        product.setAttribute("multi-entitlement", "yes");
+        product.setAttribute("sockets", "2");
+        Pool pool = TestUtil.createPool(owner, product, 100);
+        pool.setId("DEAD-BEEF");
+        pool.setAttribute("virt_only", "true");
+        pool.setAttribute("requires_host", "BLAH");
+        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool);
+        return pools;
+    }
+
+    private List<Pool> createStackedPoolEnforcingNothing() {
+        Product product = new Product(productId, "A test product");
+        product.setAttribute("stacking_id", "1");
+        product.setAttribute("multi-entitlement", "yes");
+        Pool pool = TestUtil.createPool(owner, product, 100);
+        pool.setId("DEAD-BEEF");
+        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool);
+        return pools;
+    }
+
+    // Testing an edge case, stacking ID defined, but no attributes specified to enforce:
+    @Test
+    public void unenforcedStackedAutobindForPhysical8Socket() {
+        List<Pool> pools = createStackedPoolEnforcingNothing();
+        setupConsumer("8", false);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>());
+
+        assertEquals(1, bestPools.size());
+        PoolQuantity q = bestPools.get(0);
+        assertEquals(new Integer(1), q.getQuantity());
     }
 
 }

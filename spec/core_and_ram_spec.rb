@@ -44,7 +44,7 @@ describe 'Core and RAM Limiting' do
 
   it 'consumer status should be valid when cores, ram and sockets are covered' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '3.1',
+                {'system.certificate_version' => '3.2',
                  'cpu.core(s)_per_socket' => '4',
                  'memory.memtotal' => '8000000',
                  'cpu.cpu_socket(s)' => '4'})
@@ -69,7 +69,7 @@ describe 'Core and RAM Limiting' do
   # entitle by getting single entitlement and checking status
   it 'consumer status should be partial when consumer core only not covered' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '3.1',
+                {'system.certificate_version' => '3.2',
                  'cpu.core(s)_per_socket' => '8',
                  'memory.memtotal' => '8000000',
                  'cpu.cpu_socket(s)' => '4'})
@@ -93,7 +93,7 @@ describe 'Core and RAM Limiting' do
 
   it 'consumer status should be partial when consumer ram only not covered' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '3.1',
+                {'system.certificate_version' => '3.2',
                  'cpu.core(s)_per_socket' => '4',
                  'memory.memtotal' => '16000000',
                  'cpu.cpu_socket(s)' => '4'})
@@ -117,7 +117,7 @@ describe 'Core and RAM Limiting' do
 
   it 'consumer status should be partial when consumer sockets only not covered' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '3.1',
+                {'system.certificate_version' => '3.2',
                  'cpu.core(s)_per_socket' => '2',
                  'memory.memtotal' => '8000000',
                  'cpu.cpu_socket(s)' => '8'})
@@ -142,7 +142,7 @@ describe 'Core and RAM Limiting' do
   # autobind tests. can we get a full bind to cover the limiting reagent?
   it 'consumer status should be valid when consumer core requires extra entitlement' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '3.1',
+                {'system.certificate_version' => '3.2',
                  'cpu.core(s)_per_socket' => '8',
                  'memory.memtotal' => '8000000',
                  'cpu.cpu_socket(s)' => '4'})
@@ -164,7 +164,7 @@ describe 'Core and RAM Limiting' do
 
   it 'consumer status should be invalid when consumer ram exceeds entitlement' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '3.1',
+                {'system.certificate_version' => '3.2',
                  'cpu.core(s)_per_socket' => '4',
                  'memory.memtotal' => '16000000',
                  'cpu.cpu_socket(s)' => '4'})
@@ -190,7 +190,7 @@ describe 'Core and RAM Limiting' do
 
   it 'consumer status should be valid when consumer socket requires extra entitlement' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '3.1',
+                {'system.certificate_version' => '3.2',
                  'cpu.core(s)_per_socket' => '2',
                  'memory.memtotal' => '8000000',
                  'cpu.cpu_socket(s)' => '8'})
@@ -214,7 +214,7 @@ describe 'Core and RAM Limiting' do
     owner = create_owner random_string('test_owner')
     user = user_client(owner, random_string('test-user'))
     system = consumer_client(user, random_string('system'), :system, nil,
-                {'system.certificate_version' => '3.1',
+                {'system.certificate_version' => '3.2',
                  'cpu.cpu_socket(s)' => '4',
                  'cpu.core(s)_per_socket' => '8'})
     prod1 = create_product(random_string('product'), random_string('product'), :attributes =>

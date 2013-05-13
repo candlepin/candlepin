@@ -93,7 +93,7 @@ public class TestUtil {
     private static final Random RANDOM = new Random(System.currentTimeMillis());
 
     public static int randomInt() {
-        return RANDOM.nextInt(10000);
+        return Math.abs(RANDOM.nextInt());
     }
 
     public static Product createProduct(String id, String name) {

@@ -168,12 +168,10 @@ describe 'Standalone Virt-Limit Subscriptions' do
     @guest2_client.list_entitlements.length.should == 1
   end
 
-  it 'should change the quantity on a virt_only pool when the source entitlement quantity changes' do
+  it 'should not change the quantity on sub-pool when the source entitlement quantity changes' do
     # Create a sub for a virt limited product:
     product = create_product(random_string('product'), random_string('product'),
                       :attributes => { :virt_limit => 3, :'multi-entitlement' => 'yes'})
-
-    #create a sub
     sub = @cp.create_subscription(@owner['key'], product.id, 10)
     @cp.refresh_pools(@owner['key'])
 
@@ -188,7 +186,7 @@ describe 'Standalone Virt-Limit Subscriptions' do
     pools.size.should == 2
     pools.each do |now_pool|
         if now_pool['id'] != pool['id']
-            now_pool['quantity'].should == 9
+            now_pool['quantity'].should == 3
         end
     end
     # reduce entitlement
@@ -198,18 +196,21 @@ describe 'Standalone Virt-Limit Subscriptions' do
     pools.size.should == 2
     pools.each do |now_pool|
         if now_pool['id'] != pool['id']
-            now_pool['quantity'].should == 6
-        end
-    end
-    # increase entitlement"
-    @host1_client.update_entitlement({:id => host_ent.id, :quantity => 5})
-    pools = @user.list_pools :owner => @owner.id, \
-           :product => product.id
-    pools.size.should == 2
-    pools.each do |now_pool|
-        if now_pool['id'] != pool['id']
-            now_pool['quantity'].should == 15
+            now_pool['quantity'].should == 3
         end
     end
   end
+
+  it 'should not block a virt guest' do
+    @instance_based = create_product(nil, random_string('instance_based'),
+                                    :attributes => { 'instance_multiplier' => 2,
+                                        'multi-entitlement' => 'yes' })
+    @cp.create_subscription(@owner['key'], @instance_based.id, 10)
+    @cp.refresh_pools(@owner['key'])
+
+    pool = @guest1_client.list_pools(:product => @instance_based.id,
+        :consumer => @guest1_client.uuid).first
+    @guest1_client.consume_pool(pool.id, {:quantity => 3})
+  end
+
 end

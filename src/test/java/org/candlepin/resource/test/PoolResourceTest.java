@@ -15,11 +15,16 @@
 package org.candlepin.resource.test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import java.util.List;
-
-import org.candlepin.auth.ConsumerPrincipal;
+import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
+import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ForbiddenException;
@@ -29,11 +34,17 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.resource.PoolResource;
+import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
+
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import java.util.List;
 
 
 /**
@@ -57,8 +68,12 @@ public class PoolResourceTest extends DatabaseTestFixture {
     private static final int END_YEAR = 3000;
     private Principal adminPrincipal;
 
+    @Mock private CalculatedAttributesUtil attrUtil;
+
     @Before
     public void setUp() {
+        MockitoAnnotations.initMocks(this);
+
         owner1 = createOwner();
         owner2 = createOwner();
         ownerCurator.create(owner1);
@@ -68,7 +83,6 @@ public class PoolResourceTest extends DatabaseTestFixture {
         product2 = TestUtil.createProduct();
         productCurator.create(product1);
         productCurator.create(product2);
-
 
         pool1 = createPoolAndSub(owner1, product1, 500L,
              TestUtil.createDate(START_YEAR, 1, 1), TestUtil.createDate(END_YEAR, 1, 1));
@@ -80,7 +94,16 @@ public class PoolResourceTest extends DatabaseTestFixture {
         poolCurator.create(pool2);
         poolCurator.create(pool3);
 
-        poolResource = injector.getInstance(PoolResource.class);
+        when(attrUtil.addCalculatedAttributes(eq(pool1), any(Consumer.class)))
+            .thenReturn(pool1);
+        when(attrUtil.addCalculatedAttributes(eq(pool2), any(Consumer.class)))
+            .thenReturn(pool2);
+        when(attrUtil.addCalculatedAttributes(eq(pool3), any(Consumer.class)))
+            .thenReturn(pool3);
+
+        poolResource = new PoolResource(poolCurator, consumerCurator, ownerCurator,
+            statisticCurator, i18n, injector.getInstance(EventSink.class), poolManager,
+            attrUtil);
 
         // Consumer system with too many cpu cores:
 
@@ -157,6 +180,9 @@ public class PoolResourceTest extends DatabaseTestFixture {
         List<Pool> pools = poolResource.list(null, passConsumer.getUuid(),
             product1.getId(), false, null, adminPrincipal);
         assertEquals(1, pools.size());
+
+        verify(attrUtil).addCalculatedAttributes(any(Pool.class),
+            eq(passConsumer));
     }
 
     @Test(expected = ForbiddenException.class)
@@ -180,6 +206,9 @@ public class PoolResourceTest extends DatabaseTestFixture {
         List<Pool> pools = poolResource.list(null, passConsumer.getUuid(), null, false,
             null, adminPrincipal);
         assertEquals(2, pools.size());
+
+        verify(attrUtil, times(2)).addCalculatedAttributes(any(Pool.class),
+            eq(passConsumer));
     }
 
     @Test(expected = NotFoundException.class)
@@ -254,4 +283,24 @@ public class PoolResourceTest extends DatabaseTestFixture {
         assertEquals(0, pools.size());
     }
 
+    @Test
+    public void testCalculatedAttributesAbsent() {
+        when(attrUtil.addCalculatedAttributes(eq(pool1), any(Consumer.class)))
+            .thenReturn(pool1);
+        Pool p = poolResource.getPool(pool1.getId(), null, adminPrincipal);
+        assertNull(p.getCalculatedAttributes());
+    }
+
+    @Test(expected = ForbiddenException.class)
+    public void testUnauthorizedUserRequestingPool() {
+        Owner owner2 = createOwner();
+        ownerCurator.create(owner2);
+        poolResource.getPool(pool1.getId(), passConsumer.getUuid(),
+            setupPrincipal(owner2, Access.NONE));
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void testUnknownConsumerRequestingPool() {
+        poolResource.getPool(pool1.getId(), "xyzzy", adminPrincipal);
+    }
 }

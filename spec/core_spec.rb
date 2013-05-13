@@ -35,16 +35,16 @@ describe 'Core Limiting' do
     @user = user_client(@owner, random_string('test-user'))
   end
 
-  it 'can consume core entitlement if requesting v3.1 certificate' do
+  it 'can consume core entitlement if requesting v3.2 certificate' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '3.1'})
+                {'system.certificate_version' => '3.2'})
     entitlement = system.consume_product(@core_product.id)[0]
     entitlement.should_not == nil
   end
 
-  it 'can not consume core entitlement when requesting less than v3.1 certificate' do
+  it 'can not consume core entitlement when requesting less than v3.2 certificate' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '3.0'})
+                {'system.certificate_version' => '3.1'})
 
     installed = [
         {'productId' => @core_sub.id,
@@ -55,7 +55,7 @@ describe 'Core Limiting' do
     pool = find_pool(@owner.id, @core_sub.id)
     pool.should_not == nil
 
-    expected_error = ("The client must support at least v3.1 certificates in order to use subscription: %s." +
+    expected_error = ("The client must support at least v3.2 certificates in order to use subscription: %s." +
                      " A newer client may be available to address this problem.") % [@core_product.name]
     begin
       entitlement = system.consume_pool(pool.id)
@@ -69,7 +69,7 @@ describe 'Core Limiting' do
 
   it 'consumer status should be valid when consumer core is covered' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '3.1',
+                {'system.certificate_version' => '3.2',
                  # Simulate 8 cores as would be returned from system fact
                  'cpu.core(s)_per_socket' => '8'})
     installed = [
@@ -89,7 +89,7 @@ describe 'Core Limiting' do
 
   it 'consumer status should be partial when consumer core not covered' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '3.1',
+                {'system.certificate_version' => '3.2',
                  # Simulate 16 cores as would be returned from system fact
                  'cpu.core(s)_per_socket' => '16'})
     installed = [
@@ -112,7 +112,7 @@ describe 'Core Limiting' do
 
   it 'consumer status should be partial when consumer core covered but not sockets' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '3.1',
+                {'system.certificate_version' => '3.2',
                  # Simulate 2 cores as would be returned from system fact
                  # which should be covered by the enitlement when consumed.
                  'cpu.core(s)_per_socket' => '2',
@@ -140,7 +140,7 @@ describe 'Core Limiting' do
 
   it 'consumer status should be partial when consumer sockets covered but not core' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '3.1',
+                {'system.certificate_version' => '3.2',
                  # Simulate 16 cores as would be returned from system fact
                  # which will not be covered by the enitlement when consumed.
                  'cpu.core(s)_per_socket' => '8',
@@ -168,7 +168,7 @@ describe 'Core Limiting' do
 
   it 'consumer status is valid when both core and sockets are covered' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '3.1',
+                {'system.certificate_version' => '3.2',
                  # Simulate 8 cores as would be returned from system fact
                  # which will be covered by the enitlement when consumed.
                  'cpu.core(s)_per_socket' => '4',
@@ -192,7 +192,7 @@ describe 'Core Limiting' do
 
   it 'can heal when core limited' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '3.1',
+                {'system.certificate_version' => '3.2',
                  # Simulate 8 cores as would be returned from system fact
                  'cpu.core(s)_per_socket' => '8'})
     installed = [
@@ -207,7 +207,7 @@ describe 'Core Limiting' do
 
   it 'will not heal when system core is not covered by any entitlements' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '3.1',
+                {'system.certificate_version' => '3.2',
                  # Simulate 12 corse as would be returned from system fact
                  'cpu.core(s)_per_socket' => '12'})
     installed = [
@@ -222,7 +222,7 @@ describe 'Core Limiting' do
 
   it 'can heal when both core and socket limited' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '3.1',
+                {'system.certificate_version' => '3.2',
                  # Simulate 8 cores as would be returned from system fact
                  # which will be covered by the enitlement when consumed.
                  'cpu.core(s)_per_socket' => '4',

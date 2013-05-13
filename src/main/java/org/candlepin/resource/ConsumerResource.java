@@ -453,7 +453,7 @@ public class ConsumerResource {
      * @return
      */
     private void setCapabilitiesByVersion(Consumer consumer) {
-        if (!consumer.isManifest()) { return; }
+        if (!consumer.getType().isManifest()) { return; }
 
         if (consumer.getFact("distributor_version") != null &&
             (consumer.getCapabilities() == null ||
@@ -477,7 +477,7 @@ public class ConsumerResource {
      * @return
      */
     private boolean updateCapabilities(Consumer existing, Consumer update) {
-        if (!existing.isManifest()) { return false; }
+        if (!existing.getType().isManifest()) { return false; }
         boolean change = false;
         if (update == null) {
             // create

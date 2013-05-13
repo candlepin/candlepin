@@ -17,6 +17,7 @@ lib
 *.log.*
 buildconf/builder/config/local
 .classpath
+.syntastic_class_path
 .project
 .pydevproject
 .externalToolBuilders

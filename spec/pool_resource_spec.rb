@@ -142,4 +142,19 @@ describe 'Pool Resource' do
 
   end
 
+  it 'should return calculated attributes' do
+    owner = create_owner random_string('test_owner')
+    product = create_product(name='some_product')
+
+    @cp.create_subscription(owner['key'], product.id, 25)
+    @cp.refresh_pools(owner['key'])
+    pools = @cp.list_pools
+    pool = pools.select { |p| p['owner']['key'] == owner['key'] }.first
+
+    user = user_client(owner, 'billy')
+    system = consumer_client(user, 'system')
+
+    @cp.get_pool(pool.id, system.uuid)['calculatedAttributes']['suggested_quantity'].should == "1"
+  end
+
 end

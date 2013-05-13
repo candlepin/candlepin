@@ -115,7 +115,7 @@ public class JsRunner {
             returner = this.invokeMethod(ruleName);
         }
         catch (NoSuchMethodException ex) {
-            log.warn("No rule found: " + ruleName + " in namespace: " + namespace);
+            log.info("No rule found: " + ruleName + " in namespace: " + namespace);
         }
         catch (RhinoException ex) {
             throw new RuleExecutionException(ex);
@@ -128,4 +128,18 @@ public class JsRunner {
         return invokeRule(ruleName);
     }
 
+    public <T extends Object> T runJsFunction(Class<T> clazz, String function,
+        JsContext context) {
+        T returner = null;
+        try {
+            returner = invokeMethod(function, context);
+        }
+        catch (NoSuchMethodException e) {
+            log.warn("No javascript method found: " + function);
+        }
+        catch (RhinoException e) {
+            throw new RuleExecutionException(e);
+        }
+        return returner;
+    }
 }

@@ -28,6 +28,7 @@ import org.candlepin.auth.interceptor.Verify;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.CandlepinException;
+import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.IseException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.ActivationKey;
@@ -63,6 +64,7 @@ import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
+import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -137,6 +139,8 @@ public class OwnerResource {
     private EntitlementCurator entitlementCurator;
     private UeberCertificateGenerator ueberCertGenerator;
     private EnvironmentCurator envCurator;
+    private CalculatedAttributesUtil calculatedAttributesUtil;
+
     private static final int FEED_LIMIT = 1000;
 
     @Inject
@@ -159,7 +163,7 @@ public class OwnerResource {
         EntitlementCertificateCurator entitlementCertCurator,
         EntitlementCurator entitlementCurator, UniqueIdGenerator idGenerator,
         UeberCertificateGenerator ueberCertGenerator,
-        EnvironmentCurator envCurator) {
+        EnvironmentCurator envCurator, CalculatedAttributesUtil calculatedAttributesUtil) {
 
         this.ownerCurator = ownerCurator;
         this.ownerInfoCurator = ownerInfoCurator;
@@ -184,6 +188,7 @@ public class OwnerResource {
         this.entitlementCurator = entitlementCurator;
         this.ueberCertGenerator = ueberCertGenerator;
         this.envCurator = envCurator;
+        this.calculatedAttributesUtil = calculatedAttributesUtil;
     }
 
     /**
@@ -576,7 +581,8 @@ public class OwnerResource {
         @QueryParam("consumer") String consumerUuid,
         @QueryParam("product") String productId,
         @QueryParam("listall") @DefaultValue("false") boolean listAll,
-        @QueryParam("activeon") String activeOn) {
+        @QueryParam("activeon") String activeOn,
+        @Context Principal principal) {
 
         Owner owner = findOwner(ownerKey);
 
@@ -592,13 +598,28 @@ public class OwnerResource {
                 throw new NotFoundException(i18n.tr("consumer: {0} not found",
                     consumerUuid));
             }
+
             if (!c.getOwner().getId().equals(owner.getId())) {
                 throw new BadRequestException(
                     "Consumer specified does not belong to owner on path");
             }
+
+            if (!principal.canAccess(c, Access.READ_ONLY)) {
+                throw new ForbiddenException(i18n.tr("User {0} cannot access consumer {1}",
+                    principal.getPrincipalName(), c.getUuid()));
+            }
         }
-        return poolCurator.listAvailableEntitlementPools(c, owner, productId,
+
+        List<Pool> poolList = poolCurator.listAvailableEntitlementPools(c, owner, productId,
             activeOnDate, true, listAll);
+
+        if (c != null) {
+            for (Pool p : poolList) {
+                p = calculatedAttributesUtil.addCalculatedAttributes(p, c);
+            }
+        }
+
+        return poolList;
     }
 
     /**

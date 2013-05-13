@@ -483,6 +483,23 @@
             ]
         },
         {
+            "name": "Awesome OS Instance Server Bits",
+            "id": "32060",
+            "version": "6.1",
+            "attributes": {
+                "sockets": 2,
+                "warning_period": 30
+            },
+            "content": [
+                [1111, true],
+                [0, false],
+                [1, true],
+                [2, true],
+                [234, true],
+                [235, true]
+            ]
+        },
+        {
             "name": "Awesome OS Workstation Bits",
             "id": "27060",
             "version": "6.1",
@@ -638,16 +655,13 @@
             "id": "awesomeos-instancebased",
             "type": "MKT",
             "provided_products": [
-                "37065",
-                "37070",
-                "37067",
-                "37068",
-                "37069",
-                "37060"
+                "32060"
             ],
             "attributes": {
                 "instance_multiplier": 2,
                 "sockets": 2,
+                "virt_limit": 1,
+                "host_limited": 1,
                 "stacking_id": 15,
                 "multi-entitlement": "yes",
                 "support_level" : "Standard",
@@ -1153,12 +1167,12 @@
             ]
         },
         {
-            "name": "RAM/Sockets Package (8GB)",
-            "id": "ram-sockets-8gb",
+            "name": "RAM/Cores Package (8GB, 4 cores)",
+            "id": "ram-cores-8gb-4cores",
             "type": "MKT",
             "attributes": {
                 "ram": 8,
-                "sockets": 4
+                "cores": 4
             },
             "provided_products": [
                 "801"
@@ -1259,11 +1273,11 @@
             ]
         },
         {
-            "name": "Multi-Attribute Stackable (2 sockets, 2 GB)",
-            "id": "2sock-2ram-multiattr",
+            "name": "Multi-Attribute Stackable (2 GB, 2 Cores)",
+            "id": "2cores-2ram-multiattr",
             "type": "MKT",
             "attributes": {
-                "sockets": 2,
+                "cores": 2,
                 "ram": 2,
                 "multi-entitlement": "yes",
                 "stacking_id": "multiattr-stack-test",
@@ -1292,11 +1306,11 @@
             ]
         },
         {
-            "name": "Multi-Attribute (non-stackable) (6 sockets, 8GB)",
-            "id": "non-stacked-6sock8ram-multiattr",
+            "name": "Multi-Attribute (non-stackable) (6 cores, 8GB)",
+            "id": "non-stacked-6core8ram-multiattr",
             "type": "MKT",
             "attributes": {
-                "sockets": 6,
+                "cores": 6,
                 "ram": 8,
                 "support_level" : "Super",
                 "support_type" : "Level 3"
@@ -1314,6 +1328,21 @@
                 "ram": 8,
                 "cores": 24,
                 "support_level" : "Super",
+                "support_type" : "Level 3"
+            },
+            "provided_products": [
+                "900"
+            ]
+        },
+        {
+            "name": "Multi-Attribute (multi-entitlement only) (8 cores, 4GB)",
+            "id": "non-stacked-8core4ram-multiattr",
+            "type": "MKT",
+            "attributes": {
+                "multi-entitlement": "yes",
+                "cores": 8,
+                "ram": 4,
+                "support_level" : "Premium",
                 "support_type" : "Level 3"
             },
             "provided_products": [

@@ -108,6 +108,15 @@ public abstract class X509Util {
     public String createFullContentPath(String contentPrefix, ProductContent pc) {
         String prefix = "/";
         String contentPath = pc.getContent().getContentUrl();
+        // Allow for the case wherethe content url is a true url.
+        // If that is true, then return it as is.
+        if (contentPath.startsWith("http://") ||
+            contentPath.startsWith("file://") ||
+            contentPath.startsWith("https://") ||
+            contentPath.startsWith("ftp://")) {
+            return contentPath;
+        }
+
         if (!StringUtils.isEmpty(contentPrefix)) {
             // Ensure there is no double // in the URL. See BZ952735
             // remove them all except one.

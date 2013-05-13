@@ -257,4 +257,18 @@ describe 'Owner Resource' do
     levels[0].should == 'VIP'
   end
 
+  it 'should return calculated attributes' do
+    owner = create_owner random_string("owner1")
+    product = create_product(random_string("test_id"),
+      random_string("test_name"))
+    @cp.create_subscription(owner['key'], product.id, 10)
+    @cp.refresh_pools(owner['key'])
+
+    user = user_client(owner, "billy")
+    system = consumer_client(user, "system")
+
+    pools = @cp.list_owner_pools(owner['key'], {:consumer => system.uuid})
+    pool = pools.select { |p| p['owner']['key'] == owner['key'] }.first
+    pool['calculatedAttributes']['suggested_quantity'].should == "1"
+  end
 end

@@ -29,9 +29,9 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 import java.util.Set;
-
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
@@ -50,6 +50,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
 
 
 
@@ -68,12 +70,15 @@ public class ComplianceRulesTest {
 
     @Mock private EntitlementCurator entCurator;
     @Mock private RulesCurator rulesCuratorMock;
+    private I18n i18n;
     private JsRunnerProvider provider;
 
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-
+        Locale locale = new Locale("en_US");
+        i18n = I18nFactory.getI18n(getClass(), "org.candlepin.i18n.Messages", locale,
+            I18nFactory.FALLBACK);
         // Load the default production rules:
         InputStream is = this.getClass().getResourceAsStream(
             RulesCurator.DEFAULT_RULES_FILE);
@@ -81,7 +86,8 @@ public class ComplianceRulesTest {
         when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
         when(rulesCuratorMock.getRules()).thenReturn(rules);
         provider = new JsRunnerProvider(rulesCuratorMock);
-        compliance = new ComplianceRules(provider.get(), entCurator);
+        compliance = new ComplianceRules(provider.get(),
+            entCurator, new StatusReasonMessageGenerator(i18n));
         owner = new Owner("test");
     }
 
@@ -137,6 +143,25 @@ public class ComplianceRulesTest {
         Entitlement ent = this.mockBaseStackedEntitlement(consumer, stackId, productId,
             providedProductIds);
         ent.getPool().setProductAttribute("sockets", "2", productId);
+        return ent;
+    }
+
+    private Entitlement mockInstanceEntitlement(Consumer consumer, String stackId,
+        String instanceMultiplier, String productId, String ... providedProductIds) {
+        Entitlement ent = this.mockBaseStackedEntitlement(consumer, stackId, productId,
+            providedProductIds);
+        ent.getPool().setProductAttribute("sockets", "2", productId);
+        ent.getPool().setProductAttribute("instance_multiplier", instanceMultiplier,
+            productId);
+        return ent;
+    }
+
+    private Entitlement mockHostRestrictedEntitlement(Consumer consumer, String stackId,
+        String productId, String ... providedProductIds) {
+        Entitlement ent = this.mockBaseStackedEntitlement(consumer, stackId, productId,
+            providedProductIds);
+        ent.getPool().setProductAttribute("sockets", "2", productId);
+        ent.getPool().setAttribute("requires_host", "SOMEUUID");
         return ent;
     }
 
@@ -392,7 +417,7 @@ public class ComplianceRulesTest {
         assertEquals(1, status.getPartialStacks().size());
 
         assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_1));
-        assertEquals("valid", status.getStatus());
+        assertEquals("partial", status.getStatus());
     }
 
     public void testComplianceDoesNotEnforceSocketsWhenAttributeNotSet() {
@@ -604,7 +629,7 @@ public class ComplianceRulesTest {
         assertEquals(1, status.getPartialStacks().size());
 
         assertTrue(status.getPartialStacks().keySet().contains(STACK_ID_1));
-        assertEquals("valid", status.getStatus());
+        assertEquals("partial", status.getStatus());
     }
 
     @Test
@@ -963,7 +988,7 @@ public class ComplianceRulesTest {
         assertEquals(1, status.getPartialStacks().size());
 
         assertTrue(status.getPartialStacks().keySet().contains(STACK_ID_1));
-        assertEquals("valid", status.getStatus());
+        assertEquals("partial", status.getStatus());
     }
 
     // Cores with not-stackable entitlement tests
@@ -1205,6 +1230,110 @@ public class ComplianceRulesTest {
         assertEquals(1, status.getPartiallyCompliantProducts().size());
         assertTrue(status.getPartiallyCompliantProducts().keySet().contains(PRODUCT_3));
         assertEquals(0, status.getCompliantProducts().size());
+    }
+
+    @Test
+    public void instanceBasedPhysicalGreen() {
+        Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+        ents.add(mockInstanceEntitlement(c, STACK_ID_1, "2", "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        ents.get(0).setQuantity(8);
+        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+
+        assertEquals(ComplianceStatus.GREEN, status.getStatus());
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(0, status.getPartiallyCompliantProducts().size());
+
+        assertEquals(2, status.getCompliantProducts().size());
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_1));
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_2));
+    }
+
+    @Test
+    public void instanceBasedPhysicalStackedGreen() {
+        Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+        ents.add(mockInstanceEntitlement(c, STACK_ID_1, "2", "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        ents.add(mockInstanceEntitlement(c, STACK_ID_1, "2", "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        ents.get(0).setQuantity(6);
+        ents.get(1).setQuantity(2);
+        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+
+        assertEquals(ComplianceStatus.GREEN, status.getStatus());
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(0, status.getPartiallyCompliantProducts().size());
+
+        assertEquals(2, status.getCompliantProducts().size());
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_1));
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_2));
+    }
+
+    @Test
+    public void instanceBasedPhysicalYellow() {
+        Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+        ents.add(mockInstanceEntitlement(c, STACK_ID_1, "2", "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        ents.get(0).setQuantity(7);
+        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+
+        assertEquals(ComplianceStatus.YELLOW, status.getStatus());
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(0, status.getCompliantProducts().size());
+        assertEquals(2, status.getPartiallyCompliantProducts().size());
+        assertTrue(status.getPartiallyCompliantProducts().keySet().contains(PRODUCT_1));
+        assertTrue(status.getPartiallyCompliantProducts().keySet().contains(PRODUCT_2));
+    }
+
+    @Test
+    public void instanceBasedVirtualGreen() {
+        Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
+        c.setFact("virt.is_guest", "true");
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+        ents.add(mockInstanceEntitlement(c, STACK_ID_1, "2", "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        ents.get(0).setQuantity(1);
+        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+
+        assertEquals(ComplianceStatus.GREEN, status.getStatus());
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(0, status.getPartiallyCompliantProducts().size());
+
+        assertEquals(2, status.getCompliantProducts().size());
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_1));
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_2));
+    }
+
+    @Test
+    public void hostRestrictedVirtualGreen() {
+        Consumer c = mockConsumer(PRODUCT_1, PRODUCT_2);
+        c.setFact("virt.is_guest", "true");
+        List<Entitlement> ents = new LinkedList<Entitlement>();
+        ents.add(mockHostRestrictedEntitlement(c, STACK_ID_1, "Awesome Product",
+            PRODUCT_1, PRODUCT_2));
+        ents.get(0).setQuantity(1);
+        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+
+        assertEquals(ComplianceStatus.GREEN, status.getStatus());
+        assertEquals(0, status.getNonCompliantProducts().size());
+        assertEquals(0, status.getPartiallyCompliantProducts().size());
+
+        assertEquals(2, status.getCompliantProducts().size());
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_1));
+        assertTrue(status.getCompliantProducts().keySet().contains(PRODUCT_2));
     }
 
 }

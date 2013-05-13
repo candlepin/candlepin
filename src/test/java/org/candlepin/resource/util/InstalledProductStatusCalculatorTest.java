@@ -26,6 +26,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 import java.util.Set;
 
@@ -44,6 +45,7 @@ import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
+import org.candlepin.policy.js.compliance.StatusReasonMessageGenerator;
 import org.candlepin.util.Util;
 import org.junit.Before;
 import org.junit.Test;
@@ -51,6 +53,8 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
 
 /**
  * InstalledProductStatusCalculatorTest
@@ -66,6 +70,7 @@ public class InstalledProductStatusCalculatorTest {
     @Mock private EntitlementCurator entCurator;
     @Mock private RulesCurator rulesCuratorMock;
     private JsRunnerProvider provider;
+    private I18n i18n;
 
     @Before
     public void setUp() {
@@ -78,7 +83,11 @@ public class InstalledProductStatusCalculatorTest {
         when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
         when(rulesCuratorMock.getRules()).thenReturn(rules);
         provider = new JsRunnerProvider(rulesCuratorMock);
-        compliance = new ComplianceRules(provider.get(), entCurator);
+        Locale locale = new Locale("en_US");
+        i18n = I18nFactory.getI18n(getClass(), "org.candlepin.i18n.Messages", locale,
+            I18nFactory.FALLBACK);
+        compliance = new ComplianceRules(provider.get(),
+            entCurator, new StatusReasonMessageGenerator(i18n));
         owner = new Owner("test");
     }
 

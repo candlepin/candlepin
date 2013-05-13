@@ -156,6 +156,10 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         JsContext context) {
         ValidationResult result = new ValidationResult();
         for (Rule rule : matchingRules) {
+            if (log.isDebugEnabled()) {
+                log.debug("invoking rule: " + PRE_PREFIX + rule.getRuleName());
+            }
+
             String validationJson = jsRules.invokeRule(PRE_PREFIX + rule.getRuleName(),
                 context);
 
@@ -185,7 +189,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         }
         catch (NoSuchMethodException ex) {
             // This is fine, I hope...
-            log.warn("No default rule found: " + GLOBAL_POST_FUNCTION);
+            log.info("No default rule found: " + GLOBAL_POST_FUNCTION);
         }
         catch (RhinoException ex) {
             throw new RuleExecutionException(ex);
@@ -202,7 +206,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         }
         catch (NoSuchMethodException ex) {
             // This is fine, I hope...
-            log.warn("No default rule found: " + GLOBAL_PRE_FUNCTION);
+            log.info("No default rule found: " + GLOBAL_PRE_FUNCTION);
         }
         catch (Exception ex) {
             throw new RuleExecutionException(ex);
@@ -225,7 +229,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         }
         catch (NoSuchMethodException ex) {
             // This is fine, I hope...
-            log.warn("No default rule found: " + GLOBAL_POST_FUNCTION);
+            log.info("No default rule found: " + GLOBAL_POST_FUNCTION);
         }
         catch (RhinoException ex) {
             throw new RuleExecutionException(ex);
@@ -366,7 +370,8 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         Entitlement entitlement, Pool pool, Consumer c,
         Map<String, String> attributes) {
         log.debug("Running virt_limit post unbind.");
-        if (!config.standalone() && c.isManifest()) {
+        if (!config.standalone() && !attributes.containsKey("host_limited") &&
+                c.getType().isManifest()) {
             String virtLimit = attributes.get("virt_limit");
             if (!"unlimited".equals(virtLimit)) {
                 // As we have unbound an entitlement from a physical pool that
@@ -409,7 +414,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
     private void postBindUserLicense(PoolHelper postHelper, Pool pool,
         Consumer c, Map<String, String> attributes) {
         log.debug("Running user_license post-bind.");
-        if (!c.isManifest()) {
+        if (!c.getType().isManifest()) {
             // Default to using the same product from the pool.
             String productId = pool.getProductId();
 
@@ -428,7 +433,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         Entitlement entitlement, Pool pool, Consumer c,
         Map<String, String> attributes) {
         log.debug("Running virt_limit post-bind.");
-        if (!c.isManifest() &&
+        if (!c.getType().isManifest() &&
             (config.standalone() || attributes.containsKey("host_limited"))) {
             String productId = pool.getProductId();
             String virtLimit = attributes.get("virt_limit");
@@ -437,8 +442,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
                     "unlimited");
             }
             else {
-                int virtQuantity = Integer.parseInt(virtLimit) *
-                    entitlement.getQuantity();
+                int virtQuantity = Integer.parseInt(virtLimit);
                 if (virtQuantity > 0) {
                     postHelper.createHostRestrictedPool(productId, pool,
                         String.valueOf(virtQuantity));
@@ -446,43 +450,55 @@ public abstract class AbstractEntitlementRules implements Enforcer {
             }
         }
         else {
-            if (!config.standalone() && c.isManifest()) {
-                String virtLimit = attributes.get("virt_limit");
-                if (!"unlimited".equals(virtLimit)) {
-                    // if the bonus pool is not unlimited, then the bonus pool
-                    // quantity
-                    // needs to be adjusted based on the virt limit
-                    int virtQuantity = Integer.parseInt(virtLimit) *
-                        entitlement.getQuantity();
-                    if (virtQuantity > 0) {
-                        List<Pool> pools = postHelper
-                            .lookupBySubscriptionId(pool.getSubscriptionId());
-                        for (int idex = 0; idex < pools.size(); idex++) {
-                            Pool derivedPool = pools.get(idex);
-                            if (derivedPool.getAttributeValue("pool_derived") != null) {
-                                derivedPool = postHelper.updatePoolQuantity(
-                                    derivedPool, -1 * virtQuantity);
-                            }
+            decrementHostedBonusPoolQuantity(postHelper, entitlement, pool, c,
+                attributes);
+        }
+    }
+
+    /*
+     * When distributors bind to virt_limit pools in hosted, we need to go adjust the
+     * quantity on the bonus pool, as those entitlements have now been exported to on-site.
+     */
+    private void decrementHostedBonusPoolQuantity(PoolHelper postHelper,
+        Entitlement entitlement, Pool pool, Consumer c,
+        Map<String, String> attributes) {
+        if (c.getType().isManifest() && !config.standalone() &&
+                !attributes.containsKey("host_limited")) {
+            String virtLimit = attributes.get("virt_limit");
+            if (!"unlimited".equals(virtLimit)) {
+                // if the bonus pool is not unlimited, then the bonus pool
+                // quantity
+                // needs to be adjusted based on the virt limit
+                int virtQuantity = Integer.parseInt(virtLimit) *
+                    entitlement.getQuantity();
+                if (virtQuantity > 0) {
+                    List<Pool> pools = postHelper
+                        .lookupBySubscriptionId(pool.getSubscriptionId());
+                    for (int idex = 0; idex < pools.size(); idex++) {
+                        Pool derivedPool = pools.get(idex);
+                        if (derivedPool.getAttributeValue("pool_derived") != null) {
+                            derivedPool = postHelper.updatePoolQuantity(
+                                derivedPool, -1 * virtQuantity);
                         }
                     }
                 }
-                else {
-                    // if the bonus pool is unlimited, then the quantity needs
-                    // to go to 0
-                    // when the physical pool is exhausted completely by export.
-                    // A quantity of 0 will block future binds, whereas -1 does
-                    // not.
-                    if (pool.getQuantity().equals(pool.getExported())) {
-                        // getting all pools matching the sub id. Filtering out
-                        // the 'parent'.
-                        List<Pool> pools = postHelper
-                            .lookupBySubscriptionId(pool.getSubscriptionId());
-                        for (int idex = 0; idex < pools.size(); idex++) {
-                            Pool derivedPool = pools.get(idex);
-                            if (derivedPool.getAttributeValue("pool_derived") != null) {
-                                derivedPool = postHelper.setPoolQuantity(
-                                    derivedPool, 0);
-                            }
+            }
+            else {
+                // if the bonus pool is unlimited, then the quantity needs
+                // to go to 0
+                // when the physical pool is exhausted completely by export.
+                // A quantity of 0 will block future binds, whereas -1 does
+                // not.
+                if (pool.getQuantity().equals(pool.getExported())) {
+                    // getting all pools matching the sub id. Filtering out
+                    // the 'parent'.
+                    List<Pool> pools = postHelper
+                        .lookupBySubscriptionId(pool.getSubscriptionId());
+                    for (int idex = 0; idex < pools.size(); idex++) {
+                        Pool derivedPool = pools.get(idex);
+                        if (derivedPool.getAttributeValue("pool_derived") != null) {
+                            derivedPool = postHelper.setPoolQuantity(
+                                derivedPool, 0);
                         }
                     }
                 }
