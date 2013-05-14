@@ -201,7 +201,7 @@ define "candlepin" do
   test.setup do |task|
     filter('src/main/resources/META-INF').into('target/classes/META-INF').run
   end
-  test.with COMMONS, DB, RESTEASY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE, HSQLDB, GUICE, QUARTZ, GETTEXT_COMMONS, MIME4J, RHINO, COLLECTIONS, generate
+  test.with 'target/resources', COMMONS, DB, RESTEASY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE, HSQLDB, GUICE, QUARTZ, GETTEXT_COMMONS, MIME4J, RHINO, COLLECTIONS, generate
   test.with LOGDRIVER if use_logdriver
   test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
 
