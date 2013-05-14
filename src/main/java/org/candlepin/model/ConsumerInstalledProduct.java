@@ -59,7 +59,7 @@ public class ConsumerInstalledProduct extends AbstractHibernateObject {
     @Column(name = "product_version")
     private String version;
 
-    @Column(name = "product_arch")
+    @Transient
     private String arch;
 
     @Transient
