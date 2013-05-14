@@ -16,6 +16,30 @@ package org.candlepin.resource;
 
 import static org.quartz.JobBuilder.newJob;
 
+import org.candlepin.auth.interceptor.Verify;
+import org.candlepin.controller.Entitler;
+import org.candlepin.controller.PoolManager;
+import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.exceptions.NotFoundException;
+import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.Entitlement;
+import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.SubscriptionCurator;
+import org.candlepin.paging.DataPresentation;
+import org.candlepin.paging.Page;
+import org.candlepin.paging.Paginate;
+import org.candlepin.pinsetter.tasks.RegenProductEntitlementCertsJob;
+import org.candlepin.service.ProductServiceAdapter;
+import org.candlepin.service.SubscriptionServiceAdapter;
+import org.candlepin.util.Util;
+
+import com.google.inject.Inject;
+
+import org.quartz.JobDataMap;
+import org.quartz.JobDetail;
+import org.xnap.commons.i18n.I18n;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -28,26 +52,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-
-import org.candlepin.auth.interceptor.Verify;
-import org.candlepin.controller.Entitler;
-import org.candlepin.controller.PoolManager;
-import org.candlepin.exceptions.BadRequestException;
-import org.candlepin.exceptions.NotFoundException;
-import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerCurator;
-import org.candlepin.model.Entitlement;
-import org.candlepin.model.EntitlementCurator;
-import org.candlepin.pinsetter.tasks.RegenProductEntitlementCertsJob;
-import org.candlepin.service.ProductServiceAdapter;
-import org.candlepin.service.SubscriptionServiceAdapter;
-import org.candlepin.util.Util;
-import org.quartz.JobDataMap;
-import org.quartz.JobDetail;
-import org.xnap.commons.i18n.I18n;
-
-import com.google.inject.Inject;
 
 /**
  * REST api gateway for the User object.
@@ -120,8 +126,10 @@ public class EntitlementResource {
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @Paginate
     public List<Entitlement> listAllForConsumer(
-        @QueryParam("consumer") String consumerUuid) {
+        @QueryParam("consumer") String consumerUuid,
+        @Context DataPresentation presentation) {
 
         if (consumerUuid != null) {
 
@@ -131,10 +139,13 @@ public class EntitlementResource {
                     i18n.tr("No such consumer: {0}", consumerUuid));
             }
 
+            //TODO paginate this
             return entitlementCurator.listByConsumer(consumer);
         }
 
-        return entitlementCurator.listAll();
+        Page<List<Entitlement>> p = entitlementCurator.listAll(presentation);
+
+        return p.getPageData();
     }
 
     /**

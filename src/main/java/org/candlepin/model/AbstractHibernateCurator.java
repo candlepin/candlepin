@@ -14,20 +14,25 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.auth.interceptor.EnforceAccessControl;
+import org.candlepin.paging.DataPresentation;
+import org.candlepin.paging.Page;
+
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.google.inject.persist.Transactional;
+
+import org.apache.log4j.Logger;
+import org.hibernate.Criteria;
+import org.hibernate.Session;
+import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Projections;
+
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-
-import org.apache.log4j.Logger;
-import org.candlepin.auth.interceptor.EnforceAccessControl;
-import org.hibernate.Session;
-import org.hibernate.criterion.DetachedCriteria;
-
-import com.google.inject.Inject;
-import com.google.inject.Provider;
-import com.google.inject.persist.Transactional;
 
 /**
  * AbstractHibernateCurator
@@ -84,6 +89,34 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      */
     public List<E> listAll() {
         return listByCriteria(DetachedCriteria.forClass(entityType));
+    }
+
+    @SuppressWarnings("unchecked")
+    @Transactional
+    @EnforceAccessControl
+    public Page<List<E>> listAll(DataPresentation presentation) {
+        Page<List<E>> page = new Page<List<E>>();
+
+        if (presentation != null) {
+            Criteria count = currentSession().createCriteria(entityType);
+            count.setProjection(Projections.rowCount());
+            Integer max = (Integer) count.uniqueResult();
+
+            page.setMaxRecords(max);
+
+            Criteria c = currentSession().createCriteria(entityType);
+            c.setFirstResult(presentation.getOffset());
+            c.setMaxResults(presentation.getLimit());
+
+            page.setPageData(c.list());
+            page.setLimit(presentation.getLimit());
+            page.setNextOffset(presentation.getOffset() + presentation.getLimit());
+        }
+        else {
+            page.setPageData(listAll());
+        }
+
+        return page;
     }
 
     @SuppressWarnings("unchecked")
