@@ -34,7 +34,7 @@ public class DbBasicAuthConfigTest {
 
     @Before
     public void init() {
-        config = new Config();
+        config = new CandlepinCommonTestConfig();
     }
 
     @Test

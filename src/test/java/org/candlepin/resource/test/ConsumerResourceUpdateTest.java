@@ -27,7 +27,7 @@ import java.util.Locale;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
-import org.candlepin.config.Config;
+import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.exceptions.BadRequestException;
@@ -92,7 +92,7 @@ public class ConsumerResourceUpdateTest {
             this.userService, null, poolManager, null, null, null,
             this.activationKeyCurator,
             this.entitler, this.complianceRules, this.deletedConsumerCurator,
-            this.environmentCurator, new Config());
+            this.environmentCurator, new CandlepinCommonTestConfig());
 
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class)))
             .thenReturn(new ComplianceStatus(new Date()));

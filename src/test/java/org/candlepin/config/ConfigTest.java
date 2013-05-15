@@ -21,7 +21,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import org.junit.Before;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -33,15 +32,10 @@ import java.util.TreeMap;
  * ConfigTest
  */
 public class ConfigTest {
-    private Config config;
-
-    @Before
-    public void init() {
-        config = new Config();
-    }
 
     @Test
     public void testTrimSpaces() {
+        Config config = new Config(new TreeMap<String, String>());
         TreeMap<String, String> testData = new TreeMap<String, String>();
         testData.put("good", "good");
         testData.put("bad", "    bad    ");
@@ -52,6 +46,13 @@ public class ConfigTest {
 
     @Test
     public void basicauth() {
+        Config config = new Config(
+            new HashMap<String, String>() {
+
+                {
+                    put(ConfigProperties.BASIC_AUTHENTICATION, "true");
+                }
+            });
         boolean auth = config.getBoolean(ConfigProperties.BASIC_AUTHENTICATION);
         assertEquals(auth, config.basicAuthEnabled());
     }
@@ -75,6 +76,7 @@ public class ConfigTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void getBooleanWithNonExistentEntryThrowsError() {
+        Config config = new Config(new TreeMap<String, String>());
         config.getBoolean("notthere");
     }
 

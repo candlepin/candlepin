@@ -40,7 +40,7 @@ public class JPAConfigParserTest {
 
     @Before
     public void init() {
-        config = new Config();
+        config = new CandlepinCommonTestConfig();
     }
 
     @SuppressWarnings("serial")
