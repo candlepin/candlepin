@@ -30,6 +30,7 @@ import static org.mockito.Mockito.when;
 import org.mockito.ArgumentCaptor;
 
 import org.candlepin.auth.Principal;
+import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.ActivationKey;
 import org.candlepin.model.Consumer;
@@ -90,7 +91,7 @@ public class EventSinkImplTest {
      * @return
      */
     private EventSinkImpl createEventSink(final ClientSessionFactory sessionFactory) {
-        return new EventSinkImpl(factory, mapper) {
+        return new EventSinkImpl(factory, mapper, new CandlepinCommonTestConfig()) {
             @Override
             protected ClientSessionFactory createClientSessionFactory() {
                 return sessionFactory;

@@ -51,6 +51,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.zip.InflaterOutputStream;
 
+import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Config;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
@@ -150,7 +151,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     @Before
     public void setUp() {
-        Config config = new Config();
+        Config config = new CandlepinCommonTestConfig();
         extensionUtil = new X509ExtensionUtil(config);
         v3extensionUtil = new X509V3ExtensionUtil(config, entCurator);
 

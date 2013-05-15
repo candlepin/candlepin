@@ -23,7 +23,7 @@ import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.UserPrincipal;
-import org.candlepin.config.Config;
+import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.ActivationKeyCurator;
 import org.candlepin.model.Consumer;
@@ -121,7 +121,7 @@ public class HypervisorResourceTest {
             this.userService, null, null, null, null, this.ownerCurator,
             this.activationKeyCurator,
             null, this.complianceRules, this.deletedConsumerCurator,
-            null, new Config());
+            null, new CandlepinCommonTestConfig());
         hypervisorResource = new HypervisorResource(consumerResource, poolManager,
             consumerCurator, this.deletedConsumerCurator, i18n);
 

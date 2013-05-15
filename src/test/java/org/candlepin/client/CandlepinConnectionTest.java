@@ -17,7 +17,7 @@ package org.candlepin.client;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import org.candlepin.config.Config;
+import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.model.Owner;
 
 import org.apache.commons.httpclient.Credentials;
@@ -35,7 +35,8 @@ public class CandlepinConnectionTest {
     @Ignore("needs mock connection to test with")
     @Test
     public void connect() {
-        CandlepinConnection conn = new CandlepinConnection(new Config());
+        CandlepinConnection conn = new CandlepinConnection(
+            new CandlepinCommonTestConfig());
         Credentials creds = new UsernamePasswordCredentials("admin", "admin");
         OwnerClient client = conn.connect(OwnerClient.class, creds,
             "http://localhost:8080/candlepin/");
@@ -51,7 +52,8 @@ public class CandlepinConnectionTest {
     @Ignore("needs mock connection to test with")
     @Test
     public void doesnotexist() {
-        CandlepinConnection conn = new CandlepinConnection(new Config());
+        CandlepinConnection conn = new CandlepinConnection(
+            new CandlepinCommonTestConfig());
         Credentials creds = new UsernamePasswordCredentials("admin", "admin");
         OwnerClient client = conn.connect(OwnerClient.class, creds,
             "http://localhost:8080/candlepin/");
