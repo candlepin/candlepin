@@ -28,22 +28,16 @@ import com.google.inject.Inject;
  */
 public class EnforcerDispatcher implements Enforcer {
 
-    private ManifestEntitlementRules manifestEnforcer;
     private EntitlementRules jsEnforcer;
 
     @Inject
-    public EnforcerDispatcher(EntitlementRules jsEnforcer,
-        ManifestEntitlementRules candlepinEnforcer) {
+    public EnforcerDispatcher(EntitlementRules jsEnforcer) {
         this.jsEnforcer = jsEnforcer;
-        this.manifestEnforcer = candlepinEnforcer;
     }
 
     @Override
     public PoolHelper postEntitlement(Consumer consumer, PoolHelper postEntHelper,
         Entitlement ent) {
-        if (consumer.getType().isManifest()) {
-            return manifestEnforcer.postEntitlement(consumer, postEntHelper, ent);
-        }
         return jsEnforcer.postEntitlement(consumer, postEntHelper, ent);
     }
 
@@ -56,20 +50,11 @@ public class EnforcerDispatcher implements Enforcer {
     @Override
     public ValidationResult preEntitlement(Consumer consumer, Pool entitlementPool,
         Integer quantity, CallerType caller) {
-
-        if (consumer.getType().isManifest()) {
-            return manifestEnforcer.preEntitlement(consumer, entitlementPool,
-                quantity);
-        }
-
         return jsEnforcer.preEntitlement(consumer, entitlementPool, quantity, caller);
     }
 
     public PoolHelper postUnbind(Consumer consumer, PoolHelper postEntHelper,
                 Entitlement ent) {
-        if (consumer.getType().isManifest()) {
-            return manifestEnforcer.postUnbind(consumer, postEntHelper, ent);
-        }
         return jsEnforcer.postUnbind(consumer, postEntHelper, ent);
     }
 }

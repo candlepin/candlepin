@@ -68,14 +68,15 @@ class Candlepin
   # TODO: need to switch to a params hash, getting to be too many arguments.
   def register(name, type=:system, uuid=nil, facts={}, username=nil,
               owner_key=nil, activation_keys=[], installedProducts=[],
-              environment=nil)
+              environment=nil, capabilities=[])
     consumer = {
       :type => {:label => type},
       :name => name,
       :facts => facts,
       :installedProducts => installedProducts
     }
-
+    consumer[:capabilities] = capabilities.collect { |name| {'name' => name} } if capabilities
+ 
     consumer[:uuid] = uuid if not uuid.nil?
 
     if environment.nil?
@@ -115,6 +116,7 @@ class Candlepin
         params[:guestIds] if params[:guestIds]
     consumer[:autoheal] = params[:autoheal] if params.has_key?(:autoheal)
     consumer[:serviceLevel] = params[:serviceLevel] if params.has_key?(:serviceLevel)
+    consumer[:capabilities] = params[:capabilities].collect { |name| {'name' => name} } if params[:capabilities]
 
     path = get_path("consumers")
     put("#{path}/#{uuid}", consumer)
@@ -874,6 +876,32 @@ class Candlepin
     response = get_client(uri, Net::HTTP::Get, :get)[URI.escape(uri)].get \
       :accept => accept_header
     return JSON.parse(response.body)
+  end
+
+  def create_distributor_version(name, display_name, capabilities=[])
+    version =  {
+      'name' => name,
+      'displayName' => display_name,
+      'capabilities' => capabilities.collect { |name| {'name' => name} }
+    }
+    post('/distributor_versions', version)
+  end
+
+  def update_distributor_version(name, display_name, capabilities=[])
+    version =  {
+      'name' => name,
+      'displayName' => display_name,
+      'capabilities' => capabilities.collect { |name| {'name' => name} }
+    }
+    put('/distributor_versions', version)
+  end
+
+  def delete_distributor_version(version_name)
+    delete("/distributor_versions/#{version_name}")
+  end
+
+  def get_distributor_versions()
+    get("/distributor_versions")
   end
 
   # Assumes a zip archive currently. Returns filename (random#.zip) of the

@@ -92,7 +92,7 @@ public class ConsumerResourceUpdateTest {
             this.userService, null, poolManager, null, null, null,
             this.activationKeyCurator,
             this.entitler, this.complianceRules, this.deletedConsumerCurator,
-            this.environmentCurator, new Config());
+            this.environmentCurator, null, new Config());
 
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class)))
             .thenReturn(new ComplianceStatus(new Date()));
