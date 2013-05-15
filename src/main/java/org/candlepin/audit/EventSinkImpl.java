@@ -51,11 +51,11 @@ public class EventSinkImpl implements EventSink {
     private ObjectMapper mapper;
 
     @Inject
-    public EventSinkImpl(EventFactory eventFactory, ObjectMapper mapper) {
+    public EventSinkImpl(EventFactory eventFactory, ObjectMapper mapper, Config config) {
         this.eventFactory = eventFactory;
         this.mapper = mapper;
         try {
-            largeMsgSize = new Config().getInt(ConfigProperties.HORNETQ_LARGE_MSG_SIZE);
+            largeMsgSize = config.getInt(ConfigProperties.HORNETQ_LARGE_MSG_SIZE);
 
             factory =  createClientSessionFactory();
             clientSession = factory.createSession();

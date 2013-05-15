@@ -24,10 +24,10 @@ import java.util.TreeMap;
 public class CandlepinCommonTestConfig extends Config {
 
     public CandlepinCommonTestConfig() {
-        // explicitly _not_ using the /etc/candlepin/candlepin.conf file in testing.
-        this.configuration = new TreeMap<String, String>(
-            ConfigProperties.DEFAULT_PROPERTIES);
-        this.configuration.putAll(loadProperties());
+        super(new TreeMap<String, String>());
+        // be very careful not to invoke the default Config ctor here
+        // because it will read in your /etc/candlepin/candlepin.conf
+        // which we do not want in our testing framework.
     }
 
     @Override
