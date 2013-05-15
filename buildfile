@@ -201,9 +201,13 @@ define "candlepin" do
   test.setup do |task|
     filter('src/main/resources/META-INF').into('target/classes/META-INF').run
   end
-  test.with COMMONS, DB, RESTEASY, JUNIT, LOG4J, HIBERNATE, BOUNCYCASTLE, HSQLDB, GUICE, QUARTZ, GETTEXT_COMMONS, MIME4J, RHINO, COLLECTIONS, generate
+
+  # the other dependencies are gotten from compile.classpath automagically
+  test.with HSQLDB, JUNIT
   test.with LOGDRIVER if use_logdriver
-  test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError' ]
+  # tell log4j to use a different config file during unit tests
+  # this avoids log4j using the config from guice-persist
+  test.using :java_args => [ '-Xmx2g', '-XX:+HeapDumpOnOutOfMemoryError', '-Dlog4j.configuration=log4j-test.properties' ]
 
 
   #
