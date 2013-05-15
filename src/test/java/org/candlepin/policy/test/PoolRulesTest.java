@@ -361,9 +361,19 @@ public class PoolRulesTest {
     public void hostedVirtLimitWithHostLimitedSkipsBonusPools() {
         when(configMock.standalone()).thenReturn(false);
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);
-        s.getProduct().setAttribute("host_limited", "yes");
+        s.getProduct().setAttribute("host_limited", "true");
         List<Pool> pools = poolRules.createPools(s);
         assertEquals(1, pools.size());
+    }
+
+    // Make sure host_limited false is working:
+    @Test
+    public void hostedVirtLimitWithHostLimitedFalseCreatesBonusPools() {
+        when(configMock.standalone()).thenReturn(false);
+        Subscription s = createVirtLimitSub("virtLimitProduct", 10, 10);
+        s.getProduct().setAttribute("host_limited", "false");
+        List<Pool> pools = poolRules.createPools(s);
+        assertEquals(2, pools.size());
     }
 
     @Test
