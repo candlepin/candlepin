@@ -62,7 +62,7 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
         pool1 = createPoolAndSub(owner1, product1, 500L,
             TestUtil.createDate(2000, 1, 1), TestUtil.createDate(3000, 1, 1));
 
-        attrUtil = new CalculatedAttributesUtil(i18n, consumerCurator, quantityRules);
+        attrUtil = new CalculatedAttributesUtil(quantityRules);
 
         consumer = createConsumer(owner1);
     }
@@ -72,10 +72,9 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
         when(quantityRules.getSuggestedQuantity(any(Pool.class), any(Consumer.class))).
             thenReturn(1L);
 
-        Pool p = attrUtil.addCalculatedAttributes(pool1, consumer);
-        Map<String, String> attrs = p.getCalculatedAttributes();
+        Map<String, String> attrs = attrUtil.buildCalculatedAttributes(pool1, consumer);
         assertTrue(attrs.containsKey("suggested_quantity"));
-        verify(quantityRules).getSuggestedQuantity(p, consumer);
+        verify(quantityRules).getSuggestedQuantity(pool1, consumer);
     }
 
     @Test
@@ -90,9 +89,8 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
         when(quantityRules.getSuggestedQuantity(any(Pool.class), any(Consumer.class))).
             thenReturn(1L);
 
-        Pool p = attrUtil.addCalculatedAttributes(pool2, consumer);
-        Map<String, String> attrs = p.getCalculatedAttributes();
+        Map<String, String> attrs = attrUtil.buildCalculatedAttributes(pool2, consumer);
         assertEquals("12", attrs.get("quantity_increment"));
-        verify(quantityRules).getSuggestedQuantity(p, consumer);
+        verify(quantityRules).getSuggestedQuantity(pool2, consumer);
     }
 }

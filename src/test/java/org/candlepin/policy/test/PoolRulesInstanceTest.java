@@ -78,8 +78,7 @@ public class PoolRulesInstanceTest {
 
     @Test
     public void hostedCreateInstanceBasedPool() {
-        when(configMock.standalone()).thenReturn(false);
-        Subscription s = createInstanceBasedSub("INSTANCEPROD", 100, 2);
+        Subscription s = createInstanceBasedSub("INSTANCEPROD", 100, 2, false);
         List<Pool> pools = poolRules.createPools(s);
         assertEquals(1, pools.size());
 
@@ -91,8 +90,7 @@ public class PoolRulesInstanceTest {
 
     @Test
     public void standaloneCreateInstanceBasedPool() {
-        when(configMock.standalone()).thenReturn(true);
-        Subscription s = createInstanceBasedSub("INSTANCEPROD", 100, 2);
+        Subscription s = createInstanceBasedSub("INSTANCEPROD", 100, 2, true);
         List<Pool> pools = poolRules.createPools(s);
         assertEquals(1, pools.size());
 
@@ -106,8 +104,7 @@ public class PoolRulesInstanceTest {
 
     @Test
     public void hostedInstanceBasedUpdatePool() {
-        when(configMock.standalone()).thenReturn(false);
-        Subscription s = createInstanceBasedSub("INSTANCEPROD", 100, 2);
+        Subscription s = createInstanceBasedSub("INSTANCEPROD", 100, 2, false);
         List<Pool> pools = poolRules.createPools(s);
         assertEquals(1, pools.size());
         Pool pool = pools.get(0);
@@ -129,8 +126,7 @@ public class PoolRulesInstanceTest {
 
     @Test
     public void hostedInstanceBasedRemoved() {
-        when(configMock.standalone()).thenReturn(false);
-        Subscription s = createInstanceBasedSub("INSTANCEPROD", 100, 2);
+        Subscription s = createInstanceBasedSub("INSTANCEPROD", 100, 2, false);
         List<Pool> pools = poolRules.createPools(s);
         assertEquals(1, pools.size());
         Pool pool = pools.get(0);
@@ -154,8 +150,7 @@ public class PoolRulesInstanceTest {
 
     @Test
     public void standaloneInstanceBasedUpdatePool() {
-        when(configMock.standalone()).thenReturn(true);
-        Subscription s = createInstanceBasedSub("INSTANCEPROD", 100, 2);
+        Subscription s = createInstanceBasedSub("INSTANCEPROD", 100, 2, true);
         List<Pool> pools = poolRules.createPools(s);
         assertEquals(1, pools.size());
         Pool pool = pools.get(0);
@@ -179,12 +174,15 @@ public class PoolRulesInstanceTest {
     }
 
     private Subscription createInstanceBasedSub(String productId, int quantity,
-        int instanceMultiplier) {
+        int instanceMultiplier, boolean exported) {
         Product product = new Product(productId, productId);
         product.setAttribute("instance_multiplier",
             new Integer(instanceMultiplier).toString());
         when(productAdapterMock.getProductById(productId)).thenReturn(product);
         Subscription s = TestUtil.createSubscription(product);
+        if (exported) {
+            s.setUpstreamPoolId("SOMETHING");
+        }
         s.setQuantity(new Long(quantity));
         return s;
     }

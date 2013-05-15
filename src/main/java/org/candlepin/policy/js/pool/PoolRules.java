@@ -58,7 +58,9 @@ public class PoolRules {
         // In hosted, we increase the quantity on the subscription. However in standalone,
         // we assume this already has happened in hosted and the accurate quantity was
         // exported:
-        if (sub.getProduct().hasAttribute("instance_multiplier") && !config.standalone()) {
+        if (sub.getProduct().hasAttribute("instance_multiplier") &&
+            sub.getUpstreamPoolId() == null) {
+
             int instanceMultiplier = Integer.parseInt(
                 sub.getProduct().getAttribute("instance_multiplier").getValue());
             log.info("Increasing pool quantity for instance multiplier: " +
