@@ -203,7 +203,7 @@ define "candlepin" do
   end
 
   # the other dependencies are gotten from compile.classpath automagically
-  test.with HSQLDB, JUNIT
+  test.with HSQLDB, JUNIT, generate
   test.with LOGDRIVER if use_logdriver
   # tell log4j to use a different config file during unit tests
   # this avoids log4j using the config from guice-persist
