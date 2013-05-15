@@ -661,7 +661,7 @@
                 "instance_multiplier": 2,
                 "sockets": 2,
                 "virt_limit": 1,
-                "host_limited": 1,
+                "host_limited": "true",
                 "stacking_id": 15,
                 "multi-entitlement": "yes",
                 "support_level" : "Standard",

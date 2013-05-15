@@ -370,7 +370,9 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         Entitlement entitlement, Pool pool, Consumer c,
         Map<String, String> attributes) {
         log.debug("Running virt_limit post unbind.");
-        if (!config.standalone() && !attributes.containsKey("host_limited") &&
+        boolean hostLimited = attributes.containsKey("host_limited") &&
+            attributes.get("host_limited").equals("true");
+        if (!config.standalone() && !hostLimited &&
                 c.getType().isManifest()) {
             String virtLimit = attributes.get("virt_limit");
             if (!"unlimited".equals(virtLimit)) {
@@ -433,8 +435,10 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         Entitlement entitlement, Pool pool, Consumer c,
         Map<String, String> attributes) {
         log.debug("Running virt_limit post-bind.");
+        boolean hostLimited = attributes.containsKey("host_limited") &&
+            attributes.get("host_limited").equals("true");
         if (!c.getType().isManifest() &&
-            (config.standalone() || attributes.containsKey("host_limited"))) {
+            (config.standalone() || hostLimited)) {
             String productId = pool.getProductId();
             String virtLimit = attributes.get("virt_limit");
             if ("unlimited".equals(virtLimit)) {
@@ -462,8 +466,10 @@ public abstract class AbstractEntitlementRules implements Enforcer {
     private void decrementHostedBonusPoolQuantity(PoolHelper postHelper,
         Entitlement entitlement, Pool pool, Consumer c,
         Map<String, String> attributes) {
+        boolean hostLimited = attributes.containsKey("host_limited") &&
+            attributes.get("host_limited").equals("true");
         if (c.getType().isManifest() && !config.standalone() &&
-                !attributes.containsKey("host_limited")) {
+                !hostLimited) {
             String virtLimit = attributes.get("virt_limit");
             if (!"unlimited".equals(virtLimit)) {
                 // if the bonus pool is not unlimited, then the bonus pool
