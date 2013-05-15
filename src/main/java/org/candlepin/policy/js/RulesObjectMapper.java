@@ -19,6 +19,7 @@ import java.util.Map.Entry;
 
 import org.candlepin.exceptions.IseException;
 import org.codehaus.jackson.map.AnnotationIntrospector;
+import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
 import org.codehaus.jackson.map.ser.impl.SimpleBeanPropertyFilter;
@@ -69,6 +70,12 @@ public class RulesObjectMapper {
             SimpleBeanPropertyFilter.serializeAllExcept("parentOwner", "consumers",
                 "activationKeys", "environments", "pools"));
         this.mapper.setFilters(filterProvider);
+
+        // Very important for deployments so new rules files can return additional
+        // properties that this current server doesn't know how to serialize, but still
+        // shouldn't fail on.
+        this.mapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES,
+            false);
 
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
         AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
