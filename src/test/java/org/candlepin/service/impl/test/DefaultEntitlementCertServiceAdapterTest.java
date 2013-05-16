@@ -142,6 +142,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     private Pool pool;
     private Pool largeContentPool;
     private Content content;
+    private Content noArchContent;
     private Owner owner;
     private Set<Content> superContent;
     private Set<Content> largeContent;
@@ -183,6 +184,10 @@ public class DefaultEntitlementCertServiceAdapterTest {
             CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL, CONTENT_GPG_URL, ARCH_LABELS);
         content.setMetadataExpire(CONTENT_METADATA_EXPIRE);
         content.setRequiredTags(REQUIRED_TAGS);
+
+        List<String> emptyArches = new ArrayList<String>();
+        noArchContent = createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
+            CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL, CONTENT_GPG_URL, emptyArches);
 
         superContent = new HashSet<Content>();
         for (String url : testUrls) {
@@ -904,16 +909,15 @@ public class DefaultEntitlementCertServiceAdapterTest {
             }
         }
     }
-    @Test
-    public void testPrepareV3EntitlementDataNoConsumerArch() throws IOException,
-        GeneralSecurityException {
-        Set<Product> products = new HashSet<Product>();
-        products.add(product);
+
+    private void setupEntitlements(String consumerArch, Arch lookedupArch) {
         when(entitlement.getConsumer().getFact("system.certificate_version"))
             .thenReturn("3.2");
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
-        when(entitlement.getConsumer().getFact("uname.machine")).thenReturn("x86_64");
-        when(this.archCurator.lookupByLabel(any(String.class))).thenReturn(testArch);
+        when(entitlement.getConsumer().getFact("uname.machine")).thenReturn(
+            consumerArch);
+        when(this.archCurator.lookupByLabel(any(String.class))).thenReturn(
+            lookedupArch);
 
         subscription.getProduct().setAttribute("warning_period", "20");
         subscription.getProduct().setAttribute("sockets", "4");
@@ -930,6 +934,75 @@ public class DefaultEntitlementCertServiceAdapterTest {
         for (ProductContent pc : product.getProductContent()) {
             pc.setEnabled(false);
         }
+    }
+
+    @Test
+    public void testPrepareV3EntitlementDataNoConsumerArch() throws IOException,
+        GeneralSecurityException {
+        Set<Product> products = new HashSet<Product>();
+        products.add(product);
+
+        setupEntitlements(null, testArch);
+
+        Set<X509ExtensionWrapper> extensions =
+            certServiceAdapter.prepareV3Extensions(products, entitlement, "prefix",
+                null, subscription);
+        Map<String, X509ExtensionWrapper> map =
+            new HashMap<String, X509ExtensionWrapper>();
+        for (X509ExtensionWrapper ext : extensions) {
+            map.put(ext.getOid(), ext);
+        }
+
+        byte[] payload = v3extensionUtil.createEntitlementDataPayload(products, entitlement,
+            "prefix", null, subscription);
+        String stringValue = "";
+        try {
+            stringValue = processPayload(payload);
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        Map<String, Object> data = (Map<String, Object>)
+            Util.fromJson(stringValue , Map.class);
+
+        List<Map<String, Object>> prods = (List<Map<String, Object>>) data.get("products");
+        List<Map<String, Object>> contents = null;
+        for (Map<String, Object> prod : prods) {
+            String arch = product.hasAttribute("arch") ?
+                product.getAttributeValue("arch") : "";
+            StringTokenizer st = new StringTokenizer(arch, ",");
+            while (st.hasMoreElements()) {
+                assertTrue(((List) prod.get("architectures")).contains(st.nextElement()));
+            }
+
+            contents = (List<Map<String, Object>>) prod.get("content");
+            for (Map<String, Object> cont : contents) {
+                assertEquals(cont.get("id"), CONTENT_ID);
+                assertEquals(cont.get("path"), "prefix" + CONTENT_URL);
+                assertFalse((Boolean) cont.get("enabled"));
+
+                // since we dont know the consumer arch, we dont filter
+                // any contents out
+                List<String> arches = new ArrayList<String>();
+                arches.add(ARCH_LABEL);
+                assertEquals(cont.get("arches"), arches);
+
+            }
+        }
+    }
+
+    @Test
+    public void testPrepareV3EntitlementDataNoContentArch() throws IOException,
+        GeneralSecurityException {
+        Set<Product> products = new HashSet<Product>();
+
+        // our content with no arch should inherit this arch
+        Product inheritedArchProduct = new Product("12345", "a product",
+            "variant", "version", ARCH_LABEL, "SVC");
+
+        inheritedArchProduct.setContent(Collections.singleton(noArchContent));
+        products.add(inheritedArchProduct);
+        setupEntitlements(ARCH_LABEL, testArch);
 
         Set<X509ExtensionWrapper> extensions =
             certServiceAdapter.prepareV3Extensions(products, entitlement, "prefix",
@@ -951,40 +1024,14 @@ public class DefaultEntitlementCertServiceAdapterTest {
         catch (Exception e) {
             throw new RuntimeException(e);
         }
+
         Map<String, Object> data = (Map<String, Object>)
             Util.fromJson(stringValue , Map.class);
-        assertEquals(data.get("consumer"), "test-consumer");
-        assertEquals(data.get("quantity"), 10);
-
-        Map<String, Object> subs = (Map<String, Object>) data.get("subscription");
-        assertEquals(subs.get("sku"), subscription.getProduct().getId());
-        assertEquals(subs.get("name"), subscription.getProduct().getName());
-        assertEquals(subs.get("warning"), 20);
-        assertEquals(subs.get("sockets"), 4);
-        assertEquals(subs.get("ram"), 8);
-        assertEquals(subs.get("cores"), 4);
-        assertTrue((Boolean) subs.get("management"));
-        assertEquals(subs.get("stacking_id"), "45678");
-        assertTrue((Boolean) subs.get("virt_only"));
-
-        Map<String, Object> service = (Map<String, Object>) subs.get("service");
-        assertEquals(service.get("level"), "slevel");
-        assertEquals(service.get("type"), "stype");
-        Map<String, Object> order = (Map<String, Object>) data.get("order");
-        assertEquals(order.get("number"), subscription.getOrderNumber());
-        assertTrue(((Integer) order.get("quantity")).intValue() ==
-            subscription.getQuantity());
-        assertNotNull(order.get("start"));
-        assertNotNull(order.get("end"));
-//        assertEquals(order.get("contract"), subscription.getContractNumber());
-//        assertEquals(order.get("account"), subscription.getAccountNumber());
 
         List<Map<String, Object>> prods = (List<Map<String, Object>>) data.get("products");
         List<Map<String, Object>> contents = null;
         for (Map<String, Object> prod : prods) {
-            assertEquals(prod.get("id"), product.getId());
-            assertEquals(prod.get("name"), product.getName());
-            assertEquals(prod.get("version"), product.getAttributeValue("version"));
+
             String arch = product.hasAttribute("arch") ?
                 product.getAttributeValue("arch") : "";
             StringTokenizer st = new StringTokenizer(arch, ",");
@@ -994,29 +1041,81 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
             contents = (List<Map<String, Object>>) prod.get("content");
             for (Map<String, Object> cont : contents) {
-                assertEquals(cont.get("id"), CONTENT_ID);
-                assertEquals(cont.get("name"), CONTENT_NAME);
-                assertEquals(cont.get("type"), CONTENT_TYPE);
-                assertEquals(cont.get("label"), CONTENT_LABEL);
-                assertEquals(cont.get("vendor"), CONTENT_VENDOR);
-                assertEquals(cont.get("gpg_url"), CONTENT_GPG_URL);
-                assertEquals(cont.get("path"), "prefix" + CONTENT_URL);
-                assertFalse((Boolean) cont.get("enabled"));
-                assertEquals(cont.get("metadata_expire"), 3200);
 
+                // We dont set an arch on Content, but we inherit it
+                // from product, so the arch should match ARCH_LABEL,
+                // that the Product was created with
                 List<String> arches = new ArrayList<String>();
                 arches.add(ARCH_LABEL);
                 assertEquals(cont.get("arches"), arches);
 
-                String rTags = content.getRequiredTags();
-                st = new StringTokenizer(rTags, ",");
-                while (st.hasMoreElements()) {
-                    assertTrue(((List) cont.get("required_tags"))
-                        .contains(st.nextElement()));
-                }
             }
         }
     }
+
+    @Test
+    public void testPrepareV3EntitlementDataNoCompatibleArch() throws IOException,
+        GeneralSecurityException {
+        Set<Product> products = new HashSet<Product>();
+
+        // product with no compatible content, but marked as 'ALL' arch
+        Product wrongArchProduct = new Product("12345", "a product",
+            "variant", "version", "ALL", "SVC");
+
+        // no x86_64, ie ARCH_LABEL
+        String[] wrongArchStrings = {"s390x", "s390", "ppc64", "ia64"};
+        List<String> wrongArches = new ArrayList<String>();
+        for (String wrongArchString : wrongArchStrings) {
+            wrongArches.add(wrongArchString);
+        }
+        Content wrongArchContent = createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
+            CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL, CONTENT_GPG_URL, wrongArches);
+
+        wrongArchProduct.setContent(Collections.singleton(wrongArchContent));
+        products.clear();
+        products.add(wrongArchProduct);
+        setupEntitlements(ARCH_LABEL, testArch);
+
+        Set<X509ExtensionWrapper> extensions =
+            certServiceAdapter.prepareV3Extensions(products, entitlement, "prefix",
+                null, subscription);
+        Map<String, X509ExtensionWrapper> map =
+            new HashMap<String, X509ExtensionWrapper>();
+        for (X509ExtensionWrapper ext : extensions) {
+            map.put(ext.getOid(), ext);
+        }
+        assertTrue(map.containsKey("1.3.6.1.4.1.2312.9.6"));
+        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("3.2"));
+
+        byte[] payload = v3extensionUtil.createEntitlementDataPayload(products, entitlement,
+            "prefix", null, subscription);
+        String stringValue = "";
+        try {
+            stringValue = processPayload(payload);
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        Map<String, Object> data = (Map<String, Object>)
+            Util.fromJson(stringValue , Map.class);
+
+        List<Map<String, Object>> prods = (List<Map<String, Object>>) data.get("products");
+        List<Map<String, Object>> contents = null;
+        for (Map<String, Object> prod : prods) {
+
+            String arch = product.hasAttribute("arch") ?
+                product.getAttributeValue("arch") : "";
+            StringTokenizer st = new StringTokenizer(arch, ",");
+            while (st.hasMoreElements()) {
+                assertTrue(((List) prod.get("architectures")).contains(st.nextElement()));
+            }
+
+            contents = (List<Map<String, Object>>) prod.get("content");
+            assertTrue(contents.isEmpty());
+        }
+    }
+
 
     @Test
     public void testPrepareV3EntitlementDataForDefaults() throws IOException {

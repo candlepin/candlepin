@@ -300,6 +300,9 @@ public class Product extends AbstractHibernateObject implements Linkable {
         return productContent;
     }
 
+    // FIXME: this seems wrong, shouldn't this reset the content
+    // not add to it?
+    //
     public void setContent(Set<Content> content) {
         if (content == null) {
             return;
