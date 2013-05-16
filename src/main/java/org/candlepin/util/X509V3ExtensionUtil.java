@@ -306,31 +306,12 @@ public class X509V3ExtensionUtil extends X509Util{
         toReturn.setVersion(version);
 
         // upcast arch labels to arch objects
-        Set<Arch> productArchSet = new HashSet<Arch>();
-
-        String arch = product.hasAttribute("arch") ?
-            product.getAttributeValue("arch") : "";
-
-        log.debug("_ca_ product arch attribute value: " + arch);
-
-        StringTokenizer st = new StringTokenizer(arch, ",");
+        Set<Arch> productArchSet = getProductArches(product, archCurator);
         List<String> archList = new ArrayList<String>();
-        while (st.hasMoreElements()) {
-            String archLabel = (String) st.nextElement();
-            log.debug("_ca_ product arch attribute strink token: " + archLabel);
-            archList.add(archLabel);
-
-            log.debug("_ca_ product arch label " + archLabel);
-            Arch productArch = archCurator.lookupByLabel(archLabel);
-            if (productArch != null) {
-                productArchSet.add(productArch);
-            }
-            else {
-                log.debug("_ca_ archLabel " + archLabel + " not found by archCurator");
-            }
+        for (Arch arch : productArchSet) {
+            archList.add(arch.getLabel());
         }
         toReturn.setArchitectures(archList);
-
         toReturn.setContent(createContent(filterProductContent(product, ent),
             contentPrefix, promotedContent, consumer, productArchSet));
 
