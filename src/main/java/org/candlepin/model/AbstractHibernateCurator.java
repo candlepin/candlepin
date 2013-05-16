@@ -26,6 +26,7 @@ import org.apache.log4j.Logger;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 
 import java.io.Serializable;
@@ -105,8 +106,11 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
             page.setMaxRecords(max);
 
             Criteria c = currentSession().createCriteria(entityType);
-            c.setFirstResult(presentation.getOffset());
-            c.setMaxResults(presentation.getLimit());
+            c.addOrder(createPagingOrder(presentation));
+            if (presentation.isPaging()) {
+                c.setFirstResult(presentation.getOffset());
+                c.setMaxResults(presentation.getLimit());
+            }
 
             page.setPageData(c.list());
             page.setLimit(presentation.getLimit());
@@ -117,6 +121,22 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         }
 
         return page;
+    }
+
+    private Order createPagingOrder(DataPresentation p) {
+        String sortBy = (p.getSortBy() == null) ? "created" : p.getSortBy();
+        DataPresentation.Order order = (p.getOrder() == null) ?
+            DataPresentation.DEFAULT_ORDER : p.getOrder();
+
+        switch (order) {
+            case ASCENDING:
+                return Order.asc(sortBy);
+            case DESCENDING:
+                return Order.desc(sortBy);
+            // Quiet checkstyle.
+            default:
+                return Order.desc(sortBy);
+        }
     }
 
     @SuppressWarnings("unchecked")
