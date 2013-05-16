@@ -336,6 +336,40 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
 
     @Test
+    public void testContentFilterByArch() throws CertificateSizeException {
+        // product with no compatible content, but marked as 'ALL' arch
+        Product wrongArchProduct = new Product("12345", "a product",
+            "variant", "version", "ALL", "SVC");
+
+        // no x86_64, ie ARCH_LABEL
+        String[] wrongArchStrings = {"s390x", "s390", "ppc64", "ia64"};
+        List<String> wrongArches = new ArrayList<String>();
+        for (String wrongArchString : wrongArchStrings) {
+            wrongArches.add(wrongArchString);
+        }
+        Content wrongArchContent = createContent("wrong-arch-content",
+            CONTENT_ID, "wrong-arch-content-label", CONTENT_TYPE,
+            CONTENT_VENDOR, CONTENT_URL, CONTENT_GPG_URL, wrongArches);
+
+        wrongArchProduct.setContent(Collections.singleton(wrongArchContent));
+        when(entitlement.getConsumer().getFact("uname.machine")).thenReturn("x86_64");
+        when(this.archCurator.lookupByLabel(any(String.class))).thenReturn(
+            testArch);
+
+        Set<X509ExtensionWrapper> contentExtensions = extensionUtil
+            .contentExtensions(wrongArchProduct.getProductContent(), null,
+                new HashMap<String, EnvironmentContent>(), entitlement.getConsumer());
+        Map<String, X509ExtensionWrapper> encodedContent = getEncodedContent(
+            contentExtensions);
+        // valid?
+        assertFalse(isEncodedContentValid(encodedContent));
+        assertFalse(encodedContent.containsKey(CONTENT_ID.toString()));
+        assertTrue(encodedContent.isEmpty());
+        // assert encoodedContent is empty
+    }
+
+
+    @Test
     public void testContentRequiredTagsExtention()  throws CertificateSizeException {
         Set<X509ExtensionWrapper> contentExtensions = extensionUtil
             .contentExtensions(product.getProductContent(), null,
@@ -796,6 +830,58 @@ public class DefaultEntitlementCertServiceAdapterTest {
         }
     }
 
+
+    @Test
+    public void testPrepareV1Extensions() throws IOException,
+        GeneralSecurityException {
+        Set<Product> products = new HashSet<Product>();
+
+        products.add(product);
+        setupEntitlements(ARCH_LABEL, testArch, "1.0");
+
+        Set<X509ExtensionWrapper> extensions =
+            certServiceAdapter.prepareV1Extensions(products, entitlement, "prefix",
+                null, subscription);
+        Map<String, X509ExtensionWrapper> map = getEncodedContent(extensions);
+
+        assertTrue(isEncodedContentValid(map));
+
+        assertTrue(map.containsKey(CONTENT_URL));
+    }
+
+    @Test
+    public void testPrepareV1ExtensionsNoCompatibleArch() throws IOException,
+        GeneralSecurityException {
+        Set<Product> products = new HashSet<Product>();
+
+        // product with no compatible content, but marked as 'ALL' arch
+        Product wrongArchProduct = new Product("12345", "a product",
+            "variant", "version", "ALL", "SVC");
+
+        // no x86_64, ie ARCH_LABEL
+        String[] wrongArchStrings = {"s390x", "s390", "ppc64", "ia64"};
+        List<String> wrongArches = new ArrayList<String>();
+        for (String wrongArchString : wrongArchStrings) {
+            wrongArches.add(wrongArchString);
+        }
+        Content wrongArchContent = createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
+            CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL, CONTENT_GPG_URL, wrongArches);
+
+        wrongArchProduct.setContent(Collections.singleton(wrongArchContent));
+        products.clear();
+        products.add(wrongArchProduct);
+        setupEntitlements(ARCH_LABEL, testArch, "1.0");
+
+        Set<X509ExtensionWrapper> extensions =
+            certServiceAdapter.prepareV1Extensions(products, entitlement, "prefix",
+                null, subscription);
+        Map<String, X509ExtensionWrapper> map = getEncodedContent(extensions);
+
+        assertFalse(isEncodedContentValid(map));
+
+        assertFalse(map.containsKey(CONTENT_URL));
+    }
+
     @Test
     public void testPrepareV3EntitlementData() throws IOException,
         GeneralSecurityException {
@@ -910,9 +996,10 @@ public class DefaultEntitlementCertServiceAdapterTest {
         }
     }
 
-    private void setupEntitlements(String consumerArch, Arch lookedupArch) {
+    private void setupEntitlements(String consumerArch, Arch lookedupArch,
+        String certVersion) {
         when(entitlement.getConsumer().getFact("system.certificate_version"))
-            .thenReturn("3.2");
+            .thenReturn(certVersion);
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
         when(entitlement.getConsumer().getFact("uname.machine")).thenReturn(
             consumerArch);
@@ -942,7 +1029,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<Product> products = new HashSet<Product>();
         products.add(product);
 
-        setupEntitlements(null, testArch);
+        setupEntitlements(null, testArch, "3.2");
 
         Set<X509ExtensionWrapper> extensions =
             certServiceAdapter.prepareV3Extensions(products, entitlement, "prefix",
@@ -1002,7 +1089,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         inheritedArchProduct.setContent(Collections.singleton(noArchContent));
         products.add(inheritedArchProduct);
-        setupEntitlements(ARCH_LABEL, testArch);
+        setupEntitlements(ARCH_LABEL, testArch, "3.2");
 
         Set<X509ExtensionWrapper> extensions =
             certServiceAdapter.prepareV3Extensions(products, entitlement, "prefix",
@@ -1074,7 +1161,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         wrongArchProduct.setContent(Collections.singleton(wrongArchContent));
         products.clear();
         products.add(wrongArchProduct);
-        setupEntitlements(ARCH_LABEL, testArch);
+        setupEntitlements(ARCH_LABEL, testArch, "3.2");
 
         Set<X509ExtensionWrapper> extensions =
             certServiceAdapter.prepareV3Extensions(products, entitlement, "prefix",
