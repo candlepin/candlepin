@@ -14,8 +14,11 @@
  */
 package org.candlepin.model;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -373,6 +376,28 @@ public class Product extends AbstractHibernateObject implements Linkable {
          */
     }
 
+    /*
+     * Returns a Set of the comma separated arch name Strings
+     *
+     * @return Set of arch names, or an empty set if value is
+     *         empty string, or if the 'arch' attribute doesnt
+     *         exist
+     */
+    public Set<String> getParsedArches() {
+        // if we get more attributes that are comma seperated,
+        // this may make sense to move to AbstractHibernateObject,
+        // but for now product arch is the only attribute.
+        String archesValue = getAttributeValue("arch");
+        Set<String> archesSet = new HashSet<String>();
+        if (archesValue == null) {
+            return archesSet;
+        }
+        StringTokenizer st = new StringTokenizer(archesValue, ",");
+        while (st.hasMoreElements()) {
+            archesSet.add((String) st.nextElement());
+        }
+        return archesSet;
+    }
     /**
      * Returns true if this product has a content set which modifies the given
      * product:
