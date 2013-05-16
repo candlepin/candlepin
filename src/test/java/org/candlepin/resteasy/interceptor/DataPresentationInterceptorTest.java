@@ -68,7 +68,7 @@ public class DataPresentationInterceptorTest {
         DataPresentation p = ResteasyProviderFactory.getContextData(DataPresentation.class);
         assertEquals(new Integer(123), p.getLimit());
         assertEquals(new Integer(456), p.getOffset());
-        assertNull(p.getOrder());
+        assertEquals(DataPresentation.DEFAULT_ORDER, p.getOrder());
         assertNull(p.getSortBy());
     }
 
@@ -82,7 +82,7 @@ public class DataPresentationInterceptorTest {
         DataPresentation p = ResteasyProviderFactory.getContextData(DataPresentation.class);
         assertEquals(DataPresentation.DEFAULT_LIMIT, p.getLimit());
         assertEquals(new Integer(123), p.getOffset());
-        assertNull(p.getOrder());
+        assertEquals(DataPresentation.DEFAULT_ORDER, p.getOrder());
         assertNull(p.getSortBy());
     }
 
@@ -96,7 +96,7 @@ public class DataPresentationInterceptorTest {
         DataPresentation p = ResteasyProviderFactory.getContextData(DataPresentation.class);
         assertEquals(new Integer(123), p.getLimit());
         assertEquals(DataPresentation.DEFAULT_OFFSET, p.getOffset());
-        assertNull(p.getOrder());
+        assertEquals(DataPresentation.DEFAULT_ORDER, p.getOrder());
         assertNull(p.getSortBy());
     }
 
@@ -145,15 +145,5 @@ public class DataPresentationInterceptorTest {
         assertFalse(p.isPaging());
         assertEquals(DataPresentation.Order.DESCENDING, p.getOrder());
         assertEquals("id", p.getSortBy());
-    }
-
-    @Test(expected = BadRequestException.class)
-    public void testOrderWithoutSortBy() throws Exception {
-        MockHttpRequest req = MockHttpRequest.create("GET",
-            "http://localhost/candlepin/status?order=descending");
-
-        interceptor.preProcess(req, rmethod);
-
-        DataPresentation p = ResteasyProviderFactory.getContextData(DataPresentation.class);
     }
 }

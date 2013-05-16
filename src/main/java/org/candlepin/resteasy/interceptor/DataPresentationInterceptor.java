@@ -73,18 +73,16 @@ public class DataPresentationInterceptor implements PreProcessInterceptor,
         if (offset != null || limit != null || order != null || sortBy != null) {
             p = new DataPresentation();
 
-            if (order == null && sortBy != null) {
+            if (order == null) {
                 p.setOrder(DataPresentation.DEFAULT_ORDER);
-                p.setSortBy(sortBy);
             }
-            else if (order != null && sortBy == null) {
-                throw new BadRequestException(i18n.tr("order cannot be specified" +
-                        " without sort_by"));
-            }
-            else if (order != null && sortBy != null) {
+            else {
                 p.setOrder(readOrder(order));
-                p.setSortBy(sortBy);
             }
+
+            /* We'll leave it to the curator layer to figure out what to sort by if
+             * sortBy is null. */
+            p.setSortBy(sortBy);
 
             try {
                 if (offset == null && limit != null) {
