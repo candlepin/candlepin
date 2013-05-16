@@ -145,7 +145,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     private Owner owner;
     private Set<Content> superContent;
     private Set<Content> largeContent;
-    private Arch arch;
+    private Arch testArch;
     private List<String> ARCH_LABELS;
 
     private String[] testUrls = {"/content/dist/rhel/$releasever/$basearch/os",
@@ -165,19 +165,20 @@ public class DefaultEntitlementCertServiceAdapterTest {
         certServiceAdapter = new DefaultEntitlementCertServiceAdapter(
             mockedPKI, extensionUtil, v3extensionUtil,
             mock(EntitlementCertificateCurator.class), keyPairCurator,
-            serialCurator, productAdapter, entCurator,
+            serialCurator, productAdapter, archCurator, entCurator,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
             config);
 
 
         product = new Product("12345", "a product", "variant", "version",
-            "arch", "SVC");
+            ARCH_LABEL, "SVC");
         largeContentProduct = new Product("67890", "large content product", "variant",
-            "version", "arch", "SVC");
+            "version", ARCH_LABEL, "SVC");
 
         ARCH_LABELS = new ArrayList<String>();
         ARCH_LABELS.add(ARCH_LABEL);
 
+        testArch = new Arch(ARCH_LABEL, ARCH_LABEL);
         content = createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
             CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL, CONTENT_GPG_URL, ARCH_LABELS);
         content.setMetadataExpire(CONTENT_METADATA_EXPIRE);
@@ -234,10 +235,12 @@ public class DefaultEntitlementCertServiceAdapterTest {
         String type, String vendor, String url, String gpgUrl, List<String> archLabels) {
         Content c = new Content(name, id, label, type, vendor, url, gpgUrl);
 
+        Set<Arch> arches = new HashSet<Arch>();
         for (String archLabel : archLabels) {
-            arch = new Arch(archLabel, archLabel);
-            c.setArches(Collections.singleton(arch));
+            Arch contentArch = new Arch(archLabel, archLabel);
+            arches.add(contentArch);
         }
+        c.setArches(arches);
 
         return c;
     }
@@ -246,12 +249,12 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void tooManyContentSetsAcrossMultipleProducts() throws Exception {
         Set<Product> providedProducts = new HashSet<Product>();
         Product pp1 = new Product("12346", "Provided 1", "variant", "version",
-            "arch", "SVC");
+            ARCH_LABEL, "SVC");
         pp1.setContent(generateContent(100, "PP1"));
         providedProducts.add(pp1);
 
         Product pp2 = new Product("12347", "Provided 2", "variant", "version",
-            "arch", "SVC");
+            ARCH_LABEL, "SVC");
         pp2.setContent(generateContent(100, "PP2"));
         providedProducts.add(pp2);
 
@@ -467,7 +470,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     @Test
     public void testFilterProductContent() {
         Product modProduct = new Product("12345", "a product", "variant",
-            "version", "arch", "SVC");
+            "version", ARCH_LABEL, "SVC");
 
         // Use this set for successful providing queries:
         Set<Entitlement> successResult = new HashSet<Entitlement>();
@@ -656,11 +659,12 @@ public class DefaultEntitlementCertServiceAdapterTest {
         X509ExtensionUtil mockExtensionUtil = mock(X509ExtensionUtil.class);
 
         DefaultEntitlementCertServiceAdapter entAdapter =
-            new DefaultEntitlementCertServiceAdapter(mockedPKI, mockExtensionUtil,
-                mockV3extensionUtil, mock(EntitlementCertificateCurator.class),
-                keyPairCurator, serialCurator, productAdapter, entCurator,
-                I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
-                mockConfig);
+         new DefaultEntitlementCertServiceAdapter(
+                    mockedPKI, mockExtensionUtil, mockV3extensionUtil,
+                    mock(EntitlementCertificateCurator.class), keyPairCurator,
+                    serialCurator, productAdapter, archCurator, entCurator,
+                    I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
+                    mockConfig);
 
         try {
             entAdapter.createX509Certificate(entitlement, subscription,
@@ -691,7 +695,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         DefaultEntitlementCertServiceAdapter entAdapter =
             new DefaultEntitlementCertServiceAdapter(mockedPKI, mockExtensionUtil,
                 mockV3extensionUtil, mock(EntitlementCertificateCurator.class),
-                keyPairCurator, serialCurator, productAdapter, entCurator,
+                keyPairCurator, serialCurator, productAdapter, archCurator,
+                entCurator,
                 I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
                 mockConfig);
 
@@ -720,12 +725,12 @@ public class DefaultEntitlementCertServiceAdapterTest {
         X509V3ExtensionUtil mockV3extensionUtil = mock(X509V3ExtensionUtil.class);
         X509ExtensionUtil mockExtensionUtil = mock(X509ExtensionUtil.class);
 
-        DefaultEntitlementCertServiceAdapter entAdapter =
-            new DefaultEntitlementCertServiceAdapter(mockedPKI, mockExtensionUtil,
-                mockV3extensionUtil, mock(EntitlementCertificateCurator.class),
-                keyPairCurator, serialCurator, productAdapter, entCurator,
-                I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
-                mockConfig);
+        DefaultEntitlementCertServiceAdapter entAdapter = new DefaultEntitlementCertServiceAdapter(
+            mockedPKI, mockExtensionUtil, mockV3extensionUtil,
+            mock(EntitlementCertificateCurator.class), keyPairCurator,
+            serialCurator, productAdapter, archCurator, entCurator,
+            I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
+            mockConfig);
 
         entAdapter.createX509Certificate(entitlement, subscription, product,
             new BigInteger("1234"), keyPair(), true);
@@ -757,12 +762,12 @@ public class DefaultEntitlementCertServiceAdapterTest {
         X509V3ExtensionUtil mockV3extensionUtil = mock(X509V3ExtensionUtil.class);
         X509ExtensionUtil mockExtensionUtil = mock(X509ExtensionUtil.class);
 
-        DefaultEntitlementCertServiceAdapter entAdapter =
-            new DefaultEntitlementCertServiceAdapter(mockedPKI, mockExtensionUtil,
-                mockV3extensionUtil, mock(EntitlementCertificateCurator.class),
-                keyPairCurator, serialCurator, productAdapter, entCurator,
-                I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
-                mockConfig);
+        DefaultEntitlementCertServiceAdapter entAdapter = new DefaultEntitlementCertServiceAdapter(
+            mockedPKI, mockExtensionUtil, mockV3extensionUtil,
+            mock(EntitlementCertificateCurator.class), keyPairCurator,
+            serialCurator, productAdapter, archCurator, entCurator,
+            I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
+            mockConfig);
 
         entAdapter.createX509Certificate(entitlement, subscription,
             product, new BigInteger("1234"), keyPair(), true);
@@ -795,7 +800,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             .thenReturn("3.2");
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
         when(entitlement.getConsumer().getFact("uname.machine")).thenReturn("x86_64");
-        when(this.archCurator.lookupByLabel(any(String.class))).thenReturn(arch);
+        when(this.archCurator.lookupByLabel(any(String.class))).thenReturn(testArch);
 
         subscription.getProduct().setAttribute("warning_period", "20");
         subscription.getProduct().setAttribute("sockets", "4");
@@ -908,7 +913,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             .thenReturn("3.2");
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
         when(entitlement.getConsumer().getFact("uname.machine")).thenReturn("x86_64");
-        when(this.archCurator.lookupByLabel(any(String.class))).thenReturn(arch);
+        when(this.archCurator.lookupByLabel(any(String.class))).thenReturn(testArch);
 
         subscription.getProduct().setAttribute("warning_period", "20");
         subscription.getProduct().setAttribute("sockets", "4");
@@ -1021,7 +1026,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             .thenReturn("3.2");
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
         when(entitlement.getConsumer().getFact("uname.machine")).thenReturn("x86_64");
-        when(this.archCurator.lookupByLabel(any(String.class))).thenReturn(arch);
+        when(this.archCurator.lookupByLabel(any(String.class))).thenReturn(testArch);
 
         subscription.getProduct().setAttribute("warning_period", "0");
         subscription.getProduct().setAttribute("management_enabled", "false");
@@ -1078,7 +1083,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             .thenReturn("3.2");
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
         when(entitlement.getConsumer().getFact("uname.machine")).thenReturn("x86_64");
-        when(this.archCurator.lookupByLabel(any(String.class))).thenReturn(arch);
+        when(this.archCurator.lookupByLabel(any(String.class))).thenReturn(testArch);
 
         subscription.getProduct().setAttribute("management_enabled", "1");
         entitlement.getPool().setAttribute("virt_only", "1");
@@ -1267,7 +1272,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void testContentExtensionLargeSet() throws IOException {
         Set<Product> products = new HashSet<Product>();
         Product extremeProduct = new Product("12345", "a product", "variant", "version",
-            "arch", "SVC");
+            ARCH_LABEL, "SVC");
         products.add(extremeProduct);
         Set<Content> extremeContent = new HashSet<Content>();
         for (int i = 0; i < 550; i++) {
