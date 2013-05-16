@@ -698,12 +698,12 @@ public class DefaultEntitlementCertServiceAdapterTest {
         X509ExtensionUtil mockExtensionUtil = mock(X509ExtensionUtil.class);
 
         DefaultEntitlementCertServiceAdapter entAdapter =
-         new DefaultEntitlementCertServiceAdapter(
-                    mockedPKI, mockExtensionUtil, mockV3extensionUtil,
-                    mock(EntitlementCertificateCurator.class), keyPairCurator,
-                    serialCurator, productAdapter, archCurator, entCurator,
-                    I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
-                    mockConfig);
+            new DefaultEntitlementCertServiceAdapter(
+                mockedPKI, mockExtensionUtil, mockV3extensionUtil,
+                mock(EntitlementCertificateCurator.class), keyPairCurator,
+                serialCurator, productAdapter, archCurator, entCurator,
+                I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
+                mockConfig);
 
         try {
             entAdapter.createX509Certificate(entitlement, subscription,
@@ -764,12 +764,13 @@ public class DefaultEntitlementCertServiceAdapterTest {
         X509V3ExtensionUtil mockV3extensionUtil = mock(X509V3ExtensionUtil.class);
         X509ExtensionUtil mockExtensionUtil = mock(X509ExtensionUtil.class);
 
-        DefaultEntitlementCertServiceAdapter entAdapter = new DefaultEntitlementCertServiceAdapter(
-            mockedPKI, mockExtensionUtil, mockV3extensionUtil,
-            mock(EntitlementCertificateCurator.class), keyPairCurator,
-            serialCurator, productAdapter, archCurator, entCurator,
-            I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
-            mockConfig);
+        DefaultEntitlementCertServiceAdapter entAdapter =
+            new DefaultEntitlementCertServiceAdapter(
+                mockedPKI, mockExtensionUtil, mockV3extensionUtil,
+                mock(EntitlementCertificateCurator.class), keyPairCurator,
+                serialCurator, productAdapter, archCurator, entCurator,
+                I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
+                mockConfig);
 
         entAdapter.createX509Certificate(entitlement, subscription, product,
             new BigInteger("1234"), keyPair(), true);
@@ -801,12 +802,13 @@ public class DefaultEntitlementCertServiceAdapterTest {
         X509V3ExtensionUtil mockV3extensionUtil = mock(X509V3ExtensionUtil.class);
         X509ExtensionUtil mockExtensionUtil = mock(X509ExtensionUtil.class);
 
-        DefaultEntitlementCertServiceAdapter entAdapter = new DefaultEntitlementCertServiceAdapter(
-            mockedPKI, mockExtensionUtil, mockV3extensionUtil,
-            mock(EntitlementCertificateCurator.class), keyPairCurator,
-            serialCurator, productAdapter, archCurator, entCurator,
-            I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
-            mockConfig);
+        DefaultEntitlementCertServiceAdapter entAdapter =
+            new DefaultEntitlementCertServiceAdapter(
+                mockedPKI, mockExtensionUtil, mockV3extensionUtil,
+                mock(EntitlementCertificateCurator.class), keyPairCurator,
+                serialCurator, productAdapter, archCurator, entCurator,
+                I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
+                mockConfig);
 
         entAdapter.createX509Certificate(entitlement, subscription,
             product, new BigInteger("1234"), keyPair(), true);

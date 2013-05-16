@@ -63,10 +63,10 @@ import com.google.inject.Inject;
  */
 public class X509V3ExtensionUtil extends X509Util{
 
-    static Logger log = Logger.getLogger(X509V3ExtensionUtil.class);
+    private static Logger log = Logger.getLogger(X509V3ExtensionUtil.class);
     private Config config;
     private EntitlementCurator entCurator;
-    ArchCurator archCurator;
+    private ArchCurator archCurator;
     private String thisVersion = "3.2";
 
     private long pathNodeId = 0;
@@ -336,9 +336,9 @@ public class X509V3ExtensionUtil extends X509Util{
 
         boolean enableEnvironmentFiltering = config.environmentFilteringEnabled();
 
-        //   Return only the contents that are arch appropriate
-        Set<ProductContent> archApproriateProductContent =
-            filterContentByContentArch(productContent, consumer, productArchSet, archCurator);
+        // Return only the contents that are arch appropriate
+        Set<ProductContent> archApproriateProductContent = filterContentByContentArch(
+            productContent, consumer, productArchSet, archCurator);
 
         for (ProductContent pc : archApproriateProductContent) {
             Content content = new Content();
