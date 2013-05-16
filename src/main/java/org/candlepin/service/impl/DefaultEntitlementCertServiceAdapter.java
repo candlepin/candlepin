@@ -252,7 +252,7 @@ public class DefaultEntitlementCertServiceAdapter extends
         return promotedContent;
     }
 
-    private Set<X509ExtensionWrapper> prepareV1Extensions(Set<Product> products,
+    public Set<X509ExtensionWrapper> prepareV1Extensions(Set<Product> products,
         Entitlement ent, String contentPrefix,
         Map<String, EnvironmentContent> promotedContent, Subscription sub) {
         Set<X509ExtensionWrapper> result =  new LinkedHashSet<X509ExtensionWrapper>();
