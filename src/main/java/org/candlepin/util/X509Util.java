@@ -131,6 +131,26 @@ public abstract class X509Util {
         return prefix + contentPath;
     }
 
+    public Set<org.candlepin.model.Arch> getProductArches(Product product,
+        ArchCurator archCurator) {
+        Set<String> arches = product.getParsedArches();
+        Set<org.candlepin.model.Arch> archSet = new
+            HashSet<org.candlepin.model.Arch>();
+        for (String archLabel : arches) {
+            Arch productArch = archCurator.lookupByLabel(archLabel);
+            if (productArch != null) {
+                archSet.add(productArch);
+            } else {
+                log.debug("The arch label " + archLabel +
+                    " not found by the archCurator");
+            }
+        }
+        return archSet;
+    }
+
+    /*
+     * remove content sets that do not match the consumers arch
+     */
     public Set<ProductContent> filterContentByContentArch(Set<ProductContent> pcSet, Consumer consumer,
         Set<Arch> productArchSet, ArchCurator archCurator) {
             Set<ProductContent> filtered = new HashSet<ProductContent>();
