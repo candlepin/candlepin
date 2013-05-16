@@ -28,11 +28,12 @@ public class CandlepinCommonTestConfig extends Config {
         // be very careful not to invoke the default Config ctor here
         // because it will read in your /etc/candlepin/candlepin.conf
         // which we do not want in our testing framework.
+        this.configuration.putAll(loadProperties());
     }
 
     @Override
     protected Map<String, String> loadProperties() {
-        Map<String, String> properties = super.loadProperties();
+        Map<String, String> properties = new TreeMap<String, String>();
 
         // set ssl cert/key path for testing
         try {
