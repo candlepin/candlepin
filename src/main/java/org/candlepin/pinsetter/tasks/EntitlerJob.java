@@ -73,6 +73,7 @@ public class EntitlerJob implements Job {
         // so that the job will be properly cleaned up on failure.
         catch (Exception e) {
             log.error("EntitlerJob encountered a problem.", e);
+            ctx.setResult(e.getMessage());
             throw new JobExecutionException(e.getMessage(), e, false);
         }
     }

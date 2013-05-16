@@ -35,6 +35,7 @@ import org.candlepin.model.ActivationKey;
 import org.candlepin.model.ActivationKeyCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.ContentCurator;
@@ -63,6 +64,7 @@ import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.model.UpstreamConsumer;
+import org.candlepin.pinsetter.tasks.EntitlerJob;
 import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ResourceDateParser;
@@ -107,7 +109,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
-
 
 /**
  * Owner Resource
@@ -397,6 +398,43 @@ public class OwnerResource {
         }
 
         return toReturn;
+    }
+
+    /**
+     * Starts an asynchronous healing for the given Owner. At the end of the
+     * process the idea is that all of the consumers in the owned by the Owner
+     * will be up to date.
+     *
+     * @param ownerKey id of the owner to be healed.
+     * @return the status of the pending job
+     * @httpcode 404
+     * @httpcode 202
+     */
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("{owner_key}/entitlements")
+    public JobDetail[] healEntire(
+        @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
+
+        List<JobDetail> details = new LinkedList<JobDetail>();
+        Owner owner = findOwner(ownerKey);
+        Set<Consumer> consumers = owner.getConsumers();
+
+        for (Consumer consumer : consumers) {
+            // would be nice to just get the ids but it is what it is
+            Set<ConsumerInstalledProduct> products = consumer.getInstalledProducts();
+
+            // TODO: write a google Function to map this
+            String[] pids = new String[products.size()];
+            int i = 0;
+            for (ConsumerInstalledProduct cip : products) {
+                pids[i++] = cip.getProductId();
+            }
+            details.add(
+                EntitlerJob.bindByProducts(pids, consumer.getUuid(), new Date()));
+        }
+
+        return details.toArray(new JobDetail[details.size()]);
     }
 
     /**
