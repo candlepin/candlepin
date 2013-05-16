@@ -59,18 +59,25 @@ public class ContentTest extends DatabaseTestFixture {
         String  contentHash = String.valueOf(
             Math.abs(Long.valueOf("test-content-arches".hashCode())));
 
-        Arch i386Arch = new Arch("1", "i386");
+        Arch i386Arch = new Arch("i386", "i386");
+        archCurator.create(i386Arch);
+        Arch x8664Arch = new Arch("x86_64", "x86_64");
+        archCurator.create(x8664Arch);
 
-        Arch x8664Arch = archCurator.lookupByLabel("x86_64");
+        //Arch x8664Arch = archCurator.lookupByLabel("x86_64");
         Set<Arch> arches = new HashSet<Arch>();
+//        Arch lookedupArch = archCurator.find(i386Arch.getId());
+        arches.add(i386Arch);
         arches.add(x8664Arch);
 
         Content content = new Content("test-content-arches", contentHash,
                             "test-content-arches-label", "yum", "test-vendor",
                              "test-content-url", "test-gpg-url");
+        content.setArches(arches);
         contentCurator.create(content);
+
         Content lookedUp = contentCurator.find(content.getId());
-        assertArrayEquals(content.getArches().toArray(), arches.toArray());
+        assertArrayEquals(lookedUp.getArches().toArray(), arches.toArray());
     }
 
     @Test

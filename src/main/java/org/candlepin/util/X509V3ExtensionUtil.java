@@ -351,18 +351,15 @@ public class X509V3ExtensionUtil extends X509Util{
         Consumer consumer,
         Set<Arch> productArchSet) {
 
+        Set<ProductContent> filtered = new HashSet<ProductContent>();
+
         List<Content> toReturn = new ArrayList<Content>();
 
         boolean enableEnvironmentFiltering = config.environmentFilteringEnabled();
 
-        String consumerArchLabel = consumer.getFact(ARCH_FACT);
-        Arch consumerArch = archCurator.lookupByLabel(consumerArchLabel);
-        log.debug("_ca_ consumerArch: " + consumerArch);
-        log.debug("_ca_ consumerArchLabel: " + consumerArchLabel);
-
-        //   Return only the contents that are arch approriate
+        //   Return only the contents that are arch appropriate
         Set<ProductContent> archApproriateProductContent =
-            filterContentByContentArch(productContent, consumerArch, productArchSet);
+            filterContentByContentArch(productContent, consumer, productArchSet);
 
         for (ProductContent pc : archApproriateProductContent) {
             Content content = new Content();
@@ -432,7 +429,7 @@ public class X509V3ExtensionUtil extends X509Util{
     }
 
     public Set<ProductContent> filterContentByContentArch(Set<ProductContent> pcSet,
-            Arch consumerArch, Set<Arch> productArchSet) {
+            Consumer consumer, Set<Arch> productArchSet) {
         Set<ProductContent> filtered = new HashSet<ProductContent>();
 
         /* FIXME: make this a feature flag in the config */
@@ -441,6 +438,25 @@ public class X509V3ExtensionUtil extends X509Util{
             return pcSet;
         }
 
+        String consumerArchLabel = consumer.getFact(ARCH_FACT);
+        log.debug("_ca_ consumerArchLabel: " + consumerArchLabel);
+
+        if (consumerArchLabel == null) {
+            log.debug("_ca_ consumer: " + consumer.getId() +
+                " has no " + ARCH_FACT + " attribute.");
+            log.debug("_ca_ not filtering by arch");
+            return pcSet;
+        }
+
+        Arch consumerArch = archCurator.lookupByLabel(consumerArchLabel);
+        if (consumerArch == null) {
+            log.debug("_ca_ consumer arch: " + consumerArchLabel +
+                " is not a known arch");
+            log.debug("_ca_ not filtering by arch");
+            return pcSet;
+        }
+
+        log.debug("_ca_ consumerArch: " + consumerArch);
         log.debug("_ca_ productArchSet " + productArchSet.toString());
 
         for (ProductContent pc : pcSet) {

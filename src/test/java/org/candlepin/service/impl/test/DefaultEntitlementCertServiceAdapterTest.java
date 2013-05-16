@@ -146,6 +146,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     private Set<Content> superContent;
     private Set<Content> largeContent;
     private Arch arch;
+    private List<String> ARCH_LABELS;
 
     private String[] testUrls = {"/content/dist/rhel/$releasever/$basearch/os",
         "/content/dist/rhel/$releasever/$basearch/debug",
@@ -168,28 +169,30 @@ public class DefaultEntitlementCertServiceAdapterTest {
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
             config);
 
-        arch = new Arch(ARCH_LABEL, ARCH_LABEL);
 
         product = new Product("12345", "a product", "variant", "version",
             "arch", "SVC");
         largeContentProduct = new Product("67890", "large content product", "variant",
             "version", "arch", "SVC");
 
+        ARCH_LABELS = new ArrayList<String>();
+        ARCH_LABELS.add(ARCH_LABEL);
+
         content = createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
-            CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL, CONTENT_GPG_URL, ARCH_LABEL);
+            CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL, CONTENT_GPG_URL, ARCH_LABELS);
         content.setMetadataExpire(CONTENT_METADATA_EXPIRE);
         content.setRequiredTags(REQUIRED_TAGS);
 
         superContent = new HashSet<Content>();
         for (String url : testUrls) {
             superContent.add(createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
-                CONTENT_TYPE, CONTENT_VENDOR, url, CONTENT_GPG_URL, ARCH_LABEL));
+                CONTENT_TYPE, CONTENT_VENDOR, url, CONTENT_GPG_URL, ARCH_LABELS));
         }
 
         largeContent = new HashSet<Content>();
         for (String url : largeTestUrls) {
             largeContent.add(createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
-                CONTENT_TYPE, CONTENT_VENDOR, url, CONTENT_GPG_URL, ARCH_LABEL));
+                CONTENT_TYPE, CONTENT_VENDOR, url, CONTENT_GPG_URL, ARCH_LABELS));
         }
 
         subscription = new Subscription(null, product, new HashSet<Product>(),
@@ -228,11 +231,14 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
 
     private Content createContent(String name, String id, String label,
-        String type, String vendor, String url, String gpgUrl, String archLabel) {
+        String type, String vendor, String url, String gpgUrl, List<String> archLabels) {
         Content c = new Content(name, id, label, type, vendor, url, gpgUrl);
 
-        /* FIXME: use Arch we create in database test fixture */
-        c.setArches(Collections.singleton(arch));
+        for (String archLabel : archLabels) {
+            arch = new Arch(archLabel, archLabel);
+            c.setArches(Collections.singleton(arch));
+        }
+
         return c;
     }
 
@@ -265,7 +271,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
                                              CONTENT_VENDOR,
                                              CONTENT_URL,
                                              CONTENT_GPG_URL,
-                                             ARCH_LABEL));
+                                             ARCH_LABELS));
         }
         return productContent;
     }
@@ -469,11 +475,11 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         Content normalContent = createContent(CONTENT_NAME, CONTENT_ID,
             CONTENT_LABEL, CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL,
-            CONTENT_GPG_URL, ARCH_LABEL);
+            CONTENT_GPG_URL, ARCH_LABELS);
         // Change label to prevent an equals match:
         Content modContent = createContent(CONTENT_NAME, CONTENT_ID + "_2",
             "differentlabel", CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL,
-            CONTENT_GPG_URL, ARCH_LABEL);
+            CONTENT_GPG_URL, ARCH_LABELS);
         modContent.setLabel("mod content");
         Set<String> modifiedProductIds = new HashSet<String>(
             Arrays.asList(new String[]{ "product1", "product2" }));
@@ -893,6 +899,119 @@ public class DefaultEntitlementCertServiceAdapterTest {
             }
         }
     }
+    @Test
+    public void testPrepareV3EntitlementDataNoConsumerArch() throws IOException,
+        GeneralSecurityException {
+        Set<Product> products = new HashSet<Product>();
+        products.add(product);
+        when(entitlement.getConsumer().getFact("system.certificate_version"))
+            .thenReturn("3.2");
+        when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
+        when(entitlement.getConsumer().getFact("uname.machine")).thenReturn("x86_64");
+        when(this.archCurator.lookupByLabel(any(String.class))).thenReturn(arch);
+
+        subscription.getProduct().setAttribute("warning_period", "20");
+        subscription.getProduct().setAttribute("sockets", "4");
+        subscription.getProduct().setAttribute("ram", "8");
+        subscription.getProduct().setAttribute("cores", "4");
+        subscription.getProduct().setAttribute("management_enabled", "true");
+        subscription.getProduct().setAttribute("stacking_id", "45678");
+        entitlement.getPool().setAttribute("virt_only", "true");
+        subscription.getProduct().setAttribute("support_level", "slevel");
+        subscription.getProduct().setAttribute("support_type", "stype");
+        subscription.setAccountNumber("account1");
+        subscription.setContractNumber("contract1");
+        subscription.setOrderNumber("order1");
+        for (ProductContent pc : product.getProductContent()) {
+            pc.setEnabled(false);
+        }
+
+        Set<X509ExtensionWrapper> extensions =
+            certServiceAdapter.prepareV3Extensions(products, entitlement, "prefix",
+                null, subscription);
+        Map<String, X509ExtensionWrapper> map =
+            new HashMap<String, X509ExtensionWrapper>();
+        for (X509ExtensionWrapper ext : extensions) {
+            map.put(ext.getOid(), ext);
+        }
+        assertTrue(map.containsKey("1.3.6.1.4.1.2312.9.6"));
+        assertEquals(map.get("1.3.6.1.4.1.2312.9.6").getValue(), ("3.2"));
+
+        byte[] payload = v3extensionUtil.createEntitlementDataPayload(products, entitlement,
+            "prefix", null, subscription);
+        String stringValue = "";
+        try {
+            stringValue = processPayload(payload);
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        Map<String, Object> data = (Map<String, Object>)
+            Util.fromJson(stringValue , Map.class);
+        assertEquals(data.get("consumer"), "test-consumer");
+        assertEquals(data.get("quantity"), 10);
+
+        Map<String, Object> subs = (Map<String, Object>) data.get("subscription");
+        assertEquals(subs.get("sku"), subscription.getProduct().getId());
+        assertEquals(subs.get("name"), subscription.getProduct().getName());
+        assertEquals(subs.get("warning"), 20);
+        assertEquals(subs.get("sockets"), 4);
+        assertEquals(subs.get("ram"), 8);
+        assertEquals(subs.get("cores"), 4);
+        assertTrue((Boolean) subs.get("management"));
+        assertEquals(subs.get("stacking_id"), "45678");
+        assertTrue((Boolean) subs.get("virt_only"));
+
+        Map<String, Object> service = (Map<String, Object>) subs.get("service");
+        assertEquals(service.get("level"), "slevel");
+        assertEquals(service.get("type"), "stype");
+        Map<String, Object> order = (Map<String, Object>) data.get("order");
+        assertEquals(order.get("number"), subscription.getOrderNumber());
+        assertTrue(((Integer) order.get("quantity")).intValue() ==
+            subscription.getQuantity());
+        assertNotNull(order.get("start"));
+        assertNotNull(order.get("end"));
+//        assertEquals(order.get("contract"), subscription.getContractNumber());
+//        assertEquals(order.get("account"), subscription.getAccountNumber());
+
+        List<Map<String, Object>> prods = (List<Map<String, Object>>) data.get("products");
+        List<Map<String, Object>> contents = null;
+        for (Map<String, Object> prod : prods) {
+            assertEquals(prod.get("id"), product.getId());
+            assertEquals(prod.get("name"), product.getName());
+            assertEquals(prod.get("version"), product.getAttributeValue("version"));
+            String arch = product.hasAttribute("arch") ?
+                product.getAttributeValue("arch") : "";
+            StringTokenizer st = new StringTokenizer(arch, ",");
+            while (st.hasMoreElements()) {
+                assertTrue(((List) prod.get("architectures")).contains(st.nextElement()));
+            }
+
+            contents = (List<Map<String, Object>>) prod.get("content");
+            for (Map<String, Object> cont : contents) {
+                assertEquals(cont.get("id"), CONTENT_ID);
+                assertEquals(cont.get("name"), CONTENT_NAME);
+                assertEquals(cont.get("type"), CONTENT_TYPE);
+                assertEquals(cont.get("label"), CONTENT_LABEL);
+                assertEquals(cont.get("vendor"), CONTENT_VENDOR);
+                assertEquals(cont.get("gpg_url"), CONTENT_GPG_URL);
+                assertEquals(cont.get("path"), "prefix" + CONTENT_URL);
+                assertFalse((Boolean) cont.get("enabled"));
+                assertEquals(cont.get("metadata_expire"), 3200);
+
+                List<String> arches = new ArrayList<String>();
+                arches.add(ARCH_LABEL);
+                assertEquals(cont.get("arches"), arches);
+
+                String rTags = content.getRequiredTags();
+                st = new StringTokenizer(rTags, ",");
+                while (st.hasMoreElements()) {
+                    assertTrue(((List) cont.get("required_tags"))
+                        .contains(st.nextElement()));
+                }
+            }
+        }
+    }
 
     @Test
     public void testPrepareV3EntitlementDataForDefaults() throws IOException {
@@ -1054,6 +1173,57 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
 
     @Test
+    public void testContentExtensionConsumerNoArchFact() throws IOException {
+        Set<Product> products = new HashSet<Product>();
+        products.add(product);
+        // set of content for an incompatible arch, which should
+        // be in the cert, since this consumer has no arch fact therefore
+        // should match everything
+        Content wrongArchContent = new Content();
+        List<String> wrongArchLabels = new ArrayList<String>();
+        wrongArchLabels.add("s390x");
+        String noArchUrl = "/some/place/nice";
+        wrongArchContent = createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
+                CONTENT_TYPE, CONTENT_VENDOR, noArchUrl, CONTENT_GPG_URL, wrongArchLabels);
+        product.setContent(superContent);
+        product.addContent(wrongArchContent);
+
+        when(entitlement.getConsumer().getFact("system.certificate_version"))
+            .thenReturn("3.2");
+        when(entitlement.getConsumer().getFact("uname.machine")).thenReturn(null);
+        when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
+
+        Set<X509ByteExtensionWrapper> byteExtensions =
+            certServiceAdapter.prepareV3ByteExtensions(products, entitlement, "prefix",
+                null, subscription);
+        Map<String, X509ExtensionWrapper> map =
+            new HashMap<String, X509ExtensionWrapper>();
+        Map<String, X509ByteExtensionWrapper> byteMap =
+            new HashMap<String, X509ByteExtensionWrapper>();
+        for (X509ByteExtensionWrapper ext : byteExtensions) {
+            byteMap.put(ext.getOid(), ext);
+        }
+
+        assertTrue(byteMap.containsKey("1.3.6.1.4.1.2312.9.7"));
+        List<String> contentSetList = new ArrayList<String>();
+        try {
+            contentSetList = v3extensionUtil.hydrateContentPackage(
+                byteMap.get("1.3.6.1.4.1.2312.9.7").getValue());
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        assertEquals(8, contentSetList.size());
+        for (String url : testUrls) {
+            assertTrue(contentSetList.contains("/prefix" + url));
+        }
+        // verify our new wrong arch url is in there
+        assertTrue(contentSetList.contains("/prefix" + noArchUrl));
+    }
+
+
+    @Test
     public void testSpecificLargeContent() throws IOException {
         Set<Product> products = new HashSet<Product>();
         products.add(largeContentProduct);
@@ -1103,7 +1273,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         for (int i = 0; i < 550; i++) {
             String url = "/content/dist" + i + "/jboss/source" + i;
             extremeContent.add(createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
-                CONTENT_TYPE, CONTENT_VENDOR, url, CONTENT_GPG_URL, ARCH_LABEL));
+                CONTENT_TYPE, CONTENT_VENDOR, url, CONTENT_GPG_URL, ARCH_LABELS));
         }
         extremeProduct.setContent(extremeContent);
         when(entitlement.getConsumer().getFact("system.certificate_version"))
