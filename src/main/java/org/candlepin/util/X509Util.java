@@ -20,6 +20,9 @@ import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.candlepin.model.Arch;
+import org.candlepin.model.ArchCurator;
+import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EnvironmentContent;
@@ -43,6 +46,8 @@ public abstract class X509Util {
             return product != null && StringUtils.isNumeric(product.getId());
         }
     };
+
+    public static final String ARCH_FACT = "uname.machine";
 
     /**
      * Scan the product content looking for any we should filter out.
@@ -125,6 +130,97 @@ public abstract class X509Util {
         contentPath = StringUtils.stripStart(contentPath, "/");
         return prefix + contentPath;
     }
+
+    public Set<ProductContent> filterContentByContentArch(Set<ProductContent> pcSet, Consumer consumer,
+        Set<Arch> productArchSet, ArchCurator archCurator) {
+            Set<ProductContent> filtered = new HashSet<ProductContent>();
+
+            /* FIXME: make this a feature flag in the config */
+            boolean enabledContentArchFiltering = true;
+            if (!enabledContentArchFiltering) {
+                return pcSet;
+            }
+
+            String consumerArchLabel = consumer.getFact(ARCH_FACT);
+            log.debug("_ca_ consumerArchLabel: " + consumerArchLabel);
+
+            if (consumerArchLabel == null) {
+                log.debug("_ca_ consumer: " + consumer.getId() +
+                    " has no " + ARCH_FACT + " attribute.");
+                log.debug("_ca_ not filtering by arch");
+                return pcSet;
+            }
+
+            Arch consumerArch = archCurator.lookupByLabel(consumerArchLabel);
+            if (consumerArch == null) {
+                log.debug("_ca_ consumer arch: " + consumerArchLabel +
+                    " is not a known arch");
+                log.debug("_ca_ not filtering by arch");
+                return pcSet;
+            }
+
+            log.debug("_ca_ consumerArch: " + consumerArch);
+            log.debug("_ca_ productArchSet " + productArchSet.toString());
+
+            for (ProductContent pc : pcSet) {
+                boolean canUse = false;
+                Set<Arch> arches = pc.getContent().getArches();
+
+                log.debug("_ca_ product_content arch list for " + pc.getContent().getLabel());
+                for (Arch logArch : pc.getContent().getArches()) {
+                    log.debug("_ca_ \t arch: " + logArch.toString());
+                }
+
+                if (arches.isEmpty()) {
+                    Product product = pc.getProduct();
+                    // no arches specified
+                    log.debug("_ca_ content set " + pc.getContent().getLabel() +
+                        " does not specific content arches");
+
+                    // so use the arches from the product
+                    arches.addAll(productArchSet);
+                    log.debug("_ca_so using the arches from the product " + product.toString());
+                    for (Arch productArch : arches) {
+                        log.debug("_ca_ \t arch from product: " + productArch.toString());
+                    }
+                }
+
+                for (Arch contentArch : arches) {
+                    log.debug("_ca_ Checking consumerArch " + consumerArch.getLabel() +
+                              " can use content for " + contentArch.getLabel());
+                    log.debug("_ca_ consumerArch.usesContentFor(contentArch) " +
+                              consumerArch.usesContentFor(contentArch));
+                    if (consumerArch.usesContentFor(contentArch)) {
+                        log.debug("_ca_ CAN use content " + pc.getContent().getLabel() +
+                            " for arch " + contentArch.getLabel());
+                        //filtered.add(pc);
+                        canUse = true;
+                    }
+                    else {
+                        log.debug("_ca_ CAN NOT use content " + pc.getContent().getLabel() +
+                                  " for arch " + contentArch.getLabel());
+                    }
+                }
+
+
+
+                // if we found a workable arch for this content, include it
+                if (canUse) {
+                    filtered.add(pc);
+                    log.debug("_ca_ Including content " + pc.getContent().getLabel());
+                }
+                else {
+                    log.debug("_ca_ Skipping content " + pc.getContent().getLabel());
+                }
+
+            }
+            log.debug("_ca_ arch approriate content for " +
+                      consumerArch.getLabel() + " includes: ");
+            for (ProductContent apc : filtered) {
+                log.debug("_ca_ \t " + apc.toString());
+            }
+            return filtered;
+        }
 
 
 }
