@@ -37,14 +37,11 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
 
     private UserCurator userCurator;
     private RoleCurator roleCurator;
-    private OwnerPermissionCurator permCurator;
 
     @Inject
-    public DefaultUserServiceAdapter(UserCurator userCurator, RoleCurator roleCurator,
-        OwnerPermissionCurator permCurator) {
+    public DefaultUserServiceAdapter(UserCurator userCurator, RoleCurator roleCurator) {
         this.userCurator = userCurator;
         this.roleCurator = roleCurator;
-        this.permCurator = permCurator;
     }
 
     @Override
