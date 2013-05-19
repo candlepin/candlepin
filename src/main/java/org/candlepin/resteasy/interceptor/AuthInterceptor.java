@@ -54,7 +54,6 @@ public class AuthInterceptor implements PreProcessInterceptor {
     private Injector injector;
     private ConsumerCurator consumerCurator;
     private DeletedConsumerCurator deletedConsumerCurator;
-    private OwnerCurator ownerCurator;
     private Config config;
     private UserServiceAdapter userService;
     private List<AuthProvider> providers = new ArrayList<AuthProvider>();
@@ -62,7 +61,7 @@ public class AuthInterceptor implements PreProcessInterceptor {
 
     @Inject
     public AuthInterceptor(Config config, UserServiceAdapter userService,
-        OwnerCurator ownerCurator, ConsumerCurator consumerCurator,
+        ConsumerCurator consumerCurator,
         DeletedConsumerCurator deletedConsumerCurator, Injector injector,
         I18n i18n) {
         super();
@@ -70,7 +69,6 @@ public class AuthInterceptor implements PreProcessInterceptor {
         this.injector = injector;
         this.config = config;
         this.userService = userService;
-        this.ownerCurator = ownerCurator;
         this.deletedConsumerCurator = deletedConsumerCurator;
         this.i18n = i18n;
         this.setupAuthStrategies();
