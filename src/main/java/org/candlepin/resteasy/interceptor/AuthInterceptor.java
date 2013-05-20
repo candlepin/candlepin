@@ -29,7 +29,6 @@ import org.candlepin.config.Config;
 import org.candlepin.exceptions.UnauthorizedException;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.DeletedConsumerCurator;
-import org.candlepin.model.OwnerCurator;
 import org.candlepin.service.UserServiceAdapter;
 import org.jboss.resteasy.annotations.interception.ServerInterceptor;
 import org.jboss.resteasy.core.ResourceMethod;

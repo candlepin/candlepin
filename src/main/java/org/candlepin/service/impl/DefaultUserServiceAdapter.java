@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.candlepin.model.OwnerPermission;
-import org.candlepin.model.OwnerPermissionCurator;
 import org.candlepin.model.Role;
 import org.candlepin.model.RoleCurator;
 import org.candlepin.model.User;
