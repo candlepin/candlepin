@@ -131,6 +131,7 @@ public class EntitlementResource {
         @QueryParam("consumer") String consumerUuid,
         @Context DataPresentation presentation) {
 
+        Page<List<Entitlement>> p;
         if (consumerUuid != null) {
 
             Consumer consumer = consumerCurator.findByUuid(consumerUuid);
@@ -139,12 +140,11 @@ public class EntitlementResource {
                     i18n.tr("No such consumer: {0}", consumerUuid));
             }
 
-            //TODO paginate this
-            return entitlementCurator.listByConsumer(consumer);
+            p = entitlementCurator.listByConsumer(consumer, presentation);
+            return p.getPageData();
         }
 
-        Page<List<Entitlement>> p = entitlementCurator.listAll(presentation);
-
+        p = entitlementCurator.listAll(presentation);
         return p.getPageData();
     }
 

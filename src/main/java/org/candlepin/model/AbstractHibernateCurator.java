@@ -27,7 +27,10 @@ import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
+import org.hibernate.criterion.Projection;
 import org.hibernate.criterion.Projections;
+import org.hibernate.impl.CriteriaImpl;
+import org.hibernate.transform.ResultTransformer;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -100,19 +103,11 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
         if (presentation != null) {
             Criteria count = currentSession().createCriteria(entityType);
-            count.setProjection(Projections.rowCount());
-            Integer max = (Integer) count.uniqueResult();
-
-            page.setMaxRecords(max);
+            page.setMaxRecords(findRowCount(count));
 
             Criteria c = currentSession().createCriteria(entityType);
-            c.addOrder(createPagingOrder(presentation));
-            if (presentation.isPaging()) {
-                c.setFirstResult(presentation.getOffset());
-                c.setMaxResults(presentation.getLimit());
-            }
+            page.setPageData(loadPageData(c, presentation));
 
-            page.setPageData(c.list());
             page.setLimit(presentation.getLimit());
             page.setNextOffset(presentation.getOffset() + presentation.getLimit());
         }
@@ -123,8 +118,19 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         return page;
     }
 
+    @SuppressWarnings("unchecked")
+    private List<E> loadPageData(Criteria c, DataPresentation presentation) {
+        c.addOrder(createPagingOrder(presentation));
+        if (presentation.isPaging()) {
+            c.setFirstResult(presentation.getOffset());
+            c.setMaxResults(presentation.getLimit());
+        }
+        return c.list();
+    }
+
     private Order createPagingOrder(DataPresentation p) {
-        String sortBy = (p.getSortBy() == null) ? "created" : p.getSortBy();
+        String sortBy = (p.getSortBy() == null) ?
+            AbstractHibernateObject.DEFAULT_SORT_FIELD : p.getSortBy();
         DataPresentation.Order order = (p.getOrder() == null) ?
             DataPresentation.DEFAULT_ORDER : p.getOrder();
 
@@ -139,11 +145,51 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         }
     }
 
+    private Integer findRowCount(Criteria c) {
+        c.setProjection(Projections.rowCount());
+        return (Integer) c.uniqueResult();
+    }
+
     @SuppressWarnings("unchecked")
     @Transactional
     @EnforceAccessControl
     public List<E> listByCriteria(DetachedCriteria query) {
         return query.getExecutableCriteria(currentSession()).list();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Transactional
+    @EnforceAccessControl
+    public Page<List<E>> listByCriteria(DetachedCriteria query,
+        DataPresentation presentation) {
+        Page<List<E>> page = new Page<List<E>>();
+
+        if (presentation != null) {
+            // see https://forum.hibernate.org/viewtopic.php?t=974802
+            Criteria c = query.getExecutableCriteria(currentSession());
+
+            // Save original Projection and ResultTransformer
+            CriteriaImpl cImpl = (CriteriaImpl) c;
+            Projection origProjection = cImpl.getProjection();
+            ResultTransformer origRt = cImpl.getResultTransformer();
+
+            // Get total number of records by setting a rowCount projection
+            page.setMaxRecords(findRowCount(c));
+
+            // Restore original Projection and ResultTransformer
+            c.setProjection(origProjection);
+            c.setResultTransformer(origRt);
+
+            page.setPageData(loadPageData(c, presentation));
+
+            page.setLimit(presentation.getLimit());
+            page.setNextOffset(presentation.getOffset() + presentation.getLimit());
+        }
+        else {
+            page.setPageData(listByCriteria(query));
+        }
+
+        return page;
     }
 
     @SuppressWarnings("unchecked")

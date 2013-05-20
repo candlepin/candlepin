@@ -30,6 +30,7 @@ import javax.xml.bind.annotation.XmlType;
 @MappedSuperclass
 @XmlType(name = "CandlepinObject")
 public abstract class AbstractHibernateObject implements Persisted, Serializable {
+    public static final String DEFAULT_SORT_FIELD = "created";
 
     private Date created;
     private Date updated;
