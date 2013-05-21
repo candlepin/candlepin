@@ -1342,8 +1342,8 @@ var Entitlement = {
         if (virt_pool) {
             if (consumer.type.manifest) {
                 if (pool_derived) {
-                    if (BEST_POOLS_CALLER.equals(caller) ||
-                        BIND_CALLER.equals(caller)) {
+                    if (BEST_POOLS_CALLER == caller ||
+                        BIND_CALLER == caller) {
                     	result.addError("pool.not.available.to.manifest.consumers");
                     }
                     else {
@@ -1352,8 +1352,8 @@ var Entitlement = {
                 }
         	}
         	else if (!guest) {
-                if (BEST_POOLS_CALLER.equals(caller) ||
-                    BIND_CALLER.equals(caller)) {
+                if (BEST_POOLS_CALLER == caller ||
+                    BIND_CALLER == caller) {
                     result.addError("rulefailed.virt.only");
                 }
                 else {
@@ -1461,19 +1461,9 @@ var Entitlement = {
             }
         }
         else {
-            var isCapable = false;
-
-            if (consumer.capabilities) {
-                for (var i = 0; i < consumer.capabilities.length; i++) {
-                    if (Utils.equalsIgnoreCase(consumer.capabilities[i].name, CORES_ATTRIBUTE)) {
-                        isCapable = true;
-                        break;
-                    }
-                }
-            }
-            if (!isCapable) {
-                if (BEST_POOLS_CALLER.equals(caller) ||
-                    BIND_CALLER.equals(caller)) {
+            if (!Utils.isCapable(consumer, CORES_ATTRIBUTE)) {
+                if (BEST_POOLS_CALLER == caller ||
+                    BIND_CALLER == caller) {
                     result.addError("rulefailed.cores.unsupported.by.consumer");
                 }
                 else {
@@ -1501,18 +1491,9 @@ var Entitlement = {
             }
         }
         else {
-            var isCapable = false;
-            if (consumer.capabilities) {
-                for (var i = 0; i < consumer.capabilities.length; i++) {
-                    if (consumer.capabilities[i].name.equals(RAM_ATTRIBUTE)) {
-                        isCapable = true;
-                        break;
-                    }
-                }
-            }
-            if (!isCapable) {
-                if (BEST_POOLS_CALLER.equals(caller) ||
-                    BIND_CALLER.equals(caller)) {
+            if (!Utils.isCapable(consumer, RAM_ATTRIBUTE)) {
+                if (BEST_POOLS_CALLER == caller ||
+                    BIND_CALLER == caller) {
                     result.addError("rulefailed.ram.unsupported.by.consumer");
                 }
                 else {
@@ -1534,7 +1515,7 @@ var Entitlement = {
         // only block quantities that do not evenly divide the multiplier
         // and only on physical systems
         if (!consumer.type.manifest) {
-            if (BIND_CALLER.equals(caller) && !Utils.isGuest(consumer)) {
+            if (BIND_CALLER == caller && !Utils.isGuest(consumer)) {
 
                 var multiplier = pool.getProductAttribute(INSTANCE_ATTRIBUTE);
                 log.debug("instance_multiplier: [" + multiplier + "]");
@@ -1549,18 +1530,9 @@ var Entitlement = {
             }
         }
         else {
-            var isCapable = false;
-            if (consumer.capabilities) {
-                for (var i = 0; i < consumer.capabilities.length; i++) {
-                    if (consumer.capabilities[i].name.equals(INSTANCE_ATTRIBUTE)) {
-                        isCapable = true;
-                        break;
-                    }
-                }
-            }
-            if (!isCapable) {
-                if (BEST_POOLS_CALLER.equals(caller) ||
-                    BIND_CALLER.equals(caller)) {
+            if (!Utils.isCapable(consumer, INSTANCE_ATTRIBUTE)) {
+                if (BEST_POOLS_CALLER == caller ||
+                    BIND_CALLER == caller) {
                     result.addError("rulefailed.instance.unsupported.by.consumer");
                 }
                 else {
@@ -2327,5 +2299,18 @@ var Utils = {
         log.debug(consumer.facts['virt.is_guest']);
         log.debug("is guest? " + Utils.equalsIgnoreCase('true', consumer.facts['virt.is_guest']));
         return Utils.equalsIgnoreCase('true', consumer.facts['virt.is_guest']);
+    },
+
+    isCapable: function(consumer, capability) {
+        var isCapable = false;
+        if (consumer.capabilities) {
+            for (var i = 0; i < consumer.capabilities.length; i++) {
+                if (consumer.capabilities[i].name == capability) {
+                    isCapable = true;
+                    break;
+                }
+            }
+        }
+        return isCapable;
     }
 }

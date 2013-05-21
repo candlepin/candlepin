@@ -96,8 +96,8 @@ module CandlepinMethods
     return dist_version
   end
 
-  def update_distributor_version(dist_name, display_name, capabilities=[])
-    dist_version = @cp.update_distributor_version(dist_name, display_name, capabilities)
+  def update_distributor_version(id, dist_name, display_name, capabilities=[])
+    dist_version = @cp.update_distributor_version(id, dist_name, display_name, capabilities)
     @dist_versions << dist_version
 
     return dist_version
@@ -230,8 +230,7 @@ module ExportMethods
     product2 = @cp.create_product(random_string(), random_string())
     virt_product = @cp.create_product(random_string('virt_product'),
                                   random_string('virt_product'),
-                                  {:attributes => {:virt_only => true,
-                                                   :pool_derived => true}})
+                                  {:attributes => {:virt_only => true}})
     content = create_content({:metadata_expire => 6000,
       :required_tags => "TAG1,TAG2"})
     @cp.add_content_to_product(product1.id, content.id)

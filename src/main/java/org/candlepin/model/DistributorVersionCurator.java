@@ -41,6 +41,17 @@ public class DistributorVersionCurator
     }
 
     @SuppressWarnings("unchecked")
+    public DistributorVersion findById(String id) {
+        List<DistributorVersion> dvList = currentSession()
+            .createCriteria(DistributorVersion.class)
+            .add(Restrictions.eq("id", id)).list();
+        if (!dvList.isEmpty()) {
+            return dvList.get(0);
+        }
+        return null;
+    }
+
+    @SuppressWarnings("unchecked")
     public List<DistributorVersion> findAll() {
         return (List<DistributorVersion>) currentSession()
             .createCriteria(DistributorVersion.class).list();
@@ -48,7 +59,7 @@ public class DistributorVersionCurator
 
     @SuppressWarnings("unchecked")
     public Set<DistributorVersionCapability>
-    findCapabilitiesByDIstVersion(String distVersion) {
+    findCapabilitiesByDistVersion(String distVersion) {
         List<DistributorVersion> dvList = currentSession()
             .createCriteria(DistributorVersion.class)
             .add(Restrictions.eq("name", distVersion)).list();

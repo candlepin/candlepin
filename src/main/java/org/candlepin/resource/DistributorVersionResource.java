@@ -68,10 +68,10 @@ public class DistributorVersionResource {
      * @httpcode 200
      */
     @DELETE
-    @Path("/{name}")
-    public void delete(@PathParam("name") String name,
+    @Path("/{id}")
+    public void delete(@PathParam("id") String id,
         @Context Principal principal) {
-        DistributorVersion dv = curator.findByName(name);
+        DistributorVersion dv = curator.findById(id);
         if (dv != null) {
             curator.delete(dv);
         }
@@ -102,21 +102,23 @@ public class DistributorVersionResource {
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public DistributorVersion update(DistributorVersion dv,
+    @Path("/{id}")
+    public DistributorVersion update(@PathParam("id") String id,
+        DistributorVersion dv,
         @Context Principal principal) {
-        DistributorVersion existing = verifyAndLookupDistributorVersion(dv.getName());
+        DistributorVersion existing = verifyAndLookupDistributorVersion(id);
         existing.setDisplayName(dv.getDisplayName());
         existing.setCapabilities(dv.getCapabilities());
         curator.merge(existing);
         return existing;
     }
 
-    private DistributorVersion verifyAndLookupDistributorVersion(String name) {
-        DistributorVersion dv = curator.findByName(name);
+    private DistributorVersion verifyAndLookupDistributorVersion(String id) {
+        DistributorVersion dv = curator.findById(id);
 
         if (dv == null) {
             throw new NotFoundException(i18n.tr("No such distributor version: {0}",
-                name));
+                id));
         }
         return dv;
     }

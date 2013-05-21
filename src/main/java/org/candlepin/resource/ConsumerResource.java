@@ -461,7 +461,7 @@ public class ConsumerResource {
                 existing.getCapabilities().isEmpty()) &&
                 existing.getFact("distributor_version") !=  null) {
                 Set<DistributorVersionCapability> capabilities = distributorVersionCurator.
-                    findCapabilitiesByDIstVersion(existing.getFact("distributor_version"));
+                    findCapabilitiesByDistVersion(existing.getFact("distributor_version"));
                 if (capabilities != null) {
                     Set<ConsumerCapability> ccaps = new HashSet<ConsumerCapability>();
                     for (DistributorVersionCapability dvc : capabilities) {

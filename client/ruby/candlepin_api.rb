@@ -893,7 +893,7 @@ class Candlepin
       'displayName' => display_name,
       'capabilities' => capabilities.collect { |name| {'name' => name} }
     }
-    put('/distributor_versions/#{id}', version)
+    put("/distributor_versions/#{id}", version)
   end
 
   def delete_distributor_version(id)
