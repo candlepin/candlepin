@@ -81,6 +81,7 @@ public class ProductVersionValidator {
 
     public static boolean verifyClientSupport(Consumer consumer,
         Set<? extends Attribute> productAttributes) {
+        // we do not need to worry about this check for distributors, just end clients
         if (consumer.getType() != null &&
             consumer.getType().isManifest()) {
             return true;

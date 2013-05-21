@@ -31,6 +31,11 @@ import org.hibernate.annotations.Index;
 
 /**
  * ConsumerCapability
+ *
+ * Represents a product attribute that a consumer's rules engine can appreciate
+ * and process. It is attached to a consumer record in the candlepin instance
+ * upstream from the consumer. Entitlements which include the attribute can only
+ * be bound to the consumer if the consumer has the capability.
  */
 @XmlRootElement(name = "consumercapability")
 @XmlAccessorType(XmlAccessType.PROPERTY)
@@ -45,8 +50,8 @@ public class ConsumerCapability {
     @Column(length = 32)
     private String id;
 
-    @Column(nullable = false, name = "capability_name")
-    private String capabilityName;
+    @Column(nullable = false)
+    private String name;
 
     @ManyToOne
     @ForeignKey(name = "fk_consumer_capability_consumer")
@@ -57,9 +62,9 @@ public class ConsumerCapability {
     public ConsumerCapability() {
     }
 
-    public ConsumerCapability(Consumer consumer, String capabilityName) {
+    public ConsumerCapability(Consumer consumer, String name) {
         this.consumer = consumer;
-        this.capabilityName = capabilityName;
+        this.name = name;
     }
 
     /**
@@ -73,14 +78,14 @@ public class ConsumerCapability {
      * @return the capability name
      */
     public String getName() {
-        return capabilityName;
+        return name;
     }
 
     /**
      * @param name the capability name to set
      */
     public void setName(String name) {
-        this.capabilityName = name;
+        this.name = name;
     }
 
     /**
@@ -99,11 +104,11 @@ public class ConsumerCapability {
             return false;
         }
         ConsumerCapability another = (ConsumerCapability) anObject;
-        return capabilityName.equals(another.getName());
+        return name.equals(another.getName());
     }
 
     @Override
     public int hashCode() {
-        return capabilityName.hashCode();
+        return name.hashCode();
     }
 }

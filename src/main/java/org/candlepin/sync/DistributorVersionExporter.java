@@ -21,7 +21,7 @@ import org.candlepin.model.DistributorVersion;
 import org.codehaus.jackson.map.ObjectMapper;
 
 /**
- * EntitlementExporter
+ * DistributorVersionExporter
  */
 public class DistributorVersionExporter {
     void export(ObjectMapper mapper, Writer writer, DistributorVersion version)

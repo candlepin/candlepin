@@ -16,7 +16,7 @@ package org.candlepin.util;
 
 
 /**
- * VersionUtil
+ * ManagerCapability
  */
 public class ManagerCapability {
 

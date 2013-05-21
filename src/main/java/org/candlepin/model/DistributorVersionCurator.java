@@ -15,11 +15,12 @@
 package org.candlepin.model;
 
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.criterion.Restrictions;
 
 /**
- *
+ * DistributorVersionCurator
  */
 public class DistributorVersionCurator
     extends AbstractHibernateCurator<DistributorVersion> {
@@ -32,7 +33,7 @@ public class DistributorVersionCurator
     public DistributorVersion findByName(String name) {
         List<DistributorVersion> dvList = currentSession()
             .createCriteria(DistributorVersion.class)
-            .add(Restrictions.eq("versionName", name)).list();
+            .add(Restrictions.eq("name", name)).list();
         if (!dvList.isEmpty()) {
             return dvList.get(0);
         }
@@ -44,4 +45,18 @@ public class DistributorVersionCurator
         return (List<DistributorVersion>) currentSession()
             .createCriteria(DistributorVersion.class).list();
     }
+
+    @SuppressWarnings("unchecked")
+    public Set<DistributorVersionCapability>
+    findCapabilitiesByDIstVersion(String distVersion) {
+        List<DistributorVersion> dvList = currentSession()
+            .createCriteria(DistributorVersion.class)
+            .add(Restrictions.eq("name", distVersion)).list();
+        if (!dvList.isEmpty()) {
+            return ((DistributorVersion) dvList.get(0)).getCapabilities();
+        }
+        return null;
+    }
+
+
 }

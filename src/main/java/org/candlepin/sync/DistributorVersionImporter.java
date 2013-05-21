@@ -25,7 +25,7 @@ import org.candlepin.model.DistributorVersionCurator;
 import org.codehaus.jackson.map.ObjectMapper;
 
 /**
- * ConsumerTypeImporter
+ * DistributorVersionImporter
  */
 public class DistributorVersionImporter {
     private static Logger log = Logger.getLogger(DistributorVersionImporter.class);
@@ -60,6 +60,7 @@ public class DistributorVersionImporter {
             }
             else {
                 existing.setCapabilities(distVer.getCapabilities());
+                existing.setDisplayName(distVer.getDisplayName());
                 curator.merge(existing);
                 log.debug("Updating distributor version: " + distVer.getName());
             }

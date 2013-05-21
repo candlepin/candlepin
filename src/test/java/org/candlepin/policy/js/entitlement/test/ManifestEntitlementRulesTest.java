@@ -271,9 +271,10 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
 
         Product prod = TestUtil.createProduct();
         Pool p = TestUtil.createPool(prod);
+        p.setAttribute("virt_only", "true");
         p.setAttribute("pool_derived", "true");
 
-        ValidationResult results = enforcer.preEntitlement(c, p, 1);
+        ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.BIND);
         assertNotNull(results);
         assertEquals(1, results.getErrors().size());
         ValidationError error = results.getErrors().get(0);

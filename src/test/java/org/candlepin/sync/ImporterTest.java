@@ -20,6 +20,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -434,7 +435,9 @@ public class ImporterTest {
         Map<String, File> importFiles = new HashMap<String, File>();
         importFiles.put(ImportFile.META.fileName(), mock(File.class));
         importFiles.put(ImportFile.RULES_FILE.fileName(), mock(File.class));
-        importFiles.put(ImportFile.CONSUMER_TYPE.fileName(), mock(File.class));
+        File cTypes = mock(File.class);
+        when(cTypes.listFiles()).thenReturn(new File[]{});
+        importFiles.put(ImportFile.CONSUMER_TYPE.fileName(), cTypes);
         importFiles.put(ImportFile.CONSUMER.fileName(), mock(File.class));
         importFiles.put(ImportFile.PRODUCTS.fileName(), mock(File.class));
         importFiles.put(ImportFile.ENTITLEMENTS.fileName(), mock(File.class));
@@ -677,5 +680,43 @@ public class ImporterTest {
 
         verify(dvc, never()).create(any(DistributorVersion.class));
         verify(dvc).merge(any(DistributorVersion.class));
+    }
+
+    @Test
+    public void testImportNoDistributorVersions()
+        throws IOException, ImporterException {
+        RulesImporter ri = mock(RulesImporter.class);
+        ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
+        Importer i = new Importer(null, null, ri, null, null, null, null,
+            null, config, emc, null, null, i18n, null);
+        Owner owner = mock(Owner.class);
+        ConflictOverrides co = mock(ConflictOverrides.class);
+        Map<String, File> importFiles = getTestImportFiles();
+        File ruleDir = mock(File.class);
+        File[] rulesFiles = createMockJsFile(MOCK_JS_PATH);
+        when(ruleDir.listFiles()).thenReturn(rulesFiles);
+        File actualmeta = createFile("meta.json", "0.0.3", new Date(),
+            "test_user", "prefix");
+        importFiles.put(ImportFile.META.fileName(), actualmeta);
+        importFiles.put(ImportFile.RULES_FILE.fileName(), rulesFiles[0]);
+        importFiles.put(ImportFile.PRODUCTS.fileName(), null);
+        importFiles.put(ImportFile.ENTITLEMENTS.fileName(), null);
+        doNothing().when(ri).importObject(any(Reader.class));
+        importFiles.put(ImportFile.DISTRIBUTOR_VERSIONS.fileName(), null);
+
+        // this is the hook to stop testing. we confirm that the dist version null test
+        //  is passed and then jump out instead of trying to fake the actual file
+        //  processing.
+        doThrow(new RuntimeException("Done with the test")).when(emc)
+            .lookupByTypeAndOwner(any(String.class), any(Owner.class));
+
+        try {
+            i.importObjects(owner, importFiles, co);
+        }
+        catch (RuntimeException e) {
+            assertEquals(e.getMessage(), "Done with the test");
+            return;
+        }
+        fail();
     }
 }

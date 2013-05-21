@@ -29,7 +29,7 @@ describe 'Distributor Capability' do
                                     "telepathy",
                                     "lightning speed"]) 
     dist_version_id = dist_version.id
-    dist_version = update_distributor_version("SAMvBillion",
+    dist_version = update_distributor_version(dist_version_id, "SAMvBillion",
                                     "Subscription Asset Manager Billion",
                                    ["midas touch",
                                     "lightning speed"]) 

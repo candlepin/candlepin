@@ -24,7 +24,7 @@ module CandlepinScenarios
         @owners.reverse_each { |owner| @cp.delete_owner owner['key'] }
         @users.reverse_each { |user| @cp.delete_user user['username'] }
         @products.reverse_each { |product| @cp.delete_product product['id'] }
-        @dist_versions.reverse_each { |dist_version| @cp.delete_distributor_version dist_version['name'] }
+        @dist_versions.reverse_each { |dist_version| @cp.delete_distributor_version dist_version['id'] }
 
         # restore the original rules
         if (@rules)
@@ -88,9 +88,7 @@ module CandlepinMethods
       random_str, params)
   end
 
-  # Wrapper for ruby API so we can track all distributors we created and clean them
-  # up. Note that this entails cleanup of all objects beneath that owner, so
-  # most other objects can be created using the ruby API.
+  # Wrapper for ruby API so we can track all distributor versions we created and clean them up.
   def create_distributor_version(dist_name, display_name, capabilities=[])
     dist_version = @cp.create_distributor_version(dist_name, display_name, capabilities)
     @dist_versions << dist_version

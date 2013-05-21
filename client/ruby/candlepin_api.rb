@@ -887,17 +887,17 @@ class Candlepin
     post('/distributor_versions', version)
   end
 
-  def update_distributor_version(name, display_name, capabilities=[])
+  def update_distributor_version(id, name, display_name, capabilities=[])
     version =  {
       'name' => name,
       'displayName' => display_name,
       'capabilities' => capabilities.collect { |name| {'name' => name} }
     }
-    put('/distributor_versions', version)
+    put('/distributor_versions/#{id}', version)
   end
 
-  def delete_distributor_version(version_name)
-    delete("/distributor_versions/#{version_name}")
+  def delete_distributor_version(id)
+    delete("/distributor_versions/#{id}")
   end
 
   def get_distributor_versions()

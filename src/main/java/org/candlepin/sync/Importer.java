@@ -369,7 +369,9 @@ public class Importer {
         importConsumerTypes(consumerTypes.listFiles());
 
         File distributorVersions = importFiles.get(ImportFile.DISTRIBUTOR_VERSIONS.fileName());
-        importDistributorVersions(distributorVersions.listFiles());
+        if (distributorVersions != null) {
+            importDistributorVersions(distributorVersions.listFiles());
+        }
 
         // per user elements
         try {

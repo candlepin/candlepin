@@ -33,6 +33,11 @@ import org.hibernate.annotations.GenericGenerator;
 
 /**
  * DistributorVersion
+ *
+ * Used as a capability seed list for consumers. A consumer created with
+ * a specific distributor version name will be assigned the list of
+ * capabilities related to the distributor version
+ *
  */
 @XmlRootElement(name = "distributorversion")
 @XmlAccessorType(XmlAccessType.PROPERTY)
@@ -47,8 +52,8 @@ public class DistributorVersion extends AbstractHibernateObject {
     @Column(length = 32)
     private String id;
 
-    @Column(nullable = false, unique = true, name = "version_name")
-    private String versionName;
+    @Column(nullable = false, unique = true)
+    private String name;
 
     @Column(nullable = false, unique = true, name = "display_name")
     private String displayName;
@@ -63,8 +68,8 @@ public class DistributorVersion extends AbstractHibernateObject {
     public DistributorVersion() {
     }
 
-    public DistributorVersion(String versionName) {
-        this.versionName = versionName;
+    public DistributorVersion(String name) {
+        this.name = name;
     }
 
     /**
@@ -82,17 +87,17 @@ public class DistributorVersion extends AbstractHibernateObject {
     }
 
     /**
-     * @return the version name
+     * @return the name
      */
     public String getName() {
-        return versionName;
+        return name;
     }
 
     /**
-     * @param versionName the version name to set
+     * @param name the name to set
      */
-    public void setName(String versionName) {
-        this.versionName = versionName;
+    public void setName(String name) {
+        this.name = name;
     }
 
     /**
@@ -103,7 +108,7 @@ public class DistributorVersion extends AbstractHibernateObject {
     }
 
     /**
-     * @param displayName the version name to set
+     * @param displayName the display name to set
      */
     public void setDisplayName(String displayName) {
         this.displayName = displayName;

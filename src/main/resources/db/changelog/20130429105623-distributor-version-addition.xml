@@ -12,14 +12,14 @@
         <comment>Insert the current list of known distributor versions</comment>
         <insert tableName="cp_dist_version">
             <column name="id" value="1000"/>
-            <column name="version_name" value="sat-5.5"/>
+            <column name="name" value="sat-5.5"/>
             <column name="display_name" value="Satellite 5.5"/>
             <column name="created" valueDate="${now}"/>
             <column name="updated" valueDate="${now}"/>
         </insert>
         <insert tableName="cp_dist_version">
             <column name="id" value="1001"/>
-            <column name="version_name" value="sat-6.0"/>
+            <column name="name" value="sat-6.0"/>
             <column name="display_name" value="Satellite 6.0"/>
             <column name="created" valueDate="${now}"/>
             <column name="updated" valueDate="${now}"/>
@@ -27,46 +27,51 @@
         <insert tableName="cp_dist_version_capability">
             <column name="id" value="1001"/>
             <column name="dist_version_id" value="1001"/>
-            <column name="capability_name" value="ram"/>
+            <column name="name" value="ram"/>
         </insert>
         <insert tableName="cp_dist_version_capability">
             <column name="id" value="1002"/>
             <column name="dist_version_id" value="1001"/>
-            <column name="capability_name" value="cores"/>
+            <column name="name" value="cores"/>
         </insert>
         <insert tableName="cp_dist_version_capability">
             <column name="id" value="1003"/>
             <column name="dist_version_id" value="1001"/>
-            <column name="capability_name" value="instance_multiplier"/>
+            <column name="name" value="instance_multiplier"/>
         </insert>
         <insert tableName="cp_dist_version">
             <column name="id" value="1002"/>
-            <column name="version_name" value="sam-1.2"/>
+            <column name="name" value="sam-1.2"/>
             <column name="display_name" value="Subscription Asset Manager 1.2"/>
-            <column name="created" valueDate="${now}"/>
-            <column name="updated" valueDate="${now}"/>
-        </insert>
-        <insert tableName="cp_dist_version">
-            <column name="id" value="1003"/>
-            <column name="version_name" value="sam-1.3"/>
-            <column name="display_name" value="Subscription Asset Manager 1.3"/>
             <column name="created" valueDate="${now}"/>
             <column name="updated" valueDate="${now}"/>
         </insert>
         <insert tableName="cp_dist_version_capability">
             <column name="id" value="1004"/>
-            <column name="dist_version_id" value="1003"/>
-            <column name="capability_name" value="ram"/>
+            <column name="dist_version_id" value="1002"/>
+            <column name="name" value="ram"/>
+        </insert>
+        <insert tableName="cp_dist_version">
+            <column name="id" value="1003"/>
+            <column name="name" value="sam-1.3"/>
+            <column name="display_name" value="Subscription Asset Manager 1.3"/>
+            <column name="created" valueDate="${now}"/>
+            <column name="updated" valueDate="${now}"/>
         </insert>
         <insert tableName="cp_dist_version_capability">
             <column name="id" value="1005"/>
             <column name="dist_version_id" value="1003"/>
-            <column name="capability_name" value="cores"/>
+            <column name="name" value="ram"/>
         </insert>
         <insert tableName="cp_dist_version_capability">
             <column name="id" value="1006"/>
             <column name="dist_version_id" value="1003"/>
-            <column name="capability_name" value="instance_multiplier"/>
+            <column name="name" value="cores"/>
+        </insert>
+        <insert tableName="cp_dist_version_capability">
+            <column name="id" value="1007"/>
+            <column name="dist_version_id" value="1003"/>
+            <column name="name" value="instance_multiplier"/>
         </insert>
     </changeSet>
 

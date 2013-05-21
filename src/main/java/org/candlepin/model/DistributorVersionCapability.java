@@ -45,8 +45,8 @@ public class DistributorVersionCapability {
     @Column(length = 32)
     private String id;
 
-    @Column(nullable = false, name = "capability_name")
-    private String capabilityName;
+    @Column(nullable = false)
+    private String name;
 
     @ManyToOne
     @ForeignKey(name = "fk_dist_vrsn_cpblty")
@@ -58,9 +58,9 @@ public class DistributorVersionCapability {
     }
 
     public DistributorVersionCapability(DistributorVersion distributorVersion,
-        String capabilityName) {
+        String name) {
         this.distributorVersion = distributorVersion;
-        this.capabilityName = capabilityName;
+        this.name = name;
     }
 
     /**
@@ -81,14 +81,14 @@ public class DistributorVersionCapability {
      * @return the capability name
      */
     public String getName() {
-        return capabilityName;
+        return name;
     }
 
     /**
      * @param name the capability name to set
      */
     public void setName(String name) {
-        this.capabilityName = name;
+        this.name = name;
     }
 
     /**
@@ -116,11 +116,11 @@ public class DistributorVersionCapability {
             return false;
         }
         DistributorVersionCapability another = (DistributorVersionCapability) anObject;
-        return capabilityName.equals(another.getName());
+        return name.equals(another.getName());
     }
 
     @Override
     public int hashCode() {
-        return capabilityName.hashCode();
+        return name.hashCode();
     }
 }

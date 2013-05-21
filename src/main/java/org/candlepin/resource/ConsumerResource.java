@@ -454,19 +454,17 @@ public class ConsumerResource {
      * @return
      */
     private boolean updateCapabilities(Consumer existing, Consumer update) {
-        if (existing.getType() == null ||
-            !existing.getType().isManifest()) { return false; }
         boolean change = false;
         if (update == null) {
             // create
             if ((existing.getCapabilities() == null ||
                 existing.getCapabilities().isEmpty()) &&
                 existing.getFact("distributor_version") !=  null) {
-                DistributorVersion dv = distributorVersionCurator.findByName(
-                    existing.getFact("distributor_version"));
-                if (dv != null) {
+                Set<DistributorVersionCapability> capabilities = distributorVersionCurator.
+                    findCapabilitiesByDIstVersion(existing.getFact("distributor_version"));
+                if (capabilities != null) {
                     Set<ConsumerCapability> ccaps = new HashSet<ConsumerCapability>();
-                    for (DistributorVersionCapability dvc : dv.getCapabilities()) {
+                    for (DistributorVersionCapability dvc : capabilities) {
                         ConsumerCapability cc =
                             new ConsumerCapability(existing, dvc.getName());
                         ccaps.add(cc);
@@ -478,8 +476,7 @@ public class ConsumerResource {
         }
         else {
             // update
-            if (update.getCapabilities() != null &&
-                !update.getCapabilities().isEmpty()) {
+            if (update.getCapabilities() != null) {
                 change = update.getCapabilities().equals(existing.getCapabilities());
                 existing.setCapabilities(update.getCapabilities());
             }

@@ -43,6 +43,7 @@ var RAM_ATTRIBUTE = "ram";
 var INSTANCE_ATTRIBUTE = "instance_multiplier";
 var REQUIRES_HOST_ATTRIBUTE = "requires_host";
 var VIRT_ONLY = "virt_only";
+var POOL_DERIVED = "pool_derived";
 
 // caller types
 var BEST_POOLS_CALLER = "best_pools";
@@ -1332,13 +1333,33 @@ var Entitlement = {
     pre_virt_only: function() {
         var result = Entitlement.ValidationResult();
         context = Entitlement.get_attribute_context();
-
+        var caller = context.caller;
         var consumer = context.consumer;
         var virt_pool = Utils.equalsIgnoreCase('true', context.getAttribute(context.pool, VIRT_ONLY));
+        var pool_derived = Utils.equalsIgnoreCase('true', context.getAttribute(context.pool, POOL_DERIVED));
         var guest = Utils.isGuest(consumer);
 
-        if (virt_pool && !guest && !consumer.type.manifest) {
-            result.addError("rulefailed.virt.only");
+        if (virt_pool) {
+            if (consumer.type.manifest) {
+                if (pool_derived) {
+                    if (BEST_POOLS_CALLER.equals(caller) ||
+                        BIND_CALLER.equals(caller)) {
+                    	result.addError("pool.not.available.to.manifest.consumers");
+                    }
+                    else {
+                        result.addWarning("pool.not.available.to.manifest.consumers");
+                    }
+                }
+        	}
+        	else if (!guest) {
+                if (BEST_POOLS_CALLER.equals(caller) ||
+                    BIND_CALLER.equals(caller)) {
+                    result.addError("rulefailed.virt.only");
+                }
+                else {
+                    result.addWarning("rulewarning.virt.only");
+                }
+        	}
         }
         return JSON.stringify(result);
     },
@@ -1369,12 +1390,14 @@ var Entitlement = {
     pre_requires_consumer_type: function() {
         var result = Entitlement.ValidationResult();
         context = Entitlement.get_attribute_context();
+        if (context.consumer.type.manifest) {
+            return JSON.stringify(result);        	
+        }
 
         var requiresConsumerType = context.getAttribute(context.pool, "requires_consumer_type");
         if (requiresConsumerType != null &&
             requiresConsumerType != context.consumer.type.label &&
-            context.consumer.type.label != "uebercert" &&
-            !context.consumer.type.manifest) {
+            context.consumer.type.label != "uebercert") {
             result.addError("rulefailed.consumer.type.mismatch");
         }
         return JSON.stringify(result);
@@ -1386,6 +1409,11 @@ var Entitlement = {
     pre_architecture: function() {
         var result = Entitlement.ValidationResult();
         context = Entitlement.get_attribute_context();
+        var consumer = context.consumer;
+        if (consumer.type.manifest) {
+            return JSON.stringify(result);        	
+        }
+
         if (!architectureMatches(context.pool.getProductAttribute(ARCH_ATTRIBUTE),
                                  context.consumer.facts[ARCH_FACT],
                                  context.consumer.type.label)) {
@@ -1397,9 +1425,12 @@ var Entitlement = {
     pre_sockets: function() {
         var result = Entitlement.ValidationResult();
         context = Entitlement.get_attribute_context();
-
         var consumer = context.consumer;
         var pool = context.pool;
+
+        if (consumer.type.manifest) {
+            return JSON.stringify(result);        	
+        }
 
         //usually, we assume socket count to be 1 if it is undef. However, we need to know if it's
         //undef here in order to know to skip the socket comparison (per acarter/jomara)
@@ -1432,17 +1463,17 @@ var Entitlement = {
         else {
             var isCapable = false;
 
-         if (consumer.capabilities) {
+            if (consumer.capabilities) {
                 for (var i = 0; i < consumer.capabilities.length; i++) {
-                    if (consumer.capabilities[i].name.equals(CORES_ATTRIBUTE)) {
+                    if (Utils.equalsIgnoreCase(consumer.capabilities[i].name, CORES_ATTRIBUTE)) {
                         isCapable = true;
                         break;
                     }
                 }
             }
             if (!isCapable) {
-                if (caller == BEST_POOLS_CALLER ||
-                    caller == BIND_CALLER) {
+                if (BEST_POOLS_CALLER.equals(caller) ||
+                    BIND_CALLER.equals(caller)) {
                     result.addError("rulefailed.cores.unsupported.by.consumer");
                 }
                 else {
@@ -1480,8 +1511,8 @@ var Entitlement = {
                 }
             }
             if (!isCapable) {
-                if (caller == BEST_POOLS_CALLER ||
-                    caller == BIND_CALLER) {
+                if (BEST_POOLS_CALLER.equals(caller) ||
+                    BIND_CALLER.equals(caller)) {
                     result.addError("rulefailed.ram.unsupported.by.consumer");
                 }
                 else {
@@ -1528,8 +1559,8 @@ var Entitlement = {
                 }
             }
             if (!isCapable) {
-                if (caller == BEST_POOLS_CALLER ||
-                    caller == BIND_CALLER) {
+                if (BEST_POOLS_CALLER.equals(caller) ||
+                    BIND_CALLER.equals(caller)) {
                     result.addError("rulefailed.instance.unsupported.by.consumer");
                 }
                 else {
@@ -1543,47 +1574,39 @@ var Entitlement = {
     pre_global: function() {
         var result = Entitlement.ValidationResult();
         context = Entitlement.get_attribute_context();
-
-        var consumer = context.consumer;
         var pool = context.pool;
         var caller = context.caller;
+        var consumer = context.consumer;
+        if (consumer.type.manifest) {
+            return JSON.stringify(result);
+        }        
 
         log.debug("pre_global being called by [" + caller + "]");
 
-        if (!consumer.type.manifest) {
-            var isMultiEntitlement = pool.getProductAttribute("multi-entitlement");
-            if (context.hasEntitlement(pool.id) && isMultiEntitlement != "yes") {
-                result.addError("rulefailed.consumer.already.has.product");
-            }
-
-            if (context.quantity > 1 && isMultiEntitlement != "yes") {
-                result.addError("rulefailed.pool.does.not.support.multi-entitlement");
-            }
-
-
-            // If the product has no required consumer type, assume it is restricted to "system".
-            // "hypervisor"/"uebercert" type are essentially the same as "system".
-            if (!pool.getProductAttribute("requires_consumer_type")) {
-                if (consumer.type.label != "system" && consumer.type.label != "hypervisor" &&
-                        consumer.type.label != "uebercert") {
-                    result.addError("rulefailed.consumer.type.mismatch");
-                }
-
-            }
-
-            if (pool.restrictedToUsername != null && pool.restrictedToUsername != consumer.username) {
-                result.addError("pool.not.available.to.user, pool= '" + pool.restrictedToUsername + "', actual username='" + consumer.username + "'" );
-            }
+        var isMultiEntitlement = pool.getProductAttribute("multi-entitlement");
+        if (context.hasEntitlement(pool.id) && isMultiEntitlement != "yes") {
+            result.addError("rulefailed.consumer.already.has.product");
         }
 
-        // Manifest consumers should not be able to find to any derived pools. Because
-        // they are exempt from all pre-rules, to keep these derived pools out of the list
-        // they can bind to we must use pre_global, which is used for manifest consumers.
-        else {
-            if (pool.getAttribute("pool_derived")) {
-                result.addError("pool.not.available.to.manifest.consumers");
-            }
+        if (context.quantity > 1 && isMultiEntitlement != "yes") {
+            result.addError("rulefailed.pool.does.not.support.multi-entitlement");
         }
+
+
+        // If the product has no required consumer type, assume it is restricted to "system".
+        // "hypervisor"/"uebercert" type are essentially the same as "system".
+        if (!pool.getProductAttribute("requires_consumer_type")) {
+            if (consumer.type.label != "system" && consumer.type.label != "hypervisor" &&
+                    consumer.type.label != "uebercert") {
+                result.addError("rulefailed.consumer.type.mismatch");
+            }
+
+        }
+
+        if (pool.restrictedToUsername != null && pool.restrictedToUsername != consumer.username) {
+            result.addError("pool.not.available.to.user, pool= '" + pool.restrictedToUsername + "', actual username='" + consumer.username + "'" );
+        }
+
         return JSON.stringify(result);
     },
 
