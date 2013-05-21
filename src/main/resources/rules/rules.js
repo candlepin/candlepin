@@ -1832,7 +1832,6 @@ var Autobind = {
         // We may not have selected pools for all products; that's ok.
         selected_pools.dump("selected_pools");
         var output = JSON.stringify(selected_pools.map);
-        log.debug("OUTPUT: " + output);
         return output;
     }
 }
@@ -1894,7 +1893,6 @@ var Compliance = {
     },
 
     get_status: function() {
-        log.debug("INPUT: " + json_context);
         var context = Compliance.get_status_context();
         var compStatus = this.getComplianceStatusOnDate(context.consumer,
             context.entitlements, context.ondate, log);
@@ -1910,7 +1908,6 @@ var Compliance = {
         }
         compStatus.compliantUntil = compliantUntil;
         var output = JSON.stringify(compStatus);
-        log.debug("OUTPUT: " + output);
         return output;
     },
 

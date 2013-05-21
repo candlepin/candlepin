@@ -20,6 +20,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.InputStream;
@@ -43,6 +44,8 @@ import org.candlepin.model.ProductPoolAttribute;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
+import org.candlepin.policy.js.JsContext;
+import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
@@ -89,6 +92,23 @@ public class ComplianceRulesTest {
         compliance = new ComplianceRules(provider.get(),
             entCurator, new StatusReasonMessageGenerator(i18n));
         owner = new Owner("test");
+    }
+
+    /*
+     * Make sure additive properties coming back from the javascript do not break when
+     * we deserialize.
+     */
+    @Test
+    public void additivePropertiesCanStillDeserialize() {
+        JsRunner mockRunner = mock(JsRunner.class);
+        compliance = new ComplianceRules(mockRunner,
+            entCurator, new StatusReasonMessageGenerator(i18n));
+        when(mockRunner.runJsFunction(any(Class.class), eq("get_status"),
+            any(JsContext.class))).thenReturn("{\"unknown\": \"thing\"}");
+        Consumer c = mockConsumerWithTwoProductsAndNoEntitlements();
+
+        // Nothing to assert here, we just need to see this return without error.
+        compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
     }
 
     private Consumer mockConsumer(String ... installedProducts) {

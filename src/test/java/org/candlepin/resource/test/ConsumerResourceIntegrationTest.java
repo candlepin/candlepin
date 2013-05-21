@@ -35,7 +35,7 @@ import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.Permission;
-import org.candlepin.config.Config;
+import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.model.Consumer;
@@ -540,7 +540,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         ConsumerResource cr = new ConsumerResource(this.consumerCurator, null,
             null, null, this.entitlementCurator, null, null, null, null, null,
             null, null, null, null, this.poolManager, null, null, null, null,
-            null, null, null, null, null, new Config());
+            null, null, null, null, null, new CandlepinCommonTestConfig());
 
         Response rsp = consumerResource.bind(
             consumer.getUuid(), pool.getId().toString(), null, 1, null,

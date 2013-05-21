@@ -31,6 +31,7 @@ import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.interceptor.SecurityHole;
+import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Config;
 import org.candlepin.exceptions.UnauthorizedException;
 import org.candlepin.guice.I18nProvider;
@@ -67,7 +68,7 @@ public class AuthInterceptorTest {
 
     @Before
     public void init() {
-        config = new Config();
+        config = new CandlepinCommonTestConfig();
         usa = mock(UserServiceAdapter.class);
         oc = mock(OwnerCurator.class);
         cc = mock(ConsumerCurator.class);

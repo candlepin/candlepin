@@ -100,7 +100,7 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
     public void hostedVirtLimitWithHostLimitedCreatesBonusPoolsOnBind() {
         when(config.standalone()).thenReturn(false);
         Subscription s = createVirtLimitSub("virtLimitProduct", 10, "unlimited");
-        s.getProduct().setAttribute("host_limited", "yes");
+        s.getProduct().setAttribute("host_limited", "true");
         List<Pool> pools = poolRules.createPools(s);
         assertEquals(1, pools.size());
 
