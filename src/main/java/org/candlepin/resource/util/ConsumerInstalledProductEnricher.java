@@ -115,6 +115,21 @@ public class ConsumerInstalledProductEnricher {
             return null;
         }
 
+        /*
+         * Given NOW, start date == the first date in the past where there is a
+         * gap in the entitlements for a product. AND end date would be first
+         * date in the future that the product is not fully covered by an
+         * entitlement. So the markers for end and start dates of the range are
+         * when you are NOT green.
+         *
+         * this is where this method gets interesting. We want to loop through
+         * the sorted list of possible entitlements, checking each one is valid
+         * for its start and end dates. Also, comparing the current entitlemnt
+         * with the previous entitlement processed.
+         *
+         * We adjust the end date to match the end date of the latest
+         * entitlement until there is no gap in coverage.
+         */
         Date startDate = null;
         Date endDate = null;
         Entitlement lastProcessed = null;
@@ -129,21 +144,33 @@ public class ConsumerInstalledProductEnricher {
             boolean entValidOnEnd = isEntitlementValidOnDate(next, possible, entEnd);
 
             boolean validAfterLast = true;
+
+            // compare against the previous one if we're not the last item
+            // this is key, because if the currently processed entitlement (i.e.
+            // next) is not valid within the date range of the previous
+            // entitlement, we have found a gap and need to adjust the start
+            // date.
             if (lastProcessed != null && !last) {
                 Date afterLastProcessed = getDatePlusOneSecond(lastProcessed.getEndDate());
-                validAfterLast = isEntitlementValidOnDate(lastProcessed, possible,
+
+                // bz#959967: pass in next instead of lastProcessed
+                validAfterLast = isEntitlementValidOnDate(next, possible,
                     afterLastProcessed);
                 if (!validAfterLast) {
                     startDate = null;
                 }
             }
 
+            // adjust the start date only if the new start date is BEFORE the
+            // previous entitlement's start date, otherwise leave it alone.
             if (entValidOnStart && validAfterLast) {
                 if (startDate == null || startDate.after(entStart)) {
                     startDate = entStart;
                 }
             }
 
+            // adjust the end date only if the new end date is AFTER the
+            // previous entitlement's end date, otherwise leave it alone.
             if (entValidOnEnd) {
                 if (endDate == null || endDate.before(entEnd)) {
                     endDate = entEnd;
@@ -156,6 +183,7 @@ public class ConsumerInstalledProductEnricher {
         if (startDate == null || endDate == null) {
             return null;
         }
+
         return new DateRange(startDate, endDate);
     }
 

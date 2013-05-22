@@ -220,6 +220,62 @@ public class InstalledProductStatusCalculatorTest {
     }
 
     @Test
+    public void validRangeIgnoresFutureWithOverlap() {
+        Consumer c = mockConsumer(PRODUCT_1);
+
+        Calendar cal = Calendar.getInstance();
+        Date now = cal.getTime();
+        DateRange future = rangeRelativeToDate(now, 12, 24);
+        DateRange current = rangeRelativeToDate(now, 0, 13);
+
+        // Add current entitlement
+        c.addEntitlement(mockEntitlement(c, PRODUCT_1, current, PRODUCT_1));
+        // Add future entitlement
+        c.addEntitlement(mockEntitlement(c, PRODUCT_1, future, PRODUCT_1));
+        // Add future entitlement
+        c.addEntitlement(mockEntitlement(c, PRODUCT_1, future, PRODUCT_1));
+
+        List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
+        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+
+        ComplianceStatus status = compliance.getStatus(c, now);
+        ConsumerInstalledProductEnricher calculator =
+            new ConsumerInstalledProductEnricher(c, status, compliance);
+        Product p = new Product(PRODUCT_1, "Awesome Product");
+        DateRange validRange = calculator.getValidDateRange(p);
+        assertEquals(current.getStartDate(), validRange.getStartDate());
+        assertEquals(future.getEndDate(), validRange.getEndDate());
+    }
+
+    @Test
+    public void validRangeIgnoresFutureBackToBack() {
+        Consumer c = mockConsumer(PRODUCT_1);
+
+        Calendar cal = Calendar.getInstance();
+        Date now = cal.getTime();
+        DateRange future = rangeRelativeToDate(now, 12, 24);
+        DateRange current = rangeRelativeToDate(now, 0, 12);
+
+        // Add current entitlement
+        c.addEntitlement(mockEntitlement(c, PRODUCT_1, current, PRODUCT_1));
+        // Add future entitlement
+        c.addEntitlement(mockEntitlement(c, PRODUCT_1, future, PRODUCT_1));
+        // Add future entitlement
+        c.addEntitlement(mockEntitlement(c, PRODUCT_1, future, PRODUCT_1));
+
+        List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
+        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+
+        ComplianceStatus status = compliance.getStatus(c, now);
+        ConsumerInstalledProductEnricher calculator =
+            new ConsumerInstalledProductEnricher(c, status, compliance);
+        Product p = new Product(PRODUCT_1, "Awesome Product");
+        DateRange validRange = calculator.getValidDateRange(p);
+        assertEquals(current.getStartDate(), validRange.getStartDate());
+        assertEquals(future.getEndDate(), validRange.getEndDate());
+    }
+
+    @Test
     public void validRangeWithMultipleEntsWithOverlap() {
         Consumer c = mockConsumer(PRODUCT_1);
 
