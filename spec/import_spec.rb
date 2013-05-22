@@ -10,6 +10,9 @@ describe 'Candlepin Import' do
   before(:all) do
     @users = []
     create_candlepin_export()
+
+    @cp.unregister @candlepin_consumer['uuid']
+
     @import_owner = @cp.create_owner(random_string("test_owner"))
     @import_owner_client = user_client(@import_owner, random_string('testuser'))
     @cp.import(@import_owner['key'], @export_filename)
@@ -43,7 +46,7 @@ describe 'Candlepin Import' do
 
   it "originating information should be populated in the import" do
     @import_owner_client.list_imports(@import_owner['key']).find_all do |import|
-      consumer = @candlepin_client.get_consumer()
+      consumer = @candlepin_consumer
       import['generatedBy'].should == consumer['name']
       import['generatedDate'].should_not be_nil
       import['upstreamId'].should == consumer['uuid']
@@ -186,9 +189,9 @@ describe 'Candlepin Import' do
 
   it 'should return 400 when importing manifest in use by another owner' do
     # Because the previous tests put the original import into a different state
-    # than if you just run this single one, we need to clear first and then 
+    # than if you just run this single one, we need to clear first and then
     # re-import the original.
-    # Also added the confirmation that the exception occurs when importing to 
+    # Also added the confirmation that the exception occurs when importing to
     # another owner.
     @import_owner_client.undo_import(@import_owner['key'])
     @cp.import(@import_owner['key'], @export_filename)
@@ -223,7 +226,7 @@ describe 'Candlepin Import' do
 
   it 'contains upstream consumer' do
     # this information used to be on /imports but now exists on Owner
-    consumer = @candlepin_client.get_consumer()
+    consumer = @candlepin_consumer
     upstream = @cp.get_owner(@import_owner['key'])['upstreamConsumer']
     upstream.uuid.should == consumer['uuid']
     upstream.include?('apiUrl').should be_true
