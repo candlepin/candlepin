@@ -56,10 +56,10 @@ public class ConsumerInstalledProduct extends AbstractHibernateObject {
     @Column(name = "product_name")
     private String productName;
 
-    @Transient
+    @Column(name = "product_version")
     private String version;
 
-    @Transient
+    @Column(name = "product_arch")
     private String arch;
 
     @Transient
@@ -173,7 +173,11 @@ public class ConsumerInstalledProduct extends AbstractHibernateObject {
         }
         ConsumerInstalledProduct that = (ConsumerInstalledProduct) other;
         if (this.getProductId().equals(that.getProductId()) &&
-            this.getProductName().equals(that.getProductName())) {
+            this.getProductName().equals(that.getProductName()) &&
+            ((this.getVersion() == null && that.getVersion() == null) ||
+            this.getVersion() != null && this.getVersion().equals(that.getVersion())) &&
+            ((this.getArch() == null && that.getArch() == null) ||
+            this.getArch() != null && this.getArch().equals(that.getArch()))) {
             return true;
         }
         return false;
