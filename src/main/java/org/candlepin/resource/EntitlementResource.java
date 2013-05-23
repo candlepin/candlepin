@@ -36,6 +36,7 @@ import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
 
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
@@ -141,10 +142,13 @@ public class EntitlementResource {
             }
 
             p = entitlementCurator.listByConsumer(consumer, presentation);
-            return p.getPageData();
+        }
+        else {
+            p = entitlementCurator.listAll(presentation);
         }
 
-        p = entitlementCurator.listAll(presentation);
+        // Store the page for the LinkHeaderPostInterceptor
+        ResteasyProviderFactory.pushContext(Page.class, p);
         return p.getPageData();
     }
 

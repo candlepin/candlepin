@@ -59,43 +59,43 @@ public class DataPresentationInterceptorTest {
     }
 
     @Test
-    public void testBothLimitAndOffset() throws Exception {
+    public void testBothLimitAndPage() throws Exception {
         MockHttpRequest req = MockHttpRequest.create("GET",
-            "http://localhost/candlepin/status?limit=123&offset=456");
+            "http://localhost/candlepin/status?per_page=10&page=4");
 
         interceptor.preProcess(req, rmethod);
 
         DataPresentation p = ResteasyProviderFactory.getContextData(DataPresentation.class);
-        assertEquals(new Integer(123), p.getLimit());
-        assertEquals(new Integer(456), p.getOffset());
+        assertEquals(new Integer(10), p.getPerPage());
+        assertEquals(new Integer(4), p.getPage());
         assertEquals(DataPresentation.DEFAULT_ORDER, p.getOrder());
         assertNull(p.getSortBy());
     }
 
     @Test
-    public void testNoLimitButOffset() throws Exception {
+    public void testNoLimitButPage() throws Exception {
         MockHttpRequest req = MockHttpRequest.create("GET",
-            "http://localhost/candlepin/status?offset=123");
+            "http://localhost/candlepin/status?page=5");
 
         interceptor.preProcess(req, rmethod);
 
         DataPresentation p = ResteasyProviderFactory.getContextData(DataPresentation.class);
-        assertEquals(DataPresentation.DEFAULT_LIMIT, p.getLimit());
-        assertEquals(new Integer(123), p.getOffset());
+        assertEquals(DataPresentation.DEFAULT_PER_PAGE, p.getPerPage());
+        assertEquals(new Integer(5), p.getPage());
         assertEquals(DataPresentation.DEFAULT_ORDER, p.getOrder());
         assertNull(p.getSortBy());
     }
 
     @Test
-    public void testLimitButNoOffset() throws Exception {
+    public void testLimitButNoPage() throws Exception {
         MockHttpRequest req = MockHttpRequest.create("GET",
-            "http://localhost/candlepin/status?limit=123");
+            "http://localhost/candlepin/status?per_page=10");
 
         interceptor.preProcess(req, rmethod);
 
         DataPresentation p = ResteasyProviderFactory.getContextData(DataPresentation.class);
-        assertEquals(new Integer(123), p.getLimit());
-        assertEquals(DataPresentation.DEFAULT_OFFSET, p.getOffset());
+        assertEquals(new Integer(10), p.getPerPage());
+        assertEquals(DataPresentation.DEFAULT_PAGE, p.getPage());
         assertEquals(DataPresentation.DEFAULT_ORDER, p.getOrder());
         assertNull(p.getSortBy());
     }
@@ -103,7 +103,15 @@ public class DataPresentationInterceptorTest {
     @Test(expected = BadRequestException.class)
     public void testBadIntegerValue() throws Exception {
         MockHttpRequest req = MockHttpRequest.create("GET",
-            "http://localhost/candlepin/status?limit=foo&offset=456");
+            "http://localhost/candlepin/status?page=foo&per_page=456");
+
+        interceptor.preProcess(req, rmethod);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testDoesNotAllowPageZero() throws Exception {
+        MockHttpRequest req = MockHttpRequest.create("GET",
+            "http://localhost/candlepin/status?page=0&per_page=456");
 
         interceptor.preProcess(req, rmethod);
     }

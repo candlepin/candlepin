@@ -26,29 +26,34 @@ public class DataPresentation {
         DESCENDING
     }
 
-    public static final Integer DEFAULT_OFFSET = new Integer(0);
-    public static final Integer DEFAULT_LIMIT = new Integer(10);
+    public static final String ORDER_PARAM = "order";
+    public static final String SORT_BY_PARAM = "sort_by";
+    public static final String PAGE_PARAM = "page";
+    public static final String PER_PAGE_PARAM = "per_page";
+
+    public static final Integer DEFAULT_PAGE = new Integer(0);
+    public static final Integer DEFAULT_PER_PAGE = new Integer(10);
     public static final Order DEFAULT_ORDER = Order.DESCENDING;
 
-    private Integer offset;
-    private Integer limit;
+    private Integer page;
+    private Integer perPage;
     private String sortBy;
     private Order order;
 
-    public Integer getOffset() {
-        return offset;
+    public Integer getPage() {
+        return page;
     }
 
-    public void setOffset(Integer offset) {
-        this.offset = offset;
+    public void setPage(Integer page) {
+        this.page = page;
     }
 
-    public Integer getLimit() {
-        return limit;
+    public Integer getPerPage() {
+        return perPage;
     }
 
-    public void setLimit(Integer limit) {
-        this.limit = limit;
+    public void setPerPage(Integer perPage) {
+        this.perPage = perPage;
     }
 
     public String getSortBy() {
@@ -68,6 +73,6 @@ public class DataPresentation {
     }
 
     public boolean isPaging() {
-        return limit != null && offset != null;
+        return perPage != null && page != null;
     }
 }

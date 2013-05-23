@@ -107,9 +107,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
             Criteria c = currentSession().createCriteria(entityType);
             page.setPageData(loadPageData(c, presentation));
-
-            page.setLimit(presentation.getLimit());
-            page.setNextOffset(presentation.getOffset() + presentation.getLimit());
+            page.setPresentation(presentation);
         }
         else {
             page.setPageData(listAll());
@@ -122,8 +120,8 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     private List<E> loadPageData(Criteria c, DataPresentation presentation) {
         c.addOrder(createPagingOrder(presentation));
         if (presentation.isPaging()) {
-            c.setFirstResult(presentation.getOffset());
-            c.setMaxResults(presentation.getLimit());
+            c.setFirstResult((presentation.getPage() - 1) * presentation.getPerPage());
+            c.setMaxResults(presentation.getPerPage());
         }
         return c.list();
     }
@@ -181,9 +179,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
             c.setResultTransformer(origRt);
 
             page.setPageData(loadPageData(c, presentation));
-
-            page.setLimit(presentation.getLimit());
-            page.setNextOffset(presentation.getOffset() + presentation.getLimit());
+            page.setPresentation(presentation);
         }
         else {
             page.setPageData(listByCriteria(query));

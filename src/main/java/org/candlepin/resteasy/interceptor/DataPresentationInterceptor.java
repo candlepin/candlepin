@@ -65,12 +65,12 @@ public class DataPresentationInterceptor implements PreProcessInterceptor,
 
         MultivaluedMap<String, String> params = request.getUri().getQueryParameters();
 
-        String offset = params.getFirst("offset");
-        String limit = params.getFirst("limit");
-        String order = params.getFirst("order");
-        String sortBy = params.getFirst("sort_by");
+        String page = params.getFirst(DataPresentation.PAGE_PARAM);
+        String perPage = params.getFirst(DataPresentation.PER_PAGE_PARAM);
+        String order = params.getFirst(DataPresentation.ORDER_PARAM);
+        String sortBy = params.getFirst(DataPresentation.SORT_BY_PARAM);
 
-        if (offset != null || limit != null || order != null || sortBy != null) {
+        if (page != null || perPage != null || order != null || sortBy != null) {
             p = new DataPresentation();
 
             if (order == null) {
@@ -85,17 +85,17 @@ public class DataPresentationInterceptor implements PreProcessInterceptor,
             p.setSortBy(sortBy);
 
             try {
-                if (offset == null && limit != null) {
-                    p.setOffset(DataPresentation.DEFAULT_OFFSET);
-                    p.setLimit(readInteger(limit));
+                if (page == null && perPage != null) {
+                    p.setPage(DataPresentation.DEFAULT_PAGE);
+                    p.setPerPage(readInteger(perPage));
                 }
-                else if (offset != null && limit == null) {
-                    p.setOffset(readInteger(offset));
-                    p.setLimit(DataPresentation.DEFAULT_LIMIT);
+                else if (page != null && perPage == null) {
+                    p.setPage(readInteger(page));
+                    p.setPerPage(DataPresentation.DEFAULT_PER_PAGE);
                 }
                 else {
-                    p.setOffset(readInteger(offset));
-                    p.setLimit(readInteger(limit));
+                    p.setPage(readInteger(page));
+                    p.setPerPage(readInteger(perPage));
                 }
             }
             catch (NumberFormatException nfe) {
@@ -125,7 +125,7 @@ public class DataPresentationInterceptor implements PreProcessInterceptor,
         if (value != null) {
             int i = Integer.parseInt(value);
 
-            if (i < 0) {
+            if (i <= 0) {
                 throw new NumberFormatException(i18n.tr("Expected a positive integer."));
             }
             return i;

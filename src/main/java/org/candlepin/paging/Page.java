@@ -24,8 +24,7 @@ import java.util.Collection;
 public class Page<T extends Collection<?>> {
     private T pageData;
     private Integer maxRecords;
-    private Integer nextOffset;
-    private Integer limit;
+    private DataPresentation presentation;
 
     public T getPageData() {
         return pageData;
@@ -43,19 +42,11 @@ public class Page<T extends Collection<?>> {
         this.maxRecords = maxRecords;
     }
 
-    public Integer getNextOffset() {
-        return nextOffset;
+    public DataPresentation getPresentation() {
+        return presentation;
     }
 
-    public void setNextOffset(Integer nextOffset) {
-        this.nextOffset = nextOffset;
-    }
-
-    public Integer getLimit() {
-        return limit;
-    }
-
-    public void setLimit(Integer limit) {
-        this.limit = limit;
+    public void setPresentation(DataPresentation presentation) {
+        this.presentation = presentation;
     }
 }
