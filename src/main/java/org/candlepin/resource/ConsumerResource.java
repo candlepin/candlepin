@@ -187,10 +187,10 @@ public class ConsumerResource {
         this.complianceRules = complianceRules;
         this.deletedConsumerCurator = deletedConsumerCurator;
         this.environmentCurator = environmentCurator;
-        this.consumerPersonNamePattern =
-            Pattern.compile(config.getString(ConfigProperties.CONSUMER_PERSON_NAME_PATTERN));
-        this.consumerSystemNamePattern =
-            Pattern.compile(config.getString(ConfigProperties.CONSUMER_SYSTEM_NAME_PATTERN));
+        this.consumerPersonNamePattern = Pattern.compile(config.getString(
+            ConfigProperties.CONSUMER_PERSON_NAME_PATTERN));
+        this.consumerSystemNamePattern = Pattern.compile(config.getString(
+            ConfigProperties.CONSUMER_SYSTEM_NAME_PATTERN));
         this.config = config;
     }
     /**
