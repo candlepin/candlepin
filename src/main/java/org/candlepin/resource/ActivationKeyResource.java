@@ -29,7 +29,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
-import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.interceptor.Verify;
 import org.candlepin.exceptions.BadRequestException;
@@ -52,16 +51,13 @@ public class ActivationKeyResource {
     private ActivationKeyCurator activationKeyCurator;
     private PoolCurator poolCurator;
     private I18n i18n;
-    private EventSink eventSink;
 
     @Inject
     public ActivationKeyResource(ActivationKeyCurator activationKeyCurator,
-        I18n i18n, PoolCurator poolCurator, ConsumerResource consumerResource,
-        EventSink eventSink) {
+        I18n i18n, PoolCurator poolCurator, ConsumerResource consumerResource) {
         this.activationKeyCurator = activationKeyCurator;
         this.i18n = i18n;
         this.poolCurator = poolCurator;
-        this.eventSink = eventSink;
     }
 
     /**

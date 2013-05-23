@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.candlepin.model.OwnerPermission;
-import org.candlepin.model.OwnerPermissionCurator;
 import org.candlepin.model.Role;
 import org.candlepin.model.RoleCurator;
 import org.candlepin.model.User;
@@ -37,14 +36,11 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
 
     private UserCurator userCurator;
     private RoleCurator roleCurator;
-    private OwnerPermissionCurator permCurator;
 
     @Inject
-    public DefaultUserServiceAdapter(UserCurator userCurator, RoleCurator roleCurator,
-        OwnerPermissionCurator permCurator) {
+    public DefaultUserServiceAdapter(UserCurator userCurator, RoleCurator roleCurator) {
         this.userCurator = userCurator;
         this.roleCurator = roleCurator;
-        this.permCurator = permCurator;
     }
 
     @Override

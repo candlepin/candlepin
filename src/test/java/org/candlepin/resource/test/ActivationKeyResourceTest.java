@@ -118,7 +118,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         when(pc.find(eq("testPool"))).thenReturn(p);
 
         ActivationKeyResource akr = new ActivationKeyResource(akc, i18n,
-            pc, null, null);
+            pc, null);
         akr.addPoolToKey("testKey", "testPool", 2);
     }
 
@@ -137,7 +137,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         when(p.getQuantity()).thenReturn(10L);
 
         ActivationKeyResource akr = new ActivationKeyResource(akc, i18n,
-            pc, null, null);
+            pc, null);
         akr.addPoolToKey("testKey", "testPool", -3);
     }
 
@@ -156,7 +156,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         when(p.getQuantity()).thenReturn(10L);
 
         ActivationKeyResource akr = new ActivationKeyResource(akc, i18n,
-            pc, null, null);
+            pc, null);
         akr.addPoolToKey("testKey", "testPool", 15);
     }
 
@@ -175,7 +175,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         when(ppa.getValue()).thenReturn("yes");
 
         ActivationKeyResource akr = new ActivationKeyResource(akc, i18n,
-            pc, null, null);
+            pc, null);
         akr.addPoolToKey("testKey", "testPool", 15);
     }
 
@@ -195,7 +195,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         when(p.getQuantity()).thenReturn(1L);
 
         ActivationKeyResource akr = new ActivationKeyResource(akc, i18n,
-            pc, null, null);
+            pc, null);
         akr.addPoolToKey("testKey", "testPool", 1);
     }
 
@@ -214,7 +214,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         when(p.getQuantity()).thenReturn(1L);
 
         ActivationKeyResource akr = new ActivationKeyResource(akc, i18n,
-            pc, null, null);
+            pc, null);
         assertNotNull(akr.addPoolToKey("testKey", "testPool", 1));
     }
 
