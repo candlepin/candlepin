@@ -14,35 +14,6 @@
  */
 package org.candlepin.sync;
 
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
-import org.candlepin.audit.EventSink;
-import org.candlepin.config.Config;
-import org.candlepin.controller.PoolManager;
-import org.candlepin.controller.Refresher;
-import org.candlepin.model.CertificateSerialCurator;
-import org.candlepin.model.ConsumerType;
-import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.ContentCurator;
-import org.candlepin.model.ExporterMetadata;
-import org.candlepin.model.ExporterMetadataCurator;
-import org.candlepin.model.IdentityCertificate;
-import org.candlepin.model.IdentityCertificateCurator;
-import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
-import org.candlepin.model.Subscription;
-import org.candlepin.model.SubscriptionCurator;
-import org.candlepin.pki.PKIUtility;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.hibernate.exception.ConstraintViolationException;
-import org.xnap.commons.i18n.I18n;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -63,6 +34,37 @@ import java.util.zip.ZipInputStream;
 
 import javax.persistence.PersistenceException;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+import org.candlepin.audit.EventSink;
+import org.candlepin.config.Config;
+import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.Refresher;
+import org.candlepin.model.CertificateSerialCurator;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.ContentCurator;
+import org.candlepin.model.DistributorVersion;
+import org.candlepin.model.DistributorVersionCurator;
+import org.candlepin.model.ExporterMetadata;
+import org.candlepin.model.ExporterMetadataCurator;
+import org.candlepin.model.IdentityCertificate;
+import org.candlepin.model.IdentityCertificateCurator;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
+import org.candlepin.model.Subscription;
+import org.candlepin.model.SubscriptionCurator;
+import org.candlepin.pki.PKIUtility;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.hibernate.exception.ConstraintViolationException;
+import org.xnap.commons.i18n.I18n;
+
+import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
+
 
 /**
  * Importer
@@ -82,7 +84,8 @@ public class Importer {
         ENTITLEMENT_CERTIFICATES("entitlement_certificates"),
         PRODUCTS("products"),
         RULES_FILE("rules2/rules.js"),
-        UPSTREAM_CONSUMER("upstream_consumer");
+        UPSTREAM_CONSUMER("upstream_consumer"),
+        DISTRIBUTOR_VERSIONS("distributor_version");
 
         private String fileName;
         ImportFile(String fileName) {
@@ -121,6 +124,7 @@ public class Importer {
     private CertificateSerialCurator csCurator;
     private EventSink sink;
     private I18n i18n;
+    private DistributorVersionCurator distVerCurator;
 
     @Inject
     public Importer(ConsumerTypeCurator consumerTypeCurator, ProductCurator productCurator,
@@ -128,7 +132,8 @@ public class Importer {
         IdentityCertificateCurator idCertCurator,
         ContentCurator contentCurator, SubscriptionCurator subCurator, PoolManager pm,
         PKIUtility pki, Config config, ExporterMetadataCurator emc,
-        CertificateSerialCurator csc, EventSink sink, I18n i18n) {
+        CertificateSerialCurator csc, EventSink sink, I18n i18n,
+        DistributorVersionCurator distVerCurator) {
 
         this.config = config;
         this.consumerTypeCurator = consumerTypeCurator;
@@ -145,6 +150,7 @@ public class Importer {
         this.csCurator = csc;
         this.sink = sink;
         this.i18n = i18n;
+        this.distVerCurator = distVerCurator;
     }
 
     /**
@@ -365,6 +371,11 @@ public class Importer {
         importRules(rules, metadata);
 
         importConsumerTypes(consumerTypes.listFiles());
+
+        File distributorVersions = importFiles.get(ImportFile.DISTRIBUTOR_VERSIONS.fileName());
+        if (distributorVersions != null) {
+            importDistributorVersions(distributorVersions.listFiles());
+        }
 
         // per user elements
         try {
@@ -656,5 +667,24 @@ public class Importer {
                 }
             }
         }
+    }
+
+    public void importDistributorVersions(File[] versionFiles) throws IOException {
+        DistributorVersionImporter importer =
+            new DistributorVersionImporter(distVerCurator);
+        Set<DistributorVersion> distVers = new HashSet<DistributorVersion>();
+        for (File verFile : versionFiles) {
+            Reader reader = null;
+            try {
+                reader = new FileReader(verFile);
+                distVers.add(importer.createObject(mapper, reader));
+            }
+            finally {
+                if (reader != null) {
+                    reader.close();
+                }
+            }
+        }
+        importer.store(distVers);
     }
 }

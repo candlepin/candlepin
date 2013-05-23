@@ -14,7 +14,20 @@
  */
 package org.candlepin.sync;
 
-import com.google.inject.Inject;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -25,6 +38,8 @@ import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.DistributorVersion;
+import org.candlepin.model.DistributorVersionCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCurator;
@@ -37,22 +52,9 @@ import org.candlepin.policy.js.export.ExportRules;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.util.VersionUtil;
-
 import org.codehaus.jackson.map.ObjectMapper;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
+import com.google.inject.Inject;
 
 /**
  * Exporter
@@ -70,6 +72,8 @@ public class Exporter {
     private RulesExporter rules;
     private EntitlementCertExporter entCert;
     private EntitlementExporter entExporter;
+    private DistributorVersionCurator distVerCurator;
+    private DistributorVersionExporter distVerExporter;
 
     private ConsumerTypeCurator consumerTypeCurator;
     private EntitlementCertServiceAdapter entCertAdapter;
@@ -90,7 +94,8 @@ public class Exporter {
         ProductServiceAdapter productAdapter, ProductCertExporter productCertExporter,
         EntitlementCurator entitlementCurator, EntitlementExporter entExporter,
         PKIUtility pki, Config config, ExportRules exportRules,
-        PrincipalProvider principalProvider) {
+        PrincipalProvider principalProvider, DistributorVersionCurator distVerCurator,
+        DistributorVersionExporter distVerExporter) {
 
         this.consumerTypeCurator = consumerTypeCurator;
 
@@ -109,6 +114,8 @@ public class Exporter {
         this.config = config;
         this.exportRules = exportRules;
         this.principalProvider = principalProvider;
+        this.distVerCurator = distVerCurator;
+        this.distVerExporter = distVerExporter;
 
         mapper = SyncUtils.getObjectMapper(this.config);
     }
@@ -129,6 +136,7 @@ public class Exporter {
             exportProducts(baseDir, consumer);
             exportConsumerTypes(baseDir);
             exportRules(baseDir);
+            exportDistributorVersions(baseDir);
             return makeArchive(consumer, tmpDir, baseDir);
         }
         catch (IOException e) {
@@ -494,5 +502,30 @@ public class Exporter {
         FileUtils.copyFile(new File(
             this.getClass().getResource(LEGACY_RULES_FILE).getPath()),
             oldRulesFile);
+    }
+
+    private void exportDistributorVersions(File baseDir) throws IOException {
+        List<DistributorVersion> versions = distVerCurator.findAll();
+        if (versions == null || versions.isEmpty()) { return; }
+
+        File distVerDir = new File(baseDir.getCanonicalPath(), "distributor_version");
+        distVerDir.mkdir();
+
+        FileWriter writer = null;
+        for (DistributorVersion dv : versions) {
+            if (log.isDebugEnabled()) {
+                log.debug("Exporting Distributor Version" + dv.getName());
+            }
+            try {
+                File file = new File(distVerDir.getCanonicalPath(), dv.getName() + ".json");
+                writer = new FileWriter(file);
+                distVerExporter.export(mapper, writer, dv);
+            }
+            finally {
+                if (writer != null) {
+                    writer.close();
+                }
+            }
+        }
     }
 }

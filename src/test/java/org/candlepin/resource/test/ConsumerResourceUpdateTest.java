@@ -14,15 +14,25 @@
  */
 package org.candlepin.resource.test;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.atMost;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
@@ -34,8 +44,10 @@ import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.ActivationKeyCurator;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCapability;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
+import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.Entitlement;
@@ -53,8 +65,8 @@ import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.TestUtil;
 import org.junit.Before;
-import org.junit.Test;
 import org.junit.Ignore;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
@@ -92,7 +104,7 @@ public class ConsumerResourceUpdateTest {
             this.userService, null, poolManager, null, null, null,
             this.activationKeyCurator,
             this.entitler, this.complianceRules, this.deletedConsumerCurator,
-            this.environmentCurator, new CandlepinCommonTestConfig());
+            this.environmentCurator, null, new CandlepinCommonTestConfig());
 
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class)))
             .thenReturn(new ComplianceStatus(new Date()));
@@ -716,6 +728,34 @@ public class ConsumerResourceUpdateTest {
         updated.setName("#a name");
 
         resource.updateConsumer(consumer.getUuid(), updated);
+    }
+
+    @Test
+    public void consumerCapabilityUpdate() {
+        Consumer c = getFakeConsumer();
+        Set<ConsumerCapability> caps = new HashSet<ConsumerCapability>();
+        ConsumerCapability cca = new ConsumerCapability(c, "capability_a");
+        ConsumerCapability ccb = new ConsumerCapability(c, "capability_b");
+        ConsumerCapability ccc = new ConsumerCapability(c, "capability_c");
+        caps.add(cca);
+        caps.add(ccb);
+        caps.add(ccc);
+        c.setCapabilities(caps);
+        ConsumerType ct = new ConsumerType();
+        ct.setManifest(true);
+        c.setType(ct);
+        assertEquals(3, c.getCapabilities().size());
+
+        // no capability list in update object does not change existing
+        Consumer updated = new Consumer();
+        resource.updateConsumer(c.getUuid(), updated);
+        assertEquals(3, c.getCapabilities().size());
+
+        // empty capability list in update object does change existing
+        updated = new Consumer();
+        updated.setCapabilities(new HashSet<ConsumerCapability>());
+        resource.updateConsumer(c.getUuid(), updated);
+        assertEquals(0, c.getCapabilities().size());
     }
 
     private Consumer createConsumerWithGuests(String ... guestIds) {

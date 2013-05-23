@@ -1119,4 +1119,6 @@
     <include file="db/changelog/20130403095818-reconcile-postgresql-with-oracle.xml" />
     <include file="db/changelog/20130514152949-consumer_installed_product_add_version.xml" />
     <include file="db/changelog/20130515095101-consumer_installed_product_arch_column.xml" />
+    <include file="db/changelog/20130425102131-distributor-capabilities.xml" />
+    <include file="db/changelog/20130429105623-distributor-version-addition.xml" />
 </databaseChangeLog>

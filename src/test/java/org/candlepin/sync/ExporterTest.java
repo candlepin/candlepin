@@ -22,35 +22,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.apache.commons.io.FileUtils;
-import org.candlepin.auth.Principal;
-import org.candlepin.config.CandlepinCommonTestConfig;
-import org.candlepin.config.Config;
-import org.candlepin.config.ConfigProperties;
-import org.candlepin.guice.PrincipalProvider;
-import org.candlepin.model.CertificateSerial;
-import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerType;
-import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
-import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.Entitlement;
-import org.candlepin.model.EntitlementCurator;
-import org.candlepin.model.IdentityCertificate;
-import org.candlepin.model.KeyPair;
-import org.candlepin.model.Pool;
-import org.candlepin.model.Product;
-import org.candlepin.model.ProductCertificate;
-import org.candlepin.model.ProvidedProduct;
-import org.candlepin.model.Rules;
-import org.candlepin.model.RulesCurator;
-import org.candlepin.pki.PKIUtility;
-import org.candlepin.policy.js.export.ExportRules;
-import org.candlepin.service.EntitlementCertServiceAdapter;
-import org.candlepin.service.ProductServiceAdapter;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.junit.Before;
-import org.junit.Test;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -72,6 +43,38 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import org.apache.commons.io.FileUtils;
+import org.candlepin.auth.Principal;
+import org.candlepin.config.CandlepinCommonTestConfig;
+import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.guice.PrincipalProvider;
+import org.candlepin.model.CertificateSerial;
+import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.DistributorVersion;
+import org.candlepin.model.DistributorVersionCapability;
+import org.candlepin.model.DistributorVersionCurator;
+import org.candlepin.model.Entitlement;
+import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.IdentityCertificate;
+import org.candlepin.model.KeyPair;
+import org.candlepin.model.Pool;
+import org.candlepin.model.Product;
+import org.candlepin.model.ProductCertificate;
+import org.candlepin.model.ProvidedProduct;
+import org.candlepin.model.Rules;
+import org.candlepin.model.RulesCurator;
+import org.candlepin.pki.PKIUtility;
+import org.candlepin.policy.js.export.ExportRules;
+import org.candlepin.service.EntitlementCertServiceAdapter;
+import org.candlepin.service.ProductServiceAdapter;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.junit.Before;
+import org.junit.Test;
+
 
 /**
  * ExporterTest
@@ -90,6 +93,8 @@ public class ExporterTest {
     private ProductServiceAdapter psa;
     private ProductCertExporter pce;
     private EntitlementCurator ec;
+    private DistributorVersionCurator dvc;
+    private DistributorVersionExporter dve;
     private EntitlementExporter ee;
     private PKIUtility pki;
     private CandlepinCommonTestConfig config;
@@ -115,6 +120,8 @@ public class ExporterTest {
         config = new CandlepinCommonTestConfig();
         exportRules = mock(ExportRules.class);
         pprov = mock(PrincipalProvider.class);
+        dvc = mock(DistributorVersionCurator.class);
+        dve = new DistributorVersionExporter();
 
         when(exportRules.canExport(any(Entitlement.class))).thenReturn(Boolean.TRUE);
     }
@@ -203,7 +210,7 @@ public class ExporterTest {
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov);
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve);
 
         File export = e.getFullExport(consumer);
 
@@ -250,7 +257,7 @@ public class ExporterTest {
             .thenReturn("publicKey".getBytes());
 
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov);
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve);
 
         e.getFullExport(consumer);
     }
@@ -287,7 +294,7 @@ public class ExporterTest {
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov);
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve);
         File export = e.getFullExport(consumer);
 
         // VERIFY
@@ -333,7 +340,7 @@ public class ExporterTest {
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov);
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve);
         File export = e.getFullExport(consumer);
 
         // VERIFY
@@ -380,11 +387,65 @@ public class ExporterTest {
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov);
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve);
         File export = e.getFullExport(consumer);
 
         verifyContent(export, "export/consumer.json",
             new VerifyConsumer("consumer.json"));
+    }
+
+    @Test
+    public void exportDistributorVersions() throws ExportCreationException, IOException {
+        config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+        config.setProperty(ConfigProperties.PREFIX_WEBURL, "localhost:8443/weburl");
+        config.setProperty(ConfigProperties.PREFIX_APIURL, "localhost:8443/apiurl");
+        Rules mrules = mock(Rules.class);
+        Consumer consumer = mock(Consumer.class);
+        Principal principal = mock(Principal.class);
+
+        when(mrules.getRules()).thenReturn("foobar");
+        when(pki.getSHA256WithRSAHash(any(InputStream.class))).thenReturn(
+            "signature".getBytes());
+        when(rc.getRules()).thenReturn(mrules);
+        when(pprov.get()).thenReturn(principal);
+        when(principal.getUsername()).thenReturn("testUser");
+
+        IdentityCertificate idcert = new IdentityCertificate();
+        idcert.setSerial(new CertificateSerial(10L, new Date()));
+        idcert.setKey("euh0876puhapodifbvj094");
+        idcert.setCert("hpj-08ha-w4gpoknpon*)&^%#");
+        idcert.setCreated(new Date());
+        idcert.setUpdated(new Date());
+        when(consumer.getIdCert()).thenReturn(idcert);
+
+        KeyPair keyPair = createKeyPair();
+        when(consumer.getKeyPair()).thenReturn(keyPair);
+        when(pki.getPemEncoded(keyPair.getPrivateKey()))
+            .thenReturn("privateKey".getBytes());
+        when(pki.getPemEncoded(keyPair.getPublicKey()))
+            .thenReturn("publicKey".getBytes());
+        when(consumer.getUuid()).thenReturn("8auuid");
+        when(consumer.getName()).thenReturn("consumer_name");
+        when(consumer.getType()).thenReturn(new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
+
+        DistributorVersion dv = new DistributorVersion("test-dist-ver");
+        Set<DistributorVersionCapability> dvcSet =
+            new HashSet<DistributorVersionCapability>();
+        dvcSet.add(new DistributorVersionCapability(dv, "capability-1"));
+        dvcSet.add(new DistributorVersionCapability(dv, "capability-2"));
+        dvcSet.add(new DistributorVersionCapability(dv, "capability-3"));
+        dv.setCapabilities(dvcSet);
+        List<DistributorVersion> dvList = new ArrayList<DistributorVersion>();
+        dvList.add(dv);
+        when(dvc.findAll()).thenReturn(dvList);
+
+        // FINALLY test this badboy
+        Exporter e = new Exporter(ctc, me, ce, cte, re, ece, ecsa, pe, psa,
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve);
+        File export = e.getFullExport(consumer);
+
+        verifyContent(export, "export/distributor_version/test-dist-ver.json",
+            new VerifyDistributorVersion("test-dist-ver.json"));
     }
 
     /**
@@ -609,4 +670,29 @@ public class ExporterTest {
         }
     }
 
+    public static class VerifyDistributorVersion implements Verify {
+        private String filename;
+
+        public VerifyDistributorVersion(String filename) {
+            this.filename = filename;
+        }
+
+        public void verify(ZipInputStream zis, byte[] buf) throws IOException {
+            OutputStream os = new FileOutputStream("/tmp/" + filename);
+            int n;
+            while ((n = zis.read(buf, 0, 1024)) > -1) {
+                os.write(buf, 0, n);
+            }
+            os.flush();
+            os.close();
+            ObjectMapper om = SyncUtils.getObjectMapper(
+                new Config(new HashMap<String, String>()));
+            DistributorVersion dv = om.readValue(
+                new FileInputStream("/tmp/" + filename),
+                DistributorVersion.class);
+            assertNotNull(dv);
+            assertEquals("test-dist-ver", dv.getName());
+            assertEquals(3, dv.getCapabilities().size());
+        }
+    }
 }

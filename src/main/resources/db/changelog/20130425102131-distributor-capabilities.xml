@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+
+    <changeSet id="20130425102131" author="wpoteat">
+        <createTable tableName="cp_consumer_capability">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_consumer_capability_pkey"/>
+            </column>
+            <column name="consumer_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <!-- See http://www.liquibase.org/manual/refactoring_commands -->
+    </changeSet>
+    <changeSet id="20130425102131-1" author="wpoteat" dbms="postgresql">
+        <createIndex tableName="cp_consumer_capability" indexName="cp_consumer_capability_id_idx">
+            <column name="consumer_id"/>
+        </createIndex>
+        <addForeignKeyConstraint baseColumnNames="consumer_id" baseTableName="cp_consumer_capability" baseTableSchemaName="public" constraintName="fk_cnsmr_capability_cnsmr" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    
+    <changeSet id="20130425102131-2" author="wpoteat">
+        <createTable tableName="cp_dist_version">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_dist_version_pkey"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="display_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+        </createTable>
+        <!-- See http://www.liquibase.org/manual/refactoring_commands -->
+    </changeSet>
+    <changeSet id="20130425102131-3" author="wpoteat" dbms="postgresql">
+        <createIndex tableName="cp_dist_version" indexName="cp_dist_version_id_idx">
+            <column name="id"/>
+        </createIndex>
+        <addUniqueConstraint columnNames="name" constraintName="cp_dist_version_name_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_dist_version"/> 
+    </changeSet>
+
+    <changeSet id="20130425102131-4" author="wpoteat">
+        <createTable tableName="cp_dist_version_capability">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_dist_vrsn_capability_pkey"/>
+            </column>
+            <column name="dist_version_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <!-- See http://www.liquibase.org/manual/refactoring_commands -->
+    </changeSet>
+    <changeSet id="20130425102131-5" author="wpoteat" dbms="postgresql">
+        <createIndex tableName="cp_dist_version_capability" indexName="cp_dist_vrsn_cpblty_id_idx">
+            <column name="dist_version_id"/>
+        </createIndex>
+        <addForeignKeyConstraint baseColumnNames="dist_version_id" baseTableName="cp_dist_version_capability" baseTableSchemaName="public" constraintName="fk_dist_vrsn_capability" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_dist_version" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+    </changeSet>
+    
+</databaseChangeLog>

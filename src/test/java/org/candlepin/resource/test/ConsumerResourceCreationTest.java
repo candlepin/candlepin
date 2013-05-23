@@ -117,7 +117,7 @@ public class ConsumerResourceCreationTest {
             this.userService, null, null, null, null, this.ownerCurator,
             this.activationKeyCurator,
             null, this.complianceRules, this.deletedConsumerCurator,
-            null, this.config);
+            null, null, this.config);
 
         this.system = initSystem();
 

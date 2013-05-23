@@ -56,7 +56,7 @@ import org.candlepin.policy.criteria.CriteriaRules;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.entitlement.Enforcer;
-import org.candlepin.policy.js.entitlement.EnforcerDispatcher;
+import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.resource.ActivationKeyResource;
 import org.candlepin.resource.AdminResource;
@@ -66,6 +66,7 @@ import org.candlepin.resource.ConsumerResource;
 import org.candlepin.resource.ConsumerTypeResource;
 import org.candlepin.resource.ContentResource;
 import org.candlepin.resource.CrlResource;
+import org.candlepin.resource.DistributorVersionResource;
 import org.candlepin.resource.EntitlementResource;
 import org.candlepin.resource.EnvironmentResource;
 import org.candlepin.resource.EventResource;
@@ -151,7 +152,7 @@ public class CandlepinModule extends AbstractModule {
         bind(CrlResource.class);
         bind(JobResource.class);
         bind(DateSource.class).to(DateSourceImpl.class).asEagerSingleton();
-        bind(Enforcer.class).to(EnforcerDispatcher.class);
+        bind(Enforcer.class).to(EntitlementRules.class);
         bind(PoolManager.class).to(CandlepinPoolManager.class);
         bind(PoolRules.class);
         bind(CriteriaRules.class);
@@ -183,6 +184,7 @@ public class CandlepinModule extends AbstractModule {
         bind(JsRunner.class).toProvider(JsRunnerProvider.class);
         bind(UserResource.class);
         bind(UniqueIdGenerator.class).to(DefaultUniqueIdGenerator.class);
+        bind(DistributorVersionResource.class);
 
         bind(I18n.class).toProvider(I18nProvider.class);
         bind(AuthInterceptor.class);
