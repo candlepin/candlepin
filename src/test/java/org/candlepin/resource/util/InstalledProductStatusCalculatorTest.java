@@ -166,6 +166,60 @@ public class InstalledProductStatusCalculatorTest {
     }
 
     @Test
+    public void enricherSetsArchVersion() {
+        //test that the enricher sets the arch and version
+        //when they are supplied as null
+        Consumer c = mockConsumer(PRODUCT_1);
+
+        Calendar cal = Calendar.getInstance();
+        Date now = cal.getTime();
+        DateRange range2 = rangeRelativeToDate(now, -1, 4);
+        c.addEntitlement(mockEntitlement(c, PRODUCT_1, range2, PRODUCT_1));
+        List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
+        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        ComplianceStatus status = compliance.getStatus(c, now);
+        status.addNonCompliantProduct(PRODUCT_1);
+        ConsumerInstalledProduct cip = new ConsumerInstalledProduct();
+        c.addInstalledProduct(cip);
+        ConsumerInstalledProductEnricher calculator =
+            new ConsumerInstalledProductEnricher(c, status, compliance);
+        Product p = new Product(PRODUCT_1, "Awesome Product");
+        p.setAttribute("version", "candlepin version");
+        p.setAttribute("arch", "candlepin arch");
+        calculator.enrich(cip, p);
+        assertEquals("candlepin version", cip.getVersion());
+        assertEquals("candlepin arch", cip.getArch());
+    }
+
+    @Test
+    public void enricherDoesntSetArchVersion() {
+        //test that the enricher does not set the arch and version
+        //when they are supplied with values
+        Consumer c = mockConsumer(PRODUCT_1);
+
+        Calendar cal = Calendar.getInstance();
+        Date now = cal.getTime();
+        DateRange range2 = rangeRelativeToDate(now, -1, 4);
+        c.addEntitlement(mockEntitlement(c, PRODUCT_1, range2, PRODUCT_1));
+        List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
+        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        ComplianceStatus status = compliance.getStatus(c, now);
+        status.addNonCompliantProduct(PRODUCT_1);
+        ConsumerInstalledProduct cip = new ConsumerInstalledProduct();
+        cip.setArch("x86_64");
+        cip.setVersion("4.5");
+        c.addInstalledProduct(cip);
+        ConsumerInstalledProductEnricher calculator =
+            new ConsumerInstalledProductEnricher(c, status, compliance);
+        Product p = new Product(PRODUCT_1, "Awesome Product");
+        p.setAttribute("version", "candlepin version");
+        p.setAttribute("arch", "candlepin arch");
+        calculator.enrich(cip, p);
+        assertEquals("4.5", cip.getVersion());
+        assertEquals("x86_64", cip.getArch());
+    }
+
+    @Test
     public void validRangeWithMultipleEntsWithOverlap() {
         Consumer c = mockConsumer(PRODUCT_1);
 

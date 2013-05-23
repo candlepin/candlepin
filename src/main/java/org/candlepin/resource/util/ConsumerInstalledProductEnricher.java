@@ -56,10 +56,13 @@ public class ConsumerInstalledProductEnricher {
      * @param prod the product to pull the data from.
      */
     public void enrich(ConsumerInstalledProduct cip, Product prod) {
-        cip.setArch(prod.getAttributeValue("arch"));
-        cip.setVersion(prod.getAttributeValue("version"));
         cip.setStatus(getStatus(prod.getId()));
-
+        if (cip.getVersion() == null) {
+            cip.setVersion(prod.getAttributeValue("version"));
+        }
+        if (cip.getArch() == null) {
+            cip.setArch(prod.getAttributeValue("arch"));
+        }
         DateRange range = getValidDateRange(prod);
         cip.setStartDate(range != null ? range.getStartDate() : null);
         cip.setEndDate(range != null ? range.getEndDate() : null);
