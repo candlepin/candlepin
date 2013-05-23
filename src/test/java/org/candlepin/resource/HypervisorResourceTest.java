@@ -123,7 +123,7 @@ public class HypervisorResourceTest {
             null, this.complianceRules, this.deletedConsumerCurator,
             null, null, new CandlepinCommonTestConfig());
 
-        hypervisorResource = new HypervisorResource(consumerResource, poolManager,
+        hypervisorResource = new HypervisorResource(consumerResource,
             consumerCurator, this.deletedConsumerCurator, i18n);
 
         // Ensure that we get the consumer that was passed in back from the create call.
