@@ -16,7 +16,6 @@ package org.candlepin.resource;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.interceptor.SecurityHole;
-import org.candlepin.controller.PoolManager;
 import org.candlepin.exceptions.GoneException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -53,17 +52,15 @@ import javax.ws.rs.core.MediaType;
 public class HypervisorResource {
     private static Logger log = Logger.getLogger(HypervisorResource.class);
     private ConsumerCurator consumerCurator;
-    private PoolManager poolManager;
     private ConsumerResource consumerResource;
     private DeletedConsumerCurator deletedConsumerCurator;
     private I18n i18n;
 
     @Inject
-    public HypervisorResource(ConsumerResource consumerResource, PoolManager poolManager,
+    public HypervisorResource(ConsumerResource consumerResource,
         ConsumerCurator consumerCurator, DeletedConsumerCurator deletedConsumerCurator,
         I18n i18n) {
         this.consumerResource = consumerResource;
-        this.poolManager = poolManager;
         this.consumerCurator = consumerCurator;
         this.deletedConsumerCurator = deletedConsumerCurator;
         this.i18n = i18n;
@@ -120,12 +117,6 @@ public class HypervisorResource {
                         null);
                     hostConsumerCreated = true;
                 }
-                /* commented out per 768872
-                // Revoke all entitlements from the host if no guests were reported.
-                else if (guestIds == null || guestIds.isEmpty()) {
-                    poolManager.revokeAllEntitlements(consumer);
-                }
-                */
 
                 Consumer withIds = new Consumer();
                 withIds.setGuestIds(guestIds);

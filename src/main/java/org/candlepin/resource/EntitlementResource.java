@@ -39,7 +39,6 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
-import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.pinsetter.tasks.RegenProductEntitlementCertsJob;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -58,7 +57,6 @@ public class EntitlementResource {
     private final ConsumerCurator consumerCurator;
     private PoolManager poolManager;
     private final EntitlementCurator entitlementCurator;
-    private final SubscriptionCurator subscriptionCurator;
     private SubscriptionServiceAdapter subService;
     private I18n i18n;
     private ProductServiceAdapter prodAdapter;
@@ -67,14 +65,12 @@ public class EntitlementResource {
     @Inject
     public EntitlementResource(ProductServiceAdapter prodAdapter,
             EntitlementCurator entitlementCurator,
-            SubscriptionCurator subscriptionCurator,
             ConsumerCurator consumerCurator,
             SubscriptionServiceAdapter subService,
             PoolManager poolManager,
             I18n i18n, Entitler entitler) {
 
         this.entitlementCurator = entitlementCurator;
-        this.subscriptionCurator = subscriptionCurator;
         this.subService = subService;
         this.consumerCurator = consumerCurator;
         this.i18n = i18n;

@@ -56,8 +56,7 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
         this.owner = this.ownerCurator.create(new Owner("default_owner"));
 
         UserCurator curator = this.injector.getInstance(UserCurator.class);
-        this.service = new DefaultUserServiceAdapter(curator, roleCurator,
-                permissionCurator);
+        this.service = new DefaultUserServiceAdapter(curator, roleCurator);
     }
 
     @Test
@@ -154,7 +153,7 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
         UserCurator curator = mock(UserCurator.class);
         RoleCurator roleCurator = mock(RoleCurator.class);
         UserServiceAdapter dusa = new DefaultUserServiceAdapter(curator,
-                roleCurator, permissionCurator);
+                roleCurator);
         when(curator.findByLogin(anyString())).thenReturn(u);
 
         User foo = dusa.findByLogin("foo");
