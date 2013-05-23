@@ -25,7 +25,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.8.7
+Version: 0.8.8
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -345,6 +345,20 @@ fi
 
 
 %changelog
+* Thu May 23 2013 Devan Goodwin <dgoodwin@rm-rf.ca> 0.8.8-1
+- Add support for distributor capabilities. (wpoteat@redhat.com)
+- 965310: Fix broken import of identity cert. (dgoodwin@redhat.com)
+- use ConfigProperties enums for requesting configs (alikins@redhat.com)
+- Ignore unknown properties in rules responses. (dgoodwin@redhat.com)
+- get javascript logging working with buildr (jesusr@redhat.com)
+- Added version to installed products (ckozak@redhat.com)
+- installed info no longer transient (ckozak@redhat.com)
+- Fix values for host_limited attribute. (dgoodwin@redhat.com)
+- Better method of detecting when to apply instance multiplier.
+  (dgoodwin@redhat.com)
+- CalculatedAttributesUtil should return a value instead of relying on side-
+  effects. (awood@redhat.com)
+
 * Fri May 10 2013 Michael Stead <mstead@redhat.com> 0.8.7-1
 - Merge pull request #248 from candlepin/alikins/syntastic_classpath
   (mstead@redhat.com)
