@@ -1514,9 +1514,9 @@ var Entitlement = {
 
         // only block quantities that do not evenly divide the multiplier
         // and only on physical systems
+
         if (!consumer.type.manifest) {
             if (BIND_CALLER == caller && !Utils.isGuest(consumer)) {
-
                 var multiplier = pool.getProductAttribute(INSTANCE_ATTRIBUTE);
                 log.debug("instance_multiplier: [" + multiplier + "]");
 
@@ -1639,9 +1639,9 @@ var Autobind = {
 
         log.debug("context.serviceLevelOverride: " + context.serviceLevelOverride);
         var consumerSLA = context.serviceLevelOverride;
-        if (!consumerSLA || consumerSLA.equals("")) {
+        if (!consumerSLA || consumerSLA == "") {
             consumerSLA = context.consumer.serviceLevel;
-                if (!consumerSLA || consumerSLA.equals("")) {
+                if (!consumerSLA || consumerSLA == "") {
                     consumerSLA = context.owner.defaultServiceLevel;
                 }
         }

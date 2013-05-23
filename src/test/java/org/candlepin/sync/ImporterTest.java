@@ -435,9 +435,7 @@ public class ImporterTest {
         Map<String, File> importFiles = new HashMap<String, File>();
         importFiles.put(ImportFile.META.fileName(), mock(File.class));
         importFiles.put(ImportFile.RULES_FILE.fileName(), mock(File.class));
-        File cTypes = mock(File.class);
-        when(cTypes.listFiles()).thenReturn(new File[]{});
-        importFiles.put(ImportFile.CONSUMER_TYPE.fileName(), cTypes);
+        importFiles.put(ImportFile.CONSUMER_TYPE.fileName(), mock(File.class));
         importFiles.put(ImportFile.CONSUMER.fileName(), mock(File.class));
         importFiles.put(ImportFile.PRODUCTS.fileName(), mock(File.class));
         importFiles.put(ImportFile.ENTITLEMENTS.fileName(), mock(File.class));
@@ -703,6 +701,9 @@ public class ImporterTest {
         importFiles.put(ImportFile.ENTITLEMENTS.fileName(), null);
         doNothing().when(ri).importObject(any(Reader.class));
         importFiles.put(ImportFile.DISTRIBUTOR_VERSIONS.fileName(), null);
+        File cTypes = mock(File.class);
+        when(cTypes.listFiles()).thenReturn(new File[]{});
+        importFiles.put(ImportFile.CONSUMER_TYPE.fileName(), cTypes);
 
         // this is the hook to stop testing. we confirm that the dist version null test
         //  is passed and then jump out instead of trying to fake the actual file
