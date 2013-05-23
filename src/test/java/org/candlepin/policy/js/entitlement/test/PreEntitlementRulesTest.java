@@ -53,29 +53,6 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         assertFalse(result.isSuccessful());
     }
 
-    @Test
-    public void manifestConsumerCannotBindToDerivedPool() {
-        when(config.standalone()).thenReturn(false);
-        consumer.setType(new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
-
-        Product product = new Product(productId, "A product for testing");
-        Pool pool = createPool(owner, product);
-        pool.setAttribute("pool_derived", "true");
-
-        Entitlement e = new Entitlement(pool, consumer, new Date(), new Date(),
-            1);
-        consumer.addEntitlement(e);
-
-        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
-
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
-
-        assertTrue(result.hasErrors());
-        assertFalse(result.isSuccessful());
-        assertEquals(1, result.getErrors().size());
-        assertTrue(result.getErrors().get(0).getResourceKey().contains("manifest"));
-    }
-
     @Test public void bindWithQuantityNoMultiEntitle() {
         Product product = new Product(productId, "A product for testing");
         Pool pool = createPool(owner, product);

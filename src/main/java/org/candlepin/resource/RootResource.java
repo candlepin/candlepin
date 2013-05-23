@@ -75,6 +75,7 @@ public class RootResource {
         RESOURCE_CLASSES.add(HypervisorResource.class);
         RESOURCE_CLASSES.add(EnvironmentResource.class);
         RESOURCE_CLASSES.add(RootResource.class);
+        RESOURCE_CLASSES.add(DistributorVersionResource.class);
     }
 
     @Inject

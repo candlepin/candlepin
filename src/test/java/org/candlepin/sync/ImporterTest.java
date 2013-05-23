@@ -20,37 +20,12 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.candlepin.config.CandlepinCommonTestConfig;
-import org.candlepin.config.Config;
-import org.candlepin.config.ConfigProperties;
-import org.candlepin.model.ConsumerType;
-import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
-import org.candlepin.model.CertificateSerialCurator;
-import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.ExporterMetadata;
-import org.candlepin.model.ExporterMetadataCurator;
-import org.candlepin.model.IdentityCertificateCurator;
-import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerCurator;
-import org.candlepin.pki.PKIUtility;
-import org.candlepin.pki.impl.BouncyCastlePKIUtility;
-import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
-import org.candlepin.sync.Importer.ImportFile;
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.xnap.commons.i18n.I18n;
-import org.xnap.commons.i18n.I18nFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -70,6 +45,34 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.candlepin.config.CandlepinCommonTestConfig;
+import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.CertificateSerialCurator;
+import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.DistributorVersion;
+import org.candlepin.model.DistributorVersionCurator;
+import org.candlepin.model.ExporterMetadata;
+import org.candlepin.model.ExporterMetadataCurator;
+import org.candlepin.model.IdentityCertificateCurator;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
+import org.candlepin.pki.PKIUtility;
+import org.candlepin.pki.impl.BouncyCastlePKIUtility;
+import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
+import org.candlepin.sync.Importer.ImportFile;
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
 
 /**
  * ImporterTest
@@ -125,8 +128,8 @@ public class ImporterTest {
         em.setId("42");
         em.setType(ExporterMetadata.TYPE_SYSTEM);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
-        Importer i = new Importer(null, null, null, null, null, null, null, null,
-            null, null, emc, null, null, i18n);
+        Importer i = new Importer(null, null, null, null, null, null, null,
+            null, null, null, emc, null, null, i18n, null);
         i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actual,
             new ConflictOverrides());
 
@@ -149,8 +152,8 @@ public class ImporterTest {
             "test_user", "prefix");
         ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(null);
-        Importer i = new Importer(null, null, null, null, null, null, null, null,
-            null, null, emc, null, null, i18n);
+        Importer i = new Importer(null, null, null, null, null, null, null,
+            null, null, null, emc, null, null, i18n, null);
         i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta,
             new ConflictOverrides());
         assertTrue(f.delete());
@@ -170,8 +173,8 @@ public class ImporterTest {
         em.setId("42");
         em.setType(ExporterMetadata.TYPE_SYSTEM);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
-        Importer i = new Importer(null, null, null, null, null, null, null, null,
-            null, null, emc, null, null, i18n);
+        Importer i = new Importer(null, null, null, null, null, null, null,
+            null, null, null, emc, null, null, i18n, null);
         try {
             i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta,
                 new ConflictOverrides());
@@ -198,8 +201,8 @@ public class ImporterTest {
         em.setId("42");
         em.setType(ExporterMetadata.TYPE_SYSTEM);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
-        Importer i = new Importer(null, null, null, null, null, null, null, null,
-            null, null, emc, null, null, i18n);
+        Importer i = new Importer(null, null, null, null, null, null, null,
+            null, null, null, emc, null, null, i18n, null);
         try {
             i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta,
                 new ConflictOverrides());
@@ -246,8 +249,8 @@ public class ImporterTest {
         em.setId("42");
         em.setType(ExporterMetadata.TYPE_SYSTEM);
         when(emc.lookupByType(ExporterMetadata.TYPE_SYSTEM)).thenReturn(em);
-        Importer i = new Importer(null, null, null, null, null, null, null, null,
-            null, null, emc, null, null, i18n);
+        Importer i = new Importer(null, null, null, null, null, null, null,
+            null, null, null, emc, null, null, i18n, null);
         i.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta,
             new ConflictOverrides());
         assertEquals(importDate, em.getExported());
@@ -258,8 +261,8 @@ public class ImporterTest {
         File actualmeta = createFile("meta.json", "0.0.3", new Date(),
             "test_user", "prefix");
         try {
-            Importer i = new Importer(null, null, null, null, null, null, null, null,
-                null, null, null, null, null, i18n);
+            Importer i = new Importer(null, null, null, null, null, null, null,
+                null, null, null, null, null, null, i18n, null);
 
             // null Type should cause exception
             i.validateMetadata(null, null, actualmeta, new ConflictOverrides());
@@ -276,9 +279,8 @@ public class ImporterTest {
         ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
         when(emc.lookupByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, null))
             .thenReturn(null);
-
-        Importer i = new Importer(null, null, null, null, null, null, null, null,
-            null, null, emc, null, null, i18n);
+        Importer i = new Importer(null, null, null, null, null, null, null,
+            null, null, null, emc, null, null, i18n, null);
 
         // null Type should cause exception
         i.validateMetadata(ExporterMetadata.TYPE_PER_USER, null, actualmeta,
@@ -289,9 +291,8 @@ public class ImporterTest {
     @Test
     public void testImportWithNonZipArchive()
         throws IOException, ImporterException {
-        Importer i = new Importer(null, null, null, null, null, null, null, null,
-            null, config, null, null, null, i18n);
-
+        Importer i = new Importer(null, null, null, null, null, null, null,
+            null, null, config, null, null, null, i18n, null);
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
         File archive = new File("/tmp/non_zip_file.zip");
@@ -313,9 +314,8 @@ public class ImporterTest {
     @Test
     public void testImportZipArchiveNoContent()
         throws IOException, ImporterException {
-        Importer i = new Importer(null, null, null, null, null, null, null, null,
-            null, config, null, null, null, i18n);
-
+        Importer i = new Importer(null, null, null, null, null, null, null,
+            null, null, config, null, null, null, i18n, null);
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
 
@@ -340,8 +340,7 @@ public class ImporterTest {
         throws IOException, ImporterException {
         PKIUtility pki = mock(PKIUtility.class);
         Importer i = new Importer(null, null, null, null, null, null, null, null,
-            pki, config, null, null, null, i18n);
-
+            pki, config, null, null, null, i18n, null);
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
 
@@ -363,8 +362,7 @@ public class ImporterTest {
     public void testImportBadConsumerZip() throws Exception {
         PKIUtility pki = mock(PKIUtility.class);
         Importer i = new Importer(null, null, null, null, null, null, null, null,
-            pki, config, null, null, null, i18n);
-
+            pki, config, null, null, null, i18n, null);
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
 
@@ -400,8 +398,7 @@ public class ImporterTest {
         throws Exception {
         PKIUtility pki = mock(PKIUtility.class);
         Importer i = new Importer(null, null, null, null, null, null, null, null,
-            pki, config, null, null, null, i18n);
-
+            pki, config, null, null, null, i18n, null);
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
 
@@ -438,13 +435,14 @@ public class ImporterTest {
         importFiles.put(ImportFile.CONSUMER.fileName(), mock(File.class));
         importFiles.put(ImportFile.PRODUCTS.fileName(), mock(File.class));
         importFiles.put(ImportFile.ENTITLEMENTS.fileName(), mock(File.class));
+        importFiles.put(ImportFile.DISTRIBUTOR_VERSIONS.fileName(), mock(File.class));
         return importFiles;
     }
 
     @Test
     public void testImportNoMeta() throws IOException {
         Importer i = new Importer(null, null, null, null, null, null, null, null,
-            null, config, null, null, null, i18n);
+            null, config, null, null, null, i18n, null);
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
 
@@ -465,7 +463,7 @@ public class ImporterTest {
     @Test
     public void testImportNoConsumerTypesDir() throws IOException {
         Importer i = new Importer(null, null, null, null, null, null, null, null,
-            null, config, null, null, null, i18n);
+            null, config, null, null, null, i18n, null);
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
         Map<String, File> importFiles = getTestImportFiles();
@@ -486,7 +484,7 @@ public class ImporterTest {
     @Test
     public void testImportNoConsumer() throws IOException {
         Importer i = new Importer(null, null, null, null, null, null, null, null,
-            null, config, null, null, null, i18n);
+            null, config, null, null, null, i18n, null);
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
         Map<String, File> importFiles = getTestImportFiles();
@@ -509,7 +507,7 @@ public class ImporterTest {
         throws IOException, ImporterException {
         RulesImporter ri = mock(RulesImporter.class);
         Importer i = new Importer(null, null, ri, null, null, null, null, null,
-            null, config, null, null, null, i18n);
+            null, config, null, null, null, i18n, null);
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
         Map<String, File> importFiles = getTestImportFiles();
@@ -544,7 +542,7 @@ public class ImporterTest {
     @Test
     public void testImportProductNoEntitlementDir() throws IOException {
         Importer i = new Importer(null, null, null, null, null, null, null, null,
-            null, config, null, null, null, i18n);
+            null, config, null, null, null, i18n, null);
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
         Map<String, File> importFiles = getTestImportFiles();
@@ -630,7 +628,7 @@ public class ImporterTest {
 
         Importer i = new Importer(ctc, null, null, oc,
             mock(IdentityCertificateCurator.class), null, null, null,
-            pki, null, null, mock(CertificateSerialCurator.class), null, i18n);
+            pki, null, null, mock(CertificateSerialCurator.class), null, i18n, null);
         File[] upstream = new File[2];
         File idcertfile = new File("target/test/resources/upstream/testidcert.json");
         File kpfile = new File("target/test/resources/upstream/keypair.pem");
@@ -647,5 +645,76 @@ public class ImporterTest {
         i.importConsumer(owner, consumerfile, upstream, forcedConflicts, meta);
 
         verify(oc).merge(any(Owner.class));
+    }
+
+    @Test
+    public void importDistributorVersionCreate() throws Exception {
+        DistributorVersionCurator dvc = mock(DistributorVersionCurator.class);
+        Importer i = new Importer(null, null, null, null, null, null, null,
+            null, null, null, null, null, null, i18n, dvc);
+        File[] distVer = new File[1];
+        distVer[0] = new File("target/test/resources/upstream/dist-ver.json");
+
+        i.importDistributorVersions(distVer);
+
+        verify(dvc).create(any(DistributorVersion.class));
+        verify(dvc, never()).merge(any(DistributorVersion.class));
+    }
+
+    @Test
+    public void importDistributorVersionUpdate() throws Exception {
+        DistributorVersionCurator dvc = mock(DistributorVersionCurator.class);
+        Importer i = new Importer(null, null, null, null, null, null, null,
+            null, null, null, null, null, null, i18n, dvc);
+        when(dvc.findByName("test-dist-ver")).thenReturn(
+            new DistributorVersion("test-dist-ver"));
+        File[] distVer = new File[1];
+        distVer[0] = new File("target/test/resources/upstream/dist-ver.json");
+
+        i.importDistributorVersions(distVer);
+
+        verify(dvc, never()).create(any(DistributorVersion.class));
+        verify(dvc).merge(any(DistributorVersion.class));
+    }
+
+    @Test
+    public void testImportNoDistributorVersions()
+        throws IOException, ImporterException {
+        RulesImporter ri = mock(RulesImporter.class);
+        ExporterMetadataCurator emc = mock(ExporterMetadataCurator.class);
+        Importer i = new Importer(null, null, ri, null, null, null, null,
+            null, null, config, emc, null, null, i18n, null);
+        Owner owner = mock(Owner.class);
+        ConflictOverrides co = mock(ConflictOverrides.class);
+        Map<String, File> importFiles = getTestImportFiles();
+        File ruleDir = mock(File.class);
+        File[] rulesFiles = createMockJsFile(MOCK_JS_PATH);
+        when(ruleDir.listFiles()).thenReturn(rulesFiles);
+        File actualmeta = createFile("meta.json", "0.0.3", new Date(),
+            "test_user", "prefix");
+        importFiles.put(ImportFile.META.fileName(), actualmeta);
+        importFiles.put(ImportFile.RULES_FILE.fileName(), rulesFiles[0]);
+        importFiles.put(ImportFile.PRODUCTS.fileName(), null);
+        importFiles.put(ImportFile.ENTITLEMENTS.fileName(), null);
+        doNothing().when(ri).importObject(any(Reader.class));
+        importFiles.put(ImportFile.DISTRIBUTOR_VERSIONS.fileName(), null);
+        File cTypes = mock(File.class);
+        when(cTypes.listFiles()).thenReturn(new File[]{});
+        importFiles.put(ImportFile.CONSUMER_TYPE.fileName(), cTypes);
+
+        // this is the hook to stop testing. we confirm that the dist version null test
+        //  is passed and then jump out instead of trying to fake the actual file
+        //  processing.
+        doThrow(new RuntimeException("Done with the test")).when(emc)
+            .lookupByTypeAndOwner(any(String.class), any(Owner.class));
+
+        try {
+            i.importObjects(owner, importFiles, co);
+        }
+        catch (RuntimeException e) {
+            assertEquals(e.getMessage(), "Done with the test");
+            return;
+        }
+        fail();
     }
 }

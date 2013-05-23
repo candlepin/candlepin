@@ -14,14 +14,15 @@
  */
 package org.candlepin.resource.test;
 
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Module;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
@@ -34,16 +35,15 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.Subscription;
 import org.candlepin.policy.js.entitlement.Enforcer;
-import org.candlepin.policy.js.entitlement.EnforcerDispatcher;
+import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.resource.ConsumerResource;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
+import com.google.inject.AbstractModule;
+import com.google.inject.Module;
 
 /**
  * ConsumerResourceVirtEntitlementTest
@@ -233,7 +233,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
             when(config.getString(eq(ConfigProperties.CONSUMER_PERSON_NAME_PATTERN)))
                 .thenReturn("[\\#\\?\\'\\`\\!@{}()\\[\\]\\?&\\w-\\.]+");
             bind(Config.class).toInstance(config);
-            bind(Enforcer.class).to(EnforcerDispatcher.class);
+            bind(Enforcer.class).to(EntitlementRules.class);
         }
     }
 }

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <property name="now" value="sysdate" dbms="oracle"/>
+    <property name="now" value="LOCALTIMESTAMP" dbms="postgresql"/>
+    <changeSet id="20130429105623" author="wpoteat">
+        <comment>Insert the current list of known distributor versions</comment>
+        <insert tableName="cp_dist_version">
+            <column name="id" value="1000"/>
+            <column name="name" value="sat-5.5"/>
+            <column name="display_name" value="Satellite 5.5"/>
+            <column name="created" valueDate="${now}"/>
+            <column name="updated" valueDate="${now}"/>
+        </insert>
+        <insert tableName="cp_dist_version">
+            <column name="id" value="1001"/>
+            <column name="name" value="sat-6.0"/>
+            <column name="display_name" value="Satellite 6.0"/>
+            <column name="created" valueDate="${now}"/>
+            <column name="updated" valueDate="${now}"/>
+        </insert>
+        <insert tableName="cp_dist_version_capability">
+            <column name="id" value="1001"/>
+            <column name="dist_version_id" value="1001"/>
+            <column name="name" value="ram"/>
+        </insert>
+        <insert tableName="cp_dist_version_capability">
+            <column name="id" value="1002"/>
+            <column name="dist_version_id" value="1001"/>
+            <column name="name" value="cores"/>
+        </insert>
+        <insert tableName="cp_dist_version_capability">
+            <column name="id" value="1003"/>
+            <column name="dist_version_id" value="1001"/>
+            <column name="name" value="instance_multiplier"/>
+        </insert>
+        <insert tableName="cp_dist_version">
+            <column name="id" value="1002"/>
+            <column name="name" value="sam-1.2"/>
+            <column name="display_name" value="Subscription Asset Manager 1.2"/>
+            <column name="created" valueDate="${now}"/>
+            <column name="updated" valueDate="${now}"/>
+        </insert>
+        <insert tableName="cp_dist_version_capability">
+            <column name="id" value="1004"/>
+            <column name="dist_version_id" value="1002"/>
+            <column name="name" value="ram"/>
+        </insert>
+        <insert tableName="cp_dist_version">
+            <column name="id" value="1003"/>
+            <column name="name" value="sam-1.3"/>
+            <column name="display_name" value="Subscription Asset Manager 1.3"/>
+            <column name="created" valueDate="${now}"/>
+            <column name="updated" valueDate="${now}"/>
+        </insert>
+        <insert tableName="cp_dist_version_capability">
+            <column name="id" value="1005"/>
+            <column name="dist_version_id" value="1003"/>
+            <column name="name" value="ram"/>
+        </insert>
+        <insert tableName="cp_dist_version_capability">
+            <column name="id" value="1006"/>
+            <column name="dist_version_id" value="1003"/>
+            <column name="name" value="cores"/>
+        </insert>
+        <insert tableName="cp_dist_version_capability">
+            <column name="id" value="1007"/>
+            <column name="dist_version_id" value="1003"/>
+            <column name="name" value="instance_multiplier"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

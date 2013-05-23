@@ -20,7 +20,7 @@ describe 'Job Status' do
       status = @owner.post(status['statusPath'])
     end
   end
- 
+
   it 'should contain the owner key' do
     status = @cp.refresh_pools(@owner['key'], true)
     status['targetId'].should == @owner['key']
