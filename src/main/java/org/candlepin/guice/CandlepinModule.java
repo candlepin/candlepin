@@ -86,6 +86,7 @@ import org.candlepin.resource.UserResource;
 import org.candlepin.resteasy.JsonProvider;
 import org.candlepin.resteasy.interceptor.AuthInterceptor;
 import org.candlepin.resteasy.interceptor.DataPresentationInterceptor;
+import org.candlepin.resteasy.interceptor.LinkHeaderPostInterceptor;
 import org.candlepin.resteasy.interceptor.PinsetterAsyncInterceptor;
 import org.candlepin.resteasy.interceptor.VersionPostInterceptor;
 import org.candlepin.service.UniqueIdGenerator;
@@ -193,6 +194,7 @@ public class CandlepinModule extends AbstractModule {
         bind(DataPresentationInterceptor.class);
         bind(PinsetterAsyncInterceptor.class);
         bind(VersionPostInterceptor.class);
+        bind(LinkHeaderPostInterceptor.class);
         bind(JsonProvider.class);
         bind(EventSink.class).to(EventSinkImpl.class);
         bind(JobFactory.class).to(GuiceJobFactory.class);
