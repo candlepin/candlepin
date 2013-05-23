@@ -50,6 +50,7 @@ import org.candlepin.model.DistributorVersionCurator;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
 import org.candlepin.model.IdentityCertificate;
+import org.candlepin.model.IdentityCertificateCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Product;
@@ -115,6 +116,7 @@ public class Importer {
     private OwnerCurator ownerCurator;
     private ContentCurator contentCurator;
     private SubscriptionCurator subCurator;
+    private IdentityCertificateCurator idCertCurator;
     private PoolManager poolManager;
     private PKIUtility pki;
     private Config config;
@@ -127,6 +129,7 @@ public class Importer {
     @Inject
     public Importer(ConsumerTypeCurator consumerTypeCurator, ProductCurator productCurator,
         RulesImporter rulesImporter, OwnerCurator ownerCurator,
+        IdentityCertificateCurator idCertCurator,
         ContentCurator contentCurator, SubscriptionCurator subCurator, PoolManager pm,
         PKIUtility pki, Config config, ExporterMetadataCurator emc,
         CertificateSerialCurator csc, EventSink sink, I18n i18n,
@@ -137,6 +140,7 @@ public class Importer {
         this.productCurator = productCurator;
         this.rulesImporter = rulesImporter;
         this.ownerCurator = ownerCurator;
+        this.idCertCurator = idCertCurator;
         this.contentCurator = contentCurator;
         this.subCurator = subCurator;
         this.poolManager = pm;
@@ -500,7 +504,8 @@ public class Importer {
             }
         }
 
-        ConsumerImporter importer = new ConsumerImporter(ownerCurator, i18n);
+        ConsumerImporter importer = new ConsumerImporter(ownerCurator, idCertCurator,
+            i18n, csCurator);
         Reader reader = null;
         ConsumerDto consumer = null;
         try {

@@ -24,6 +24,10 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.model.CertificateSerial;
+import org.candlepin.model.CertificateSerialCurator;
+import org.candlepin.model.IdentityCertificate;
+import org.candlepin.model.IdentityCertificateCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.UpstreamConsumer;
@@ -49,13 +53,17 @@ public class ConsumerImporterTest {
     private ConsumerImporter importer;
     private ObjectMapper mapper;
     private OwnerCurator curator;
+    private CertificateSerialCurator serialCurator;
+    private IdentityCertificateCurator idCertCurator;
     private I18n i18n;
 
     @Before
     public void setUp() {
         curator = mock(OwnerCurator.class);
+        serialCurator = mock(CertificateSerialCurator.class);
+        idCertCurator = mock(IdentityCertificateCurator.class);
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        importer = new ConsumerImporter(curator, i18n);
+        importer = new ConsumerImporter(curator, idCertCurator, i18n, serialCurator);
         mapper = SyncUtils.getObjectMapper(new Config(new HashMap<String, String>()));
     }
 
@@ -102,7 +110,10 @@ public class ConsumerImporterTest {
         when(consumer.getUuid()).thenReturn("test-uuid");
         when(consumer.getOwner()).thenReturn(owner);
 
-        importer.store(owner, consumer, new ConflictOverrides(), null);
+        IdentityCertificate idCert = new IdentityCertificate();
+        idCert.setSerial(new CertificateSerial());
+
+        importer.store(owner, consumer, new ConflictOverrides(), idCert);
 
         // now verify that the owner has the upstream consumer set
         ArgumentCaptor<UpstreamConsumer> arg =
@@ -121,7 +132,10 @@ public class ConsumerImporterTest {
         when(consumer.getUuid()).thenReturn("test-uuid");
         when(consumer.getOwner()).thenReturn(owner);
 
-        importer.store(owner, consumer, new ConflictOverrides(), null);
+        IdentityCertificate idCert = new IdentityCertificate();
+        idCert.setSerial(new CertificateSerial());
+
+        importer.store(owner, consumer, new ConflictOverrides(), idCert);
 
         // now verify that the owner didn't change
         // arg.getValue() returns the Owner being stored
@@ -175,8 +189,11 @@ public class ConsumerImporterTest {
         when(consumer.getUuid()).thenReturn("test-uuid");
         when(consumer.getOwner()).thenReturn(owner);
 
+        IdentityCertificate idCert = new IdentityCertificate();
+        idCert.setSerial(new CertificateSerial());
+
         importer.store(owner, consumer,
-            new ConflictOverrides(Importer.Conflict.DISTRIBUTOR_CONFLICT), null);
+            new ConflictOverrides(Importer.Conflict.DISTRIBUTOR_CONFLICT), idCert);
 
         // now verify that the owner has the upstream consumer set
         ArgumentCaptor<UpstreamConsumer> arg =
