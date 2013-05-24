@@ -212,4 +212,26 @@ public class ConsumerImporterTest {
 
         importer.store(owner, consumer, new ConflictOverrides(), null);
     }
+
+    /*
+     * BZ#966860
+     */
+    @Test
+    public void importConsumerWithNullIdCertShouldNotFail() throws ImporterException {
+        Owner owner = mock(Owner.class);
+        ConsumerDto consumer = mock(ConsumerDto.class);
+        when(owner.getUpstreamUuid()).thenReturn("test-uuid");
+        when(consumer.getUuid()).thenReturn("test-uuid");
+        when(consumer.getOwner()).thenReturn(owner);
+
+        importer.store(owner, consumer, new ConflictOverrides(), null);
+
+        // now verify that the owner has the upstream consumer set
+        ArgumentCaptor<UpstreamConsumer> arg =
+            ArgumentCaptor.forClass(UpstreamConsumer.class);
+
+        verify(owner).setUpstreamConsumer(arg.capture());
+        assertEquals("test-uuid", arg.getValue().getUuid());
+        verify(curator).merge(owner);
+    }
 }
