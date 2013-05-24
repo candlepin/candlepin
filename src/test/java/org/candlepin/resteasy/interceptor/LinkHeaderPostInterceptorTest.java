@@ -159,6 +159,13 @@ public class LinkHeaderPostInterceptorTest {
     }
 
     @Test
+    public void testDoesNotAddAnythingWhenNoQueryParameters() {
+        UriBuilder bu = UriBuilder.fromUri("https://localhost:8443/candlepin/resource");
+        URI returned = interceptor.addUnchangingQueryParams(bu, null).build();
+        assertEquals(URI.create("https://localhost:8443/candlepin/resource"), returned);
+    }
+
+    @Test
     public void testBuildPageLink() {
         UriBuilder bu = UriBuilder.fromUri("https://localhost:8443/candlepin/resource");
         assertEquals("https://localhost:8443/candlepin/resource?page=5",

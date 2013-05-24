@@ -69,13 +69,26 @@ public class LinkHeaderPostInterceptor implements PostProcessInterceptor, Accept
     @SuppressWarnings("rawtypes")
     public void postProcess(ServerResponse response) {
         Page page = ResteasyProviderFactory.getContextData(Page.class);
+
+        if (page == null) {
+            log.warn("Method marked for pagination, but no page exists in the context.");
+            return;
+        }
+
+        // If we aren't paging, then no need for Link headers.
+        if (page.getPresentation() == null || !page.getPresentation().isPaging()) {
+            return;
+        }
+
         HttpServletRequest request = ResteasyProviderFactory.getContextData(
             HttpServletRequest.class);
-
         UriBuilder builder = buildBaseUrl(request);
+        // If builder is null, we couldn't read the request URI, so stop.
+        if (builder == null) {
+            return;
+        }
 
-        MultivaluedMap<String, String>  params = null;
-
+        MultivaluedMap<String, String> params = null;
         try {
             params = extractParameters(request.getQueryString());
         }
@@ -84,28 +97,24 @@ public class LinkHeaderPostInterceptor implements PostProcessInterceptor, Accept
             return;
         }
 
-        // If builder is null, we couldn't read the request URI, so stop.
-        // If we aren't paging, then no need for Link headers.
-        if (builder != null && page.getPresentation().isPaging()) {
-            builder = addUnchangingQueryParams(builder, params);
-            //TODO add missing parameters like the default limit if no limit is given.
+        builder = addUnchangingQueryParams(builder, params);
+        //TODO add missing parameters like the default limit if no limit is given.
 
-            LinkHeader header = new LinkHeader();
+        LinkHeader header = new LinkHeader();
 
-            Integer next = getNextPage(page);
-            if (next != null) {
-                header.addLink(null, "next", buildPageLink(builder, next), null);
-            }
-
-            Integer prev = getPrevPage(page);
-            if (prev != null) {
-                header.addLink(null, "prev", buildPageLink(builder, prev), null);
-            }
-
-            header.addLink(null, "first", buildPageLink(builder, 1), null);
-            header.addLink(null, "last", buildPageLink(builder, getLastPage(page)), null);
-            response.getMetadata().add(LINK_HEADER, header.toString());
+        Integer next = getNextPage(page);
+        if (next != null) {
+            header.addLink(null, "next", buildPageLink(builder, next), null);
         }
+
+        Integer prev = getPrevPage(page);
+        if (prev != null) {
+            header.addLink(null, "prev", buildPageLink(builder, prev), null);
+        }
+
+        header.addLink(null, "first", buildPageLink(builder, 1), null);
+        header.addLink(null, "last", buildPageLink(builder, getLastPage(page)), null);
+        response.getMetadata().add(LINK_HEADER, header.toString());
     }
 
     protected String buildPageLink(UriBuilder b, int value) {
@@ -211,14 +220,15 @@ public class LinkHeaderPostInterceptor implements PostProcessInterceptor, Accept
         MultivaluedMap<String, String> params) {
         // This will take care of adding back any order, per_page, or sort_by
         // parameters provided too.
-        for (Entry<String, List<String>> e : params.entrySet()) {
-            if (!e.getKey().equals(DataPresentation.PAGE_PARAM)) {
-                for (String v : e.getValue()) {
-                    builder = builder.queryParam(e.getKey(), v);
+        if (params != null) {
+            for (Entry<String, List<String>> e : params.entrySet()) {
+                if (!e.getKey().equals(DataPresentation.PAGE_PARAM)) {
+                    for (String v : e.getValue()) {
+                        builder = builder.queryParam(e.getKey(), v);
+                    }
                 }
             }
         }
-
         return builder;
     }
 }
