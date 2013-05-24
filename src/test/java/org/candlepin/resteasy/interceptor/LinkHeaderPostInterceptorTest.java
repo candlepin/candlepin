@@ -18,6 +18,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.config.Config;
@@ -25,7 +27,9 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.paging.DataPresentation;
 import org.candlepin.paging.Page;
 
+import org.jboss.resteasy.core.ServerResponse;
 import org.jboss.resteasy.specimpl.MultivaluedMapImpl;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -43,6 +47,10 @@ public class LinkHeaderPostInterceptorTest {
 
     @Mock private HttpServletRequest request;
     @Mock private Config config;
+    @Mock private ServerResponse response;
+    @Mock private Page page;
+    @Mock private DataPresentation presentation;
+
     private LinkHeaderPostInterceptor interceptor;
 
     /* We do not want to load candlepin.conf off the filesystem which is what
@@ -269,5 +277,61 @@ public class LinkHeaderPostInterceptorTest {
 
         assertNull(interceptor.getPrevPage(p));
         assertNull(interceptor.getNextPage(p));
+        assertEquals(new Integer(1), interceptor.getLastPage(p));
+    }
+
+    @Test
+    public void testPostProcessWithNullPage() {
+        // Should just not throw an exception
+        interceptor.postProcess(response);
+    }
+
+    @Test
+    public void testPostProcessWithNullPresentation() {
+        ResteasyProviderFactory.pushContext(Page.class, page);
+        when(page.getPresentation()).thenReturn(null);
+        interceptor.postProcess(response);
+        verify(page).getPresentation();
+    }
+
+    @Test
+    public void testPostProcessWithNonPagingPresentation() {
+        when(page.getPresentation()).thenReturn(presentation);
+        when(presentation.isPaging()).thenReturn(false);
+        ResteasyProviderFactory.pushContext(Page.class, page);
+        interceptor.postProcess(response);
+        verify(page, times(2)).getPresentation();
+        verify(presentation).isPaging();
+    }
+
+    @Test
+    public void testPostProcessWithPaging() {
+        when(page.getPresentation()).thenReturn(presentation);
+        when(page.getMaxRecords()).thenReturn(15);
+        when(presentation.isPaging()).thenReturn(true);
+        when(presentation.getPage()).thenReturn(2);
+        when(presentation.getPerPage()).thenReturn(5);
+
+        // We're going to take the quick path through buildBaseUrl.
+        when(config.containsKey(eq(ConfigProperties.PREFIX_APIURL))).thenReturn(false);
+        when(request.getRequestURL()).thenReturn(
+            new StringBuffer("https://example.com/candlepin"));
+        when(request.getQueryString()).thenReturn("order=asc&page=1&per_page=10");
+
+        MultivaluedMap<String, Object> map = new MultivaluedMapImpl<String, Object>();
+        when(response.getMetadata()).thenReturn(map);
+
+        ResteasyProviderFactory.pushContext(Page.class, page);
+        ResteasyProviderFactory.pushContext(HttpServletRequest.class, request);
+
+        interceptor.postProcess(response);
+        String header = (String) map.getFirst(LinkHeaderPostInterceptor.LINK_HEADER);
+
+        // It would be a bit much to parse the entire header, so let's just make
+        // sure that we have first, last, next, and prev links.
+        assertTrue(header.contains("rel=\"first\""));
+        assertTrue(header.contains("rel=\"last\""));
+        assertTrue(header.contains("rel=\"next\""));
+        assertTrue(header.contains("rel=\"prev\""));
     }
 }

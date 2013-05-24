@@ -51,7 +51,7 @@ import javax.ws.rs.ext.Provider;
 @Precedence("HEADER_DECORATOR")
 public class LinkHeaderPostInterceptor implements PostProcessInterceptor, AcceptedByMethod {
     private static Logger log = Logger.getLogger(LinkHeaderPostInterceptor.class);
-    private static final String LINK_HEADER = "Link";
+    public static final String LINK_HEADER = "Link";
 
     private Config config;
 
