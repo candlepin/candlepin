@@ -25,7 +25,6 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
-import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.paging.DataPresentation;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.Paginate;
