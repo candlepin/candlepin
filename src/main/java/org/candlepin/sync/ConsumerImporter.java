@@ -92,22 +92,25 @@ public class ConsumerImporter {
         }
 
         /*
-         * WARNING: Strange quirk here, we create a certificate serial object here which
-         * does not match the actual serial of the identity certificate. Presumably this is
-         * to prevent potential conflicts with a serial that came from somewhere else.
-         * This is consistent with importing entitlement certs (as subscription certs).
+         * WARNING: Strange quirk here, we create a certificate serial object
+         * here which does not match the actual serial of the identity
+         * certificate. Presumably this is to prevent potential conflicts with
+         * a serial that came from somewhere else. This is consistent with
+         * importing entitlement certs (as subscription certs).
          */
-        CertificateSerial cs = new CertificateSerial();
-        cs.setCollected(idcert.getSerial().isCollected());
-        cs.setExpiration(idcert.getSerial().getExpiration());
-        cs.setRevoked(idcert.getSerial().isRevoked());
-        cs.setUpdated(idcert.getSerial().getUpdated());
-        cs.setCreated(idcert.getSerial().getCreated());
-        serialCurator.create(cs);
+        if (idcert != null) {
+            CertificateSerial cs = new CertificateSerial();
+            cs.setCollected(idcert.getSerial().isCollected());
+            cs.setExpiration(idcert.getSerial().getExpiration());
+            cs.setRevoked(idcert.getSerial().isRevoked());
+            cs.setUpdated(idcert.getSerial().getUpdated());
+            cs.setCreated(idcert.getSerial().getCreated());
+            serialCurator.create(cs);
 
-        idcert.setId(null);
-        idcert.setSerial(cs);
-        idCertCurator.create(idcert);
+            idcert.setId(null);
+            idcert.setSerial(cs);
+            idCertCurator.create(idcert);
+        }
 
         // create an UpstreamConsumer from the imported ConsumerDto
         UpstreamConsumer uc = new UpstreamConsumer(consumer.getName(),
