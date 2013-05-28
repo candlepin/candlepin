@@ -16,6 +16,7 @@ package org.candlepin.resource.util;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
@@ -410,6 +411,24 @@ public class InstalledProductStatusCalculatorTest {
         DateRange validRange = calculator.getValidDateRange(p);
         assertEquals(range3.getStartDate(), validRange.getStartDate());
         assertEquals(range2.getEndDate(), validRange.getEndDate());
+    }
+
+    @Test
+    public void cannotStackFutureSubs() {
+        Consumer c = mockConsumer(PRODUCT_1);
+        Calendar cal = Calendar.getInstance();
+        Date now = cal.getTime();
+        DateRange range1 = rangeRelativeToDate(now, -4, 4);
+        DateRange range2 = rangeRelativeToDate(range1.getEndDate(), 5, 6);
+        c.addEntitlement(mockStackedEntitlement(c, range1, STACK_ID_1, PRODUCT_1, 1,
+            PRODUCT_1));
+        c.addEntitlement(mockStackedEntitlement(c, range2, STACK_ID_1, PRODUCT_1, 1,
+            PRODUCT_1));
+        List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
+        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+        ComplianceStatus status = compliance.getStatus(c, now);
+        assertEquals("partial", status.getStatus());
+        assertTrue(status.getPartialStacks().containsKey(STACK_ID_1));
     }
 
     @Test
