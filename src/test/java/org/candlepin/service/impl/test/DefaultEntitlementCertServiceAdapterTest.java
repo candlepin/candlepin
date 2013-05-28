@@ -335,39 +335,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
         assertTrue(encodedContent.containsKey(content.getLabel()));
     }
 
-    @Test
-    public void testContentFilterByArch() throws CertificateSizeException {
-        // product with no compatible content, but marked as 'ALL' arch
-        Product wrongArchProduct = new Product("12345", "a product",
-            "variant", "version", "ALL", "SVC");
-
-        // no x86_64, ie ARCH_LABEL
-        String[] wrongArchStrings = {"s390x", "s390", "ppc64", "ia64"};
-        List<String> wrongArches = new ArrayList<String>();
-        for (String wrongArchString : wrongArchStrings) {
-            wrongArches.add(wrongArchString);
-        }
-        Content wrongArchContent = createContent("wrong-arch-content",
-            CONTENT_ID, "wrong-arch-content-label", CONTENT_TYPE,
-            CONTENT_VENDOR, CONTENT_URL, CONTENT_GPG_URL, wrongArches);
-
-        wrongArchProduct.setContent(Collections.singleton(wrongArchContent));
-        when(entitlement.getConsumer().getFact("uname.machine")).thenReturn("x86_64");
-        when(this.archCurator.lookupByLabel(any(String.class))).thenReturn(
-            testArch);
-
-        Set<X509ExtensionWrapper> contentExtensions = extensionUtil
-            .contentExtensions(wrongArchProduct.getProductContent(), null,
-                new HashMap<String, EnvironmentContent>(), entitlement.getConsumer());
-        Map<String, X509ExtensionWrapper> encodedContent = getEncodedContent(
-            contentExtensions);
-        // valid?
-        assertFalse(isEncodedContentValid(encodedContent));
-        assertFalse(encodedContent.containsKey(CONTENT_ID.toString()));
-        assertTrue(encodedContent.isEmpty());
-        // assert encoodedContent is empty
-    }
-
 
     @Test
     public void testContentRequiredTagsExtention()  throws CertificateSizeException {
