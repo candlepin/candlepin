@@ -29,32 +29,41 @@ describe 'Entitlement Certificate V3' do
     @product = create_product(nil, nil, :attributes =>
 				{:version => '6.4',
 				 :arch => 'i386, x86_64',
-                                 :sockets => 4,
-                                 :cores => 8,
-                                 :ram => 16,
-                                 :warning_period => 15,
-                                 :management_enabled => true,
-                                 :stacking_id => '8888',
-                                 :virt_only => 'false',
-                                 :support_level => 'standard',
-                                 :support_type => 'excellent',})
+                 :sockets => 4,
+                 :cores => 8,
+                 :ram => 16,
+                 :warning_period => 15,
+                 :management_enabled => true,
+                 :stacking_id => '8888',
+                 :virt_only => 'false',
+                 :support_level => 'standard',
+                 :support_type => 'excellent',})
 
     @product_30 = create_product(nil, nil, :attributes =>
 				{:version => '6.4',
 				 :arch => 'i386, x86_64',
-                                 :sockets => 4,
-                                 :warning_period => 15,
-                                 :management_enabled => true,
-                                 :virt_only => 'false',
-                                 :support_level => 'standard',
-                                 :support_type => 'excellent',})
+                 :sockets => 4,
+                 :warning_period => 15,
+                 :management_enabled => true,
+                 :virt_only => 'false',
+                 :support_level => 'standard',
+                 :support_type => 'excellent',})
 
     @content = create_content({:gpg_url => 'gpg_url',
                                :content_url => '/content/dist/rhel/$releasever/$basearch/os',
                                :metadata_expire => 6400,
                                :required_tags => 'TAG1,TAG2',})
 
+    @arch_content = create_content({:gpg_url => 'gpg_url',
+                                    :content_url => '/content/dist/rhel/$releasever/$basearch/os',
+                                    :metadata_expire => 6400,
+                                    :arches => ['1', '2'],
+                                    :required_tags => 'TAG1,TAG2',})
+
+
     @cp.add_content_to_product(@product.id, @content.id, false)
+    @cp.add_content_to_product(@product.id, @arch_content.id, false)
+
 
     @subscription = @cp.create_subscription(@owner['key'], @product.id, 10, [], '12345', '6789', 'order1')
     @subscription_30 = @cp.create_subscription(@owner['key'], @product_30.id, 10, [], '123456', '67890', 'order2')
@@ -112,6 +121,8 @@ describe 'Entitlement Certificate V3' do
     json_body['order']['account'].should == '6789'
     json_body['products'][0]['id'].should == @product.id
     json_body['products'][0]['name'].should == @product.name
+    puts "arches", json_body['products'][0]['architectures']
+    puts "content.arches", json_body['products'][0]['content'][0]['arches']
     json_body['products'][0]['version'].should == '6.4'
     json_body['products'][0]['architectures'].size.should == 2
     json_body['products'][0]['content'][0]['id'].should == @content.id
@@ -137,7 +148,7 @@ describe 'Entitlement Certificate V3' do
 
     json_body = extract_payload(entitlement.certificates[0]['cert'])
 
-    json_body['products'][0]['content'].size.should == 3
+    json_body['products'][0]['content'].size.should == 4
 
     value = extension_from_cert(entitlement.certificates[0]['cert'], "1.3.6.1.4.1.2312.9.7")
 
@@ -160,7 +171,7 @@ describe 'Entitlement Certificate V3' do
 
     json_body = extract_payload(entitlement.certificates[0]['cert'])
 
-    json_body['products'][0]['content'].size.should == 101
+    json_body['products'][0]['content'].size.should == 102
 
     value = extension_from_cert(entitlement.certificates[0]['cert'], "1.3.6.1.4.1.2312.9.7")
 
