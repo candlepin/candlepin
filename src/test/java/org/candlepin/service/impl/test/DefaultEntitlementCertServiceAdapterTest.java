@@ -809,7 +809,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         setupEntitlements(ARCH_LABEL, testArch, "1.0");
 
         Set<X509ExtensionWrapper> extensions =
-            certServiceAdapter.prepareV1Extensions(products, entitlement, "prefix",
+            certServiceAdapter.prepareV1Extensions(products, entitlement, "",
                 null, subscription);
         Map<String, X509ExtensionWrapper> map = getEncodedContent(extensions);
 
@@ -842,7 +842,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         setupEntitlements(ARCH_LABEL, testArch, "1.0");
 
         Set<X509ExtensionWrapper> extensions =
-            certServiceAdapter.prepareV1Extensions(products, entitlement, "prefix",
+            certServiceAdapter.prepareV1Extensions(products, entitlement, "",
                 null, subscription);
         Map<String, X509ExtensionWrapper> map = getEncodedContent(extensions);
 
