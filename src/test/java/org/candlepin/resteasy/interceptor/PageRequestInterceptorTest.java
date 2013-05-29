@@ -66,8 +66,8 @@ public class PageRequestInterceptorTest {
         interceptor.preProcess(req, rmethod);
 
         PageRequest p = ResteasyProviderFactory.getContextData(PageRequest.class);
-        assertEquals(new Integer(10), p.getPerPage());
-        assertEquals(new Integer(4), p.getPage());
+        assertEquals(Integer.valueOf(10), p.getPerPage());
+        assertEquals(Integer.valueOf(4), p.getPage());
         assertEquals(PageRequest.DEFAULT_ORDER, p.getOrder());
         assertNull(p.getSortBy());
     }
@@ -81,7 +81,7 @@ public class PageRequestInterceptorTest {
 
         PageRequest p = ResteasyProviderFactory.getContextData(PageRequest.class);
         assertEquals(PageRequest.DEFAULT_PER_PAGE, p.getPerPage());
-        assertEquals(new Integer(5), p.getPage());
+        assertEquals(Integer.valueOf(5), p.getPage());
         assertEquals(PageRequest.DEFAULT_ORDER, p.getOrder());
         assertNull(p.getSortBy());
     }
@@ -94,7 +94,7 @@ public class PageRequestInterceptorTest {
         interceptor.preProcess(req, rmethod);
 
         PageRequest p = ResteasyProviderFactory.getContextData(PageRequest.class);
-        assertEquals(new Integer(10), p.getPerPage());
+        assertEquals(Integer.valueOf(10), p.getPerPage());
         assertEquals(PageRequest.DEFAULT_PAGE, p.getPage());
         assertEquals(PageRequest.DEFAULT_ORDER, p.getOrder());
         assertNull(p.getSortBy());

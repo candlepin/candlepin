@@ -191,7 +191,7 @@ public class LinkHeaderPostInterceptorTest {
         pr.setPerPage(10);
         pr.setPage(3);
 
-        assertEquals(new Integer(2), interceptor.getPrevPage(p));
+        assertEquals(Integer.valueOf(2), interceptor.getPrevPage(p));
     }
 
     @Test
@@ -219,7 +219,7 @@ public class LinkHeaderPostInterceptorTest {
         pr.setPerPage(10);
         pr.setPage(3);
 
-        assertEquals(new Integer(4), interceptor.getNextPage(p));
+        assertEquals(Integer.valueOf(4), interceptor.getNextPage(p));
     }
 
     @Test
@@ -247,7 +247,7 @@ public class LinkHeaderPostInterceptorTest {
         pr.setPerPage(10);
         pr.setPage(1);
 
-        assertEquals(new Integer(6), interceptor.getLastPage(p));
+        assertEquals(Integer.valueOf(6), interceptor.getLastPage(p));
     }
 
     @Test
@@ -261,7 +261,7 @@ public class LinkHeaderPostInterceptorTest {
         pr.setPerPage(10);
         pr.setPage(1);
 
-        assertEquals(new Integer(1), interceptor.getLastPage(p));
+        assertEquals(Integer.valueOf(1), interceptor.getLastPage(p));
     }
 
     @Test
@@ -277,7 +277,7 @@ public class LinkHeaderPostInterceptorTest {
 
         assertNull(interceptor.getPrevPage(p));
         assertNull(interceptor.getNextPage(p));
-        assertEquals(new Integer(1), interceptor.getLastPage(p));
+        assertEquals(Integer.valueOf(1), interceptor.getLastPage(p));
     }
 
     @Test

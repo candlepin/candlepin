@@ -62,7 +62,7 @@ public class CuratorPaginationTest extends DatabaseTestFixture {
         pageRequest.setPerPage(2);
 
         Page<List<Owner>> p = ownerCurator.listAll(pageRequest);
-        assertEquals(new Integer(10), p.getMaxRecords());
+        assertEquals(Integer.valueOf(10), p.getMaxRecords());
 
         List<Owner> ownerList = p.getPageData();
         assertEquals(2, ownerList.size());
@@ -94,7 +94,7 @@ public class CuratorPaginationTest extends DatabaseTestFixture {
             add(Restrictions.gt("key", "5"));
 
         Page<List<Owner>> p = ownerCurator.listByCriteria(criteria, pageRequest);
-        assertEquals(new Integer(4), p.getMaxRecords());
+        assertEquals(Integer.valueOf(4), p.getMaxRecords());
 
         List<Owner> ownerList = p.getPageData();
         assertEquals(2, ownerList.size());
@@ -122,7 +122,7 @@ public class CuratorPaginationTest extends DatabaseTestFixture {
         assertFalse(pageRequest.isPaging());
 
         Page<List<Owner>> p = ownerCurator.listAll(pageRequest);
-        assertEquals(new Integer(10), p.getMaxRecords());
+        assertEquals(Integer.valueOf(10), p.getMaxRecords());
 
         List<Owner> ownerList = p.getPageData();
         assertEquals(10, ownerList.size());
