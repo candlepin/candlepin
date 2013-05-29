@@ -119,32 +119,28 @@ public class Arch extends AbstractHibernateObject {
 
         // handle "ALL" arch, sigh
         if (inLabel.equals("ALL")) {
-            return true;
+            compatible = true;
         }
-
         // Exact arch match
-        if (ourLabel.equals(inLabel)) {
-            return true;
+        else if (ourLabel.equals(inLabel)) {
+            compatible = true;
         }
-
         // x86_64 can use content for i386 etc
-        if (ourLabel.equals("x86_64")) {
+        else if (ourLabel.equals("x86_64")) {
             if (x86Labels.contains(inLabel)) {
-                return true;
+                compatible = true;
             }
         }
-
         // i686 can run all x86 arches
-        if (ourLabel.equals("i686")) {
+        else if (ourLabel.equals("i686")) {
             if (x86Labels.contains(inLabel)) {
-                return true;
+                compatible = true;
             }
         }
-
         // ppc64 can run ppc. Mostly...
-        if (ourLabel.equals("ppc64")) {
+        else if (ourLabel.equals("ppc64")) {
             if (ppcLabels.contains(inLabel)) {
-                return true;
+                compatible = true;
             }
         }
 
@@ -162,9 +158,6 @@ public class Arch extends AbstractHibernateObject {
         // so included, but more than likely will just be
         // some map look ups from a constant map.
 
-        // Use consumerArch.usesContentFor(contentArch), so
-        // i686Arch.usesContentFor(i386Arch) would return true, but
-        // i386Arch.usesContentFor(i686Arch) would return false.
         return compatible;
     }
 
