@@ -747,7 +747,9 @@ public class ConsumerResourceUpdateTest {
         assertEquals(3, c.getCapabilities().size());
 
         // no capability list in update object does not change existing
+        // also shows that setCapabilites can accept null and not error
         Consumer updated = new Consumer();
+        updated.setCapabilities(null);
         resource.updateConsumer(c.getUuid(), updated);
         assertEquals(3, c.getCapabilities().size());
 
