@@ -785,7 +785,7 @@ var CoverageCalculator = {
             // Figure out the max required from the pool to cover
             // the consumers fact.
             var amountRequiredFromPool = 0;
-            var coveredCounter = currentCovered + (amountRequiredFromPool * prodAttrValue);
+            var coveredCounter = currentCovered;
             while (CoverageCalculator
                    .adjustCoverage(attr, consumer, coveredCounter,
                                    stackTracker.instanceMultiplier)
@@ -2029,7 +2029,7 @@ var Compliance = {
                 }
                 // Otherwise check the stack and add appropriately:
                 else {
-                    var stackCoverage = Compliance.getStackCoverage(consumer, stack_id, entitlements);
+                    var stackCoverage = Compliance.getStackCoverage(consumer, stack_id, entitlementsOnDate);
                     if(!stackCoverage.covered) {
                         log.debug("    stack is non-compliant");
                         partially_stacked = true;
