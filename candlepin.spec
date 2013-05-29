@@ -25,7 +25,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.8.9
+Version: 0.8.10
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -345,6 +345,14 @@ fi
 
 
 %changelog
+* Wed May 29 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.10-1
+- Arch-based content sets (alikins@redhat.com)
+- Added pagination support (awood@redhat.com)
+- Handle specified null list for capabilities (wpoteat@redhat.com)
+- Instanced based spec tests (dgoodwin@redhat.com)
+- 966069: only stack valid ents (ckozak@redhat.com)
+- 959967: calculate installed prods correctly (jesusr@redhat.com)
+
 * Fri May 24 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.9-1
 - 966860: handle older manifests with no id cert (jesusr@redhat.com)
 - remove unused variables (jesusr@redhat.com)
