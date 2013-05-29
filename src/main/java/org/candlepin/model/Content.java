@@ -269,6 +269,7 @@ public class Content extends AbstractHibernateObject {
     public Set<Arch> getArches() {
         return arches;
     }
+
     /**
      * @param from Content object to copy properties from.
      * @return current Content object with updated properites
