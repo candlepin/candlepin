@@ -85,7 +85,7 @@ import org.candlepin.resource.SubscriptionResource;
 import org.candlepin.resource.UserResource;
 import org.candlepin.resteasy.JsonProvider;
 import org.candlepin.resteasy.interceptor.AuthInterceptor;
-import org.candlepin.resteasy.interceptor.DataPresentationInterceptor;
+import org.candlepin.resteasy.interceptor.PageRequestInterceptor;
 import org.candlepin.resteasy.interceptor.LinkHeaderPostInterceptor;
 import org.candlepin.resteasy.interceptor.PinsetterAsyncInterceptor;
 import org.candlepin.resteasy.interceptor.VersionPostInterceptor;
@@ -191,7 +191,7 @@ public class CandlepinModule extends AbstractModule {
 
         bind(I18n.class).toProvider(I18nProvider.class);
         bind(AuthInterceptor.class);
-        bind(DataPresentationInterceptor.class);
+        bind(PageRequestInterceptor.class);
         bind(PinsetterAsyncInterceptor.class);
         bind(VersionPostInterceptor.class);
         bind(LinkHeaderPostInterceptor.class);

@@ -25,7 +25,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
-import org.candlepin.paging.DataPresentation;
+import org.candlepin.paging.PageRequest;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.Paginate;
 import org.candlepin.pinsetter.tasks.RegenProductEntitlementCertsJob;
@@ -129,7 +129,7 @@ public class EntitlementResource {
     @Paginate
     public List<Entitlement> listAllForConsumer(
         @QueryParam("consumer") String consumerUuid,
-        @Context DataPresentation presentation) {
+        @Context PageRequest pageRequest) {
 
         Page<List<Entitlement>> p;
         if (consumerUuid != null) {
@@ -140,10 +140,10 @@ public class EntitlementResource {
                     i18n.tr("No such consumer: {0}", consumerUuid));
             }
 
-            p = entitlementCurator.listByConsumer(consumer, presentation);
+            p = entitlementCurator.listByConsumer(consumer, pageRequest);
         }
         else {
-            p = entitlementCurator.listAll(presentation);
+            p = entitlementCurator.listAll(pageRequest);
         }
 
         // Store the page for the LinkHeaderPostInterceptor

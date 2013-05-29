@@ -24,7 +24,7 @@ import java.util.Collection;
 public class Page<T extends Collection<?>> {
     private T pageData;
     private Integer maxRecords;
-    private DataPresentation presentation;
+    private PageRequest pageRequest;
 
     public T getPageData() {
         return pageData;
@@ -42,11 +42,11 @@ public class Page<T extends Collection<?>> {
         this.maxRecords = maxRecords;
     }
 
-    public DataPresentation getPresentation() {
-        return presentation;
+    public PageRequest getPageRequest() {
+        return pageRequest;
     }
 
-    public void setPresentation(DataPresentation presentation) {
-        this.presentation = presentation;
+    public void setPageRequest(PageRequest pageRequest) {
+        this.pageRequest = pageRequest;
     }
 }

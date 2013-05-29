@@ -15,7 +15,7 @@
 package org.candlepin.model;
 
 import org.candlepin.auth.interceptor.EnforceAccessControl;
-import org.candlepin.paging.DataPresentation;
+import org.candlepin.paging.PageRequest;
 import org.candlepin.paging.Page;
 
 import com.google.inject.Inject;
@@ -98,16 +98,16 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     @SuppressWarnings("unchecked")
     @Transactional
     @EnforceAccessControl
-    public Page<List<E>> listAll(DataPresentation presentation) {
+    public Page<List<E>> listAll(PageRequest pageRequest) {
         Page<List<E>> page = new Page<List<E>>();
 
-        if (presentation != null) {
+        if (pageRequest != null) {
             Criteria count = currentSession().createCriteria(entityType);
             page.setMaxRecords(findRowCount(count));
 
             Criteria c = currentSession().createCriteria(entityType);
-            page.setPageData(loadPageData(c, presentation));
-            page.setPresentation(presentation);
+            page.setPageData(loadPageData(c, pageRequest));
+            page.setPageRequest(pageRequest);
         }
         else {
             page.setPageData(listAll());
@@ -117,27 +117,25 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     }
 
     @SuppressWarnings("unchecked")
-    private List<E> loadPageData(Criteria c, DataPresentation presentation) {
-        c.addOrder(createPagingOrder(presentation));
-        if (presentation.isPaging()) {
-            c.setFirstResult((presentation.getPage() - 1) * presentation.getPerPage());
-            c.setMaxResults(presentation.getPerPage());
+    private List<E> loadPageData(Criteria c, PageRequest pageRequest) {
+        c.addOrder(createPagingOrder(pageRequest));
+        if (pageRequest.isPaging()) {
+            c.setFirstResult((pageRequest.getPage() - 1) * pageRequest.getPerPage());
+            c.setMaxResults(pageRequest.getPerPage());
         }
         return c.list();
     }
 
-    private Order createPagingOrder(DataPresentation p) {
+    private Order createPagingOrder(PageRequest p) {
         String sortBy = (p.getSortBy() == null) ?
             AbstractHibernateObject.DEFAULT_SORT_FIELD : p.getSortBy();
-        DataPresentation.Order order = (p.getOrder() == null) ?
-            DataPresentation.DEFAULT_ORDER : p.getOrder();
+        PageRequest.Order order = (p.getOrder() == null) ?
+            PageRequest.DEFAULT_ORDER : p.getOrder();
 
         switch (order) {
             case ASCENDING:
                 return Order.asc(sortBy);
-            case DESCENDING:
-                return Order.desc(sortBy);
-            // Quiet checkstyle.
+            //DESCENDING
             default:
                 return Order.desc(sortBy);
         }
@@ -159,10 +157,10 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     @Transactional
     @EnforceAccessControl
     public Page<List<E>> listByCriteria(DetachedCriteria query,
-        DataPresentation presentation) {
+        PageRequest pageRequest) {
         Page<List<E>> page = new Page<List<E>>();
 
-        if (presentation != null) {
+        if (pageRequest != null) {
             // see https://forum.hibernate.org/viewtopic.php?t=974802
             Criteria c = query.getExecutableCriteria(currentSession());
 
@@ -178,8 +176,8 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
             c.setProjection(origProjection);
             c.setResultTransformer(origRt);
 
-            page.setPageData(loadPageData(c, presentation));
-            page.setPresentation(presentation);
+            page.setPageData(loadPageData(c, pageRequest));
+            page.setPageRequest(pageRequest);
         }
         else {
             page.setPageData(listByCriteria(query));

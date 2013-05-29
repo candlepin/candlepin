@@ -14,7 +14,7 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.paging.DataPresentation;
+import org.candlepin.paging.PageRequest;
 import org.candlepin.paging.Page;
 import org.candlepin.service.ProductServiceAdapter;
 
@@ -72,10 +72,10 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     }
 
     public Page<List<Entitlement>> listByConsumer(Consumer consumer,
-        DataPresentation presentation) {
+        PageRequest pageRequest) {
         DetachedCriteria query = DetachedCriteria.forClass(Entitlement.class)
             .add(Restrictions.eq("consumer", consumer));
-        return listByCriteria(query, presentation);
+        return listByCriteria(query, pageRequest);
     }
 
     public List<Entitlement> listByConsumer(Consumer consumer) {
