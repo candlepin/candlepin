@@ -15,9 +15,9 @@
 package org.candlepin.resteasy.interceptor;
 
 import org.candlepin.exceptions.BadRequestException;
-import org.candlepin.paging.DataPresentation;
+import org.candlepin.paging.PageRequest;
 import org.candlepin.paging.Paginate;
-import org.candlepin.paging.DataPresentation.Order;
+import org.candlepin.paging.PageRequest.Order;
 
 import com.google.inject.Inject;
 
@@ -42,13 +42,13 @@ import javax.ws.rs.ext.Provider;
  */
 @Provider
 @ServerInterceptor
-public class DataPresentationInterceptor implements PreProcessInterceptor,
+public class PageRequestInterceptor implements PreProcessInterceptor,
     AcceptedByMethod {
 
     private I18n i18n;
 
     @Inject
-    public DataPresentationInterceptor(I18n i18n) {
+    public PageRequestInterceptor(I18n i18n) {
         super();
         this.i18n = i18n;
     }
@@ -61,20 +61,20 @@ public class DataPresentationInterceptor implements PreProcessInterceptor,
     @Override
     public ServerResponse preProcess(HttpRequest request, ResourceMethod method)
         throws Failure, WebApplicationException {
-        DataPresentation p = null;
+        PageRequest p = null;
 
         MultivaluedMap<String, String> params = request.getUri().getQueryParameters();
 
-        String page = params.getFirst(DataPresentation.PAGE_PARAM);
-        String perPage = params.getFirst(DataPresentation.PER_PAGE_PARAM);
-        String order = params.getFirst(DataPresentation.ORDER_PARAM);
-        String sortBy = params.getFirst(DataPresentation.SORT_BY_PARAM);
+        String page = params.getFirst(PageRequest.PAGE_PARAM);
+        String perPage = params.getFirst(PageRequest.PER_PAGE_PARAM);
+        String order = params.getFirst(PageRequest.ORDER_PARAM);
+        String sortBy = params.getFirst(PageRequest.SORT_BY_PARAM);
 
         if (page != null || perPage != null || order != null || sortBy != null) {
-            p = new DataPresentation();
+            p = new PageRequest();
 
             if (order == null) {
-                p.setOrder(DataPresentation.DEFAULT_ORDER);
+                p.setOrder(PageRequest.DEFAULT_ORDER);
             }
             else {
                 p.setOrder(readOrder(order));
@@ -86,12 +86,12 @@ public class DataPresentationInterceptor implements PreProcessInterceptor,
 
             try {
                 if (page == null && perPage != null) {
-                    p.setPage(DataPresentation.DEFAULT_PAGE);
+                    p.setPage(PageRequest.DEFAULT_PAGE);
                     p.setPerPage(readInteger(perPage));
                 }
                 else if (page != null && perPage == null) {
                     p.setPage(readInteger(page));
-                    p.setPerPage(DataPresentation.DEFAULT_PER_PAGE);
+                    p.setPerPage(PageRequest.DEFAULT_PER_PAGE);
                 }
                 else {
                     p.setPage(readInteger(page));
@@ -104,7 +104,7 @@ public class DataPresentationInterceptor implements PreProcessInterceptor,
             }
         }
 
-        ResteasyProviderFactory.pushContext(DataPresentation.class, p);
+        ResteasyProviderFactory.pushContext(PageRequest.class, p);
 
         return null;
     }

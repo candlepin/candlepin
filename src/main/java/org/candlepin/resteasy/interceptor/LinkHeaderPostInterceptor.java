@@ -16,7 +16,7 @@ package org.candlepin.resteasy.interceptor;
 
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.paging.DataPresentation;
+import org.candlepin.paging.PageRequest;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.Paginate;
 
@@ -76,7 +76,7 @@ public class LinkHeaderPostInterceptor implements PostProcessInterceptor, Accept
         }
 
         // If we aren't paging, then no need for Link headers.
-        if (page.getPresentation() == null || !page.getPresentation().isPaging()) {
+        if (page.getPageRequest() == null || !page.getPageRequest().isPaging()) {
             return;
         }
 
@@ -120,23 +120,23 @@ public class LinkHeaderPostInterceptor implements PostProcessInterceptor, Accept
     protected String buildPageLink(UriBuilder b, int value) {
         // Copy so we can use the same builder for building each link.
         UriBuilder builder = b.clone();
-        builder.queryParam(DataPresentation.PAGE_PARAM, String.valueOf(value));
+        builder.queryParam(PageRequest.PAGE_PARAM, String.valueOf(value));
         return builder.build().toString();
     }
 
     protected Integer getLastPage(Page page) {
-        DataPresentation presentation = page.getPresentation();
-        return (page.getMaxRecords() / presentation.getPerPage()) + 1;
+        PageRequest pageRequest = page.getPageRequest();
+        return (page.getMaxRecords() / pageRequest.getPerPage()) + 1;
     }
 
     protected Integer getPrevPage(Page page) {
-        Integer prev = page.getPresentation().getPage() - 1;
+        Integer prev = page.getPageRequest().getPage() - 1;
         // if the calculated page is out of bounds, return null
         return (prev < 1 || prev >= getLastPage(page)) ? null : prev;
     }
 
     protected Integer getNextPage(Page page) {
-        Integer next = page.getPresentation().getPage() + 1;
+        Integer next = page.getPageRequest().getPage() + 1;
         return (next > getLastPage(page)) ? null : next;
     }
 
@@ -222,7 +222,7 @@ public class LinkHeaderPostInterceptor implements PostProcessInterceptor, Accept
         // parameters provided too.
         if (params != null) {
             for (Entry<String, List<String>> e : params.entrySet()) {
-                if (!e.getKey().equals(DataPresentation.PAGE_PARAM)) {
+                if (!e.getKey().equals(PageRequest.PAGE_PARAM)) {
                     for (String v : e.getValue()) {
                         builder = builder.queryParam(e.getKey(), v);
                     }

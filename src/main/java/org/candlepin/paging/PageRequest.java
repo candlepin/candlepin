@@ -15,9 +15,9 @@
 package org.candlepin.paging;
 
 /**
- * Represents the presentation of data coming back from Candlepin.
+ * Represents a request to page data coming back from Candlepin.
  */
-public class DataPresentation {
+public class PageRequest {
     /**
      * Represents the order things can be sorted in.
      */

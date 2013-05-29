@@ -20,7 +20,7 @@ import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 
 import org.candlepin.exceptions.BadRequestException;
-import org.candlepin.paging.DataPresentation;
+import org.candlepin.paging.PageRequest;
 
 import org.jboss.resteasy.core.ResourceMethod;
 import org.jboss.resteasy.mock.MockHttpRequest;
@@ -33,17 +33,17 @@ import org.xnap.commons.i18n.I18nFactory;
 import java.util.Locale;
 
 /**
- * PresentationInterceptorTest
+ * PageRequestInterceptorTest
  */
-public class DataPresentationInterceptorTest {
+public class PageRequestInterceptorTest {
     private I18n i18n;
-    private DataPresentationInterceptor interceptor;
+    private PageRequestInterceptor interceptor;
     private ResourceMethod rmethod;
 
     @Before
     public void setUp() throws Exception {
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        interceptor = new DataPresentationInterceptor(i18n);
+        interceptor = new PageRequestInterceptor(i18n);
         rmethod = mock(ResourceMethod.class);
     }
 
@@ -54,7 +54,7 @@ public class DataPresentationInterceptorTest {
 
         interceptor.preProcess(req, rmethod);
 
-        DataPresentation p = ResteasyProviderFactory.getContextData(DataPresentation.class);
+        PageRequest p = ResteasyProviderFactory.getContextData(PageRequest.class);
         assertNull(p);
     }
 
@@ -65,10 +65,10 @@ public class DataPresentationInterceptorTest {
 
         interceptor.preProcess(req, rmethod);
 
-        DataPresentation p = ResteasyProviderFactory.getContextData(DataPresentation.class);
+        PageRequest p = ResteasyProviderFactory.getContextData(PageRequest.class);
         assertEquals(new Integer(10), p.getPerPage());
         assertEquals(new Integer(4), p.getPage());
-        assertEquals(DataPresentation.DEFAULT_ORDER, p.getOrder());
+        assertEquals(PageRequest.DEFAULT_ORDER, p.getOrder());
         assertNull(p.getSortBy());
     }
 
@@ -79,10 +79,10 @@ public class DataPresentationInterceptorTest {
 
         interceptor.preProcess(req, rmethod);
 
-        DataPresentation p = ResteasyProviderFactory.getContextData(DataPresentation.class);
-        assertEquals(DataPresentation.DEFAULT_PER_PAGE, p.getPerPage());
+        PageRequest p = ResteasyProviderFactory.getContextData(PageRequest.class);
+        assertEquals(PageRequest.DEFAULT_PER_PAGE, p.getPerPage());
         assertEquals(new Integer(5), p.getPage());
-        assertEquals(DataPresentation.DEFAULT_ORDER, p.getOrder());
+        assertEquals(PageRequest.DEFAULT_ORDER, p.getOrder());
         assertNull(p.getSortBy());
     }
 
@@ -93,10 +93,10 @@ public class DataPresentationInterceptorTest {
 
         interceptor.preProcess(req, rmethod);
 
-        DataPresentation p = ResteasyProviderFactory.getContextData(DataPresentation.class);
+        PageRequest p = ResteasyProviderFactory.getContextData(PageRequest.class);
         assertEquals(new Integer(10), p.getPerPage());
-        assertEquals(DataPresentation.DEFAULT_PAGE, p.getPage());
-        assertEquals(DataPresentation.DEFAULT_ORDER, p.getOrder());
+        assertEquals(PageRequest.DEFAULT_PAGE, p.getPage());
+        assertEquals(PageRequest.DEFAULT_ORDER, p.getOrder());
         assertNull(p.getSortBy());
     }
 
@@ -123,9 +123,9 @@ public class DataPresentationInterceptorTest {
 
         interceptor.preProcess(req, rmethod);
 
-        DataPresentation p = ResteasyProviderFactory.getContextData(DataPresentation.class);
+        PageRequest p = ResteasyProviderFactory.getContextData(PageRequest.class);
         assertFalse(p.isPaging());
-        assertEquals(DataPresentation.Order.ASCENDING, p.getOrder());
+        assertEquals(PageRequest.Order.ASCENDING, p.getOrder());
         assertEquals("id", p.getSortBy());
     }
 
@@ -136,9 +136,9 @@ public class DataPresentationInterceptorTest {
 
         interceptor.preProcess(req, rmethod);
 
-        DataPresentation p = ResteasyProviderFactory.getContextData(DataPresentation.class);
+        PageRequest p = ResteasyProviderFactory.getContextData(PageRequest.class);
         assertFalse(p.isPaging());
-        assertEquals(DataPresentation.DEFAULT_ORDER, p.getOrder());
+        assertEquals(PageRequest.DEFAULT_ORDER, p.getOrder());
         assertEquals("id", p.getSortBy());
     }
 
@@ -149,9 +149,9 @@ public class DataPresentationInterceptorTest {
 
         interceptor.preProcess(req, rmethod);
 
-        DataPresentation p = ResteasyProviderFactory.getContextData(DataPresentation.class);
+        PageRequest p = ResteasyProviderFactory.getContextData(PageRequest.class);
         assertFalse(p.isPaging());
-        assertEquals(DataPresentation.Order.DESCENDING, p.getOrder());
+        assertEquals(PageRequest.Order.DESCENDING, p.getOrder());
         assertEquals("id", p.getSortBy());
     }
 }
