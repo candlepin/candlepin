@@ -150,6 +150,19 @@ public class PoolHelperTest {
     }
 
     @Test
+    public void usingPrimitiveEqualsOnStringIsBad() {
+        when(pool.getOrderNumber()).thenReturn("123");
+        when(pool.getAccountNumber()).thenReturn("456");
+        when(pool.getContractNumber()).thenReturn("789");
+        when(sub.getOrderNumber()).thenReturn(new String("123"));
+        when(sub.getAccountNumber()).thenReturn("456");
+        when(sub.getContractNumber()).thenReturn("789");
+
+        PoolHelper ph = new PoolHelper(pm, productCache, null);
+        assertFalse(ph.checkForOrderChanges(pool, sub));
+    }
+
+    @Test
     public void productIdDifferent() {
         when(pool.getProductId()).thenReturn("prodid123");
         when(pool.getProductName()).thenReturn("Awesome Product");

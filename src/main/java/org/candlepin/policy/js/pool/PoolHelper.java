@@ -315,9 +315,9 @@ public class PoolHelper extends AttributeHelper {
     }
 
     public boolean checkForOrderChanges(Pool existingPool, Subscription sub) {
-        return ((existingPool.getOrderNumber() != sub.getOrderNumber()) ||
-                (existingPool.getAccountNumber() != sub.getAccountNumber()) ||
-                (existingPool.getContractNumber() != sub.getContractNumber()));
+        return ((!existingPool.getOrderNumber().equals(sub.getOrderNumber())) ||
+                (!existingPool.getAccountNumber().equals(sub.getAccountNumber())) ||
+                (!existingPool.getContractNumber().equals(sub.getContractNumber())));
     }
 
     private boolean haveAttributesChanged(Pool existing, Subscription sub) {
