@@ -135,9 +135,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         switch (order) {
             case ASCENDING:
                 return Order.asc(sortBy);
-            case DESCENDING:
-                return Order.desc(sortBy);
-            // Quiet checkstyle.
+            //DESCENDING
             default:
                 return Order.desc(sortBy);
         }
