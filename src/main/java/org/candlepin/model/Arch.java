@@ -15,6 +15,7 @@
 package org.candlepin.model;
 
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -42,10 +43,21 @@ public class Arch extends AbstractHibernateObject {
     @Column(length = 32)
     private String label;
 
-    private static String[] x86LabelStrs = {"i386", "i486", "i586", "i686"};
-    private static List<String> x86Labels = Arrays.asList(x86LabelStrs);
-    private static String[] ppcLabelStrs = {"ppc", "ppc64"};
-    private static List<String> ppcLabels = Arrays.asList(ppcLabelStrs);
+    private static ArrayList<String> x86Labels = new ArrayList<String>() {
+        {
+            add("i386");
+            add("i386");
+            add("i586");
+            add("i686");
+        }
+    };
+
+    private static ArrayList<String> ppcLabels = new ArrayList<String>() {
+        {
+        add("ppc");
+        add("ppc64");
+        }
+    };
 
     public Arch() {
 
