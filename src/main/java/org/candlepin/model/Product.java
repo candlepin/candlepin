@@ -393,9 +393,8 @@ public class Product extends AbstractHibernateObject implements Linkable {
         if (archesValue == null) {
             return archesSet;
         }
-        StringTokenizer st = new StringTokenizer(archesValue, ",");
-        while (st.hasMoreElements()) {
-            archesSet.add(((String) st.nextElement()).trim());
+        for (String arch : archesValue.split(",")) {
+            archesSet.add(arch.trim());
         }
         return archesSet;
     }
