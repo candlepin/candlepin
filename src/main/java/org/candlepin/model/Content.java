@@ -20,7 +20,9 @@ import java.util.Set;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -30,6 +32,7 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.candlepin.service.UniqueIdGenerator;
 import org.hibernate.annotations.CollectionOfElements;
+import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.Type;
 
 /**
@@ -82,6 +85,15 @@ public class Content extends AbstractHibernateObject {
     @CollectionOfElements(targetElement = String.class)
     @JoinTable(name = "cp_content_modified_products")
     private Set<String> modifiedProductIds = new HashSet<String>();
+
+    @ManyToMany(targetEntity = Arch.class)
+    @ForeignKey(name = "fk_arch_id",
+                inverseName = "fk_content_id")
+    @JoinTable(
+        name = "cp_content_arch",
+        joinColumns = @JoinColumn(name = "content_id"),
+        inverseJoinColumns = @JoinColumn(name = "arch_id"))
+    private Set<Arch> arches = new HashSet<Arch>();
 
     public Content(String name, String id, String label, String type,
         String vendor, String contentUrl, String gpgUrl) {
@@ -250,6 +262,14 @@ public class Content extends AbstractHibernateObject {
         return releaseVer;
     }
 
+    public void setArches(Set<Arch> arches) {
+        this.arches = arches;
+    }
+
+    public Set<Arch> getArches() {
+        return arches;
+    }
+
     /**
      * @param from Content object to copy properties from.
      * @return current Content object with updated properites
@@ -266,6 +286,7 @@ public class Content extends AbstractHibernateObject {
         setMetadataExpire(from.getMetadataExpire());
         setModifiedProductIds(defaultIfNull(from.getModifiedProductIds(),
             new HashSet<String>()));
+        setArches(from.getArches());
 
         return this;
     }
@@ -273,4 +294,5 @@ public class Content extends AbstractHibernateObject {
     private <T> T defaultIfNull(T val, T dflt) {
         return val == null ? dflt : val;
     }
+
 }

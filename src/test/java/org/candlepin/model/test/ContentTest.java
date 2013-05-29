@@ -14,7 +14,10 @@
  */
 package org.candlepin.model.test;
 
+
 import java.util.HashSet;
+import java.util.Set;
+import org.candlepin.model.Arch;
 import org.candlepin.model.Content;
 import org.candlepin.test.DatabaseTestFixture;
 import org.junit.Test;
@@ -27,6 +30,7 @@ import static org.hamcrest.collection.IsCollectionContaining.hasItem;
  */
 public class ContentTest extends DatabaseTestFixture {
 
+    /* FIXME: add Arches here */
     @Test
     public void testContent() {
         String  contentHash = String.valueOf(
@@ -48,6 +52,32 @@ public class ContentTest extends DatabaseTestFixture {
         assertEquals(content.getContentUrl(), lookedUp.getContentUrl());
         assertThat(lookedUp.getModifiedProductIds(), hasItem("ProductB"));
         assertEquals(metadataExpire, lookedUp.getMetadataExpire());
+    }
+
+    @Test
+    public void testContentWithArches() {
+        String  contentHash = String.valueOf(
+            Math.abs(Long.valueOf("test-content-arches".hashCode())));
+
+        Arch i386Arch = new Arch("i386", "i386");
+        archCurator.create(i386Arch);
+        Arch x8664Arch = new Arch("x86_64", "x86_64");
+        archCurator.create(x8664Arch);
+
+        //Arch x8664Arch = archCurator.lookupByLabel("x86_64");
+        Set<Arch> arches = new HashSet<Arch>();
+//        Arch lookedupArch = archCurator.find(i386Arch.getId());
+        arches.add(i386Arch);
+        arches.add(x8664Arch);
+
+        Content content = new Content("test-content-arches", contentHash,
+                            "test-content-arches-label", "yum", "test-vendor",
+                             "test-content-url", "test-gpg-url");
+        content.setArches(arches);
+        contentCurator.create(content);
+
+        Content lookedUp = contentCurator.find(content.getId());
+        assertArrayEquals(lookedUp.getArches().toArray(), arches.toArray());
     }
 
     @Test

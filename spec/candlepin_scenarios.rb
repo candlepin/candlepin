@@ -232,9 +232,15 @@ module ExportMethods
                                   random_string('virt_product'),
                                   {:attributes => {:virt_only => true}})
     content = create_content({:metadata_expire => 6000,
-      :required_tags => "TAG1,TAG2"})
+                              :required_tags => "TAG1,TAG2"})
+    arch_content = create_content({:metadata_expire => 6000,
+                                   :content_url => "/path/to/arch/specific/content",
+                                   :required_tags => "TAG1,TAG2",
+                                   :arches => ['1', '2']})
     @cp.add_content_to_product(product1.id, content.id)
     @cp.add_content_to_product(product2.id, content.id)
+    @cp.add_content_to_product(product2.id, arch_content.id)
+
     @end_date = Date.new(2025, 5, 29)
 
     sub1 = @cp.create_subscription(@owner['key'], product1.id, 2, [], '', '12345', '6789', nil, @end_date)
@@ -292,9 +298,13 @@ module ExportMethods
     product1 = @cp.create_product(random_string(), random_string())
     product2 = @cp.create_product(random_string(), random_string())
     content = create_content({:metadata_expire => 6000,
-      :required_tags => "TAG1,TAG2"})
+                              :required_tags => "TAG1,TAG2"})
+    arch_content = create_content({:metadata_expire => 6000,
+                                   :required_tags => "TAG1,TAG2",
+                                   :arches => ['1', '2']})
     @cp.add_content_to_product(product1.id, content.id)
     @cp.add_content_to_product(product2.id, content.id)
+    @cp.add_content_to_product(product2.id, arch_content.id)
     @end_date = Date.new(2025, 5, 29)
 
     sub1 = @cp.create_subscription(@owner['key'], product1.id, 12, [], '', '12345', '6789', nil, @end_date)

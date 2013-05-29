@@ -187,6 +187,19 @@ describe 'Candlepin Import' do
     new_pool_ids.should_not =~ pool_ids
   end
 
+  it 'should import arch content correctly' do
+      contents = @cp.list_content()
+      contents.each do |content|
+        if content.has_key('content_url')
+          if content['content_url'] == '/path/to/arch/specific/content'
+              content['arches'].should == ['i386', 'x86_64']
+              pp "#{content['label']}"
+              pp "#{content['arches']}"
+          end
+        end
+      end
+  end
+
   it 'should return 400 when importing manifest in use by another owner' do
     # Because the previous tests put the original import into a different state
     # than if you just run this single one, we need to clear first and then

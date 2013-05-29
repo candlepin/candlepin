@@ -20,6 +20,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
 import org.candlepin.config.Config;
+import org.candlepin.model.ArchCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.Content;
@@ -38,7 +39,8 @@ public class X509V3ExtensionUtilTest {
     public void compareToEquals() {
         Config config = mock(Config.class);
         EntitlementCurator ec = mock(EntitlementCurator.class);
-        X509V3ExtensionUtil util = new X509V3ExtensionUtil(config, ec);
+        ArchCurator ac = mock(ArchCurator.class);
+        X509V3ExtensionUtil util = new X509V3ExtensionUtil(config, ec, ac);
         PathNode pn = util.new PathNode();
         NodePair np = new NodePair("name", pn);
         NodePair np1 = new NodePair("name", pn);
@@ -50,7 +52,8 @@ public class X509V3ExtensionUtilTest {
     public void nullCompareTo() {
         Config config = mock(Config.class);
         EntitlementCurator ec = mock(EntitlementCurator.class);
-        X509V3ExtensionUtil util = new X509V3ExtensionUtil(config, ec);
+        ArchCurator ac = mock(ArchCurator.class);
+        X509V3ExtensionUtil util = new X509V3ExtensionUtil(config, ec, ac);
         PathNode pn = util.new PathNode();
         NodePair np = new NodePair("name", pn);
         assertEquals(1, np.compareTo(null));
@@ -60,7 +63,8 @@ public class X509V3ExtensionUtilTest {
     public void nullEquals() {
         Config config = mock(Config.class);
         EntitlementCurator ec = mock(EntitlementCurator.class);
-        X509V3ExtensionUtil util = new X509V3ExtensionUtil(config, ec);
+        ArchCurator ac = mock(ArchCurator.class);
+        X509V3ExtensionUtil util = new X509V3ExtensionUtil(config, ec, ac);
         PathNode pn = util.new PathNode();
         NodePair np = new NodePair("name", pn);
         assertFalse(np.equals(null));
@@ -70,7 +74,8 @@ public class X509V3ExtensionUtilTest {
     public void otherObjectEquals() {
         Config config = mock(Config.class);
         EntitlementCurator ec = mock(EntitlementCurator.class);
-        X509V3ExtensionUtil util = new X509V3ExtensionUtil(config, ec);
+        ArchCurator ac = mock(ArchCurator.class);
+        X509V3ExtensionUtil util = new X509V3ExtensionUtil(config, ec, ac);
         PathNode pn = util.new PathNode();
         NodePair np = new NodePair("name", pn);
         assertFalse(np.equals(pn));
@@ -80,7 +85,8 @@ public class X509V3ExtensionUtilTest {
     public void notEqualNodes() {
         Config config = mock(Config.class);
         EntitlementCurator ec = mock(EntitlementCurator.class);
-        X509V3ExtensionUtil util = new X509V3ExtensionUtil(config, ec);
+        ArchCurator ac = mock(ArchCurator.class);
+        X509V3ExtensionUtil util = new X509V3ExtensionUtil(config, ec, ac);
         PathNode pn = util.new PathNode();
         NodePair np = new NodePair("name", pn);
         NodePair np1 = new NodePair("diff", pn);
@@ -96,7 +102,8 @@ public class X509V3ExtensionUtilTest {
         ProductContent pc = new ProductContent(p, c, true);
         Config config = mock(Config.class);
         EntitlementCurator ec = mock(EntitlementCurator.class);
-        X509V3ExtensionUtil util = new X509V3ExtensionUtil(config, ec);
+        ArchCurator ac = mock(ArchCurator.class);
+        X509V3ExtensionUtil util = new X509V3ExtensionUtil(config, ec, ac);
 
         assertEquals("/this/is/some/path", util.createFullContentPath("/this/is", pc));
         assertEquals("/this/is/some/path", util.createFullContentPath("/this/is/", pc));

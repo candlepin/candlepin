@@ -108,6 +108,7 @@ data['content'].each do |c|
   end
 
   params[:content_url] = c['content_url']
+  params[:arches] = c['arches'] || []
   params[:gpg_url] = c['gpg_url']
   params[:modified_products] = modified_products
 
