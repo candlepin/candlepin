@@ -14,22 +14,25 @@
  */
 package org.candlepin.model;
 
-import java.util.Date;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import org.candlepin.paging.DataPresentation;
+import org.candlepin.paging.Page;
+import org.candlepin.service.ProductServiceAdapter;
+
+import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
 import org.apache.log4j.Logger;
-import org.candlepin.service.ProductServiceAdapter;
 import org.hibernate.Criteria;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 import org.xnap.commons.i18n.I18n;
 
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 /**
  * EntitlementCurator
@@ -68,10 +71,16 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         return toReturn;
     }
 
-    public List<Entitlement> listByConsumer(Consumer consumer) {
+    public Page<List<Entitlement>> listByConsumer(Consumer consumer,
+        DataPresentation presentation) {
         DetachedCriteria query = DetachedCriteria.forClass(Entitlement.class)
             .add(Restrictions.eq("consumer", consumer));
-        return listByCriteria(query);
+        return listByCriteria(query, presentation);
+    }
+
+    public List<Entitlement> listByConsumer(Consumer consumer) {
+        Page<List<Entitlement>> p = listByConsumer(consumer, null);
+        return p.getPageData();
     }
 
     public List<Entitlement> listByEnvironment(Environment environment) {
