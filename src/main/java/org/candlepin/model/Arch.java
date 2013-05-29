@@ -18,6 +18,7 @@ package org.candlepin.model;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -38,6 +39,7 @@ public class Arch extends AbstractHibernateObject {
     @Id
     private String id;
 
+    @Column(length = 32)
     private String label;
 
     private static String[] x86LabelStrs = {"i386", "i486", "i586", "i686"};
