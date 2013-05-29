@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+            xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+
+            <changeSet id="20130501152202-1" author="alikins">
+                <comment>Add a cp_content_arch for content/arch mapping</comment>
+                <createTable tableName="cp_arch">
+
+                    <column name="id" type="VARCHAR(255)">
+                        <constraints nullable="false" primaryKey="true" primaryKeyName="cp_arch_pkey"/>
+                    </column>
+                    <column name="label" type="VARCHAR(255)">
+                        <constraints nullable="false"/>
+                    </column>
+                   <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+                   <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+               </createTable>
+            </changeSet>
+
+            <changeSet id="20130501152202-2" author="alikins">
+            <createTable tableName="cp_content_arch">
+                    <column name="content_id" type="VARCHAR(255)">
+                        <constraints nullable="false"/>
+                    </column>
+                    <column name="arch_id" type="VARCHAR(255)">
+                        <constraints nullable="false"/>
+                   </column>
+                   <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+                   <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+               </createTable>
+           </changeSet>
+
+            <changeSet id="20130501152202-3" author="alikins">
+                <addPrimaryKey columnNames="arch_id, content_id" constraintName="cp_content_arch_pkey" tableName="cp_content_arch"/>
+            </changeSet>
+
+            <changeSet id="20130501152202-4" author="alikins">
+                <addForeignKeyConstraint baseColumnNames="arch_id" baseTableName="cp_content_arch" baseTableSchemaName="public" constraintName="fk_content_arch_arch" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_arch" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+            </changeSet>
+
+            <changeSet id="20130501152202-5" author="alikins">
+                <addForeignKeyConstraint baseColumnNames="content_id" baseTableName="cp_content_arch" baseTableSchemaName="public" constraintName="fk_content_arch_content" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_content" referencedTableSchemaName="public" referencesUniqueColumn="false"/>
+            </changeSet>
+
+            <changeSet id="20130501152202-6" author="alikins">
+                <comment>populate arch table</comment>
+                <insert tableName="cp_arch">
+                    <column name="id" value="0"/>
+                    <column name="label" value="ALL"/>
+                </insert>
+                <insert tableName="cp_arch">
+                    <column name="id" value="1"/>
+                    <column name="label" value="x86_64"/>
+                </insert>
+                <insert tableName="cp_arch">
+                    <column name="id" value="2"/>
+                    <column name="label" value="i386"/>
+                </insert>
+                <insert tableName="cp_arch">
+                    <column name="id" value="3"/>
+                    <column name="label" value="i486"/>
+                </insert>
+                <insert tableName="cp_arch">
+                    <column name="id" value="4"/>
+                    <column name="label" value="i586"/>
+                </insert>
+                <insert tableName="cp_arch">
+                    <column name="id" value="5"/>
+                    <column name="label" value="i686"/>
+                </insert>
+                <insert tableName="cp_arch">
+                    <column name="id" value="6"/>
+                    <column name="label" value="ppc"/>
+                </insert>
+                <insert tableName="cp_arch">
+                    <column name="id" value="7"/>
+                    <column name="label" value="ppc64"/>
+                </insert>
+                <insert tableName="cp_arch">
+                    <column name="id" value="8"/>
+                    <column name="label" value="ia64"/>
+                </insert>
+                <insert tableName="cp_arch">
+                    <column name="id" value="9"/>
+                    <column name="label" value="arm"/>
+                </insert>
+                <insert tableName="cp_arch">
+                    <column name="id" value="10"/>
+                    <column name="label" value="s390"/>
+                </insert>
+                <insert tableName="cp_arch">
+                    <column name="id" value="11"/>
+                    <column name="label" value="s390x"/>
+                </insert>
+            </changeSet>
+</databaseChangeLog>

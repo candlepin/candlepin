@@ -30,6 +30,8 @@ public class ContentCuratorTest extends DatabaseTestFixture {
 
     private Content updates;
 
+    /* FIXME: Add Arches here */
+
     @Before
     public void setUp() {
         updates = new Content(

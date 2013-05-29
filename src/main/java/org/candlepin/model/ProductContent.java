@@ -52,6 +52,12 @@ public class ProductContent extends AbstractHibernateObject {
         this.setEnabled(enabled);
     }
 
+    public String toString() {
+        return "[ProductContent, product = " + product.getName() +
+                ", content = " + content.getLabel() +
+                ", enabled = " + enabled + "]";
+    }
+
     @XmlTransient
     public Serializable getId() {
         // TODO: just here to appease AbstractHibernateObject

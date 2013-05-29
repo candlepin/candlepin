@@ -35,6 +35,8 @@ import java.util.zip.InflaterOutputStream;
 
 import org.apache.log4j.Logger;
 import org.candlepin.config.Config;
+import org.candlepin.model.Arch;
+import org.candlepin.model.ArchCurator;
 import org.candlepin.json.model.Content;
 import org.candlepin.json.model.EntitlementBody;
 import org.candlepin.json.model.Order;
@@ -64,18 +66,20 @@ public class X509V3ExtensionUtil extends X509Util{
     private static Logger log = Logger.getLogger(X509V3ExtensionUtil.class);
     private Config config;
     private EntitlementCurator entCurator;
+    private ArchCurator archCurator;
     private String thisVersion = "3.2";
 
     private long pathNodeId = 0;
     private long huffNodeId = 0;
     private static final Object END_NODE = new Object();
     private static boolean treeDebug = false;
-
     @Inject
-    public X509V3ExtensionUtil(Config config, EntitlementCurator entCurator) {
+    public X509V3ExtensionUtil(Config config, EntitlementCurator entCurator,
+        ArchCurator archCurator) {
         // Output everything in UTC
         this.config = config;
         this.entCurator = entCurator;
+        this.archCurator = archCurator;
     }
 
     public Set<X509ExtensionWrapper> getExtensions(Set<Product> products,
@@ -301,30 +305,42 @@ public class X509V3ExtensionUtil extends X509Util{
             product.getAttributeValue("version") : "";
         toReturn.setVersion(version);
 
-        String arch = product.hasAttribute("arch") ?
-            product.getAttributeValue("arch") : "";
-        StringTokenizer st = new StringTokenizer(arch, ",");
+        // upcast arch labels to arch objects
+        Set<Arch> productArchSet = getProductArches(product, archCurator);
         List<String> archList = new ArrayList<String>();
-        while (st.hasMoreElements()) {
-            archList.add((String) st.nextElement());
+        for (Arch arch : productArchSet) {
+            archList.add(arch.getLabel());
         }
         toReturn.setArchitectures(archList);
-
         toReturn.setContent(createContent(filterProductContent(product, ent),
-            contentPrefix, promotedContent, consumer));
+            contentPrefix, promotedContent, consumer, productArchSet));
 
         return toReturn;
     }
 
+    /*
+     * createContent
+     *
+     * productArchList is a list of arch strings parse from
+     *   product attributes.
+     */
     public List<Content> createContent(
         Set<ProductContent> productContent, String contentPrefix,
-        Map<String, EnvironmentContent> promotedContent, Consumer consumer) {
+        Map<String, EnvironmentContent> promotedContent,
+        Consumer consumer,
+        Set<Arch> productArchSet) {
+
+        Set<ProductContent> filtered = new HashSet<ProductContent>();
 
         List<Content> toReturn = new ArrayList<Content>();
 
         boolean enableEnvironmentFiltering = config.environmentFilteringEnabled();
 
-        for (ProductContent pc : productContent) {
+        // Return only the contents that are arch appropriate
+        Set<ProductContent> archApproriateProductContent = filterContentByContentArch(
+            productContent, consumer, productArchSet, archCurator);
+
+        for (ProductContent pc : archApproriateProductContent) {
             Content content = new Content();
             if (enableEnvironmentFiltering) {
                 if (consumer.getEnvironment() != null && !promotedContent.containsKey(
@@ -335,7 +351,7 @@ public class X509V3ExtensionUtil extends X509Util{
                 }
             }
 
-            // augment the content path with the prefix if it is passed in
+            // Augment the content path with the prefix if it is passed in
             String contentPath = this.createFullContentPath(contentPrefix, pc);
 
             content.setId(pc.getContent().getId());
@@ -345,6 +361,14 @@ public class X509V3ExtensionUtil extends X509Util{
             content.setVendor(pc.getContent().getVendor());
             content.setPath(contentPath);
             content.setGpgUrl(pc.getContent().getGpgUrl());
+
+            // We filter content objects in filterProductContentByContentArch,
+            // do we need to still filter out arches?
+            List<String> archList = new ArrayList<String>();
+            for (Arch arch : pc.getContent().getArches()) {
+                archList.add(arch.getLabel());
+            }
+            content.setArches(archList);
 
             // Check if we should override the enabled flag due to setting on promoted
             // content:
