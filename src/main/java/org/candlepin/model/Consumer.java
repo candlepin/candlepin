@@ -578,6 +578,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
      * @param capabilities the capabilities to set
      */
     public void setCapabilities(Set<ConsumerCapability> capabilities) {
+        if (capabilities == null) { return; }
         if (this.capabilities == null) {
             this.capabilities = new HashSet<ConsumerCapability>();
         }
