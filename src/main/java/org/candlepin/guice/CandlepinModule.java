@@ -85,6 +85,8 @@ import org.candlepin.resource.SubscriptionResource;
 import org.candlepin.resource.UserResource;
 import org.candlepin.resteasy.JsonProvider;
 import org.candlepin.resteasy.interceptor.AuthInterceptor;
+import org.candlepin.resteasy.interceptor.DataPresentationInterceptor;
+import org.candlepin.resteasy.interceptor.LinkHeaderPostInterceptor;
 import org.candlepin.resteasy.interceptor.PinsetterAsyncInterceptor;
 import org.candlepin.resteasy.interceptor.VersionPostInterceptor;
 import org.candlepin.service.UniqueIdGenerator;
@@ -99,9 +101,6 @@ import org.candlepin.util.DateSource;
 import org.candlepin.util.DateSourceImpl;
 import org.candlepin.util.ExpiryDateFunction;
 import org.candlepin.util.X509ExtensionUtil;
-import org.quartz.JobListener;
-import org.quartz.spi.JobFactory;
-import org.xnap.commons.i18n.I18n;
 
 import com.google.common.base.Function;
 import com.google.inject.AbstractModule;
@@ -110,6 +109,10 @@ import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
 import com.google.inject.persist.jpa.JpaPersistModule;
+
+import org.quartz.JobListener;
+import org.quartz.spi.JobFactory;
+import org.xnap.commons.i18n.I18n;
 
 /**
  * CandlepinProductionConfiguration
@@ -188,8 +191,10 @@ public class CandlepinModule extends AbstractModule {
 
         bind(I18n.class).toProvider(I18nProvider.class);
         bind(AuthInterceptor.class);
+        bind(DataPresentationInterceptor.class);
         bind(PinsetterAsyncInterceptor.class);
         bind(VersionPostInterceptor.class);
+        bind(LinkHeaderPostInterceptor.class);
         bind(JsonProvider.class);
         bind(EventSink.class).to(EventSinkImpl.class);
         bind(JobFactory.class).to(GuiceJobFactory.class);
