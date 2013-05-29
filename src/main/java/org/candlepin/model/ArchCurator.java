@@ -29,7 +29,7 @@ public class ArchCurator extends AbstractHibernateCurator<Arch> {
      * lookup the Arch by its label.
      *
      * @param label
-     *            type to lookup
+     *        type to lookup
      * @return Arch whose label matches the given label.
      */
     public Arch lookupByLabel(String label) {
@@ -37,6 +37,7 @@ public class ArchCurator extends AbstractHibernateCurator<Arch> {
             Arch.class).add(Restrictions.eq("label", label))
             .uniqueResult();
     }
+
 
     /* FIXME: need a version of this that knows how to find
      *        equilivent arches. ie, that i686 is also i586.

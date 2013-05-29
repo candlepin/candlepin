@@ -16,8 +16,6 @@ package org.candlepin.model;
 
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -54,8 +52,8 @@ public class Arch extends AbstractHibernateObject {
 
     private static ArrayList<String> ppcLabels = new ArrayList<String>() {
         {
-        add("ppc");
-        add("ppc64");
+            add("ppc");
+            add("ppc64");
         }
     };
 

@@ -16,7 +16,6 @@ package org.candlepin.model;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.StringTokenizer;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
