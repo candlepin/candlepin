@@ -262,8 +262,6 @@ public class Content extends AbstractHibernateObject {
         return releaseVer;
     }
 
-
-
     public void setArches(Set<Arch> arches) {
         this.arches = arches;
     }
