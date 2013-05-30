@@ -24,7 +24,6 @@ import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.exceptions.NotFoundException;
-import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.EntitlementCertificate;
@@ -100,8 +99,6 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
     @Test
     public void testUeberEntitlementIsGenerated() throws Exception {
         or.createUeberCertificate(principal, owner.getKey());
-        Consumer c = consumerCurator.findByName(owner, "ueber_cert_consumer");
-
         assertNotNull(poolCurator.findUeberPool(owner));
     }
 

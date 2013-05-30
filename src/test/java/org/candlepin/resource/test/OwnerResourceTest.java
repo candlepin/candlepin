@@ -463,13 +463,12 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         consumerTypeCurator.create(c.getType());
         consumerCurator.create(c);
 
-        Principal principal = setupPrincipal(new ConsumerPrincipal(c));
         securityInterceptor.enable();
 
         Owner owner2 = createOwner();
         ownerCurator.create(owner2);
 
-        List<Pool> pools = ownerResource.getPools(owner.getKey(), c.getUuid(),
+        ownerResource.getPools(owner.getKey(), c.getUuid(),
             p.getId(), true, null, setupPrincipal(owner2, Access.NONE));
     }
 

@@ -455,7 +455,6 @@ public class ConsumerResourceTest {
             null, null, null, null, null, null, null, null, null, null, null,
             null, new CandlepinCommonTestConfig());
         String dtStr = "2011-09-26T18:10:50.184081+00:00";
-        Date dt = ResourceDateParser.parseDateString(dtStr);
         consumerResource.updateLastCheckin("not-a-valid-uuid", dtStr);
     }
 

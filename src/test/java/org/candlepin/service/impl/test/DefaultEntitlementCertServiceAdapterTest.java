@@ -1308,8 +1308,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<X509ByteExtensionWrapper> byteExtensions =
             certServiceAdapter.prepareV3ByteExtensions(products, entitlement, "prefix",
                 null, subscription);
-        Map<String, X509ExtensionWrapper> map =
-            new HashMap<String, X509ExtensionWrapper>();
         Map<String, X509ByteExtensionWrapper> byteMap =
             new HashMap<String, X509ByteExtensionWrapper>();
         for (X509ByteExtensionWrapper ext : byteExtensions) {
@@ -1356,8 +1354,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<X509ByteExtensionWrapper> byteExtensions =
             certServiceAdapter.prepareV3ByteExtensions(products, entitlement, "prefix",
                 null, subscription);
-        Map<String, X509ExtensionWrapper> map =
-            new HashMap<String, X509ExtensionWrapper>();
         Map<String, X509ByteExtensionWrapper> byteMap =
             new HashMap<String, X509ByteExtensionWrapper>();
         for (X509ByteExtensionWrapper ext : byteExtensions) {
@@ -1395,8 +1391,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<X509ByteExtensionWrapper> byteExtensions =
             certServiceAdapter.prepareV3ByteExtensions(products, largeContentEntitlement,
                 "prefix", null, largeContentSubscription);
-        Map<String, X509ExtensionWrapper> map =
-            new HashMap<String, X509ExtensionWrapper>();
         Map<String, X509ByteExtensionWrapper> byteMap =
             new HashMap<String, X509ByteExtensionWrapper>();
         for (X509ByteExtensionWrapper ext : byteExtensions) {
@@ -1440,14 +1434,11 @@ public class DefaultEntitlementCertServiceAdapterTest {
             .thenReturn("3.2");
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
 
-        Set<X509ExtensionWrapper> extensions =
-            certServiceAdapter.prepareV3Extensions(products, entitlement, "prefix",
+        certServiceAdapter.prepareV3Extensions(products, entitlement, "prefix",
                 null, subscription);
         Set<X509ByteExtensionWrapper> byteExtensions =
             certServiceAdapter.prepareV3ByteExtensions(products, entitlement, "prefix",
                 null, subscription);
-        Map<String, X509ExtensionWrapper> map =
-            new HashMap<String, X509ExtensionWrapper>();
         Map<String, X509ByteExtensionWrapper> byteMap =
             new HashMap<String, X509ByteExtensionWrapper>();
         for (X509ByteExtensionWrapper ext : byteExtensions) {

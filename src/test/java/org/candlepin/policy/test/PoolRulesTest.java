@@ -440,8 +440,6 @@ public class PoolRulesTest {
         List<Pool> pools = poolRules.createPools(s);
         assertEquals(2, pools.size());
 
-        Pool virtBonusPool = pools.get(1);
-
         // Now we update the sub and see if that unlimited pool gets adjusted:
         s.getProduct().getAttributes().clear();
         List<PoolUpdate> updates = poolRules.updatePools(s, pools);
