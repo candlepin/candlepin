@@ -16,7 +16,6 @@ package org.candlepin.resteasy.interceptor;
 
 import java.util.List;
 
-import org.apache.log4j.Logger;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.service.UserServiceAdapter;
@@ -37,8 +36,6 @@ public abstract class UserAuth implements AuthProvider {
     protected UserServiceAdapter userServiceAdapter;
     protected Injector injector;
     protected I18n i18n;
-
-    private static Logger log = Logger.getLogger(UserAuth.class);
 
     public UserAuth(UserServiceAdapter userServiceAdapter, Injector injector) {
         this.userServiceAdapter = userServiceAdapter;

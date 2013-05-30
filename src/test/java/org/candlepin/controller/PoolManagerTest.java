@@ -58,7 +58,6 @@ import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.Subscription;
 import org.candlepin.policy.ValidationResult;
-import org.candlepin.policy.criteria.CriteriaRules;
 import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.autobind.AutobindRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
@@ -107,8 +106,6 @@ public class PoolManagerTest {
     private AutobindRules autobindRules;
     @Mock
     private PoolRules poolRulesMock;
-    @Mock
-    private CriteriaRules poolCriteriaMock;
     @Mock
     private ConsumerCurator consumerCuratorMock;
     @Mock
