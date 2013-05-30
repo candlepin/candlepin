@@ -131,7 +131,6 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
         return new Date(rulesFile.lastModified());
     }
 
-    // @Override
     @Transactional
     public void delete(Rules entity) {
         List<Rules> existingRuleSet = listAll();
@@ -143,7 +142,6 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
 
     }
 
-    @Override
     public Rules merge(Rules entity) {
         return super.merge(entity);
     }
