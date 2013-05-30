@@ -24,7 +24,7 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.paging.DataPresentation;
+import org.candlepin.paging.PageRequest;
 import org.candlepin.paging.Page;
 
 import org.jboss.resteasy.core.ServerResponse;
@@ -49,7 +49,7 @@ public class LinkHeaderPostInterceptorTest {
     @Mock private Config config;
     @Mock private ServerResponse response;
     @Mock private Page page;
-    @Mock private DataPresentation presentation;
+    @Mock private PageRequest pageRequest;
 
     private LinkHeaderPostInterceptor interceptor;
 
@@ -185,13 +185,13 @@ public class LinkHeaderPostInterceptorTest {
         Page p = new Page();
         p.setMaxRecords(55);
 
-        DataPresentation dp = new DataPresentation();
-        p.setPresentation(dp);
+        PageRequest pr = new PageRequest();
+        p.setPageRequest(pr);
 
-        dp.setPerPage(10);
-        dp.setPage(3);
+        pr.setPerPage(10);
+        pr.setPage(3);
 
-        assertEquals(new Integer(2), interceptor.getPrevPage(p));
+        assertEquals(Integer.valueOf(2), interceptor.getPrevPage(p));
     }
 
     @Test
@@ -199,11 +199,11 @@ public class LinkHeaderPostInterceptorTest {
         Page p = new Page();
         p.setMaxRecords(55);
 
-        DataPresentation dp = new DataPresentation();
-        p.setPresentation(dp);
+        PageRequest pr = new PageRequest();
+        p.setPageRequest(pr);
 
-        dp.setPerPage(10);
-        dp.setPage(1);
+        pr.setPerPage(10);
+        pr.setPage(1);
 
         assertNull(interceptor.getPrevPage(p));
     }
@@ -213,13 +213,13 @@ public class LinkHeaderPostInterceptorTest {
         Page p = new Page();
         p.setMaxRecords(55);
 
-        DataPresentation dp = new DataPresentation();
-        p.setPresentation(dp);
+        PageRequest pr = new PageRequest();
+        p.setPageRequest(pr);
 
-        dp.setPerPage(10);
-        dp.setPage(3);
+        pr.setPerPage(10);
+        pr.setPage(3);
 
-        assertEquals(new Integer(4), interceptor.getNextPage(p));
+        assertEquals(Integer.valueOf(4), interceptor.getNextPage(p));
     }
 
     @Test
@@ -227,11 +227,11 @@ public class LinkHeaderPostInterceptorTest {
         Page p = new Page();
         p.setMaxRecords(55);
 
-        DataPresentation dp = new DataPresentation();
-        p.setPresentation(dp);
+        PageRequest pr = new PageRequest();
+        p.setPageRequest(pr);
 
-        dp.setPerPage(10);
-        dp.setPage(6);
+        pr.setPerPage(10);
+        pr.setPage(6);
 
         assertNull(interceptor.getNextPage(p));
     }
@@ -241,13 +241,13 @@ public class LinkHeaderPostInterceptorTest {
         Page p = new Page();
         p.setMaxRecords(55);
 
-        DataPresentation dp = new DataPresentation();
-        p.setPresentation(dp);
+        PageRequest pr = new PageRequest();
+        p.setPageRequest(pr);
 
-        dp.setPerPage(10);
-        dp.setPage(1);
+        pr.setPerPage(10);
+        pr.setPage(1);
 
-        assertEquals(new Integer(6), interceptor.getLastPage(p));
+        assertEquals(Integer.valueOf(6), interceptor.getLastPage(p));
     }
 
     @Test
@@ -255,13 +255,13 @@ public class LinkHeaderPostInterceptorTest {
         Page p = new Page();
         p.setMaxRecords(8);
 
-        DataPresentation dp = new DataPresentation();
-        p.setPresentation(dp);
+        PageRequest pr = new PageRequest();
+        p.setPageRequest(pr);
 
-        dp.setPerPage(10);
-        dp.setPage(1);
+        pr.setPerPage(10);
+        pr.setPage(1);
 
-        assertEquals(new Integer(1), interceptor.getLastPage(p));
+        assertEquals(Integer.valueOf(1), interceptor.getLastPage(p));
     }
 
     @Test
@@ -269,15 +269,15 @@ public class LinkHeaderPostInterceptorTest {
         Page p = new Page();
         p.setMaxRecords(8);
 
-        DataPresentation dp = new DataPresentation();
-        p.setPresentation(dp);
+        PageRequest pr = new PageRequest();
+        p.setPageRequest(pr);
 
-        dp.setPerPage(10);
-        dp.setPage(2);
+        pr.setPerPage(10);
+        pr.setPage(2);
 
         assertNull(interceptor.getPrevPage(p));
         assertNull(interceptor.getNextPage(p));
-        assertEquals(new Integer(1), interceptor.getLastPage(p));
+        assertEquals(Integer.valueOf(1), interceptor.getLastPage(p));
     }
 
     @Test
@@ -287,30 +287,30 @@ public class LinkHeaderPostInterceptorTest {
     }
 
     @Test
-    public void testPostProcessWithNullPresentation() {
+    public void testPostProcessWithNullPageRequest() {
         ResteasyProviderFactory.pushContext(Page.class, page);
-        when(page.getPresentation()).thenReturn(null);
+        when(page.getPageRequest()).thenReturn(null);
         interceptor.postProcess(response);
-        verify(page).getPresentation();
+        verify(page).getPageRequest();
     }
 
     @Test
     public void testPostProcessWithNonPagingPresentation() {
-        when(page.getPresentation()).thenReturn(presentation);
-        when(presentation.isPaging()).thenReturn(false);
+        when(page.getPageRequest()).thenReturn(pageRequest);
+        when(pageRequest.isPaging()).thenReturn(false);
         ResteasyProviderFactory.pushContext(Page.class, page);
         interceptor.postProcess(response);
-        verify(page, times(2)).getPresentation();
-        verify(presentation).isPaging();
+        verify(page, times(2)).getPageRequest();
+        verify(pageRequest).isPaging();
     }
 
     @Test
     public void testPostProcessWithPaging() {
-        when(page.getPresentation()).thenReturn(presentation);
+        when(page.getPageRequest()).thenReturn(pageRequest);
         when(page.getMaxRecords()).thenReturn(15);
-        when(presentation.isPaging()).thenReturn(true);
-        when(presentation.getPage()).thenReturn(2);
-        when(presentation.getPerPage()).thenReturn(5);
+        when(pageRequest.isPaging()).thenReturn(true);
+        when(pageRequest.getPage()).thenReturn(2);
+        when(pageRequest.getPerPage()).thenReturn(5);
 
         // We're going to take the quick path through buildBaseUrl.
         when(config.containsKey(eq(ConfigProperties.PREFIX_APIURL))).thenReturn(false);

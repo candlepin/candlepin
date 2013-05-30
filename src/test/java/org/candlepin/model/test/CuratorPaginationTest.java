@@ -18,7 +18,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 import org.candlepin.model.Owner;
-import org.candlepin.paging.DataPresentation;
+import org.candlepin.paging.PageRequest;
 import org.candlepin.paging.Page;
 import org.candlepin.test.DatabaseTestFixture;
 
@@ -55,14 +55,14 @@ public class CuratorPaginationTest extends DatabaseTestFixture {
 
     @Test
     public void testPaging() {
-        DataPresentation presentation = new DataPresentation();
-        presentation.setSortBy("key");
-        presentation.setOrder(DataPresentation.Order.ASCENDING);
-        presentation.setPage(3);
-        presentation.setPerPage(2);
+        PageRequest pageRequest = new PageRequest();
+        pageRequest.setSortBy("key");
+        pageRequest.setOrder(PageRequest.Order.ASCENDING);
+        pageRequest.setPage(3);
+        pageRequest.setPerPage(2);
 
-        Page<List<Owner>> p = ownerCurator.listAll(presentation);
-        assertEquals(new Integer(10), p.getMaxRecords());
+        Page<List<Owner>> p = ownerCurator.listAll(pageRequest);
+        assertEquals(Integer.valueOf(10), p.getMaxRecords());
 
         List<Owner> ownerList = p.getPageData();
         assertEquals(2, ownerList.size());
@@ -71,8 +71,8 @@ public class CuratorPaginationTest extends DatabaseTestFixture {
         assertEquals("4", ownerList.get(0).getKey());
         assertEquals("5", ownerList.get(1).getKey());
 
-        DataPresentation presentation2 = p.getPresentation();
-        assertEquals(presentation, presentation2);
+        PageRequest pageRequest2 = p.getPageRequest();
+        assertEquals(pageRequest, pageRequest2);
     }
 
     @Test
@@ -84,24 +84,24 @@ public class CuratorPaginationTest extends DatabaseTestFixture {
 
     @Test
     public void testPagingWithDetachedCriteria() {
-        DataPresentation presentation = new DataPresentation();
-        presentation.setSortBy("key");
-        presentation.setOrder(DataPresentation.Order.ASCENDING);
-        presentation.setPage(1);
-        presentation.setPerPage(2);
+        PageRequest pageRequest = new PageRequest();
+        pageRequest.setSortBy("key");
+        pageRequest.setOrder(PageRequest.Order.ASCENDING);
+        pageRequest.setPage(1);
+        pageRequest.setPerPage(2);
 
         DetachedCriteria criteria = DetachedCriteria.forClass(Owner.class).
             add(Restrictions.gt("key", "5"));
 
-        Page<List<Owner>> p = ownerCurator.listByCriteria(criteria, presentation);
-        assertEquals(new Integer(4), p.getMaxRecords());
+        Page<List<Owner>> p = ownerCurator.listByCriteria(criteria, pageRequest);
+        assertEquals(Integer.valueOf(4), p.getMaxRecords());
 
         List<Owner> ownerList = p.getPageData();
         assertEquals(2, ownerList.size());
         assertEquals("6", ownerList.get(0).getKey());
 
-        DataPresentation presentation2 = p.getPresentation();
-        assertEquals(presentation, presentation2);
+        PageRequest pageRequest2 = p.getPageRequest();
+        assertEquals(pageRequest, pageRequest2);
     }
 
     @Test
@@ -116,13 +116,13 @@ public class CuratorPaginationTest extends DatabaseTestFixture {
 
     @Test
     public void testReturnsAllResultsWhenNotPaging() {
-        DataPresentation presentation = new DataPresentation();
-        presentation.setSortBy("key");
-        presentation.setOrder(DataPresentation.Order.ASCENDING);
-        assertFalse(presentation.isPaging());
+        PageRequest pageRequest = new PageRequest();
+        pageRequest.setSortBy("key");
+        pageRequest.setOrder(PageRequest.Order.ASCENDING);
+        assertFalse(pageRequest.isPaging());
 
-        Page<List<Owner>> p = ownerCurator.listAll(presentation);
-        assertEquals(new Integer(10), p.getMaxRecords());
+        Page<List<Owner>> p = ownerCurator.listAll(pageRequest);
+        assertEquals(Integer.valueOf(10), p.getMaxRecords());
 
         List<Owner> ownerList = p.getPageData();
         assertEquals(10, ownerList.size());

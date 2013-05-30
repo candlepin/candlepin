@@ -15,9 +15,9 @@
 package org.candlepin.paging;
 
 /**
- * Represents the presentation of data coming back from Candlepin.
+ * Represents a request to page data coming back from Candlepin.
  */
-public class DataPresentation {
+public class PageRequest {
     /**
      * Represents the order things can be sorted in.
      */
@@ -31,8 +31,8 @@ public class DataPresentation {
     public static final String PAGE_PARAM = "page";
     public static final String PER_PAGE_PARAM = "per_page";
 
-    public static final Integer DEFAULT_PAGE = new Integer(0);
-    public static final Integer DEFAULT_PER_PAGE = new Integer(10);
+    public static final Integer DEFAULT_PAGE = Integer.valueOf(0);
+    public static final Integer DEFAULT_PER_PAGE = Integer.valueOf(10);
     public static final Order DEFAULT_ORDER = Order.DESCENDING;
 
     private Integer page;
