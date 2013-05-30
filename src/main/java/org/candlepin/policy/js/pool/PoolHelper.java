@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Attribute;
 import org.candlepin.model.Entitlement;
@@ -315,9 +316,9 @@ public class PoolHelper extends AttributeHelper {
     }
 
     public boolean checkForOrderChanges(Pool existingPool, Subscription sub) {
-        return ((!existingPool.getOrderNumber().equals(sub.getOrderNumber())) ||
-                (!existingPool.getAccountNumber().equals(sub.getAccountNumber())) ||
-                (!existingPool.getContractNumber().equals(sub.getContractNumber())));
+        return (!StringUtils.equals(existingPool.getOrderNumber(), sub.getOrderNumber()) ||
+            !StringUtils.equals(existingPool.getAccountNumber(), sub.getAccountNumber()) ||
+            !StringUtils.equals(existingPool.getContractNumber(), sub.getContractNumber()));
     }
 
     private boolean haveAttributesChanged(Pool existing, Subscription sub) {
