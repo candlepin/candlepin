@@ -42,6 +42,7 @@ import org.junit.Test;
  * CertTest
  * @version $Rev$
  */
+@SuppressWarnings("deprecation")
 public class CertTest {
 
     private RSAPublicKeySpec pubKeySpec;
@@ -155,8 +156,6 @@ public class CertTest {
                 caPrivKey);
         X509Certificate clientCert = AttrCertExample.createClientCert(pubKey,
                 caPrivKey, caPubKey);
-//        System.out.println("CaCert: " + caCert);
-//        System.out.println("clientCert: " + clientCert);
         // Instantiate a new AC generator
         X509V2AttributeCertificateGenerator acGen =
             new X509V2AttributeCertificateGenerator();
