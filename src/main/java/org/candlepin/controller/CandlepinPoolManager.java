@@ -576,7 +576,7 @@ public class CandlepinPoolManager implements PoolManager {
      * @return
      */
     private EntitlementCertificate generateEntitlementCertificate(
-        Consumer consumer, Pool pool, Entitlement e, boolean generateUeberCert) {
+        Pool pool, Entitlement e, boolean generateUeberCert) {
         Subscription sub = null;
         if (pool.getSubscriptionId() != null) {
             sub = subAdapter.getSubscription(pool.getSubscriptionId());
@@ -732,7 +732,7 @@ public class CandlepinPoolManager implements PoolManager {
         e.getCertificates().clear();
         // below call creates new certificates and saves it to the backend.
         EntitlementCertificate generated = this.generateEntitlementCertificate(
-            e.getConsumer(), e.getPool(), e, ueberCertificate);
+            e.getPool(), e, ueberCertificate);
         e.setDirty(false);
         entitlementCurator.merge(e);
 
@@ -980,7 +980,7 @@ public class CandlepinPoolManager implements PoolManager {
         @Override
         public void handleSelfCertificate(Consumer consumer, Pool pool,
             Entitlement entitlement, boolean generateUeberCert) {
-            generateEntitlementCertificate(consumer, pool, entitlement, generateUeberCert);
+            generateEntitlementCertificate(pool, entitlement, generateUeberCert);
         }
         @Override
         public void handleBonusPools(Consumer consumer, Pool pool,

@@ -22,7 +22,6 @@ import static org.quartz.JobKey.jobKey;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.persist.PersistService;
 import com.google.inject.persist.UnitOfWork;
 import com.google.inject.persist.jpa.JpaPersistModule;
 
@@ -51,7 +50,6 @@ import org.quartz.spi.JobFactory;
 public class PinsetterJobListenerDatabaseTest {
     protected Injector injector;
     protected UnitOfWork unitOfWork;
-    private PersistService persistenceService;
     private JobCurator curator;
 
     @Before
@@ -59,7 +57,6 @@ public class PinsetterJobListenerDatabaseTest {
         TestModule testingModule = new TestModule();
         injector = Guice.createInjector(testingModule,
             new CandlepinNonServletEnvironmentTestingModule());
-        persistenceService = injector.getInstance(PersistService.class);
         unitOfWork = injector.getInstance(UnitOfWork.class);
         curator = injector.getInstance(JobCurator.class);
     }

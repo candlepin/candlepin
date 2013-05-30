@@ -330,7 +330,6 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testConsumerTypeCountByPoolPutsDefaultsIntoSystem() {
-        ConsumerType type = consumerTypeCurator.lookupByLabel("system");
         owner.addEntitlementPool(pool1);
 
         OwnerInfo info = ownerInfoCurator.lookupByOwner(owner);

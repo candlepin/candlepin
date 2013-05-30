@@ -463,13 +463,12 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         consumerTypeCurator.create(c.getType());
         consumerCurator.create(c);
 
-        Principal principal = setupPrincipal(new ConsumerPrincipal(c));
         securityInterceptor.enable();
 
         Owner owner2 = createOwner();
         ownerCurator.create(owner2);
 
-        List<Pool> pools = ownerResource.getPools(owner.getKey(), c.getUuid(),
+        ownerResource.getPools(owner.getKey(), c.getUuid(),
             p.getId(), true, null, setupPrincipal(owner2, Access.NONE));
     }
 
@@ -669,7 +668,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource or = new OwnerResource(oc, null,
             null, akc, null, null, i18n, null, null, null,
             null, null, null, null, null, null, null,
-            null, null, null, null, null, null, null, null, null, null);
+            null, null, null, null, null, null, null);
         or.createActivationKey("testOwner", ak);
     }
 
@@ -745,7 +744,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         EventSink es = mock(EventSink.class);
         OwnerResource thisOwnerResource = new OwnerResource(ownerCurator, null, null,
             null, null, null, i18n, es, null, null, null, importer, null, null,
-            null, importRecordCurator, null, null, null, null, null, null, null, null,
+            null, importRecordCurator, null, null, null, null, null,
             null, null, null);
 
         MultipartInput input = mock(MultipartInput.class);
@@ -780,7 +779,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         SubscriptionCurator sc = mock(SubscriptionCurator.class);
         OwnerResource thisOwnerResource = new OwnerResource(ownerCurator, null, sc,
             null, null, null, i18n, es, null, null, null, null, null, ec,
-            null, importRecordCurator, null, null, null, null, null, null, null, null,
+            null, importRecordCurator, null, null, null, null, null,
             null, null, null);
 
         ExporterMetadata metadata = new ExporterMetadata();
@@ -803,7 +802,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         EventSink es = mock(EventSink.class);
         OwnerResource thisOwnerResource = new OwnerResource(ownerCurator, null, null,
             null, null, null, i18n, es, null, null, null, importer, null, null,
-            null, importRecordCurator, null, null, null, null, null, null, null, null,
+            null, importRecordCurator, null, null, null, null, null,
             null, null, null);
 
         MultipartInput input = mock(MultipartInput.class);
@@ -844,8 +843,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Owner owner = mock(Owner.class);
         OwnerResource ownerres = new OwnerResource(oc, null, null,
             null, null, null, i18n, null, null, null, null, null, null, null,
-            null, null, null, null, null, null, null, null, null, null,
-            null, null, null);
+            null, null, null, null, null, null, null, null, null, null);
 
         when(oc.lookupByKey(eq("admin"))).thenReturn(owner);
         when(owner.getUpstreamConsumer()).thenReturn(upstream);

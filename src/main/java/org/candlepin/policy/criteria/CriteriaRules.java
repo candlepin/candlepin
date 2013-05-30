@@ -17,7 +17,6 @@ package org.candlepin.policy.criteria;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.log4j.Logger;
 import org.candlepin.config.Config;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -44,7 +43,6 @@ public class CriteriaRules  {
 
     protected Config config;
     protected ConsumerCurator consumerCurator;
-    private static Logger log = Logger.getLogger(CriteriaRules.class);
 
     @Inject
     public CriteriaRules(Config config,

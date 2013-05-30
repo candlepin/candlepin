@@ -22,7 +22,6 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.persist.Transactional;
 
-import org.apache.log4j.Logger;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
@@ -44,7 +43,6 @@ import javax.persistence.EntityManager;
  */
 public abstract class AbstractHibernateCurator<E extends Persisted> {
     @Inject protected Provider<EntityManager> entityManager;
-    private static Logger log = Logger.getLogger(AbstractHibernateCurator.class);
     private final Class<E> entityType;
     private int batchSize = 30;
 

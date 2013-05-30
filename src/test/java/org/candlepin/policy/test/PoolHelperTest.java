@@ -321,7 +321,6 @@ public class PoolHelperTest {
         targetProduct.getAttributes().clear();
         targetProduct.setAttribute("A1", "V1");
         targetProduct.setAttribute("A2", "V2");
-        Subscription sourceSub = TestUtil.createSubscription(targetProduct);
         Pool targetPool = TestUtil.createPool(targetProduct);
         targetPool.setId("jso_speedwagon");
 

@@ -66,10 +66,10 @@ public class EnvironmentCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void listWithContent() {
-        Environment e = envCurator.create(new Environment("env2", "Another Env", owner));
+        envCurator.create(new Environment("env2", "Another Env", owner));
 
         final String contentId = "contentId";
-        EnvironmentContent ec = envContentCurator.create(
+        envContentCurator.create(
             new EnvironmentContent(environment, contentId, true));
 
         Set<String> ids = new HashSet<String>();

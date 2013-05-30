@@ -66,20 +66,20 @@ public class RulesCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void getRules() {
-        Rules rules = rulesCurator.getRules();
+        rulesCurator.getRules();
     }
 
     @Test
     public void deleteDefaultRules() {
         Rules rules = rulesCurator.getRules();
         rulesCurator.delete(rules);
-        Rules defaultRules = rulesCurator.getRules();
+        rulesCurator.getRules();
     }
 
     @Test
     public void uploadRules() {
         Rules rules = new Rules("// Version: 3.1000\n//these are the new rules");
-        Rules newRules = rulesCurator.update(rules);
+        rulesCurator.update(rules);
         Rules updateRules = rulesCurator.getRules();
         assertEquals(rules.getRules(), updateRules.getRules());
     }
@@ -87,9 +87,9 @@ public class RulesCuratorTest extends DatabaseTestFixture {
     @Test
     public void uploadMultipleRules() {
         Rules rules = new Rules("// Version: 3.1000\n// rules1 ");
-        Rules newRules = rulesCurator.update(rules);
+        rulesCurator.update(rules);
         Rules rules2 = new Rules("// Version: 3.1001\n// rules2 ");
-        Rules newRules2 = rulesCurator.update(rules2);
+        rulesCurator.update(rules2);
         Rules updateRules = rulesCurator.getRules();
         assertEquals(rules2.getRules(), updateRules.getRules());
     }
