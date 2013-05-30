@@ -154,6 +154,45 @@ public class EntitlerTest {
         bindByPoolErrorTest("rulefailed.no.entitlements.available");
     }
 
+    @Test
+    public void consumerDoesntSupportInstanceBased() {
+        String expected = "Consumer does not support instance based " +
+            "calculation required by pool 'pool10'";
+        try {
+            bindByPoolErrorTest("rulefailed.instance.unsupported.by.consumer");
+            fail();
+        }
+        catch (ForbiddenException e) {
+            assertEquals(expected, e.getMessage());
+        }
+    }
+
+    @Test
+    public void consumerDoesntSupportCores() {
+        String expected = "Consumer does not support core " +
+            "calculaton required by pool 'pool10'";
+        try {
+            bindByPoolErrorTest("rulefailed.cores.unsupported.by.consumer");
+            fail();
+        }
+        catch (ForbiddenException e) {
+            assertEquals(expected, e.getMessage());
+        }
+    }
+
+    @Test
+    public void consumerDoesntSupportRam() {
+        String expected = "Consumer does not support RAM " +
+            "calculaton required by pool 'pool10'";
+        try {
+            bindByPoolErrorTest("rulefailed.ram.unsupported.by.consumer");
+            fail();
+        }
+        catch (ForbiddenException e) {
+            assertEquals(expected, e.getMessage());
+        }
+    }
+
     private void bindByPoolErrorTest(String msg) {
         try {
             String poolid = "pool10";
