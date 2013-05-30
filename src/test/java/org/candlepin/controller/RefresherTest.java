@@ -115,7 +115,6 @@ public class RefresherTest {
 
     @Test
     public void testPoolOnlyExaminedOnceTwoProducts() {
-        Owner owner = mock(Owner.class);
         Product product = mock(Product.class);
         Product product2 = mock(Product.class);
 

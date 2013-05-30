@@ -26,6 +26,7 @@ import static org.mockito.Mockito.when;
 import java.io.InputStream;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.candlepin.auth.UserPrincipal;
@@ -149,7 +150,7 @@ public class PoolRulesTest {
         p.getProvidedProducts().add(
             new ProvidedProduct(product3.getId(), product3.getName(), p));
 
-        List<Pool> existingPools = new java.util.LinkedList<Pool>();
+        List<Pool> existingPools = new LinkedList<Pool>();
         existingPools.add(p);
         List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools);
         assertEquals(1, updates.size());
@@ -167,7 +168,7 @@ public class PoolRulesTest {
         Pool p = copyFromSub(s);
         p.setProductName("somethingelse");
 
-        List<Pool> existingPools = new java.util.LinkedList<Pool>();
+        List<Pool> existingPools = new LinkedList<Pool>();
         existingPools.add(p);
         List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools);
 
@@ -187,7 +188,7 @@ public class PoolRulesTest {
         Pool p = copyFromSub(s);
         p.setEndDate(new Date());
 
-        List<Pool> existingPools = new java.util.LinkedList<Pool>();
+        List<Pool> existingPools = new LinkedList<Pool>();
         existingPools.add(p);
         List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools);
 
@@ -207,7 +208,7 @@ public class PoolRulesTest {
         Pool p = copyFromSub(s);
         p.setQuantity(2000L);
 
-        List<Pool> existingPools = new java.util.LinkedList<Pool>();
+        List<Pool> existingPools = new LinkedList<Pool>();
         existingPools.add(p);
         List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools);
 
@@ -231,7 +232,7 @@ public class PoolRulesTest {
         p.addAttribute(new PoolAttribute("pool_derived", "true"));
         p.setQuantity(40L);
 
-        List<Pool> existingPools = new java.util.LinkedList<Pool>();
+        List<Pool> existingPools = new LinkedList<Pool>();
         existingPools.add(p);
         List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools);
 
@@ -254,7 +255,7 @@ public class PoolRulesTest {
 
         when(productAdapterMock.getProductById(s.getProduct().getId()))
             .thenReturn(s.getProduct());
-        List<Pool> existingPools = new java.util.LinkedList<Pool>();
+        List<Pool> existingPools = new LinkedList<Pool>();
         existingPools.add(p);
         List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools);
 
@@ -281,7 +282,7 @@ public class PoolRulesTest {
         when(productAdapterMock.getProductById(s.getProduct().getId()))
             .thenReturn(s.getProduct());
 
-        List<Pool> existingPools = new java.util.LinkedList<Pool>();
+        List<Pool> existingPools = new LinkedList<Pool>();
         existingPools.add(p);
         List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools);
 
@@ -309,7 +310,7 @@ public class PoolRulesTest {
         when(productAdapterMock.getProductById(s.getProduct().getId()))
             .thenReturn(s.getProduct());
 
-        List<Pool> existingPools = new java.util.LinkedList<Pool>();
+        List<Pool> existingPools = new LinkedList<Pool>();
         existingPools.add(p);
         List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools);
 
@@ -345,7 +346,7 @@ public class PoolRulesTest {
 
     private Subscription createVirtLimitSub(String productId, int quantity, int virtLimit) {
         Product product = new Product(productId, productId);
-        product.setAttribute("virt_limit", new Integer(virtLimit).toString());
+        product.setAttribute("virt_limit", Integer.toString(virtLimit));
         when(productAdapterMock.getProductById(productId)).thenReturn(product);
         Subscription s = TestUtil.createSubscription(product);
         s.setQuantity(new Long(quantity));
@@ -438,8 +439,6 @@ public class PoolRulesTest {
         s.getProduct().setAttribute("virt_limit", "4");
         List<Pool> pools = poolRules.createPools(s);
         assertEquals(2, pools.size());
-
-        Pool virtBonusPool = pools.get(1);
 
         // Now we update the sub and see if that unlimited pool gets adjusted:
         s.getProduct().getAttributes().clear();
@@ -614,7 +613,7 @@ public class PoolRulesTest {
         p.addAttribute(new PoolAttribute("pool_derived", "true"));
         p.setQuantity(10L);
 
-        List<Pool> existingPools = new java.util.LinkedList<Pool>();
+        List<Pool> existingPools = new LinkedList<Pool>();
         existingPools.add(p);
         List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools);
 
@@ -633,7 +632,7 @@ public class PoolRulesTest {
         p.addAttribute(new PoolAttribute("pool_derived", "true"));
         p.setQuantity(20L);
 
-        List<Pool> existingPools = new java.util.LinkedList<Pool>();
+        List<Pool> existingPools = new LinkedList<Pool>();
         existingPools.add(p);
         List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools);
 
@@ -655,7 +654,7 @@ public class PoolRulesTest {
         p.setQuantity(2000L);
         p.setContractNumber("ABC");
 
-        List<Pool> existingPools = new java.util.LinkedList<Pool>();
+        List<Pool> existingPools = new LinkedList<Pool>();
         existingPools.add(p);
         List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools);
 
@@ -675,7 +674,7 @@ public class PoolRulesTest {
         p.setQuantity(2000L);
         p.setOrderNumber("ABC");
 
-        List<Pool> existingPools = new java.util.LinkedList<Pool>();
+        List<Pool> existingPools = new LinkedList<Pool>();
         existingPools.add(p);
         List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools);
 
@@ -695,7 +694,7 @@ public class PoolRulesTest {
         p.setQuantity(2000L);
         p.setAccountNumber("ABC");
 
-        List<Pool> existingPools = new java.util.LinkedList<Pool>();
+        List<Pool> existingPools = new LinkedList<Pool>();
         existingPools.add(p);
         List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools);
 

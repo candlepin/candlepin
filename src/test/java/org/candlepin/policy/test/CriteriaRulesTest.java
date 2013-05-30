@@ -85,8 +85,7 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
         Product targetProduct = TestUtil.createProduct();
         targetProduct.setAttribute("virt_only", "true");
         this.productCurator.create(targetProduct);
-        Pool physicalPool = this.createPoolAndSub(owner, targetProduct, 1L, new Date(),
-            new Date());
+        this.createPoolAndSub(owner, targetProduct, 1L, new Date(), new Date());
 
         this.createPoolAndSub(owner, targetProduct, 1L, new Date(),
             new Date());

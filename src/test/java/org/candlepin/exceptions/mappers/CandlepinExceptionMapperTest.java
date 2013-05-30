@@ -45,7 +45,6 @@ import javax.ws.rs.core.Response.Status;
 public class CandlepinExceptionMapperTest {
 
     private Injector injector;
-    private HttpServletRequest req;
     private CandlepinExceptionMapper cem;
 
 
@@ -53,7 +52,6 @@ public class CandlepinExceptionMapperTest {
     public void init() {
         MapperTestModule mtm = new MapperTestModule();
         injector = Guice.createInjector(mtm);
-        req = injector.getInstance(HttpServletRequest.class);
         cem = injector.getInstance(CandlepinExceptionMapper.class);
     }
 

@@ -14,8 +14,6 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.service.ProductServiceAdapter;
-
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
@@ -45,7 +43,7 @@ public class OwnerInfoCurator {
 
     @Inject
     public OwnerInfoCurator(Provider<EntityManager> entityManager,
-        ConsumerTypeCurator consumerTypeCurator, ProductServiceAdapter psa) {
+        ConsumerTypeCurator consumerTypeCurator) {
         this.entityManager = entityManager;
         this.consumerTypeCurator = consumerTypeCurator;
     }

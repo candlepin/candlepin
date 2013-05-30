@@ -30,7 +30,7 @@ public class ArchTest extends DatabaseTestFixture {
     /* FIXME: inherit DatabaseTestFixture and read/write to Arch'es to db */
     @Test
     public void testArch() {
-        Arch arch = new Arch("i386", "i386");
+        new Arch("i386", "i386");
     }
 
     @Test

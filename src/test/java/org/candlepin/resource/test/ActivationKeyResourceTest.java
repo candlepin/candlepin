@@ -117,8 +117,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         when(akc.find(eq("testKey"))).thenReturn(ak);
         when(pc.find(eq("testPool"))).thenReturn(p);
 
-        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n,
-            pc, null);
+        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, pc);
         akr.addPoolToKey("testKey", "testPool", 2);
     }
 
@@ -136,8 +135,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         when(ppa.getValue()).thenReturn("yes");
         when(p.getQuantity()).thenReturn(10L);
 
-        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n,
-            pc, null);
+        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, pc);
         akr.addPoolToKey("testKey", "testPool", -3);
     }
 
@@ -155,8 +153,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         when(ppa.getValue()).thenReturn("yes");
         when(p.getQuantity()).thenReturn(10L);
 
-        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n,
-            pc, null);
+        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, pc);
         akr.addPoolToKey("testKey", "testPool", 15);
     }
 
@@ -174,8 +171,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         when(p.getProductAttribute(eq("multi-entitlement"))).thenReturn(ppa);
         when(ppa.getValue()).thenReturn("yes");
 
-        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n,
-            pc, null);
+        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, pc);
         akr.addPoolToKey("testKey", "testPool", 15);
     }
 
@@ -194,8 +190,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         when(ppa.getValue()).thenReturn("person");
         when(p.getQuantity()).thenReturn(1L);
 
-        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n,
-            pc, null);
+        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, pc);
         akr.addPoolToKey("testKey", "testPool", 1);
     }
 
@@ -213,8 +208,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         when(ppa.getValue()).thenReturn("candlepin");
         when(p.getQuantity()).thenReturn(1L);
 
-        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n,
-            pc, null);
+        ActivationKeyResource akr = new ActivationKeyResource(akc, i18n, pc);
         assertNotNull(akr.addPoolToKey("testKey", "testPool", 1));
     }
 

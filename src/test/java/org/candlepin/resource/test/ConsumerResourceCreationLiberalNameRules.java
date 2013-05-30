@@ -25,8 +25,6 @@ import java.util.HashMap;
  */
 public class ConsumerResourceCreationLiberalNameRules extends
     ConsumerResourceCreationTest {
-    private Config config;
-
     private static class ConfigForTesting extends Config {
         @SuppressWarnings("serial")
         public ConfigForTesting() {

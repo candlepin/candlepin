@@ -52,7 +52,6 @@ public class RulesResourceTest extends DatabaseTestFixture {
         String rulesBuffer = new String(Base64.encodeBase64String((
             TestUtil.createRulesBlob(10000).getBytes())));
         rulesResource.upload(rulesBuffer);
-        Rules rules = rulesCurator.getRules();
         String rulesBlob = rulesResource.get();
         assertEquals(rulesBlob, rulesBuffer);
     }

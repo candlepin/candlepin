@@ -24,7 +24,6 @@ import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.config.CandlepinCommonTestConfig;
-import org.candlepin.controller.PoolManager;
 import org.candlepin.model.ActivationKeyCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -93,9 +92,6 @@ public class HypervisorResourceTest {
 
     @Mock
     private UserPrincipal principal;
-
-    @Mock
-    private PoolManager poolManager;
 
     @Mock
     private ComplianceRules complianceRules;

@@ -25,8 +25,6 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 
-import org.apache.log4j.Logger;
-
 import com.google.inject.Singleton;
 
 /**
@@ -39,7 +37,6 @@ import com.google.inject.Singleton;
  */
 @Singleton // For use with Guice
 public class ContentTypeHackFilter implements Filter {
-    private static Logger log = Logger.getLogger(ContentTypeHackFilter.class);
 
     @Override
     public void destroy() {

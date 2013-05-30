@@ -37,7 +37,6 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
-import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.Statistic;
 import org.candlepin.model.StatisticCurator;
@@ -71,7 +70,6 @@ public class ProductResource {
      */
     @Inject
     public ProductResource(ProductServiceAdapter prodAdapter,
-                           ProductCertificateCurator productCertCurator,
                            StatisticCurator statisticCurator,
                            ContentCurator contentCurator,
                            OwnerCurator ownerCurator,

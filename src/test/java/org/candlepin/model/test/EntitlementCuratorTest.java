@@ -17,7 +17,6 @@ package org.candlepin.model.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -48,7 +47,6 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     private Owner owner;
     private Consumer consumer;
     private Environment environment;
-    private Calendar cal;
     private Date overlappingDate;
     private Date futureDate;
     private Date pastDate;
@@ -58,8 +56,6 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
     @Before
     public void setUp() {
-        cal = Calendar.getInstance();
-
         owner = createOwner();
         ownerCurator.create(owner);
 

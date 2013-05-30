@@ -54,7 +54,7 @@ public class ActivationKeyResource {
 
     @Inject
     public ActivationKeyResource(ActivationKeyCurator activationKeyCurator,
-        I18n i18n, PoolCurator poolCurator, ConsumerResource consumerResource) {
+        I18n i18n, PoolCurator poolCurator) {
         this.activationKeyCurator = activationKeyCurator;
         this.i18n = i18n;
         this.poolCurator = poolCurator;

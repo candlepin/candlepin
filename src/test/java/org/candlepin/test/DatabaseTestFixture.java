@@ -18,7 +18,6 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.persist.PersistFilter;
-import com.google.inject.persist.PersistService;
 import com.google.inject.persist.UnitOfWork;
 import com.google.inject.util.Modules;
 
@@ -143,8 +142,6 @@ public class DatabaseTestFixture {
     protected UeberCertificateGenerator ueberCertGenerator;
     protected CandlepinSingletonScope cpSingletonScope;
 
-    private PersistService persistanceService;
-
     @Before
     public void init() {
         Module guiceOverrideModule = getGuiceOverrideModule();
@@ -152,8 +149,6 @@ public class DatabaseTestFixture {
         if (guiceOverrideModule == null) {
             injector = Guice.createInjector(testingModule,
                 new CandlepinNonServletEnvironmentTestingModule());
-              //  PersistService.usingJpa().across(UnitOfWork.REQUEST)
-//                    .buildModule());
         }
         else {
             injector = Guice.createInjector(Modules.override(testingModule)
@@ -167,7 +162,6 @@ public class DatabaseTestFixture {
         // Exit the scope to make sure that it is clean before starting the test.
         cpSingletonScope.exit();
         cpSingletonScope.enter();
-        persistanceService = injector.getInstance(PersistService.class);
 
         injector.getInstance(EntityManagerFactory.class);
         emf = injector.getProvider(EntityManagerFactory.class).get();

@@ -64,9 +64,7 @@ public class StatisticCuratorQueries extends AbstractHibernateCurator<Statistic>
             else if (qType.equals("SYSTEM")) {
                 c.add(Restrictions.eq("entryType", EntryType.SYSTEM));
             }
-            else {
-                // no match, no filter
-            }
+            // no match, no filter
         }
         if (vType != null && !vType.trim().equals("")) {
             if (vType.equals("RAW")) {
@@ -88,9 +86,7 @@ public class StatisticCuratorQueries extends AbstractHibernateCurator<Statistic>
             else if (vType.equals("VIRTUAL")) {
                 c.add(Restrictions.eq("valueType", ValueType.VIRTUAL));
             }
-            else {
-                // no match, no filter
-            }
+            // no match, no filter
         }
         if (reference != null && !reference.trim().equals("")) {
             c.add(Restrictions.eq("valueReference", reference));
@@ -126,9 +122,7 @@ public class StatisticCuratorQueries extends AbstractHibernateCurator<Statistic>
                 c.add(Restrictions
                     .eq("valueType", ValueType.PERCENTAGECONSUMED));
             }
-            else {
-                // no match, no filter
-            }
+            // no match, no filter
         }
         if (from != null) {
             c.add(Restrictions.ge("created", from));
@@ -161,9 +155,7 @@ public class StatisticCuratorQueries extends AbstractHibernateCurator<Statistic>
                 c.add(Restrictions
                     .eq("valueType", ValueType.PERCENTAGECONSUMED));
             }
-            else {
-                // no match, no filter
-            }
+            // no match, no filter
         }
         if (from != null) {
             c.add(Restrictions.ge("created", from));

@@ -42,7 +42,7 @@ public class BouncyCastlePKIReaderTest {
                     put(ConfigProperties.CA_KEY_PASSWORD, "dog8code");
                 }
             });
-        BouncyCastlePKIReader pki = new BouncyCastlePKIReader(config);
+        new BouncyCastlePKIReader(config);
     }
 
 }

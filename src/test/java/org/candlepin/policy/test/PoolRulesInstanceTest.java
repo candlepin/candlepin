@@ -22,6 +22,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.InputStream;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.candlepin.config.Config;
@@ -114,7 +115,7 @@ public class PoolRulesInstanceTest {
         // Change the quantity:
         s.setQuantity(new Long(200));
 
-        List<Pool> existingPools = new java.util.LinkedList<Pool>();
+        List<Pool> existingPools = new LinkedList<Pool>();
         existingPools.add(pool);
         List<PoolUpdate> updates = poolRules.updatePools(s, existingPools);
 
@@ -137,7 +138,7 @@ public class PoolRulesInstanceTest {
         ProductAttribute pa = s.getProduct().getAttribute("instance_multiplier");
         s.getProduct().getAttributes().remove(pa);
 
-        List<Pool> existingPools = new java.util.LinkedList<Pool>();
+        List<Pool> existingPools = new LinkedList<Pool>();
         existingPools.add(pool);
         List<PoolUpdate> updates = poolRules.updatePools(s, existingPools);
 
@@ -160,7 +161,7 @@ public class PoolRulesInstanceTest {
         // Change the quantity as well:
         s.setQuantity(new Long(200));
 
-        List<Pool> existingPools = new java.util.LinkedList<Pool>();
+        List<Pool> existingPools = new LinkedList<Pool>();
         existingPools.add(pool);
         List<PoolUpdate> updates = poolRules.updatePools(s, existingPools);
 
@@ -177,7 +178,7 @@ public class PoolRulesInstanceTest {
         int instanceMultiplier, boolean exported) {
         Product product = new Product(productId, productId);
         product.setAttribute("instance_multiplier",
-            new Integer(instanceMultiplier).toString());
+            Integer.toString(instanceMultiplier));
         when(productAdapterMock.getProductById(productId)).thenReturn(product);
         Subscription s = TestUtil.createSubscription(product);
         if (exported) {

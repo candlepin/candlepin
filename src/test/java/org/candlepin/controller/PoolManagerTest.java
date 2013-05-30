@@ -58,7 +58,6 @@ import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.Subscription;
 import org.candlepin.policy.ValidationResult;
-import org.candlepin.policy.criteria.CriteriaRules;
 import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.autobind.AutobindRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
@@ -107,8 +106,6 @@ public class PoolManagerTest {
     private AutobindRules autobindRules;
     @Mock
     private PoolRules poolRulesMock;
-    @Mock
-    private CriteriaRules poolCriteriaMock;
     @Mock
     private ConsumerCurator consumerCuratorMock;
     @Mock
@@ -268,17 +265,6 @@ public class PoolManagerTest {
     private Owner getOwner() {
         // just grab the first one
         return principal.getOwners().get(0);
-    }
-
-    private void verifyAndAssertForAllChanges(Subscription s, Pool p,
-        int expectedEventCount) {
-        verify(mockPoolCurator).retrieveFreeEntitlementsOfPool(any(Pool.class),
-            eq(true));
-        verify(mockEventSink, times(expectedEventCount)).sendEvent(any(Event.class));
-
-        assertEquals(s.getQuantity(), p.getQuantity());
-        assertEquals(s.getEndDate(), p.getEndDate());
-        assertEquals(s.getStartDate(), p.getStartDate());
     }
 
     @Test
