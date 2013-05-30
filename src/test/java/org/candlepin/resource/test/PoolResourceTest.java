@@ -21,7 +21,6 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
@@ -94,8 +93,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
         poolCurator.create(pool3);
 
         poolResource = new PoolResource(poolCurator, consumerCurator, ownerCurator,
-            statisticCurator, i18n, injector.getInstance(EventSink.class), poolManager,
-            attrUtil);
+            statisticCurator, i18n, poolManager, attrUtil);
 
         // Consumer system with too many cpu cores:
 

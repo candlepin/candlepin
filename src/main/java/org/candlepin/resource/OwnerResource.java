@@ -159,10 +159,8 @@ public class OwnerResource {
         SubscriptionServiceAdapter subService,
         OwnerPermissionCurator permCurator,
         ConsumerTypeCurator consumerTypeCurator,
-        ProductServiceAdapter prodAdapter,
-        ContentCurator contentCurator,
         EntitlementCertificateCurator entitlementCertCurator,
-        EntitlementCurator entitlementCurator, UniqueIdGenerator idGenerator,
+        EntitlementCurator entitlementCurator,
         UeberCertificateGenerator ueberCertGenerator,
         EnvironmentCurator envCurator, CalculatedAttributesUtil calculatedAttributesUtil) {
 

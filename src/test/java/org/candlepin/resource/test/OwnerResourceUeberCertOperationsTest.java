@@ -69,9 +69,8 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
         or = new OwnerResource(ownerCurator, poolCurator,
             null, null, consumerCurator, null, i18n, null, null, null,
             null, null, poolManager, null, null, null, subAdapter,
-            null, consumerTypeCurator, productAdapter, contentCurator,
-            entCertCurator, entitlementCurator, uniqueIdGenerator, ueberCertGenerator,
-            null, null);
+            null, consumerTypeCurator, entCertCurator, entitlementCurator, 
+            ueberCertGenerator, null, null);
     }
 
     @Test
