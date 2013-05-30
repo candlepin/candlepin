@@ -270,17 +270,6 @@ public class PoolManagerTest {
         return principal.getOwners().get(0);
     }
 
-    private void verifyAndAssertForAllChanges(Subscription s, Pool p,
-        int expectedEventCount) {
-        verify(mockPoolCurator).retrieveFreeEntitlementsOfPool(any(Pool.class),
-            eq(true));
-        verify(mockEventSink, times(expectedEventCount)).sendEvent(any(Event.class));
-
-        assertEquals(s.getQuantity(), p.getQuantity());
-        assertEquals(s.getEndDate(), p.getEndDate());
-        assertEquals(s.getStartDate(), p.getStartDate());
-    }
-
     @Test
     public void testCreatePoolForSubscription() {
         final Subscription s = TestUtil.createSubscription(getOwner(),
