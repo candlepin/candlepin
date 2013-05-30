@@ -169,6 +169,7 @@
         <include name="**/candlepin/util/**"/>
         <include name="**/candlepin/resteasy/**"/>
         <include name="**/candlepin/jackson/**"/>
+        <include name="**/candlepin/paging/**"/>
       </fileset>
       <manifest>
         <attribute name="Implementation-Vendor" value="" />
