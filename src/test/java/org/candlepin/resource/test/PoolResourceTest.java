@@ -262,12 +262,12 @@ public class PoolResourceTest extends DatabaseTestFixture {
     @Test
     public void testActiveOnDate() {
         // Need to be a super admin to do this:
-        String activeOn = new Integer(START_YEAR + 1).toString();
+        String activeOn = Integer.toString(START_YEAR + 1);
         List<Pool> pools = poolResource.list(null, null, null, false, activeOn,
             setupAdminPrincipal("superadmin"));
         assertEquals(3, pools.size());
 
-        activeOn = new Integer(START_YEAR - 1).toString();
+        activeOn = Integer.toString(START_YEAR - 1);
         pools = poolResource.list(owner1.getId(), null, null, false, activeOn,
             adminPrincipal);
         assertEquals(0, pools.size());

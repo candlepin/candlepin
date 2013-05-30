@@ -178,7 +178,7 @@ public class PoolRulesInstanceTest {
         int instanceMultiplier, boolean exported) {
         Product product = new Product(productId, productId);
         product.setAttribute("instance_multiplier",
-            new Integer(instanceMultiplier).toString());
+            Integer.toString(instanceMultiplier));
         when(productAdapterMock.getProductById(productId)).thenReturn(product);
         Subscription s = TestUtil.createSubscription(product);
         if (exported) {

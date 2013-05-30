@@ -346,7 +346,7 @@ public class PoolRulesTest {
 
     private Subscription createVirtLimitSub(String productId, int quantity, int virtLimit) {
         Product product = new Product(productId, productId);
-        product.setAttribute("virt_limit", new Integer(virtLimit).toString());
+        product.setAttribute("virt_limit", Integer.toString(virtLimit));
         when(productAdapterMock.getProductById(productId)).thenReturn(product);
         Subscription s = TestUtil.createSubscription(product);
         s.setQuantity(new Long(quantity));
