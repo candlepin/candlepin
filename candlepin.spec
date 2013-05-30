@@ -25,7 +25,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.8.10
+Version: 0.8.11
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -345,6 +345,13 @@ fi
 
 
 %changelog
+* Thu May 30 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.11-1
+- pmd: various code clean up (jmrodri@gmail.com)
+- Convert new Integer calls to Integer.valueOf(). (awood@redhat.com)
+- Rename DataPresentation to PageRequest. (awood@redhat.com)
+- Remove checkstyle specific hack. (awood@redhat.com)
+- findbugs: don't use != on Strings. (jmrodri@gmail.com)
+
 * Wed May 29 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.10-1
 - Arch-based content sets (alikins@redhat.com)
 - Added pagination support (awood@redhat.com)
