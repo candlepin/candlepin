@@ -142,6 +142,18 @@ public class Entitler {
                     "Quantity ''{0}'' is not a multiple of instance multiplier ''{1}''",
                     quantity, multip);
             }
+            else if (error.equals("rulefailed.instance.unsupported.by.consumer")) {
+                msg = i18n.tr("Consumer does not support instance based calculation " +
+                    "required by pool ''{0}''", pool.getId());
+            }
+            else if (error.equals("rulefailed.cores.unsupported.by.consumer")) {
+                msg = i18n.tr("Consumer does not support core calculaton " +
+                    "required by pool ''{0}''", pool.getId());
+            }
+            else if (error.equals("rulefailed.ram.unsupported.by.consumer")) {
+                msg = i18n.tr("Consumer does not support RAM calculaton " +
+                    "required by pool ''{0}''", pool.getId());
+            }
             else {
                 msg = i18n.tr("Unable to entitle consumer to the pool with " +
                     "id ''{0}''.: {1}", pool.getId().toString(), error);
