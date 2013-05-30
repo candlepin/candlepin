@@ -416,7 +416,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         securityInterceptor.enable();
 
-        ownerResource.ownerConsumers(owner.getKey(), null, null);
+        ownerResource.ownerConsumers(owner.getKey(), null, null, null);
     }
 
     @Test

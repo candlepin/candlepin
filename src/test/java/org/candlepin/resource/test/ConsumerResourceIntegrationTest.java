@@ -422,7 +422,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         setupPrincipal(new ConsumerPrincipal(consumer));
         securityInterceptor.enable();
 
-        consumerResource.list(null, null, null);
+        consumerResource.list(null, null, null, null);
     }
 
     @Test

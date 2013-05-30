@@ -58,6 +58,10 @@ import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.model.UpstreamConsumer;
+import org.candlepin.pinsetter.tasks.EntitlerJob;
+import org.candlepin.paging.Page;
+import org.candlepin.paging.PageRequest;
+import org.candlepin.paging.Paginate;
 import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ResourceDateParser;
@@ -77,6 +81,7 @@ import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.util.GenericType;
 import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
@@ -530,10 +535,12 @@ public class OwnerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/consumers")
+    @Paginate
     public List<Consumer> ownerConsumers(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @QueryParam("username") String userName,
-        @QueryParam("type") String typeLabel) {
+        @QueryParam("type") String typeLabel,
+        @Context PageRequest pageRequest) {
 
         Owner owner = findOwner(ownerKey);
 
@@ -545,7 +552,12 @@ public class OwnerResource {
 
         // We don't look up the user and warn if it doesn't exist here to not
         // give away usernames
-        return consumerCurator.listByUsernameAndType(userName, type, owner);
+        Page<List<Consumer>> p = consumerCurator.listByUsernameAndType(userName,
+            type, owner, pageRequest);
+
+        // Store the page for the LinkHeaderPostInterceptor
+        ResteasyProviderFactory.pushContext(Page.class, p);
+        return p.getPageData();
     }
 
     private ConsumerType lookupConsumerType(String label) {
