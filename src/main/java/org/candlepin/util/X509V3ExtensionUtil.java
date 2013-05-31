@@ -35,8 +35,6 @@ import java.util.zip.InflaterOutputStream;
 
 import org.apache.log4j.Logger;
 import org.candlepin.config.Config;
-import org.candlepin.model.Arch;
-import org.candlepin.model.ArchCurator;
 import org.candlepin.json.model.Content;
 import org.candlepin.json.model.EntitlementBody;
 import org.candlepin.json.model.Order;
@@ -50,6 +48,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
+import org.candlepin.util.Arch;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 import org.codehaus.jackson.annotate.JsonMethod;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -66,7 +65,6 @@ public class X509V3ExtensionUtil extends X509Util{
     private static Logger log = Logger.getLogger(X509V3ExtensionUtil.class);
     private Config config;
     private EntitlementCurator entCurator;
-    private ArchCurator archCurator;
     private String thisVersion = "3.2";
 
     private long pathNodeId = 0;
@@ -74,12 +72,10 @@ public class X509V3ExtensionUtil extends X509Util{
     private static final Object END_NODE = new Object();
     private static boolean treeDebug = false;
     @Inject
-    public X509V3ExtensionUtil(Config config, EntitlementCurator entCurator,
-        ArchCurator archCurator) {
+    public X509V3ExtensionUtil(Config config, EntitlementCurator entCurator) {
         // Output everything in UTC
         this.config = config;
         this.entCurator = entCurator;
-        this.archCurator = archCurator;
     }
 
     public Set<X509ExtensionWrapper> getExtensions(Set<Product> products,
@@ -305,7 +301,9 @@ public class X509V3ExtensionUtil extends X509Util{
             product.getAttributeValue("version") : "";
         toReturn.setVersion(version);
 
-        Set<String> productArchSet = product.getParsedArches();
+        String productArches = product.getAttributeValue("arch");
+        Set<String> productArchSet = Arch.parseArches(productArches);
+
         // FIXME: getParsedArches might make more sense to just return a list
         List<String> archList = new ArrayList<String>();
         for (String arch : productArchSet) {
@@ -313,7 +311,7 @@ public class X509V3ExtensionUtil extends X509Util{
         }
         toReturn.setArchitectures(archList);
         toReturn.setContent(createContent(filterProductContent(product, ent),
-            contentPrefix, promotedContent, consumer));
+            contentPrefix, promotedContent, consumer, product));
 
         return toReturn;
     }
@@ -327,7 +325,7 @@ public class X509V3ExtensionUtil extends X509Util{
     public List<Content> createContent(
         Set<ProductContent> productContent, String contentPrefix,
         Map<String, EnvironmentContent> promotedContent,
-        Consumer consumer) {
+        Consumer consumer, Product product) {
 
         Set<ProductContent> filtered = new HashSet<ProductContent>();
 
@@ -337,7 +335,7 @@ public class X509V3ExtensionUtil extends X509Util{
 
         // Return only the contents that are arch appropriate
         Set<ProductContent> archApproriateProductContent = filterContentByContentArch(
-            productContent, consumer);
+            productContent, consumer, product);
 
         for (ProductContent pc : archApproriateProductContent) {
             Content content = new Content();

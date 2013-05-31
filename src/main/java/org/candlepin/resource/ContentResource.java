@@ -30,8 +30,6 @@ import javax.ws.rs.core.MediaType;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
-import org.candlepin.model.Arch;
-import org.candlepin.model.ArchCurator;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.EnvironmentContent;
@@ -51,18 +49,16 @@ public class ContentResource {
     private I18n i18n;
     private UniqueIdGenerator idGenerator;
     private EnvironmentContentCurator envContentCurator;
-    private ArchCurator archCurator;
     private PoolManager poolManager;
 
     @Inject
     public ContentResource(ContentCurator contentCurator, I18n i18n,
         UniqueIdGenerator idGenerator, EnvironmentContentCurator envContentCurator,
-        ArchCurator archCurator, PoolManager poolManager) {
+        PoolManager poolManager) {
         this.i18n = i18n;
         this.contentCurator = contentCurator;
         this.idGenerator = idGenerator;
         this.envContentCurator = envContentCurator;
-        this.archCurator = archCurator;
         this.poolManager = poolManager;
     }
 

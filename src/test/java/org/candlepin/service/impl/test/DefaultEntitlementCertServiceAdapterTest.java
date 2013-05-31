@@ -53,8 +53,6 @@ import java.util.zip.InflaterOutputStream;
 
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Config;
-import org.candlepin.model.Arch;
-import org.candlepin.model.ArchCurator;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
@@ -125,8 +123,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
     private EntitlementCurator entCurator;
     @Mock
     private KeyPairCurator keyPairCurator;
-    @Mock
-    private ArchCurator archCurator;
 
     @Mock
     private Consumer consumer;
@@ -160,12 +156,12 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void setUp() {
         Config config = new CandlepinCommonTestConfig();
         extensionUtil = new X509ExtensionUtil(config);
-        v3extensionUtil = new X509V3ExtensionUtil(config, entCurator, archCurator);
+        v3extensionUtil = new X509V3ExtensionUtil(config, entCurator);
 
         certServiceAdapter = new DefaultEntitlementCertServiceAdapter(
             mockedPKI, extensionUtil, v3extensionUtil,
             mock(EntitlementCertificateCurator.class), keyPairCurator,
-            serialCurator, productAdapter, archCurator, entCurator,
+            serialCurator, productAdapter, entCurator,
             I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
             config);
 
@@ -657,7 +653,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             new DefaultEntitlementCertServiceAdapter(
                 mockedPKI, mockExtensionUtil, mockV3extensionUtil,
                 mock(EntitlementCertificateCurator.class), keyPairCurator,
-                serialCurator, productAdapter, archCurator, entCurator,
+                serialCurator, productAdapter, entCurator,
                 I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
                 mockConfig);
 
@@ -690,7 +686,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         DefaultEntitlementCertServiceAdapter entAdapter =
             new DefaultEntitlementCertServiceAdapter(mockedPKI, mockExtensionUtil,
                 mockV3extensionUtil, mock(EntitlementCertificateCurator.class),
-                keyPairCurator, serialCurator, productAdapter, archCurator,
+                keyPairCurator, serialCurator, productAdapter,
                 entCurator,
                 I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
                 mockConfig);
@@ -724,7 +720,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             new DefaultEntitlementCertServiceAdapter(
                 mockedPKI, mockExtensionUtil, mockV3extensionUtil,
                 mock(EntitlementCertificateCurator.class), keyPairCurator,
-                serialCurator, productAdapter, archCurator, entCurator,
+                serialCurator, productAdapter, entCurator,
                 I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
                 mockConfig);
 
@@ -762,7 +758,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             new DefaultEntitlementCertServiceAdapter(
                 mockedPKI, mockExtensionUtil, mockV3extensionUtil,
                 mock(EntitlementCertificateCurator.class), keyPairCurator,
-                serialCurator, productAdapter, archCurator, entCurator,
+                serialCurator, productAdapter, entCurator,
                 I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
                 mockConfig);
 

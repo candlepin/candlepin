@@ -16,8 +16,6 @@ package org.candlepin.model.test;
 
 
 import java.util.HashSet;
-import java.util.Set;
-import org.candlepin.model.Arch;
 import org.candlepin.model.Content;
 import org.candlepin.test.DatabaseTestFixture;
 import org.junit.Test;

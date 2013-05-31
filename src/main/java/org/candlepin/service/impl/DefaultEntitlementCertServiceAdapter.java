@@ -28,8 +28,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.candlepin.config.Config;
-import org.candlepin.model.Arch;
-import org.candlepin.model.ArchCurator;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Entitlement;
@@ -77,7 +75,6 @@ public class DefaultEntitlementCertServiceAdapter extends
     private CertificateSerialCurator serialCurator;
     private ProductServiceAdapter productAdapter;
     private EntitlementCurator entCurator;
-    private ArchCurator archCurator;
     private I18n i18n;
     private Config config;
 
@@ -92,7 +89,6 @@ public class DefaultEntitlementCertServiceAdapter extends
         KeyPairCurator keyPairCurator,
         CertificateSerialCurator serialCurator,
         ProductServiceAdapter productAdapter,
-        ArchCurator archCurator,
         EntitlementCurator entCurator, I18n i18n,
         Config config) {
 
@@ -103,7 +99,6 @@ public class DefaultEntitlementCertServiceAdapter extends
         this.keyPairCurator = keyPairCurator;
         this.serialCurator = serialCurator;
         this.productAdapter = productAdapter;
-        this.archCurator = archCurator;
         this.entCurator = entCurator;
         this.i18n = i18n;
         this.config = config;
@@ -267,7 +262,7 @@ public class DefaultEntitlementCertServiceAdapter extends
                     promotedContent, enableEnvironmentFiltering);
 
             filteredContent = extensionUtil.filterContentByContentArch(filteredContent,
-                ent.getConsumer());
+                ent.getConsumer(), prod);
 
             // Keep track of the number of content sets that are being added.
             contentCounter += filteredContent.size();
