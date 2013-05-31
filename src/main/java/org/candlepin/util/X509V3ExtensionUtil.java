@@ -361,7 +361,9 @@ public class X509V3ExtensionUtil extends X509Util{
 
             // FIXME: does json model need arches split?
             //       requiredTags and json.model.Product.arches does...
-            content.setArches(pc.getContent().getArches());
+            List<String> archesList = new ArrayList<String>();
+            archesList.addAll(Arch.parseArches(pc.getContent().getArches()));
+            content.setArches(archesList);
 
             // Check if we should override the enabled flag due to setting on promoted
             // content:
