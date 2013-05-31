@@ -61,41 +61,44 @@ public class Arch {
     }
 
     /*
-     * determine if arch1 is compatible with arch2
+     * determine if contentArch is compatible with consumerArch
      *
-     * @param arch1
-     * @param arch2
-     * @return true if arch1 is compatible with arch2, false
+     * @param contentArch
+     * @param consumerArch
+     * @return true if contentArch is compatible with consumerArch, false
      * otherwise
      */
-    public static boolean isCompatible(String arch1, String arch2) {
+    public static boolean contentForConsumer(String contentArch, String consumerArch) {
         boolean compatible = false;
         // FIXME: hardcode exact matches on label
         //        only atm
 
         // handle "ALL" arch, sigh
-        if (arch1.equals("ALL")) {
+        if (contentArch.equals("ALL")) {
+            compatible = true;
+        }
+        else if (contentArch.equals("noarch")) {
             compatible = true;
         }
         // Exact arch match
-        else if (arch2.equals(arch1)) {
+        else if (consumerArch.equals(contentArch)) {
             compatible = true;
         }
         // x86_64 can use content for i386 etc
-        else if (arch2.equals("x86_64")) {
-            if (x86Labels.contains(arch1)) {
+        else if (consumerArch.equals("x86_64")) {
+            if (x86Labels.contains(contentArch)) {
                 compatible = true;
             }
         }
         // i686 can run all x86 arches
-        else if (arch2.equals("i686")) {
-            if (x86Labels.contains(arch1)) {
+        else if (consumerArch.equals("i686")) {
+            if (x86Labels.contains(contentArch)) {
                 compatible = true;
             }
         }
         // ppc64 can run ppc. Mostly...
-        else if (arch2.equals("ppc64")) {
-            if (ppcLabels.contains(arch1)) {
+        else if (consumerArch.equals("ppc64")) {
+            if (ppcLabels.contains(contentArch)) {
                 compatible = true;
             }
         }
