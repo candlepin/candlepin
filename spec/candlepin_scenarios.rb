@@ -236,7 +236,7 @@ module ExportMethods
     arch_content = create_content({:metadata_expire => 6000,
                                    :content_url => "/path/to/arch/specific/content",
                                    :required_tags => "TAG1,TAG2",
-                                   :arches => ['1', '2']})
+                                   :arches => "i386,x86_64"})
     @cp.add_content_to_product(product1.id, content.id)
     @cp.add_content_to_product(product2.id, content.id)
     @cp.add_content_to_product(product2.id, arch_content.id)
@@ -301,7 +301,7 @@ module ExportMethods
                               :required_tags => "TAG1,TAG2"})
     arch_content = create_content({:metadata_expire => 6000,
                                    :required_tags => "TAG1,TAG2",
-                                   :arches => ['1', '2']})
+                                   :arches => "i686,x86_64"})
     @cp.add_content_to_product(product1.id, content.id)
     @cp.add_content_to_product(product2.id, content.id)
     @cp.add_content_to_product(product2.id, arch_content.id)
