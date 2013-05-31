@@ -280,7 +280,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         securityInterceptor.enable();
 
-        ownerResource.getPools(owner.getKey(), null, null, false, null, principal);
+        ownerResource.getPools(owner.getKey(), null, null, false, null, principal, null);
     }
 
     @Test
@@ -295,7 +295,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         poolCurator.create(pool2);
 
         List<Pool> pools = ownerResource.getPools(owner.getKey(),
-            null, null, true, null, principal);
+            null, null, true, null, principal, null);
         assertEquals(2, pools.size());
     }
 
@@ -315,7 +315,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         // Filtering should just cause this to return no results:
-        ownerResource.getPools(owner.getKey(), null, null, true, null, principal);
+        ownerResource.getPools(owner.getKey(), null, null, true, null, principal, null);
     }
 
     @Test(expected = ForbiddenException.class)
@@ -428,7 +428,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         securityInterceptor.enable();
 
-        ownerResource.getPools(owner.getKey(), null, null, false, null, principal);
+        ownerResource.getPools(owner.getKey(), null, null, false, null, principal, null);
     }
 
     @Test
@@ -446,7 +446,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         List<Pool> pools = ownerResource.getPools(owner.getKey(), c.getUuid(),
-            p.getId(), true, null, principal);
+            p.getId(), true, null, principal, null);
         assertEquals(1, pools.size());
         Pool returnedPool = pools.get(0);
         assertNotNull(returnedPool.getCalculatedAttributes());
@@ -469,7 +469,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ownerCurator.create(owner2);
 
         ownerResource.getPools(owner.getKey(), c.getUuid(),
-            p.getId(), true, null, setupPrincipal(owner2, Access.NONE));
+            p.getId(), true, null, setupPrincipal(owner2, Access.NONE), null);
     }
 
     @Test(expected = ForbiddenException.class)

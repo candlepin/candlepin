@@ -30,12 +30,16 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Statistic;
 import org.candlepin.model.StatisticCurator;
+import org.candlepin.paging.Page;
+import org.candlepin.paging.PageRequest;
+import org.candlepin.paging.Paginate;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ResourceDateParser;
 
 import com.google.inject.Inject;
 
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Date;
@@ -107,11 +111,14 @@ public class PoolResource {
     @Wrapped(element = "pools")
     @Deprecated
     @SecurityHole
+    @Paginate
     public List<Pool> list(@QueryParam("owner") String ownerId,
         @QueryParam("consumer") String consumerUuid,
         @QueryParam("product") String productId,
         @QueryParam("listall") @DefaultValue("false") boolean listAll,
-        @QueryParam("activeon") String activeOn, @Context Principal principal) {
+        @QueryParam("activeon") String activeOn,
+        @Context Principal principal,
+        @Context PageRequest pageRequest) {
 
         // Make sure we were given sane query parameters:
         if (consumerUuid != null && ownerId != null) {
@@ -167,8 +174,9 @@ public class PoolResource {
                     principal.getPrincipalName()));
         }
 
-        List<Pool> poolList = poolCurator.listAvailableEntitlementPools(c, o, productId,
-            activeOnDate, true, listAll);
+        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(c, o, productId,
+            activeOnDate, true, listAll, pageRequest);
+        List<Pool> poolList = page.getPageData();
 
         if (c != null) {
             for (Pool p : poolList) {
@@ -177,6 +185,8 @@ public class PoolResource {
             }
         }
 
+        // Store the page for the LinkHeaderPostInterceptor
+        ResteasyProviderFactory.pushContext(Page.class, page);
         return poolList;
     }
 

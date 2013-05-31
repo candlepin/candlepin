@@ -583,6 +583,7 @@ public class OwnerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/pools")
+    @Paginate
     public List<Pool> getPools(
         @PathParam("owner_key")
             @Verify(value = Owner.class, require = Access.READ_POOLS) String ownerKey,
@@ -590,7 +591,8 @@ public class OwnerResource {
         @QueryParam("product") String productId,
         @QueryParam("listall") @DefaultValue("false") boolean listAll,
         @QueryParam("activeon") String activeOn,
-        @Context Principal principal) {
+        @Context Principal principal,
+        @Context PageRequest pageRequest) {
 
         Owner owner = findOwner(ownerKey);
 
@@ -618,8 +620,9 @@ public class OwnerResource {
             }
         }
 
-        List<Pool> poolList = poolCurator.listAvailableEntitlementPools(c, owner, productId,
-            activeOnDate, true, listAll);
+        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(c, owner,
+            productId, activeOnDate, true, listAll, pageRequest);
+        List<Pool> poolList = page.getPageData();
 
         if (c != null) {
             for (Pool p : poolList) {
@@ -628,6 +631,8 @@ public class OwnerResource {
             }
         }
 
+        // Store the page for the LinkHeaderPostInterceptor
+        ResteasyProviderFactory.pushContext(Page.class, page);
         return poolList;
     }
 

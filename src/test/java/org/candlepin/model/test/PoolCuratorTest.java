@@ -31,8 +31,11 @@ import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductPoolAttribute;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Subscription;
+import org.candlepin.paging.Page;
+import org.candlepin.paging.PageRequest;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -349,6 +352,122 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         assertEquals(1, poolCurator.listAvailableEntitlementPools(null, owner, null,
             activeOn, false, false).size());
+    }
+
+    @Test
+    public void testCorrectPagingWhenItemsAreFiltered() {
+        for (int i = 0; i < 50; i++) {
+            Pool pool = TestUtil.createPool(owner, product);
+            pool.setStartDate(TestUtil.createDate(2011, 1, 2));
+            pool.setEndDate(TestUtil.createDate(2011, 3, 2));
+            poolCurator.create(pool);
+        }
+
+        for (int i = 0; i < 50; i++) {
+            Product p = TestUtil.createProduct();
+            productCurator.create(p);
+
+            Pool pool = TestUtil.createPool(owner, p);
+            pool.setStartDate(TestUtil.createDate(2011, 1, 2));
+            pool.setEndDate(TestUtil.createDate(2011, 3, 2));
+            poolCurator.create(pool);
+        }
+
+        PageRequest req = new PageRequest();
+        req.setPage(1);
+        req.setPerPage(10);
+
+        Date activeOn = TestUtil.createDate(2011, 2, 2);
+        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
+            null, owner, product.getId(), activeOn, false, false, req);
+        assertEquals(Integer.valueOf(50), page.getMaxRecords());
+        assertEquals(10, page.getPageData().size());
+        // Make sure we have the real PageRequest, not the dummy one we send in
+        // with the order and sortBy fields.
+        assertEquals(req, page.getPageRequest());
+    }
+
+    @Test
+    public void testCorrectPagingWhenResultsLessThanPageSize() {
+        for (int i = 0; i < 5; i++) {
+            Pool pool = TestUtil.createPool(owner, product);
+            pool.setStartDate(TestUtil.createDate(2011, 1, 2));
+            pool.setEndDate(TestUtil.createDate(2011, 3, 2));
+            poolCurator.create(pool);
+        }
+
+        PageRequest req = new PageRequest();
+        req.setPage(1);
+        req.setPerPage(10);
+
+        Date activeOn = TestUtil.createDate(2011, 2, 2);
+        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
+            null, owner, product.getId(), activeOn, false, false, req);
+        assertEquals(Integer.valueOf(5), page.getMaxRecords());
+        assertEquals(5, page.getPageData().size());
+    }
+
+    @Test
+    public void testCorrectPagingWhenPageRequestOutOfBounds() {
+        for (int i = 0; i < 5; i++) {
+            Pool pool = TestUtil.createPool(owner, product);
+            pool.setStartDate(TestUtil.createDate(2011, 1, 2));
+            pool.setEndDate(TestUtil.createDate(2011, 3, 2));
+            poolCurator.create(pool);
+        }
+
+        PageRequest req = new PageRequest();
+        req.setPage(5);
+        req.setPerPage(10);
+
+        Date activeOn = TestUtil.createDate(2011, 2, 2);
+        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
+            null, owner, product.getId(), activeOn, false, false, req);
+        assertEquals(Integer.valueOf(5), page.getMaxRecords());
+        assertEquals(0, page.getPageData().size());
+    }
+
+    @Test
+    public void testCorrectPagingWhenLastPage() {
+        for (int i = 0; i < 5; i++) {
+            Pool pool = TestUtil.createPool(owner, product);
+            pool.setStartDate(TestUtil.createDate(2011, 1, 2));
+            pool.setEndDate(TestUtil.createDate(2011, 3, 2));
+            poolCurator.create(pool);
+        }
+
+        PageRequest req = new PageRequest();
+        req.setPage(3);
+        req.setPerPage(2);
+
+        Date activeOn = TestUtil.createDate(2011, 2, 2);
+        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
+            null, owner, product.getId(), activeOn, false, false, req);
+        assertEquals(Integer.valueOf(5), page.getMaxRecords());
+        assertEquals(1, page.getPageData().size());
+    }
+
+    @Test
+    public void testCorrectPagingWhenResultsEmpty() {
+        for (int i = 0; i < 5; i++) {
+            Product p = TestUtil.createProduct();
+            productCurator.create(p);
+
+            Pool pool = TestUtil.createPool(owner, p);
+            pool.setStartDate(TestUtil.createDate(2011, 1, 2));
+            pool.setEndDate(TestUtil.createDate(2011, 3, 2));
+            poolCurator.create(pool);
+        }
+
+        PageRequest req = new PageRequest();
+        req.setPage(1);
+        req.setPerPage(10);
+
+        Date activeOn = TestUtil.createDate(2011, 2, 2);
+        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
+            null, owner, product.getId(), activeOn, false, false, req);
+        assertEquals(Integer.valueOf(0), page.getMaxRecords());
+        assertEquals(0, page.getPageData().size());
     }
 
     @Test
