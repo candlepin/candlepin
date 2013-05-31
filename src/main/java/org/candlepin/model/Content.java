@@ -86,17 +86,11 @@ public class Content extends AbstractHibernateObject {
     @JoinTable(name = "cp_content_modified_products")
     private Set<String> modifiedProductIds = new HashSet<String>();
 
-    @ManyToMany(targetEntity = Arch.class)
-    @ForeignKey(name = "fk_arch_id",
-                inverseName = "fk_content_id")
-    @JoinTable(
-        name = "cp_content_arch",
-        joinColumns = @JoinColumn(name = "content_id"),
-        inverseJoinColumns = @JoinColumn(name = "arch_id"))
-    private Set<Arch> arches = new HashSet<Arch>();
+    @Column(nullable = true)
+    private String arches;
 
     public Content(String name, String id, String label, String type,
-        String vendor, String contentUrl, String gpgUrl) {
+        String vendor, String contentUrl, String gpgUrl, String arches) {
         setName(name);
         setId(id);
         setLabel(label);
@@ -104,6 +98,7 @@ public class Content extends AbstractHibernateObject {
         setVendor(vendor);
         setContentUrl(contentUrl);
         setGpgUrl(gpgUrl);
+        setArches(arches);
     }
 
     public Content() {
@@ -115,7 +110,7 @@ public class Content extends AbstractHibernateObject {
         return new Content(
             UEBER_CONTENT_NAME, idGenerator.generateId(),
             ueberContentLabelForProduct(p), "yum", "Custom",
-            "/" + o.getKey(), "");
+            "/" + o.getKey(), "", "");
     }
 
     /*
@@ -262,14 +257,34 @@ public class Content extends AbstractHibernateObject {
         return releaseVer;
     }
 
-    public void setArches(Set<Arch> arches) {
+    public void setArches(String arches) {
         this.arches = arches;
     }
 
-    public Set<Arch> getArches() {
+    public String getArches() {
         return arches;
     }
-
+    /*
+     * Returns a Set of the comma separated arch name Strings
+     *
+     * @return Set of arch names, or an empty set if value is
+     *         empty string, or if the 'arch' attribute doesnt
+     *         exist
+     */
+    public Set<String> getParsedArches() {
+        // if we get more attributes that are comma seperated,
+        // this may make sense to move to AbstractHibernateObject,
+        // but for now product arch is the only attribute.
+        String archesValue = getArches();
+        Set<String> archesSet = new HashSet<String>();
+        if (archesValue == null || archesValue.trim().equals("")) {
+            return archesSet;
+        }
+        for (String arch : archesValue.split(",")) {
+            archesSet.add(arch.trim());
+        }
+        return archesSet;
+    }
     /**
      * @param from Content object to copy properties from.
      * @return current Content object with updated properites

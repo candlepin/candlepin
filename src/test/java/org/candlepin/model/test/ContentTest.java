@@ -30,14 +30,14 @@ import static org.hamcrest.collection.IsCollectionContaining.hasItem;
  */
 public class ContentTest extends DatabaseTestFixture {
 
-    /* FIXME: add Arches here */
     @Test
     public void testContent() {
         String  contentHash = String.valueOf(
             Math.abs(Long.valueOf("test-content".hashCode())));
         Content content = new Content("test-content", contentHash,
                             "test-content-label", "yum", "test-vendor",
-                             "test-content-url", "test-gpg-url");
+                             "test-content-url", "test-gpg-url",
+                             "test-arch1,test-arch2");
         HashSet<String> modifiedProductIds = new HashSet<String>();
         modifiedProductIds.add("ProductA");
         modifiedProductIds.add("ProductB");
@@ -59,39 +59,30 @@ public class ContentTest extends DatabaseTestFixture {
         String  contentHash = String.valueOf(
             Math.abs(Long.valueOf("test-content-arches".hashCode())));
 
-        Arch i386Arch = new Arch("i386", "i386");
-        archCurator.create(i386Arch);
-        Arch x8664Arch = new Arch("x86_64", "x86_64");
-        archCurator.create(x8664Arch);
-
-        //Arch x8664Arch = archCurator.lookupByLabel("x86_64");
-        Set<Arch> arches = new HashSet<Arch>();
-//        Arch lookedupArch = archCurator.find(i386Arch.getId());
-        arches.add(i386Arch);
-        arches.add(x8664Arch);
-
         Content content = new Content("test-content-arches", contentHash,
                             "test-content-arches-label", "yum", "test-vendor",
-                             "test-content-url", "test-gpg-url");
+                             "test-content-url", "test-gpg-url", "");
+        String arches = "x86_64, i386";
         content.setArches(arches);
         contentCurator.create(content);
 
         Content lookedUp = contentCurator.find(content.getId());
-        assertArrayEquals(lookedUp.getArches().toArray(), arches.toArray());
+        assertEquals(lookedUp.getArches(), arches);
     }
 
     @Test
     public void testCreateOrUpdateWithNewLabel() {
         Content content = new Content("Test Content", "100",
             "test-content-label", "yum", "test-vendor",
-             "test-content-url", "test-gpg-url");
+             "test-content-url", "test-gpg-url", "test-arch1");
         contentCurator.create(content);
 
         // Same ID, but label changed:
         String newLabel = "test-content-label-new";
         String newName = "Test Content Updated";
         Content modifiedContent = new Content(newName, "100",
-            newLabel, "yum", "test-vendor", "test-content-url", "test-gpg-url");
+            newLabel, "yum", "test-vendor", "test-content-url",
+            "test-gpg-url", "test-arch1");
         contentCurator.createOrUpdate(modifiedContent);
 
         content = contentCurator.find("100");

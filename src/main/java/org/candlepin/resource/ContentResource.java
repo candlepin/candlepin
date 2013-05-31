@@ -111,12 +111,7 @@ public class ContentResource {
         if (lookedUp != null) {
             return lookedUp;
         }
-        // populate arches from arch labels from arches attribute
-        Set<Arch> arches = new HashSet<Arch>();
-        for (org.candlepin.model.Arch incoming : content.getArches()) {
-            arches.add(archCurator.find(incoming.getId()));
-        }
-        content.setArches(arches);
+
         return contentCurator.create(content);
     }
 

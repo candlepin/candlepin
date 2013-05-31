@@ -146,8 +146,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     private Owner owner;
     private Set<Content> superContent;
     private Set<Content> largeContent;
-    private Arch testArch;
-    private List<String> ARCH_LABELS;
+    private String testArch;
 
     private String[] testUrls = {"/content/dist/rhel/$releasever/$basearch/os",
         "/content/dist/rhel/$releasever/$basearch/debug",
@@ -176,29 +175,26 @@ public class DefaultEntitlementCertServiceAdapterTest {
         largeContentProduct = new Product("67890", "large content product", "variant",
             "version", ARCH_LABEL, "SVC");
 
-        ARCH_LABELS = new ArrayList<String>();
-        ARCH_LABELS.add(ARCH_LABEL);
-
-        testArch = new Arch(ARCH_LABEL, ARCH_LABEL);
+        testArch = "test-arch";
         content = createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
-            CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL, CONTENT_GPG_URL, ARCH_LABELS);
+            CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL, CONTENT_GPG_URL, ARCH_LABEL);
         content.setMetadataExpire(CONTENT_METADATA_EXPIRE);
         content.setRequiredTags(REQUIRED_TAGS);
 
-        List<String> emptyArches = new ArrayList<String>();
+        String emptyArches = "";
         noArchContent = createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
             CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL, CONTENT_GPG_URL, emptyArches);
 
         superContent = new HashSet<Content>();
         for (String url : testUrls) {
             superContent.add(createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
-                CONTENT_TYPE, CONTENT_VENDOR, url, CONTENT_GPG_URL, ARCH_LABELS));
+                CONTENT_TYPE, CONTENT_VENDOR, url, CONTENT_GPG_URL, ARCH_LABEL));
         }
 
         largeContent = new HashSet<Content>();
         for (String url : largeTestUrls) {
             largeContent.add(createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
-                CONTENT_TYPE, CONTENT_VENDOR, url, CONTENT_GPG_URL, ARCH_LABELS));
+                CONTENT_TYPE, CONTENT_VENDOR, url, CONTENT_GPG_URL, ARCH_LABEL));
         }
 
         subscription = new Subscription(null, product, new HashSet<Product>(),
@@ -237,15 +233,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
 
     private Content createContent(String name, String id, String label,
-        String type, String vendor, String url, String gpgUrl, List<String> archLabels) {
-        Content c = new Content(name, id, label, type, vendor, url, gpgUrl);
-
-        Set<Arch> arches = new HashSet<Arch>();
-        for (String archLabel : archLabels) {
-            Arch contentArch = new Arch(archLabel, archLabel);
-            arches.add(contentArch);
-        }
-        c.setArches(arches);
+        String type, String vendor, String url, String gpgUrl, String arches) {
+        Content c = new Content(name, id, label, type, vendor, url, gpgUrl, arches);
 
         return c;
     }
@@ -279,7 +268,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
                                              CONTENT_VENDOR,
                                              CONTENT_URL,
                                              CONTENT_GPG_URL,
-                                             ARCH_LABELS));
+                                             ARCH_LABEL));
         }
         return productContent;
     }
@@ -484,11 +473,11 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         Content normalContent = createContent(CONTENT_NAME, CONTENT_ID,
             CONTENT_LABEL, CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL,
-            CONTENT_GPG_URL, ARCH_LABELS);
+            CONTENT_GPG_URL, ARCH_LABEL);
         // Change label to prevent an equals match:
         Content modContent = createContent(CONTENT_NAME, CONTENT_ID + "_2",
             "differentlabel", CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL,
-            CONTENT_GPG_URL, ARCH_LABELS);
+            CONTENT_GPG_URL, ARCH_LABEL);
         modContent.setLabel("mod content");
         Set<String> modifiedProductIds = new HashSet<String>(
             Arrays.asList(new String[]{ "product1", "product2" }));
@@ -828,11 +817,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             "variant", "version", "ALL", "SVC");
 
         // no x86_64, ie ARCH_LABEL
-        String[] wrongArchStrings = {"s390x", "s390", "ppc64", "ia64"};
-        List<String> wrongArches = new ArrayList<String>();
-        for (String wrongArchString : wrongArchStrings) {
-            wrongArches.add(wrongArchString);
-        }
+        String wrongArches = "s390x,s390,ppc64,ia64";
         Content wrongArchContent = createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
             CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL, CONTENT_GPG_URL, wrongArches);
 
@@ -860,7 +845,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
             .thenReturn("3.2");
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
         when(entitlement.getConsumer().getFact("uname.machine")).thenReturn("x86_64");
-        when(this.archCurator.lookupByLabel(any(String.class))).thenReturn(testArch);
 
         subscription.getProduct().setAttribute("warning_period", "20");
         subscription.getProduct().setAttribute("sockets", "4");
@@ -965,15 +949,13 @@ public class DefaultEntitlementCertServiceAdapterTest {
         }
     }
 
-    private void setupEntitlements(String consumerArch, Arch lookedupArch,
+    private void setupEntitlements(String consumerArch, String lookedupArch,
         String certVersion) {
         when(entitlement.getConsumer().getFact("system.certificate_version"))
             .thenReturn(certVersion);
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
         when(entitlement.getConsumer().getFact("uname.machine")).thenReturn(
             consumerArch);
-        when(this.archCurator.lookupByLabel(any(String.class))).thenReturn(
-            lookedupArch);
 
         subscription.getProduct().setAttribute("warning_period", "20");
         subscription.getProduct().setAttribute("sockets", "4");
@@ -1119,11 +1101,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             "variant", "version", "ALL", "SVC");
 
         // no x86_64, ie ARCH_LABEL
-        String[] wrongArchStrings = {"s390x", "s390", "ppc64", "ia64"};
-        List<String> wrongArches = new ArrayList<String>();
-        for (String wrongArchString : wrongArchStrings) {
-            wrongArches.add(wrongArchString);
-        }
+        String wrongArches = "s390x,s390,ppc64,ia64";
         Content wrongArchContent = createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
             CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL, CONTENT_GPG_URL, wrongArches);
 
@@ -1181,7 +1159,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
             .thenReturn("3.2");
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
         when(entitlement.getConsumer().getFact("uname.machine")).thenReturn("x86_64");
-        when(this.archCurator.lookupByLabel(any(String.class))).thenReturn(testArch);
 
         subscription.getProduct().setAttribute("warning_period", "0");
         subscription.getProduct().setAttribute("management_enabled", "false");
@@ -1238,7 +1215,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
             .thenReturn("3.2");
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
         when(entitlement.getConsumer().getFact("uname.machine")).thenReturn("x86_64");
-        when(this.archCurator.lookupByLabel(any(String.class))).thenReturn(testArch);
 
         subscription.getProduct().setAttribute("management_enabled", "1");
         entitlement.getPool().setAttribute("virt_only", "1");
@@ -1338,11 +1314,10 @@ public class DefaultEntitlementCertServiceAdapterTest {
         // be in the cert, since this consumer has no arch fact therefore
         // should match everything
         Content wrongArchContent = new Content();
-        List<String> wrongArchLabels = new ArrayList<String>();
-        wrongArchLabels.add("s390x");
+        String wrongArches = "s390";
         String noArchUrl = "/some/place/nice";
         wrongArchContent = createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
-                CONTENT_TYPE, CONTENT_VENDOR, noArchUrl, CONTENT_GPG_URL, wrongArchLabels);
+                CONTENT_TYPE, CONTENT_VENDOR, noArchUrl, CONTENT_GPG_URL, wrongArches);
         product.setContent(superContent);
         product.addContent(wrongArchContent);
 
@@ -1427,7 +1402,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         for (int i = 0; i < 550; i++) {
             String url = "/content/dist" + i + "/jboss/source" + i;
             extremeContent.add(createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
-                CONTENT_TYPE, CONTENT_VENDOR, url, CONTENT_GPG_URL, ARCH_LABELS));
+                CONTENT_TYPE, CONTENT_VENDOR, url, CONTENT_GPG_URL, ARCH_LABEL));
         }
         extremeProduct.setContent(extremeContent);
         when(entitlement.getConsumer().getFact("system.certificate_version"))

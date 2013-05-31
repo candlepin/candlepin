@@ -266,10 +266,8 @@ public class DefaultEntitlementCertServiceAdapter extends
                 extensionUtil.filterProductContent(prod, ent, entCurator,
                     promotedContent, enableEnvironmentFiltering);
 
-            Set<Arch> productArchSet = extensionUtil.getProductArches(prod,
-                archCurator);
             filteredContent = extensionUtil.filterContentByContentArch(filteredContent,
-                ent.getConsumer(), productArchSet, archCurator);
+                ent.getConsumer());
 
             // Keep track of the number of content sets that are being added.
             contentCounter += filteredContent.size();

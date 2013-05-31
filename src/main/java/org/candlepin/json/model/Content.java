@@ -42,7 +42,7 @@ public class Content {
     private Long metadataExpire;
     @JsonProperty("required_tags")
     private List<String> requiredTags;
-    private List<String> arches;
+    private String arches;
 
     /**
      * @param id
@@ -124,14 +124,14 @@ public class Content {
     /**
      * @return the arches
      */
-    public List<String> getArches() {
+    public String getArches() {
         return arches;
     }
 
     /**
      * @param arches the arches to set
      */
-    public void setArches(List<String> arches) {
+    public void setArches(String arches) {
         this.arches = arches;
     }
 }

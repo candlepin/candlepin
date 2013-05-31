@@ -305,15 +305,15 @@ public class X509V3ExtensionUtil extends X509Util{
             product.getAttributeValue("version") : "";
         toReturn.setVersion(version);
 
-        // upcast arch labels to arch objects
-        Set<Arch> productArchSet = getProductArches(product, archCurator);
+        Set<String> productArchSet = product.getParsedArches();
+        // FIXME: getParsedArches might make more sense to just return a list
         List<String> archList = new ArrayList<String>();
-        for (Arch arch : productArchSet) {
-            archList.add(arch.getLabel());
+        for (String arch : productArchSet) {
+            archList.add(arch);
         }
         toReturn.setArchitectures(archList);
         toReturn.setContent(createContent(filterProductContent(product, ent),
-            contentPrefix, promotedContent, consumer, productArchSet));
+            contentPrefix, promotedContent, consumer));
 
         return toReturn;
     }
@@ -327,8 +327,7 @@ public class X509V3ExtensionUtil extends X509Util{
     public List<Content> createContent(
         Set<ProductContent> productContent, String contentPrefix,
         Map<String, EnvironmentContent> promotedContent,
-        Consumer consumer,
-        Set<Arch> productArchSet) {
+        Consumer consumer) {
 
         Set<ProductContent> filtered = new HashSet<ProductContent>();
 
@@ -338,7 +337,7 @@ public class X509V3ExtensionUtil extends X509Util{
 
         // Return only the contents that are arch appropriate
         Set<ProductContent> archApproriateProductContent = filterContentByContentArch(
-            productContent, consumer, productArchSet, archCurator);
+            productContent, consumer);
 
         for (ProductContent pc : archApproriateProductContent) {
             Content content = new Content();
@@ -362,13 +361,9 @@ public class X509V3ExtensionUtil extends X509Util{
             content.setPath(contentPath);
             content.setGpgUrl(pc.getContent().getGpgUrl());
 
-            // We filter content objects in filterProductContentByContentArch,
-            // do we need to still filter out arches?
-            List<String> archList = new ArrayList<String>();
-            for (Arch arch : pc.getContent().getArches()) {
-                archList.add(arch.getLabel());
-            }
-            content.setArches(archList);
+            // FIXME: does json model need arches split?
+            //       requiredTags and json.model.Product.arches does...
+            content.setArches(pc.getContent().getArches());
 
             // Check if we should override the enabled flag due to setting on promoted
             // content:
