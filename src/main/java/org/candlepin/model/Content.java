@@ -261,27 +261,7 @@ public class Content extends AbstractHibernateObject {
     public String getArches() {
         return arches;
     }
-    /*
-     * Returns a Set of the comma separated arch name Strings
-     *
-     * @return Set of arch names, or an empty set if value is
-     *         empty string, or if the 'arch' attribute doesnt
-     *         exist
-     */
-    public Set<String> getParsedArches() {
-        // if we get more attributes that are comma seperated,
-        // this may make sense to move to AbstractHibernateObject,
-        // but for now product arch is the only attribute.
-        String archesValue = getArches();
-        Set<String> archesSet = new HashSet<String>();
-        if (archesValue == null || archesValue.trim().equals("")) {
-            return archesSet;
-        }
-        for (String arch : archesValue.split(",")) {
-            archesSet.add(arch.trim());
-        }
-        return archesSet;
-    }
+
     /**
      * @param from Content object to copy properties from.
      * @return current Content object with updated properites
