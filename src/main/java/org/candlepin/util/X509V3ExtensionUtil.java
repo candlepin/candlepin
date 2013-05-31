@@ -48,7 +48,6 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
-import org.candlepin.util.Arch;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 import org.codehaus.jackson.annotate.JsonMethod;
 import org.codehaus.jackson.map.ObjectMapper;

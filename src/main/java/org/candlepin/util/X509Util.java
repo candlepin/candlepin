@@ -26,7 +26,6 @@ import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
-import org.candlepin.util.Arch;
 
 import com.google.common.base.Predicate;
 
@@ -183,18 +182,16 @@ public abstract class X509Util {
             }
 
             for (String contentArch : contentArches) {
-                log.debug("_ca_ Checking consumerArch " +
-                    consumerArch + " can use content for " +
-                    contentArch);
-                log.debug("_ca_ consumerArch.usesContentFor(contentArch) " +
-                   Arch.isCompatible(contentArch, consumerArch));
+                log.debug("_ca_ Checking consumerArch " + consumerArch +
+                    " can use content for " + contentArch);
+                log.debug("_ca_ arch.contentForConsume" +
+                    Arch.contentForConsumer(contentArch, consumerArch));
 
                 // if archCompare(contentArch, productArch
-                if (Arch.isCompatible(contentArch, consumerArch)) {
-                  log.debug("_ca_ CAN use content " +
-                      pc.getContent().getLabel() + " for arch " +
-                      contentArch);
-                  canUse = true;
+                if (Arch.contentForConsumer(contentArch, consumerArch)) {
+                    log.debug("_ca_ CAN use content " +
+                        pc.getContent().getLabel() + " for arch " + contentArch);
+                    canUse = true;
                 }
                 else {
                     log.debug("_ca_ CAN NOT use content " +
