@@ -179,7 +179,7 @@
             "vendor": "Red Hat",
             "content_url": "/path/to/awesomeos/all",
             "gpg_url": "/path/to/awesomeos/gpg/",
-            "arches": ["2"],
+            "arches": "i386",
             "metadata_expire": 3600
         },
         {
@@ -190,7 +190,7 @@
             "vendor": "Red Hat",
             "content_url": "/path/to/awesomeos/all",
             "gpg_url": "/path/to/awesomeos/gpg/",
-            "arches": ["1","2"],
+            "arches": "x86_64,i386",
             "metadata_expire": 3600
         },
         {
@@ -201,7 +201,7 @@
             "vendor": "Red Hat",
             "content_url": "/path/to/awesomeos/all",
             "gpg_url": "/path/to/awesomeos/gpg/",
-            "arches": ["1"],
+            "arches": "x86_64",
             "metadata_expire": 3600
         },
         {
@@ -212,7 +212,7 @@
             "vendor": "Red Hat",
             "content_url": "/path/to/awesomeos/all",
             "gpg_url": "/path/to/awesomeos/gpg/",
-            "arches": ["11"],
+            "arches": "s390x",
             "metadata_expire": 3600
         },
         {
@@ -223,7 +223,7 @@
             "vendor": "Red Hat",
             "content_url": "/path/to/awesomeos/all",
             "gpg_url": "/path/to/awesomeos/gpg/",
-            "arches": ["7"],
+            "arches": "ppc64",
             "metadata_expire": 3600
         },
         {
@@ -234,7 +234,7 @@
             "vendor": "Red Hat",
             "content_url": "/path/to/awesomeos/all",
             "gpg_url": "/path/to/awesomeos/gpg/",
-            "arches": ["6"],
+            "arches": "ppc",
             "metadata_expire": 3600
         },
 
@@ -246,7 +246,7 @@
             "vendor": "Red Hat",
             "content_url": "/path/to/awesomeos/all",
             "gpg_url": "/path/to/awesomeos/gpg/",
-            "arches": ["8"],
+            "arches": "ia64",
             "metadata_expire": 3600
         },
         {
