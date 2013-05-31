@@ -47,6 +47,7 @@ public abstract class X509Util {
     };
 
     public static final String ARCH_FACT = "uname.machine";
+    public static final String PRODUCT_ARCH_ATTR = "arch";
 
     /**
      * Scan the product content looking for any we should filter out.
@@ -160,7 +161,7 @@ public abstract class X509Util {
             boolean canUse = false;
             Set<String> contentArches = Arch.parseArches(pc.getContent().getArches());
             Set<String> productArches =
-                Arch.parseArches(product.getAttributeValue("arches"));
+                Arch.parseArches(product.getAttributeValue(PRODUCT_ARCH_ATTR));
 
             log.debug("product_content arch list for " +
                 pc.getContent().getLabel());
@@ -186,10 +187,10 @@ public abstract class X509Util {
                     consumerArch + " can use content for " +
                     contentArch);
                 log.debug("_ca_ consumerArch.usesContentFor(contentArch) " +
-                   Arch.isCompatible(consumerArch, contentArch));
+                   Arch.isCompatible(contentArch, consumerArch));
 
                 // if archCompare(contentArch, productArch
-                if (Arch.isCompatible(consumerArch, contentArch)) {
+                if (Arch.isCompatible(contentArch, consumerArch)) {
                   log.debug("_ca_ CAN use content " +
                       pc.getContent().getLabel() + " for arch " +
                       contentArch);
