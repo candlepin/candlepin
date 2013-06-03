@@ -32,6 +32,7 @@ import org.hibernate.impl.CriteriaImpl;
 import org.hibernate.transform.ResultTransformer;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -255,5 +256,20 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
     public void refresh(E object) {
         getEntityManager().refresh(object);
+    }
+
+    public List<E> takeSubList(PageRequest pageRequest, List<E> results) {
+        int fromIndex = (pageRequest.getPage() - 1) * pageRequest.getPerPage();
+        if (fromIndex >= results.size()) {
+            return new ArrayList<E>();
+        }
+
+        int toIndex = fromIndex + pageRequest.getPerPage();
+        if (toIndex > results.size()) {
+            toIndex = results.size();
+        }
+        // sublist returns a portion of the list between the specified fromIndex,
+        // inclusive, and toIndex, exclusive.
+        return results.subList(fromIndex, toIndex);
     }
 }

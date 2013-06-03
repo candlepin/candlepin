@@ -308,21 +308,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return resultsPage;
     }
 
-    private List<Pool> takeSubList(PageRequest pageRequest, List<Pool> results) {
-        int fromIndex = (pageRequest.getPage() - 1) * pageRequest.getPerPage();
-        if (fromIndex >= results.size()) {
-            return new ArrayList<Pool>();
-        }
-
-        int toIndex = fromIndex + pageRequest.getPerPage();
-        if (toIndex > results.size()) {
-            toIndex = results.size();
-        }
-        // sublist returns a portion of the list between the specified fromIndex,
-        // inclusive, and toIndex, exclusive.
-        return results.subList(fromIndex, toIndex);
-    }
-
     @Transactional
     @EnforceAccessControl
     public List<Pool> listPoolsRestrictedToUser(String username) {

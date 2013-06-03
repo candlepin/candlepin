@@ -18,8 +18,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 import org.candlepin.model.Owner;
-import org.candlepin.paging.PageRequest;
 import org.candlepin.paging.Page;
+import org.candlepin.paging.PageRequest;
 import org.candlepin.test.DatabaseTestFixture;
 
 import org.hibernate.criterion.DetachedCriteria;
@@ -27,6 +27,7 @@ import org.hibernate.criterion.Restrictions;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -126,5 +127,51 @@ public class CuratorPaginationTest extends DatabaseTestFixture {
 
         List<Owner> ownerList = p.getPageData();
         assertEquals(10, ownerList.size());
+    }
+
+    private List<Owner> createOwners(int owners) {
+        List<Owner> ownerList = new ArrayList<Owner>();
+        for (int i = 0; i < owners; i++) {
+            Owner o = new Owner();
+            o.setDisplayName(String.valueOf(i));
+            o.setKey(String.valueOf(i));
+            ownerList.add(o);
+        }
+        return ownerList;
+    }
+
+    @Test
+    public void testTakeSubList() {
+        PageRequest req = new PageRequest();
+        req.setPage(1);
+        req.setPerPage(10);
+
+        List<Owner> ownerList = createOwners(20);
+
+        List<Owner> results = ownerCurator.takeSubList(req, ownerList);
+        assertEquals(10, results.size());
+    }
+
+    @Test
+    public void testTakeSubListWhenResultsTooSmall() {
+        PageRequest req = new PageRequest();
+        req.setPage(1);
+        req.setPerPage(10);
+
+        List<Owner> ownerList = createOwners(2);
+        List<Owner> results = ownerCurator.takeSubList(req, ownerList);
+        assertEquals(2, results.size());
+    }
+
+    @Test
+    public void testTakeSubListWhenRequestOutOfBounds() {
+        PageRequest req = new PageRequest();
+        req.setPage(5);
+        req.setPerPage(10);
+
+        List<Owner> ownerList = createOwners(10);
+
+        List<Owner> results = ownerCurator.takeSubList(req, ownerList);
+        assertEquals(0, results.size());
     }
 }
