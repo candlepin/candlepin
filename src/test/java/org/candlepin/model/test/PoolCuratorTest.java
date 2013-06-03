@@ -376,15 +376,27 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         PageRequest req = new PageRequest();
         req.setPage(1);
         req.setPerPage(10);
+        req.setOrder(PageRequest.Order.ASCENDING);
+        req.setSortBy("id");
 
         Date activeOn = TestUtil.createDate(2011, 2, 2);
         Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
             null, owner, product.getId(), activeOn, false, false, req);
         assertEquals(Integer.valueOf(50), page.getMaxRecords());
-        assertEquals(10, page.getPageData().size());
+
+        List<Pool> pools = page.getPageData();
+        assertEquals(10, pools.size());
+
         // Make sure we have the real PageRequest, not the dummy one we send in
         // with the order and sortBy fields.
         assertEquals(req, page.getPageRequest());
+
+        // Check that we've sorted ascending on the id
+        for (int i = 0; i < pools.size(); i++) {
+            if (i < pools.size() - 1) {
+                assertTrue(pools.get(i).getId().compareTo(pools.get(i + 1).getId()) < 1);
+            }
+        }
     }
 
     @Test

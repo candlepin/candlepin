@@ -339,6 +339,10 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         List<Entitlement> ents = page.getPageData();
         assertEquals(10, ents.size());
 
+        // Make sure we have the real PageRequest, not the dummy one we send in
+        // with the order and sortBy fields.
+        assertEquals(req, page.getPageRequest());
+
         // Check that we've sorted ascending on the id
         for (int i = 0; i < ents.size(); i++) {
             if (i < ents.size() - 1) {
