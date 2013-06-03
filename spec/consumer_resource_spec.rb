@@ -19,6 +19,15 @@ describe 'Consumer Resource' do
     @consumer2 = consumer_client(@user2, random_string("consumer2"))
   end
 
+   it 'should receive paged data back when requested' do
+    (1..4).each do |i|
+      consumer_client(@user1, random_string('system'))
+    end
+    consumers = @cp.list_consumers({:page => 1, :per_page => 2, :sort_by => "id", :order => "asc"})
+    consumers.length.should == 2
+    (consumers[0].id <=> consumers[1].id).should == -1
+  end
+
   it 'should set compliance status and update compliance status' do
     @consumer1.get_consumer()['entitlementStatus'].should == "valid"
     product1 = create_product(random_string('product'), random_string('product'))
