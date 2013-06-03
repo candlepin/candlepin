@@ -198,7 +198,6 @@ public abstract class X509Util {
                         pc.getContent().getLabel() + " for arch " +
                         contentArch);
                 }
-                canUse = true;
             }
 
             // if we found a workable arch for this content, include it
