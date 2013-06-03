@@ -358,10 +358,18 @@ public class X509V3ExtensionUtil extends X509Util{
             content.setPath(contentPath);
             content.setGpgUrl(pc.getContent().getGpgUrl());
 
-            // FIXME: does json model need arches split?
-            //       requiredTags and json.model.Product.arches does...
+
+            // Set content model's arches here, inheriting from the product if
+            // they are not set on the content.
             List<String> archesList = new ArrayList<String>();
-            archesList.addAll(Arch.parseArches(pc.getContent().getArches()));
+
+            Set<String> contentArches = Arch.parseArches(pc.getContent().getArches());
+            if (contentArches.isEmpty()) {
+                archesList.addAll(Arch.parseArches(product.getAttributeValue(PRODUCT_ARCH_ATTR)));
+            }
+            else {
+                archesList.addAll(Arch.parseArches(pc.getContent().getArches()));
+            }
             content.setArches(archesList);
 
             // Check if we should override the enabled flag due to setting on promoted
