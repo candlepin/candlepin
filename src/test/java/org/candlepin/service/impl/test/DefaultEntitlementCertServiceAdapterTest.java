@@ -1134,8 +1134,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         List<Map<String, Object>> contents = null;
         for (Map<String, Object> prod : prods) {
 
-            String arch = product.hasAttribute("arch") ?
-                product.getAttributeValue("arch") : "";
+            String arch = wrongArchProduct.hasAttribute("arch") ?
+                wrongArchProduct.getAttributeValue("arch") : "";
             StringTokenizer st = new StringTokenizer(arch, ",");
             while (st.hasMoreElements()) {
                 assertTrue(((List) prod.get("architectures")).contains(st.nextElement()));
