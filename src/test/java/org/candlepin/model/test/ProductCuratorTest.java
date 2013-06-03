@@ -628,7 +628,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     public void testRemoveProductContent() {
         Product p = createTestProduct();
         Content content = new Content("test-content", "test-content",
-            "test-content", "yum", "us", "here", "here");
+            "test-content", "yum", "us", "here", "here", "test-arch");
         p.addContent(content);
         productCurator.create(p);
 

@@ -127,7 +127,7 @@ public class AutobindRulesTest {
         Set<Content> productContent = new HashSet<Content>();
         for (int i = 0; i < X509ExtensionUtil.V1_CONTENT_LIMIT + 1; i++) {
             productContent.add(new Content("fake" + i, "fake" + i,
-                "fake" + i, "yum", "vendor", "", ""));
+                "fake" + i, "yum", "vendor", "", "", ""));
         }
 
         engProduct.setContent(productContent);
@@ -171,7 +171,7 @@ public class AutobindRulesTest {
         Set<Content> productContent = new HashSet<Content>();
         for (int i = 0; i < X509ExtensionUtil.V1_CONTENT_LIMIT + 1; i++) {
             productContent.add(new Content("fake" + i, "fake" + i,
-                "fake" + i, "yum", "vendor", "", ""));
+                "fake" + i, "yum", "vendor", "", "", ""));
         }
 
         engProduct.setContent(productContent);

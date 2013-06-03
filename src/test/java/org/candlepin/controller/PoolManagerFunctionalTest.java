@@ -225,7 +225,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         Set<String> modified = new HashSet<String>();
         modified.add(PRODUCT_VIRT_HOST);
         Content content = new Content("modifier-content", "modifier-content",
-            "modifer-content", "yum", "us", "here", "here");
+            "modifer-content", "yum", "us", "here", "here", "");
         content.setModifiedProductIds(modified);
         modifier.addContent(content);
 
