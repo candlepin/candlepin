@@ -363,12 +363,15 @@ public class X509V3ExtensionUtil extends X509Util{
             // they are not set on the content.
             List<String> archesList = new ArrayList<String>();
 
-            Set<String> contentArches = Arch.parseArches(pc.getContent().getArches());
+            Set<String> contentArches = Arch.parseArches(pc.getContent()
+                .getArches());
             if (contentArches.isEmpty()) {
-                archesList.addAll(Arch.parseArches(product.getAttributeValue(PRODUCT_ARCH_ATTR)));
+                archesList.addAll(Arch.parseArches(product
+                    .getAttributeValue(PRODUCT_ARCH_ATTR)));
             }
             else {
-                archesList.addAll(Arch.parseArches(pc.getContent().getArches()));
+                archesList
+                    .addAll(Arch.parseArches(pc.getContent().getArches()));
             }
             content.setArches(archesList);
 
