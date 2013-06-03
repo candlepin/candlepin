@@ -139,11 +139,6 @@ public abstract class X509Util {
         Set<ProductContent> pcSet, Consumer consumer, Product product) {
         Set<ProductContent> filtered = new HashSet<ProductContent>();
 
-        /* FIXME: make this a feature flag in the config */
-        boolean enabledContentArchFiltering = true;
-        if (!enabledContentArchFiltering) {
-            return pcSet;
-        }
 
         String consumerArch = consumer.getFact(ARCH_FACT);
         log.debug("consumerArch: " + consumerArch);
