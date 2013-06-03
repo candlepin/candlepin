@@ -324,7 +324,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         consumerResource.unbindBySerial(consumer.getUuid(), serials.get(0)
             .getSerial().getId());
         assertEquals(0,
-            consumerResource.listEntitlements(consumer.getUuid(), null).size());
+            consumerResource.listEntitlements(consumer.getUuid(), null, null).size());
     }
 
     @Test(expected = ForbiddenException.class)
@@ -438,7 +438,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         assertEquals(3,
-            consumerResource.listEntitlements(consumer.getUuid(), null).size());
+            consumerResource.listEntitlements(consumer.getUuid(), null, null).size());
     }
 
     @Test(expected = ForbiddenException.class)
@@ -457,7 +457,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         setupPrincipal(new ConsumerPrincipal(evilConsumer));
         securityInterceptor.enable();
 
-        consumerResource.listEntitlements(consumer.getUuid(), null);
+        consumerResource.listEntitlements(consumer.getUuid(), null, null);
     }
 
     @Test(expected = ForbiddenException.class)
@@ -475,7 +475,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         securityInterceptor.enable();
         setupPrincipal(evilOwner, Access.ALL);
 
-        consumerResource.listEntitlements(consumer.getUuid(), null);
+        consumerResource.listEntitlements(consumer.getUuid(), null, null);
     }
 
     @Test
@@ -490,7 +490,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         assertEquals(3,
-            consumerResource.listEntitlements(consumer.getUuid(), null).size());
+            consumerResource.listEntitlements(consumer.getUuid(), null, null).size());
     }
 
     @Test

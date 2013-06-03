@@ -1470,26 +1470,33 @@ public class ConsumerResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{consumer_uuid}/entitlements")
+    @Paginate
     public List<Entitlement> listEntitlements(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-        @QueryParam("product") String productId) {
+        @QueryParam("product") String productId,
+        @Context PageRequest pageRequest) {
 
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
-        List<Entitlement> returnedEntitlements;
+        Page<List<Entitlement>> entitlementsPage;
         if (productId != null) {
             Product p = productAdapter.getProductById(productId);
             if (p == null) {
                 throw new BadRequestException(i18n.tr("No such product: {0}",
                     productId));
             }
-            returnedEntitlements = entitlementCurator.listByConsumerAndProduct(consumer,
-                productId);
+            entitlementsPage = entitlementCurator.listByConsumerAndProduct(consumer,
+                productId, pageRequest);
         }
         else {
-            returnedEntitlements = entitlementCurator.listByConsumer(consumer);
+            entitlementsPage = entitlementCurator.listByConsumer(consumer, pageRequest);
         }
 
+        // Store the page for the LinkHeaderPostInterceptor
+        ResteasyProviderFactory.pushContext(Page.class, entitlementsPage);
+
+        List<Entitlement> returnedEntitlements = entitlementsPage.getPageData();
         poolManager.regenerateDirtyEntitlements(returnedEntitlements);
+
         return returnedEntitlements;
     }
 
