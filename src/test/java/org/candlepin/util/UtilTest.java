@@ -191,6 +191,16 @@ public class UtilTest {
     }
 
     @Test
+    public void addMinutesToDt() {
+        Calendar c = Calendar.getInstance();
+        c.setTime(new Date());
+        c.add(Calendar.MINUTE, 10);
+        int future = c.get(Calendar.MINUTE);
+        c.setTime(Util.addMinutesToDt(10));
+        assertEquals(future, c.get(Calendar.MINUTE));
+    }
+
+    @Test
     public void negativeAddDaysToDt() {
         Calendar c = Calendar.getInstance();
         c.setTime(new Date());
