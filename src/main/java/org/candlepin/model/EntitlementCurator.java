@@ -305,6 +305,9 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         if (pageRequest != null && pageRequest.isPaging()) {
             page.setPageData(takeSubList(pageRequest, filtered));
         }
+        else {
+            page.setPageData(filtered);
+        }
 
         return page;
     }

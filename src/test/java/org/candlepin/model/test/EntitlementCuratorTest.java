@@ -16,6 +16,7 @@ package org.candlepin.model.test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import org.candlepin.model.Consumer;
@@ -349,6 +350,46 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
                 assertTrue(ents.get(i).getId().compareTo(ents.get(i + 1).getId()) < 1);
             }
         }
+    }
+
+    @Test
+    public void testListByConsumerAndProductWithoutPaging() {
+        Product product = TestUtil.createProduct();
+        productCurator.create(product);
+
+        Pool pool = createPoolAndSub(owner, product, 1L,
+            dateSource.currentDate(), createDate(2020, 1, 1));
+        poolCurator.create(pool);
+
+        for (int i = 0; i < 10; i++) {
+            EntitlementCertificate cert =
+                createEntitlementCertificate("key", "certificate");
+            Entitlement ent = createEntitlement(owner, consumer, pool, cert);
+            entitlementCurator.create(ent);
+        }
+
+        Product product2 = TestUtil.createProduct();
+        productCurator.create(product2);
+
+        Pool pool2 = createPoolAndSub(owner, product2, 1L,
+            dateSource.currentDate(), createDate(2020, 1, 1));
+        poolCurator.create(pool2);
+
+        for (int i = 0; i < 10; i++) {
+            EntitlementCertificate cert =
+                createEntitlementCertificate("key", "certificate");
+            Entitlement ent2 = createEntitlement(owner, consumer, pool2, cert);
+            entitlementCurator.create(ent2);
+        }
+
+        Page<List<Entitlement>> page =
+            entitlementCurator.listByConsumerAndProduct(consumer, product.getId(), null);
+        assertEquals(Integer.valueOf(10), page.getMaxRecords());
+
+        List<Entitlement> ents = page.getPageData();
+        assertEquals(10, ents.size());
+
+        assertNull(page.getPageRequest());
     }
 
     @Test
