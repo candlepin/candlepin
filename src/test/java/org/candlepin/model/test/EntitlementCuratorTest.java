@@ -194,8 +194,8 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     private Product createModifyingProduct(String modifiedProductId) {
         Product modifierProd = TestUtil.createProduct();
         String randomString = "" + TestUtil.randomInt();
-        Content modContent = new Content(randomString, randomString, randomString,
-            "type", "somebody", "", "");
+        Content modContent = new Content(randomString, randomString,
+            randomString, "type", "somebody", "", "", "");
         Set<String> modifiedProdIds = new HashSet<String>();
         modifiedProdIds.add(modifiedProductId);
         modContent.setModifiedProductIds(modifiedProdIds);

@@ -82,7 +82,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
             Math.abs(Long.valueOf("test-content".hashCode())));
         Content testContent = new Content("test-content", contentHash,
                             "test-content-label", "yum", "test-vendor",
-                             "test-content-url", "test-gpg-url");
+                             "test-content-url", "test-gpg-url", "test-arch");
 
         HashSet<Content> contentSet = new HashSet<Content>();
         testContent = contentCurator.create(testContent);

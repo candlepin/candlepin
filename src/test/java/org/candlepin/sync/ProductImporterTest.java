@@ -349,8 +349,8 @@ public class ProductImporterTest {
         Product newProduct = TestUtil.createProduct("fake id", "fake name");
         Product oldProduct = TestUtil.createProduct("fake id", "fake name");
 
-        Content content = new Content("foobar", null, null, null, null, null, null);
-        Content content2 = new Content("baz", null, null, null, null, null, null);
+        Content content = new Content("foobar", null, null, null, null, null, null, null);
+        Content content2 = new Content("baz", null, null, null, null, null, null, null);
 
         oldProduct.addContent(content);
         newProduct.addContent(content2);
@@ -372,7 +372,7 @@ public class ProductImporterTest {
         Product newProduct = TestUtil.createProduct("fake id", "fake name");
         Product oldProduct = TestUtil.createProduct("fake id", "fake name");
 
-        Content content = new Content("foobar", null, null, null, null, null, null);
+        Content content = new Content("foobar", null, null, null, null, null, null, null);
 
         oldProduct.addContent(content);
         newProduct.addEnabledContent(content);
@@ -392,7 +392,7 @@ public class ProductImporterTest {
     // Returns the Content object added
     private void addContentTo(Product p) {
         Content c = new Content("name", "100130", "label", "type",
-            "vendor", "url", "gpgurl");
+            "vendor", "url", "gpgurl", "arch");
         c.setMetadataExpire(1000L);
         p.getProductContent().add(new ProductContent(p, c, true));
     }

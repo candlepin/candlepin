@@ -57,7 +57,7 @@ describe 'Entitlement Certificate V3' do
     @arch_content = create_content({:gpg_url => 'gpg_url',
                                     :content_url => '/content/dist/rhel/arch/specific/$releasever/$basearch/os',
                                     :metadata_expire => 6400,
-                                    :arches => ['1', '2'],
+                                    :arches => "i386,x86_64",
                                     :required_tags => 'TAG1,TAG2',})
 
 

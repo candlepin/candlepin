@@ -37,7 +37,7 @@ public class ContentCuratorTest extends DatabaseTestFixture {
         updates = new Content(
             "Test Content 1", "100",
             "test-content-label-1", "yum-1", "test-vendor-1",
-            "test-content-url-1", "test-gpg-url-1");
+            "test-content-url-1", "test-gpg-url-1", "test-arch1,test-arch2");
         updates.setRequiredTags("required-tags");
         updates.setReleaseVer("releaseVer");
         updates.setMetadataExpire(new Long(1));
@@ -49,7 +49,7 @@ public class ContentCuratorTest extends DatabaseTestFixture {
         Content toBeUpdated = new Content(
             "Test Content", updates.getId(),
             "test-content-label", "yum", "test-vendor",
-            "test-content-url", "test-gpg-url");
+            "test-content-url", "test-gpg-url", "test-arch1");
         contentCurator.create(toBeUpdated);
 
         toBeUpdated = contentCurator.createOrUpdate(updates);
@@ -63,5 +63,6 @@ public class ContentCuratorTest extends DatabaseTestFixture {
         assertEquals(toBeUpdated.getReleaseVer(), updates.getReleaseVer());
         assertEquals(toBeUpdated.getMetadataExpire(), updates.getMetadataExpire());
         assertEquals(toBeUpdated.getModifiedProductIds(), updates.getModifiedProductIds());
+        assertEquals(toBeUpdated.getArches(), updates.getArches());
     }
 }

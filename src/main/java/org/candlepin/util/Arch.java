@@ -12,34 +12,16 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.model;
-
+package org.candlepin.util;
 
 import java.util.ArrayList;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlRootElement;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
- * Represents a cpu or system architecture. Content sets can
- * include software that runs on a particular architecture.
+ * Arch
  */
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.PROPERTY)
-@Entity
-@Table(name = "cp_arch")
-public class Arch extends AbstractHibernateObject {
-
-    @Id
-    private String id;
-
-    @Column(length = 32)
-    private String label;
+public class Arch {
 
     private static ArrayList<String> x86Labels = new ArrayList<String>() {
         {
@@ -57,87 +39,66 @@ public class Arch extends AbstractHibernateObject {
         }
     };
 
-    public Arch() {
-
+    private Arch() {
     }
 
-    public Arch(String id, String label) {
-        this.setLabel(label);
-        this.setId(id);
-    }
-
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    /** {@inheritDoc} */
-    public String getId() {
-        return id;
-
-    }
-
-    /**
-     * @return the label
-     */
-    public String getLabel() {
-        return label;
-    }
-
-    /**
-     * @param label the label to set
-     */
-    public void setLabel(String label) {
-        this.label = label;
-    }
-
-    @Override
-    public String toString() {
-        return "Arch [id = " + id + ", label = " + label + "]";
-    }
-
-    /**
+    /*
+     * Returns a Set of the comma separated arch name Strings
      *
-     * @param incoming
-     * @return If the two arches are compatible
-     *
-     * Compare two Arch objects to see if they are considered
-     * compatible for the sake of running package content for
-     * one Arch
+     * @return Set of arch names, or an empty set if value is
+     *         empty string, or if the 'arch' attribute doesnt
+     *         exist
      */
-    // I'm sure there is a better name here, but "isCompatible"
-    // isn't quite right.
-    public boolean usesContentFor(Arch incoming) {
+    public static Set<String> parseArches(String arches) {
+        Set<String> archesSet = new HashSet<String>();
+        if (arches == null || arches.trim().equals("")) {
+            return archesSet;
+        }
+        for (String arch : arches.split(",")) {
+            archesSet.add(arch.trim());
+        }
+        return archesSet;
+    }
+
+    /*
+     * determine if contentArch is compatible with consumerArch
+     *
+     * @param contentArch
+     * @param consumerArch
+     * @return true if contentArch is compatible with consumerArch, false
+     * otherwise
+     */
+    public static boolean contentForConsumer(String contentArch, String consumerArch) {
         boolean compatible = false;
         // FIXME: hardcode exact matches on label
         //        only atm
 
-        String inLabel = incoming.getLabel();
-        String ourLabel = this.getLabel();
-
         // handle "ALL" arch, sigh
-        if (inLabel.equals("ALL")) {
+        if (contentArch.equals("ALL")) {
+            compatible = true;
+        }
+        else if (contentArch.equals("noarch")) {
             compatible = true;
         }
         // Exact arch match
-        else if (ourLabel.equals(inLabel)) {
+        else if (consumerArch.equals(contentArch)) {
             compatible = true;
         }
         // x86_64 can use content for i386 etc
-        else if (ourLabel.equals("x86_64")) {
-            if (x86Labels.contains(inLabel)) {
+        else if (consumerArch.equals("x86_64")) {
+            if (x86Labels.contains(contentArch)) {
                 compatible = true;
             }
         }
         // i686 can run all x86 arches
-        else if (ourLabel.equals("i686")) {
-            if (x86Labels.contains(inLabel)) {
+        else if (consumerArch.equals("i686")) {
+            if (x86Labels.contains(contentArch)) {
                 compatible = true;
             }
         }
         // ppc64 can run ppc. Mostly...
-        else if (ourLabel.equals("ppc64")) {
-            if (ppcLabels.contains(inLabel)) {
+        else if (consumerArch.equals("ppc64")) {
+            if (ppcLabels.contains(contentArch)) {
                 compatible = true;
             }
         }
@@ -158,5 +119,4 @@ public class Arch extends AbstractHibernateObject {
 
         return compatible;
     }
-
 }

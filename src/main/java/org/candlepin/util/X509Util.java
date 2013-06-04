@@ -20,8 +20,6 @@ import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.candlepin.model.Arch;
-import org.candlepin.model.ArchCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
@@ -48,6 +46,7 @@ public abstract class X509Util {
     };
 
     public static final String ARCH_FACT = "uname.machine";
+    public static final String PRODUCT_ARCH_ATTR = "arch";
 
     /**
      * Scan the product content looking for any we should filter out.
@@ -131,102 +130,68 @@ public abstract class X509Util {
         return prefix + contentPath;
     }
 
-    public Set<org.candlepin.model.Arch> getProductArches(Product product,
-        ArchCurator archCurator) {
-        Set<String> arches = product.getParsedArches();
-        Set<org.candlepin.model.Arch> archSet = new
-            HashSet<org.candlepin.model.Arch>();
-        for (String archLabel : arches) {
-            Arch productArch = archCurator.lookupByLabel(archLabel);
-            if (productArch != null) {
-                archSet.add(productArch);
-            }
-            else {
-                log.debug("The arch label " + archLabel +
-                    " not found by the archCurator");
-            }
-        }
-        return archSet;
-    }
+
 
     /*
      * remove content sets that do not match the consumers arch
      */
     public Set<ProductContent> filterContentByContentArch(
-        Set<ProductContent> pcSet, Consumer consumer, Set<Arch> productArchSet,
-        ArchCurator archCurator) {
+        Set<ProductContent> pcSet, Consumer consumer, Product product) {
         Set<ProductContent> filtered = new HashSet<ProductContent>();
 
-        /* FIXME: make this a feature flag in the config */
-        boolean enabledContentArchFiltering = true;
-        if (!enabledContentArchFiltering) {
-            return pcSet;
-        }
 
-        String consumerArchLabel = consumer.getFact(ARCH_FACT);
-        log.debug("_ca_ consumerArchLabel: " + consumerArchLabel);
+        String consumerArch = consumer.getFact(ARCH_FACT);
+        log.debug("consumerArch: " + consumerArch);
 
-        if (consumerArchLabel == null) {
-            log.debug("_ca_ consumer: " + consumer.getId() + " has no " +
-                ARCH_FACT + " attribute.");
-            log.debug("_ca_ not filtering by arch");
-            return pcSet;
-        }
-
-        Arch consumerArch = archCurator.lookupByLabel(consumerArchLabel);
         if (consumerArch == null) {
-            log.debug("_ca_ consumer arch: " + consumerArchLabel +
-                " is not a known arch");
-            log.debug("_ca_ not filtering by arch");
+            log.debug("consumer: " + consumer.getId() + " has no " +
+                ARCH_FACT + " attribute.");
+            log.debug("not filtering by arch");
             return pcSet;
         }
 
-        log.debug("_ca_ consumerArch: " + consumerArch);
-        log.debug("_ca_ productArchSet " + productArchSet.toString());
 
         for (ProductContent pc : pcSet) {
             boolean canUse = false;
-            Set<Arch> arches = pc.getContent().getArches();
+            Set<String> contentArches = Arch.parseArches(pc.getContent().getArches());
+            Set<String> productArches =
+                Arch.parseArches(product.getAttributeValue(PRODUCT_ARCH_ATTR));
 
-            log.debug("_ca_ product_content arch list for " +
+            log.debug("product_content arch list for " +
                 pc.getContent().getLabel());
-            for (Arch logArch : pc.getContent().getArches()) {
-                log.debug("_ca_ \t arch: " + logArch.toString());
-            }
 
-            if (arches.isEmpty()) {
-                Product product = pc.getProduct();
-                // no arches specified
-                log.debug("_ca_ content set " + pc.getContent().getLabel() +
+            log.debug("contentArches: " + contentArches);
+            log.debug("productArches: " + productArches);
+
+            // empty or null Content.arches should result in
+            // inheriting the arches from the product
+            if (contentArches.isEmpty()) {
+                log.debug("content set " + pc.getContent().getLabel() +
                     " does not specific content arches");
 
                 // so use the arches from the product
-                arches.addAll(productArchSet);
-                log.debug("_ca_so using the arches from the product " +
+                contentArches.addAll(productArches);
+                log.debug("using the arches from the product " +
                     product.toString());
-                for (Arch productArch : arches) {
-                    log.debug("_ca_ \t arch from product: " +
-                        productArch.toString());
-                }
+                log.debug("productArches: " + productArches.toString());
             }
 
-            for (Arch contentArch : arches) {
-                log.debug("_ca_ Checking consumerArch " +
-                    consumerArch.getLabel() + " can use content for " +
-                    contentArch.getLabel());
-                log.debug("_ca_ consumerArch.usesContentFor(contentArch) " +
-                    consumerArch.usesContentFor(contentArch));
-                if (consumerArch.usesContentFor(contentArch)) {
+            for (String contentArch : contentArches) {
+                log.debug("_ca_ Checking consumerArch " + consumerArch +
+                    " can use content for " + contentArch);
+                log.debug("_ca_ arch.contentForConsume" +
+                    Arch.contentForConsumer(contentArch, consumerArch));
+
+                // if archCompare(contentArch, productArch
+                if (Arch.contentForConsumer(contentArch, consumerArch)) {
                     log.debug("_ca_ CAN use content " +
-                        pc.getContent().getLabel() + " for arch " +
-                        contentArch.getLabel());
-                    // filtered.add(pc);
+                        pc.getContent().getLabel() + " for arch " + contentArch);
                     canUse = true;
                 }
                 else {
                     log.debug("_ca_ CAN NOT use content " +
                         pc.getContent().getLabel() + " for arch " +
-                        contentArch.getLabel());
+                        contentArch);
                 }
             }
 
@@ -242,7 +207,7 @@ public abstract class X509Util {
 
         }
         log.debug("_ca_ arch approriate content for " +
-            consumerArch.getLabel() + " includes: ");
+            consumerArch + " includes: ");
         for (ProductContent apc : filtered) {
             log.debug("_ca_ \t " + apc.toString());
         }
