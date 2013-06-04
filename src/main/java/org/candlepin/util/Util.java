@@ -116,6 +116,12 @@ public class Util {
         return calendar.getTime();
     }
 
+    public static Date addMinutesToDt(int minuteField) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.MINUTE, minuteField);
+        return calendar.getTime();
+    }
+
     public static Date addToFields(int day, int month, int yr) {
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.DAY_OF_MONTH, day);

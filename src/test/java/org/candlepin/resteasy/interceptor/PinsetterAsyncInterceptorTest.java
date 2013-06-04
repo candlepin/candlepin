@@ -14,17 +14,17 @@
  */
 package org.candlepin.resteasy.interceptor;
 
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.any;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.quartz.JobBuilder.newJob;
 
 import com.google.inject.Provider;
-import java.util.Arrays;
-import java.util.List;
-import org.candlepin.auth.Principal;
+
 import org.candlepin.auth.Access;
+import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.exceptions.ServiceUnavailableException;
@@ -43,6 +43,9 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
  *
@@ -156,4 +159,18 @@ public class PinsetterAsyncInterceptorTest {
         this.interceptor.postProcess(response);
     }
 
+    @Test
+    public void scheduleMultipleJobs() throws PinsetterException {
+        JobDetail[] details = new JobDetail[3];
+        details[0] = newJob().build();
+        details[1] = newJob().build();
+        details[2] = newJob().build();
+
+        when(response.getEntity()).thenReturn(details);
+
+        this.interceptor.postProcess(response);
+
+        verify(this.pinsetterKernel, times(3)).scheduleSingleJob(any(JobDetail.class));
+        verify(this.response, times(1)).setEntity(any(JobStatus[].class));
+    }
 }
