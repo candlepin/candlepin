@@ -721,29 +721,6 @@ public class ConsumerResource {
             consumerCurator.update(toUpdate);
         }
     }
-    @PUT
-    @Produces(MediaType.APPLICATION_JSON)
-    @Path("{consumer_uuid}/checkin")
-    @Transactional
-    public void updateLastCheckin(
-        @PathParam("consumer_uuid") String uuid,
-        @QueryParam("checkin_date") String checkinDateStr) {
-        Date checkinDate = null;
-        if (checkinDateStr != null) {
-            checkinDate = ResourceDateParser.parseDateString(checkinDateStr);
-        }
-        log.debug("parsed " + checkinDateStr + " to " + checkinDate);
-
-        Consumer c = verifyAndLookupConsumer(uuid);
-
-        if (checkinDate != null) {
-            consumerCurator.updateLastCheckin(c, checkinDate);
-        }
-        else {
-            consumerCurator.updateLastCheckin(c);
-        }
-    }
-
 
     // Requires security hole since security interceptor will intercept when the method is
     // called. This is because it is protected. This method is called from other resources,
@@ -823,6 +800,11 @@ public class ConsumerResource {
             // get the new name into the id cert
             IdentityCertificate ic = generateIdCert(toUpdate, true);
             toUpdate.setIdCert(ic);
+        }
+
+        if (updated.getLastCheckin() != null) {
+            toUpdate.setLastCheckin(updated.getLastCheckin());
+            changesMade = true;
         }
 
         if (changesMade) {

@@ -760,6 +760,22 @@ public class ConsumerResourceUpdateTest {
         assertEquals(0, c.getCapabilities().size());
     }
 
+    @Test
+    public void consumerLastCheckin() {
+        Consumer c = getFakeConsumer();
+        Date now = new Date();
+        c.setLastCheckin(now);
+        ConsumerType ct = new ConsumerType();
+        ct.setManifest(true);
+        c.setType(ct);
+
+        Consumer updated = new Consumer();
+        Date then = new Date(now.getTime() + 10000L);
+        updated.setLastCheckin(then);
+        resource.updateConsumer(c.getUuid(), updated);
+        assertEquals(then, c.getLastCheckin());
+    }
+
     private Consumer createConsumerWithGuests(String ... guestIds) {
         Consumer a = new Consumer();
         Owner owner = new Owner();
