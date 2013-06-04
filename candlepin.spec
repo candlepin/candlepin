@@ -25,7 +25,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.8.12
+Version: 0.8.13
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -345,6 +345,13 @@ fi
 
 
 %changelog
+* Tue Jun 04 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.13-1
+- heal entire org (jesusr@redhat.com)
+- Drop the Arch table/model (alikins@redhat.com)
+- Include arches inherited from product on contents (alikins@redhat.com)
+- Update the last checkin date in the consumer update json only (wpoteat@redhat.com)
+- translate errors for supported calculations (ckozak@redhat.com)
+
 * Thu May 30 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.12-1
 - add paging package to candlepin-api.jar (jesusr@redhat.com)
 
