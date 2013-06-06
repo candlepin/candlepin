@@ -146,70 +146,79 @@ public abstract class X509Util {
         if (consumerArch == null) {
             log.debug("consumer: " + consumer.getId() + " has no " +
                 ARCH_FACT + " attribute.");
-            log.debug("not filtering by arch");
+            log.debug("Not filtering by arch");
             return pcSet;
         }
 
 
         for (ProductContent pc : pcSet) {
-            boolean canUse = false;
+            boolean canUse = true;
             Set<String> contentArches = Arch.parseArches(pc.getContent().getArches());
             Set<String> productArches =
                 Arch.parseArches(product.getAttributeValue(PRODUCT_ARCH_ATTR));
 
-            log.debug("product_content arch list for " +
+            log.debug("productContent arch list for " +
                 pc.getContent().getLabel());
 
             log.debug("contentArches: " + contentArches);
             log.debug("productArches: " + productArches);
 
-            // empty or null Content.arches should result in
+            // Empty or null Content.arches should result in
             // inheriting the arches from the product
             if (contentArches.isEmpty()) {
-                log.debug("content set " + pc.getContent().getLabel() +
-                    " does not specific content arches");
+                log.debug("Content set " + pc.getContent().getLabel() +
+                    " does not specify content arches");
 
-                // so use the arches from the product
-                contentArches.addAll(productArches);
-                log.debug("using the arches from the product " +
-                    product.toString());
-                log.debug("productArches: " + productArches.toString());
+                // No content arch, see if there is a Product arch
+                // and if so inherit it.
+                if (!productArches.isEmpty()) {
+                    contentArches.addAll(productArches);
+                    log.debug("Using the arches from the product " +
+                        product.toString());
+                    log.debug("productArches: " + productArches.toString());
+                }
+                else {
+                    // No Product arches either, log it, but do
+                    // not filter out this content
+                    log.debug("No arch attributes found for content or product");
+                }
             }
 
             for (String contentArch : contentArches) {
-                log.debug("_ca_ Checking consumerArch " + consumerArch +
+                log.debug("Checking consumerArch " + consumerArch +
                     " can use content for " + contentArch);
-                log.debug("_ca_ arch.contentForConsume" +
+                log.debug("arch.contentForConsumer" +
                     Arch.contentForConsumer(contentArch, consumerArch));
 
-                // if archCompare(contentArch, productArch
                 if (Arch.contentForConsumer(contentArch, consumerArch)) {
-                    log.debug("_ca_ CAN use content " +
+                    log.debug("Can use content " +
                         pc.getContent().getLabel() + " for arch " + contentArch);
-                    canUse = true;
                 }
                 else {
-                    log.debug("_ca_ CAN NOT use content " +
+                    log.debug("Can not use content " +
                         pc.getContent().getLabel() + " for arch " +
                         contentArch);
+                    canUse = false;
                 }
             }
 
-            // if we found a workable arch for this content, include it
+            // If we found a workable arch for this content, include it
+            // also include content where no arch was found at all (on
+            // Content or on Product)
             if (canUse) {
                 filtered.add(pc);
-                log.debug("_ca_ Including content " +
+                log.debug("Including content " +
                     pc.getContent().getLabel());
             }
             else {
-                log.debug("_ca_ Skipping content " + pc.getContent().getLabel());
+                log.debug("Skipping content " + pc.getContent().getLabel());
             }
 
         }
-        log.debug("_ca_ arch approriate content for " +
+        log.debug("Arch approriate content for " +
             consumerArch + " includes: ");
         for (ProductContent apc : filtered) {
-            log.debug("_ca_ \t " + apc.toString());
+            log.debug("\t " + apc.toString());
         }
         return filtered;
     }
