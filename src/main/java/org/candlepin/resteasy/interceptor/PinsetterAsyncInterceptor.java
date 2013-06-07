@@ -32,7 +32,6 @@ import org.quartz.JobDetail;
 import org.quartz.impl.JobDetailImpl;
 
 import javax.ws.rs.ext.Provider;
-import org.apache.log4j.Logger;
 
 /**
  * Resteasy interceptor that handles scheduling a one-time pinsetter job if the
@@ -44,7 +43,7 @@ import org.apache.log4j.Logger;
 @Provider
 @ServerInterceptor
 public class PinsetterAsyncInterceptor implements PostProcessInterceptor {
-    private static Logger log = Logger.getLogger(PinsetterAsyncInterceptor.class);
+
     private PinsetterKernel pinsetterKernel;
     private com.google.inject.Provider<Principal> principalProvider;
 
@@ -68,32 +67,15 @@ public class PinsetterAsyncInterceptor implements PostProcessInterceptor {
             JobDetail jobDetail = (JobDetail) entity;
             setJobPrincipal(jobDetail);
 
-            JobStatus status = this.scheduleJob(jobDetail);
-            response.setEntity(status);
-            response.setStatus(HttpResponseCodes.SC_ACCEPTED);
-        }
-        else if (entity instanceof JobDetail[]) {
-            JobDetail[] details = (JobDetail[]) entity;
-            JobStatus[] statuses = new JobStatus[details.length];
+            try {
+                JobStatus status = this.pinsetterKernel.scheduleSingleJob(jobDetail);
 
-            int i = 0;
-            for (JobDetail jobDetail : details) {
-                setJobPrincipal(jobDetail);
-                JobStatus status = this.scheduleJob(jobDetail);
-                statuses[i++] = status;
+                response.setEntity(status);
+                response.setStatus(HttpResponseCodes.SC_ACCEPTED);
             }
-
-            response.setEntity(statuses);
-            response.setStatus(HttpResponseCodes.SC_ACCEPTED);
-        }
-    }
-
-    private JobStatus scheduleJob(JobDetail detail) {
-        try {
-            return this.pinsetterKernel.scheduleSingleJob(detail);
-        }
-        catch (PinsetterException e) {
-            throw new ServiceUnavailableException("Error scheduling refresh job.", e);
+            catch (PinsetterException e) {
+                throw new ServiceUnavailableException("Error scheduling refresh job.", e);
+            }
         }
     }
 

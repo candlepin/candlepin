@@ -58,8 +58,6 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
-import javax.persistence.EntityExistsException;
-
 /**
  * Pinsetter Kernel.
  * @version $Rev$
@@ -334,19 +332,12 @@ public class PinsetterKernel {
                 .addJobListenerMatcher(PinsetterJobListener.LISTENER_NAME
                     , jobNameEquals(detail.getKey().getName()));
 
-            JobStatus status = null;
-            try {
+            JobStatus status = jobCurator.find(detail.getKey().getName());
+            if (status == null) {
                 status = jobCurator.create(new JobStatus(detail));
-            }
-            catch (EntityExistsException e) {
-                // status exists, let's update it
-                // in theory this should be the rare case
-                status = jobCurator.find(detail.getKey().getName());
-                jobCurator.merge(status);
             }
 
             scheduler.scheduleJob(detail, trigger);
-
             if (log.isDebugEnabled()) {
                 log.debug("Scheduled " + detailImpl.getFullName());
             }
@@ -382,10 +373,8 @@ public class PinsetterKernel {
      * @throws PinsetterException if there is an error scheduling the job
      */
     public JobStatus scheduleSingleJob(JobDetail jobDetail) throws PinsetterException {
-        // make it start in a minute
         Trigger trigger = newTrigger()
             .withIdentity(jobDetail.getKey().getName() + " trigger", SINGLE_JOB_GROUP)
-            .startAt(Util.addMinutesToDt(1))
             .build();
 
         return scheduleJob(jobDetail, SINGLE_JOB_GROUP, trigger);
