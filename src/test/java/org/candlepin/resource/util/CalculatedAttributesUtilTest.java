@@ -26,6 +26,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.policy.js.quantity.QuantityRules;
+import org.candlepin.policy.js.quantity.SuggestedQuantity;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
@@ -69,8 +70,11 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
 
     @Test
     public void testCalculatedAttributesPresent() {
+        SuggestedQuantity suggested = new SuggestedQuantity();
+        suggested.setSuggested(1L);
+        suggested.setIncrement(1L);
         when(quantityRules.getSuggestedQuantity(any(Pool.class), any(Consumer.class))).
-            thenReturn(1L);
+            thenReturn(suggested);
 
         Map<String, String> attrs = attrUtil.buildCalculatedAttributes(pool1, consumer);
         assertTrue(attrs.containsKey("suggested_quantity"));
@@ -86,8 +90,11 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
         Pool pool2 = createPoolAndSub(owner1, product2, 500L,
             TestUtil.createDate(2000, 1, 1), TestUtil.createDate(3000, 1, 1));
 
+        SuggestedQuantity suggested = new SuggestedQuantity();
+        suggested.setSuggested(1L);
+        suggested.setIncrement(12L);
         when(quantityRules.getSuggestedQuantity(any(Pool.class), any(Consumer.class))).
-            thenReturn(1L);
+            thenReturn(suggested);
 
         Map<String, String> attrs = attrUtil.buildCalculatedAttributes(pool2, consumer);
         assertEquals("12", attrs.get("quantity_increment"));

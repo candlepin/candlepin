@@ -46,7 +46,7 @@ public class QuantityRules {
         jsRules.init("quantity_name_space");
     }
 
-    public long getSuggestedQuantity(Pool p, Consumer c) {
+    public SuggestedQuantity getSuggestedQuantity(Pool p, Consumer c) {
         JsonJsContext args = new JsonJsContext(mapper);
 
         Set<Entitlement> validEntitlements = new HashSet<Entitlement>();
@@ -61,14 +61,9 @@ public class QuantityRules {
         args.put("validEntitlements", validEntitlements);
         args.put("log", log, false);
 
-        // Fun fact: All numbers in javascript (ECMAScript) are double-precision.
-        // See http://www.ecma-international.org/ecma-262/5.1/#sec-8.5
-
-        // For some reason Rhino will return an integer sometimes and a double
-        // other times.  So let's just deal with Strings to make everything
-        // consistent.
-        String q = jsRules.runJsFunction(String.class, "get_suggested_quantity", args);
-        return Long.valueOf(q);
+        String json = jsRules.runJsFunction(String.class, "get_suggested_quantity", args);
+        SuggestedQuantity dto = mapper.toObject(json, SuggestedQuantity.class);
+        return dto;
     }
 
     private boolean isValid(Entitlement e) {

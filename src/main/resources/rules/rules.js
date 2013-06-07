@@ -1,4 +1,4 @@
-// Version: 3.1
+// Version: 4.0
 
 /*
  * Default Candlepin rule set.
@@ -1391,7 +1391,7 @@ var Entitlement = {
         var result = Entitlement.ValidationResult();
         context = Entitlement.get_attribute_context();
         if (context.consumer.type.manifest) {
-            return JSON.stringify(result);        	
+            return JSON.stringify(result);
         }
 
         var requiresConsumerType = context.getAttribute(context.pool, "requires_consumer_type");
@@ -1411,7 +1411,7 @@ var Entitlement = {
         context = Entitlement.get_attribute_context();
         var consumer = context.consumer;
         if (consumer.type.manifest) {
-            return JSON.stringify(result);        	
+            return JSON.stringify(result);
         }
 
         if (!architectureMatches(context.pool.getProductAttribute(ARCH_ATTRIBUTE),
@@ -1429,7 +1429,7 @@ var Entitlement = {
         var pool = context.pool;
 
         if (consumer.type.manifest) {
-            return JSON.stringify(result);        	
+            return JSON.stringify(result);
         }
 
         //usually, we assume socket count to be 1 if it is undef. However, we need to know if it's
@@ -1551,7 +1551,7 @@ var Entitlement = {
         var consumer = context.consumer;
         if (consumer.type.manifest) {
             return JSON.stringify(result);
-        }        
+        }
 
         log.debug("pre_global being called by [" + caller + "]");
 
@@ -2169,10 +2169,13 @@ var Quantity = {
         var consumer = context.consumer;
         var validEntitlements = context.validEntitlements;
 
-        var quantity = 1;
+        var result = {
+            suggested: 1,
+            increment: 1
+        };
 
         if (!Quantity.allows_multi_entitlement(pool)) {
-            return quantity.toString();
+            return JSON.stringify(result);
         }
 
         if (pool.hasProductAttribute("stacking_id")) {
@@ -2184,13 +2187,18 @@ var Quantity = {
                 stackTracker.updateAccumulatedFromEnt(ent);
             }
 
-            quantity = CoverageCalculator.getQuantityToCoverStack(stackTracker, pool, consumer);
+            result.suggested = CoverageCalculator.getQuantityToCoverStack(stackTracker, pool, consumer);
         }
         else {
-            quantity = 1;
+            result.suggested = 1;
         }
 
-        return quantity.toString();
+        // Adjust the suggested quantity increment if necessary:
+        if (pool.hasProductAttribute("instance_multiplier") && !Utils.isGuest(consumer)) {
+            result.increment = parseInt(pool.getProductAttribute("instance_multiplier"));
+        }
+
+        return JSON.stringify(result);
     },
 
     allows_multi_entitlement: function(pool) {
