@@ -452,28 +452,6 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         assertFalse(result.hasWarnings());
     }
 
-    // There shouldn't be any way to get a host restricted pool in hosted, but make sure
-    // if it were to happen, it wouldn't be enforced.
-    @Test
-    public void hostedVirtOnlyPoolGuestHostDoesNotMatch() {
-        Consumer parent = new Consumer("test parent consumer", "test user", owner,
-            new ConsumerType(ConsumerTypeEnum.SYSTEM));
-        Pool pool = setupHostRestrictedPool(parent);
-        Consumer otherParent = new Consumer("test parent consumer", "test user", owner,
-            new ConsumerType(ConsumerTypeEnum.SYSTEM));
-
-        when(config.standalone()).thenReturn(false);
-        String guestId = "virtguestuuid";
-        consumer.setFact("virt.is_guest", "true");
-        consumer.setFact("virt.uuid", guestId);
-
-        when(consumerCurator.getHost(guestId)).thenReturn(otherParent);
-
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
-        assertFalse(result.hasErrors());
-        assertFalse(result.hasWarnings());
-    }
-
     @Test
     public void virtOnlyPoolGuestHostDoesNotMatch() {
         when(config.standalone()).thenReturn(true);

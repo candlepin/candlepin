@@ -1342,13 +1342,7 @@ var Entitlement = {
         if (virt_pool) {
             if (consumer.type.manifest) {
                 if (pool_derived) {
-                    if (BEST_POOLS_CALLER == caller ||
-                        BIND_CALLER == caller) {
-                    	result.addError("pool.not.available.to.manifest.consumers");
-                    }
-                    else {
-                        result.addWarning("pool.not.available.to.manifest.consumers");
-                    }
+                    result.addError("pool.not.available.to.manifest.consumers");
                 }
         	}
         	else if (!guest) {
@@ -1368,9 +1362,9 @@ var Entitlement = {
         var result = Entitlement.ValidationResult();
         context = Entitlement.get_attribute_context();
 
-        // It shouldn't be possible to get a host restricted pool in hosted, but just in
-        // case, make sure it won't be enforced if we do.
-        if (!context.standalone) {
+        // requires_host derived pools not available to manifest
+        if (context.consumer.type.manifest) {
+            result.addError("pool.not.available.to.manifest.consumers");
             return JSON.stringify(result);
         }
 
