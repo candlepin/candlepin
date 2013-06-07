@@ -17,6 +17,7 @@ package org.candlepin.resource.util;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Pool;
 import org.candlepin.policy.js.quantity.QuantityRules;
+import org.candlepin.policy.js.quantity.SuggestedQuantity;
 
 import com.google.inject.Inject;
 
@@ -41,13 +42,12 @@ public class CalculatedAttributesUtil {
             return attrMap;
         }
 
-        attrMap.put("suggested_quantity",
-            String.valueOf(quantityRules.getSuggestedQuantity(p, c)));
+        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(p, c);
 
-        if (p.hasProductAttribute("instance_multiplier")) {
-            attrMap.put("quantity_increment",
-                p.getProductAttribute("instance_multiplier").getValue());
-        }
+        attrMap.put("suggested_quantity",
+            String.valueOf(suggested.getSuggested()));
+        attrMap.put("quantity_increment",
+            String.valueOf(suggested.getIncrement()));
 
         return attrMap;
     }

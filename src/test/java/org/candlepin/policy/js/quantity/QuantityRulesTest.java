@@ -46,6 +46,7 @@ import java.util.Set;
 public class QuantityRulesTest {
 
     private static final String SOCKET_ATTRIBUTE = "sockets";
+    private static final String INSTANCE_ATTRIBUTE = "instance_multiplier";
     private static final String SOCKET_FACT = "cpu.cpu_socket(s)";
     private static final String CORES_ATTRIBUTE = "cores";
     private static final String CORES_FACT = "cpu.core(s)_per_socket";
@@ -109,22 +110,25 @@ public class QuantityRulesTest {
     @Test
     public void testNonMultiEntitlementPool() {
         pool.setProductAttribute("multi-entitlement", "no", product.getId());
-        assertEquals(1L, quantityRules.getSuggestedQuantity(pool, new Consumer()));
+        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool,
+            new Consumer());
+        assertEquals(new Long(1), suggested.getSuggested());
     }
 
     @Test
     public void testPhysicalDefaultToNumSocketsBySocketCount() {
         consumer.setFact(SOCKET_FACT, "4");
         pool.setProductAttribute(SOCKET_ATTRIBUTE, "2", product.getId());
-
-        assertEquals(2L, quantityRules.getSuggestedQuantity(pool, consumer));
+        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool, consumer);
+        assertEquals(new Long(2), suggested.getSuggested());
     }
 
     @Test
     public void testPhysicalRoundsUp() {
         consumer.setFact(SOCKET_FACT, "4");
         pool.setProductAttribute(SOCKET_ATTRIBUTE, "3", product.getId());
-        assertEquals(2L, quantityRules.getSuggestedQuantity(pool, consumer));
+        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool, consumer);
+        assertEquals(new Long(2), suggested.getSuggested());
     }
 
     @Test
@@ -140,7 +144,8 @@ public class QuantityRulesTest {
 
         consumer.setEntitlements(ents);
 
-        assertEquals(2L, quantityRules.getSuggestedQuantity(pool, consumer));
+        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool, consumer);
+        assertEquals(new Long(2), suggested.getSuggested());
     }
 
     @Test
@@ -148,7 +153,8 @@ public class QuantityRulesTest {
         consumer.setFact(IS_VIRT, "true");
         consumer.setFact(CORES_FACT, "8");
         pool.setProductAttribute(CORES_ATTRIBUTE, "4", product.getId());
-        assertEquals(2L, quantityRules.getSuggestedQuantity(pool, consumer));
+        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool, consumer);
+        assertEquals(new Long(2), suggested.getSuggested());
     }
 
     @Test
@@ -156,7 +162,8 @@ public class QuantityRulesTest {
         consumer.setFact(IS_VIRT, "true");
         consumer.setFact(SOCKET_FACT, "4");
         pool.setProductAttribute(SOCKET_ATTRIBUTE, "2", product.getId());
-        assertEquals(2L, quantityRules.getSuggestedQuantity(pool, consumer));
+        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool, consumer);
+        assertEquals(new Long(2), suggested.getSuggested());
     }
 
     @Test
@@ -164,7 +171,8 @@ public class QuantityRulesTest {
         consumer.setFact(IS_VIRT, "true");
         consumer.setFact(SOCKET_FACT, "4");
         consumer.setFact(CORES_FACT, "8");
-        assertEquals(1L, quantityRules.getSuggestedQuantity(pool, consumer));
+        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool, consumer);
+        assertEquals(new Long(1), suggested.getSuggested());
     }
 
     @Test
@@ -172,7 +180,8 @@ public class QuantityRulesTest {
         consumer.setFact(IS_VIRT, "true");
         consumer.setFact(CORES_FACT, "8");
         pool.setProductAttribute(CORES_ATTRIBUTE, "6", product.getId());
-        assertEquals(2L, quantityRules.getSuggestedQuantity(pool, consumer));
+        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool, consumer);
+        assertEquals(new Long(2), suggested.getSuggested());
     }
 
     @Test
@@ -189,7 +198,8 @@ public class QuantityRulesTest {
 
         consumer.setEntitlements(ents);
 
-        assertEquals(2L, quantityRules.getSuggestedQuantity(pool, consumer));
+        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool, consumer);
+        assertEquals(new Long(2), suggested.getSuggested());
     }
 
     @Test
@@ -198,7 +208,33 @@ public class QuantityRulesTest {
         consumer.setFact(SOCKET_FACT, "4");
         pool.setProductAttribute(SOCKET_ATTRIBUTE, "2", product.getId());
 
-        assertEquals(2L, quantityRules.getSuggestedQuantity(pool, consumer));
+        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool, consumer);
+        assertEquals(new Long(2), suggested.getSuggested());
+        assertEquals(new Long(1), suggested.getIncrement());
+    }
+
+    @Test
+    public void testInstanceBasedOnPhysical() {
+        consumer.setFact(IS_VIRT, "false");
+        consumer.setFact(SOCKET_FACT, "4");
+        pool.setProductAttribute(SOCKET_ATTRIBUTE, "2", product.getId());
+        pool.setProductAttribute(INSTANCE_ATTRIBUTE, "2", product.getId());
+
+        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool, consumer);
+        assertEquals(new Long(4), suggested.getSuggested());
+        assertEquals(new Long(2), suggested.getIncrement());
+    }
+
+    @Test
+    public void testInstanceBasedOnGuest() {
+        consumer.setFact(IS_VIRT, "true");
+        consumer.setFact(SOCKET_FACT, "4");
+        pool.setProductAttribute(SOCKET_ATTRIBUTE, "2", product.getId());
+        pool.setProductAttribute(INSTANCE_ATTRIBUTE, "2", product.getId());
+
+        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool, consumer);
+        assertEquals(new Long(1), suggested.getSuggested());
+        assertEquals(new Long(1), suggested.getIncrement());
     }
 
     @Test
@@ -207,7 +243,8 @@ public class QuantityRulesTest {
         consumer.setFact(SOCKET_FACT, "4");
         pool.setProductAttribute(SOCKET_ATTRIBUTE, "2", product.getId());
 
-        assertEquals(2L, quantityRules.getSuggestedQuantity(pool, consumer));
+        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool, consumer);
+        assertEquals(new Long(2), suggested.getSuggested());
     }
 
     @Test
@@ -227,7 +264,8 @@ public class QuantityRulesTest {
 
         consumer.setEntitlements(ents);
 
-        assertEquals(2L, quantityRules.getSuggestedQuantity(pool, consumer));
+        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool, consumer);
+        assertEquals(new Long(2), suggested.getSuggested());
     }
 
     @Test
@@ -244,7 +282,8 @@ public class QuantityRulesTest {
 
         consumer.setEntitlements(ents);
 
-        assertEquals(0L, quantityRules.getSuggestedQuantity(pool, consumer));
+        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool, consumer);
+        assertEquals(new Long(0), suggested.getSuggested());
     }
 
     @Test
@@ -263,7 +302,8 @@ public class QuantityRulesTest {
 
         consumer.setEntitlements(ents);
 
-        assertEquals(2L, quantityRules.getSuggestedQuantity(pool, consumer));
+        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool, consumer);
+        assertEquals(new Long(2), suggested.getSuggested());
     }
 
 }
