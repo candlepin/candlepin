@@ -282,6 +282,58 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
     }
 
     @Test
+    public void preEntitlementShouldNotAllowListOfDerivedPools() {
+        Consumer c = TestUtil.createConsumer();
+        c.getType().setManifest(true);
+
+        Product prod = TestUtil.createProduct();
+        Pool p = TestUtil.createPool(prod);
+        p.setAttribute("virt_only", "true");
+        p.setAttribute("pool_derived", "true");
+
+        ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.LIST_POOLS);
+        assertNotNull(results);
+        assertEquals(1, results.getErrors().size());
+        ValidationError error = results.getErrors().get(0);
+        assertEquals("pool.not.available.to.manifest.consumers", error.getResourceKey());
+    }
+
+    @Test
+    public void preEntitlementShouldNotAllowConsumptionFromRequiresHostPools() {
+        Consumer c = TestUtil.createConsumer();
+        c.getType().setManifest(true);
+
+        Product prod = TestUtil.createProduct();
+        Pool p = TestUtil.createPool(prod);
+        p.setAttribute("virt_only", "true");
+        p.setAttribute("requires_host", "true");
+
+        ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.BIND);
+        assertNotNull(results);
+        assertEquals(1, results.getErrors().size());
+        ValidationError error = results.getErrors().get(0);
+        assertEquals("pool.not.available.to.manifest.consumers", error.getResourceKey());
+    }
+
+    @Test
+    public void preEntitlementShouldNotAllowListOfRequiresHostPools() {
+        Consumer c = TestUtil.createConsumer();
+        c.getType().setManifest(true);
+
+        Product prod = TestUtil.createProduct();
+        Pool p = TestUtil.createPool(prod);
+        p.setAttribute("virt_only", "true");
+        p.setAttribute("requires_host", "true");
+
+        ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.LIST_POOLS);
+        assertNotNull(results);
+        assertEquals(1, results.getErrors().size());
+        ValidationError error = results.getErrors().get(0);
+        assertEquals("pool.not.available.to.manifest.consumers", error.getResourceKey());
+    }
+
+
+    @Test
     public void preEntitlementShouldNotAllowOverConsumptionOfEntitlements() {
         Consumer c = TestUtil.createConsumer();
         c.getType().setManifest(true);
