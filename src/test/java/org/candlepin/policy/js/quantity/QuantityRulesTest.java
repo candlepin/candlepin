@@ -226,6 +226,32 @@ public class QuantityRulesTest {
     }
 
     @Test
+    public void testInstanceBasedOnPhysicalNotEnoughAvailable() {
+        consumer.setFact(IS_VIRT, "false");
+        consumer.setFact(SOCKET_FACT, "40"); // lots of ents required
+        pool.setProductAttribute(SOCKET_ATTRIBUTE, "2", product.getId());
+        pool.setProductAttribute(INSTANCE_ATTRIBUTE, "2", product.getId());
+
+        pool.setQuantity(4L);
+        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool, consumer);
+        assertEquals(new Long(4), suggested.getSuggested());
+        assertEquals(new Long(2), suggested.getIncrement());
+    }
+
+    @Test
+    public void testInstanceBasedOnPhysicalNotEnoughAvailableUneven() {
+        consumer.setFact(IS_VIRT, "false");
+        consumer.setFact(SOCKET_FACT, "40"); // lots of ents required
+        pool.setProductAttribute(SOCKET_ATTRIBUTE, "2", product.getId());
+        pool.setProductAttribute(INSTANCE_ATTRIBUTE, "2", product.getId());
+
+        pool.setQuantity(3L);
+        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool, consumer);
+        assertEquals(new Long(2), suggested.getSuggested());
+        assertEquals(new Long(2), suggested.getIncrement());
+    }
+
+    @Test
     public void testInstanceBasedOnGuest() {
         consumer.setFact(IS_VIRT, "true");
         consumer.setFact(SOCKET_FACT, "4");
