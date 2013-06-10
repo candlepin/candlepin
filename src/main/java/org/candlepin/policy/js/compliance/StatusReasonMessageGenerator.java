@@ -14,6 +14,10 @@
  */
 package org.candlepin.policy.js.compliance;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import org.apache.commons.lang.StringUtils;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.Entitlement;
@@ -79,18 +83,20 @@ public class StatusReasonMessageGenerator {
         }
     }
 
+    //Only works for the current time, which is currently the only time reasons are supplied
     private String getStackedMarketingName(String stackId, Consumer consumer) {
-        String result = "";
+        Set<String> results = new HashSet<String>();
         for (Entitlement e : consumer.getEntitlements()) {
-            if (e.getPool().getProductAttribute("stacking_id") != null) {
+            if (e.getPool().getProductAttribute("stacking_id") != null &&
+                    e.isValid()) {
                 if (e.getPool().getProductAttribute("stacking_id")
                     .getValue().equals(stackId)) {
-                    result += e.getPool().getProductName() + "/";
+                    results.add(e.getPool().getProductName());
                 }
             }
         }
-        if (result.length() > 0) {
-            return result.substring(0, result.length() - 1);
+        if (results.size() > 0) {
+            return StringUtils.join(results, "/");
         }
         else {
             return "UNABLE_TO_GET_NAME";
