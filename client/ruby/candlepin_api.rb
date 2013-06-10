@@ -323,8 +323,11 @@ class Candlepin
     path << "consumer=#{params[:consumer]}&" if params[:consumer]
     path << "product=#{params[:product]}&" if params[:product]
     path << "listall=#{params[:listall]}&" if params[:listall]
+    path << "page=#{params[:page]}&" if params[:page]
+    path << "per_page=#{params[:per_page]}&" if params[:per_page]
+    path << "order=#{params[:order]}&" if params[:order]
+    path << "sort_by=#{params[:sort_by]}&" if params[:sort_by]
     results = get(path)
-
     return results
   end
 
@@ -543,8 +546,12 @@ class Candlepin
   def list_entitlements(params={})
     uuid = params[:uuid] || @uuid
 
-    path = "/consumers/#{uuid}/entitlements"
-    path << "?product=#{params[:product_id]}" if params[:product_id]
+    path = "/consumers/#{uuid}/entitlements?"
+    path << "product=#{params[:product_id]}&" if params[:product_id]
+    path << "page=#{params[:page]}&" if params[:page]
+    path << "per_page=#{params[:per_page]}&" if params[:per_page]
+    path << "order=#{params[:order]}&" if params[:order]
+    path << "sort_by=#{params[:sort_by]}&" if params[:sort_by]
     results = get(path)
     return results
   end
@@ -571,6 +578,10 @@ class Candlepin
 
     query << "username=#{args[:username]}&" if args[:username]
     query << "type=#{args[:type]}&" if args[:type]
+    query << "page=#{args[:page]}&" if args[:page]
+    query << "per_page=#{args[:per_page]}&" if args[:per_page]
+    query << "order=#{args[:order]}&" if args[:order]
+    query << "sort_by=#{args[:sort_by]}&" if args[:sort_by]
     get(query)
   end
 

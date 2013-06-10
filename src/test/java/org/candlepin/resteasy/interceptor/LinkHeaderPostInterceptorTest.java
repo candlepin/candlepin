@@ -265,6 +265,20 @@ public class LinkHeaderPostInterceptorTest {
     }
 
     @Test
+    public void testGetLastPageWhenEvenlyDivisible() {
+        Page p = new Page();
+        p.setMaxRecords(10);
+
+        PageRequest pr = new PageRequest();
+        p.setPageRequest(pr);
+
+        pr.setPerPage(10);
+        pr.setPage(1);
+
+        assertEquals(Integer.valueOf(1), interceptor.getLastPage(p));
+    }
+
+    @Test
     public void testPagesWithOutOfBoundsInitialPage() {
         Page p = new Page();
         p.setMaxRecords(8);

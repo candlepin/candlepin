@@ -24,6 +24,24 @@ describe 'Entitlement Resource' do
     @qowner = create_owner random_string 'test_owner'
   end
 
+  it 'should receive paged data back when requested' do
+    id_list = []
+    (1..4).each do |i|
+      prod = create_product()
+      @cp.create_subscription(@owner['key'], prod.id, 6)
+      id_list.push(prod.id)
+    end
+    @cp.refresh_pools(@owner['key'])
+
+    id_list.each do |id|
+      @system.consume_product(id)
+    end
+
+    entitlements = @system.list_entitlements({:page => 1, :per_page => 2, :sort_by => "id", :order => "asc"})
+    entitlements.length.should == 2
+    (entitlements[0].id <=> entitlements[1].id).should == -1
+  end
+
   it 'should allow entitlement certificate regeneration based on product id' do
     @system.consume_product(@monitoring_prod.id)
     old_ent = @system.list_certificate_serials()[0]

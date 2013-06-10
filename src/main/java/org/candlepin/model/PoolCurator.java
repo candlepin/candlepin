@@ -14,22 +14,20 @@
  */
 package org.candlepin.model;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
-
-import org.apache.log4j.Logger;
 import org.candlepin.auth.interceptor.EnforceAccessControl;
+import org.candlepin.paging.Page;
+import org.candlepin.paging.PageRequest;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.criteria.CriteriaRules;
 import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
+
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.persist.Transactional;
+
+import org.apache.log4j.Logger;
 import org.hibernate.Criteria;
 import org.hibernate.Filter;
 import org.hibernate.LockMode;
@@ -42,9 +40,14 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.impl.FilterImpl;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.persist.Transactional;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * EntitlementPoolCurator
@@ -149,6 +152,15 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return listAvailableEntitlementPools(null, owner, productId, null, false, false);
     }
 
+    @SuppressWarnings("unchecked")
+    @Transactional
+    @EnforceAccessControl
+    public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
+            String productId, Date activeOn, boolean activeOnly, boolean includeWarnings) {
+        return listAvailableEntitlementPools(c, o, productId, activeOn, activeOnly,
+            includeWarnings, null).getPageData();
+    }
+
     /**
      * List entitlement pools.
      *
@@ -170,13 +182,12 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     @SuppressWarnings("unchecked")
     @Transactional
     @EnforceAccessControl
-    public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
-            String productId, Date activeOn, boolean activeOnly, boolean includeWarnings) {
-
+    public Page<List<Pool>> listAvailableEntitlementPools(Consumer c, Owner o,
+            String productId, Date activeOn, boolean activeOnly, boolean includeWarnings,
+            PageRequest pageRequest) {
         if (o == null && c != null) {
             o = c.getOwner();
         }
-
 
         if (log.isDebugEnabled()) {
             log.debug("Listing available pools for:");
@@ -185,7 +196,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             log.debug("   product: " + productId);
         }
 
-        Criteria crit = currentSession().createCriteria(Pool.class);
+        DetachedCriteria crit = DetachedCriteria.forClass(Pool.class);
         if (activeOnly) {
             crit.add(Restrictions.eq("activeSubscription", Boolean.TRUE));
         }
@@ -215,27 +226,23 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             crit.add(Restrictions.ge("endDate", activeOn));
         }
 
-        // FIXME: sort by enddate?
-        List<Pool> results = crit.list();
-
-        if (log.isDebugEnabled()) {
-            log.debug("Loaded " + results.size() + " pools from database.");
-        }
+        Page<List<Pool>> resultsPage = listByCriteria(crit, pageRequest, true);
+        List<Pool> results = resultsPage.getPageData();
 
         if (results == null) {
             log.debug("no results");
-            return new ArrayList<Pool>();
+            resultsPage.setPageData(new ArrayList<Pool>());
+            return resultsPage;
         }
 
         if (log.isDebugEnabled()) {
-            log.debug("active pools for owner: " + results.size());
+            log.debug("Loaded " + results.size() + " pools from database.");
         }
 
         // crit.add(Restrictions.or(Restrictions.eq("productId", productId),
         // Restrictions.in("", results)))
         // Filter for product we want:
         if (productId != null) {
-
             List<Pool> newResults = new LinkedList<Pool>();
             for (Pool p : results) {
                 // Provides will check if the products are a direct match, or if the
@@ -276,7 +283,15 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             results = newResults;
         }
 
-        return results;
+        // Set maxRecords once we are done filtering
+        resultsPage.setMaxRecords(results.size());
+
+        if (pageRequest != null && pageRequest.isPaging()) {
+            results = takeSubList(pageRequest, results);
+        }
+
+        resultsPage.setPageData(results);
+        return resultsPage;
     }
 
     @Transactional
