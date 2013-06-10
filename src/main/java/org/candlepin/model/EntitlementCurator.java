@@ -273,22 +273,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         DetachedCriteria query = DetachedCriteria.forClass(Entitlement.class)
             .add(Restrictions.eq("consumer", consumer));
 
-        // Create a copy of the page request with just the order and sort by values.
-        // We will take care of the page and page size after we run our filters
-        // on the results.
-        PageRequest orderAndSortByPageRequest = null;
-        if (pageRequest != null) {
-            orderAndSortByPageRequest = new PageRequest();
-            orderAndSortByPageRequest.setOrder(pageRequest.getOrder());
-            orderAndSortByPageRequest.setSortBy(pageRequest.getSortBy());
-        }
-
-        Page<List<Entitlement>> page = listByCriteria(query, orderAndSortByPageRequest);
-
-        // The AbstractHibernateCurator sets the pageRequest field to
-        // orderAndSortByPageRequest.  Set it to the correct object here.
-        page.setPageRequest(pageRequest);
-
+        Page<List<Entitlement>> page = listByCriteria(query, pageRequest, true);
         List<Entitlement> results = page.getPageData();
 
         // TODO: Possible to do this via hibernate query? No luck on first attempt

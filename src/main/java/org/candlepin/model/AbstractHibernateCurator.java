@@ -93,6 +93,32 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     public List<E> listAll() {
         return listByCriteria(DetachedCriteria.forClass(entityType));
     }
+    @SuppressWarnings("unchecked")
+    @Transactional
+    @EnforceAccessControl
+    public Page<List<E>> listAll(PageRequest pageRequest, boolean postFilter) {
+        Page<List<E>> resultsPage;
+        if (postFilter) {
+            // Create a copy of the page request with just the order and sort by values.
+            // Since we are filtering after the results are returned, we don't want
+            // to send the page or page size values in.
+            PageRequest orderAndSortByPageRequest = null;
+            if (pageRequest != null) {
+                orderAndSortByPageRequest = new PageRequest();
+                orderAndSortByPageRequest.setOrder(pageRequest.getOrder());
+                orderAndSortByPageRequest.setSortBy(pageRequest.getSortBy());
+            }
+
+            resultsPage = listAll(orderAndSortByPageRequest);
+
+            // Set the pageRequest to the correct object here.
+            resultsPage.setPageRequest(pageRequest);
+        }
+        else {
+            resultsPage = listAll(pageRequest);
+        }
+        return resultsPage;
+    }
 
     @SuppressWarnings("unchecked")
     @Transactional
@@ -150,6 +176,34 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     @EnforceAccessControl
     public List<E> listByCriteria(DetachedCriteria query) {
         return query.getExecutableCriteria(currentSession()).list();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Transactional
+    @EnforceAccessControl
+    public Page<List<E>> listByCriteria(DetachedCriteria query,
+        PageRequest pageRequest, boolean postFilter) {
+        Page<List<E>> resultsPage;
+        if (postFilter) {
+            // Create a copy of the page request with just the order and sort by values.
+            // Since we are filtering after the results are returned, we don't want
+            // to send the page or page size values in.
+            PageRequest orderAndSortByPageRequest = null;
+            if (pageRequest != null) {
+                orderAndSortByPageRequest = new PageRequest();
+                orderAndSortByPageRequest.setOrder(pageRequest.getOrder());
+                orderAndSortByPageRequest.setSortBy(pageRequest.getSortBy());
+            }
+
+            resultsPage = listByCriteria(query, orderAndSortByPageRequest);
+
+            // Set the pageRequest to the correct object here.
+            resultsPage.setPageRequest(pageRequest);
+        }
+        else {
+            resultsPage = listByCriteria(query, pageRequest);
+        }
+        return resultsPage;
     }
 
     @SuppressWarnings("unchecked")

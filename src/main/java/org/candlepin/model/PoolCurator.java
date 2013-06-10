@@ -226,22 +226,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             crit.add(Restrictions.ge("endDate", activeOn));
         }
 
-        // Create a copy of the page request with just the order and sort by values.
-        // We will take care of the page and page size after we run our filters
-        // on the results.
-        PageRequest orderAndSortByPageRequest = null;
-        if (pageRequest != null) {
-            orderAndSortByPageRequest = new PageRequest();
-            orderAndSortByPageRequest.setOrder(pageRequest.getOrder());
-            orderAndSortByPageRequest.setSortBy(pageRequest.getSortBy());
-        }
-
-        Page<List<Pool>> resultsPage = listByCriteria(crit, orderAndSortByPageRequest);
+        Page<List<Pool>> resultsPage = listByCriteria(crit, pageRequest, true);
         List<Pool> results = resultsPage.getPageData();
-
-        // The AbstractHibernateCurator sets the pageRequest field to
-        // orderAndSortByPageRequest.  Set it to the correct object here.
-        resultsPage.setPageRequest(pageRequest);
 
         if (results == null) {
             log.debug("no results");

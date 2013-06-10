@@ -129,6 +129,55 @@ public class CuratorPaginationTest extends DatabaseTestFixture {
         assertEquals(10, ownerList.size());
     }
 
+    @Test
+    public void testReturnsAllResultsWhenPostFilteringByCriteria() {
+        PageRequest pageRequest = new PageRequest();
+        pageRequest.setSortBy("key");
+        pageRequest.setOrder(PageRequest.Order.ASCENDING);
+        pageRequest.setPage(1);
+        pageRequest.setPerPage(2);
+
+        DetachedCriteria criteria = DetachedCriteria.forClass(Owner.class).
+            add(Restrictions.gt("key", "5"));
+
+        /* Since we are telling listByCriteria that we are doing post-filtering
+         * it should return us all results, but ordered and sorted by what we
+         * provide
+         */
+        Page<List<Owner>> p = ownerCurator.listByCriteria(criteria, pageRequest, true);
+        assertEquals(Integer.valueOf(4), p.getMaxRecords());
+
+        List<Owner> ownerList = p.getPageData();
+        assertEquals(4, ownerList.size());
+        assertEquals("6", ownerList.get(0).getKey());
+
+        PageRequest pageRequest2 = p.getPageRequest();
+        assertEquals(pageRequest, pageRequest2);
+    }
+
+    @Test
+    public void testReturnsAllResultsWhenPostFiltering() {
+        PageRequest pageRequest = new PageRequest();
+        pageRequest.setSortBy("key");
+        pageRequest.setOrder(PageRequest.Order.ASCENDING);
+        pageRequest.setPage(1);
+        pageRequest.setPerPage(2);
+
+        /* Since we are telling listByCriteria that we are doing post-filtering
+         * it should return us all results, but ordered and sorted by what we
+         * provide
+         */
+        Page<List<Owner>> p = ownerCurator.listAll(pageRequest, true);
+        assertEquals(Integer.valueOf(10), p.getMaxRecords());
+
+        List<Owner> ownerList = p.getPageData();
+        assertEquals(10, ownerList.size());
+        assertEquals("0", ownerList.get(0).getKey());
+
+        PageRequest pageRequest2 = p.getPageRequest();
+        assertEquals(pageRequest, pageRequest2);
+    }
+
     private List<Owner> createOwners(int owners) {
         List<Owner> ownerList = new ArrayList<Owner>();
         for (int i = 0; i < owners; i++) {
