@@ -15,6 +15,8 @@
 package org.candlepin.policy.js.compliance;
 
 import static org.junit.Assert.assertEquals;
+
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -78,6 +80,10 @@ public class StatusReasonMessageGeneratorTest {
         generator.setMessage(consumer, reason);
         String message = reason.getMessage();
         assertEquals("Only covers 4 of 8 sockets.", message);
+        String[] names = reason.getAttributes().get("name").split("/");
+        Arrays.sort(names);
+        assertEquals("Stack Subscription One", names[0]);
+        assertEquals("Stack Subscription Two", names[1]);
     }
 
     @Test

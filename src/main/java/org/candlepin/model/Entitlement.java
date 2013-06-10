@@ -296,4 +296,13 @@ public class Entitlement extends AbstractHibernateObject implements Linkable, Ow
         this.dirty = dirty;
     }
 
+    @XmlTransient
+    public boolean isValidOnDate(Date d) {
+        return d.after(this.getStartDate()) && d.before(this.getEndDate());
+    }
+
+    @XmlTransient
+    public boolean isValid() {
+        return this.isValidOnDate(new Date());
+    }
 }
