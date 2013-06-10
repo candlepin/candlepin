@@ -457,6 +457,34 @@ public class AutobindRulesTest {
     }
 
     @Test
+    public void instanceAutobindForPhysical8SocketNotEnoughUneven() {
+        List<Pool> pools = createInstanceBasedPool();
+        pools.get(0).setQuantity(7L); // Only 7 available
+        setupConsumer("8", false);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>());
+
+        assertEquals(1, bestPools.size());
+        PoolQuantity q = bestPools.get(0);
+        assertEquals(new Integer(6), q.getQuantity());
+    }
+
+    @Test
+    public void instanceAutobindForPhysical8SocketNotEnoughEven() {
+        List<Pool> pools = createInstanceBasedPool();
+        pools.get(0).setQuantity(4L); // Only 4 available
+        setupConsumer("8", false);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>());
+
+        assertEquals(1, bestPools.size());
+        PoolQuantity q = bestPools.get(0);
+        assertEquals(new Integer(4), q.getQuantity());
+    }
+
+    @Test
     public void instanceAutobindForPhysical8SocketCompletePartialStack() {
         List<Pool> pools = createInstanceBasedPool();
         setupConsumer("8", false);

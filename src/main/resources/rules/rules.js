@@ -797,6 +797,19 @@ var CoverageCalculator = {
             if (maxQuantity < amountRequiredFromPool) {
                 maxQuantity = amountRequiredFromPool;
             }
+
+            // Don't try to take more than the pool has available:
+            if (maxQuantity > pool.quantity - pool.consumed) {
+                maxQuantity = pool.quantity - pool.consumed;
+            }
+
+            // Adjust the suggested quantity if necessary:
+            if (pool.hasProductAttribute("instance_multiplier") && !Utils.isGuest(consumer)) {
+                // Make sure we never recommend something that isn't a multiple of
+                // instance multiplier:
+                maxQuantity = maxQuantity - (maxQuantity % stackTracker.instanceMultiplier);
+            }
+
         }
         log.debug("Quantity required to cover consumer: " + maxQuantity);
         return maxQuantity;
@@ -927,9 +940,6 @@ function findStackingPools(pool_class, consumer, compliance) {
             // don't take more entitlements than are available!
             var quantity = CoverageCalculator.getQuantityToCoverStack(stackTrackerToProcess,
                 pool, consumer);
-            if (quantity > pool.quantity - pool.consumed) {
-                quantity = pool.quantity - pool.consumed;
-            }
             log.debug("Incrementing pool quantity for stack to: " + quantity);
 
             // Update the stack accumulated values to simulate attaching X
