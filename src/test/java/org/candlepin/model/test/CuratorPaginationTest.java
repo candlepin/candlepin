@@ -18,8 +18,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 import org.candlepin.model.Owner;
-import org.candlepin.paging.PageRequest;
 import org.candlepin.paging.Page;
+import org.candlepin.paging.PageRequest;
 import org.candlepin.test.DatabaseTestFixture;
 
 import org.hibernate.criterion.DetachedCriteria;
@@ -27,6 +27,7 @@ import org.hibernate.criterion.Restrictions;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -126,5 +127,100 @@ public class CuratorPaginationTest extends DatabaseTestFixture {
 
         List<Owner> ownerList = p.getPageData();
         assertEquals(10, ownerList.size());
+    }
+
+    @Test
+    public void testReturnsAllResultsWhenPostFilteringByCriteria() {
+        PageRequest pageRequest = new PageRequest();
+        pageRequest.setSortBy("key");
+        pageRequest.setOrder(PageRequest.Order.ASCENDING);
+        pageRequest.setPage(1);
+        pageRequest.setPerPage(2);
+
+        DetachedCriteria criteria = DetachedCriteria.forClass(Owner.class).
+            add(Restrictions.gt("key", "5"));
+
+        /* Since we are telling listByCriteria that we are doing post-filtering
+         * it should return us all results, but ordered and sorted by what we
+         * provide
+         */
+        Page<List<Owner>> p = ownerCurator.listByCriteria(criteria, pageRequest, true);
+        assertEquals(Integer.valueOf(4), p.getMaxRecords());
+
+        List<Owner> ownerList = p.getPageData();
+        assertEquals(4, ownerList.size());
+        assertEquals("6", ownerList.get(0).getKey());
+
+        PageRequest pageRequest2 = p.getPageRequest();
+        assertEquals(pageRequest, pageRequest2);
+    }
+
+    @Test
+    public void testReturnsAllResultsWhenPostFiltering() {
+        PageRequest pageRequest = new PageRequest();
+        pageRequest.setSortBy("key");
+        pageRequest.setOrder(PageRequest.Order.ASCENDING);
+        pageRequest.setPage(1);
+        pageRequest.setPerPage(2);
+
+        /* Since we are telling listByCriteria that we are doing post-filtering
+         * it should return us all results, but ordered and sorted by what we
+         * provide
+         */
+        Page<List<Owner>> p = ownerCurator.listAll(pageRequest, true);
+        assertEquals(Integer.valueOf(10), p.getMaxRecords());
+
+        List<Owner> ownerList = p.getPageData();
+        assertEquals(10, ownerList.size());
+        assertEquals("0", ownerList.get(0).getKey());
+
+        PageRequest pageRequest2 = p.getPageRequest();
+        assertEquals(pageRequest, pageRequest2);
+    }
+
+    private List<Owner> createOwners(int owners) {
+        List<Owner> ownerList = new ArrayList<Owner>();
+        for (int i = 0; i < owners; i++) {
+            Owner o = new Owner();
+            o.setDisplayName(String.valueOf(i));
+            o.setKey(String.valueOf(i));
+            ownerList.add(o);
+        }
+        return ownerList;
+    }
+
+    @Test
+    public void testTakeSubList() {
+        PageRequest req = new PageRequest();
+        req.setPage(1);
+        req.setPerPage(10);
+
+        List<Owner> ownerList = createOwners(20);
+
+        List<Owner> results = ownerCurator.takeSubList(req, ownerList);
+        assertEquals(10, results.size());
+    }
+
+    @Test
+    public void testTakeSubListWhenResultsTooSmall() {
+        PageRequest req = new PageRequest();
+        req.setPage(1);
+        req.setPerPage(10);
+
+        List<Owner> ownerList = createOwners(2);
+        List<Owner> results = ownerCurator.takeSubList(req, ownerList);
+        assertEquals(2, results.size());
+    }
+
+    @Test
+    public void testTakeSubListWhenRequestOutOfBounds() {
+        PageRequest req = new PageRequest();
+        req.setPage(5);
+        req.setPerPage(10);
+
+        List<Owner> ownerList = createOwners(10);
+
+        List<Owner> results = ownerCurator.takeSubList(req, ownerList);
+        assertEquals(0, results.size());
     }
 }

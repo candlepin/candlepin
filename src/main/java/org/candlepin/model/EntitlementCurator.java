@@ -268,11 +268,13 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
 
 
     @Transactional
-    public List<Entitlement> listByConsumerAndProduct(Consumer consumer, String productId) {
+    public Page<List<Entitlement>> listByConsumerAndProduct(Consumer consumer,
+        String productId, PageRequest pageRequest) {
         DetachedCriteria query = DetachedCriteria.forClass(Entitlement.class)
             .add(Restrictions.eq("consumer", consumer));
 
-        List<Entitlement> results = listByCriteria(query);
+        Page<List<Entitlement>> page = listByCriteria(query, pageRequest, true);
+        List<Entitlement> results = page.getPageData();
 
         // TODO: Possible to do this via hibernate query? No luck on first attempt
         // with criteria query.
@@ -282,7 +284,17 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
                 filtered.add(e);
             }
         }
-        return filtered;
+
+        page.setMaxRecords(filtered.size());
+
+        if (pageRequest != null && pageRequest.isPaging()) {
+            page.setPageData(takeSubList(pageRequest, filtered));
+        }
+        else {
+            page.setPageData(filtered);
+        }
+
+        return page;
     }
 
     @Transactional

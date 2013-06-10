@@ -126,7 +126,15 @@ public class LinkHeaderPostInterceptor implements PostProcessInterceptor, Accept
 
     protected Integer getLastPage(Page page) {
         PageRequest pageRequest = page.getPageRequest();
-        return (page.getMaxRecords() / pageRequest.getPerPage()) + 1;
+
+        // The last page is ceiling(maxRecords/recordsPerPage)
+        int lastPage = page.getMaxRecords() / pageRequest.getPerPage();
+
+        if (page.getMaxRecords() % pageRequest.getPerPage() != 0) {
+            lastPage++;
+        }
+
+        return lastPage;
     }
 
     protected Integer getPrevPage(Page page) {

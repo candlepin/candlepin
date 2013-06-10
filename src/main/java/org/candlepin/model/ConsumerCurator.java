@@ -14,6 +14,23 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.auth.interceptor.EnforceAccessControl;
+import org.candlepin.config.Config;
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.paging.Page;
+import org.candlepin.paging.PageRequest;
+
+import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
+
+import org.apache.log4j.Logger;
+import org.hibernate.Query;
+import org.hibernate.ReplicationMode;
+import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Restrictions;
+import org.xnap.commons.i18n.I18n;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -22,20 +39,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-
-import org.apache.log4j.Logger;
-import org.candlepin.auth.interceptor.EnforceAccessControl;
-import org.candlepin.config.Config;
-import org.candlepin.config.ConfigProperties;
-import org.candlepin.exceptions.BadRequestException;
-import org.hibernate.Criteria;
-import org.hibernate.Query;
-import org.hibernate.ReplicationMode;
-import org.hibernate.criterion.Restrictions;
-import org.xnap.commons.i18n.I18n;
-
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
 
 /**
  * ConsumerCurator
@@ -223,10 +226,10 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @SuppressWarnings("unchecked")
     @Transactional
     @EnforceAccessControl
-    public List<Consumer> listByUsernameAndType(String userName,
-        ConsumerType type, Owner owner) {
+    public Page<List<Consumer>> listByUsernameAndType(String userName,
+        ConsumerType type, Owner owner, PageRequest pageRequest) {
 
-        Criteria criteria = currentSession().createCriteria(Consumer.class);
+        DetachedCriteria criteria = DetachedCriteria.forClass(Consumer.class);
 
         if (userName != null) {
             criteria.add(Restrictions.eq("username", userName));
@@ -238,7 +241,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             criteria.add(Restrictions.eq("owner", owner));
         }
 
-        return criteria.list();
+        return listByCriteria(criteria, pageRequest);
     }
 
     /**
