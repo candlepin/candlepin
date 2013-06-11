@@ -382,7 +382,6 @@ public class PinsetterKernel {
      * @throws PinsetterException if there is an error scheduling the job
      */
     public JobStatus scheduleSingleJob(JobDetail jobDetail) throws PinsetterException {
-        // make it start in a minute
         Trigger trigger = newTrigger()
             .withIdentity(jobDetail.getKey().getName() + " trigger", SINGLE_JOB_GROUP)
             .build();
