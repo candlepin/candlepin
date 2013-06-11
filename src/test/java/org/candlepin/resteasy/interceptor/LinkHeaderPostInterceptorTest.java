@@ -24,12 +24,13 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.paging.PageRequest;
 import org.candlepin.paging.Page;
+import org.candlepin.paging.PageRequest;
 
 import org.jboss.resteasy.core.ServerResponse;
 import org.jboss.resteasy.specimpl.MultivaluedMapImpl;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -66,6 +67,11 @@ public class LinkHeaderPostInterceptorTest {
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
         interceptor = new LinkHeaderPostInterceptor(config);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        ResteasyProviderFactory.clearContextData();
     }
 
     @Test
