@@ -66,6 +66,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.EntityExistsException;
+
 /**
  * PinsetterKernelTest
  *
@@ -160,9 +162,12 @@ public class PinsetterKernelTest {
         JobStatus status = mock(JobStatus.class);
         when(jcurator.find(startsWith(
             Util.getClassName(JobCleaner.class)))).thenReturn(status);
+        when(jcurator.create(any(JobStatus.class))).thenThrow(new EntityExistsException());
         pk.startup();
         verify(sched).start();
-        verify(jcurator, atMost(1)).create(any(JobStatus.class));
+        // this test will have 2 jobs each throwing an exception, we should
+        // updated both statuses, then schedule both.
+        verify(jcurator, atMost(2)).merge(any(JobStatus.class));
         verify(sched, atMost(2)).scheduleJob(any(JobDetail.class), any(Trigger.class));
     }
 

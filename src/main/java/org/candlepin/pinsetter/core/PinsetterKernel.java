@@ -58,6 +58,8 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
+import javax.persistence.EntityExistsException;
+
 /**
  * Pinsetter Kernel.
  * @version $Rev$
@@ -332,12 +334,19 @@ public class PinsetterKernel {
                 .addJobListenerMatcher(PinsetterJobListener.LISTENER_NAME
                     , jobNameEquals(detail.getKey().getName()));
 
-            JobStatus status = jobCurator.find(detail.getKey().getName());
-            if (status == null) {
+            JobStatus status = null;
+            try {
                 status = jobCurator.create(new JobStatus(detail));
+            }
+            catch (EntityExistsException e) {
+                // status exists, let's update it
+                // in theory this should be the rare case
+                status = jobCurator.find(detail.getKey().getName());
+                jobCurator.merge(status);
             }
 
             scheduler.scheduleJob(detail, trigger);
+
             if (log.isDebugEnabled()) {
                 log.debug("Scheduled " + detailImpl.getFullName());
             }
