@@ -58,7 +58,7 @@ public class MigrationResource {
         @QueryParam("delete") @DefaultValue("true") boolean delete) {
 
         if (OWNER.equals(entity)) {
-            return migrateOwner(entity, key, url, delete);
+            return migrateOwner(key, url, delete);
         }
 
         throw new BadRequestException(i18n.tr("Bad entity value."));
@@ -68,10 +68,7 @@ public class MigrationResource {
      * @return a JobDetail
      * @httpcode 202
      */
-    private JobDetail migrateOwner(@QueryParam("entity") String entity,
-        @QueryParam("id") String ownerKey,
-        @QueryParam("uri") String url,
-        @QueryParam("delete") @DefaultValue("true") boolean delete) {
+    private JobDetail migrateOwner(String ownerKey, String url, boolean delete) {
 
         if (log.isDebugEnabled()) {
             log.debug("launch migrate owner - owner [" + ownerKey +
