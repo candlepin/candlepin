@@ -193,6 +193,8 @@ public abstract class X509Util {
                 if (Arch.contentForConsumer(contentArch, consumerArch)) {
                     log.debug("Can use content " +
                         pc.getContent().getLabel() + " for arch " + contentArch);
+                    canUse = true;
+                    break;
                 }
                 else {
                     log.debug("Can not use content " +
