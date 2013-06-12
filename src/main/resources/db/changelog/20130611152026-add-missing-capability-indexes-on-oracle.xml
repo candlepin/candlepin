@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+
+    <changeSet id="20130611152026" author="dgoodwin" dbms="oracle">
+        <addForeignKeyConstraint baseColumnNames="consumer_id" baseTableName="cp_consumer_capability" constraintName="fk_cnsmr_capability_cnsmr" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_consumer" referencesUniqueColumn="false"/>
+
+        <addUniqueConstraint columnNames="name" constraintName="cp_dist_version_name_key" deferrable="false" disabled="false" initiallyDeferred="false" tableName="cp_dist_version"/>
+
+        <addForeignKeyConstraint baseColumnNames="dist_version_id" baseTableName="cp_dist_version_capability" constraintName="fk_dist_vrsn_capability" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_dist_version" referencesUniqueColumn="false"/>
+    </changeSet>
+
+</databaseChangeLog>
