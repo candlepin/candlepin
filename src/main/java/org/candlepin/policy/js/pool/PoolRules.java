@@ -28,6 +28,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProvidedProduct;
+import org.candlepin.model.SubProvidedProduct;
 import org.candlepin.model.Subscription;
 import org.candlepin.policy.js.ProductCache;
 
@@ -80,10 +81,12 @@ public class PoolRules {
             helper.getFlattenedAttributes(sub.getProduct());
         long quantity = calculateQuantity(sub);
         Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
+        Set<SubProvidedProduct> subProvidedProducts = new HashSet<SubProvidedProduct>();
         Pool newPool = new Pool(sub.getOwner(), sub.getProduct().getId(),
                 sub.getProduct().getName(), providedProducts, quantity, sub.getStartDate(),
                 sub.getEndDate(), sub.getContractNumber(), sub.getAccountNumber(),
                 sub.getOrderNumber());
+        newPool.setSubProvidedProducts(subProvidedProducts);
 
         if (sub.getProvidedProducts() != null) {
             for (Product p : sub.getProvidedProducts()) {
@@ -93,6 +96,16 @@ public class PoolRules {
                 providedProducts.add(providedProduct);
             }
         }
+
+        if (sub.getSubProvidedProducts() != null) {
+            for (Product p : sub.getSubProvidedProducts()) {
+                SubProvidedProduct providedProduct = new SubProvidedProduct(p.getId(),
+                    p.getName());
+                providedProduct.setPool(newPool);
+                subProvidedProducts.add(providedProduct);
+            }
+        }
+
         helper.copyProductAttributesOntoPool(sub, newPool);
         newPool.setSubscriptionId(sub.getId());
         newPool.setSubscriptionSubKey("master");

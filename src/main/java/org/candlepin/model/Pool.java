@@ -602,6 +602,11 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
         this.productAttributes.add(attrib);
     }
 
+    public void addSubProductAttribute(SubProductPoolAttribute attrib) {
+        attrib.setPool(this);
+        this.subProductAttributes.add(attrib);
+    }
+
     public void setProductAttribute(String key, String value, String productId) {
         ProductPoolAttribute existing =
             findAttribute(this.productAttributes, key);
@@ -620,8 +625,16 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
         return findAttribute(this.productAttributes, name) != null;
     }
 
+    public boolean hasSubProductAttribute(String name) {
+        return findAttribute(this.subProductAttributes, name) != null;
+    }
+
     public ProductPoolAttribute getProductAttribute(String name) {
         return findAttribute(this.productAttributes, name);
+    }
+
+    public SubProductPoolAttribute getSubProductAttribute(String name) {
+        return findAttribute(this.subProductAttributes, name);
     }
 
     private <A extends AbstractPoolAttribute> A findAttribute(Set<A> attributes,

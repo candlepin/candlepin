@@ -28,6 +28,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.config.Config;
@@ -43,6 +44,8 @@ import org.candlepin.model.ProductPoolAttribute;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
+import org.candlepin.model.SubProductPoolAttribute;
+import org.candlepin.model.SubProvidedProduct;
 import org.candlepin.model.Subscription;
 import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.pool.PoolRules;
@@ -104,6 +107,16 @@ public class PoolRulesTest {
         for (ProductAttribute attr : sub.getProduct().getAttributes()) {
             p.addProductAttribute(new ProductPoolAttribute(attr.getName(), attr.getValue(),
                 sub.getProduct().getId()));
+        }
+
+        // Copy sub-product data if there is any:
+        if (sub.getSubProduct() != null) {
+            p.setSubProductId(sub.getSubProduct().getId());
+            p.setSubProductName(sub.getSubProduct().getName());
+            for (ProductAttribute attr : sub.getSubProduct().getAttributes()) {
+                p.addSubProductAttribute(new SubProductPoolAttribute(attr.getName(), attr.getValue(),
+                    sub.getProduct().getId()));
+            }
         }
 
         return p;
@@ -342,6 +355,67 @@ public class PoolRulesTest {
         assertTrue(resultPool.hasProductAttribute(testAttributeKey));
         assertEquals(expectedAttributeValue,
             resultPool.getProductAttribute(testAttributeKey).getValue());
+    }
+
+    @Test
+    public void subProductAttributesCopiedOntoPoolWhenCreatingNewPool() {
+        Product product = TestUtil.createProduct();
+        Product subProduct = TestUtil.createProduct();
+
+        Subscription sub = TestUtil.createSubscription(owner, product);
+        String testAttributeKey = "multi-entitlement";
+        String expectedAttributeValue = "yes";
+        subProduct.setAttribute(testAttributeKey, expectedAttributeValue);
+
+        when(this.productAdapterMock.getProductById(anyString())).thenReturn(product);
+        when(this.productAdapterMock.getProductById(anyString())).thenReturn(subProduct);
+
+        List<Pool> pools = this.poolRules.createPools(sub);
+        assertEquals(1, pools.size());
+
+        Pool resultPool = pools.get(0);
+        assertTrue(resultPool.hasSubProductAttribute(testAttributeKey));
+        assertEquals(expectedAttributeValue,
+            resultPool.getSubProductAttribute(testAttributeKey).getValue());
+    }
+
+    @Test
+    public void subProductIdCopiedOntoPoolWhenCreatingNewPool() {
+        Product product = TestUtil.createProduct();
+        Product subProduct = TestUtil.createProduct();
+
+        Subscription sub = TestUtil.createSubscription(owner, product);
+
+        when(this.productAdapterMock.getProductById(anyString())).thenReturn(product);
+        when(this.productAdapterMock.getProductById(anyString())).thenReturn(subProduct);
+
+        List<Pool> pools = this.poolRules.createPools(sub);
+        assertEquals(1, pools.size());
+
+        Pool resultPool = pools.get(0);
+        assertEquals(subProduct.getId(), resultPool.getSubProductId());
+        assertEquals(subProduct.getName(), resultPool.getSubProductName());
+    }
+
+    @Test
+    public void subProvidedProductsCopiedOntoPoolWhenCreatingNewPool() {
+        Product product = TestUtil.createProduct();
+        Product subProduct = TestUtil.createProduct();
+        Product subProvidedProduct = TestUtil.createProduct();
+
+        Subscription sub = TestUtil.createSubscription(owner, product);
+        Set<Product> subProvided = new HashSet<Product>();
+        subProvided.add(subProvidedProduct);
+        sub.setSubProvidedProducts(subProvided);
+
+        when(this.productAdapterMock.getProductById(anyString())).thenReturn(product);
+        when(this.productAdapterMock.getProductById(anyString())).thenReturn(subProduct);
+
+        List<Pool> pools = this.poolRules.createPools(sub);
+        assertEquals(1, pools.size());
+
+        Pool resultPool = pools.get(0);
+        assertEquals(1, resultPool.getSubProvidedProducts().size());
     }
 
     private Subscription createVirtLimitSub(String productId, int quantity, int virtLimit) {
