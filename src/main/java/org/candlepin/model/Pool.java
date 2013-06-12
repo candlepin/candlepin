@@ -113,11 +113,20 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
     @Column(nullable = false)
     private String productId;
 
+    @Column
+    private String subProductId;
+
     @OneToMany(mappedBy = "pool", targetEntity = ProvidedProduct.class)
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.MERGE,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     private Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
+
+    @OneToMany(mappedBy = "pool", targetEntity = SubProvidedProduct.class)
+    @Cascade({org.hibernate.annotations.CascadeType.ALL,
+        org.hibernate.annotations.CascadeType.MERGE,
+        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    private Set<SubProvidedProduct> subProvidedProducts = new HashSet<SubProvidedProduct>();
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "pool")
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
@@ -131,6 +140,13 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     private Set<ProductPoolAttribute> productAttributes =
         new HashSet<ProductPoolAttribute>();
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "pool")
+    @Cascade({org.hibernate.annotations.CascadeType.ALL,
+        org.hibernate.annotations.CascadeType.MERGE,
+        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    private Set<SubProductPoolAttribute> subProductAttributes =
+        new HashSet<SubProductPoolAttribute>();
 
     @OneToMany(mappedBy = "pool", cascade = CascadeType.ALL)
     @LazyCollection(LazyCollectionOption.EXTRA)
@@ -153,6 +169,8 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
 
     // TODO: May not still be needed, iirc a temporary hack for client.
     private String productName;
+
+    private String subProductName;
 
     @Version
     private int version;
@@ -660,5 +678,29 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
         }
 
         calculatedAttributes.put(name, value);
+    }
+
+    public String getSubProductId() {
+        return subProductId;
+    }
+
+    public void setSubProductId(String subProductId) {
+        this.subProductId = subProductId;
+    }
+
+    public Set<SubProvidedProduct> getSubProvidedProducts() {
+        return subProvidedProducts;
+    }
+
+    public void setSubProvidedProducts(Set<SubProvidedProduct> subProvidedProducts) {
+        this.subProvidedProducts = subProvidedProducts;
+    }
+
+    public String getSubProductName() {
+        return subProductName;
+    }
+
+    public void setSubProductName(String subProductName) {
+        this.subProductName = subProductName;
     }
 }

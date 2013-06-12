@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+
+    <changeSet id="20130611101437-1" author="dgoodwin">
+        <addColumn tableName="cp_subscription">
+            <column name="subproduct_id" type="varchar(255)"/>
+        </addColumn>
+        <addForeignKeyConstraint baseColumnNames="subproduct_id" baseTableName="cp_subscription" constraintName="fk_subscription_subproduct" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" referencesUniqueColumn="false"/>
+    </changeSet>
+
+    <changeSet id="20130611101437-2" author="dgoodwin">
+        <createTable tableName="cp_subscription_subproducts">
+            <column name="subscription_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20130611101437-3" author="dgoodwin">
+        <addColumn tableName="cp_pool">
+            <column name="subproductid" type="varchar(255)"/>
+            <column name="subproductname" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="dgoodwin" id="120130611101437-4">
+        <createTable tableName="cp_pool_subproducts">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_pool_subproducts_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="product_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_name" type="VARCHAR(255)"/>
+            <column name="pool_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet author="dgoodwin" id="120130611101437-5">
+        <createTable tableName="cp_subproduct_pool_attribute">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_subprod_pool_attr_pkey"/>
+            </column>
+            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="value" type="VARCHAR(255)"/>
+            <column name="productid" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pool_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>

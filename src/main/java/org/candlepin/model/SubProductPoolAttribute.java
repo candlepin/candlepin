@@ -22,21 +22,21 @@ import javax.persistence.Table;
 import org.codehaus.jackson.map.annotate.JsonFilter;
 
 /**
- * ProductPoolAttribute
+ * SubProductPoolAttribute
  */
 @Entity
-@Table(name = "cp_product_pool_attribute")
+@Table(name = "cp_subproduct_pool_attribute")
 @Embeddable
 @JsonFilter("ProductPoolAttributeFilter")
-public class ProductPoolAttribute extends AbstractPoolAttribute {
+public class SubProductPoolAttribute extends AbstractPoolAttribute {
 
     @Column(nullable = false)
     private String productId;
 
-    public ProductPoolAttribute() {
+    public SubProductPoolAttribute() {
     }
 
-    public ProductPoolAttribute(String name, String val, String productId) {
+    public SubProductPoolAttribute(String name, String val, String productId) {
         super(name, val);
         this.productId = productId;
     }

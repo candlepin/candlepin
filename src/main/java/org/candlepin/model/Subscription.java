@@ -63,6 +63,11 @@ public class Subscription extends AbstractHibernateObject {
     @JoinColumn(nullable = false)
     private Product product;
 
+    @ManyToOne
+    @ForeignKey(name = "fk_subscription_subproduct")
+    @JoinColumn(nullable = true)
+    private Product subProduct;
+
     @ManyToMany(targetEntity = Product.class)
     @ForeignKey(name = "fk_product_id",
             inverseName = "fk_subscription_id")
@@ -70,6 +75,14 @@ public class Subscription extends AbstractHibernateObject {
         joinColumns = @JoinColumn(name = "subscription_id"),
         inverseJoinColumns = @JoinColumn(name = "product_id"))
     private Set<Product> providedProducts = new HashSet<Product>();
+
+    @ManyToMany(targetEntity = Product.class)
+    @ForeignKey(name = "fk_product_id",
+            inverseName = "fk_subscription_id")
+    @JoinTable(name = "cp_subscription_subproducts",
+        joinColumns = @JoinColumn(name = "subscription_id"),
+        inverseJoinColumns = @JoinColumn(name = "product_id"))
+    private Set<Product> subProvidedProducts = new HashSet<Product>();
 
     @Column(nullable = false)
     private Long quantity;
@@ -322,6 +335,22 @@ public class Subscription extends AbstractHibernateObject {
 
     public void setCertificate(SubscriptionsCertificate c) {
         cert = c;
+    }
+
+    public Product getSubProduct() {
+        return subProduct;
+    }
+
+    public void setSubProduct(Product subProduct) {
+        this.subProduct = subProduct;
+    }
+
+    public Set<Product> getSubProvidedProducts() {
+        return subProvidedProducts;
+    }
+
+    public void setSubProvidedProducts(Set<Product> subProvidedProducts) {
+        this.subProvidedProducts = subProvidedProducts;
     }
 
 }
