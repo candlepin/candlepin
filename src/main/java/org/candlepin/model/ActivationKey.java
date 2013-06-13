@@ -14,10 +14,6 @@
  */
 package org.candlepin.model;
 
-import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -34,6 +30,11 @@ import javax.persistence.UniqueConstraint;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+
+import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Index;
 
 /**
  * ActivationKey
@@ -138,5 +139,15 @@ public class ActivationKey extends AbstractHibernateObject implements Owned {
             }
         }
         this.getPools().remove(toRemove);
+    }
+
+    @XmlTransient
+    public String getHostRestriction() {
+        for (ActivationKeyPool akp : this.getPools()) {
+            if (akp.getPool().isHostRestricted()) {
+                return akp.getPool().getAttributeValue("requires_host");
+            }
+        }
+        return null;
     }
 }

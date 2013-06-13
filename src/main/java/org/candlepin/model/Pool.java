@@ -14,19 +14,6 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.jackson.HateoasInclude;
-import org.candlepin.util.DateSource;
-
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.map.annotate.JsonFilter;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.Formula;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
-
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -49,6 +36,19 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
+import org.apache.commons.lang.StringUtils;
+import org.candlepin.jackson.HateoasInclude;
+import org.candlepin.util.DateSource;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+import org.codehaus.jackson.map.annotate.JsonFilter;
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.Formula;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Index;
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
 
 /**
  * Represents a pool of products eligible to be consumed (entitled).
@@ -660,5 +660,14 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
         }
 
         calculatedAttributes.put(name, value);
+    }
+
+    public boolean isHostRestricted() {
+        String host = this.getRequiredHost();
+        return !StringUtils.isBlank(host);
+    }
+
+    public String getRequiredHost() {
+        return (this.getAttributeValue("requires_host"));
     }
 }
