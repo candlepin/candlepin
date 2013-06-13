@@ -46,18 +46,14 @@ public class EmptyStringInterceptor extends EmptyInterceptor {
         String[] propertyNames, Type[] types) {
         boolean modified = false;
         for (int i = 0; i < types.length; i++) {
-            if (types[i] instanceof StringType) {
-                if ("".equals(state[i])) {
-                    log.warn("Attempting to write an empty string to the database " +
-                            "for " + propertyNames[i] + ".  Substituting null instead.");
-                    state[i] = null;
-                    modified = true;
-                }
+            if (types[i] instanceof StringType && "".equals(state[i])) {
+                log.debug("Attempting to write an empty string to the database" +
+                    " for " + propertyNames[i] + ".  Substituting null instead.");
+                state[i] = null;
+                modified = true;
             }
         }
 
         return modified;
     }
-
-
 }
