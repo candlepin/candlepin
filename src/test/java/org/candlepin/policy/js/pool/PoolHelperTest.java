@@ -30,6 +30,7 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductPoolAttribute;
@@ -342,6 +343,7 @@ public class PoolHelperTest {
     @Test
     public void hostRestrictedPoolCreatedWithSubProductPoolData() {
         Consumer cons = TestUtil.createConsumer();
+        Owner owner = cons.getOwner();
 
         // Create a product for the main pool to be sure that
         // the attributes do not get copied to the sub pool.
@@ -362,7 +364,7 @@ public class PoolHelperTest {
         subProduct.setAttribute("SA1", "SV1");
         subProduct.setAttribute("SA2", "SV2");
 
-        Pool targetPool = TestUtil.createPool(mainPoolProduct);
+        Pool targetPool = TestUtil.createPool(owner, mainPoolProduct, 4);
         targetPool.setId("sub-prod-pool");
         targetPool.setSubProductId(subProduct.getId());
         targetPool.setSubProductName(subProduct.getName());
@@ -393,6 +395,10 @@ public class PoolHelperTest {
         assertEquals(2, providedProdIds.size());
         assertTrue(providedProdIds.contains(subProvided1.getProductId()));
         assertTrue(providedProdIds.contains(subProvided2.getProductId()));
+
+        // Ensure that the quantity on the subpool is unlimited despite the parent having
+        // a quantity of 4.
+        assertEquals(-1L, (long) hostRestrictedPool.getQuantity());
     }
 
 }
