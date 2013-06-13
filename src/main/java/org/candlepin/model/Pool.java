@@ -597,6 +597,10 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
         return productAttributes;
     }
 
+    public Set<SubProductPoolAttribute> getSubProductAttributes() {
+        return subProductAttributes;
+    }
+
     public void addProductAttribute(ProductPoolAttribute attrib) {
         attrib.setPool(this);
         this.productAttributes.add(attrib);

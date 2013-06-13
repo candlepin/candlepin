@@ -34,6 +34,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductPoolAttribute;
 import org.candlepin.model.ProvidedProduct;
+import org.candlepin.model.SubProvidedProduct;
 import org.candlepin.model.Subscription;
 import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.pool.PoolHelper;
@@ -336,6 +337,62 @@ public class PoolHelperTest {
         assertEquals(2, hostRestrictedPool.getProductAttributes().size());
         assertTrue(hostRestrictedPool.hasProductAttribute("A1"));
         assertTrue(hostRestrictedPool.hasProductAttribute("A2"));
+    }
+
+    @Test
+    public void hostRestrictedPoolCreatedWithSubProductPoolData() {
+        Consumer cons = TestUtil.createConsumer();
+
+        // Create a product for the main pool to be sure that
+        // the attributes do not get copied to the sub pool.
+        Product mainPoolProduct = TestUtil.createProduct();
+        mainPoolProduct.getAttributes().clear();
+        mainPoolProduct.setAttribute("A1", "V1");
+        mainPoolProduct.setAttribute("A2", "V2");
+
+        SubProvidedProduct subProvided1 = new SubProvidedProduct("sub-pp-1", "Sub Provided 1");
+        SubProvidedProduct subProvided2 = new SubProvidedProduct("sub-pp-2", "Sub Provided 2");
+
+        Set<SubProvidedProduct> subProvidedProducts = new HashSet<SubProvidedProduct>();
+        subProvidedProducts.add(subProvided1);
+        subProvidedProducts.add(subProvided2);
+
+        Product subProduct = TestUtil.createProduct();
+        subProduct.getAttributes().clear();
+        subProduct.setAttribute("SA1", "SV1");
+        subProduct.setAttribute("SA2", "SV2");
+
+        Pool targetPool = TestUtil.createPool(mainPoolProduct);
+        targetPool.setId("sub-prod-pool");
+        targetPool.setSubProductId(subProduct.getId());
+        targetPool.setSubProductName(subProduct.getName());
+        targetPool.setSubProvidedProducts(subProvidedProducts);
+
+        when(psa.getProductById(subProduct.getId())).thenReturn(subProduct);
+        when(ent.getConsumer()).thenReturn(cons);
+
+        PoolHelper ph = new PoolHelper(pm, productCache, ent);
+        Pool hostRestrictedPool = ph.createHostRestrictedPool(targetPool.getProductId(),
+            targetPool, "quantity-ignored-for-sub-product-pool");
+
+        assertEquals(targetPool.getId(),
+            hostRestrictedPool.getAttributeValue("source_pool_id"));
+        assertEquals(2, hostRestrictedPool.getProductAttributes().size());
+        assertTrue(hostRestrictedPool.hasProductAttribute("SA1"));
+        assertEquals("SV1", hostRestrictedPool.getProductAttribute("SA1").getValue());
+        assertTrue(hostRestrictedPool.hasProductAttribute("SA2"));
+        assertEquals("SV2", hostRestrictedPool.getProductAttribute("SA2").getValue());
+
+        // Check that the sub provided products made it to the sub pool
+        Set<String> providedProdIds = new HashSet<String>();
+        for (ProvidedProduct pp : hostRestrictedPool.getProvidedProducts()) {
+            providedProdIds.add(pp.getProductId());
+            // Make sure that the correct pool was associated
+            assertEquals(hostRestrictedPool, pp.getPool());
+        }
+        assertEquals(2, providedProdIds.size());
+        assertTrue(providedProdIds.contains(subProvided1.getProductId()));
+        assertTrue(providedProdIds.contains(subProvided2.getProductId()));
     }
 
 }

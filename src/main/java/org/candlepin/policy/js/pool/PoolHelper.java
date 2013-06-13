@@ -33,6 +33,8 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductPoolAttribute;
 import org.candlepin.model.ProvidedProduct;
+import org.candlepin.model.SubProductPoolAttribute;
+import org.candlepin.model.SubProvidedProduct;
 import org.candlepin.model.Subscription;
 import org.candlepin.policy.js.AttributeHelper;
 import org.candlepin.policy.js.ProductCache;
@@ -89,9 +91,29 @@ public class PoolHelper extends AttributeHelper {
     public Pool createHostRestrictedPool(String productId, Pool pool,
         String quantity) {
 
-        Pool consumerSpecificPool = createPool(productId, pool.getOwner(), quantity,
-            pool.getStartDate(), pool.getEndDate(), pool.getContractNumber(),
-            pool.getAccountNumber(), pool.getOrderNumber(), pool.getProvidedProducts());
+        Pool consumerSpecificPool = null;
+        if (pool.getSubProductId() == null) {
+            consumerSpecificPool = createPool(productId, pool.getOwner(),
+                quantity, pool.getStartDate(), pool.getEndDate(),
+                pool.getContractNumber(), pool.getAccountNumber(), pool.getOrderNumber(),
+                pool.getProvidedProducts());
+        }
+        else {
+            // If a sub product id is on the pool, we want to define the sub pool
+            // with the sub product data that was defined on the parent pool,
+            // allowing the sub pool to have different attributes than the parent.
+            Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
+            for (SubProvidedProduct subProvided : pool.getSubProvidedProducts()) {
+                providedProducts.add(new ProvidedProduct(subProvided.getProductId(),
+                                                         subProvided.getProductName()));
+            }
+
+            consumerSpecificPool = createPool(pool.getSubProductId(), pool.getOwner(),
+                "unlimited", pool.getStartDate(), pool.getEndDate(),
+                pool.getContractNumber(), pool.getAccountNumber(), pool.getOrderNumber(),
+                providedProducts);
+
+        }
 
         consumerSpecificPool.setAttribute("requires_host",
             sourceEntitlement.getConsumer().getUuid());
@@ -103,7 +125,8 @@ public class PoolHelper extends AttributeHelper {
 
 
         consumerSpecificPool.setSubscriptionId(pool.getSubscriptionId());
-        this.copyProductIDAttributesOntoPool(productId, consumerSpecificPool);
+        this.copyProductIDAttributesOntoPool(consumerSpecificPool.getProductId(),
+            consumerSpecificPool);
         poolManager.createPool(consumerSpecificPool);
         return consumerSpecificPool;
     }
