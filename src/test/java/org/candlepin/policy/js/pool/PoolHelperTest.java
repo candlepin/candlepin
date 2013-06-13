@@ -12,7 +12,7 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.policy.test;
+package org.candlepin.policy.js.pool;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -223,7 +223,7 @@ public class PoolHelperTest {
         PoolHelper ph = new PoolHelper(pm, productCache, null);
         when(psa.getProductById(targetProduct.getId())).thenReturn(targetProduct);
         assertTrue("Update expected.",
-            ph.copyProductAttributesOntoPool(sourceSub, targetPool));
+            ph.copyProductAttributesOntoPool(sourceSub.getProduct().getId(), targetPool));
         assertEquals(2, targetPool.getProductAttributes().size());
         assertTrue(targetPool.hasProductAttribute("A1"));
         assertTrue(targetPool.hasProductAttribute("A2"));
@@ -242,7 +242,7 @@ public class PoolHelperTest {
         PoolHelper ph = new PoolHelper(pm, productCache, null);
         when(psa.getProductById(targetProduct.getId())).thenReturn(targetProduct);
         assertTrue("Update expected.",
-            ph.copyProductAttributesOntoPool(sourceSub, targetPool));
+            ph.copyProductAttributesOntoPool(sourceSub.getProduct().getId(), targetPool));
         assertEquals(1, targetPool.getProductAttributes().size());
         assertTrue(targetPool.hasProductAttribute("A1"));
         assertEquals("V-updated", targetPool.getProductAttribute("A1").getValue());
@@ -261,7 +261,7 @@ public class PoolHelperTest {
         PoolHelper ph = new PoolHelper(pm, productCache, null);
         when(psa.getProductById(targetProduct.getId())).thenReturn(targetProduct);
         assertTrue("Update expected.",
-            ph.copyProductAttributesOntoPool(sourceSub, targetPool));
+            ph.copyProductAttributesOntoPool(sourceSub.getProduct().getId(), targetPool));
         assertEquals(1, targetPool.getProductAttributes().size());
         assertTrue(targetPool.hasProductAttribute("A1"));
         assertEquals("V-updated", targetPool.getProductAttribute("A1").getValue());
@@ -277,7 +277,7 @@ public class PoolHelperTest {
         ph = new PoolHelper(pm, productCache, null);
         when(psa.getProductById(targetProduct.getId())).thenReturn(targetProduct);
         assertTrue("Update expected.",
-            ph.copyProductAttributesOntoPool(sourceSub, targetPool));
+            ph.copyProductAttributesOntoPool(sourceSub.getProduct().getId(), targetPool));
         assertEquals(1, targetPool.getProductAttributes().size());
         assertTrue(targetPool.hasProductAttribute("A1"));
         assertEquals(null, targetPool.getProductAttribute("A1").getValue());
@@ -293,7 +293,7 @@ public class PoolHelperTest {
         ph = new PoolHelper(pm, productCache, null);
         when(psa.getProductById(targetProduct.getId())).thenReturn(targetProduct);
         assertTrue("Update expected.",
-            ph.copyProductAttributesOntoPool(sourceSub, targetPool));
+            ph.copyProductAttributesOntoPool(sourceSub.getProduct().getId(), targetPool));
         assertEquals(1, targetPool.getProductAttributes().size());
         assertTrue(targetPool.hasProductAttribute("A1"));
         assertEquals(null, targetPool.getProductAttribute("A1").getValue());
@@ -311,7 +311,7 @@ public class PoolHelperTest {
         PoolHelper ph = new PoolHelper(pm, productCache, null);
         when(psa.getProductById(targetProduct.getId())).thenReturn(targetProduct);
         assertTrue("Update expected.",
-            ph.copyProductAttributesOntoPool(sourceSub, targetPool));
+            ph.copyProductAttributesOntoPool(sourceSub.getProduct().getId(), targetPool));
         assertTrue(targetPool.getProductAttributes().isEmpty());
     }
 

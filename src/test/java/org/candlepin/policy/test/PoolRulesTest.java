@@ -363,6 +363,7 @@ public class PoolRulesTest {
         Product subProduct = TestUtil.createProduct();
 
         Subscription sub = TestUtil.createSubscription(owner, product);
+        sub.setSubProduct(subProduct);
         String testAttributeKey = "multi-entitlement";
         String expectedAttributeValue = "yes";
         subProduct.setAttribute(testAttributeKey, expectedAttributeValue);
@@ -385,6 +386,7 @@ public class PoolRulesTest {
         Product subProduct = TestUtil.createProduct();
 
         Subscription sub = TestUtil.createSubscription(owner, product);
+        sub.setSubProduct(subProduct);
 
         when(this.productAdapterMock.getProductById(anyString())).thenReturn(product);
         when(this.productAdapterMock.getProductById(anyString())).thenReturn(subProduct);
@@ -404,6 +406,7 @@ public class PoolRulesTest {
         Product subProvidedProduct = TestUtil.createProduct();
 
         Subscription sub = TestUtil.createSubscription(owner, product);
+        sub.setSubProduct(subProduct);
         Set<Product> subProvided = new HashSet<Product>();
         subProvided.add(subProvidedProduct);
         sub.setSubProvidedProducts(subProvided);

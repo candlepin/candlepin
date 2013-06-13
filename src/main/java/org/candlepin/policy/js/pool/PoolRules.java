@@ -106,7 +106,12 @@ public class PoolRules {
             }
         }
 
-        helper.copyProductAttributesOntoPool(sub, newPool);
+        helper.copyProductAttributesOntoPool(sub.getProduct().getId(), newPool);
+        if (sub.getSubProduct() != null) {
+            newPool.setSubProductId(sub.getSubProduct().getId());
+            newPool.setSubProductName(sub.getSubProduct().getName());
+            helper.copySubProductAttributesOntoPool(sub.getSubProduct().getId(), newPool);
+        }
         newPool.setSubscriptionId(sub.getId());
         newPool.setSubscriptionSubKey("master");
         ProductAttribute virtAtt = sub.getProduct().getAttribute("virt_only");
@@ -250,8 +255,8 @@ public class PoolRules {
             boolean quantityChanged = !(expectedQuantity == existingPool.getQuantity());
             boolean productsChanged = helper.checkForChangedProducts(existingPool, sub);
 
-            boolean prodAttrsChanged = helper.copyProductAttributesOntoPool(sub,
-                existingPool);
+            boolean prodAttrsChanged = helper.copyProductAttributesOntoPool(
+                sub.getProduct().getId(), existingPool);
             boolean orderDataChanged = helper.checkForOrderChanges(existingPool, sub);
 
             if (prodAttrsChanged) {

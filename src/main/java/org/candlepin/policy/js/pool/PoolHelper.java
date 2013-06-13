@@ -125,8 +125,7 @@ public class PoolHelper extends AttributeHelper {
 
 
         consumerSpecificPool.setSubscriptionId(pool.getSubscriptionId());
-        this.copyProductIDAttributesOntoPool(consumerSpecificPool.getProductId(),
-            consumerSpecificPool);
+        this.copyProductAttributesOntoPool(productId, consumerSpecificPool);
         poolManager.createPool(consumerSpecificPool);
         return consumerSpecificPool;
     }
@@ -192,29 +191,13 @@ public class PoolHelper extends AttributeHelper {
             pool.setAttribute(entry.getKey(), entry.getValue());
         }
 
-        copyProductIDAttributesOntoPool(productId, pool);
+        copyProductAttributesOntoPool(productId, pool);
 
         return pool;
     }
 
-
     /**
-     * Copies all of a {@link Subscription}'s top-level product attributes onto the pool.
-     * If an attribute already exists, it will be updated. Any attributes that are
-     * on the {@link Pool} but not on the {@link Product} will be removed.
-     *
-     * @param sub
-     * @param pool
-     *
-     * @return true if the pools attributes changed, false otherwise.
-     */
-    public boolean copyProductAttributesOntoPool(Subscription sub, Pool pool) {
-        return this.copyProductIDAttributesOntoPool(sub.getProduct().getId(), pool);
-    }
-
-
-    /**
-     * Copies all of a {@link Products}'s top-level product attributes onto the pool.
+     * Copies all of the {@link Products} and sub-product attributes onto the pool.
      * If an attribute already exists, it will be updated. Any attributes that are
      * on the {@link Pool} but not on the {@link Product} will be removed.
      *
@@ -223,7 +206,7 @@ public class PoolHelper extends AttributeHelper {
      *
      * @return true if the pools attributes changed, false otherwise.
      */
-    protected boolean copyProductIDAttributesOntoPool(String productId, Pool pool) {
+    protected boolean copyProductAttributesOntoPool(String productId, Pool pool) {
         Set<String> processed = new HashSet<String>();
 
         boolean hasChanged = false;
@@ -269,6 +252,57 @@ public class PoolHelper extends AttributeHelper {
                 }
             }
             pool.getProductAttributes().removeAll(toRemove);
+        }
+        return hasChanged;
+    }
+
+    // TODO: refactor with above method
+    protected boolean copySubProductAttributesOntoPool(String productId, Pool pool) {
+        Set<String> processed = new HashSet<String>();
+
+        boolean hasChanged = false;
+        Product product = productCache.getProductById(productId);
+        if (product != null) {
+            for (Attribute attr : product.getAttributes()) {
+
+                String attributeName = attr.getName();
+                String attributeValue = attr.getValue();
+
+                // Add to the processed list so that we can determine which should
+                // be removed later.
+                processed.add(attributeName);
+
+                if (pool.hasSubProductAttribute(attributeName) &&
+                    attributeValue != null) {
+                    SubProductPoolAttribute provided =
+                        pool.getSubProductAttribute(attributeName);
+                    String providedValue = provided.getValue();
+                    if (providedValue != null) {
+                        boolean productsAreSame =
+                            product.getId().equals(provided.getProductId());
+                        boolean attrValueSame = attributeValue.equals(providedValue);
+                        if (productsAreSame && attrValueSame) {
+                            continue;
+                        }
+                    }
+                }
+
+                // Change detected - update the attribute
+                pool.setSubProductAttribute(attributeName, attributeValue,
+                    product.getId());
+                hasChanged = true;
+            }
+
+            // Determine if any should be removed.
+            Set<SubProductPoolAttribute> toRemove =
+                new HashSet<SubProductPoolAttribute>();
+            for (SubProductPoolAttribute toCheck : pool.getSubProductAttributes()) {
+                if (!processed.contains(toCheck.getName())) {
+                    toRemove.add(toCheck);
+                    hasChanged = true;
+                }
+            }
+            pool.getSubProductAttributes().removeAll(toRemove);
         }
         return hasChanged;
     }
