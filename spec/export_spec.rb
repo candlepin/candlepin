@@ -57,7 +57,7 @@ describe 'Candlepin Export' do
       available_certs[c['serial']] = c
     end
 
-    exported_entitlement_certs.size.should == 3
+    exported_entitlement_certs.size.should == 4
 
     exported_entitlement_certs.each do |file|
       exported_cert = File.read(File.join(entitlement_certs_dir, file))
@@ -95,8 +95,8 @@ describe 'Candlepin Export' do
       available_certs[c['serial']] = c
     end
 
-    # All 3 should be there, despite one cert is for a virt product
-    exported_entitlement_certs.size.should == 3
+    # All 4 should be there, despite one cert is for a virt product
+    exported_entitlement_certs.size.should == 4
 
     exported_entitlement_certs.each do |file|
       exported_cert = File.read(File.join(entitlement_certs_dir, file))
@@ -114,6 +114,25 @@ describe 'Candlepin Export' do
 
     # Should also contain legacy rules file:
     File.exists?(File.join(@export_dir, "rules/default-rules.js")).should be_true
+  end
+  
+  it 'should export products' do
+    prod_dir = File.join(@export_dir, 'products')
+    File.exists?(prod_dir).should be_true
+    files = Dir["#{prod_dir}/*.json"].find_all.collect {|file| file}
+    files.length.should == 6
+    File.exists?(File.join(prod_dir, "#{@product1.id}.json")).should be_true
+    File.exists?(File.join(prod_dir, "#{@product2.id}.json")).should be_true
+    File.exists?(File.join(prod_dir, "#{@virt_product.id}.json")).should be_true
+    File.exists?(File.join(prod_dir, "#{@product3.id}.json")).should be_true
+    File.exists?(File.join(prod_dir, "#{@sub_product.id}.json")).should be_true
+    File.exists?(File.join(prod_dir, "#{@sub_provided_prod.id}.json")).should be_true
+    
+    # Only one product cert should get created as only products with
+    # a numeric ID (real products) have certs created on export.
+    certs = Dir["#{prod_dir}/*.pem"].find_all.collect {|file| file}
+    certs.length.should == 1
+    File.exists?(File.join(prod_dir, "#{@sub_provided_prod.id}.pem")).should be_true
   end
 
 end

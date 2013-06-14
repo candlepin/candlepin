@@ -175,8 +175,10 @@ module CandlepinMethods
   end
 
   def random_string(prefix=nil)
-    prefix ||= ''
-    "#{prefix}-#{rand(100000)}"
+    if prefix
+      prefix = "#{prefix}-"
+    end
+    "#{prefix}#{rand(100000)}"
   end
 
   def check_for_hateoas(json)
@@ -225,32 +227,46 @@ module ExportMethods
     owner_client = Candlepin.new(@user['username'], 'password')
 
     # the before(:each) is not initialized yet, call create_product sans wrapper
-    product1 = @cp.create_product(random_string(), random_string(),
+    @product1 = @cp.create_product(random_string('prod1'), random_string(),
                               {:multiplier => 2})
-    product2 = @cp.create_product(random_string(), random_string())
-    virt_product = @cp.create_product(random_string('virt_product'),
+    @product2 = @cp.create_product(random_string('prod2'), random_string())
+    @virt_product = @cp.create_product(random_string('virt_product'),
                                   random_string('virt_product'),
                                   {:attributes => {:virt_only => true}})
+    
+    @product3 = @cp.create_product(random_string('sub-prod'), random_string(), {
+        :attributes => { :arch => "x86_64", :virt_limit => "unlimited"}
+    })
+    
+    @sub_product = @cp.create_product(random_string('sub-prov-prod'), random_string(),
+        {"sockets" => "2"})
+    @sub_provided_prod = @cp.create_product(random_string("1234"), random_string());
+    
     content = create_content({:metadata_expire => 6000,
                               :required_tags => "TAG1,TAG2"})
     arch_content = create_content({:metadata_expire => 6000,
                                    :content_url => "/path/to/arch/specific/content",
                                    :required_tags => "TAG1,TAG2",
                                    :arches => "i386,x86_64"})
-    @cp.add_content_to_product(product1.id, content.id)
-    @cp.add_content_to_product(product2.id, content.id)
-    @cp.add_content_to_product(product2.id, arch_content.id)
+    @cp.add_content_to_product(@product1.id, content.id)
+    @cp.add_content_to_product(@product2.id, content.id)
+    @cp.add_content_to_product(@product2.id, arch_content.id)
+    @cp.add_content_to_product(@sub_product.id, content.id)
 
     @end_date = Date.new(2025, 5, 29)
 
-    sub1 = @cp.create_subscription(@owner['key'], product1.id, 2, [], '', '12345', '6789', nil, @end_date)
-    sub2 = @cp.create_subscription(@owner['key'], product2.id, 4, [], '', '12345', '6789', nil, @end_date)
-    sub3 = @cp.create_subscription(@owner['key'], virt_product.id, 10, [], '', '12345', '6789', nil, @end_date)
+    sub1 = @cp.create_subscription(@owner['key'], @product1.id, 2, [], '', '12345', '6789', nil, @end_date)
+    sub2 = @cp.create_subscription(@owner['key'], @product2.id, 4, [], '', '12345', '6789', nil, @end_date)
+    sub3 = @cp.create_subscription(@owner['key'], @virt_product.id, 10, [], '', '12345', '6789', nil, @end_date)
+    sub4 = @cp.create_subscription(@owner['key'], @product3.id, 5, [], '', '12345', '6789', nil, @end_date,
+      {'sub_product_id' => @sub_product['id'],  'sub_provided_products' => [@sub_provided_prod['id']]})
+
     @cp.refresh_pools(@owner['key'])
 
-    pool1 = @cp.list_pools(:owner => @owner.id, :product => product1.id)[0]
-    pool2 = @cp.list_pools(:owner => @owner.id, :product => product2.id)[0]
-    pool3 = @cp.list_pools(:owner => @owner.id, :product => virt_product.id)[0]
+    pool1 = @cp.list_pools(:owner => @owner.id, :product => @product1.id)[0]
+    pool2 = @cp.list_pools(:owner => @owner.id, :product => @product2.id)[0]
+    pool3 = @cp.list_pools(:owner => @owner.id, :product => @virt_product.id)[0]
+    pool4 = @cp.list_pools(:owner => @owner.id, :product => @product3.id)[0]
 
     @candlepin_client = consumer_client(owner_client, random_string('test_client'),
         "candlepin", @user['username'])
@@ -259,6 +275,7 @@ module ExportMethods
     @entitlement1 = @candlepin_client.consume_pool(pool1.id)[0]
     @entitlement2 = @candlepin_client.consume_pool(pool2.id)[0]
     @candlepin_client.consume_pool(pool3.id)
+    @entitlement3 = @candlepin_client.consume_pool(pool4.id)[0]
 
     # Make a temporary directory where we can safely extract our archive:
     @tmp_dir = File.join(Dir.tmpdir, random_string('candlepin-rspec'))
