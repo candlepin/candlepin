@@ -14,18 +14,32 @@
  */
 package org.candlepin.sync;
 
+import static org.mockito.Mockito.mock;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventSink;
+import org.candlepin.model.CertificateSerial;
+import org.candlepin.model.CertificateSerialCurator;
+import org.candlepin.model.Consumer;
+import org.candlepin.model.Entitlement;
+import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.Owner;
+import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProvidedProduct;
+import org.candlepin.model.SubProvidedProduct;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
+import org.candlepin.test.TestUtil;
+import org.codehaus.jackson.map.ObjectMapper;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -35,9 +49,16 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
+import java.io.Reader;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * EntitlementImporterTest
@@ -47,6 +68,9 @@ public class EntitlementImporterTest {
 
     @Mock private EventSink sink;
     @Mock private SubscriptionCurator curator;
+    @Mock private CertificateSerialCurator certSerialCurator;
+    @Mock private ObjectMapper om;
+
     private Owner owner;
     private Subscription testSub1;
     private Subscription testSub2;
@@ -109,8 +133,8 @@ public class EntitlementImporterTest {
         this.testSub33 = createSubscription(owner, "test-prod-1", "up3", "ue33", "uc1", 10);
         this.testSub34 = createSubscription(owner, "test-prod-1", "up3", "ue34", "uc1", 5);
 
-        this.importer = new EntitlementImporter(this.curator, null, this.sink, i18n);
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
+        this.importer = new EntitlementImporter(this.curator, certSerialCurator, this.sink, i18n);
     }
 
     @Test
@@ -543,6 +567,78 @@ public class EntitlementImporterTest {
         verify(curator).create(testSub34);
     }
 
+    @Test
+    public void importObject() throws Exception {
+        Consumer consumer = TestUtil.createConsumer(owner);
+        ConsumerDto consumerDto = new ConsumerDto(consumer.getUuid(), consumer.getName(),
+            consumer.getType(), consumer.getOwner(), "", "");
+
+        Product parentProduct = TestUtil.createProduct();
+        ProvidedProduct pp1 = TestUtil.createProvidedProduct();
+
+        Set<ProvidedProduct> provided = new HashSet<ProvidedProduct>();
+        provided.add(pp1);
+
+        // Sub product setup
+        Product subProduct = TestUtil.createProduct();
+        SubProvidedProduct subProvided1 = TestUtil.createSubProvidedProduct();
+
+        Set<SubProvidedProduct> subProvidedProducts = new HashSet<SubProvidedProduct>();
+        subProvidedProducts.add(subProvided1);
+
+        Pool pool = TestUtil.createPool(owner, parentProduct, provided, subProduct.getId(),
+            subProvidedProducts, 3);
+        EntitlementCertificate cert = createEntitlementCertificate("my-test-key", "my-cert");
+        Entitlement ent = TestUtil.createEntitlement(owner, consumer, pool, cert);
+        ent.setQuantity(3);
+
+        Reader reader = mock(Reader.class);
+        when(om.readValue(reader, Entitlement.class)).thenReturn(ent);
+
+        // Create our expected products
+        Map<String, Product> productsById = new HashMap<String, Product>();
+        productsById.put(parentProduct.getId(), parentProduct);
+        productsById.put(pp1.getProductId(),
+            TestUtil.createProduct(pp1.getProductId(), pp1.getProductName()));
+        productsById.put(subProduct.getId(), subProduct);
+        productsById.put(subProvided1.getProductId(),TestUtil.createProduct(
+            subProvided1.getProductId(), subProvided1.getProductName()));
+
+        Subscription sub = importer.importObject(om, reader, owner,
+            productsById, consumerDto);
+
+        assertEquals(pool.getId(), sub.getUpstreamPoolId());
+        assertEquals(consumer.getUuid(), sub.getUpstreamConsumerId());
+        assertEquals(ent.getId(), sub.getUpstreamEntitlementId());
+
+        assertEquals(owner, sub.getOwner());
+        assertEquals(ent.getStartDate(), sub.getStartDate());
+        assertEquals(ent.getEndDate(), sub.getEndDate());
+
+        assertEquals(pool.getAccountNumber(), sub.getAccountNumber());
+        assertEquals(pool.getContractNumber(), sub.getContractNumber());
+
+        assertEquals(ent.getQuantity().intValue(), sub.getQuantity().intValue());
+
+        assertEquals(parentProduct, sub.getProduct());
+        assertEquals(provided.size(), sub.getProvidedProducts().size());
+        assertEquals(pp1.getProductId(), sub.getProvidedProducts().
+            iterator().next().getId());
+
+        assertEquals(subProduct, sub.getSubProduct());
+        assertEquals(1, sub.getSubProvidedProducts().size());
+        assertEquals(subProvided1.getProductId(), sub.getSubProvidedProducts().
+            iterator().next().getId());
+
+        assertNotNull(sub.getCertificate());
+        CertificateSerial serial = sub.getCertificate().getSerial();
+        assertEquals(cert.getSerial().isCollected(), serial.isCollected());
+        assertEquals(cert.getSerial().isRevoked(), serial.isRevoked());
+        assertEquals(cert.getSerial().getExpiration(), serial.getExpiration());
+        assertEquals(cert.getSerial().getCreated(), serial.getCreated());
+        assertEquals(cert.getSerial().getUpdated(), serial.getUpdated());
+    }
+
     private Subscription createSubscription(Owner owner, String productId,
             String poolId, String entId, String conId, long quantity) {
         Subscription sub = new Subscription();
@@ -554,5 +650,23 @@ public class EntitlementImporterTest {
         sub.setOwner(owner);
         sub.setId("" + index++);
         return sub;
+    }
+
+    private void addSubProductData(Product subProduct, Set<SubProvidedProduct> subProvided) {
+
+    }
+
+    protected EntitlementCertificate createEntitlementCertificate(String key,
+        String cert) {
+        EntitlementCertificate toReturn = new EntitlementCertificate();
+        CertificateSerial certSerial = new CertificateSerial(new Date());
+        certSerial.setCollected(true);
+        certSerial.setRevoked(true);
+        certSerial.setUpdated(new Date());
+        certSerial.setCreated(new Date());
+        toReturn.setKeyAsBytes(key.getBytes());
+        toReturn.setCertAsBytes(cert.getBytes());
+        toReturn.setSerial(certSerial);
+        return toReturn;
     }
 }
