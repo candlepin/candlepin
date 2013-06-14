@@ -343,7 +343,6 @@ public class PoolHelperTest {
     @Test
     public void hostRestrictedPoolCreatedWithSubProductPoolData() {
         Consumer cons = TestUtil.createConsumer();
-        Owner owner = cons.getOwner();
 
         // Create a product for the main pool to be sure that
         // the attributes do not get copied to the sub pool.
@@ -364,7 +363,7 @@ public class PoolHelperTest {
         subProduct.setAttribute("SA1", "SV1");
         subProduct.setAttribute("SA2", "SV2");
 
-        Pool targetPool = TestUtil.createPool(owner, mainPoolProduct, 4);
+        Pool targetPool = TestUtil.createPool(mainPoolProduct);
         targetPool.setId("sub-prod-pool");
         targetPool.setSubProductId(subProduct.getId());
         targetPool.setSubProductName(subProduct.getName());
@@ -375,10 +374,11 @@ public class PoolHelperTest {
 
         PoolHelper ph = new PoolHelper(pm, productCache, ent);
         Pool hostRestrictedPool = ph.createHostRestrictedPool(targetPool.getProductId(),
-            targetPool, "quantity-ignored-for-sub-product-pool");
+            targetPool, "unlimited");
 
         assertEquals(targetPool.getId(),
             hostRestrictedPool.getAttributeValue("source_pool_id"));
+        assertEquals(-1L, (long) hostRestrictedPool.getQuantity());
         assertEquals(2, hostRestrictedPool.getProductAttributes().size());
         assertTrue(hostRestrictedPool.hasProductAttribute("SA1"));
         assertEquals("SV1", hostRestrictedPool.getProductAttribute("SA1").getValue());
@@ -395,10 +395,6 @@ public class PoolHelperTest {
         assertEquals(2, providedProdIds.size());
         assertTrue(providedProdIds.contains(subProvided1.getProductId()));
         assertTrue(providedProdIds.contains(subProvided2.getProductId()));
-
-        // Ensure that the quantity on the subpool is unlimited despite the parent having
-        // a quantity of 4.
-        assertEquals(-1L, (long) hostRestrictedPool.getQuantity());
     }
 
 }

@@ -109,7 +109,7 @@ public class PoolHelper extends AttributeHelper {
             }
 
             consumerSpecificPool = createPool(pool.getSubProductId(), pool.getOwner(),
-                "unlimited", pool.getStartDate(), pool.getEndDate(),
+                quantity, pool.getStartDate(), pool.getEndDate(),
                 pool.getContractNumber(), pool.getAccountNumber(), pool.getOrderNumber(),
                 providedProducts);
 
@@ -125,7 +125,8 @@ public class PoolHelper extends AttributeHelper {
 
 
         consumerSpecificPool.setSubscriptionId(pool.getSubscriptionId());
-        this.copyProductAttributesOntoPool(productId, consumerSpecificPool);
+        this.copyProductAttributesOntoPool(consumerSpecificPool.getProductId(),
+            consumerSpecificPool);
         poolManager.createPool(consumerSpecificPool);
         return consumerSpecificPool;
     }
