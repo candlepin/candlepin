@@ -67,6 +67,7 @@ import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
+import org.candlepin.model.SubProvidedProduct;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.policy.js.export.ExportRules;
 import org.candlepin.service.EntitlementCertServiceAdapter;
@@ -149,6 +150,7 @@ public class ExporterTest {
         Consumer consumer = mock(Consumer.class);
         Entitlement ent = mock(Entitlement.class);
         ProvidedProduct pp = mock(ProvidedProduct.class);
+        SubProvidedProduct spp = mock(SubProvidedProduct.class);
         Pool pool = mock(Pool.class);
         Rules mrules = mock(Rules.class);
         Principal principal = mock(Principal.class);
@@ -156,6 +158,9 @@ public class ExporterTest {
 
         Set<ProvidedProduct> ppset = new HashSet<ProvidedProduct>();
         ppset.add(pp);
+
+        Set<SubProvidedProduct> sppSet = new HashSet<SubProvidedProduct>();
+        sppSet.add(spp);
 
         Set<Entitlement> entitlements = new HashSet<Entitlement>();
         entitlements.add(ent);
@@ -174,6 +179,20 @@ public class ExporterTest {
         prod1.setHref("http://localhost");
         prod1.setAttributes(Collections.EMPTY_SET);
 
+        Product subProduct = new Product("MKT-sub-prod", "Sub Product");
+        subProduct.setMultiplier(1L);
+        subProduct.setCreated(new Date());
+        subProduct.setUpdated(new Date());
+        subProduct.setHref("http://localhost");
+        subProduct.setAttributes(Collections.EMPTY_SET);
+
+        Product subProvidedProduct = new Product("332211", "Sub Product");
+        subProvidedProduct.setMultiplier(1L);
+        subProvidedProduct.setCreated(new Date());
+        subProvidedProduct.setUpdated(new Date());
+        subProvidedProduct.setHref("http://localhost");
+        subProvidedProduct.setAttributes(Collections.EMPTY_SET);
+
         ProductCertificate pcert = new ProductCertificate();
         pcert.setKey("euh0876puhapodifbvj094");
         pcert.setCert("hpj-08ha-w4gpoknpon*)&^%#");
@@ -183,6 +202,11 @@ public class ExporterTest {
         when(pp.getProductId()).thenReturn("12345");
         when(pool.getProvidedProducts()).thenReturn(ppset);
         when(pool.getProductId()).thenReturn("MKT-prod");
+
+        when(pool.getSubProvidedProducts()).thenReturn(sppSet);
+        when(pool.getSubProductId()).thenReturn(subProduct.getId());
+        when(spp.getProductId()).thenReturn(subProvidedProduct.getId());
+
         when(ent.getPool()).thenReturn(pool);
         when(mrules.getRules()).thenReturn("foobar");
         when(pki.getSHA256WithRSAHash(any(InputStream.class))).thenReturn(
@@ -191,6 +215,8 @@ public class ExporterTest {
         when(consumer.getEntitlements()).thenReturn(entitlements);
         when(psa.getProductById("12345")).thenReturn(prod);
         when(psa.getProductById("MKT-prod")).thenReturn(prod1);
+        when(psa.getProductById("MKT-sub-prod")).thenReturn(subProduct);
+        when(psa.getProductById("332211")).thenReturn(subProvidedProduct);
         when(psa.getProductCertificate(any(Product.class))).thenReturn(pcert);
         when(pprov.get()).thenReturn(principal);
         when(principal.getUsername()).thenReturn("testUser");
@@ -219,9 +245,15 @@ public class ExporterTest {
         verifyContent(export, "export/products/12345.pem",
             new VerifyProductCert("12345.pem"));
         assertFalse(verifyHasEntry(export, "export/products/MKT-prod.pem"));
+
+        verifyContent(export, "export/products/332211.pem",
+            new VerifyProductCert("332211.pem"));
+        assertFalse(verifyHasEntry(export, "export/products/MKT-sub-prod.pem"));
+
         FileUtils.deleteDirectory(export.getParentFile());
         assertTrue(new File("/tmp/consumer_export.zip").delete());
         assertTrue(new File("/tmp/12345.pem").delete());
+        assertTrue(new File("/tmp/332211.pem").delete());
     }
 
     @Test(expected = ExportCreationException.class)
