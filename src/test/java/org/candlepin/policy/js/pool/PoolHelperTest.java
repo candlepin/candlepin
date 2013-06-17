@@ -177,39 +177,6 @@ public class PoolHelperTest {
     }
 
     @Test
-    public void attributeChanged() {
-        when(pool.getProductId()).thenReturn("prodid123");
-        when(pool.getProductName()).thenReturn("Awesome Product");
-        when(product.getId()).thenReturn("prodid123");
-        when(product.getName()).thenReturn("Awesome Product");
-        when(sub.getProduct()).thenReturn(product);
-
-        Set<ProvidedProduct> poolprods = new HashSet<ProvidedProduct>();
-        ProvidedProduct pp = new ProvidedProduct("productid", "Awesome Product");
-        pp.setId(pp.getProductId());
-        poolprods.add(pp);
-        Set<Product> subprods = new HashSet<Product>();
-        Product p = new Product("productid", "Awesome Product");
-        p.setAttribute("hola", "mundo");
-        subprods.add(p);
-        when(pool.getProvidedProducts()).thenReturn(poolprods);
-        when(sub.getProvidedProducts()).thenReturn(subprods);
-
-        ProductPoolAttribute pppa = mock(ProductPoolAttribute.class);
-        when(pppa.getName()).thenReturn("hola");
-        when(pppa.getValue()).thenReturn("mundo nuevo");
-        when(pppa.getProductId()).thenReturn("productid"); // matches sub prod
-        when(pppa.getId()).thenReturn("hoy");
-        Set<ProductPoolAttribute> attribs =
-            new HashSet<ProductPoolAttribute>();
-        attribs.add(pppa);
-        when(pool.getProductAttributes()).thenReturn(attribs);
-
-        PoolHelper ph = new PoolHelper(pm, productCache, null);
-        assertTrue(ph.checkForChangedProducts(pool, sub));
-    }
-
-    @Test
     public void copyProductAttributesOntoPoolAddsNewAttribute() {
         Product targetProduct = TestUtil.createProduct();
         targetProduct.getAttributes().clear();
@@ -373,7 +340,7 @@ public class PoolHelperTest {
         when(ent.getConsumer()).thenReturn(cons);
 
         PoolHelper ph = new PoolHelper(pm, productCache, ent);
-        Pool hostRestrictedPool = ph.createHostRestrictedPool(targetPool.getProductId(),
+        Pool hostRestrictedPool = ph.createHostRestrictedPool(targetPool.getSubProductId(),
             targetPool, "unlimited");
 
         assertEquals(targetPool.getId(),

@@ -507,6 +507,11 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
         providedProducts.add(provided);
     }
 
+    public void addSubProvidedProduct(SubProvidedProduct provided) {
+        provided.setPool(this);
+        subProvidedProducts.add(provided);
+    }
+
     public void setProvidedProducts(Set<ProvidedProduct> providedProducts) {
         this.providedProducts = providedProducts;
     }

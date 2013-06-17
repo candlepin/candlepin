@@ -23,18 +23,58 @@ import org.candlepin.model.Pool;
 public class PoolUpdate {
 
     private Pool pool;
-    private Boolean datesChanged;
-    private Boolean quantityChanged;
-    private Boolean productsChanged;
-    private Boolean orderChanged;
 
-    public PoolUpdate(Pool pool, Boolean datesChanged, Boolean quantityChanged,
-        Boolean productsChanged, Boolean orderChanged) {
-        this.pool = pool;
-        this.datesChanged = datesChanged;
-        this.quantityChanged = quantityChanged;
-        this.productsChanged = productsChanged;
-        this.orderChanged = orderChanged;
+    /**
+     * True if start/end dates for the subscription changed.
+     */
+    private Boolean datesChanged = false;
+
+    /**
+     * True if quantity for the pool has changed. Can be a complex calculation for some
+     * pools depending on the attributes involved.
+     */
+    private Boolean quantityChanged = false;
+
+    /**
+     * True if product attributes have changed.
+     */
+    private Boolean productAttributesChanged = false;
+
+    /**
+     * True if product ID or name has changed for the pool's primary product, or on
+     * any provided products. Also covers addition/removal of provided products.
+     */
+    private Boolean productsChanged = false;
+
+    /**
+     * True if order information has changed on the subscription.
+     */
+    private Boolean orderChanged = false;
+
+    /**
+     * True if sub-product ID or name has changed for the pool's sub-product, or any
+     * provided sub-products. (also covers addition/removal of sub-provided products.
+     */
+    private Boolean subProductsChanged = false;
+
+    /**
+     * True if sub-product attributes changed. Will be false in situations where we're
+     * refreshing a derived pool, and the subscription's sub-product attributes have
+     * changed because that update would show up as a productAttributesChanged.
+     */
+    private Boolean subProductAttributesChanged = false;
+
+    public PoolUpdate(Pool p) {
+        this.pool = p;
+    }
+
+    /**
+     * @return true if any subscription change was detected and applied to this pool.
+     */
+    public boolean changed() {
+        return datesChanged || quantityChanged || productsChanged ||
+            productAttributesChanged ||
+            orderChanged || subProductsChanged || subProductAttributesChanged;
     }
 
     public Pool getPool() {
@@ -76,5 +116,29 @@ public class PoolUpdate {
 
     public void setOrderChanged(Boolean orderChanged) {
         this.orderChanged = orderChanged;
+    }
+
+    public Boolean getSubProductsChanged() {
+        return subProductsChanged;
+    }
+
+    public void setSubProductsChanged(Boolean subProductsChanged) {
+        this.subProductsChanged = subProductsChanged;
+    }
+
+    public Boolean getSubProductAttributesChanged() {
+        return subProductAttributesChanged;
+    }
+
+    public void setSubProductAttributesChanged(Boolean subProductAttributesChanged) {
+        this.subProductAttributesChanged = subProductAttributesChanged;
+    }
+
+    public Boolean getProductAttributesChanged() {
+        return productAttributesChanged;
+    }
+
+    public void setProductAttributesChanged(Boolean productAttributesChanged) {
+        this.productAttributesChanged = productAttributesChanged;
     }
 }

@@ -365,10 +365,33 @@ public class PoolHelper extends AttributeHelper {
         changeFound = !poolProducts.equals(subProducts) ||
             !existingPool.getProductName().equals(sub.getProduct().getName());
 
-        // Check the attributes only when no other change was detected.
-        if (!changeFound) {
-            changeFound = haveAttributesChanged(existingPool, sub);
+        return changeFound;
+    }
+
+    // TODO: refactor with above method
+    public boolean checkForChangedSubProducts(Pool existingPool, Subscription sub) {
+        Set<String> poolProducts = new HashSet<String>();
+        Set<String> incomingProducts = new HashSet<String>();
+
+        if (existingPool.getSubProductId() != null) {
+            poolProducts.add(existingPool.getSubProductId());
         }
+
+        for (SubProvidedProduct pp : existingPool.getSubProvidedProducts()) {
+            poolProducts.add(pp.getProductId());
+        }
+
+        if (sub.getSubProduct() != null) {
+            incomingProducts.add(sub.getSubProduct().getId());
+        }
+        for (Product product : sub.getSubProvidedProducts()) {
+            incomingProducts.add(product.getId());
+        }
+
+        boolean changeFound = false;
+
+        // Check if the product name has been changed:
+        changeFound = !poolProducts.equals(incomingProducts);
 
         return changeFound;
     }
