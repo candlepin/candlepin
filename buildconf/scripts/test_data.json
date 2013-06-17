@@ -645,6 +645,27 @@
                 "multi-entitlement" : "no"
             }
         },
+        {
+            "name": "Awesome OS Server Basic (data center)",
+            "id": "awesomeos-server-basic-dc",
+            "type": "MKT",
+            "provided_products": [
+                
+            ],
+            "attributes": {
+                "sockets": 2,
+                "warning_period": 30,
+                "management_enabled" : 0,
+                "support_level" : "None",
+                "support_type" : "Self-Support",
+                "multi-entitlement" : "no",
+                "virt_limit" : "unlimited"
+            },
+            "sub_product_id" : "37060",
+            "sub_provided_products" : [
+                "1144"
+            ]
+        },
 
         {
             "name": "Awesome OS Server Basic (multi-entitlement)",
