@@ -25,12 +25,12 @@ describe 'Candlepin Import' do
 
   it 'creates pools' do
     pools = @import_owner_client.list_pools({:owner => @import_owner['id']})
-    pools.length.should == 3
+    pools.length.should == 4
   end
 
   it 'ignores multiplier for pool quantity' do
     pools = @import_owner_client.list_pools({:owner => @import_owner['id']})
-    pools.length.should == 3
+    pools.length.should == 4
 
     # 1 product has a multiplier of 2 upstream, the other 1.
     # 1 entitlement is consumed from each pool for the export, so
@@ -248,5 +248,13 @@ describe 'Candlepin Import' do
     upstream.name.should == consumer['name']
     # upstream.type caused a failure on some machines
     upstream['type'].should == consumer['type']
+  end
+  
+  it 'should contain all sub product data' do
+    pool = @cp.list_pools(:owner => @import_owner.id, :product => @product3.id)[0]
+    pool.should_not be_nil
+    pool["subProductId"].should == @sub_product.id
+    pool["subProvidedProducts"].length.should == 1
+    pool["subProvidedProducts"][0]["productId"].should == @sub_provided_prod.id
   end
 end

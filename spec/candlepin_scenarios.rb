@@ -240,7 +240,7 @@ module ExportMethods
     
     @sub_product = @cp.create_product(random_string('sub-prov-prod'), random_string(),
         {"sockets" => "2"})
-    @sub_provided_prod = @cp.create_product(random_string("1234"), random_string());
+    @sub_provided_prod = @cp.create_product(random_string(), random_string());
     
     content = create_content({:metadata_expire => 6000,
                               :required_tags => "TAG1,TAG2"})
