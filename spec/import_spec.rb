@@ -25,18 +25,19 @@ describe 'Candlepin Import' do
 
   it 'creates pools' do
     pools = @import_owner_client.list_pools({:owner => @import_owner['id']})
-    pools.length.should == 3
+    pools.length.should == 4
   end
 
   it 'ignores multiplier for pool quantity' do
     pools = @import_owner_client.list_pools({:owner => @import_owner['id']})
-    pools.length.should == 3
+    pools.length.should == 4
 
-    # 1 product has a multiplier of 2 upstream, the other 1.
+    # 1 product has a multiplier of 2 upstream, the others 1.
     # 1 entitlement is consumed from each pool for the export, so
-    # quantity should be 1 on both.
+    # quantity should be 1 on each.
     pools[0]['quantity'].should == 1
     pools[1]['quantity'].should == 1
+    pools[2]['quantity'].should == 1
   end
 
   it 'modifies owner to reference upstream consumer' do
@@ -142,6 +143,8 @@ describe 'Candlepin Import' do
     owner2 = @cp.create_owner(random_string("owner1"))
     @cp.import(owner1['key'], newer_export)
     @cp.import(owner2['key'], older_export)
+    @cp.delete_owner(owner1['key'])
+    @cp.delete_owner(owner2['key'])
   end
 
   it 'should return 409 when importing manifest from different subscription management application' do
@@ -219,6 +222,7 @@ describe 'Candlepin Import' do
         e.http_code.should == 400
         exception = true
     end
+    @cp.delete_owner(owner2['key'])
     exception.should == true
   end
 
