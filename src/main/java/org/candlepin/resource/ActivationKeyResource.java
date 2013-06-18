@@ -28,7 +28,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.interceptor.Verify;
@@ -155,13 +154,6 @@ public class ActivationKeyResource {
             throw new BadRequestException(
                 i18n.tr("The quantity must not be greater than the total " +
                     "allowed for the pool"));
-        }
-        if (pool.isHostRestricted() &&
-            !StringUtils.isBlank(key.getHostRestriction()) &&
-            !pool.getRequiredHost().equals(key.getHostRestriction())) {
-            throw new BadRequestException(
-                i18n.tr("Pools with host restrictions must be associated to the " +
-                    "same host to be used the same activation key."));
         }
         key.addPool(pool, quantity);
         activationKeyCurator.update(key);
