@@ -21,9 +21,9 @@ describe 'Candlepin Import Update' do
   end
 
   it 'should successfully update the import' do
-    @sublist.size().should == 3
+    @sublist.size().should == 4
     new_sublist = @cp.list_subscriptions(@import_owner['key'])
-    new_sublist.size().should == 4
+    new_sublist.size().should == 5
 
     hasChanged = false
     new_sublist.each do |new_sub|
