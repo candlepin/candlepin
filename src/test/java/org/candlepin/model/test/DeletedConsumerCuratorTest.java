@@ -18,6 +18,9 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.Date;
+import java.util.List;
+
 import org.candlepin.model.Consumer;
 import org.candlepin.model.DeletedConsumer;
 import org.candlepin.model.DeletedConsumerCurator;
@@ -26,14 +29,15 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.List;
-
 /**
  * DeletedConsumerCuratorTest
  */
 public class DeletedConsumerCuratorTest extends DatabaseTestFixture {
 
     private DeletedConsumerCurator dcc;
+    private Date twoResultsDate;
+    private Date oneResultDate;
+
 
     @Before
     public void init() {
@@ -42,10 +46,28 @@ public class DeletedConsumerCuratorTest extends DatabaseTestFixture {
 
         DeletedConsumer dc = new DeletedConsumer("abcde", "10");
         dcc.create(dc);
+        try {
+            Thread.sleep(5);
+        }
+        catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
 
+
+        // save the current time, DCs created after this will have
+        // a created timestamp after this time
+        twoResultsDate = new Date();
         dc = new DeletedConsumer("fghij", "10");
         dcc.create(dc);
-
+        try {
+            Thread.sleep(5);
+        }
+        catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        oneResultDate = new Date();
         dc = new DeletedConsumer("klmno", "20");
         dcc.create(dc);
     }
@@ -94,5 +116,12 @@ public class DeletedConsumerCuratorTest extends DatabaseTestFixture {
         c = mock(Consumer.class);
         when(c.getUuid()).thenReturn("dontfind");
         assertEquals(0, dcc.countByConsumer(c));
+    }
+
+    @Test
+    public void findByDate() {
+        assertEquals(2, dcc.findByDate(twoResultsDate).size());
+        assertEquals(1, dcc.findByDate(oneResultDate).size());
+        assertEquals(0, dcc.findByDate(new Date()).size());
     }
 }
