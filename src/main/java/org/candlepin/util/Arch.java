@@ -26,16 +26,9 @@ public class Arch {
     private static ArrayList<String> x86Labels = new ArrayList<String>() {
         {
             add("i386");
-            add("i386");
+            add("i486");
             add("i586");
             add("i686");
-        }
-    };
-
-    private static ArrayList<String> ppcLabels = new ArrayList<String>() {
-        {
-            add("ppc");
-            add("ppc64");
         }
     };
 
@@ -66,56 +59,34 @@ public class Arch {
      * @param contentArch
      * @param consumerArch
      * @return true if contentArch is compatible with consumerArch, false
-     * otherwise
+     *         otherwise. Note that this is stricter than strict binary
+     *         compatibility, and should not be used for that. This is
+     *         just to determine appropriate Content set arch matches.
+     *         It supports exact match, 'ALL', 'noarch', and the
+     *         'x86' alias.
      */
     public static boolean contentForConsumer(String contentArch, String consumerArch) {
         boolean compatible = false;
-        // FIXME: hardcode exact matches on label
-        //        only atm
 
-        // handle "ALL" arch, sigh
+        // handle "ALL" arch
         if (contentArch.equals("ALL")) {
             compatible = true;
         }
-        else if (contentArch.equals("noarch")) {
-            compatible = true;
-        }
-        // Exact arch match
+        // exact match
         else if (consumerArch.equals(contentArch)) {
             compatible = true;
         }
-        // x86_64 can use content for i386 etc
-        else if (consumerArch.equals("x86_64")) {
-            if (x86Labels.contains(contentArch)) {
+        // noarch content can run on any consumer
+        else if (contentArch.equals("noarch")) {
+            compatible = true;
+        }
+        // x86 is an alias for anything that
+        // could run on an i?86 machine
+        else if (contentArch.equals("x86")) {
+            if (x86Labels.contains(consumerArch)) {
                 compatible = true;
             }
         }
-        // i686 can run all x86 arches
-        else if (consumerArch.equals("i686")) {
-            if (x86Labels.contains(contentArch)) {
-                compatible = true;
-            }
-        }
-        // ppc64 can run ppc. Mostly...
-        else if (consumerArch.equals("ppc64")) {
-            if (ppcLabels.contains(contentArch)) {
-                compatible = true;
-            }
-        }
-
-        /* In theory, ia64 can run x86 and x86_64 content.
-         * I think s390x can use s390 content as well.
-         * ppc only runs ppc
-         *
-         * But for now, we only except exact matches.
-         */
-
-        // FIXME: we may end up needing to compare to "ALL"
-        // as well.
-
-        // This could be some fancy db magic if someone were
-        // so included, but more than likely will just be
-        // some map look ups from a constant map.
 
         return compatible;
     }

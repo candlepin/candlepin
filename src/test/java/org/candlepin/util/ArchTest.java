@@ -35,8 +35,29 @@ public class ArchTest {
 
     @Test
     public void testContentFori686ForX8664() {
-        assertTrue(Arch.contentForConsumer("i686", "x86_64"));
+        assertFalse(Arch.contentForConsumer("i686", "x86_64"));
     }
+
+    @Test
+    public void testContentForConsumerX86Fori686() {
+        assertTrue(Arch.contentForConsumer("x86", "i686"));
+    }
+
+    @Test
+    public void testContentForConsumerX86Fori386() {
+        assertTrue(Arch.contentForConsumer("x86", "i386"));
+    }
+
+    @Test
+    public void testContentForConsumerX86ForX8664() {
+        assertFalse(Arch.contentForConsumer("x86", "x86_64"));
+    }
+
+    @Test
+    public void testContentForConsumerX86Fors390x() {
+        assertFalse(Arch.contentForConsumer("x86", "s390x"));
+    }
+
 
     @Test
     public void testContentForConsumeri386Fori686() {
@@ -52,7 +73,7 @@ public class ArchTest {
 
     @Test
     public void testContentForConsumerPpcForPpc64() {
-        assertTrue(Arch.contentForConsumer("ppc", "ppc64"));
+        assertFalse(Arch.contentForConsumer("ppc", "ppc64"));
     }
 
     @Test
