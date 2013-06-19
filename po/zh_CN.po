@@ -4,14 +4,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-06-19 16:01-0300\n"
+"POT-Creation-Date: 2012-06-27 12:35-0400\n"
 "PO-Revision-Date: 2013-03-19 07:08-0400\n"
 "Last-Translator: leahliu <lliu@redhat.com>\n"
 "Language-Team: Chinese (Simplified, China)\n"
-"Language: zh-Hans-CN\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: zh-Hans-CN\n"
 "Plural-Forms: nplurals=1; plural=0\n"
 "X-Generator: Zanata 2.2.2\n"
 
@@ -797,10 +797,9 @@ msgstr "您必须指定一个所有者密钥、客户 UUID 或主要名称。"
 
 #: src/main/java/org/candlepin/resource/JobResource.java:114
 msgid ""
-"You must specify one of owner key, consumer UUID, or principal name, but not "
-"all."
-msgstr ""
-"您必须指定拥有者密钥、用户 UUID 或者主要名称中的一个，但不需要全都指定。"
+"You must specify one of owner key, consumer UUID, or principal name, but not"
+" all."
+msgstr "您必须指定拥有者密钥、用户 UUID 或者主要名称中的一个，但不需要全都指定。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author xhuang
@@ -1076,18 +1075,17 @@ msgstr "获取 oauth 客户密钥出错"
 msgid ""
 "The client must support at least v{0} certificates in order to use "
 "subscription: {1}. A newer client may be available to address this problem."
-msgstr ""
-"客户端必须至少支持 v{0} 个证书方可使用订阅：{1}。较新的客户端可解决这个问题。"
+msgstr "客户端必须至少支持 v{0} 个证书方可使用订阅：{1}。较新的客户端可解决这个问题。"
 
 #: src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:278
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase https://access.redhat.com/knowledge/"
-"node/129003 for more information."
+"to address this problem. See kbase "
+"https://access.redhat.com/knowledge/node/129003 for more information."
 msgstr ""
-"证书 {0} 的内容组过多。较新的客户端可解决这个问题。详情请查看知识库 https://"
-"access.redhat.com/knowledge/node/129003。"
+"证书 {0} 的内容组过多。较新的客户端可解决这个问题。详情请查看知识库 "
+"https://access.redhat.com/knowledge/node/129003。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author xhuang
@@ -1161,7 +1159,8 @@ msgstr ""
 #: src/main/java/org/candlepin/controller/Entitler.java:146
 #, java-format
 msgid ""
-"Consumer does not support instance based calculation required by pool ''{0}''"
+"Consumer does not support instance based calculation required by pool "
+"''{0}''"
 msgstr ""
 
 #: src/main/java/org/candlepin/controller/Entitler.java:150
@@ -1282,12 +1281,12 @@ msgstr "fact ''{0}'' 必须是一个整数而不是 ''{1}''。那个 fact 还没
 msgid ""
 "The fact ''{0}'' must have a positive integer value instead of ''{1}''. No "
 "value will exist for that fact."
-msgstr ""
-"fact ''{0}'' 必须是一个正整数而不是 ''{1}''。那个 fact 还没有任何数值。"
+msgstr "fact ''{0}'' 必须是一个正整数而不是 ''{1}''。那个 fact 还没有任何数值。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author leahliu
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:405
 #, java-format
-msgid "The consumer with UUID {0} is a virtual guest. It does not have guests."
+msgid ""
+"The consumer with UUID {0} is a virtual guest. It does not have guests."
 msgstr "UUID 为 {0} 的客户是虚拟客体。它没有虚拟机。"

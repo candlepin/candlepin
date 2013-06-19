@@ -5,13 +5,13 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2013-06-19 16:01-0300\n"
-"PO-Revision-Date: 2013-03-19 03:58-0400\n"
+"PO-Revision-Date: 2013-05-10 06:48-0400\n"
 "Last-Translator: ngoswami <ngoswami@fedoraproject.org>\n"
 "Language-Team: Assamese\n"
-"Language: as\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: as\n"
 "Plural-Forms: \n"
 "X-Generator: Zanata 2.2.2\n"
 
@@ -296,7 +296,8 @@ msgstr "অপৰ্যাপ্ত অনুমতিসমূহ"
 # keys, author ngoswami
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:331
 msgid "Must specify an org to register with activation keys."
-msgstr "সক্ৰিয়কৰণ কি'সমূহৰ সৈতে ৰেজিস্টাৰ কৰিবলে এটা সংঘঠন ধাৰ্য্য কৰিব লাগিব।"
+msgstr ""
+"সক্ৰিয়কৰণ কি'সমূহৰ সৈতে ৰেজিস্টাৰ কৰিবলে এটা সংঘঠন ধাৰ্য্য কৰিব লাগিব।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ngoswami
@@ -491,8 +492,8 @@ msgid ""
 "Consumer {0} cannot be exported. A manifest cannot be made for consumer of "
 "type ''{1}''."
 msgstr ""
-"উপভোক্তা {0} ক এক্সপোৰ্ট কৰিব নোৱাৰি। ধৰণ ''{1}'' ৰ উপভোক্তাৰ বাবে এটা ব্যক্ত "
-"নিৰ্মাণ কৰিব নোৱাৰি।"
+"উপভোক্তা {0} ক এক্সপোৰ্ট কৰিব নোৱাৰি। ধৰণ ''{1}'' ৰ উপভোক্তাৰ বাবে এটা "
+"ব্যক্ত নিৰ্মাণ কৰিব নোৱাৰি।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -545,7 +546,8 @@ msgstr "UUID ''{0}'' ৰ সৈতে উৎপাদন পোৱা নগল�
 #: src/main/java/org/candlepin/resource/ProductResource.java:224
 #, java-format
 msgid "Product with UUID ''{0}'' cannot be deleted while subscriptions exist."
-msgstr "স্বাক্ষৰণসমূহ অস্তিত্ববান থাকোতে UUID ''{0}'' ৰ সৈতে উৎপাদন মচিব নোৱাৰি।"
+msgstr ""
+"স্বাক্ষৰণসমূহ অস্তিত্ববান থাকোতে UUID ''{0}'' ৰ সৈতে উৎপাদন মচিব নোৱাৰি।"
 
 #: src/main/java/org/candlepin/resource/ProductResource.java:279
 msgid "Must specify product ID."
@@ -566,7 +568,8 @@ msgstr "পৰিমাণ ০ কে ডাঙৰ হব লাগিব"
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:141
 msgid ""
 "Cannot add pools restricted to consumer type 'person' to activation keys."
-msgstr "সক্ৰিয়কৰণ কি'সমূহলে উপভোক্তা ধৰণ 'person' লে সীমিত পুলসমূহ যোগ কৰিব নোৱাৰি।"
+msgstr ""
+"সক্ৰিয়কৰণ কি'সমূহলে উপভোক্তা ধৰণ 'person' লে সীমিত পুলসমূহ যোগ কৰিব নোৱাৰি।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ngoswami
@@ -575,8 +578,8 @@ msgid ""
 "Error: Only pools with multi-entitlement product subscriptions can be added "
 "to the activation key with a quantity greater than one."
 msgstr ""
-"ত্ৰুটি: কেৱল বহু-অনুজ্ঞা উৎপাদন স্বাক্ষৰণসমূহৰ লগত থকা পুলসমূহক সক্ৰিয়কৰণ কি'লে একতকে "
-"অধিক এটা পৰিমাণৰ সৈতে যোগ কৰিব পাৰি। "
+"ত্ৰুটি: কেৱল বহু-অনুজ্ঞা উৎপাদন স্বাক্ষৰণসমূহৰ লগত থকা পুলসমূহক সক্ৰিয়কৰণ "
+"কি'লে একতকে অধিক এটা পৰিমাণৰ সৈতে যোগ কৰিব পাৰি। "
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ngoswami
@@ -815,15 +818,16 @@ msgstr "ID ''{0}'' ৰ সৈতে অনুজ্ঞা পুল পোৱা
 
 #: src/main/java/org/candlepin/resource/JobResource.java:108
 msgid "You must specify an owner key, consumer UUID, or principal name."
-msgstr "আপুনি এট গৰাকী কি', উপভোক্তা UUID, অথবা প্ৰিন্সিপাল নাম ধাৰ্য্য কৰিব লাগিব।"
+msgstr ""
+"আপুনি এট গৰাকী কি', উপভোক্তা UUID, অথবা প্ৰিন্সিপাল নাম ধাৰ্য্য কৰিব লাগিব।"
 
 #: src/main/java/org/candlepin/resource/JobResource.java:114
 msgid ""
-"You must specify one of owner key, consumer UUID, or principal name, but not "
-"all."
+"You must specify one of owner key, consumer UUID, or principal name, but not"
+" all."
 msgstr ""
-"আপুনি গৰাকী কি', উপভোক্তা UUID, অথবা প্ৰিন্সিপাল নামৰ এটা ধাৰ্য্য কৰিব লাগিব, কিন্তু "
-"সকলো নহয়।"
+"আপুনি গৰাকী কি', উপভোক্তা UUID, অথবা প্ৰিন্সিপাল নামৰ এটা ধাৰ্য্য কৰিব "
+"লাগিব, কিন্তু সকলো নহয়।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ngoswami
@@ -886,39 +890,40 @@ msgstr ""
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:57
 msgid "Not covered by a valid subscription."
-msgstr ""
+msgstr "এটা বৈধ স্বাক্ষৰণৰ অন্তৰ্গত নহয়।"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:60
 #, java-format
 msgid "Covers architecture {0} but the system is {1}."
-msgstr ""
+msgstr "স্থাপত্য {0} ক অন্তৰ্ভুক্ত কৰে কিন্তু চিস্টেম {1}।"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:65
 #, java-format
 msgid "Only covers {0} of {1} sockets."
-msgstr ""
+msgstr "{1} চকেটসমূহৰ কেৱল {0} ক অন্তৰ্ভুক্ত কৰে।"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:70
 #, java-format
 msgid "Only covers {0} of {1} cores."
-msgstr ""
+msgstr "{1} কেন্দ্ৰসমূহৰ কেৱল {0} ক অন্তৰ্ভুক্ত কৰে।"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:75
 #, java-format
 msgid "Only covers {0}GB of {1}GB of RAM."
-msgstr ""
+msgstr "{1}GB RAM ৰ কেৱল {0}GB অন্তৰ্ণুক্ত কৰে।"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:80
 #, java-format
 msgid "{2} COVERAGE PROBLEM.  Covers {0} of {1}"
-msgstr ""
+msgstr "{2} অন্তৰ্ভুক্তকৰণ সমস্যা।  {1} ৰ {0} অন্তৰ্ভুক্ত কৰে"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ngoswami
 #: src/main/java/org/candlepin/policy/js/entitlement/AbstractEntitlementRules.java:136
 #, java-format
 msgid "''{0}'' Should contain name, priority and at least one attribute"
-msgstr "''{0}'' এ নাম, প্ৰাথমিকতা আৰু অন্তত এটা বৈশিষ্ট অন্তৰ্ভুক্ত কৰিব লাগিব"
+msgstr ""
+"''{0}'' এ নাম, প্ৰাথমিকতা আৰু অন্তত এটা বৈশিষ্ট অন্তৰ্ভুক্ত কৰিব লাগিব"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1034,12 +1039,15 @@ msgstr "আপস্ট্ৰিম স্বাক্ষৰণ ব্যৱস�
 msgid ""
 "This subscription management application has already been imported by "
 "another owner."
-msgstr "এই স্বাক্ষৰণ ব্যৱস্থাপনা এপ্লিকেচন অন্য গৰাকী দ্বাৰা ইতিমধ্যে ইমপোৰ্ট কৰা হৈছে।"
+msgstr ""
+"এই স্বাক্ষৰণ ব্যৱস্থাপনা এপ্লিকেচন অন্য গৰাকী দ্বাৰা ইতিমধ্যে ইমপোৰ্ট কৰা "
+"হৈছে।"
 
 #: src/main/java/org/candlepin/sync/ConsumerImporter.java:82
 msgid ""
 "Owner has already imported from another subscription management application."
-msgstr "গৰাকীয়ে ইতিমধ্যে অন্য স্বাক্ষৰণ ব্যৱস্থাপনা এপ্লিকেচনৰ পৰা ইমপোৰ্ট কৰিছে।"
+msgstr ""
+"গৰাকীয়ে ইতিমধ্যে অন্য স্বাক্ষৰণ ব্যৱস্থাপনা এপ্লিকেচনৰ পৰা ইমপোৰ্ট কৰিছে।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ngoswami
@@ -1104,19 +1112,19 @@ msgid ""
 "The client must support at least v{0} certificates in order to use "
 "subscription: {1}. A newer client may be available to address this problem."
 msgstr ""
-"ক্লাএন্টে স্বাক্ষৰণ: {1} ব্যৱহাৰ কৰিবলে অন্তত v{0} প্ৰমাণপত্ৰসমূহ সমৰ্থন কৰিব লাগিব। "
-"এই সমস্যাক চাবলে এটা নতুন ক্লাএন্ট উপলব্ধ থাকিব পাৰে।"
+"ক্লাএন্টে স্বাক্ষৰণ: {1} ব্যৱহাৰ কৰিবলে অন্তত v{0} প্ৰমাণপত্ৰসমূহ সমৰ্থন "
+"কৰিব লাগিব। এই সমস্যাক চাবলে এটা নতুন ক্লাএন্ট উপলব্ধ থাকিব পাৰে।"
 
 #: src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:278
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase https://access.redhat.com/knowledge/"
-"node/129003 for more information."
+"to address this problem. See kbase "
+"https://access.redhat.com/knowledge/node/129003 for more information."
 msgstr ""
-"প্ৰমাণপত্ৰ {0} ৰ বাবে অত্যাধিক সমল সংহতি। এই সমস্যাক চাবলে এটা নতুন ক্লাএন্ট উপলব্ধ "
-"থাকিব পাৰে। অধিক তথ্যৰ বাবে kbase https://access.redhat.com/knowledge/"
-"node/129003 চাওক।"
+"প্ৰমাণপত্ৰ {0} ৰ বাবে অত্যাধিক সমল সংহতি। এই সমস্যাক চাবলে এটা নতুন ক্লাএন্ট"
+" উপলব্ধ থাকিব পাৰে। অধিক তথ্যৰ বাবে kbase "
+"https://access.redhat.com/knowledge/node/129003 চাওক।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ngoswami
@@ -1139,7 +1147,8 @@ msgid ""
 "This consumer is already subscribed to the product matching pool with id "
 "''{0}''."
 msgstr ""
-"এইজন উপভোক্তা ইতিমধ্যে আইডি ''{0}'' ৰ সৈতে উৎপাদন মিল খোৱা পুলৰ লগত স্বাক্ষৰীত।"
+"এইজন উপভোক্তা ইতিমধ্যে আইডি ''{0}'' ৰ সৈতে উৎপাদন মিল খোৱা পুলৰ লগত "
+"স্বাক্ষৰীত।"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:112
 #, java-format
@@ -1186,12 +1195,13 @@ msgstr "পুল ভাৰছুৱেল অতিথিসমূহৰ বা
 #: src/main/java/org/candlepin/controller/Entitler.java:142
 #, java-format
 msgid "Quantity ''{0}'' is not a multiple of instance multiplier ''{1}''"
-msgstr ""
+msgstr "পৰিমাণ '{0}'' ইনস্টেন্স মাল্টিপ্লায়াৰ ''{1}'' ৰ বহুগুণ নহয়"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:146
 #, java-format
 msgid ""
-"Consumer does not support instance based calculation required by pool ''{0}''"
+"Consumer does not support instance based calculation required by pool "
+"''{0}''"
 msgstr ""
 
 #: src/main/java/org/candlepin/controller/Entitler.java:150
@@ -1292,7 +1302,8 @@ msgstr "বৈশিষ্ট্য ''{0}'' এটা বুলিয়ান ম�
 msgid ""
 "You cannot create a circular reference for products that ''{0}'' relies on."
 msgstr ""
-"''{0}'' এ নিৰ্ভৰ কৰা উৎপাদনসমূহৰ বাবে আপুনি এটা চক্ৰিয় প্ৰসংগ সৃষ্টি কৰিব নোৱাৰে।"
+"''{0}'' এ নিৰ্ভৰ কৰা উৎপাদনসমূহৰ বাবে আপুনি এটা চক্ৰিয় প্ৰসংগ সৃষ্টি কৰিব "
+"নোৱাৰে।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1307,8 +1318,8 @@ msgid ""
 "The fact ''{0}'' must be an integer instead of ''{1}''. No value will exist "
 "for that fact."
 msgstr ""
-"ফেক্ট ''{0}'', {1} ৰ পৰিবৰ্তে এটা পূৰ্ণসংখ্যা হব লাগিব। সেই ফেক্টৰ বাবে কোনো মান "
-"অস্তিত্ববান নহয়।"
+"ফেক্ট ''{0}'', {1} ৰ পৰিবৰ্তে এটা পূৰ্ণসংখ্যা হব লাগিব। সেই ফেক্টৰ বাবে কোনো"
+" মান অস্তিত্ববান নহয়।"
 
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:333
 #, java-format
@@ -1316,12 +1327,13 @@ msgid ""
 "The fact ''{0}'' must have a positive integer value instead of ''{1}''. No "
 "value will exist for that fact."
 msgstr ""
-"ফেক্ট ''{0}'' ৰ ''{1}'' পৰিবৰ্তে এটা ধণাত্মক পূৰ্ণসংখ্যা থাকিব লাগিব। কোনো মান সেই "
-"ফেক্টৰ বাবে অস্তিত্ববান নাথাকে।"
+"ফেক্ট ''{0}'' ৰ ''{1}'' পৰিবৰ্তে এটা ধণাত্মক পূৰ্ণসংখ্যা থাকিব লাগিব। কোনো "
+"মান সেই ফেক্টৰ বাবে অস্তিত্ববান নাথাকে।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ngoswami
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:405
 #, java-format
-msgid "The consumer with UUID {0} is a virtual guest. It does not have guests."
+msgid ""
+"The consumer with UUID {0} is a virtual guest. It does not have guests."
 msgstr "UUID {0} ৰ সৈতে উপভোক্তা এজন ভাৰছুৱেল অতিথি। ইয়াৰ কোনো অতিথি নাই।"

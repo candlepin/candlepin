@@ -1,18 +1,19 @@
 # Krishnababu Krothapalli <kkrothap@redhat.com>, 2012.
 # Krishnababu Krothapalli <kkrothap@redhat.com>, 2012, 2013.
 # kkrothap <kkrothap@fedoraproject.org>, 2012. #zanata
+# kkrothap <kkrothap@fedoraproject.org>, 2013. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2013-06-19 16:01-0300\n"
-"PO-Revision-Date: 2013-03-19 09:38-0400\n"
-"Last-Translator: Krishnababu Krothapalli <kkrothap@redhat.com>\n"
+"PO-Revision-Date: 2013-05-15 07:35-0400\n"
+"Last-Translator: kkrothap <kkrothap@fedoraproject.org>\n"
 "Language-Team: Telugu <Fedora-trans-te@redhat.com>\n"
-"Language: te\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: te\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "X-Generator: Zanata 2.2.2\n"
 
@@ -433,7 +434,8 @@ msgstr "ఆటో-బైండింగ్ అప్పుడు పరిమా
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1383
 #, java-format
 msgid "Unable to attach a subscription for a product that has no pool: {0} "
-msgstr "ఏ పూల్ లేని వుత్పత్తి కొరకు సబ్‌స్క్రిప్షన్ అనుబందించలేక పోయింది: {0} "
+msgstr ""
+"ఏ పూల్ లేని వుత్పత్తి కొరకు సబ్‌స్క్రిప్షన్ అనుబందించలేక పోయింది: {0} "
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -487,7 +489,9 @@ msgstr "వరుస సంఖ్య {0}తో యెన్‌టైటిల్
 msgid ""
 "Consumer {0} cannot be exported. A manifest cannot be made for consumer of "
 "type ''{1}''."
-msgstr "వినియోగదారి {0} యెగుమతికాలేదు. ''{1}'' రకమైన వినియోగదారి కొరకు మానిఫెస్ట్ చేయబడలేదు."
+msgstr ""
+"వినియోగదారి {0} యెగుమతికాలేదు. ''{1}'' రకమైన వినియోగదారి కొరకు మానిఫెస్ట్ "
+"చేయబడలేదు."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -514,7 +518,8 @@ msgstr " UUID {0} తో వినియోగదారి వర్చ్యు
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:118
 #, java-format
 msgid "Consumer: {0} has no entitlement for product {1}"
-msgstr "వినియోగదారి: {0} యెటువంటి యెన్‌టైటిల్‌మెంట్స్ వుత్పత్తి {1} కొరకు కలిగిలేదు"
+msgstr ""
+"వినియోగదారి: {0} యెటువంటి యెన్‌టైటిల్‌మెంట్స్ వుత్పత్తి {1} కొరకు కలిగిలేదు"
 
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:193
 msgid "Quantity value must be greater than 0"
@@ -538,7 +543,8 @@ msgstr "UUID \"{0}\" తో వుత్పత్తి కనుగొనలే
 #: src/main/java/org/candlepin/resource/ProductResource.java:224
 #, java-format
 msgid "Product with UUID ''{0}'' cannot be deleted while subscriptions exist."
-msgstr "UUID ''{0}'' తో వుత్పత్తి తొలగించబడలేదు సబ్‌స్క్రిప్షన్లు వున్నప్పుడు."
+msgstr ""
+"UUID ''{0}'' తో వుత్పత్తి తొలగించబడలేదు సబ్‌స్క్రిప్షన్లు వున్నప్పుడు."
 
 #: src/main/java/org/candlepin/resource/ProductResource.java:279
 msgid "Must specify product ID."
@@ -559,7 +565,9 @@ msgstr "పరిమాణం తప్పక 0 కన్నా యెక్క�
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:141
 msgid ""
 "Cannot add pools restricted to consumer type 'person' to activation keys."
-msgstr "వినియోగదారి రకం 'person' కు నిర్భందించివున్న పూల్స్ ను క్రియాశీల కీలకు జతచేయలేము."
+msgstr ""
+"వినియోగదారి రకం 'person' కు నిర్భందించివున్న పూల్స్ ను క్రియాశీల కీలకు "
+"జతచేయలేము."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author kkrothap
@@ -568,8 +576,8 @@ msgid ""
 "Error: Only pools with multi-entitlement product subscriptions can be added "
 "to the activation key with a quantity greater than one."
 msgstr ""
-"దోషం: ఒకటి కన్నా యెక్కువ పరిమాణంతో బహుళ-యెన్టైటిల్మెంట్ వుత్పత్తి సబ్‌స్క్రిప్షన్సుతో వున్న పూల్సు మాత్రమే "
-"క్రియాశీల కీకు జతచేయబడును."
+"దోషం: ఒకటి కన్నా యెక్కువ పరిమాణంతో బహుళ-యెన్టైటిల్మెంట్ వుత్పత్తి "
+"సబ్‌స్క్రిప్షన్సుతో వున్న పూల్సు మాత్రమే క్రియాశీల కీకు జతచేయబడును."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author kkrothap
@@ -663,7 +671,8 @@ msgid ""
 "The activation key name ''{0}'' must be alphanumeric or include the "
 "characters '-' or '_'"
 msgstr ""
-"క్రియాశీల కీ పేరు ''{0}'' తప్పక అల్ఫాన్యూమరిక్ అయివుండాలి లేదా '-' లేదా '_' అక్షరాలను కలిగివుండాలి"
+"క్రియాశీల కీ పేరు ''{0}'' తప్పక అల్ఫాన్యూమరిక్ అయివుండాలి లేదా '-' లేదా '_' "
+"అక్షరాలను కలిగివుండాలి"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:512
 #, java-format
@@ -797,13 +806,16 @@ msgstr "ఐడి \"{0}\" తో యెన్టైటిల్మెంట్ �
 
 #: src/main/java/org/candlepin/resource/JobResource.java:108
 msgid "You must specify an owner key, consumer UUID, or principal name."
-msgstr "మీరు యజమాని కీ, వినియోగదారి UUID, లేదా ప్రిన్సిపల్ పేరు తప్పక తెలుపాలి."
+msgstr ""
+"మీరు యజమాని కీ, వినియోగదారి UUID, లేదా ప్రిన్సిపల్ పేరు తప్పక తెలుపాలి."
 
 #: src/main/java/org/candlepin/resource/JobResource.java:114
 msgid ""
-"You must specify one of owner key, consumer UUID, or principal name, but not "
-"all."
-msgstr "యజమాని కీ, వినియోగదారి UUID, లేదా ప్రిన్సిపల్ పేరు వీటిలో వొకటి తెలుపవలెను, అన్నీ కాదు."
+"You must specify one of owner key, consumer UUID, or principal name, but not"
+" all."
+msgstr ""
+"యజమాని కీ, వినియోగదారి UUID, లేదా ప్రిన్సిపల్ పేరు వీటిలో వొకటి తెలుపవలెను, "
+"అన్నీ కాదు."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author kkrothap
@@ -862,32 +874,32 @@ msgstr ""
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:57
 msgid "Not covered by a valid subscription."
-msgstr ""
+msgstr "చెల్లునటువంటి సబ్‌స్క్రిప్షన్ చే కవర్ కాలేదు."
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:60
 #, java-format
 msgid "Covers architecture {0} but the system is {1}."
-msgstr ""
+msgstr "ఆకృతి {0} ను కవర్ చేస్తోంది అయితే వ్యవస్థ {1}."
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:65
 #, java-format
 msgid "Only covers {0} of {1} sockets."
-msgstr ""
+msgstr "{1} సాకెట్లలో {0} ను కవర్‌ చేస్తోంది."
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:70
 #, java-format
 msgid "Only covers {0} of {1} cores."
-msgstr ""
+msgstr "{1} కోర్‌లలో {0} మాత్రమే కవర్ చేస్తోంది."
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:75
 #, java-format
 msgid "Only covers {0}GB of {1}GB of RAM."
-msgstr ""
+msgstr "{1}GB RAM లో {0}GB  మాత్రమే కవర్ చేస్తోంది."
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:80
 #, java-format
 msgid "{2} COVERAGE PROBLEM.  Covers {0} of {1}"
-msgstr ""
+msgstr "{2} కవరేజ్ సమస్య.  {1} లో {0} మాత్రమే కవర్ చేయును."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author kkrothap
@@ -1010,12 +1022,15 @@ msgstr "అప్‌స్ట్రీమ్ సబ్‌స్క్రిప�
 msgid ""
 "This subscription management application has already been imported by "
 "another owner."
-msgstr "ఈ సబ్‌స్క్రిప్షన్ నిర్వహణ అనువర్తనం యిప్పటికే వేరొక యజమానిచే దిగుమతి చేసుకోబడెను."
+msgstr ""
+"ఈ సబ్‌స్క్రిప్షన్ నిర్వహణ అనువర్తనం యిప్పటికే వేరొక యజమానిచే దిగుమతి "
+"చేసుకోబడెను."
 
 #: src/main/java/org/candlepin/sync/ConsumerImporter.java:82
 msgid ""
 "Owner has already imported from another subscription management application."
-msgstr "యజమాని యిప్పటికే వేరొక సబ్‌స్క్రిప్షన్ నిర్వహణ అనువర్తనం నుండి దిగుమతైను."
+msgstr ""
+"యజమాని యిప్పటికే వేరొక సబ్‌స్క్రిప్షన్ నిర్వహణ అనువర్తనం నుండి దిగుమతైను."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author kkrothap
@@ -1080,25 +1095,27 @@ msgid ""
 "The client must support at least v{0} certificates in order to use "
 "subscription: {1}. A newer client may be available to address this problem."
 msgstr ""
-"క్లైంట్ తప్పక కనీసం v{0} ధృవీకరణపత్రాలకు తోడ్పాటునివ్వాలి సబ్‌స్క్రిప్షన్ వుపయోగించుటకు: {1}. ఈ "
-"సమస్యను గుర్తించుటకు కొత్త క్లైంట్ అందుబాటులో వుండవచ్చు."
+"క్లైంట్ తప్పక కనీసం v{0} ధృవీకరణపత్రాలకు తోడ్పాటునివ్వాలి సబ్‌స్క్రిప్షన్ "
+"వుపయోగించుటకు: {1}. ఈ సమస్యను గుర్తించుటకు కొత్త క్లైంట్ అందుబాటులో "
+"వుండవచ్చు."
 
 #: src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:278
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase https://access.redhat.com/knowledge/"
-"node/129003 for more information."
+"to address this problem. See kbase "
+"https://access.redhat.com/knowledge/node/129003 for more information."
 msgstr ""
-"ధృవీకరణపత్రం {0} కొరకు చాలా కాంటెంట్ సమితులు. ఈ సమస్యను గుర్తించుటకు కొత్త క్లైంట్ అందుబాటులో "
-"వుండవచ్చు. మరింత సమాచారం కొరకు కెబేస్  https://access.redhat.com/knowledge/"
-"node/129003 చూడండి."
+"ధృవీకరణపత్రం {0} కొరకు చాలా కాంటెంట్ సమితులు. ఈ సమస్యను గుర్తించుటకు కొత్త "
+"క్లైంట్ అందుబాటులో వుండవచ్చు. మరింత సమాచారం కొరకు కెబేస్  "
+"https://access.redhat.com/knowledge/node/129003 చూడండి."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author kkrothap
 #: src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java:145
 msgid "Standalone candlepin does not support redeeming a subscription."
-msgstr "సబ్‌స్క్రిప్షన్‌ను వెచ్చించుటకు స్టాండెలోన్ కాండిల్‌పిన్ తోడ్పాటునీయదు."
+msgstr ""
+"సబ్‌స్క్రిప్షన్‌ను వెచ్చించుటకు స్టాండెలోన్ కాండిల్‌పిన్ తోడ్పాటునీయదు."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author kkrothap
@@ -1114,7 +1131,9 @@ msgstr "సబ్‌స్క్రిప్షన్ పూల్ {0} లేద
 msgid ""
 "This consumer is already subscribed to the product matching pool with id "
 "''{0}''."
-msgstr "ఐడి ''{0}'' తో వుత్పత్తి సరిజోడీ పూల్‌కు యీ వినియోగదారి యిప్పటికే సబ్‌స్క్రైబ్ అయెను."
+msgstr ""
+"ఐడి ''{0}'' తో వుత్పత్తి సరిజోడీ పూల్‌కు యీ వినియోగదారి యిప్పటికే "
+"సబ్‌స్క్రైబ్ అయెను."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:112
 #, java-format
@@ -1128,7 +1147,9 @@ msgstr "ఐడి ''{0}'' తో ఏ సబ్‌స్క్రిప్షన�
 msgid ""
 "Consumers of this type are not allowed to subscribe to the pool with id "
 "''{0}''."
-msgstr "ఐడి ''{0}'' తో వున్న పూల్‌కు సబ్‌స్క్రైబ్ అగుటకు యీ రకమైన వినియోగదారులు అనుమతించబడరు."
+msgstr ""
+"ఐడి ''{0}'' తో వున్న పూల్‌కు సబ్‌స్క్రైబ్ అగుటకు యీ రకమైన వినియోగదారులు "
+"అనుమతించబడరు."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author kkrothap
@@ -1161,12 +1182,13 @@ msgstr "పూల్ వర్చ్యువల్ గెస్టులకు 
 #: src/main/java/org/candlepin/controller/Entitler.java:142
 #, java-format
 msgid "Quantity ''{0}'' is not a multiple of instance multiplier ''{1}''"
-msgstr ""
+msgstr "Quantity ''{0}'' అనునది ఇన్‌స్టాన్స్ గుణిజం ''{1}'' యొక్క గుణకం కాదు"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:146
 #, java-format
 msgid ""
-"Consumer does not support instance based calculation required by pool ''{0}''"
+"Consumer does not support instance based calculation required by pool "
+"''{0}''"
 msgstr ""
 
 #: src/main/java/org/candlepin/controller/Entitler.java:150
@@ -1190,19 +1212,24 @@ msgstr "ఐడి ''{0}'' తో వున్న పూల్‌నకు వి
 #, java-format
 msgid ""
 "Insufficient pool quantity available for adjustment to entitlement ''{0}''."
-msgstr "ఎన్టైటిల్మెంట్ ''{0}'' కు సర్దుబాటు చేయడానికి సరిపోని పూల్ పరిమాణం అందుబాటులోవుంది."
+msgstr ""
+"ఎన్టైటిల్మెంట్ ''{0}'' కు సర్దుబాటు చేయడానికి సరిపోని పూల్ పరిమాణం "
+"అందుబాటులోవుంది."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:184
 #: src/main/java/org/candlepin/controller/Entitler.java:189
 #, java-format
 msgid ""
 "Multi-entitlement not supported for pool connected with entitlement ''{0}''."
-msgstr "ఎన్టైటిల్మెంట్ ''{0}'' తో అనుసంధానమైవున్న పూల్ కొరకు బహుళ-ఎన్టైటిల్మెంట్ తోడ్పాటువుండదు."
+msgstr ""
+"ఎన్టైటిల్మెంట్ ''{0}'' తో అనుసంధానమైవున్న పూల్ కొరకు బహుళ-ఎన్టైటిల్మెంట్ "
+"తోడ్పాటువుండదు."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:194
 #, java-format
 msgid "Unable to adjust quantity for the entitlement with id ''{0}'': {1}"
-msgstr "ఐడి ''{0}'' తో వున్న ఎన్టైటిల్మెంట్ కొరకు పరిమాణం సర్దుబాటు చేయలేదు: {1}"
+msgstr ""
+"ఐడి ''{0}'' తో వున్న ఎన్టైటిల్మెంట్ కొరకు పరిమాణం సర్దుబాటు చేయలేదు: {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1215,7 +1242,9 @@ msgstr "ఈ వినియోగదారి యిప్పిటికే వ
 #, java-format
 msgid ""
 "There are not enough free subscriptions available for the product ''{0}''"
-msgstr "ఉత్పత్తి ''{0}'' కొరకు అక్కడ సరిపోయినన్ని వుచిత సబ్‌స్క్రిప్షన్లు అందుబాటులోలేవు"
+msgstr ""
+"ఉత్పత్తి ''{0}'' కొరకు అక్కడ సరిపోయినన్ని వుచిత సబ్‌స్క్రిప్షన్లు "
+"అందుబాటులోలేవు"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1227,7 +1256,9 @@ msgstr "ఈ రకమైన వినియోగదారులు వుత్
 #: src/main/java/org/candlepin/controller/Entitler.java:249
 #, java-format
 msgid "Only virtual systems can have subscription ''{0}'' attached."
-msgstr "వర్చ్యువల్ వ్యవస్థలు మాత్రమే సబ్‌స్క్రిప్షన్ ''{0}'' అనుబందించి కలిగివుండగలవు."
+msgstr ""
+"వర్చ్యువల్ వ్యవస్థలు మాత్రమే సబ్‌స్క్రిప్షన్ ''{0}'' అనుబందించి "
+"కలిగివుండగలవు."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1266,7 +1297,8 @@ msgstr "ఏట్రిబ్యూట్ ''{0}'' తప్పక బూలి�
 #, java-format
 msgid ""
 "You cannot create a circular reference for products that ''{0}'' relies on."
-msgstr "''{0}'' నమ్మకంవుంచు వుత్పత్తుల కొరకు మీరు సర్క్యులర్ రిఫరెన్స్ సృష్టించలేరు."
+msgstr ""
+"''{0}'' నమ్మకంవుంచు వుత్పత్తుల కొరకు మీరు సర్క్యులర్ రిఫరెన్స్ సృష్టించలేరు."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1281,7 +1313,8 @@ msgid ""
 "The fact ''{0}'' must be an integer instead of ''{1}''. No value will exist "
 "for that fact."
 msgstr ""
-"ఫాక్ట్ ''{0}'' తప్పక పూర్ణాంకం కావాలి ''{1}'' బదులుగా. ఫాక్ట్ కొరకు ఏ విలువ నిష్క్రమించదు."
+"ఫాక్ట్ ''{0}'' తప్పక పూర్ణాంకం కావాలి ''{1}'' బదులుగా. ఫాక్ట్ కొరకు ఏ విలువ "
+"నిష్క్రమించదు."
 
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:333
 #, java-format
@@ -1289,11 +1322,13 @@ msgid ""
 "The fact ''{0}'' must have a positive integer value instead of ''{1}''. No "
 "value will exist for that fact."
 msgstr ""
-"ఫాక్ట్ ''{0}'' తప్పకుండా ధన పూర్ణాంకం కావాలి ''{1}'' బదులుగా. ఫాక్ట్ కొరకు ఏ విలువ నిష్క్రమించదు."
+"ఫాక్ట్ ''{0}'' తప్పకుండా ధన పూర్ణాంకం కావాలి ''{1}'' బదులుగా. ఫాక్ట్ కొరకు ఏ"
+" విలువ నిష్క్రమించదు."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author kkrothap
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:405
 #, java-format
-msgid "The consumer with UUID {0} is a virtual guest. It does not have guests."
+msgid ""
+"The consumer with UUID {0} is a virtual guest. It does not have guests."
 msgstr "UUID {0} తో వినియోగదారి వర్చ్యువల్ గెస్టు. అది గెస్టులను కలిగిలేదు."

@@ -6,14 +6,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-06-19 16:01-0300\n"
+"POT-Creation-Date: 2012-06-27 12:35-0400\n"
 "PO-Revision-Date: 2013-03-21 08:46-0400\n"
 "Last-Translator: Gladys Guerrero Lozano <gladysguerrerolozano419@gmail.com>\n"
 "Language-Team: Spanish (Spain)\n"
-"Language: es-ES\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: es-ES\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "X-Generator: Zanata 2.2.2\n"
 
@@ -309,7 +309,8 @@ msgstr "No puede especificar el nombre de usuario con llaves de activación."
 # keys, author gguerrer
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:358
 msgid "A consumer type of 'person' cannot be used with activation keys"
-msgstr "No se puede usar un tipo de usuario 'persona' con llaves de activación"
+msgstr ""
+"No se puede usar un tipo de usuario 'persona' con llaves de activación"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -440,7 +441,8 @@ msgstr "No se puede especificar una cantidad al auto vincular."
 #, java-format
 msgid "Unable to attach a subscription for a product that has no pool: {0} "
 msgstr ""
-"No se pudo adjuntar una suscripción para un producto que no tiene grupo: {0} "
+"No se pudo adjuntar una suscripción para un producto que no tiene grupo: {0}"
+" "
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -677,8 +679,8 @@ msgid ""
 "The activation key name ''{0}'' must be alphanumeric or include the "
 "characters '-' or '_'"
 msgstr ""
-"El nombre de llave de activación ''{0}'' debe ser alfanumérico o incluye los "
-"caracteres '-' o '_'"
+"El nombre de llave de activación ''{0}'' debe ser alfanumérico o incluye los"
+" caracteres '-' o '_'"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:512
 #, java-format
@@ -748,8 +750,8 @@ msgstr "Problema al generar certificado Ueber para propietario {0}"
 #, java-format
 msgid "ueber certificate for owner {0} was not found. Please generate one."
 msgstr ""
-"No se encontró el certificado Ueber para propietario  {0}. Por favor generar "
-"uno.  "
+"No se encontró el certificado Ueber para propietario  {0}. Por favor generar"
+" uno.  "
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author gguerrer
@@ -821,8 +823,8 @@ msgstr ""
 
 #: src/main/java/org/candlepin/resource/JobResource.java:114
 msgid ""
-"You must specify one of owner key, consumer UUID, or principal name, but not "
-"all."
+"You must specify one of owner key, consumer UUID, or principal name, but not"
+" all."
 msgstr ""
 "Debe especificar ya sea la llave de propietario, la UUID de usuario o el "
 "nombre principal, pero no todos."
@@ -1110,15 +1112,15 @@ msgid ""
 "subscription: {1}. A newer client may be available to address this problem."
 msgstr ""
 "El cliente debe soportar por lo menos v{0} certificados para usar la "
-"suscripción: {1}. Un nuevo cliente puede estar disponible para resolver este "
-"problema."
+"suscripción: {1}. Un nuevo cliente puede estar disponible para resolver este"
+" problema."
 
 #: src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:278
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase https://access.redhat.com/knowledge/"
-"node/129003 for more information."
+"to address this problem. See kbase "
+"https://access.redhat.com/knowledge/node/129003 for more information."
 msgstr ""
 "Demasiados conjuntos de contenido para certificado {0}. Un cliente más "
 "reciente puede estar disponible para resolver este problema. Consulte la "
@@ -1162,8 +1164,8 @@ msgid ""
 "Consumers of this type are not allowed to subscribe to the pool with id "
 "''{0}''."
 msgstr ""
-"Los usuarios de este tipo no están autorizados para suscribirse al grupo con "
-"ID ''{0}''."
+"Los usuarios de este tipo no están autorizados para suscribirse al grupo con"
+" ID ''{0}''."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author gguerrer
@@ -1201,7 +1203,8 @@ msgstr ""
 #: src/main/java/org/candlepin/controller/Entitler.java:146
 #, java-format
 msgid ""
-"Consumer does not support instance based calculation required by pool ''{0}''"
+"Consumer does not support instance based calculation required by pool "
+"''{0}''"
 msgstr ""
 
 #: src/main/java/org/candlepin/controller/Entitler.java:150
@@ -1232,7 +1235,8 @@ msgstr "Cantidad del grupo disponible para ajuste al derecho ''{0}''."
 #, java-format
 msgid ""
 "Multi-entitlement not supported for pool connected with entitlement ''{0}''."
-msgstr "Multi-derechos no soportados para grupo conectado con derecho ''{0}''."
+msgstr ""
+"Multi-derechos no soportados para grupo conectado con derecho ''{0}''."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:194
 #, java-format
@@ -1263,7 +1267,8 @@ msgstr ""
 #: src/main/java/org/candlepin/controller/Entitler.java:249
 #, java-format
 msgid "Only virtual systems can have subscription ''{0}'' attached."
-msgstr "Solamente sistemas virtuales pueden tener ''{0}'' suscripción adjunta."
+msgstr ""
+"Solamente sistemas virtuales pueden tener ''{0}'' suscripción adjunta."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1335,5 +1340,6 @@ msgstr ""
 # keys, author gguerrer
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:405
 #, java-format
-msgid "The consumer with UUID {0} is a virtual guest. It does not have guests."
+msgid ""
+"The consumer with UUID {0} is a virtual guest. It does not have guests."
 msgstr "El usuario con UUID {0} es un huésped virtual. No tiene huéspedes."

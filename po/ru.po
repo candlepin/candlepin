@@ -4,16 +4,15 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-06-19 16:01-0300\n"
+"POT-Creation-Date: 2012-06-27 12:35-0400\n"
 "PO-Revision-Date: 2013-03-21 08:15-0400\n"
 "Last-Translator: ypoyarko <ypoyarko@redhat.com>\n"
 "Language-Team: Russian\n"
-"Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
-"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)\n"
+"Language: ru\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)\n"
 "X-Generator: Zanata 2.2.2\n"
 
 # translation auto-copied from project Candlepin, version master, document
@@ -803,8 +802,8 @@ msgstr "Необходимо указать ключ владельца, UUID к
 
 #: src/main/java/org/candlepin/resource/JobResource.java:114
 msgid ""
-"You must specify one of owner key, consumer UUID, or principal name, but not "
-"all."
+"You must specify one of owner key, consumer UUID, or principal name, but not"
+" all."
 msgstr ""
 "Необходимо указать лишь одно значение: ключ владельца, UUID клиента или имя "
 "субъекта."
@@ -1086,19 +1085,19 @@ msgid ""
 "subscription: {1}. A newer client may be available to address this problem."
 msgstr ""
 "Клиент должен поддерживать определенное число сертификатов (как минимум  "
-"{0}), чтобы иметь возможность использования подписки {1}. Обновление клиента "
-"может решить эту проблему."
+"{0}), чтобы иметь возможность использования подписки {1}. Обновление клиента"
+" может решить эту проблему."
 
 #: src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:278
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase https://access.redhat.com/knowledge/"
-"node/129003 for more information."
+"to address this problem. See kbase "
+"https://access.redhat.com/knowledge/node/129003 for more information."
 msgstr ""
 "Слишком много наборов содержимого для сертификата {0}. Обновление клиента "
-"может решить эту проблему. Подробнее на https://access.redhat.com/knowledge/"
-"node/129003."
+"может решить эту проблему. Подробнее на "
+"https://access.redhat.com/knowledge/node/129003."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ypoyarko
@@ -1172,7 +1171,8 @@ msgstr ""
 #: src/main/java/org/candlepin/controller/Entitler.java:146
 #, java-format
 msgid ""
-"Consumer does not support instance based calculation required by pool ''{0}''"
+"Consumer does not support instance based calculation required by pool "
+"''{0}''"
 msgstr ""
 
 #: src/main/java/org/candlepin/controller/Entitler.java:150
@@ -1306,5 +1306,6 @@ msgstr ""
 # keys, author ypoyarko
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:405
 #, java-format
-msgid "The consumer with UUID {0} is a virtual guest. It does not have guests."
+msgid ""
+"The consumer with UUID {0} is a virtual guest. It does not have guests."
 msgstr "Клиент с UUID {0} является виртуальным гостем. У него нет гостей."

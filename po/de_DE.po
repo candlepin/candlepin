@@ -4,14 +4,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-06-19 16:01-0300\n"
+"POT-Creation-Date: 2012-06-27 12:35-0400\n"
 "PO-Revision-Date: 2013-04-01 06:48-0400\n"
 "Last-Translator: hedda <hedda@fedoraproject.org>\n"
 "Language-Team: German (Germany)\n"
-"Language: de-DE\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: de-DE\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "X-Generator: Zanata 2.2.2\n"
 
@@ -357,8 +357,8 @@ msgstr ""
 #, java-format
 msgid "Activation key ''{0}'' not found for organization ''{1}''."
 msgstr ""
-"Aktivierungsschlüssel ''{0}'' konnte nicht für Organisation ''{1}'' gefunden "
-"werden."
+"Aktivierungsschlüssel ''{0}'' konnte nicht für Organisation ''{1}'' gefunden"
+" werden."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author hedda
@@ -614,7 +614,8 @@ msgstr "Inhalt mit ID {0} konnte nicht gefunden werden."
 # keys
 #: src/main/java/org/candlepin/resource/RulesResource.java:85
 msgid "Error decoding the rules. The text should be base 64 encoded"
-msgstr "Fehler beim Dekodieren der Regeln. Der Text sollte base64-kodiert sein"
+msgstr ""
+"Fehler beim Dekodieren der Regeln. Der Text sollte base64-kodiert sein"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -688,7 +689,8 @@ msgstr ""
 #, java-format
 msgid "The activation key name ''{0}'' is already in use for owner {1}"
 msgstr ""
-"Der Aktivierungsschlüsselname ''{0}'' wird bereits für Besitzer {1} verwendet"
+"Der Aktivierungsschlüsselname ''{0}'' wird bereits für Besitzer {1} "
+"verwendet"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author hedda
@@ -778,7 +780,8 @@ msgstr "Subskriptionen gelöscht durch {0}"
 # keys
 #: src/main/java/org/candlepin/resource/PoolResource.java:126
 msgid "Cannot filter on both owner and consumer"
-msgstr "Nach Besitzer und Verbraucher kann nicht gleichzeitig gefiltert werden"
+msgstr ""
+"Nach Besitzer und Verbraucher kann nicht gleichzeitig gefiltert werden"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -826,11 +829,11 @@ msgstr ""
 
 #: src/main/java/org/candlepin/resource/JobResource.java:114
 msgid ""
-"You must specify one of owner key, consumer UUID, or principal name, but not "
-"all."
+"You must specify one of owner key, consumer UUID, or principal name, but not"
+" all."
 msgstr ""
-"Sie müssen entweder Besitzerschlüssel, Verbraucher-UUID, oder Principal-Name "
-"angeben, aber nicht alle drei."
+"Sie müssen entweder Besitzerschlüssel, Verbraucher-UUID, oder Principal-Name"
+" angeben, aber nicht alle drei."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author hedda
@@ -1122,8 +1125,8 @@ msgstr ""
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase https://access.redhat.com/knowledge/"
-"node/129003 for more information."
+"to address this problem. See kbase "
+"https://access.redhat.com/knowledge/node/129003 for more information."
 msgstr ""
 "Zu viele Inhaltssets für Zertifikat {0}. Möglicherweise ist ein neuerer "
 "Client verfügbar, der dieses Problem beseitigt. Siehe Wissensdatenbank "
@@ -1134,7 +1137,8 @@ msgstr ""
 #: src/main/java/org/candlepin/service/impl/DefaultSubscriptionServiceAdapter.java:145
 msgid "Standalone candlepin does not support redeeming a subscription."
 msgstr ""
-"Standalone-Candlepin unterstützt nicht das Zurückerlangen von Subskriptionen."
+"Standalone-Candlepin unterstützt nicht das Zurückerlangen von "
+"Subskriptionen."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author hedda
@@ -1207,7 +1211,8 @@ msgstr ""
 #: src/main/java/org/candlepin/controller/Entitler.java:146
 #, java-format
 msgid ""
-"Consumer does not support instance based calculation required by pool ''{0}''"
+"Consumer does not support instance based calculation required by pool "
+"''{0}''"
 msgstr ""
 
 #: src/main/java/org/candlepin/controller/Entitler.java:150
@@ -1335,8 +1340,8 @@ msgid ""
 "The fact ''{0}'' must be an integer instead of ''{1}''. No value will exist "
 "for that fact."
 msgstr ""
-"Der Fakt ''{0}'' muss ein Ganzzahlwert anstelle von ''{1}'' sein. Für diesen "
-"Fakt existiert kein gültiger Wert."
+"Der Fakt ''{0}'' muss ein Ganzzahlwert anstelle von ''{1}'' sein. Für diesen"
+" Fakt existiert kein gültiger Wert."
 
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:333
 #, java-format
@@ -1351,6 +1356,8 @@ msgstr ""
 # keys
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:405
 #, java-format
-msgid "The consumer with UUID {0} is a virtual guest. It does not have guests."
+msgid ""
+"The consumer with UUID {0} is a virtual guest. It does not have guests."
 msgstr ""
-"Der Verbraucher mit der UUID {0} ist ein virtueller Gast. Er hat keine Gäste."
+"Der Verbraucher mit der UUID {0} ist ein virtueller Gast. Er hat keine "
+"Gäste."

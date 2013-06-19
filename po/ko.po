@@ -4,14 +4,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-06-19 16:01-0300\n"
+"POT-Creation-Date: 2012-06-27 12:35-0400\n"
 "PO-Revision-Date: 2013-03-20 09:17-0400\n"
 "Last-Translator: eukim <eukim@fedoraproject.org>\n"
 "Language-Team: Korean\n"
-"Language: ko\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: ko\n"
 "Plural-Forms: nplurals=1; plural=0\n"
 "X-Generator: Zanata 2.2.2\n"
 
@@ -486,9 +486,7 @@ msgstr "시리얼 번호 {0}의 인타이틀먼트 인증서를 찾을 수 없�
 msgid ""
 "Consumer {0} cannot be exported. A manifest cannot be made for consumer of "
 "type ''{1}''."
-msgstr ""
-"사용자 {0}을(를) 내보내기할 수 없습니다. 사용자 유형 ''{1}''에 대한 매니페스"
-"트를 만들 수 없습니다. "
+msgstr "사용자 {0}을(를) 내보내기할 수 없습니다. 사용자 유형 ''{1}''에 대한 매니페스트를 만들 수 없습니다. "
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -539,9 +537,7 @@ msgstr "UUID ''{0}''을(를) 갖는 제품을 찾을 수 없습니다."
 #: src/main/java/org/candlepin/resource/ProductResource.java:224
 #, java-format
 msgid "Product with UUID ''{0}'' cannot be deleted while subscriptions exist."
-msgstr ""
-"서브스크립션이 존재하는 동안 UUID ''{0}''을(를) 갖는 제품을 삭제할 수 없습니"
-"다. "
+msgstr "서브스크립션이 존재하는 동안 UUID ''{0}''을(를) 갖는 제품을 삭제할 수 없습니다. "
 
 #: src/main/java/org/candlepin/resource/ProductResource.java:279
 msgid "Must specify product ID."
@@ -570,9 +566,7 @@ msgstr "'개인' 사용자 유형으로 제한된 풀을 활성키에 추가할 
 msgid ""
 "Error: Only pools with multi-entitlement product subscriptions can be added "
 "to the activation key with a quantity greater than one."
-msgstr ""
-"오류: 멀티 인타이틀먼트 제품 서브스크립션을 갖는 풀 만이 하나 이상의 수량을 "
-"갖는 활성화 키에 추가시킬 수 있습니다.  "
+msgstr "오류: 멀티 인타이틀먼트 제품 서브스크립션을 갖는 풀 만이 하나 이상의 수량을 갖는 활성화 키에 추가시킬 수 있습니다.  "
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
@@ -665,9 +659,7 @@ msgstr "활성화 키의 이름을 반드시 지정해야 합니다. "
 msgid ""
 "The activation key name ''{0}'' must be alphanumeric or include the "
 "characters '-' or '_'"
-msgstr ""
-"활성키 이름 ''{0}''은 알파벳과 숫자 조합이거나 '-' 또는 '_' 문자로 되어 있어"
-"야 합니다."
+msgstr "활성키 이름 ''{0}''은 알파벳과 숫자 조합이거나 '-' 또는 '_' 문자로 되어 있어야 합니다."
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:512
 #, java-format
@@ -735,8 +727,7 @@ msgstr "소유자 {0}의 ueber 인증서를 생성하는 도중 문제 발생 "
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1210
 #, java-format
 msgid "ueber certificate for owner {0} was not found. Please generate one."
-msgstr ""
-"소유자 {0}의 ueber 인증서를 찾을 수 없습니다. 해당 인증서를 생성해 주십시오. "
+msgstr "소유자 {0}의 ueber 인증서를 찾을 수 없습니다. 해당 인증서를 생성해 주십시오. "
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
@@ -806,8 +797,8 @@ msgstr "소유자 키, 사용자 UUID, 주요 이름 등을 지정하셔야 합�
 
 #: src/main/java/org/candlepin/resource/JobResource.java:114
 msgid ""
-"You must specify one of owner key, consumer UUID, or principal name, but not "
-"all."
+"You must specify one of owner key, consumer UUID, or principal name, but not"
+" all."
 msgstr "소유자 키, 사용자 UUID, 주요 이름 중 하나를 지정하셔야 합니다. "
 
 # translation auto-copied from project Candlepin, version master, document
@@ -1015,15 +1006,12 @@ msgstr "업스트림 서브스크립션 관리 애플리케이션의 ID가 없�
 msgid ""
 "This subscription management application has already been imported by "
 "another owner."
-msgstr ""
-"이 서브스크립션 관리 애플리케이션은 다른 소유자에 의해 이미 가져오기 되었습니"
-"다."
+msgstr "이 서브스크립션 관리 애플리케이션은 다른 소유자에 의해 이미 가져오기 되었습니다."
 
 #: src/main/java/org/candlepin/sync/ConsumerImporter.java:82
 msgid ""
 "Owner has already imported from another subscription management application."
-msgstr ""
-"소유자가 이미 다른 서브스크립션 관리 애플리케이션에서 가져오기되었습니다."
+msgstr "소유자가 이미 다른 서브스크립션 관리 애플리케이션에서 가져오기되었습니다."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
@@ -1088,19 +1076,18 @@ msgid ""
 "The client must support at least v{0} certificates in order to use "
 "subscription: {1}. A newer client may be available to address this problem."
 msgstr ""
-"서브스크립션을 사용하려면 클라이언트는 적어도 v{0} 인증서를 지원해야 합니다: "
-"{1}. 새로운 클라이언트는 이러한 문제를 처리할 수 있을 수 도 있습니다."
+"서브스크립션을 사용하려면 클라이언트는 적어도 v{0} 인증서를 지원해야 합니다: {1}. 새로운 클라이언트는 이러한 문제를 처리할 수 "
+"있을 수 도 있습니다."
 
 #: src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:278
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
-"to address this problem. See kbase https://access.redhat.com/knowledge/"
-"node/129003 for more information."
+"to address this problem. See kbase "
+"https://access.redhat.com/knowledge/node/129003 for more information."
 msgstr ""
-"너무 많은 컨텐츠가 인증서 {0}에 설정되어 있습니다. 새로운 클라이언트의 경우 "
-"이 문제를 처리할 수 있습니다. 자세한 내용은 기술 문서에서 참조하십시오. "
-"(https://access.redhat.com/knowledge/node/129003)"
+"너무 많은 컨텐츠가 인증서 {0}에 설정되어 있습니다. 새로운 클라이언트의 경우 이 문제를 처리할 수 있습니다. 자세한 내용은 기술 "
+"문서에서 참조하십시오. (https://access.redhat.com/knowledge/node/129003)"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
@@ -1122,9 +1109,7 @@ msgstr "서브스크리션 풀 {0}은(는) 존재하지 않습니다. "
 msgid ""
 "This consumer is already subscribed to the product matching pool with id "
 "''{0}''."
-msgstr ""
-"이 사용자는 id ''{0}''을(를) 갖는 풀과 일치하는 제품에 이미 등록되어 있습니"
-"다. "
+msgstr "이 사용자는 id ''{0}''을(를) 갖는 풀과 일치하는 제품에 이미 등록되어 있습니다. "
 
 #: src/main/java/org/candlepin/controller/Entitler.java:112
 #, java-format
@@ -1145,8 +1130,7 @@ msgstr "이러한 유형의 사용자는 id ''{0}''을(를) 갖는 풀에 등록
 #: src/main/java/org/candlepin/controller/Entitler.java:121
 #, java-format
 msgid "Multi-entitlement not supported for pool with id ''{0}''."
-msgstr ""
-"멀티 인타이틀먼트는 id ''{0}''을(를) 갖는 풀에 대해 지원되지 않습니다. "
+msgstr "멀티 인타이틀먼트는 id ''{0}''을(를) 갖는 풀에 대해 지원되지 않습니다. "
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1177,7 +1161,8 @@ msgstr ""
 #: src/main/java/org/candlepin/controller/Entitler.java:146
 #, java-format
 msgid ""
-"Consumer does not support instance based calculation required by pool ''{0}''"
+"Consumer does not support instance based calculation required by pool "
+"''{0}''"
 msgstr ""
 
 #: src/main/java/org/candlepin/controller/Entitler.java:150
@@ -1195,8 +1180,7 @@ msgstr ""
 #: src/main/java/org/candlepin/controller/Entitler.java:158
 #, java-format
 msgid "Unable to entitle consumer to the pool with id ''{0}''.: {1}"
-msgstr ""
-"id ''{0}''을(를) 갖는 풀에 있는 사용자에 권한을 부여할 수 없습니다.: {1}"
+msgstr "id ''{0}''을(를) 갖는 풀에 있는 사용자에 권한을 부여할 수 없습니다.: {1}"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:179
 #, java-format
@@ -1209,9 +1193,7 @@ msgstr "인타이틀먼트 ''{0}''의 조정에 사용할 수 있는 풀 수량�
 #, java-format
 msgid ""
 "Multi-entitlement not supported for pool connected with entitlement ''{0}''."
-msgstr ""
-"멀티 인타이틀먼트는 인타이틀먼트 ''{0}''에 연결된 풀에 대해 지원되지 않습니"
-"다."
+msgstr "멀티 인타이틀먼트는 인타이틀먼트 ''{0}''에 연결된 풀에 대해 지원되지 않습니다."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:194
 #, java-format
@@ -1294,23 +1276,19 @@ msgstr "사용자 이름은 {0}자 이하여야 합니다. "
 msgid ""
 "The fact ''{0}'' must be an integer instead of ''{1}''. No value will exist "
 "for that fact."
-msgstr ""
-"정보 ''{0}''는 ''{1}'' 대신 정수여야 합니다. 해당 정보에 대해 존재하는 값이 "
-"없습니다."
+msgstr "정보 ''{0}''는 ''{1}'' 대신 정수여야 합니다. 해당 정보에 대해 존재하는 값이 없습니다."
 
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:333
 #, java-format
 msgid ""
 "The fact ''{0}'' must have a positive integer value instead of ''{1}''. No "
 "value will exist for that fact."
-msgstr ""
-"정보 ''{0}''는 ''{1}'' 대신 양의 정수 값이어야 합니다. 해당 정보에 대해 존재"
-"하는 값이 없습니다."
+msgstr "정보 ''{0}''는 ''{1}'' 대신 양의 정수 값이어야 합니다. 해당 정보에 대해 존재하는 값이 없습니다."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:405
 #, java-format
-msgid "The consumer with UUID {0} is a virtual guest. It does not have guests."
-msgstr ""
-"UUID {0}을 갖는 컨슈머는 가상 게스트입니다. 이는 게스트를 갖을 수 없습니다. "
+msgid ""
+"The consumer with UUID {0} is a virtual guest. It does not have guests."
+msgstr "UUID {0}을 갖는 컨슈머는 가상 게스트입니다. 이는 게스트를 갖을 수 없습니다. "
