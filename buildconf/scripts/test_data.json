@@ -650,7 +650,8 @@
             "id": "awesomeos-server-basic-vdc",
             "type": "MKT",
             "attributes": {
-                "sockets": 2
+                "sockets": 2,
+                "skip_subs" : "true"
             }
         },
         {
@@ -658,7 +659,7 @@
             "id": "awesomeos-server-basic-dc",
             "type": "MKT",
             "provided_products": [
-                
+
             ],
             "attributes": {
                 "sockets": 4,

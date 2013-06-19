@@ -165,7 +165,7 @@ data['products'].each do |product|
 
   # If product ID is non-numeric, we assume it's a marketing product
   # and create subscriptions for it:
-  if id.to_i.to_s != id
+  if id.to_i.to_s != id && !attrs.has_key?('skip_subs')
     # Create a SMALL and a LARGE with the slightly similar begin/end dates.
     owner_keys.each do |owner_key|
       subscription = cp.create_subscription(owner_key,
@@ -177,7 +177,7 @@ data['products'].each do |product|
                                             startDate1, endDate1,
                                             {
                                               'sub_product_id' => sub_product_id,
-                                              'sub_provided_products' => sub_provided_products 
+                                              'sub_provided_products' => sub_provided_products
                                             })
       contract_number += 1
       subscription = cp.create_subscription(owner_key,
@@ -189,7 +189,7 @@ data['products'].each do |product|
                                             startDate1, endDate1,
                                             {
                                               'sub_product_id' => sub_product_id,
-                                              'sub_provided_products' => sub_provided_products 
+                                              'sub_provided_products' => sub_provided_products
                                             })
 
       # Create a subscription for the future:
@@ -200,7 +200,7 @@ data['products'].each do |product|
                                             startDate2, endDate2,
                                             {
                                               'sub_product_id' => sub_product_id,
-                                              'sub_provided_products' => sub_provided_products 
+                                              'sub_provided_products' => sub_provided_products
                                             })
       contract_number += 1
     end
