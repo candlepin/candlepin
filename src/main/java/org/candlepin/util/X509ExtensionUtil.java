@@ -74,9 +74,16 @@ public class X509ExtensionUtil  extends X509Util{
         // NOTE: order ~= subscription
         // entitlement == entitlement
 
+        // Need to be sure that we get the correct product here. If pool
+        // is derived and we have a sub product on the sub, then we must
+        // use that product so that the appropriate bits of data are copied.
+        boolean derivedPool = ent.getPool().hasAttribute("pool_derived");
+        Product product = derivedPool && sub.getSubProduct() != null ?
+            sub.getSubProduct() : sub.getProduct();
+
         String subscriptionOid = OIDUtil.REDHAT_OID + "." +
             OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ORDER_NAMESPACE_KEY);
-        if (sub.getProduct().getId() != null) {
+        if (product.getId() != null) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_NAME_KEY), false, ent
                 .getPool().getProductName()));
@@ -85,12 +92,11 @@ public class X509ExtensionUtil  extends X509Util{
             OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_NUMBER_KEY), false, sub
             .getOrderNumber()));
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-            OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SKU_KEY), false, sub
-            .getProduct().getId().toString()));
+            OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SKU_KEY), false, product.getId().toString()));
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
             OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_QUANTITY_KEY), false, sub
             .getQuantity().toString()));
-        String socketLimit = sub.getProduct().getAttributeValue("sockets");
+        String socketLimit = product.getAttributeValue("sockets");
         if (socketLimit != null) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SOCKETLIMIT_KEY), false,
@@ -103,7 +109,7 @@ public class X509ExtensionUtil  extends X509Util{
             OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_ENDDATE_KEY), false,
             iso8601DateFormat.format(sub.getEndDate())));
         // TODO : use keys
-        String warningPeriod = sub.getProduct().getAttributeValue(
+        String warningPeriod = product.getAttributeValue(
             "warning_period");
         if (warningPeriod == null) {
             warningPeriod = "0";
@@ -123,15 +129,15 @@ public class X509ExtensionUtil  extends X509Util{
                 false, sub.getAccountNumber()));
         }
         // Add Smart Management, default to "not managed"
-        String mgmt = sub.getProduct().getAttributeValue("management_enabled");
+        String mgmt = product.getAttributeValue("management_enabled");
         mgmt = (mgmt == null) ? "0" : mgmt;
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
             OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_PROVIDES_MANAGEMENT_KEY),
             false, mgmt));
 
-        String supportLevel = sub.getProduct().getAttributeValue(
+        String supportLevel = product.getAttributeValue(
             "support_level");
-        String supportType = sub.getProduct().getAttributeValue("support_type");
+        String supportType = product.getAttributeValue("support_type");
         if (supportLevel != null) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SUPPORT_LEVEL), false,
@@ -142,7 +148,7 @@ public class X509ExtensionUtil  extends X509Util{
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SUPPORT_TYPE), false,
                 supportType));
         }
-        String stackingId = sub.getProduct().getAttributeValue("stacking_id");
+        String stackingId = product.getAttributeValue("stacking_id");
         if (stackingId != null) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_STACKING_ID), false,

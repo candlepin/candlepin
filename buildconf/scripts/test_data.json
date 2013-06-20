@@ -646,6 +646,14 @@
             }
         },
         {
+            "name": "Awesome OS Server Basic (dc-virt)",
+            "id": "awesomeos-server-basic-vdc",
+            "type": "MKT",
+            "attributes": {
+                "sockets": 2
+            }
+        },
+        {
             "name": "Awesome OS Server Basic (data center)",
             "id": "awesomeos-server-basic-dc",
             "type": "MKT",
@@ -653,7 +661,7 @@
                 
             ],
             "attributes": {
-                "sockets": 2,
+                "sockets": 4,
                 "warning_period": 30,
                 "management_enabled" : 0,
                 "support_level" : "None",
@@ -661,12 +669,11 @@
                 "multi-entitlement" : "no",
                 "virt_limit" : "unlimited"
             },
-            "sub_product_id" : "37060",
+            "sub_product_id" : "awesomeos-server-basic-vdc",
             "sub_provided_products" : [
-                "1144"
+                "37060"
             ]
         },
-
         {
             "name": "Awesome OS Server Basic (multi-entitlement)",
             "id": "awesomeos-server-basic-me",
