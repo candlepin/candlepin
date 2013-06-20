@@ -406,7 +406,6 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         return pool;
     }
 
-
     @Test
     public void userLicensePassesPre() {
         Pool pool = setupUserLicensedPool();
@@ -416,24 +415,6 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         assertFalse(result.hasWarnings());
     }
 
-    @Test
-    public void userRestrictedPoolPassesPre() {
-        Pool pool = setupUserRestrictedPool();
-        consumer.setUsername("bob");
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
-        assertFalse(result.hasErrors());
-        assertFalse(result.hasWarnings());
-    }
-
-    @Test
-    public void userRestrictedPoolFailsPre() {
-        Pool pool = setupUserRestrictedPool();
-        consumer.setUsername("notbob");
-
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
-        assertTrue(result.hasErrors());
-        assertFalse(result.hasWarnings());
-    }
 
     @Test
     public void virtOnlyPoolGuestHostMatches() {
@@ -518,5 +499,23 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         return pool;
     }
 
+    @Test
+    public void hypervisorForSystemNotGenerateError() {
+        Pool pool = setupProductWithRequiresSystemConsumerTypeAttribute();
+        consumer.setType(new ConsumerType(ConsumerTypeEnum.HYPERVISOR));
+
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
+        assertFalse(result.hasErrors());
+        assertFalse(result.hasWarnings());
+    }
+
+    private Pool setupProductWithRequiresSystemConsumerTypeAttribute() {
+        Product product = new Product(productId, "A product for testing");
+        product.setAttribute("requires_consumer_type",
+            ConsumerTypeEnum.SYSTEM.toString());
+        Pool pool = createPool(owner, product);
+        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+        return pool;
+    }
 
 }
