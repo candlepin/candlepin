@@ -156,12 +156,12 @@ public class ActivationKeyResource {
                 i18n.tr("The quantity must not be greater than the total " +
                     "allowed for the pool"));
         }
-        if (pool.isHostRestricted() &&
-            !StringUtils.isBlank(key.getHostRestriction()) &&
-            !pool.getRequiredHost().equals(key.getHostRestriction())) {
+        if (isPoolHostRestricted(pool) &&
+            !StringUtils.isBlank(getKeyHostRestriction(key)) &&
+            !getPoolRequiredHost(pool).equals(getKeyHostRestriction(key))) {
             throw new BadRequestException(
-                i18n.tr("Pools with host restrictions must be associated to the " +
-                    "same host to be used the same activation key."));
+                i18n.tr("Activation keys can only use host restricted pools from " +
+                    "a single host."));
         }
         key.addPool(pool, quantity);
         activationKeyCurator.update(key);
@@ -235,5 +235,23 @@ public class ActivationKeyResource {
                 "Pool with id {0} could not be found.", poolId));
         }
         return pool;
+    }
+
+    private String getKeyHostRestriction(ActivationKey ak) {
+        for (ActivationKeyPool akp : ak.getPools()) {
+            if (isPoolHostRestricted(akp.getPool())) {
+                return akp.getPool().getAttributeValue("requires_host");
+            }
+        }
+        return null;
+    }
+
+    private boolean isPoolHostRestricted(Pool pool) {
+        String host = getPoolRequiredHost(pool);
+        return !StringUtils.isBlank(host);
+    }
+
+    private String getPoolRequiredHost(Pool pool) {
+        return (pool.getAttributeValue("requires_host"));
     }
 }

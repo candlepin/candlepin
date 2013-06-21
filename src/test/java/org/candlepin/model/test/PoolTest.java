@@ -285,16 +285,4 @@ public class PoolTest extends DatabaseTestFixture {
         assertTrue(pool2.getConsumed() == 5);
         assertTrue(pool2.getEntitlements().size() == 1);
     }
-
-    @Test
-    public void testPoolHostRestricted() {
-        pool.setAttribute("requires_host", null);
-        assertFalse(pool.isHostRestricted());
-        pool.setAttribute("requires_host", "");
-        assertFalse(pool.isHostRestricted());
-        pool.setAttribute("requires_host", "  ");
-        assertFalse(pool.isHostRestricted());
-        pool.setAttribute("requires_host", "host1");
-        assertTrue(pool.isHostRestricted());
-    }
 }
