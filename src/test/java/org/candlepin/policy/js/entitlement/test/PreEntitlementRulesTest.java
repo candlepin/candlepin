@@ -379,7 +379,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
 
     @Test
     public void correctConsumerTypeShouldNotGenerateError() {
-        Pool pool = setupProductWithRequiresConsumerTypeAttribute();
+        Pool pool = setupProductWitConsumerTypeAttribute(ConsumerTypeEnum.DOMAIN);
         consumer.setType(new ConsumerType(ConsumerTypeEnum.DOMAIN));
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
@@ -389,7 +389,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
 
     @Test
     public void mismatchingConsumerTypeShouldGenerateError() {
-        Pool pool = setupProductWithRequiresConsumerTypeAttribute();
+        Pool pool = setupProductWitConsumerTypeAttribute(ConsumerTypeEnum.DOMAIN);
         consumer.setType(new ConsumerType(ConsumerTypeEnum.PERSON));
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
@@ -397,14 +397,6 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         assertFalse(result.hasWarnings());
     }
 
-    private Pool setupProductWithRequiresConsumerTypeAttribute() {
-        Product product = new Product(productId, "A product for testing");
-        product.setAttribute("requires_consumer_type",
-            ConsumerTypeEnum.DOMAIN.toString());
-        Pool pool = createPool(owner, product);
-        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
-        return pool;
-    }
 
     @Test
     public void userLicensePassesPre() {
@@ -501,7 +493,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
 
     @Test
     public void hypervisorForSystemNotGenerateError() {
-        Pool pool = setupProductWithRequiresSystemConsumerTypeAttribute();
+        Pool pool = setupProductWitConsumerTypeAttribute(ConsumerTypeEnum.SYSTEM);
         consumer.setType(new ConsumerType(ConsumerTypeEnum.HYPERVISOR));
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
@@ -509,10 +501,20 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         assertFalse(result.hasWarnings());
     }
 
-    private Pool setupProductWithRequiresSystemConsumerTypeAttribute() {
+    @Test
+    public void systemForHypervisorGeneratesError() {
+        Pool pool = setupProductWitConsumerTypeAttribute(ConsumerTypeEnum.HYPERVISOR);
+        consumer.setType(new ConsumerType(ConsumerTypeEnum.SYSTEM));
+
+        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
+        assertTrue(result.hasErrors());
+        assertFalse(result.hasWarnings());
+    }
+
+    private Pool setupProductWitConsumerTypeAttribute(ConsumerTypeEnum consumerType) {
         Product product = new Product(productId, "A product for testing");
         product.setAttribute("requires_consumer_type",
-            ConsumerTypeEnum.SYSTEM.toString());
+            consumerType.toString());
         Pool pool = createPool(owner, product);
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
         return pool;
