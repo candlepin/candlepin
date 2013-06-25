@@ -19,7 +19,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
@@ -84,7 +83,6 @@ import org.candlepin.util.X509V3ExtensionUtil;
 import org.candlepin.util.X509V3ExtensionUtil.HuffNode;
 import org.candlepin.util.X509V3ExtensionUtil.NodePair;
 import org.candlepin.util.X509V3ExtensionUtil.PathNode;
-import org.candlepin.version.CertVersionConflictException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -633,75 +631,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
             argThat(new ListContainsSupportType("Level 3")), any(Set.class),
             any(Date.class), any(Date.class), any(KeyPair.class), any(BigInteger.class),
             any(String.class));
-    }
-
-    @Test
-    public void ensureV1CertificateCreationFailsWithUnsupportedProductAttribute()
-        throws Exception {
-
-        Config mockConfig = mock(Config.class);
-
-        // RAM requires 3.1, so an exception should be thrown for cert V1 clients.
-        when(consumer.getFact(eq("system.certificate_version"))).thenReturn("1.0");
-        ProductAttribute attr = new ProductAttribute("ram", "4");
-        subscription.getProduct().addAttribute(attr);
-
-        X509V3ExtensionUtil mockV3extensionUtil = mock(X509V3ExtensionUtil.class);
-        X509ExtensionUtil mockExtensionUtil = mock(X509ExtensionUtil.class);
-
-        DefaultEntitlementCertServiceAdapter entAdapter =
-            new DefaultEntitlementCertServiceAdapter(
-                mockedPKI, mockExtensionUtil, mockV3extensionUtil,
-                mock(EntitlementCertificateCurator.class), keyPairCurator,
-                serialCurator, productAdapter, entCurator,
-                I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
-                mockConfig);
-
-        try {
-            entAdapter.createX509Certificate(entitlement, subscription,
-                product, new BigInteger("1234"), keyPair(), true);
-            fail("Expected CertException here.");
-        }
-        catch (CertVersionConflictException e) {
-            String expected = "The client must support at least v3.1 certificates in " +
-                "order to use subscription: " + subscription.getProduct().getName() +
-                ". A newer client may be available to address this problem.";
-            assertEquals(expected, e.getMessage());
-        }
-    }
-
-    @Test
-    public void ensureV3CertificateCreationFailsWithUnsupportedConsumerCertVersion()
-        throws Exception {
-        Config mockConfig = mock(Config.class);
-
-        // RAM requires 3.1, so an exception should be thrown.
-        when(consumer.getFact(eq("system.certificate_version"))).thenReturn("3.0");
-        ProductAttribute attr = new ProductAttribute("ram", "4");
-        subscription.getProduct().addAttribute(attr);
-
-        X509V3ExtensionUtil mockV3extensionUtil = mock(X509V3ExtensionUtil.class);
-        X509ExtensionUtil mockExtensionUtil = mock(X509ExtensionUtil.class);
-
-        DefaultEntitlementCertServiceAdapter entAdapter =
-            new DefaultEntitlementCertServiceAdapter(mockedPKI, mockExtensionUtil,
-                mockV3extensionUtil, mock(EntitlementCertificateCurator.class),
-                keyPairCurator, serialCurator, productAdapter,
-                entCurator,
-                I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
-                mockConfig);
-
-        try {
-            entAdapter.createX509Certificate(entitlement, subscription,
-                product, new BigInteger("1234"), keyPair(), true);
-            fail("Expected CertException here.");
-        }
-        catch (CertVersionConflictException e) {
-            String expected = "The client must support at least v3.1 certificates in " +
-                "order to use subscription: " + subscription.getProduct().getName() +
-                ". A newer client may be available to address this problem.";
-            assertEquals(expected, e.getMessage());
-        }
     }
 
     @Test

@@ -63,7 +63,6 @@ import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.Util;
 import org.candlepin.version.CertVersionConflictException;
-import org.candlepin.version.ProductVersionValidator;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -427,16 +426,7 @@ public class CandlepinPoolManager implements PoolManager {
                     }
                 }
                 else {
-                    // Check to make sure that the consumer supports the required cert
-                    // versions for all attributes.
-                    if (!ProductVersionValidator.verifyClientSupport(consumer,
-                        pool.getProductAttributes())) {
-                        log.debug("Pool filtered from candidates because it is " +
-                                  "unsupported by the consumer. Upgrade client to use.");
-                    }
-                    else {
-                        filteredPools.add(pool);
-                    }
+                    filteredPools.add(pool);
                 }
             }
         }
