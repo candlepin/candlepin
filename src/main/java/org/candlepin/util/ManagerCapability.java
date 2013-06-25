@@ -20,7 +20,8 @@ package org.candlepin.util;
  */
 public class ManagerCapability {
 
-    private static String[] capabilities = {"cores", "ram", "instance_multiplier"};
+    private static String[] capabilities = {"cores", "ram", "instance_multiplier",
+        "sub_products"};
 
     private ManagerCapability() {
         // Quiet checkstyle

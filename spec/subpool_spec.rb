@@ -52,6 +52,14 @@ describe 'Sub-pool Subscriptions Should' do
       :product => @datacenter_product.id
     @pools.size.should == 1
     @main_pool = @pools[0]
+    
+    @distributor = @user.register(random_string('host'), :candlepin, nil,
+      {}, nil, nil, [], [], nil)
+    @distributor_client = Candlepin.new(username=nil, password=nil,
+        cert=@distributor['idCert']['cert'],
+        key=@distributor['idCert']['key'])
+    #@distributor_client.update_consumer(
+    #    {:facts => {'@distributor_version' => 'sam-1.3'}})
   end
 
   it 'transfers sub-product data to main pool' do
@@ -66,6 +74,34 @@ describe 'Sub-pool Subscriptions Should' do
 
     # Guest should now see additional sub-pool:
     @guest_client.list_pools({:consumer => @guest_client.uuid}).size.should == 2
+  end
+  
+  it 'not be visible by distributor that does not have capability after basic search' do
+    pools = @distributor_client.list_pools :consumer => @distributor.uuid
+    pools.size.should == 0
+  end
+  
+  it 'be visible by distributor that does not have capability after list all' do
+    pools = @distributor_client.list_pools :consumer => @distributor.uuid, :listall => "true"
+    pools.size.should == 1
+
+    pool = pools.first
+    pool['subProductId'].should == @sub_product['id']
+    pool['subProvidedProducts'].size.should == 1
+    pool['subProvidedProducts'][0]['productId'].should ==
+      @eng_product['id']
+  end
+  
+  it 'prevents distributor from attaching without necessisary capabilities' do    
+    expected_error = "Unable to entitle consumer to the pool with id '%s'.: rulefailed.subproduct.unsupported.by.consumer" % @main_pool['id']
+    begin
+        @distributor_client.consume_pool @main_pool['id']
+        fail("Expected Forbidden since distributor does not have capability")
+    rescue RestClient::Forbidden => e
+      message = JSON.parse(e.http_body)['displayMessage']
+      message.should == expected_error
+    end
+
   end
 
 end

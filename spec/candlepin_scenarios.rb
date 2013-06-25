@@ -270,6 +270,7 @@ module ExportMethods
 
     @candlepin_client = consumer_client(owner_client, random_string('test_client'),
         "candlepin", @user['username'])
+    @candlepin_client.update_consumer({:facts => {"distributor_version" => "sam-1.3"}})
     @candlepin_consumer = @candlepin_client.get_consumer()
 
     @entitlement1 = @candlepin_client.consume_pool(pool1.id)[0]

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+
+    <changeSet id="20130624133949" author="mstead">
+        <comment>Add the sub_product distributor version capability for SAM-1.3 and Satellite-6.0</comment>
+            <insert tableName="cp_dist_version_capability">
+                <column name="id" value="1008"/>
+                <column name="dist_version_id" value="1001"/>
+                <column name="name" value="sub_product"/>
+            </insert>
+            <insert tableName="cp_dist_version_capability">
+                <column name="id" value="1009"/>
+                <column name="dist_version_id" value="1003"/>
+                <column name="name" value="sub_product"/>
+            </insert>
+    </changeSet>
+
+</databaseChangeLog>
