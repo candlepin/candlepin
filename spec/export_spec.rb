@@ -122,10 +122,6 @@ describe 'Candlepin Export' do
     files = Dir["#{prod_dir}/*.json"].find_all.collect {|file| file}
     files.length.should == 6
     
-    files.each do |file|
-      puts file
-    end
-    
     File.exists?(File.join(prod_dir, "#{@product1.id}.json")).should be_true
     File.exists?(File.join(prod_dir, "#{@product2.id}.json")).should be_true
     File.exists?(File.join(prod_dir, "#{@virt_product.id}.json")).should be_true
