@@ -23,7 +23,7 @@ data = {}
 filenames.each do |filename|
   puts filename
   product_data_buf = File.read(filename)
-  product_data = JSON product_data_buf
+  product_data = JSON(product_data_buf, {})
   data['products'] = data.fetch('products',[]) + product_data['products']
   data['content'] = data.fetch('content',[]) + product_data['content']
   data['owners'] = data.fetch('owners', []) + product_data['owners']

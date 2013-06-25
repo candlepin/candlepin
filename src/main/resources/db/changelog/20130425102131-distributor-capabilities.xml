@@ -21,7 +21,7 @@
         </createTable>
         <!-- See http://www.liquibase.org/manual/refactoring_commands -->
     </changeSet>
-    <changeSet id="20130425102131-1" author="wpoteat">
+    <changeSet id="20130425102131-1" author="wpoteat" dbms="postgresql">
         <createIndex tableName="cp_consumer_capability" indexName="cp_consumer_capability_id_idx">
             <column name="consumer_id"/>
         </createIndex>
@@ -44,7 +44,7 @@
         </createTable>
         <!-- See http://www.liquibase.org/manual/refactoring_commands -->
     </changeSet>
-    <changeSet id="20130425102131-3" author="wpoteat">
+    <changeSet id="20130425102131-3" author="wpoteat" dbms="postgresql">
         <createIndex tableName="cp_dist_version" indexName="cp_dist_version_id_idx">
             <column name="id"/>
         </createIndex>
@@ -65,7 +65,7 @@
         </createTable>
         <!-- See http://www.liquibase.org/manual/refactoring_commands -->
     </changeSet>
-    <changeSet id="20130425102131-5" author="wpoteat">
+    <changeSet id="20130425102131-5" author="wpoteat" dbms="postgresql">
         <createIndex tableName="cp_dist_version_capability" indexName="cp_dist_vrsn_cpblty_id_idx">
             <column name="dist_version_id"/>
         </createIndex>

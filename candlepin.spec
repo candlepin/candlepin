@@ -25,7 +25,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.8.13
+Version: 0.8.15
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -345,6 +345,42 @@ fi
 
 
 %changelog
+* Wed Jun 19 2013 Devan Goodwin <dgoodwin@rm-rf.ca> 0.8.15-1
+- Latest translations from zanata. (dgoodwin@redhat.com)
+- Extract latest strings. (dgoodwin@redhat.com)
+
+* Wed Jun 19 2013 Devan Goodwin <dgoodwin@rm-rf.ca> 0.8.14-1
+- make Content arch compares more specific (alikins@redhat.com)
+- new deleted_consumers resource (cduryee@redhat.com)
+- Added empty hash for the new opts param for JSON parsing.
+  (cschevia@redhat.com)
+- group if statements and log.debug instead of warn. (jesusr@redhat.com)
+- Small fix to arch content filter (wpoteat@redhat.com)
+- Add missing capability indexes/fkeys for Oracle. (dgoodwin@redhat.com)
+- Fix recent content arch changeset to work on Oracle. (dgoodwin@redhat.com)
+- pmd: remove unused parameters (jmrodri@gmail.com)
+- pmd: duplicate code: refactor to minimize dupe code (jmrodri@gmail.com)
+- remove delay on single job scheduling. (jesusr@redhat.com)
+- pmd: duplicate code: removed unused test (jmrodri@gmail.com)
+- 966430: Don't suggest quantities we can't actually have.
+  (dgoodwin@redhat.com)
+- Fix sporadically failing unit test. (awood@redhat.com)
+- Push post-filtering logic into AbstractHibernateCurator. (awood@redhat.com)
+- 972752: Correct stacked marketing names (ckozak@redhat.com)
+- Must set page results to the filtered list. (awood@redhat.com)
+- Adding pagination spec tests. (awood@redhat.com)
+- Adding a few more assertions to paging tests. (awood@redhat.com)
+- Add pagination to listing entitlements for a consumer. (awood@redhat.com)
+- Move takeSubList method up to AbstractHibernateCurator. (awood@redhat.com)
+- Default page should be 1 not 0. (awood@redhat.com)
+- Fix bug in determining last page. (awood@redhat.com)
+- Add pagination to pool listings. (awood@redhat.com)
+- Add paging to additional resources. (awood@redhat.com)
+- Fix Content and Product with no arch. (alikins@redhat.com)
+- 971121: Candlepin Lists Derived Pools For Distributors (wpoteat@redhat.com)
+- 963535: Fix instance quantity increment of 2 on virt guests.
+  (dgoodwin@redhat.com)
+
 * Tue Jun 04 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.13-1
 - heal entire org (jesusr@redhat.com)
 - Drop the Arch table/model (alikins@redhat.com)

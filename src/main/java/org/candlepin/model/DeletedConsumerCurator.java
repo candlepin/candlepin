@@ -17,6 +17,7 @@ package org.candlepin.model;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -59,5 +60,11 @@ public class DeletedConsumerCurator extends
                         .add(Restrictions.eq("consumerUuid", uuid))
                         .setProjection(Projections.rowCount()).uniqueResult();
 
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<DeletedConsumer> findByDate(Date date) {
+        return currentSession().createCriteria(DeletedConsumer.class)
+            .add(Restrictions.ge("created", date)).list();
     }
 }

@@ -103,6 +103,15 @@ class Candlepin
     return result
   end
 
+  def get_deleted_consumers(date = nil)
+    path = get_path("deleted_consumers")
+    if !date.nil?
+        path += "?date=#{date}"
+    end
+    result = get(path)
+    return result
+  end
+
   def update_consumer(params)
     uuid = params[:uuid] || @uuid
 
