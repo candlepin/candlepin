@@ -1285,7 +1285,6 @@ var Entitlement = {
             "ram:1:ram," +
             "cores:1:cores," +
             "requires_consumer_type:1:requires_consumer_type," +
-            "user_license:1:user_license," +
             "virt_only:1:virt_only," +
             "virt_limit:1:virt_limit," +
             "requires_host:1:requires_host," +

@@ -406,16 +406,6 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         return pool;
     }
 
-
-    @Test
-    public void userLicensePassesPre() {
-        Pool pool = setupUserLicensedPool();
-        consumer.setType(new ConsumerType(ConsumerTypeEnum.PERSON));
-        ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
-        assertFalse(result.hasErrors());
-        assertFalse(result.hasWarnings());
-    }
-
     @Test
     public void userRestrictedPoolPassesPre() {
         Pool pool = setupUserRestrictedPool();

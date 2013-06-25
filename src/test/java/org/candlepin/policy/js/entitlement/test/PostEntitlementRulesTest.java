@@ -45,39 +45,6 @@ import org.junit.Test;
 public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
 
     @Test
-    public void userLicensePostCreatesSubPool() {
-        Pool pool = setupUserLicensedPool();
-        consumer.setType(new ConsumerType(ConsumerTypeEnum.PERSON));
-        Entitlement e = new Entitlement(pool, consumer, new Date(), new Date(),
-            1);
-
-        PoolHelper postHelper = mock(PoolHelper.class);
-        when(postHelper.getFlattenedAttributes(eq(pool))).thenReturn(
-            attrHelper.getFlattenedAttributes(pool));
-        enforcer.postEntitlement(consumer, postHelper, e);
-        verify(postHelper).createUserRestrictedPool(pool.getProductId(), pool,
-            "unlimited");
-    }
-
-    @Test
-    public void testUserLicensePostForDifferentProduct() {
-        Pool pool = setupUserLicensedPool();
-        String subProductId = "subProductId";
-        pool.setAttribute("user_license_product", subProductId);
-
-        consumer.setType(new ConsumerType(ConsumerTypeEnum.PERSON));
-        Entitlement e = new Entitlement(pool, consumer, new Date(), new Date(),
-            1);
-
-        PoolHelper postHelper = mock(PoolHelper.class);
-        when(postHelper.getFlattenedAttributes(eq(pool))).thenReturn(
-            attrHelper.getFlattenedAttributes(pool));
-        enforcer.postEntitlement(consumer, postHelper, e);
-        verify(postHelper).createUserRestrictedPool(subProductId, pool,
-            "unlimited");
-    }
-
-    @Test
     public void virtLimitSubPool() {
         Pool pool = setupVirtLimitPool();
         Entitlement e = new Entitlement(pool, consumer, new Date(), new Date(),

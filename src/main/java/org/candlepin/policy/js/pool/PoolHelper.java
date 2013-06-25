@@ -58,27 +58,6 @@ public class PoolHelper extends AttributeHelper {
     }
 
     /**
-    * Create a pool for a product and limit it to consumers a particular user has
-    * registered.
-    *
-    * @param productId Label of the product the pool is for.
-    * @param quantity Number of entitlements for this pool, also accepts "unlimited".
-    */
-    public void createUserRestrictedPool(String productId, Pool pool,
-        String quantity) {
-
-        Pool consumerSpecificPool = createPool(productId, pool.getOwner(), quantity,
-            pool.getStartDate(), pool.getEndDate(), pool.getContractNumber(),
-            pool.getAccountNumber(), pool.getOrderNumber(),
-            pool.getProvidedProducts());
-
-        consumerSpecificPool.setRestrictedToUsername(
-                this.sourceEntitlement.getConsumer().getUsername());
-
-        poolManager.createPool(consumerSpecificPool);
-    }
-
-    /**
      * Create a pool only for virt guests of a particular host consumer.
      *
      *

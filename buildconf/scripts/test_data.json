@@ -716,25 +716,6 @@
             ]
         },
         {
-            "name": "Awesome OS Developer Basic",
-            "id": "1144",
-            "type": "SYS",
-            "provided_products": [
-                "1"
-            ]
-        },
-        {
-            "name": "Awesome OS Developer Edition",
-            "id": "AWESOMEOS09XYU34",
-            "type": "MKT",
-            "attributes": {
-                "requires_consumer_type": "person",
-                "enabled_consumer_types": "person",
-                "user_license": "unlimited",
-                "user_license_product": "1144"
-            }
-        },
-        {
             "name": "Awesome OS Server Bundled (2 Sockets, Standard Support)",
             "id": "awesomeos-server-2-socket-std",
             "version": "6.1",
