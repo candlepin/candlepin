@@ -15,9 +15,7 @@
 package org.candlepin.policy.js.pool;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -30,7 +28,6 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductPoolAttribute;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.SubProductPoolAttribute;
@@ -272,55 +269,6 @@ public class PoolHelper extends AttributeHelper {
         pool.setAttribute("requires_consumer_type", "system");
 
         return pool;
-    }
-
-    public boolean checkForChangedProducts(Pool existingPool, Subscription sub) {
-        Set<String> poolProducts = new HashSet<String>();
-        Set<String> subProducts = new HashSet<String>();
-        poolProducts.add(existingPool.getProductId());
-
-        for (ProvidedProduct pp : existingPool.getProvidedProducts()) {
-            poolProducts.add(pp.getProductId());
-        }
-
-        subProducts.add(sub.getProduct().getId());
-        for (Product product : sub.getProvidedProducts()) {
-            subProducts.add(product.getId());
-        }
-
-        boolean changeFound = false;
-        // Check if the product name has been changed:
-        changeFound = !poolProducts.equals(subProducts) ||
-            !existingPool.getProductName().equals(sub.getProduct().getName());
-
-        return changeFound;
-    }
-
-    public boolean checkForChangedSubProducts(Pool existingPool, Subscription sub) {
-        Set<String> poolProducts = new HashSet<String>();
-        Set<String> incomingProducts = new HashSet<String>();
-
-        if (existingPool.getSubProductId() != null) {
-            poolProducts.add(existingPool.getSubProductId());
-        }
-
-        for (SubProvidedProduct pp : existingPool.getSubProvidedProducts()) {
-            poolProducts.add(pp.getProductId());
-        }
-
-        if (sub.getSubProduct() != null) {
-            incomingProducts.add(sub.getSubProduct().getId());
-        }
-        for (Product product : sub.getSubProvidedProducts()) {
-            incomingProducts.add(product.getId());
-        }
-
-        boolean changeFound = false;
-
-        // Check if the product name has been changed:
-        changeFound = !poolProducts.equals(incomingProducts);
-
-        return changeFound;
     }
 
     public boolean checkForOrderChanges(Pool existingPool, Subscription sub) {

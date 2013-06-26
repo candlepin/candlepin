@@ -132,7 +132,8 @@ public class EntitlementImporterTest {
         this.testSub34 = createSubscription(owner, "test-prod-1", "up3", "ue34", "uc1", 5);
 
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        this.importer = new EntitlementImporter(this.curator, certSerialCurator, this.sink, i18n);
+        this.importer = new EntitlementImporter(this.curator, certSerialCurator,
+            this.sink, i18n);
     }
 
     @Test

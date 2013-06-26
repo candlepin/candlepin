@@ -49,7 +49,6 @@ public class PoolHelperTest {
 
     private Pool pool;
     private Subscription sub;
-    private Product product;
     private PoolManager pm;
     private ProductServiceAdapter psa;
     private Entitlement ent;
@@ -59,7 +58,6 @@ public class PoolHelperTest {
     public void init() {
         pool = mock(Pool.class);
         sub = mock(Subscription.class);
-        product = mock(Product.class);
         pm = mock(PoolManager.class);
         psa = mock(ProductServiceAdapter.class);
         ent = mock(Entitlement.class);
@@ -71,30 +69,6 @@ public class PoolHelperTest {
         // default to an empty list, override in the test
         when(pool.getProvidedProducts()).thenReturn(Collections.EMPTY_SET);
         when(sub.getProvidedProducts()).thenReturn(Collections.EMPTY_SET);
-    }
-
-    @Test
-    public void productsDidnotChange() {
-        when(pool.getProductId()).thenReturn("prodid123");
-        when(pool.getProductName()).thenReturn("Awesome Product");
-        when(product.getId()).thenReturn("prodid123");
-        when(product.getName()).thenReturn("Awesome Product");
-        when(sub.getProduct()).thenReturn(product);
-
-        PoolHelper ph = new PoolHelper(pm, productCache, null);
-        assertFalse(ph.checkForChangedProducts(pool, sub));
-    }
-
-    @Test
-    public void nameChanged() {
-        when(pool.getProductId()).thenReturn("prodid123");
-        when(pool.getProductName()).thenReturn("Awesome Product");
-        when(product.getId()).thenReturn("prodid123");
-        when(product.getName()).thenReturn("Awesome Product Changed");
-        when(sub.getProduct()).thenReturn(product);
-
-        PoolHelper ph = new PoolHelper(pm, productCache, null);
-        assertTrue(ph.checkForChangedProducts(pool, sub));
     }
 
     @Test
@@ -160,18 +134,6 @@ public class PoolHelperTest {
 
         PoolHelper ph = new PoolHelper(pm, productCache, null);
         assertFalse(ph.checkForOrderChanges(pool, sub));
-    }
-
-    @Test
-    public void productIdDifferent() {
-        when(pool.getProductId()).thenReturn("prodid123");
-        when(pool.getProductName()).thenReturn("Awesome Product");
-        when(product.getId()).thenReturn("prodidnew");
-        when(product.getName()).thenReturn("Awesome Product");
-        when(sub.getProduct()).thenReturn(product);
-
-        PoolHelper ph = new PoolHelper(pm, productCache, null);
-        assertTrue(ph.checkForChangedProducts(pool, sub));
     }
 
     @Test
@@ -316,10 +278,10 @@ public class PoolHelperTest {
         mainPoolProduct.setAttribute("A1", "V1");
         mainPoolProduct.setAttribute("A2", "V2");
 
-        SubProvidedProduct subProvided1 = new SubProvidedProduct("sub-pp-1",
-            "Sub Provided 1");
-        SubProvidedProduct subProvided2 = new SubProvidedProduct("sub-pp-2",
-            "Sub Provided 2");
+        SubProvidedProduct subProvided1 =
+            new SubProvidedProduct("sub-pp-1", "Sub Provided 1");
+        SubProvidedProduct subProvided2 =
+            new SubProvidedProduct("sub-pp-2", "Sub Provided 2");
 
         Set<SubProvidedProduct> subProvidedProducts = new HashSet<SubProvidedProduct>();
         subProvidedProducts.add(subProvided1);

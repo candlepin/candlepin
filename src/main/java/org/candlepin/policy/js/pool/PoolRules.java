@@ -263,20 +263,28 @@ public class PoolRules {
     private boolean checkForChangedProducts(Subscription sub,
         PoolHelper helper, Pool existingPool) {
 
-        boolean productsChanged = helper.checkForChangedProducts(existingPool, sub);
+        boolean productsChanged =
+            !sub.getProduct().getId().equals(existingPool.getProductId());
+        productsChanged = productsChanged ||
+            !sub.getProduct().getName().equals(existingPool.getProductName());
+
+        // Build expected set of ProvidedProducts and compare:
+        Set<ProvidedProduct> currentProvided = existingPool.getProvidedProducts();
+        Set<ProvidedProduct> incomingProvided = new HashSet<ProvidedProduct>();
+        if (sub.getProvidedProducts() != null) {
+            for (Product p : sub.getProvidedProducts()) {
+                incomingProvided.add(new ProvidedProduct(p.getId(), p.getName(),
+                    existingPool));
+            }
+        }
+        productsChanged = productsChanged || !currentProvided.equals(incomingProvided);
 
         if (productsChanged) {
             log.info("   Subscription products changed.");
             existingPool.setProductName(sub.getProduct().getName());
             existingPool.setProductId(sub.getProduct().getId());
             existingPool.getProvidedProducts().clear();
-
-            if (sub.getProvidedProducts() != null) {
-                for (Product p : sub.getProvidedProducts()) {
-                    existingPool.addProvidedProduct(new ProvidedProduct(p.getId(),
-                        p.getName()));
-                }
-            }
+            existingPool.getProvidedProducts().addAll(incomingProvided);
         }
         return productsChanged;
     }
@@ -284,15 +292,31 @@ public class PoolRules {
     private boolean checkForChangedSubProducts(Subscription sub,
         PoolHelper helper, Pool existingPool) {
 
-        boolean productsChanged = helper.checkForChangedSubProducts(existingPool, sub);
+        boolean productsChanged = false;
+        if (sub.getSubProduct() != null) {
+            productsChanged = !sub.getSubProduct().getId().equals(
+                existingPool.getSubProductId());
+            productsChanged = productsChanged ||
+                !sub.getSubProduct().getName().equals(existingPool.getSubProductName());
+        }
+
+        // Build expected set of ProvidedProducts and compare:
+        Set<SubProvidedProduct> currentProvided = existingPool.getSubProvidedProducts();
+        Set<SubProvidedProduct> incomingProvided = new HashSet<SubProvidedProduct>();
+        if (sub.getSubProvidedProducts() != null) {
+            for (Product p : sub.getSubProvidedProducts()) {
+                incomingProvided.add(new SubProvidedProduct(p.getId(), p.getName(),
+                    existingPool));
+            }
+        }
+        productsChanged = productsChanged || !currentProvided.equals(incomingProvided);
 
         if (productsChanged) {
-            if (sub.getSubProvidedProducts() != null) {
-                for (Product p : sub.getSubProvidedProducts()) {
-                    existingPool.addSubProvidedProduct(new SubProvidedProduct(p.getId(),
-                        p.getName()));
-                }
-            }
+            log.info("   Subscription sub-products changed.");
+            existingPool.setSubProductName(sub.getSubProduct().getName());
+            existingPool.setSubProductId(sub.getSubProduct().getId());
+            existingPool.getSubProvidedProducts().clear();
+            existingPool.getSubProvidedProducts().addAll(incomingProvided);
         }
         return productsChanged;
     }

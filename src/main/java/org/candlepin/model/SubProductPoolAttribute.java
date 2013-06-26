@@ -19,6 +19,7 @@ import javax.persistence.Embeddable;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.codehaus.jackson.map.annotate.JsonFilter;
 
 /**
@@ -61,6 +62,14 @@ public class SubProductPoolAttribute extends AbstractPoolAttribute {
         }
         SubProductPoolAttribute another = (SubProductPoolAttribute) anObject;
         return super.equals(anObject) && getProductId().equals(another.getProductId());
+    }
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(5, 13).
+            append(name).
+            append(value).
+            append(productId).
+            toHashCode();
     }
 
 }

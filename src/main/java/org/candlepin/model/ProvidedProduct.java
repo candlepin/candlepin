@@ -26,6 +26,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.codehaus.jackson.map.annotate.JsonFilter;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
@@ -134,4 +135,26 @@ public class ProvidedProduct extends AbstractHibernateObject {
         this.pool = pool;
     }
 
+    @Override
+    public boolean equals(Object anObject) {
+        if (this == anObject) {
+            return true;
+        }
+        if (!(anObject instanceof ProvidedProduct)) {
+            return false;
+        }
+
+        ProvidedProduct another = (ProvidedProduct) anObject;
+
+        return productId.equals(another.getProductId()) &&
+            productName.equals(another.getProductName());
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(449, 3).
+            append(productId).
+            append(productName).
+            toHashCode();
+    }
 }
