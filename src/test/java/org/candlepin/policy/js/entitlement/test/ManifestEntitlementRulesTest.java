@@ -365,7 +365,8 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         assertTrue(results.getWarnings().isEmpty());
 
         ValidationError error = results.getErrors().get(0);
-        assertEquals("rulefailed.subproduct.unsupported.by.consumer", error.getResourceKey());
+        assertEquals("rulefailed.subproduct.unsupported.by.consumer",
+            error.getResourceKey());
     }
 
     @Test
@@ -384,7 +385,8 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         assertTrue(results.getErrors().isEmpty());
 
         ValidationWarning warning = results.getWarnings().get(0);
-        assertEquals("rulewarning.subproduct.unsupported.by.consumer", warning.getResourceKey());
+        assertEquals("rulewarning.subproduct.unsupported.by.consumer",
+            warning.getResourceKey());
     }
 
     @Test
@@ -403,7 +405,8 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         assertTrue(results.getWarnings().isEmpty());
 
         ValidationError error = results.getErrors().get(0);
-        assertEquals("rulefailed.subproduct.unsupported.by.consumer", error.getResourceKey());
+        assertEquals("rulefailed.subproduct.unsupported.by.consumer",
+            error.getResourceKey());
     }
 
     @Test

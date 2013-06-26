@@ -46,7 +46,6 @@ import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.SubProductPoolAttribute;
-import org.candlepin.model.SubProvidedProduct;
 import org.candlepin.model.Subscription;
 import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.pool.PoolRules;
@@ -115,8 +114,8 @@ public class PoolRulesTest {
             p.setSubProductId(sub.getSubProduct().getId());
             p.setSubProductName(sub.getSubProduct().getName());
             for (ProductAttribute attr : sub.getSubProduct().getAttributes()) {
-                p.addSubProductAttribute(new SubProductPoolAttribute(attr.getName(), attr.getValue(),
-                    sub.getProduct().getId()));
+                p.addSubProductAttribute(new SubProductPoolAttribute(attr.getName(),
+                    attr.getValue(), sub.getProduct().getId()));
             }
         }
 

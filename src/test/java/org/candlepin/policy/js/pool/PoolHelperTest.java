@@ -30,7 +30,6 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
-import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductPoolAttribute;
@@ -38,7 +37,6 @@ import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.SubProvidedProduct;
 import org.candlepin.model.Subscription;
 import org.candlepin.policy.js.ProductCache;
-import org.candlepin.policy.js.pool.PoolHelper;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.TestUtil;
 import org.junit.Before;
@@ -318,8 +316,10 @@ public class PoolHelperTest {
         mainPoolProduct.setAttribute("A1", "V1");
         mainPoolProduct.setAttribute("A2", "V2");
 
-        SubProvidedProduct subProvided1 = new SubProvidedProduct("sub-pp-1", "Sub Provided 1");
-        SubProvidedProduct subProvided2 = new SubProvidedProduct("sub-pp-2", "Sub Provided 2");
+        SubProvidedProduct subProvided1 = new SubProvidedProduct("sub-pp-1",
+            "Sub Provided 1");
+        SubProvidedProduct subProvided2 = new SubProvidedProduct("sub-pp-2",
+            "Sub Provided 2");
 
         Set<SubProvidedProduct> subProvidedProducts = new HashSet<SubProvidedProduct>();
         subProvidedProducts.add(subProvided1);

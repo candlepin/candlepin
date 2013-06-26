@@ -50,12 +50,10 @@ import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
 import java.io.Reader;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -588,7 +586,8 @@ public class EntitlementImporterTest {
 
         Pool pool = TestUtil.createPool(owner, parentProduct, provided, subProduct.getId(),
             subProvidedProducts, 3);
-        EntitlementCertificate cert = createEntitlementCertificate("my-test-key", "my-cert");
+        EntitlementCertificate cert = createEntitlementCertificate("my-test-key",
+            "my-cert");
         Entitlement ent = TestUtil.createEntitlement(owner, consumer, pool, cert);
         ent.setQuantity(3);
 
@@ -601,7 +600,7 @@ public class EntitlementImporterTest {
         productsById.put(pp1.getProductId(),
             TestUtil.createProduct(pp1.getProductId(), pp1.getProductName()));
         productsById.put(subProduct.getId(), subProduct);
-        productsById.put(subProvided1.getProductId(),TestUtil.createProduct(
+        productsById.put(subProvided1.getProductId(), TestUtil.createProduct(
             subProvided1.getProductId(), subProvided1.getProductName()));
 
         Subscription sub = importer.importObject(om, reader, owner,
@@ -650,10 +649,6 @@ public class EntitlementImporterTest {
         sub.setOwner(owner);
         sub.setId("" + index++);
         return sub;
-    }
-
-    private void addSubProductData(Product subProduct, Set<SubProvidedProduct> subProvided) {
-
     }
 
     protected EntitlementCertificate createEntitlementCertificate(String key,
