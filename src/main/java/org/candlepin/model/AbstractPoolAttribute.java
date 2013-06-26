@@ -109,7 +109,7 @@ public abstract class AbstractPoolAttribute extends AbstractHibernateObject
         Attribute another = (Attribute) anObject;
 
         return
-            name.equals(another.getName());
+            name.equals(another.getName()) && value.equals(another.getValue());
     }
 
     @Override

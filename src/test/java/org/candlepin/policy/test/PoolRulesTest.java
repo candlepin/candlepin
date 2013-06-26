@@ -799,6 +799,8 @@ public class PoolRulesTest {
         when(configMock.standalone()).thenReturn(false);
         Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
         s.setQuantity(10L);
+        when(productAdapterMock.getProductById(s.getProduct().getId()))
+            .thenReturn(s.getProduct());
 
         // Setup a pool with a single (different) provided product:
         Pool p = copyFromSub(s);

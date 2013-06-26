@@ -42,7 +42,7 @@ public class SubProductPoolAttribute extends AbstractPoolAttribute {
     }
 
     public String toString() {
-        return "ProductPoolAttribute [id=" + id + ", name=" + name + ", value=" +
+        return "SubProductPoolAttribute [id=" + id + ", name=" + name + ", value=" +
             value + ", productId=" + productId + "]";
     }
 
@@ -52,6 +52,15 @@ public class SubProductPoolAttribute extends AbstractPoolAttribute {
 
     public String getProductId() {
         return productId;
+    }
+
+    @Override
+    public boolean equals(Object anObject) {
+        if (!(anObject instanceof ProductPoolAttribute)) {
+            return false;
+        }
+        SubProductPoolAttribute another = (SubProductPoolAttribute) anObject;
+        return super.equals(anObject) && getProductId().equals(another.getProductId());
     }
 
 }

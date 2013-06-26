@@ -54,4 +54,12 @@ public class ProductPoolAttribute extends AbstractPoolAttribute {
         return productId;
     }
 
+    @Override
+    public boolean equals(Object anObject) {
+        if (!(anObject instanceof ProductPoolAttribute)) {
+            return false;
+        }
+        ProductPoolAttribute another = (ProductPoolAttribute) anObject;
+        return super.equals(anObject) && getProductId().equals(another.getProductId());
+    }
 }

@@ -177,7 +177,7 @@ public class PoolHelper extends AttributeHelper {
     }
 
     /**
-     * Copies all of the {@link Products} and sub-product attributes onto the pool.
+     * Copies all of the {@link Products} attributes onto the pool.
      * If an attribute already exists, it will be updated. Any attributes that are
      * on the {@link Pool} but not on the {@link Product} will be removed.
      *
@@ -187,103 +187,52 @@ public class PoolHelper extends AttributeHelper {
      * @return true if the pools attributes changed, false otherwise.
      */
     protected boolean copyProductAttributesOntoPool(String productId, Pool pool) {
-        Set<String> processed = new HashSet<String>();
-
         boolean hasChanged = false;
         Product product = productCache.getProductById(productId);
+
+        // Build a set of what we would expect and compare them to the current:
+        Set<ProductPoolAttribute> currentAttrs = pool.getProductAttributes();
+        Set<ProductPoolAttribute> incomingAttrs = new HashSet<ProductPoolAttribute>();
         if (product != null) {
             for (Attribute attr : product.getAttributes()) {
-
-                String attributeName = attr.getName();
-                String attributeValue = attr.getValue();
-
-                // Add to the processed list so that we can determine which should
-                // be removed later.
-                processed.add(attributeName);
-
-                if (pool.hasProductAttribute(attributeName) &&
-                    attributeValue != null) {
-                    ProductPoolAttribute provided =
-                        pool.getProductAttribute(attributeName);
-                    String providedValue = provided.getValue();
-                    if (providedValue != null) {
-                        boolean productsAreSame =
-                            product.getId().equals(provided.getProductId());
-                        boolean attrValueSame = attributeValue.equals(providedValue);
-                        if (productsAreSame && attrValueSame) {
-                            continue;
-                        }
-                    }
-                }
-
-                // Change detected - update the attribute
-                pool.setProductAttribute(attributeName, attributeValue,
-                    product.getId());
-                hasChanged = true;
+                ProductPoolAttribute newAttr = new ProductPoolAttribute(attr.getName(),
+                    attr.getValue(), product.getId());
+                newAttr.setPool(pool);
+                incomingAttrs.add(newAttr);
             }
-
-            // Determine if any should be removed.
-            Set<ProductPoolAttribute> toRemove =
-                new HashSet<ProductPoolAttribute>();
-            for (ProductPoolAttribute toCheck : pool.getProductAttributes()) {
-                if (!processed.contains(toCheck.getName())) {
-                    toRemove.add(toCheck);
-                    hasChanged = true;
-                }
-            }
-            pool.getProductAttributes().removeAll(toRemove);
         }
+
+        if (!currentAttrs.equals(incomingAttrs)) {
+            hasChanged = true;
+            pool.getProductAttributes().clear();
+            pool.getProductAttributes().addAll(incomingAttrs);
+        }
+
         return hasChanged;
     }
 
-    // TODO: refactor with above method
     protected boolean copySubProductAttributesOntoPool(String productId, Pool pool) {
-        Set<String> processed = new HashSet<String>();
-
         boolean hasChanged = false;
         Product product = productCache.getProductById(productId);
+
+        // Build a set of what we would expect and compare them to the current:
+        Set<SubProductPoolAttribute> currentAttrs = pool.getSubProductAttributes();
+        Set<SubProductPoolAttribute> incomingAttrs = new HashSet<SubProductPoolAttribute>();
         if (product != null) {
             for (Attribute attr : product.getAttributes()) {
-
-                String attributeName = attr.getName();
-                String attributeValue = attr.getValue();
-
-                // Add to the processed list so that we can determine which should
-                // be removed later.
-                processed.add(attributeName);
-
-                if (pool.hasSubProductAttribute(attributeName) &&
-                    attributeValue != null) {
-                    SubProductPoolAttribute provided =
-                        pool.getSubProductAttribute(attributeName);
-                    String providedValue = provided.getValue();
-                    if (providedValue != null) {
-                        boolean productsAreSame =
-                            product.getId().equals(provided.getProductId());
-                        boolean attrValueSame = attributeValue.equals(providedValue);
-                        if (productsAreSame && attrValueSame) {
-                            continue;
-                        }
-                    }
-                }
-
-                // Change detected - update the attribute
-                pool.setSubProductAttribute(attributeName, attributeValue,
-                    product.getId());
-                hasChanged = true;
+                SubProductPoolAttribute newAttr = new SubProductPoolAttribute(
+                    attr.getName(), attr.getValue(), product.getId());
+                newAttr.setPool(pool);
+                incomingAttrs.add(newAttr);
             }
-
-            // Determine if any should be removed.
-            Set<SubProductPoolAttribute> toRemove =
-                new HashSet<SubProductPoolAttribute>();
-            for (SubProductPoolAttribute toCheck : pool.getSubProductAttributes()) {
-                if (!processed.contains(toCheck.getName())) {
-                    toRemove.add(toCheck);
-                    hasChanged = true;
-                }
-            }
-            pool.getSubProductAttributes().removeAll(toRemove);
         }
+
+        if (!currentAttrs.equals(incomingAttrs)) {
+            hasChanged = true;
+            pool.getSubProductAttributes().clear();
+            pool.getSubProductAttributes().addAll(incomingAttrs);
+        }
+
         return hasChanged;
     }
 
@@ -347,7 +296,6 @@ public class PoolHelper extends AttributeHelper {
         return changeFound;
     }
 
-    // TODO: refactor with above method
     public boolean checkForChangedSubProducts(Pool existingPool, Subscription sub) {
         Set<String> poolProducts = new HashSet<String>();
         Set<String> incomingProducts = new HashSet<String>();
@@ -380,47 +328,4 @@ public class PoolHelper extends AttributeHelper {
             !StringUtils.equals(existingPool.getAccountNumber(), sub.getAccountNumber()) ||
             !StringUtils.equals(existingPool.getContractNumber(), sub.getContractNumber()));
     }
-
-    private boolean haveAttributesChanged(Pool existing, Subscription sub) {
-        Set<ProductPoolAttribute> attribs =
-            existing.getProductAttributes();
-
-        // should probably make this part of Pool.
-        Map<String, List<ProductPoolAttribute>> byProductId =
-            new HashMap<String, List<ProductPoolAttribute>>();
-
-        for (ProductPoolAttribute attrib : attribs) {
-            List<ProductPoolAttribute> attribList =
-                byProductId.get(attrib.getProductId());
-
-            if (attribList == null) {
-                attribList = new LinkedList<ProductPoolAttribute>();
-                attribList.add(attrib);
-                byProductId.put(attrib.getProductId(), attribList);
-            }
-            else {
-                attribList.add(attrib);
-            }
-        }
-
-        for (Product product : sub.getProvidedProducts()) {
-            List<ProductPoolAttribute> attribList =
-                byProductId.get(product.getId());
-
-            if (attribList == null) {
-                break;
-            }
-
-            for (ProductPoolAttribute attrib : attribList) {
-                ProductAttribute pa = product.getAttribute(attrib.getName());
-                if (!pa.getValue().equals(attrib.getValue())) {
-                    // we found a change, no need to look any further
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
 }
