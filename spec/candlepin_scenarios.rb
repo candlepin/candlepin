@@ -418,3 +418,13 @@ class Hash
     end
   end
 end
+
+module SpecUtils
+
+  def flatten_attributes(attributes)
+      attrs = {}
+      attributes.each do |attribute| attrs[attribute['name']] = attribute['value'] end
+      return attrs
+  end
+
+end

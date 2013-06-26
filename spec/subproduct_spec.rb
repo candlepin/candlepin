@@ -3,6 +3,7 @@ require 'candlepin_scenarios'
 describe 'Sub-pool Subscriptions Should' do
   include CandlepinMethods
   include CandlepinScenarios
+  include SpecUtils
 
   before(:each) do
     @owner = create_owner random_string('instance_owner')
@@ -37,6 +38,8 @@ describe 'Sub-pool Subscriptions Should' do
     })
     @sub_product = create_product(nil, nil, {
       :attributes => {
+          :cores => 2,
+          :sockets=>4
       }
     })
     @eng_product = create_product('300')
@@ -74,6 +77,35 @@ describe 'Sub-pool Subscriptions Should' do
 
     # Guest should now see additional sub-pool:
     @guest_client.list_pools({:consumer => @guest_client.uuid}).size.should == 2
+    guest_pools = @guest_client.list_pools({:consumer => @guest_client.uuid,
+        :product => @sub_product['id']})
+    guest_pools.size.should == 1
+    sub_prod_pool = guest_pools[0]
+    sub_prod_pool['quantity'].should == -1 # unlimited
+    
+    pool_attrs = flatten_attributes(sub_prod_pool['attributes'])
+    verify_attribute(pool_attrs, "requires_consumer_type", 'system')
+    verify_attribute(pool_attrs, "requires_host", @physical_sys.uuid)
+    verify_attribute(pool_attrs, "source_pool_id", @main_pool.id)
+    verify_attribute(pool_attrs, "virt_only", "true")
+    verify_attribute(pool_attrs, "pool_derived", "true")
+    
+    product_attrs = flatten_attributes(sub_prod_pool['productAttributes'])
+    verify_attribute(product_attrs, "sockets", "4")
+    verify_attribute(product_attrs, "cores", "2")
+  end
+  
+  it 'allows guest to consume sub product pool' do
+    @physical_client.consume_pool @main_pool['id']
+    ents = @physical_client.list_entitlements
+    ents.size.should == 1
+    
+    guest_pools = @guest_client.list_pools({:consumer => @guest_client.uuid,
+      :product => @sub_product['id']})
+    guest_pools.size.should == 1
+    @guest_client.consume_pool guest_pools[0]['id']
+    ents = @guest_client.list_entitlements
+    ents.size.should == 1
   end
   
   it 'not be visible by distributor that does not have capability after basic search' do
@@ -101,7 +133,10 @@ describe 'Sub-pool Subscriptions Should' do
       message = JSON.parse(e.http_body)['displayMessage']
       message.should == expected_error
     end
-
   end
 
+  def verify_attribute(attrs, attr_name, attr_value)
+    attrs.should have_key(attr_name)
+    attrs[attr_name].should == attr_value
+  end
 end
