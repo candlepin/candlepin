@@ -35,7 +35,7 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProvidedProduct;
-import org.candlepin.model.SubProvidedProduct;
+import org.candlepin.model.DerivedProvidedProduct;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.test.TestUtil;
@@ -580,9 +580,10 @@ public class EntitlementImporterTest {
 
         // Sub product setup
         Product subProduct = TestUtil.createProduct();
-        SubProvidedProduct subProvided1 = TestUtil.createSubProvidedProduct();
+        DerivedProvidedProduct subProvided1 = TestUtil.createSubProvidedProduct();
 
-        Set<SubProvidedProduct> subProvidedProducts = new HashSet<SubProvidedProduct>();
+        Set<DerivedProvidedProduct> subProvidedProducts =
+            new HashSet<DerivedProvidedProduct>();
         subProvidedProducts.add(subProvided1);
 
         Pool pool = TestUtil.createPool(owner, parentProduct, provided, subProduct.getId(),
@@ -625,9 +626,9 @@ public class EntitlementImporterTest {
         assertEquals(pp1.getProductId(), sub.getProvidedProducts().
             iterator().next().getId());
 
-        assertEquals(subProduct, sub.getSubProduct());
-        assertEquals(1, sub.getSubProvidedProducts().size());
-        assertEquals(subProvided1.getProductId(), sub.getSubProvidedProducts().
+        assertEquals(subProduct, sub.getDerivedProduct());
+        assertEquals(1, sub.getDerivedProvidedProducts().size());
+        assertEquals(subProvided1.getProductId(), sub.getDerivedProvidedProducts().
             iterator().next().getId());
 
         assertNotNull(sub.getCertificate());

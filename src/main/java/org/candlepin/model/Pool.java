@@ -114,7 +114,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
     private String productId;
 
     @Column
-    private String subProductId;
+    private String derivedProductId;
 
     @OneToMany(mappedBy = "pool", targetEntity = ProvidedProduct.class)
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
@@ -122,11 +122,12 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     private Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
 
-    @OneToMany(mappedBy = "pool", targetEntity = SubProvidedProduct.class)
+    @OneToMany(mappedBy = "pool", targetEntity = DerivedProvidedProduct.class)
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.MERGE,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
-    private Set<SubProvidedProduct> subProvidedProducts = new HashSet<SubProvidedProduct>();
+    private Set<DerivedProvidedProduct> derivedProvidedProducts =
+        new HashSet<DerivedProvidedProduct>();
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "pool")
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
@@ -145,8 +146,8 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.MERGE,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
-    private Set<SubProductPoolAttribute> subProductAttributes =
-        new HashSet<SubProductPoolAttribute>();
+    private Set<DerivedProductPoolAttribute> derivedProductAttributes =
+        new HashSet<DerivedProductPoolAttribute>();
 
     @OneToMany(mappedBy = "pool", cascade = CascadeType.ALL)
     @LazyCollection(LazyCollectionOption.EXTRA)
@@ -170,7 +171,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
     // TODO: May not still be needed, iirc a temporary hack for client.
     private String productName;
 
-    private String subProductName;
+    private String derivedProductName;
 
     @Version
     private int version;
@@ -507,11 +508,6 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
         providedProducts.add(provided);
     }
 
-    public void addSubProvidedProduct(SubProvidedProduct provided) {
-        provided.setPool(this);
-        subProvidedProducts.add(provided);
-    }
-
     public void setProvidedProducts(Set<ProvidedProduct> providedProducts) {
         this.providedProducts = providedProducts;
     }
@@ -602,8 +598,8 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
         return productAttributes;
     }
 
-    public Set<SubProductPoolAttribute> getSubProductAttributes() {
-        return subProductAttributes;
+    public Set<DerivedProductPoolAttribute> getDerivedProductAttributes() {
+        return derivedProductAttributes;
     }
 
     public void addProductAttribute(ProductPoolAttribute attrib) {
@@ -611,9 +607,9 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
         this.productAttributes.add(attrib);
     }
 
-    public void addSubProductAttribute(SubProductPoolAttribute attrib) {
+    public void addSubProductAttribute(DerivedProductPoolAttribute attrib) {
         attrib.setPool(this);
-        this.subProductAttributes.add(attrib);
+        this.derivedProductAttributes.add(attrib);
     }
 
     public void setProductAttribute(String key, String value, String productId) {
@@ -630,15 +626,15 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
         }
     }
 
-    public void setSubProductAttribute(String key, String value, String productId) {
-        SubProductPoolAttribute existing =
-            findAttribute(this.subProductAttributes, key);
+    public void setDerivedProductAttribute(String key, String value, String productId) {
+        DerivedProductPoolAttribute existing =
+            findAttribute(this.derivedProductAttributes, key);
         if (existing != null) {
             existing.setValue(value);
             existing.setProductId(productId);
         }
         else {
-            SubProductPoolAttribute attr = new SubProductPoolAttribute(key,
+            DerivedProductPoolAttribute attr = new DerivedProductPoolAttribute(key,
                 value, productId);
             addSubProductAttribute(attr);
         }
@@ -649,15 +645,15 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
     }
 
     public boolean hasSubProductAttribute(String name) {
-        return findAttribute(this.subProductAttributes, name) != null;
+        return findAttribute(this.derivedProductAttributes, name) != null;
     }
 
     public ProductPoolAttribute getProductAttribute(String name) {
         return findAttribute(this.productAttributes, name);
     }
 
-    public SubProductPoolAttribute getSubProductAttribute(String name) {
-        return findAttribute(this.subProductAttributes, name);
+    public DerivedProductPoolAttribute getDerivedProductAttribute(String name) {
+        return findAttribute(this.derivedProductAttributes, name);
     }
 
     private <A extends AbstractPoolAttribute> A findAttribute(Set<A> attributes,
@@ -716,27 +712,28 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
         calculatedAttributes.put(name, value);
     }
 
-    public String getSubProductId() {
-        return subProductId;
+    public String getDerivedProductId() {
+        return derivedProductId;
     }
 
-    public void setSubProductId(String subProductId) {
-        this.subProductId = subProductId;
+    public void setDerivedProductId(String subProductId) {
+        this.derivedProductId = subProductId;
     }
 
-    public Set<SubProvidedProduct> getSubProvidedProducts() {
-        return subProvidedProducts;
+    public Set<DerivedProvidedProduct> getDerivedProvidedProducts() {
+        return derivedProvidedProducts;
     }
 
-    public void setSubProvidedProducts(Set<SubProvidedProduct> subProvidedProducts) {
-        this.subProvidedProducts = subProvidedProducts;
+    public void setDerivedProvidedProducts(
+        Set<DerivedProvidedProduct> subProvidedProducts) {
+        this.derivedProvidedProducts = subProvidedProducts;
     }
 
-    public String getSubProductName() {
-        return subProductName;
+    public String getDerivedProductName() {
+        return derivedProductName;
     }
 
-    public void setSubProductName(String subProductName) {
-        this.subProductName = subProductName;
+    public void setDerivedProductName(String subProductName) {
+        this.derivedProductName = subProductName;
     }
 }

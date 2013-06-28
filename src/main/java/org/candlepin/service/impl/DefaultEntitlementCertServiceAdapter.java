@@ -139,8 +139,8 @@ public class DefaultEntitlementCertServiceAdapter extends
             // entitlement for derived pool who's sub specifies a
             // sub product.
             boolean derived = pool.hasAttribute("pool_derived");
-            providedProducts = derived && sub.getSubProduct() != null ?
-                sub.getSubProvidedProducts() : sub.getProvidedProducts();
+            providedProducts = derived && sub.getDerivedProduct() != null ?
+                sub.getDerivedProvidedProducts() : sub.getProvidedProducts();
         }
         else {
             // If this pool doesn't have a subscription associated with it, we need to

@@ -233,15 +233,15 @@ module ExportMethods
     @virt_product = @cp.create_product(random_string('virt_product'),
                                   random_string('virt_product'),
                                   {:attributes => {:virt_only => true}})
-    
+
     @product3 = @cp.create_product(random_string('sub-prod'), random_string(), {
         :attributes => { :arch => "x86_64", :virt_limit => "unlimited"}
     })
-    
-    @sub_product = @cp.create_product(random_string('sub-prov-prod'), random_string(),
+
+    @derived_product = @cp.create_product(random_string('sub-prov-prod'), random_string(),
         {"sockets" => "2"})
-    @sub_provided_prod = @cp.create_product(random_string(), random_string());
-    
+    @derived_provided_prod = @cp.create_product(random_string(), random_string());
+
     content = create_content({:metadata_expire => 6000,
                               :required_tags => "TAG1,TAG2"})
     arch_content = create_content({:metadata_expire => 6000,
@@ -251,7 +251,7 @@ module ExportMethods
     @cp.add_content_to_product(@product1.id, content.id)
     @cp.add_content_to_product(@product2.id, content.id)
     @cp.add_content_to_product(@product2.id, arch_content.id)
-    @cp.add_content_to_product(@sub_product.id, content.id)
+    @cp.add_content_to_product(@derived_product.id, content.id)
 
     @end_date = Date.new(2025, 5, 29)
 
@@ -259,7 +259,7 @@ module ExportMethods
     sub2 = @cp.create_subscription(@owner['key'], @product2.id, 4, [], '', '12345', '6789', nil, @end_date)
     sub3 = @cp.create_subscription(@owner['key'], @virt_product.id, 10, [], '', '12345', '6789', nil, @end_date)
     sub4 = @cp.create_subscription(@owner['key'], @product3.id, 5, [], '', '12345', '6789', nil, @end_date,
-      {'sub_product_id' => @sub_product['id'],  'sub_provided_products' => [@sub_provided_prod['id']]})
+      {'derived_product_id' => @derived_product['id'],  'derived_provided_products' => [@derived_provided_prod['id']]})
 
     @cp.refresh_pools(@owner['key'])
 

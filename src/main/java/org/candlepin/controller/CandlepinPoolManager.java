@@ -588,7 +588,7 @@ public class CandlepinPoolManager implements PoolManager {
             // Need to make sure that we check for a defined sub product
             // if it is a derived pool.
             boolean derived = pool.hasAttribute("pool_derived");
-            product = derived && sub.getSubProduct() != null ? sub.getSubProduct() :
+            product = derived && sub.getDerivedProduct() != null ? sub.getDerivedProduct() :
                 sub.getProduct();
         }
         else {

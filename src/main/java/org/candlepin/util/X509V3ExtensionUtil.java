@@ -184,8 +184,8 @@ public class X509V3ExtensionUtil extends X509Util{
         // is derived and we have a sub product on the sub, then we must
         // use that product so that the appropriate bits of data are copied.
         boolean derivedPool = ent.getPool().hasAttribute("pool_derived");
-        Product product = derivedPool && sub.getSubProduct() != null ?
-            sub.getSubProduct() : sub.getProduct();
+        Product product = derivedPool && sub.getDerivedProduct() != null ?
+            sub.getDerivedProduct() : sub.getProduct();
 
         toReturn.setSku(product.getId().toString());
         toReturn.setName(product.getName());

@@ -42,7 +42,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.RulesCurator;
-import org.candlepin.model.SubProvidedProduct;
+import org.candlepin.model.DerivedProvidedProduct;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.User;
 import org.codehaus.jackson.JsonNode;
@@ -124,9 +124,9 @@ public class TestUtil {
             "Test Provided Product " + random);
     }
 
-    public static SubProvidedProduct createSubProvidedProduct() {
+    public static DerivedProvidedProduct createSubProvidedProduct() {
         int random = randomInt();
-        return new SubProvidedProduct("test-sub-provided-product-" + random,
+        return new DerivedProvidedProduct("test-sub-provided-product-" + random,
             "Test Sub Provided Product " + random);
     }
 
@@ -183,10 +183,10 @@ public class TestUtil {
 
     public static Pool createPool(Owner owner, Product product,
         Set<ProvidedProduct> providedProducts, String subProductId,
-        Set<SubProvidedProduct> subProvidedProducts, int quantity) {
+        Set<DerivedProvidedProduct> subProvidedProducts, int quantity) {
         Pool pool = createPool(owner, product, providedProducts, quantity);
-        pool.setSubProductId(subProductId);
-        pool.setSubProvidedProducts(subProvidedProducts);
+        pool.setDerivedProductId(subProductId);
+        pool.setDerivedProvidedProducts(subProvidedProducts);
         return pool;
     }
 

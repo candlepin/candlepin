@@ -34,7 +34,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductPoolAttribute;
 import org.candlepin.model.ProvidedProduct;
-import org.candlepin.model.SubProvidedProduct;
+import org.candlepin.model.DerivedProvidedProduct;
 import org.candlepin.model.Subscription;
 import org.candlepin.policy.js.ProductCache;
 import org.candlepin.service.ProductServiceAdapter;
@@ -278,12 +278,13 @@ public class PoolHelperTest {
         mainPoolProduct.setAttribute("A1", "V1");
         mainPoolProduct.setAttribute("A2", "V2");
 
-        SubProvidedProduct subProvided1 =
-            new SubProvidedProduct("sub-pp-1", "Sub Provided 1");
-        SubProvidedProduct subProvided2 =
-            new SubProvidedProduct("sub-pp-2", "Sub Provided 2");
+        DerivedProvidedProduct subProvided1 =
+            new DerivedProvidedProduct("sub-pp-1", "Sub Provided 1");
+        DerivedProvidedProduct subProvided2 =
+            new DerivedProvidedProduct("sub-pp-2", "Sub Provided 2");
 
-        Set<SubProvidedProduct> subProvidedProducts = new HashSet<SubProvidedProduct>();
+        Set<DerivedProvidedProduct> subProvidedProducts =
+            new HashSet<DerivedProvidedProduct>();
         subProvidedProducts.add(subProvided1);
         subProvidedProducts.add(subProvided2);
 
@@ -294,16 +295,16 @@ public class PoolHelperTest {
 
         Pool targetPool = TestUtil.createPool(mainPoolProduct);
         targetPool.setId("sub-prod-pool");
-        targetPool.setSubProductId(subProduct.getId());
-        targetPool.setSubProductName(subProduct.getName());
-        targetPool.setSubProvidedProducts(subProvidedProducts);
+        targetPool.setDerivedProductId(subProduct.getId());
+        targetPool.setDerivedProductName(subProduct.getName());
+        targetPool.setDerivedProvidedProducts(subProvidedProducts);
 
         when(psa.getProductById(subProduct.getId())).thenReturn(subProduct);
         when(ent.getConsumer()).thenReturn(cons);
 
         PoolHelper ph = new PoolHelper(pm, productCache, ent);
-        Pool hostRestrictedPool = ph.createHostRestrictedPool(targetPool.getSubProductId(),
-            targetPool, "unlimited");
+        Pool hostRestrictedPool = ph.createHostRestrictedPool(
+            targetPool.getDerivedProductId(), targetPool, "unlimited");
 
         assertEquals(targetPool.getId(),
             hostRestrictedPool.getAttributeValue("source_pool_id"));

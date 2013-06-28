@@ -1552,7 +1552,7 @@ var Entitlement = {
         var pool = context.pool;
         var caller = context.caller;
         var consumer = context.consumer;
-        
+
         log.debug("pre_global being called by [" + caller + "]");
 
         if (consumer.type.manifest) {
@@ -1561,12 +1561,12 @@ var Entitlement = {
         	//
         	// NOTE: We check for subProductId in the pre_global space because it is not
         	// a product attribute.
-            if (pool.subProductId && !Utils.isCapable(consumer, "sub_product")) {
+            if (pool.derivedProductId && !Utils.isCapable(consumer, "derived_product")) {
                 if (BEST_POOLS_CALLER == caller || BIND_CALLER == caller) {
-                    result.addError("rulefailed.subproduct.unsupported.by.consumer");
+                    result.addError("rulefailed.derivedproduct.unsupported.by.consumer");
                 }
                 else {
-                    result.addWarning("rulewarning.subproduct.unsupported.by.consumer");
+                    result.addWarning("rulewarning.derivedproduct.unsupported.by.consumer");
                 }
             }
             return JSON.stringify(result);

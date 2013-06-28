@@ -350,14 +350,14 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
     }
 
     @Test
-    public void preEntitlementNoSubProductCapabilityProducesErrorOnBind() {
+    public void preEntitlementNoDerivedProductCapabilityProducesErrorOnBind() {
         Consumer c = TestUtil.createConsumer();
         c.setCapabilities(new HashSet<ConsumerCapability>());
         c.getType().setManifest(true);
 
         Product prod = TestUtil.createProduct();
         Pool p = TestUtil.createPool(prod);
-        p.setSubProductId("sub-prod-id");
+        p.setDerivedProductId("sub-prod-id");
 
         ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.BIND);
         assertNotNull(results);
@@ -365,19 +365,19 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         assertTrue(results.getWarnings().isEmpty());
 
         ValidationError error = results.getErrors().get(0);
-        assertEquals("rulefailed.subproduct.unsupported.by.consumer",
+        assertEquals("rulefailed.derivedproduct.unsupported.by.consumer",
             error.getResourceKey());
     }
 
     @Test
-    public void preEntitlementNoSubProductCapabilityProducesWarningOnList() {
+    public void preEntitlementNoDerivedProductCapabilityProducesWarningOnList() {
         Consumer c = TestUtil.createConsumer();
         c.setCapabilities(new HashSet<ConsumerCapability>());
         c.getType().setManifest(true);
 
         Product prod = TestUtil.createProduct();
         Pool p = TestUtil.createPool(prod);
-        p.setSubProductId("sub-prod-id");
+        p.setDerivedProductId("sub-prod-id");
 
         ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.LIST_POOLS);
         assertNotNull(results);
@@ -385,19 +385,19 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         assertTrue(results.getErrors().isEmpty());
 
         ValidationWarning warning = results.getWarnings().get(0);
-        assertEquals("rulewarning.subproduct.unsupported.by.consumer",
+        assertEquals("rulewarning.derivedproduct.unsupported.by.consumer",
             warning.getResourceKey());
     }
 
     @Test
-    public void preEntitlementNoSubProductCapabilityProducesErrorOnBestPools() {
+    public void preEntitlementNoDerivedProductCapabilityProducesErrorOnBestPools() {
         Consumer c = TestUtil.createConsumer();
         c.setCapabilities(new HashSet<ConsumerCapability>());
         c.getType().setManifest(true);
 
         Product prod = TestUtil.createProduct();
         Pool p = TestUtil.createPool(prod);
-        p.setSubProductId("sub-prod-id");
+        p.setDerivedProductId("sub-prod-id");
 
         ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.BEST_POOLS);
         assertNotNull(results);
@@ -405,21 +405,21 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         assertTrue(results.getWarnings().isEmpty());
 
         ValidationError error = results.getErrors().get(0);
-        assertEquals("rulefailed.subproduct.unsupported.by.consumer",
+        assertEquals("rulefailed.derivedproduct.unsupported.by.consumer",
             error.getResourceKey());
     }
 
     @Test
-    public void preEntitlementWithSubProductCapabilitySuccessOnBind() {
+    public void preEntitlementWithDerivedProductCapabilitySuccessOnBind() {
         Consumer c = TestUtil.createConsumer();
         HashSet<ConsumerCapability> capabilities = new HashSet<ConsumerCapability>();
-        capabilities.add(new ConsumerCapability(c, "sub_product"));
+        capabilities.add(new ConsumerCapability(c, "derived_product"));
         c.setCapabilities(capabilities);
         c.getType().setManifest(true);
 
         Product prod = TestUtil.createProduct();
         Pool p = TestUtil.createPool(prod);
-        p.setSubProductId("sub-prod-id");
+        p.setDerivedProductId("sub-prod-id");
 
         ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.BIND);
         assertNotNull(results);
@@ -427,16 +427,16 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
     }
 
     @Test
-    public void preEntitlementWithSubProductCapabilitySuccessOnBestPools() {
+    public void preEntitlementWithDerivedProductCapabilitySuccessOnBestPools() {
         Consumer c = TestUtil.createConsumer();
         HashSet<ConsumerCapability> capabilities = new HashSet<ConsumerCapability>();
-        capabilities.add(new ConsumerCapability(c, "sub_product"));
+        capabilities.add(new ConsumerCapability(c, "derived_product"));
         c.setCapabilities(capabilities);
         c.getType().setManifest(true);
 
         Product prod = TestUtil.createProduct();
         Pool p = TestUtil.createPool(prod);
-        p.setSubProductId("sub-prod-id");
+        p.setDerivedProductId("sub-prod-id");
 
         ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.BEST_POOLS);
         assertNotNull(results);

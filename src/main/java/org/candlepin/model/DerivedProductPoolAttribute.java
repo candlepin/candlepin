@@ -23,27 +23,27 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.codehaus.jackson.map.annotate.JsonFilter;
 
 /**
- * SubProductPoolAttribute
+ * DerivedProductPoolAttribute
  */
 @Entity
-@Table(name = "cp_subproduct_pool_attribute")
+@Table(name = "cp_derivedprod_pool_attrs")
 @Embeddable
 @JsonFilter("ProductPoolAttributeFilter")
-public class SubProductPoolAttribute extends AbstractPoolAttribute {
+public class DerivedProductPoolAttribute extends AbstractPoolAttribute {
 
     @Column(nullable = false)
     private String productId;
 
-    public SubProductPoolAttribute() {
+    public DerivedProductPoolAttribute() {
     }
 
-    public SubProductPoolAttribute(String name, String val, String productId) {
+    public DerivedProductPoolAttribute(String name, String val, String productId) {
         super(name, val);
         this.productId = productId;
     }
 
     public String toString() {
-        return "SubProductPoolAttribute [id=" + id + ", name=" + name + ", value=" +
+        return "DerivedProductPoolAttribute [id=" + id + ", name=" + name + ", value=" +
             value + ", productId=" + productId + "]";
     }
 
@@ -60,7 +60,7 @@ public class SubProductPoolAttribute extends AbstractPoolAttribute {
         if (!(anObject instanceof ProductPoolAttribute)) {
             return false;
         }
-        SubProductPoolAttribute another = (SubProductPoolAttribute) anObject;
+        DerivedProductPoolAttribute another = (DerivedProductPoolAttribute) anObject;
         return super.equals(anObject) && getProductId().equals(another.getProductId());
     }
     @Override

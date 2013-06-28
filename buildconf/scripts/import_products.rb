@@ -143,8 +143,8 @@ data['products'].each do |product|
   product_content = product['content'] || []
   dependent_products = product['dependencies'] || []
   relies_on = product['relies_on'] || []
-  sub_product_id = product['sub_product_id']
-  sub_provided_products = product['sub_provided_products'] || []
+  derived_product_id = product['derived_product_id']
+  derived_provided_products = product['derived_provided_products'] || []
 
   attrs['version'] = version
   attrs['variant'] = variant
@@ -176,8 +176,8 @@ data['products'].each do |product|
                                             'order-8675309',
                                             startDate1, endDate1,
                                             {
-                                              'sub_product_id' => sub_product_id,
-                                              'sub_provided_products' => sub_provided_products
+                                              'derived_product_id' => derived_product_id,
+                                              'derived_provided_products' => derived_provided_products
                                             })
       contract_number += 1
       subscription = cp.create_subscription(owner_key,
@@ -188,8 +188,8 @@ data['products'].each do |product|
                                             'order-8675309',
                                             startDate1, endDate1,
                                             {
-                                              'sub_product_id' => sub_product_id,
-                                              'sub_provided_products' => sub_provided_products
+                                              'derived_product_id' => derived_product_id,
+                                              'derived_provided_products' => derived_provided_products
                                             })
 
       # Create a subscription for the future:
@@ -199,8 +199,8 @@ data['products'].each do |product|
                                             'order-8675309',
                                             startDate2, endDate2,
                                             {
-                                              'sub_product_id' => sub_product_id,
-                                              'sub_provided_products' => sub_provided_products
+                                              'derived_product_id' => derived_product_id,
+                                              'derived_provided_products' => derived_provided_products
                                             })
       contract_number += 1
     end

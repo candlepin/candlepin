@@ -249,12 +249,12 @@ describe 'Candlepin Import' do
     # upstream.type caused a failure on some machines
     upstream['type'].should == consumer['type']
   end
-  
-  it 'should contain all sub product data' do
+
+  it 'should contain all derived product data' do
     pool = @cp.list_pools(:owner => @import_owner.id, :product => @product3.id)[0]
     pool.should_not be_nil
-    pool["subProductId"].should == @sub_product.id
-    pool["subProvidedProducts"].length.should == 1
-    pool["subProvidedProducts"][0]["productId"].should == @sub_provided_prod.id
+    pool["derivedProductId"].should == @derived_product.id
+    pool["derivedProvidedProducts"].length.should == 1
+    pool["derivedProvidedProducts"][0]["productId"].should == @derived_provided_prod.id
   end
 end

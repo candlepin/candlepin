@@ -52,17 +52,19 @@ public class PoolUpdate {
     private Boolean orderChanged = false;
 
     /**
-     * True if sub-product ID or name has changed for the pool's sub-product, or any
-     * provided sub-products. (also covers addition/removal of sub-provided products.
+     * True if derived product ID or name has changed for the pool's derived product,
+     * or any
+     * provided derived-products. (also covers addition/removal of derived
+     * provided products.
      */
-    private Boolean subProductsChanged = false;
+    private Boolean derivedProductsChanged = false;
 
     /**
-     * True if sub-product attributes changed. Will be false in situations where we're
-     * refreshing a derived pool, and the subscription's sub-product attributes have
+     * True if derived product attributes changed. Will be false in situations where we're
+     * refreshing a derived pool, and the subscription's derived product attributes have
      * changed because that update would show up as a productAttributesChanged.
      */
-    private Boolean subProductAttributesChanged = false;
+    private Boolean derivedProductAttributesChanged = false;
 
     public PoolUpdate(Pool p) {
         this.pool = p;
@@ -74,7 +76,7 @@ public class PoolUpdate {
     public boolean changed() {
         return datesChanged || quantityChanged || productsChanged ||
             productAttributesChanged ||
-            orderChanged || subProductsChanged || subProductAttributesChanged;
+            orderChanged || derivedProductsChanged || derivedProductAttributesChanged;
     }
 
     public Pool getPool() {
@@ -118,20 +120,21 @@ public class PoolUpdate {
         this.orderChanged = orderChanged;
     }
 
-    public Boolean getSubProductsChanged() {
-        return subProductsChanged;
+    public Boolean getDerivedProductsChanged() {
+        return derivedProductsChanged;
     }
 
-    public void setSubProductsChanged(Boolean subProductsChanged) {
-        this.subProductsChanged = subProductsChanged;
+    public void setDerivedProductsChanged(Boolean derivedProductsChanged) {
+        this.derivedProductsChanged = derivedProductsChanged;
     }
 
-    public Boolean getSubProductAttributesChanged() {
-        return subProductAttributesChanged;
+    public Boolean getDerivedProductAttributesChanged() {
+        return derivedProductAttributesChanged;
     }
 
-    public void setSubProductAttributesChanged(Boolean subProductAttributesChanged) {
-        this.subProductAttributesChanged = subProductAttributesChanged;
+    public void setDerivedProductAttributesChanged(
+        Boolean derivedProductAttributesChanged) {
+        this.derivedProductAttributesChanged = derivedProductAttributesChanged;
     }
 
     public Boolean getProductAttributesChanged() {

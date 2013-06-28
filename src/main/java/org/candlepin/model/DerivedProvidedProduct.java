@@ -38,9 +38,9 @@ import org.hibernate.annotations.GenericGenerator;
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_pool_subproducts")
+@Table(name = "cp_pool_derivedprods")
 @JsonFilter("ProvidedProductFilter")
-public class SubProvidedProduct extends AbstractHibernateObject {
+public class DerivedProvidedProduct extends AbstractHibernateObject {
 
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -60,16 +60,16 @@ public class SubProvidedProduct extends AbstractHibernateObject {
     @XmlTransient
     private Pool pool;
 
-    public SubProvidedProduct() {
+    public DerivedProvidedProduct() {
 
     }
 
-    public SubProvidedProduct(String productId, String productName) {
+    public DerivedProvidedProduct(String productId, String productName) {
         this.productId = productId;
         this.productName = productName;
     }
 
-    public SubProvidedProduct(String productId, String productName, Pool pool) {
+    public DerivedProvidedProduct(String productId, String productName, Pool pool) {
         this.productId = productId;
         this.productName = productName;
         this.pool = pool;
@@ -113,11 +113,11 @@ public class SubProvidedProduct extends AbstractHibernateObject {
         if (this == anObject) {
             return true;
         }
-        if (!(anObject instanceof SubProvidedProduct)) {
+        if (!(anObject instanceof DerivedProvidedProduct)) {
             return false;
         }
 
-        SubProvidedProduct another = (SubProvidedProduct) anObject;
+        DerivedProvidedProduct another = (DerivedProvidedProduct) anObject;
 
         return productId.equals(another.getProductId()) &&
             productName.equals(another.getProductName());

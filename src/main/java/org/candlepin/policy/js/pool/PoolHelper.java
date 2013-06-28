@@ -30,8 +30,8 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductPoolAttribute;
 import org.candlepin.model.ProvidedProduct;
-import org.candlepin.model.SubProductPoolAttribute;
-import org.candlepin.model.SubProvidedProduct;
+import org.candlepin.model.DerivedProductPoolAttribute;
+import org.candlepin.model.DerivedProvidedProduct;
 import org.candlepin.model.Subscription;
 import org.candlepin.policy.js.AttributeHelper;
 import org.candlepin.policy.js.ProductCache;
@@ -68,7 +68,7 @@ public class PoolHelper extends AttributeHelper {
         String quantity) {
 
         Pool consumerSpecificPool = null;
-        if (pool.getSubProductId() == null) {
+        if (pool.getDerivedProductId() == null) {
             consumerSpecificPool = createPool(productId, pool.getOwner(),
                 quantity, pool.getStartDate(), pool.getEndDate(),
                 pool.getContractNumber(), pool.getAccountNumber(), pool.getOrderNumber(),
@@ -79,12 +79,12 @@ public class PoolHelper extends AttributeHelper {
             // with the sub product data that was defined on the parent pool,
             // allowing the sub pool to have different attributes than the parent.
             Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
-            for (SubProvidedProduct subProvided : pool.getSubProvidedProducts()) {
+            for (DerivedProvidedProduct subProvided : pool.getDerivedProvidedProducts()) {
                 providedProducts.add(new ProvidedProduct(subProvided.getProductId(),
                                                          subProvided.getProductName()));
             }
 
-            consumerSpecificPool = createPool(pool.getSubProductId(), pool.getOwner(),
+            consumerSpecificPool = createPool(pool.getDerivedProductId(), pool.getOwner(),
                 quantity, pool.getStartDate(), pool.getEndDate(),
                 pool.getContractNumber(), pool.getAccountNumber(), pool.getOrderNumber(),
                 providedProducts);
@@ -213,11 +213,12 @@ public class PoolHelper extends AttributeHelper {
         Product product = productCache.getProductById(productId);
 
         // Build a set of what we would expect and compare them to the current:
-        Set<SubProductPoolAttribute> currentAttrs = pool.getSubProductAttributes();
-        Set<SubProductPoolAttribute> incomingAttrs = new HashSet<SubProductPoolAttribute>();
+        Set<DerivedProductPoolAttribute> currentAttrs = pool.getDerivedProductAttributes();
+        Set<DerivedProductPoolAttribute> incomingAttrs =
+            new HashSet<DerivedProductPoolAttribute>();
         if (product != null) {
             for (Attribute attr : product.getAttributes()) {
-                SubProductPoolAttribute newAttr = new SubProductPoolAttribute(
+                DerivedProductPoolAttribute newAttr = new DerivedProductPoolAttribute(
                     attr.getName(), attr.getValue(), product.getId());
                 newAttr.setPool(pool);
                 incomingAttrs.add(newAttr);
@@ -226,8 +227,8 @@ public class PoolHelper extends AttributeHelper {
 
         if (!currentAttrs.equals(incomingAttrs)) {
             hasChanged = true;
-            pool.getSubProductAttributes().clear();
-            pool.getSubProductAttributes().addAll(incomingAttrs);
+            pool.getDerivedProductAttributes().clear();
+            pool.getDerivedProductAttributes().addAll(incomingAttrs);
         }
 
         return hasChanged;

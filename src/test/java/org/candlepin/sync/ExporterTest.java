@@ -67,7 +67,7 @@ import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
-import org.candlepin.model.SubProvidedProduct;
+import org.candlepin.model.DerivedProvidedProduct;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.policy.js.export.ExportRules;
 import org.candlepin.service.EntitlementCertServiceAdapter;
@@ -150,7 +150,7 @@ public class ExporterTest {
         Consumer consumer = mock(Consumer.class);
         Entitlement ent = mock(Entitlement.class);
         ProvidedProduct pp = mock(ProvidedProduct.class);
-        SubProvidedProduct spp = mock(SubProvidedProduct.class);
+        DerivedProvidedProduct spp = mock(DerivedProvidedProduct.class);
         Pool pool = mock(Pool.class);
         Rules mrules = mock(Rules.class);
         Principal principal = mock(Principal.class);
@@ -159,7 +159,7 @@ public class ExporterTest {
         Set<ProvidedProduct> ppset = new HashSet<ProvidedProduct>();
         ppset.add(pp);
 
-        Set<SubProvidedProduct> sppSet = new HashSet<SubProvidedProduct>();
+        Set<DerivedProvidedProduct> sppSet = new HashSet<DerivedProvidedProduct>();
         sppSet.add(spp);
 
         Set<Entitlement> entitlements = new HashSet<Entitlement>();
@@ -203,8 +203,8 @@ public class ExporterTest {
         when(pool.getProvidedProducts()).thenReturn(ppset);
         when(pool.getProductId()).thenReturn("MKT-prod");
 
-        when(pool.getSubProvidedProducts()).thenReturn(sppSet);
-        when(pool.getSubProductId()).thenReturn(subProduct.getId());
+        when(pool.getDerivedProvidedProducts()).thenReturn(sppSet);
+        when(pool.getDerivedProductId()).thenReturn(subProduct.getId());
         when(spp.getProductId()).thenReturn(subProvidedProduct.getId());
 
         when(ent.getPool()).thenReturn(pool);

@@ -35,7 +35,7 @@ import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProvidedProduct;
-import org.candlepin.model.SubProvidedProduct;
+import org.candlepin.model.DerivedProvidedProduct;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.model.SubscriptionsCertificate;
@@ -93,17 +93,17 @@ public class EntitlementImporter {
         subscription.setProvidedProducts(products);
 
         // Add any sub product data to the subscription.
-        if (entitlement.getPool().getSubProductId() != null) {
-            subscription.setSubProduct(findProduct(productsById,
-                entitlement.getPool().getSubProductId()));
+        if (entitlement.getPool().getDerivedProductId() != null) {
+            subscription.setDerivedProduct(findProduct(productsById,
+                entitlement.getPool().getDerivedProductId()));
         }
 
         Set<Product> subProvProds = new HashSet<Product>();
-        for (SubProvidedProduct subProvProd : entitlement.getPool().
-            getSubProvidedProducts()) {
+        for (DerivedProvidedProduct subProvProd : entitlement.getPool().
+            getDerivedProvidedProducts()) {
             subProvProds.add(findProduct(productsById, subProvProd.getProductId()));
         }
-        subscription.setSubProvidedProducts(subProvProds);
+        subscription.setDerivedProvidedProducts(subProvProds);
 
         Set<EntitlementCertificate> certs = entitlement.getCertificates();
 

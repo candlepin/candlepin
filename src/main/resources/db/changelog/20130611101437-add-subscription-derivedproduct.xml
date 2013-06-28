@@ -9,13 +9,13 @@
 
     <changeSet id="20130611101437-1" author="dgoodwin">
         <addColumn tableName="cp_subscription">
-            <column name="subproduct_id" type="varchar(255)"/>
+            <column name="derivedproduct_id" type="varchar(255)"/>
         </addColumn>
-        <addForeignKeyConstraint baseColumnNames="subproduct_id" baseTableName="cp_subscription" constraintName="fk_subscription_subproduct" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" referencesUniqueColumn="false"/>
+        <addForeignKeyConstraint baseColumnNames="derivedproduct_id" baseTableName="cp_subscription" constraintName="fk_sub_derivedprod" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" referencesUniqueColumn="false"/>
     </changeSet>
 
     <changeSet id="20130611101437-2" author="dgoodwin">
-        <createTable tableName="cp_subscription_subproducts">
+        <createTable tableName="cp_sub_derivedprods">
             <column name="subscription_id" type="VARCHAR(32)">
                 <constraints nullable="false"/>
             </column>
@@ -27,15 +27,15 @@
 
     <changeSet id="20130611101437-3" author="dgoodwin">
         <addColumn tableName="cp_pool">
-            <column name="subproductid" type="varchar(255)"/>
-            <column name="subproductname" type="VARCHAR(255)"/>
+            <column name="derivedproductid" type="varchar(255)"/>
+            <column name="derivedproductname" type="VARCHAR(255)"/>
         </addColumn>
     </changeSet>
 
     <changeSet author="dgoodwin" id="120130611101437-4">
-        <createTable tableName="cp_pool_subproducts">
+        <createTable tableName="cp_pool_derivedprods">
             <column name="id" type="VARCHAR(32)">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_pool_subproducts_pkey"/>
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_pool_derivedprods_pkey"/>
             </column>
             <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
             <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
@@ -50,9 +50,9 @@
     </changeSet>
 
     <changeSet author="dgoodwin" id="120130611101437-5">
-        <createTable tableName="cp_subproduct_pool_attribute">
+        <createTable tableName="cp_derivedprod_pool_attrs">
             <column name="id" type="VARCHAR(32)">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_subprod_pool_attr_pkey"/>
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_derivedprod_pool_attr_pkey"/>
             </column>
             <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
             <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>

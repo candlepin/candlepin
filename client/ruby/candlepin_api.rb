@@ -666,12 +666,12 @@ class Candlepin
       'contractNumber' => contract_number
     }
 
-    if params['sub_product_id']
-      subscription['subProduct'] = { 'id' => params['sub_product_id'] }
+    if params['derived_product_id']
+      subscription['derivedProduct'] = { 'id' => params['derived_product_id'] }
     end
 
-    if params['sub_provided_products']
-      subscription['subProvidedProducts'] = params['sub_provided_products'].collect { |pid| {'id' => pid} }
+    if params['derived_provided_products']
+      subscription['derivedProvidedProducts'] = params['derived_provided_products'].collect { |pid| {'id' => pid} }
     end
 
     return post("/owners/#{owner_key}/subscriptions", subscription)

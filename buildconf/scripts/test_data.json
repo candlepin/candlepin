@@ -670,8 +670,8 @@
                 "multi-entitlement" : "no",
                 "virt_limit" : "unlimited"
             },
-            "sub_product_id" : "awesomeos-server-basic-vdc",
-            "sub_provided_products" : [
+            "derived_product_id" : "awesomeos-server-basic-vdc",
+            "derived_provided_products" : [
                 "37060"
             ]
         },

@@ -47,7 +47,7 @@ import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProvidedProduct;
-import org.candlepin.model.SubProvidedProduct;
+import org.candlepin.model.DerivedProvidedProduct;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.policy.js.export.ExportRules;
 import org.candlepin.service.EntitlementCertServiceAdapter;
@@ -440,7 +440,7 @@ public class Exporter {
             }
 
             // Also need to check for sub products
-            String subProductId = entitlement.getPool().getSubProductId();
+            String subProductId = entitlement.getPool().getDerivedProductId();
             if (subProductId != null && !subProductId.isEmpty() &&
                 !products.containsKey(subProductId)) {
                 products.put(subProductId, productAdapter.getProductById(subProductId));
@@ -448,8 +448,8 @@ public class Exporter {
 
             // TODO This seems so duplicated. It would be nice to be able to
             //       do all processing in one loop.
-            for (SubProvidedProduct subProvidedProduct : entitlement.getPool().
-                getSubProvidedProducts()) {
+            for (DerivedProvidedProduct subProvidedProduct : entitlement.getPool().
+                getDerivedProvidedProducts()) {
                 // Don't want to call the adapter if not needed, it can be expensive.
                 if (!products.containsKey(subProvidedProduct.getProductId())) {
                     products.put(subProvidedProduct.getProductId(),
