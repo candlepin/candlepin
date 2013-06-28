@@ -14,21 +14,8 @@
  */
 package org.candlepin.resource;
 
-import java.util.Arrays;
-import java.util.List;
-
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-
 import org.candlepin.auth.interceptor.SecurityHole;
+import org.candlepin.auth.interceptor.Verify;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Content;
@@ -43,10 +30,25 @@ import org.candlepin.model.StatisticCurator;
 import org.candlepin.pinsetter.tasks.RefreshPoolsForProductJob;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.service.ProductServiceAdapter;
+
+import com.google.inject.Inject;
+
 import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
 
-import com.google.inject.Inject;
+import java.util.Arrays;
+import java.util.List;
+
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
 
 /**
  * API Gateway into /product
@@ -150,6 +152,27 @@ public class ProductResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Product createProduct(Product product) {
         return prodAdapter.createProduct(product);
+    }
+
+    /**
+     * @return a Product
+     * @httpcode 400
+     * @httpcode 200
+     */
+    @PUT
+    @Path("/{product_uuid}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Product updateProduct(
+        @PathParam("product_uuid") @Verify(Product.class) String productId,
+        Product product) {
+        Product toUpdate = getProduct(productId);
+        toUpdate.setName(product.getName());
+        toUpdate.getAttributes().clear();
+        toUpdate.getAttributes().addAll(product.getAttributes());
+        toUpdate.setMultiplier(product.getMultiplier());
+        this.prodAdapter.mergeProduct(toUpdate);
+
+        return toUpdate;
     }
 
     /**

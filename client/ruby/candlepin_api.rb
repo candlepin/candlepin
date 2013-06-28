@@ -513,6 +513,10 @@ class Candlepin
     post("/products", product)
   end
 
+  def update_product(product_id, product)
+    return put("/products/#{product_id}", product)
+  end
+
   def get_product(product_id)
     get("/products/#{product_id}")
   end

@@ -14,18 +14,6 @@
  */
 package org.candlepin.auth.interceptor;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.ws.rs.DELETE;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-
-import org.aopalliance.intercept.MethodInterceptor;
-import org.aopalliance.intercept.MethodInvocation;
-import org.apache.log4j.Logger;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.exceptions.ForbiddenException;
@@ -45,14 +33,29 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
+import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.User;
 import org.candlepin.resteasy.interceptor.AuthUtil;
 import org.candlepin.util.Util;
-import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Provider;
+
+import org.aopalliance.intercept.MethodInterceptor;
+import org.aopalliance.intercept.MethodInvocation;
+import org.apache.log4j.Logger;
+import org.xnap.commons.i18n.I18n;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.ws.rs.DELETE;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 
 /**
  * Interceptor for enforcing role based access to REST API methods.
@@ -86,7 +89,7 @@ public class SecurityInterceptor implements MethodInterceptor {
         storeMap.put(Pool.class, new PoolStore());
         storeMap.put(User.class, new UserStore());
         storeMap.put(ActivationKey.class, new ActivationKeyStore());
-
+        storeMap.put(Product.class, new ProductStore());
     }
 
     /**
@@ -312,6 +315,19 @@ public class SecurityInterceptor implements MethodInterceptor {
             }
 
             return activationKeyCurator.find(key);
+        }
+    }
+
+    private class ProductStore implements EntityStore {
+        private ProductCurator productCurator;
+
+        @Override
+        public Object lookup(String key) {
+            if (productCurator == null) {
+                productCurator = injector.getInstance(ProductCurator.class);
+            }
+
+            return productCurator.find(key);
         }
     }
 
