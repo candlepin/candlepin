@@ -33,7 +33,6 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.codehaus.jackson.map.annotate.JsonFilter;
-import org.hibernate.annotations.ForceDiscriminator;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
@@ -47,9 +46,8 @@ import org.hibernate.annotations.Index;
 @Entity
 @Table(name = "cp_pool_products")
 @JsonFilter("ProvidedProductFilter")
-@Inheritance(strategy=InheritanceType.JOINED)
-@ForceDiscriminator
-@DiscriminatorColumn(name="provided_type", discriminatorType=DiscriminatorType.STRING)
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
 @DiscriminatorValue("provided")
 public class ProvidedProduct extends AbstractHibernateObject {
 

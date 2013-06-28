@@ -26,6 +26,7 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
+import org.hibernate.annotations.Where;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -116,16 +117,20 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
     @Column
     private String derivedProductId;
 
-    @OneToMany(mappedBy = "pool", targetEntity = ProvidedProduct.class)
+    @OneToMany(targetEntity = ProvidedProduct.class)
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.MERGE,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    @JoinColumn(name = "pool_id", insertable = false, updatable = false)
+    @Where(clause = "dtype='provided'")
     private Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
 
-    @OneToMany(mappedBy = "pool", targetEntity = DerivedProvidedProduct.class)
+    @OneToMany(targetEntity = DerivedProvidedProduct.class)
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.MERGE,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    @JoinColumn(name = "pool_id", insertable = false, updatable = false)
+    @Where(clause = "dtype='derived'")
     private Set<DerivedProvidedProduct> derivedProvidedProducts =
         new HashSet<DerivedProvidedProduct>();
 
@@ -135,17 +140,21 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     private Set<PoolAttribute> attributes = new HashSet<PoolAttribute>();
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "pool")
+    @OneToMany(cascade = CascadeType.ALL)
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.MERGE,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    @JoinColumn(name = "pool_id", insertable = false, updatable = false)
+    @Where(clause = "dtype='product'")
     private Set<ProductPoolAttribute> productAttributes =
         new HashSet<ProductPoolAttribute>();
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "pool")
+    @OneToMany(cascade = CascadeType.ALL)
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.MERGE,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    @JoinColumn(name = "pool_id", insertable = false, updatable = false)
+    @Where(clause = "dtype='derived'")
     private Set<DerivedProductPoolAttribute> derivedProductAttributes =
         new HashSet<DerivedProductPoolAttribute>();
 

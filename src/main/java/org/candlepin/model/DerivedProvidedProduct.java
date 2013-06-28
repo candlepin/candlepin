@@ -14,58 +14,29 @@
  */
 package org.candlepin.model;
 
-import javax.persistence.Column;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 
-import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.codehaus.jackson.map.annotate.JsonFilter;
-import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.GenericGenerator;
 
 /**
- * Represents a sub-product provided by a Pool. These are used when a sub-pool is created
- * as a result of a bind, so the sub-pool can provide different content than the parent.
+ * Represents a derived product provided by a Pool. These are used when a
+ * sub-pool is created as a result of a bind, so the sub-pool can provide
+ * different content than the parent.
  */
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
-@Table(name = "cp_pool_derivedprods")
 @JsonFilter("ProvidedProductFilter")
 @DiscriminatorValue("derived")
 public class DerivedProvidedProduct extends ProvidedProduct {
+    public DerivedProvidedProduct() {
+        super();
+    }
 
-//    @Id
-//    @GeneratedValue(generator = "system-uuid")
-//    @GenericGenerator(name = "system-uuid", strategy = "uuid")
-//    @Column(length = 32)
-//    private String id;
-//
-//    @Column(name = "product_id", nullable = false)
-//    private String productId;
-//
-//    @Column(name = "product_name")
-//    private String productName;
-//
-//    @ManyToOne
-//    @ForeignKey(name = "fk_pool_provided_subproduct")
-//    @JoinColumn(nullable = false)
-//    @XmlTransient
-//    private Pool pool;
-//
-//    public DerivedProvidedProduct() {
-//
-//    }
-//
     public DerivedProvidedProduct(String productId, String productName) {
         super(productId, productName);
     }
@@ -73,60 +44,4 @@ public class DerivedProvidedProduct extends ProvidedProduct {
     public DerivedProvidedProduct(String productId, String productName, Pool pool) {
         super(productId, productName, pool);
     }
-//
-//    public String getProductId() {
-//        return productId;
-//    }
-//
-//    public void setProductId(String productId) {
-//        this.productId = productId;
-//    }
-//
-//    public String getProductName() {
-//        return productName;
-//    }
-//
-//    public void setProductName(String productName) {
-//        this.productName = productName;
-//    }
-//
-//    public String getId() {
-//        return id;
-//    }
-//
-//    public void setId(String id) {
-//        this.id = id;
-//    }
-//
-//    @XmlTransient
-//    public Pool getPool() {
-//        return pool;
-//    }
-//
-//    public void setPool(Pool pool) {
-//        this.pool = pool;
-//    }
-//
-//    @Override
-//    public boolean equals(Object anObject) {
-//        if (this == anObject) {
-//            return true;
-//        }
-//        if (!(anObject instanceof DerivedProvidedProduct)) {
-//            return false;
-//        }
-//
-//        DerivedProvidedProduct another = (DerivedProvidedProduct) anObject;
-//
-//        return productId.equals(another.getProductId()) &&
-//            productName.equals(another.getProductName());
-//    }
-//
-//    @Override
-//    public int hashCode() {
-//        return new HashCodeBuilder(281, 43).
-//            append(productId).
-//            append(productName).
-//            toHashCode();
-//    }
 }

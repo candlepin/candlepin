@@ -35,35 +35,21 @@
     <changeSet author="dgoodwin" id="120130611101437-4">
         <comment>Add a new discriminator column so we can store derived provided products.</comment>
         <addColumn tableName="cp_pool_products">
-            <column name="provided_type" type="varchar(30)"/>
+            <column name="dtype" type="varchar(30)"/>
         </addColumn>
+        <update tableName="cp_pool_products">
+            <column name="dtype" value="provided"/>
+        </update>
     </changeSet>
 
     <changeSet author="dgoodwin" id="120130611101437-5">
-      <comment>All existing rows must be normal provided products.</comment>
-      <update tableName="cp_pool_products">
-        <column name="provided_type" value="provided"/>
-      </update>
-    </changeSet>
-
-    <changeSet author="dgoodwin" id="120130611101437-6">
-        <createTable tableName="cp_derivedprod_pool_attrs">
-            <column name="id" type="VARCHAR(32)">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_derivedprod_pool_attr_pkey"/>
-            </column>
-            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
-            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
-            <column name="name" type="VARCHAR(255)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="value" type="VARCHAR(255)"/>
-            <column name="productid" type="VARCHAR(255)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="pool_id" type="VARCHAR(32)">
-                <constraints nullable="false"/>
-            </column>
-        </createTable>
+        <comment>Add a new discriminator column so we can store derived product attributes.</comment>
+        <addColumn tableName="cp_product_pool_attribute">
+            <column name="dtype" type="varchar(30)"/>
+        </addColumn>
+        <update tableName="cp_product_pool_attribute">
+            <column name="dtype" value="product"/>
+        </update>
     </changeSet>
 
 </databaseChangeLog>

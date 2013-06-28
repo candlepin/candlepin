@@ -14,62 +14,26 @@
  */
 package org.candlepin.model;
 
-import javax.persistence.Column;
+import javax.persistence.DiscriminatorValue;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
-import javax.persistence.Table;
 
-import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.codehaus.jackson.map.annotate.JsonFilter;
 
 /**
  * DerivedProductPoolAttribute
  */
 @Entity
-@Table(name = "cp_derivedprod_pool_attrs")
 @Embeddable
 @JsonFilter("ProductPoolAttributeFilter")
-public class DerivedProductPoolAttribute extends AbstractPoolAttribute {
-
-    @Column(nullable = false)
-    private String productId;
+@DiscriminatorValue("derived")
+public class DerivedProductPoolAttribute extends ProductPoolAttribute {
 
     public DerivedProductPoolAttribute() {
+        super();
     }
 
     public DerivedProductPoolAttribute(String name, String val, String productId) {
-        super(name, val);
-        this.productId = productId;
+        super(name, val, productId);
     }
-
-    public String toString() {
-        return "DerivedProductPoolAttribute [id=" + id + ", name=" + name + ", value=" +
-            value + ", productId=" + productId + "]";
-    }
-
-    public void setProductId(String productId) {
-        this.productId = productId;
-    }
-
-    public String getProductId() {
-        return productId;
-    }
-
-    @Override
-    public boolean equals(Object anObject) {
-        if (!(anObject instanceof ProductPoolAttribute)) {
-            return false;
-        }
-        DerivedProductPoolAttribute another = (DerivedProductPoolAttribute) anObject;
-        return super.equals(anObject) && getProductId().equals(another.getProductId());
-    }
-    @Override
-    public int hashCode() {
-        return new HashCodeBuilder(5, 13).
-            append(name).
-            append(value).
-            append(productId).
-            toHashCode();
-    }
-
 }
