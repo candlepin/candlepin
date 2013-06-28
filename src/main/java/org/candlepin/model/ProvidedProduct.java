@@ -15,9 +15,14 @@
 package org.candlepin.model;
 
 import javax.persistence.Column;
+import javax.persistence.DiscriminatorColumn;
+import javax.persistence.DiscriminatorType;
+import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
@@ -28,6 +33,7 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.codehaus.jackson.map.annotate.JsonFilter;
+import org.hibernate.annotations.ForceDiscriminator;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
@@ -41,6 +47,10 @@ import org.hibernate.annotations.Index;
 @Entity
 @Table(name = "cp_pool_products")
 @JsonFilter("ProvidedProductFilter")
+@Inheritance(strategy=InheritanceType.JOINED)
+@ForceDiscriminator
+@DiscriminatorColumn(name="provided_type", discriminatorType=DiscriminatorType.STRING)
+@DiscriminatorValue("provided")
 public class ProvidedProduct extends AbstractHibernateObject {
 
     @Id

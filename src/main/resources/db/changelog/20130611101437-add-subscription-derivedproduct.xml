@@ -33,23 +33,20 @@
     </changeSet>
 
     <changeSet author="dgoodwin" id="120130611101437-4">
-        <createTable tableName="cp_pool_derivedprods">
-            <column name="id" type="VARCHAR(32)">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_pool_derivedprods_pkey"/>
-            </column>
-            <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
-            <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
-            <column name="product_id" type="VARCHAR(255)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="product_name" type="VARCHAR(255)"/>
-            <column name="pool_id" type="VARCHAR(32)">
-                <constraints nullable="false"/>
-            </column>
-        </createTable>
+        <comment>Add a new discriminator column so we can store derived provided products.</comment>
+        <addColumn tableName="cp_pool_products">
+            <column name="provided_type" type="varchar(30)"/>
+        </addColumn>
     </changeSet>
 
     <changeSet author="dgoodwin" id="120130611101437-5">
+      <comment>All existing rows must be normal provided products.</comment>
+      <update tableName="cp_pool_products">
+        <column name="provided_type" value="provided"/>
+      </update>
+    </changeSet>
+
+    <changeSet author="dgoodwin" id="120130611101437-6">
         <createTable tableName="cp_derivedprod_pool_attrs">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_derivedprod_pool_attr_pkey"/>

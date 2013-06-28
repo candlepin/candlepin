@@ -15,6 +15,7 @@
 package org.candlepin.model;
 
 import javax.persistence.Column;
+import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -40,94 +41,92 @@ import org.hibernate.annotations.GenericGenerator;
 @Entity
 @Table(name = "cp_pool_derivedprods")
 @JsonFilter("ProvidedProductFilter")
-public class DerivedProvidedProduct extends AbstractHibernateObject {
+@DiscriminatorValue("derived")
+public class DerivedProvidedProduct extends ProvidedProduct {
 
-    @Id
-    @GeneratedValue(generator = "system-uuid")
-    @GenericGenerator(name = "system-uuid", strategy = "uuid")
-    @Column(length = 32)
-    private String id;
-
-    @Column(name = "product_id", nullable = false)
-    private String productId;
-
-    @Column(name = "product_name")
-    private String productName;
-
-    @ManyToOne
-    @ForeignKey(name = "fk_pool_provided_subproduct")
-    @JoinColumn(nullable = false)
-    @XmlTransient
-    private Pool pool;
-
-    public DerivedProvidedProduct() {
-
-    }
-
+//    @Id
+//    @GeneratedValue(generator = "system-uuid")
+//    @GenericGenerator(name = "system-uuid", strategy = "uuid")
+//    @Column(length = 32)
+//    private String id;
+//
+//    @Column(name = "product_id", nullable = false)
+//    private String productId;
+//
+//    @Column(name = "product_name")
+//    private String productName;
+//
+//    @ManyToOne
+//    @ForeignKey(name = "fk_pool_provided_subproduct")
+//    @JoinColumn(nullable = false)
+//    @XmlTransient
+//    private Pool pool;
+//
+//    public DerivedProvidedProduct() {
+//
+//    }
+//
     public DerivedProvidedProduct(String productId, String productName) {
-        this.productId = productId;
-        this.productName = productName;
+        super(productId, productName);
     }
 
     public DerivedProvidedProduct(String productId, String productName, Pool pool) {
-        this.productId = productId;
-        this.productName = productName;
-        this.pool = pool;
+        super(productId, productName, pool);
     }
-
-    public String getProductId() {
-        return productId;
-    }
-
-    public void setProductId(String productId) {
-        this.productId = productId;
-    }
-
-    public String getProductName() {
-        return productName;
-    }
-
-    public void setProductName(String productName) {
-        this.productName = productName;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    @XmlTransient
-    public Pool getPool() {
-        return pool;
-    }
-
-    public void setPool(Pool pool) {
-        this.pool = pool;
-    }
-
-    @Override
-    public boolean equals(Object anObject) {
-        if (this == anObject) {
-            return true;
-        }
-        if (!(anObject instanceof DerivedProvidedProduct)) {
-            return false;
-        }
-
-        DerivedProvidedProduct another = (DerivedProvidedProduct) anObject;
-
-        return productId.equals(another.getProductId()) &&
-            productName.equals(another.getProductName());
-    }
-
-    @Override
-    public int hashCode() {
-        return new HashCodeBuilder(281, 43).
-            append(productId).
-            append(productName).
-            toHashCode();
-    }
+//
+//    public String getProductId() {
+//        return productId;
+//    }
+//
+//    public void setProductId(String productId) {
+//        this.productId = productId;
+//    }
+//
+//    public String getProductName() {
+//        return productName;
+//    }
+//
+//    public void setProductName(String productName) {
+//        this.productName = productName;
+//    }
+//
+//    public String getId() {
+//        return id;
+//    }
+//
+//    public void setId(String id) {
+//        this.id = id;
+//    }
+//
+//    @XmlTransient
+//    public Pool getPool() {
+//        return pool;
+//    }
+//
+//    public void setPool(Pool pool) {
+//        this.pool = pool;
+//    }
+//
+//    @Override
+//    public boolean equals(Object anObject) {
+//        if (this == anObject) {
+//            return true;
+//        }
+//        if (!(anObject instanceof DerivedProvidedProduct)) {
+//            return false;
+//        }
+//
+//        DerivedProvidedProduct another = (DerivedProvidedProduct) anObject;
+//
+//        return productId.equals(another.getProductId()) &&
+//            productName.equals(another.getProductName());
+//    }
+//
+//    @Override
+//    public int hashCode() {
+//        return new HashCodeBuilder(281, 43).
+//            append(productId).
+//            append(productName).
+//            toHashCode();
+//    }
 }
