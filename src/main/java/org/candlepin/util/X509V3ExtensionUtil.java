@@ -238,18 +238,18 @@ public class X509V3ExtensionUtil extends X509Util{
             }
         }
 
-        toReturn.setService(createService(sub));
+        toReturn.setService(createService(product));
         return toReturn;
     }
 
-    private Service createService(org.candlepin.model.Subscription sub) {
-        if (sub.getProduct().getAttributeValue("support_level") == null &&
-            sub.getProduct().getAttributeValue("support_type") == null) {
+    private Service createService(Product product) {
+        if (product.getAttributeValue("support_level") == null &&
+            product.getAttributeValue("support_type") == null) {
             return null;
         }
         Service toReturn = new Service();
-        toReturn.setLevel(sub.getProduct().getAttributeValue("support_level"));
-        toReturn.setType(sub.getProduct().getAttributeValue("support_type"));
+        toReturn.setLevel(product.getAttributeValue("support_level"));
+        toReturn.setType(product.getAttributeValue("support_type"));
 
         return toReturn;
     }
