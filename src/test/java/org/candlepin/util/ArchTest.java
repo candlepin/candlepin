@@ -16,12 +16,118 @@ package org.candlepin.util;
 
 import static org.junit.Assert.*;
 
+import java.util.Set;
+
 import org.junit.Test;
 
 /**
  * ArchTest
  */
 public class ArchTest {
+
+    @Test
+    public void testParseArches() {
+        Set<String> arches = Arch.parseArches("x86,x86_64,ia64,s390x,ppc,s390,ppc64");
+        assertTrue(arches.contains("x86"));
+        assertTrue(arches.contains("x86_64"));
+        assertTrue(arches.contains("ia64"));
+        assertTrue(arches.contains("s390x"));
+        assertTrue(arches.contains("ppc"));
+        assertTrue(arches.contains("s390"));
+        assertTrue(arches.contains("ppc64"));
+        assertEquals(7, arches.size());
+    }
+
+    @Test
+    public void testParseArchesTrailingComma() {
+        Set<String> arches = Arch.parseArches("x86,x86_64,ia64,s390x,ppc,s390,ppc64,");
+        assertTrue(arches.contains("x86"));
+        assertTrue(arches.contains("x86_64"));
+        assertTrue(arches.contains("ia64"));
+        assertTrue(arches.contains("s390x"));
+        assertTrue(arches.contains("ppc"));
+        assertTrue(arches.contains("s390"));
+        assertTrue(arches.contains("ppc64"));
+        assertEquals(7, arches.size());
+    }
+
+    @Test
+    public void testParseArchesLeadingComma() {
+        String archString = ",x86";
+        Set<String> arches = Arch.parseArches(archString);
+        assertTrue(arches.contains("x86"));
+        assertEquals(1, arches.size());
+    }
+
+    @Test
+    public void testParseArchesLeadingCommas() {
+        String archString = ",,,,x86";
+        Set<String> arches = Arch.parseArches(archString);
+        assertTrue(arches.contains("x86"));
+        assertEquals(1, arches.size());
+    }
+
+    @Test
+    public void testParseArchesMultipleCommas() {
+        String archString = "x86,,,x86_64, , ,s390x";
+        Set<String> arches = Arch.parseArches(archString);
+        assertTrue(arches.contains("x86"));
+        assertEquals(3, arches.size());
+    }
+
+    @Test
+    public void testParseArchesMultipleSpaces() {
+        String archString = "x86,  x86_64,    , ,s390x   ";
+        Set<String> arches = Arch.parseArches(archString);
+        assertTrue(arches.contains("x86"));
+        assertTrue(arches.contains("x86_64"));
+        assertTrue(arches.contains("s390x"));
+        assertEquals(3, arches.size());
+    }
+
+    @Test
+    public void testParseArchesSpuriousWhitespace() {
+        String archString = "  x86 ,   x86_64,ia64,s390x,ppc,s390,  ppc64,";
+        Set<String> arches = Arch.parseArches(archString);
+        assertTrue(arches.contains("x86"));
+        assertTrue(arches.contains("x86_64"));
+        assertTrue(arches.contains("ia64"));
+        assertTrue(arches.contains("s390x"));
+        assertTrue(arches.contains("ppc"));
+        assertTrue(arches.contains("s390"));
+        assertTrue(arches.contains("ppc64"));
+        assertEquals(7, arches.size());
+    }
+
+    @Test
+    public void testParseArchesEmptyString() {
+        String archString = "";
+        Set<String> arches = Arch.parseArches(archString);
+        assertTrue(arches.isEmpty());
+    }
+
+    @Test
+    public void testParseArchesJustComma() {
+        String archString = ",";
+        Set<String> arches = Arch.parseArches(archString);
+        assertTrue(arches.isEmpty());
+    }
+
+    @Test
+    public void testParseArchesDoubles() {
+        String archString = "x86,x86,x86";
+        Set<String> arches = Arch.parseArches(archString);
+        assertTrue(arches.contains("x86"));
+        assertEquals(1, arches.size());
+    }
+
+    @Test
+    public void testParseArchesAll() {
+        String archString = "ALL";
+        Set<String> arches = Arch.parseArches(archString);
+        assertTrue(arches.contains("ALL"));
+        assertEquals(1, arches.size());
+    }
 
     @Test
     public void testContentForConsumerExactMatch() {
@@ -57,7 +163,6 @@ public class ArchTest {
     public void testContentForConsumerX86Fors390x() {
         assertFalse(Arch.contentForConsumer("x86", "s390x"));
     }
-
 
     @Test
     public void testContentForConsumeri386Fori686() {

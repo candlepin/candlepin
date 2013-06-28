@@ -47,8 +47,12 @@ public class Arch {
         if (arches == null || arches.trim().equals("")) {
             return archesSet;
         }
-        for (String arch : arches.split(",")) {
-            archesSet.add(arch.trim());
+        // split on comma, but try to include any whitespace
+        // or repeated commas
+        for (String arch : arches.split(",[\\s,]*")) {
+            if (!arch.isEmpty()) {
+                archesSet.add(arch.trim());
+            }
         }
         return archesSet;
     }
