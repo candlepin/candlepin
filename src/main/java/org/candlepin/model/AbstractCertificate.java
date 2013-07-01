@@ -20,7 +20,8 @@ import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
 /**
- * AbstractCertificate
+ * AbstractCertificate is a base class for all certificates within Candlepin.
+ * It contains a number of common methods used by all certificates.
  */
 @MappedSuperclass
 @XmlType(name = "Certificate")
