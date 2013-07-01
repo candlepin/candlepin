@@ -111,7 +111,10 @@ public class HypervisorResource {
                     consumer.setName(hostEntry.getKey());
                     consumer.setUuid(hostEntry.getKey());
                     consumer.setType(new ConsumerType(ConsumerTypeEnum.HYPERVISOR));
+                    // Default hypervisors to be x86_64 machines with the latest
+                    // cert version
                     consumer.setFact("uname.machine", "x86_64");
+                    consumer.setFact("system.certificate_version", "3.2");
                     consumer.setGuestIds(new ArrayList<GuestId>());
                     consumer = consumerResource.create(consumer, principal, null, ownerKey,
                         null);

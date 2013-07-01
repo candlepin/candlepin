@@ -161,6 +161,7 @@ public class HypervisorResourceTest {
         assertEquals("GUEST_A", c1.getGuestIds().get(0).getGuestId());
         assertEquals("GUEST_B", c1.getGuestIds().get(1).getGuestId());
         assertEquals("x86_64", c1.getFact("uname.machine"));
+        assertEquals("3.2", c1.getFact("system.certificate_version"));
         assertEquals("hypervisor", c1.getType().getLabel());
     }
 
