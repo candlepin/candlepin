@@ -259,7 +259,9 @@ public abstract class AbstractEntitlementRules implements Enforcer {
     }
 
     /**
-     * Rule
+     * Rule represents a core concept in Candlepin which is a business rule used
+     * to determine system compliance as well as entitlement eligibility for a
+     * particular consumer.
      */
     public static class Rule {
         private final String ruleName;
