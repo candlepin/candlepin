@@ -24,6 +24,7 @@ import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
@@ -42,6 +43,7 @@ import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.xnap.commons.i18n.I18n;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -268,6 +270,37 @@ public class PoolResource {
         return statisticCurator.getStatisticsByPool(id, null,
                                 ResourceDateParser.getFromDate(from, to, days),
                                 ResourceDateParser.parseDateString(to));
+    }
+
+    /**
+     * @return the current entitlements for a pool
+     * @httpcode 400
+     * @httpcode 200
+     */
+    @GET
+    @Path("{pool_id}/entitlements")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Entitlement> getPoolEntitlements(@PathParam("pool_id")
+                            @Verify(Pool.class) String id,
+                            @Context Principal principal) {
+
+        Pool pool = poolCurator.find(id);
+
+        if (pool == null) {
+            throw new NotFoundException(i18n.tr(
+                "Subscription Pool with ID ''{0}'' could not be found.", id));
+        }
+
+        Owner o = pool.getOwner();
+        if (principal.canAccess(o, Access.READ_POOLS)) {
+            List<Entitlement> entitlements = new ArrayList<Entitlement>();
+            entitlements.addAll(pool.getEntitlements());
+            return entitlements;
+        }
+        else {
+            throw new ForbiddenException(i18n.tr("User {0} cannot access owner {1}",
+                principal.getPrincipalName(), o.getKey()));
+        }
     }
 
     /**
