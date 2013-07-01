@@ -290,17 +290,16 @@ public class PoolResource {
             throw new NotFoundException(i18n.tr(
                 "Subscription Pool with ID ''{0}'' could not be found.", id));
         }
+
+        Owner o = pool.getOwner();
+        if (principal.canAccess(o, Access.READ_POOLS)) {
+            List<Entitlement> entitlements = new ArrayList<Entitlement>();
+            entitlements.addAll(pool.getEntitlements());
+            return entitlements;
+        }
         else {
-            Owner o = pool.getOwner();
-            if (principal.canAccess(o, Access.READ_POOLS)) {
-                List<Entitlement> entitlements = new ArrayList<Entitlement>();
-                entitlements.addAll(pool.getEntitlements());
-                return entitlements;
-            }
-            else {
-                throw new ForbiddenException(i18n.tr("User {0} cannot access owner {1}",
-                    principal.getPrincipalName(), o.getKey()));
-            }
+            throw new ForbiddenException(i18n.tr("User {0} cannot access owner {1}",
+                principal.getPrincipalName(), o.getKey()));
         }
     }
 

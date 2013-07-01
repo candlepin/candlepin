@@ -300,6 +300,11 @@ public class PoolResourceTest extends DatabaseTestFixture {
         assertEquals(0, ents.size());
     }
 
+    @Test(expected = NotFoundException.class)
+    public void testUnknownConsumerRequestingEntitlements() {
+        poolResource.getPoolEntitlements("xyzzy", adminPrincipal);
+    }
+
     @Test(expected = ForbiddenException.class)
     public void testUnauthorizedUserRequestingPoolEntitlements() {
         Owner owner2 = createOwner();
