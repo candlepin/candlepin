@@ -143,6 +143,8 @@ data['products'].each do |product|
   product_content = product['content'] || []
   dependent_products = product['dependencies'] || []
   relies_on = product['relies_on'] || []
+  derived_product_id = product['derived_product_id']
+  derived_provided_products = product['derived_provided_products'] || []
 
   attrs['version'] = version
   attrs['variant'] = variant
@@ -163,7 +165,7 @@ data['products'].each do |product|
 
   # If product ID is non-numeric, we assume it's a marketing product
   # and create subscriptions for it:
-  if id.to_i.to_s != id
+  if id.to_i.to_s != id && !attrs.has_key?('skip_subs')
     # Create a SMALL and a LARGE with the slightly similar begin/end dates.
     owner_keys.each do |owner_key|
       subscription = cp.create_subscription(owner_key,
@@ -172,7 +174,11 @@ data['products'].each do |product|
                                             provided_products,
                                             contract_number, '12331131231',
                                             'order-8675309',
-                                            startDate1, endDate1)
+                                            startDate1, endDate1,
+                                            {
+                                              'derived_product_id' => derived_product_id,
+                                              'derived_provided_products' => derived_provided_products
+                                            })
       contract_number += 1
       subscription = cp.create_subscription(owner_key,
                                             product_ret['id'],
@@ -180,14 +186,22 @@ data['products'].each do |product|
                                             provided_products,
                                             contract_number, '12331131231',
                                             'order-8675309',
-                                            startDate1, endDate1)
+                                            startDate1, endDate1,
+                                            {
+                                              'derived_product_id' => derived_product_id,
+                                              'derived_provided_products' => derived_provided_products
+                                            })
 
       # Create a subscription for the future:
       subscription = cp.create_subscription(owner_key, product_ret['id'],
                                             15, provided_products,
                                             contract_number, '12331131231',
                                             'order-8675309',
-                                            startDate2, endDate2)
+                                            startDate2, endDate2,
+                                            {
+                                              'derived_product_id' => derived_product_id,
+                                              'derived_provided_products' => derived_provided_products
+                                            })
       contract_number += 1
     end
   end

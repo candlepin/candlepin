@@ -15,19 +15,28 @@
 package org.candlepin.model;
 
 import javax.persistence.Column;
+import javax.persistence.DiscriminatorColumn;
+import javax.persistence.DiscriminatorType;
+import javax.persistence.DiscriminatorValue;
 import javax.persistence.Embeddable;
 import javax.persistence.Entity;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
 import javax.persistence.Table;
 
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.codehaus.jackson.map.annotate.JsonFilter;
 
 /**
- * ProductProvidedPoolAttribute
+ * ProductPoolAttribute
  */
 @Entity
 @Table(name = "cp_product_pool_attribute")
 @Embeddable
 @JsonFilter("ProductPoolAttributeFilter")
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
+@DiscriminatorValue("product")
 public class ProductPoolAttribute extends AbstractPoolAttribute {
 
     @Column(nullable = false)
@@ -54,4 +63,21 @@ public class ProductPoolAttribute extends AbstractPoolAttribute {
         return productId;
     }
 
+    @Override
+    public boolean equals(Object anObject) {
+        if (!(anObject instanceof ProductPoolAttribute)) {
+            return false;
+        }
+        ProductPoolAttribute another = (ProductPoolAttribute) anObject;
+        return super.equals(anObject) && getProductId().equals(another.getProductId());
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(59, 61).
+            append(name).
+            append(value).
+            append(productId).
+            toHashCode();
+    }
 }

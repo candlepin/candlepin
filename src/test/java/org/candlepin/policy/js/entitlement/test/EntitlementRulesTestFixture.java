@@ -103,16 +103,6 @@ public class EntitlementRulesTestFixture {
         poolRules = new PoolRules(poolManagerMock, productCache, config);
     }
 
-    protected Pool setupUserLicensedPool() {
-        Product product = new Product(productId, "A user licensed product");
-        product.setAttribute("requires_consumer_type",
-            ConsumerTypeEnum.PERSON.toString());
-        Pool pool = createPool(owner, product);
-        pool.setAttribute("user_license", "unlimited");
-        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
-        return pool;
-    }
-
     protected Subscription createVirtLimitSub(String productId, int quantity,
         String virtLimit) {
         Product product = new Product(productId, productId);

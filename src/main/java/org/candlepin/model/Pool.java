@@ -26,6 +26,7 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
+import org.hibernate.annotations.Where;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -113,11 +114,25 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
     @Column(nullable = false)
     private String productId;
 
-    @OneToMany(mappedBy = "pool", targetEntity = ProvidedProduct.class)
+    @Column
+    private String derivedProductId;
+
+    @OneToMany(targetEntity = ProvidedProduct.class)
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.MERGE,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    @JoinColumn(name = "pool_id", insertable = false, updatable = false)
+    @Where(clause = "dtype='provided'")
     private Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
+
+    @OneToMany(targetEntity = DerivedProvidedProduct.class)
+    @Cascade({org.hibernate.annotations.CascadeType.ALL,
+        org.hibernate.annotations.CascadeType.MERGE,
+        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    @JoinColumn(name = "pool_id", insertable = false, updatable = false)
+    @Where(clause = "dtype='derived'")
+    private Set<DerivedProvidedProduct> derivedProvidedProducts =
+        new HashSet<DerivedProvidedProduct>();
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "pool")
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
@@ -125,12 +140,23 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     private Set<PoolAttribute> attributes = new HashSet<PoolAttribute>();
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "pool")
+    @OneToMany(cascade = CascadeType.ALL)
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.MERGE,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    @JoinColumn(name = "pool_id", insertable = false, updatable = false)
+    @Where(clause = "dtype='product'")
     private Set<ProductPoolAttribute> productAttributes =
         new HashSet<ProductPoolAttribute>();
+
+    @OneToMany(cascade = CascadeType.ALL)
+    @Cascade({org.hibernate.annotations.CascadeType.ALL,
+        org.hibernate.annotations.CascadeType.MERGE,
+        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+    @JoinColumn(name = "pool_id", insertable = false, updatable = false)
+    @Where(clause = "dtype='derived'")
+    private Set<DerivedProductPoolAttribute> derivedProductAttributes =
+        new HashSet<DerivedProductPoolAttribute>();
 
     @OneToMany(mappedBy = "pool", cascade = CascadeType.ALL)
     @LazyCollection(LazyCollectionOption.EXTRA)
@@ -153,6 +179,8 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
 
     // TODO: May not still be needed, iirc a temporary hack for client.
     private String productName;
+
+    private String derivedProductName;
 
     @Version
     private int version;
@@ -579,9 +607,18 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
         return productAttributes;
     }
 
+    public Set<DerivedProductPoolAttribute> getDerivedProductAttributes() {
+        return derivedProductAttributes;
+    }
+
     public void addProductAttribute(ProductPoolAttribute attrib) {
         attrib.setPool(this);
         this.productAttributes.add(attrib);
+    }
+
+    public void addSubProductAttribute(DerivedProductPoolAttribute attrib) {
+        attrib.setPool(this);
+        this.derivedProductAttributes.add(attrib);
     }
 
     public void setProductAttribute(String key, String value, String productId) {
@@ -598,12 +635,34 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
         }
     }
 
+    public void setDerivedProductAttribute(String key, String value, String productId) {
+        DerivedProductPoolAttribute existing =
+            findAttribute(this.derivedProductAttributes, key);
+        if (existing != null) {
+            existing.setValue(value);
+            existing.setProductId(productId);
+        }
+        else {
+            DerivedProductPoolAttribute attr = new DerivedProductPoolAttribute(key,
+                value, productId);
+            addSubProductAttribute(attr);
+        }
+    }
+
     public boolean hasProductAttribute(String name) {
         return findAttribute(this.productAttributes, name) != null;
     }
 
+    public boolean hasSubProductAttribute(String name) {
+        return findAttribute(this.derivedProductAttributes, name) != null;
+    }
+
     public ProductPoolAttribute getProductAttribute(String name) {
         return findAttribute(this.productAttributes, name);
+    }
+
+    public DerivedProductPoolAttribute getDerivedProductAttribute(String name) {
+        return findAttribute(this.derivedProductAttributes, name);
     }
 
     private <A extends AbstractPoolAttribute> A findAttribute(Set<A> attributes,
@@ -660,5 +719,30 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
         }
 
         calculatedAttributes.put(name, value);
+    }
+
+    public String getDerivedProductId() {
+        return derivedProductId;
+    }
+
+    public void setDerivedProductId(String subProductId) {
+        this.derivedProductId = subProductId;
+    }
+
+    public Set<DerivedProvidedProduct> getDerivedProvidedProducts() {
+        return derivedProvidedProducts;
+    }
+
+    public void setDerivedProvidedProducts(
+        Set<DerivedProvidedProduct> subProvidedProducts) {
+        this.derivedProvidedProducts = subProvidedProducts;
+    }
+
+    public String getDerivedProductName() {
+        return derivedProductName;
+    }
+
+    public void setDerivedProductName(String subProductName) {
+        this.derivedProductName = subProductName;
     }
 }

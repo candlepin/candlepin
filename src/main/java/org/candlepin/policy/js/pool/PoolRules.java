@@ -28,6 +28,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProvidedProduct;
+import org.candlepin.model.DerivedProvidedProduct;
 import org.candlepin.model.Subscription;
 import org.candlepin.policy.js.ProductCache;
 
@@ -80,10 +81,13 @@ public class PoolRules {
             helper.getFlattenedAttributes(sub.getProduct());
         long quantity = calculateQuantity(sub);
         Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
+        Set<DerivedProvidedProduct> subProvidedProducts =
+            new HashSet<DerivedProvidedProduct>();
         Pool newPool = new Pool(sub.getOwner(), sub.getProduct().getId(),
                 sub.getProduct().getName(), providedProducts, quantity, sub.getStartDate(),
                 sub.getEndDate(), sub.getContractNumber(), sub.getAccountNumber(),
                 sub.getOrderNumber());
+        newPool.setDerivedProvidedProducts(subProvidedProducts);
 
         if (sub.getProvidedProducts() != null) {
             for (Product p : sub.getProvidedProducts()) {
@@ -93,7 +97,23 @@ public class PoolRules {
                 providedProducts.add(providedProduct);
             }
         }
-        helper.copyProductAttributesOntoPool(sub, newPool);
+
+        if (sub.getDerivedProvidedProducts() != null) {
+            for (Product p : sub.getDerivedProvidedProducts()) {
+                DerivedProvidedProduct providedProduct =
+                    new DerivedProvidedProduct(p.getId(), p.getName());
+                providedProduct.setPool(newPool);
+                subProvidedProducts.add(providedProduct);
+            }
+        }
+
+        helper.copyProductAttributesOntoPool(sub.getProduct().getId(), newPool);
+        if (sub.getDerivedProduct() != null) {
+            newPool.setDerivedProductId(sub.getDerivedProduct().getId());
+            newPool.setDerivedProductName(sub.getDerivedProduct().getName());
+            helper.copySubProductAttributesOntoPool(sub.getDerivedProduct().getId(),
+                newPool);
+        }
         newPool.setSubscriptionId(sub.getId());
         newPool.setSubscriptionSubKey("master");
         ProductAttribute virtAtt = sub.getProduct().getAttribute("virt_only");
@@ -158,151 +178,258 @@ public class PoolRules {
         Map<String, String> attributes =
             helper.getFlattenedAttributes(sub.getProduct());
         for (Pool existingPool : existingPools) {
+
             log.info("Updating pool: " + existingPool.getId());
-            boolean datesChanged = (!sub.getStartDate().equals(
-                existingPool.getStartDate())) ||
-                (!sub.getEndDate().equals(existingPool.getEndDate()));
 
-            // Expected quantity is normally the subscription's quantity, but for
-            // virt only pools we expect it to be sub quantity * virt_limit:
-            long expectedQuantity = calculateQuantity(sub);
+            // Used to track if anything has changed:
+            PoolUpdate update = new PoolUpdate(existingPool);
 
-            /*
-             *  WARNING: when updating pools, we have the added complication of having to
-             *  watch out for pools that candlepin creates internally. (i.e. virt bonus
-             *  pools in hosted (created when sub is first detected), and host restricted
-             *  virt pools when on-site. (created when a host binds)
-             */
-            if (existingPool.hasAttribute("pool_derived") &&
-                existingPool.attributeEquals("virt_only", "true") &&
-                existingPool.hasProductAttribute("virt_limit")) {
+            update.setDatesChanged(checkForDateChange(sub, existingPool));
+            update.setQuantityChanged(
+                checkForQuantityChange(sub, existingPool, existingPools, attributes));
 
-                if (!attributes.containsKey("virt_limit")) {
-                    log.warn("virt_limit attribute has been removed from subscription, " +
-                        "flagging pool for deletion if supported: " + existingPool.getId());
-                    // virt_limit has been removed! We need to clean up this pool. Set
-                    // attribute to notify the server of this:
-                    existingPool.setAttribute("candlepin.delete_pool", "true");
-                    // Older candlepin's won't look at the delete attribute, so we will
-                    // set the expected quantity to 0 to effectively disable the pool
-                    // on those servers as well.
-                    expectedQuantity = 0;
-                }
-                else {
-                    String virtLimitStr = attributes.get("virt_limit");
 
-                    if ("unlimited".equals(virtLimitStr)) {
-                        // 0 will only happen if the rules set it to be 0 -- don't modify
-                        // -1 for pretty much all the rest
-                        expectedQuantity = existingPool.getQuantity() == 0 ?
-                            0 : -1;
-                    }
-                    else {
-                        try {
-                            int virtLimit = Integer.parseInt(virtLimitStr);
-                            if (config.standalone()) {
-                                // this is how we determined the quantity
-                                expectedQuantity = virtLimit;
-                            }
-                            else {
-                                // we need to see if a parent pool exists and has been
-                                // exported. Adjust is number exported from a parent pool.
-                                // If no parent pool, adjust = 0 [a scenario of virtual pool
-                                // only]
-                                //
-                                // WARNING: we're assuming there is only one base
-                                // (non-derived) pool. This may change in the future
-                                // requiring a more complex
-                                // adjustment for exported quantities if there are multiple
-                                // pools in play.
-                                long adjust = 0L;
-                                for (Pool derivedPool : existingPools) {
-                                    String isDerived =
-                                        derivedPool.getAttributeValue("pool_derived");
-                                    if (isDerived == null) {
-                                        adjust = derivedPool.getExported();
-                                    }
-                                }
-                                expectedQuantity = (expectedQuantity - adjust) * virtLimit;
-                            }
-                        }
-                        catch (NumberFormatException nfe) {
-                            // Nothing to update if we get here.
-                            continue;
-                        }
-                    }
-                }
+            // Checks product name, ID, and provided products. Attributes are handled
+            // separately.
+            // TODO: should they be separate? ^^
+            update.setProductsChanged(
+                checkForChangedProducts(sub, helper, existingPool));
+
+            update.setDerivedProductsChanged(
+                checkForChangedSubProducts(sub, helper, existingPool));
+
+            update.setProductAttributesChanged(checkForProductAttributeChanges(sub,
+                helper, existingPool));
+            update.setDerivedProductAttributesChanged(
+                checkForSubProductAttributeChanges(sub, helper, existingPool));
+
+            update.setOrderChanged(checkForOrderDataChanges(sub, helper,
+                existingPool));
+
+            // All done, see if we found any changes and return an update object if so:
+            if (update.changed()) {
+                poolsUpdated.add(update);
             }
-
-            boolean quantityChanged = !(expectedQuantity == existingPool.getQuantity());
-            boolean productsChanged = helper.checkForChangedProducts(existingPool, sub);
-
-            boolean prodAttrsChanged = helper.copyProductAttributesOntoPool(sub,
-                existingPool);
-            boolean orderDataChanged = helper.checkForOrderChanges(existingPool, sub);
-
-            if (prodAttrsChanged) {
-                log.info("Updated product attributes from subscription.");
-            }
-
-            if (!(quantityChanged || datesChanged || productsChanged ||
-                  prodAttrsChanged || orderDataChanged)) {
-                //TODO: Should we check whether pool is overflowing here?
+            else {
                 log.info("   No updates required.");
-                continue;
             }
-
-            if (quantityChanged) {
-                this.updateQuantityChanged(existingPool, expectedQuantity);
-            }
-
-            if (orderDataChanged) {
-                this.updateOrderChanged(existingPool, sub);
-            }
-
-            if (datesChanged) {
-                this.updateDatesChanged(existingPool, sub);
-            }
-
-            if (productsChanged) {
-                this.updateProductsChanged(existingPool, sub);
-            }
-            poolsUpdated.add(new org.candlepin.policy.js.pool.PoolUpdate(existingPool,
-                datesChanged, quantityChanged, productsChanged, orderDataChanged));
         }
 
         return poolsUpdated;
     }
 
-    protected void updateQuantityChanged(Pool existingPool, Long expectedQuantity) {
-        log.info("   Quantity changed to: " + expectedQuantity);
-        existingPool.setQuantity(expectedQuantity);
+    private boolean checkForOrderDataChanges(Subscription sub,
+        PoolHelper helper, Pool existingPool) {
+        boolean orderDataChanged = helper.checkForOrderChanges(existingPool, sub);
+        if (orderDataChanged) {
+            log.info("   Order Data Changed");
+            existingPool.setAccountNumber(sub.getAccountNumber());
+            existingPool.setOrderNumber(sub.getOrderNumber());
+            existingPool.setContractNumber(sub.getContractNumber());
+        }
+        return orderDataChanged;
     }
 
-    protected void updateOrderChanged(Pool existingPool, Subscription sub) {
-        log.info("   Order Data Changed");
-        existingPool.setAccountNumber(sub.getAccountNumber());
-        existingPool.setOrderNumber(sub.getOrderNumber());
-        existingPool.setContractNumber(sub.getContractNumber());
+    private boolean checkForProductAttributeChanges(Subscription sub,
+        PoolHelper helper, Pool existingPool) {
+        boolean prodAttrsChanged = false;
+        // Transfer the subscription's sub-product attributes instead if applicable:
+        if (existingPool.hasAttribute("pool_derived") && sub.getDerivedProduct() != null) {
+            prodAttrsChanged = helper.copyProductAttributesOntoPool(
+                sub.getDerivedProduct().getId(), existingPool);
+        }
+        else {
+            prodAttrsChanged = helper.copyProductAttributesOntoPool(
+                sub.getProduct().getId(), existingPool);
+        }
+        if (prodAttrsChanged) {
+            log.info("Updated product attributes from subscription.");
+        }
+
+        return prodAttrsChanged;
     }
 
-    protected void updateDatesChanged(Pool existingPool, Subscription sub) {
-        log.info("   Subscription dates changed.");
-        existingPool.setStartDate(sub.getStartDate());
-        existingPool.setEndDate(sub.getEndDate());
+    private boolean checkForSubProductAttributeChanges(Subscription sub,
+        PoolHelper helper, Pool existingPool) {
+        boolean subProdAttrsChanged = false;
+        if (!existingPool.hasAttribute("pool_derived") && sub.getDerivedProduct() != null) {
+            subProdAttrsChanged = helper.copySubProductAttributesOntoPool(
+                sub.getDerivedProduct().getId(), existingPool);
+        }
+        if (subProdAttrsChanged) {
+            log.info("Updated sub-product attributes from subscription.");
+        }
+        return subProdAttrsChanged;
     }
 
-    protected void updateProductsChanged(Pool existingPool, Subscription sub) {
-        log.info("   Subscription products changed.");
-        existingPool.setProductName(sub.getProduct().getName());
-        existingPool.setProductId(sub.getProduct().getId());
-        existingPool.getProvidedProducts().clear();
+    private boolean checkForChangedProducts(Subscription sub,
+        PoolHelper helper, Pool existingPool) {
 
+        boolean productsChanged =
+            !sub.getProduct().getId().equals(existingPool.getProductId());
+        productsChanged = productsChanged ||
+            !sub.getProduct().getName().equals(existingPool.getProductName());
+
+        // Build expected set of ProvidedProducts and compare:
+        Set<ProvidedProduct> currentProvided = existingPool.getProvidedProducts();
+        Set<ProvidedProduct> incomingProvided = new HashSet<ProvidedProduct>();
         if (sub.getProvidedProducts() != null) {
             for (Product p : sub.getProvidedProducts()) {
-                existingPool.addProvidedProduct(new ProvidedProduct(p.getId(),
-                    p.getName()));
+                incomingProvided.add(new ProvidedProduct(p.getId(), p.getName(),
+                    existingPool));
             }
         }
+        productsChanged = productsChanged || !currentProvided.equals(incomingProvided);
+
+        if (productsChanged) {
+            log.info("   Subscription products changed.");
+            existingPool.setProductName(sub.getProduct().getName());
+            existingPool.setProductId(sub.getProduct().getId());
+            existingPool.getProvidedProducts().clear();
+            existingPool.getProvidedProducts().addAll(incomingProvided);
+        }
+        return productsChanged;
     }
+
+    private boolean checkForChangedSubProducts(Subscription sub,
+        PoolHelper helper, Pool existingPool) {
+
+        boolean productsChanged = false;
+        if (sub.getDerivedProduct() != null) {
+            productsChanged = !sub.getDerivedProduct().getId().equals(
+                existingPool.getDerivedProductId());
+            productsChanged = productsChanged ||
+                !sub.getDerivedProduct().getName().equals(
+                    existingPool.getDerivedProductName());
+        }
+
+        // Build expected set of ProvidedProducts and compare:
+        Set<DerivedProvidedProduct> currentProvided =
+            existingPool.getDerivedProvidedProducts();
+        Set<DerivedProvidedProduct> incomingProvided =
+            new HashSet<DerivedProvidedProduct>();
+        if (sub.getDerivedProvidedProducts() != null) {
+            for (Product p : sub.getDerivedProvidedProducts()) {
+                incomingProvided.add(new DerivedProvidedProduct(p.getId(), p.getName(),
+                    existingPool));
+            }
+        }
+        productsChanged = productsChanged || !currentProvided.equals(incomingProvided);
+
+        if (productsChanged) {
+            log.info("   Subscription sub-products changed.");
+            existingPool.setDerivedProductName(sub.getDerivedProduct().getName());
+            existingPool.setDerivedProductId(sub.getDerivedProduct().getId());
+            existingPool.getDerivedProvidedProducts().clear();
+            existingPool.getDerivedProvidedProducts().addAll(incomingProvided);
+        }
+        return productsChanged;
+    }
+
+    private boolean checkForDateChange(Subscription sub, Pool existingPool) {
+
+        boolean datesChanged = (!sub.getStartDate().equals(
+            existingPool.getStartDate())) ||
+            (!sub.getEndDate().equals(existingPool.getEndDate()));
+
+        if (datesChanged) {
+            log.info("   Subscription dates changed.");
+            existingPool.setStartDate(sub.getStartDate());
+            existingPool.setEndDate(sub.getEndDate());
+        }
+        return datesChanged;
+    }
+
+    private boolean checkForQuantityChange(Subscription sub, Pool existingPool,
+        List<Pool> existingPools, Map<String, String> attributes) {
+
+        // Expected quantity is normally the subscription's quantity, but for
+        // virt only pools we expect it to be sub quantity * virt_limit:
+        long expectedQuantity = calculateQuantity(sub);
+        expectedQuantity = processHostedVirtLimitPools(existingPools,
+            attributes, existingPool, expectedQuantity);
+
+
+        boolean quantityChanged = !(expectedQuantity == existingPool.getQuantity());
+
+        if (quantityChanged) {
+            log.info("   Quantity changed to: " + expectedQuantity);
+            existingPool.setQuantity(expectedQuantity);
+        }
+
+        return quantityChanged;
+    }
+
+    private long processHostedVirtLimitPools(List<Pool> existingPools,
+        Map<String, String> attributes, Pool existingPool, long expectedQuantity) {
+        /*
+         *  WARNING: when updating pools, we have the added complication of having to
+         *  watch out for pools that candlepin creates internally. (i.e. virt bonus
+         *  pools in hosted (created when sub is first detected), and host restricted
+         *  virt pools when on-site. (created when a host binds)
+         */
+        if (existingPool.hasAttribute("pool_derived") &&
+            existingPool.attributeEquals("virt_only", "true") &&
+            existingPool.hasProductAttribute("virt_limit")) {
+
+            if (!attributes.containsKey("virt_limit")) {
+                log.warn("virt_limit attribute has been removed from subscription, " +
+                    "flagging pool for deletion if supported: " + existingPool.getId());
+                // virt_limit has been removed! We need to clean up this pool. Set
+                // attribute to notify the server of this:
+                existingPool.setAttribute("candlepin.delete_pool", "true");
+                // Older candlepin's won't look at the delete attribute, so we will
+                // set the expected quantity to 0 to effectively disable the pool
+                // on those servers as well.
+                expectedQuantity = 0;
+            }
+            else {
+                String virtLimitStr = attributes.get("virt_limit");
+
+                if ("unlimited".equals(virtLimitStr)) {
+                    // 0 will only happen if the rules set it to be 0 -- don't modify
+                    // -1 for pretty much all the rest
+                    expectedQuantity = existingPool.getQuantity() == 0 ?
+                        0 : -1;
+                }
+                else {
+                    try {
+                        int virtLimit = Integer.parseInt(virtLimitStr);
+                        if (config.standalone()) {
+                            // this is how we determined the quantity
+                            expectedQuantity = virtLimit;
+                        }
+                        else {
+                            // we need to see if a parent pool exists and has been
+                            // exported. Adjust is number exported from a parent pool.
+                            // If no parent pool, adjust = 0 [a scenario of virtual pool
+                            // only]
+                            //
+                            // WARNING: we're assuming there is only one base
+                            // (non-derived) pool. This may change in the future
+                            // requiring a more complex
+                            // adjustment for exported quantities if there are multiple
+                            // pools in play.
+                            long adjust = 0L;
+                            for (Pool derivedPool : existingPools) {
+                                String isDerived =
+                                    derivedPool.getAttributeValue("pool_derived");
+                                if (isDerived == null) {
+                                    adjust = derivedPool.getExported();
+                                }
+                            }
+                            expectedQuantity = (expectedQuantity - adjust) * virtLimit;
+                        }
+                    }
+                    catch (NumberFormatException nfe) {
+                        // Nothing to update if we get here.
+//                            continue;
+                    }
+                }
+            }
+        }
+        return expectedQuantity;
+    }
+
+
 }

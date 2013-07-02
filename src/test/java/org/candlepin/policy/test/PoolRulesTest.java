@@ -24,10 +24,12 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.config.Config;
@@ -43,6 +45,7 @@ import org.candlepin.model.ProductPoolAttribute;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
+import org.candlepin.model.DerivedProductPoolAttribute;
 import org.candlepin.model.Subscription;
 import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.pool.PoolRules;
@@ -104,6 +107,16 @@ public class PoolRulesTest {
         for (ProductAttribute attr : sub.getProduct().getAttributes()) {
             p.addProductAttribute(new ProductPoolAttribute(attr.getName(), attr.getValue(),
                 sub.getProduct().getId()));
+        }
+
+        // Copy sub-product data if there is any:
+        if (sub.getDerivedProduct() != null) {
+            p.setDerivedProductId(sub.getDerivedProduct().getId());
+            p.setDerivedProductName(sub.getDerivedProduct().getName());
+            for (ProductAttribute attr : sub.getDerivedProduct().getAttributes()) {
+                p.addSubProductAttribute(new DerivedProductPoolAttribute(attr.getName(),
+                    attr.getValue(), sub.getProduct().getId()));
+            }
         }
 
         return p;
@@ -168,8 +181,7 @@ public class PoolRulesTest {
         Pool p = copyFromSub(s);
         p.setProductName("somethingelse");
 
-        List<Pool> existingPools = new LinkedList<Pool>();
-        existingPools.add(p);
+        List<Pool> existingPools = Arrays.asList(p);
         List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools);
 
         assertEquals(1, updates.size());
@@ -188,8 +200,7 @@ public class PoolRulesTest {
         Pool p = copyFromSub(s);
         p.setEndDate(new Date());
 
-        List<Pool> existingPools = new LinkedList<Pool>();
-        existingPools.add(p);
+        List<Pool> existingPools = Arrays.asList(p);
         List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools);
 
         assertEquals(1, updates.size());
@@ -208,8 +219,7 @@ public class PoolRulesTest {
         Pool p = copyFromSub(s);
         p.setQuantity(2000L);
 
-        List<Pool> existingPools = new LinkedList<Pool>();
-        existingPools.add(p);
+        List<Pool> existingPools = Arrays.asList(p);
         List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools);
 
         assertEquals(1, updates.size());
@@ -232,8 +242,7 @@ public class PoolRulesTest {
         p.addAttribute(new PoolAttribute("pool_derived", "true"));
         p.setQuantity(40L);
 
-        List<Pool> existingPools = new LinkedList<Pool>();
-        existingPools.add(p);
+        List<Pool> existingPools = Arrays.asList(p);
         List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools);
 
         assertEquals(1, updates.size());
@@ -245,7 +254,7 @@ public class PoolRulesTest {
     }
 
     @Test
-    public void productAttributesCopiedOntoPoolDuringUpdate() {
+    public void updatePoolWithNewProductAttributes() {
         Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
         Pool p = copyFromSub(s);
 
@@ -255,8 +264,7 @@ public class PoolRulesTest {
 
         when(productAdapterMock.getProductById(s.getProduct().getId()))
             .thenReturn(s.getProduct());
-        List<Pool> existingPools = new LinkedList<Pool>();
-        existingPools.add(p);
+        List<Pool> existingPools = Arrays.asList(p);
         List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools);
 
         assertEquals(1, updates.size());
@@ -266,17 +274,57 @@ public class PoolRulesTest {
     }
 
     @Test
-    public void productAttributesCopiedOntoPoolDuringUpdateAndOverwriteValue() {
+    public void updatePoolWithNewSubProductAttributes() {
+        Subscription s = createSubscriptionWithSubProduct();
+        Pool p = copyFromSub(s);
+
+        // Update the subscription's sub-product:
+        s.getDerivedProduct().setAttribute("a", "new value");
+
+        List<Pool> existingPools = Arrays.asList(p);
+        List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools);
+
+        assertEquals(1, updates.size());
+        PoolUpdate update = updates.get(0);
+        Pool updatedPool = update.getPool();
+        assertTrue(updatedPool.hasSubProductAttribute("a"));
+    }
+
+    @Test
+    public void updateDerivedPoolWithNewSubProductAttributes() {
+        Subscription s = createSubscriptionWithSubProduct();
+        Pool p = copyFromSub(s);
+
+        // Simulate that this is a derived pool. When we add a new sub-product attribute
+        // to the subscription, it should show up as a primary product attribute on a
+        // sub pool:
+        p.setAttribute("pool_derived", "true");
+
+        // Update the subscription's sub-product:
+        s.getDerivedProduct().setAttribute("a", "new value");
+
+        List<Pool> existingPools = Arrays.asList(p);
+        List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools);
+
+        assertEquals(1, updates.size());
+        PoolUpdate update = updates.get(0);
+        Pool updatedPool = update.getPool();
+        assertTrue(updatedPool.hasProductAttribute("a"));
+        assertFalse(updatedPool.hasSubProductAttribute("a"));
+    }
+
+    @Test
+    public void updatePoolWithModifiedProductAttributes() {
         Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
         Pool p = copyFromSub(s);
 
         String testAttributeKey = "multi-entitlement";
         String expectedAttributeValue = "yes";
 
-        // Simulate an attribute that was added via collapse.
+        // Simulate an attribute that was added during pool creation:
         p.setProductAttribute(testAttributeKey, "no", s.getProduct().getId());
 
-        // Update the subscription's product.
+        // Update the subscription's product with new attribute value:
         s.getProduct().setAttribute(testAttributeKey, expectedAttributeValue);
 
         when(productAdapterMock.getProductById(s.getProduct().getId()))
@@ -292,6 +340,87 @@ public class PoolRulesTest {
         assertTrue(updatedPool.hasProductAttribute(testAttributeKey));
         assertEquals(expectedAttributeValue,
             updatedPool.getProductAttribute(testAttributeKey).getValue());
+    }
+
+    @Test
+    public void updatePoolWithModifiedSubProductAttributes() {
+        Subscription s = createSubscriptionWithSubProduct();
+        s.getDerivedProduct().setAttribute("a", "orig value");
+        Pool p = copyFromSub(s);
+
+        // Update the subscription's sub-product:
+        String newVal = "new value";
+        s.getDerivedProduct().setAttribute("a", newVal);
+
+        List<Pool> existingPools = Arrays.asList(p);
+        List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools);
+
+        assertEquals(1, updates.size());
+        PoolUpdate update = updates.get(0);
+        Pool updatedPool = update.getPool();
+        assertTrue(updatedPool.hasSubProductAttribute("a"));
+        assertEquals(newVal, updatedPool.getDerivedProductAttribute("a").getValue());
+    }
+
+    private Subscription createSubscriptionWithSubProduct() {
+        Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
+        Product subProd = TestUtil.createProduct();
+        s.setDerivedProduct(subProd);
+        when(productAdapterMock.getProductById(s.getProduct().getId()))
+            .thenReturn(s.getProduct());
+        when(productAdapterMock.getProductById(s.getDerivedProduct().getId()))
+            .thenReturn(s.getDerivedProduct());
+        return s;
+    }
+
+    @Test
+    public void updateDerivedPoolWithModifiedSubProductAttributes() {
+        Subscription s = createSubscriptionWithSubProduct();
+        Pool p = copyFromSub(s);
+        p.setAttribute("pool_derived", "true");
+
+        s.getDerivedProduct().setAttribute("a", "orig value");
+        // Simulate that this is a derived pool. When we add a new sub-product attribute
+        // to the subscription, it should show up as a primary product attribute on a
+        // sub pool:
+
+        // Update the subscription's sub-product:
+        String newVal = "new value";
+        s.getDerivedProduct().setAttribute("a", newVal);
+
+        List<Pool> existingPools = Arrays.asList(p);
+        List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools);
+
+        assertEquals(1, updates.size());
+        PoolUpdate update = updates.get(0);
+        Pool updatedPool = update.getPool();
+        assertTrue(updatedPool.hasProductAttribute("a"));
+        assertEquals(newVal, updatedPool.getProductAttribute("a").getValue());
+        assertFalse(updatedPool.hasSubProductAttribute("a"));
+    }
+
+    @Test
+    public void updatePoolSubProvidedProductsChanged() {
+        // Subscription with two provided products:
+        Subscription s = createSubscriptionWithSubProduct();
+        Product product1 = TestUtil.createProduct();
+        Product product2 = TestUtil.createProduct();
+        Product product3 = TestUtil.createProduct();
+        s.getDerivedProvidedProducts().add(product1);
+        s.getDerivedProvidedProducts().add(product2);
+
+        // Setup a pool with a single (different) provided product:
+        Pool p = copyFromSub(s);
+        p.getProvidedProducts().clear();
+        p.getProvidedProducts().add(
+            new ProvidedProduct(product3.getId(), product3.getName(), p));
+
+        List<Pool> existingPools = Arrays.asList(p);
+
+        List<PoolUpdate> updates = this.poolRules.updatePools(s, existingPools);
+        assertEquals(1, updates.size());
+        assertTrue(updates.get(0).getDerivedProductAttributesChanged());
+        assertEquals(2, updates.get(0).getPool().getDerivedProvidedProducts().size());
     }
 
     @Test
@@ -342,6 +471,70 @@ public class PoolRulesTest {
         assertTrue(resultPool.hasProductAttribute(testAttributeKey));
         assertEquals(expectedAttributeValue,
             resultPool.getProductAttribute(testAttributeKey).getValue());
+    }
+
+    @Test
+    public void subProductAttributesCopiedOntoPoolWhenCreatingNewPool() {
+        Product product = TestUtil.createProduct();
+        Product subProduct = TestUtil.createProduct();
+
+        Subscription sub = TestUtil.createSubscription(owner, product);
+        sub.setDerivedProduct(subProduct);
+        String testAttributeKey = "multi-entitlement";
+        String expectedAttributeValue = "yes";
+        subProduct.setAttribute(testAttributeKey, expectedAttributeValue);
+
+        when(this.productAdapterMock.getProductById(anyString())).thenReturn(product);
+        when(this.productAdapterMock.getProductById(anyString())).thenReturn(subProduct);
+
+        List<Pool> pools = this.poolRules.createPools(sub);
+        assertEquals(1, pools.size());
+
+        Pool resultPool = pools.get(0);
+        assertTrue(resultPool.hasSubProductAttribute(testAttributeKey));
+        assertEquals(expectedAttributeValue,
+            resultPool.getDerivedProductAttribute(testAttributeKey).getValue());
+    }
+
+    @Test
+    public void subProductIdCopiedOntoPoolWhenCreatingNewPool() {
+        Product product = TestUtil.createProduct();
+        Product subProduct = TestUtil.createProduct();
+
+        Subscription sub = TestUtil.createSubscription(owner, product);
+        sub.setDerivedProduct(subProduct);
+
+        when(this.productAdapterMock.getProductById(anyString())).thenReturn(product);
+        when(this.productAdapterMock.getProductById(anyString())).thenReturn(subProduct);
+
+        List<Pool> pools = this.poolRules.createPools(sub);
+        assertEquals(1, pools.size());
+
+        Pool resultPool = pools.get(0);
+        assertEquals(subProduct.getId(), resultPool.getDerivedProductId());
+        assertEquals(subProduct.getName(), resultPool.getDerivedProductName());
+    }
+
+    @Test
+    public void subProvidedProductsCopiedOntoPoolWhenCreatingNewPool() {
+        Product product = TestUtil.createProduct();
+        Product subProduct = TestUtil.createProduct();
+        Product subProvidedProduct = TestUtil.createProduct();
+
+        Subscription sub = TestUtil.createSubscription(owner, product);
+        sub.setDerivedProduct(subProduct);
+        Set<Product> subProvided = new HashSet<Product>();
+        subProvided.add(subProvidedProduct);
+        sub.setDerivedProvidedProducts(subProvided);
+
+        when(this.productAdapterMock.getProductById(anyString())).thenReturn(product);
+        when(this.productAdapterMock.getProductById(anyString())).thenReturn(subProduct);
+
+        List<Pool> pools = this.poolRules.createPools(sub);
+        assertEquals(1, pools.size());
+
+        Pool resultPool = pools.get(0);
+        assertEquals(1, resultPool.getDerivedProvidedProducts().size());
     }
 
     private Subscription createVirtLimitSub(String productId, int quantity, int virtLimit) {
@@ -606,6 +799,8 @@ public class PoolRulesTest {
         when(configMock.standalone()).thenReturn(false);
         Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
         s.setQuantity(10L);
+        when(productAdapterMock.getProductById(s.getProduct().getId()))
+            .thenReturn(s.getProduct());
 
         // Setup a pool with a single (different) provided product:
         Pool p = copyFromSub(s);

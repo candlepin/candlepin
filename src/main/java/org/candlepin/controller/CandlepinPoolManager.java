@@ -574,8 +574,12 @@ public class CandlepinPoolManager implements PoolManager {
 
         Product product = null;
         if (sub != null) {
-            // Just look this up off of the subscription if one exists
-            product = sub.getProduct();
+            // Just look this up off of the subscription if one exists.
+            // Need to make sure that we check for a defined sub product
+            // if it is a derived pool.
+            boolean derived = pool.hasAttribute("pool_derived");
+            product = derived && sub.getDerivedProduct() != null ? sub.getDerivedProduct() :
+                sub.getProduct();
         }
         else {
             // This is possible in a sub-pool, for example - the pool was not

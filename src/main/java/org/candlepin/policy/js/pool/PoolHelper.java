@@ -15,9 +15,7 @@
 package org.candlepin.policy.js.pool;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -30,9 +28,10 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductPoolAttribute;
 import org.candlepin.model.ProvidedProduct;
+import org.candlepin.model.DerivedProductPoolAttribute;
+import org.candlepin.model.DerivedProvidedProduct;
 import org.candlepin.model.Subscription;
 import org.candlepin.policy.js.AttributeHelper;
 import org.candlepin.policy.js.ProductCache;
@@ -56,27 +55,6 @@ public class PoolHelper extends AttributeHelper {
     }
 
     /**
-    * Create a pool for a product and limit it to consumers a particular user has
-    * registered.
-    *
-    * @param productId Label of the product the pool is for.
-    * @param quantity Number of entitlements for this pool, also accepts "unlimited".
-    */
-    public void createUserRestrictedPool(String productId, Pool pool,
-        String quantity) {
-
-        Pool consumerSpecificPool = createPool(productId, pool.getOwner(), quantity,
-            pool.getStartDate(), pool.getEndDate(), pool.getContractNumber(),
-            pool.getAccountNumber(), pool.getOrderNumber(),
-            pool.getProvidedProducts());
-
-        consumerSpecificPool.setRestrictedToUsername(
-                this.sourceEntitlement.getConsumer().getUsername());
-
-        poolManager.createPool(consumerSpecificPool);
-    }
-
-    /**
      * Create a pool only for virt guests of a particular host consumer.
      *
      *
@@ -89,9 +67,29 @@ public class PoolHelper extends AttributeHelper {
     public Pool createHostRestrictedPool(String productId, Pool pool,
         String quantity) {
 
-        Pool consumerSpecificPool = createPool(productId, pool.getOwner(), quantity,
-            pool.getStartDate(), pool.getEndDate(), pool.getContractNumber(),
-            pool.getAccountNumber(), pool.getOrderNumber(), pool.getProvidedProducts());
+        Pool consumerSpecificPool = null;
+        if (pool.getDerivedProductId() == null) {
+            consumerSpecificPool = createPool(productId, pool.getOwner(),
+                quantity, pool.getStartDate(), pool.getEndDate(),
+                pool.getContractNumber(), pool.getAccountNumber(), pool.getOrderNumber(),
+                pool.getProvidedProducts());
+        }
+        else {
+            // If a sub product id is on the pool, we want to define the sub pool
+            // with the sub product data that was defined on the parent pool,
+            // allowing the sub pool to have different attributes than the parent.
+            Set<ProvidedProduct> providedProducts = new HashSet<ProvidedProduct>();
+            for (DerivedProvidedProduct subProvided : pool.getDerivedProvidedProducts()) {
+                providedProducts.add(new ProvidedProduct(subProvided.getProductId(),
+                                                         subProvided.getProductName()));
+            }
+
+            consumerSpecificPool = createPool(pool.getDerivedProductId(), pool.getOwner(),
+                quantity, pool.getStartDate(), pool.getEndDate(),
+                pool.getContractNumber(), pool.getAccountNumber(), pool.getOrderNumber(),
+                providedProducts);
+
+        }
 
         consumerSpecificPool.setAttribute("requires_host",
             sourceEntitlement.getConsumer().getUuid());
@@ -103,7 +101,8 @@ public class PoolHelper extends AttributeHelper {
 
 
         consumerSpecificPool.setSubscriptionId(pool.getSubscriptionId());
-        this.copyProductIDAttributesOntoPool(productId, consumerSpecificPool);
+        this.copyProductAttributesOntoPool(consumerSpecificPool.getProductId(),
+            consumerSpecificPool);
         poolManager.createPool(consumerSpecificPool);
         return consumerSpecificPool;
     }
@@ -169,29 +168,13 @@ public class PoolHelper extends AttributeHelper {
             pool.setAttribute(entry.getKey(), entry.getValue());
         }
 
-        copyProductIDAttributesOntoPool(productId, pool);
+        copyProductAttributesOntoPool(productId, pool);
 
         return pool;
     }
 
-
     /**
-     * Copies all of a {@link Subscription}'s top-level product attributes onto the pool.
-     * If an attribute already exists, it will be updated. Any attributes that are
-     * on the {@link Pool} but not on the {@link Product} will be removed.
-     *
-     * @param sub
-     * @param pool
-     *
-     * @return true if the pools attributes changed, false otherwise.
-     */
-    public boolean copyProductAttributesOntoPool(Subscription sub, Pool pool) {
-        return this.copyProductIDAttributesOntoPool(sub.getProduct().getId(), pool);
-    }
-
-
-    /**
-     * Copies all of a {@link Products}'s top-level product attributes onto the pool.
+     * Copies all of the {@link Products} attributes onto the pool.
      * If an attribute already exists, it will be updated. Any attributes that are
      * on the {@link Pool} but not on the {@link Product} will be removed.
      *
@@ -200,53 +183,54 @@ public class PoolHelper extends AttributeHelper {
      *
      * @return true if the pools attributes changed, false otherwise.
      */
-    protected boolean copyProductIDAttributesOntoPool(String productId, Pool pool) {
-        Set<String> processed = new HashSet<String>();
-
+    protected boolean copyProductAttributesOntoPool(String productId, Pool pool) {
         boolean hasChanged = false;
         Product product = productCache.getProductById(productId);
+
+        // Build a set of what we would expect and compare them to the current:
+        Set<ProductPoolAttribute> currentAttrs = pool.getProductAttributes();
+        Set<ProductPoolAttribute> incomingAttrs = new HashSet<ProductPoolAttribute>();
         if (product != null) {
             for (Attribute attr : product.getAttributes()) {
-
-                String attributeName = attr.getName();
-                String attributeValue = attr.getValue();
-
-                // Add to the processed list so that we can determine which should
-                // be removed later.
-                processed.add(attributeName);
-
-                if (pool.hasProductAttribute(attributeName) &&
-                    attributeValue != null) {
-                    ProductPoolAttribute provided =
-                        pool.getProductAttribute(attributeName);
-                    String providedValue = provided.getValue();
-                    if (providedValue != null) {
-                        boolean productsAreSame =
-                            product.getId().equals(provided.getProductId());
-                        boolean attrValueSame = attributeValue.equals(providedValue);
-                        if (productsAreSame && attrValueSame) {
-                            continue;
-                        }
-                    }
-                }
-
-                // Change detected - update the attribute
-                pool.setProductAttribute(attributeName, attributeValue,
-                    product.getId());
-                hasChanged = true;
+                ProductPoolAttribute newAttr = new ProductPoolAttribute(attr.getName(),
+                    attr.getValue(), product.getId());
+                newAttr.setPool(pool);
+                incomingAttrs.add(newAttr);
             }
-
-            // Determine if any should be removed.
-            Set<ProductPoolAttribute> toRemove =
-                new HashSet<ProductPoolAttribute>();
-            for (ProductPoolAttribute toCheck : pool.getProductAttributes()) {
-                if (!processed.contains(toCheck.getName())) {
-                    toRemove.add(toCheck);
-                    hasChanged = true;
-                }
-            }
-            pool.getProductAttributes().removeAll(toRemove);
         }
+
+        if (!currentAttrs.equals(incomingAttrs)) {
+            hasChanged = true;
+            pool.getProductAttributes().clear();
+            pool.getProductAttributes().addAll(incomingAttrs);
+        }
+
+        return hasChanged;
+    }
+
+    protected boolean copySubProductAttributesOntoPool(String productId, Pool pool) {
+        boolean hasChanged = false;
+        Product product = productCache.getProductById(productId);
+
+        // Build a set of what we would expect and compare them to the current:
+        Set<DerivedProductPoolAttribute> currentAttrs = pool.getDerivedProductAttributes();
+        Set<DerivedProductPoolAttribute> incomingAttrs =
+            new HashSet<DerivedProductPoolAttribute>();
+        if (product != null) {
+            for (Attribute attr : product.getAttributes()) {
+                DerivedProductPoolAttribute newAttr = new DerivedProductPoolAttribute(
+                    attr.getName(), attr.getValue(), product.getId());
+                newAttr.setPool(pool);
+                incomingAttrs.add(newAttr);
+            }
+        }
+
+        if (!currentAttrs.equals(incomingAttrs)) {
+            hasChanged = true;
+            pool.getDerivedProductAttributes().clear();
+            pool.getDerivedProductAttributes().addAll(incomingAttrs);
+        }
+
         return hasChanged;
     }
 
@@ -288,79 +272,9 @@ public class PoolHelper extends AttributeHelper {
         return pool;
     }
 
-    public boolean checkForChangedProducts(Pool existingPool, Subscription sub) {
-        Set<String> poolProducts = new HashSet<String>();
-        Set<String> subProducts = new HashSet<String>();
-        poolProducts.add(existingPool.getProductId());
-
-        for (ProvidedProduct pp : existingPool.getProvidedProducts()) {
-            poolProducts.add(pp.getProductId());
-        }
-
-        subProducts.add(sub.getProduct().getId());
-        for (Product product : sub.getProvidedProducts()) {
-            subProducts.add(product.getId());
-        }
-
-        boolean changeFound = false;
-        // Check if the product name has been changed:
-        changeFound = !poolProducts.equals(subProducts) ||
-            !existingPool.getProductName().equals(sub.getProduct().getName());
-
-        // Check the attributes only when no other change was detected.
-        if (!changeFound) {
-            changeFound = haveAttributesChanged(existingPool, sub);
-        }
-
-        return changeFound;
-    }
-
     public boolean checkForOrderChanges(Pool existingPool, Subscription sub) {
         return (!StringUtils.equals(existingPool.getOrderNumber(), sub.getOrderNumber()) ||
             !StringUtils.equals(existingPool.getAccountNumber(), sub.getAccountNumber()) ||
             !StringUtils.equals(existingPool.getContractNumber(), sub.getContractNumber()));
     }
-
-    private boolean haveAttributesChanged(Pool existing, Subscription sub) {
-        Set<ProductPoolAttribute> attribs =
-            existing.getProductAttributes();
-
-        // should probably make this part of Pool.
-        Map<String, List<ProductPoolAttribute>> byProductId =
-            new HashMap<String, List<ProductPoolAttribute>>();
-
-        for (ProductPoolAttribute attrib : attribs) {
-            List<ProductPoolAttribute> attribList =
-                byProductId.get(attrib.getProductId());
-
-            if (attribList == null) {
-                attribList = new LinkedList<ProductPoolAttribute>();
-                attribList.add(attrib);
-                byProductId.put(attrib.getProductId(), attribList);
-            }
-            else {
-                attribList.add(attrib);
-            }
-        }
-
-        for (Product product : sub.getProvidedProducts()) {
-            List<ProductPoolAttribute> attribList =
-                byProductId.get(product.getId());
-
-            if (attribList == null) {
-                break;
-            }
-
-            for (ProductPoolAttribute attrib : attribList) {
-                ProductAttribute pa = product.getAttribute(attrib.getName());
-                if (!pa.getValue().equals(attrib.getValue())) {
-                    // we found a change, no need to look any further
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
 }
