@@ -37,7 +37,6 @@ import org.candlepin.policy.ValidationWarning;
 import org.candlepin.policy.js.JsContext;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.ProductCache;
-import org.candlepin.policy.js.RuleExecutionException;
 import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.policy.js.pool.PoolHelper;
 import org.candlepin.util.DateSource;
@@ -64,8 +63,6 @@ public abstract class AbstractEntitlementRules implements Enforcer {
 
     protected static final String PRE_PREFIX = "pre_";
     protected static final String POST_PREFIX = "post_";
-    protected static final String GLOBAL_PRE_FUNCTION = PRE_PREFIX + "global";
-    protected static final String GLOBAL_POST_FUNCTION = POST_PREFIX + "global";
 
     protected void rulesInit() {
         String mappings;
@@ -180,61 +177,12 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         }
     }
 
-    protected void invokeGlobalPostEntitlementRule(JsContext context) {
-        // No method for this product, try to find a global function, if
-        // neither exists this is ok and we'll just carry on.
-        try {
-            jsRules.invokeMethod(GLOBAL_POST_FUNCTION, context);
-            log.debug("Ran rule: " + GLOBAL_POST_FUNCTION);
-        }
-        catch (NoSuchMethodException ex) {
-            // This is fine, I hope...
-            log.info("No default rule found: " + GLOBAL_POST_FUNCTION);
-        }
-        catch (RhinoException ex) {
-            throw new RuleExecutionException(ex);
-        }
-    }
-
-    protected ValidationResult invokeGlobalPreEntitlementRule(JsContext context) {
-        // No method for this product, try to find a global function, if
-        // neither exists this is ok and we'll just carry on.
-        try {
-            String resultJson = jsRules.invokeMethod(GLOBAL_PRE_FUNCTION, context);
-            log.debug("Ran rule: " + GLOBAL_PRE_FUNCTION);
-            return objectMapper.toObject(resultJson, ValidationResult.class);
-        }
-        catch (NoSuchMethodException ex) {
-            // This is fine, I hope...
-            log.info("No default rule found: " + GLOBAL_PRE_FUNCTION);
-        }
-        catch (Exception ex) {
-            throw new RuleExecutionException(ex);
-        }
-        return new ValidationResult();
-    }
-
     protected void callPostUnbindRules(List<Rule> matchingRules) {
         for (Rule rule : matchingRules) {
             jsRules.invokeRule(POST_PREFIX + rule.getRuleName());
         }
     }
 
-    protected void invokeGlobalPostUnbindRule(JsContext context) {
-        // No method for this product, try to find a global function, if
-        // neither exists this is ok and we'll just carry on.
-        try {
-            jsRules.invokeMethod(GLOBAL_POST_FUNCTION, context);
-            log.debug("Ran rule: " + GLOBAL_POST_FUNCTION);
-        }
-        catch (NoSuchMethodException ex) {
-            // This is fine, I hope...
-            log.info("No default rule found: " + GLOBAL_POST_FUNCTION);
-        }
-        catch (RhinoException ex) {
-            throw new RuleExecutionException(ex);
-        }
-    }
 
     // Always ensure that we do not over consume.
     // FIXME for auto sub stacking, we need to be able to pull across multiple
