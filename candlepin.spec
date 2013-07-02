@@ -25,7 +25,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.8.15
+Version: 0.8.16
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -345,6 +345,19 @@ fi
 
 
 %changelog
+* Tue Jul 02 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.16-1
+- 837151: Fix activation key including virtual type subscriptions (wpoteat@redhat.com)
+- 888866: Old sm can use subs with new attributes (ckozak@redhat.com)
+- 971445: fix importing manifest from same distributor for the same org (wpoteat@redhat.com)
+- 976089: Expose new api to get entitlements for a pool (bkearney@redhat.com)
+- latest strings from zanata (alikins@redhat.com)
+- Add Arch.parseArches test cases (alikins@redhat.com)
+- Do not create virt sub-pool when a guest binds to main pool. (dgoodwin@redhat.com)
+- update class javadoc (jmrodri@gmail.com)
+- Allow hypervisor types to also consume system subscriptions. (bkearney@redhat.com)
+- Sub-pool data feature (mstead@redhat.com)
+- Add support for sub-product data on subs and pools. (dgoodwin@redhat.com)
+
 * Wed Jun 19 2013 Devan Goodwin <dgoodwin@rm-rf.ca> 0.8.15-1
 - Latest translations from zanata. (dgoodwin@redhat.com)
 - Extract latest strings. (dgoodwin@redhat.com)
