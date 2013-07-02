@@ -440,6 +440,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         boolean hostLimited = attributes.containsKey("host_limited") &&
             attributes.get("host_limited").equals("true");
         if (!c.getType().isManifest() &&
+            !"true".equalsIgnoreCase(c.getFact("virt.is_guest")) &&
             (config.standalone() || hostLimited)) {
             String productId = pool.getProductId();
             String virtLimit = attributes.get("virt_limit");
