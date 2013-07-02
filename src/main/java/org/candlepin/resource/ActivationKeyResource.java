@@ -28,6 +28,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.interceptor.Verify;
@@ -155,6 +156,13 @@ public class ActivationKeyResource {
                 i18n.tr("The quantity must not be greater than the total " +
                     "allowed for the pool"));
         }
+        if (isPoolHostRestricted(pool) &&
+            !StringUtils.isBlank(getKeyHostRestriction(key)) &&
+            !getPoolRequiredHost(pool).equals(getKeyHostRestriction(key))) {
+            throw new BadRequestException(
+                i18n.tr("Activation keys can only use host restricted pools from " +
+                    "a single host."));
+        }
         key.addPool(pool, quantity);
         activationKeyCurator.update(key);
         return pool;
@@ -227,5 +235,23 @@ public class ActivationKeyResource {
                 "Pool with id {0} could not be found.", poolId));
         }
         return pool;
+    }
+
+    private String getKeyHostRestriction(ActivationKey ak) {
+        for (ActivationKeyPool akp : ak.getPools()) {
+            if (isPoolHostRestricted(akp.getPool())) {
+                return akp.getPool().getAttributeValue("requires_host");
+            }
+        }
+        return null;
+    }
+
+    private boolean isPoolHostRestricted(Pool pool) {
+        String host = getPoolRequiredHost(pool);
+        return !StringUtils.isBlank(host);
+    }
+
+    private String getPoolRequiredHost(Pool pool) {
+        return (pool.getAttributeValue("requires_host"));
     }
 }

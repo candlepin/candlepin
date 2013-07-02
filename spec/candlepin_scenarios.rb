@@ -242,6 +242,9 @@ module ExportMethods
         {"sockets" => "2"})
     @derived_provided_prod = @cp.create_product(random_string(), random_string());
 
+    #this is for the update process
+    product_up = @cp.create_product(random_string('product_up'), random_string('product_up'))
+
     content = create_content({:metadata_expire => 6000,
                               :required_tags => "TAG1,TAG2"})
     arch_content = create_content({:metadata_expire => 6000,
@@ -260,6 +263,7 @@ module ExportMethods
     sub3 = @cp.create_subscription(@owner['key'], @virt_product.id, 10, [], '', '12345', '6789', nil, @end_date)
     sub4 = @cp.create_subscription(@owner['key'], @product3.id, 5, [], '', '12345', '6789', nil, @end_date,
       {'derived_product_id' => @derived_product['id'],  'derived_provided_products' => [@derived_provided_prod['id']]})
+    sub_up = @cp.create_subscription(@owner['key'], product_up.id, 10, [], '', '12345', '6789', nil, @end_date)
 
     @cp.refresh_pools(@owner['key'])
 
@@ -267,6 +271,8 @@ module ExportMethods
     pool2 = @cp.list_pools(:owner => @owner.id, :product => @product2.id)[0]
     pool3 = @cp.list_pools(:owner => @owner.id, :product => @virt_product.id)[0]
     pool4 = @cp.list_pools(:owner => @owner.id, :product => @product3.id)[0]
+    @pool_up = @cp.list_pools(:owner => @owner.id, :product => product_up.id)[0]
+
 
     @candlepin_client = consumer_client(owner_client, random_string('test_client'),
         "candlepin", @user['username'])
@@ -277,6 +283,7 @@ module ExportMethods
     @entitlement2 = @candlepin_client.consume_pool(pool2.id)[0]
     @candlepin_client.consume_pool(pool3.id)
     @entitlement3 = @candlepin_client.consume_pool(pool4.id)[0]
+    @entitlement_up = @candlepin_client.consume_pool(@pool_up.id)[0]
 
     # Make a temporary directory where we can safely extract our archive:
     @tmp_dir = File.join(Dir.tmpdir, random_string('candlepin-rspec'))
@@ -334,8 +341,10 @@ module ExportMethods
 
     @candlepin_client.consume_pool(pool1.id)
     @candlepin_client.consume_pool(pool2.id)
+    @candlepin_client.consume_pool(@pool_up.id, {:quantity => 4})
 
     @cp.unbind_entitlement(@entitlement2.id, :uuid => @candlepin_client.uuid)
+    @cp.unbind_entitlement(@entitlement_up.id, :uuid => @candlepin_client.uuid)
     @candlepin_client.regenerate_entitlement_certificates_for_entitlement(@entitlement1.id)
 
     # Make a temporary directory where we can safely extract our archive:

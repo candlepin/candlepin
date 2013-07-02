@@ -52,8 +52,6 @@ import org.candlepin.util.Util;
 import org.candlepin.util.X509ExtensionUtil;
 import org.candlepin.util.X509Util;
 import org.candlepin.util.X509V3ExtensionUtil;
-import org.candlepin.version.CertVersionConflictException;
-import org.candlepin.version.ProductVersionValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -169,9 +167,6 @@ public class DefaultEntitlementCertServiceAdapter extends
         Map<String, EnvironmentContent> promotedContent = getPromotedContent(ent);
         String contentPrefix = getContentPrefix(ent, useContentPrefix);
 
-        // Check to make sure that the subscription is supported by
-        // the consumer's cert_version.
-        verifySubscriptionSupport(ent, sub);
 
         if (shouldGenerateV3(ent)) {
             extensions = prepareV3Extensions(products, ent, contentPrefix,
@@ -188,19 +183,6 @@ public class DefaultEntitlementCertServiceAdapter extends
                 createDN(ent), extensions, byteExtensions, sub.getStartDate(),
                 ent.getEndDate(), keyPair, serialNumber, null);
         return x509Cert;
-    }
-
-    private void verifySubscriptionSupport(Entitlement ent, Subscription sub) {
-        // Check to make sure that the consumer supports the required cert
-        // versions for all attributes.
-        if (!ProductVersionValidator.verifyClientSupport(ent.getConsumer(),
-            sub.getProduct().getAttributes())) {
-            throw new CertVersionConflictException(i18n.tr("The client must support " +
-                "at least v{0} certificates in order to use subscription: {1}. " +
-                "A newer client may be available to address this " +
-                "problem.", ProductVersionValidator.getMinimumCertificateVersion(sub),
-                sub.getProduct().getName()));
-        }
     }
 
     private boolean shouldGenerateV3(Entitlement entitlement) {

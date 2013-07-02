@@ -39,7 +39,10 @@ import java.util.List;
 import javax.persistence.EntityManager;
 
 /**
- * AbstractHibernateCurator
+ * AbstractHibernateCurator base class for all Candlepin curators. Curators are
+ * the applications database layer, typically following the pattern of one
+ * curator for each model type. This class contains methods common to all
+ * curators.
  * @param <E> Entity specific curator.
  */
 public abstract class AbstractHibernateCurator<E extends Persisted> {

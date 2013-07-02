@@ -305,8 +305,8 @@ public class EntitlementImporter {
     private void mergeSubscription(Subscription subscription, Subscription local,
         Map<String, Subscription> map) {
         subscription.setId(local.getId());
-        subscriptionCurator.merge(subscription);
         map.remove(local.getUpstreamEntitlementId());
+        subscriptionCurator.merge(subscription);
         // send updated event
         sink.emitSubscriptionModified(local, subscription);
     }

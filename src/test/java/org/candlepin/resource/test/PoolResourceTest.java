@@ -28,6 +28,7 @@ import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
@@ -291,5 +292,24 @@ public class PoolResourceTest extends DatabaseTestFixture {
     @Test(expected = NotFoundException.class)
     public void testUnknownConsumerRequestingPool() {
         poolResource.getPool(pool1.getId(), "xyzzy", adminPrincipal);
+    }
+
+    public void testEmptyEntitlementList() {
+        List<Entitlement> ents =
+            poolResource.getPoolEntitlements(pool1.getId(),  adminPrincipal);
+        assertEquals(0, ents.size());
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void testUnknownConsumerRequestingEntitlements() {
+        poolResource.getPoolEntitlements("xyzzy", adminPrincipal);
+    }
+
+    @Test(expected = ForbiddenException.class)
+    public void testUnauthorizedUserRequestingPoolEntitlements() {
+        Owner owner2 = createOwner();
+        ownerCurator.create(owner2);
+        poolResource.getPoolEntitlements(pool1.getId(),
+            setupPrincipal(owner2, Access.NONE));
     }
 }

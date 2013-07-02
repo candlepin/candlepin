@@ -54,31 +54,6 @@ describe 'RAM Limiting' do
     entitlement.should_not == nil
   end
 
-  it 'can not consume ram entitlement when requesting less than v3.1 certificate' do
-    system = consumer_client(@user, random_string('system1'), :system, nil,
-                {'system.certificate_version' => '3.0'})
-
-    installed = [
-        {'productId' => @ram_sub.id,
-        'productName' => @ram_sub.name}
-    ]
-    system.update_consumer({:installedProducts => installed})
-
-    pool = find_pool(@owner.id, @ram_sub.id)
-    pool.should_not == nil
-
-    expected_error = ("The client must support at least v3.1 certificates in order to use subscription: %s." +
-                     " A newer client may be available to address this problem.") % [@ram_product.name]
-    begin
-      entitlement = system.consume_pool(pool.id)
-      entitlement.should_not == nil
-      fail("Conflict error should have been raised since system's certificate version is incorrect.")
-    rescue RestClient::Conflict => e
-      message = JSON.parse(e.http_body)['displayMessage']
-      message.should == expected_error
-    end
-  end
-
   it 'consumer status should be valid when consumer RAM is covered' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
                 {'system.certificate_version' => '3.1',
