@@ -25,12 +25,12 @@ describe 'Candlepin Import' do
 
   it 'creates pools' do
     pools = @import_owner_client.list_pools({:owner => @import_owner['id']})
-    pools.length.should == 4
+    pools.length.should == 5
   end
 
   it 'ignores multiplier for pool quantity' do
     pools = @import_owner_client.list_pools({:owner => @import_owner['id']})
-    pools.length.should == 4
+    pools.length.should == 5
 
     # 1 product has a multiplier of 2 upstream, the others 1.
     # 1 entitlement is consumed from each pool for the export, so

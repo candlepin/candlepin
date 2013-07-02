@@ -243,7 +243,7 @@ module ExportMethods
     @derived_provided_prod = @cp.create_product(random_string(), random_string());
 
     #this is for the update process
-    product_up = @cp.create_product(random_string('product_up'), random_string('product_up'))
+    @product_up = @cp.create_product(random_string('product_up'), random_string('product_up'))
 
     content = create_content({:metadata_expire => 6000,
                               :required_tags => "TAG1,TAG2"})
@@ -263,7 +263,7 @@ module ExportMethods
     sub3 = @cp.create_subscription(@owner['key'], @virt_product.id, 10, [], '', '12345', '6789', nil, @end_date)
     sub4 = @cp.create_subscription(@owner['key'], @product3.id, 5, [], '', '12345', '6789', nil, @end_date,
       {'derived_product_id' => @derived_product['id'],  'derived_provided_products' => [@derived_provided_prod['id']]})
-    sub_up = @cp.create_subscription(@owner['key'], product_up.id, 10, [], '', '12345', '6789', nil, @end_date)
+    sub_up = @cp.create_subscription(@owner['key'], @product_up.id, 10, [], '', '12345', '6789', nil, @end_date)
 
     @cp.refresh_pools(@owner['key'])
 
@@ -271,7 +271,7 @@ module ExportMethods
     pool2 = @cp.list_pools(:owner => @owner.id, :product => @product2.id)[0]
     pool3 = @cp.list_pools(:owner => @owner.id, :product => @virt_product.id)[0]
     pool4 = @cp.list_pools(:owner => @owner.id, :product => @product3.id)[0]
-    @pool_up = @cp.list_pools(:owner => @owner.id, :product => product_up.id)[0]
+    @pool_up = @cp.list_pools(:owner => @owner.id, :product => @product_up.id)[0]
 
 
     @candlepin_client = consumer_client(owner_client, random_string('test_client'),
