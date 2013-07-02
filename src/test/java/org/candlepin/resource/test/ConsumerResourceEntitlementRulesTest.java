@@ -78,7 +78,7 @@ public class ConsumerResourceEntitlementRulesTest extends DatabaseTestFixture {
         // Now for the 11th:
         Consumer c = TestUtil.createConsumer(consumer.getType(), owner);
         consumerCurator.create(c);
-        consumerResource.bind(c.getUuid(), pool.getId(), null, null, null, null,
+        consumerResource.bind(c.getUuid(), pool.getId(), null, 1, null, null,
             false, null);
     }
 
