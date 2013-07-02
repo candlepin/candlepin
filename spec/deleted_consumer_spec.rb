@@ -4,6 +4,7 @@ require 'candlepin_scenarios'
 
 require 'rubygems'
 require 'rest_client'
+require 'time'
 
 describe 'Deleted Consumer Resource' do
 

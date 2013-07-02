@@ -15,9 +15,14 @@
 package org.candlepin.model;
 
 import javax.persistence.Column;
+import javax.persistence.DiscriminatorColumn;
+import javax.persistence.DiscriminatorType;
+import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
@@ -26,6 +31,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.codehaus.jackson.map.annotate.JsonFilter;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
@@ -40,6 +46,9 @@ import org.hibernate.annotations.Index;
 @Entity
 @Table(name = "cp_pool_products")
 @JsonFilter("ProvidedProductFilter")
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
+@DiscriminatorValue("provided")
 public class ProvidedProduct extends AbstractHibernateObject {
 
     @Id
@@ -134,4 +143,26 @@ public class ProvidedProduct extends AbstractHibernateObject {
         this.pool = pool;
     }
 
+    @Override
+    public boolean equals(Object anObject) {
+        if (this == anObject) {
+            return true;
+        }
+        if (!(anObject instanceof ProvidedProduct)) {
+            return false;
+        }
+
+        ProvidedProduct another = (ProvidedProduct) anObject;
+
+        return productId.equals(another.getProductId()) &&
+            productName.equals(another.getProductName());
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(449, 3).
+            append(productId).
+            append(productName).
+            toHashCode();
+    }
 }

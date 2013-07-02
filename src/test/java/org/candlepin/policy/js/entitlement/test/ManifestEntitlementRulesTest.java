@@ -349,4 +349,98 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         assertEquals("rulefailed.no.entitlements.available", error.getResourceKey());
     }
 
+    @Test
+    public void preEntitlementNoDerivedProductCapabilityProducesErrorOnBind() {
+        Consumer c = TestUtil.createConsumer();
+        c.setCapabilities(new HashSet<ConsumerCapability>());
+        c.getType().setManifest(true);
+
+        Product prod = TestUtil.createProduct();
+        Pool p = TestUtil.createPool(prod);
+        p.setDerivedProductId("sub-prod-id");
+
+        ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.BIND);
+        assertNotNull(results);
+        assertEquals(1, results.getErrors().size());
+        assertTrue(results.getWarnings().isEmpty());
+
+        ValidationError error = results.getErrors().get(0);
+        assertEquals("rulefailed.derivedproduct.unsupported.by.consumer",
+            error.getResourceKey());
+    }
+
+    @Test
+    public void preEntitlementNoDerivedProductCapabilityProducesWarningOnList() {
+        Consumer c = TestUtil.createConsumer();
+        c.setCapabilities(new HashSet<ConsumerCapability>());
+        c.getType().setManifest(true);
+
+        Product prod = TestUtil.createProduct();
+        Pool p = TestUtil.createPool(prod);
+        p.setDerivedProductId("sub-prod-id");
+
+        ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.LIST_POOLS);
+        assertNotNull(results);
+        assertEquals(1, results.getWarnings().size());
+        assertTrue(results.getErrors().isEmpty());
+
+        ValidationWarning warning = results.getWarnings().get(0);
+        assertEquals("rulewarning.derivedproduct.unsupported.by.consumer",
+            warning.getResourceKey());
+    }
+
+    @Test
+    public void preEntitlementNoDerivedProductCapabilityProducesErrorOnBestPools() {
+        Consumer c = TestUtil.createConsumer();
+        c.setCapabilities(new HashSet<ConsumerCapability>());
+        c.getType().setManifest(true);
+
+        Product prod = TestUtil.createProduct();
+        Pool p = TestUtil.createPool(prod);
+        p.setDerivedProductId("sub-prod-id");
+
+        ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.BEST_POOLS);
+        assertNotNull(results);
+        assertEquals(1, results.getErrors().size());
+        assertTrue(results.getWarnings().isEmpty());
+
+        ValidationError error = results.getErrors().get(0);
+        assertEquals("rulefailed.derivedproduct.unsupported.by.consumer",
+            error.getResourceKey());
+    }
+
+    @Test
+    public void preEntitlementWithDerivedProductCapabilitySuccessOnBind() {
+        Consumer c = TestUtil.createConsumer();
+        HashSet<ConsumerCapability> capabilities = new HashSet<ConsumerCapability>();
+        capabilities.add(new ConsumerCapability(c, "derived_product"));
+        c.setCapabilities(capabilities);
+        c.getType().setManifest(true);
+
+        Product prod = TestUtil.createProduct();
+        Pool p = TestUtil.createPool(prod);
+        p.setDerivedProductId("sub-prod-id");
+
+        ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.BIND);
+        assertNotNull(results);
+        assertTrue("Expected no warnings or errors.", results.isSuccessful());
+    }
+
+    @Test
+    public void preEntitlementWithDerivedProductCapabilitySuccessOnBestPools() {
+        Consumer c = TestUtil.createConsumer();
+        HashSet<ConsumerCapability> capabilities = new HashSet<ConsumerCapability>();
+        capabilities.add(new ConsumerCapability(c, "derived_product"));
+        c.setCapabilities(capabilities);
+        c.getType().setManifest(true);
+
+        Product prod = TestUtil.createProduct();
+        Pool p = TestUtil.createPool(prod);
+        p.setDerivedProductId("sub-prod-id");
+
+        ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.BEST_POOLS);
+        assertNotNull(results);
+        assertTrue("Expected no warnings or errors.", results.isSuccessful());
+    }
+
 }

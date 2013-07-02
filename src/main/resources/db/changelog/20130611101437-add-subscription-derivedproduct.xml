@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+
+    <changeSet id="20130611101437-1" author="dgoodwin">
+        <addColumn tableName="cp_subscription">
+            <column name="derivedproduct_id" type="varchar(255)"/>
+        </addColumn>
+        <addForeignKeyConstraint baseColumnNames="derivedproduct_id" baseTableName="cp_subscription" constraintName="fk_sub_derivedprod" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" referencesUniqueColumn="false"/>
+    </changeSet>
+
+    <changeSet id="20130611101437-2" author="dgoodwin">
+        <createTable tableName="cp_sub_derivedprods">
+            <column name="subscription_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20130611101437-3" author="dgoodwin">
+        <addColumn tableName="cp_pool">
+            <column name="derivedproductid" type="varchar(255)"/>
+            <column name="derivedproductname" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="dgoodwin" id="120130611101437-4">
+        <comment>Add a new discriminator column so we can store derived provided products.</comment>
+        <addColumn tableName="cp_pool_products">
+            <column name="dtype" type="varchar(30)"/>
+        </addColumn>
+        <update tableName="cp_pool_products">
+            <column name="dtype" value="provided"/>
+        </update>
+    </changeSet>
+
+    <changeSet author="dgoodwin" id="120130611101437-5">
+        <comment>Add a new discriminator column so we can store derived product attributes.</comment>
+        <addColumn tableName="cp_product_pool_attribute">
+            <column name="dtype" type="varchar(30)"/>
+        </addColumn>
+        <update tableName="cp_product_pool_attribute">
+            <column name="dtype" value="product"/>
+        </update>
+    </changeSet>
+
+</databaseChangeLog>

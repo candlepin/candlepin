@@ -1289,7 +1289,6 @@ var Entitlement = {
             "ram:1:ram," +
             "cores:1:cores," +
             "requires_consumer_type:1:requires_consumer_type," +
-            "user_license:1:user_license," +
             "virt_only:1:virt_only," +
             "virt_limit:1:virt_limit," +
             "requires_host:1:requires_host," +
@@ -1566,12 +1565,25 @@ var Entitlement = {
         var caller = context.caller;
         var consumer = context.consumer;
 
+        log.debug("pre_global being called by [" + caller + "]");
+
         // Manifest should be able to extract by default.
         if (consumer.type.manifest) {
+            // Distributors should not be able to consume from pools with sub products
+            // if they are not capable of supporting them.
+        	//
+        	// NOTE: We check for subProductId in the pre_global space because it is not
+        	// a product attribute.
+            if (pool.derivedProductId && !Utils.isCapable(consumer, "derived_product")) {
+                if (BEST_POOLS_CALLER == caller || BIND_CALLER == caller) {
+                    result.addError("rulefailed.derivedproduct.unsupported.by.consumer");
+                }
+                else {
+                    result.addWarning("rulewarning.derivedproduct.unsupported.by.consumer");
+                }
+            }
             return JSON.stringify(result);
         }
-
-        log.debug("pre_global being called by [" + caller + "]");
 
         var isMultiEntitlement = pool.getProductAttribute("multi-entitlement");
         if (context.hasEntitlement(pool.id) && isMultiEntitlement != "yes") {

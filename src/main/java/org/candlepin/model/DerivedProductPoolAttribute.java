@@ -12,22 +12,28 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.util;
+package org.candlepin.model;
 
+import javax.persistence.DiscriminatorValue;
+import javax.persistence.Embeddable;
+import javax.persistence.Entity;
+
+import org.codehaus.jackson.map.annotate.JsonFilter;
 
 /**
- * ManagerCapability
+ * DerivedProductPoolAttribute
  */
-public class ManagerCapability {
+@Entity
+@Embeddable
+@JsonFilter("ProductPoolAttributeFilter")
+@DiscriminatorValue("derived")
+public class DerivedProductPoolAttribute extends ProductPoolAttribute {
 
-    private static String[] capabilities = {"cores", "ram", "instance_multiplier",
-        "derived_product"};
-
-    private ManagerCapability() {
-        // Quiet checkstyle
+    public DerivedProductPoolAttribute() {
+        super();
     }
 
-    public static String[] getCapabilityList() {
-        return capabilities;
+    public DerivedProductPoolAttribute(String name, String val, String productId) {
+        super(name, val, productId);
     }
 }

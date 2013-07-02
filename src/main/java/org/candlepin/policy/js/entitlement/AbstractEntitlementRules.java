@@ -296,10 +296,6 @@ public abstract class AbstractEntitlementRules implements Enforcer {
         // TODO: should really be cleaned up, this used to be post rules but
         // because
         // it actually manages pools we pulled back to engine. Needs re-org.
-        if (attributes.containsKey("user_license")) {
-            postBindUserLicense(postHelper, pool, c, attributes);
-        }
-
         if (attributes.containsKey("virt_limit")) {
             postBindVirtLimit(postHelper, entitlement, pool, c, attributes);
         }
@@ -360,24 +356,6 @@ public abstract class AbstractEntitlementRules implements Enforcer {
                     }
                 }
             }
-        }
-    }
-
-    private void postBindUserLicense(PoolHelper postHelper, Pool pool,
-        Consumer c, Map<String, String> attributes) {
-        log.debug("Running user_license post-bind.");
-        if (!c.getType().isManifest()) {
-            // Default to using the same product from the pool.
-            String productId = pool.getProductId();
-
-            // Check if the sub-pool should be for a different product:
-            if (attributes.containsKey("user_license_product")) {
-                productId = attributes.get("user_license_product");
-            }
-
-            // Create a sub-pool for this user
-            postHelper.createUserRestrictedPool(productId, pool,
-                attributes.get("user_license"));
         }
     }
 

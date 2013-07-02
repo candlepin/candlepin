@@ -133,7 +133,12 @@ public class DefaultEntitlementCertServiceAdapter extends
     private Set<Product> getProvidedProducts(Pool pool, Subscription sub) {
         Set<Product> providedProducts = new HashSet<Product>();
         if (sub != null) {
-            providedProducts = sub.getProvidedProducts();
+            // need to use the sub provided products if creating an
+            // entitlement for derived pool who's sub specifies a
+            // sub product.
+            boolean derived = pool.hasAttribute("pool_derived");
+            providedProducts = derived && sub.getDerivedProduct() != null ?
+                sub.getDerivedProvidedProducts() : sub.getProvidedProducts();
         }
         else {
             // If this pool doesn't have a subscription associated with it, we need to

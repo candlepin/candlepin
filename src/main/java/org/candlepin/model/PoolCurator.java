@@ -568,9 +568,9 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                                           .add(Restrictions.eq("pool", entity)).list();
         for (ProductPoolAttribute att : ppa) {
             ppac.delete(att);
-
         }
         entity.getProductAttributes().clear();
+        entity.getDerivedProductAttributes().clear();
 
         PoolAttributeCurator pac = injector.getInstance(PoolAttributeCurator.class);
         List<PoolAttribute> pa = currentSession()

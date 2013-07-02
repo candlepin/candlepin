@@ -22,6 +22,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Index;
@@ -109,12 +110,13 @@ public abstract class AbstractPoolAttribute extends AbstractHibernateObject
         Attribute another = (Attribute) anObject;
 
         return
-            name.equals(another.getName());
+            name.equals(another.getName()) && value.equals(another.getValue());
     }
 
     @Override
     public int hashCode() {
-        return name.hashCode() * 31 + (value != null ? value.hashCode() : 0);
+        return new HashCodeBuilder(17, 31).
+            append(name).
+            append(value).toHashCode();
     }
-
 }

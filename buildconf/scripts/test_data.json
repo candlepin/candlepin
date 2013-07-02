@@ -645,7 +645,36 @@
                 "multi-entitlement" : "no"
             }
         },
+        {
+            "name": "Awesome OS Server Basic (dc-virt)",
+            "id": "awesomeos-server-basic-vdc",
+            "type": "MKT",
+            "attributes": {
+                "sockets": 2,
+                "skip_subs" : "true"
+            }
+        },
+        {
+            "name": "Awesome OS Server Basic (data center)",
+            "id": "awesomeos-server-basic-dc",
+            "type": "MKT",
+            "provided_products": [
 
+            ],
+            "attributes": {
+                "sockets": 4,
+                "warning_period": 30,
+                "management_enabled" : 0,
+                "support_level" : "None",
+                "support_type" : "Self-Support",
+                "multi-entitlement" : "no",
+                "virt_limit" : "unlimited"
+            },
+            "derived_product_id" : "awesomeos-server-basic-vdc",
+            "derived_provided_products" : [
+                "37060"
+            ]
+        },
         {
             "name": "Awesome OS Server Basic (multi-entitlement)",
             "id": "awesomeos-server-basic-me",
@@ -685,25 +714,6 @@
                 [0, false],
                 [1, true]
             ]
-        },
-        {
-            "name": "Awesome OS Developer Basic",
-            "id": "1144",
-            "type": "SYS",
-            "provided_products": [
-                "1"
-            ]
-        },
-        {
-            "name": "Awesome OS Developer Edition",
-            "id": "AWESOMEOS09XYU34",
-            "type": "MKT",
-            "attributes": {
-                "requires_consumer_type": "person",
-                "enabled_consumer_types": "person",
-                "user_license": "unlimited",
-                "user_license_product": "1144"
-            }
         },
         {
             "name": "Awesome OS Server Bundled (2 Sockets, Standard Support)",

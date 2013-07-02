@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.candlepin.model.Consumer;
+import org.candlepin.model.DerivedProvidedProduct;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
@@ -91,7 +92,29 @@ public class PoolTest extends DatabaseTestFixture {
         assertEquals(owner.getId(), lookedUp.getOwner().getId());
         assertEquals(prod1.getId(), lookedUp.getProductId());
         assertTrue(lookedUp.provides(prod1.getId()));
+    }
 
+    @Test
+    public void testCreateWithDerivedProvidedProducts() {
+        Product derivedProd = TestUtil.createProduct();
+        productCurator.create(derivedProd);
+
+        Pool p = TestUtil.createPool(owner, prod1, new HashSet<ProvidedProduct>(), 1000);
+        p.addProvidedProduct(new ProvidedProduct(prod2.getId(), prod2.getName()));
+        Set<DerivedProvidedProduct> derivedProducts = new HashSet<DerivedProvidedProduct>();
+        derivedProducts.add(new DerivedProvidedProduct(derivedProd.getId(),
+            derivedProd.getName(), p));
+
+        p.setDerivedProvidedProducts(derivedProducts);
+        poolCurator.create(p);
+
+        Pool lookedUp = entityManager().find(Pool.class, p.getId());
+        assertEquals(1, lookedUp.getProvidedProducts().size());
+        assertEquals(prod2.getId(),
+            lookedUp.getProvidedProducts().iterator().next().getProductId());
+        assertEquals(1, lookedUp.getDerivedProvidedProducts().size());
+        assertEquals(derivedProd.getId(),
+            lookedUp.getDerivedProvidedProducts().iterator().next().getProductId());
     }
 
     public void testMultiplePoolsForOwnerProductAllowed() {

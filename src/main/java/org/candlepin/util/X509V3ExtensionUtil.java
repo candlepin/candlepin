@@ -179,10 +179,18 @@ public class X509V3ExtensionUtil extends X509Util{
     public Subscription createSubscription(
         org.candlepin.model.Subscription sub, Entitlement ent) {
         Subscription toReturn = new Subscription();
-        toReturn.setSku(sub.getProduct().getId().toString());
-        toReturn.setName(sub.getProduct().getName());
 
-        String warningPeriod = sub.getProduct().getAttributeValue(
+        // Need to be sure that we get the correct product here. If pool
+        // is derived and we have a sub product on the sub, then we must
+        // use that product so that the appropriate bits of data are copied.
+        boolean derivedPool = ent.getPool().hasAttribute("pool_derived");
+        Product product = derivedPool && sub.getDerivedProduct() != null ?
+            sub.getDerivedProduct() : sub.getProduct();
+
+        toReturn.setSku(product.getId().toString());
+        toReturn.setName(product.getName());
+
+        String warningPeriod = product.getAttributeValue(
             "warning_period");
         if (warningPeriod != null && !warningPeriod.trim().equals("")) {
             // only included if not the default value of 0
@@ -191,22 +199,22 @@ public class X509V3ExtensionUtil extends X509Util{
             }
         }
 
-        String socketLimit = sub.getProduct().getAttributeValue("sockets");
+        String socketLimit = product.getAttributeValue("sockets");
         if (socketLimit != null && !socketLimit.trim().equals("")) {
             toReturn.setSockets(new Integer(socketLimit));
         }
 
-        String ramLimit = sub.getProduct().getAttributeValue("ram");
+        String ramLimit = product.getAttributeValue("ram");
         if (ramLimit != null && !ramLimit.trim().equals("")) {
             toReturn.setRam(new Integer(ramLimit));
         }
 
-        String coreLimit = sub.getProduct().getAttributeValue("cores");
+        String coreLimit = product.getAttributeValue("cores");
         if (coreLimit != null && !coreLimit.trim().equals("")) {
             toReturn.setCores(new Integer(coreLimit));
         }
 
-        String management = sub.getProduct().getAttributeValue("management_enabled");
+        String management = product.getAttributeValue("management_enabled");
         if (management != null && !management.trim().equals("")) {
             // only included if not the default value of false
             if (management.equalsIgnoreCase("true") ||
@@ -215,7 +223,7 @@ public class X509V3ExtensionUtil extends X509Util{
             }
         }
 
-        String stackingId = sub.getProduct().getAttributeValue("stacking_id");
+        String stackingId = product.getAttributeValue("stacking_id");
         if (stackingId != null && !stackingId.trim().equals("")) {
             toReturn.setStackingId(stackingId);
         }
@@ -230,18 +238,18 @@ public class X509V3ExtensionUtil extends X509Util{
             }
         }
 
-        toReturn.setService(createService(sub));
+        toReturn.setService(createService(product));
         return toReturn;
     }
 
-    private Service createService(org.candlepin.model.Subscription sub) {
-        if (sub.getProduct().getAttributeValue("support_level") == null &&
-            sub.getProduct().getAttributeValue("support_type") == null) {
+    private Service createService(Product product) {
+        if (product.getAttributeValue("support_level") == null &&
+            product.getAttributeValue("support_type") == null) {
             return null;
         }
         Service toReturn = new Service();
-        toReturn.setLevel(sub.getProduct().getAttributeValue("support_level"));
-        toReturn.setType(sub.getProduct().getAttributeValue("support_type"));
+        toReturn.setLevel(product.getAttributeValue("support_level"));
+        toReturn.setType(product.getAttributeValue("support_type"));
 
         return toReturn;
     }
