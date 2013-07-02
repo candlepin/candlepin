@@ -166,10 +166,19 @@ public class ProductResource {
         @PathParam("product_uuid") @Verify(Product.class) String productId,
         Product product) {
         Product toUpdate = getProduct(productId);
+
         toUpdate.setName(product.getName());
+
+        // clear and addall here instead of replacing instance so there are no
+        // dangling memory references
         toUpdate.getAttributes().clear();
         toUpdate.getAttributes().addAll(product.getAttributes());
+        toUpdate.getProductContent().clear();
+        toUpdate.getProductContent().addAll(product.getProductContent());
+
         toUpdate.setMultiplier(product.getMultiplier());
+        // not calling setHref() it's a no op and pointless to call.
+
         this.prodAdapter.mergeProduct(toUpdate);
 
         return toUpdate;

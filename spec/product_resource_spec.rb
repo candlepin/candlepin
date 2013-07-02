@@ -9,6 +9,8 @@ describe 'Product Resource' do
     prod = create_product(id=nil, name='tacos')
     prod2 = create_product(id=nil, name='enchiladas')
 
+    prod.name.should_not == prod2.name
+
     prod = @cp.update_product(prod.id, prod2)
 
     prod.name.should == prod2.name
