@@ -14,7 +14,6 @@
  */
 package org.candlepin.policy.js.entitlement.test;
 
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyLong;
@@ -25,13 +24,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Date;
-import java.util.List;
 
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
-import org.candlepin.model.Subscription;
 import org.candlepin.policy.js.pool.PoolHelper;
 import org.junit.Test;
 
@@ -79,25 +76,35 @@ public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
             eq(pool), eq("unlimited"));
     }
 
-    /*
-     * Bonus pools should not be created when performing distributor binds.
-     */
+    // Sub-pools should not be created when distributors bind:
     @Test
-    public void noBonusPoolsForDistributorBinds() {
+    public void noSubPoolsForDistributorBinds() {
         when(config.standalone()).thenReturn(true);
         consumer.setType(new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
-        Subscription s = createVirtLimitSub("virtLimitProduct", 10, "unlimited");
-        List<Pool> pools = poolRules.createPools(s);
-        assertEquals(1, pools.size());
-
-        Pool physicalPool = pools.get(0);
-        physicalPool.setId("physical");
-
-        assertEquals(new Long(10), physicalPool.getQuantity());
-        assertEquals(0, physicalPool.getAttributes().size());
-
-        Entitlement e = new Entitlement(physicalPool, consumer, new Date(), new Date(),
+        Pool pool = setupVirtLimitPool();
+        Entitlement e = new Entitlement(pool, consumer, new Date(), new Date(),
             1);
+
+        PoolHelper postHelper = new PoolHelper(poolManagerMock, productCache, e);
+
+        enforcer.postEntitlement(consumer, postHelper, e);
+        verify(poolManagerMock, never()).createPool(any(Pool.class));
+        verify(poolManagerMock, never()).updatePoolQuantity(any(Pool.class), anyInt());
+
+        enforcer.postUnbind(consumer, postHelper, e);
+        verify(poolManagerMock, never()).updatePoolQuantity(any(Pool.class), anyInt());
+        verify(poolManagerMock, never()).setPoolQuantity(any(Pool.class), anyLong());
+    }
+
+    // Sub-pools should not be created when guests bind:
+    @Test
+    public void noSubPoolsForGuestBinds() {
+        when(config.standalone()).thenReturn(true);
+        Pool pool = setupVirtLimitPool();
+        consumer.setFact("virt.is_guest", "true");
+        Entitlement e = new Entitlement(pool, consumer, new Date(), new Date(),
+            1);
+
         PoolHelper postHelper = new PoolHelper(poolManagerMock, productCache, e);
 
         enforcer.postEntitlement(consumer, postHelper, e);

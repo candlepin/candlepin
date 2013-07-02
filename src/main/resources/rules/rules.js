@@ -26,6 +26,10 @@ function quantity_name_space() {
     return Quantity;
 }
 
+// consumer types
+var SYSTEM_TYPE = "system"
+var HYPERVISOR_TYPE = "hypervisor"
+var UEBERCERT_TYPE = "uebercert"
 
 // Consumer fact names
 var SOCKET_FACT="cpu.cpu_socket(s)";
@@ -1393,15 +1397,23 @@ var Entitlement = {
     pre_requires_consumer_type: function() {
         var result = Entitlement.ValidationResult();
         context = Entitlement.get_attribute_context();
+        // Distributors can access everything
         if (context.consumer.type.manifest) {
             return JSON.stringify(result);
         }
 
         var requiresConsumerType = context.getAttribute(context.pool, "requires_consumer_type");
+        // skip if the attribtue is not defined, or if generating an uebercert.
         if (requiresConsumerType != null &&
-            requiresConsumerType != context.consumer.type.label &&
-            context.consumer.type.label != "uebercert") {
-            result.addError("rulefailed.consumer.type.mismatch");
+            context.consumer.type.label != UEBERCERT_TYPE ) {
+            // Consumer types need to match (except below)
+            if (requiresConsumerType != context.consumer.type.label) {
+                // Allow hypervisors to be like systems
+                if (!(requiresConsumerType == SYSTEM_TYPE &&
+                    context.consumer.type.label == HYPERVISOR_TYPE)) {
+                     result.addError("rulefailed.consumer.type.mismatch");
+                }
+            }
         }
         return JSON.stringify(result);
     },
@@ -1555,6 +1567,7 @@ var Entitlement = {
 
         log.debug("pre_global being called by [" + caller + "]");
 
+        // Manifest should be able to extract by default.
         if (consumer.type.manifest) {
             // Distributors should not be able to consume from pools with sub products
             // if they are not capable of supporting them.
@@ -1585,11 +1598,10 @@ var Entitlement = {
         // If the product has no required consumer type, assume it is restricted to "system".
         // "hypervisor"/"uebercert" type are essentially the same as "system".
         if (!pool.getProductAttribute("requires_consumer_type")) {
-            if (consumer.type.label != "system" && consumer.type.label != "hypervisor" &&
-                    consumer.type.label != "uebercert") {
+            if (consumer.type.label != SYSTEM_TYPE && consumer.type.label != HYPERVISOR_TYPE &&
+                    consumer.type.label != UEBERCERT_TYPE) {
                 result.addError("rulefailed.consumer.type.mismatch");
             }
-
         }
 
         if (pool.restrictedToUsername != null && pool.restrictedToUsername != consumer.username) {
