@@ -44,6 +44,8 @@ import org.candlepin.model.StatisticCurator;
 import org.candlepin.pinsetter.tasks.RefreshPoolsForProductJob;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.service.ProductServiceAdapter;
+
+import org.apache.log4j.Logger;
 import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
 
@@ -57,6 +59,7 @@ import com.google.inject.Inject;
 @Path("/products")
 public class ProductResource {
 
+    private static Logger log = Logger.getLogger(ProductResource.class);
     private ProductServiceAdapter prodAdapter;
     private ContentCurator contentCurator;
     private StatisticCurator statisticCurator;
@@ -166,21 +169,82 @@ public class ProductResource {
         Product product) {
         Product toUpdate = getProduct(productId);
 
-        toUpdate.setName(product.getName());
-
-        // clear and addall here instead of replacing instance so there are no
-        // dangling memory references
-        toUpdate.getAttributes().clear();
-        toUpdate.getAttributes().addAll(product.getAttributes());
-        toUpdate.getProductContent().clear();
-        toUpdate.getProductContent().addAll(product.getProductContent());
-
-        toUpdate.setMultiplier(product.getMultiplier());
-        // not calling setHref() it's a no op and pointless to call.
-
-        this.prodAdapter.mergeProduct(toUpdate);
+        if (performProductUpdates(product, toUpdate)) {
+            this.prodAdapter.mergeProduct(toUpdate);
+        }
 
         return toUpdate;
+    }
+
+    // Requires security hole since security interceptor will intercept when the method is
+    // called. This is because it is protected. This method is called from other resources,
+    // and therefore it assumes the caller is screened first.
+    // TODO Might be a better way to do this.
+    @SecurityHole(noAuth = true)
+    protected boolean performProductUpdates(Product existing, Product incoming) {
+        boolean changesMade = false;
+
+        if (incoming.getName() != null && !existing.getName().equals(incoming.getName()) &&
+            !incoming.getName().isEmpty()) {
+            if (log.isDebugEnabled()) {
+                log.debug("   Updating product name");
+            }
+            changesMade = true;
+            existing.setName(incoming.getName());
+        }
+
+        if (incoming.getAttributes() == null) {
+            if (log.isDebugEnabled()) {
+                log.debug("Attributes not included in this product update, " +
+                    "skipping update.");
+            }
+            return false;
+        }
+        else
+            if (!existing.getAttributes().equals(incoming.getAttributes())) {
+                if (log.isDebugEnabled()) {
+                    log.debug("Updating product attributes");
+                }
+
+                // clear and addall here instead of replacing instance so there are no
+                // dangling memory references
+                existing.getAttributes().clear();
+                existing.getAttributes().addAll(incoming.getAttributes());
+                changesMade = true;
+            }
+
+        if (incoming.getProductContent() == null) {
+            if (log.isDebugEnabled()) {
+                log.debug("ProductContent not included in this product update, " +
+                    "skipping update.");
+            }
+            return false;
+        }
+        else
+            if (!existing.getProductContent().equals(incoming.getProductContent())) {
+                if (log.isDebugEnabled()) {
+                    log.debug("Updating product ProductContent");
+                }
+
+                // clear and addall here instead of replacing instance so there are no
+                // dangling memory references
+                existing.getProductContent().clear();
+                existing.getProductContent().addAll(incoming.getProductContent());
+                changesMade = true;
+            }
+
+        if (incoming.getMultiplier() != null &&
+            existing.getMultiplier().longValue() != incoming.getMultiplier().longValue()) {
+            if (log.isDebugEnabled()) {
+                log.debug("   Updating product multiplier");
+            }
+            changesMade = true;
+            existing.setMultiplier(incoming.getMultiplier());
+        }
+
+        // not calling setHref() it's a no op and pointless to call.
+
+        return changesMade;
     }
 
     /**

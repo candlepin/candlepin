@@ -16,6 +16,17 @@ describe 'Product Resource' do
     prod.name.should == prod2.name
   end
 
+  it 'does not update product name' do
+    prod = create_product(id=nil, name='iron maiden')
+    prod2 = create_product(id=nil, name=nil)
+
+    prod.name.should == 'iron maiden'
+
+    prod = @cp.update_product(prod.id, prod2)
+
+    prod.name.should == 'iron maiden'
+  end
+
   it 'removes content from products.' do
     prod = create_product
     content = create_content
