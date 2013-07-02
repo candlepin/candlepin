@@ -379,7 +379,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
 
     @Test
     public void correctConsumerTypeShouldNotGenerateError() {
-        Pool pool = setupProductWitConsumerTypeAttribute(ConsumerTypeEnum.DOMAIN);
+        Pool pool = setupProductWithConsumerTypeAttribute(ConsumerTypeEnum.DOMAIN);
         consumer.setType(new ConsumerType(ConsumerTypeEnum.DOMAIN));
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
@@ -389,7 +389,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
 
     @Test
     public void mismatchingConsumerTypeShouldGenerateError() {
-        Pool pool = setupProductWitConsumerTypeAttribute(ConsumerTypeEnum.DOMAIN);
+        Pool pool = setupProductWithConsumerTypeAttribute(ConsumerTypeEnum.DOMAIN);
         consumer.setType(new ConsumerType(ConsumerTypeEnum.PERSON));
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
@@ -493,7 +493,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
 
     @Test
     public void hypervisorForSystemNotGenerateError() {
-        Pool pool = setupProductWitConsumerTypeAttribute(ConsumerTypeEnum.SYSTEM);
+        Pool pool = setupProductWithConsumerTypeAttribute(ConsumerTypeEnum.SYSTEM);
         consumer.setType(new ConsumerType(ConsumerTypeEnum.HYPERVISOR));
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
@@ -503,7 +503,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
 
     @Test
     public void systemForHypervisorGeneratesError() {
-        Pool pool = setupProductWitConsumerTypeAttribute(ConsumerTypeEnum.HYPERVISOR);
+        Pool pool = setupProductWithConsumerTypeAttribute(ConsumerTypeEnum.HYPERVISOR);
         consumer.setType(new ConsumerType(ConsumerTypeEnum.SYSTEM));
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
@@ -511,7 +511,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         assertFalse(result.hasWarnings());
     }
 
-    private Pool setupProductWitConsumerTypeAttribute(ConsumerTypeEnum consumerType) {
+    private Pool setupProductWithConsumerTypeAttribute(ConsumerTypeEnum consumerType) {
         Product product = new Product(productId, "A product for testing");
         product.setAttribute("requires_consumer_type",
             consumerType.toString());
