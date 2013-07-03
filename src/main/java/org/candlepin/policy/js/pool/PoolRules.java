@@ -153,9 +153,8 @@ public class PoolRules {
                     int virtLimitQuantity = Integer.parseInt(virtLimit);
                     if (virtLimitQuantity > 0) {
                         long virtQuantity = quantity * virtLimitQuantity;
-                        // FIXME Not sure I like the cast to int here. Anything we can do?
                         Pool derivedPool = helper.createPool(sub, sub.getProduct().getId(),
-                            Integer.toString((int) virtQuantity), virtAttributes);
+                            String.valueOf(virtQuantity), virtAttributes);
                         derivedPool.setSubscriptionSubKey("derived");
                         pools.add(derivedPool);
                     }
