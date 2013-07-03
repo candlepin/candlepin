@@ -94,7 +94,7 @@ import org.xnap.commons.i18n.I18nFactory;
 /**
  * DefaultEntitlementCertServiceAdapter
  */
-
+@SuppressWarnings("unchecked")
 @RunWith(MockitoJUnitRunner.class)
 public class DefaultEntitlementCertServiceAdapterTest {
 
@@ -345,7 +345,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
         assertTrue(isEncodedContentValid(encodedContent));
         assertFalse(encodedContent.containsKey(REQUIRED_TAGS.toString()));
     }
-
 
     @Test
     public void testPrefixesShouldBeUsed() throws Exception {
