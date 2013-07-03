@@ -22,7 +22,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-import org.apache.log4j.Logger;
 import org.candlepin.model.DeletedConsumer;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.resource.util.ResourceDateParser;
@@ -34,7 +33,6 @@ import com.google.inject.Inject;
  */
 @Path("/deleted_consumers")
 public class DeletedConsumerResource {
-    private static Logger log = Logger.getLogger(DeletedConsumerResource.class);
     private DeletedConsumerCurator deletedConsumerCurator;
 
     @Inject

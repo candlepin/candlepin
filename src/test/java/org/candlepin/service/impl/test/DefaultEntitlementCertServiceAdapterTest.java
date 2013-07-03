@@ -94,7 +94,7 @@ import org.xnap.commons.i18n.I18nFactory;
 /**
  * DefaultEntitlementCertServiceAdapter
  */
-
+@SuppressWarnings("unchecked")
 @RunWith(MockitoJUnitRunner.class)
 public class DefaultEntitlementCertServiceAdapterTest {
 
@@ -140,7 +140,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
     private Owner owner;
     private Set<Content> superContent;
     private Set<Content> largeContent;
-    private String testArch;
 
     private String[] testUrls = {"/content/dist/rhel/$releasever/$basearch/os",
         "/content/dist/rhel/$releasever/$basearch/debug",
@@ -169,7 +168,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
         largeContentProduct = new Product("67890", "large content product", "variant",
             "version", ARCH_LABEL, "SVC");
 
-        testArch = "test-arch";
         content = createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
             CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL, CONTENT_GPG_URL, ARCH_LABEL);
         content.setMetadataExpire(CONTENT_METADATA_EXPIRE);
@@ -347,7 +345,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
         assertTrue(isEncodedContentValid(encodedContent));
         assertFalse(encodedContent.containsKey(REQUIRED_TAGS.toString()));
     }
-
 
     @Test
     public void testPrefixesShouldBeUsed() throws Exception {
@@ -720,7 +717,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<Product> products = new HashSet<Product>();
 
         products.add(product);
-        setupEntitlements(ARCH_LABEL, testArch, "1.0");
+        setupEntitlements(ARCH_LABEL, "1.0");
 
         Set<X509ExtensionWrapper> extensions =
             certServiceAdapter.prepareV1Extensions(products, entitlement, "",
@@ -749,7 +746,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         wrongArchProduct.setContent(Collections.singleton(wrongArchContent));
         products.clear();
         products.add(wrongArchProduct);
-        setupEntitlements(ARCH_LABEL, testArch, "1.0");
+        setupEntitlements(ARCH_LABEL, "1.0");
 
         Set<X509ExtensionWrapper> extensions =
             certServiceAdapter.prepareV1Extensions(products, entitlement, "",
@@ -874,8 +871,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         }
     }
 
-    private void setupEntitlements(String consumerArch, String lookedupArch,
-        String certVersion) {
+    private void setupEntitlements(String consumerArch, String certVersion) {
         when(entitlement.getConsumer().getFact("system.certificate_version"))
             .thenReturn(certVersion);
         when(entitlement.getConsumer().getUuid()).thenReturn("test-consumer");
@@ -905,7 +901,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<Product> products = new HashSet<Product>();
         products.add(product);
 
-        setupEntitlements(null, testArch, "3.2");
+        setupEntitlements(null, "3.2");
 
         Set<X509ExtensionWrapper> extensions =
             certServiceAdapter.prepareV3Extensions(products, entitlement, "prefix",
@@ -965,7 +961,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         inheritedArchProduct.setContent(Collections.singleton(noArchContent));
         products.add(inheritedArchProduct);
-        setupEntitlements(ARCH_LABEL, testArch, "3.2");
+        setupEntitlements(ARCH_LABEL, "3.2");
 
         Set<X509ExtensionWrapper> extensions =
             certServiceAdapter.prepareV3Extensions(products, entitlement, "prefix",
@@ -1033,7 +1029,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         wrongArchProduct.setContent(Collections.singleton(wrongArchContent));
         products.clear();
         products.add(wrongArchProduct);
-        setupEntitlements(ARCH_LABEL, testArch, "3.2");
+        setupEntitlements(ARCH_LABEL, "3.2");
 
         Set<X509ExtensionWrapper> extensions =
             certServiceAdapter.prepareV3Extensions(products, entitlement, "prefix",
