@@ -193,10 +193,10 @@ public class PoolRules {
             // separately.
             // TODO: should they be separate? ^^
             update.setProductsChanged(
-                checkForChangedProducts(sub, helper, existingPool));
+                checkForChangedProducts(sub, existingPool));
 
             update.setDerivedProductsChanged(
-                checkForChangedSubProducts(sub, helper, existingPool));
+                checkForChangedSubProducts(sub, existingPool));
 
             update.setProductAttributesChanged(checkForProductAttributeChanges(sub,
                 helper, existingPool));
@@ -262,8 +262,7 @@ public class PoolRules {
         return subProdAttrsChanged;
     }
 
-    private boolean checkForChangedProducts(Subscription sub,
-        PoolHelper helper, Pool existingPool) {
+    private boolean checkForChangedProducts(Subscription sub, Pool existingPool) {
 
         boolean productsChanged =
             !sub.getProduct().getId().equals(existingPool.getProductId());
@@ -292,7 +291,7 @@ public class PoolRules {
     }
 
     private boolean checkForChangedSubProducts(Subscription sub,
-        PoolHelper helper, Pool existingPool) {
+        Pool existingPool) {
 
         boolean productsChanged = false;
         if (sub.getDerivedProduct() != null) {

@@ -537,7 +537,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         // we might have changed the bonus pool quantities, lets find out.
-        handler.handleBonusPools(consumer, pool, entitlement);
+        handler.handleBonusPools(pool, entitlement);
         return entitlement;
     }
 
@@ -548,7 +548,7 @@ public class CandlepinPoolManager implements PoolManager {
      * @param consumer
      * @param pool
      */
-    private void checkBonusPoolQuantities(Consumer consumer, Pool pool, Entitlement e) {
+    private void checkBonusPoolQuantities(Pool pool, Entitlement e) {
         for (Pool derivedPool :
                 lookupOversubscribedBySubscriptionId(pool.getSubscriptionId(), e)) {
             if (!derivedPool.getId().equals(pool.getId()) &&
@@ -946,7 +946,7 @@ public class CandlepinPoolManager implements PoolManager {
         void handleEntitlementPersist(Entitlement entitlement);
         void handleSelfCertificate(Consumer consumer, Pool pool,
             Entitlement entitlement, boolean generateUeberCert);
-        void handleBonusPools(Consumer consumer, Pool pool, Entitlement entitlement);
+        void handleBonusPools(Pool pool, Entitlement entitlement);
     }
 
     /**
@@ -977,9 +977,8 @@ public class CandlepinPoolManager implements PoolManager {
             generateEntitlementCertificate(pool, entitlement, generateUeberCert);
         }
         @Override
-        public void handleBonusPools(Consumer consumer, Pool pool,
-            Entitlement entitlement) {
-            checkBonusPoolQuantities(consumer, pool, entitlement);
+        public void handleBonusPools(Pool pool, Entitlement entitlement) {
+            checkBonusPoolQuantities(pool, entitlement);
         }
     }
 
@@ -1007,11 +1006,10 @@ public class CandlepinPoolManager implements PoolManager {
             regenerateCertificatesOf(entitlement, generateUeberCert, true);
         }
         @Override
-        public void handleBonusPools(Consumer consumer, Pool pool,
-            Entitlement entitlement) {
+        public void handleBonusPools(Pool pool, Entitlement entitlement) {
             updatePoolsForSubscription(poolCurator.listBySourceEntitlement(entitlement),
                 subAdapter.getSubscription(pool.getSubscriptionId()));
-            checkBonusPoolQuantities(consumer, pool, entitlement);
+            checkBonusPoolQuantities(pool, entitlement);
         }
     }
 }
