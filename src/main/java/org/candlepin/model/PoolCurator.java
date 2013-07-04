@@ -14,6 +14,16 @@
  */
 package org.candlepin.model;
 
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+
+import org.apache.log4j.Logger;
 import org.candlepin.auth.interceptor.EnforceAccessControl;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
@@ -22,12 +32,6 @@ import org.candlepin.policy.criteria.CriteriaRules;
 import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
-
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.persist.Transactional;
-
-import org.apache.log4j.Logger;
 import org.hibernate.Criteria;
 import org.hibernate.Filter;
 import org.hibernate.LockMode;
@@ -37,17 +41,14 @@ import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
+import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.criterion.Subqueries;
 import org.hibernate.impl.FilterImpl;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.persist.Transactional;
 
 /**
  * EntitlementPoolCurator
@@ -582,5 +583,22 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         entity.getAttributes().clear();
 
         currentSession().delete(toDelete);
+    }
+
+    public int getSubPoolCountForStackId(Consumer consumer, String stackId) {
+        DetachedCriteria noRequiresHost = DetachedCriteria.forClass(
+            ProductPoolAttribute.class, "attr")
+                .add(Restrictions.and(Restrictions.eq("name", "stacking_id"),
+                    Restrictions.eq("value", stackId)))
+                .add(Property.forName("this.id").eqProperty("attr.pool.id"))
+                .setProjection(Projections.property("attr.id"));
+
+        Criteria query = currentSession().createCriteria(Pool.class)
+            .add(Restrictions.and(
+                Restrictions.isNotNull("sourceEntitlement"),
+                Subqueries.exists(noRequiresHost)))
+            .createCriteria("sourceEntitlement")
+            .add(Restrictions.eq("consumer", consumer));
+        return query.list().size();
     }
 }

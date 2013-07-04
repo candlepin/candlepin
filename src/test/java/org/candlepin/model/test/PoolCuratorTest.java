@@ -612,4 +612,40 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertEquals(2, levels.size());
     }
 
+    @Test
+    public void getSubPoolCountForStack() {
+        Product product = TestUtil.createProduct();
+        product.setAttribute("virt_limit", "3");
+        product.setAttribute("stacking_id", "13241");
+        productCurator.create(product);
+
+        Pool pool = createPoolAndSub(owner, product, 1L,
+            TestUtil.createDate(2011, 3, 2), TestUtil.createDate(2055, 3, 2));
+        poolCurator.create(pool);
+
+        String subid = pool.getSubscriptionId();
+
+        Entitlement sourceEnt = new Entitlement(pool, consumer, pool.getStartDate(),
+            pool.getEndDate(), 1);
+        entitlementCurator.create(sourceEnt);
+
+        // Create derived pool referencing the entitlement just made:
+        Pool derivedPool = new Pool(owner, product.getId(), product.getName(),
+            new HashSet<ProvidedProduct>(), 1L, TestUtil.createDate(2011, 3, 2),
+            TestUtil.createDate(2055, 3, 2),
+            "", "", "");
+        derivedPool.setSourceEntitlement(sourceEnt);
+        derivedPool.setSubscriptionId(subid);
+
+        for (ProductAttribute pa : product.getAttributes()) {
+            derivedPool.addProductAttribute(new ProductPoolAttribute(pa.getName(),
+                pa.getValue(), product.getId()));
+        }
+
+        poolCurator.create(derivedPool);
+
+        int count = poolCurator.getSubPoolCountForStackId(consumer, "13241");
+        assertEquals(1, count);
+    }
+
 }
