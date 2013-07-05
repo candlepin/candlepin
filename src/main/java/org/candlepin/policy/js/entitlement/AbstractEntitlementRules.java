@@ -370,16 +370,24 @@ public abstract class AbstractEntitlementRules implements Enforcer {
             (config.standalone() || hostLimited)) {
             String productId = pool.getProductId();
             String virtLimit = attributes.get("virt_limit");
-            if ("unlimited".equals(virtLimit)) {
-                postHelper.createHostRestrictedPool(productId, pool,
-                    "unlimited");
-            }
-            else {
-                int virtQuantity = Integer.parseInt(virtLimit);
-                if (virtQuantity > 0) {
-                    postHelper.createHostRestrictedPool(productId, pool,
-                        String.valueOf(virtQuantity));
+
+            String stackId = attributes.get("stacking_id");
+            boolean createSubPool = stackId == null ?
+                true : poolCurator.getSubPoolCountForStackId(c, stackId) == 0;
+
+            if (createSubPool) {
+                try {
+                    int virtQuantity = Integer.parseInt(virtLimit);
+                    if (virtQuantity <= 0) {
+                        return;
+                    }
                 }
+                catch (NumberFormatException nfe) {
+                    if (!"unlimited".equals(virtLimit)) {
+                        return;
+                    }
+                }
+                postHelper.createHostRestrictedPool(productId, pool, virtLimit);
             }
         }
         else {
