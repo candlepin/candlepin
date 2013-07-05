@@ -209,9 +209,17 @@ describe 'Candlepin Import' do
     # re-import the original.
     # Also added the confirmation that the exception occurs when importing to
     # another owner.
-    @import_owner_client.undo_import(@import_owner['key'])
+    status = @import_owner_client.undo_import(@import_owner['key'])
+    # make sure the undo job is complete first
+    done = false
+    while not done do
+      sleep(1)
+      job = @cp.get_job(status.id)
+      if job.state == "FINISHED"
+        done = true
+      end
+    end
     @cp.import(@import_owner['key'], @export_filename)
-
     owner2 = @cp.create_owner(random_string("owner2"))
     exception = false
     begin
