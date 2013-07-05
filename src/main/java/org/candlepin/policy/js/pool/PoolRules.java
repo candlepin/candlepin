@@ -153,9 +153,8 @@ public class PoolRules {
                     int virtLimitQuantity = Integer.parseInt(virtLimit);
                     if (virtLimitQuantity > 0) {
                         long virtQuantity = quantity * virtLimitQuantity;
-                        // FIXME Not sure I like the cast to int here. Anything we can do?
                         Pool derivedPool = helper.createPool(sub, sub.getProduct().getId(),
-                            Integer.toString((int) virtQuantity), virtAttributes);
+                            String.valueOf(virtQuantity), virtAttributes);
                         derivedPool.setSubscriptionSubKey("derived");
                         pools.add(derivedPool);
                     }
@@ -193,10 +192,10 @@ public class PoolRules {
             // separately.
             // TODO: should they be separate? ^^
             update.setProductsChanged(
-                checkForChangedProducts(sub, helper, existingPool));
+                checkForChangedProducts(sub, existingPool));
 
             update.setDerivedProductsChanged(
-                checkForChangedSubProducts(sub, helper, existingPool));
+                checkForChangedSubProducts(sub, existingPool));
 
             update.setProductAttributesChanged(checkForProductAttributeChanges(sub,
                 helper, existingPool));
@@ -262,8 +261,7 @@ public class PoolRules {
         return subProdAttrsChanged;
     }
 
-    private boolean checkForChangedProducts(Subscription sub,
-        PoolHelper helper, Pool existingPool) {
+    private boolean checkForChangedProducts(Subscription sub, Pool existingPool) {
 
         boolean productsChanged =
             !sub.getProduct().getId().equals(existingPool.getProductId());
@@ -292,7 +290,7 @@ public class PoolRules {
     }
 
     private boolean checkForChangedSubProducts(Subscription sub,
-        PoolHelper helper, Pool existingPool) {
+        Pool existingPool) {
 
         boolean productsChanged = false;
         if (sub.getDerivedProduct() != null) {

@@ -334,8 +334,6 @@ public class X509V3ExtensionUtil extends X509Util{
         Map<String, EnvironmentContent> promotedContent,
         Consumer consumer, Product product) {
 
-        Set<ProductContent> filtered = new HashSet<ProductContent>();
-
         List<Content> toReturn = new ArrayList<Content>();
 
         boolean enableEnvironmentFiltering = config.environmentFilteringEnabled();

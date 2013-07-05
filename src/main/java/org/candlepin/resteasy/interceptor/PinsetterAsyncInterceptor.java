@@ -32,7 +32,6 @@ import org.quartz.JobDetail;
 import org.quartz.impl.JobDetailImpl;
 
 import javax.ws.rs.ext.Provider;
-import org.apache.log4j.Logger;
 
 /**
  * Resteasy interceptor that handles scheduling a one-time pinsetter job if the
@@ -44,7 +43,6 @@ import org.apache.log4j.Logger;
 @Provider
 @ServerInterceptor
 public class PinsetterAsyncInterceptor implements PostProcessInterceptor {
-    private static Logger log = Logger.getLogger(PinsetterAsyncInterceptor.class);
     private PinsetterKernel pinsetterKernel;
     private com.google.inject.Provider<Principal> principalProvider;
 
