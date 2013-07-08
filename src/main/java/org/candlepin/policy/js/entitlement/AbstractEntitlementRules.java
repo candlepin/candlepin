@@ -373,7 +373,7 @@ public abstract class AbstractEntitlementRules implements Enforcer {
 
             String stackId = attributes.get("stacking_id");
             boolean createSubPool = stackId == null ?
-                true : poolCurator.getSubPoolCountForStackId(c, stackId) == 0;
+                true : poolCurator.getSubPoolCountForStackId(c, pool, stackId) == 0;
 
             if (createSubPool) {
                 try {
