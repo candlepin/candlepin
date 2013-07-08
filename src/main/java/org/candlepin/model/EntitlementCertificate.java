@@ -95,10 +95,10 @@ public class EntitlementCertificate extends AbstractCertificate {
             return false;
         }
         EntitlementCertificate other = (EntitlementCertificate) obj;
-        if (id == other.id) {
-            if (other.getEntitlement().getId().equals(this.getEntitlement().getId())) {
-                return true;
-            }
+        if (id == other.id &&
+            other.getEntitlement().getId().equals(this.getEntitlement().getId())) {
+
+            return true;
         }
         return false;
     }

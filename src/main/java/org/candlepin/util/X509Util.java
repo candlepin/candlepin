@@ -71,13 +71,13 @@ public abstract class X509Util {
 
         for (ProductContent pc : prod.getProductContent()) {
             // Filter any content not promoted to environment.
-            if (filterEnvironment) {
-                if (ent.getConsumer().getEnvironment() != null &&
-                    !promotedContent.containsKey(pc.getContent().getId())) {
-                    log.debug("Skipping content not promoted to environment: " +
-                        pc.getContent().getId());
-                    continue;
-                }
+            if (filterEnvironment &&
+                (ent.getConsumer().getEnvironment() != null &&
+                    !promotedContent.containsKey(pc.getContent().getId()))) {
+
+                log.debug("Skipping content not promoted to environment: " +
+                    pc.getContent().getId());
+                continue;
             }
 
             boolean include = true;

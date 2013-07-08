@@ -431,11 +431,9 @@ public class CandlepinPoolManager implements PoolManager {
             }
         }
 
-        if (filteredPools.size() == 0) {
-            // Only throw refused exception if we actually hit the rules:
-            if (failedResult != null) {
-                throw new EntitlementRefusedException(failedResult);
-            }
+        // Only throw refused exception if we actually hit the rules:
+        if (filteredPools.size() == 0 && failedResult != null) {
+            throw new EntitlementRefusedException(failedResult);
         }
 
         List<PoolQuantity> enforced = autobindRules.selectBestPools(consumer,
