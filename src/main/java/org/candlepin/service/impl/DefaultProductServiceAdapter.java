@@ -185,6 +185,11 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
         prodCurator.removeProductContent(product, content);
     }
 
+    @Override
+    public Product mergeProduct(Product prod) {
+        return prodCurator.merge(prod);
+    }
+
     public boolean productHasSubscriptions(Product prod) {
         return prodCurator.productHasSubscriptions(prod);
     }

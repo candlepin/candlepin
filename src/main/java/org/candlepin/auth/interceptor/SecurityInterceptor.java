@@ -45,6 +45,8 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
+import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.User;
 import org.candlepin.resteasy.interceptor.AuthUtil;
 import org.candlepin.util.Util;
@@ -86,7 +88,7 @@ public class SecurityInterceptor implements MethodInterceptor {
         storeMap.put(Pool.class, new PoolStore());
         storeMap.put(User.class, new UserStore());
         storeMap.put(ActivationKey.class, new ActivationKeyStore());
-
+        storeMap.put(Product.class, new ProductStore());
     }
 
     /**
@@ -312,6 +314,19 @@ public class SecurityInterceptor implements MethodInterceptor {
             }
 
             return activationKeyCurator.find(key);
+        }
+    }
+
+    private class ProductStore implements EntityStore {
+        private ProductCurator productCurator;
+
+        @Override
+        public Object lookup(String key) {
+            if (productCurator == null) {
+                productCurator = injector.getInstance(ProductCurator.class);
+            }
+
+            return productCurator.find(key);
         }
     }
 
