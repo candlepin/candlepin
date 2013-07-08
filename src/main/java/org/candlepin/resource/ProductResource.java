@@ -213,6 +213,27 @@ public class ProductResource {
                 changesMade = true;
             }
 
+        if (incoming.getDependentProductIds() == null) {
+            if (log.isDebugEnabled()) {
+                log.debug("Dependent Product Ids not included in this product update, " +
+                    "skipping update.");
+            }
+            return false;
+        }
+        else
+            if (!existing.getDependentProductIds().equals(
+                    incoming.getDependentProductIds())) {
+                if (log.isDebugEnabled()) {
+                    log.debug("Updating dependent product ids");
+                }
+
+                // clear and addall here instead of replacing instance so there are no
+                // dangling memory references
+                existing.getDependentProductIds().clear();
+                existing.getDependentProductIds().addAll(incoming.getDependentProductIds());
+                changesMade = true;
+            }
+
         if (incoming.getMultiplier() != null &&
             existing.getMultiplier().longValue() != incoming.getMultiplier().longValue()) {
             if (log.isDebugEnabled()) {
