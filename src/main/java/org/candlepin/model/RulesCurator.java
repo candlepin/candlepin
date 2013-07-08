@@ -142,10 +142,6 @@ public class RulesCurator extends AbstractHibernateCurator<Rules> {
 
     }
 
-    public Rules merge(Rules entity) {
-        return super.merge(entity);
-    }
-
     private Rules rulesFromFile(String path) {
         InputStream is = this.getClass().getResourceAsStream(path);
         return new Rules(Util.readFile(is));
