@@ -14,6 +14,32 @@
  */
 package org.candlepin.resource;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringTokenizer;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+
+import org.apache.log4j.Logger;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventAdapter;
 import org.candlepin.audit.EventFactory;
@@ -64,6 +90,7 @@ import org.candlepin.paging.PageRequest;
 import org.candlepin.paging.Paginate;
 import org.candlepin.pinsetter.tasks.EntitlerJob;
 import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
+import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -73,11 +100,6 @@ import org.candlepin.sync.Importer;
 import org.candlepin.sync.ImporterException;
 import org.candlepin.sync.Meta;
 import org.candlepin.sync.SyncDataFormatException;
-
-import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
-
-import org.apache.log4j.Logger;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
@@ -87,30 +109,8 @@ import org.jboss.resteasy.util.GenericType;
 import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.StringTokenizer;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
+import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
 /**
  * Owner Resource
@@ -143,6 +143,7 @@ public class OwnerResource {
     private UeberCertificateGenerator ueberCertGenerator;
     private EnvironmentCurator envCurator;
     private CalculatedAttributesUtil calculatedAttributesUtil;
+    private Enforcer enforcer;
 
     private static final int FEED_LIMIT = 1000;
 
@@ -164,7 +165,8 @@ public class OwnerResource {
         EntitlementCertificateCurator entitlementCertCurator,
         EntitlementCurator entitlementCurator,
         UeberCertificateGenerator ueberCertGenerator,
-        EnvironmentCurator envCurator, CalculatedAttributesUtil calculatedAttributesUtil) {
+        EnvironmentCurator envCurator, Enforcer enforcer,
+        CalculatedAttributesUtil calculatedAttributesUtil) {
 
         this.ownerCurator = ownerCurator;
         this.ownerInfoCurator = ownerInfoCurator;
@@ -190,6 +192,7 @@ public class OwnerResource {
         this.ueberCertGenerator = ueberCertGenerator;
         this.envCurator = envCurator;
         this.calculatedAttributesUtil = calculatedAttributesUtil;
+        this.enforcer = enforcer;
     }
 
     /**
@@ -329,7 +332,7 @@ public class OwnerResource {
             log.info("Deleting subscription: " + s);
             subscriptionCurator.delete(s);
         }
-        for (Pool p : poolCurator.listByOwner(owner)) {
+        for (Pool p : poolCurator.listByOwner(enforcer, owner)) {
             log.info("Deleting pool: " + p);
             poolCurator.delete(p);
         }
@@ -657,7 +660,7 @@ public class OwnerResource {
             }
         }
 
-        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(c, owner,
+        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(enforcer, c, owner,
             productId, activeOnDate, true, listAll, pageRequest);
         List<Pool> poolList = page.getPageData();
 

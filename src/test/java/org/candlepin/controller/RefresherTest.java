@@ -14,10 +14,10 @@
  */
 package org.candlepin.controller;
 
-import static org.mockito.Mockito.any;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -27,10 +27,12 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.Subscription;
+import org.candlepin.policy.js.entitlement.Enforcer;
+import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.util.Util;
-import org.junit.Test;
 import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 
@@ -43,6 +45,7 @@ public class RefresherTest {
     private CandlepinPoolManager poolManager;
     private SubscriptionServiceAdapter subAdapter;
     private PoolCurator poolCurator;
+    private Enforcer enforcer;
 
     private Refresher refresher;
 
@@ -51,6 +54,7 @@ public class RefresherTest {
         poolManager = mock(CandlepinPoolManager.class);
         subAdapter = mock(SubscriptionServiceAdapter.class);
         poolCurator = mock(PoolCurator.class);
+        enforcer = mock(EntitlementRules.class);
 
         refresher = new Refresher(poolManager, subAdapter, poolCurator, false);
     }
@@ -100,8 +104,8 @@ public class RefresherTest {
         when(subAdapter.getSubscriptions(owner)).thenReturn(subscriptions);
         when(subAdapter.getSubscription("subId")).thenReturn(subscription);
 
-        when(poolCurator.listAvailableEntitlementPools(null, owner, null, null, false,
-            false)).thenReturn(pools);
+        when(poolCurator.listAvailableEntitlementPools(enforcer, null, owner, null, null,
+            false, false)).thenReturn(pools);
         when(poolCurator.lookupBySubscriptionId("subId")).thenReturn(pools);
 
         refresher.add(owner);

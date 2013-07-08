@@ -137,7 +137,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         // Trigger the refresh:
         poolManager.getRefresher().add(owner).run();
-        List<Pool> pools = poolCurator.listByOwnerAndProduct(owner,
+        List<Pool> pools = poolCurator.listByOwnerAndProduct(enforcer, owner,
             prod.getId());
         assertEquals(1, pools.size());
         Pool newPool = pools.get(0);
@@ -190,7 +190,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         // Trigger the refresh:
         poolManager.getRefresher().add(owner).run();
 
-        List<Pool> pools = poolCurator.listByOwnerAndProduct(owner,
+        List<Pool> pools = poolCurator.listByOwnerAndProduct(enforcer, owner,
             prod.getId());
         assertEquals(1, pools.size());
         Pool newPool = pools.get(0);
@@ -224,7 +224,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         // Trigger the refresh:
         poolManager.getRefresher().add(owner).run();
 
-        List<Pool> pools = poolCurator.listByOwner(owner);
+        List<Pool> pools = poolCurator.listByOwner(enforcer, owner);
         assertEquals(2, pools.size());
     }
 
@@ -247,7 +247,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         poolManager.entitleByPool(c1, pool, 1);
 
         assertEquals(2, consumerCurator.listByOwner(owner).size());
-        assertEquals(1, poolCurator.listByOwner(owner).size());
+        assertEquals(1, poolCurator.listByOwner(enforcer, owner).size());
         assertEquals(1, entitlementCurator.listByOwner(owner).size());
 
         ownerResource.deleteOwner(owner.getKey(), true);
@@ -255,7 +255,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals(0, consumerCurator.listByOwner(owner).size());
         assertNull(consumerCurator.findByUuid(c1.getUuid()));
         assertNull(consumerCurator.findByUuid(c2.getUuid()));
-        assertEquals(0, poolCurator.listByOwner(owner).size());
+        assertEquals(0, poolCurator.listByOwner(enforcer, owner).size());
         assertEquals(0, entitlementCurator.listByOwner(owner).size());
     }
 
@@ -668,7 +668,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource or = new OwnerResource(oc, null,
             null, akc, null, null, i18n, null, null, null,
             null, null, null, null, null, null, null,
-            null, null, null, null, null, null, null);
+            null, null, null, null, null, null, enforcer, null);
         or.createActivationKey("testOwner", ak);
     }
 
@@ -745,7 +745,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource thisOwnerResource = new OwnerResource(ownerCurator, null, null,
             null, null, null, i18n, es, null, null, null, importer, null, null,
             null, importRecordCurator, null, null, null, null, null,
-            null, null, null);
+            null, null, enforcer, null);
 
         MultipartInput input = mock(MultipartInput.class);
         InputPart part = mock(InputPart.class);
@@ -780,7 +780,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource thisOwnerResource = new OwnerResource(ownerCurator, null, sc,
             null, null, null, i18n, es, null, null, null, null, null, ec,
             null, importRecordCurator, null, null, null, null, null,
-            null, null, null);
+            null, null, enforcer, null);
 
         ExporterMetadata metadata = new ExporterMetadata();
         when(ec.lookupByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner))
@@ -803,7 +803,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource thisOwnerResource = new OwnerResource(ownerCurator, null, null,
             null, null, null, i18n, es, null, null, null, importer, null, null,
             null, importRecordCurator, null, null, null, null, null,
-            null, null, null);
+            null, null, enforcer, null);
 
         MultipartInput input = mock(MultipartInput.class);
         InputPart part = mock(InputPart.class);
@@ -843,7 +843,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Owner owner = mock(Owner.class);
         OwnerResource ownerres = new OwnerResource(oc, null, null,
             null, null, null, i18n, null, null, null, null, null, null, null,
-            null, null, null, null, null, null, null, null, null, null);
+            null, null, null, null, null, null, null, null, null, enforcer, null);
 
         when(oc.lookupByKey(eq("admin"))).thenReturn(owner);
         when(owner.getUpstreamConsumer()).thenReturn(upstream);

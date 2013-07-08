@@ -62,15 +62,15 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
         virtPool.setAttribute("virt_only", "true");
         poolCurator.merge(virtPool);
 
-        List<Pool> results = poolCurator.listAvailableEntitlementPools(consumer, null,
-            null, null, false, true);
+        List<Pool> results = poolCurator.listAvailableEntitlementPools(enforcer, consumer,
+            null, null, null, false, true);
 
         assertEquals(1, results.size());
         assertEquals(physicalPool.getId(), results.get(0).getId());
 
         // Make the consumer a guest and try again:
         consumer.setFact("virt.is_guest", "true");
-        results = poolCurator.listAvailableEntitlementPools(consumer, null,
+        results = poolCurator.listAvailableEntitlementPools(enforcer, consumer, null,
             null, null, false, true);
 
         assertEquals(2, results.size());
@@ -90,13 +90,13 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
         this.createPoolAndSub(owner, targetProduct, 1L, new Date(),
             new Date());
 
-        List<Pool> results = poolCurator.listAvailableEntitlementPools(consumer, null,
-            null, null, false, true);
+        List<Pool> results = poolCurator.listAvailableEntitlementPools(enforcer, consumer,
+            null, null, null, false, true);
 
         assertEquals(0, results.size());
         // Make the consumer a guest and try again:
         consumer.setFact("virt.is_guest", "true");
-        results = poolCurator.listAvailableEntitlementPools(consumer, null,
+        results = poolCurator.listAvailableEntitlementPools(enforcer, consumer, null,
             null, null, false, true);
 
         assertEquals(2, results.size());
@@ -127,8 +127,8 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
         anotherVirtPool.setAttribute("requires_host", "SOMEOTHERUUID");
         poolCurator.merge(anotherVirtPool);
 
-        List<Pool> results = poolCurator.listAvailableEntitlementPools(consumer, null,
-            null, null, false, true);
+        List<Pool> results = poolCurator.listAvailableEntitlementPools(enforcer, consumer,
+            null, null, null, false, true);
 
         assertEquals(0, results.size());
 
@@ -137,7 +137,7 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
         consumer.setFact("virt.uuid", "GUESTUUID");
         consumerCurator.update(consumer);
         assertEquals(host.getUuid(), consumerCurator.getHost("GUESTUUID").getUuid());
-        results = poolCurator.listAvailableEntitlementPools(consumer, null,
+        results = poolCurator.listAvailableEntitlementPools(enforcer, consumer, null,
             null, null, false, true);
 
         assertEquals(1, results.size());
@@ -165,7 +165,7 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
         virtPool.setAttribute("requires_host", host.getUuid());
         poolCurator.merge(virtPool);
 
-        List<Pool> results = poolCurator.listAvailableEntitlementPools(
+        List<Pool> results = poolCurator.listAvailableEntitlementPools(enforcer,
             c, null, null, null, false, true);
         assertEquals(0, results.size());
     }
@@ -190,7 +190,7 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
         virtPool.setAttribute("virt_only", "true");
         poolCurator.merge(virtPool);
 
-        List<Pool> results = poolCurator.listAvailableEntitlementPools(
+        List<Pool> results = poolCurator.listAvailableEntitlementPools(enforcer,
             c, null, null, null, false, true);
         assertEquals(1, results.size());
     }

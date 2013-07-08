@@ -24,6 +24,15 @@ import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.reset;
 
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+
+import javax.persistence.EntityNotFoundException;
+
+import org.apache.commons.collections.Transformer;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventSink;
 import org.candlepin.model.Consumer;
@@ -43,22 +52,12 @@ import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
-
-import com.google.inject.AbstractModule;
-import com.google.inject.Module;
-
-import org.apache.commons.collections.Transformer;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-
-import javax.persistence.EntityNotFoundException;
+import com.google.inject.AbstractModule;
+import com.google.inject.Module;
 
 public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
@@ -134,16 +133,16 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
     @Test
     public void testEntitlementPoolsCreated() {
-        List<Pool> pools = poolCurator.listByOwner(o);
+        List<Pool> pools = poolCurator.listByOwner(enforcer, o);
         assertTrue(pools.size() > 0);
 
-        Pool virtHostPool = poolCurator.listByOwnerAndProduct(o, virtHost.getId()).get(0);
+        Pool virtHostPool = poolCurator.listByOwnerAndProduct(enforcer, o, virtHost.getId()).get(0);
         assertNotNull(virtHostPool);
     }
 
     @Test
     public void testQuantityCheck() throws Exception {
-        Pool monitoringPool = poolCurator.listByOwnerAndProduct(o,
+        Pool monitoringPool = poolCurator.listByOwnerAndProduct(enforcer, o,
                 monitoring.getId()).get(0);
         assertEquals(Long.valueOf(5), monitoringPool.getQuantity());
         for (int i = 0; i < 5; i++) {
@@ -179,7 +178,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
     @Test
     public void testConsumeQuantity() throws Exception {
-        Pool monitoringPool = poolCurator.listByOwnerAndProduct(o,
+        Pool monitoringPool = poolCurator.listByOwnerAndProduct(enforcer, o,
             monitoring.getId()).get(0);
         assertEquals(Long.valueOf(5), monitoringPool.getQuantity());
 
@@ -274,7 +273,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         // set up initial pool
         poolManager.getRefresher().add(o).run();
 
-        List<Pool> pools = poolCurator.listByOwnerAndProduct(o, product1.getId());
+        List<Pool> pools = poolCurator.listByOwnerAndProduct(enforcer, o, product1.getId());
         assertEquals(1, pools.size());
 
         // now alter the product behind the sub, and make sure the pool is also updated
@@ -284,7 +283,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         // set up initial pool
         poolManager.getRefresher().add(o).run();
 
-        pools = poolCurator.listByOwnerAndProduct(o, product2.getId());
+        pools = poolCurator.listByOwnerAndProduct(enforcer, o, product2.getId());
         assertEquals(1, pools.size());
     }
 

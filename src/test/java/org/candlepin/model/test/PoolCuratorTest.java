@@ -79,8 +79,9 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         poolCurator.create(pool);
 
         List<Pool> results =
-            poolCurator.listAvailableEntitlementPools(consumer, consumer.getOwner(),
-                (String) null, TestUtil.createDate(20450, 3, 2), true, false);
+            poolCurator.listAvailableEntitlementPools(enforcer, consumer,
+                consumer.getOwner(),(String) null, TestUtil.createDate(20450, 3, 2),
+                true, false);
         assertEquals(0, results.size());
 
     }
@@ -92,14 +93,15 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         poolCurator.create(pool);
 
         List<Pool> results =
-            poolCurator.listAvailableEntitlementPools(consumer, consumer.getOwner(),
-                (String) null, TestUtil.createDate(2005, 3, 3), true, false);
+            poolCurator.listAvailableEntitlementPools(enforcer, consumer,
+                consumer.getOwner(),(String) null, TestUtil.createDate(2005, 3, 3),
+                true, false);
         assertEquals(0, results.size());
 
         // If we specify no date filtering, the expired pool should be returned:
         results =
-            poolCurator.listAvailableEntitlementPools(consumer, consumer.getOwner(),
-                (String) null, null, true, false);
+            poolCurator.listAvailableEntitlementPools(enforcer, consumer,
+                consumer.getOwner(), (String) null, null, true, false);
         assertEquals(1, results.size());
     }
 
@@ -112,8 +114,8 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         ueberCertGenerator.generate(owner, new NoAuthPrincipal());
 
         List<Pool> results =
-            poolCurator.listAvailableEntitlementPools(consumer, consumer.getOwner(),
-                (String) null, null, true, false);
+            poolCurator.listAvailableEntitlementPools(enforcer, consumer,
+                consumer.getOwner(), (String) null, null, true, false);
         assertEquals(1, results.size());
     }
 
@@ -126,7 +128,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
         poolCurator.create(pool);
 
-        List<Pool> results = poolCurator.listByOwnerAndProduct(owner, p.getId());
+        List<Pool> results = poolCurator.listByOwnerAndProduct(enforcer, owner, p.getId());
         Pool onlyPool = results.get(0);
 
         assertEquals("An Extremely Great Product", onlyPool.getProductName());
@@ -171,7 +173,8 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Pool p = TestUtil.createPool(owner, parent, providedProducts, 5);
         providedProduct.setPool(p);
         poolCurator.create(p);
-        List<Pool> results = poolCurator.listByOwnerAndProduct(owner, product.getId());
+        List<Pool> results = poolCurator.listByOwnerAndProduct(enforcer, owner,
+            product.getId());
         assertEquals(1, results.size());
     }
 
@@ -325,8 +328,8 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         pool.setStartDate(activeOn);
         poolCurator.create(pool);
 
-        assertEquals(1, poolCurator.listAvailableEntitlementPools(null, owner, null,
-            activeOn, false, false).size());
+        assertEquals(1, poolCurator.listAvailableEntitlementPools(enforcer, null, owner,
+            null, activeOn, false, false).size());
     }
 
     @Test
@@ -337,8 +340,8 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         pool.setEndDate(activeOn);
         poolCurator.create(pool);
 
-        assertEquals(1, poolCurator.listAvailableEntitlementPools(null, owner, null,
-            activeOn, false, false).size());
+        assertEquals(1, poolCurator.listAvailableEntitlementPools(enforcer, null, owner,
+            null, activeOn, false, false).size());
     }
 
     @Test
@@ -350,8 +353,8 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         pool.setEndDate(TestUtil.createDate(2011, 3, 2));
         poolCurator.create(pool);
 
-        assertEquals(1, poolCurator.listAvailableEntitlementPools(null, owner, null,
-            activeOn, false, false).size());
+        assertEquals(1, poolCurator.listAvailableEntitlementPools(enforcer, null, owner,
+            null, activeOn, false, false).size());
     }
 
     @Test
@@ -380,7 +383,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         req.setSortBy("id");
 
         Date activeOn = TestUtil.createDate(2011, 2, 2);
-        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
+        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(enforcer,
             null, owner, product.getId(), activeOn, false, false, req);
         assertEquals(Integer.valueOf(50), page.getMaxRecords());
 
@@ -413,7 +416,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         req.setPerPage(10);
 
         Date activeOn = TestUtil.createDate(2011, 2, 2);
-        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
+        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(enforcer,
             null, owner, product.getId(), activeOn, false, false, req);
         assertEquals(Integer.valueOf(5), page.getMaxRecords());
         assertEquals(5, page.getPageData().size());
@@ -433,7 +436,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         req.setPerPage(10);
 
         Date activeOn = TestUtil.createDate(2011, 2, 2);
-        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
+        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(enforcer,
             null, owner, product.getId(), activeOn, false, false, req);
         assertEquals(Integer.valueOf(5), page.getMaxRecords());
         assertEquals(0, page.getPageData().size());
@@ -453,7 +456,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         req.setPerPage(2);
 
         Date activeOn = TestUtil.createDate(2011, 2, 2);
-        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
+        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(enforcer,
             null, owner, product.getId(), activeOn, false, false, req);
         assertEquals(Integer.valueOf(5), page.getMaxRecords());
         assertEquals(1, page.getPageData().size());
@@ -476,7 +479,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         req.setPerPage(10);
 
         Date activeOn = TestUtil.createDate(2011, 2, 2);
-        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(
+        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(enforcer,
             null, owner, product.getId(), activeOn, false, false, req);
         assertEquals(Integer.valueOf(0), page.getMaxRecords());
         assertEquals(0, page.getPageData().size());

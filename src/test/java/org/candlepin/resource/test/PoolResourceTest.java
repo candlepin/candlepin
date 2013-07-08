@@ -94,7 +94,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
         poolCurator.create(pool3);
 
         poolResource = new PoolResource(poolCurator, consumerCurator, ownerCurator,
-            statisticCurator, i18n, poolManager, attrUtil);
+            statisticCurator, i18n, poolManager, enforcer, attrUtil);
 
         // Consumer system with too many cpu cores:
 
