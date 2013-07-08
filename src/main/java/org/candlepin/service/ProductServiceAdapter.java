@@ -93,4 +93,6 @@ public interface ProductServiceAdapter {
     void removeRely(String productId, String relyId);
 
     Set<String> getReliesOn(String productId);
+
+    Product mergeProduct(Product prod);
 }

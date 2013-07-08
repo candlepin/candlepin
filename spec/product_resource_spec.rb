@@ -5,6 +5,48 @@ describe 'Product Resource' do
   include CandlepinMethods
   include CandlepinScenarios
 
+  it 'updates individual product fields' do
+    prod = create_product(id=nil, name='tacos', :multiplier => 2, :dependentProductIds => [2, 4])
+    prod2 = create_product(id=nil, name='enchiladas', :multiplier => 4)
+
+    prod.name.should_not == prod2.name
+    prod.multiplier.should_not == prod2.multiplier
+    prod.attributes.should_not == prod2.attributes
+    prod.dependentProductIds.should_not == prod2.dependentProductIds
+
+    prod = @cp.update_product(prod.id, :name => 'enchiladas')
+
+    prod.name.should == prod2.name
+    prod.multiplier.should_not == prod2.multiplier
+    prod.attributes.should_not == prod2.attributes
+    prod.dependentProductIds.should_not == prod2.dependentProductIds
+
+    #the idea here is attributes should not change if set equal to nil
+    #then updated, so store it as a temp variable to compare to after
+    #update_product is called.
+    temp_attributes = prod.attributes
+
+    prod = @cp.update_product(prod.id, :multiplier => prod2.multiplier, :attributes => nil)
+
+    prod.multiplier.should == prod2.multiplier
+    prod.attributes.should == temp_attributes
+
+    prod = @cp.update_product(prod.id, :dependentProductIds => prod2.dependentProductIds)
+
+    prod.dependentProductIds.should == prod2.dependentProductIds
+  end
+
+  it 'does not update product name' do
+    prod = create_product(id=nil, name='iron maiden')
+    prod2 = create_product(id=nil, name=nil)
+
+    prod.name.should == 'iron maiden'
+
+    prod = @cp.update_product(prod.id, prod2)
+
+    prod.name.should == 'iron maiden'
+  end
+
   it 'removes content from products.' do
     prod = create_product
     content = create_content

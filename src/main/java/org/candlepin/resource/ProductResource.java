@@ -29,6 +29,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 import org.candlepin.auth.interceptor.SecurityHole;
+import org.candlepin.auth.interceptor.Verify;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Content;
@@ -43,6 +44,8 @@ import org.candlepin.model.StatisticCurator;
 import org.candlepin.pinsetter.tasks.RefreshPoolsForProductJob;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.service.ProductServiceAdapter;
+
+import org.apache.log4j.Logger;
 import org.quartz.JobDetail;
 import org.xnap.commons.i18n.I18n;
 
@@ -56,6 +59,7 @@ import com.google.inject.Inject;
 @Path("/products")
 public class ProductResource {
 
+    private static Logger log = Logger.getLogger(ProductResource.class);
     private ProductServiceAdapter prodAdapter;
     private ContentCurator contentCurator;
     private StatisticCurator statisticCurator;
@@ -150,6 +154,98 @@ public class ProductResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Product createProduct(Product product) {
         return prodAdapter.createProduct(product);
+    }
+
+    /**
+     * @return a Product
+     * @httpcode 400
+     * @httpcode 200
+     */
+    @PUT
+    @Path("/{product_uuid}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Product updateProduct(
+        @PathParam("product_uuid") @Verify(Product.class) String productId,
+        Product product) {
+        Product toUpdate = getProduct(productId);
+
+        if (performProductUpdates(toUpdate, product)) {
+            this.prodAdapter.mergeProduct(toUpdate);
+        }
+
+        return toUpdate;
+    }
+
+    // Requires security hole since security interceptor will intercept when the method is
+    // called. This is because it is protected. This method is called from other resources,
+    // and therefore it assumes the caller is screened first.
+    // TODO Might be a better way to do this.
+    @SecurityHole(noAuth = true)
+    protected boolean performProductUpdates(Product existing, Product incoming) {
+        boolean changesMade = false;
+
+        if (incoming.getName() != null && !existing.getName().equals(incoming.getName()) &&
+            !incoming.getName().isEmpty()) {
+            if (log.isDebugEnabled()) {
+                log.debug("   Updating product name from");
+            }
+            changesMade = true;
+            existing.setName(incoming.getName());
+        }
+
+        if (incoming.getAttributes() == null) {
+            if (log.isDebugEnabled()) {
+                log.debug("Attributes not included in this product update, " +
+                    "skipping update.");
+            }
+            return false;
+        }
+        else
+            if (!existing.getAttributes().equals(incoming.getAttributes())) {
+                if (log.isDebugEnabled()) {
+                    log.debug("Updating product attributes");
+                }
+
+                // clear and addall here instead of replacing instance so there are no
+                // dangling memory references
+                existing.getAttributes().clear();
+                existing.getAttributes().addAll(incoming.getAttributes());
+                changesMade = true;
+            }
+
+        if (incoming.getDependentProductIds() == null) {
+            if (log.isDebugEnabled()) {
+                log.debug("Dependent Product Ids not included in this product update, " +
+                    "skipping update.");
+            }
+            return false;
+        }
+        else
+            if (!existing.getDependentProductIds().equals(
+                    incoming.getDependentProductIds())) {
+                if (log.isDebugEnabled()) {
+                    log.debug("Updating dependent product ids");
+                }
+
+                // clear and addall here instead of replacing instance so there are no
+                // dangling memory references
+                existing.getDependentProductIds().clear();
+                existing.getDependentProductIds().addAll(incoming.getDependentProductIds());
+                changesMade = true;
+            }
+
+        if (incoming.getMultiplier() != null &&
+            existing.getMultiplier().longValue() != incoming.getMultiplier().longValue()) {
+            if (log.isDebugEnabled()) {
+                log.debug("   Updating product multiplier");
+            }
+            changesMade = true;
+            existing.setMultiplier(incoming.getMultiplier());
+        }
+
+        // not calling setHref() it's a no op and pointless to call.
+
+        return changesMade;
     }
 
     /**
