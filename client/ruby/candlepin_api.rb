@@ -513,8 +513,16 @@ class Candlepin
     post("/products", product)
   end
 
-  def update_product(product_id, product)
-    return put("/products/#{product_id}", product)
+  def update_product(product_id, params={})
+
+    product = get_product(product_id)
+    product[:name] = params[:name] if params[:name]
+    product[:multiplier] = params[:multiplier] if params[:multiplier]
+    product[:attributes] = params[:attributes] if params[:attributes]
+    product[:dependentProductIds] = params[:dependentProductIds] if params[:dependentProductIds]
+    product[:relies_on] = params[:relies_on] if params[:relies_on]
+
+    put("/products/#{product_id}", product)
   end
 
   def get_product(product_id)

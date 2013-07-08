@@ -5,15 +5,17 @@ describe 'Product Resource' do
   include CandlepinMethods
   include CandlepinScenarios
 
-  it 'updates product name' do
-    prod = create_product(id=nil, name='tacos')
-    prod2 = create_product(id=nil, name='enchiladas')
+  it 'updates product name and not other attributes' do
+    prod = create_product(id=nil, name='tacos', :multiplier => 2)
+    prod2 = create_product(id=nil, name='enchiladas', :multiplier => 4)
 
     prod.name.should_not == prod2.name
+    prod.multiplier.should_not == prod2.multiplier
 
-    prod = @cp.update_product(prod.id, prod2)
+    prod = @cp.update_product(prod.id, :name => 'enchiladas')
 
     prod.name.should == prod2.name
+    prod.multiplier.should_not == prod2.multiplier
   end
 
   it 'does not update product name' do

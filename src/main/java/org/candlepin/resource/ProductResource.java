@@ -169,7 +169,7 @@ public class ProductResource {
         Product product) {
         Product toUpdate = getProduct(productId);
 
-        if (performProductUpdates(product, toUpdate)) {
+        if (performProductUpdates(toUpdate, product)) {
             this.prodAdapter.mergeProduct(toUpdate);
         }
 
@@ -187,7 +187,7 @@ public class ProductResource {
         if (incoming.getName() != null && !existing.getName().equals(incoming.getName()) &&
             !incoming.getName().isEmpty()) {
             if (log.isDebugEnabled()) {
-                log.debug("   Updating product name");
+                log.debug("   Updating product name from");
             }
             changesMade = true;
             existing.setName(incoming.getName());
@@ -210,26 +210,6 @@ public class ProductResource {
                 // dangling memory references
                 existing.getAttributes().clear();
                 existing.getAttributes().addAll(incoming.getAttributes());
-                changesMade = true;
-            }
-
-        if (incoming.getProductContent() == null) {
-            if (log.isDebugEnabled()) {
-                log.debug("ProductContent not included in this product update, " +
-                    "skipping update.");
-            }
-            return false;
-        }
-        else
-            if (!existing.getProductContent().equals(incoming.getProductContent())) {
-                if (log.isDebugEnabled()) {
-                    log.debug("Updating product ProductContent");
-                }
-
-                // clear and addall here instead of replacing instance so there are no
-                // dangling memory references
-                existing.getProductContent().clear();
-                existing.getProductContent().addAll(incoming.getProductContent());
                 changesMade = true;
             }
 
