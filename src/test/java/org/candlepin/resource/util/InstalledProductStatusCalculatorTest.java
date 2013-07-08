@@ -15,9 +15,9 @@
 package org.candlepin.resource.util;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -383,7 +383,7 @@ public class InstalledProductStatusCalculatorTest {
         c.addEntitlement(mockEntitlement(c, PRODUCT_1, range1, PRODUCT_1));
 
         List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(ents);
+        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
 
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
@@ -404,7 +404,7 @@ public class InstalledProductStatusCalculatorTest {
         c.addEntitlement(mockEntitlement(c, PRODUCT_1, range1, PRODUCT_1));
 
         List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(ents);
+        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
 
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
@@ -427,7 +427,7 @@ public class InstalledProductStatusCalculatorTest {
             PRODUCT_1));
 
         List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
-        when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(ents);
+        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
 
         ComplianceStatus status = compliance.getStatus(c, now);
         ConsumerInstalledProductEnricher calculator =
@@ -435,6 +435,31 @@ public class InstalledProductStatusCalculatorTest {
         Product p = new Product(PRODUCT_1, "Awesome Product");
         DateRange validRange = calculator.getValidDateRange(p);
         assertNull(validRange);
+    }
+
+    //Test valid range with a full stack where one stacked entitlement provides the product
+    @Test
+    public void validRangeWhenStackedButOneProvides() {
+        Consumer c = mockConsumer(PRODUCT_1);
+
+        Calendar cal = Calendar.getInstance();
+        Date now = cal.getTime();
+        DateRange range = rangeRelativeToDate(now, -4, 4);
+
+        c.addEntitlement(mockStackedEntitlement(c, range, STACK_ID_1, PRODUCT_1, 1,
+            PRODUCT_1));
+        c.addEntitlement(mockStackedEntitlement(c, range, STACK_ID_1, "other", 1,
+            PRODUCT_1));
+
+        List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
+        when(entCurator.listByConsumer(eq(c))).thenReturn(ents);
+
+        ComplianceStatus status = compliance.getStatus(c, now);
+        ConsumerInstalledProductEnricher calculator =
+            new ConsumerInstalledProductEnricher(c, status, compliance);
+        Product p = new Product(PRODUCT_1, "Awesome Product");
+        DateRange validRange = calculator.getValidDateRange(p);
+        assertNotNull(validRange);
     }
 
     @Test
