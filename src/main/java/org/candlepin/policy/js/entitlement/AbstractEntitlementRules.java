@@ -349,10 +349,9 @@ public abstract class AbstractEntitlementRules implements Enforcer {
                     .getSubscriptionId());
                 for (int idex = 0; idex < pools.size(); idex++) {
                     Pool derivedPool = pools.get(idex);
-                    if (derivedPool.getAttributeValue("pool_derived") != null) {
-                        if (derivedPool.getQuantity() == 0) {
-                            postHelper.setPoolQuantity(derivedPool, -1);
-                        }
+                    if (derivedPool.getAttributeValue("pool_derived") != null &&
+                        derivedPool.getQuantity() == 0) {
+                        postHelper.setPoolQuantity(derivedPool, -1);
                     }
                 }
             }

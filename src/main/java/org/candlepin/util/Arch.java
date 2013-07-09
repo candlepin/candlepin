@@ -86,10 +86,8 @@ public class Arch {
         }
         // x86 is an alias for anything that
         // could run on an i?86 machine
-        else if (contentArch.equals("x86")) {
-            if (x86Labels.contains(consumerArch)) {
-                compatible = true;
-            }
+        else if (contentArch.equals("x86") && x86Labels.contains(consumerArch)) {
+            compatible = true;
         }
 
         return compatible;

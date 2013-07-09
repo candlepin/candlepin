@@ -523,10 +523,10 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 exemptProductIds.add(productId);
             }
             else if ("support_level".equalsIgnoreCase(name) &&
-                (value != null && !value.trim().equals(""))) {
-                if (exemptProductIds.contains(productId)) {
-                    exemptSlaSet.add(value);
-                }
+                (value != null && !value.trim().equals("")) &&
+                exemptProductIds.contains(productId)) {
+
+                exemptSlaSet.add(value);
             }
         }
 
@@ -534,10 +534,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             String name = (String) result[0];
             String value = (String) result[1];
 
-            if (!"support_level_exempt".equals(name)) {
-                if (!exemptSlaSet.contains(value)) {
-                    slaSet.add(value);
-                }
+            if (!"support_level_exempt".equals(name) && !exemptSlaSet.contains(value)) {
+                slaSet.add(value);
             }
         }
 

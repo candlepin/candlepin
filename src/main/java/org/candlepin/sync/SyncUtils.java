@@ -37,11 +37,9 @@ class SyncUtils {
     private final File baseDir;
     SyncUtils(Config config) {
         baseDir = new File(config.getString(ConfigProperties.SYNC_WORK_DIR));
-        if (!baseDir.exists()) {
-            if (!baseDir.mkdirs()) {
-                throw new IseException(
-                    "Unable to create base dir for sync: " + baseDir);
-            }
+        if (!baseDir.exists() && !baseDir.mkdirs()) {
+            throw new IseException(
+                "Unable to create base dir for sync: " + baseDir);
         }
     }
 

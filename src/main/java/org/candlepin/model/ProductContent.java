@@ -66,7 +66,6 @@ public class ProductContent extends AbstractHibernateObject {
 
     public void setId(String s) {
         // TODO: just here to appease jackson
-        return;
     }
 
     /**
