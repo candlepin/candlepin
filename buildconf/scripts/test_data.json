@@ -668,7 +668,8 @@
                 "support_level" : "None",
                 "support_type" : "Self-Support",
                 "multi-entitlement" : "no",
-                "virt_limit" : "unlimited"
+                "virt_limit" : "unlimited",
+                "host_limited": "true"
             },
             "derived_product_id" : "awesomeos-server-basic-vdc",
             "derived_provided_products" : [
