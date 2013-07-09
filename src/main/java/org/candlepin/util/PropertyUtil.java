@@ -41,10 +41,8 @@ public class PropertyUtil {
         String value = null;
         try {
             Field f = clazz.getDeclaredField(field);
-            if (Modifier.isStatic(f.getModifiers())) {
-                if (f.get(clazz) != null) {
-                    value = f.get(clazz).toString();
-                }
+            if (Modifier.isStatic(f.getModifiers()) && f.get(clazz) != null) {
+                value = f.get(clazz).toString();
             }
         }
         catch (SecurityException se) {

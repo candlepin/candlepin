@@ -366,11 +366,11 @@ public class ConsumerResource {
             verifyPersonConsumer(consumer, type, owner, userName);
         }
 
-        if (type.isType(ConsumerTypeEnum.SYSTEM)) {
-            if (!isConsumerSystemNameValid(consumer.getName())) {
-                throw new BadRequestException(
-                    i18n.tr("System name cannot contain most special characters."));
-            }
+        if (type.isType(ConsumerTypeEnum.SYSTEM) &&
+            !isConsumerSystemNameValid(consumer.getName())) {
+
+            throw new BadRequestException(
+                i18n.tr("System name cannot contain most special characters."));
         }
         consumer.setOwner(owner);
         consumer.setType(type);
@@ -642,12 +642,12 @@ public class ConsumerResource {
         }
 
         // Check permissions for current principal on the owner:
-        if ((principal instanceof UserPrincipal)) {
-            if (!principal.canAccess(owner, Access.ALL)) {
-                throw new ForbiddenException(i18n.tr(
-                    "User {0} cannot access organization {1}",
-                    principal.getPrincipalName(), owner.getKey()));
-            }
+        if ((principal instanceof UserPrincipal) &&
+            !principal.canAccess(owner, Access.ALL)) {
+
+            throw new ForbiddenException(i18n.tr(
+                "User {0} cannot access organization {1}",
+                principal.getPrincipalName(), owner.getKey()));
         }
 
         return owner;

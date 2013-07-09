@@ -171,10 +171,8 @@ public class ConsumerInstalledProductEnricher {
 
             // adjust the end date only if the new end date is AFTER the
             // previous entitlement's end date, otherwise leave it alone.
-            if (entValidOnEnd) {
-                if (endDate == null || endDate.before(entEnd)) {
-                    endDate = entEnd;
-                }
+            if (entValidOnEnd && (endDate == null || endDate.before(entEnd))) {
+                endDate = entEnd;
             }
 
             lastProcessed = next;
