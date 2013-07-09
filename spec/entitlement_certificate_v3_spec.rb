@@ -212,4 +212,18 @@ describe 'Entitlement Certificate V3' do
     are_content_urls_present(value, urls).should == true
     @system.unbind_entitlement entitlement.id
   end
+
+  it 'generates a version 3.2 certificate on distributors with a cert_v3 capability' do
+    dist_version = create_distributor_version("SAMvBillion",
+      "Subscription Asset Manager Billion",
+      ["cert_v3"])
+    facts = { 'distributor_version' => 'SAMvBillion'}
+
+    consumer = @user.register(random_string('v3_system'), :candlepin, nil, facts, nil, nil)
+    v3_system = Candlepin.new(nil, nil, consumer.idCert.cert, consumer.idCert['key'])
+    v3_system.consume_product(@product_30.id)
+
+    value = extension_from_cert(v3_system.list_certificates[0]['cert'], "1.3.6.1.4.1.2312.9.6")
+    value.should == "3.2"
+   end
 end
