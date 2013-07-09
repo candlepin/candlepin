@@ -186,59 +186,40 @@ public class ProductResource {
 
         if (incoming.getName() != null && !existing.getName().equals(incoming.getName()) &&
             !incoming.getName().isEmpty()) {
-            if (log.isDebugEnabled()) {
-                log.debug("   Updating product name from");
-            }
+
+            log.debug("Updating product name");
             changesMade = true;
             existing.setName(incoming.getName());
         }
 
-        if (incoming.getAttributes() == null) {
-            if (log.isDebugEnabled()) {
-                log.debug("Attributes not included in this product update, " +
-                    "skipping update.");
-            }
-            return false;
+        if (incoming.getAttributes() != null &&
+            !existing.getAttributes().equals(incoming.getAttributes())) {
+
+            log.debug("Updating product attributes");
+
+            // clear and addall here instead of replacing instance so there are no
+            // dangling memory references
+            existing.getAttributes().clear();
+            existing.getAttributes().addAll(incoming.getAttributes());
+            changesMade = true;
         }
-        else
-            if (!existing.getAttributes().equals(incoming.getAttributes())) {
-                if (log.isDebugEnabled()) {
-                    log.debug("Updating product attributes");
-                }
 
-                // clear and addall here instead of replacing instance so there are no
-                // dangling memory references
-                existing.getAttributes().clear();
-                existing.getAttributes().addAll(incoming.getAttributes());
-                changesMade = true;
-            }
+        if (incoming.getDependentProductIds() != null &&
+            !existing.getDependentProductIds().equals(incoming.getDependentProductIds())) {
 
-        if (incoming.getDependentProductIds() == null) {
-            if (log.isDebugEnabled()) {
-                log.debug("Dependent Product Ids not included in this product update, " +
-                    "skipping update.");
-            }
-            return false;
+            log.debug("Updating dependent product ids");
+
+            // clear and addall here instead of replacing instance so there are no
+            // dangling memory references
+            existing.getDependentProductIds().clear();
+            existing.getDependentProductIds().addAll(incoming.getDependentProductIds());
+            changesMade = true;
         }
-        else
-            if (!existing.getDependentProductIds().equals(
-                    incoming.getDependentProductIds())) {
-                if (log.isDebugEnabled()) {
-                    log.debug("Updating dependent product ids");
-                }
-
-                // clear and addall here instead of replacing instance so there are no
-                // dangling memory references
-                existing.getDependentProductIds().clear();
-                existing.getDependentProductIds().addAll(incoming.getDependentProductIds());
-                changesMade = true;
-            }
 
         if (incoming.getMultiplier() != null &&
             existing.getMultiplier().longValue() != incoming.getMultiplier().longValue()) {
-            if (log.isDebugEnabled()) {
-                log.debug("   Updating product multiplier");
-            }
+
+            log.debug("Updating product multiplier");
             changesMade = true;
             existing.setMultiplier(incoming.getMultiplier());
         }
