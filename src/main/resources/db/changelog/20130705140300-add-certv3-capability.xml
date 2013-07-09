@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-2.0.xsd">
+
+    <changeSet id="20130705140300" author="awood">
+        <comment>Add the cert_v3 capability to SAM 1.3 and Satellite 6.0</comment>
+        <insert tableName="cp_dist_version_capability">
+            <column name="id" value="1010"/>
+            <column name="dist_version_id" value="1001"/>
+            <column name="name" value="cert_v3"/>
+        </insert>
+        <insert tableName="cp_dist_version_capability">
+            <column name="id" value="1011"/>
+            <column name="dist_version_id" value="1003"/>
+            <column name="name" value="cert_v3"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>

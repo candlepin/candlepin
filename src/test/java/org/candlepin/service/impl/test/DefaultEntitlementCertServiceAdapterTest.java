@@ -55,6 +55,8 @@ import org.candlepin.config.Config;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCapability;
+import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
@@ -208,6 +210,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         largeContentPool.setProductId(largeContentProduct.getId());
         largeContentPool.setProductName(largeContentProduct.getName());
 
+        when(consumer.getType()).thenReturn(
+            new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM));
         entitlement = new Entitlement();
         entitlement.setQuantity(new Integer(ENTITLEMENT_QUANTITY));
         entitlement.setConsumer(consumer);
@@ -699,6 +703,38 @@ public class DefaultEntitlementCertServiceAdapterTest {
             eq(entitlement), any(String.class), any(Map.class), eq(subscription));
         verifyZeroInteractions(mockExtensionUtil);
     }
+
+    @Test
+    public void ensureV3CertIsCreatedWhenV3CapabilityPresent() throws Exception {
+        Config mockConfig = mock(Config.class);
+
+        when(consumer.getType()).thenReturn(
+            new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN));
+
+        Set<ConsumerCapability> set = new HashSet<ConsumerCapability>();
+        set.add(new ConsumerCapability(consumer, "cert_v3"));
+        when(consumer.getCapabilities()).thenReturn(set);
+
+        X509V3ExtensionUtil mockV3extensionUtil = mock(X509V3ExtensionUtil.class);
+        X509ExtensionUtil mockExtensionUtil = mock(X509ExtensionUtil.class);
+
+        DefaultEntitlementCertServiceAdapter entAdapter =
+            new DefaultEntitlementCertServiceAdapter(
+                mockedPKI, mockExtensionUtil, mockV3extensionUtil,
+                mock(EntitlementCertificateCurator.class), keyPairCurator,
+                serialCurator, productAdapter, entCurator,
+                I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK),
+                mockConfig);
+
+        entAdapter.createX509Certificate(entitlement, subscription,
+            product, new BigInteger("1234"), keyPair(), true);
+        verify(mockV3extensionUtil).getExtensions(any(Set.class), eq(entitlement),
+            any(String.class), any(Map.class), eq(subscription));
+        verify(mockV3extensionUtil).getByteExtensions(any(Set.class),
+            eq(entitlement), any(String.class), any(Map.class), eq(subscription));
+        verifyZeroInteractions(mockExtensionUtil);
+    }
+
 
     @Test
     public void testCleanUpPrefixNoChange() throws Exception {
