@@ -19,7 +19,11 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerInstalledProduct;
@@ -331,13 +335,36 @@ public class ConsumerInstalledProductEnricher {
      * @return all entitlements from the consumer covering the specified product.
      */
     private List<Entitlement> getEntitlementsForProduct(Product product) {
-        List<Entitlement> productEnts = new ArrayList<Entitlement>();
+        Set<Entitlement> productEnts = new HashSet<Entitlement>();
+        Set<String> stackIds = new HashSet<String>();
+        Map<String, Set<Entitlement>> stackIdMap = new HashMap<String, Set<Entitlement>>();
         for (Entitlement ent : this.consumer.getEntitlements()) {
             if (ent.getPool().provides(product.getId())) {
                 productEnts.add(ent);
+                //If this entitlement is stackable,
+                //the whole stack may be required, even if
+                //this is the only ent that provides the product
+                if (ent.getPool().hasProductAttribute("stacking_id")) {
+                    stackIds.add(ent.getPool()
+                        .getProductAttribute("stacking_id").getValue());
+                }
+            }
+            //Save the stacking id so we don't have to loop over everything again
+            if (ent.getPool().hasProductAttribute("stacking_id")) {
+                String key = ent.getPool().getProductAttribute("stacking_id").getValue();
+                if (!stackIdMap.containsKey(key)) {
+                    stackIdMap.put(key, new HashSet<Entitlement>());
+                }
+                stackIdMap.get(key).add(ent);
             }
         }
-        return productEnts;
+        //Add entitlements that provide via a stack,
+        //however may not physically provide the product
+        for (String stackId : stackIds) {
+            productEnts.addAll(stackIdMap.get(stackId));
+        }
+        //Cast the set back to a List
+        return new ArrayList<Entitlement>(productEnts);
     }
 
     /**
