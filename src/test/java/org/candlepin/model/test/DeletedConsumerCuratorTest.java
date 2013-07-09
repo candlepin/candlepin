@@ -67,6 +67,7 @@ public class DeletedConsumerCuratorTest extends DatabaseTestFixture {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+
         oneResultDate = new Date();
         dc = new DeletedConsumer("klmno", "20");
         dcc.create(dc);
@@ -123,5 +124,17 @@ public class DeletedConsumerCuratorTest extends DatabaseTestFixture {
         assertEquals(2, dcc.findByDate(twoResultsDate).size());
         assertEquals(1, dcc.findByDate(oneResultDate).size());
         assertEquals(0, dcc.findByDate(new Date()).size());
+    }
+
+    @Test
+    public void descOrderByDate() {
+        DeletedConsumer newest = dcc.findByDate(twoResultsDate).get(0);
+        assertEquals("klmno", newest.getConsumerUuid());
+    }
+
+    @Test
+    public void descOrderByOwnerId() {
+        DeletedConsumer newest = dcc.findByOwnerId("10").get(0);
+        assertEquals("fghij", newest.getConsumerUuid());
     }
 }

@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 
@@ -48,6 +49,7 @@ public class DeletedConsumerCurator extends
     public List<DeletedConsumer> findByOwnerId(String oid) {
         return currentSession().createCriteria(DeletedConsumer.class)
             .add(Restrictions.eq("ownerId", oid))
+            .addOrder(Order.desc("created"))
             .list();
     }
 
@@ -65,6 +67,8 @@ public class DeletedConsumerCurator extends
     @SuppressWarnings("unchecked")
     public List<DeletedConsumer> findByDate(Date date) {
         return currentSession().createCriteria(DeletedConsumer.class)
-            .add(Restrictions.ge("created", date)).list();
+            .add(Restrictions.ge("created", date))
+            .addOrder(Order.desc("created"))
+            .list();
     }
 }
