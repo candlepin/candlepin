@@ -30,6 +30,8 @@ import java.util.Set;
 import org.candlepin.config.Config;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
+import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCapability;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
@@ -186,9 +188,20 @@ public class DefaultEntitlementCertServiceAdapter extends
     }
 
     private boolean shouldGenerateV3(Entitlement entitlement) {
-        String entitlementVersion = entitlement.getConsumer()
-            .getFact("system.certificate_version");
-        return entitlementVersion != null && entitlementVersion.startsWith("3.");
+        Consumer consumer = entitlement.getConsumer();
+
+        if (consumer.getType().isManifest()) {
+            for (ConsumerCapability capability : consumer.getCapabilities()) {
+                if ("cert_v3".equals(capability.getName())) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        else {
+            String entitlementVersion = consumer.getFact("system.certificate_version");
+            return entitlementVersion != null && entitlementVersion.startsWith("3.");
+        }
     }
 
     /**
