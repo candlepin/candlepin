@@ -6,15 +6,15 @@ describe 'Product Resource' do
   include CandlepinScenarios
 
   it 'updates individual product fields' do
-    prod = create_product(id=nil, name='tacos', :multiplier => 2, :dependentProductIds => [2, 4])
-    prod2 = create_product(id=nil, name='enchiladas', :multiplier => 4)
+    prod = create_product(id=nil, name='tacos', {:multiplier => 2, :dependentProductIds => [2, 4]})
+    prod2 = create_product(id=nil, name='enchiladas', {:multiplier => 4})
 
     prod.name.should_not == prod2.name
     prod.multiplier.should_not == prod2.multiplier
     prod.attributes.should_not == prod2.attributes
     prod.dependentProductIds.should_not == prod2.dependentProductIds
 
-    prod = @cp.update_product(prod.id, :name => 'enchiladas')
+    prod = @cp.update_product(prod.id, {:name => 'enchiladas'})
 
     prod.name.should == prod2.name
     prod.multiplier.should_not == prod2.multiplier
@@ -26,12 +26,12 @@ describe 'Product Resource' do
     #update_product is called.
     temp_attributes = prod.attributes
 
-    prod = @cp.update_product(prod.id, :multiplier => prod2.multiplier, :attributes => nil)
+    prod = @cp.update_product(prod.id, {:multiplier => prod2.multiplier, :attributes => nil})
 
     prod.multiplier.should == prod2.multiplier
     prod.attributes.should == temp_attributes
 
-    prod = @cp.update_product(prod.id, :dependentProductIds => prod2.dependentProductIds)
+    prod = @cp.update_product(prod.id, {:dependentProductIds => prod2.dependentProductIds})
 
     prod.dependentProductIds.should == prod2.dependentProductIds
   end
