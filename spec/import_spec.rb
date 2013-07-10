@@ -79,7 +79,8 @@ describe 'Candlepin Import' do
 
     # Delete again and make sure another owner is clear to import the
     # same manifest:
-    @import_owner_client.undo_import(@import_owner['key'])
+    job = @import_owner_client.undo_import(@import_owner['key'])
+    wait_for_job(job['id'], 30)
     another_owner = @cp.create_owner(random_string('testowner'))
     @cp.import(another_owner['key'], @export_filename)
     @cp.delete_owner(another_owner['key'])
@@ -97,7 +98,8 @@ describe 'Candlepin Import' do
   end
 
   it 'should create a DELETE record on a deleted import' do
-    @import_owner_client.undo_import(@import_owner['key'])
+    job = @import_owner_client.undo_import(@import_owner['key'])
+    wait_for_job(job['id'], 30)
     @import_owner_client.list_imports(@import_owner['key']).find_all do |import|
       import.status == 'DELETE'
     end.should_not be_empty
@@ -209,16 +211,9 @@ describe 'Candlepin Import' do
     # re-import the original.
     # Also added the confirmation that the exception occurs when importing to
     # another owner.
-    status = @import_owner_client.undo_import(@import_owner['key'])
-    # make sure the undo job is complete first
-    done = false
-    while not done do
-      sleep(1)
-      job = @cp.get_job(status.id)
-      if job.state == "FINISHED"
-        done = true
-      end
-    end
+    job = @import_owner_client.undo_import(@import_owner['key'])
+    wait_for_job(job['id'], 30)
+
     @cp.import(@import_owner['key'], @export_filename)
     owner2 = @cp.create_owner(random_string("owner2"))
     exception = false
