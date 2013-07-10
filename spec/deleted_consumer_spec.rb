@@ -22,10 +22,9 @@ describe 'Deleted Consumer Resource' do
     uuid = consumer1.uuid
     @cp.unregister(consumer1.uuid)
 
-    @cp.get_deleted_consumers().length.should_not == 0
     deleted_consumers = @cp.get_deleted_consumers(date=date)
+    deleted_consumers.length.should_not == 0
     deleted_consumers.first.consumerUuid.should == uuid
-    deleted_consumers.length.should == 1
   end
 
 end
