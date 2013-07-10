@@ -25,7 +25,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.8.16
+Version: 0.8.17
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -345,6 +345,14 @@ fi
 
 
 %changelog
+* Wed Jul 10 2013 Devan Goodwin <dgoodwin@rm-rf.ca> 0.8.17-1
+- Strings update. (dgoodwin@redhat.com)
+- make deleted consumers call more predictable (jesusr@redhat.com)
+- Add cert v3 capability. (awood@redhat.com)
+- 980640: fix stacked ent providing logic (ckozak@redhat.com)
+- update_product single attribute update support (cschevia@redhat.com)
+- 971174: Support for updating products (cschevia@redhat.com)
+
 * Tue Jul 02 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.16-1
 - 837151: Fix activation key including virtual type subscriptions (wpoteat@redhat.com)
 - 888866: Old sm can use subs with new attributes (ckozak@redhat.com)
