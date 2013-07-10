@@ -72,25 +72,25 @@ public class Product extends AbstractHibernateObject implements Linkable {
     @Cascade({ org.hibernate.annotations.CascadeType.ALL,
         org.hibernate.annotations.CascadeType.MERGE,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN })
-    private Set<ProductAttribute> attributes = new HashSet<ProductAttribute>();
+    private Set<ProductAttribute> attributes;
 
     @CollectionOfElements
     @JoinTable(name = "cp_product_content", joinColumns = @JoinColumn(name = "product_id"))
     @LazyCollection(LazyCollectionOption.EXTRA) // allows .size() without loading all data
-    private Set<ProductContent> productContent = new HashSet<ProductContent>();
+    private Set<ProductContent> productContent;
 
     @ManyToMany(mappedBy = "providedProducts")
-    private Set<Subscription> subscriptions = new HashSet<Subscription>();
+    private Set<Subscription> subscriptions;
 
     @CollectionOfElements(targetElement = String.class)
     @JoinTable(name = "cp_product_dependent_products")
-    private Set<String> dependentProductIds = new HashSet<String>();
+    private Set<String> dependentProductIds;
 
     @CollectionOfElements(targetElement = String.class)
     @JoinTable(name = "cp_product_reliance",
     joinColumns = @JoinColumn(name = "parent_product_id"))
     @Column(name = "child_product_id")
-    private Set<String> reliantProductIds = new HashSet<String>();
+    private Set<String> reliantProductIds;
 
     /**
      * Constructor Use this variant when creating a new object to persist.
@@ -106,6 +106,11 @@ public class Product extends AbstractHibernateObject implements Linkable {
         setId(id);
         setName(name);
         setMultiplier(multiplier);
+        setAttributes(new HashSet<ProductAttribute>());
+        setProductContent(new HashSet<ProductContent>());
+        setSubscriptions(new HashSet<Subscription>());
+        setDependentProductIds(new HashSet<String>());
+        setReliesOn(new HashSet<String>());
     }
 
     public Product(String id, String name, String variant, String version,
@@ -113,6 +118,11 @@ public class Product extends AbstractHibernateObject implements Linkable {
         setId(id);
         setName(name);
         setMultiplier(1L);
+        setAttributes(new HashSet<ProductAttribute>());
+        setProductContent(new HashSet<ProductContent>());
+        setSubscriptions(new HashSet<Subscription>());
+        setDependentProductIds(new HashSet<String>());
+        setReliesOn(new HashSet<String>());
         setAttribute("version", version);
         setAttribute("variant", variant);
         setAttribute("type", type);
@@ -196,6 +206,9 @@ public class Product extends AbstractHibernateObject implements Linkable {
     }
 
     public void addAttribute(ProductAttribute attrib) {
+        if (this.attributes == null) {
+            this.attributes = new HashSet<ProductAttribute>();
+        }
         attrib.setProduct(this);
         this.attributes.add(attrib);
     }
@@ -205,18 +218,22 @@ public class Product extends AbstractHibernateObject implements Linkable {
     }
 
     public ProductAttribute getAttribute(String key) {
-        for (ProductAttribute a : attributes) {
-            if (a.getName().equals(key)) {
-                return a;
+        if (attributes != null) {
+            for (ProductAttribute a : attributes) {
+                if (a.getName().equals(key)) {
+                    return a;
+                }
             }
         }
         return null;
     }
 
     public String getAttributeValue(String key) {
-        for (ProductAttribute a : attributes) {
-            if (a.getName().equals(key)) {
-                return a.getValue();
+        if (attributes != null) {
+            for (ProductAttribute a : attributes) {
+                if (a.getName().equals(key)) {
+                    return a.getValue();
+                }
             }
         }
         return null;
@@ -226,25 +243,31 @@ public class Product extends AbstractHibernateObject implements Linkable {
     public Set<String> getAttributeNames() {
         Set<String> toReturn = new HashSet<String>();
 
-        for (ProductAttribute attribute : attributes) {
-            toReturn.add(attribute.getName());
+        if (attributes != null) {
+            for (ProductAttribute attribute : attributes) {
+                toReturn.add(attribute.getName());
+            }
         }
         return toReturn;
     }
 
     public boolean hasAttribute(String key) {
-        for (ProductAttribute attribute : attributes) {
-            if (attribute.getName().equals(key)) {
-                return true;
+        if (attributes != null) {
+            for (ProductAttribute attribute : attributes) {
+                if (attribute.getName().equals(key)) {
+                    return true;
+                }
             }
         }
         return false;
     }
 
     public boolean hasContent(String contentId) {
-        for (ProductContent pc : getProductContent()) {
-            if (pc.getContent().getId().equals(contentId)) {
-                return true;
+        if (this.getProductContent() != null) {
+            for (ProductContent pc : getProductContent()) {
+                if (pc.getContent().getId().equals(contentId)) {
+                    return true;
+                }
             }
         }
         return false;
@@ -273,6 +296,9 @@ public class Product extends AbstractHibernateObject implements Linkable {
      * @param content
      */
     public void addContent(Content content) {
+        if (productContent == null) {
+            productContent = new HashSet<ProductContent>();
+        }
         productContent.add(new ProductContent(this, content, false));
     }
 
@@ -280,6 +306,9 @@ public class Product extends AbstractHibernateObject implements Linkable {
      * @param content
      */
     public void addEnabledContent(Content content) {
+        if (productContent == null) {
+            productContent = new HashSet<ProductContent>();
+        }
         productContent.add(new ProductContent(this, content, true));
     }
 
@@ -304,6 +333,9 @@ public class Product extends AbstractHibernateObject implements Linkable {
         if (content == null) {
             return;
         }
+        if (productContent == null) {
+            productContent = new HashSet<ProductContent>();
+        }
         for (Content newContent : content) {
             productContent.add(new ProductContent(this, newContent, false));
         }
@@ -312,6 +344,9 @@ public class Product extends AbstractHibernateObject implements Linkable {
     public void setEnabledContent(Set<Content> content) {
         if (content == null) {
             return;
+        }
+        if (productContent == null) {
+            productContent = new HashSet<ProductContent>();
         }
         for (Content newContent : content) {
             productContent.add(new ProductContent(this, newContent, true));
@@ -356,11 +391,16 @@ public class Product extends AbstractHibernateObject implements Linkable {
     }
 
     public void addRely(String relyId) {
+        if (getReliesOn() == null) {
+            this.reliantProductIds = new HashSet<String>();
+        }
         this.reliantProductIds.add(relyId);
     }
 
     public void removeRely(String relyId) {
-        this.reliantProductIds.remove(relyId);
+        if (getReliesOn() != null) {
+            this.reliantProductIds.remove(relyId);
+        }
     }
 
     @Override
@@ -384,9 +424,11 @@ public class Product extends AbstractHibernateObject implements Linkable {
      * @return true if this product modifies the given product ID
      */
     public boolean modifies(String productId) {
-        for (ProductContent pc : getProductContent()) {
-            if (pc.getContent().getModifiedProductIds().contains(productId)) {
-                return true;
+        if (getProductContent() != null) {
+            for (ProductContent pc : getProductContent()) {
+                if (pc.getContent().getModifiedProductIds().contains(productId)) {
+                    return true;
+                }
             }
         }
         return false;
