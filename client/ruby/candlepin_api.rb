@@ -515,7 +515,10 @@ class Candlepin
 
   def update_product(product_id, params={})
 
-    product = get_product(product_id)
+    product = {
+      :id => product_id
+    }
+
     product[:name] = params[:name] if params[:name]
     product[:multiplier] = params[:multiplier] if params[:multiplier]
     product[:attributes] = params[:attributes] if params[:attributes]
