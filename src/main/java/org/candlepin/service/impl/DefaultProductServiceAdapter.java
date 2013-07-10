@@ -38,7 +38,6 @@ import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -109,21 +108,6 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
             prodCertCurator.delete(cert);
         }
         prodCurator.delete(product);
-    }
-
-    @Override
-    public HashMap<String, String> getProductNamesByProductId(String[] ids) {
-        HashMap<String, String> names = new HashMap<String, String>();
-        for (String id : ids) {
-            Product p = getProductById(id);
-            if (p != null) {
-                names.put(id, p.getName());
-            }
-            else {
-                names.put(id, null);
-            }
-        }
-        return names;
     }
 
     @Override

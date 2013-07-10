@@ -17,7 +17,6 @@ package org.candlepin.service;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
@@ -57,13 +56,6 @@ public interface ProductServiceAdapter {
      * @param product
      */
     void deleteProduct(Product product);
-
-    /**
-     * given a list of skus, return a set of sku, name pairs
-     * @param skus skus
-     * @return hashmap of sku, name pairs
-     */
-    HashMap<String, String> getProductNamesByProductId(String[] skus);
 
     /**
      * Gets the certificate that defines the given product, creating one

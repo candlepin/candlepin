@@ -45,7 +45,6 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * DefaultProductServiceAdapterTest
@@ -128,19 +127,6 @@ public class DefaultProductServiceAdapterTest {
         dpsa.deleteProduct(p);
         verify(pcc, never()).delete(any(ProductCertificate.class));
         verify(pc).delete(eq(p));
-    }
-
-    @Test
-    public void productNamesByProductId() {
-        String[] ids = {"deadbeef", "beefdead"};
-        Product p = mock(Product.class);
-        when(p.getName()).thenReturn("fake name");
-        when(pc.lookupById(eq("deadbeef"))).thenReturn(p);
-        when(pc.lookupById(eq("beefdead"))).thenReturn(null);
-        Map<String, String> names = dpsa.getProductNamesByProductId(ids);
-        assertEquals(2, names.size());
-        assertEquals(null, names.get("beefdead"));
-        assertEquals("fake name", names.get("deadbeef"));
     }
 
     @Test
