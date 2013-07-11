@@ -11,16 +11,6 @@
             "metadata_expire": 600
         },
         {
-            "name": "always-enabled-content",
-            "id": 1,
-            "label": "always-enabled-content",
-            "type": "yum",
-            "vendor": "test-vendor",
-            "content_url": "/foo/path/always/$releasever",
-            "gpg_url": "/foo/path/always/gpg",
-            "metadata_expire": 200
-        },
-        {
             "name": "tagged-content",
             "id": 2,
             "label": "tagged-content",
@@ -551,12 +541,11 @@
                 "warning_period": 30
             },
             "content": [
-                [1111, true],
+                [1111, false],
                 [0, false],
-                [1, true],
-                [2, true],
-                [234, true],
-                [235, true]
+                [2, false],
+                [234, false],
+                [235, false]
             ]
         },
         {
@@ -568,12 +557,11 @@
                 "warning_period": 30
             },
             "content": [
-                [1111, true],
+                [1111, false],
                 [0, false],
-                [1, true],
-                [2, true],
-                [234, true],
-                [235, true]
+                [2, false],
+                [234, false],
+                [235, false]
             ]
         },
         {
@@ -586,9 +574,8 @@
 
             },
             "content": [
-                [1111, true],
-                [0, false],
-                [1, true]
+                [1111, false],
+                [0, false]
             ]
         },
         {
@@ -596,7 +583,7 @@
             "id": "37080",
             "version": "6.1",
             "content": [
-                [1112, true]
+                [1112, false]
             ]
         },
         {
@@ -718,8 +705,7 @@
             "name": "Awesome OS Developer Bits",
             "id": "1",
             "content": [
-                [0, false],
-                [1, true]
+                [0, false]
             ]
         },
         {
@@ -775,8 +761,7 @@
                 "warning_period": 30
             },
             "content": [
-                [0, false],
-                [1, true]
+                [0, false]
             ]
         },
         {
@@ -789,9 +774,8 @@
                 "warning_period": 30
             },
             "content": [
-                [11113, true],
+                [11113, false],
                 [0, false],
-                [1, true],
                 [11121, false]
             ]
         },
@@ -819,9 +803,8 @@
                 "warning_period": 30
             },
             "content": [
-                [11113, true],
+                [11113, false],
                 [0, false],
-                [1, true],
                 [11121, false]
             ]
         },
@@ -849,9 +832,8 @@
                 "warning_period": 30
             },
             "content": [
-                [11113, true],
+                [11113, false],
                 [0, false],
-                [1, true],
                 [11122, false]
             ]
         },
@@ -880,9 +862,8 @@
                 "virt_only": "true"
             },
             "content": [
-                [11113, true],
+                [11113, false],
                 [0, false],
-                [1, true],
                 [11122, false]
             ]
         },
@@ -911,9 +892,8 @@
                 "warning_period": 30
             },
             "content": [
-                [11113, true],
+                [11113, false],
                 [0, false],
-                [1, true],
                 [11123, false]
             ]
         },
@@ -943,9 +923,8 @@
                 "multi-entitlement": "yes"
             },
             "content": [
-                [11113, true],
+                [11113, false],
                 [0, false],
-                [1, true],
                 [11124, false]
             ]
         },
@@ -977,12 +956,11 @@
                 "multi-entitlement": "yes"
             },
             "content": [
-                [68064, true],
-                [68000, true],
-                [64000, true],
-                [39001, true],
-                [0, false],
-                [1, true]
+                [68064, false],
+                [68000, false],
+                [64000, false],
+                [39001, false],
+                [0, false]
             ]
         },
         {
@@ -1013,13 +991,12 @@
                 "multi-entitlement": "yes"
             },
             "content": [
-                [6401, true],
-                [68064, true],
-                [68000, true],
-                [64000, true],
-                [39001, true],
-                [0, false],
-                [1, true]
+                [6401, false],
+                [68064, false],
+                [68000, false],
+                [64000, false],
+                [39001, false],
+                [0, false]
             ]
         },
         {
@@ -1051,9 +1028,8 @@
                 "multi-entitlement": "yes"
             },
             "content": [
-                [38664, true],
-                [0, false],
-                [1, true]
+                [38664, false],
+                [0, false]
             ]
         },
         {
@@ -1084,9 +1060,8 @@
                 "multi-entitlement": "yes"
             },
             "content": [
-                [6401, true],
-                [0, false],
-                [1, true]
+                [6401, false],
+                [0, false]
             ]
         },
         {
@@ -1116,9 +1091,8 @@
                 "stacking_id": 1
             },
             "content": [
-                [11113, true],
+                [11113, false],
                 [0, false],
-                [1, true],
                 [11124, false]
             ]
         },
@@ -1149,9 +1123,8 @@
                 "multi-entitlement": "yes"
             },
             "content": [
-                [11113, true],
+                [11113, false],
                 [0, false],
-                [1, true],
                 [11125, false]
             ]
         },
@@ -1181,9 +1154,8 @@
                 "warning_period": 30
             },
             "content": [
-                [11113, true],
+                [11113, false],
                 [0, false],
-                [1, true],
                 [11126, false]
             ]
         },
@@ -1211,9 +1183,8 @@
                 "warning_period": 30
             },
             "content": [
-                [11113, true],
+                [11113, false],
                 [0, false],
-                [1, true],
                 [11120, false]
             ]
         },
@@ -1241,9 +1212,8 @@
                 "warning_period": 30
             },
             "content": [
-                [11113, true],
+                [11113, false],
                 [0, false],
-                [1, true],
                 [11124, false],
                 [11123, false],
                 [11125, false],
@@ -1296,8 +1266,7 @@
             "name": "Multiplier Product Bits",
             "id": "917571",
             "content": [
-                [0, false],
-                [1, true]
+                [0, false]
             ]
         },
         {
@@ -1346,9 +1315,8 @@
             "attributes": {
             },
             "content": [
-                [11113, true],
+                [11113, false],
                 [0, false],
-                [1, true],
                 [11124, false],
                 [11123, false],
                 [11125, false],
@@ -1418,7 +1386,6 @@
             "attributes": {
             },
             "content": [
-                [1, true],
                 [11124, false]
             ]
         },
@@ -1454,7 +1421,6 @@
             "attributes": {
             },
             "content": [
-                [1, true]
             ]
         },
         {
