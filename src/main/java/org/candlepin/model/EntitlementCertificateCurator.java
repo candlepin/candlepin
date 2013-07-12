@@ -16,7 +16,6 @@ package org.candlepin.model;
 
 import java.util.List;
 
-import org.candlepin.auth.interceptor.EnforceAccessControl;
 import org.hibernate.criterion.Restrictions;
 
 import com.google.inject.Inject;
@@ -35,7 +34,6 @@ public class EntitlementCertificateCurator extends
 
     @SuppressWarnings("unchecked")
     @Transactional
-    @EnforceAccessControl
     public List<EntitlementCertificate> listForEntitlement(Entitlement e) {
         return currentSession().createCriteria(
             EntitlementCertificate.class).add(
@@ -45,7 +43,6 @@ public class EntitlementCertificateCurator extends
 
     @SuppressWarnings("unchecked")
     @Transactional
-    @EnforceAccessControl
     public List<EntitlementCertificate> listForConsumer(Consumer c) {
         return currentSession().createCriteria(EntitlementCertificate.class)
             .createAlias("entitlement", "ent")

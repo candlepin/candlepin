@@ -14,7 +14,6 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.auth.interceptor.EnforceAccessControl;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.exceptions.BadRequestException;
@@ -58,7 +57,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     @Transactional
-    @EnforceAccessControl
     @Override
     public Consumer create(Consumer entity) {
         entity.ensureUUID();
@@ -70,7 +68,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     @Transactional
-    @EnforceAccessControl
     public void delete(Consumer entity) {
         // save off the ids before we delete
         DeletedConsumer dc = new DeletedConsumer(entity.getUuid(),
@@ -131,7 +128,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * @return Consumer whose name matches the given name, null otherwise.
      */
     @Transactional
-    @EnforceAccessControl
     public Consumer findByName(Owner o, String name) {
         return (Consumer) currentSession().createCriteria(Consumer.class)
             .add(Restrictions.eq("name", name))
@@ -149,7 +145,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * @return Consumer whose name matches the given virt.uuid, null otherwise.
      */
     @Transactional
-    @EnforceAccessControl
     public Consumer findByVirtUuid(String uuid, String ownerId) {
         Consumer result = null;
 
@@ -181,7 +176,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * @return Consumer for this user if one exists, null otherwise.
      */
     @Transactional
-    @EnforceAccessControl
     public Consumer findByUser(User user) {
         ConsumerType person = consumerTypeCurator
             .lookupByLabel(ConsumerType.ConsumerTypeEnum.PERSON.getLabel());
@@ -197,7 +191,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * @return Consumer whose uuid matches the given value, or null otherwise.
      */
     @Transactional
-    @EnforceAccessControl
     public Consumer findByUuid(String uuid) {
         return getConsumer(uuid);
     }
@@ -212,7 +205,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
     @SuppressWarnings("unchecked")
     @Transactional
-    @EnforceAccessControl
     public List<Consumer> listByOwner(Owner owner) {
         return currentSession().createCriteria(Consumer.class)
             .add(Restrictions.eq("owner", owner)).list();
@@ -228,7 +220,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      */
     @SuppressWarnings("unchecked")
     @Transactional
-    @EnforceAccessControl
     public Page<List<Consumer>> listByUsernameAndType(String userName,
         ConsumerType type, Owner owner, PageRequest pageRequest) {
 
@@ -252,7 +243,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * @return Updated consumers
      */
     @Transactional
-    @EnforceAccessControl
     public Consumer update(Consumer updatedConsumer) {
         Consumer existingConsumer = find(updatedConsumer.getId());
         if (existingConsumer == null) {
@@ -371,7 +361,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * @return host consumer who most recently reported the given guestId (if any)
      */
     @Transactional
-    @EnforceAccessControl
     public Consumer getHost(String guestId) {
 
         // TODO: could the query do the work for us here? sort on updated time, limit to 1.
@@ -400,7 +389,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * @return list of registered guest consumers for this host
      */
     @Transactional
-    @EnforceAccessControl
     public List<Consumer> getGuests(Consumer consumer) {
         if (consumer.getFact("virt.uuid") != null &&
             !consumer.getFact("virt.uuid").trim().equals("")) {

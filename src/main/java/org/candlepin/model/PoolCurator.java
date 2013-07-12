@@ -14,7 +14,6 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.auth.interceptor.EnforceAccessControl;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.policy.ValidationResult;
@@ -72,7 +71,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     @Override
     @Transactional
-    @EnforceAccessControl
     public Pool find(Serializable id) {
         Pool pool = super.find(id);
         return pool;
@@ -80,7 +78,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     @Override
     @Transactional
-    @EnforceAccessControl
     public List<Pool> listAll() {
         List<Pool> pools = super.listAll();
         return pools;
@@ -92,7 +89,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @return pools owned by the given Owner.
      */
     @Transactional
-    @EnforceAccessControl
     public List<Pool> listByOwner(Owner o) {
         return listByOwner(o, null);
     }
@@ -104,7 +100,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @return pools owned by the given Owner.
      */
     @Transactional
-    @EnforceAccessControl
     public List<Pool> listByOwner(Owner o, Date activeOn) {
         return listAvailableEntitlementPools(null, o, null, activeOn, true, false);
     }
@@ -132,7 +127,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @return pools available to the consumer.
      */
     @Transactional
-    @EnforceAccessControl
     public List<Pool> listByConsumer(Consumer c) {
         return listAvailableEntitlementPools(c, c.getOwner(), (String) null, null,
             true, false);
@@ -146,7 +140,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @return list of EntitlementPools
      */
     @Transactional
-    @EnforceAccessControl
     public List<Pool> listByOwnerAndProduct(Owner owner,
             String productId) {
         return listAvailableEntitlementPools(null, owner, productId, null, false, false);
@@ -154,7 +147,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     @SuppressWarnings("unchecked")
     @Transactional
-    @EnforceAccessControl
     public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
             String productId, Date activeOn, boolean activeOnly, boolean includeWarnings) {
         return listAvailableEntitlementPools(c, o, productId, activeOn, activeOnly,
@@ -181,7 +173,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      */
     @SuppressWarnings("unchecked")
     @Transactional
-    @EnforceAccessControl
     public Page<List<Pool>> listAvailableEntitlementPools(Consumer c, Owner o,
             String productId, Date activeOn, boolean activeOnly, boolean includeWarnings,
             PageRequest pageRequest) {
@@ -295,7 +286,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     @Transactional
-    @EnforceAccessControl
     public List<Pool> listPoolsRestrictedToUser(String username) {
         return listByCriteria(
             DetachedCriteria.forClass(Pool.class)
@@ -303,7 +293,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     @Transactional
-    @EnforceAccessControl
     public Pool findUeberPool(Owner o) {
         return (Pool) currentSession()
             .createCriteria(Pool.class)
@@ -401,7 +390,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     @Transactional
-    @EnforceAccessControl
     public Pool create(Pool entity) {
 
         /* Ensure all referenced PoolAttributes are correctly pointing to
@@ -555,7 +543,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @param entity pool to be deleted.
      */
     @Transactional
-    @EnforceAccessControl
     public void delete(Pool entity) {
         Pool toDelete = find(entity.getId());
 

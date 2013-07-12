@@ -14,7 +14,6 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.auth.interceptor.EnforceAccessControl;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.paging.Page;
 
@@ -74,7 +73,6 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @return entity matching given id, or null otherwise.
      */
     @Transactional
-    @EnforceAccessControl
     public E find(Serializable id) {
         return id == null ? null : get(entityType, id);
     }
@@ -84,7 +82,6 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @return newly created entity
      */
     @Transactional
-    @EnforceAccessControl
     public E create(E entity) {
         save(entity);
         return entity;
@@ -98,7 +95,6 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     }
     @SuppressWarnings("unchecked")
     @Transactional
-    @EnforceAccessControl
     public Page<List<E>> listAll(PageRequest pageRequest, boolean postFilter) {
         Page<List<E>> resultsPage;
         if (postFilter) {
@@ -125,7 +121,6 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
     @SuppressWarnings("unchecked")
     @Transactional
-    @EnforceAccessControl
     public Page<List<E>> listAll(PageRequest pageRequest) {
         Page<List<E>> page = new Page<List<E>>();
 
@@ -176,14 +171,12 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
     @SuppressWarnings("unchecked")
     @Transactional
-    @EnforceAccessControl
     public List<E> listByCriteria(DetachedCriteria query) {
         return query.getExecutableCriteria(currentSession()).list();
     }
 
     @SuppressWarnings("unchecked")
     @Transactional
-    @EnforceAccessControl
     public Page<List<E>> listByCriteria(DetachedCriteria query,
         PageRequest pageRequest, boolean postFilter) {
         Page<List<E>> resultsPage;
@@ -211,7 +204,6 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
     @SuppressWarnings("unchecked")
     @Transactional
-    @EnforceAccessControl
     public Page<List<E>> listByCriteria(DetachedCriteria query,
         PageRequest pageRequest) {
         Page<List<E>> page = new Page<List<E>>();
@@ -244,7 +236,6 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
     @SuppressWarnings("unchecked")
     @Transactional
-    @EnforceAccessControl
     public E getByCriteria(DetachedCriteria query) {
         return (E) query.getExecutableCriteria(currentSession()).uniqueResult();
     }
@@ -253,7 +244,6 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @param entity to be deleted.
      */
     @Transactional
-    @EnforceAccessControl
     public void delete(E entity) {
         E toDelete = find(entity.getId());
         currentSession().delete(toDelete);
@@ -270,7 +260,6 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @return merged entity.
      */
     @Transactional
-    @EnforceAccessControl
     public E merge(E entity) {
         return getEntityManager().merge(entity);
     }

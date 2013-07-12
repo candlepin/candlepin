@@ -16,7 +16,6 @@ package org.candlepin.model;
 
 import java.util.List;
 
-import org.candlepin.auth.interceptor.EnforceAccessControl;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.exceptions.BadRequestException;
@@ -79,7 +78,6 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     @Transactional
-    @EnforceAccessControl
     public Product create(Product entity) {
 
         /*
@@ -100,7 +98,6 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     @Transactional
-    @EnforceAccessControl
     public Product merge(Product entity) {
 
         /*
@@ -206,7 +203,6 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     @Transactional
-    @EnforceAccessControl
     public void removeProductContent(Product prod, Content content) {
         for (ProductContent pc : prod.getProductContent()) {
             if (content.getId().equals(pc.getContent().getId())) {
