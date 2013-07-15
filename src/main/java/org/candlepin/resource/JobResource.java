@@ -101,18 +101,14 @@ public class JobResource {
         @QueryParam("consumer") String uuid,
         @QueryParam("principal") String principalName) {
 
-        if (StringUtils.isEmpty(ownerKey) &&
-            StringUtils.isEmpty(uuid) &&
-            StringUtils.isEmpty(principalName)) {
+        boolean allParamsEmpty = StringUtils.isEmpty(ownerKey) &&
+                                 StringUtils.isEmpty(uuid) &&
+                                 StringUtils.isEmpty(principalName);
 
-            throw new BadRequestException(i18n.tr("You must specify an owner " +
-                "key, consumer UUID, or principal name."));
-        }
-
-        // make sure we didn't specify them all
-        if (!ensureOnlyOne(ownerKey, uuid, principalName)) {
-            throw new BadRequestException(i18n.tr("You must specify one of " +
-                "owner key, consumer UUID, or principal name, but not all."));
+        // make sure we only specified one
+        if (allParamsEmpty || !ensureOnlyOne(ownerKey, uuid, principalName)) {
+            throw new BadRequestException(i18n.tr("You must specify exactly " +
+                "one of owner key, unit UUID, or principal name."));
         }
 
         List<JobStatus> statuses = null;

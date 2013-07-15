@@ -82,7 +82,7 @@ public class ConsumerTypeResource {
         }
 
         throw new NotFoundException(
-            i18n.tr("ConsumerType with id '" + id + "' could not be found."));
+            i18n.tr("Unit type with id '" + id + "' could not be found."));
     }
 
     /**
@@ -102,9 +102,9 @@ public class ConsumerTypeResource {
             return toReturn;
         }
         catch (Exception e) {
-            log.error("Problem creating consumertype:", e);
+            log.error("Problem creating unit type:", e);
             throw new BadRequestException(
-                i18n.tr("Problem creating consumertype: {0}", in));
+                i18n.tr("Problem creating unit type: {0}", in));
         }
     }
 
@@ -125,7 +125,7 @@ public class ConsumerTypeResource {
 
         if (type == null) {
             throw new BadRequestException(
-                i18n.tr("Consumer Type with label {0} could not be found.", in.getId()));
+                i18n.tr("Unit type with label {0} could not be found.", in.getId()));
         }
 
         consumerTypeCurator.merge(in);
@@ -146,7 +146,7 @@ public class ConsumerTypeResource {
 
         if (type == null) {
             throw new BadRequestException(
-                i18n.tr("Consumer Type with id {0} could not be found.", id));
+                i18n.tr("Unit type with id {0} could not be found.", id));
         }
 
         consumerTypeCurator.delete(type);

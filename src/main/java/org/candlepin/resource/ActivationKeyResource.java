@@ -139,8 +139,8 @@ public class ActivationKeyResource {
             pool.getProductAttribute("requires_consumer_type") != null &&
             pool.getProductAttribute("requires_consumer_type").getValue()
                   .equals("person")) {
-            throw new BadRequestException(i18n.tr("Cannot add pools restricted to " +
-                "consumer type 'person' to activation keys."));
+            throw new BadRequestException(i18n.tr("Cannot add pools that are " +
+                    "restricted to unit type 'person' to activation keys."));
         }
         if (quantity > 1) {
             ProductPoolAttribute ppa = pool.getProductAttribute("multi-entitlement");

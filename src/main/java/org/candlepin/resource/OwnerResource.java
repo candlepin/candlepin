@@ -601,7 +601,7 @@ public class OwnerResource {
         ConsumerType type = consumerTypeCurator.lookupByLabel(label);
 
         if (type == null) {
-            throw new BadRequestException(i18n.tr("No such consumer type: {0}",
+            throw new BadRequestException(i18n.tr("No such unit type: {0}",
                 label));
         }
         return type;
@@ -642,7 +642,7 @@ public class OwnerResource {
         if (consumerUuid != null) {
             c = consumerCurator.findByUuid(consumerUuid);
             if (c == null) {
-                throw new NotFoundException(i18n.tr("consumer: {0} not found",
+                throw new NotFoundException(i18n.tr("Unit: {0} not found",
                     consumerUuid));
             }
 
@@ -775,7 +775,7 @@ public class OwnerResource {
         Consumer consumer = consumerCurator.findByUuid(consumerUuid);
 
         if (consumer == null) {
-            throw new NotFoundException(i18n.tr("No such consumer: {0}",
+            throw new NotFoundException(i18n.tr("No such unit: {0}",
                 consumerUuid));
         }
         return consumer;
@@ -839,7 +839,7 @@ public class OwnerResource {
             throw new BadRequestException(
                 i18n.tr(
                     "Service level ''{0}'' is not available " +
-                    "to consumers of organization {1}.",
+                    "to units of organization {1}.",
                     serviceLevel, owner.getKey()));
         }
     }
