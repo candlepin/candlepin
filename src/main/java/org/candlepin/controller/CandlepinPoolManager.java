@@ -48,6 +48,8 @@ import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Subscription;
+import org.candlepin.paging.Page;
+import org.candlepin.paging.PageRequest;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.ProductCache;
@@ -129,8 +131,9 @@ public class CandlepinPoolManager implements PoolManager {
         List<Subscription> subs = subAdapter.getSubscriptions(owner);
         log.debug("Found " + subs.size() + " subscriptions.");
 
-        List<Pool> pools = this.poolCurator.listAvailableEntitlementPools(null,
-            owner, null, null, false, false);
+        // FIXME mstead: This is a get by owner -- make a specifc call here.
+        List<Pool> pools = this.listAvailableEntitlementPools(null,
+            owner, null, null, false, false, null).getPageData();
 
         // Map all pools for this owner/product that have a
         // subscription ID associated with them.
@@ -380,8 +383,8 @@ public class CandlepinPoolManager implements PoolManager {
 
         ValidationResult failedResult = null;
 
-        List<Pool> allOwnerPools = poolCurator.listAvailableEntitlementPools(
-            consumer, owner, (String) null, entitleDate, true, false);
+        List<Pool> allOwnerPools = this.listAvailableEntitlementPools(
+            consumer, owner, (String) null, entitleDate, true, false, null).getPageData();
         List<Pool> filteredPools = new LinkedList<Pool>();
 
         // We have to check compliance status here so we can replace an empty
@@ -740,9 +743,9 @@ public class CandlepinPoolManager implements PoolManager {
     @Override
     @Transactional
     public void regenerateCertificatesOf(String productId, boolean lazy) {
-        List<Pool> poolsForProduct = this.poolCurator
-            .listAvailableEntitlementPools(null, null, productId, new Date(),
-                false, false);
+        // TODO mstead: Targets a pool lookup by productId -- call a method to get just that.
+        List<Pool> poolsForProduct = this.listAvailableEntitlementPools(null, null,
+            productId, new Date(), false, false, null).getPageData();
         for (Pool pool : poolsForProduct) {
             regenerateCertificatesOf(pool.getEntitlements(), lazy);
         }
@@ -1028,5 +1031,52 @@ public class CandlepinPoolManager implements PoolManager {
                 subAdapter.getSubscription(pool.getSubscriptionId()));
             checkBonusPoolQuantities(pool, entitlement);
         }
+    }
+
+    @Override
+    public Page<List<Pool>> listAvailableEntitlementPools(Consumer consumer,
+        Owner owner, String productId, Date activeOn, boolean activeOnly,
+        boolean includeWarnings, PageRequest pageRequest) {
+        Page<List<Pool>> page = this.poolCurator.listAvailableEntitlementPools(consumer,
+            owner, productId, activeOn, activeOnly, pageRequest);
+        if (consumer == null) {
+            return page;
+        }
+
+        // If the consumer was specified, we need to filter out any
+        // pools that the consumer will not be able to attach.
+        // If querying for pools available to a specific consumer, we need
+        // to do a rules pass to verify the entitlement will be granted.
+        // Note that something could change between the time we list a pool as
+        // available, and the consumer requests the actual entitlement, and the
+        // request still could fail.
+        List<Pool> preFilterResults = page.getPageData();
+        List<Pool> newResults = new LinkedList<Pool>();
+        for (Pool p : preFilterResults) {
+            ValidationResult result = enforcer.preEntitlement(
+                consumer, p, 1, CallerType.LIST_POOLS);
+            if (result.isSuccessful() && (!result.hasWarnings() || includeWarnings)) {
+                newResults.add(p);
+            }
+            else {
+                log.info("Omitting pool due to failed rule check: " + p.getId());
+                if (result.hasErrors()) {
+                    log.info("\tErrors: " + result.getErrors());
+                }
+                if (result.hasWarnings()) {
+                    log.info("\tWarnings: " + result.getWarnings());
+                }
+            }
+        }
+
+        // Set maxRecords once we are done filtering
+        page.setMaxRecords(newResults.size());
+
+        if (pageRequest != null && pageRequest.isPaging()) {
+            newResults = poolCurator.takeSubList(pageRequest, newResults);
+        }
+
+        page.setPageData(newResults);
+        return page;
     }
 }

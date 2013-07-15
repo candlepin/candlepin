@@ -176,7 +176,7 @@ public class PoolResource {
                     principal.getPrincipalName()));
         }
 
-        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(c, o, productId,
+        Page<List<Pool>> page = poolManager.listAvailableEntitlementPools(c, o, productId,
             activeOnDate, true, listAll, pageRequest);
         List<Pool> poolList = page.getPageData();
 

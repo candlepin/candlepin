@@ -21,6 +21,8 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Subscription;
+import org.candlepin.paging.Page;
+import org.candlepin.paging.PageRequest;
 import org.candlepin.policy.EntitlementRefusedException;
 
 import java.util.Date;
@@ -129,4 +131,26 @@ public interface PoolManager {
 
     Entitlement adjustEntitlementQuantity(Consumer consumer, Entitlement entitlement,
         Integer quantity) throws EntitlementRefusedException;
+
+    /**
+     * List entitlement pools.
+     *
+     * If a consumer is specified, a pass through the rules will be done for
+     * each potentially usable pool.
+     *
+     * @param c Consumer being entitled.
+     * @param o Owner whose subscriptions should be inspected.
+     * @param productId only entitlements which provide this product are included.
+     * @param activeOn Indicates to return only pools valid on this date.
+     *        Set to null for no date filtering.
+     * @param activeOnly if true, only active entitlements are included.
+     * @param includeWarnings When filtering by consumer, include pools that
+     *        triggered a rule warning. (errors will still be excluded)
+     * @param pageRequest used to determine if results paging is required.
+     * @return List of entitlement pools.
+     */
+    Page<List<Pool>> listAvailableEntitlementPools(Consumer c, Owner owner,
+        String productId, Date activeOn, boolean activeOnly, boolean includeWarnings,
+        PageRequest pageRequest);
+
 }

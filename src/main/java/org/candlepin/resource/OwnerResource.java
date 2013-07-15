@@ -657,7 +657,7 @@ public class OwnerResource {
             }
         }
 
-        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(c, owner,
+        Page<List<Pool>> page = poolManager.listAvailableEntitlementPools(c, owner,
             productId, activeOnDate, true, listAll, pageRequest);
         List<Pool> poolList = page.getPageData();
 
