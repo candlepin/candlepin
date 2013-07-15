@@ -103,7 +103,7 @@ public class EnforcerTest extends DatabaseTestFixture {
         JsRunner jsRules = new JsRunnerProvider(rulesCurator).get();
 
         enforcer = new EntitlementRules(new DateSourceForTesting(2010, 1, 1),
-            jsRules, productCache, i18n, config, consumerCurator);
+            jsRules, productCache, i18n, config, consumerCurator, poolCurator);
     }
 
     @Test

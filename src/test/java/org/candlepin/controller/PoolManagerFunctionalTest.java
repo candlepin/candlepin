@@ -37,6 +37,8 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.Subscription;
+import org.candlepin.paging.Page;
+import org.candlepin.paging.PageRequest;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
@@ -73,6 +75,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     private Product virtGuest;
     private Product monitoring;
     private Product provisioning;
+    private Product socketLimitedProduct;
 
     private ConsumerType systemType;
 
@@ -101,6 +104,11 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         virtGuest.addAttribute(new ProductAttribute(PRODUCT_VIRT_GUEST, ""));
         monitoring.addAttribute(new ProductAttribute(PRODUCT_MONITORING, ""));
         provisioning.addAttribute(new ProductAttribute(PRODUCT_PROVISIONING, ""));
+
+        socketLimitedProduct = new Product("socket-limited-prod",
+            "Socket Limited Product");
+        socketLimitedProduct.addAttribute(new ProductAttribute("sockets", "2"));
+        productCurator.create(socketLimitedProduct);
 
         productAdapter.createProduct(virtHost);
         productAdapter.createProduct(virtHostPlatform);
@@ -286,6 +294,68 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         pools = poolCurator.listByOwnerAndProduct(o, product2.getId());
         assertEquals(1, pools.size());
+    }
+
+    @Test
+    public void testListAllForConsumerIncludesWarnings() {
+        Page<List<Pool>> results =
+            poolManager.listAvailableEntitlementPools(parentSystem, parentSystem.getOwner(),
+                null, null, true, true, new PageRequest());
+        assertEquals(4, results.getPageData().size());
+
+        Pool pool = createPoolAndSub(o, socketLimitedProduct, 100L,
+            TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
+        poolCurator.create(pool);
+
+        parentSystem.setFact("cpu.sockets", "4");
+        results = poolManager.listAvailableEntitlementPools(parentSystem,
+            parentSystem.getOwner(), null, null, true, true, new PageRequest());
+        // Expect the warnings to be included. Should have one more pool available.
+        assertEquals(5, results.getPageData().size());
+    }
+
+
+    @Test
+    public void testListAllForConsumerExcludesErrors() {
+        Product p = new Product("test-product", "Test Product");
+        productCurator.create(p);
+
+        Page<List<Pool>> results =
+            poolManager.listAvailableEntitlementPools(parentSystem, parentSystem.getOwner(),
+                null, null, true, true, new PageRequest());
+        assertEquals(4, results.getPageData().size());
+
+        // Creating a pool with no entitlements available, which will trigger
+        // a rules error:
+        Pool pool = createPoolAndSub(o, p, 0L,
+            TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
+        poolCurator.create(pool);
+
+        results = poolManager.listAvailableEntitlementPools(parentSystem,
+            parentSystem.getOwner(), null, null, true, true, new PageRequest());
+        // Pool in error should not be included. Should have the same number of
+        // initial pools.
+        assertEquals(4, results.getPageData().size());
+    }
+
+    @Test
+    public void testListForConsumerExcludesWarnings() {
+        Page<List<Pool>> results =
+            poolManager.listAvailableEntitlementPools(parentSystem, parentSystem.getOwner(),
+                (String) null, null, true, false, new PageRequest());
+        assertEquals(4, results.getPageData().size());
+
+        Pool pool = createPoolAndSub(o, socketLimitedProduct, 100L,
+            TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
+        poolCurator.create(pool);
+
+        parentSystem.setFact("cpu.cpu_socket(s)", "4");
+
+        results = poolManager.listAvailableEntitlementPools(parentSystem,
+            parentSystem.getOwner(), (String) null, null, true, false, new PageRequest());
+        // Pool in error should not be included. Should have the same number of
+        // initial pools.
+        assertEquals(4, results.getPageData().size());
     }
 
     /**
