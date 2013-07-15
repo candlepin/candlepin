@@ -31,6 +31,7 @@ import org.hibernate.criterion.Restrictions;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -193,6 +194,12 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Transactional
     public Consumer findByUuid(String uuid) {
         return getConsumer(uuid);
+    }
+
+    @Transactional
+    public List<Consumer> findByUuids(Collection<String> uuids) {
+        return listByCriteria(
+            DetachedCriteria.forClass(Consumer.class).add(Restrictions.in("uuid", uuids)));
     }
 
     // NOTE: This is a giant hack that is for use *only* by SSLAuth in order

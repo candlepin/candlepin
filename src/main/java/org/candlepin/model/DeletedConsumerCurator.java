@@ -14,12 +14,17 @@
  */
 package org.candlepin.model;
 
+import org.hibernate.Criteria;
 import org.hibernate.criterion.Order;
+import org.hibernate.criterion.ProjectionList;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 
+import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * DeletedConsumerCurator
@@ -62,6 +67,33 @@ public class DeletedConsumerCurator extends
                         .add(Restrictions.eq("consumerUuid", uuid))
                         .setProjection(Projections.rowCount()).uniqueResult();
 
+    }
+
+    public Map<String, Integer> countByConsumerUuids(Collection<String> uuids) {
+        Criteria c = currentSession().createCriteria(DeletedConsumer.class)
+            .add(Restrictions.in("consumerUuid", uuids));
+        ProjectionList projectionList = Projections.projectionList();
+        projectionList.add(Projections.groupProperty("consumerUuid"));
+        projectionList.add(Projections.rowCount());
+        c.setProjection(projectionList);
+
+        List results = c.list();
+        Map<String, Integer> uuidMap = new HashMap<String, Integer>();
+        for (int i = 0; i < results.size(); i++) {
+            Object[] pair = (Object[]) results.get(i);
+            uuidMap.put((String) pair[0], (Integer) pair[1]);
+        }
+
+        // If one of the uuids has a count of zero, the query will simply leave
+        // that value out of the results.  So we put in a zero so people won't
+        // be surprised by nulls.
+        for (String uuid : uuids) {
+            if (!uuidMap.containsKey(uuid)) {
+                uuidMap.put(uuid, Integer.valueOf(0));
+            }
+        }
+
+        return uuidMap;
     }
 
     @SuppressWarnings("unchecked")

@@ -27,6 +27,7 @@ import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projection;
 import org.hibernate.criterion.Projections;
+import org.hibernate.criterion.Restrictions;
 import org.hibernate.impl.CriteriaImpl;
 import org.hibernate.transform.ResultTransformer;
 
@@ -93,6 +94,12 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     public List<E> listAll() {
         return listByCriteria(DetachedCriteria.forClass(entityType));
     }
+
+    public List<E> listAllByIds(Collection<? extends Serializable> ids) {
+        return listByCriteria(
+            DetachedCriteria.forClass(entityType).add(Restrictions.in("id", ids)));
+    }
+
     @SuppressWarnings("unchecked")
     @Transactional
     public Page<List<E>> listAll(PageRequest pageRequest, boolean postFilter) {
