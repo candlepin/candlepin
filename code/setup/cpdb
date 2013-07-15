@@ -24,8 +24,13 @@ import os
 from optparse import OptionParser
 from subprocess import Popen, PIPE
 
+if os.path.exists('/usr/sbin/tomcat') and not os.path.exists('/usr/sbin/tomcat6'):
+    TOMCAT = 'tomcat'
+else:
+    TOMCAT = 'tomcat6'
+
 JBOSS_CLASSPATH = "/var/lib/jbossas/server/production/deploy/candlepin.war/WEB-INF/classes/"
-TOMCAT_CLASSPATH = "/var/lib/tomcat6/webapps/candlepin/WEB-INF/classes/"
+TOMCAT_CLASSPATH = "/var/lib/" + TOMCAT + "/webapps/candlepin/WEB-INF/classes/"
 
 def run_command(command):
     (status, output) = commands.getstatusoutput(command)

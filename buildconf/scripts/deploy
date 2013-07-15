@@ -179,8 +179,12 @@ if [ "$JBOSS_HOME" != "" ]; then
     CONTAINER_CONF_DIR="$JBOSS_HOME/conf"
     CLEAN="$JBOSS_HOME/server/default/deploy/candlepin*"
 else
-    # use tomcat 6, if not specified
+    # use tomcat 6, unless it doesnt exist and tomcat does
     TC=tomcat6
+    if ( [ -f /usr/sbin/tomcat ] && (! [ -f /usr/sbin/tomcat6 ] ) );
+    then
+        TC=tomcat
+    fi
     if [ -z $TC_HOME ]; then
         TC_HOME=/var/lib/$TC
     fi
