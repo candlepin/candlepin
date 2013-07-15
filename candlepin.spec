@@ -21,6 +21,12 @@
 %define reqcpdeps 1
 %endif
 
+%if 0%{?fedora} >= 19
+%define tomcat tomcat
+%else
+%define tomcat tomcat6
+%endif
+
 Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
@@ -141,21 +147,13 @@ Requires: gettext-commons
 %description
 Candlepin is an open source entitlement management system.
 
-%package tomcat6
-Summary: Candlepin web application for tomcat6
-Requires: tomcat6
+%package %{tomcat}
+Summary: Candlepin web application for tomcat
+Requires: %{tomcat}
 Requires: candlepin = %{version}
 
-%description tomcat6
-Candlepin web application for tomcat6
-
-%package jboss
-Summary: Candlepin web application for jboss
-Requires: jbossas >= 4.3
-Requires: candlepin = %{version}
-
-%description jboss
-Candlepin web application for jboss
+%description %{tomcat}
+Candlepin web application for tomcat
 
 %package devel
 Summary: Development libraries for candlepin integration
@@ -220,31 +218,20 @@ install -m 755 code/setup/cpsetup $RPM_BUILD_ROOT/%{_datadir}/%{name}/cpsetup
 install -m 755 code/setup/cpdb $RPM_BUILD_ROOT/%{_datadir}/%{name}/cpdb
 touch $RPM_BUILD_ROOT/%{_sysconfdir}/%{name}/%{name}.conf
 
-# tomcat6
-install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat6/webapps/
-install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat6/webapps/%{name}/
-install -d -m 755 $RPM_BUILD_ROOT/%{_sysconfdir}/tomcat6/
-unzip target/%{name}-%{version}.war -d $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat6/webapps/%{name}/
+# tomcat
+install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/%{tomcat}/webapps/
+install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/%{tomcat}/webapps/%{name}/
+install -d -m 755 $RPM_BUILD_ROOT/%{_sysconfdir}/%{tomcat}/
+unzip target/%{name}-%{version}.war -d $RPM_BUILD_ROOT/%{_localstatedir}/lib/%{tomcat}/webapps/%{name}/
 
 
 %if !0%{?reqcpdeps}
 #remove the copied jars and resymlink
-rm $RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat6/webapps/%{name}/WEB-INF/lib/*.jar
-ant -Ddistlibdir=$RPM_BUILD_ROOT/%{_localstatedir}/lib/tomcat6/webapps/%{name}/WEB-INF/lib/ -Dscllibdir=%{scllibdir}/%{_datadir}/java/ initjars
+rm $RPM_BUILD_ROOT/%{_localstatedir}/lib/%{tomcat}/webapps/%{name}/WEB-INF/lib/*.jar
+ant -Ddistlibdir=$RPM_BUILD_ROOT/%{_localstatedir}/lib/%{tomcat}/webapps/%{name}/WEB-INF/lib/ -Dscllibdir=%{scllibdir}/%{_datadir}/java/ initjars
 
 %endif
-ln -s /etc/candlepin/certs/keystore $RPM_BUILD_ROOT/%{_sysconfdir}/tomcat6/keystore
-
-# jbossas
-install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/
-install -d -m 755 $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/%{name}.war
-unzip target/%{name}-%{version}.war -d $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/%{name}.war/
-
-%if !0%{?reqcpdeps}
-#remove the copied jars and resymlink
-rm $RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/%{name}.war/WEB-INF/lib/*.jar
-ant -Ddistlibdir=$RPM_BUILD_ROOT/%{_localstatedir}/lib/jbossas/server/production/deploy/%{name}.war/WEB-INF/lib/ -Dscllibdir=%{scllibdir}/%{_datadir}/java/ initjars
-%endif
+ln -s /etc/candlepin/certs/keystore $RPM_BUILD_ROOT/%{_sysconfdir}/%{tomcat}/keystore
 
 # devel
 install -d -m 755 $RPM_BUILD_ROOT/%{_datadir}/%{name}/lib/
@@ -310,22 +297,13 @@ fi
 %doc LICENSE
 %doc README
 
-%files jboss
-%defattr(-,jboss,jboss,-)
-%{_localstatedir}/lib/jbossas/server/production/deploy/%{name}.war/*
-%{_localstatedir}/lib/%{name}
-%{_localstatedir}/log/%{name}
-%{_localstatedir}/cache/%{name}
-%defattr(600,jboss,jboss,-)
-%config(noreplace) %{_sysconfdir}/%{name}/%{name}.conf
-
-%files tomcat6
+%files %{tomcat}
 %defattr(644,tomcat,tomcat,775)
-%{_localstatedir}/lib/tomcat6/webapps/%{name}/*
+%{_localstatedir}/lib/%{tomcat}/webapps/%{name}/*
 %{_localstatedir}/lib/%{name}/
 %{_localstatedir}/log/%{name}
 %{_localstatedir}/cache/%{name}
-%config(noreplace) %{_sysconfdir}/tomcat6/keystore
+%config(noreplace) %{_sysconfdir}/%{tomcat}/keystore
 %defattr(600,tomcat,tomcat,-)
 %config(noreplace) %{_sysconfdir}/%{name}/%{name}.conf
 
