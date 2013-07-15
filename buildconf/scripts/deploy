@@ -13,12 +13,12 @@ function recreate_postgresql ()
     # need to setup .pgpass for this to use passwds
     # something like:
     #   *:*:candlepin:candlepin:candlepinpasswd
-    #   *:*:postgres:candlepin:candlepinpasswd 
+    #   *:*:postgres:candlepin:candlepinpasswd
 
     dropdb -w -U "$DBUSER" candlepin
     createdb -w -U "$DBUSER" candlepin
     evalrc $? "createdb failed"
-} 
+}
 
 function recreate_oracle ()
 {
@@ -180,7 +180,7 @@ if [ "$JBOSS_HOME" != "" ]; then
     CLEAN="$JBOSS_HOME/server/default/deploy/candlepin*"
 else
     # use tomcat 6, if not specified
-    TC=tomcat6
+    TC=tomcat
     if [ -z $TC_HOME ]; then
         TC_HOME=/var/lib/$TC
     fi

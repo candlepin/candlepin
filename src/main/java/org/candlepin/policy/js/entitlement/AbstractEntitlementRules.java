@@ -373,9 +373,10 @@ public abstract class AbstractEntitlementRules implements Enforcer {
 
             String stackId = attributes.get("stacking_id");
             boolean createSubPool = stackId == null ?
-                true : poolCurator.getSubPoolCountForStackId(c, pool, stackId) == 0;
+                true : poolCurator.getSubPoolCountForStackId(c, stackId) == 0;
 
             if (createSubPool) {
+                log.debug("Creating a new sub-pool.");
                 try {
                     int virtQuantity = Integer.parseInt(virtLimit);
                     if (virtQuantity <= 0) {
@@ -388,6 +389,9 @@ public abstract class AbstractEntitlementRules implements Enforcer {
                     }
                 }
                 postHelper.createHostRestrictedPool(productId, pool, virtLimit);
+            }
+            else {
+                log.debug("Skipping sub-pool creation");
             }
         }
         else {

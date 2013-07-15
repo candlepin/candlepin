@@ -647,7 +647,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         poolCurator.create(derivedPool);
 
-        int count = poolCurator.getSubPoolCountForStackId(consumer, pool, "13241");
+        int count = poolCurator.getSubPoolCountForStackId(consumer, "13241");
         assertEquals(1, count);
     }
 

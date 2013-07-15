@@ -310,25 +310,6 @@ public class PoolManagerTest {
         verify(entitlementCurator, never()).listModifying(any(Entitlement.class));
     }
 
-    @Test
-    public void testRevokeCleansUpPoolsWithSourceEnt() throws Exception {
-        Entitlement e = new Entitlement(pool, TestUtil.createConsumer(o),
-            pool.getStartDate(), pool.getEndDate(), 1);
-        List<Pool> poolsWithSource = createPoolsWithSourceEntitlement(e, product);
-        when(mockPoolCurator.listBySourceEntitlement(e)).thenReturn(poolsWithSource);
-        PreUnbindHelper preHelper =  mock(PreUnbindHelper.class);
-        ValidationResult result = new ValidationResult();
-        when(preHelper.getResult()).thenReturn(result);
-        when(mockConfig.standalone()).thenReturn(true);
-
-        when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(pool);
-
-        manager.revokeEntitlement(e);
-
-        verify(entCertAdapterMock).revokeEntitlementCertificates(e);
-        verify(entitlementCurator).delete(e);
-    }
-
     @SuppressWarnings("unchecked")
     @Test
     public void testEntitleWithADate() throws Exception {
@@ -428,6 +409,46 @@ public class PoolManagerTest {
         pools.add(pool2);
         return pools;
     }
+
+    @Test
+    public void testRevokeCleansUpPoolsWithSourceEnt() throws Exception {
+        Entitlement e = new Entitlement(pool, TestUtil.createConsumer(o),
+            pool.getStartDate(), pool.getEndDate(), 1);
+        List<Pool> poolsWithSource = createPoolsWithSourceEntitlement(e, product);
+        when(mockPoolCurator.listBySourceEntitlement(e)).thenReturn(poolsWithSource);
+        PreUnbindHelper preHelper =  mock(PreUnbindHelper.class);
+        ValidationResult result = new ValidationResult();
+        when(preHelper.getResult()).thenReturn(result);
+        when(mockConfig.standalone()).thenReturn(true);
+
+        when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(pool);
+
+        manager.revokeEntitlement(e);
+
+        verify(entCertAdapterMock).revokeEntitlementCertificates(e);
+        verify(entitlementCurator).delete(e);
+    }
+
+    @Test
+    public void testRevokeReparentsDerivedPoolIfStacked() throws Exception {
+        Entitlement e = new Entitlement(pool, TestUtil.createConsumer(o),
+            pool.getStartDate(), pool.getEndDate(), 1);
+        List<Pool> poolsWithSource = createPoolsWithSourceEntitlement(e, product);
+        when(mockPoolCurator.listBySourceEntitlement(e)).thenReturn(poolsWithSource);
+        PreUnbindHelper preHelper =  mock(PreUnbindHelper.class);
+        ValidationResult result = new ValidationResult();
+        when(preHelper.getResult()).thenReturn(result);
+        when(mockConfig.standalone()).thenReturn(true);
+
+        when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(pool);
+
+        manager.revokeEntitlement(e);
+
+        verify(entCertAdapterMock).revokeEntitlementCertificates(e);
+        verify(entitlementCurator).delete(e);
+    }
+
+    // testRevokeCleans
 
     @Test
     public void testCleanup() throws Exception {

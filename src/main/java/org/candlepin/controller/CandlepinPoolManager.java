@@ -772,12 +772,16 @@ public class CandlepinPoolManager implements PoolManager {
 
         // Look for pools referencing this entitlement as their source
         // entitlement and clean them up as well
+        String stackId = pool.getProductAttributeValue("stacking_id");
+        boolean stacked = stackId == null;
+//            true : poolCurator.getSubPoolCountForStackId(consumer, pool, stackId) == 0;
 
         // we need to create a list of pools and entitlements to delete,
         // otherwise we are tampering with the loop iterator from inside
         // the loop (#811581)
         Set<Pool> deletablePools = new HashSet<Pool>();
         for (Pool p : poolCurator.listBySourceEntitlement(entitlement)) {
+
             Set<Entitlement> deletableEntitlements = new HashSet<Entitlement>();
             for (Entitlement e : p.getEntitlements()) {
                 deletableEntitlements.add(e);

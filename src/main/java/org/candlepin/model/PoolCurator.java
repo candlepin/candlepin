@@ -586,7 +586,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         currentSession().delete(toDelete);
     }
 
-    public int getSubPoolCountForStackId(Consumer consumer, Pool parent, String stackId) {
+    public int getSubPoolCountForStackId(Consumer consumer, String stackId) {
         DetachedCriteria noRequiresHost = DetachedCriteria.forClass(
             ProductPoolAttribute.class, "attr")
                 .add(Restrictions.and(Restrictions.eq("name", "stacking_id"),
@@ -599,9 +599,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 Restrictions.isNotNull("sourceEntitlement"),
                 Subqueries.exists(noRequiresHost)))
             .createCriteria("sourceEntitlement")
-            .add(Restrictions.and(
-                Restrictions.eq("consumer", consumer),
-                Restrictions.eq("pool", parent)));
-        return query.list().size();
+            .add(Restrictions.eq("consumer", consumer));
+        int results = query.list().size();
+        return results;
     }
 }
