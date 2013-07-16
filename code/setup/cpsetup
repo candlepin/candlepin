@@ -32,6 +32,11 @@ from optparse import OptionParser
 
 CANDLEPIN_CONF = '/etc/candlepin/candlepin.conf'
 
+if os.path.exists('/usr/sbin/tomcat') and not os.path.exists('/usr/sbin/tomcat6'):
+    TOMCAT = 'tomcat'
+else:
+    TOMCAT = 'tomcat6'
+
 def run_command(command):
     (status, output) = commands.getstatusoutput(command)
     if status > 0:
@@ -100,17 +105,17 @@ class TomcatSetup(object):
         file.close
 
     def fix_perms(self):
-        run_command("chmod g+x /var/log/tomcat6")
-        run_command("chmod g+x /etc/tomcat6/")
-        run_command("chown tomcat:tomcat -R /var/lib/tomcat6")
-        run_command("chown tomcat:tomcat -R /var/lib/tomcat6")
-        run_command("chown tomcat:tomcat -R /var/cache/tomcat6")
+        run_command("chmod g+x /var/log/" + TOMCAT)
+        run_command("chmod g+x /etc/" + TOMCAT + "/")
+        run_command("chown tomcat:tomcat -R /var/lib/" + TOMCAT)
+        run_command("chown tomcat:tomcat -R /var/lib/" + TOMCAT)
+        run_command("chown tomcat:tomcat -R /var/cache/" + TOMCAT)
 
     def stop(self):
-        run_command("/sbin/service tomcat6 stop")
+        run_command("/sbin/service " + TOMCAT +" stop")
 
     def restart(self):
-        run_command("/sbin/service tomcat6 restart")
+        run_command("/sbin/service " + TOMCAT + " restart")
 
     def wait_for_startup(self):
         print("Waiting for tomcat to restart...")
@@ -242,7 +247,7 @@ def main(argv):
         sys.exit(1)
 
     # Stop tomcat before we wipe the DB otherwise you get errors from pg
-    tsetup = TomcatSetup('/etc/tomcat6', options.keystorepwd)
+    tsetup = TomcatSetup('/etc/' + TOMCAT, options.keystorepwd)
     tsetup.fix_perms()
     tsetup.stop()
 
@@ -267,7 +272,7 @@ def main(argv):
     certsetup = CertSetup()
     certsetup.generate()
 
-    tsetup = TomcatSetup('/etc/tomcat6', options.keystorepwd)
+    tsetup = TomcatSetup('/etc/' + TOMCAT, options.keystorepwd)
     tsetup.update_config()
     tsetup.restart()
     tsetup.wait_for_startup()
