@@ -1,4 +1,4 @@
-#!/usr/bin/ruby
+#!/usr/bin/env ruby
 #
 # Script to create a valid candlepin export.zip which can then be imported
 # for an owner. Creates everything necessary, starting with a fresh owner,
