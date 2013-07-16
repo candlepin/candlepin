@@ -27,10 +27,8 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 /**
  * DeletedConsumerCuratorTest
@@ -109,16 +107,6 @@ public class DeletedConsumerCuratorTest extends DatabaseTestFixture {
         assertEquals(1, dcc.countByConsumerUuid("abcde"));
         assertEquals(0, dcc.countByConsumerUuid("dontfind"));
         assertEquals(1, dcc.countByConsumerUuid("fghij"));
-    }
-
-    @Test
-    public void countByConsumerIds() {
-        String[] ids = {"abcde", "fghij", "klmno", "dontfind"};
-        Map<String, Integer> found = dcc.countByConsumerUuids(Arrays.asList(ids));
-        assertEquals(Integer.valueOf(1), found.get("abcde"));
-        assertEquals(Integer.valueOf(1), found.get("fghij"));
-        assertEquals(Integer.valueOf(1), found.get("klmno"));
-        assertEquals(Integer.valueOf(0), found.get("dontfind"));
     }
 
     @Test

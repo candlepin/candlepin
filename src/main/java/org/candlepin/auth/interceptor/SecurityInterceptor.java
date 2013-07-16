@@ -328,20 +328,9 @@ public class SecurityInterceptor implements MethodInterceptor {
         @Override
         public List<Consumer> lookup(Collection<String> keys) {
             initialize();
-
-            Map<String, Integer> deletedCounts =
-                deletedConsumerCurator.countByConsumerUuids(keys);
-
-            for (String uuid : deletedCounts.keySet()) {
-                Integer i = deletedCounts.get(uuid);
-                if (i != null && i > 0) {
-                    log.debug("Key " + uuid + " is deleted, throwing GoneException");
-                    I18n i18n = injector.getInstance(I18n.class);
-                    throw new GoneException(i18n.tr("Consumer {0} has been deleted", uuid)
-                        , uuid);
-                }
-            }
-
+            // Do not look for deleted consumers because do not want to throw
+            // an exception and reject the whole request just because one of
+            // the requested items is deleted.
             return consumerCurator.findByUuids(keys);
         }
     }
