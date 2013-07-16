@@ -1819,15 +1819,19 @@ public class ConsumerResource {
     @Path("{consumer_uuid}/compliance")
     @Transactional
     public ComplianceStatus getComplianceStatus(
-        @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid) {
+        @PathParam("consumer_uuid") @Verify(Consumer.class) String uuid,
+        @QueryParam("on_date") String onDate) {
         Consumer consumer = verifyAndLookupConsumer(uuid);
+        Date date = onDate == null ?
+            Calendar.getInstance().getTime() :
+                ResourceDateParser.parseDateString(onDate);
         ComplianceStatus status = this.complianceRules.getStatus(consumer,
-            Calendar.getInstance().getTime());
+            date);
 
-        // NOTE: If this method ever changes to accept an optional date, do not update this
-        // field on the consumer if the date is specified:
-        consumer.setEntitlementStatus(status.getStatus());
-
+        // Optional date, so we don't update entitlement status
+        if (onDate != null) {
+            consumer.setEntitlementStatus(status.getStatus());
+        }
         return status;
     }
 
