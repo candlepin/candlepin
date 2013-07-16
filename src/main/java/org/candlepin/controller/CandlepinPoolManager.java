@@ -774,7 +774,13 @@ public class CandlepinPoolManager implements PoolManager {
         // entitlement and clean them up as well
         String stackId = pool.getProductAttributeValue("stacking_id");
         boolean stacked = stackId == null;
-//            true : poolCurator.getSubPoolCountForStackId(consumer, pool, stackId) == 0;
+        // Can this derived pool be re-parented?
+        List<Entitlement> otherEnts =
+            entitlementCurator.listOtherEntitlementsInStack(stackId, entitlement);
+        Entitlement newParent = null;
+        if (stacked && otherEnts.size() > 0) {
+            newParent = otherEnts.get(0);
+        }
 
         // we need to create a list of pools and entitlements to delete,
         // otherwise we are tampering with the loop iterator from inside
@@ -782,11 +788,15 @@ public class CandlepinPoolManager implements PoolManager {
         Set<Pool> deletablePools = new HashSet<Pool>();
         for (Pool p : poolCurator.listBySourceEntitlement(entitlement)) {
 
+            if (newParent != null) {
+                log.info("Changing source entitlement for pool " + p.getId() +
+                    ": " + p.getSourceEntitlement().getId() + " -> " + newParent.getId());
+                p.setSourceEntitlement(newParent);
+                // TODO: refresh here to correct end dates and other oddities?
+                continue;
+            }
             Set<Entitlement> deletableEntitlements = new HashSet<Entitlement>();
             for (Entitlement e : p.getEntitlements()) {
-
-                // Can this entitlement be re-parented instead?
-
                 deletableEntitlements.add(e);
             }
             for (Entitlement de : deletableEntitlements) {
