@@ -102,7 +102,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     @Transactional
     @EnforceAccessControl
     public List<Pool> listByOwner(Owner o, Date activeOn) {
-        return listAvailableEntitlementPools(null, o, null, activeOn, true, false);
+        return listAvailableEntitlementPools(null, o, null, activeOn, true);
     }
 
     /**
@@ -132,14 +132,14 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     // FIXME Not referenced anywhere.
     public List<Pool> listByOwnerAndProduct(Owner owner,
             String productId) {
-        return listAvailableEntitlementPools(null, owner, productId, null, false, false);
+        return listAvailableEntitlementPools(null, owner, productId, null, false);
     }
 
     @SuppressWarnings("unchecked")
     @Transactional
     @EnforceAccessControl
     public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
-            String productId, Date activeOn, boolean activeOnly, boolean includeWarnings) {
+            String productId, Date activeOn, boolean activeOnly) {
         return listAvailableEntitlementPools(c, o, productId, activeOn, activeOnly,
             null).getPageData();
     }

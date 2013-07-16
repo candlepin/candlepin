@@ -138,8 +138,8 @@ public interface PoolManager {
      * If a consumer is specified, a pass through the rules will be done for
      * each potentially usable pool.
      *
-     * @param c Consumer being entitled.
-     * @param o Owner whose subscriptions should be inspected.
+     * @param consumer Consumer being entitled.
+     * @param owner Owner whose subscriptions should be inspected.
      * @param productId only entitlements which provide this product are included.
      * @param activeOn Indicates to return only pools valid on this date.
      *        Set to null for no date filtering.
@@ -149,7 +149,7 @@ public interface PoolManager {
      * @param pageRequest used to determine if results paging is required.
      * @return List of entitlement pools.
      */
-    Page<List<Pool>> listAvailableEntitlementPools(Consumer c, Owner owner,
+    Page<List<Pool>> listAvailableEntitlementPools(Consumer consumer, Owner owner,
         String productId, Date activeOn, boolean activeOnly, boolean includeWarnings,
         PageRequest pageRequest);
 

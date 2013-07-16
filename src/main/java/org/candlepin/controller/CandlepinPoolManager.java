@@ -1079,4 +1079,5 @@ public class CandlepinPoolManager implements PoolManager {
         page.setPageData(newResults);
         return page;
     }
+
 }
