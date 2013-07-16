@@ -14,6 +14,7 @@
  */
 package org.candlepin.policy.js.compliance;
 
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -22,6 +23,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.Entitlement;
 import org.xnap.commons.i18n.I18n;
+
 import com.google.inject.Inject;
 
 /**
@@ -36,11 +38,11 @@ public class StatusReasonMessageGenerator {
         this.i18n = i18n;
     }
 
-    public void setMessage(Consumer c, ComplianceReason reason) {
+    public void setMessage(Consumer c, ComplianceReason reason, Date onDate) {
         String marketingName, id;
         if (reason.isStacked()) {
             id = reason.getAttributes().get("stack_id");
-            marketingName = getStackedMarketingName(id, c);
+            marketingName = getStackedMarketingName(id, c, onDate);
             reason.getAttributes().put("name", marketingName);
         }
         else if (reason.isNonCovered()) {
@@ -50,7 +52,7 @@ public class StatusReasonMessageGenerator {
         }
         else { //nonstacked regular ent
             id = reason.getAttributes().get("entitlement_id");
-            marketingName = getMarketingName(id, c);
+            marketingName = getMarketingName(id, c, onDate);
             reason.getAttributes().put("name", marketingName);
         }
         if (reason.getKey().equals("NOTCOVERED")) {
@@ -84,11 +86,10 @@ public class StatusReasonMessageGenerator {
     }
 
     //Only works for the current time, which is currently the only time reasons are supplied
-    private String getStackedMarketingName(String stackId, Consumer consumer) {
+    private String getStackedMarketingName(String stackId, Consumer consumer, Date onDate) {
         Set<String> results = new HashSet<String>();
-        for (Entitlement e : consumer.getEntitlements()) {
-            if (e.getPool().getProductAttribute("stacking_id") != null &&
-                    e.isValid()) {
+        for (Entitlement e : getEntitlementsOnDate(consumer, onDate)) {
+            if (e.getPool().getProductAttribute("stacking_id") != null) {
                 if (e.getPool().getProductAttribute("stacking_id")
                     .getValue().equals(stackId)) {
                     results.add(e.getPool().getProductName());
@@ -103,8 +104,8 @@ public class StatusReasonMessageGenerator {
         }
     }
 
-    private String getMarketingName(String id, Consumer consumer) {
-        for (Entitlement e : consumer.getEntitlements()) {
+    private String getMarketingName(String id, Consumer consumer, Date onDate) {
+        for (Entitlement e : getEntitlementsOnDate(consumer, onDate)) {
             if (e.getId().equals(id)) {
                 return e.getPool().getProductName();
             }
@@ -119,5 +120,15 @@ public class StatusReasonMessageGenerator {
             }
         }
         return "UNABLE_TO_GET_NAME";
+    }
+
+    private Set<Entitlement> getEntitlementsOnDate(Consumer c, Date onDate) {
+        Set<Entitlement> result = new HashSet<Entitlement>();
+        for (Entitlement ent : c.getEntitlements()) {
+            if (ent.isValidOnDate(onDate)) {
+                result.add(ent);
+            }
+        }
+        return result;
     }
 }

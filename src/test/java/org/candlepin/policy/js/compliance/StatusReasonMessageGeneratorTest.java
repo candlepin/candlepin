@@ -17,10 +17,12 @@ package org.candlepin.policy.js.compliance;
 import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
+
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
@@ -68,7 +70,7 @@ public class StatusReasonMessageGeneratorTest {
     @Test
     public void testSocketsMessage() {
         ComplianceReason reason = buildReason("SOCKETS", buildGeneralAttributes("8", "4"));
-        generator.setMessage(consumer, reason);
+        generator.setMessage(consumer, reason, new Date());
         assertEquals(
             "Only covers 4 of 8 sockets.",
             reason.getMessage());
@@ -77,7 +79,7 @@ public class StatusReasonMessageGeneratorTest {
     @Test
     public void testStackedSubs() {
         ComplianceReason reason = buildReason("SOCKETS", buildStackedAttributes("8", "4"));
-        generator.setMessage(consumer, reason);
+        generator.setMessage(consumer, reason, new Date());
         String message = reason.getMessage();
         assertEquals("Only covers 4 of 8 sockets.", message);
         String[] names = reason.getAttributes().get("name").split("/");
@@ -90,7 +92,7 @@ public class StatusReasonMessageGeneratorTest {
     public void testArchMessage() {
         ComplianceReason reason = buildReason("ARCH",
             buildGeneralAttributes("x86_64", "ppc64"));
-        generator.setMessage(consumer, reason);
+        generator.setMessage(consumer, reason, new Date());
         assertEquals(
             "Covers architecture ppc64 but" +
             " the system is x86_64.", reason.getMessage());
@@ -99,7 +101,7 @@ public class StatusReasonMessageGeneratorTest {
     @Test
     public void testRamMessage() {
         ComplianceReason reason = buildReason("RAM", buildGeneralAttributes("8", "4"));
-        generator.setMessage(consumer, reason);
+        generator.setMessage(consumer, reason, new Date());
         assertEquals(
             "Only covers 4GB of 8GB of RAM.",
             reason.getMessage());
@@ -108,7 +110,7 @@ public class StatusReasonMessageGeneratorTest {
     @Test
     public void testCoresMessage() {
         ComplianceReason reason = buildReason("CORES", buildGeneralAttributes("8", "4"));
-        generator.setMessage(consumer, reason);
+        generator.setMessage(consumer, reason, new Date());
         assertEquals(
             "Only covers 4 of 8 cores.",
             reason.getMessage());
@@ -118,7 +120,7 @@ public class StatusReasonMessageGeneratorTest {
     public void testDefaultMessage() {
         ComplianceReason reason = buildReason("NOT_A_KEY",
             buildGeneralAttributes("8", "4"));
-        generator.setMessage(consumer, reason);
+        generator.setMessage(consumer, reason, new Date());
         assertEquals(
             "NOT_A_KEY COVERAGE PROBLEM.  " +
             "Covers 4 of 8", reason.getMessage());
@@ -133,7 +135,7 @@ public class StatusReasonMessageGeneratorTest {
         installed.setProductId("prod1");
         installed.setProductName("NonCovered Product");
         consumer.addInstalledProduct(installed);
-        generator.setMessage(consumer, reason);
+        generator.setMessage(consumer, reason, new Date());
         assertEquals("Not covered by a valid subscription.", reason.getMessage());
     }
 
