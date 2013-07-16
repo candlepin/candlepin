@@ -617,12 +617,12 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void getSubPoolCountForStack() {
-        Product product = TestUtil.createProduct();
-        product.setAttribute("virt_limit", "3");
-        product.setAttribute("stacking_id", "13241");
-        productCurator.create(product);
+        Product virtProduct = TestUtil.createProduct();
+        virtProduct.setAttribute("virt_limit", "3");
+        virtProduct.setAttribute("stacking_id", "13241");
+        productCurator.create(virtProduct);
 
-        Pool pool = createPoolAndSub(owner, product, 1L,
+        Pool pool = createPoolAndSub(owner, virtProduct, 1L,
             TestUtil.createDate(2011, 3, 2), TestUtil.createDate(2055, 3, 2));
         poolCurator.create(pool);
 
@@ -633,16 +633,16 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         entitlementCurator.create(sourceEnt);
 
         // Create derived pool referencing the entitlement just made:
-        Pool derivedPool = new Pool(owner, product.getId(), product.getName(),
+        Pool derivedPool = new Pool(owner, virtProduct.getId(), virtProduct.getName(),
             new HashSet<ProvidedProduct>(), 1L, TestUtil.createDate(2011, 3, 2),
             TestUtil.createDate(2055, 3, 2),
             "", "", "");
         derivedPool.setSourceEntitlement(sourceEnt);
         derivedPool.setSubscriptionId(subid);
 
-        for (ProductAttribute pa : product.getAttributes()) {
+        for (ProductAttribute pa : virtProduct.getAttributes()) {
             derivedPool.addProductAttribute(new ProductPoolAttribute(pa.getName(),
-                pa.getValue(), product.getId()));
+                pa.getValue(), virtProduct.getId()));
         }
 
         poolCurator.create(derivedPool);
@@ -650,5 +650,4 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         int count = poolCurator.getSubPoolCountForStackId(consumer, "13241");
         assertEquals(1, count);
     }
-
 }

@@ -784,6 +784,9 @@ public class CandlepinPoolManager implements PoolManager {
 
             Set<Entitlement> deletableEntitlements = new HashSet<Entitlement>();
             for (Entitlement e : p.getEntitlements()) {
+
+                // Can this entitlement be re-parented instead?
+
                 deletableEntitlements.add(e);
             }
             for (Entitlement de : deletableEntitlements) {

@@ -432,4 +432,52 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         assertEquals(5, page.getPageData().size());
     }
 
+
+    @Test
+    public void listOtherEntsInStack() {
+        Product virtProduct = TestUtil.createProduct();
+        virtProduct.setAttribute("virt_limit", "4");
+        virtProduct.setAttribute("stacking_id", "123");
+        productCurator.create(virtProduct);
+
+        Pool pool = createPoolAndSub(owner, virtProduct, 1L,
+            TestUtil.createDate(2011, 3, 2), TestUtil.createDate(2055, 3, 2));
+        poolCurator.create(pool);
+        Pool pool2 = createPoolAndSub(owner, virtProduct, 1L,
+            TestUtil.createDate(2011, 3, 2), TestUtil.createDate(3055, 3, 2));
+        poolCurator.create(pool2);
+
+        Consumer consumer1 = TestUtil.createConsumer(owner);
+        consumerTypeCurator.create(consumer1.getType());
+        consumerCurator.create(consumer1);
+
+        Consumer consumer2 = TestUtil.createConsumer(owner);
+        consumerTypeCurator.create(consumer2.getType());
+        consumerCurator.create(consumer2);
+
+        // Give first consumer an entitlement to each pool:
+        Entitlement ent1 = new Entitlement(pool, consumer1, pool.getStartDate(),
+            pool.getEndDate(), 1);
+        entitlementCurator.create(ent1);
+        Entitlement ent2 = new Entitlement(pool2, consumer1, pool.getStartDate(),
+            pool.getEndDate(), 1);
+        entitlementCurator.create(ent2);
+
+        // Give another a consumer an entitlement to one of the pools so we can be sure
+        // it's filtered out:
+        Entitlement otherEnt = new Entitlement(pool, consumer2, pool.getStartDate(),
+            pool.getEndDate(), 1);
+
+        List<Entitlement> ents = entitlementCurator.listOtherEntitlementsInStack("123",
+            ent1);
+        assertEquals(1, ents.size());
+        assertEquals(ent2.getId(), ents.get(0).getId());
+
+        ents = entitlementCurator.listOtherEntitlementsInStack("123", ent2);
+        assertEquals(1, ents.size());
+        assertEquals(ent1.getId(), ents.get(0).getId());
+
+        ents = entitlementCurator.listOtherEntitlementsInStack("123", otherEnt);
+        assertEquals(0, ents.size());
+    }
 }

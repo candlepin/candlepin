@@ -25,7 +25,10 @@ import org.apache.log4j.Logger;
 import org.hibernate.Criteria;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Projections;
+import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.criterion.Subqueries;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Date;
@@ -329,5 +332,29 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         this.currentSession().replicate(ent, ReplicationMode.EXCEPTION);
 
         return ent;
+    }
+
+    /**
+     * Lists all other entitlements a consumer has with the given stack
+     * ID.
+     * @param stackId Stack to search for.
+     * @param excludeMe Entitlement to exclude. (as it's probably being deleted)
+     * @return Other Entitlements in the stack.
+     */
+    public List<Entitlement> listOtherEntitlementsInStack(String stackId,
+        Entitlement excludeMe) {
+        DetachedCriteria stackCriteria = DetachedCriteria.forClass(
+            ProductPoolAttribute.class, "attr")
+                .add(Restrictions.and(Restrictions.eq("name", "stacking_id"),
+                    Restrictions.eq("value", stackId)))
+                .add(Property.forName("pool.id").eqProperty("attr.pool.id"))
+                .setProjection(Projections.property("attr.id"));
+
+        Criteria query = currentSession().createCriteria(Entitlement.class)
+            .add(Restrictions.eq("consumer", excludeMe.getConsumer()))
+            .add(Restrictions.ne("id", excludeMe.getId()))
+            .createCriteria("pool")
+                .add(Subqueries.exists(stackCriteria));
+        return query.list();
     }
 }
