@@ -10,6 +10,9 @@
     <changeSet id="20130212124537-community" author="bkearney" dbms="postgresql">
         <preConditions onFail="MARK_RAN">
             <changeLogPropertyDefined property="community" value="True"/>
+            <sqlCheck expectedResult="0">
+                select count(*) from cp_consumer_type where label = 'headpin'
+            </sqlCheck>
         </preConditions>
         <comment>Add community friendly names for Headpin and Katello</comment>
         <insert tableName="cp_consumer_type">
@@ -27,6 +30,9 @@
     <changeSet id="20130212124537-product" author="bkearney" dbms="postgresql">
         <preConditions onFail="MARK_RAN">
             <changeLogPropertyDefined property="community" value="False"/>
+            <sqlCheck expectedResult="0">
+                select count(*) from cp_consumer_type where label = 'sam'
+            </sqlCheck>
         </preConditions>
         <comment>Add product friendly names for Headpin and Katello</comment>
         <insert tableName="cp_consumer_type">
