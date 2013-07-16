@@ -952,7 +952,7 @@ public class CandlepinPoolManager implements PoolManager {
 
     @Override
     public Refresher getRefresher(boolean lazy) {
-        return new Refresher(this, this.subAdapter, this.poolCurator, lazy);
+        return new Refresher(this, this.subAdapter, lazy);
     }
 
     /**

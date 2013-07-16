@@ -21,7 +21,6 @@ import java.util.Set;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
-import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.Subscription;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -40,7 +39,7 @@ public class Refresher {
     private Set<Product> products = Util.newSet();
 
     Refresher(CandlepinPoolManager poolManager, SubscriptionServiceAdapter subAdapter,
-        PoolCurator poolCurator, boolean lazy) {
+        boolean lazy) {
         this.poolManager = poolManager;
         this.subAdapter = subAdapter;
         this.lazy = lazy;
