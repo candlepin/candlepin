@@ -1065,4 +1065,24 @@ public class CandlepinPoolManager implements PoolManager {
         return page;
     }
 
+    @Override
+    public Set<String> retrieveServiceLevelsForOwner(Owner owner, boolean exempt) {
+        return poolCurator.retrieveServiceLevelsForOwner(owner, exempt);
+    }
+
+    @Override
+    public List<Entitlement> findEntitlementsForPool(Pool pool) {
+        return poolCurator.entitlementsIn(pool);
+    }
+
+    @Override
+    public Pool findUeberPool(Owner owner) {
+        return poolCurator.findUeberPool(owner);
+    }
+
+    @Override
+    public List<Pool> listPoolsByOwner(Owner owner) {
+        return poolCurator.listByOwner(owner);
+    }
+
 }

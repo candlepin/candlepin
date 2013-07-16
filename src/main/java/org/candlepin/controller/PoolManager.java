@@ -25,6 +25,7 @@ import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.policy.EntitlementRefusedException;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -159,5 +160,42 @@ public interface PoolManager {
     Page<List<Pool>> listAvailableEntitlementPools(Consumer consumer, Owner owner,
         String productId, Date activeOn, boolean activeOnly, boolean includeWarnings,
         PageRequest pageRequest);
+
+    /**
+     *  Get the available service levels for consumers for this owner. Exempt
+     *  means that a product pool with this level can be used with a consumer of any
+     *  service level.
+     *
+     * @param owner The owner that has the list of available service levels for
+     *              its consumers
+     * @param exempt boolean to show if the desired list is the levels that are
+     *               explicitly marked with the support_level_exempt attribute.
+     * @return Set of levels based on exempt flag.
+     */
+    Set<String> retrieveServiceLevelsForOwner(Owner owner, boolean exempt);
+
+    /**
+     * Finds the entitlements for the specified Pool.
+     *
+     * @param pool look for entitlements from this Pool.
+     * @return a list of entitlements
+     */
+     List<Entitlement> findEntitlementsForPool(Pool pool);
+
+    /**
+     * Find the Ueber pool for this owner
+     *
+     * @param owner the owner to fetch the pool from
+     * @return the Ueber pool
+     */
+    Pool findUeberPool(Owner owner);
+
+    /**
+     * Lists the pools for the specified Owner.
+     *
+     * @param owner the Owner to get the pools for
+     * @return a list of pools for the specified Owner
+     */
+    List<Pool> listPoolsByOwner(Owner owner);
 
 }
