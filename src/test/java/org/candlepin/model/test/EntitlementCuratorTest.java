@@ -468,16 +468,50 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Entitlement otherEnt = new Entitlement(pool, consumer2, pool.getStartDate(),
             pool.getEndDate(), 1);
 
-        List<Entitlement> ents = entitlementCurator.listOtherEntitlementsInStack("123",
+        List<Entitlement> ents = entitlementCurator.listEntsForReSource("123",
             ent1);
         assertEquals(1, ents.size());
         assertEquals(ent2.getId(), ents.get(0).getId());
 
-        ents = entitlementCurator.listOtherEntitlementsInStack("123", ent2);
+        ents = entitlementCurator.listEntsForReSource("123", ent2);
         assertEquals(1, ents.size());
         assertEquals(ent1.getId(), ents.get(0).getId());
 
-        ents = entitlementCurator.listOtherEntitlementsInStack("123", otherEnt);
+        ents = entitlementCurator.listEntsForReSource("123", otherEnt);
         assertEquals(0, ents.size());
     }
+
+    @Test
+    public void listOtherEntsInStackIgnoresDerived() {
+        Product virtProduct = TestUtil.createProduct();
+        virtProduct.setAttribute("virt_limit", "4");
+        virtProduct.setAttribute("stacking_id", "123");
+        productCurator.create(virtProduct);
+
+        Consumer consumer1 = TestUtil.createConsumer(owner);
+        consumerTypeCurator.create(consumer1.getType());
+        consumerCurator.create(consumer1);
+
+        Pool pool = createPoolAndSub(owner, virtProduct, 1L,
+            TestUtil.createDate(2011, 3, 2), TestUtil.createDate(2055, 3, 2));
+        poolCurator.create(pool);
+        Entitlement ent1 = new Entitlement(pool, consumer1, pool.getStartDate(),
+            pool.getEndDate(), 1);
+        entitlementCurator.create(ent1);
+
+        // Second pool is "derived":
+        Pool pool2 = createPoolAndSub(owner, virtProduct, 1L,
+            TestUtil.createDate(2011, 3, 2), TestUtil.createDate(3055, 3, 2));
+        pool2.setSourceEntitlement(ent1);
+        poolCurator.create(pool2);
+
+        Entitlement ent2 = new Entitlement(pool2, consumer1, pool.getStartDate(),
+            pool.getEndDate(), 1);
+        entitlementCurator.create(ent2);
+
+        List<Entitlement> ents = entitlementCurator.listEntsForReSource("123",
+            ent1);
+        assertEquals(0, ents.size());
+    }
+
 }

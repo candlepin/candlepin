@@ -335,13 +335,18 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     }
 
     /**
-     * Lists all other entitlements a consumer has with the given stack
-     * ID.
+     * Lists other suitable entitlements a consumer has which can be used to re-source
+     * a derived pool whose current source entitlement is being deleted.
+     *
+     * Any entitlements from pools with a source entitlement are excluded. This query
+     * is used to search for entitlements we can re-parent a derived pool to, so any
+     * other entitlements from a derived pool are not suitable.
+     *
      * @param stackId Stack to search for.
-     * @param excludeMe Entitlement to exclude. (as it's probably being deleted)
+     * @param excludeMe Pool's current source entitlement.
      * @return Other Entitlements in the stack.
      */
-    public List<Entitlement> listOtherEntitlementsInStack(String stackId,
+    public List<Entitlement> listEntsForReSource(String stackId,
         Entitlement excludeMe) {
         DetachedCriteria stackCriteria = DetachedCriteria.forClass(
             ProductPoolAttribute.class, "attr")
@@ -354,6 +359,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             .add(Restrictions.eq("consumer", excludeMe.getConsumer()))
             .add(Restrictions.ne("id", excludeMe.getId()))
             .createCriteria("pool")
+                .add(Restrictions.isNull("sourceEntitlement"))
                 .add(Subqueries.exists(stackCriteria));
         return query.list();
     }

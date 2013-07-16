@@ -776,7 +776,7 @@ public class CandlepinPoolManager implements PoolManager {
         boolean stacked = stackId == null;
         // Can this derived pool be re-parented?
         List<Entitlement> otherEnts =
-            entitlementCurator.listOtherEntitlementsInStack(stackId, entitlement);
+            entitlementCurator.listEntsForReSource(stackId, entitlement);
         Entitlement newParent = null;
         if (stacked && otherEnts.size() > 0) {
             newParent = otherEnts.get(0);

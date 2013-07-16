@@ -44,7 +44,7 @@ describe 'Standalone Virt-Limit Subscriptions' do
     @guest_pool = pools.find_all { |i| !i['sourceEntitlement'].nil? }[0]
   end
 
-  it 'should re-parent guest pool when other stacked entitlements exist' do
+  it 'should re-source guest pool when other stacked entitlements exist' do
     @cp.list_owner_pools(@owner['key']).length.should == 4
     # Use another pool in the stack:
     host_ent_2 = @host1_client.consume_pool(@pools[1]['id'])[0]
