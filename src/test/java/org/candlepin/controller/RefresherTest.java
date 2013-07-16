@@ -100,9 +100,7 @@ public class RefresherTest {
         when(subAdapter.getSubscriptions(owner)).thenReturn(subscriptions);
         when(subAdapter.getSubscription("subId")).thenReturn(subscription);
 
-        when(poolCurator.listAvailableEntitlementPools(null, owner, null, null, false,
-            false)).thenReturn(pools);
-        when(poolCurator.lookupBySubscriptionId("subId")).thenReturn(pools);
+        when(poolManager.lookupBySubscriptionId("subId")).thenReturn(pools);
 
         refresher.add(owner);
         refresher.add(product);
@@ -134,7 +132,7 @@ public class RefresherTest {
         when(subAdapter.getSubscriptions(product)).thenReturn(subscriptions);
         when(subAdapter.getSubscriptions(product2)).thenReturn(subscriptions);
         when(subAdapter.getSubscription("subId")).thenReturn(subscription);
-        when(poolCurator.lookupBySubscriptionId("subId")).thenReturn(pools);
+        when(poolManager.lookupBySubscriptionId("subId")).thenReturn(pools);
         refresher.add(product);
         refresher.add(product2);
         refresher.run();

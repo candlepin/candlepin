@@ -17,6 +17,12 @@ package org.candlepin.model.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.model.ActivationKey;
 import org.candlepin.model.Consumer;
@@ -35,15 +41,8 @@ import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
-
 import org.junit.Before;
 import org.junit.Test;
-
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 
 public class PoolCuratorTest extends DatabaseTestFixture {
@@ -80,7 +79,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         List<Pool> results =
             poolCurator.listAvailableEntitlementPools(consumer, consumer.getOwner(),
-                (String) null, TestUtil.createDate(20450, 3, 2), true, false);
+                (String) null, TestUtil.createDate(20450, 3, 2), true);
         assertEquals(0, results.size());
 
     }
@@ -93,13 +92,13 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         List<Pool> results =
             poolCurator.listAvailableEntitlementPools(consumer, consumer.getOwner(),
-                (String) null, TestUtil.createDate(2005, 3, 3), true, false);
+                (String) null, TestUtil.createDate(2005, 3, 3), true);
         assertEquals(0, results.size());
 
         // If we specify no date filtering, the expired pool should be returned:
         results =
             poolCurator.listAvailableEntitlementPools(consumer, consumer.getOwner(),
-                (String) null, null, true, false);
+                (String) null, null, true);
         assertEquals(1, results.size());
     }
 
@@ -113,7 +112,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         List<Pool> results =
             poolCurator.listAvailableEntitlementPools(consumer, consumer.getOwner(),
-                (String) null, null, true, false);
+                (String) null, null, true);
         assertEquals(1, results.size());
     }
 
@@ -326,7 +325,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         poolCurator.create(pool);
 
         assertEquals(1, poolCurator.listAvailableEntitlementPools(null, owner, null,
-            activeOn, false, false).size());
+            activeOn, false).size());
     }
 
     @Test
@@ -338,7 +337,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         poolCurator.create(pool);
 
         assertEquals(1, poolCurator.listAvailableEntitlementPools(null, owner, null,
-            activeOn, false, false).size());
+            activeOn, false).size());
     }
 
     @Test
@@ -351,7 +350,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         poolCurator.create(pool);
 
         assertEquals(1, poolCurator.listAvailableEntitlementPools(null, owner, null,
-            activeOn, false, false).size());
+            activeOn, false).size());
     }
 
     @Test
