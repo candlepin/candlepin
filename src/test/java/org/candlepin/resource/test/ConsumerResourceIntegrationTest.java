@@ -273,7 +273,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         consumer = consumerCurator.findByUuid(consumer.getUuid());
         assertEquals(1, consumer.getEntitlements().size());
 
-        pool = poolCurator.find(pool.getId());
+        pool = poolManager.find(pool.getId());
         assertEquals(Long.valueOf(1), pool.getConsumed());
         assertEquals(1, resultList.size());
         assertEquals(pool.getId(), resultList.get(0).getPool().getId());
@@ -539,7 +539,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     public void testRegenerateEntitlementCertificateWithValidConsumerByEntitlement() {
         ConsumerResource cr = new ConsumerResource(this.consumerCurator, null,
             null, null, this.entitlementCurator, null, null, null, null, null,
-            null, null, null, null, this.poolManager, null, null, null, null,
+            null, null, null, null, this.poolManager, null, null, null,
             null, null, null, null, null, new CandlepinCommonTestConfig());
 
         Response rsp = consumerResource.bind(
