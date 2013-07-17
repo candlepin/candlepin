@@ -56,9 +56,17 @@ public class DeletedConsumer extends AbstractHibernateObject {
     @Column(name = "owner_id", length = 32, nullable = false)
     private String ownerId;
 
-    public DeletedConsumer(String cuuid, String oid) {
+    @Column(name = "owner_key", length = 255, nullable = false)
+    private String ownerKey;
+
+    @Column(name = "owner_displayname", length = 255, nullable = false)
+    private String ownerDisplayName;
+
+    public DeletedConsumer(String cuuid, String oid, String okey, String oname) {
         consumerUuid = cuuid;
         ownerId = oid;
+        ownerKey = okey;
+        ownerDisplayName = oname;
     }
 
     public DeletedConsumer() {
@@ -91,5 +99,20 @@ public class DeletedConsumer extends AbstractHibernateObject {
 
     public String getOwnerId() {
         return ownerId;
+    }
+
+    public void setOwnerKey(String okey) {
+        ownerKey = okey;
+    }
+
+    public String getOwnerKey() {
+        return ownerKey;
+    }
+    public void setOwnerDisplayName(String oname) {
+        ownerDisplayName = oname;
+    }
+
+    public String getOwnerDisplayName() {
+        return ownerDisplayName;
     }
 }

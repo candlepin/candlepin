@@ -44,7 +44,7 @@ public class DeletedConsumerCuratorTest extends DatabaseTestFixture {
         super.init();
         dcc = injector.getInstance(DeletedConsumerCurator.class);
 
-        DeletedConsumer dc = new DeletedConsumer("abcde", "10");
+        DeletedConsumer dc = new DeletedConsumer("abcde", "10", "key", "name");
         dcc.create(dc);
         try {
             Thread.sleep(5);
@@ -58,7 +58,7 @@ public class DeletedConsumerCuratorTest extends DatabaseTestFixture {
         // save the current time, DCs created after this will have
         // a created timestamp after this time
         twoResultsDate = new Date();
-        dc = new DeletedConsumer("fghij", "10");
+        dc = new DeletedConsumer("fghij", "10", "key", "name");
         dcc.create(dc);
         try {
             Thread.sleep(5);
@@ -69,7 +69,7 @@ public class DeletedConsumerCuratorTest extends DatabaseTestFixture {
         }
 
         oneResultDate = new Date();
-        dc = new DeletedConsumer("klmno", "20");
+        dc = new DeletedConsumer("klmno", "20", "key", "name");
         dcc.create(dc);
     }
 
