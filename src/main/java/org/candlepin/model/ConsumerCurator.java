@@ -74,7 +74,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     public void delete(Consumer entity) {
         // save off the ids before we delete
         DeletedConsumer dc = new DeletedConsumer(entity.getUuid(),
-            entity.getOwner().getId());
+            entity.getOwner().getId(), entity.getOwner().getKey(),
+            entity.getOwner().getDisplayName());
 
         super.delete(entity);
 
@@ -83,6 +84,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         if (existing != null) {
             // update the owner ID in case the same UUID was specified by two owners
             existing.setOwnerId(dc.getOwnerId());
+            existing.setOwnerKey(dc.getOwnerKey());
+            existing.setOwnerDisplayName(dc.getOwnerDisplayName());
             existing.setUpdated(new Date());
             deletedConsumerCurator.save(existing);
         }
