@@ -619,9 +619,13 @@ class Candlepin
     get("/consumers/#{consumer_id}")
   end
 
-  def get_compliance(consumer_id=nil)
+  def get_compliance(consumer_id=nil, on_date=nil)
     consumer_id ||= @uuid
-    get("/consumers/#{consumer_id}/compliance")
+    query = "/consumers/#{consumer_id}/compliance"
+    if on_date
+        query << "?on_date=#{on_date}"
+    end
+    get(query)
   end
 
   def get_consumer_host(consumer_id=nil)

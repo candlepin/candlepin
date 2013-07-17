@@ -1,5 +1,6 @@
 
 require 'candlepin_scenarios'
+require 'time'
 
 def assert_reason(reason, expected_key, expected_message, expected_attributes)
   reason["key"].should == expected_key
@@ -132,7 +133,44 @@ describe 'Single Entitlement Compliance Reasons' do
                                                         'has' => expected_has,
                                                         'name' => @product1.name})
   end
-  
+
+  it 'future reasons system invalid' do
+    system = consumer_client(@user, random_string('system1'), :system, nil,
+                {'system.certificate_version' => '3.2',
+                 'uname.machine' => 'x86_64',
+                 'memory.memtotal' => '4194304',
+                 'cpu.cpu_socket(s)' => '2'})
+    installed = [
+        {'productId' => @product1.id, 'productName' => @product1.name}
+    ]
+    system.update_consumer({:installedProducts => installed})
+
+    pool = find_pool(@owner.id, @product1_sub.id)
+    pool.should_not == nil
+
+    entitlements = system.consume_pool(pool.id)
+    entitlements.should_not == nil
+    entitlements.size.should == 1
+    entitlement = entitlements[0]
+    # One day after endDate
+    after_stop_date = (Time.parse(entitlement.endDate) + 24 * 60 * 60).utc.iso8601
+
+    now_compliance_status = @cp.get_compliance(consumer_id=system.uuid)
+    compliance_status = @cp.get_compliance(consumer_id=system.uuid, on_date=after_stop_date)
+    compliance_status['status'].should == 'invalid'
+    compliance_status['compliant'].should == false
+    compliance_status.should have_key('reasons')
+
+    expected_message = "Not covered by a valid subscription."
+
+    reasons = compliance_status['reasons']
+    reasons.size.should == 1
+    assert_reason(reasons[0], 'NOTCOVERED', expected_message, {'product_id' => @product1.id,
+                                                        'name' => @product1.name})
+    @cp.get_consumer(system.uuid)['entitlementStatus'].should_not == now_compliance_status['status']
+
+  end
+
   it 'reports sockets not covered' do
     system = consumer_client(@user, random_string('system1'), :system, nil,
                 {'system.certificate_version' => '3.2',
