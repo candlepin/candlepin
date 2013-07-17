@@ -60,7 +60,6 @@ describe 'Consumer Resource' do
   end
 
   it 'allows super admins to see all consumers' do
-
     uuids = []
     @cp.list_consumers.each do |c|
       uuids << c['uuid']
@@ -70,6 +69,18 @@ describe 'Consumer Resource' do
     end
     uuids.include?(@consumer1.uuid).should be_true
     uuids.include?(@consumer2.uuid).should be_true
+  end
+
+  it 'allows super admins to query consumers by id' do
+    # Create a consumer that should not be in the list of returned results
+    consumer3 = consumer_client(@user2, random_string("consumer3"))
+    returned_uuids = []
+    @cp.list_consumers({:uuids => [@consumer1.uuid, @consumer2.uuid]}).each do |c|
+      returned_uuids << c['uuid']
+    end
+    returned_uuids.include?(@consumer1.uuid).should be_true
+    returned_uuids.include?(@consumer2.uuid).should be_true
+    returned_uuids.length.should == 2
   end
 
   it 'lets an owner admin see only their consumers' do
