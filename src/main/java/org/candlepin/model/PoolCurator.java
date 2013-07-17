@@ -56,6 +56,7 @@ import com.google.inject.persist.Transactional;
 public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     private static Logger log = Logger.getLogger(PoolCurator.class);
+    private Enforcer enforcer;
     private CriteriaRules poolCriteria;
     @Inject
     protected Injector injector;
@@ -64,8 +65,9 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     protected ProductCache productCache;
 
     @Inject
-    protected PoolCurator(CriteriaRules poolCriteria) {
+    protected PoolCurator(Enforcer enforcer, CriteriaRules poolCriteria) {
         super(Pool.class);
+        this.enforcer = enforcer;
         this.poolCriteria = poolCriteria;
     }
 
@@ -92,8 +94,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      */
     @Transactional
     @EnforceAccessControl
-    public List<Pool> listByOwner(Enforcer enforcer, Owner o) {
-        return listByOwner(enforcer, o, null);
+    public List<Pool> listByOwner(Owner o) {
+        return listByOwner(o, null);
     }
 
     /**
@@ -104,9 +106,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      */
     @Transactional
     @EnforceAccessControl
-    public List<Pool> listByOwner(Enforcer enforcer, Owner o, Date activeOn) {
-        return listAvailableEntitlementPools(enforcer, null, o, null, activeOn, true,
-            false);
+    public List<Pool> listByOwner(Owner o, Date activeOn) {
+        return listAvailableEntitlementPools(null, o, null, activeOn, true, false);
     }
 
     /**
@@ -133,8 +134,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      */
     @Transactional
     @EnforceAccessControl
-    public List<Pool> listByConsumer(Enforcer enforcer, Consumer c) {
-        return listAvailableEntitlementPools(enforcer, c, c.getOwner(), (String) null, null,
+    public List<Pool> listByConsumer(Consumer c) {
+        return listAvailableEntitlementPools(c, c.getOwner(), (String) null, null,
             true, false);
     }
 
@@ -147,18 +148,17 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      */
     @Transactional
     @EnforceAccessControl
-    public List<Pool> listByOwnerAndProduct(Enforcer enforcer, Owner owner,
+    public List<Pool> listByOwnerAndProduct(Owner owner,
             String productId) {
-        return listAvailableEntitlementPools(enforcer, null, owner, productId, null, false,
-            false);
+        return listAvailableEntitlementPools(null, owner, productId, null, false, false);
     }
 
     @SuppressWarnings("unchecked")
     @Transactional
     @EnforceAccessControl
-    public List<Pool> listAvailableEntitlementPools(Enforcer enforcer, Consumer c, Owner o,
+    public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
             String productId, Date activeOn, boolean activeOnly, boolean includeWarnings) {
-        return listAvailableEntitlementPools(enforcer, c, o, productId, activeOn, activeOnly,
+        return listAvailableEntitlementPools(c, o, productId, activeOn, activeOnly,
             includeWarnings, null).getPageData();
     }
 
@@ -170,7 +170,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * If a consumer is specified, a pass through the rules will be done for
      * each potentially usable pool.
      *
-     * @param enforcer the enforcer to determine which pools are valid for a consumer.
      * @param c Consumer being entitled.
      * @param o Owner whose subscriptions should be inspected.
      * @param productId only entitlements which provide this product are included.
@@ -184,9 +183,9 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     @SuppressWarnings("unchecked")
     @Transactional
     @EnforceAccessControl
-    public Page<List<Pool>> listAvailableEntitlementPools(Enforcer enforcer, Consumer c,
-            Owner o, String productId, Date activeOn, boolean activeOnly,
-            boolean includeWarnings, PageRequest pageRequest) {
+    public Page<List<Pool>> listAvailableEntitlementPools(Consumer c, Owner o,
+            String productId, Date activeOn, boolean activeOnly, boolean includeWarnings,
+            PageRequest pageRequest) {
         if (o == null && c != null) {
             o = c.getOwner();
         }

@@ -129,7 +129,7 @@ public class CandlepinPoolManager implements PoolManager {
         List<Subscription> subs = subAdapter.getSubscriptions(owner);
         log.debug("Found " + subs.size() + " subscriptions.");
 
-        List<Pool> pools = this.poolCurator.listAvailableEntitlementPools(enforcer, null,
+        List<Pool> pools = this.poolCurator.listAvailableEntitlementPools(null,
             owner, null, null, false, false);
 
         // Map all pools for this owner/product that have a
@@ -380,7 +380,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         ValidationResult failedResult = null;
 
-        List<Pool> allOwnerPools = poolCurator.listAvailableEntitlementPools(enforcer,
+        List<Pool> allOwnerPools = poolCurator.listAvailableEntitlementPools(
             consumer, owner, (String) null, entitleDate, true, false);
         List<Pool> filteredPools = new LinkedList<Pool>();
 
@@ -741,7 +741,7 @@ public class CandlepinPoolManager implements PoolManager {
     @Transactional
     public void regenerateCertificatesOf(String productId, boolean lazy) {
         List<Pool> poolsForProduct = this.poolCurator
-            .listAvailableEntitlementPools(enforcer, null, null, productId, new Date(),
+            .listAvailableEntitlementPools(null, null, productId, new Date(),
                 false, false);
         for (Pool pool : poolsForProduct) {
             regenerateCertificatesOf(pool.getEntitlements(), lazy);

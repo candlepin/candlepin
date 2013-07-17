@@ -161,8 +161,8 @@ public class PoolManagerTest {
         when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
             subscriptions);
         when(
-            mockPoolCurator.listAvailableEntitlementPools(any(Enforcer.class),
-                any(Consumer.class), any(Owner.class), anyString(), any(Date.class),
+            mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
+                any(Owner.class), anyString(), any(Date.class),
                 anyBoolean(), anyBoolean())).thenReturn(pools);
         this.manager.getRefresher().add(getOwner()).run();
         verify(this.manager).deletePool(same(p));
@@ -178,8 +178,8 @@ public class PoolManagerTest {
         when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
             subscriptions);
         when(
-            mockPoolCurator.listAvailableEntitlementPools(any(Enforcer.class),
-                any(Consumer.class), any(Owner.class), anyString(), any(Date.class),
+            mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
+                any(Owner.class), anyString(), any(Date.class),
                 anyBoolean(), anyBoolean())).thenReturn(pools);
 
         List<Pool> newPools = new LinkedList<Pool>();
@@ -208,8 +208,8 @@ public class PoolManagerTest {
         when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
             subscriptions);
         when(
-            mockPoolCurator.listAvailableEntitlementPools(any(Enforcer.class),
-                any(Consumer.class), any(Owner.class), anyString(), any(Date.class),
+            mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
+                any(Owner.class), anyString(), any(Date.class),
                 anyBoolean(), anyBoolean())).thenReturn(pools);
 
         List<PoolUpdate> updates = new LinkedList();
@@ -324,8 +324,8 @@ public class PoolManagerTest {
 
         ValidationResult result = mock(ValidationResult.class);
 
-        when(mockPoolCurator.listAvailableEntitlementPools(any(Enforcer.class),
-            any(Consumer.class), any(Owner.class), any(String.class), eq(now), anyBoolean(),
+        when(mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
+            any(Owner.class), any(String.class), eq(now), anyBoolean(),
             anyBoolean())).thenReturn(pools);
         when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(pool1);
         when(enforcerMock.preEntitlement(any(Consumer.class), any(Pool.class), anyInt(),
@@ -376,7 +376,7 @@ public class PoolManagerTest {
 
         when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(p);
 
-        when(mockPoolCurator.listAvailableEntitlementPools(any(Enforcer.class), any(Consumer.class),
+        when(mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
             any(Owner.class), anyString(), any(Date.class),
             anyBoolean(), anyBoolean())).thenReturn(pools);
 
@@ -504,8 +504,8 @@ public class PoolManagerTest {
         when(complianceRules.getStatus(any(Consumer.class),
             any(Date.class))).thenReturn(mockCompliance);
 
-        when(mockPoolCurator.listAvailableEntitlementPools(any(Enforcer.class),
-            any(Consumer.class), any(Owner.class), anyString(), eq(now),
+        when(mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
+            any(Owner.class), anyString(), eq(now),
             anyBoolean(), anyBoolean())).thenReturn(pools);
 
         when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(pool1);

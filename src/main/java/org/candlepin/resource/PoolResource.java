@@ -34,7 +34,6 @@ import org.candlepin.model.StatisticCurator;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.paging.Paginate;
-import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ResourceDateParser;
 
@@ -72,14 +71,12 @@ public class PoolResource {
     private I18n i18n;
     private PoolManager poolManager;
     private CalculatedAttributesUtil calculatedAttributesUtil;
-    private Enforcer enforcer;
 
     @Inject
     public PoolResource(PoolCurator poolCurator,
         ConsumerCurator consumerCurator, OwnerCurator ownerCurator,
         StatisticCurator statisticCurator, I18n i18n,
         PoolManager poolManager,
-        Enforcer enforcer,
         CalculatedAttributesUtil calculatedAttributesUtil) {
 
         this.poolCurator = poolCurator;
@@ -89,7 +86,6 @@ public class PoolResource {
         this.i18n = i18n;
         this.poolManager = poolManager;
         this.calculatedAttributesUtil = calculatedAttributesUtil;
-        this.enforcer = enforcer;
     }
 
     /**
@@ -180,8 +176,8 @@ public class PoolResource {
                     principal.getPrincipalName()));
         }
 
-        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(enforcer, c, o,
-            productId, activeOnDate, true, listAll, pageRequest);
+        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(c, o, productId,
+            activeOnDate, true, listAll, pageRequest);
         List<Pool> poolList = page.getPageData();
 
         if (c != null) {

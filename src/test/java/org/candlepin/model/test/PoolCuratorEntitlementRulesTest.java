@@ -76,7 +76,7 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
 
         consumer.setFact("cpu.sockets", "4");
         List<Pool> results =
-            poolCurator.listAvailableEntitlementPools(enforcer, consumer, consumer.getOwner(),
+            poolCurator.listAvailableEntitlementPools(consumer, consumer.getOwner(),
                 null, null, true, true);
         assertEquals(1, results.size());
     }
@@ -94,8 +94,8 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
         poolCurator.create(pool);
 
         List<Pool> results =
-            poolCurator.listAvailableEntitlementPools(enforcer, consumer,
-                consumer.getOwner(), null, null, true, true);
+            poolCurator.listAvailableEntitlementPools(consumer, consumer.getOwner(),
+                null, null, true, true);
         assertEquals(0, results.size());
     }
 
@@ -112,7 +112,7 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
 
         consumer.setFact("cpu.cpu_socket(s)", "4");
         List<Pool> results =
-            poolCurator.listByConsumer(enforcer, consumer);
+            poolCurator.listByConsumer(consumer);
         assertEquals(0, results.size());
     }
 
