@@ -1,4 +1,4 @@
-#!/usr/bin/ruby
+#!/usr/bin/env ruby
 
 require  "../../client/ruby/candlepin_api"
 require 'pp'
