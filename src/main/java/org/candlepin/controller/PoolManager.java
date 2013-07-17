@@ -25,7 +25,6 @@ import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.policy.EntitlementRefusedException;
 
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -180,7 +179,7 @@ public interface PoolManager {
      * @param pool look for entitlements from this Pool.
      * @return a list of entitlements
      */
-     List<Entitlement> findEntitlementsForPool(Pool pool);
+    List<Entitlement> findEntitlementsForPool(Pool pool);
 
     /**
      * Find the Ueber pool for this owner

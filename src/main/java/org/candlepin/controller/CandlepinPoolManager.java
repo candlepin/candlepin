@@ -131,7 +131,6 @@ public class CandlepinPoolManager implements PoolManager {
         List<Subscription> subs = subAdapter.getSubscriptions(owner);
         log.debug("Found " + subs.size() + " subscriptions.");
 
-        // FIXME mstead: This is a get by owner -- make a specifc call here.
         List<Pool> pools = this.listAvailableEntitlementPools(null,
             owner, null, null, false, false, null).getPageData();
 
@@ -745,7 +744,6 @@ public class CandlepinPoolManager implements PoolManager {
     @Override
     @Transactional
     public void regenerateCertificatesOf(String productId, boolean lazy) {
-        // TODO mstead: Targets a pool lookup by productId -- call a method to get just that.
         List<Pool> poolsForProduct = this.listAvailableEntitlementPools(null, null,
             productId, new Date(), false, false, null).getPageData();
         for (Pool pool : poolsForProduct) {
