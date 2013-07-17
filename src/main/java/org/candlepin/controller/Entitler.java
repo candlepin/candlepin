@@ -155,7 +155,7 @@ public class Entitler {
                     "required by pool ''{0}''", pool.getId());
             }
             else {
-                msg = i18n.tr("Unable to attach pool with ID '{0}''.: {1}.",
+                msg = i18n.tr("Unable to attach pool with ID ''{0}''.: {1}.",
                     pool.getId().toString(), error);
             }
             throw new ForbiddenException(msg);
