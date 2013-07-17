@@ -14,11 +14,8 @@
  */
 package org.candlepin.model.test;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-
-import java.util.List;
 
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.model.Consumer;
@@ -47,8 +44,6 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
     private Product product;
     private Consumer consumer;
 
-    private static final String CPU_LIMITED_PRODUCT = "CPULIMITED001";
-
     @Before
     public void setUp() {
         owner = createOwner();
@@ -62,58 +57,6 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
         consumer.setType(new ConsumerType("system"));
         consumerTypeCurator.create(consumer.getType());
         consumerCurator.create(consumer);
-    }
-
-    @Test
-    public void testListAllForConsumerConsumerIncludesWarnings() {
-        Product p = new Product(CPU_LIMITED_PRODUCT, CPU_LIMITED_PRODUCT);
-        p.addAttribute(new ProductAttribute("sockets", "2"));
-        productCurator.create(p);
-
-        Pool pool = createPoolAndSub(owner, p, 100L,
-            TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
-        poolCurator.create(pool);
-
-        consumer.setFact("cpu.sockets", "4");
-        List<Pool> results =
-            poolCurator.listAvailableEntitlementPools(enforcer, consumer, consumer.getOwner(),
-                null, null, true, true);
-        assertEquals(1, results.size());
-    }
-
-
-    @Test
-    public void testListAllForConsumerExcludesErrors() {
-        Product p = new Product(CPU_LIMITED_PRODUCT, CPU_LIMITED_PRODUCT);
-        productCurator.create(p);
-
-        // Creating a pool with no entitlements available, which will trigger
-        // a rules error:
-        Pool pool = createPoolAndSub(owner, p, 0L,
-            TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
-        poolCurator.create(pool);
-
-        List<Pool> results =
-            poolCurator.listAvailableEntitlementPools(enforcer, consumer,
-                consumer.getOwner(), null, null, true, true);
-        assertEquals(0, results.size());
-    }
-
-    @Test
-    public void testListForConsumerExcludesWarnings() {
-
-        Product p = new Product(CPU_LIMITED_PRODUCT, CPU_LIMITED_PRODUCT);
-        p.addAttribute(new ProductAttribute("sockets", "2"));
-        productCurator.create(p);
-
-        Pool pool = createPoolAndSub(owner, p, 100L,
-            TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
-        poolCurator.create(pool);
-
-        consumer.setFact("cpu.cpu_socket(s)", "4");
-        List<Pool> results =
-            poolCurator.listByConsumer(enforcer, consumer);
-        assertEquals(0, results.size());
     }
 
     @Test

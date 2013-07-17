@@ -32,12 +32,12 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.interceptor.Verify;
+import org.candlepin.controller.PoolManager;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.ActivationKey;
 import org.candlepin.model.ActivationKeyCurator;
 import org.candlepin.model.ActivationKeyPool;
 import org.candlepin.model.Pool;
-import org.candlepin.model.PoolCurator;
 import org.candlepin.model.ProductPoolAttribute;
 import org.xnap.commons.i18n.I18n;
 
@@ -50,15 +50,15 @@ import com.google.inject.Inject;
 public class ActivationKeyResource {
     private static Logger log = Logger.getLogger(ActivationKeyResource.class);
     private ActivationKeyCurator activationKeyCurator;
-    private PoolCurator poolCurator;
+    private PoolManager poolManager;
     private I18n i18n;
 
     @Inject
     public ActivationKeyResource(ActivationKeyCurator activationKeyCurator,
-        I18n i18n, PoolCurator poolCurator) {
+        I18n i18n, PoolManager poolManager) {
         this.activationKeyCurator = activationKeyCurator;
         this.i18n = i18n;
-        this.poolCurator = poolCurator;
+        this.poolManager = poolManager;
     }
 
     /**
@@ -228,7 +228,7 @@ public class ActivationKeyResource {
     }
 
     private Pool findPool(String poolId) {
-        Pool pool = poolCurator.find(poolId);
+        Pool pool = poolManager.find(poolId);
 
         if (pool == null) {
             throw new BadRequestException(i18n.tr(

@@ -14,36 +14,6 @@
  */
 package org.candlepin.resource;
 
-import org.candlepin.auth.Access;
-import org.candlepin.auth.Principal;
-import org.candlepin.auth.interceptor.SecurityHole;
-import org.candlepin.auth.interceptor.Verify;
-import org.candlepin.controller.PoolManager;
-import org.candlepin.exceptions.BadRequestException;
-import org.candlepin.exceptions.ForbiddenException;
-import org.candlepin.exceptions.NotFoundException;
-import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerCurator;
-import org.candlepin.model.Entitlement;
-import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.Pool;
-import org.candlepin.model.PoolCurator;
-import org.candlepin.model.Statistic;
-import org.candlepin.model.StatisticCurator;
-import org.candlepin.paging.Page;
-import org.candlepin.paging.PageRequest;
-import org.candlepin.paging.Paginate;
-import org.candlepin.policy.js.entitlement.Enforcer;
-import org.candlepin.resource.util.CalculatedAttributesUtil;
-import org.candlepin.resource.util.ResourceDateParser;
-
-import com.google.inject.Inject;
-
-import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
-import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import org.xnap.commons.i18n.I18n;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -58,6 +28,33 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+import org.candlepin.auth.Access;
+import org.candlepin.auth.Principal;
+import org.candlepin.auth.interceptor.SecurityHole;
+import org.candlepin.auth.interceptor.Verify;
+import org.candlepin.controller.PoolManager;
+import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.exceptions.ForbiddenException;
+import org.candlepin.exceptions.NotFoundException;
+import org.candlepin.model.Consumer;
+import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.Entitlement;
+import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.Pool;
+import org.candlepin.model.Statistic;
+import org.candlepin.model.StatisticCurator;
+import org.candlepin.paging.Page;
+import org.candlepin.paging.PageRequest;
+import org.candlepin.paging.Paginate;
+import org.candlepin.resource.util.CalculatedAttributesUtil;
+import org.candlepin.resource.util.ResourceDateParser;
+import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
+import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.xnap.commons.i18n.I18n;
+
+import com.google.inject.Inject;
+
 /**
  * API gateway for the EntitlementPool
  */
@@ -65,31 +62,25 @@ import javax.ws.rs.core.MediaType;
 @Path("/pools")
 public class PoolResource {
 
-    private PoolCurator poolCurator;
     private ConsumerCurator consumerCurator;
     private OwnerCurator ownerCurator;
     private StatisticCurator statisticCurator;
     private I18n i18n;
     private PoolManager poolManager;
     private CalculatedAttributesUtil calculatedAttributesUtil;
-    private Enforcer enforcer;
 
     @Inject
-    public PoolResource(PoolCurator poolCurator,
-        ConsumerCurator consumerCurator, OwnerCurator ownerCurator,
+    public PoolResource(ConsumerCurator consumerCurator, OwnerCurator ownerCurator,
         StatisticCurator statisticCurator, I18n i18n,
         PoolManager poolManager,
-        Enforcer enforcer,
         CalculatedAttributesUtil calculatedAttributesUtil) {
 
-        this.poolCurator = poolCurator;
         this.consumerCurator = consumerCurator;
         this.ownerCurator = ownerCurator;
         this.statisticCurator = statisticCurator;
         this.i18n = i18n;
         this.poolManager = poolManager;
         this.calculatedAttributesUtil = calculatedAttributesUtil;
-        this.enforcer = enforcer;
     }
 
     /**
@@ -180,8 +171,8 @@ public class PoolResource {
                     principal.getPrincipalName()));
         }
 
-        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(enforcer, c, o,
-            productId, activeOnDate, true, listAll, pageRequest);
+        Page<List<Pool>> page = poolManager.listAvailableEntitlementPools(c, o, productId,
+            activeOnDate, true, listAll, pageRequest);
         List<Pool> poolList = page.getPageData();
 
         if (c != null) {
@@ -211,7 +202,7 @@ public class PoolResource {
     public Pool getPool(@PathParam("pool_id") @Verify(Pool.class) String id,
         @QueryParam("consumer") String consumerUuid,
         @Context Principal principal) {
-        Pool toReturn = poolCurator.find(id);
+        Pool toReturn = poolManager.find(id);
 
         Consumer c = null;
         if (consumerUuid != null) {
@@ -248,7 +239,7 @@ public class PoolResource {
     @Path("/{pool_id}")
     @Produces(MediaType.APPLICATION_JSON)
     public void deletePool(@PathParam("pool_id") String id) {
-        Pool pool = poolCurator.find(id);
+        Pool pool = poolManager.find(id);
         if (pool == null) {
             throw new NotFoundException(i18n.tr(
                 "Entitlement Pool with ID ''{0}'' could not be found.", id));
@@ -288,7 +279,7 @@ public class PoolResource {
                             @Verify(Pool.class) String id,
                             @Context Principal principal) {
 
-        Pool pool = poolCurator.find(id);
+        Pool pool = poolManager.find(id);
 
         if (pool == null) {
             throw new NotFoundException(i18n.tr(

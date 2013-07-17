@@ -27,11 +27,8 @@ import org.apache.log4j.Logger;
 import org.candlepin.auth.interceptor.EnforceAccessControl;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
-import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.criteria.CriteriaRules;
 import org.candlepin.policy.js.ProductCache;
-import org.candlepin.policy.js.entitlement.Enforcer;
-import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
 import org.hibernate.Criteria;
 import org.hibernate.Filter;
 import org.hibernate.LockMode;
@@ -92,8 +89,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      */
     @Transactional
     @EnforceAccessControl
-    public List<Pool> listByOwner(Enforcer enforcer, Owner o) {
-        return listByOwner(enforcer, o, null);
+    public List<Pool> listByOwner(Owner o) {
+        return listByOwner(o, null);
     }
 
     /**
@@ -104,9 +101,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      */
     @Transactional
     @EnforceAccessControl
-    public List<Pool> listByOwner(Enforcer enforcer, Owner o, Date activeOn) {
-        return listAvailableEntitlementPools(enforcer, null, o, null, activeOn, true,
-            false);
+    public List<Pool> listByOwner(Owner o, Date activeOn) {
+        return listAvailableEntitlementPools(null, o, null, activeOn, true);
     }
 
     /**
@@ -124,20 +120,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return results;
     }
 
-
-    /**
-     * Returns list of pools available to the consumer.
-     *
-     * @param c Consumer to filter
-     * @return pools available to the consumer.
-     */
-    @Transactional
-    @EnforceAccessControl
-    public List<Pool> listByConsumer(Enforcer enforcer, Consumer c) {
-        return listAvailableEntitlementPools(enforcer, c, c.getOwner(), (String) null, null,
-            true, false);
-    }
-
     /**
      * List all entitlement pools for the given owner and product.
      *
@@ -147,19 +129,19 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      */
     @Transactional
     @EnforceAccessControl
-    public List<Pool> listByOwnerAndProduct(Enforcer enforcer, Owner owner,
+    // FIXME Not referenced anywhere.
+    public List<Pool> listByOwnerAndProduct(Owner owner,
             String productId) {
-        return listAvailableEntitlementPools(enforcer, null, owner, productId, null, false,
-            false);
+        return listAvailableEntitlementPools(null, owner, productId, null, false);
     }
 
     @SuppressWarnings("unchecked")
     @Transactional
     @EnforceAccessControl
-    public List<Pool> listAvailableEntitlementPools(Enforcer enforcer, Consumer c, Owner o,
-            String productId, Date activeOn, boolean activeOnly, boolean includeWarnings) {
-        return listAvailableEntitlementPools(enforcer, c, o, productId, activeOn, activeOnly,
-            includeWarnings, null).getPageData();
+    public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
+            String productId, Date activeOn, boolean activeOnly) {
+        return listAvailableEntitlementPools(c, o, productId, activeOn, activeOnly,
+            null).getPageData();
     }
 
     /**
@@ -167,26 +149,20 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      *
      * Pools will be refreshed from the underlying subscription service.
      *
-     * If a consumer is specified, a pass through the rules will be done for
-     * each potentially usable pool.
-     *
-     * @param enforcer the enforcer to determine which pools are valid for a consumer.
      * @param c Consumer being entitled.
      * @param o Owner whose subscriptions should be inspected.
      * @param productId only entitlements which provide this product are included.
      * @param activeOn Indicates to return only pools valid on this date.
      *        Set to null for no date filtering.
      * @param activeOnly if true, only active entitlements are included.
-     * @param includeWarnings When filtering by consumer, include pools that
-     *        triggered a rule warning. (errors will still be excluded)
+     * @param pageRequest used to specify paging criteria.
      * @return List of entitlement pools.
      */
     @SuppressWarnings("unchecked")
     @Transactional
     @EnforceAccessControl
-    public Page<List<Pool>> listAvailableEntitlementPools(Enforcer enforcer, Consumer c,
-            Owner o, String productId, Date activeOn, boolean activeOnly,
-            boolean includeWarnings, PageRequest pageRequest) {
+    public Page<List<Pool>> listAvailableEntitlementPools(Consumer c, Owner o,
+            String productId, Date activeOn, boolean activeOnly, PageRequest pageRequest) {
         if (o == null && c != null) {
             o = c.getOwner();
         }
@@ -253,32 +229,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                     newResults.add(p);
                     if (log.isDebugEnabled()) {
                         log.debug("Pool provides " + productId + ": " + p);
-                    }
-                }
-            }
-            results = newResults;
-        }
-
-        // If querying for pools available to a specific consumer, we need
-        // to do a rules pass to verify the entitlement will be granted.
-        // Note that something could change between the time we list a pool as
-        // available, and the consumer requests the actual entitlement, and the
-        // request still could fail.
-        if (c != null) {
-            List<Pool> newResults = new LinkedList<Pool>();
-            for (Pool p : results) {
-                ValidationResult result = enforcer.preEntitlement(
-                    c, p, 1, CallerType.LIST_POOLS);
-                if (result.isSuccessful() && (!result.hasWarnings() || includeWarnings)) {
-                    newResults.add(p);
-                }
-                else {
-                    log.info("Omitting pool due to failed rule check: " + p.getId());
-                    if (result.hasErrors()) {
-                        log.info("\tErrors: " + result.getErrors());
-                    }
-                    if (result.hasWarnings()) {
-                        log.info("\tWarnings: " + result.getWarnings());
                     }
                 }
             }

@@ -78,7 +78,6 @@ import org.candlepin.model.OwnerInfoCurator;
 import org.candlepin.model.OwnerPermission;
 import org.candlepin.model.OwnerPermissionCurator;
 import org.candlepin.model.Pool;
-import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Statistic;
 import org.candlepin.model.StatisticCurator;
 import org.candlepin.model.Subscription;
@@ -90,7 +89,6 @@ import org.candlepin.paging.PageRequest;
 import org.candlepin.paging.Paginate;
 import org.candlepin.pinsetter.tasks.EntitlerJob;
 import org.candlepin.pinsetter.tasks.RefreshPoolsJob;
-import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -120,7 +118,6 @@ public class OwnerResource {
 
     private OwnerCurator ownerCurator;
     private OwnerInfoCurator ownerInfoCurator;
-    private PoolCurator poolCurator;
     private SubscriptionCurator subscriptionCurator;
     private ActivationKeyCurator activationKeyCurator;
     private StatisticCurator statisticCurator;
@@ -143,12 +140,11 @@ public class OwnerResource {
     private UeberCertificateGenerator ueberCertGenerator;
     private EnvironmentCurator envCurator;
     private CalculatedAttributesUtil calculatedAttributesUtil;
-    private Enforcer enforcer;
 
     private static final int FEED_LIMIT = 1000;
 
     @Inject
-    public OwnerResource(OwnerCurator ownerCurator, PoolCurator poolCurator,
+    public OwnerResource(OwnerCurator ownerCurator,
         SubscriptionCurator subscriptionCurator,
         ActivationKeyCurator activationKeyCurator,
         ConsumerCurator consumerCurator,
@@ -165,12 +161,10 @@ public class OwnerResource {
         EntitlementCertificateCurator entitlementCertCurator,
         EntitlementCurator entitlementCurator,
         UeberCertificateGenerator ueberCertGenerator,
-        EnvironmentCurator envCurator, Enforcer enforcer,
-        CalculatedAttributesUtil calculatedAttributesUtil) {
+        EnvironmentCurator envCurator, CalculatedAttributesUtil calculatedAttributesUtil) {
 
         this.ownerCurator = ownerCurator;
         this.ownerInfoCurator = ownerInfoCurator;
-        this.poolCurator = poolCurator;
         this.subscriptionCurator = subscriptionCurator;
         this.activationKeyCurator = activationKeyCurator;
         this.consumerCurator = consumerCurator;
@@ -192,7 +186,6 @@ public class OwnerResource {
         this.ueberCertGenerator = ueberCertGenerator;
         this.envCurator = envCurator;
         this.calculatedAttributesUtil = calculatedAttributesUtil;
-        this.enforcer = enforcer;
     }
 
     /**
@@ -332,9 +325,9 @@ public class OwnerResource {
             log.info("Deleting subscription: " + s);
             subscriptionCurator.delete(s);
         }
-        for (Pool p : poolCurator.listByOwner(enforcer, owner)) {
+        for (Pool p : poolManager.listPoolsByOwner(owner)) {
             log.info("Deleting pool: " + p);
-            poolCurator.delete(p);
+            poolManager.deletePool(p);
         }
 
         cleanupUeberCert(owner);
@@ -374,9 +367,9 @@ public class OwnerResource {
             subscriptionCurator.delete(ueberSub);
         }
 
-        Pool ueberPool = poolCurator.findUeberPool(owner);
+        Pool ueberPool = poolManager.findUeberPool(owner);
         if (ueberPool != null) {
-            poolCurator.delete(ueberPool);
+            poolManager.deletePool(ueberPool);
         }
     }
 
@@ -397,7 +390,7 @@ public class OwnerResource {
 
         List<Entitlement> toReturn = new LinkedList<Entitlement>();
         for (Pool pool : owner.getPools()) {
-            toReturn.addAll(poolCurator.entitlementsIn(pool));
+            toReturn.addAll(poolManager.findEntitlementsForPool(pool));
         }
 
         return toReturn;
@@ -456,7 +449,7 @@ public class OwnerResource {
             require = Access.READ_SERVICE_LEVELS) String ownerKey) {
         Owner owner = findOwner(ownerKey);
 
-        return poolCurator.retrieveServiceLevelsForOwner(owner, false);
+        return poolManager.retrieveServiceLevelsForOwner(owner, false);
     }
 
     /**
@@ -660,7 +653,7 @@ public class OwnerResource {
             }
         }
 
-        Page<List<Pool>> page = poolCurator.listAvailableEntitlementPools(enforcer, c, owner,
+        Page<List<Pool>> page = poolManager.listAvailableEntitlementPools(c, owner,
             productId, activeOnDate, true, listAll, pageRequest);
         List<Pool> poolList = page.getPageData();
 
@@ -834,7 +827,7 @@ public class OwnerResource {
         throws BadRequestException {
         if (serviceLevel != null &&
             !serviceLevel.trim().equals("")) {
-            for (String level : poolCurator.retrieveServiceLevelsForOwner(owner, false)) {
+            for (String level : poolManager.retrieveServiceLevelsForOwner(owner, false)) {
                 if (serviceLevel.equalsIgnoreCase(level)) {
                     return;
                 }

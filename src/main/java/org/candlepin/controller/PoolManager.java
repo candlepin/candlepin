@@ -21,6 +21,8 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Subscription;
+import org.candlepin.paging.Page;
+import org.candlepin.paging.PageRequest;
 import org.candlepin.policy.EntitlementRefusedException;
 
 import java.util.Date;
@@ -129,4 +131,63 @@ public interface PoolManager {
 
     Entitlement adjustEntitlementQuantity(Consumer consumer, Entitlement entitlement,
         Integer quantity) throws EntitlementRefusedException;
+
+    /**
+     * List entitlement pools.
+     *
+     * If a consumer is specified, a pass through the rules will be done for
+     * each potentially usable pool.
+     *
+     * @param consumer Consumer being entitled.
+     * @param owner Owner whose subscriptions should be inspected.
+     * @param productId only entitlements which provide this product are included.
+     * @param activeOn Indicates to return only pools valid on this date.
+     *        Set to null for no date filtering.
+     * @param activeOnly if true, only active entitlements are included.
+     * @param includeWarnings When filtering by consumer, include pools that
+     *        triggered a rule warning. (errors will still be excluded)
+     * @param pageRequest used to determine if results paging is required.
+     * @return List of entitlement pools.
+     */
+    Page<List<Pool>> listAvailableEntitlementPools(Consumer consumer, Owner owner,
+        String productId, Date activeOn, boolean activeOnly, boolean includeWarnings,
+        PageRequest pageRequest);
+
+    /**
+     *  Get the available service levels for consumers for this owner. Exempt
+     *  means that a product pool with this level can be used with a consumer of any
+     *  service level.
+     *
+     * @param owner The owner that has the list of available service levels for
+     *              its consumers
+     * @param exempt boolean to show if the desired list is the levels that are
+     *               explicitly marked with the support_level_exempt attribute.
+     * @return Set of levels based on exempt flag.
+     */
+    Set<String> retrieveServiceLevelsForOwner(Owner owner, boolean exempt);
+
+    /**
+     * Finds the entitlements for the specified Pool.
+     *
+     * @param pool look for entitlements from this Pool.
+     * @return a list of entitlements
+     */
+    List<Entitlement> findEntitlementsForPool(Pool pool);
+
+    /**
+     * Find the Ueber pool for this owner
+     *
+     * @param owner the owner to fetch the pool from
+     * @return the Ueber pool
+     */
+    Pool findUeberPool(Owner owner);
+
+    /**
+     * Lists the pools for the specified Owner.
+     *
+     * @param owner the Owner to get the pools for
+     * @return a list of pools for the specified Owner
+     */
+    List<Pool> listPoolsByOwner(Owner owner);
+
 }

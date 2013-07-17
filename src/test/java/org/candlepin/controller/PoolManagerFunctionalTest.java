@@ -24,15 +24,6 @@ import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.reset;
 
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-
-import javax.persistence.EntityNotFoundException;
-
-import org.apache.commons.collections.Transformer;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventSink;
 import org.candlepin.model.Consumer;
@@ -46,18 +37,30 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.Subscription;
+import org.candlepin.paging.Page;
+import org.candlepin.paging.PageRequest;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Module;
+
+import org.apache.commons.collections.Transformer;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Module;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+
+import javax.persistence.EntityNotFoundException;
 
 public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
@@ -72,6 +75,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     private Product virtGuest;
     private Product monitoring;
     private Product provisioning;
+    private Product socketLimitedProduct;
 
     private ConsumerType systemType;
 
@@ -100,6 +104,11 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         virtGuest.addAttribute(new ProductAttribute(PRODUCT_VIRT_GUEST, ""));
         monitoring.addAttribute(new ProductAttribute(PRODUCT_MONITORING, ""));
         provisioning.addAttribute(new ProductAttribute(PRODUCT_PROVISIONING, ""));
+
+        socketLimitedProduct = new Product("socket-limited-prod",
+            "Socket Limited Product");
+        socketLimitedProduct.addAttribute(new ProductAttribute("sockets", "2"));
+        productCurator.create(socketLimitedProduct);
 
         productAdapter.createProduct(virtHost);
         productAdapter.createProduct(virtHostPlatform);
@@ -133,16 +142,16 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
     @Test
     public void testEntitlementPoolsCreated() {
-        List<Pool> pools = poolCurator.listByOwner(enforcer, o);
+        List<Pool> pools = poolCurator.listByOwner(o);
         assertTrue(pools.size() > 0);
 
-        Pool virtHostPool = poolCurator.listByOwnerAndProduct(enforcer, o, virtHost.getId()).get(0);
+        Pool virtHostPool = poolCurator.listByOwnerAndProduct(o, virtHost.getId()).get(0);
         assertNotNull(virtHostPool);
     }
 
     @Test
     public void testQuantityCheck() throws Exception {
-        Pool monitoringPool = poolCurator.listByOwnerAndProduct(enforcer, o,
+        Pool monitoringPool = poolCurator.listByOwnerAndProduct(o,
                 monitoring.getId()).get(0);
         assertEquals(Long.valueOf(5), monitoringPool.getQuantity());
         for (int i = 0; i < 5; i++) {
@@ -178,7 +187,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
     @Test
     public void testConsumeQuantity() throws Exception {
-        Pool monitoringPool = poolCurator.listByOwnerAndProduct(enforcer, o,
+        Pool monitoringPool = poolCurator.listByOwnerAndProduct(o,
             monitoring.getId()).get(0);
         assertEquals(Long.valueOf(5), monitoringPool.getQuantity());
 
@@ -273,7 +282,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         // set up initial pool
         poolManager.getRefresher().add(o).run();
 
-        List<Pool> pools = poolCurator.listByOwnerAndProduct(enforcer, o, product1.getId());
+        List<Pool> pools = poolCurator.listByOwnerAndProduct(o, product1.getId());
         assertEquals(1, pools.size());
 
         // now alter the product behind the sub, and make sure the pool is also updated
@@ -283,8 +292,70 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         // set up initial pool
         poolManager.getRefresher().add(o).run();
 
-        pools = poolCurator.listByOwnerAndProduct(enforcer, o, product2.getId());
+        pools = poolCurator.listByOwnerAndProduct(o, product2.getId());
         assertEquals(1, pools.size());
+    }
+
+    @Test
+    public void testListAllForConsumerIncludesWarnings() {
+        Page<List<Pool>> results =
+            poolManager.listAvailableEntitlementPools(parentSystem, parentSystem.getOwner(),
+                null, null, true, true, new PageRequest());
+        assertEquals(4, results.getPageData().size());
+
+        Pool pool = createPoolAndSub(o, socketLimitedProduct, 100L,
+            TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
+        poolCurator.create(pool);
+
+        parentSystem.setFact("cpu.sockets", "4");
+        results = poolManager.listAvailableEntitlementPools(parentSystem,
+            parentSystem.getOwner(), null, null, true, true, new PageRequest());
+        // Expect the warnings to be included. Should have one more pool available.
+        assertEquals(5, results.getPageData().size());
+    }
+
+
+    @Test
+    public void testListAllForConsumerExcludesErrors() {
+        Product p = new Product("test-product", "Test Product");
+        productCurator.create(p);
+
+        Page<List<Pool>> results =
+            poolManager.listAvailableEntitlementPools(parentSystem, parentSystem.getOwner(),
+                null, null, true, true, new PageRequest());
+        assertEquals(4, results.getPageData().size());
+
+        // Creating a pool with no entitlements available, which will trigger
+        // a rules error:
+        Pool pool = createPoolAndSub(o, p, 0L,
+            TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
+        poolCurator.create(pool);
+
+        results = poolManager.listAvailableEntitlementPools(parentSystem,
+            parentSystem.getOwner(), null, null, true, true, new PageRequest());
+        // Pool in error should not be included. Should have the same number of
+        // initial pools.
+        assertEquals(4, results.getPageData().size());
+    }
+
+    @Test
+    public void testListForConsumerExcludesWarnings() {
+        Page<List<Pool>> results =
+            poolManager.listAvailableEntitlementPools(parentSystem, parentSystem.getOwner(),
+                (String) null, null, true, false, new PageRequest());
+        assertEquals(4, results.getPageData().size());
+
+        Pool pool = createPoolAndSub(o, socketLimitedProduct, 100L,
+            TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
+        poolCurator.create(pool);
+
+        parentSystem.setFact("cpu.cpu_socket(s)", "4");
+
+        results = poolManager.listAvailableEntitlementPools(parentSystem,
+            parentSystem.getOwner(), (String) null, null, true, false, new PageRequest());
+        // Pool in error should not be included. Should have the same number of
+        // initial pools.
+        assertEquals(4, results.getPageData().size());
     }
 
     /**

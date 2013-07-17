@@ -14,15 +14,12 @@
  */
 package org.candlepin.test;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashSet;
-
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.servlet.http.HttpServletRequest;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Module;
+import com.google.inject.persist.PersistFilter;
+import com.google.inject.persist.UnitOfWork;
+import com.google.inject.util.Modules;
 
 import org.candlepin.CandlepinCommonTestingModule;
 import org.candlepin.CandlepinNonServletEnvironmentTestingModule;
@@ -74,7 +71,6 @@ import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.model.SubscriptionsCertificateCurator;
 import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.model.UserCurator;
-import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -85,12 +81,15 @@ import org.junit.After;
 import org.junit.Before;
 import org.xnap.commons.i18n.I18n;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Module;
-import com.google.inject.persist.PersistFilter;
-import com.google.inject.persist.UnitOfWork;
-import com.google.inject.util.Modules;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashSet;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * Test fixture for test classes requiring access to the database.
@@ -139,7 +138,6 @@ public class DatabaseTestFixture {
     protected StatisticCurator statisticCurator;
     protected UniqueIdGenerator uniqueIdGenerator;
     protected UeberCertificateGenerator ueberCertGenerator;
-    protected Enforcer enforcer;
     protected CandlepinSingletonScope cpSingletonScope;
 
     @Before
@@ -179,7 +177,6 @@ public class DatabaseTestFixture {
         consumerTypeCurator = injector.getInstance(ConsumerTypeCurator.class);
         certificateCurator = injector
             .getInstance(SubscriptionsCertificateCurator.class);
-        enforcer = injector.getInstance(Enforcer.class);
         poolCurator = injector.getInstance(PoolCurator.class);
         poolAttributeCurator = injector.getInstance(PoolAttributeCurator.class);
         productPoolAttributeCurator = injector

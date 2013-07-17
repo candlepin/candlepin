@@ -67,6 +67,7 @@ public class EntitlementRulesTestFixture {
     protected ComplianceStatus compliance;
     @Mock
     protected PoolManager poolManagerMock;
+
     @Mock
     protected PoolCurator poolCurator;
 

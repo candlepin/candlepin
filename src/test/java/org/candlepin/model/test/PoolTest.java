@@ -191,8 +191,8 @@ public class PoolTest extends DatabaseTestFixture {
         poolCurator.create(pool);
 
 
-        List<Pool> results = poolCurator.listAvailableEntitlementPools(enforcer, null,
-            owner, childProduct.getId(), null, false, false);
+        List<Pool> results = poolCurator.listAvailableEntitlementPools(null, owner,
+            childProduct.getId(), null, false);
         assertEquals(1, results.size());
         assertEquals(pool.getId(), results.get(0).getId());
     }
