@@ -75,7 +75,7 @@ public class ComplianceRules {
         try {
             ComplianceStatus result = mapper.toObject(json, ComplianceStatus.class);
             for (ComplianceReason reason : result.getReasons()) {
-                generator.setMessage(c, reason);
+                generator.setMessage(c, reason, result.getDate());
             }
             return result;
         }
