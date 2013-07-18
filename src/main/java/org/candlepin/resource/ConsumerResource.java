@@ -1810,6 +1810,7 @@ public class ConsumerResource {
      * Return the compliance status of the specified consumer.
      *
      * @param uuid uuid of the consumer to get status for.
+     * @param onDate Date to get compliance information for, default is now.
      * @return the compliance status by the given uuid.
      * @httpcode 404
      * @httpcode 200
