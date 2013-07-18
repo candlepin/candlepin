@@ -202,6 +202,14 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             DetachedCriteria.forClass(Consumer.class).add(Restrictions.in("uuid", uuids)));
     }
 
+    @Transactional
+    public List<Consumer> findByUuidsAndOwner(Collection<String> uuids, Owner owner) {
+        DetachedCriteria criteria = DetachedCriteria.forClass(Consumer.class);
+        criteria.add(Restrictions.eq("owner", owner));
+        criteria.add(Restrictions.in("uuid", uuids));
+        return listByCriteria(criteria);
+    }
+
     // NOTE: This is a giant hack that is for use *only* by SSLAuth in order
     // to bypass the authentication. Do not call it!
     // TODO: Come up with a better way to do this!
