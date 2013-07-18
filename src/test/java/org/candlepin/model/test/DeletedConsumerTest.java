@@ -24,7 +24,7 @@ import org.junit.Test;
  */
 public class DeletedConsumerTest {
 
-    private DeletedConsumer dc = new DeletedConsumer("abcde", "10");
+    private DeletedConsumer dc = new DeletedConsumer("abcde", "10", "key", "displayname");
 
     @Test
     public void consumerId() {
@@ -39,5 +39,21 @@ public class DeletedConsumerTest {
         dc.setOwnerId("11");
         assertEquals("11", dc.getOwnerId());
     }
+
+    @Test
+    public void displayName() {
+        assertEquals("displayname", dc.getOwnerDisplayName());
+        dc.setOwnerDisplayName("dn2");
+        assertEquals("dn2", dc.getOwnerDisplayName());
+    }
+
+    @Test
+    public void key() {
+        assertEquals("key", dc.getOwnerKey());
+        dc.setOwnerKey("key2");
+        assertEquals("key2", dc.getOwnerKey());
+    }
+
+
 
 }
