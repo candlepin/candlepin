@@ -1830,7 +1830,7 @@ public class ConsumerResource {
             date);
 
         // Optional date, so we don't update entitlement status
-        if (onDate != null) {
+        if (onDate == null) {
             consumer.setEntitlementStatus(status.getStatus());
         }
         return status;
