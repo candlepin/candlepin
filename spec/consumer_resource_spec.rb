@@ -45,6 +45,20 @@ describe 'Consumer Resource' do
     @consumer1.get_consumer()['entitlementStatus'].should == "valid"
   end
 
+  it 'should list compliances' do
+    additionalConsumer = consumer_client(@user1, random_string("additionalConsumer"))
+    results = @user1.get_compliance_list([@consumer1.uuid, additionalConsumer.uuid])
+    results.length.should == 2
+    results.has_key?(additionalConsumer.uuid).should == true
+    results.has_key?(@consumer1.uuid).should == true
+  end
+
+  it 'should forbid listing compliances that user does not own' do
+    lambda {
+      results = @user1.get_compliance_list([@consumer1.uuid, @consumer2.uuid])
+    }.should raise_exception(RestClient::Forbidden)
+  end
+
   it 'should return a 410 for deleted consumers' do
     @cp.unregister(@consumer1.uuid)
     lambda do
