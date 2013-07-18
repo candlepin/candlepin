@@ -149,7 +149,7 @@ public class SubscriptionResource {
         Consumer consumer = consumerCurator.findByUuid(consumerUuid);
 
         if (consumer == null) {
-            throw new BadRequestException(i18n.tr("No such consumer: {0}",
+            throw new BadRequestException(i18n.tr("No such unit: {0}",
                 consumerUuid));
         }
 

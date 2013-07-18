@@ -52,7 +52,7 @@ public abstract class ConsumerAuth implements AuthProvider {
             if (deletedConsumerCurator.countByConsumerUuid(consumerUuid) > 0) {
                 log.debug("Key " + consumerUuid + " is deleted, throwing GoneException");
                 throw new GoneException(
-                    i18n.tr("Consumer {0} has been deleted", consumerUuid), consumerUuid);
+                    i18n.tr("Unit {0} has been deleted", consumerUuid), consumerUuid);
             }
 
             Consumer consumer = this.consumerCurator.getConsumer(consumerUuid);

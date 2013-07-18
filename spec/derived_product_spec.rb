@@ -125,7 +125,7 @@ describe 'Sub-pool Subscriptions Should' do
   end
 
   it 'prevents distributor from attaching without necessisary capabilities' do
-    expected_error = "Unable to entitle consumer to the pool with id '%s'.: rulefailed.derivedproduct.unsupported.by.consumer" % @main_pool['id']
+    expected_error = "Unable to attach pool with ID '%s'.: rulefailed.derivedproduct.unsupported.by.consumer." % @main_pool['id']
     begin
         @distributor_client.consume_pool @main_pool['id']
         fail("Expected Forbidden since distributor does not have capability")

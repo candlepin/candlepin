@@ -104,21 +104,21 @@ public class Entitler {
 
             if (error.equals("rulefailed.consumer.already.has.product")) {
                 msg = i18n.tr(
-                    "This consumer is already subscribed to the product " +
-                    "matching pool with id ''{0}''.", pool.getId());
+                    "This unit has already had the subscription matching " +
+                    "pool ID ''{0}'' attached.", pool.getId());
             }
             else if (error.equals("rulefailed.no.entitlements.available")) {
                 msg = i18n.tr(
                     "No subscriptions are available from the pool with " +
-                    "id ''{0}''.", pool.getId());
+                    "ID ''{0}''.", pool.getId());
             }
             else if (error.equals("rulefailed.consumer.type.mismatch")) {
                 msg = i18n.tr(
-                    "Consumers of this type are not allowed to subscribe to " +
-                    "the pool with id ''{0}''.", pool.getId());
+                    "Units of this type are not allowed to attach the pool " +
+                    "with ID ''{0}''.", pool.getId());
             }
             else if (error.equals("rulefailed.pool.does.not.support.multi-entitlement")) {
-                msg = i18n.tr("Multi-entitlement not supported for pool with id ''{0}''.",
+                msg = i18n.tr("Multi-entitlement not supported for pool with ID ''{0}''.",
                     pool.getId());
             }
             else if (error.equals("virt.guest.host.does.not.match.pool.owner")) {
@@ -126,8 +126,8 @@ public class Entitler {
                     pool.getId());
             }
             else if (error.equals("pool.not.available.to.manifest.consumers")) {
-                msg = i18n.tr("Pool not available to manifest consumers: ''{0}''.",
-                    pool.getId());
+                msg = i18n.tr("Pool not available to subscription management " +
+                        "applications.");
             }
             else if (error.equals("rulefailed.virt.only")) {
                 msg = i18n.tr("Pool is restricted to virtual guests: ''{0}''.",
@@ -143,20 +143,20 @@ public class Entitler {
                     quantity, multip);
             }
             else if (error.equals("rulefailed.instance.unsupported.by.consumer")) {
-                msg = i18n.tr("Consumer does not support instance based calculation " +
+                msg = i18n.tr("Unit does not support instance based calculation " +
                     "required by pool ''{0}''", pool.getId());
             }
             else if (error.equals("rulefailed.cores.unsupported.by.consumer")) {
-                msg = i18n.tr("Consumer does not support core calculaton " +
+                msg = i18n.tr("Unit does not support core calculation " +
                     "required by pool ''{0}''", pool.getId());
             }
             else if (error.equals("rulefailed.ram.unsupported.by.consumer")) {
-                msg = i18n.tr("Consumer does not support RAM calculaton " +
+                msg = i18n.tr("Unit does not support RAM calculation " +
                     "required by pool ''{0}''", pool.getId());
             }
             else {
-                msg = i18n.tr("Unable to entitle consumer to the pool with " +
-                    "id ''{0}''.: {1}", pool.getId().toString(), error);
+                msg = i18n.tr("Unable to attach pool with ID ''{0}''.: {1}.",
+                    pool.getId().toString(), error);
             }
             throw new ForbiddenException(msg);
         }
@@ -233,16 +233,16 @@ public class Entitler {
             String msg;
             String error = e.getResult().getErrors().get(0).getResourceKey();
             if (error.equals("rulefailed.consumer.already.has.product")) {
-                msg = i18n.tr("This consumer is already subscribed to the " +
-                    "product ''{0}''", productId);
+                msg = i18n.tr("This system already has a subscription for " +
+                        "the product ''{0}'' attached.", productId);
             }
             else if (error.equals("rulefailed.no.entitlements.available")) {
                 msg = i18n.tr("There are not enough free subscriptions " +
                     "available for the product ''{0}''", productId);
             }
             else if (error.equals("rulefailed.consumer.type.mismatch")) {
-                msg = i18n.tr("Consumers of this type are not allowed to the " +
-                    "product ''{0}''", productId);
+                msg = i18n.tr("Units of this type are not allowed for " +
+                        "the product ''{0}''.", productId);
             }
             else if (error.equals("rulefailed.virt.only")) {
                 msg = i18n.tr(
@@ -251,7 +251,7 @@ public class Entitler {
             }
             else {
                 msg = i18n.tr(
-                    "Unable to entitle consumer to the product ''{0}'': {1}",
+                    "Unable to attach subscription for the product ''{0}'': {1}.",
                     productId, error);
             }
             throw new ForbiddenException(msg);

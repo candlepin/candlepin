@@ -272,7 +272,7 @@ public class SecurityInterceptor implements MethodInterceptor {
             if (deletedConsumerCurator.countByConsumerUuid(key) > 0) {
                 log.debug("Key " + key + " is deleted, throwing GoneException");
                 I18n i18n = injector.getInstance(I18n.class);
-                throw new GoneException(i18n.tr("Consumer {0} has been deleted", key), key);
+                throw new GoneException(i18n.tr("Unit {0} has been deleted", key), key);
             }
 
             return consumerCurator.findByUuid(key);

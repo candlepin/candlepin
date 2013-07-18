@@ -119,7 +119,7 @@ public class UeberCertificateGenerator {
         ConsumerType type = consumerTypeCurator.lookupByLabel(label);
 
         if (type == null) {
-            throw new CuratorException(i18n.tr("No such consumer type: {0}",
+            throw new CuratorException(i18n.tr("No such unit type: {0}",
                 label));
         }
         return type;
