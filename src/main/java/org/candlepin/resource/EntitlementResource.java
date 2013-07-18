@@ -115,7 +115,7 @@ public class EntitlementResource {
         }
 
         throw new NotFoundException(
-            i18n.tr("Consumer: {0} has no entitlement for product {1}",
+            i18n.tr("Unit: {0} has no subscription for product {1}",
                 consumerUuid, productId));
     }
 
@@ -137,7 +137,7 @@ public class EntitlementResource {
             Consumer consumer = consumerCurator.findByUuid(consumerUuid);
             if (consumer == null) {
                 throw new BadRequestException(
-                    i18n.tr("No such consumer: {0}", consumerUuid));
+                    i18n.tr("No such unit: {0}", consumerUuid));
             }
 
             p = entitlementCurator.listByConsumer(consumer, pageRequest);

@@ -355,7 +355,7 @@ public class ConsumerResource {
         if (type.isType(ConsumerTypeEnum.PERSON)) {
             if (keys.size() > 0) {
                 throw new BadRequestException(
-                    i18n.tr("A consumer type of 'person' cannot be" +
+                    i18n.tr("A unit type of 'person' cannot be" +
                         " used with activation keys"));
             }
             if (!isConsumerPersonNameValid(consumer.getName())) {
@@ -436,10 +436,10 @@ public class ConsumerResource {
             throw ce;
         }
         catch (Exception e) {
-            log.error("Problem creating consumer:", e);
+            log.error("Problem creating unit:", e);
             e.printStackTrace();
             throw new BadRequestException(i18n.tr(
-                "Problem creating consumer {0}", consumer));
+                "Problem creating unit {0}", consumer));
         }
     }
     /**
@@ -543,7 +543,7 @@ public class ConsumerResource {
             throw new BadRequestException(
                 i18n.tr(
                     "Service level ''{0}'' is not available " +
-                    "to consumers of organization {1}.",
+                    "to units of organization {1}.",
                     serviceLevel, owner.getKey()));
         }
     }
@@ -627,7 +627,7 @@ public class ConsumerResource {
 
             if (ownerKeys.size() != 1) {
                 throw new BadRequestException(
-                    i18n.tr("You must specify an organization for new consumers."));
+                    i18n.tr("You must specify an organization for new units."));
             }
 
             ownerKey = ownerKeys.get(0);
@@ -707,7 +707,7 @@ public class ConsumerResource {
         ConsumerType type = consumerTypeCurator.lookupByLabel(label);
 
         if (type == null) {
-            throw new BadRequestException(i18n.tr("No such consumer type: {0}",
+            throw new BadRequestException(i18n.tr("No such unit type: {0}",
                 label));
         }
         return type;
@@ -1104,7 +1104,7 @@ public class ConsumerResource {
         catch (ForbiddenException e) {
             String msg = e.message().getDisplayMessage();
             throw new ForbiddenException(i18n.tr(
-                "Cannot unregister {0} consumer {1} because: {2}", toDelete
+                "Cannot unregister {0} {1} because: {2}", toDelete
                     .getType().getLabel(), toDelete.getName(), msg), e);
 
         }
@@ -1445,7 +1445,7 @@ public class ConsumerResource {
         Consumer consumer = consumerCurator.findByUuid(consumerUuid);
 
         if (consumer == null) {
-            throw new NotFoundException(i18n.tr("No such consumer: {0}",
+            throw new NotFoundException(i18n.tr("No such unit: {0}",
                 consumerUuid));
         }
         return consumer;
@@ -1534,7 +1534,7 @@ public class ConsumerResource {
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
 
         if (consumer == null) {
-            throw new NotFoundException(i18n.tr("Consumer with ID " +
+            throw new NotFoundException(i18n.tr("Unit with ID " +
                 consumerUuid + " could not be found."));
         }
 
@@ -1659,8 +1659,8 @@ public class ConsumerResource {
             !consumer.getType().isManifest()) {
             throw new ForbiddenException(
                 i18n.tr(
-                    "Consumer {0} cannot be exported. " +
-                    "A manifest cannot be made for consumer of type ''{1}''.",
+                    "Unit {0} cannot be exported. " +
+                    "A manifest cannot be made for units of type ''{1}''.",
                     consumerUuid, consumer.getType().getLabel()));
         }
 
@@ -1739,17 +1739,17 @@ public class ConsumerResource {
             }
         }
         catch (GeneralSecurityException e) {
-            log.error("Problem regenerating id cert for consumer:", e);
+            log.error("Problem regenerating ID cert for unit:", e);
             errored = true;
         }
         catch (IOException e) {
-            log.error("Problem regenerating id cert for consumer:", e);
+            log.error("Problem regenerating ID cert for unit:", e);
             errored = true;
         }
 
         if (errored) {
             throw new BadRequestException(i18n.tr(
-                "Problem regenerating id cert for consumer {0}", c));
+                "Problem regenerating ID cert for unit {0}", c));
         }
 
         if (log.isDebugEnabled()) {
@@ -1788,7 +1788,7 @@ public class ConsumerResource {
         if (consumer.getFact("virt.uuid") == null ||
             consumer.getFact("virt.uuid").trim().equals("")) {
             throw new BadRequestException(i18n.tr(
-                "The consumer with UUID {0} is not a virtual guest.",
+                "The system with UUID {0} is not a virtual guest.",
                 consumer.getUuid()));
         }
         return consumerCurator.getHost(consumer.getFact("virt.uuid"));

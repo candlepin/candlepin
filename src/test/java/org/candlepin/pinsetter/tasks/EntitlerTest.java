@@ -156,7 +156,7 @@ public class EntitlerTest {
 
     @Test
     public void consumerDoesntSupportInstanceBased() {
-        String expected = "Consumer does not support instance based " +
+        String expected = "Unit does not support instance based " +
             "calculation required by pool 'pool10'";
         try {
             bindByPoolErrorTest("rulefailed.instance.unsupported.by.consumer");
@@ -169,8 +169,8 @@ public class EntitlerTest {
 
     @Test
     public void consumerDoesntSupportCores() {
-        String expected = "Consumer does not support core " +
-            "calculaton required by pool 'pool10'";
+        String expected = "Unit does not support core " +
+            "calculation required by pool 'pool10'";
         try {
             bindByPoolErrorTest("rulefailed.cores.unsupported.by.consumer");
             fail();
@@ -182,8 +182,8 @@ public class EntitlerTest {
 
     @Test
     public void consumerDoesntSupportRam() {
-        String expected = "Consumer does not support RAM " +
-            "calculaton required by pool 'pool10'";
+        String expected = "Unit does not support RAM " +
+            "calculation required by pool 'pool10'";
         try {
             bindByPoolErrorTest("rulefailed.ram.unsupported.by.consumer");
             fail();

@@ -103,9 +103,9 @@ public class PoolResource {
      *        available, consumer type mismatch, etc)
      * @return the list of available entitlement pools.
      * @httpcode 200 if the request succeeded
-     * @httpcode 400 if both consumer and owner are given, or if a product id is
-     *           specified without a consumer or owner
-     * @httpcode 404 if a specified consumer or owner is not found
+     * @httpcode 400 if both consumer(unit) and owner are given, or if a product id is
+     *           specified without a consumer(unit) or owner
+     * @httpcode 404 if a specified consumer(unit) or owner is not found
      * @httpcode 403
      */
     @GET
@@ -125,11 +125,11 @@ public class PoolResource {
         // Make sure we were given sane query parameters:
         if (consumerUuid != null && ownerId != null) {
             throw new BadRequestException(
-                i18n.tr("Cannot filter on both owner and consumer"));
+                i18n.tr("Cannot filter on both owner and unit"));
         }
         if (consumerUuid == null && ownerId == null && productId != null) {
             throw new BadRequestException(
-                i18n.tr("A consumer or owner is needed to filter on product"));
+                i18n.tr("A unit or owner is needed to filter on product"));
         }
 
         Date activeOnDate = new Date();
@@ -142,13 +142,13 @@ public class PoolResource {
         if (consumerUuid != null) {
             c = consumerCurator.findByUuid(consumerUuid);
             if (c == null) {
-                throw new NotFoundException(i18n.tr("consumer: {0} not found",
+                throw new NotFoundException(i18n.tr("Unit: {0} not found",
                     consumerUuid));
             }
 
             // Now that we have a consumer, check that this principal can access it:
             if (!principal.canAccess(c, Access.READ_ONLY)) {
-                throw new ForbiddenException(i18n.tr("User {0} cannot access consumer {1}",
+                throw new ForbiddenException(i18n.tr("User {0} cannot access unit {1}",
                     principal.getPrincipalName(), consumerUuid));
             }
 

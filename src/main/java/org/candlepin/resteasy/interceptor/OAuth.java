@@ -116,7 +116,7 @@ public class OAuth implements AuthProvider {
             // status code of 200. make it 401 unauthorized instead.
             if (e.getProblem().equals("signature_invalid")) {
                 throw new UnauthorizedException(
-                    i18n.tr("Invalid oauth consumer or secret"));
+                    i18n.tr("Invalid oauth unit or secret"));
             }
             Response.Status returnCode = Response.Status.fromStatusCode(e
                 .getHttpStatusCode());
@@ -152,12 +152,12 @@ public class OAuth implements AuthProvider {
             OAuthAccessor accessor = accessors.get(msg.getConsumerKey());
             if (accessor == null) {
                 throw new UnauthorizedException(
-                    i18n.tr("Invalid oauth consumer or secret"));
+                    i18n.tr("Invalid oauth unit or secret"));
             }
             return accessor;
         }
         catch (IOException e) {
-            throw new IseException(i18n.tr("Error getting oauth consumer Key",
+            throw new IseException(i18n.tr("Error getting oauth unit key",
                 e));
         }
 

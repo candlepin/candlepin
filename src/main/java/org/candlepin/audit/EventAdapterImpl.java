@@ -122,9 +122,9 @@ public class EventAdapterImpl implements EventAdapter {
     //TODO: Make them nicer strings if the system did it
     static {
         MESSAGES = new HashMap<String, String>();
-        MESSAGES.put("CONSUMERCREATED", I18n.marktr("{0} created new consumer {1}"));
-        MESSAGES.put("CONSUMERMODIFIED", I18n.marktr("{0} modified the consumer {1}"));
-        MESSAGES.put("CONSUMERDELETED", I18n.marktr("{0} deleted the consumer {1}"));
+        MESSAGES.put("CONSUMERCREATED", I18n.marktr("{0} created new unit {1}"));
+        MESSAGES.put("CONSUMERMODIFIED", I18n.marktr("{0} modified the unit {1}"));
+        MESSAGES.put("CONSUMERDELETED", I18n.marktr("{0} deleted the unit {1}"));
         MESSAGES.put("OWNERCREATED", I18n.marktr("{0} created new owner {1}"));
         MESSAGES.put("OWNERMODIFIED", I18n.marktr("{0} modified the owner {1}"));
         MESSAGES.put("OWNERDELETED", I18n.marktr("{0} deleted the owner {1}"));
@@ -138,7 +138,7 @@ public class EventAdapterImpl implements EventAdapter {
         MESSAGES.put("POOLMODIFIED", I18n.marktr("{0} modified a pool for product {1}"));
         MESSAGES.put("POOLDELETED", I18n.marktr("{0} deleted a pool for product {1}"));
         MESSAGES.put("EXPORTCREATED",
-            I18n.marktr("{0} created an export for consumer {1}"));
+            I18n.marktr("{0} created an export for unit {1}"));
         MESSAGES.put("IMPORTCREATED", I18n.marktr("{0} imported a manifest for owner {1}"));
         MESSAGES.put("USERCREATED", I18n.marktr("{0} created new user {1}"));
         MESSAGES.put("USERMODIFIED", I18n.marktr("{0} modified the user {1}"));

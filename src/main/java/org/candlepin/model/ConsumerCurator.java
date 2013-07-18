@@ -99,7 +99,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         if ((entity.getName() != null) &&
             (entity.getName().length() >= NAME_LENGTH)) {
             throw new BadRequestException(i18n.tr(
-                "Name of the consumer should be shorter than {0} characters.",
+                "Name of the unit must be shorter than {0} characters.",
                 NAME_LENGTH));
         }
     }
@@ -405,7 +405,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         if (consumer.getFact("virt.uuid") != null &&
             !consumer.getFact("virt.uuid").trim().equals("")) {
             throw new BadRequestException(i18n.tr(
-                "The consumer with UUID {0} is a virtual guest. " +
+                "The system with UUID {0} is a virtual guest. " +
                 "It does not have guests.",
                 consumer.getUuid()));
         }
