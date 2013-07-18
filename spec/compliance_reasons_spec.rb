@@ -167,7 +167,7 @@ describe 'Single Entitlement Compliance Reasons' do
     reasons.size.should == 1
     assert_reason(reasons[0], 'NOTCOVERED', expected_message, {'product_id' => @product1.id,
                                                         'name' => @product1.name})
-    @cp.get_consumer(system.uuid)['entitlementStatus'].should_not == now_compliance_status['status']
+    @cp.get_consumer(system.uuid)['entitlementStatus'].should_not == compliance_status['status']
 
   end
 
