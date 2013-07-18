@@ -100,9 +100,11 @@ import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -1849,6 +1851,27 @@ public class ConsumerResource {
             consumer.setEntitlementStatus(status.getStatus());
         }
         return status;
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/compliance")
+    @Transactional
+    public Map<String, ComplianceStatus> getComplianceStatusList(
+        @QueryParam("uuid") @Verify(Consumer.class) List<String> uuids) {
+        List<Consumer> consumers = consumerCurator.findByUuids(uuids);
+        Map<String, ComplianceStatus> results = new HashMap<String, ComplianceStatus>();
+
+        Date now = Calendar.getInstance().getTime();
+        for (Consumer consumer : consumers) {
+            ComplianceStatus status = complianceRules.getStatus(consumer, now);
+            // NOTE: If this method ever changes to accept an optional date, do
+            // not update this field on the consumer if the date is specified:
+            consumer.setEntitlementStatus(status.getStatus());
+            results.put(consumer.getUuid(), status);
+        }
+
+        return results;
     }
 
     private void addDataToInstalledProducts(Consumer consumer) {

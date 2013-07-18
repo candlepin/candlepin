@@ -634,6 +634,13 @@ class Candlepin
     get(query)
   end
 
+  def get_compliance_list(consumer_ids=nil)
+    consumer_ids ||= [@uuid]
+    query = "/consumers/compliance?"
+    query << consumer_ids.map {|uuid| "uuid=#{uuid}"}.join("&")
+    get(query)
+  end
+
   def get_consumer_host(consumer_id=nil)
     consumer_id ||= @uuid
     get("/consumers/#{consumer_id}/host")

@@ -57,6 +57,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.Subscription;
 import org.candlepin.policy.js.compliance.ComplianceRules;
+import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.resource.ConsumerResource;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.service.EntitlementCertServiceAdapter;
@@ -64,6 +65,7 @@ import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.TestUtil;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -83,6 +85,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -105,6 +108,8 @@ public class ConsumerResourceTest {
     private PoolManager mockedPoolManager;
     @Mock
     private EntitlementCurator mockedEntitlementCurator;
+    @Mock
+    private ComplianceRules mockedComplianceRules;
 
     @Before
     public void setUp() {
@@ -483,5 +488,38 @@ public class ConsumerResourceTest {
             usa, null, null, null, null, oc, null, null, null, null, null,
             null, new CandlepinCommonTestConfig());
         cr.create(c, up, null, "testOwner", null);
+    }
+
+    @Test
+    public void testGetComplianceStatusList() {
+        Consumer c = mock(Consumer.class);
+        Consumer c2 = mock(Consumer.class);
+        when(c.getUuid()).thenReturn("1");
+        when(c2.getUuid()).thenReturn("2");
+
+        List<Consumer> consumers = new ArrayList<Consumer>();
+        consumers.add(c);
+        consumers.add(c2);
+
+        List<String> uuids = new ArrayList<String>();
+        uuids.add("1");
+        uuids.add("2");
+        when(mockedConsumerCurator.findByUuids(eq(uuids))).thenReturn(consumers);
+
+        ComplianceStatus status = new ComplianceStatus();
+        when(mockedComplianceRules.getStatus(any(Consumer.class), any(Date.class)))
+            .thenReturn(status);
+
+        ConsumerResource cr = new ConsumerResource(mockedConsumerCurator, null,
+            null, null, null, null, null, i18n, null, null, null, null,
+            null, null, null, null, null, null, null, null, mockedComplianceRules,
+            null, null, null, new CandlepinCommonTestConfig());
+
+        Map<String, ComplianceStatus> results = cr.getComplianceStatusList(uuids);
+        verify(c).setEntitlementStatus(status.getStatus());
+        verify(c2).setEntitlementStatus(status.getStatus());
+        assertEquals(2, results.size());
+        assertTrue(results.containsKey("1"));
+        assertTrue(results.containsKey("2"));
     }
 }
