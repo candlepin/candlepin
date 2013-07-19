@@ -606,12 +606,10 @@ class Candlepin
     query << "per_page=#{args[:per_page]}&" if args[:per_page]
     query << "order=#{args[:order]}&" if args[:order]
     query << "sort_by=#{args[:sort_by]}&" if args[:sort_by]
-    if args[:uuids]
-      # We could join("&") but that would not leave a trailing ampersand
-      # which is nice for the next person who needs to add an argument to
-      # the query.
-      query << args[:uuids].map {|uuid| "uuid=#{uuid}&"}.join("")
-    end
+    # We could join("&") but that would not leave a trailing ampersand
+    # which is nice for the next person who needs to add an argument to
+    # the query.
+    query << args[:uuids].map {|uuid| "uuid=#{uuid}&"}.join("") if args[:uuids]
     get(query)
   end
 

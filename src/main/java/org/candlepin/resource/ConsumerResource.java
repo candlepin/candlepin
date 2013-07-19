@@ -258,7 +258,7 @@ public class ConsumerResource {
             if (userName != null || typeLabel != null || ownerKey != null ||
                 pageRequest != null) {
                 throw new BadRequestException(
-                    i18n.tr("Cannot specify other parameters with consumer IDs."));
+                    i18n.tr("Cannot specify other query parameters with consumer IDs."));
             }
 
             return consumerCurator.findByUuids(uuids);
