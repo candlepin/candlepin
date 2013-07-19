@@ -103,6 +103,24 @@ public class SecurityInterceptorTest implements Provider<Principal> {
         verify(principal, times(2)).canAccess(any(User.class), any(Access.class));
     }
 
+    @Test
+    public void invokeWithEmptyList() {
+        when(principal.canAccess(
+            any(User.class), any(Access.class))).thenReturn(true);
+        TestClass t = injector.getInstance(TestClass.class);
+        List<String> l = new ArrayList<String>();
+        assertEquals(l, t.verifyListMethod(l));
+    }
+
+    @Test
+    public void invokeWithNullList() {
+        when(principal.canAccess(
+            any(User.class), any(Access.class))).thenReturn(true);
+        TestClass t = injector.getInstance(TestClass.class);
+        List<String> l = null;
+        assertEquals(l, t.verifyListMethod(l));
+    }
+
     @Test(expected = IseException.class)
     public void invalidVerify() {
         TestClass t = injector.getInstance(TestClass.class);

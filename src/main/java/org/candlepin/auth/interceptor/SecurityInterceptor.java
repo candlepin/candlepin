@@ -196,7 +196,7 @@ public class SecurityInterceptor implements MethodInterceptor {
                         throw new IseException(i18n.tr("Unable to verify request."));
                     }
 
-                    List entities;
+                    List entities = new ArrayList();
 
                     Object argument = invocation.getArguments()[i];
                     if (argument instanceof String) {
@@ -223,7 +223,6 @@ public class SecurityInterceptor implements MethodInterceptor {
                                 typeName, verifyParam));
                         }
 
-                        entities = new ArrayList();
                         entities.add(entity);
                     }
                     else {
@@ -232,7 +231,9 @@ public class SecurityInterceptor implements MethodInterceptor {
                             " access to collection of" + verifyType + ": " + verifyParams);
                         // If the request is for a list of items, we'll leave it
                         // up to the requester to determine if something is missing or not.
-                        entities = storeMap.get(verifyType).lookup(verifyParams);
+                        if (verifyParams != null && !verifyParams.isEmpty()) {
+                            entities = storeMap.get(verifyType).lookup(verifyParams);
+                        }
                     }
 
                     for (Object entity : entities) {
