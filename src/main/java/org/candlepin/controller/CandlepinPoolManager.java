@@ -177,6 +177,27 @@ public class CandlepinPoolManager implements PoolManager {
         return entitlementsToRegen;
     }
 
+    public void cleanupExpiredPools() {
+        List<Pool> pools = poolCurator.listExpiredPools();
+        log.info("Expired pools: " + pools.size());
+        for (Pool p : pools) {
+            if (p.hasAttribute("derived_pool")) {
+                // Derived pools will be cleaned up when their parent entitlement
+                // is revoked.
+                continue;
+            }
+            log.info("Cleaning up expired pool: " + p.getId() +
+                " (" + p.getEndDate() + ")");
+
+            Subscription sub = subAdapter.getSubscription(p.getSubscriptionId());
+            // In case it was already deleted:
+            if (sub != null) {
+                subAdapter.deleteSubscription(sub);
+            }
+
+            deletePool(p);
+        }
+    }
 
     private boolean isExpired(Subscription subscription) {
         Date now = new Date();

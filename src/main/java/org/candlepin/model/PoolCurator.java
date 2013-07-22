@@ -161,6 +161,18 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             includeWarnings, null).getPageData();
     }
 
+    @SuppressWarnings("unchecked")
+    public List<Pool> listExpiredPools() {
+        Date today = new Date();
+        Criteria crit = currentSession().createCriteria(Pool.class).add(
+            Restrictions.lt("endDate", today));
+        List<Pool> results = crit.list();
+        if (results == null) {
+            results = new LinkedList<Pool>();
+        }
+        return results;
+    }
+
     /**
      * List entitlement pools.
      *
