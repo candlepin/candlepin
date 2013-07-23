@@ -593,4 +593,13 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
         currentSession().delete(toDelete);
     }
+
+    /**
+     * @param c
+     * @param stackId
+     * @return
+     */
+    public int getSubPoolCountForStackId(Consumer c, String stackId) {
+        return 0;
+    }
 }
