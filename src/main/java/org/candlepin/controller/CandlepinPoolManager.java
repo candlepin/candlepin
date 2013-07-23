@@ -571,8 +571,13 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         Product product = null;
+        /*
+         * If we have a subscription for this pool, the products we need are already
+         * loaded as this saves us some product adapter lookups.
+         *
+         * If not we'll have to look them up based on the pool's data.
+         */
         if (sub != null) {
-            // Just look this up off of the subscription if one exists.
             // Need to make sure that we check for a defined sub product
             // if it is a derived pool.
             boolean derived = pool.hasAttribute("pool_derived");
@@ -580,13 +585,8 @@ public class CandlepinPoolManager implements PoolManager {
                 sub.getProduct();
         }
         else {
-            // This is possible in a sub-pool, for example - the pool was not
-            // created directly from a subscription
+            // Some pools may not have a subscription, i.e. derived from stack pools.
             product = productCache.getProductById(e.getProductId());
-
-            // in the case of a sub-pool, we want to find the originating
-            // subscription for cert generation
-            sub = findSubscription(e);
         }
 
         try {
@@ -600,23 +600,6 @@ public class CandlepinPoolManager implements PoolManager {
         catch (Exception ex) {
             throw new RuntimeException(ex);
         }
-    }
-
-    private Subscription findSubscription(Entitlement entitlement) {
-        Pool pool = entitlement.getPool();
-
-        if (pool.getSubscriptionId() != null) {
-            return subAdapter.getSubscription(pool.getSubscriptionId());
-        }
-
-        Entitlement source = pool.getSourceEntitlement();
-
-        if (source != null) {
-            return findSubscription(source);
-        }
-
-        // Cannot traverse any further - just give up
-        return null;
     }
 
     @Override

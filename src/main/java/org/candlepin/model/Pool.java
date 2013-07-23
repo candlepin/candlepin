@@ -676,6 +676,10 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
         return findAttribute(this.productAttributes, name);
     }
 
+    public String getProductAttributeValue(String name) {
+        return findAttributeValue(this.productAttributes, name);
+    }
+
     public DerivedProductPoolAttribute getDerivedProductAttribute(String name) {
         return findAttribute(this.derivedProductAttributes, name);
     }

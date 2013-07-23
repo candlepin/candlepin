@@ -44,6 +44,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EnvironmentContent;
+import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
 import org.candlepin.pki.X509ByteExtensionWrapper;
@@ -77,10 +78,8 @@ public class X509V3ExtensionUtil extends X509Util{
         this.entCurator = entCurator;
     }
 
-    public Set<X509ExtensionWrapper> getExtensions(Set<Product> products,
-        Entitlement ent, String contentPrefix,
-        Map<String, EnvironmentContent> promotedContent,
-        org.candlepin.model.Subscription sub) {
+    public Set<X509ExtensionWrapper> getExtensions(Entitlement ent,
+        String contentPrefix, Map<String, EnvironmentContent> promotedContent) {
         Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<X509ExtensionWrapper>();
 
         X509ExtensionWrapper versionExtension =
@@ -95,13 +94,12 @@ public class X509V3ExtensionUtil extends X509Util{
 
     public Set<X509ByteExtensionWrapper> getByteExtensions(Set<Product> products,
         Entitlement ent, String contentPrefix,
-        Map<String, EnvironmentContent> promotedContent,
-        org.candlepin.model.Subscription sub) throws IOException {
+        Map<String, EnvironmentContent> promotedContent) throws IOException {
         Set<X509ByteExtensionWrapper> toReturn =
             new LinkedHashSet<X509ByteExtensionWrapper>();
 
         EntitlementBody eb = createEntitlementBodyContent(products, ent,
-            contentPrefix, promotedContent, sub);
+            contentPrefix, promotedContent);
 
         X509ByteExtensionWrapper bodyExtension =
             new X509ByteExtensionWrapper(OIDUtil.REDHAT_OID + "." +
@@ -114,12 +112,11 @@ public class X509V3ExtensionUtil extends X509Util{
 
     public byte[] createEntitlementDataPayload(Set<Product> products,
         Entitlement ent, String contentPrefix,
-        Map<String, EnvironmentContent> promotedContent,
-        org.candlepin.model.Subscription sub)
+        Map<String, EnvironmentContent> promotedContent)
         throws UnsupportedEncodingException, IOException {
 
         EntitlementBody map = createEntitlementBody(products, ent,
-            contentPrefix, promotedContent, sub);
+            contentPrefix, promotedContent);
 
         String json = toJson(map);
         return processPayload(json);
@@ -149,14 +146,13 @@ public class X509V3ExtensionUtil extends X509Util{
 
     public EntitlementBody createEntitlementBody(Set<Product> products,
         Entitlement ent, String contentPrefix,
-        Map<String, EnvironmentContent> promotedContent,
-        org.candlepin.model.Subscription sub) {
+        Map<String, EnvironmentContent> promotedContent) {
 
         EntitlementBody toReturn = new EntitlementBody();
         toReturn.setConsumer(ent.getConsumer().getUuid());
         toReturn.setQuantity(ent.getQuantity());
-        toReturn.setSubscription(createSubscription(sub, ent));
-        toReturn.setOrder(createOrder(sub));
+        toReturn.setSubscription(createSubscription(ent));
+        toReturn.setOrder(createOrder(ent.getPool()));
         toReturn.setProducts(createProducts(products, contentPrefix, promotedContent,
             ent.getConsumer(), ent));
         toReturn.setPool(createPool(ent));
@@ -166,8 +162,7 @@ public class X509V3ExtensionUtil extends X509Util{
 
     public EntitlementBody createEntitlementBodyContent(Set<Product> products,
         Entitlement ent, String contentPrefix,
-        Map<String, EnvironmentContent> promotedContent,
-        org.candlepin.model.Subscription sub) {
+        Map<String, EnvironmentContent> promotedContent) {
 
         EntitlementBody toReturn = new EntitlementBody();
         toReturn.setProducts(createProducts(products, contentPrefix, promotedContent,
@@ -177,20 +172,14 @@ public class X509V3ExtensionUtil extends X509Util{
     }
 
     public Subscription createSubscription(
-        org.candlepin.model.Subscription sub, Entitlement ent) {
+        Entitlement ent) {
         Subscription toReturn = new Subscription();
+        Pool pool = ent.getPool();
 
-        // Need to be sure that we get the correct product here. If pool
-        // is derived and we have a sub product on the sub, then we must
-        // use that product so that the appropriate bits of data are copied.
-        boolean derivedPool = ent.getPool().hasAttribute("pool_derived");
-        Product product = derivedPool && sub.getDerivedProduct() != null ?
-            sub.getDerivedProduct() : sub.getProduct();
+        toReturn.setSku(pool.getProductId());
+        toReturn.setName(pool.getProductName());
 
-        toReturn.setSku(product.getId().toString());
-        toReturn.setName(product.getName());
-
-        String warningPeriod = product.getAttributeValue(
+        String warningPeriod = pool.getProductAttributeValue(
             "warning_period");
         if (warningPeriod != null && !warningPeriod.trim().equals("")) {
             // only included if not the default value of 0
@@ -199,22 +188,22 @@ public class X509V3ExtensionUtil extends X509Util{
             }
         }
 
-        String socketLimit = product.getAttributeValue("sockets");
+        String socketLimit = pool.getProductAttributeValue("sockets");
         if (socketLimit != null && !socketLimit.trim().equals("")) {
             toReturn.setSockets(new Integer(socketLimit));
         }
 
-        String ramLimit = product.getAttributeValue("ram");
+        String ramLimit = pool.getProductAttributeValue("ram");
         if (ramLimit != null && !ramLimit.trim().equals("")) {
             toReturn.setRam(new Integer(ramLimit));
         }
 
-        String coreLimit = product.getAttributeValue("cores");
+        String coreLimit = pool.getProductAttributeValue("cores");
         if (coreLimit != null && !coreLimit.trim().equals("")) {
             toReturn.setCores(new Integer(coreLimit));
         }
 
-        String management = product.getAttributeValue("management_enabled");
+        String management = pool.getProductAttributeValue("management_enabled");
         if (management != null && !management.trim().equals("")) {
             // only included if not the default value of false
             if (management.equalsIgnoreCase("true") ||
@@ -223,7 +212,7 @@ public class X509V3ExtensionUtil extends X509Util{
             }
         }
 
-        String stackingId = product.getAttributeValue("stacking_id");
+        String stackingId = pool.getProductAttributeValue("stacking_id");
         if (stackingId != null && !stackingId.trim().equals("")) {
             toReturn.setStackingId(stackingId);
         }
@@ -238,39 +227,39 @@ public class X509V3ExtensionUtil extends X509Util{
             }
         }
 
-        toReturn.setService(createService(product));
+        toReturn.setService(createService(pool));
         return toReturn;
     }
 
-    private Service createService(Product product) {
-        if (product.getAttributeValue("support_level") == null &&
-            product.getAttributeValue("support_type") == null) {
+    private Service createService(Pool pool) {
+        if (pool.getProductAttributeValue("support_level") == null &&
+            pool.getProductAttributeValue("support_type") == null) {
             return null;
         }
         Service toReturn = new Service();
-        toReturn.setLevel(product.getAttributeValue("support_level"));
-        toReturn.setType(product.getAttributeValue("support_type"));
+        toReturn.setLevel(pool.getProductAttributeValue("support_level"));
+        toReturn.setType(pool.getProductAttributeValue("support_type"));
 
         return toReturn;
     }
 
-    public Order createOrder(org.candlepin.model.Subscription sub) {
+    public Order createOrder(Pool pool) {
         SimpleDateFormat iso8601DateFormat = Util.getUTCDateFormat();
         Order toReturn = new Order();
 
-        toReturn.setNumber(sub.getOrderNumber());
-        toReturn.setQuantity(sub.getQuantity());
-        toReturn.setStart(iso8601DateFormat.format(sub.getStartDate()));
-        toReturn.setEnd(iso8601DateFormat.format(sub.getEndDate()));
+        toReturn.setNumber(pool.getOrderNumber());
+        toReturn.setQuantity(pool.getQuantity());
+        toReturn.setStart(iso8601DateFormat.format(pool.getStartDate()));
+        toReturn.setEnd(iso8601DateFormat.format(pool.getEndDate()));
 
-        if (sub.getContractNumber() != null &&
-            !sub.getContractNumber().trim().equals("")) {
-            toReturn.setContract(sub.getContractNumber());
+        if (pool.getContractNumber() != null &&
+            !pool.getContractNumber().trim().equals("")) {
+            toReturn.setContract(pool.getContractNumber());
         }
 
-        if (sub.getAccountNumber() != null &&
-            !sub.getAccountNumber().trim().equals("")) {
-            toReturn.setAccount(sub.getAccountNumber());
+        if (pool.getAccountNumber() != null &&
+            !pool.getAccountNumber().trim().equals("")) {
+            toReturn.setAccount(pool.getAccountNumber());
         }
 
         return toReturn;
