@@ -93,6 +93,13 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
     @Column(nullable = true)
     private String subscriptionSubKey;
 
+    /*
+     * Signifies that this pool is a derived pool linked to this stack (only one
+     * sub pool per stack allowed)
+     */
+    @Column(nullable = true)
+    private String linkedStackId;
+
     /* Indicates this pool was created as a result of granting an entitlement.
      * Allows us to know that we need to clean this pool up if that entitlement
      * if ever revoked. */
@@ -484,6 +491,14 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
      */
     public void setSubscriptionId(String subscriptionId) {
         this.subscriptionId = subscriptionId;
+    }
+
+    public String getLinkedStackId() {
+        return linkedStackId;
+    }
+
+    public void setLinkedStackId(String linkedStackId) {
+        this.linkedStackId = linkedStackId;
     }
 
     /**
