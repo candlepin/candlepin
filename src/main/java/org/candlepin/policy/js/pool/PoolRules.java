@@ -217,6 +217,16 @@ public class PoolRules {
         return poolsUpdated;
     }
 
+    /**
+     * Refresh pools which have no subscription tied (directly) to them.
+     *
+     * @param floatingPools ools with no subscription ID
+     * @return pool updates
+     */
+    public List<PoolUpdate> updatePools(List<Pool> floatingPools) {
+        return null;
+    }
+
     private boolean checkForOrderDataChanges(Subscription sub,
         PoolHelper helper, Pool existingPool) {
         boolean orderDataChanged = helper.checkForOrderChanges(existingPool, sub);

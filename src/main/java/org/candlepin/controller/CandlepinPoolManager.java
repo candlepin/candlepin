@@ -136,6 +136,9 @@ public class CandlepinPoolManager implements PoolManager {
         List<Pool> pools = this.listAvailableEntitlementPools(null,
             owner, null, null, false, false, null).getPageData();
 
+        // Pools with no subscription ID:
+        List<Pool> floatingPools = new LinkedList<Pool>();
+
         // Map all pools for this owner/product that have a
         // subscription ID associated with them.
         Map<String, List<Pool>> subToPoolMap = new HashMap<String, List<Pool>>();
@@ -147,6 +150,7 @@ public class CandlepinPoolManager implements PoolManager {
                 }
                 subToPoolMap.get(p.getSubscriptionId()).add(p);
             }
+            floatingPools.add(p);
         }
 
         Set<Entitlement> entitlementsToRegen = Util.newSet();
@@ -170,6 +174,8 @@ public class CandlepinPoolManager implements PoolManager {
                 subToPoolMap.remove(sub.getId());
             }
         }
+
+        entitlementsToRegen.addAll(updateFloatingPools(floatingPools));
 
         // delete pools whose subscription disappeared:
         for (Entry<String, List<Pool>> entry : subToPoolMap.entrySet()) {
@@ -250,10 +256,15 @@ public class CandlepinPoolManager implements PoolManager {
             poolEvents.put(existing.getId(), e);
         }
 
-        // Hand off to Javascript to determine which pools need updating:
+        // Hand off to rules to determine which pools need updating:
         List<PoolUpdate> updatedPools = poolRules.updatePools(sub,
             existingPools);
 
+        return processPoolUpdates(poolEvents, updatedPools);
+    }
+
+    private Set<Entitlement> processPoolUpdates(
+        Map<String, Event> poolEvents, List<PoolUpdate> updatedPools) {
         Set<Entitlement> entitlementsToRegen = Util.newSet();
         for (PoolUpdate updatedPool : updatedPools) {
 
@@ -282,8 +293,8 @@ public class CandlepinPoolManager implements PoolManager {
                 // when subscription dates change, entitlement dates should
                 // change as well
                 for (Entitlement entitlement : entitlements) {
-                    entitlement.setStartDate(sub.getStartDate());
-                    entitlement.setEndDate(sub.getEndDate());
+                    entitlement.setStartDate(updatedPool.getPool().getStartDate());
+                    entitlement.setEndDate(updatedPool.getPool().getEndDate());
                     // TODO: perhaps optimize it to use hibernate query?
                     this.entitlementCurator.merge(entitlement);
                 }
@@ -298,6 +309,29 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         return entitlementsToRegen;
+    }
+
+    /**
+     * Update pools which have no subscription attached, if applicable.
+     *
+     * @param floatingPools
+     * @return
+     */
+    Set<Entitlement> updateFloatingPools(List<Pool> floatingPools) {
+        /*
+         * Rules need to determine which pools have changed, but the Java must
+         * send out the events. Create an event for each pool that could change,
+         * even if we won't use them all.
+         */
+        Map<String, Event> poolEvents = new HashMap<String, Event>();
+        for (Pool existing : floatingPools) {
+            Event e = eventFactory.poolChangedFrom(existing);
+            poolEvents.put(existing.getId(), e);
+        }
+
+        // Hand off to rules to determine which pools need updating:
+        List<PoolUpdate> updatedPools = poolRules.updatePools(floatingPools);
+        return processPoolUpdates(poolEvents, updatedPools);
     }
 
     private boolean poolExistsForSubscription(

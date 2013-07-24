@@ -77,6 +77,7 @@ import org.candlepin.util.Util;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
@@ -155,7 +156,7 @@ public class PoolManagerTest {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Test
-    public void testRefreshPoolsForDeactivatingPools() {
+    public void testRefreshPoolsForDeletingPools() {
         List<Subscription> subscriptions = Util.newList();
         List<Pool> pools = Util.newList();
         Pool p = TestUtil.createPool(TestUtil.createProduct());
@@ -176,6 +177,30 @@ public class PoolManagerTest {
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Test
+    public void testRefreshPoolsSortsStackDerivedPools() {
+        List<Subscription> subscriptions = Util.newList();
+        List<Pool> pools = Util.newList();
+
+        // Pool has no subscription ID:
+        Pool p = TestUtil.createPool(TestUtil.createProduct());
+        p.setLinkedStackId("a");
+
+        pools.add(p);
+        when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
+            subscriptions);
+        when(
+            mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
+                any(Owner.class), anyString(), any(Date.class),
+                anyBoolean(), anyBoolean())).thenReturn(pools);
+
+        this.manager.getRefresher().add(getOwner()).run();
+        ArgumentCaptor<List> poolCaptor = ArgumentCaptor.forClass(List.class);
+        verify(this.poolRulesMock).updatePools(poolCaptor.capture());
+        assertEquals(1, poolCaptor.getValue().size());
+        assertEquals(p, poolCaptor.getValue().get(0));
+    }
+
     @Test
     public void refreshPoolsCreatingPoolsForExistingSubscriptions() {
         List<Subscription> subscriptions = Util.newList();
