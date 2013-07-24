@@ -35,6 +35,7 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.ActivationKey;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.DerivedProductPoolAttribute;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
@@ -46,6 +47,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductPoolAttribute;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Subscription;
 import org.candlepin.paging.Page;
@@ -1081,6 +1083,79 @@ public class CandlepinPoolManager implements PoolManager {
     @Override
     public List<Pool> listPoolsByOwner(Owner owner) {
         return poolCurator.listByOwner(owner);
+    }
+
+    /**
+     * Updates the pool based on the entitlements in the specified stack.
+     * @param pool
+     * @param stackId
+     */
+    @Override
+    public void updatePoolFromStack(Pool pool, Consumer consumer, String stackId) {
+        pool.setLinkedStackId(stackId);
+        pool.setSourceEntitlement(null);
+        pool.setSubscriptionId(null);
+
+        List<Entitlement> stackedEnts = this.entitlementCurator.findByStackId(consumer,
+            stackId);
+
+        // Nothing to do if there were no entitlements found.
+        // TODO This should never happen. There should always be one pool in the stack,
+        //      otherwise the derived pool should be cleaned up. Wonder if this case
+        //      should throw a hard exception.
+        if (stackedEnts.isEmpty()) {
+            return;
+        }
+
+        Entitlement eldest = null;
+        pool.getProvidedProducts().clear();
+        pool.getProductAttributes().clear();
+        for (Entitlement nextStacked : stackedEnts) {
+            if (eldest == null || nextStacked.getCreated().before(eldest.getCreated())) {
+                eldest = nextStacked;
+            }
+
+            // the pool should be updated to have the earliest start date.
+            if (nextStacked.getStartDate().before(pool.getStartDate())) {
+                pool.setStartDate(nextStacked.getStartDate());
+            }
+
+            // The pool should be updated to have the latest end date.
+            if (nextStacked.getEndDate().after(pool.getEndDate())) {
+                pool.setEndDate(nextStacked.getEndDate());
+            }
+
+            // Update the provided products
+            Pool nextStackedPool = nextStacked.getPool();
+            for (ProvidedProduct pp : nextStackedPool.getProvidedProducts()) {
+                pool.addProvidedProduct(
+                    new ProvidedProduct(pp.getProductId(), pp.getProductName()));
+            }
+
+            // Update the product pool attributes - we need to be sure to check for any
+            // derived products for the sub pool. If it exists, then we need to use the
+            // derived product pool attributes.
+            if (nextStackedPool.getDerivedProductId() == null) {
+                for (ProductPoolAttribute attr : nextStackedPool.getProductAttributes()) {
+                    pool.setProductAttribute(attr.getName(), attr.getValue(),
+                        attr.getProductId());
+                }
+            }
+            else {
+                for (DerivedProductPoolAttribute attr :
+                    nextStackedPool.getDerivedProductAttributes()) {
+                    pool.setProductAttribute(attr.getName(), attr.getValue(),
+                        attr.getProductId());
+                }
+            }
+        }
+
+        // Now that we know the eldest entitlement, update the the data that would
+        // normally have come from the subscription.
+        Pool eldestEntPool = eldest.getPool();
+        pool.setContractNumber(eldestEntPool.getContractNumber());
+        pool.setAccountNumber(eldestEntPool.getAccountNumber());
+        pool.setOrderNumber(eldestEntPool.getOrderNumber());
     }
 
 }

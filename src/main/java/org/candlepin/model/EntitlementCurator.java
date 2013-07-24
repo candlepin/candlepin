@@ -25,7 +25,11 @@ import org.apache.log4j.Logger;
 import org.hibernate.Criteria;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Order;
+import org.hibernate.criterion.Projections;
+import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.criterion.Subqueries;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Date;
@@ -329,5 +333,29 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         this.currentSession().replicate(ent, ReplicationMode.EXCEPTION);
 
         return ent;
+    }
+
+    /**
+     * Find the entitlements for the given consumer that are part of the specified stack.
+     *
+     * @param consumer the consumer
+     * @param stackId the ID of the stack
+     * @return the list of entitlements for the consumer that are in the stack.
+     */
+    public List<Entitlement> findByStackId(Consumer consumer, String stackId) {
+        DetachedCriteria stackCriteria = DetachedCriteria.forClass(
+            ProductPoolAttribute.class, "attr")
+                .add(Restrictions.and(Restrictions.eq("name", "stacking_id"),
+                    Restrictions.eq("value", stackId)))
+                .add(Property.forName("pool.id").eqProperty("attr.pool.id"))
+                .setProjection(Projections.property("attr.id"));
+
+        Criteria activeNowQuery = currentSession().createCriteria(Entitlement.class)
+            .add(Restrictions.eq("consumer", consumer))
+            .createCriteria("pool")
+                .add(Restrictions.isNull("sourceEntitlement"))
+                .add(Restrictions.isNull("linkedStackId"))
+                .add(Subqueries.exists(stackCriteria));
+        return activeNowQuery.list();
     }
 }

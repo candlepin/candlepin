@@ -24,6 +24,7 @@ import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Attribute;
+import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
@@ -96,13 +97,22 @@ public class PoolHelper extends AttributeHelper {
         consumerSpecificPool.setAttribute("pool_derived", "true");
         consumerSpecificPool.setAttribute("virt_only", "true");
 
-        // attribute per 795431, useful for rolling up pool info in headpin
-        consumerSpecificPool.setAttribute("source_pool_id", pool.getId());
-
-
-        consumerSpecificPool.setSubscriptionId(pool.getSubscriptionId());
         this.copyProductAttributesOntoPool(consumerSpecificPool.getProductId(),
             consumerSpecificPool);
+
+        // If the pool is stacked, we want to create the derived pool based on
+        // the entitlements in the stack, instead of just the parent pool.
+        String stackId = consumerSpecificPool.getProductAttributeValue("stacking_id");
+        if (stackId != null && !stackId.isEmpty()) {
+            this.poolManager.updatePoolFromStack(consumerSpecificPool,
+                sourceEntitlement.getConsumer(), stackId);
+        }
+        else {
+            // attribute per 795431, useful for rolling up pool info in headpin
+            consumerSpecificPool.setAttribute("source_pool_id", pool.getId());
+            consumerSpecificPool.setSubscriptionId(pool.getSubscriptionId());
+        }
+
         poolManager.createPool(consumerSpecificPool);
         return consumerSpecificPool;
     }

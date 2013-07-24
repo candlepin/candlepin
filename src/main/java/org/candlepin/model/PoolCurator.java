@@ -35,6 +35,7 @@ import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.criterion.Subqueries;
 import org.hibernate.impl.FilterImpl;
 
 import java.io.Serializable;
@@ -546,11 +547,20 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     /**
-     * @param c
+     * @param consumer
      * @param stackId
      * @return
      */
-    public int getSubPoolCountForStackId(Consumer c, String stackId) {
-        return 0;
+    public int getSubPoolCountForStackId(Consumer consumer, String stackId) {
+        DetachedCriteria requiresHostCriteria = DetachedCriteria.forClass(
+            PoolAttribute.class, "attr")
+                .add(Restrictions.and(Restrictions.eq("name", "requires_host"),
+                    Restrictions.eq("value", consumer.getUuid())))
+                .setProjection(Projections.property("attr.id"));
+        Criteria getCount = currentSession().createCriteria(Pool.class)
+            .add(Restrictions.and(Restrictions.isNotNull("linkedStackId"),
+                                  Restrictions.eq("linkedStackId", stackId)))
+            .add(Subqueries.exists(requiresHostCriteria));
+        return getCount.list().size();
     }
 }
