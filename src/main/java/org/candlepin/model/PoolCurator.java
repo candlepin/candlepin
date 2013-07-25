@@ -558,8 +558,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                     Restrictions.eq("value", consumer.getUuid())))
                 .setProjection(Projections.property("attr.id"));
         Criteria getCount = currentSession().createCriteria(Pool.class)
-            .add(Restrictions.and(Restrictions.isNotNull("linkedStackId"),
-                                  Restrictions.eq("linkedStackId", stackId)))
+            .add(Restrictions.and(Restrictions.isNotNull("sourceStackId"),
+                                  Restrictions.eq("sourceStackId", stackId)))
             .add(Subqueries.exists(requiresHostCriteria));
         return getCount.list().size();
     }

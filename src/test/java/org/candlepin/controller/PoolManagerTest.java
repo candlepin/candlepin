@@ -184,7 +184,7 @@ public class PoolManagerTest {
 
         // Pool has no subscription ID:
         Pool p = TestUtil.createPool(TestUtil.createProduct());
-        p.setLinkedStackId("a");
+        p.setSourceStackId("a");
 
         pools.add(p);
         when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(

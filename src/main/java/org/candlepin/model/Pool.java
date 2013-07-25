@@ -98,7 +98,7 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
      * sub pool per stack allowed)
      */
     @Column(nullable = true)
-    private String linkedStackId;
+    private String sourceStackId;
 
     /** Indicates this pool was created as a result of granting an entitlement.
      * Allows us to know that we need to clean this pool up if that entitlement
@@ -503,12 +503,12 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
         this.subscriptionId = subscriptionId;
     }
 
-    public String getLinkedStackId() {
-        return linkedStackId;
+    public String getSourceStackId() {
+        return sourceStackId;
     }
 
-    public void setLinkedStackId(String linkedStackId) {
-        this.linkedStackId = linkedStackId;
+    public void setSourceStackId(String sourceStackId) {
+        this.sourceStackId = sourceStackId;
     }
 
     /**

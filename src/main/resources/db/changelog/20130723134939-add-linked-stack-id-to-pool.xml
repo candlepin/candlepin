@@ -10,7 +10,7 @@
     <changeSet id="20130723134939" author="mstead">
         <comment>Adding linkedStackId column to Pool to support one subpool per stack.</comment>
         <addColumn tableName="cp_pool">
-            <column name="linkedstackid" type="varchar(255)"/>
+            <column name="sourcestackid" type="varchar(255)"/>
         </addColumn>
     </changeSet>
 

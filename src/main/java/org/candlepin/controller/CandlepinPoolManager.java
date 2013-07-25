@@ -1126,7 +1126,7 @@ public class CandlepinPoolManager implements PoolManager {
      */
     @Override
     public void updatePoolFromStack(Pool pool, Consumer consumer, String stackId) {
-        pool.setLinkedStackId(stackId);
+        pool.setSourceStackId(stackId);
         pool.setSourceEntitlement(null);
         pool.setSourceConsumer(consumer);
         pool.setSubscriptionId(null);
