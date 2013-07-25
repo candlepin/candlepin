@@ -15,8 +15,10 @@
 package org.candlepin.model.test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -311,5 +313,50 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         factConsumer.setFacts(facts);
         factConsumer = consumerCurator.create(factConsumer);
         assertEquals(consumerCurator.findByUuid(factConsumer.getUuid()), factConsumer);
+    }
+
+    @Test
+    public void testFindByUuids() {
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        consumer.setUuid("1");
+        consumer = consumerCurator.create(consumer);
+
+        Consumer consumer2 = new Consumer("testConsumer2", "testUser2", owner, ct);
+        consumer2.setUuid("2");
+        consumer2 = consumerCurator.create(consumer2);
+
+        Consumer consumer3 = new Consumer("testConsumer3", "testUser3", owner, ct);
+        consumer3.setUuid("3");
+        consumer3 = consumerCurator.create(consumer3);
+
+        List<Consumer> results = consumerCurator.findByUuids(
+            Arrays.asList(new String[] {"1", "2"}));
+        assertTrue(results.contains(consumer));
+        assertTrue(results.contains(consumer2));
+        assertFalse(results.contains(consumer3));
+    }
+
+    @Test
+    public void testFindByUuidsAndOwner() {
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        consumer.setUuid("1");
+        consumer = consumerCurator.create(consumer);
+
+        Owner owner2 = new Owner("test-owner2", "Test Owner2");
+        ownerCurator.create(owner2);
+
+        Consumer consumer2 = new Consumer("testConsumer2", "testUser2", owner2, ct);
+        consumer2.setUuid("2");
+        consumer2 = consumerCurator.create(consumer2);
+
+        Consumer consumer3 = new Consumer("testConsumer3", "testUser3", owner2, ct);
+        consumer3.setUuid("3");
+        consumer3 = consumerCurator.create(consumer3);
+
+        List<Consumer> results = consumerCurator.findByUuidsAndOwner(
+            Arrays.asList(new String[] {"2"}), owner2);
+        assertTrue(results.contains(consumer2));
+        assertFalse(results.contains(consumer));
+        assertFalse(results.contains(consumer3));
     }
 }

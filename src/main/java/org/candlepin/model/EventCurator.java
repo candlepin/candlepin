@@ -18,7 +18,6 @@ package org.candlepin.model;
 import java.util.List;
 
 import org.candlepin.audit.Event;
-import org.candlepin.auth.interceptor.EnforceAccessControl;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
@@ -53,14 +52,12 @@ public class EventCurator extends AbstractHibernateCurator<Event> {
     }
 
     @SuppressWarnings("unchecked")
-    @EnforceAccessControl
     public List<Event> listMostRecent(int limit, Owner owner) {
         return createEventCriteria(limit).add(
             Restrictions.eq("ownerId", owner.getId())).list();
     }
 
     @SuppressWarnings("unchecked")
-    @EnforceAccessControl
     public List<Event> listMostRecent(int limit, Consumer consumer) {
         return createEventCriteria(limit).add(
             Restrictions.eq("consumerId", consumer.getId())).list();
