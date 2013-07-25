@@ -36,6 +36,7 @@ import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolAttribute;
@@ -72,6 +73,7 @@ public class PoolRulesTest {
     @Mock private ProductServiceAdapter productAdapterMock;
     @Mock private PoolManager poolManagerMock;
     @Mock private Config configMock;
+    @Mock private EntitlementCurator entCurMock;
 
     private ProductCache productCache;
     private UserPrincipal principal;
@@ -91,7 +93,7 @@ public class PoolRulesTest {
         when(configMock.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
         productCache = new ProductCache(configMock, productAdapterMock);
 
-        poolRules = new PoolRules(poolManagerMock, productCache, configMock);
+        poolRules = new PoolRules(poolManagerMock, productCache, configMock, entCurMock);
         principal = TestUtil.createOwnerPrincipal();
         owner = principal.getOwners().get(0);
     }
@@ -898,4 +900,5 @@ public class PoolRulesTest {
         assertTrue(update.getOrderChanged());
         assertEquals("123", update.getPool().getAccountNumber());
     }
+
 }

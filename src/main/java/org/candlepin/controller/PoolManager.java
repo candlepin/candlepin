@@ -196,14 +196,4 @@ public interface PoolManager {
      * @return a list of pools for the specified Owner
      */
     List<Pool> listPoolsByOwner(Owner owner);
-
-    /**
-     * Updates the specified pool based on the consumer's current entitlements for
-     * specified stack ID.
-     *
-     * @param poolToUpdate the pool to update.
-     * @param consumer the consumer who owns the entitlements in the stack.
-     * @param stackId the stack ID to get the entitlements for.
-     */
-    void updatePoolFromStack(Pool poolToUpdate, Consumer consumer, String stackId);
 }

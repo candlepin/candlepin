@@ -27,6 +27,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolAttribute;
@@ -67,6 +68,8 @@ public class EntitlementRulesTestFixture {
     protected ComplianceStatus compliance;
     @Mock
     protected PoolManager poolManagerMock;
+    @Mock
+    protected EntitlementCurator entCurMock;
 
     @Mock
     protected PoolCurator poolCurator;
@@ -105,7 +108,8 @@ public class EntitlementRulesTestFixture {
 
         attrHelper = new AttributeHelper();
 
-        poolRules = new PoolRules(poolManagerMock, productCache, config);
+        poolRules = new PoolRules(poolManagerMock, productCache, config,
+            entCurMock);
     }
 
     protected Subscription createVirtLimitSub(String productId, int quantity,

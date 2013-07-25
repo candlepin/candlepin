@@ -14,6 +14,7 @@
  */
 package org.candlepin.policy.js.pool;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -24,9 +25,14 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 import org.candlepin.config.Config;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.model.Consumer;
+import org.candlepin.model.DerivedProductPoolAttribute;
+import org.candlepin.model.Entitlement;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
+import org.candlepin.model.ProductPoolAttribute;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.DerivedProvidedProduct;
 import org.candlepin.model.Subscription;
@@ -44,13 +50,16 @@ public class PoolRules {
     private PoolManager poolManager;
     private ProductCache productCache;
     private Config config;
+    private EntitlementCurator entCurator;
 
 
     @Inject
-    public PoolRules(PoolManager poolManager, ProductCache productCache, Config config) {
+    public PoolRules(PoolManager poolManager, ProductCache productCache, Config config,
+        EntitlementCurator entCurator) {
         this.poolManager = poolManager;
         this.productCache = productCache;
         this.config = config;
+        this.entCurator = entCurator;
     }
 
     private long calculateQuantity(Subscription sub) {
@@ -168,6 +177,33 @@ public class PoolRules {
         return pools;
     }
 
+    /**
+     * Refresh pools which have no subscription tied (directly) to them.
+     *
+     * @param floatingPools ools with no subscription ID
+     * @return pool updates
+     */
+    public List<PoolUpdate> updatePools(List<Pool> floatingPools) {
+        for (Pool p : floatingPools) {
+
+            if (p.getSubscriptionId() != null) {
+                // Should be filtered out before calling, but just in case we skip it:
+                continue;
+            }
+
+            if (p.getSourceStackId() != null) {
+                Consumer c = p.getSourceConsumer();
+                if (c == null) {
+                    log.error("Stack derived pool has no source consumer: " + p.getId());
+                }
+                else {
+                    updatePoolFromStack(p, c, p.getSourceStackId());
+                }
+            }
+        }
+        return new LinkedList<PoolUpdate>();
+    }
+
     public List<PoolUpdate> updatePools(Subscription sub, List<Pool> existingPools) {
         log.info("Refreshing pools for existing subscription: " + sub);
         log.info("  existing pools: " + existingPools.size());
@@ -183,7 +219,8 @@ public class PoolRules {
             // Used to track if anything has changed:
             PoolUpdate update = new PoolUpdate(existingPool);
 
-            update.setDatesChanged(checkForDateChange(sub, existingPool));
+            update.setDatesChanged(checkForDateChange(sub.getStartDate(),
+                sub.getEndDate(), existingPool));
             update.setQuantityChanged(
                 checkForQuantityChange(sub, existingPool, existingPools, attributes));
 
@@ -195,7 +232,7 @@ public class PoolRules {
                 checkForChangedProducts(sub, existingPool));
 
             update.setDerivedProductsChanged(
-                checkForChangedSubProducts(sub, existingPool));
+                checkForChangedDerivedProducts(sub, existingPool));
 
             update.setProductAttributesChanged(checkForProductAttributeChanges(sub,
                 helper, existingPool));
@@ -218,13 +255,89 @@ public class PoolRules {
     }
 
     /**
-     * Refresh pools which have no subscription tied (directly) to them.
-     *
-     * @param floatingPools ools with no subscription ID
-     * @return pool updates
+     * Updates the pool based on the entitlements in the specified stack.
+     * @param pool
+     * @param stackId
      */
-    public List<PoolUpdate> updatePools(List<Pool> floatingPools) {
-        return new LinkedList<PoolUpdate>();
+    public void updatePoolFromStack(Pool pool, Consumer consumer, String stackId) {
+
+        PoolUpdate update = new PoolUpdate(pool);
+
+        pool.setSourceStackId(stackId);
+        pool.setSourceEntitlement(null);
+        pool.setSourceConsumer(consumer);
+        pool.setSubscriptionId(null);
+
+        List<Entitlement> stackedEnts = this.entCurator.findByStackId(consumer,
+            stackId);
+
+        // Nothing to do if there were no entitlements found.
+        // TODO This should never happen. There should always be one pool in the stack,
+        //      otherwise the derived pool should be cleaned up. Wonder if this case
+        //      should throw a hard exception.
+        if (stackedEnts.isEmpty()) {
+            return;
+        }
+
+        // Accumulate the expected values before we set anything on the pool:
+        Entitlement eldest = null;
+        pool.getProvidedProducts().clear();
+        pool.getProductAttributes().clear();
+        Date startDate = null;
+        Date endDate = null;
+        for (Entitlement nextStacked : stackedEnts) {
+            if (eldest == null || nextStacked.getCreated().before(eldest.getCreated())) {
+                eldest = nextStacked;
+            }
+
+            // the pool should be updated to have the earliest start date.
+            if (nextStacked.getStartDate().before(startDate)) {
+                startDate = nextStacked.getStartDate();
+            }
+
+            // The pool should be updated to have the latest end date.
+            if (nextStacked.getEndDate().after(endDate)) {
+                endDate = nextStacked.getEndDate();
+            }
+
+            // Update the provided products
+            // TODO: missing check for derived provided products?
+            Pool nextStackedPool = nextStacked.getPool();
+            for (ProvidedProduct pp : nextStackedPool.getProvidedProducts()) {
+                pool.addProvidedProduct(
+                    new ProvidedProduct(pp.getProductId(), pp.getProductName()));
+            }
+
+            // Update the product pool attributes - we need to be sure to check for any
+            // derived products for the sub pool. If it exists, then we need to use the
+            // derived product pool attributes.
+            if (nextStackedPool.getDerivedProductId() == null) {
+                for (ProductPoolAttribute attr : nextStackedPool.getProductAttributes()) {
+                    pool.setProductAttribute(attr.getName(), attr.getValue(),
+                        attr.getProductId());
+                }
+            }
+            else {
+                for (DerivedProductPoolAttribute attr :
+                    nextStackedPool.getDerivedProductAttributes()) {
+                    pool.setProductAttribute(attr.getName(), attr.getValue(),
+                        attr.getProductId());
+                }
+            }
+
+            // product ID vs derived product ID
+            // quantity
+        }
+
+        update.setDatesChanged(checkForDateChange(startDate,
+            endDate, pool));
+
+        // Now that we know the eldest entitlement, update the the data that would
+        // normally have come from the subscription.
+        Pool eldestEntPool = eldest.getPool();
+        pool.setContractNumber(eldestEntPool.getContractNumber());
+        pool.setAccountNumber(eldestEntPool.getAccountNumber());
+        pool.setOrderNumber(eldestEntPool.getOrderNumber());
     }
 
     private boolean checkForOrderDataChanges(Subscription sub,
@@ -299,7 +412,7 @@ public class PoolRules {
         return productsChanged;
     }
 
-    private boolean checkForChangedSubProducts(Subscription sub,
+    private boolean checkForChangedDerivedProducts(Subscription sub,
         Pool existingPool) {
 
         boolean productsChanged = false;
@@ -334,16 +447,16 @@ public class PoolRules {
         return productsChanged;
     }
 
-    private boolean checkForDateChange(Subscription sub, Pool existingPool) {
+    private boolean checkForDateChange(Date start, Date end, Pool existingPool) {
 
-        boolean datesChanged = (!sub.getStartDate().equals(
+        boolean datesChanged = (!start.equals(
             existingPool.getStartDate())) ||
-            (!sub.getEndDate().equals(existingPool.getEndDate()));
+            (!end.equals(existingPool.getEndDate()));
 
         if (datesChanged) {
             log.info("   Subscription dates changed.");
-            existingPool.setStartDate(sub.getStartDate());
-            existingPool.setEndDate(sub.getEndDate());
+            existingPool.setStartDate(start);
+            existingPool.setEndDate(end);
         }
         return datesChanged;
     }
@@ -354,7 +467,7 @@ public class PoolRules {
         // Expected quantity is normally the subscription's quantity, but for
         // virt only pools we expect it to be sub quantity * virt_limit:
         long expectedQuantity = calculateQuantity(sub);
-        expectedQuantity = processHostedVirtLimitPools(existingPools,
+        expectedQuantity = processVirtLimitPools(existingPools,
             attributes, existingPool, expectedQuantity);
 
 
@@ -368,7 +481,7 @@ public class PoolRules {
         return quantityChanged;
     }
 
-    private long processHostedVirtLimitPools(List<Pool> existingPools,
+    private long processVirtLimitPools(List<Pool> existingPools,
         Map<String, String> attributes, Pool existingPool, long expectedQuantity) {
         /*
          *  WARNING: when updating pools, we have the added complication of having to
