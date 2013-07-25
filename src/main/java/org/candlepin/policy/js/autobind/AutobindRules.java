@@ -70,7 +70,7 @@ public class AutobindRules {
         int poolsBeforeContentFilter = pools.size();
         pools = filterPoolsForV1Certificates(consumer, pools);
 
-        // TODO: Not the best behavior:
+        // per dgoodwin, this needs to throw an exception for legacy clients
         if (pools.size() == 0) {
             throw new RuntimeException("No entitlements for products: " +
                 Arrays.toString(productIds));
