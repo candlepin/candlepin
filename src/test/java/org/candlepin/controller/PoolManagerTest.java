@@ -189,10 +189,13 @@ public class PoolManagerTest {
         pools.add(p);
         when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
             subscriptions);
+
+        Page page = mock(Page.class);
+        when(page.getPageData()).thenReturn(pools);
         when(
             mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
                 any(Owner.class), anyString(), any(Date.class),
-                anyBoolean(), anyBoolean())).thenReturn(pools);
+                anyBoolean(), any(PageRequest.class))).thenReturn(page);
 
         this.manager.getRefresher().add(getOwner()).run();
         ArgumentCaptor<List> poolCaptor = ArgumentCaptor.forClass(List.class);
