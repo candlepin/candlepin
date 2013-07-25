@@ -329,7 +329,7 @@ public class SecurityInterceptor implements MethodInterceptor {
         @Override
         public List<Consumer> lookup(Collection<String> keys) {
             initialize();
-            // Do not look for deleted consumers because do not want to throw
+            // Do not look for deleted consumers because we do not want to throw
             // an exception and reject the whole request just because one of
             // the requested items is deleted.
             return consumerCurator.findByUuids(keys);
