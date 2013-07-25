@@ -224,7 +224,7 @@ public class PoolRules {
      * @return pool updates
      */
     public List<PoolUpdate> updatePools(List<Pool> floatingPools) {
-        return null;
+        return new LinkedList<PoolUpdate>();
     }
 
     private boolean checkForOrderDataChanges(Subscription sub,

@@ -274,7 +274,10 @@ public class PoolHelper extends AttributeHelper {
                 new ProvidedProduct(pp.getProductId(), pp.getProductName()));
         }
 
-        pool.setSourceEntitlement(sourceEntitlement);
+        if (sourceEntitlement != null) {
+            pool.setSourceEntitlement(sourceEntitlement);
+            pool.setSourceConsumer(sourceEntitlement.getConsumer());
+        }
 
         // temp - we need a way to specify this on the product
         pool.setAttribute("requires_consumer_type", "system");

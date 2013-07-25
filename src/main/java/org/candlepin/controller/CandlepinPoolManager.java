@@ -1128,6 +1128,7 @@ public class CandlepinPoolManager implements PoolManager {
     public void updatePoolFromStack(Pool pool, Consumer consumer, String stackId) {
         pool.setLinkedStackId(stackId);
         pool.setSourceEntitlement(null);
+        pool.setSourceConsumer(consumer);
         pool.setSubscriptionId(null);
 
         List<Entitlement> stackedEnts = this.entitlementCurator.findByStackId(consumer,

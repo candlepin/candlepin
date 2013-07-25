@@ -1129,4 +1129,5 @@
     <include file="db/changelog/20130705140300-add-certv3-capability.xml" />
     <include file="db/changelog/20130717133146-ownerkey-and-displayname-in-deletedconsumer.xml" />
     <include file="db/changelog/20130723134939-add-linked-stack-id-to-pool.xml" />
+    <include file="db/changelog/20130725093910-add-source-consumer-to-pool.xml" />
 </databaseChangeLog>
