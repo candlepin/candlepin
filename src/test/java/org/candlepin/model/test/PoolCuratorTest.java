@@ -14,6 +14,7 @@
  */
 package org.candlepin.model.test;
 
+import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -629,7 +630,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         poolCurator.create(derivedPool);
 
-        int count = poolCurator.getSubPoolCountForStackId(consumer, expectedStackId);
-        assertEquals(1, count);
+        Pool pool = poolCurator.getSubPoolForStackId(consumer, expectedStackId);
+        assertNotNull(pool);
     }
 }

@@ -814,7 +814,19 @@ public class CandlepinPoolManager implements PoolManager {
         // otherwise we are tampering with the loop iterator from inside
         // the loop (#811581)
         Set<Pool> deletablePools = new HashSet<Pool>();
-        for (Pool p : poolCurator.listBySourceEntitlement(entitlement)) {
+        Set<Pool> subPools = new HashSet<Pool>();
+        subPools.addAll(poolCurator.listBySourceEntitlement(entitlement));
+
+        // Check for a single stacked sub pool as well.
+        if (pool.hasProductAttribute("stacking_id")) {
+            Pool stackedSubPool = poolCurator.getSubPoolForStackId(consumer,
+                pool.getProductAttributeValue("stacking_id"));
+            if (stackedSubPool != null) {
+                subPools.add(stackedSubPool);
+            }
+        }
+
+        for (Pool p : subPools) {
             Set<Entitlement> deletableEntitlements = new HashSet<Entitlement>();
             for (Entitlement e : p.getEntitlements()) {
                 deletableEntitlements.add(e);
@@ -1002,6 +1014,18 @@ public class CandlepinPoolManager implements PoolManager {
         @Override
         public void handlePostEntitlement(Consumer consumer, PoolHelper poolHelper,
             Entitlement entitlement) {
+
+            Pool entPool = entitlement.getPool();
+            String stackId = entPool.getProductAttributeValue("stacking_id");
+            if (stackId != null && !stackId.isEmpty()) {
+                Pool pool =
+                    poolCurator.getSubPoolForStackId(entitlement.getConsumer(), stackId);
+                if (pool != null) {
+                    poolRules.updatePoolFromStack(pool, consumer, stackId);
+                    poolCurator.merge(pool);
+                }
+            }
+
             enforcer.postEntitlement(consumer, poolHelper, entitlement);
         }
         @Override

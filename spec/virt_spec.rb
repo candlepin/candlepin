@@ -26,10 +26,6 @@ describe 'Standalone Virt-Limit Subscriptions' do
 
     pools = @host1_client.list_pools :consumer => @host1['uuid']
     @host_ent = @host1_client.consume_pool(@virt_limit_pool['id'])[0]
-    # After binding the host should see no pools available:
-    pools = @host1_client.list_pools :consumer => @host1['uuid']
-    # one should remain
-    pools.length.should == 1
 
     pools = @host2_client.list_pools :consumer => @host2['uuid']
     host2_ent = @host2_client.consume_pool(@virt_limit_pool['id'])[0]
@@ -45,8 +41,24 @@ describe 'Standalone Virt-Limit Subscriptions' do
     pools = @guest1_client.list_pools :consumer => @guest1['uuid']
 
     pools.should have(3).things
-    @guest_pool = pools.find_all { |i| !i['sourceEntitlement'].nil? }[0]
+    @guest_pool = pools.find_all { |i| !i['sourceStackId'].nil? }[0]
+  end
 
+  it 'should re-source guest pool when other stacked entitlements exist' do
+    @cp.list_owner_pools(@owner['key']).length.should == 4
+    @guest_pool['sourceConsumer']['uuid'].should == @host1['uuid']
+    @guest_pool['contractNumber'].should == "123"
+    # Use another pool in the stack:
+    host_ent_2 = @host1_client.consume_pool(@pools[1]['id'])[0]
+    # No new guest pool should have been created because we already had one
+    # for that stack:
+    @cp.list_owner_pools(@owner['key']).length.should == 4
+
+    # Delete the original entitlement:
+    @host1_client.unbind_entitlement(@host_ent['id'])
+    @guest_pool = @host1_client.get_pool(@guest_pool['id'])
+    @guest_pool['sourceEntitlement']['id'].should == host_ent_2['id']
+    @guest_pool['contractNumber'].should == "456"
   end
 
   it 'should create a virt_only pool for hosts guests' do

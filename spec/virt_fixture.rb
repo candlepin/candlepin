@@ -14,16 +14,18 @@ module VirtFixture
         # Create a sub for a virt limited product:
         @virt_limit_product = create_product(nil, nil, {
           :attributes => {
-            :virt_limit => 3
+            'virt_limit' => 3,
+            'stacking_id' => 'virtstack',
+            'multi-entitlement' => 'yes'
           }
         })
 
 
         #create two subs, to do migration testing
         @sub1 = @cp.create_subscription(@owner['key'],
-          @virt_limit_product.id, 10)
+          @virt_limit_product.id, 10, [], "123")
         @sub2 = @cp.create_subscription(@owner['key'],
-          @virt_limit_product.id, 10)
+          @virt_limit_product.id, 10, [], "456")
         @cp.refresh_pools(@owner['key'])
 
         @pools = @user.list_pools :owner => @owner.id, \
@@ -33,13 +35,13 @@ module VirtFixture
 
         # Setup two virt guest consumers:
         @uuid1 = random_string('system.uuid')
-        @uuid2 = random_string('system.uuid')
         @guest1 = @user.register(random_string('guest'), :system, nil,
           {'virt.uuid' => @uuid1, 'virt.is_guest' => 'true'}, nil, nil, [], [])
         @guest1_client = Candlepin.new(username=nil, password=nil,
             cert=@guest1['idCert']['cert'],
             key=@guest1['idCert']['key'])
 
+        @uuid2 = random_string('system.uuid')
         @guest2 = @user.register(random_string('guest'), :system, nil,
           {'virt.uuid' => @uuid2, 'virt.is_guest' => 'true'}, nil, nil, [], [])
         @guest2_client = Candlepin.new(username=nil, password=nil,

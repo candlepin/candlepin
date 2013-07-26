@@ -353,7 +353,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             .add(Restrictions.eq("consumer", consumer))
             .createCriteria("pool")
                 .add(Restrictions.isNull("sourceEntitlement"))
-                .add(Restrictions.isNull("linkedStackId"))
+                .add(Restrictions.isNull("sourceStackId"))
                 .add(Subqueries.exists(stackCriteria));
         return activeNowQuery.list();
     }
