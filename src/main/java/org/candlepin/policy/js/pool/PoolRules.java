@@ -184,6 +184,7 @@ public class PoolRules {
      * @return pool updates
      */
     public List<PoolUpdate> updatePools(List<Pool> floatingPools) {
+        List<PoolUpdate> updates = new LinkedList<PoolUpdate>();
         for (Pool p : floatingPools) {
 
             if (p.getSubscriptionId() != null) {
@@ -197,11 +198,14 @@ public class PoolRules {
                     log.error("Stack derived pool has no source consumer: " + p.getId());
                 }
                 else {
-                    updatePoolFromStack(p, c, p.getSourceStackId());
+                    PoolUpdate update = updatePoolFromStack(p, c, p.getSourceStackId());
+                    if (update.changed()) {
+                        updates.add(update);
+                    }
                 }
             }
         }
-        return new LinkedList<PoolUpdate>();
+        return updates;
     }
 
     public List<PoolUpdate> updatePools(Subscription sub, List<Pool> existingPools) {
@@ -229,7 +233,10 @@ public class PoolRules {
             // separately.
             // TODO: should they be separate? ^^
             update.setProductsChanged(
-                checkForChangedProducts(sub, existingPool));
+                checkForChangedProducts(sub.getProduct().getId(),
+                    sub.getProduct().getName(),
+                    getExpectedProvidedProducts(sub, existingPool),
+                    existingPool));
 
             update.setDerivedProductsChanged(
                 checkForChangedDerivedProducts(sub, existingPool));
@@ -259,14 +266,9 @@ public class PoolRules {
      * @param pool
      * @param stackId
      */
-    public void updatePoolFromStack(Pool pool, Consumer consumer, String stackId) {
+    public PoolUpdate updatePoolFromStack(Pool pool, Consumer consumer, String stackId) {
 
         PoolUpdate update = new PoolUpdate(pool);
-
-        pool.setSourceStackId(stackId);
-        pool.setSourceEntitlement(null);
-        pool.setSourceConsumer(consumer);
-        pool.setSubscriptionId(null);
 
         List<Entitlement> stackedEnts = this.entCurator.findByStackId(consumer,
             stackId);
@@ -276,15 +278,20 @@ public class PoolRules {
         //      otherwise the derived pool should be cleaned up. Wonder if this case
         //      should throw a hard exception.
         if (stackedEnts.isEmpty()) {
-            return;
+            return update;
         }
+
+        pool.setSourceStackId(stackId);
+        pool.setSourceEntitlement(null);
+        pool.setSourceConsumer(consumer);
+        pool.setSubscriptionId(null);
 
         // Accumulate the expected values before we set anything on the pool:
         Entitlement eldest = null;
-        pool.getProvidedProducts().clear();
-        pool.getProductAttributes().clear();
         Date startDate = null;
         Date endDate = null;
+        Set<ProvidedProduct> expectedProvidedProds = new HashSet<ProvidedProduct>();
+        Set<ProductPoolAttribute> expectedAttrs = new HashSet<ProductPoolAttribute>();
         for (Entitlement nextStacked : stackedEnts) {
             if (eldest == null || nextStacked.getCreated().before(eldest.getCreated())) {
                 eldest = nextStacked;
@@ -301,11 +308,18 @@ public class PoolRules {
             }
 
             // Update the provided products
-            // TODO: missing check for derived provided products?
             Pool nextStackedPool = nextStacked.getPool();
-            for (ProvidedProduct pp : nextStackedPool.getProvidedProducts()) {
-                pool.addProvidedProduct(
-                    new ProvidedProduct(pp.getProductId(), pp.getProductName()));
+            if (nextStackedPool.getDerivedProductId() == null) {
+                for (ProvidedProduct pp : nextStackedPool.getProvidedProducts()) {
+                    expectedProvidedProds.add(
+                        new ProvidedProduct(pp.getProductId(), pp.getProductName(), pool));
+                }
+            }
+            else {
+                for (DerivedProvidedProduct pp : nextStackedPool.getDerivedProvidedProducts()) {
+                    expectedProvidedProds.add(
+                        new ProvidedProduct(pp.getProductId(), pp.getProductName(), pool));
+                }
             }
 
             // Update the product pool attributes - we need to be sure to check for any
@@ -313,20 +327,17 @@ public class PoolRules {
             // derived product pool attributes.
             if (nextStackedPool.getDerivedProductId() == null) {
                 for (ProductPoolAttribute attr : nextStackedPool.getProductAttributes()) {
-                    pool.setProductAttribute(attr.getName(), attr.getValue(),
-                        attr.getProductId());
+                    expectedAttrs.add(new ProductPoolAttribute(attr.getName(),
+                        attr.getValue(), attr.getProductId()));
                 }
             }
             else {
                 for (DerivedProductPoolAttribute attr :
                     nextStackedPool.getDerivedProductAttributes()) {
-                    pool.setProductAttribute(attr.getName(), attr.getValue(),
-                        attr.getProductId());
+                    expectedAttrs.add(new ProductPoolAttribute(attr.getName(),
+                        attr.getValue(), attr.getProductId()));
                 }
             }
-
-            // product ID vs derived product ID
-            // quantity
         }
 
         update.setDatesChanged(checkForDateChange(startDate,
@@ -335,9 +346,30 @@ public class PoolRules {
         // Now that we know the eldest entitlement, update the the data that would
         // normally have come from the subscription.
         Pool eldestEntPool = eldest.getPool();
-        pool.setContractNumber(eldestEntPool.getContractNumber());
-        pool.setAccountNumber(eldestEntPool.getAccountNumber());
-        pool.setOrderNumber(eldestEntPool.getOrderNumber());
+
+        // Check if product ID, name, or provided products have changed.
+        update.setProductsChanged(
+            checkForChangedProducts(eldestEntPool.getProductId(),
+                eldestEntPool.getProductName(),
+                expectedProvidedProds,
+                pool));
+
+        // Check if product attributes have changed:
+        if (!pool.getProductAttributes().equals(expectedAttrs)) {
+            pool.getProductAttributes().clear();
+            pool.getProductAttributes().addAll(expectedAttrs);
+            update.setProductAttributesChanged(true);
+        }
+
+        if (!eldestEntPool.getContractNumber().equals(pool.getContractNumber()) ||
+            !eldestEntPool.getOrderNumber().equals(pool.getOrderNumber()) ||
+            !eldestEntPool.getAccountNumber().equals(pool.getAccountNumber())) {
+            pool.setContractNumber(eldestEntPool.getContractNumber());
+            pool.setAccountNumber(eldestEntPool.getAccountNumber());
+            pool.setOrderNumber(eldestEntPool.getOrderNumber());
+            update.setOrderChanged(true);
+        }
+        return update;
     }
 
     private boolean checkForOrderDataChanges(Subscription sub,
@@ -384,15 +416,8 @@ public class PoolRules {
         return subProdAttrsChanged;
     }
 
-    private boolean checkForChangedProducts(Subscription sub, Pool existingPool) {
-
-        boolean productsChanged =
-            !sub.getProduct().getId().equals(existingPool.getProductId());
-        productsChanged = productsChanged ||
-            !sub.getProduct().getName().equals(existingPool.getProductName());
-
-        // Build expected set of ProvidedProducts and compare:
-        Set<ProvidedProduct> currentProvided = existingPool.getProvidedProducts();
+    private Set<ProvidedProduct> getExpectedProvidedProducts(Subscription sub,
+        Pool existingPool) {
         Set<ProvidedProduct> incomingProvided = new HashSet<ProvidedProduct>();
         if (sub.getProvidedProducts() != null) {
             for (Product p : sub.getProvidedProducts()) {
@@ -400,12 +425,25 @@ public class PoolRules {
                     existingPool));
             }
         }
+        return incomingProvided;
+    }
+
+    private boolean checkForChangedProducts(String incomingProductId,
+        String incomingProductName, Set<ProvidedProduct> incomingProvided, Pool existingPool) {
+
+        boolean productsChanged =
+            !incomingProductId.equals(existingPool.getProductId());
+        productsChanged = productsChanged ||
+            !incomingProductName.equals(existingPool.getProductName());
+
+        // Build expected set of ProvidedProducts and compare:
+        Set<ProvidedProduct> currentProvided = existingPool.getProvidedProducts();
         productsChanged = productsChanged || !currentProvided.equals(incomingProvided);
 
         if (productsChanged) {
             log.info("   Subscription products changed.");
-            existingPool.setProductName(sub.getProduct().getName());
-            existingPool.setProductId(sub.getProduct().getId());
+            existingPool.setProductId(incomingProductId);
+            existingPool.setProductName(incomingProductName);
             existingPool.getProvidedProducts().clear();
             existingPool.getProvidedProducts().addAll(incomingProvided);
         }
