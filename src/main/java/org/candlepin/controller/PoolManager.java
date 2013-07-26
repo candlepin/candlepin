@@ -196,4 +196,6 @@ public interface PoolManager {
      * @return a list of pools for the specified Owner
      */
     List<Pool> listPoolsByOwner(Owner owner);
+
+    void updatePoolFromStack(Pool pool, Consumer consumer, String stackId);
 }

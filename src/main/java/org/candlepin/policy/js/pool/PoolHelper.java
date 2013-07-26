@@ -104,8 +104,8 @@ public class PoolHelper extends AttributeHelper {
         // the entitlements in the stack, instead of just the parent pool.
         String stackId = consumerSpecificPool.getProductAttributeValue("stacking_id");
         if (stackId != null && !stackId.isEmpty()) {
-//            this.poolManager.updatePoolFromStack(consumerSpecificPool,
-//                sourceEntitlement.getConsumer(), stackId);
+            poolManager.updatePoolFromStack(consumerSpecificPool,
+                sourceEntitlement.getConsumer(), stackId);
         }
         else {
             // attribute per 795431, useful for rolling up pool info in headpin

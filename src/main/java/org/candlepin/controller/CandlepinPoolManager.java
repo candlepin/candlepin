@@ -1119,4 +1119,8 @@ public class CandlepinPoolManager implements PoolManager {
         return poolCurator.listByOwner(owner);
     }
 
+    public void updatePoolFromStack(Pool pool, Consumer consumer, String stackId) {
+        poolRules.updatePoolFromStack(pool, consumer, stackId);
+    }
+
 }
