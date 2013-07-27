@@ -14,7 +14,6 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.auth.interceptor.EnforceAccessControl;
 import org.hibernate.criterion.Restrictions;
 
 import com.google.inject.persist.Transactional;
@@ -45,7 +44,6 @@ public class UserCurator extends AbstractHibernateCurator<User> {
     }
 
     @Transactional
-    @EnforceAccessControl
     public User update(User user) {
         User existingUser = this.find(user.getId());
         if (existingUser == null) {

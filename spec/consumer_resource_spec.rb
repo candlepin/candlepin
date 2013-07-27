@@ -45,6 +45,20 @@ describe 'Consumer Resource' do
     @consumer1.get_consumer()['entitlementStatus'].should == "valid"
   end
 
+  it 'should list compliances' do
+    additionalConsumer = consumer_client(@user1, random_string("additionalConsumer"))
+    results = @user1.get_compliance_list([@consumer1.uuid, additionalConsumer.uuid])
+    results.length.should == 2
+    results.has_key?(additionalConsumer.uuid).should == true
+    results.has_key?(@consumer1.uuid).should == true
+  end
+
+  it 'should forbid listing compliances that user does not own' do
+    lambda {
+      results = @user1.get_compliance_list([@consumer1.uuid, @consumer2.uuid])
+    }.should raise_exception(RestClient::Forbidden)
+  end
+
   it 'should return a 410 for deleted consumers' do
     @cp.unregister(@consumer1.uuid)
     lambda do
@@ -60,7 +74,6 @@ describe 'Consumer Resource' do
   end
 
   it 'allows super admins to see all consumers' do
-
     uuids = []
     @cp.list_consumers.each do |c|
       uuids << c['uuid']
@@ -70,6 +83,18 @@ describe 'Consumer Resource' do
     end
     uuids.include?(@consumer1.uuid).should be_true
     uuids.include?(@consumer2.uuid).should be_true
+  end
+
+  it 'allows super admins to query consumers by id' do
+    # Create a consumer that should not be in the list of returned results
+    consumer3 = consumer_client(@user2, random_string("consumer3"))
+    returned_uuids = []
+    @cp.list_consumers({:uuids => [@consumer1.uuid, @consumer2.uuid]}).each do |c|
+      returned_uuids << c['uuid']
+    end
+    returned_uuids.include?(@consumer1.uuid).should be_true
+    returned_uuids.include?(@consumer2.uuid).should be_true
+    returned_uuids.length.should == 2
   end
 
   it 'lets an owner admin see only their consumers' do

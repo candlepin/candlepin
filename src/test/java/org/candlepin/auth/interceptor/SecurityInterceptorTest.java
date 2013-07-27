@@ -17,7 +17,16 @@ package org.candlepin.auth.interceptor;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import org.candlepin.auth.Access;
+import org.candlepin.auth.Principal;
+import org.candlepin.exceptions.ForbiddenException;
+import org.candlepin.exceptions.IseException;
+import org.candlepin.guice.I18nProvider;
+import org.candlepin.model.User;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -26,16 +35,12 @@ import com.google.inject.Provider;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
 
-import org.candlepin.auth.Access;
-import org.candlepin.auth.Principal;
-import org.candlepin.exceptions.ForbiddenException;
-import org.candlepin.exceptions.IseException;
-import org.candlepin.guice.I18nProvider;
-import org.candlepin.model.User;
 import org.junit.Before;
 import org.junit.Test;
 import org.xnap.commons.i18n.I18n;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 import javax.servlet.http.HttpServletRequest;
@@ -86,6 +91,36 @@ public class SecurityInterceptorTest implements Provider<Principal> {
         assertEquals("luser", t.verifyMethod("luser"));
     }
 
+    @Test
+    public void invokeWithVerifyList() {
+        when(principal.canAccess(
+            any(User.class), any(Access.class))).thenReturn(true);
+        TestClass t = injector.getInstance(TestClass.class);
+        List<String> l = new ArrayList<String>();
+        l.add("hello");
+        l.add("world");
+        assertEquals(l, t.verifyListMethod(l));
+        verify(principal, times(2)).canAccess(any(User.class), any(Access.class));
+    }
+
+    @Test
+    public void invokeWithEmptyList() {
+        when(principal.canAccess(
+            any(User.class), any(Access.class))).thenReturn(true);
+        TestClass t = injector.getInstance(TestClass.class);
+        List<String> l = new ArrayList<String>();
+        assertEquals(l, t.verifyListMethod(l));
+    }
+
+    @Test
+    public void invokeWithNullList() {
+        when(principal.canAccess(
+            any(User.class), any(Access.class))).thenReturn(true);
+        TestClass t = injector.getInstance(TestClass.class);
+        List<String> l = null;
+        assertEquals(l, t.verifyListMethod(l));
+    }
+
     @Test(expected = IseException.class)
     public void invalidVerify() {
         TestClass t = injector.getInstance(TestClass.class);
@@ -125,6 +160,10 @@ public class SecurityInterceptorTest implements Provider<Principal> {
 
         public String verifyMethod(@Verify(User.class) String username) {
             return username;
+        }
+
+        public List<String> verifyListMethod(@Verify(User.class) List<String> usernames) {
+            return usernames;
         }
 
         public void invalidVerify(@Verify(Injector.class) String str) {

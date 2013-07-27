@@ -51,6 +51,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
+import org.candlepin.paging.PageRequest;
 import org.candlepin.pki.PKIReader;
 import org.candlepin.pki.impl.BouncyCastlePKIReader;
 import org.candlepin.resource.ConsumerResource;
@@ -422,7 +423,20 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         setupPrincipal(new ConsumerPrincipal(consumer));
         securityInterceptor.enable();
 
-        consumerResource.list(null, null, null, null);
+        consumerResource.list(null, null, null, new ArrayList<String>(), null);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void testConsumerCannotListWithUuidsAndOtherParameters() {
+        Consumer consumer = TestUtil.createConsumer(standardSystemType, owner);
+        consumerCurator.create(consumer);
+
+        setupAdminPrincipal("admin");
+        securityInterceptor.enable();
+        List<String> uuidList = new ArrayList<String>();
+        uuidList.add(consumer.getUuid());
+        consumerResource.list("username", "typeLabel", owner.getKey(), uuidList,
+            new PageRequest());
     }
 
     @Test

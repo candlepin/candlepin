@@ -100,9 +100,11 @@ import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -205,6 +207,7 @@ public class ConsumerResource {
             ConfigProperties.CONSUMER_SYSTEM_NAME_PATTERN));
         this.config = config;
     }
+
     /**
      * List available Consumers
      *
@@ -220,32 +223,46 @@ public class ConsumerResource {
     public List<Consumer> list(@QueryParam("username") String userName,
         @QueryParam("type") String typeLabel,
         @QueryParam("owner") String ownerKey,
+        @QueryParam("uuid") List<String> uuids,
         @Context PageRequest pageRequest) {
-        ConsumerType type = null;
 
-        if (typeLabel != null) {
-            type = lookupConsumerType(typeLabel);
-        }
+        if (uuids == null || uuids.isEmpty()) {
+            ConsumerType type = null;
 
-        Owner owner = null;
-        if (ownerKey != null) {
-            owner = ownerCurator.lookupByKey(ownerKey);
-
-            if (owner == null) {
-                throw new NotFoundException(
-                    i18n.tr("Organization with key: {0} was not found.",
-                        ownerKey));
+            if (typeLabel != null) {
+                type = lookupConsumerType(typeLabel);
             }
+
+            Owner owner = null;
+            if (ownerKey != null) {
+                owner = ownerCurator.lookupByKey(ownerKey);
+
+                if (owner == null) {
+                    throw new NotFoundException(
+                        i18n.tr("Organization with key: {0} was not found.",
+                            ownerKey));
+                }
+            }
+
+            // We don't look up the user and warn if it doesn't exist here to not
+            // give away usernames
+            Page<List<Consumer>> p = consumerCurator.listByUsernameAndType(userName,
+                type, owner, pageRequest);
+
+            // Store the page for the LinkHeaderPostInterceptor
+            ResteasyProviderFactory.pushContext(Page.class, p);
+            return p.getPageData();
         }
+        else {
+            // If you make a request with ids specified along with other parameters, die.
+            if (userName != null || typeLabel != null || ownerKey != null ||
+                pageRequest != null) {
+                throw new BadRequestException(
+                    i18n.tr("Cannot specify other query parameters with consumer IDs."));
+            }
 
-        // We don't look up the user and warn if it doesn't exist here to not
-        // give away usernames
-        Page<List<Consumer>> p = consumerCurator.listByUsernameAndType(userName,
-            type, owner, pageRequest);
-
-        // Store the page for the LinkHeaderPostInterceptor
-        ResteasyProviderFactory.pushContext(Page.class, p);
-        return p.getPageData();
+            return consumerCurator.findByUuids(uuids);
+        }
     }
 
     /**
@@ -1834,6 +1851,27 @@ public class ConsumerResource {
             consumer.setEntitlementStatus(status.getStatus());
         }
         return status;
+    }
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/compliance")
+    @Transactional
+    public Map<String, ComplianceStatus> getComplianceStatusList(
+        @QueryParam("uuid") @Verify(Consumer.class) List<String> uuids) {
+        List<Consumer> consumers = consumerCurator.findByUuids(uuids);
+        Map<String, ComplianceStatus> results = new HashMap<String, ComplianceStatus>();
+
+        Date now = Calendar.getInstance().getTime();
+        for (Consumer consumer : consumers) {
+            ComplianceStatus status = complianceRules.getStatus(consumer, now);
+            // NOTE: If this method ever changes to accept an optional date, do
+            // not update this field on the consumer if the date is specified:
+            consumer.setEntitlementStatus(status.getStatus());
+            results.put(consumer.getUuid(), status);
+        }
+
+        return results;
     }
 
     private void addDataToInstalledProducts(Consumer consumer) {

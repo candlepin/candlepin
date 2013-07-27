@@ -23,6 +23,7 @@ import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -57,6 +58,12 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
         return (Owner) currentSession().createCriteria(Owner.class)
             .add(Restrictions.eq("key", key))
             .uniqueResult();
+    }
+
+    @Transactional
+    public List<Owner> lookupByKeys(Collection<String> keys) {
+        return listByCriteria(
+            DetachedCriteria.forClass(Owner.class).add(Restrictions.in("key", keys)));
     }
 
     public Owner lookupWithUpstreamUuid(String upstreamUuid) {
