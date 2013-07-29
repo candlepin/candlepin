@@ -549,7 +549,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     /**
      * @param consumer
      * @param stackId
-     * @return
+     * @return Number of derived pools which exist for the given consumer and stack
      */
     public int getSubPoolCountForStackId(Consumer consumer, String stackId) {
         DetachedCriteria requiresHostCriteria = DetachedCriteria.forClass(

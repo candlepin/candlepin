@@ -32,6 +32,7 @@ import org.candlepin.model.ActivationKeyPool;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
+import org.candlepin.model.DerivedProductPoolAttribute;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.IdentityCertificate;
@@ -40,6 +41,7 @@ import org.candlepin.model.OwnerPermission;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
+import org.candlepin.model.ProductPoolAttribute;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.DerivedProvidedProduct;
@@ -289,6 +291,43 @@ public class TestUtil {
 
     public void addPermissionToUser(User u, Access role, Owner o) {
         // Check if a permission already exists for this verb and owner:
+    }
+
+    /**
+     * Returns a pool which will look like it was created from the given subscription
+     * during refresh pools.
+     *
+     * @param sub source subscription
+     * @return pool for subscription
+     */
+    public static Pool copyFromSub(Subscription sub) {
+        Pool p = new Pool(sub.getOwner(), sub.getProduct().getId(),
+            sub.getProduct().getName(), new HashSet<ProvidedProduct>(),
+            sub.getQuantity(), sub.getStartDate(),
+            sub.getEndDate(), sub.getContractNumber(), sub.getAccountNumber(),
+            sub.getOrderNumber());
+        p.setSubscriptionId(sub.getId());
+
+        for (ProductAttribute attr : sub.getProduct().getAttributes()) {
+            p.addProductAttribute(new ProductPoolAttribute(attr.getName(), attr.getValue(),
+                sub.getProduct().getId()));
+        }
+
+        // Copy sub-product data if there is any:
+        if (sub.getDerivedProduct() != null) {
+            p.setDerivedProductId(sub.getDerivedProduct().getId());
+            p.setDerivedProductName(sub.getDerivedProduct().getName());
+            for (ProductAttribute attr : sub.getDerivedProduct().getAttributes()) {
+                p.addSubProductAttribute(new DerivedProductPoolAttribute(attr.getName(),
+                    attr.getValue(), sub.getProduct().getId()));
+            }
+        }
+
+        for (Product prod : sub.getProvidedProducts()) {
+            p.addProvidedProduct(new ProvidedProduct(prod.getId(), prod.getName()));
+        }
+
+        return p;
     }
 
     public static ActivationKey createActivationKey(Owner owner,

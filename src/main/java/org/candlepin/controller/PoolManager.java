@@ -136,7 +136,7 @@ public interface PoolManager {
      * Search for any expired pools on the server, cleanup their subscription,
      * entitlements, and the pool itself.
      */
-    public void cleanupExpiredPools();
+    void cleanupExpiredPools();
 
 
     /**

@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.candlepin.config.Config;
 import org.candlepin.controller.PoolManager;
@@ -265,6 +266,7 @@ public class PoolRules {
      * Updates the pool based on the entitlements in the specified stack.
      * @param pool
      * @param stackId
+     * @return pool update specifics
      */
     public PoolUpdate updatePoolFromStack(Pool pool, Consumer consumer, String stackId) {
 
@@ -298,12 +300,12 @@ public class PoolRules {
             }
 
             // the pool should be updated to have the earliest start date.
-            if (nextStacked.getStartDate().before(startDate)) {
+            if (startDate == null || nextStacked.getStartDate().before(startDate)) {
                 startDate = nextStacked.getStartDate();
             }
 
             // The pool should be updated to have the latest end date.
-            if (nextStacked.getEndDate().after(endDate)) {
+            if (endDate == null || nextStacked.getEndDate().after(endDate)) {
                 endDate = nextStacked.getEndDate();
             }
 
@@ -316,7 +318,8 @@ public class PoolRules {
                 }
             }
             else {
-                for (DerivedProvidedProduct pp : nextStackedPool.getDerivedProvidedProducts()) {
+                for (DerivedProvidedProduct pp :
+                    nextStackedPool.getDerivedProvidedProducts()) {
                     expectedProvidedProds.add(
                         new ProvidedProduct(pp.getProductId(), pp.getProductName(), pool));
                 }
@@ -325,17 +328,20 @@ public class PoolRules {
             // Update the product pool attributes - we need to be sure to check for any
             // derived products for the sub pool. If it exists, then we need to use the
             // derived product pool attributes.
+            //
+            // Using the pool's *current* product ID here, we may have to change it later
+            // if if changes.
             if (nextStackedPool.getDerivedProductId() == null) {
                 for (ProductPoolAttribute attr : nextStackedPool.getProductAttributes()) {
                     expectedAttrs.add(new ProductPoolAttribute(attr.getName(),
-                        attr.getValue(), attr.getProductId()));
+                        attr.getValue(), pool.getProductId()));
                 }
             }
             else {
                 for (DerivedProductPoolAttribute attr :
                     nextStackedPool.getDerivedProductAttributes()) {
                     expectedAttrs.add(new ProductPoolAttribute(attr.getName(),
-                        attr.getValue(), attr.getProductId()));
+                        attr.getValue(), pool.getProductId()));
                 }
             }
         }
@@ -343,8 +349,8 @@ public class PoolRules {
         update.setDatesChanged(checkForDateChange(startDate,
             endDate, pool));
 
-        // Now that we know the eldest entitlement, update the the data that would
-        // normally have come from the subscription.
+        // We use the "oldest" entitlement as the master for determining values that
+        // could have come from the various subscriptions.
         Pool eldestEntPool = eldest.getPool();
 
         // Check if product ID, name, or provided products have changed.
@@ -356,14 +362,21 @@ public class PoolRules {
 
         // Check if product attributes have changed:
         if (!pool.getProductAttributes().equals(expectedAttrs)) {
+            // Make sure each attribute has correct product ID on it:
+            for (ProductPoolAttribute attr : expectedAttrs) {
+                attr.setProductId(pool.getProductId());
+            }
             pool.getProductAttributes().clear();
             pool.getProductAttributes().addAll(expectedAttrs);
             update.setProductAttributesChanged(true);
         }
 
-        if (!eldestEntPool.getContractNumber().equals(pool.getContractNumber()) ||
-            !eldestEntPool.getOrderNumber().equals(pool.getOrderNumber()) ||
-            !eldestEntPool.getAccountNumber().equals(pool.getAccountNumber())) {
+        if (!StringUtils.equals(eldestEntPool.getContractNumber(),
+            pool.getContractNumber()) ||
+            !StringUtils.equals(eldestEntPool.getOrderNumber(), pool.getOrderNumber()) ||
+            !StringUtils.equals(eldestEntPool.getAccountNumber(),
+                pool.getAccountNumber())) {
+
             pool.setContractNumber(eldestEntPool.getContractNumber());
             pool.setAccountNumber(eldestEntPool.getAccountNumber());
             pool.setOrderNumber(eldestEntPool.getOrderNumber());
@@ -429,7 +442,8 @@ public class PoolRules {
     }
 
     private boolean checkForChangedProducts(String incomingProductId,
-        String incomingProductName, Set<ProvidedProduct> incomingProvided, Pool existingPool) {
+        String incomingProductName, Set<ProvidedProduct> incomingProvided,
+        Pool existingPool) {
 
         boolean productsChanged =
             !incomingProductId.equals(existingPool.getProductId());
