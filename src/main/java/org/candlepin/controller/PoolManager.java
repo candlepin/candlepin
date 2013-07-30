@@ -24,6 +24,7 @@ import org.candlepin.model.Subscription;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.policy.EntitlementRefusedException;
+import org.candlepin.policy.js.pool.PoolUpdate;
 
 import java.util.Date;
 import java.util.List;
@@ -203,8 +204,7 @@ public interface PoolManager {
      * @param consumer
      * @param stackId
      *
-     * @return true if the pool was successfully updated by another entitlement
-     *              in the stack, false otherwise.
+     * @return pool update specifics
      */
-    boolean updatePoolFromStack(Pool pool, Consumer consumer, String stackId);
+    PoolUpdate updatePoolFromStack(Pool pool, Consumer consumer, String stackId);
 }

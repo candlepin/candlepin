@@ -845,18 +845,22 @@ public class CandlepinPoolManager implements PoolManager {
         // update or delete the sub pool now that all other pools have been deleted.
         if (!"true".equals(pool.getAttributeValue("pool_derived")) &&
             pool.hasProductAttribute("stacking_id")) {
-            Pool stackedSubPool = poolCurator.getSubPoolForStackId(consumer,
-                pool.getProductAttributeValue("stacking_id"));
+            String stackId = pool.getProductAttributeValue("stacking_id");
+            Pool stackedSubPool = poolCurator.getSubPoolForStackId(consumer, stackId);
             if (stackedSubPool != null) {
-                boolean updated = updatePoolFromStack(stackedSubPool, consumer,
-                    pool.getProductAttributeValue("stacking_id"));
-                // if the pool was successfully updated, merge the changes,
-                // else, delete it since there were no entitlements in the stack
-                if (updated) {
-                    poolCurator.merge(stackedSubPool);
+                List<Entitlement> stackedEnts =
+                    this.entitlementCurator.findByStackId(consumer, stackId);
+
+                // If there are no stacked entitlements, we need to delete the
+                // stacked sub pool, else we update it based on the entitlements
+                // currently in the stack.
+                if (stackedEnts.isEmpty()) {
+                    deletePool(stackedSubPool);
                 }
                 else {
-                    deletePool(stackedSubPool);
+                    updatePoolFromStackedEntitlements(
+                        stackedSubPool, consumer, stackId, stackedEnts);
+                    poolCurator.merge(stackedSubPool);
                 }
             }
         }
@@ -1151,8 +1155,14 @@ public class CandlepinPoolManager implements PoolManager {
         return poolCurator.listByOwner(owner);
     }
 
-    public boolean updatePoolFromStack(Pool pool, Consumer consumer, String stackId) {
+    public PoolUpdate updatePoolFromStack(Pool pool, Consumer consumer, String stackId) {
         return poolRules.updatePoolFromStack(pool, consumer, stackId);
+    }
+
+    private PoolUpdate updatePoolFromStackedEntitlements(Pool pool, Consumer consumer, String stackId,
+        List<Entitlement> stackedEntitlements) {
+        return poolRules.updatePoolFromStackedEntitlements(pool, consumer, stackId,
+            stackedEntitlements);
     }
 
 }

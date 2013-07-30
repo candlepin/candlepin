@@ -262,6 +262,7 @@ public class PoolRules {
         return poolsUpdated;
     }
 
+
     /**
      * Updates the pool based on the entitlements in the specified stack.
      * @param pool
@@ -271,16 +272,23 @@ public class PoolRules {
      * @return pool update specifics
      */
     public PoolUpdate updatePoolFromStack(Pool pool, Consumer consumer, String stackId) {
+        List<Entitlement> stackedEnts = this.entCurator.findByStackId(consumer,
+            stackId);
+        return this.updatePoolFromStackedEntitlements(pool, consumer, stackId, stackedEnts);
+    }
+
+    /**
+     * @param pool
+     * @param consumer
+     * @param stackId
+     * @param stackedEntitlements
+     */
+    public PoolUpdate updatePoolFromStackedEntitlements(Pool pool, Consumer consumer,
+            String stackId, List<Entitlement> stackedEnts) {
 
         PoolUpdate update = new PoolUpdate(pool);
 
-        List<Entitlement> stackedEnts = this.entCurator.findByStackId(consumer,
-            stackId);
-
         // Nothing to do if there were no entitlements found.
-        // TODO This should never happen. There should always be one pool in the stack,
-        //      otherwise the derived pool should be cleaned up. Wonder if this case
-        //      should throw a hard exception.
         if (stackedEnts.isEmpty()) {
             return update;
         }
@@ -605,6 +613,5 @@ public class PoolRules {
         }
         return expectedQuantity;
     }
-
 
 }
