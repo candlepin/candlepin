@@ -293,8 +293,9 @@ public class OwnerResource {
 
     private void cleanupAndDelete(Owner owner, boolean revokeCerts) {
         log.info("Cleaning up owner: " + owner);
-        for (Consumer c : consumerCurator.listByOwner(owner)) {
-            log.info("Deleting consumer: " + c);
+        List<Consumer> consumers = consumerCurator.listByOwner(owner);
+        for (Consumer c : consumers) {
+            log.info("Removing all entitlements for consumer: " + c);
 
             if (revokeCerts) {
                 poolManager.revokeAllEntitlements(c);
@@ -303,15 +304,23 @@ public class OwnerResource {
                 // otherwise just remove them without touching the CRL
                 poolManager.removeAllEntitlements(c);
             }
+        }
 
+        // FIXME Actual consumer deletion had to me moved out of
+        //       the loop above since all entitlements needed to
+        //       be removed before the deletion occured. Perhaps
+        //       this can be handled a little better.
+        for (Consumer consumer : consumers) {
             // need to check if this has been removed due to a
             // parent being deleted
             // TODO: There has to be a more efficient way to do this...
-            c = consumerCurator.find(c.getId());
-            if (c != null) {
-                consumerCurator.delete(c);
+            log.info("Deleting consumer: " + consumer);
+            Consumer next = consumerCurator.find(consumer.getId());
+            if (next != null) {
+                consumerCurator.delete(next);
             }
         }
+
         for (ActivationKey key : activationKeyCurator
             .listByOwner(owner)) {
             log.info("Deleting activation key: " + key);

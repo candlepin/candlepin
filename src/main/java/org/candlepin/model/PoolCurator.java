@@ -552,21 +552,10 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      * @return Number of derived pools which exist for the given consumer and stack
      */
     public Pool getSubPoolForStackId(Consumer consumer, String stackId) {
-        DetachedCriteria requiresHostCriteria = DetachedCriteria.forClass(
-            PoolAttribute.class, "attr")
-                .add(Restrictions.and(Restrictions.eq("name", "requires_host"),
-                    Restrictions.eq("value", consumer.getUuid())))
-                .setProjection(Projections.property("attr.id"));
         Criteria getCount = currentSession().createCriteria(Pool.class)
+            .add(Restrictions.eq("sourceConsumer", consumer))
             .add(Restrictions.and(Restrictions.isNotNull("sourceStackId"),
-                                  Restrictions.eq("sourceStackId", stackId)))
-            .add(Subqueries.exists(requiresHostCriteria));
-
-        try {
-            return (Pool) getCount.uniqueResult();
-        }
-        catch (Exception e) {
-            return null;
-        }
+                                  Restrictions.eq("sourceStackId", stackId)));
+        return (Pool) getCount.uniqueResult();
     }
 }

@@ -814,19 +814,8 @@ public class CandlepinPoolManager implements PoolManager {
         // otherwise we are tampering with the loop iterator from inside
         // the loop (#811581)
         Set<Pool> deletablePools = new HashSet<Pool>();
-        Set<Pool> subPools = new HashSet<Pool>();
-        subPools.addAll(poolCurator.listBySourceEntitlement(entitlement));
 
-        // Check for a single stacked sub pool as well.
-        if (pool.hasProductAttribute("stacking_id")) {
-            Pool stackedSubPool = poolCurator.getSubPoolForStackId(consumer,
-                pool.getProductAttributeValue("stacking_id"));
-            if (stackedSubPool != null) {
-                subPools.add(stackedSubPool);
-            }
-        }
-
-        for (Pool p : subPools) {
+        for (Pool p : poolCurator.listBySourceEntitlement(entitlement)) {
             Set<Entitlement> deletableEntitlements = new HashSet<Entitlement>();
             for (Entitlement e : p.getEntitlements()) {
                 deletableEntitlements.add(e);
@@ -851,6 +840,27 @@ public class CandlepinPoolManager implements PoolManager {
         if (consumer.getType().isManifest()) {
             pool.setExported(pool.getExported() - entitlement.getQuantity());
         }
+
+        // Check for a single stacked sub pool as well. We'll need to either
+        // update or delete the sub pool now that all other pools have been deleted.
+        if (!"true".equals(pool.getAttributeValue("pool_derived")) &&
+            pool.hasProductAttribute("stacking_id")) {
+            Pool stackedSubPool = poolCurator.getSubPoolForStackId(consumer,
+                pool.getProductAttributeValue("stacking_id"));
+            if (stackedSubPool != null) {
+                boolean updated = updatePoolFromStack(stackedSubPool, consumer,
+                    pool.getProductAttributeValue("stacking_id"));
+                // if the pool was successfully updated, merge the changes,
+                // else, delete it since there were no entitlements in the stack
+                if (updated) {
+                    poolCurator.merge(stackedSubPool);
+                }
+                else {
+                    deletePool(stackedSubPool);
+                }
+            }
+        }
+
         // post unbind actions
         PoolHelper poolHelper = new PoolHelper(this, productCache, entitlement);
         enforcer.postUnbind(consumer, poolHelper, entitlement);
@@ -1141,8 +1151,8 @@ public class CandlepinPoolManager implements PoolManager {
         return poolCurator.listByOwner(owner);
     }
 
-    public void updatePoolFromStack(Pool pool, Consumer consumer, String stackId) {
-        poolRules.updatePoolFromStack(pool, consumer, stackId);
+    public boolean updatePoolFromStack(Pool pool, Consumer consumer, String stackId) {
+        return poolRules.updatePoolFromStack(pool, consumer, stackId);
     }
 
 }

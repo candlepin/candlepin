@@ -265,7 +265,9 @@ public class PoolRules {
     /**
      * Updates the pool based on the entitlements in the specified stack.
      * @param pool
+     * @param consumer
      * @param stackId
+     *
      * @return pool update specifics
      */
     public PoolUpdate updatePoolFromStack(Pool pool, Consumer consumer, String stackId) {

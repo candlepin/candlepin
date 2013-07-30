@@ -22,16 +22,19 @@ module VirtFixture
 
 
         #create two subs, to do migration testing
+        @first_created_sub = @cp.create_subscription(@owner['key'],
+            @virt_limit_product.id, 10, [], "eldest-contract", "eldest-account", "eldest-order")
         @sub1 = @cp.create_subscription(@owner['key'],
-          @virt_limit_product.id, 10, [], "123")
+          @virt_limit_product.id, 10, [], "123", "321", "333")
         @sub2 = @cp.create_subscription(@owner['key'],
-          @virt_limit_product.id, 10, [], "456")
+          @virt_limit_product.id, 10, [], "456", '', '', nil, Date.today + 380)
         @cp.refresh_pools(@owner['key'])
 
         @pools = @user.list_pools :owner => @owner.id, \
           :product => @virt_limit_product.id
-        @pools.size.should == 2
-        @virt_limit_pool = @pools[0]
+        @pools.size.should == 3
+        @eldest_virt_pool = @pools.find_all {|p| p['contractNumber'] == "eldest-contract"}[0]
+        @virt_limit_pool = @pools.find_all {|p| p['contractNumber'] == "123"}[0]
 
         # Setup two virt guest consumers:
         @uuid1 = random_string('system.uuid')
@@ -53,6 +56,6 @@ module VirtFixture
 
   def find_guest_virt_pool(guest_client, guest_uuid)
     pools = guest_client.list_pools :consumer => guest_uuid
-    return pools.find_all { |i| !i['sourceEntitlement'].nil? }[0]
+    return pools.find_all { |i| !i['sourceStackId'].nil? }[0]
   end
 end

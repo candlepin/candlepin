@@ -40,25 +40,32 @@ describe 'Standalone Virt-Limit Subscriptions' do
     # Find the host-restricted pool:
     pools = @guest1_client.list_pools :consumer => @guest1['uuid']
 
-    pools.should have(3).things
+    pools.should have(4).things
     @guest_pool = pools.find_all { |i| !i['sourceStackId'].nil? }[0]
   end
 
   it 'should re-source guest pool when other stacked entitlements exist' do
-    @cp.list_owner_pools(@owner['key']).length.should == 4
+    @cp.list_owner_pools(@owner['key']).length.should == 5 # 3 original, 2 after host binds.
     @guest_pool['sourceConsumer']['uuid'].should == @host1['uuid']
     @guest_pool['contractNumber'].should == "123"
+    @guest_pool['accountNumber'].should == "321"
+    @guest_pool['orderNumber'].should == "333"
     # Use another pool in the stack:
-    host_ent_2 = @host1_client.consume_pool(@pools[1]['id'])[0]
+    host_ent_2 = @host1_client.consume_pool(@eldest_virt_pool['id'])[0]
     # No new guest pool should have been created because we already had one
     # for that stack:
-    @cp.list_owner_pools(@owner['key']).length.should == 4
+    @cp.list_owner_pools(@owner['key']).length.should == 5 
 
     # Delete the original entitlement:
     @host1_client.unbind_entitlement(@host_ent['id'])
-    @guest_pool = @host1_client.get_pool(@guest_pool['id'])
-    @guest_pool['sourceEntitlement']['id'].should == host_ent_2['id']
-    @guest_pool['contractNumber'].should == "456"
+    gpool = @host1_client.get_pool(@guest_pool['id'])
+    gpool['sourceConsumer']['uuid'].should == @host1['uuid']
+
+    # sub pool should now carry the properties of the eldest
+    # stacked pool consumed by the host.
+    gpool['contractNumber'].should == "eldest-contract"
+    gpool['orderNumber'].should == "eldest-order"
+    gpool['accountNumber'].should == "eldest-account"
   end
 
   it 'should create a virt_only pool for hosts guests' do
@@ -80,7 +87,7 @@ describe 'Standalone Virt-Limit Subscriptions' do
   it 'should list host restricted pool only for its guests' do
     # Other guest shouldn't be able to see the virt sub-pool:
     pools = @guest2_client.list_pools :consumer => @guest2['uuid']
-    pools.should have(2).things
+    pools.should have(3).things
   end
 
   it 'should revoke guest entitlements when host unbinds' do

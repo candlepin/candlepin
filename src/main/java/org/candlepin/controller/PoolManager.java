@@ -197,5 +197,14 @@ public interface PoolManager {
      */
     List<Pool> listPoolsByOwner(Owner owner);
 
-    void updatePoolFromStack(Pool pool, Consumer consumer, String stackId);
+    /**
+     * Updates the pool based on the entitlements in the specified stack.
+     * @param pool
+     * @param consumer
+     * @param stackId
+     *
+     * @return true if the pool was successfully updated by another entitlement
+     *              in the stack, false otherwise.
+     */
+    boolean updatePoolFromStack(Pool pool, Consumer consumer, String stackId);
 }

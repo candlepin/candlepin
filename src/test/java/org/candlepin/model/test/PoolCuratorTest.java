@@ -626,6 +626,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             TestUtil.createDate(2055, 3, 2),
             "", "", "");
         derivedPool.setSourceStackId(expectedStackId);
+        derivedPool.setSourceConsumer(consumer);
         derivedPool.setAttribute("requires_host", consumer.getUuid());
 
         poolCurator.create(derivedPool);
