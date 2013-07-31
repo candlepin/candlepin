@@ -14,37 +14,32 @@ module VirtFixture
         # Create a sub for a virt limited product:
         @virt_limit_product = create_product(nil, nil, {
           :attributes => {
-            'virt_limit' => 3,
-            'stacking_id' => 'virtstack',
-            'multi-entitlement' => 'yes'
+            :virt_limit => 3
           }
         })
 
 
         #create two subs, to do migration testing
-        @first_created_sub = @cp.create_subscription(@owner['key'],
-            @virt_limit_product.id, 10, [], "eldest-contract", "eldest-account", "eldest-order")
         @sub1 = @cp.create_subscription(@owner['key'],
-          @virt_limit_product.id, 10, [], "123", "321", "333")
+          @virt_limit_product.id, 10)
         @sub2 = @cp.create_subscription(@owner['key'],
-          @virt_limit_product.id, 10, [], "456", '', '', nil, Date.today + 380)
+          @virt_limit_product.id, 10)
         @cp.refresh_pools(@owner['key'])
 
         @pools = @user.list_pools :owner => @owner.id, \
           :product => @virt_limit_product.id
-        @pools.size.should == 3
-        @eldest_virt_pool = @pools.find_all {|p| p['contractNumber'] == "eldest-contract"}[0]
-        @virt_limit_pool = @pools.find_all {|p| p['contractNumber'] == "123"}[0]
+        @pools.size.should == 2
+        @virt_limit_pool = @pools[0]
 
         # Setup two virt guest consumers:
         @uuid1 = random_string('system.uuid')
+        @uuid2 = random_string('system.uuid')
         @guest1 = @user.register(random_string('guest'), :system, nil,
           {'virt.uuid' => @uuid1, 'virt.is_guest' => 'true'}, nil, nil, [], [])
         @guest1_client = Candlepin.new(username=nil, password=nil,
             cert=@guest1['idCert']['cert'],
             key=@guest1['idCert']['key'])
 
-        @uuid2 = random_string('system.uuid')
         @guest2 = @user.register(random_string('guest'), :system, nil,
           {'virt.uuid' => @uuid2, 'virt.is_guest' => 'true'}, nil, nil, [], [])
         @guest2_client = Candlepin.new(username=nil, password=nil,
@@ -56,6 +51,6 @@ module VirtFixture
 
   def find_guest_virt_pool(guest_client, guest_uuid)
     pools = guest_client.list_pools :consumer => guest_uuid
-    return pools.find_all { |i| !i['sourceStackId'].nil? }[0]
+    return pools.find_all { |i| !i['sourceEntitlement'].nil? }[0]
   end
 end
