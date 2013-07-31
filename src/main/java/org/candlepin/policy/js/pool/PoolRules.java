@@ -372,12 +372,13 @@ public class PoolRules {
 
         // Check if product attributes have changed:
         if (!pool.getProductAttributes().equals(expectedAttrs)) {
-            // Make sure each attribute has correct product ID on it:
+            // Make sure each attribute has correct product ID on it,
+            // and update the pool.
+            pool.getProductAttributes().clear();
             for (ProductPoolAttribute attr : expectedAttrs) {
                 attr.setProductId(pool.getProductId());
+                pool.addProductAttribute(attr);
             }
-            pool.getProductAttributes().clear();
-            pool.getProductAttributes().addAll(expectedAttrs);
             update.setProductAttributesChanged(true);
         }
 
