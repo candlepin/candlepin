@@ -78,6 +78,12 @@ describe 'One Sub Pool Per Stack' do
         cert=@host['idCert']['cert'],
         key=@host['idCert']['key'])
 
+    @host2 = @user.register(random_string('host'), :system, nil,
+      {}, nil, nil, [], [])
+    @host2_client = Candlepin.new(username=nil, password=nil,
+        cert=@host2['idCert']['cert'],
+        key=@host2['idCert']['key'])
+
     # Link the host and the guest:
     @host_client.update_consumer({:guestIds => [{'guestId' => @guest_uuid}]})
     @cp.get_consumer_guests(@host['uuid']).length.should == 1
@@ -189,6 +195,80 @@ describe 'One Sub Pool Per Stack' do
     
     # Guest entitlement should now be revoked.
     @guest_client.list_entitlements.length.should == 0
+  end
+  
+  it 'should remove guest entitlement when host unregisters' do
+    ent1 = @host_client.consume_pool(@stacked_virt_pool1['id'])[0]
+    ent2 = @host_client.consume_pool(@stacked_virt_pool2['id'])[0]
+    ent3 = @host_client.consume_pool(@stacked_non_virt_pool['id'])[0]
+    @host_client.list_entitlements.length.should == 3
+    
+    sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
+    sub_pool.should_not be_nil
+    
+    @guest_client.consume_pool(sub_pool['id'])
+    @guest_client.list_entitlements.length.should == 1
+    
+    @host_client.unregister
+    
+    # Guest entitlement should now be revoked.
+    @guest_client.list_entitlements.length.should == 0
+  end
+  
+  it 'should remove guest entitlement when guest is migrated' do
+    ent1 = @host_client.consume_pool(@stacked_virt_pool1['id'])[0]
+    sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
+    sub_pool.should_not be_nil
+    
+    @guest_client.consume_pool(sub_pool['id'])
+    @guest_client.list_entitlements.length.should == 1
+    
+    # Simulate migration
+    @host2_client.update_consumer({:guestIds => [{'guestId' => @guest_uuid}]})
+    
+    # Guest entitlement should now be revoked.
+    @guest_client.list_entitlements.length.should == 0
+  end
+  
+  it 'should update guest sub pool ent when product is updated' do
+    # Attach sub to host and ensure sub pool is created.
+    host_ent = @host_client.consume_pool(@stacked_virt_pool1['id'])[0]
+    sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
+    sub_pool.should_not be_nil
+    
+    # Consumer ent for guest
+    initial_guest_ent = @guest_client.consume_pool(sub_pool['id'])[0]
+    initial_guest_ent.should_not be_nil
+    find_product_attribute(initial_guest_ent.pool, "sockets").should be_nil
+    
+    attrs = @virt_limit_product['attributes']
+    attrs << {"name" => "sockets", "value" => "4"}
+    @cp.update_product(@virt_limit_product.id, :attributes => attrs)
+    updated_product = @cp.get_product(@virt_limit_product.id)
+    
+    @cp.refresh_pools(@owner['key'])
+    
+    updated_ent = @guest_client.list_entitlements[0]
+    check_product_attr_value(updated_ent.pool, "sockets", "4")
+  end
+  
+  it 'should update guest sub pool ent as host stack is updated' do
+    @host_client.consume_pool(@stacked_virt_pool1['id'])
+    ent = @host_client.consume_pool(@stacked_non_virt_pool['id'])[0]
+
+    sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
+    sub_pool.should_not be_nil
+    initial_guest_ent = @guest_client.consume_pool(sub_pool['id'])[0]
+    
+    # Remove an ent from the host so that the guest ent will be updated.
+    @host_client.unbind_entitlement(ent['id'])
+    
+    # Check that the product data was copied.
+    updated_ent = @guest_client.list_entitlements[0]
+    check_product_attr_value(updated_ent.pool, "virt_limit", '3')
+    check_product_attr_value(updated_ent.pool, "multi-entitlement", 'yes')
+    check_product_attr_value(updated_ent.pool, "stacking_id", @stack_id)
+    find_product_attribute(updated_ent.pool, "sockets").should be_nil
   end
   
   def find_product_attribute(pool, attribute_name)
