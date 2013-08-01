@@ -26,6 +26,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.candlepin.service.UniqueIdGenerator;
@@ -147,6 +148,9 @@ public class Content extends AbstractHibernateObject {
     }
 
     public void setVendor(String vendor) {
+        if (StringUtils.isBlank(vendor)) {
+            vendor = "unknown";
+        }
         this.vendor = vendor;
     }
 
