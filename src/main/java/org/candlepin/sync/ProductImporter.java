@@ -18,13 +18,15 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.Set;
 
-import org.codehaus.jackson.map.ObjectMapper;
+import org.apache.commons.lang.StringUtils;
+import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.util.Util;
+import org.codehaus.jackson.map.ObjectMapper;
 
 import com.google.common.collect.Sets;
 
@@ -69,7 +71,13 @@ public class ProductImporter {
             // will be
             // updated multiple times during the import.
             for (ProductContent content : importedProduct.getProductContent()) {
-                contentCurator.createOrUpdate(content.getContent());
+                // BZ 990113 error occurs because incoming content data has
+                //  no value for Vendor. Will place one to avoid DB issues.
+                Content c = content.getContent();
+                if (StringUtils.isBlank(c.getVendor())) {
+                    c.setVendor("unknown");
+                }
+                contentCurator.createOrUpdate(c);
             }
 
             curator.createOrUpdate(importedProduct);
