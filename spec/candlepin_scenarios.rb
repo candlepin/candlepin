@@ -358,6 +358,28 @@ module ExportMethods
     unzip_export_file(File.join(@tmp_dir_update, "consumer_export.zip"), @tmp_dir_update)
   end
 
+  def create_candlepin_export_update_no_ent
+    ## We need to test the behavoir of the manifest update when no entitlements
+    ## are included
+    ## You must execute the create_candlepin_export method in the same test before
+    ## this one.
+    ents = @candlepin_client.list_entitlements()
+    # remove all entitlements
+    ents.each do |ent|
+      @cp.unbind_entitlement(ent.id, {:uuid => @candlepin_client.uuid})
+    end
+
+    # Make a temporary directory where we can safely extract our archive:
+    @tmp_dir_update = File.join(Dir.tmpdir, random_string('candlepin-rspec'))
+    @export_dir_update = File.join(@tmp_dir_update, "export")
+    Dir.mkdir(@tmp_dir_update)
+
+    @export_filename_update = @candlepin_client.export_consumer(@tmp_dir_update)
+    File.exist?(@export_filename_update).should == true
+    unzip_export_file(@export_filename_update, @tmp_dir_update)
+    unzip_export_file(File.join(@tmp_dir_update, "consumer_export.zip"), @tmp_dir_update)
+  end
+
   def cleanup_candlepin_export
     Dir.chdir(@orig_working_dir)
     FileUtils.rm_rf(@tmp_dir)
