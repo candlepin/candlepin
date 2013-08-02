@@ -362,13 +362,15 @@ public class PoolRules {
         // We use the "oldest" entitlement as the master for determining values that
         // could have come from the various subscriptions.
         Pool eldestEntPool = eldest.getPool();
+        boolean useDerived = eldestEntPool.getDerivedProductId() != null;
+        String prodId = useDerived ?
+            eldestEntPool.getDerivedProductId() : eldestEntPool.getProductId();
+        String prodName = useDerived ?
+            eldestEntPool.getDerivedProductName() : eldestEntPool.getProductName();
 
         // Check if product ID, name, or provided products have changed.
         update.setProductsChanged(
-            checkForChangedProducts(eldestEntPool.getProductId(),
-                eldestEntPool.getProductName(),
-                expectedProvidedProds,
-                pool));
+            checkForChangedProducts(prodId, prodName, expectedProvidedProds, pool));
 
         // Check if product attributes have changed:
         if (!pool.getProductAttributes().equals(expectedAttrs)) {

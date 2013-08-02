@@ -99,9 +99,9 @@ public class PoolHelper extends AttributeHelper {
         this.copyProductAttributesOntoPool(consumerSpecificPool.getProductId(),
             consumerSpecificPool);
 
-        // If the pool is stacked, we want to create the derived pool based on
+        // If the originating pool is stacked, we want to create the derived pool based on
         // the entitlements in the stack, instead of just the parent pool.
-        String stackId = consumerSpecificPool.getProductAttributeValue("stacking_id");
+        String stackId = pool.getProductAttributeValue("stacking_id");
         if (stackId != null && !stackId.isEmpty()) {
             poolManager.updatePoolFromStack(consumerSpecificPool,
                 sourceEntitlement.getConsumer(), stackId);
