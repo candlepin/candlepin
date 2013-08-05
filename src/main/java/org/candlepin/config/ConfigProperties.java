@@ -157,7 +157,7 @@ public class ConfigProperties {
                 this.put(ACTIVATION_DEBUG_PREFIX, "");
 
                 this.put(HORNETQ_BASE_DIR, "/var/lib/candlepin/hornetq");
-                this.put(HORNETQ_LARGE_MSG_SIZE, Integer.toString(10 * 1024));
+                this.put(HORNETQ_LARGE_MSG_SIZE, Integer.toString(100 * 1024));
                 this.put(AUDIT_LISTENERS,
                     "org.candlepin.audit.DatabaseListener," +
                         "org.candlepin.audit.LoggingListener," +

@@ -85,10 +85,6 @@ public class HornetqContextListener {
             // in vm, who needs security?
             config.setSecurityEnabled(false);
 
-            int largeMsgSize =
-                candlepinConfig.getInt(ConfigProperties.HORNETQ_LARGE_MSG_SIZE);
-            //config.setJournalBufferSize_AIO(largeMsgSize);
-            config.setJournalBufferSize_NIO(largeMsgSize);
             // XXX: should use AIO when we get the native bindings working
             config.setJournalType(JournalType.NIO);
 
