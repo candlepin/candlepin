@@ -1367,7 +1367,7 @@ public class ConsumerResource {
             if (poolIdString != null) {
                 detail = EntitlerJob.bindByPool(poolIdString, consumerUuid, quantity);
             }
-            else if (productIds != null && productIds.length > 0) {
+            else {
                 detail = EntitlerJob.bindByProducts(productIds,
                         consumerUuid, entitleDate);
             }
