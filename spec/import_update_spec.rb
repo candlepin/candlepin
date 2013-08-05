@@ -12,8 +12,6 @@ describe 'Candlepin Import Update' do
     @import_owner_client = user_client(@import_owner, random_string('testuser'))
     @cp.import(@import_owner['key'], @export_filename)
     @sublist = @cp.list_subscriptions(@import_owner['key'])
-    create_candlepin_export_update()
-    @cp.import(@import_owner['key'], @export_filename_update)
   end
 
   after(:all) do
@@ -21,6 +19,9 @@ describe 'Candlepin Import Update' do
   end
 
   it 'should successfully update the import' do
+    create_candlepin_export_update()
+    @cp.import(@import_owner['key'], @export_filename_update)
+
     @sublist.size().should == 5
     new_sublist = @cp.list_subscriptions(@import_owner['key'])
     new_sublist.size().should == 6
@@ -39,4 +40,13 @@ describe 'Candlepin Import Update' do
     hasChanged.should == true
   end
 
+
+  it 'should remove all imported subscriptions if import has no entitlements' do
+    create_candlepin_export_update_no_ent()
+    @cp.import(@import_owner['key'], @export_filename_update)
+    # manifest consumer
+    @candlepin_client.list_entitlements().size.should == 0
+    # import owner 
+    @cp.list_subscriptions(@import_owner['key']).size.should == 0
+  end
 end
