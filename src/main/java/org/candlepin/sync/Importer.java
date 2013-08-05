@@ -412,8 +412,8 @@ public class Importer {
 
         // If the consumer has no entitlements, this products directory will end up empty.
         // This also implies there will be no entitlements to import.
+        Refresher refresher = poolManager.getRefresher();
         if (importFiles.get(ImportFile.PRODUCTS.fileName()) != null) {
-            Refresher refresher = poolManager.getRefresher();
             ProductImporter importer = new ProductImporter(productCurator, contentCurator);
 
             Set<Product> productsToImport = importProducts(
@@ -434,10 +434,12 @@ public class Importer {
             refresher.run();
         }
         else {
-            log.warn("No products found to import, skipping product and entitlement import.");
+            log.warn("No products found to import, skipping product import.");
+            log.warn("No entitlements in manifest, removing all subscriptions for owner.");
+            importEntitlements(owner, new HashSet<Product>(), new File[]{}, consumer);
+            refresher.add(owner);
+            refresher.run();
         }
-
-
         return consumer;
     }
 
