@@ -391,6 +391,12 @@ class Candlepin
     delete("/consumers/#{@uuid}/entitlements")
   end
 
+  def autoheal_org(owner_key)
+    # Note that this method returns an array of JobDetails and
+    # not just a single JobDetail.
+    post("/owners/#{owner_key}/entitlements")
+  end
+
   def list_products
     get("/products")
   end
