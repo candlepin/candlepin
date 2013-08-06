@@ -31,7 +31,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.8.17
+Version: 0.8.18
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -323,6 +323,20 @@ fi
 
 
 %changelog
+* Tue Jul 23 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.18-1
+- 876764: String updates: consumer -> unit (cschevia@redhat.com)
+- 914827: Do not insert new consumer types if they are already present. (bkearney@redhat.com)
+- misc spec test and doc cleanup (ckozak@redhat.com)
+- Updated spec test and syntax in file (cschevia@redhat.com)
+- Track owner key and owner displayname on deletedconsumers (cduryee@redhat.com)
+- add getComplianceStatus with date, reasons with date (ckozak@redhat.com)
+- Make candlepin work on f19 (ckozak@redhat.com)
+- allow user defined ruby versions (ckozak@redhat.com)
+- Add F19 releaser, drop F16. (dgoodwin@redhat.com)
+- set all awesomeos content enabled=0 by default (alikins@redhat.com)
+- Fixed update product code (cschevia@redhat.com)
+- remove unused method (jesusr@redhat.com)
+
 * Wed Jul 10 2013 Devan Goodwin <dgoodwin@rm-rf.ca> 0.8.17-1
 - Strings update. (dgoodwin@redhat.com)
 - make deleted consumers call more predictable (jesusr@redhat.com)

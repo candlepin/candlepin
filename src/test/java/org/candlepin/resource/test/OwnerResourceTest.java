@@ -54,6 +54,7 @@ import org.candlepin.model.Role;
 import org.candlepin.model.Subscription;
 import org.candlepin.model.SubscriptionCurator;
 import org.candlepin.model.UpstreamConsumer;
+import org.candlepin.paging.PageRequest;
 import org.candlepin.resource.OwnerResource;
 import org.candlepin.sync.ConflictOverrides;
 import org.candlepin.sync.Importer;
@@ -416,7 +417,67 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         securityInterceptor.enable();
 
-        ownerResource.ownerConsumers(owner.getKey(), null, null, null);
+        ownerResource.ownerConsumers(owner.getKey(), null, null,
+            new ArrayList<String>(), null);
+    }
+
+    @Test(expected = BadRequestException.class)
+    public void consumerCannotListConsumersByIdWhenOtherParametersPresent() {
+        Consumer c = TestUtil.createConsumer(owner);
+        consumerTypeCurator.create(c.getType());
+        consumerCurator.create(c);
+
+        List<String> uuids = new ArrayList<String>();
+        uuids.add(c.getUuid());
+
+        setupPrincipal(owner, Access.ALL);
+        securityInterceptor.enable();
+
+        ownerResource.ownerConsumers(owner.getKey(), "username", "type", uuids,
+            new PageRequest());
+    }
+
+    @Test(expected = ForbiddenException.class)
+    public void consumerCannotListConsumersFromAnotherOwner() {
+        Consumer c = TestUtil.createConsumer(owner);
+        consumerTypeCurator.create(c.getType());
+        consumerCurator.create(c);
+
+        Owner owner2 = ownerCurator.create(new Owner("Owner2"));
+        Consumer c2 = TestUtil.createConsumer(owner2);
+        consumerTypeCurator.create(c2.getType());
+        consumerCurator.create(c2);
+
+        List<String> uuids = new ArrayList<String>();
+        uuids.add(c.getUuid());
+        uuids.add(c2.getUuid());
+
+        setupPrincipal(owner, Access.ALL);
+        securityInterceptor.enable();
+
+        ownerResource.ownerConsumers(owner.getKey(), null, null, uuids, null);
+    }
+
+    @Test
+    public void consumerCanListMultipleConsumers() {
+        Consumer c = TestUtil.createConsumer(owner);
+        consumerTypeCurator.create(c.getType());
+        consumerCurator.create(c);
+
+        Consumer c2 = TestUtil.createConsumer(owner);
+        consumerTypeCurator.create(c2.getType());
+        consumerCurator.create(c2);
+
+        List<String> uuids = new ArrayList<String>();
+        uuids.add(c.getUuid());
+        uuids.add(c2.getUuid());
+
+        setupPrincipal(owner, Access.ALL);
+        securityInterceptor.enable();
+
+        List<Consumer> results = ownerResource.ownerConsumers(owner.getKey(), null,
+            null, uuids, null);
+        assertEquals(2, results.size());
     }
 
     @Test

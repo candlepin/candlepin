@@ -18,16 +18,17 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.Date;
-import java.util.List;
-
 import org.candlepin.model.Consumer;
 import org.candlepin.model.DeletedConsumer;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.test.DatabaseTestFixture;
+
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.Date;
+import java.util.List;
 
 /**
  * DeletedConsumerCuratorTest

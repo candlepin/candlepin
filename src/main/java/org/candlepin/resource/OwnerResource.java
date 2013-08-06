@@ -582,24 +582,35 @@ public class OwnerResource {
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @QueryParam("username") String userName,
         @QueryParam("type") String typeLabel,
+        @QueryParam("uuid") @Verify(Consumer.class) List<String> uuids,
         @Context PageRequest pageRequest) {
 
         Owner owner = findOwner(ownerKey);
 
-        ConsumerType type = null;
+        if (uuids == null || uuids.isEmpty()) {
+            ConsumerType type = null;
 
-        if (typeLabel != null) {
-            type = lookupConsumerType(typeLabel);
+            if (typeLabel != null) {
+                type = lookupConsumerType(typeLabel);
+            }
+
+            // We don't look up the user and warn if it doesn't exist here to not
+            // give away usernames
+            Page<List<Consumer>> p = consumerCurator.listByUsernameAndType(userName,
+                type, owner, pageRequest);
+
+            // Store the page for the LinkHeaderPostInterceptor
+            ResteasyProviderFactory.pushContext(Page.class, p);
+            return p.getPageData();
         }
+        else {
+            if (userName != null || typeLabel != null || pageRequest != null) {
+                throw new BadRequestException(
+                    i18n.tr("Cannot specify other query parameters with consumer IDs."));
+            }
 
-        // We don't look up the user and warn if it doesn't exist here to not
-        // give away usernames
-        Page<List<Consumer>> p = consumerCurator.listByUsernameAndType(userName,
-            type, owner, pageRequest);
-
-        // Store the page for the LinkHeaderPostInterceptor
-        ResteasyProviderFactory.pushContext(Page.class, p);
-        return p.getPageData();
+            return consumerCurator.findByUuidsAndOwner(uuids, owner);
+        }
     }
 
     private ConsumerType lookupConsumerType(String label) {

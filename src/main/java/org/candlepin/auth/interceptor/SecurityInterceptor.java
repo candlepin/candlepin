@@ -14,18 +14,6 @@
  */
 package org.candlepin.auth.interceptor;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.ws.rs.DELETE;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-
-import org.aopalliance.intercept.MethodInterceptor;
-import org.aopalliance.intercept.MethodInvocation;
-import org.apache.log4j.Logger;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.exceptions.ForbiddenException;
@@ -43,6 +31,7 @@ import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.Persisted;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
@@ -50,11 +39,27 @@ import org.candlepin.model.ProductCurator;
 import org.candlepin.model.User;
 import org.candlepin.resteasy.interceptor.AuthUtil;
 import org.candlepin.util.Util;
-import org.xnap.commons.i18n.I18n;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Provider;
+
+import org.aopalliance.intercept.MethodInterceptor;
+import org.aopalliance.intercept.MethodInvocation;
+import org.apache.log4j.Logger;
+import org.xnap.commons.i18n.I18n;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.ws.rs.DELETE;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 
 /**
  * Interceptor for enforcing role based access to REST API methods.
@@ -183,10 +188,6 @@ public class SecurityInterceptor implements MethodInterceptor {
                     if (((Verify) a).require() != Access.NONE) {
                         requiredAccess = ((Verify) a).require();
                     }
-                    String verifyParam = (String) invocation.getArguments()[i];
-
-                    log.debug("Verifying " + requiredAccess + " access to " + verifyType +
-                        ": " + verifyParam);
 
                     // Use the correct curator (in storeMap) to look up the actual
                     // entity with the annotated argument
@@ -194,26 +195,51 @@ public class SecurityInterceptor implements MethodInterceptor {
                         log.error("No store configured to verify: " + verifyType);
                         throw new IseException(i18n.tr("Unable to verify request."));
                     }
-                    Object entity = storeMap.get(verifyType).lookup(verifyParam);
-                    if (entity == null) {
-                        // This is bad, we're verifying a parameter with an ID which
-                        // doesn't seem to exist in the DB. Error will be thrown in
-                        // invoke though.
-                        String typeName = Util.getClassName(verifyType);
-                        if (typeName.equals("Owner")) {
-                            typeName = i18n.tr("Organization");
-                        }
-                        log.info("No such entity: " + typeName + " id: " + verifyParam);
 
-                        throw new NotFoundException(
-                            i18n.tr("{0} with id {1} could not be found.",
+                    List entities = new ArrayList();
+
+                    Object argument = invocation.getArguments()[i];
+                    if (argument instanceof String) {
+                        String verifyParam = (String) argument;
+                        log.debug("Verifying " + requiredAccess +
+                            " access to " + verifyType + ": " + verifyParam);
+
+                        Object entity = storeMap.get(verifyType).lookup(verifyParam);
+                        // If the request is just for a single item, throw an exception
+                        // if it is not found.
+                        if (entity == null) {
+                            // This is bad, we're verifying a parameter with an ID which
+                            // doesn't seem to exist in the DB. Error will be thrown in
+                            // invoke though.
+                            String typeName = Util.getClassName(verifyType);
+                            if (typeName.equals("Owner")) {
+                                typeName = i18n.tr("Organization");
+                            }
+                            log.info("No such entity: " + typeName + " id: " +
+                                verifyParam);
+
+                            throw new NotFoundException(i18n.tr(
+                                "{0} with id {1} could not be found.",
                                 typeName, verifyParam));
+                        }
+
+                        entities.add(entity);
+                    }
+                    else {
+                        Collection<String> verifyParams = (Collection<String>) argument;
+                        log.debug("Verifying " + requiredAccess +
+                            " access to collection of" + verifyType + ": " + verifyParams);
+                        // If the request is for a list of items, we'll leave it
+                        // up to the requester to determine if something is missing or not.
+                        if (verifyParams != null && !verifyParams.isEmpty()) {
+                            entities = storeMap.get(verifyType).lookup(verifyParams);
+                        }
                     }
 
-                    // Deny access if the entity to be verified turns out to be null, or
-                    // the principal cannot access it:
-                    if (!principal.canAccess(entity, requiredAccess)) {
-                        denyAccess(principal, invocation);
+                    for (Object entity : entities) {
+                        if (!principal.canAccess(entity, requiredAccess)) {
+                            denyAccess(principal, invocation);
+                        }
                     }
                 }
             }
@@ -225,42 +251,60 @@ public class SecurityInterceptor implements MethodInterceptor {
         }
     }
 
-    private interface EntityStore {
-        Object lookup(String key);
+    private interface EntityStore<E extends Persisted> {
+        E lookup(String key);
+        List<E> lookup(Collection<String> keys);
     }
 
-    private class OwnerStore implements EntityStore {
+    private class OwnerStore implements EntityStore<Owner> {
         private OwnerCurator ownerCurator;
 
-        @Override
-        public Object lookup(String key) {
+        private void initialize() {
             if (ownerCurator == null) {
                 ownerCurator = injector.getInstance(OwnerCurator.class);
             }
+        }
 
+        @Override
+        public Owner lookup(String key) {
+            initialize();
             return ownerCurator.lookupByKey(key);
+        }
+
+        @Override
+        public List<Owner> lookup(Collection<String> keys) {
+            initialize();
+            return ownerCurator.lookupByKeys(keys);
         }
     }
 
-    private class EnvironmentStore implements EntityStore {
+    private class EnvironmentStore implements EntityStore<Environment> {
         private EnvironmentCurator envCurator;
 
-        @Override
-        public Object lookup(String key) {
+        private void initialize() {
             if (envCurator == null) {
                 envCurator = injector.getInstance(EnvironmentCurator.class);
             }
+        }
 
+        @Override
+        public Environment lookup(String key) {
+            initialize();
             return envCurator.find(key);
+        }
+
+        @Override
+        public List<Environment> lookup(Collection<String> keys) {
+            initialize();
+            return envCurator.listAllByIds(keys);
         }
     }
 
-    private class ConsumerStore implements EntityStore {
+    private class ConsumerStore implements EntityStore<Consumer> {
         private ConsumerCurator consumerCurator;
         private DeletedConsumerCurator deletedConsumerCurator;
 
-        @Override
-        public Object lookup(String key) {
+        private void initialize() {
             if (consumerCurator == null) {
                 consumerCurator = injector.getInstance(ConsumerCurator.class);
             }
@@ -268,7 +312,11 @@ public class SecurityInterceptor implements MethodInterceptor {
             if (deletedConsumerCurator == null) {
                 deletedConsumerCurator = injector.getInstance(DeletedConsumerCurator.class);
             }
+        }
 
+        @Override
+        public Consumer lookup(String key) {
+            initialize();
             if (deletedConsumerCurator.countByConsumerUuid(key) > 0) {
                 log.debug("Key " + key + " is deleted, throwing GoneException");
                 I18n i18n = injector.getInstance(I18n.class);
@@ -277,69 +325,122 @@ public class SecurityInterceptor implements MethodInterceptor {
 
             return consumerCurator.findByUuid(key);
         }
-    }
-
-    private class EntitlementStore implements EntityStore {
-        private EntitlementCurator entitlementCurator;
 
         @Override
-        public Object lookup(String key) {
+        public List<Consumer> lookup(Collection<String> keys) {
+            initialize();
+            // Do not look for deleted consumers because we do not want to throw
+            // an exception and reject the whole request just because one of
+            // the requested items is deleted.
+            return consumerCurator.findByUuids(keys);
+        }
+    }
+
+    private class EntitlementStore implements EntityStore<Entitlement> {
+        private EntitlementCurator entitlementCurator;
+
+        private void initialize() {
             if (entitlementCurator == null) {
                 entitlementCurator = injector.getInstance(EntitlementCurator.class);
             }
+        }
+
+        @Override
+        public Entitlement lookup(String key) {
+            initialize();
             return entitlementCurator.find(key);
+        }
+
+        @Override
+        public List<Entitlement> lookup(Collection<String> keys) {
+            initialize();
+            return entitlementCurator.listAllByIds(keys);
         }
     }
 
-    private class PoolStore implements EntityStore {
+    private class PoolStore implements EntityStore<Pool> {
         private PoolCurator poolCurator;
 
-        @Override
-        public Object lookup(String key) {
+        private void initialize() {
             if (poolCurator == null) {
                 poolCurator = injector.getInstance(PoolCurator.class);
             }
+        }
 
+        @Override
+        public Pool lookup(String key) {
+            initialize();
             return poolCurator.find(key);
+        }
+
+        @Override
+        public List<Pool> lookup(Collection<String> keys) {
+            initialize();
+            return poolCurator.listAllByIds(keys);
         }
     }
 
-    private class ActivationKeyStore implements EntityStore {
+    private class ActivationKeyStore implements EntityStore<ActivationKey> {
         private ActivationKeyCurator activationKeyCurator;
 
-        @Override
-        public Object lookup(String key) {
+        private void initialize() {
             if (activationKeyCurator == null) {
                 activationKeyCurator = injector.getInstance(ActivationKeyCurator.class);
             }
+        }
 
+        @Override
+        public ActivationKey lookup(String key) {
+            initialize();
             return activationKeyCurator.find(key);
+        }
+
+        @Override
+        public List<ActivationKey> lookup(Collection<String> keys) {
+            initialize();
+            return activationKeyCurator.listAllByIds(keys);
         }
     }
 
-    private class ProductStore implements EntityStore {
+    private class ProductStore implements EntityStore<Product> {
         private ProductCurator productCurator;
 
-        @Override
-        public Object lookup(String key) {
+        private void initialize() {
             if (productCurator == null) {
                 productCurator = injector.getInstance(ProductCurator.class);
             }
+        }
 
+        @Override
+        public Product lookup(String key) {
+            initialize();
             return productCurator.find(key);
+        }
+
+        @Override
+        public List<Product> lookup(Collection<String> keys) {
+            initialize();
+            return productCurator.listAllByIds(keys);
         }
     }
 
-
-    private static class UserStore implements EntityStore {
+    private static class UserStore implements EntityStore<User> {
         @Override
-        public Object lookup(String username) {
-
+        public User lookup(String username) {
             /* WARNING: Semi-risky business here, we need a user object for the security
              * code to validate, but in this area we seem to only need the username.
              */
-
             return new User(username, null);
+        }
+
+        @Override
+        public List<User> lookup(Collection<String> keys) {
+            List<User> users = new ArrayList<User>();
+            for (String username : keys) {
+                users.add(new User(username, null));
+            }
+
+            return users;
         }
     }
 
