@@ -89,7 +89,7 @@ public class DistributorVersionResource {
         DistributorVersion existing = curator.findByName(dv.getName());
         if (existing != null) {
             throw new BadRequestException(
-                i18n.tr("A distributor version with name {0}" +
+                i18n.tr("A distributor version with name {0} " +
                         "already exists", dv.getName()));
         }
         return curator.create(dv);

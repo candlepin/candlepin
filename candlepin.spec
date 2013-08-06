@@ -31,7 +31,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.8.18
+Version: 0.8.19
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -323,6 +323,20 @@ fi
 
 
 %changelog
+* Wed Jul 31 2013 Devan Goodwin <dgoodwin@rm-rf.ca> 0.8.19-1
+- Strings update. (dgoodwin@redhat.com)
+- Allow calls to /owners/{owner_key}/consumers to accept a list of consumer
+  UUIDs. (awood@redhat.com)
+- Handle empty or null lists being sent in to the SecurityInterceptor.
+  (awood@redhat.com)
+- Add method to search by consumer owner and UUID list. (awood@redhat.com)
+- Add method to list compliance by consumer UUID. (awood@redhat.com)
+- Allow GET /consumers to accept a list of uuids to look up. (awood@redhat.com)
+- Remove checks on deleted consumers for bulk verification of consumers.
+  (awood@redhat.com)
+- Modify @Verify annotation to accept collections. (awood@redhat.com)
+- Remove unused EnforceAccessControl annotation. (awood@redhat.com)
+
 * Tue Jul 23 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.18-1
 - 876764: String updates: consumer -> unit (cschevia@redhat.com)
 - 914827: Do not insert new consumer types if they are already present. (bkearney@redhat.com)

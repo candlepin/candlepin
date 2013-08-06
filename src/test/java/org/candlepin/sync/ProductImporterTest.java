@@ -389,10 +389,36 @@ public class ProductImporterTest {
         assertEquals(1, changed.size());
     }
 
+    @Test
+    public void testVendorSetToUnknown() throws Exception {
+        Product product = TestUtil.createProduct();
+        addNoVendorContentTo(product);
+
+        String json = getJsonForProduct(product);
+        Reader reader = new StringReader(json);
+        Product created = importer.createObject(mapper, reader);
+        Content c = created.getProductContent().iterator().next().getContent();
+        Set<Product> storeThese = new HashSet<Product>();
+        storeThese.add(created);
+        importer.store(storeThese);
+
+        verify(contentCuratorMock).createOrUpdate(c);
+
+        assertEquals("unknown", c.getVendor());
+    }
+
     // Returns the Content object added
     private void addContentTo(Product p) {
         Content c = new Content("name", "100130", "label", "type",
             "vendor", "url", "gpgurl", "arch");
+        c.setMetadataExpire(1000L);
+        p.getProductContent().add(new ProductContent(p, c, true));
+    }
+
+    // Returns the Content object added without vendor
+    private void addNoVendorContentTo(Product p) {
+        Content c = new Content("name", "100130", "label", "type",
+            "", "url", "gpgurl", "arch");
         c.setMetadataExpire(1000L);
         p.getProductContent().add(new ProductContent(p, c, true));
     }
