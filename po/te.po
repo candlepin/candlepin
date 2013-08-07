@@ -7,8 +7,8 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2013-07-31 14:45-0300\n"
-"PO-Revision-Date: 2013-07-03 04:27-0400\n"
-"Last-Translator: kkrothap <kkrothap@fedoraproject.org>\n"
+"PO-Revision-Date: 2013-08-01 04:03-0400\n"
+"Last-Translator: Krishnababu Krothapalli <kkrothap@redhat.com>\n"
 "Language-Team: Telugu <Fedora-trans-te@redhat.com>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -38,7 +38,7 @@ msgstr "ఐడి {1} తో {0} కనుగొనలేక పోయింద�
 #: src/main/java/org/candlepin/resteasy/interceptor/ConsumerAuth.java:55
 #, java-format
 msgid "Unit {0} has been deleted"
-msgstr ""
+msgstr "యూనిట్ {0} తొలగించబడెను"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author kkrothap
@@ -50,17 +50,17 @@ msgstr "వాడుకరి {0} మరియు లక్ష్యం {1} క�
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:125
 #, java-format
 msgid "{0} created new unit {1}"
-msgstr ""
+msgstr "{0} కొత్త యూనిట్ {1} సృష్టించెను"
 
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:126
 #, java-format
 msgid "{0} modified the unit {1}"
-msgstr ""
+msgstr "{0} అనునది యూనిట్ {1} సవరించెను"
 
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:127
 #, java-format
 msgid "{0} deleted the unit {1}"
-msgstr ""
+msgstr "{0} యూనిట్ {1} ను తొలగించెను"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author kkrothap
@@ -127,7 +127,7 @@ msgstr "{0} పూల్‌ను  వుత్పత్తి {1} కొరక�
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:141
 #, java-format
 msgid "{0} created an export for unit {1}"
-msgstr ""
+msgstr "{0} అనునది యూనిట్ {1} కొరకు ఎగుమతి సృష్టించెను"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author kkrothap
@@ -281,7 +281,7 @@ msgstr "కీ: {0} తో సంస్థ కనుగొనబడలేదు.
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:261
 #: src/main/java/org/candlepin/resource/OwnerResource.java:604
 msgid "Cannot specify other query parameters with consumer IDs."
-msgstr ""
+msgstr "వినియోగదారి ఐడీలతో వేరే క్వరీ పారామితులను తెలుపలేదు."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author kkrothap
@@ -303,7 +303,7 @@ msgstr "క్రియాశీల కీలతో వాడుకరిపే�
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:375
 msgid "A unit type of 'person' cannot be used with activation keys"
-msgstr ""
+msgstr "క్రియాశీల కీలతో 'person' యొక్క యూనిట్ రకం వుపయోగించలేము"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -321,7 +321,7 @@ msgstr "పూల్ ఐడి తప్పక అందివ్వవలెన
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:459
 #, java-format
 msgid "Problem creating unit {0}"
-msgstr ""
+msgstr "యూనిట్ {0} సృష్టించుటలో సమస్య"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:540
 msgid "System name cannot be null."
@@ -337,7 +337,7 @@ msgstr "సిస్టమ్ పేరు # అక్షరంతో ప్ర�
 #: src/main/java/org/candlepin/resource/OwnerResource.java:852
 #, java-format
 msgid "Service level ''{0}'' is not available to units of organization {1}."
-msgstr ""
+msgstr "సేవా స్థాయి \"{0}\" అనునది సంస్థ {1} యొక్క యూనిట్సుకు అందుబాటులోలేదు"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author kkrothap
@@ -362,7 +362,7 @@ msgstr "వాడుకరి {0} యిప్పటికే వొక వ్�
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:647
 msgid "You must specify an organization for new units."
-msgstr ""
+msgstr "కొత్త యూనిట్ల కొరకు మీరు సంస్థను తప్పక తెలుపాలి."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author kkrothap
@@ -383,7 +383,7 @@ msgstr "వాడుకరి {0} సంస్థ {1} ను యాక్సె�
 #: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:122
 #, java-format
 msgid "No such unit type: {0}"
-msgstr ""
+msgstr "అటువంటి యూనిట్ రకం లేదు: {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author kkrothap
@@ -398,7 +398,7 @@ msgstr "అటువంటి యెన్విరాన్మెంట్ ల�
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1124
 #, java-format
 msgid "Cannot unregister {0} {1} because: {2}"
-msgstr ""
+msgstr "{0} {1} నమోదు తీసివేయలేదు యెంచేతంటే: {2}"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1211
 msgid "Unable to create entitlement certificate archive"
@@ -429,7 +429,7 @@ msgstr ""
 #: src/main/java/org/candlepin/resource/OwnerResource.java:789
 #, java-format
 msgid "No such unit: {0}"
-msgstr ""
+msgstr "అటువంటి యూనిట్ లేదు: {0}"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1475
 #, java-format
@@ -445,7 +445,7 @@ msgstr "అటువంటి ప్రొడక్ట్ లేదు: {0}"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1554
 msgid "Unit with ID "
-msgstr ""
+msgstr "ఐడి తో యూనిట్"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author mospina
@@ -470,6 +470,8 @@ msgid ""
 "Unit {0} cannot be exported. A manifest cannot be made for units of type "
 "''{1}''."
 msgstr ""
+"యూనిట్ {0} ఎగుమతి చేయలేదు. ''{1}'' రకం యొక్క యూనిట్స్ కొరకు మానిఫెస్ట్ "
+"చేయలేదు."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -480,17 +482,17 @@ msgstr "ఎగుమతి ఆర్కైవ్‌ను సృష్టిం�
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1769
 #, java-format
 msgid "Problem regenerating ID cert for unit {0}"
-msgstr ""
+msgstr "యూనిట్ {0} కొరకు సమస్య యింజినీరింగ్ ఐడి ధృవీకరణపత్రం"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1808
 #, java-format
 msgid "The system with UUID {0} is not a virtual guest."
-msgstr ""
+msgstr "UUID {0} తో వ్యవస్థ వర్చ్యువల్ అతిథి కాదు."
 
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:118
 #, java-format
 msgid "Unit: {0} has no subscription for product {1}"
-msgstr ""
+msgstr "యూనిట్: {0} అనునది వుత్పత్తి {1} కొరకు సబ్‌స్క్రిప్షన్ కలిగిలేదు"
 
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:193
 msgid "Quantity value must be greater than 0"
@@ -537,7 +539,7 @@ msgstr "పరిమాణం తప్పక 0 కన్నా యెక్క�
 msgid ""
 "Cannot add pools that are restricted to unit type 'person' to activation "
 "keys."
-msgstr ""
+msgstr "యూనిట్ రకం 'person' కు నిర్భందించిన పూల్స్ క్రియాశీల కీలకు జతచేయలేదు."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author kkrothap
@@ -659,7 +661,7 @@ msgstr "క్రియాశీల కీ పేరు ''{0}'' యజమాన�
 #: src/main/java/org/candlepin/resource/PoolResource.java:145
 #, java-format
 msgid "Unit: {0} not found"
-msgstr ""
+msgstr "యూనిట్: {0} కనబడలేదు"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author kkrothap
@@ -735,16 +737,16 @@ msgstr "{0} చేత సబ్‌స్క్రిప్షన్లు తొ
 
 #: src/main/java/org/candlepin/resource/PoolResource.java:128
 msgid "Cannot filter on both owner and unit"
-msgstr ""
+msgstr "యజమాని మరియు యూనిట్ పై వడపోయలేదు"
 
 #: src/main/java/org/candlepin/resource/PoolResource.java:132
 msgid "A unit or owner is needed to filter on product"
-msgstr ""
+msgstr "ఉత్పత్తిపై వడపోయుటకు యూనిట్ లేదా యజమాని కావాలి"
 
 #: src/main/java/org/candlepin/resource/PoolResource.java:151
 #, java-format
 msgid "User {0} cannot access unit {1}"
-msgstr ""
+msgstr "వాడుకరి {0} యూనిట్ {1} ఏక్సెస్ చేయలేదు"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -790,6 +792,7 @@ msgstr "ఐడి \"{0}\" తో యెన్టైటిల్మెంట్ �
 msgid ""
 "You must specify exactly one of owner key, unit UUID, or principal name."
 msgstr ""
+"యజమాని కీ, యూనిట్ UUID, లేదా ప్రిన్సిపల్ పేరు లలో ఖచ్చితంగా వొకటి తెలుపాలి."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author kkrothap
@@ -815,22 +818,22 @@ msgstr "చెడ్డ మూలకం విలువ"
 
 #: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:85
 msgid "Unit type with id '"
-msgstr ""
+msgstr "ఐడి ' తో యూనిట్ రకం"
 
 #: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:107
 #, java-format
 msgid "Problem creating unit type: {0}"
-msgstr ""
+msgstr "యూనిట్ రకం సృష్టించుటలో సమస్య: {0}"
 
 #: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:128
 #, java-format
 msgid "Unit type with label {0} could not be found."
-msgstr ""
+msgstr "లేబుల్ {0} తో యూనిట్ రకం కనుగొనలేక పోయింది."
 
 #: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:149
 #, java-format
 msgid "Unit type with id {0} could not be found."
-msgstr ""
+msgstr "ఐడి {0} తో యూనిట్ రకం కనుగొనలేక పోయింది."
 
 #: src/main/java/org/candlepin/resource/DistributorVersionResource.java:92
 #, java-format
@@ -1035,7 +1038,7 @@ msgstr "ధన సంఖ్య కావలసివుంది."
 #: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:119
 #: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:155
 msgid "Invalid oauth unit or secret"
-msgstr ""
+msgstr "చెల్లని oauth యూనిట్ లేదా రహస్యం"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author kkrothap
@@ -1053,7 +1056,7 @@ msgstr "OAuth దోషం యెదురైంది. అంతర్గత �
 
 #: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:160
 msgid "Error getting oauth unit key"
-msgstr ""
+msgstr "oauth యూనిట్ కీ పొందుటలో దోషం"
 
 #: src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:278
 #, java-format
@@ -1086,21 +1089,23 @@ msgid ""
 "This unit has already had the subscription matching pool ID ''{0}'' "
 "attached."
 msgstr ""
+"ఈ యూనిట్ అనునది యిప్పటికే పూల్ ఐడి ''{0}'' పోలు సబ్‌స్క్రిప్షన్ అనుబందించి "
+"కలిగివుంది."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:112
 #, java-format
 msgid "No subscriptions are available from the pool with ID ''{0}''."
-msgstr ""
+msgstr "ఐడి ''{0}'' తో పూల్ నుండి ఏ సబ్‌స్క్రిప్షన్లు అందుబాటులో లేవు."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:117
 #, java-format
 msgid "Units of this type are not allowed to attach the pool with ID ''{0}''."
-msgstr ""
+msgstr "ఐడి ''{0}'' తో పూల్ అనుబందించుటకు ఈ రకపు యూనిట్లు అనుమతించబడవు."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:121
 #, java-format
 msgid "Multi-entitlement not supported for pool with ID ''{0}''."
-msgstr ""
+msgstr "ఐడి ''{0}'' తో వున్న పూల్ కొరకు బహుళ-ఎన్టైటిల్మెంట్ తోడ్పాటునీయదు."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1111,7 +1116,7 @@ msgstr "Guest''s  హోస్ట్ పూల్ యజమానితో ప�
 
 #: src/main/java/org/candlepin/controller/Entitler.java:129
 msgid "Pool not available to subscription management applications."
-msgstr ""
+msgstr "సబ్‌స్క్రిప్షన్ నిర్వహణ అనువర్తనముల కొరకు పూల్ అందుబాటులోలేదు."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1129,22 +1134,22 @@ msgstr "Quantity ''{0}'' అనునది ఇన్‌స్టాన్స్
 #, java-format
 msgid ""
 "Unit does not support instance based calculation required by pool ''{0}''"
-msgstr ""
+msgstr "పూల్ \"{0}\" కు అవసరమైన ఇన్‌స్టాన్స్ ఆధారిత గణింపును యూనిట్ తోడ్పాటునీయదు"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:150
 #, java-format
 msgid "Unit does not support core calculation required by pool ''{0}''"
-msgstr ""
+msgstr "పూల్ ''{0}'' కు అవసరమైన కోర్ గణింపుకు యూనిట్ తోడ్పాటునీయదు"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:154
 #, java-format
 msgid "Unit does not support RAM calculation required by pool ''{0}''"
-msgstr ""
+msgstr "పూల్ ''{0}'' కు అవసరమైన RAM గణింపుకు యూనిట్ తోడ్పాటునీయదు"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:158
 #, java-format
 msgid "Unable to attach pool with ID ''{0}''.: {1}."
-msgstr ""
+msgstr "ఐడి ''{0}'' తో పూల్ అనుబందించ లేదు.: {1}."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:179
 #, java-format
@@ -1174,6 +1179,8 @@ msgstr ""
 msgid ""
 "This system already has a subscription for the product ''{0}'' attached."
 msgstr ""
+"ఉత్పత్తి ''{0}'' కొరకు వొక సబ్‌స్క్రిప్షన్‌ను ఈ వ్యవస్థ యిప్పటికే అనుబందించి"
+" కలిగివుంది."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:240
 #, java-format
@@ -1186,7 +1193,7 @@ msgstr ""
 #: src/main/java/org/candlepin/controller/Entitler.java:244
 #, java-format
 msgid "Units of this type are not allowed for the product ''{0}''."
-msgstr ""
+msgstr "ఉత్పత్తి ''{0}'' కొరకు ఈ రకపు యూనిట్లు అనుమతించబడవు."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:249
 #, java-format
@@ -1198,7 +1205,7 @@ msgstr ""
 #: src/main/java/org/candlepin/controller/Entitler.java:254
 #, java-format
 msgid "Unable to attach subscription for the product ''{0}'': {1}."
-msgstr ""
+msgstr "ఉత్పత్తి ''{0}'' కొరకు సబ్‌స్క్రిప్షన్ అనుబందించ లేదు: {1}."
 
 #: src/main/java/org/candlepin/model/EntitlementCurator.java:256
 #, java-format
@@ -1236,7 +1243,7 @@ msgstr ""
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:100
 #, java-format
 msgid "Name of the unit must be shorter than {0} characters."
-msgstr ""
+msgstr "యూనిట్ యొక్క పేరు తప్పకుండా {0} అక్షరాల కన్నా తక్కువవుండాలి."
 
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:332
 #, java-format
@@ -1259,4 +1266,4 @@ msgstr ""
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:411
 #, java-format
 msgid "The system with UUID {0} is a virtual guest. It does not have guests."
-msgstr ""
+msgstr "UUID {0} తోవున్న వ్యవస్థ వర్చ్యువల్ అతిథి. అది అతిథులను కలిగిలేదు."

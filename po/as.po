@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2013-07-31 14:45-0300\n"
-"PO-Revision-Date: 2013-07-02 12:55-0400\n"
+"PO-Revision-Date: 2013-08-01 03:22-0400\n"
 "Last-Translator: ngoswami <ngoswami@fedoraproject.org>\n"
 "Language-Team: Assamese\n"
 "MIME-Version: 1.0\n"
@@ -38,7 +38,7 @@ msgstr "আইডি {1} ৰ সৈতে {0} পোৱা নগল।"
 #: src/main/java/org/candlepin/resteasy/interceptor/ConsumerAuth.java:55
 #, java-format
 msgid "Unit {0} has been deleted"
-msgstr ""
+msgstr "একক {0} মচি পেলোৱা হৈছে"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ngoswami
@@ -50,17 +50,17 @@ msgstr "ব্যৱহাৰকাৰী {0} আৰু লক্ষ্য {1} �
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:125
 #, java-format
 msgid "{0} created new unit {1}"
-msgstr ""
+msgstr "{0} এ নতুন একক {1} সৃষ্টি কৰিছে"
 
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:126
 #, java-format
 msgid "{0} modified the unit {1}"
-msgstr ""
+msgstr "{0} এ একক {1} পৰিবৰ্তন কৰিছে"
 
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:127
 #, java-format
 msgid "{0} deleted the unit {1}"
-msgstr ""
+msgstr "{0} এ একক {1} মচি পেলাইছে"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ngoswami
@@ -127,7 +127,7 @@ msgstr "{0} এ  {1} ৰ বাবে এটা পুল মচি পেলা
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:141
 #, java-format
 msgid "{0} created an export for unit {1}"
-msgstr ""
+msgstr "{0} এ একক {1} ৰ বাবে এটা এক্সপোৰ্ট সৃষ্টি কৰিছে"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ngoswami
@@ -281,7 +281,7 @@ msgstr "key: {0} ৰ সৈতে সংঘঠন পোৱা নগল।"
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:261
 #: src/main/java/org/candlepin/resource/OwnerResource.java:604
 msgid "Cannot specify other query parameters with consumer IDs."
-msgstr ""
+msgstr "উপভোক্তা IDs ৰ সৈতে অন্য প্ৰশ্ন প্ৰাচলসমূহ ধাৰ্য্য কৰিব নোৱাৰি।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ngoswami
@@ -304,7 +304,7 @@ msgstr "সক্ৰিয়কৰণ কি'ৰ সৈতে ব্যৱহা�
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:375
 msgid "A unit type of 'person' cannot be used with activation keys"
-msgstr ""
+msgstr "সক্ৰিয়কৰণ কি'সমূহৰ সৈতে 'person' ধৰণৰ এটা একক ব্যৱহাৰ কৰিব নোৱাৰি"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -322,7 +322,7 @@ msgstr "পুল ID দি থোৱা হ'ব লাগিব"
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:459
 #, java-format
 msgid "Problem creating unit {0}"
-msgstr ""
+msgstr "একক {0} সৃষ্টি কৰোতে সমস্যা"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ngoswami
@@ -340,7 +340,7 @@ msgstr "চিস্টেম নাম # আখৰৰ সৈতে আৰম্
 #: src/main/java/org/candlepin/resource/OwnerResource.java:852
 #, java-format
 msgid "Service level ''{0}'' is not available to units of organization {1}."
-msgstr ""
+msgstr "সেৱা স্তৰ ''{0}'' সংঘটন {1} ৰ এককসমূহৰ বাবে উপলব্ধ নহয়।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ngoswami
@@ -365,7 +365,7 @@ msgstr "ব্যৱহাৰকাৰী {0} এ ইতিমধ্যে এ�
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:647
 msgid "You must specify an organization for new units."
-msgstr ""
+msgstr "আপুনি নতুন এককসমূহৰ বাবে এটা সংঘঠন ধাৰ্য্য কৰিব লাগিব।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ngoswami
@@ -386,7 +386,7 @@ msgstr "ব্যৱহাৰকাৰী {0} -য় সংঘঠন {1} অভি
 #: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:122
 #, java-format
 msgid "No such unit type: {0}"
-msgstr ""
+msgstr "এই ধৰণৰ কোনো একক নাই: {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ngoswami
@@ -401,7 +401,7 @@ msgstr "এনে কোনো পৰিৱেশ নাই: {0}"
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1124
 #, java-format
 msgid "Cannot unregister {0} {1} because: {2}"
-msgstr ""
+msgstr "{0} {1} আনৰেজিস্টাৰ কৰিব নোৱাৰি কাৰণ: {2}"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1211
 msgid "Unable to create entitlement certificate archive"
@@ -431,7 +431,7 @@ msgstr "কোনো পুল নথকা এটা উৎপাদনৰ ব�
 #: src/main/java/org/candlepin/resource/OwnerResource.java:789
 #, java-format
 msgid "No such unit: {0}"
-msgstr ""
+msgstr "এই ধৰণৰ কোনো একক নাই: {0}"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1475
 #, java-format
@@ -447,7 +447,7 @@ msgstr "এনে কোনো উৎপাদন: {0} নাই"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1554
 msgid "Unit with ID "
-msgstr ""
+msgstr "ID ৰ সৈতে একক"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ngoswami
@@ -472,6 +472,8 @@ msgid ""
 "Unit {0} cannot be exported. A manifest cannot be made for units of type "
 "''{1}''."
 msgstr ""
+"একক {0} এক্সপোৰ্ট কৰিব নোৱাৰি। ধৰণ ''{1}'' ৰ এককসমূহৰ বাবে এটা মেনিফেস্ট "
+"নিৰ্মাণ কৰিব নোৱাৰি।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -482,17 +484,17 @@ msgstr "এক্সপোৰ্ট সাঁচনি সৃষ্টি কৰ
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1769
 #, java-format
 msgid "Problem regenerating ID cert for unit {0}"
-msgstr ""
+msgstr "একক {0} ৰ বাবে ID cert পুনৰ সৃজন কৰিবলৈ সমস্যা"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1808
 #, java-format
 msgid "The system with UUID {0} is not a virtual guest."
-msgstr ""
+msgstr "UUID {0} ৰ সৈতে চিস্টেম এটা ভাৰছুৱেল অতিথি নহয়।"
 
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:118
 #, java-format
 msgid "Unit: {0} has no subscription for product {1}"
-msgstr ""
+msgstr "একক: {0} ৰ {1} ৰ বাবে কোনো স্বাক্ষৰণ উৎপাদন নাই"
 
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:193
 msgid "Quantity value must be greater than 0"
@@ -542,6 +544,7 @@ msgid ""
 "Cannot add pools that are restricted to unit type 'person' to activation "
 "keys."
 msgstr ""
+"সক্ৰিয়কৰণ কি'সমূহলে একক ধৰণ 'person' লৈ সীমিত পুলসমূহ যোগ কৰিব নোৱাৰি।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ngoswami
@@ -671,7 +674,7 @@ msgstr "সক্ৰিয়কৰণ কি' নাম ''{0}'' ইতিমধ্
 #: src/main/java/org/candlepin/resource/PoolResource.java:145
 #, java-format
 msgid "Unit: {0} not found"
-msgstr ""
+msgstr "একক: {0} পোৱা নগল"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ngoswami
@@ -747,16 +750,16 @@ msgstr "{0} দ্বাৰা স্বাক্ষৰণসমূহ মচি
 
 #: src/main/java/org/candlepin/resource/PoolResource.java:128
 msgid "Cannot filter on both owner and unit"
-msgstr ""
+msgstr "দুয়ো গৰাকী আৰু এককত ফিল্টাৰ কৰিব নোৱাৰি"
 
 #: src/main/java/org/candlepin/resource/PoolResource.java:132
 msgid "A unit or owner is needed to filter on product"
-msgstr ""
+msgstr "উৎপাদন ফিল্টাৰ কৰিবলৈ এটা একক অথবা গৰাকীৰ প্ৰয়োজন"
 
 #: src/main/java/org/candlepin/resource/PoolResource.java:151
 #, java-format
 msgid "User {0} cannot access unit {1}"
-msgstr ""
+msgstr "ব্যৱহাৰকাৰী {0} এ একক {1} অভিগম কৰিব নোৱাৰে"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -804,6 +807,8 @@ msgstr "ID ''{0}'' ৰ সৈতে অনুজ্ঞা পুল পোৱা
 msgid ""
 "You must specify exactly one of owner key, unit UUID, or principal name."
 msgstr ""
+"আপুনি গৰাকী কি, একক UUID, অথবা প্ৰিন্সিপাল নামৰ যিকোনো এটা ধাৰ্য্য কৰিব "
+"লাগিব।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ngoswami
@@ -829,22 +834,22 @@ msgstr "বেয়া সংস্থা মান।"
 
 #: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:85
 msgid "Unit type with id '"
-msgstr ""
+msgstr "আইডি ' ৰ সৈতে একক ধৰণ"
 
 #: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:107
 #, java-format
 msgid "Problem creating unit type: {0}"
-msgstr ""
+msgstr "একক ধৰণ সৃষ্টি কৰোতে ত্ৰুটি: {0}"
 
 #: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:128
 #, java-format
 msgid "Unit type with label {0} could not be found."
-msgstr ""
+msgstr "লেবেল {0} ৰ সৈতে একক ধৰণ পোৱা নগল।"
 
 #: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:149
 #, java-format
 msgid "Unit type with id {0} could not be found."
-msgstr ""
+msgstr "আইডি {0} ৰ সৈতে একক ধৰণ পোৱা নগল।"
 
 #: src/main/java/org/candlepin/resource/DistributorVersionResource.java:92
 #, java-format
@@ -1050,7 +1055,7 @@ msgstr "এটা ধণাত্মক পূৰ্ণ সংখ্যা হ�
 #: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:119
 #: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:155
 msgid "Invalid oauth unit or secret"
-msgstr ""
+msgstr "অবৈধ oauth একক অথবা গোপন"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ngoswami
@@ -1068,7 +1073,7 @@ msgstr "OAuth ত্ৰুটিৰ সন্মূখিন হোৱা গল
 
 #: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:160
 msgid "Error getting oauth unit key"
-msgstr ""
+msgstr "oauth একক কি' প্ৰাপ্ত কৰিবলে ত্ৰুটি"
 
 #: src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:278
 #, java-format
@@ -1099,22 +1104,22 @@ msgstr "স্বাক্ষৰণ পুল {0} অস্তিত্ববা
 msgid ""
 "This unit has already had the subscription matching pool ID ''{0}'' "
 "attached."
-msgstr ""
+msgstr "এই এককৰ ইতিমধ্যে স্বাক্ষৰণ মিল খোৱা পুল ID ''{0}'' সংলগ্ন আছে।"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:112
 #, java-format
 msgid "No subscriptions are available from the pool with ID ''{0}''."
-msgstr ""
+msgstr "ID ''{0}'' ৰ সৈতে পুলৰ পৰা কোনো স্বাক্ষৰণ উপলব্ধ নাই।"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:117
 #, java-format
 msgid "Units of this type are not allowed to attach the pool with ID ''{0}''."
-msgstr ""
+msgstr "ID ''{0}'' ৰ সৈতে পুল সংলগ্ন কৰিবলৈ এই ধৰণ এককৰ অনুমতি নাই।"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:121
 #, java-format
 msgid "Multi-entitlement not supported for pool with ID ''{0}''."
-msgstr ""
+msgstr "ID ''{0}'' ৰ সৈতে পুলৰ বাবে বহু-অনুজ্ঞা সমৰ্থিত নহয়।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1125,7 +1130,7 @@ msgstr "অতিথিৰ হস্ট পুলৰ গৰাকীৰ সৈ�
 
 #: src/main/java/org/candlepin/controller/Entitler.java:129
 msgid "Pool not available to subscription management applications."
-msgstr ""
+msgstr "পুল স্বাক্ষৰণ ব্যৱস্থাপনা এপ্লিকেচনসমূহৰ বাবে উপলব্ধ নহয়।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1143,22 +1148,22 @@ msgstr "পৰিমাণ '{0}'' ইনস্টেন্স মাল্টি
 #, java-format
 msgid ""
 "Unit does not support instance based calculation required by pool ''{0}''"
-msgstr ""
+msgstr "এককে পুল ''{0}'' দ্বাৰা প্ৰয়োজনীয় উদাহৰণ ভিত্তিয় গণনা সমৰ্থন নকৰে"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:150
 #, java-format
 msgid "Unit does not support core calculation required by pool ''{0}''"
-msgstr ""
+msgstr "এককে পুল ''{0}'' দ্বাৰা প্ৰয়োজনীয় কেন্দ্ৰীয় গণনা সমৰ্থন নকৰে"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:154
 #, java-format
 msgid "Unit does not support RAM calculation required by pool ''{0}''"
-msgstr ""
+msgstr "এককে পুল ''{0}'' দ্বাৰা প্ৰয়োজনীয় RAM গণনা সমৰ্থন নকৰে"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:158
 #, java-format
 msgid "Unable to attach pool with ID ''{0}''.: {1}."
-msgstr ""
+msgstr "ID ''{0}'' ৰ সৈতে পুল সংলগ্ন কৰিবলৈ অক্ষম।: {1}।"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:179
 #, java-format
@@ -1182,7 +1187,7 @@ msgstr "আইডি ''{0}'' ৰ সৈতে অনুজ্ঞাৰ বাব
 #, java-format
 msgid ""
 "This system already has a subscription for the product ''{0}'' attached."
-msgstr ""
+msgstr "এই চিস্টেমৰ ইতিমধ্যে উৎপাদন ''{0}'' ৰ বাবে এটা স্বাক্ষৰণ সংলগ্ন আছে।"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:240
 #, java-format
@@ -1193,7 +1198,7 @@ msgstr "উৎপাদন ''{0}'' ৰ বাবে পৰ্যাপ্ত ব
 #: src/main/java/org/candlepin/controller/Entitler.java:244
 #, java-format
 msgid "Units of this type are not allowed for the product ''{0}''."
-msgstr ""
+msgstr "উৎপাদন ''{0}'' ৰ বাবে এই ধৰণৰ এককবোৰৰ অনুমতি নাই।"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:249
 #, java-format
@@ -1203,7 +1208,7 @@ msgstr "কেৱল ভাৰছুৱেল চিস্টেমসমূহ�
 #: src/main/java/org/candlepin/controller/Entitler.java:254
 #, java-format
 msgid "Unable to attach subscription for the product ''{0}'': {1}."
-msgstr ""
+msgstr "উৎপাদন ''{0}'' ৰ বাবে স্বাক্ষৰণ সংলগ্ন কৰিবলৈ অক্ষম: {1}।"
 
 #: src/main/java/org/candlepin/model/EntitlementCurator.java:256
 #, java-format
@@ -1242,7 +1247,7 @@ msgstr ""
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:100
 #, java-format
 msgid "Name of the unit must be shorter than {0} characters."
-msgstr ""
+msgstr "এককৰ নাম {0} আখৰৰ সৰু হ'ব লাগিব।"
 
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:332
 #, java-format
@@ -1265,4 +1270,4 @@ msgstr ""
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:411
 #, java-format
 msgid "The system with UUID {0} is a virtual guest. It does not have guests."
-msgstr ""
+msgstr "UUID {0} ৰ সৈতে চিস্টেম এটা ভাৰছুৱেল অতিথি হয়। ইয়াৰ কোনো অতিথি নাই।"

@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2012-06-27 12:35-0400\n"
-"PO-Revision-Date: 2013-07-03 08:47-0400\n"
+"PO-Revision-Date: 2013-08-07 12:07-0400\n"
 "Last-Translator: samfreemanz <sfriedma@redhat.com>\n"
 "Language-Team: French\n"
 "MIME-Version: 1.0\n"
@@ -36,7 +36,7 @@ msgstr "{0} avec l'ID {1} est introuvable."
 #: src/main/java/org/candlepin/resteasy/interceptor/ConsumerAuth.java:55
 #, java-format
 msgid "Unit {0} has been deleted"
-msgstr ""
+msgstr "L'unité {0} a été supprimée"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author samfreemanz
@@ -48,17 +48,17 @@ msgstr "Événement inconnu pour l'utilisateur {0} et la cible {1}"
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:125
 #, java-format
 msgid "{0} created new unit {1}"
-msgstr ""
+msgstr "{0} a créé la nouvelle unité {1}"
 
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:126
 #, java-format
 msgid "{0} modified the unit {1}"
-msgstr ""
+msgstr "{0} a modifié l'unité {1}"
 
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:127
 #, java-format
 msgid "{0} deleted the unit {1}"
-msgstr ""
+msgstr "{0} a supprimé l'unité {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author samfreemanz
@@ -125,7 +125,7 @@ msgstr "{0} a supprimé un pool pour le produit {1}"
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:141
 #, java-format
 msgid "{0} created an export for unit {1}"
-msgstr ""
+msgstr "{0} a créé un export pour l'unité {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author samfreemanz
@@ -280,6 +280,8 @@ msgstr "L'organisation avec la clé : {0} est introuvable."
 #: src/main/java/org/candlepin/resource/OwnerResource.java:604
 msgid "Cannot specify other query parameters with consumer IDs."
 msgstr ""
+"Impossible de spécifier d'autres paramètres de requête avec les ID des "
+"consommateurs."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author samfreemanz
@@ -305,6 +307,8 @@ msgstr ""
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:375
 msgid "A unit type of 'person' cannot be used with activation keys"
 msgstr ""
+"Le type d'unité « personne » ne peut pas être utilisé avec des clés "
+"d'activation"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -323,7 +327,7 @@ msgstr "L'ID du pool doit être fourni"
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:459
 #, java-format
 msgid "Problem creating unit {0}"
-msgstr ""
+msgstr "Problème lors de la création de l'unité {0}"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:540
 msgid "System name cannot be null."
@@ -340,13 +344,15 @@ msgstr "Le nom du système ne peut pas commencer par le caractère #"
 #, java-format
 msgid "Service level ''{0}'' is not available to units of organization {1}."
 msgstr ""
+"Le niveau de service « {0} » n'est pas disponible aux unités de "
+"l'organisation {1}."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author samfreemanz
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:592
 #, java-format
 msgid "Activation key ''{0}'' not found for organization ''{1}''."
-msgstr "Clé d'activation ''{0}'' introuvable pour l'organisation ''{1}''."
+msgstr "Clé d'activation « {0} » introuvable pour l'organisation « {1} »."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author samfreemanz
@@ -364,7 +370,7 @@ msgstr "L'utilisateur {0} est déjà enregistré comme consommateur personnel"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:647
 msgid "You must specify an organization for new units."
-msgstr ""
+msgstr "Une organisation doit être spécifiée pour les nouvelles unités."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author samfreemanz
@@ -385,7 +391,7 @@ msgstr "L'utilisateur {0} ne peut accéder à l'organisation {1}"
 #: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:122
 #, java-format
 msgid "No such unit type: {0}"
-msgstr ""
+msgstr "Aucun tel type d'unité : {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author samfreemanz
@@ -400,7 +406,7 @@ msgstr "Pas de tel environnement : {0}"
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1124
 #, java-format
 msgid "Cannot unregister {0} {1} because: {2}"
-msgstr ""
+msgstr "Impossible de dés-enregistrer {0} {1} car : {2}"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1211
 msgid "Unable to create entitlement certificate archive"
@@ -432,7 +438,7 @@ msgstr ""
 #: src/main/java/org/candlepin/resource/OwnerResource.java:789
 #, java-format
 msgid "No such unit: {0}"
-msgstr ""
+msgstr "Aucune telle unité : {0}"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1475
 #, java-format
@@ -448,7 +454,7 @@ msgstr "Aucun tel produit : {0}"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1554
 msgid "Unit with ID "
-msgstr ""
+msgstr "Unité avec ID"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author samfreemanz
@@ -458,7 +464,7 @@ msgstr ""
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:258
 #, java-format
 msgid "Entitlement with ID ''{0}'' could not be found."
-msgstr "Impossible de trouver le droit d'accès avec l'ID ''{0}''."
+msgstr "Impossible de trouver le droit d'accès avec l'ID « {0} »."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author samfreemanz
@@ -475,6 +481,8 @@ msgid ""
 "Unit {0} cannot be exported. A manifest cannot be made for units of type "
 "''{1}''."
 msgstr ""
+"L'unité {0} ne peut pas être exportée. Un manifeste ne peut pas être créé "
+"pour les unités de type « {1} »."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -485,17 +493,17 @@ msgstr "Impossible de créer une archive d'export"
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1769
 #, java-format
 msgid "Problem regenerating ID cert for unit {0}"
-msgstr ""
+msgstr "Problème lors de la régénération du cert ID pour l'unité {0}"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1808
 #, java-format
 msgid "The system with UUID {0} is not a virtual guest."
-msgstr ""
+msgstr "Le système avec l'UUID {0} n'est pas un invité virtuel."
 
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:118
 #, java-format
 msgid "Unit: {0} has no subscription for product {1}"
-msgstr ""
+msgstr "Unité : {0} ne possède pas d'abonnement pour le produit {1}"
 
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:193
 msgid "Quantity value must be greater than 0"
@@ -544,6 +552,8 @@ msgid ""
 "Cannot add pools that are restricted to unit type 'person' to activation "
 "keys."
 msgstr ""
+"Impossible d'ajouter les pools restreints au type d'unité « personne » aux "
+"clés d'activation."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author samfreemanz
@@ -674,7 +684,7 @@ msgstr ""
 #: src/main/java/org/candlepin/resource/PoolResource.java:145
 #, java-format
 msgid "Unit: {0} not found"
-msgstr ""
+msgstr "Unité : {0} introuvable"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author samfreemanz
@@ -753,16 +763,17 @@ msgstr "Abonnements supprimés par {0}"
 
 #: src/main/java/org/candlepin/resource/PoolResource.java:128
 msgid "Cannot filter on both owner and unit"
-msgstr ""
+msgstr "Impossible de filtrer sur le propriétaire et l'unité"
 
 #: src/main/java/org/candlepin/resource/PoolResource.java:132
 msgid "A unit or owner is needed to filter on product"
 msgstr ""
+"Une unité ou un propriétaire est nécessaire pour filtrer sur le produit"
 
 #: src/main/java/org/candlepin/resource/PoolResource.java:151
 #, java-format
 msgid "User {0} cannot access unit {1}"
-msgstr ""
+msgstr "L'utilisateur {0} ne peut pas accéder à l'unité {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -808,6 +819,8 @@ msgstr "Impossible de trouver le pool des droits d'accès avec l'ID « {0} ».
 msgid ""
 "You must specify exactly one of owner key, unit UUID, or principal name."
 msgstr ""
+"Vous devez spécifier une clé propriétaire, un UUID d'unité, ou un nom "
+"principal."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author samfreemanz
@@ -833,22 +846,22 @@ msgstr "Mauvaise valeur d'entité."
 
 #: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:85
 msgid "Unit type with id '"
-msgstr ""
+msgstr "Type d'unité avec ID '"
 
 #: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:107
 #, java-format
 msgid "Problem creating unit type: {0}"
-msgstr ""
+msgstr "Problème lors de la création du type d'unité : {0}"
 
 #: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:128
 #, java-format
 msgid "Unit type with label {0} could not be found."
-msgstr ""
+msgstr "Le type d'unité avec l'étiquette {0} est introuvable."
 
 #: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:149
 #, java-format
 msgid "Unit type with id {0} could not be found."
-msgstr ""
+msgstr "Le type d'unité avec l'ID {0} est introuvable."
 
 #: src/main/java/org/candlepin/resource/DistributorVersionResource.java:92
 #, java-format
@@ -894,7 +907,7 @@ msgstr "PROBLÈME DE COUVERTURE {2}.  Couvre {0} sur {1}"
 #: src/main/java/org/candlepin/policy/js/entitlement/AbstractEntitlementRules.java:133
 #, java-format
 msgid "''{0}'' Should contain name, priority and at least one attribute"
-msgstr "''{0}'' doit contenir le nom, la priorité, et au moins un attribut"
+msgstr "« {0} » doit contenir le nom, la priorité, et au moins un attribut"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1059,7 +1072,7 @@ msgstr "Un entier positif était attendu."
 #: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:119
 #: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:155
 msgid "Invalid oauth unit or secret"
-msgstr ""
+msgstr "Unité ou secret OAuth invalide"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author samfreemanz
@@ -1077,7 +1090,7 @@ msgstr "Erreur OAuth rencontrée. Message interne : {0}"
 
 #: src/main/java/org/candlepin/resteasy/interceptor/OAuth.java:160
 msgid "Error getting oauth unit key"
-msgstr ""
+msgstr "Erreur lors de l'obtention de la clé d'unité OAuth"
 
 #: src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:278
 #, java-format
@@ -1112,21 +1125,27 @@ msgid ""
 "This unit has already had the subscription matching pool ID ''{0}'' "
 "attached."
 msgstr ""
+"Cette unité possède déjà l'ID de pool correspondant à l'abonnement « {0} » "
+"attaché."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:112
 #, java-format
 msgid "No subscriptions are available from the pool with ID ''{0}''."
-msgstr ""
+msgstr "Aucun abonnement n'est disponible depuis le pool avec l'ID « {0} »."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:117
 #, java-format
 msgid "Units of this type are not allowed to attach the pool with ID ''{0}''."
 msgstr ""
+"Les unités de ce type n'ont pas le droit d'attacher le pool avec l'ID « {0} "
+"»."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:121
 #, java-format
 msgid "Multi-entitlement not supported for pool with ID ''{0}''."
 msgstr ""
+"Les multiples droits d'accès ne sont pas pris en charge pour le pool avec "
+"l'ID « {0} »."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1134,46 +1153,52 @@ msgstr ""
 #, java-format
 msgid "Guest''s host does not match owner of pool: ''{0}''."
 msgstr ""
-"L'hôte de l'invité ne correspond pas au propriétaire du pool : ''{0}''."
+"L'hôte de l'invité ne correspond pas au propriétaire du pool : « {0} »."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:129
 msgid "Pool not available to subscription management applications."
 msgstr ""
+"Le pool n'est pas disponible aux applications de gestion des abonnements."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/controller/Entitler.java:133
 #, java-format
 msgid "Pool is restricted to virtual guests: ''{0}''."
-msgstr "Pool restreint aux invités virtuels : ''{0}''."
+msgstr "Pool restreint aux invités virtuels : « {0} »."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:142
 #, java-format
 msgid "Quantity ''{0}'' is not a multiple of instance multiplier ''{1}''"
 msgstr ""
-"La quantité ''{0}'' n'est pas un multiple du multiplicateur d'instances "
-"''{1}''"
+"La quantité « {0} » n'est pas un multiple du multiplicateur d'instances « "
+"{1} »"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:146
 #, java-format
 msgid ""
 "Unit does not support instance based calculation required by pool ''{0}''"
 msgstr ""
+"L'unité ne prend pas en charge les calculs basés sur instances requis par le"
+" pool « {0} »"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:150
 #, java-format
 msgid "Unit does not support core calculation required by pool ''{0}''"
 msgstr ""
+"L'unité ne prend pas en charge les calculs de cœur requis par le pool « {0} "
+"»"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:154
 #, java-format
 msgid "Unit does not support RAM calculation required by pool ''{0}''"
 msgstr ""
+"L'unité ne prend pas en charge les calculs de RAM requis par le pool « {0} »"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:158
 #, java-format
 msgid "Unable to attach pool with ID ''{0}''.: {1}."
-msgstr ""
+msgstr "Impossible d'attacher le pool avec l'ID « {0} ». : {1}."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:179
 #, java-format
@@ -1181,7 +1206,7 @@ msgid ""
 "Insufficient pool quantity available for adjustment to entitlement ''{0}''."
 msgstr ""
 "Quantité disponible du pool insuffisante pour l'ajustement au droit d'accès "
-"''{0}''."
+"« {0} »."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:184
 #: src/main/java/org/candlepin/controller/Entitler.java:189
@@ -1190,13 +1215,13 @@ msgid ""
 "Multi-entitlement not supported for pool connected with entitlement ''{0}''."
 msgstr ""
 "Les multiples droits d'accès ne sont pas pris en charge pour le pool "
-"connecté avec le droit d'accès ''{0}''."
+"connecté avec le droit d'accès « {0} »."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:194
 #, java-format
 msgid "Unable to adjust quantity for the entitlement with id ''{0}'': {1}"
 msgstr ""
-"Impossible d'ajuster la quantité pour le droit d'accès avec l'ID ''{0}'' : "
+"Impossible d'ajuster la quantité pour le droit d'accès avec l'ID « {0} » : "
 "{1}"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:236
@@ -1204,6 +1229,7 @@ msgstr ""
 msgid ""
 "This system already has a subscription for the product ''{0}'' attached."
 msgstr ""
+"Ce système possède déjà un abonnement attaché pour le produit « {0} »."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:240
 #, java-format
@@ -1216,18 +1242,18 @@ msgstr ""
 #: src/main/java/org/candlepin/controller/Entitler.java:244
 #, java-format
 msgid "Units of this type are not allowed for the product ''{0}''."
-msgstr ""
+msgstr "Les unités de ce type ne sont pas autorisées pour le produit « {0} »."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:249
 #, java-format
 msgid "Only virtual systems can have subscription ''{0}'' attached."
 msgstr ""
-"Seuls les systèmes virtuels peuvent avoir l'abonnement ''{0}'' attaché."
+"Seuls les systèmes virtuels peuvent avoir l'abonnement « {0} » attaché."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:254
 #, java-format
 msgid "Unable to attach subscription for the product ''{0}'': {1}."
-msgstr ""
+msgstr "Impossible d'attacher un abonnement pour le produit « {0} » : {1}."
 
 #: src/main/java/org/candlepin/model/EntitlementCurator.java:256
 #, java-format
@@ -1237,23 +1263,23 @@ msgstr "Aucun produit trouvé pour l'ID de produit {0}"
 #: src/main/java/org/candlepin/model/ProductCurator.java:139
 #, java-format
 msgid "The attribute ''{0}'' must be an integer value."
-msgstr "L'attribut ''{0}'' doit être une valeur entière."
+msgstr "L'attribut « {0} » doit être une valeur entière."
 
 #: src/main/java/org/candlepin/model/ProductCurator.java:146
 #: src/main/java/org/candlepin/model/ProductCurator.java:165
 #, java-format
 msgid "The attribute ''{0}'' must have a positive value."
-msgstr "L'attribut ''{0}'' doit avoir une valeur positive."
+msgstr "L'attribut « {0} » doit avoir une valeur positive."
 
 #: src/main/java/org/candlepin/model/ProductCurator.java:158
 #, java-format
 msgid "The attribute ''{0}'' must be a long value."
-msgstr "L'attribut ''{0}'' doit être une valeur longue."
+msgstr "L'attribut « {0} » doit être une valeur longue."
 
 #: src/main/java/org/candlepin/model/ProductCurator.java:176
 #, java-format
 msgid "The attribute ''{0}'' must be a boolean value."
-msgstr "L'attribut ''{0}'' doit être une valeur booléenne."
+msgstr "L'attribut « {0} » doit être une valeur booléenne."
 
 #: src/main/java/org/candlepin/model/ProductCurator.java:185
 #, java-format
@@ -1261,12 +1287,12 @@ msgid ""
 "You cannot create a circular reference for products that ''{0}'' relies on."
 msgstr ""
 "Vou sne pouvez pas créer de référence circulaire pour les produits sur "
-"lesquels ''{0}'' s'appuie."
+"lesquels « {0} » s'appuie."
 
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:100
 #, java-format
 msgid "Name of the unit must be shorter than {0} characters."
-msgstr ""
+msgstr "Le nom de l'unité doit faire moins de {0} caractères."
 
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:332
 #, java-format
@@ -1274,7 +1300,7 @@ msgid ""
 "The fact ''{0}'' must be an integer instead of ''{1}''. No value will exist "
 "for that fact."
 msgstr ""
-"Le fait ''{0}'' doit être un entier à la place de ''{1}''. Aucune valeur "
+"Le fait « {0} » doit être un entier à la place de « {1} ». Aucune valeur "
 "n'existera pour ce fait."
 
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:341
@@ -1283,10 +1309,12 @@ msgid ""
 "The fact ''{0}'' must have a positive integer value instead of ''{1}''. No "
 "value will exist for that fact."
 msgstr ""
-"Le fait ''{0}'' doit avoir une valeur entière positive au lieu de ''{1}''. "
+"Le fait « {0} » doit avoir une valeur entière positive au lieu de « {1} ». "
 "Aucune valeur n'existera pour ce fait."
 
 #: src/main/java/org/candlepin/model/ConsumerCurator.java:411
 #, java-format
 msgid "The system with UUID {0} is a virtual guest. It does not have guests."
 msgstr ""
+"Le système avec l'UUID {0} est un invité virtuel. Il ne possède pas "
+"d'invités."
