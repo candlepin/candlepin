@@ -19,7 +19,17 @@ describe 'Consumer Resource' do
     @consumer2 = consumer_client(@user2, random_string("consumer2"))
   end
 
-   it 'should receive paged data back when requested' do
+  it "should block consumers from using other org's pools" do
+    product1 = create_product
+    sub = @cp.create_subscription(@owner1['key'], product1.id)
+    @cp.refresh_pools(@owner1['key'])
+    pool = @consumer1.list_pools({:owner => @owner1['id']}).first
+    lambda {
+      @consumer2.consume_pool(pool.id).size.should == 1
+    }.should raise_exception(RestClient::Forbidden)
+  end
+
+  it 'should receive paged data back when requested' do
     (1..4).each do |i|
       consumer_client(@user1, random_string('system'))
     end
