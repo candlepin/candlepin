@@ -127,7 +127,7 @@ public class PoolRulesStackDerivedTest {
         when(productAdapterMock.getProductById(prod1.getId())).thenReturn(prod1);
 
         prod2 = TestUtil.createProduct();
-        prod2.addAttribute(new ProductAttribute("virt_limit", "4"));
+        prod2.addAttribute(new ProductAttribute("virt_limit", "unlimited"));
         prod2.addAttribute(new ProductAttribute("stacking_id", STACK));
         prod2.addAttribute(new ProductAttribute("testattr2", "2"));
         when(productAdapterMock.getProductById(prod2.getId())).thenReturn(prod2);

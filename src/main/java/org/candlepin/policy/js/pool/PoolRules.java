@@ -303,7 +303,8 @@ public class PoolRules {
         Date startDate = null;
         Date endDate = null;
         Set<ProvidedProduct> expectedProvidedProds = new HashSet<ProvidedProduct>();
-        Set<ProductPoolAttribute> expectedAttrs = new HashSet<ProductPoolAttribute>();
+        Map<String, ProductPoolAttribute> expectedAttrs =
+            new HashMap<String, ProductPoolAttribute>();
         for (Entitlement nextStacked : stackedEnts) {
             if (eldest == null || nextStacked.getCreated().before(eldest.getCreated())) {
                 eldest = nextStacked;
@@ -343,15 +344,17 @@ public class PoolRules {
             // if if changes.
             if (nextStackedPool.getDerivedProductId() == null) {
                 for (ProductPoolAttribute attr : nextStackedPool.getProductAttributes()) {
-                    expectedAttrs.add(new ProductPoolAttribute(attr.getName(),
-                        attr.getValue(), pool.getProductId()));
+                    expectedAttrs.put(attr.getName(),
+                        new ProductPoolAttribute(attr.getName(), attr.getValue(),
+                            pool.getProductId()));
                 }
             }
             else {
                 for (DerivedProductPoolAttribute attr :
                     nextStackedPool.getDerivedProductAttributes()) {
-                    expectedAttrs.add(new ProductPoolAttribute(attr.getName(),
-                        attr.getValue(), pool.getProductId()));
+                    expectedAttrs.put(attr.getName(),
+                        new ProductPoolAttribute(attr.getName(), attr.getValue(),
+                            pool.getProductId()));
                 }
             }
         }
@@ -373,11 +376,11 @@ public class PoolRules {
             checkForChangedProducts(prodId, prodName, expectedProvidedProds, pool));
 
         // Check if product attributes have changed:
-        if (!pool.getProductAttributes().equals(expectedAttrs)) {
+        if (!pool.getProductAttributes().equals(expectedAttrs.values())) {
             // Make sure each attribute has correct product ID on it,
             // and update the pool.
             pool.getProductAttributes().clear();
-            for (ProductPoolAttribute attr : expectedAttrs) {
+            for (ProductPoolAttribute attr : expectedAttrs.values()) {
                 attr.setProductId(pool.getProductId());
                 pool.addProductAttribute(attr);
             }
