@@ -300,6 +300,7 @@ public class PoolRules {
 
         // Accumulate the expected values before we set anything on the pool:
         Entitlement eldest = null;
+        Entitlement eldestWithVirtLimit = null;
         Date startDate = null;
         Date endDate = null;
         Set<ProvidedProduct> expectedProvidedProds = new HashSet<ProvidedProduct>();
@@ -322,6 +323,16 @@ public class PoolRules {
 
             // Update the provided products
             Pool nextStackedPool = nextStacked.getPool();
+
+            // Keep track of the eldest with virt limit so that we can change the
+            // quantity of the sub pool.
+            if (nextStackedPool.hasProductAttribute("virt_limit")) {
+                if (eldestWithVirtLimit == null ||
+                    nextStacked.getCreated().before(eldestWithVirtLimit.getCreated())) {
+                    eldestWithVirtLimit = nextStacked;
+                }
+            }
+
             if (nextStackedPool.getDerivedProductId() == null) {
                 for (ProvidedProduct pp : nextStackedPool.getProvidedProducts()) {
                     expectedProvidedProds.add(
@@ -356,6 +367,24 @@ public class PoolRules {
                         new ProductPoolAttribute(attr.getName(), attr.getValue(),
                             pool.getProductId()));
                 }
+            }
+        }
+
+        // Check if the quantity should be changed. If there was no
+        // virt limiting entitlement, then we leave the quantity alone,
+        // else, we set the quantity to that of the eldest virt limiting
+        // entitlement pool.
+        if (eldestWithVirtLimit != null) {
+            // Quantity may have changed, lets see.
+            String virtLimit =
+                eldestWithVirtLimit.getPool().getProductAttributeValue("virt_limit");
+
+            Long quantity = virtLimit.equalsIgnoreCase("unlimited")?
+                -1L : Long.parseLong(virtLimit);
+
+            if (!quantity.equals(pool.getQuantity())) {
+                pool.setQuantity(quantity);
+                update.setQuantityChanged(true);
             }
         }
 

@@ -22,6 +22,14 @@ describe 'One Sub Pool Per Stack' do
         }
     })
     
+    @virt_limit_product2 = create_product(nil, nil, {
+        :attributes => {
+            'virt_limit' => 6,
+            'stacking_id' => @stack_id,
+            'multi-entitlement' => 'yes'
+        }
+    })
+    
     @virt_limit_provided_product = create_product()
 
     @regular_stacked_product = create_product(nil, nil, {
@@ -64,6 +72,8 @@ describe 'One Sub Pool Per Stack' do
       @virt_limit_product.id, 10, [@virt_limit_provided_product.id], "123", "321", "333")
     @stacked_virt_sub2 = @cp.create_subscription(@owner['key'],
       @virt_limit_product.id, 10, [], "456", '', '', nil, Date.today + 380)
+    @stacked_virt_sub3 = @cp.create_subscription(@owner['key'],
+      @virt_limit_product2.id, 10, [], "444", '', '', nil, Date.today + 380)
     @stacked_non_virt_sub = @cp.create_subscription(@owner['key'],
       @regular_stacked_product.id, 4, [@regular_stacked_provided_product.id], "789")
     @non_stacked_sub = @cp.create_subscription(@owner['key'],
@@ -80,13 +90,16 @@ describe 'One Sub Pool Per Stack' do
     pools = @user.list_pools :owner => @owner.id
     
     @initial_pool_count = pools.size
-    @initial_pool_count.should == 5
+    @initial_pool_count.should == 6
     
     @stacked_virt_pool1 = pools.detect { |p| p['contractNumber'] == "123" }
     @stacked_virt_pool1.should_not be_nil
 
     @stacked_virt_pool2 = pools.detect { |p| p['contractNumber'] == "456" }
     @stacked_virt_pool2.should_not be_nil
+    
+    @stacked_virt_pool3 = pools.detect { |p| p['contractNumber'] == "444" }
+    @stacked_virt_pool3.should_not be_nil
 
     @stacked_non_virt_pool = pools.detect { |p| p['contractNumber'] == "789" }
     @stacked_non_virt_pool.should_not be_nil
@@ -209,7 +222,7 @@ describe 'One Sub Pool Per Stack' do
     ent1 = @host_client.consume_pool(@datacenter_pool['id'])[0]
     ent1.should_not be_nil
 
-    @guest_client.list_pools(:consumer => @guest['uuid']).size.should == 6
+    @guest_client.list_pools(:consumer => @guest['uuid']).size.should == 7
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
     sub_pool['productId'].should == @derived_product.id
@@ -349,6 +362,27 @@ describe 'One Sub Pool Per Stack' do
     check_product_attr_value(updated_ent.pool, "multi-entitlement", 'yes')
     check_product_attr_value(updated_ent.pool, "stacking_id", @stack_id)
     find_product_attribute(updated_ent.pool, "sockets").should be_nil
+  end
+  
+  it 'should update quantity of sub pool when stack changes' do
+    ent1 = @host_client.consume_pool(@stacked_virt_pool1['id'])[0]
+    ent2 = @host_client.consume_pool(@stacked_non_virt_pool['id'])[0]
+    ent3 = @host_client.consume_pool(@stacked_virt_pool3['id'])[0]
+    @host_client.list_entitlements.length.should == 3
+
+    sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
+    sub_pool.should_not be_nil
+    sub_pool['quantity'].should == 3
+   
+    @host_client.unbind_entitlement(ent1['id'])
+    sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
+    sub_pool['quantity'].should == 6
+
+    @host_client.unbind_entitlement(ent3['id'])
+    sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
+    # quantity should not have changed since there was no entitlement
+    # specifying virt_limit -- use the last instead.
+    sub_pool['quantity'].should == 6
   end
   
   def find_product_attribute(pool, attribute_name)
