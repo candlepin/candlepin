@@ -350,6 +350,10 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             pp.setPool(pool);
         }
 
+        for (DerivedProvidedProduct dpp : pool.getDerivedProvidedProducts()) {
+            dpp.setPool(pool);
+        }
+
         for (PoolAttribute pa : pool.getAttributes()) {
             pa.setPool(pool);
         }
@@ -358,6 +362,11 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             ppa.setPool(pool);
         }
 
+        for (DerivedProductPoolAttribute dppa : pool.getDerivedProductAttributes()) {
+            dppa.setPool(pool);
+        }
+
+        // Looks like this is restored in MigrateOwnerJob.replicateEntitlements:
         pool.setSourceEntitlement(null);
 
         this.currentSession().replicate(pool, ReplicationMode.EXCEPTION);
