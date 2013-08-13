@@ -1613,7 +1613,7 @@ var Autobind = {
     
     		/*
              * Method returns whether or not it is possible for the entitlement
-             * group to be valid It removes unnecessary pools.
+             * group to be valid.
              */
     		validate: function(context) {
     		    var all_ents = this.get_all_ents(this.pools).concat(this.attached_ents);
@@ -1629,6 +1629,7 @@ var Autobind = {
     		    else if (!this.stackable) {
     		        return false;
     		    }
+                // At this point, we must be stackable
     		    var coverage = Compliance.getStackCoverage(this.consumer, this.stack_id, all_ents);
     		    if (!coverage.covered) {
                     log.debug("stack " + this.stack_id + " is partial with all entitlements stacked.");
@@ -1692,7 +1693,13 @@ var Autobind = {
                 return count;
             },
 
+            /*
+             * Attempts to remove all pools from a group that enforce each stackable attribute, then
+             * checks compliance.  This prevents us from suggesting two fully compliant stacks that
+             * enforce different attributes
+             */
             remove_extra_attrs: function() {
+                // Assumes this group has already passed validation, so it must be compliant with every pool (max quantity) attached
                 var original_provided = this.get_provided_products().length;
                 for (var attrIdx in STACKABLE_ATTRIBUTES) {
                     var attr = STACKABLE_ATTRIBUTES[attrIdx];
@@ -1700,6 +1707,7 @@ var Autobind = {
                         continue;
                     }
                     var pools_without = [];
+                    // TODO: make sure we aren't removing all virt_only/derived pools, if we have the option to remove a different attribute
                     for (var i = 0; i < this.pools.length; i++) {
                         var pool = this.pools[i];
                         var prodAttrValue = pool.getProductAttribute(attr);
@@ -1715,10 +1723,16 @@ var Autobind = {
                 }
             },
 
+            /*
+             * Remove all pools that aren't necessary for compliance
+             */
     		prune_pools: function() {
+                // We know this group is required at this point,
+                // so we cannot remove the one pool if it's non-stackable
     		    if (!this.stackable) {
     		        return;
     		    }
+                // Sort pools such that we preserve virt_only and host_requires if possible
     		    this.pools.sort(this.compare_pools);
     		    var temp = null;
     		    var prior_pool_size = this.pools.length;
@@ -1735,10 +1749,14 @@ var Autobind = {
     		    log.debug("removed " + (prior_pool_size - this.pools.length) + " of " + prior_pool_size + " pools"); 
     		},
 
+            /*
+             * Sort pools for pruning (helps us later with quantity as well)
+             */
     		compare_pools: function(pool0, pool1) {
     		    get_pool_priority = function(pool) {
                     var priority = 0;
                     // use virt only if possible
+                    // if the consumer is not virt, the pool will have been filtered out
                     if (Utils.equalsIgnoreCase(pool.getProductAttribute(VIRT_ONLY), "true")) {
                         priority += 100;
                     }
@@ -1757,14 +1775,19 @@ var Autobind = {
     		    else if (pool0.endDate < pool1.endDate) {
     		        priority0 += 1;
     		    }
+                // Sort descending, because it's easier to remove items from
+                // an array while going backwards.
     		    return priority1 - priority0;
     		},
 
+            /*
+             * Returns a map of pool id to pool quantity for every pool that is required from this group
+             */
     		get_pool_quantity: function() {
     		    var result = Utils.getJsMap();
-    		    // Still in priority order, so we can use that to our advantage
+    		    // Still in priority order, but reversed from prune_pools
     		    var ents = this.get_all_ents(this.pools);
-    		    for (var i = this.pools.length - 1; i >= 0; i--) {
+                for (var i = 0; i < this.pools.length; i++) {
     		        var pool = this.pools[i];
     		        var increment = 1;
     		        if (pool.hasProductAttribute("instance_multiplier") && !Utils.isGuest(this.consumer)) {
@@ -1871,6 +1894,9 @@ var Autobind = {
         return context;
     },
 
+    /*
+     * Only use pools that match teh consumer SLA or SLA override, if set
+     */
     is_pool_sla_valid: function(context, pool, consumerSLA) {
     	var poolSLA = pool.getProductAttribute('support_level');
         var poolSLAExempt = isLevelExempt(pool.getProductAttribute('support_level'), context.exemptList);
@@ -1883,7 +1909,10 @@ var Autobind = {
         }
         return true;
     },
-    
+
+    /*
+     * If the architecture does not match the consumer, this pool can never be valid
+     */
     is_pool_arch_valid: function(context, pool, consumerArch) {
     	if (architectureMatches(pool.getProductAttribute(ARCH_ATTRIBUTE),
                 consumerArch,
@@ -1905,6 +1934,7 @@ var Autobind = {
 
     /*
      * If onDate is null, bypass the check
+     * date comes from compliance.
      */
     is_pool_date_valid: function(pool, onDate) {
         if (onDate == null) {
@@ -1926,6 +1956,10 @@ var Autobind = {
         return false;
     },
 
+    /*
+     * Gets the sla of the consumer, unless serviceLevelOverride is set, in which
+     * case we use that.
+     */
     get_consumer_sla: function(context) {
     	log.debug("context.serviceLevelOverride: " + context.serviceLevelOverride);
         var consumerSLA = context.serviceLevelOverride;
@@ -1969,6 +2003,9 @@ var Autobind = {
         return valid_pools;
     },
 
+    /*
+     * Builds entitlement group objects that allow us to treat stacks and individual entitlements the same
+     */
     build_entitlement_groups: function(valid_pools, installed, consumer, attached_ents) {
         var ent_groups = [];
     	for (var i = 0; i < valid_pools.length; i++) {
@@ -1985,12 +2022,14 @@ var Autobind = {
     	                break;
     	            }
     	        }
+                // If the pool is stackable, and not part of an existing entitlement group, create a new group and add it
     	        if (!found) {
     	            var new_ent_group = this.create_entitlement_group(true, stack_id, installed, consumer, attached_ents);
     	            new_ent_group.add_pool(pool);
     	            ent_groups.push(new_ent_group);
     	        }
     	    } else {
+                //if the entitlemnent is not stackable, create a new stack group for it
     	        var new_ent_group = this.create_entitlement_group(false, "", installed, consumer, attached_ents);
     	        new_ent_group.add_pool(pool);
     	        ent_groups.push(new_ent_group);
@@ -2000,7 +2039,7 @@ var Autobind = {
     },
 
     /*
-     * returns the list of productIds that the stack will cover
+     * returns the list of productIds that the stack will cover, which the consumer has installed
      */
     get_common_products: function(installed, group) {
         var group_installed = group.get_provided_products();
@@ -2026,6 +2065,7 @@ var Autobind = {
             var intersection = this.get_common_products(installed, group).length;
             var group_host_specific = group.get_num_host_specific();
             var group_virt_only = group.get_num_virt_only();
+            // Choose group that provides the most installed products
             if (intersection > max_provide) {
                 max_provide = intersection;
                 stacked = group.stackable;
@@ -2034,6 +2074,7 @@ var Autobind = {
                 best = group;
             }
             if (intersection > 0 && intersection == max_provide) {
+                // Break ties with number of host specific pools
                 if (num_host_specific < group_host_specific) {
                    best = group;
                    stacked = group.stackable;
@@ -2041,12 +2082,14 @@ var Autobind = {
                    num_host_specific = group_host_specific;
                 }
                 if (num_host_specific == group_host_specific) {
+                    // Break ties with number of virt only pools
                     if (num_virt_only < group_virt_only) {
                         best = group;
                         num_virt_only = group_virt_only;
                         stacked = group.stackable;
                     }
                     if (num_virt_only == group_virt_only) {
+                        // Break ties by prefering non-stacked entitlements
                         if (stacked && !group.stackable) {
                             best = group;
                             stacked = group.stackable;
@@ -2104,7 +2147,9 @@ var Autobind = {
 
     get_attached_ents: function(compliance) {
         var attached_ents = [];
-        var createPoolsFor = ["partialStacks"];
+        var createPoolsFor = ["partialStacks",
+                              "partiallyCompliantProducts",
+                              "compliantProducts"];
 
         // Create the pools for all entitlement maps in compliance.
         // The number of entitlements should be relatively small.
@@ -2114,7 +2159,20 @@ var Autobind = {
             for (var key in nextMap) {
                 var ents = nextMap[key];
                 for (var entIdx = 0; entIdx < ents.length; entIdx++) {
-                    attached_ents.push(ents[entIdx]);
+                    //these only really matter if they're stacked because we can't remove entitlements,
+                    //only build upon existant stacks
+                    if (is_pool_stacked(ents[entIdx].pool)) {
+                        var contains = false;
+                        //Must make sure there are no duplicates
+                        for (var j = 0; j < attached_ents.length; j++) {
+                            if (ents[entIdx].id == attached_ents[j].id) {
+                                contains = true;
+                            }
+                        }
+                        if (!contains) {
+                            attached_ents.push(ents[entIdx]);
+                        }
+                    }
                 }
             }
         }
