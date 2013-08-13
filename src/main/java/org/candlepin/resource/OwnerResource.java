@@ -31,7 +31,6 @@ import org.candlepin.model.ActivationKey;
 import org.candlepin.model.ActivationKeyCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
-import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
@@ -421,19 +420,15 @@ public class OwnerResource {
         Set<Consumer> consumers = owner.getConsumers();
 
         for (Consumer consumer : consumers) {
-            // would be nice to just get the ids but it is what it is
-            Set<ConsumerInstalledProduct> products = consumer.getInstalledProducts();
-
-            // TODO: write a google Function to map this
-            String[] pids = new String[products.size()];
-            int i = 0;
-            for (ConsumerInstalledProduct cip : products) {
-                pids[i++] = cip.getProductId();
-            }
+            // Do not send in product ids.  CandlepinPoolManager will take care
+            // of looking up the non or partially compliant products to bind.
             details.add(
-                EntitlerJob.bindByProducts(pids, consumer.getUuid(), new Date()));
+                EntitlerJob.bindByProducts(null, consumer.getUuid(), new Date()));
         }
 
+        // Convert to an array so PinsetterAsyncInterceptor can run instanceof
+        // on the ServerResponse entity object.  This won't work on Lists because
+        // of type erasure.
         return details.toArray(new JobDetail[details.size()]);
     }
 

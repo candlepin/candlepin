@@ -283,4 +283,31 @@ describe 'Owner Resource' do
     pool = pools.select { |p| p['owner']['key'] == owner['key'] }.first
     pool['calculatedAttributes']['suggested_quantity'].should == "1"
   end
+
+  it 'should not double bind when healing an org' do
+    # BZ 988549
+    owner = create_owner(random_string("owner1"))
+    product = create_product(random_string("test_id"),
+      random_string("test_name"))
+    @cp.create_subscription(owner['key'], product.id, 10)
+    @cp.refresh_pools(owner['key'])
+
+    user = user_client(owner, "robot ninja")
+    system = consumer_client(user, "system")
+    installed = [{'productId' => product.id, 'productName' => product.name}]
+    system.update_consumer({:installedProducts => installed})
+
+    job = user.autoheal_org(owner['key'])
+    wait_for_job(job[0]['id'], 30)
+    c = @cp.get_consumer(system.uuid)
+    c['entitlementCount'].should == 1
+
+    @cp.create_subscription(owner['key'], product.id, 10)
+    @cp.refresh_pools(owner['key'])
+
+    job = user.autoheal_org(owner['key'])
+    wait_for_job(job[0]['id'], 30)
+    c = @cp.get_consumer(system.uuid)
+    c['entitlementCount'].should == 1
+  end
 end
