@@ -345,6 +345,8 @@ fi
 
 
 %changelog
+* Tue Aug 13 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.5.1-1
+- 965310: Backport fix broken import of identity cert. (wpoteat@redhat.com)
 * Mon Apr 29 2013 Bryan Kearney <bkearney@redhat.com> 0.8.5-1
 - 956873: Fix broken rules on older Candlepin servers. (dgoodwin@redhat.com)
 - Add additional EmptyStringInterceptor test. (awood@redhat.com)
