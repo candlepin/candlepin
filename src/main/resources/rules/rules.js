@@ -1694,33 +1694,104 @@ var Autobind = {
             },
 
             /*
-             * Attempts to remove all pools from a group that enforce each stackable attribute, then
+             * 2^n again, but this time n is the number of stackable attributes that aren't arch. (3)
+             */
+            get_sets: function(list, max_length) {
+                if (list.length == 0) {
+                    return [[]];
+                }
+                var results = [];
+                var tempSet = this.get_sets(list.slice(1), max_length);
+                for (var i=0; i < tempSet.length; i++) {
+                    if (tempSet[i].length < max_length) {
+                        results.push([list[0]].concat(tempSet[i]));
+                    }
+                    results.push(tempSet[i]);
+                }
+                return results;
+            },
+
+            /*
+             * Generages sets of attributes to attempt to remove
+             */
+            get_attribute_sets: function() {
+                var stack_attributes = [];
+                // get unique list of additive stack attributes
+                for (var attrIdx in STACKABLE_ATTRIBUTES) {
+                    var attr = STACKABLE_ATTRIBUTES[attrIdx];
+                    if (attr != ARCH_ATTRIBUTE) {
+                        stack_attributes.push(attr);
+                    }
+                }
+                sets = this.get_sets(stack_attributes, stack_attributes.length - 1);
+                for (var i = sets.length - 1; i >= 0; i--) {
+                    var set = sets[i];
+                    if (set.length == 0) {
+                        sets.splice(i, 1);
+                    }
+                }
+                return sets;
+            },
+
+            /*
+             * Attempts to remove all pools from a group that enforce each set of stackable attributes, then
              * checks compliance.  This prevents us from suggesting two fully compliant stacks that
              * enforce different attributes
              */
             remove_extra_attrs: function() {
-                // Assumes this group has already passed validation, so it must be compliant with every pool (max quantity) attached
+                var possible_pool_sets = [];
+                possible_pool_sets.push(this.pools);
                 var original_provided = this.get_provided_products().length;
-                for (var attrIdx in STACKABLE_ATTRIBUTES) {
-                    var attr = STACKABLE_ATTRIBUTES[attrIdx];
-                    if (attr == ARCH_ATTRIBUTE) {
-                        continue;
-                    }
-                    var pools_without = [];
-                    // TODO: make sure we aren't removing all virt_only/derived pools, if we have the option to remove a different attribute
-                    for (var i = 0; i < this.pools.length; i++) {
-                        var pool = this.pools[i];
-                        var prodAttrValue = pool.getProductAttribute(attr);
-                        if (!prodAttrValue || prodAttrValue === null) {
-                            pools_without.push(pool);
+                var sets_to_check = this.get_attribute_sets(); //array of arrays of attributes to remove
+                for (var setIdx = 0; setIdx < sets_to_check.length; setIdx++) {
+                    var attrs_to_remove = sets_to_check[setIdx];
+                    for (var attrIdx = 0; attrIdx < attrs_to_remove.length; attrIdx++) {
+                        var attr = attrs_to_remove[attrIdx];
+
+                        var pools_without = [];
+                        for (var i = 0; i < this.pools.length; i++) {
+                            var pool = this.pools[i];
+                            var prodAttrValue = pool.getProductAttribute(attr);
+                            if (!prodAttrValue || prodAttrValue === null) {
+                                pools_without.push(pool);
+                            }
+                        }
+                        all_ents = this.get_all_ents(pools_without).concat(this.attached_ents);
+                        if (Compliance.getStackCoverage(this.consumer, this.stack_id, all_ents).covered && (this.get_provided_products_pools(pools_without).length == original_provided)) {
+                            possible_pool_sets.push(pools_without);
                         }
                     }
-                    all_ents = this.get_all_ents(pools_without).concat(this.attached_ents);
-                    if (Compliance.getStackCoverage(this.consumer, this.stack_id, all_ents).covered && (this.get_provided_products_pools(pools_without).length == original_provided)) {
-                        log.debug("attr "+attr+" is unnecessary, removing pools");
-                        this.pools = pools_without;
+                }
+                var best = 0;
+                var best_priority = 0.0;
+                var num_pools=this.pools.length;
+                for (var i = 0; i < possible_pool_sets.length; i++) {
+                    var pools = possible_pool_sets[i];
+                    var priority = 0;
+                    for (var j = 0; j < pools.length; j++) {
+                        var pool = pools[j];
+                        // use virt only if possible
+                        // if the consumer is not virt, the pool will have been filtered out
+                        if (Utils.equalsIgnoreCase(pool.getProductAttribute(VIRT_ONLY), "true")) {
+                            priority += 100;
+                        }
+                        // better still if host_specific
+                        if (pool.getAttribute(REQUIRES_HOST_ATTRIBUTE) != null) {
+                            priority += 150;
+                        }
+                    }
+                    // Priority per pool, that way we don't tend towards stacks with more pools.
+                    priority /= pools.length;
+                    if (priority > best_priority) {
+                        best_priority = priority;
+                        best = i;
+                        num_pools = pools.length;
+                    } else if (priority == best_priority && num_pools > pools.length) {
+                        best = i;
+                        num_pools = pools.length;
                     }
                 }
+                this.pools = possible_pool_sets[best];
             },
 
             /*

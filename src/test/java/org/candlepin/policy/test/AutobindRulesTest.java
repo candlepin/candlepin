@@ -213,6 +213,85 @@ public class AutobindRulesTest {
         assertTrue(bestPools.contains(new PoolQuantity(pool, 1)));
     }
 
+    /*
+     * Make sure the attribute with the minimum number of pools is chosen
+     */
+    @Test
+    public void testFindBestWithMultiAttrsStacked() {
+        consumer.setFact("cpu.cpu_socket(s)", "4");
+        consumer.setFact("memory.memtotal", "16000000");
+        consumer.setFact("cpu.core(s)_per_socket", "4");
+
+        Product product = mockStackingProduct(productId, "Test Stack product", "1", "1");
+        product.setAttribute("cores", "6");
+        product.setAttribute("ram", "2");
+        product.setAttribute("sockets", "2");
+
+        Pool pool1 = TestUtil.createPool(owner, product);
+        pool1.setId("DEAD-BEEF1");
+        Pool pool2 = TestUtil.createPool(owner, product);
+        pool2.setId("DEAD-BEEF2");
+        //only enforce cores on pool 2
+        pool2.setProductAttribute("ram", null, productId);
+        pool2.setProductAttribute("sockets", null, productId);
+        Pool pool3 = TestUtil.createPool(owner, product);
+        pool3.setId("DEAD-BEEF3");
+        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool1);
+        pools.add(pool2);
+        pools.add(pool3);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>());
+
+        assertEquals(1, bestPools.size());
+        assertEquals(pool2, bestPools.get(0).getPool());
+        assertEquals(new Integer(3), bestPools.get(0).getQuantity());
+    }
+
+    /*
+     * Make sure the attribute with the minimum number of pools is chosen
+     */
+    @Test
+    public void testFindBestWithMultiAttrsStackedVirt() {
+        consumer.setFact("cpu.cpu_socket(s)", "4");
+        consumer.setFact("memory.memtotal", "16000000");
+        consumer.setFact("cpu.core(s)_per_socket", "4");
+        consumer.setFact("virt.is_guest", "true");
+
+        Product product = mockStackingProduct(productId, "Test Stack product", "1", "1");
+        product.setAttribute("cores", "6");
+        product.setAttribute("ram", "2");
+        product.setAttribute("sockets", "2");
+
+        Pool pool1 = TestUtil.createPool(owner, product);
+        pool1.setId("DEAD-BEEF1");
+        pool1.setAttribute("virt_only", "true");
+        Pool pool2 = TestUtil.createPool(owner, product);
+        pool2.setId("DEAD-BEEF2");
+        //only enforce cores on pool 2
+        pool2.setProductAttribute("ram", null, productId);
+        pool2.setProductAttribute("sockets", null, productId);
+        Pool pool3 = TestUtil.createPool(owner, product);
+        pool3.setId("DEAD-BEEF3");
+        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool1);
+        pools.add(pool2);
+        pools.add(pool3);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>());
+
+        assertEquals(2, bestPools.size());
+        //higher quantity from this pool, as it is virt_only
+        assertTrue(bestPools.contains(new PoolQuantity(pool1, 5)));
+        assertTrue(bestPools.contains(new PoolQuantity(pool3, 3)));
+    }
+
     @Test
     public void ensureSelectBestPoolsFiltersPoolsBySLAWhenConsumerHasSLASet() {
         // Create Premium SLA prod
