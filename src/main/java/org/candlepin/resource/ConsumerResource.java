@@ -1304,7 +1304,7 @@ public class ConsumerResource {
     @Path("/{consumer_uuid}/entitlements")
     public Response bind(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-        @QueryParam("pool") String poolIdString,
+        @QueryParam("pool") @Verify(Pool.class) String poolIdString,
         @QueryParam("product") String[] productIds,
         @QueryParam("quantity") @DefaultValue("1") Integer quantity,
         @QueryParam("email") String email,
@@ -1363,7 +1363,7 @@ public class ConsumerResource {
             if (poolIdString != null) {
                 detail = EntitlerJob.bindByPool(poolIdString, consumerUuid, quantity);
             }
-            else if (productIds != null && productIds.length > 0) {
+            else {
                 detail = EntitlerJob.bindByProducts(productIds,
                         consumerUuid, entitleDate);
             }
