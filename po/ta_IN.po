@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-08-07 15:25-0400\n"
+"POT-Creation-Date: 2013-08-13 20:48-0400\n"
 "PO-Revision-Date: 2013-05-24 07:20-0400\n"
 "Last-Translator: Shantha kumar <shkumar@redhat.com>\n"
 "Language-Team: Tamil <>\n"
@@ -22,7 +22,7 @@ msgstr "தயாரிப்பு ID {0} க்கான தயாரிப்
 
 #: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:122
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:727
-#: src/main/java/org/candlepin/resource/OwnerResource.java:615
+#: src/main/java/org/candlepin/resource/OwnerResource.java:610
 #, java-format
 msgid "No such unit type: {0}"
 msgstr ""
@@ -618,7 +618,7 @@ msgid "Organization with key: {0} was not found."
 msgstr "நிறுவனத்துடன் விசை: {0} காணப்படவில்லை."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:261
-#: src/main/java/org/candlepin/resource/OwnerResource.java:604
+#: src/main/java/org/candlepin/resource/OwnerResource.java:599
 msgid "Cannot specify other query parameters with consumer IDs."
 msgstr ""
 
@@ -673,7 +673,7 @@ msgid "System name cannot begin with # character"
 msgstr "கணினி பெயர் # எழுத்துடன் ஆரம்பிக்காது"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:562
-#: src/main/java/org/candlepin/resource/OwnerResource.java:852
+#: src/main/java/org/candlepin/resource/OwnerResource.java:847
 #, java-format
 msgid "Service level ''{0}'' is not available to units of organization {1}."
 msgstr ""
@@ -753,7 +753,7 @@ msgid "Unable to attach a subscription for a product that has no pool: {0} "
 msgstr "தொகுப்பகம் இல்லாத தயாரிப்புக்கு ஒரு சந்தாவை இணைக்க முடியவில்லை: {0} "
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1465
-#: src/main/java/org/candlepin/resource/OwnerResource.java:789
+#: src/main/java/org/candlepin/resource/OwnerResource.java:784
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:140
 #: src/main/java/org/candlepin/resource/SubscriptionResource.java:152
 #, java-format
@@ -826,23 +826,23 @@ msgstr ""
 msgid "No such distributor version: {0}"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:264
+#: src/main/java/org/candlepin/resource/OwnerResource.java:263
 #, java-format
 msgid "Could not create the Owner: {0}. Parent {1} does not exist."
 msgstr "உரிமையாளரை உருவாக்க முடியவில்லை: {0}. தாய் உறுப்பு {1} இல்லை."
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:276
+#: src/main/java/org/candlepin/resource/OwnerResource.java:275
 #, java-format
 msgid "Could not create the Owner: {0}"
 msgstr "உரிமையாளரை உருவாக்க முடியவில்லை: {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
-#: src/main/java/org/candlepin/resource/OwnerResource.java:498
+#: src/main/java/org/candlepin/resource/OwnerResource.java:493
 msgid "Must provide a name for activation key."
 msgstr "செயல்பாட்டு விசைக்காக ஒரு பெயரை கட்டாயம் வழங்க வேண்டும்."
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:505
+#: src/main/java/org/candlepin/resource/OwnerResource.java:500
 #, java-format
 msgid ""
 "The activation key name ''{0}'' must be alphanumeric or include the "
@@ -851,13 +851,13 @@ msgstr ""
 "செயல்படுத்தல் விசை பெயர் ''{0}'' ஆனது எண் மற்றும் எழுத்து கொண்டதாகவே இருக்க வேண்டும், "
 "அல்லது '-' அல்லது '_' ஆகிய எழுத்துகளைக் கொண்டிருக்கலாம்"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:512
+#: src/main/java/org/candlepin/resource/OwnerResource.java:507
 #, java-format
 msgid "The activation key name ''{0}'' is already in use for owner {1}"
 msgstr ""
 "செயல்படுத்தல் விசை பெயர் ''{0}'' ஆனது ஏற்கனவே உரிமையாளர் {1} க்கு பயன்பாட்டில் உள்ளது"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:656
+#: src/main/java/org/candlepin/resource/OwnerResource.java:651
 #: src/main/java/org/candlepin/resource/PoolResource.java:145
 #, java-format
 msgid "Unit: {0} not found"
@@ -865,7 +865,7 @@ msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
-#: src/main/java/org/candlepin/resource/OwnerResource.java:666
+#: src/main/java/org/candlepin/resource/OwnerResource.java:661
 #: src/main/java/org/candlepin/resource/PoolResource.java:221
 #, java-format
 msgid "User {0} cannot access consumer {1}"
@@ -873,64 +873,64 @@ msgstr "பயனர் {0} நுகர்வோர் {1} ஐ அணுக ம
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:779
-#: src/main/java/org/candlepin/resource/OwnerResource.java:884
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1089
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1119
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1148
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1174
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1213
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1245
+#: src/main/java/org/candlepin/resource/OwnerResource.java:774
+#: src/main/java/org/candlepin/resource/OwnerResource.java:879
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1084
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1114
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1143
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1169
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1208
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1240
 #, java-format
 msgid "owner with key: {0} was not found."
 msgstr "விசையுடன் உரிமையாளர்: {0} காணப்படவில்லை."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:903
+#: src/main/java/org/candlepin/resource/OwnerResource.java:898
 #, java-format
 msgid "subscription with id: {0} not found."
 msgstr "id: {0}-உடன் உள்ள சந்தா காணப்பட்டவில்லை."
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1003
+#: src/main/java/org/candlepin/resource/OwnerResource.java:998
 msgid "Unknown conflict to force"
 msgstr "நிர்ப்பந்திக்க தெரியாத முரண்"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1032
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1027
 msgid "Error reading export archive"
 msgstr "ஏற்ற காப்பில் வாசிப்பதில் பிழைஇ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1195
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1190
 #, java-format
 msgid "Problem generating ueber cert for owner {0}"
 msgstr "ueber cert-ஐ உருவாக்குவதில் உரிமையாளர் {0}-க்கு சிக்கல்"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1221
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1216
 #, java-format
 msgid "ueber certificate for owner {0} was not found. Please generate one."
 msgstr "ueber சான்றிதழ்  உரிமையாளர்{0}-க்கு காணப்படவில்லை. ஒன்றை உருவாக்கவும்."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ifelix
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1273
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1268
 #, java-format
 msgid "{0} file imported successfully."
 msgstr "{0} கோப்பு வெற்றிகரமாக இறக்குமதி செய்யப்பட்டது."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1275
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1270
 #, java-format
 msgid "{0} file imported forcibly"
 msgstr "{0} கோப்பு வலுகட்டாயமாக இறக்குமதி செய்யப்பட்டது."
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1307
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1302
 #, java-format
 msgid "Subscriptions deleted by {0}"
 msgstr "{0} ஆல் சந்தாக்கள் நீக்கப்பட்டன"

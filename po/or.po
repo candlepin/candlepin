@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-08-07 15:25-0400\n"
+"POT-Creation-Date: 2013-08-13 20:48-0400\n"
 "PO-Revision-Date: 2013-08-01 01:57-0400\n"
 "Last-Translator: mgiri <mgiri@fedoraproject.org>\n"
 "Language-Team: Oriya\n"
@@ -22,7 +22,7 @@ msgstr "ଉତ୍ପାଦ ID {0} ପାଇଁ କୌଣସି ଉତ୍ପା�
 
 #: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:122
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:727
-#: src/main/java/org/candlepin/resource/OwnerResource.java:615
+#: src/main/java/org/candlepin/resource/OwnerResource.java:610
 #, java-format
 msgid "No such unit type: {0}"
 msgstr "ଏପରି କୌଣସି ଏକକ ପ୍ରକାର ନାହିଁ: {0}"
@@ -614,7 +614,7 @@ msgid "Organization with key: {0} was not found."
 msgstr "କି: {0} ବିଶିଷ୍ଟ ଅନୁଷ୍ଠାନ ମିଳିଲା ନାହିଁ।"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:261
-#: src/main/java/org/candlepin/resource/OwnerResource.java:604
+#: src/main/java/org/candlepin/resource/OwnerResource.java:599
 msgid "Cannot specify other query parameters with consumer IDs."
 msgstr "ଗ୍ରାହକ ID ଗୁଡ଼ିକ ସହିତ ଅନ୍ୟ ପ୍ରଶ୍ନ ପ୍ରାଚଳଗୁଡ଼ିକୁ ଉଲ୍ଲେଖ କରିପାରିବେ ନାହିଁ।"
 
@@ -669,7 +669,7 @@ msgid "System name cannot begin with # character"
 msgstr "ତନ୍ତ୍ର ନାମ # ସହିତ ଆରମ୍ଭ ହୋଇପାରିବ ନାହିଁ"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:562
-#: src/main/java/org/candlepin/resource/OwnerResource.java:852
+#: src/main/java/org/candlepin/resource/OwnerResource.java:847
 #, java-format
 msgid "Service level ''{0}'' is not available to units of organization {1}."
 msgstr "ଅନୁଷ୍ଠାନ {1} ର ଏକକ ପାଇଁ ସର୍ଭିସ ସ୍ତର \"{0}\" ଉପଲବ୍ଧ ନାହିଁ।"
@@ -749,7 +749,7 @@ msgid "Unable to attach a subscription for a product that has no pool: {0} "
 msgstr "ଶ୍ରେଣୀ ସମୂହ ନଥିବା ଉତ୍ପାଦନ ପାଇଁ ସଦସ୍ୟତା ସଂଲଗ୍ନ କରିବାରେ ଅସମର୍ଥ: {0} "
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1465
-#: src/main/java/org/candlepin/resource/OwnerResource.java:789
+#: src/main/java/org/candlepin/resource/OwnerResource.java:784
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:140
 #: src/main/java/org/candlepin/resource/SubscriptionResource.java:152
 #, java-format
@@ -824,23 +824,23 @@ msgstr ""
 msgid "No such distributor version: {0}"
 msgstr "ଏପରି କୌଣସି ବଣ୍ଟନ ସଂସ୍କରଣ ନାହିଁ: {0}"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:264
+#: src/main/java/org/candlepin/resource/OwnerResource.java:263
 #, java-format
 msgid "Could not create the Owner: {0}. Parent {1} does not exist."
 msgstr "ମାଲିକ: {0} ନିର୍ମାଣ କରିପାରିଲା ନାହିଁ। ମୂଖ୍ୟ {1} ଅବସ୍ଥିତ ନାହିଁ।"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:276
+#: src/main/java/org/candlepin/resource/OwnerResource.java:275
 #, java-format
 msgid "Could not create the Owner: {0}"
 msgstr "ମାଲିକ: {0} ନିର୍ମାଣ କରିପାରିଲା ନାହିଁ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author mgiri
-#: src/main/java/org/candlepin/resource/OwnerResource.java:498
+#: src/main/java/org/candlepin/resource/OwnerResource.java:493
 msgid "Must provide a name for activation key."
 msgstr "ସକ୍ରିୟଣ କି ପାଇଁ ଗୋଟିଏ ନାମ ପ୍ରଦାନ କରିବା ଉଚିତ।"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:505
+#: src/main/java/org/candlepin/resource/OwnerResource.java:500
 #, java-format
 msgid ""
 "The activation key name ''{0}'' must be alphanumeric or include the "
@@ -849,12 +849,12 @@ msgstr ""
 "ସକ୍ରିୟଣ କି ନାମ ''{0}'' ଅକ୍ଷରାଙ୍କୀୟ ହୋଇଥିବା ଉଚିତ ଅଥବା ବର୍ଣ୍ଣ '-' କିମ୍ବା '_' କୁ ଅନ୍ତର୍ଭୁକ୍ତ "
 "କରିଥିବା ଉଚିତ"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:512
+#: src/main/java/org/candlepin/resource/OwnerResource.java:507
 #, java-format
 msgid "The activation key name ''{0}'' is already in use for owner {1}"
 msgstr "ସକ୍ରିୟଣ କି ନାମ ''{0}'' ମାଲିକ {1} ପାଇଁ ପୂର୍ବରୁ ବ୍ୟବହାର ହେଉଛି"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:656
+#: src/main/java/org/candlepin/resource/OwnerResource.java:651
 #: src/main/java/org/candlepin/resource/PoolResource.java:145
 #, java-format
 msgid "Unit: {0} not found"
@@ -862,7 +862,7 @@ msgstr "ଏକକ: {0} ମିଳୁନାହିଁ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author mgiri
-#: src/main/java/org/candlepin/resource/OwnerResource.java:666
+#: src/main/java/org/candlepin/resource/OwnerResource.java:661
 #: src/main/java/org/candlepin/resource/PoolResource.java:221
 #, java-format
 msgid "User {0} cannot access consumer {1}"
@@ -870,64 +870,64 @@ msgstr "ଚାଳକ {0} ଗ୍ରାହକ {1} କୁ ଅଭିଗମ୍ୟ କ
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:779
-#: src/main/java/org/candlepin/resource/OwnerResource.java:884
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1089
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1119
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1148
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1174
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1213
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1245
+#: src/main/java/org/candlepin/resource/OwnerResource.java:774
+#: src/main/java/org/candlepin/resource/OwnerResource.java:879
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1084
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1114
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1143
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1169
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1208
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1240
 #, java-format
 msgid "owner with key: {0} was not found."
 msgstr "କି ସହିତ ମାଲିକ: {0} ମିଳିଲା ନାହିଁ।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:903
+#: src/main/java/org/candlepin/resource/OwnerResource.java:898
 #, java-format
 msgid "subscription with id: {0} not found."
 msgstr "id ସହିତ ସଦସ୍ୟତା: {0} ମିଳିଲା ନାହିଁ।"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1003
+#: src/main/java/org/candlepin/resource/OwnerResource.java:998
 msgid "Unknown conflict to force"
 msgstr "ବାଧ୍ଯ କରିବା ପାଇଁ ଅଜଣା ଦ୍ୱନ୍ଦ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1032
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1027
 msgid "Error reading export archive"
 msgstr "ରପ୍ତାନୀ ଅଭିଲେଖକୁ ପଢ଼ିବାରେ ତ୍ରୁଟି"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author mgiri
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1195
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1190
 #, java-format
 msgid "Problem generating ueber cert for owner {0}"
 msgstr "ମାଲିକ {0} ପାଇଁ ueber ପ୍ରମାଣପତ୍ର ସୃଷ୍ଟିକରିବାରେ ସମସ୍ୟା"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author mgiri
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1221
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1216
 #, java-format
 msgid "ueber certificate for owner {0} was not found. Please generate one."
 msgstr "ueber ପ୍ରମାଣପତ୍ର ମାଲିକ {0} ମିଳୁ ନାହିଁ। ଦୟାକରି ଗୋଟିଏ ସୃଷ୍ଟି କରନ୍ତୁ।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author mgiri
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1273
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1268
 #, java-format
 msgid "{0} file imported successfully."
 msgstr "{0} ଫାଇଲ ସଫଳତାର ସହିତ ଆମଦାନୀ ହୋଇଛି।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1275
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1270
 #, java-format
 msgid "{0} file imported forcibly"
 msgstr "{0} ଫାଇଲକୁ ବାଧ୍ଯକରି ଆମଦାନୀ ହୋଇଛି"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1307
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1302
 #, java-format
 msgid "Subscriptions deleted by {0}"
 msgstr "{0} ଦ୍ୱାରା ସଦସ୍ୟତାକୁ ଅପସାରଣ କରାଯାଇଛି"

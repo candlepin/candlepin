@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-08-07 15:25-0400\n"
+"POT-Creation-Date: 2013-08-13 20:48-0400\n"
 "PO-Revision-Date: 2013-08-02 07:51-0400\n"
 "Last-Translator: asaini <asaini@redhat.com>\n"
 "Language-Team: Punjabi\n"
@@ -22,7 +22,7 @@ msgstr "ਉਤਪਾਦ ID {0} ਲਈ ਕੋਈ ਉਤਪਾਦ ਨਹੀਂ ਲ
 
 #: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:122
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:727
-#: src/main/java/org/candlepin/resource/OwnerResource.java:615
+#: src/main/java/org/candlepin/resource/OwnerResource.java:610
 #, java-format
 msgid "No such unit type: {0}"
 msgstr "ਅਜਿਹੀ ਕਿਸਮ ਦੀ ਕੋਈ ਇਕਾਈ ਨਹੀਂ: {0}"
@@ -612,7 +612,7 @@ msgid "Organization with key: {0} was not found."
 msgstr "ਕੁੰਜੀ: {0} ਵਾਲਾ ਸੰਗਠਨ ਨਹੀਂ ਲੱਭਿਆ।"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:261
-#: src/main/java/org/candlepin/resource/OwnerResource.java:604
+#: src/main/java/org/candlepin/resource/OwnerResource.java:599
 msgid "Cannot specify other query parameters with consumer IDs."
 msgstr "ਗ੍ਰਾਹਕ IDs ਨਾਲ ਹੋਰ ਪੁੱਛ-ਗਿੱਛ ਗੁਣ ਨਹੀਂ ਦਰਸਾਏ ਜਾ ਸਕਦੇ।"
 
@@ -667,7 +667,7 @@ msgid "System name cannot begin with # character"
 msgstr "ਸਿਸਟਮ ਨਾਂ # ਅੱਖਰ ਨਹੀਂ ਸ਼ੁਰੂ ਨਹੀਂ ਹੋ ਸਕਦਾ"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:562
-#: src/main/java/org/candlepin/resource/OwnerResource.java:852
+#: src/main/java/org/candlepin/resource/OwnerResource.java:847
 #, java-format
 msgid "Service level ''{0}'' is not available to units of organization {1}."
 msgstr "''{0}'' ਸੇਵਾ ਪੱਧਰ {1} ਸੰਸਥਾ ਦੀਆਂ ਇਕਾਈਆਂ ਲਈ ਉਪਲੱਬਧ ਨਹੀਂ ਹੈ।"
@@ -747,7 +747,7 @@ msgid "Unable to attach a subscription for a product that has no pool: {0} "
 msgstr "ਉਤਪਾਦ ਜਿਸਦਾ ਕਿ ਕੋਈ ਪੂਲ ਨਹੀਂ ਉਸ ਲਈ ਮੈਂਬਰੀ ਨੱਥੀ ਕਰਨ ਤੋਂ ਅਸਮਰੱਥ: {0}"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1465
-#: src/main/java/org/candlepin/resource/OwnerResource.java:789
+#: src/main/java/org/candlepin/resource/OwnerResource.java:784
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:140
 #: src/main/java/org/candlepin/resource/SubscriptionResource.java:152
 #, java-format
@@ -822,23 +822,23 @@ msgstr ""
 msgid "No such distributor version: {0}"
 msgstr "ਅਜਿਹਾ ਕੋਈ ਵਿਤਰਕ ਸੰਸਕਰਣ ਨਹੀਂ: {0}"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:264
+#: src/main/java/org/candlepin/resource/OwnerResource.java:263
 #, java-format
 msgid "Could not create the Owner: {0}. Parent {1} does not exist."
 msgstr "ਮਾਲਕ ਨਹੀਂ ਬਣਾ ਸਕਿਆ: {0}। ਅਧਾਰ {1} ਮੌਜੂਦ ਨਹੀਂ ਹੈ।"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:276
+#: src/main/java/org/candlepin/resource/OwnerResource.java:275
 #, java-format
 msgid "Could not create the Owner: {0}"
 msgstr "ਮਾਲਕ ਨਹੀਂ ਬਣਾ ਸਕਿਆ: {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author jassy
-#: src/main/java/org/candlepin/resource/OwnerResource.java:498
+#: src/main/java/org/candlepin/resource/OwnerResource.java:493
 msgid "Must provide a name for activation key."
 msgstr "ਸਰਗਰਮੀ ਕੁੰਜੀ ਲਈ ਇੱਕ ਨਾਂ ਦੇਣਾ ਜਰੂਰੀ ਹੈ।"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:505
+#: src/main/java/org/candlepin/resource/OwnerResource.java:500
 #, java-format
 msgid ""
 "The activation key name ''{0}'' must be alphanumeric or include the "
@@ -846,12 +846,12 @@ msgid ""
 msgstr ""
 "''{0}'' ਕਿਰਿਆਸ਼ੀਲਤਾ ਚਾਬੀ ਨਾਂ ਦਾ ਸ਼ਬਦ-ਅੰਕ ਹੋਣਾ ਜਰੂਰੀ ਹੈ ਜਾਂ ਫਿਰ '-' ਜਾਂ '_' ਸ਼ਾਮਿਲ ਹੋਣ"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:512
+#: src/main/java/org/candlepin/resource/OwnerResource.java:507
 #, java-format
 msgid "The activation key name ''{0}'' is already in use for owner {1}"
 msgstr "ਕਿਰੀਆਸ਼ੀਲਤਾ ਚਾਬੀ ਨਾਂ ''{0}'' ਪਹਿਲਾਂ ਹੀ {1} ਮਾਲਕ ਲਈ ਮੌਜੂਦ ਹੈ"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:656
+#: src/main/java/org/candlepin/resource/OwnerResource.java:651
 #: src/main/java/org/candlepin/resource/PoolResource.java:145
 #, java-format
 msgid "Unit: {0} not found"
@@ -859,7 +859,7 @@ msgstr "ਇਕਾਈ: {0} ਨਹੀਂ ਲੱਭੀ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author jassy
-#: src/main/java/org/candlepin/resource/OwnerResource.java:666
+#: src/main/java/org/candlepin/resource/OwnerResource.java:661
 #: src/main/java/org/candlepin/resource/PoolResource.java:221
 #, java-format
 msgid "User {0} cannot access consumer {1}"
@@ -867,64 +867,64 @@ msgstr "ਯੂਜ਼ਰ {0} ਖਪਤਕਾਰ {1} ਨੂੰ ਵਰਤ ਨਹੀਂ
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:779
-#: src/main/java/org/candlepin/resource/OwnerResource.java:884
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1089
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1119
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1148
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1174
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1213
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1245
+#: src/main/java/org/candlepin/resource/OwnerResource.java:774
+#: src/main/java/org/candlepin/resource/OwnerResource.java:879
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1084
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1114
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1143
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1169
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1208
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1240
 #, java-format
 msgid "owner with key: {0} was not found."
 msgstr "ਕੁੰਜੀ: {0} ਵਾਲਾ ਮਾਲਕ ਨਹੀਂ ਲੱਭਿਆ।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:903
+#: src/main/java/org/candlepin/resource/OwnerResource.java:898
 #, java-format
 msgid "subscription with id: {0} not found."
 msgstr "id: {0} ਵਾਲੀ ਮੈਂਬਰੀ ਨਹੀਂ ਲੱਭੀ।"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1003
+#: src/main/java/org/candlepin/resource/OwnerResource.java:998
 msgid "Unknown conflict to force"
 msgstr "ਮਜਬੂਰ ਕਰਨ ਲਈ ਅਣਪਛਾਤਾ ਟਕਰਾਅ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1032
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1027
 msgid "Error reading export archive"
 msgstr "ਨਿਰਯਾਤ ਆਰਕਾਇਵ ਪੜ੍ਹਨ ਵੇਲੇ ਗਲਤੀ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author jassy
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1195
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1190
 #, java-format
 msgid "Problem generating ueber cert for owner {0}"
 msgstr "ueber cert ਨੂੰ ਮਾਲਕ {0} ਲਈ ਬਣਾਉਣ ਵੇਲੇ ਮੁਸ਼ਕਿਲ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author jassy
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1221
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1216
 #, java-format
 msgid "ueber certificate for owner {0} was not found. Please generate one."
 msgstr "ਮਾਲਕ {0} ਲਈ ueber ਪ੍ਰਮਾਣ-ਪੱਤਰ ਨਹੀਂ ਲੱਭਿਆ। ਕਿਰਪਾ ਕਰਕੇ ਹੋਰ ਬਣਾਓ।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author jassy
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1273
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1268
 #, java-format
 msgid "{0} file imported successfully."
 msgstr "{0} ਫਾਈਲ ਸਫਲਤਾਪੂਰਕ ਬਰਾਮਦ ਹੋਈ।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1275
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1270
 #, java-format
 msgid "{0} file imported forcibly"
 msgstr "{0} ਫਾਈਲ ਜਬਰਦਸਤੀ ਬਰਾਮਦ ਕੀਤੀ ਗਈ ਹੈ"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1307
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1302
 #, java-format
 msgid "Subscriptions deleted by {0}"
 msgstr "{0} ਦੁਆਰਾ ਮੈਂਬਰੀਆਂ ਮਿਟਾਈਆਂ ਗਈਆਂ"

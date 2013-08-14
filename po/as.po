@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-08-07 15:25-0400\n"
+"POT-Creation-Date: 2013-08-13 20:48-0400\n"
 "PO-Revision-Date: 2013-08-01 03:22-0400\n"
 "Last-Translator: ngoswami <ngoswami@fedoraproject.org>\n"
 "Language-Team: Assamese\n"
@@ -22,7 +22,7 @@ msgstr "উৎপাদন ID {0} ৰ বাবে কোনো উৎপাদ�
 
 #: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:122
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:727
-#: src/main/java/org/candlepin/resource/OwnerResource.java:615
+#: src/main/java/org/candlepin/resource/OwnerResource.java:610
 #, java-format
 msgid "No such unit type: {0}"
 msgstr "এই ধৰণৰ কোনো একক নাই: {0}"
@@ -620,7 +620,7 @@ msgid "Organization with key: {0} was not found."
 msgstr "key: {0} ৰ সৈতে সংঘঠন পোৱা নগল।"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:261
-#: src/main/java/org/candlepin/resource/OwnerResource.java:604
+#: src/main/java/org/candlepin/resource/OwnerResource.java:599
 msgid "Cannot specify other query parameters with consumer IDs."
 msgstr "উপভোক্তা IDs ৰ সৈতে অন্য প্ৰশ্ন প্ৰাচলসমূহ ধাৰ্য্য কৰিব নোৱাৰি।"
 
@@ -677,7 +677,7 @@ msgid "System name cannot begin with # character"
 msgstr "চিস্টেম নাম # আখৰৰ সৈতে আৰম্ভ হব নোৱাৰে"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:562
-#: src/main/java/org/candlepin/resource/OwnerResource.java:852
+#: src/main/java/org/candlepin/resource/OwnerResource.java:847
 #, java-format
 msgid "Service level ''{0}'' is not available to units of organization {1}."
 msgstr "সেৱা স্তৰ ''{0}'' সংঘটন {1} ৰ এককসমূহৰ বাবে উপলব্ধ নহয়।"
@@ -757,7 +757,7 @@ msgid "Unable to attach a subscription for a product that has no pool: {0} "
 msgstr "কোনো পুল নথকা এটা উৎপাদনৰ বাবে এটা স্বাক্ষৰণ সংলগ্ন কৰিবলে অক্ষম: {0}"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1465
-#: src/main/java/org/candlepin/resource/OwnerResource.java:789
+#: src/main/java/org/candlepin/resource/OwnerResource.java:784
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:140
 #: src/main/java/org/candlepin/resource/SubscriptionResource.java:152
 #, java-format
@@ -832,23 +832,23 @@ msgstr ""
 msgid "No such distributor version: {0}"
 msgstr "এনে কোনো বিতৰণকাৰী সংস্কৰণ নাই: {0}"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:264
+#: src/main/java/org/candlepin/resource/OwnerResource.java:263
 #, java-format
 msgid "Could not create the Owner: {0}. Parent {1} does not exist."
 msgstr "গৰাকী: {0} সৃষ্টি কৰিব নোৱাৰি। উপধায়ক {1} অস্তিত্ববান নহয়।"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:276
+#: src/main/java/org/candlepin/resource/OwnerResource.java:275
 #, java-format
 msgid "Could not create the Owner: {0}"
 msgstr "গৰাকী: {0} সৃষ্টি কৰিব নোৱাৰি"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ngoswami
-#: src/main/java/org/candlepin/resource/OwnerResource.java:498
+#: src/main/java/org/candlepin/resource/OwnerResource.java:493
 msgid "Must provide a name for activation key."
 msgstr "সক্ৰিয়কৰণ কি'ৰ বাবে এটা নাম প্ৰদান কৰিব লাগিব।"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:505
+#: src/main/java/org/candlepin/resource/OwnerResource.java:500
 #, java-format
 msgid ""
 "The activation key name ''{0}'' must be alphanumeric or include the "
@@ -857,12 +857,12 @@ msgstr ""
 "সক্ৰিয়কৰণ কি' নাম ''{0}'' আল্ফানিউমাৰিক হব লাগিব অথবা আখৰসমূহ '-' অথবা '_' "
 "অন্তৰভুক্ত কৰিব লাগিব"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:512
+#: src/main/java/org/candlepin/resource/OwnerResource.java:507
 #, java-format
 msgid "The activation key name ''{0}'' is already in use for owner {1}"
 msgstr "সক্ৰিয়কৰণ কি' নাম ''{0}'' ইতিমধ্যে গৰাকী {1} ৰ বাবে ব্যৱহৃত"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:656
+#: src/main/java/org/candlepin/resource/OwnerResource.java:651
 #: src/main/java/org/candlepin/resource/PoolResource.java:145
 #, java-format
 msgid "Unit: {0} not found"
@@ -870,7 +870,7 @@ msgstr "একক: {0} পোৱা নগল"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ngoswami
-#: src/main/java/org/candlepin/resource/OwnerResource.java:666
+#: src/main/java/org/candlepin/resource/OwnerResource.java:661
 #: src/main/java/org/candlepin/resource/PoolResource.java:221
 #, java-format
 msgid "User {0} cannot access consumer {1}"
@@ -878,64 +878,64 @@ msgstr "ব্যৱহাৰকাৰী {0} এ গ্ৰাহক {1} অভ�
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:779
-#: src/main/java/org/candlepin/resource/OwnerResource.java:884
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1089
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1119
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1148
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1174
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1213
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1245
+#: src/main/java/org/candlepin/resource/OwnerResource.java:774
+#: src/main/java/org/candlepin/resource/OwnerResource.java:879
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1084
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1114
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1143
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1169
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1208
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1240
 #, java-format
 msgid "owner with key: {0} was not found."
 msgstr "key: {0} থকা অধিকাৰীক পোৱা নগল।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:903
+#: src/main/java/org/candlepin/resource/OwnerResource.java:898
 #, java-format
 msgid "subscription with id: {0} not found."
 msgstr "আই-ডি: {0} থকা স্বাক্ষৰণ পোৱা নগল।"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1003
+#: src/main/java/org/candlepin/resource/OwnerResource.java:998
 msgid "Unknown conflict to force"
 msgstr "বললে অজ্ঞাত দন্দ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1032
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1027
 msgid "Error reading export archive"
 msgstr "এক্সপোৰ্ট সাঁচনি পঢোতে ত্ৰুটি"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ngoswami
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1195
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1190
 #, java-format
 msgid "Problem generating ueber cert for owner {0}"
 msgstr "গৰাকী {0} ৰ বাবে ueber প্ৰমাণপত্ৰ সৃজন কৰোতে ত্ৰুটি"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ngoswami
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1221
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1216
 #, java-format
 msgid "ueber certificate for owner {0} was not found. Please generate one."
 msgstr "গৰাকী {0} ৰ বাবে ueber প্ৰমাণপত্ৰ পোৱা নগল। অনুগ্ৰহ কৰি এটা সৃজন কৰক।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ngoswami
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1273
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1268
 #, java-format
 msgid "{0} file imported successfully."
 msgstr "{0} ফাইল সফলভাৱে ইমপোৰ্ট কৰা হল।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1275
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1270
 #, java-format
 msgid "{0} file imported forcibly"
 msgstr "{0} ফাইল বলৱৎভাৱে ইমপোৰ্ট কৰা হৈছে"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1307
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1302
 #, java-format
 msgid "Subscriptions deleted by {0}"
 msgstr "{0} দ্বাৰা স্বাক্ষৰণসমূহ মচি পেলোৱা হৈছে"

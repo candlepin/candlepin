@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2013-08-07 15:25-0400\n"
+"POT-Creation-Date: 2013-08-13 20:48-0400\n"
 "PO-Revision-Date: 2013-08-06 09:57-0400\n"
 "Last-Translator: Gladys Guerrero Lozano <gladysguerrerolozano419@gmail.com>\n"
 "Language-Team: Spanish (Spain)\n"
@@ -24,7 +24,7 @@ msgstr "No se encontró producto para ID de producto {0}"
 
 #: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:122
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:727
-#: src/main/java/org/candlepin/resource/OwnerResource.java:615
+#: src/main/java/org/candlepin/resource/OwnerResource.java:610
 #, java-format
 msgid "No such unit type: {0}"
 msgstr "No existe dicho tipo de unidad: {0}"
@@ -629,7 +629,7 @@ msgid "Organization with key: {0} was not found."
 msgstr "No se encontró organización con llave: {0}"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:261
-#: src/main/java/org/candlepin/resource/OwnerResource.java:604
+#: src/main/java/org/candlepin/resource/OwnerResource.java:599
 msgid "Cannot specify other query parameters with consumer IDs."
 msgstr ""
 "No se pueden especificar otros parámetros de preguntas con los ID de "
@@ -688,7 +688,7 @@ msgid "System name cannot begin with # character"
 msgstr "Nombre de sistema no puede comenzar por el carácter #"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:562
-#: src/main/java/org/candlepin/resource/OwnerResource.java:852
+#: src/main/java/org/candlepin/resource/OwnerResource.java:847
 #, java-format
 msgid "Service level ''{0}'' is not available to units of organization {1}."
 msgstr ""
@@ -772,7 +772,7 @@ msgstr ""
 "No se pudo adjuntar una suscripción para un producto que no tiene grupo: {0} "
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1465
-#: src/main/java/org/candlepin/resource/OwnerResource.java:789
+#: src/main/java/org/candlepin/resource/OwnerResource.java:784
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:140
 #: src/main/java/org/candlepin/resource/SubscriptionResource.java:152
 #, java-format
@@ -847,23 +847,23 @@ msgstr ""
 msgid "No such distributor version: {0}"
 msgstr "No existe distribuidor: {0}"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:264
+#: src/main/java/org/candlepin/resource/OwnerResource.java:263
 #, java-format
 msgid "Could not create the Owner: {0}. Parent {1} does not exist."
 msgstr "No se pudo crear el Propietario: {0}. Padre {1} no existe."
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:276
+#: src/main/java/org/candlepin/resource/OwnerResource.java:275
 #, java-format
 msgid "Could not create the Owner: {0}"
 msgstr "No se pudo crear el Propietario: {0} "
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author gguerrer
-#: src/main/java/org/candlepin/resource/OwnerResource.java:498
+#: src/main/java/org/candlepin/resource/OwnerResource.java:493
 msgid "Must provide a name for activation key."
 msgstr "Debe proporcionar un nombre para llave de activación"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:505
+#: src/main/java/org/candlepin/resource/OwnerResource.java:500
 #, java-format
 msgid ""
 "The activation key name ''{0}'' must be alphanumeric or include the "
@@ -872,13 +872,13 @@ msgstr ""
 "El nombre de llave de activación ''{0}'' debe ser alfanumérico o incluye los "
 "caracteres '-' o '_'"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:512
+#: src/main/java/org/candlepin/resource/OwnerResource.java:507
 #, java-format
 msgid "The activation key name ''{0}'' is already in use for owner {1}"
 msgstr ""
 "Nombre de llave de activación ''{0}'' ya está en uso por el propietario {1}"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:656
+#: src/main/java/org/candlepin/resource/OwnerResource.java:651
 #: src/main/java/org/candlepin/resource/PoolResource.java:145
 #, java-format
 msgid "Unit: {0} not found"
@@ -886,7 +886,7 @@ msgstr "Unidad: {0} no se encontró"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:666
+#: src/main/java/org/candlepin/resource/OwnerResource.java:661
 #: src/main/java/org/candlepin/resource/PoolResource.java:221
 #, java-format
 msgid "User {0} cannot access consumer {1}"
@@ -894,45 +894,45 @@ msgstr "El usuario  {0} no puede acceder a usuario {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:779
-#: src/main/java/org/candlepin/resource/OwnerResource.java:884
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1089
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1119
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1148
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1174
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1213
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1245
+#: src/main/java/org/candlepin/resource/OwnerResource.java:774
+#: src/main/java/org/candlepin/resource/OwnerResource.java:879
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1084
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1114
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1143
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1169
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1208
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1240
 #, java-format
 msgid "owner with key: {0} was not found."
 msgstr "Propietario con llave: {0} no se encontró. "
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:903
+#: src/main/java/org/candlepin/resource/OwnerResource.java:898
 #, java-format
 msgid "subscription with id: {0} not found."
 msgstr "Suscripción con ID: {0} no se encontró."
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1003
+#: src/main/java/org/candlepin/resource/OwnerResource.java:998
 msgid "Unknown conflict to force"
 msgstr "Conflicto desconocido a forzar"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1032
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1027
 msgid "Error reading export archive"
 msgstr "Error en la lectura del archivo de exportación"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author gguerrer
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1195
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1190
 #, java-format
 msgid "Problem generating ueber cert for owner {0}"
 msgstr "Problema al generar certificado Ueber para propietario {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author gguerrer
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1221
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1216
 #, java-format
 msgid "ueber certificate for owner {0} was not found. Please generate one."
 msgstr ""
@@ -941,19 +941,19 @@ msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author gguerrer
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1273
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1268
 #, java-format
 msgid "{0} file imported successfully."
 msgstr "{0} archivo importado correctamente."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1275
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1270
 #, java-format
 msgid "{0} file imported forcibly"
 msgstr "{0} archivo importado por la fuerza"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1307
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1302
 #, java-format
 msgid "Subscriptions deleted by {0}"
 msgstr "Suscripciones borradas por {0}"
