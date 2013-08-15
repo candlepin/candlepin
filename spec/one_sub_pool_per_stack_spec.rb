@@ -3,7 +3,7 @@ require 'virt_fixture'
 
 # This spec tests virt limited products in a standalone Candlepin deployment.
 # (which we assume to be testing against)
-describe 'One Sub Pool Per Stack' do
+describe 'One Sub Pool Per Stack Feature' do
   include CandlepinMethods
   include CandlepinScenarios
 
@@ -259,7 +259,7 @@ describe 'One Sub Pool Per Stack' do
 
   it 'should not update product data from products not in the stack' do
     ent1 = @host_client.consume_pool(@stacked_virt_pool1['id'])[0]
-    ent2 = @host_client.consume_pool(@non_stacked_pool['id'])[0]
+    ent2 = @host_client.consume_pool(@non_stacked_pool['id'])[0]	
     ent2.should_not be_nil
     
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
@@ -373,7 +373,7 @@ describe 'One Sub Pool Per Stack' do
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
     sub_pool['quantity'].should == 3
-   
+
     @host_client.unbind_entitlement(ent1['id'])
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool['quantity'].should == 6
@@ -385,6 +385,50 @@ describe 'One Sub Pool Per Stack' do
     sub_pool['quantity'].should == 6
   end
   
+  it 'should regenerate ent certs when sub pool is update and client checks in' do
+    @host_client.consume_pool(@stacked_virt_pool1['id'])
+
+    sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
+    sub_pool.should_not be_nil
+    initial_guest_ent = @guest_client.consume_pool(sub_pool['id'])[0]
+    initial_guest_ent.should_not be_nil
+    initial_guest_ent["certificates"].length.should == 1
+    initial_guest_cert = initial_guest_ent['certificates'][0]
+    
+    # Grab another ent for the host to force a change in the guest's cert.
+    @host_client.consume_pool(@stacked_virt_pool2['id'])[0]
+    
+    # Listing the certs will cause a regeneration of dirty ents before
+    # returning them (simulate client checkin).
+    guest_certs = @guest_client.list_certificates()
+    guest_certs.length.should == 1
+    regenerated_cert = guest_certs[0]
+    # Make sure that it was regenerated.
+    regenerated_cert['id'].should_not == initial_guest_cert['id']
+  end
+
+  it 'should not regenerate certs on refresh pools when sub pool has not been changed' do
+    @host_client.consume_pool(@stacked_virt_pool1['id'])
+
+    sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
+    sub_pool.should_not be_nil
+    initial_guest_ent = @guest_client.consume_pool(sub_pool['id'])[0]
+    initial_guest_ent.should_not be_nil
+    initial_guest_ent["certificates"].length.should == 1
+    initial_guest_cert = initial_guest_ent['certificates'][0]
+    
+    # Perform refresh pools -- an old bug marked sub pool as dirty
+    @cp.refresh_pools(@owner['key'])
+    
+    # Listing the certs will cause a regeneration of dirty ents before
+    # returning them (simulate client checkin).
+    guest_certs = @guest_client.list_certificates()
+    guest_certs.length.should == 1
+    regenerated_cert = guest_certs[0]
+    # Make sure that it was not regenerated.
+    regenerated_cert['id'].should == initial_guest_cert['id']
+  end
+
   def find_product_attribute(pool, attribute_name)
     return pool['productAttributes'].detect { |a| a['name'] == attribute_name }
   end

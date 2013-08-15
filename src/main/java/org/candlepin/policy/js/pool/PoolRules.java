@@ -304,8 +304,12 @@ public class PoolRules {
         Date startDate = null;
         Date endDate = null;
         Set<ProvidedProduct> expectedProvidedProds = new HashSet<ProvidedProduct>();
+
+        // Store the product pool attributes in a map by name so that
+        // we don't end up with multiple attributes with the same name.
         Map<String, ProductPoolAttribute> expectedAttrs =
             new HashMap<String, ProductPoolAttribute>();
+
         for (Entitlement nextStacked : stackedEnts) {
             if (eldest == null || nextStacked.getCreated().before(eldest.getCreated())) {
                 eldest = nextStacked;
@@ -370,6 +374,8 @@ public class PoolRules {
             }
         }
 
+
+
         // Check if the quantity should be changed. If there was no
         // virt limiting entitlement, then we leave the quantity alone,
         // else, we set the quantity to that of the eldest virt limiting
@@ -404,8 +410,10 @@ public class PoolRules {
         update.setProductsChanged(
             checkForChangedProducts(prodId, prodName, expectedProvidedProds, pool));
 
-        // Check if product attributes have changed:
-        if (!pool.getProductAttributes().equals(expectedAttrs.values())) {
+        // Check if product attributes have changed.
+        // NOTE: Can't compare a set to a list here.
+        if (!pool.getProductAttributes().equals(
+            new HashSet<ProductPoolAttribute>(expectedAttrs.values()))) {
             // Make sure each attribute has correct product ID on it,
             // and update the pool.
             pool.getProductAttributes().clear();
@@ -426,6 +434,14 @@ public class PoolRules {
             pool.setAccountNumber(eldestEntPool.getAccountNumber());
             pool.setOrderNumber(eldestEntPool.getOrderNumber());
             update.setOrderChanged(true);
+        }
+
+        // If there are any changes made, then mark all the entitlements as dirty
+        // so that they get regenerated on next checkin.
+        if (update.changed()) {
+            for (Entitlement ent : pool.getEntitlements()) {
+                ent.setDirty(true);
+            }
         }
         return update;
     }
