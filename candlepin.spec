@@ -31,7 +31,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.8.19
+Version: 0.8.20
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -323,6 +323,21 @@ fi
 
 
 %changelog
+* Wed Aug 14 2013 Devan Goodwin <dgoodwin@rm-rf.ca> 0.8.20-1
+- extract and merge strings (jesusr@redhat.com)
+- 994711: protect against consuming other org ents (jesusr@redhat.com)
+- dont list expired (ckozak@redhat.com)
+- Async binds should have the same behavior as regular binds.
+  (awood@redhat.com)
+- 988549: Let CandlepinPoolManager decide which products to bind.
+  (awood@redhat.com)
+- 989698: Attempted fix for hornetq journal errors. (dgoodwin@redhat.com)
+- 990728: Refresh Manifest fails when the upstream distributor has all the
+  subscriptions removed (wpoteat@redhat.com)
+- 990113: '500 Internal Server Error' importing manifest from stage
+  (wpoteat@redhat.com)
+- Fixed typo in string (cschevia@redhat.com)
+
 * Wed Jul 31 2013 Devan Goodwin <dgoodwin@rm-rf.ca> 0.8.19-1
 - Strings update. (dgoodwin@redhat.com)
 - Allow calls to /owners/{owner_key}/consumers to accept a list of consumer
