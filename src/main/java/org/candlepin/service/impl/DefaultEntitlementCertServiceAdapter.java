@@ -148,7 +148,7 @@ public class DefaultEntitlementCertServiceAdapter extends
             // lookup all the Product objects manually:
             for (ProvidedProduct providedProduct : pool.getProvidedProducts()) {
                 providedProducts.add(
-                    productAdapter.getProductById(providedProduct.getId()));
+                    productAdapter.getProductById(providedProduct.getProductId()));
             }
         }
         return providedProducts;
