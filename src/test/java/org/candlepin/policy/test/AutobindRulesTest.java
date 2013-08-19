@@ -15,6 +15,7 @@
 package org.candlepin.policy.test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.eq;
@@ -213,6 +214,85 @@ public class AutobindRulesTest {
         assertTrue(bestPools.contains(new PoolQuantity(pool, 1)));
     }
 
+    /*
+     * Make sure the attribute with the minimum number of pools is chosen
+     */
+    @Test
+    public void testFindBestWithMultiAttrsStacked() {
+        consumer.setFact("cpu.cpu_socket(s)", "4");
+        consumer.setFact("memory.memtotal", "16000000");
+        consumer.setFact("cpu.core(s)_per_socket", "4");
+
+        Product product = mockStackingProduct(productId, "Test Stack product", "1", "1");
+        product.setAttribute("cores", "6");
+        product.setAttribute("ram", "2");
+        product.setAttribute("sockets", "2");
+
+        Pool pool1 = TestUtil.createPool(owner, product);
+        pool1.setId("DEAD-BEEF1");
+        Pool pool2 = TestUtil.createPool(owner, product);
+        pool2.setId("DEAD-BEEF2");
+        //only enforce cores on pool 2
+        pool2.setProductAttribute("ram", null, productId);
+        pool2.setProductAttribute("sockets", null, productId);
+        Pool pool3 = TestUtil.createPool(owner, product);
+        pool3.setId("DEAD-BEEF3");
+        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool1);
+        pools.add(pool2);
+        pools.add(pool3);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>());
+
+        assertEquals(1, bestPools.size());
+        assertEquals(pool2, bestPools.get(0).getPool());
+        assertEquals(new Integer(3), bestPools.get(0).getQuantity());
+    }
+
+    /*
+     * Make sure the attribute with the minimum number of pools is chosen
+     */
+    @Test
+    public void testFindBestWithMultiAttrsStackedVirt() {
+        consumer.setFact("cpu.cpu_socket(s)", "4");
+        consumer.setFact("memory.memtotal", "16000000");
+        consumer.setFact("cpu.core(s)_per_socket", "4");
+        consumer.setFact("virt.is_guest", "true");
+
+        Product product = mockStackingProduct(productId, "Test Stack product", "1", "1");
+        product.setAttribute("cores", "6");
+        product.setAttribute("ram", "2");
+        product.setAttribute("sockets", "2");
+
+        Pool pool1 = TestUtil.createPool(owner, product);
+        pool1.setId("DEAD-BEEF1");
+        pool1.setAttribute("virt_only", "true");
+        Pool pool2 = TestUtil.createPool(owner, product);
+        pool2.setId("DEAD-BEEF2");
+        //only enforce cores on pool 2
+        pool2.setProductAttribute("ram", null, productId);
+        pool2.setProductAttribute("sockets", null, productId);
+        Pool pool3 = TestUtil.createPool(owner, product);
+        pool3.setId("DEAD-BEEF3");
+        when(this.prodAdapter.getProductById(productId)).thenReturn(product);
+
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool1);
+        pools.add(pool2);
+        pools.add(pool3);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{ productId }, pools, compliance, null, new HashSet<String>());
+
+        assertEquals(2, bestPools.size());
+        //higher quantity from this pool, as it is virt_only
+        assertTrue(bestPools.contains(new PoolQuantity(pool1, 5)));
+        assertTrue(bestPools.contains(new PoolQuantity(pool3, 3)));
+    }
+
     @Test
     public void ensureSelectBestPoolsFiltersPoolsBySLAWhenConsumerHasSLASet() {
         // Create Premium SLA prod
@@ -320,8 +400,7 @@ public class AutobindRulesTest {
         assertTrue(bestPools.contains(new PoolQuantity(slaPremiumPool, 1)));
     }
 
-    // we shouldn't be able to get any new entitlements
-    @Test(expected = RuleExecutionException.class)
+    @Test
     public void testFindBestWillNotCompleteAPartialStackFromAnotherId() {
         consumer.setFact("cpu.cpu_socket(s)", "8");
         String productId1 = "A";
@@ -355,8 +434,16 @@ public class AutobindRulesTest {
 
         compliance.addPartialStack("1", entitlement);
 
-        autobindRules.selectBestPools(consumer, new String[]{ productId2, productId3 },
+        List<PoolQuantity> result = autobindRules.selectBestPools(consumer,
+            new String[]{ productId2, productId3 },
             pools, compliance, null, new HashSet<String>());
+        assertNotNull(result);
+        // We can make sure the partial stack wasn't completed
+        for (PoolQuantity pq : result) {
+            if (pq.getPool().getId().equals(pool1.getId())) {
+                fail("Should not complete this stack");
+            }
+        }
     }
 
     protected Pool createPool(Owner owner, Product product,
@@ -386,6 +473,7 @@ public class AutobindRulesTest {
 
     @Test
     public void testSelectBestPoolDefaultRule() {
+        consumer.setFact("cpu.cpu_socket(s)", "32");
         Product product = new Product("a-product", "A product for testing");
 
         Pool pool1 = createPool(owner, product, 5, TestUtil
@@ -402,7 +490,10 @@ public class AutobindRulesTest {
         List<PoolQuantity> result = autobindRules.selectBestPools(consumer,
             new String[] {product.getId()}, availablePools, compliance, null,
             new HashSet<String>());
-        assertTrue(result.contains(new PoolQuantity(pool1, 1)));
+        assertNotNull(result);
+        for (PoolQuantity pq : result) {
+            assertEquals(new Integer(1), pq.getQuantity());
+        }
     }
 
     private Product mockStackingProduct(String pid, String productName,
@@ -456,7 +547,7 @@ public class AutobindRulesTest {
         assertEquals(new Integer(8), q.getQuantity());
     }
 
-    @Test
+    @Test(expected = RuleExecutionException.class)
     public void instanceAutobindForPhysical8SocketNotEnoughUneven() {
         List<Pool> pools = createInstanceBasedPool();
         pools.get(0).setQuantity(7L); // Only 7 available
@@ -464,13 +555,9 @@ public class AutobindRulesTest {
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
             new String[]{ productId }, pools, compliance, null, new HashSet<String>());
-
-        assertEquals(1, bestPools.size());
-        PoolQuantity q = bestPools.get(0);
-        assertEquals(new Integer(6), q.getQuantity());
     }
 
-    @Test
+    @Test(expected = RuleExecutionException.class)
     public void instanceAutobindForPhysical8SocketNotEnoughEven() {
         List<Pool> pools = createInstanceBasedPool();
         pools.get(0).setQuantity(4L); // Only 4 available
@@ -478,10 +565,6 @@ public class AutobindRulesTest {
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
             new String[]{ productId }, pools, compliance, null, new HashSet<String>());
-
-        assertEquals(1, bestPools.size());
-        PoolQuantity q = bestPools.get(0);
-        assertEquals(new Integer(4), q.getQuantity());
     }
 
     @Test

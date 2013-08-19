@@ -1,4 +1,4 @@
-// Version: 4.0
+// Version: 4.1
 
 /*
  * Default Candlepin rule set.
@@ -27,9 +27,9 @@ function quantity_name_space() {
 }
 
 // consumer types
-var SYSTEM_TYPE = "system"
-var HYPERVISOR_TYPE = "hypervisor"
-var UEBERCERT_TYPE = "uebercert"
+var SYSTEM_TYPE = "system";
+var HYPERVISOR_TYPE = "hypervisor";
+var UEBERCERT_TYPE = "uebercert";
 
 // Consumer fact names
 var SOCKET_FACT="cpu.cpu_socket(s)";
@@ -135,15 +135,27 @@ function createPool(pool) {
     };
 
     pool.getAttribute = function (attrName) {
-        return this.findAttributeIn(attrName, this.attributes);
+        attr_result = this.findAttributeIn(attrName, this.attributes);
+        if (attr_result === null) {
+            return this.findAttributeIn(attrName, this.productAttributes);
+        }
+        return attr_result;
+    };
+
+    pool.hasAttribute = function(attrName) {
+        return this.getAttribute(attrName) !== null;
     };
 
     pool.getProductAttribute = function (attrName) {
-        return this.findAttributeIn(attrName, this.productAttributes);
+        var attr_result = this.findAttributeIn(attrName, this.productAttributes);
+        if (attr_result === null) {
+            return this.findAttributeIn(attrName, this.attributes);
+        }
+        return attr_result;
     };
 
     pool.hasProductAttribute = function (attrName) {
-        return this.getProductAttribute(attrName) != null;
+        return this.getProductAttribute(attrName) !== null;
     };
 
     // Add some functions onto pool objects:
@@ -224,31 +236,6 @@ function arrayToString(a) {
     return msg;
 }
 
-// Compute the set of all sets of combinations of elements in a.
-function powerSet(a, n) {
-    if (a.length == 0) {
-        return [];
-    }
-
-    var res = [];
-    var tempSet = powerSet(a.slice(1), n);
-    for (var j = 0; j < tempSet.length; j++) {
-        var x = tempSet[j];
-
-        if (x.length <= n) {
-            res.push(x);
-        }
-        if (x.length + 1 <= n) {
-            var z = x.slice(0);
-            z.push(a[0]);
-            res.push(z);
-        }
-    }
-    res.push([a[0]]);
-    return res;
-}
-
-
 // Check if the provided list of pools contains any duplicated products
 // We don't need to worry about checking multi-entitle allowed products,
 // as you can use as many of those as you want.
@@ -296,7 +283,7 @@ function architectureMatches(productArchStr, consumerUnameMachine, consumerType)
     }
 
     var supportedArches = [];
-    if (productArchStr != null) {
+    if (productArchStr !== null) {
         supportedArches = productArchStr.toUpperCase().split(PROD_ARCHITECTURE_SEPARATOR);
 
         // If X86 is supported, add all variants to this list:
@@ -375,7 +362,7 @@ var FactValueCalculator = {
          */
         ram: function (prodAttr, consumer) {
             var consumerRam = consumer.facts[ATTRIBUTES_TO_CONSUMER_FACTS[prodAttr]] ?
-                    consumer.facts[ATTRIBUTES_TO_CONSUMER_FACTS[prodAttr]] : 1
+                    consumer.facts[ATTRIBUTES_TO_CONSUMER_FACTS[prodAttr]] : 1;
             var ramGb = parseInt(consumerRam) / 1024 / 1024;
             return Math.round(ramGb);
         },
@@ -408,10 +395,10 @@ var FactValueCalculator = {
         log.debug("Calculated consumer " + prodAttr + " to be " + calculatedValue);
         return calculatedValue;
     }
-}
+};
 
 /**
- * A factory for creating a JS objects representing the reasons
+ * A factory for creating JS objects representing the reasons
  * affecting a non covered entitlement or stack.
  */
 var StatusReasonGenerator = {
@@ -438,7 +425,7 @@ var StatusReasonGenerator = {
         return reason;
     },
 
-    /*
+   /*
     * Add a reason for an installed product without entitlement (red)
     */
     buildInstalledProductReason: function (installed_pid) {
@@ -466,7 +453,7 @@ var StatusReasonGenerator = {
 
         return attribute;
     }
-}
+};
 
 /**
  *  Determines the coverage of a consumer based on a single pool, or a stack.
@@ -569,8 +556,8 @@ var CoverageCalculator = {
             // Round uneven multiples down:
             attributeValue = attributeValue - (attributeValue % instanceMultiplier);
 
-            log.debug("  Adjusting sockets covered from: "
-                      + initialValue + " to: " + attributeValue);
+            log.debug("  Adjusting sockets covered from: " +
+                      initialValue + " to: " + attributeValue);
         }
         return attributeValue;
     },
@@ -792,8 +779,8 @@ var CoverageCalculator = {
             var coveredCounter = currentCovered;
             while (CoverageCalculator
                    .adjustCoverage(attr, consumer, coveredCounter,
-                                   stackTracker.instanceMultiplier)
-                   < consumerQuantity) {
+                                   stackTracker.instanceMultiplier) <
+                   consumerQuantity) {
                 amountRequiredFromPool++;
                 coveredCounter = currentCovered + (amountRequiredFromPool * prodAttrValue);
             }
@@ -818,7 +805,7 @@ var CoverageCalculator = {
         log.debug("Quantity required to cover consumer: " + maxQuantity);
         return maxQuantity;
     }
-}
+};
 
 // assumptions: number of pools consumed from is not considered, so we might not be taking from the smallest amount.
 // we only stack within the same pool_class. if you have stacks that provide different sets of products,
@@ -982,7 +969,7 @@ function findStackingPools(pool_class, consumer, compliance) {
     not_stacked_pool_map.dump("not_stacked_pool_map");
 
     // if an unstacked pool can cover all our products, take that.
-    if (bestNotStackedEntitlingPool != null && bestNonStackedCoveragePercentage == 1) {
+    if (bestNotStackedEntitlingPool !== null && bestNonStackedCoveragePercentage == 1) {
         return not_stacked_pool_map;
     }
 
@@ -1178,7 +1165,7 @@ function createStackTracker(consumer, stackId) {
             for (var attrIdx in STACKABLE_ATTRIBUTES) {
                 var nextAttr = STACKABLE_ATTRIBUTES[attrIdx];
                 var poolValue = pool.getProductAttribute(nextAttr);
-                if (poolValue != null) {
+                if (poolValue !== null) {
                     var stackValue = this.enforces(nextAttr) ? this.getAccumulatedValue(nextAttr) : null;
                     var accumulate = this.getAccumulationStrategy(nextAttr);
                     this.setAccumulatedValue(nextAttr, accumulate(stackValue, poolValue, pool, quantityToTake));
@@ -1240,21 +1227,21 @@ function comparePools(pool1, pool2) {
     // Prefer a virt_only pool over a regular pool, else fall through to the next rules.
     // At this point virt_only pools will have already been filtered out by the pre rules
     // for non virt machines.
-    if (pool1.getProductAttribute(VIRT_ONLY) == "true" && pool2.getProductAttribute(VIRT_ONLY) != "true") {
+    if (Utils.equalsIgnoreCase(pool1.getProductAttribute(VIRT_ONLY), "true") && !Utils.equalsIgnoreCase(pool2.getProductAttribute(VIRT_ONLY), "true")) {
         return true;
     }
-    else if (pool2.getProductAttribute(VIRT_ONLY) == "true" && pool1.getProductAttribute(VIRT_ONLY) != "true") {
+    else if (Utils.equalsIgnoreCase(pool2.getProductAttribute(VIRT_ONLY)) && !Utils.equalsIgnoreCase(pool1.getProductAttribute(VIRT_ONLY), "true")) {
         return false;
     }
 
     // If both virt_only, prefer one with host_requires, otherwise keep looking
     // for a reason to pick one or the other. We know that the host must match
     // as pools are filtered before even being passed to select best pools.
-    if (pool1.getProductAttribute(VIRT_ONLY) == "true" && pool2.getProductAttribute(VIRT_ONLY) == "true") {
-        if (pool1.getProductAttribute(REQUIRES_HOST_ATTRIBUTE) != null && pool2.getProductAttribute(REQUIRES_HOST_ATTRIBUTE) == null) {
+    if (Utils.equalsIgnoreCase(pool1.getProductAttribute(VIRT_ONLY), "true") && Utils.equalsIgnoreCase(pool2.getProductAttribute(VIRT_ONLY), "true")) {
+        if (pool1.getAttribute(REQUIRES_HOST_ATTRIBUTE) !== null && pool2.getAttribute(REQUIRES_HOST_ATTRIBUTE) === null) {
             return true;
         }
-        if (pool2.getProductAttribute(REQUIRES_HOST_ATTRIBUTE) != null && pool1.getProductAttribute(REQUIRES_HOST_ATTRIBUTE) == null) {
+        if (pool2.getAttribute(REQUIRES_HOST_ATTRIBUTE) !== null && pool1.getAttribute(REQUIRES_HOST_ATTRIBUTE) === null) {
             return false;
         }
         // If neither condition is true, no preference...
@@ -1327,7 +1314,7 @@ var Entitlement = {
                 }
             }
             return false;
-        }
+        };
 
         // Get attribute from a pool. Pool attributes are preferred
         // but if not found, the top level product attributes will be
@@ -1338,7 +1325,7 @@ var Entitlement = {
                 attr = pool.getProductAttribute(attributeName);
             }
             return attr;
-        }
+        };
 
         return context;
     },
@@ -1357,8 +1344,8 @@ var Entitlement = {
                 if (pool_derived) {
                     result.addError("pool.not.available.to.manifest.consumers");
                 }
-        	}
-        	else if (!guest) {
+            }
+            else if (!guest) {
                 if (BEST_POOLS_CALLER == caller ||
                     BIND_CALLER == caller) {
                     result.addError("rulefailed.virt.only");
@@ -1366,7 +1353,7 @@ var Entitlement = {
                 else {
                     result.addWarning("rulewarning.virt.only");
                 }
-        	}
+            }
         }
         return JSON.stringify(result);
     },
@@ -1571,9 +1558,9 @@ var Entitlement = {
         if (consumer.type.manifest) {
             // Distributors should not be able to consume from pools with sub products
             // if they are not capable of supporting them.
-        	//
-        	// NOTE: We check for subProductId in the pre_global space because it is not
-        	// a product attribute.
+            //
+            // NOTE: We check for subProductId in the pre_global space because it is not
+            // a product attribute.
             if (pool.derivedProductId && !Utils.isCapable(consumer, "derived_product")) {
                 if (BEST_POOLS_CALLER == caller || BIND_CALLER == caller) {
                     result.addError("rulefailed.derivedproduct.unsupported.by.consumer");
@@ -1615,6 +1602,339 @@ var Entitlement = {
 
 var Autobind = {
 
+    create_entitlement_group: function(stackable, stack_id, installed_ids, consumer, attached_ents) {
+        return {
+            pools: [],
+            stackable: stackable,
+            stack_id: stack_id,
+            installed: installed_ids,
+            consumer: consumer,
+            attached_ents: attached_ents,
+    
+            /*
+             * Method returns whether or not it is possible for the entitlement
+             * group to be valid.
+             */
+            validate: function(context) {
+                var all_ents = this.get_all_ents(this.pools).concat(this.attached_ents);
+
+                if (all_ents.length == 0) {
+                    log.debug("No entitlements");
+                    return false;
+                }
+
+                if (!this.stackable && CoverageCalculator.getEntitlementCoverage(all_ents[0], this.consumer).covered) {
+                    return true;
+                }
+                else if (!this.stackable) {
+                    return false;
+                }
+                // At this point, we must be stackable
+                var coverage = Compliance.getStackCoverage(this.consumer, this.stack_id, all_ents);
+                if (!coverage.covered) {
+                    log.debug("stack " + this.stack_id + " is partial with all entitlements stacked.");
+                    var attrs_to_remove = [];
+                    for(var i = 0; i < coverage.reasons.length; i++) {
+                        if (coverage.reasons[i]["key"] == ARCH_ATTRIBUTE) {
+                            // Must have already attached a bad arch
+                            // entitlement, we already pruned them out of pools
+                            log.debug("This stack contains an arch mismatch");
+                            return false;
+                        }
+                        var attribute = coverage.reasons[i]["key"].toLowerCase();
+                        // Shouldn't have to worry about duplicates because
+                        // we're dealing with only this stack
+                        attrs_to_remove.push(attribute);
+                    }
+                    var pools_without_bad_attrs = [];
+                    // remove all pools with attributes that we cannot support
+                    for (var j = this.pools.length - 1; j >= 0; j--) {
+                        var pool = this.pools[j];
+                        var pool_is_valid = true;
+                        for(var i = 0; i < attrs_to_remove.length; i++) {
+                            var bad_attribute = attrs_to_remove[i];
+                            var prodAttrValue = pool.getProductAttribute(bad_attribute);
+                            if (prodAttrValue) {
+                                pool_is_valid = false;
+                                break;
+                            }
+                        }
+                        if (pool_is_valid) {
+                            pools_without_bad_attrs.push(pool);
+                        }
+                    }
+                    this.pools = pools_without_bad_attrs;
+                    all_ents = this.get_all_ents(this.pools).concat(this.attached_ents);
+                    coverage = Compliance.getStackCoverage(consumer, this.stack_id, all_ents);
+                    return coverage.covered;
+                }
+                return true;
+            },
+
+            get_num_host_specific: function() {
+                var count = 0;
+                for (var i = 0; i < this.pools.length; i++) {
+                    var pool = this.pools[i];
+                    if (pool.getAttribute(REQUIRES_HOST_ATTRIBUTE) != null) {
+                        count++;
+                    }
+                }
+                return count;
+            },
+
+            get_num_virt_only: function() {
+                var count = 0;
+                for (var i = 0; i < this.pools.length; i++) {
+                    var pool = this.pools[i];
+                    if (Utils.equalsIgnoreCase('true',  pool.getProductAttribute(VIRT_ONLY))) {
+                        count++;
+                    }
+                }
+                return count;
+            },
+
+            /*
+             * 2^n again, but this time n is the number of stackable attributes that aren't arch. (3)
+             */
+            get_sets: function(list, max_length) {
+                if (list.length == 0) {
+                    return [[]];
+                }
+                var results = [];
+                var tempSet = this.get_sets(list.slice(1), max_length);
+                for (var i=0; i < tempSet.length; i++) {
+                    if (tempSet[i].length < max_length) {
+                        results.push([list[0]].concat(tempSet[i]));
+                    }
+                    results.push(tempSet[i]);
+                }
+                return results;
+            },
+
+            /*
+             * Generates sets of attributes to attempt to remove
+             */
+            get_attribute_sets: function() {
+                var stack_attributes = [];
+                // get unique list of additive stack attributes
+                for (var attrIdx in STACKABLE_ATTRIBUTES) {
+                    var attr = STACKABLE_ATTRIBUTES[attrIdx];
+                    if (attr != ARCH_ATTRIBUTE) {
+                        stack_attributes.push(attr);
+                    }
+                }
+                sets = this.get_sets(stack_attributes, stack_attributes.length - 1);
+                for (var i = sets.length - 1; i >= 0; i--) {
+                    var set = sets[i];
+                    if (set.length == 0) {
+                        sets.splice(i, 1);
+                    }
+                }
+                return sets;
+            },
+
+            /*
+             * Attempts to remove all pools from a group that enforce each set of stackable attributes, then
+             * checks compliance.  This prevents us from suggesting two fully compliant stacks that
+             * enforce different attributes
+             */
+            remove_extra_attrs: function() {
+                var possible_pool_sets = [];
+                possible_pool_sets.push(this.pools);
+                var original_provided = this.get_provided_products().length;
+                var sets_to_check = this.get_attribute_sets(); //array of arrays of attributes to remove
+                for (var setIdx = 0; setIdx < sets_to_check.length; setIdx++) {
+                    var attrs_to_remove = sets_to_check[setIdx];
+                    for (var attrIdx = 0; attrIdx < attrs_to_remove.length; attrIdx++) {
+                        var attr = attrs_to_remove[attrIdx];
+
+                        var pools_without = [];
+                        for (var i = 0; i < this.pools.length; i++) {
+                            var pool = this.pools[i];
+                            var prodAttrValue = pool.getProductAttribute(attr);
+                            if (!prodAttrValue || prodAttrValue === null) {
+                                pools_without.push(pool);
+                            }
+                        }
+                        all_ents = this.get_all_ents(pools_without).concat(this.attached_ents);
+                        if (Compliance.getStackCoverage(this.consumer, this.stack_id, all_ents).covered && (this.get_provided_products_pools(pools_without).length == original_provided)) {
+                            possible_pool_sets.push(pools_without);
+                        }
+                    }
+                }
+                var best = 0;
+                var best_priority = 0.0;
+                var num_pools=this.pools.length;
+                for (var i = 0; i < possible_pool_sets.length; i++) {
+                    var pools = possible_pool_sets[i];
+                    var priority = 0;
+                    for (var j = 0; j < pools.length; j++) {
+                        var pool = pools[j];
+                        // use virt only if possible
+                        // if the consumer is not virt, the pool will have been filtered out
+                        if (Utils.equalsIgnoreCase(pool.getProductAttribute(VIRT_ONLY), "true")) {
+                            priority += 100;
+                        }
+                        // better still if host_specific
+                        if (pool.getAttribute(REQUIRES_HOST_ATTRIBUTE) != null) {
+                            priority += 150;
+                        }
+                    }
+                    // Priority per pool, that way we don't tend towards stacks with more pools.
+                    priority /= pools.length;
+                    if (priority > best_priority) {
+                        best_priority = priority;
+                        best = i;
+                        num_pools = pools.length;
+                    } else if (priority == best_priority && num_pools > pools.length) {
+                        best = i;
+                        num_pools = pools.length;
+                    }
+                }
+                this.pools = possible_pool_sets[best];
+            },
+
+            /*
+             * Remove all pools that aren't necessary for compliance
+             */
+            prune_pools: function() {
+                // We know this group is required at this point,
+                // so we cannot remove the one pool if it's non-stackable
+                if (!this.stackable) {
+                    return;
+                }
+                // Sort pools such that we preserve virt_only and host_requires if possible
+                this.pools.sort(this.compare_pools);
+                var temp = null;
+                var prior_pool_size = this.pools.length;
+                var provided_size = this.get_provided_products().length;
+                for (var i = this.pools.length - 1; i >= 0; i--) {
+                    temp = this.pools[i];
+                    this.pools.splice(i, 1);
+                    var ents = this.get_all_ents(this.pools);
+                    if (ents.length == 0 || !Compliance.getStackCoverage(this.consumer, this.stack_id, ents.concat(this.attached_ents)).covered || this.get_provided_products().length != provided_size) {
+                        // if something has broken, we add the pool back
+                        this.pools.push(temp);
+                    }
+                }
+                log.debug("removed " + (prior_pool_size - this.pools.length) + " of " + prior_pool_size + " pools"); 
+            },
+
+            /*
+             * Sort pools for pruning (helps us later with quantity as well)
+             */
+            compare_pools: function(pool0, pool1) {
+                get_pool_priority = function(pool) {
+                    var priority = 0;
+                    // use virt only if possible
+                    // if the consumer is not virt, the pool will have been filtered out
+                    if (Utils.equalsIgnoreCase(pool.getProductAttribute(VIRT_ONLY), "true")) {
+                        priority += 100;
+                    }
+                    // better still if host_specific
+                    if (pool.getAttribute(REQUIRES_HOST_ATTRIBUTE) != null) {
+                        priority += 150;
+                    }
+                    return priority;
+                };
+                var priority0 = get_pool_priority(pool0);
+                var priority1 = get_pool_priority(pool1);
+                // If two pools are still considered equal, select the pool that expires first
+                if (pool0.endDate > pool1.endDate) {
+                    priority1 += 1;
+                }
+                else if (pool0.endDate < pool1.endDate) {
+                    priority0 += 1;
+                }
+                // Sort descending, because it's easier to remove items from
+                // an array while going backwards.
+                return priority1 - priority0;
+            },
+
+            /*
+             * Returns a map of pool id to pool quantity for every pool that is required from this group
+             */
+            get_pool_quantity: function() {
+                var result = Utils.getJsMap();
+                // Still in priority order, but reversed from prune_pools
+                var ents = this.get_all_ents(this.pools);
+                for (var i = 0; i < this.pools.length; i++) {
+                    var pool = this.pools[i];
+                    var increment = 1;
+                    if (pool.hasProductAttribute("instance_multiplier") && !Utils.isGuest(this.consumer)) {
+                        increment = parseInt(pool.getProductAttribute(INSTANCE_ATTRIBUTE));
+                    }
+
+                    //entitlement index matches pool index
+                    var current_ent = ents[i];
+
+                    for (var j = increment; j <= (pool.quantity - pool.consumed); j += increment) {
+                        current_ent.quantity = j;
+                        //can probably do this part better.  ex: get compliance once, use compliance reasons to calculate the number required
+                        
+                        if (this.stackable) {
+                            if (Compliance.getStackCoverage(this.consumer, this.stack_id, ents.concat(this.attached_ents)).covered) {
+                                result.put(pool.id, j);
+                                break;
+                            }
+                        } else {
+                            if (CoverageCalculator.getEntitlementCoverage(current_ent, this.consumer).covered) {
+                                result.put(pool.id, j);
+                                break;
+                            }
+                        }
+                    }
+                }
+                return result;
+            },
+    
+            get_all_ents: function(in_pools) {
+                var ents = [];
+                for (var i = 0; i < in_pools.length; i++) {
+                    var pool = in_pools[i];
+                    ents.push(this.get_mock_ents_for_pool(pool, this.consumer));
+                }
+                return ents;
+            },
+    
+            add_pool: function(pool) {
+                this.pools.push(pool);
+            },
+
+            get_mock_ents_for_pool: function(pool, consumer) {
+                return {
+                    pool: pool,
+                    startDate: pool.startDate,
+                    endDate: pool.endDate,
+                    quantity: pool.quantity - pool.consumed,
+                    consumer: consumer,
+                    owner: consumer.owner
+                };
+            },
+
+            // Eventually, could map pools to provided products to save time
+            // checking
+            get_provided_products: function() {
+                return this.get_provided_products_pools(this.pools);
+            },
+
+            // use custom pools
+            get_provided_products_pools: function(in_pools) {
+                var provided = [];
+                for (var i = 0; i < in_pools.length; i++) {
+                    var provided_by_pool = in_pools[i].products();
+                    for (var j = 0; j < provided_by_pool.length; j++) {
+                        var provided_id = provided_by_pool[j];
+                        if (provided.indexOf(provided_id) == -1 && this.installed.indexOf(provided_id) >= 0) {
+                            provided.push(provided_id);
+                        }
+                    }
+                }
+                return provided;
+            }
+        };
+    },
+    
     create_autobind_context: function() {
         var context = JSON.parse(json_context);
 
@@ -1645,27 +1965,73 @@ var Autobind = {
         return context;
     },
 
-    select_pools: function() {
-        var context = this.create_autobind_context();
+    /*
+     * Only use pools that match the consumer SLA or SLA override, if set
+     */
+    is_pool_sla_valid: function(context, pool, consumerSLA) {
+        var poolSLA = pool.getProductAttribute('support_level');
+        var poolSLAExempt = isLevelExempt(pool.getProductAttribute('support_level'), context.exemptList);
 
-        // Greedy selection for now, in order
-        // XXX need to watch out for multientitle products - how so?
-
-        // An array of arrays of pools. each array is a grouping of pools that provide the
-        // same subset of products which are applicable to the requested products.
-        // further, each array is sorted, from best to worst. (pool fitness is determined
-        // arbitrarily by rules herein.
-        var pools_by_class = [];
-
-        // "pools" is a list of all the owner's pools which are compatible for the system:
-        log.debug("Selecting best pools from: " + context.pools.length);
-        if (log.debug) {
-            for (var m = 0; m < context.pools.length; m++) {
-                var pool = context.pools[m];
-                log.debug("   " + context.pools[m].id);
-            }
+        if (!poolSLAExempt && consumerSLA &&
+            consumerSLA != "" && !Utils.equalsIgnoreCase(consumerSLA, poolSLA)) {
+            log.debug("Skipping pool " + pool.id +
+                    " since SLA does not match that of the consumer.");
+            return false;
         }
+        return true;
+    },
 
+    /*
+     * If the architecture does not match the consumer, this pool can never be valid
+     */
+    is_pool_arch_valid: function(context, pool, consumerArch) {
+        if (architectureMatches(pool.getProductAttribute(ARCH_ATTRIBUTE),
+                consumerArch,
+                context.consumer.type)) {
+            return true;
+        }
+        log.debug("Skipping pool " + pool.id + " since the ARCH doesn't match that of the consumer");
+        return false;
+    },
+
+    // confusing name. checks if the pool is valid on grounds of virt_only
+    is_pool_virt_valid: function(pool, isGuest) {
+        // if physical, and pool is virt_only, invalid.
+        if (!isGuest && pool.hasProductAttribute(VIRT_ONLY)) {
+            return !Utils.equalsIgnoreCase('true', pool.getProductAttribute(VIRT_ONLY));
+        }
+        return true;
+    },
+
+    /*
+     * If onDate is null, bypass the check
+     * date comes from compliance.
+     */
+    is_pool_date_valid: function(pool, onDate) {
+        if (onDate == null) {
+            return true;
+        }
+        var startDate = new Date(pool.startDate);
+        var endDate = new Date(pool.endDate);
+        if (Utils.date_compare(startDate, onDate) <= 0 && Utils.date_compare(endDate, onDate) >= 0) {
+            return true;
+        }
+        log.debug("Skipping pool " + pool.id + " since the date isn't valid");
+        return false;
+    },
+
+    is_pool_not_empty: function(pool) {
+        if (pool.quantity - pool.consumed > 0) {
+            return true;
+        }
+        return false;
+    },
+
+    /*
+     * Gets the sla of the consumer, unless serviceLevelOverride is set, in which
+     * case we use that.
+     */
+    get_consumer_sla: function(context) {
         log.debug("context.serviceLevelOverride: " + context.serviceLevelOverride);
         var consumerSLA = context.serviceLevelOverride;
         if (!consumerSLA || consumerSLA == "") {
@@ -1674,163 +2040,259 @@ var Autobind = {
                     consumerSLA = context.owner.defaultServiceLevel;
                 }
         }
+        return consumerSLA;
+    },
 
-        // Builds out the pools_by_class by iterating each pool, checking which products it provides (that
-        // are relevant to this request), then filtering out other pools which provide the *exact* same products
-        // by selecting the preferred pool based on other criteria.
-        for (var i = 0 ; i < context.pools.length ; i++) {
+    // returns all pools that can be attached to this consumer
+    get_valid_pools: function(context) {
+        var consumerSLA = this.get_consumer_sla(context);
+        var isGuest = Utils.isGuest(context.consumer);
+        var consumerArch = ARCH_FACT in context.consumer.facts ?
+                context.consumer.facts[ARCH_FACT] : null;
+        var valid_pools = [];
+        for (var i = 0; i < context.pools.length ; i++) {
             var pool = context.pools[i];
 
-            // If the SLA of the consumer does not match that of the pool
-            // we do not consider the pool unless the level is exempt
-            var poolSLA = pool.getProductAttribute('support_level');
-            var poolSLAExempt = isLevelExempt(pool.getProductAttribute('support_level'), context.exemptList);
-
-            if (!poolSLAExempt && consumerSLA &&
-                consumerSLA != "" && !Utils.equalsIgnoreCase(consumerSLA, poolSLA)) {
-                log.debug("Skipping pool " + pool.id +
-                        " since SLA does not match that of the consumer.");
-                continue;
+            //probably not necessary at this point
+            if (pool.hasProductAttribute("instance_multiplier") && !isGuest) {
+                var increment = parseInt(pool.getProductAttribute("instance_multiplier"));
+                pool.quantity -= (pool.quantity % increment);
             }
 
-            log.debug("Checking pool for best unique provides combination: " +
-                    pool.id);
-            log.debug("  " + pool.endDate);
-            log.debug("  top level product: " + pool.productId);
-
-            var unameMachine = context.consumer.facts[ARCH_FACT] ?
-                context.consumer.facts[ARCH_FACT] : null;
-            if (architectureMatches(pool.getProductAttribute(ARCH_ATTRIBUTE),
-                                    unameMachine,
-                                    context.consumer.type)) {
-                var provided_products = getRelevantProvidedProducts(pool, context.products);
-                log.debug("  relevant provided products: ");
-                for (var n = 0; n < provided_products.length; n++) {
-                    var pp = provided_products[n];
-                    log.debug("    " + pp);
+            if (this.is_pool_arch_valid(context, pool, consumerArch) &&
+                    this.is_pool_virt_valid(pool, isGuest) &&
+                    this.is_pool_sla_valid(context, pool, consumerSLA) &&
+                    this.is_pool_date_valid(pool, context.compliance["date"]) &&
+                    this.is_pool_not_empty(pool)) {
+                //if it doesn't support multi-entitlement, we set quantity to 1 more than consumed
+                if (!Quantity.allows_multi_entitlement(pool)) {
+                    pool.quantity = pool.consumed + 1; //stops us from accidentally adding too many
                 }
-                // XXX wasteful, should be a hash or something.
-                // Tracks if we found another pool previously looked at which had the exact same provided products:
-                var duplicate_found = false;
+                valid_pools.push(pool);
+            }
+        }
+        return valid_pools;
+    },
 
-                // Check current pool against previous best to see if it's better:
-                for (var n = 0; n < pools_by_class.length; n++) {
-                    var pool_class = pools_by_class[n];
+    /*
+     * Builds entitlement group objects that allow us to treat stacks and individual entitlements the same
+     */
+    build_entitlement_groups: function(valid_pools, installed, consumer, attached_ents) {
+        var ent_groups = [];
+        for (var i = 0; i < valid_pools.length; i++) {
+            var pool = valid_pools[i];
 
-                    var best_pool = pool_class[0];
-                    var best_provided_products = getRelevantProvidedProducts(best_pool, context.products);
-
-                    if (providesSameProducts(provided_products, best_provided_products)) {
-                        duplicate_found = true;
-                        log.debug("  provides same product combo as: " + pool.id);
-
-                        // figure out where to insert this pool in its sorted class
-                        var i = 0;
-                        for (; i < pool_class.length; i++) {
-                            if (comparePools(pool, best_pool)) {
-                                break;
-                            }
-                        }
-                        log.debug("  inserted into slot: " + i);
-
-                        // now insert the pool into the middle of the array
-                        pool_class.splice(i, 0, pool);
+            if (is_pool_stacked(pool)) {
+                var found = false;
+                var stack_id = pool.getProductAttribute("stacking_id");
+                for (var j = 0; j < ent_groups.length; j++) {
+                    ent_group = ent_groups[j];
+                    if (ent_group.stack_id == stack_id) {
+                        ent_group.add_pool(pool);
+                        found = true;
                         break;
                     }
                 }
-
-                // If we did not find a duplicate pool providing the same products,
-                if (!duplicate_found) {
-                    log.debug("  no duplicate found");
-                    var pool_class = [];
-                    pool_class.push(pool);
-                    pools_by_class.push(pool_class);
+                // If the pool is stackable, and not part of an existing entitlement group, create a new group and add it
+                if (!found) {
+                    var new_ent_group = this.create_entitlement_group(true, stack_id, installed, consumer, attached_ents);
+                    new_ent_group.add_pool(pool);
+                    ent_groups.push(new_ent_group);
                 }
+            } else {
+                //if the entitlement is not stackable, create a new stack group for it
+                var new_ent_group = this.create_entitlement_group(false, "", installed, consumer, attached_ents);
+                new_ent_group.add_pool(pool);
+                ent_groups.push(new_ent_group);
             }
         }
+        return ent_groups;
+    },
 
-        var candidate_combos = powerSet(pools_by_class, context.products.length);
+    /*
+     * returns the list of productIds that the stack will cover, which the consumer has installed
+     */
+    get_common_products: function(installed, group) {
+        var group_installed = group.get_provided_products();
+        var common_products = [];
+        for (var i = 0; i < group_installed.length; i++) {
+            var inst_id = group_installed[i];
+            if (installed.indexOf(inst_id) != -1) {
+                common_products.push(inst_id);
+            }
+        }
+        return common_products;
+    },
 
-        log.debug("Selecting " + context.products.length + " products from " + pools_by_class.length +
-                  " pools in " + candidate_combos.length + " possible combinations");
-
-        // Select the best pool combo. We prefer:
-        // -The combo that provides the most products
-        // -The combo that uses the fewest entitlements
-
-
-        var selected_pools = Utils.getJsMap();
-        var best_provided_count = 0;
-        var best_entitlements_count = 0;
-
-        for (var k = 0; k < candidate_combos.length; k++) {
-            var pool_combo = candidate_combos[k];
-
-            var provided_count = 0;
-            var unique_provided = [];
-            for (var m = 0; m < pool_combo.length; m++) {
-                var pool_class = pool_combo[m];
-
-                var pool = pool_class[0];
-                var provided_products = getRelevantProvidedProducts(pool, context.products);
-                for (var n = 0; n < provided_products.length; n++) {
-                    var provided_product = provided_products[n];
-
-                    log.debug("\t\tprovided_product " + provided_product);
-                    if (!contains(unique_provided, provided_product)) {
-                        unique_provided.push(provided_product);
-                    }
+    // been adding more attributes to break ties, there's probably a better way to write this at this point
+    find_best_ent_group: function(all_groups, installed) {
+        var max_provide = 0;
+        var stacked = false;
+        var best = null;
+        var num_virt_only = 0;
+        var num_host_specific = 0;
+        for (var i = 0; i < all_groups.length; i++) {
+            var group = all_groups[i];
+            var intersection = this.get_common_products(installed, group).length;
+            var group_host_specific = group.get_num_host_specific();
+            var group_virt_only = group.get_num_virt_only();
+            // Choose group that provides the most installed products
+            if (intersection > max_provide) {
+                max_provide = intersection;
+                stacked = group.stackable;
+                num_virt_only = group_virt_only;
+                num_host_specific = group_host_specific;
+                best = group;
+            }
+            if (intersection > 0 && intersection == max_provide) {
+                // Break ties with number of host specific pools
+                if (num_host_specific < group_host_specific) {
+                   best = group;
+                   stacked = group.stackable;
+                   num_virt_only = group_virt_only;
+                   num_host_specific = group_host_specific;
                 }
-            }
-
-            for (var m = 0; m < unique_provided.length; m++) {
-                var product = unique_provided[m];
-                log.debug("unique_provided " + product);
-            }
-
-            // number of provided products is less than our best selection. keep our current selection.
-            if (unique_provided.length < best_provided_count) {
-                continue;
-            }
-
-            // we do it after the unique provided.length check because that value is the best we can do
-            // create 'best' stacking combo here
-            // use that best combo for the following comparison
-
-            if (unique_provided.length > best_provided_count || pool_combo.length < best_entitlements_count) {
-                // XXX we'll have to do something here to ensure no product overlap after selecting the actual pool/pools from the combo
-                if (hasNoProductOverlap(pool_combo)) {
-                    var new_selection = Utils.getJsMap();
-                    var total_entitlements = 0;
-                    for (var p = 0; p < pool_combo.length; p++) {
-                        var pool_class = pool_combo[p];
-
-                        var poolMap = findStackingPools(pool_class, context.consumer, context.compliance);
-                        poolMap.dump("poolMap");
-                        new_selection.putAll(poolMap);
-                        new_selection.dump("new_selection");
-
-                        var quantity = 0;
-                        var values = poolMap.values();
-                        for (var v = 0; v < values.length; v++) {
-                            quantity += values[v];
+                if (num_host_specific == group_host_specific) {
+                    // Break ties with number of virt only pools
+                    if (num_virt_only < group_virt_only) {
+                        best = group;
+                        num_virt_only = group_virt_only;
+                        stacked = group.stackable;
+                    }
+                    if (num_virt_only == group_virt_only) {
+                        // Break ties by prefering non-stacked entitlements
+                        if (stacked && !group.stackable) {
+                            best = group;
+                            stacked = group.stackable;
                         }
-
-                        total_entitlements += quantity;
                     }
+                }
+            }
+        }
+        return best;
+    },
 
-                    // now verify that after selecting our actual pools from the pool combo,
-                    // we still have a better choice here
-                    if (new_selection.values().length > 0) {
-                        selected_pools = new_selection;
-                        best_provided_count = unique_provided.length;
-                        best_entitlements_count = total_entitlements;
+    get_best_entitlement_groups: function(all_groups, installed, compliance) {
+        var best = [];
+        
+        var partial_stacks = [];
+        for (var stack_id in compliance["partialStacks"]) {
+            if (compliance["partialStacks"].hasOwnProperty(stack_id)) {
+                for(var i = 0; i < all_groups.length; i++) {
+                    var current_group = all_groups[i];
+                    if (current_group.stack_id == stack_id) {
+                        var in_common = this.get_common_products(installed, current_group);
+                        current_group.installed = in_common; // don't have to
+                                                                // worry about
+                                                                // products that
+                                                                // other stacks
+                                                                // are handling
+                        best.push(current_group);
+ 
+                        for (var j = installed.length - 1; j >= 0; j--) {
+                            var current= installed[j];
+                            if (in_common.indexOf(current) != -1) {
+                               installed.splice(j, 1);
+                            }
+                        }
                     }
                 }
             }
         }
 
-        // We may not have selected pools for all products; that's ok.
+        var group = this.find_best_ent_group(all_groups, installed);
+        while (group != null) {
+            best.push(group);
+            var in_common = this.get_common_products(installed, group);
+            for (var j = installed.length - 1; j >= 0; j--) {
+                var current = installed[j];
+                if (in_common.indexOf(current) != -1) {
+                   installed.splice(j, 1);
+                }
+            }
+            group.installed = in_common;
+            group = this.find_best_ent_group(all_groups, installed);
+        }
+        return best;
+    },
+
+    get_attached_ents: function(compliance) {
+        var attached_ents = [];
+        var createPoolsFor = ["partialStacks",
+                              "partiallyCompliantProducts",
+                              "compliantProducts"];
+
+        // Create the pools for all entitlement maps in compliance.
+        // The number of entitlements should be relatively small.
+        for (var i = 0; i < createPoolsFor.length; i++) {
+            var nextMapAttrName = createPoolsFor[i];
+            var nextMap = compliance[nextMapAttrName];
+            for (var key in nextMap) {
+                var ents = nextMap[key];
+                for (var entIdx = 0; entIdx < ents.length; entIdx++) {
+                    //these only really matter if they're stacked because we can't remove entitlements,
+                    //only build upon existant stacks
+                    if (is_pool_stacked(ents[entIdx].pool)) {
+                        var contains = false;
+                        //Must make sure there are no duplicates
+                        for (var j = 0; j < attached_ents.length; j++) {
+                            if (ents[entIdx].id == attached_ents[j].id) {
+                                contains = true;
+                            }
+                        }
+                        if (!contains) {
+                            attached_ents.push(ents[entIdx]);
+                        }
+                    }
+                }
+            }
+        }
+        return attached_ents;
+    },
+
+    select_pools: function() {
+        var context = this.create_autobind_context();
+
+        var attached_ents = this.get_attached_ents(context.compliance);
+        
+        var valid_pools = this.get_valid_pools(context);
+
+        var installed = context.products;
+        //filter compliant products from this list
+        for (var prod in context.compliance["compliantProducts"]) {
+            if (installed.indexOf(prod) != -1) {
+                installed.splice(installed.indexOf(prod), 1);
+            }
+        }
+        var ent_groups = this.build_entitlement_groups(valid_pools, installed, context.consumer, attached_ents);
+        log.debug("Total ent groups: "+ent_groups.length);
+
+        var valid_groups = [];
+        for (var i = ent_groups.length - 1; i >= 0; i--) {
+            var ent_group = ent_groups[i];
+            if (ent_group.validate()) {
+                valid_groups.push(ent_group);
+            } else {
+                log.debug("Group "+ent_group.stack_id+" failed validation.");
+            }
+        }
+
+        log.debug("finding best ent groups");
+        var best_groups = this.get_best_entitlement_groups(valid_groups, installed, context.compliance);
+        log.debug("best_groups size: "+best_groups.length);
+
+        for (var i = 0; i < best_groups.length; i++) {
+            var group = best_groups[i];
+            group.remove_extra_attrs();
+            group.prune_pools();
+        }
+
+        selected_pools = Utils.getJsMap();
+
+        for (var i = 0; i < best_groups.length; i++) {
+            var group = best_groups[i];
+            selected_pools.putAll(group.get_pool_quantity());
+        }
         selected_pools.dump("selected_pools");
         var output = JSON.stringify(selected_pools.map);
         return output;
@@ -1838,8 +2300,12 @@ var Autobind = {
 }
 
 function is_stacked(ent) {
-    for (var j = 0; j < ent.pool.productAttributes.length; j++) {
-        var attr = ent.pool.productAttributes[j];
+    return is_pool_stacked(ent.pool);
+}
+
+function is_pool_stacked(pool) {
+    for (var j = 0; j < pool.productAttributes.length; j++) {
+        var attr = pool.productAttributes[j];
 
         if (attr.name == "stacking_id") {
             return true;
