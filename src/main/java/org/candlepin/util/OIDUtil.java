@@ -80,6 +80,7 @@ public final class OIDUtil {
 
     public static final String CF_REPO_TYPE_FILE_KEY = "file";
     public static final String CF_REPO_TYPE_YUM_KEY = "yum";
+    public static final String CF_REPO_TYPE_KICKSTART_KEY = "kickstart";
 
     public static final Map<String, String> SYSTEM_OIDS = new HashMap<String, String>();
     public static final Map<String, String> ORDER_OIDS = new HashMap<String, String>();
@@ -171,6 +172,7 @@ public final class OIDUtil {
 
         CF_REPO_TYPE.put(CF_REPO_TYPE_YUM_KEY, "1");
         CF_REPO_TYPE.put(CF_REPO_TYPE_FILE_KEY, "2");
+        CF_REPO_TYPE.put(CF_REPO_TYPE_KICKSTART_KEY, "3");
     }
 
     // Maybe not the best place for this, but better than relying on bouncycastle for it.
