@@ -15,6 +15,7 @@
 package org.candlepin.policy.test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.eq;
@@ -399,7 +400,7 @@ public class AutobindRulesTest {
         assertTrue(bestPools.contains(new PoolQuantity(slaPremiumPool, 1)));
     }
 
-    @Test(expected = RuleExecutionException.class)
+    @Test
     public void testFindBestWillNotCompleteAPartialStackFromAnotherId() {
         consumer.setFact("cpu.cpu_socket(s)", "8");
         String productId1 = "A";
@@ -433,19 +434,16 @@ public class AutobindRulesTest {
 
         compliance.addPartialStack("1", entitlement);
 
-        //it is possible for this to throw RuleExecutionException on some rules versions
         List<PoolQuantity> result = autobindRules.selectBestPools(consumer,
             new String[]{ productId2, productId3 },
             pools, compliance, null, new HashSet<String>());
-        //if it isn't thrown, we can make sure the partial stack wasn't completed
-        if (result != null) {
-            for (PoolQuantity pq : result) {
-                if (pq.getPool().getId().equals(pool1.getId())) {
-                    fail("Should not complete this stack");
-                }
+        assertNotNull(result);
+        // We can make sure the partial stack wasn't completed
+        for (PoolQuantity pq : result) {
+            if (pq.getPool().getId().equals(pool1.getId())) {
+                fail("Should not complete this stack");
             }
         }
-        throw new RuleExecutionException("throwing exception to satisfy test");
     }
 
     protected Pool createPool(Owner owner, Product product,
@@ -492,10 +490,9 @@ public class AutobindRulesTest {
         List<PoolQuantity> result = autobindRules.selectBestPools(consumer,
             new String[] {product.getId()}, availablePools, compliance, null,
             new HashSet<String>());
-        if (result != null) {
-            for (PoolQuantity pq : result) {
-                assertEquals(new Integer(1), pq.getQuantity());
-            }
+        assertNotNull(result);
+        for (PoolQuantity pq : result) {
+            assertEquals(new Integer(1), pq.getQuantity());
         }
     }
 
