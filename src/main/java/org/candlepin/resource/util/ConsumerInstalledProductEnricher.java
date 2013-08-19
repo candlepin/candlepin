@@ -103,7 +103,9 @@ public class ConsumerInstalledProductEnricher {
     protected DateRange getValidDateRange(Product product) {
         // We only return a DateRange for valid products.
         String status = getStatus(product.getId());
-        if (status != GREEN_STATUS) {
+
+        // This just saves some time, not necessary for correctness
+        if (status == RED_STATUS) {
             return null;
         }
 
@@ -144,8 +146,16 @@ public class ConsumerInstalledProductEnricher {
             Date entStart = next.getStartDate();
             Date entEnd = next.getEndDate();
 
-            boolean entValidOnStart = isEntitlementValidOnDate(next, possible, entStart);
-            boolean entValidOnEnd = isEntitlementValidOnDate(next, possible, entEnd);
+            boolean entValidOnStart;
+            boolean entValidOnEnd;
+            if (status == GREEN_STATUS) {
+                entValidOnStart = isEntitlementValidOnDate(next, possible, entStart);
+                entValidOnEnd = isEntitlementValidOnDate(next, possible, entEnd);
+            }
+            else {
+                entValidOnStart = true;
+                entValidOnEnd = true;
+            }
 
             boolean validAfterLast = true;
 
@@ -157,9 +167,14 @@ public class ConsumerInstalledProductEnricher {
             if (lastProcessed != null && !last) {
                 Date afterLastProcessed = getDatePlusOneSecond(lastProcessed.getEndDate());
 
-                // bz#959967: pass in next instead of lastProcessed
-                validAfterLast = isEntitlementValidOnDate(next, possible,
-                    afterLastProcessed);
+                if (status == GREEN_STATUS) {
+                    // bz#959967: pass in next instead of lastProcessed
+                    validAfterLast = isEntitlementValidOnDate(next, possible,
+                        afterLastProcessed);
+                }
+                else {
+                    validAfterLast = isEntitlementDateValid(next, afterLastProcessed);
+                }
                 if (!validAfterLast) {
                     startDate = null;
                 }
@@ -210,8 +225,7 @@ public class ConsumerInstalledProductEnricher {
      */
     private boolean isEntitlementValidOnDate(Entitlement ent,
         List<Entitlement> possible, Date date) {
-        DateRange entToCheckRange = new DateRange(ent.getStartDate(), ent.getEndDate());
-        boolean entToCheckActiveOnDate = entToCheckRange.contains(date);
+        boolean entToCheckActiveOnDate = isEntitlementDateValid(ent, date);
 
         // Check if entitlement is stackable.
         if (ent.getPool().hasProductAttribute("stacking_id")) {
@@ -248,6 +262,11 @@ public class ConsumerInstalledProductEnricher {
         // At this point, we consider the entitlement valid if the entitlement
         // covers the specified date.
         return entToCheckActiveOnDate;
+    }
+
+    private boolean isEntitlementDateValid(Entitlement ent, Date date) {
+        DateRange entToCheckRange = new DateRange(ent.getStartDate(), ent.getEndDate());
+        return entToCheckRange.contains(date);
     }
 
     /**
