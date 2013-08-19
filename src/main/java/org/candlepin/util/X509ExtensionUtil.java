@@ -225,6 +225,13 @@ public class X509ExtensionUtil  extends X509Util{
             // augment the content path with the prefix if it is passed in
             String contentPath = this.createFullContentPath(contentPrefix, pc);
 
+            // If we get a content type we don't have content type OID for
+            // skip it. see rhbz#997970
+            if (!OIDUtil.CF_REPO_TYPE.containsKey(pc.getContent().getType())) {
+                log.warn("No content type OID found for " + pc.getContent() +
+                    " with content type: " + pc.getContent().getType());
+                continue;
+            }
             String contentOid = OIDUtil.REDHAT_OID +
                 "." +
                 OIDUtil.TOPLEVEL_NAMESPACES
