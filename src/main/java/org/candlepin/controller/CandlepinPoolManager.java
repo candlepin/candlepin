@@ -1159,10 +1159,10 @@ public class CandlepinPoolManager implements PoolManager {
         return poolRules.updatePoolFromStack(pool, consumer, stackId);
     }
 
-    private PoolUpdate updatePoolFromStackedEntitlements(Pool pool, Consumer consumer, String stackId,
+    private PoolUpdate updatePoolFromStackedEntitlements(Pool pool,
+        Consumer consumer, String stackId,
         List<Entitlement> stackedEntitlements) {
-        return poolRules.updatePoolFromStackedEntitlements(pool, consumer, stackId,
-            stackedEntitlements);
+        return poolRules.updatePoolFromStackedEntitlements(pool, consumer,
+            stackId, stackedEntitlements);
     }
-
 }

@@ -277,14 +277,9 @@ public class PoolRules {
         return this.updatePoolFromStackedEntitlements(pool, consumer, stackId, stackedEnts);
     }
 
-    /**
-     * @param pool
-     * @param consumer
-     * @param stackId
-     * @param stackedEntitlements
-     */
-    public PoolUpdate updatePoolFromStackedEntitlements(Pool pool, Consumer consumer,
-            String stackId, List<Entitlement> stackedEnts) {
+    public PoolUpdate updatePoolFromStackedEntitlements(Pool pool,
+            Consumer consumer, String stackId,
+            List<Entitlement> stackedEnts) {
 
         PoolUpdate update = new PoolUpdate(pool);
 
@@ -374,8 +369,6 @@ public class PoolRules {
             }
         }
 
-
-
         // Check if the quantity should be changed. If there was no
         // virt limiting entitlement, then we leave the quantity alone,
         // else, we set the quantity to that of the eldest virt limiting
@@ -385,7 +378,7 @@ public class PoolRules {
             String virtLimit =
                 eldestWithVirtLimit.getPool().getProductAttributeValue("virt_limit");
 
-            Long quantity = virtLimit.equalsIgnoreCase("unlimited")?
+            Long quantity = virtLimit.equalsIgnoreCase("unlimited") ?
                 -1L : Long.parseLong(virtLimit);
 
             if (!quantity.equals(pool.getQuantity())) {
