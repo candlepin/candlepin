@@ -21,7 +21,6 @@ import java.util.Set;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
-import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.Subscription;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -34,17 +33,15 @@ public class Refresher {
 
     private CandlepinPoolManager poolManager;
     private SubscriptionServiceAdapter subAdapter;
-    private PoolCurator poolCurator;
     private boolean lazy;
 
     private Set<Owner> owners = Util.newSet();
     private Set<Product> products = Util.newSet();
 
     Refresher(CandlepinPoolManager poolManager, SubscriptionServiceAdapter subAdapter,
-        PoolCurator poolCurator, boolean lazy) {
+        boolean lazy) {
         this.poolManager = poolManager;
         this.subAdapter = subAdapter;
-        this.poolCurator = poolCurator;
         this.lazy = lazy;
     }
 
@@ -80,7 +77,7 @@ public class Refresher {
              * pools. this shouldn't happen; we should really get a refreshpools by owner
              * call for it, but why not handle it, just in case!
              */
-            List<Pool> pools = poolCurator.lookupBySubscriptionId(subscription.getId());
+            List<Pool> pools = poolManager.lookupBySubscriptionId(subscription.getId());
             if (pools.isEmpty()) {
                 poolManager.createPoolsForSubscription(subscription);
             }

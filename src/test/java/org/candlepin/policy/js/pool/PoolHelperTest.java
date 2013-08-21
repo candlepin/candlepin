@@ -220,7 +220,7 @@ public class PoolHelperTest {
 
         ph = new PoolHelper(pm, productCache, null);
         when(psa.getProductById(targetProduct.getId())).thenReturn(targetProduct);
-        assertTrue("Update expected.",
+        assertFalse("No update expected.",
             ph.copyProductAttributesOntoPool(sourceSub.getProduct().getId(), targetPool));
         assertEquals(1, targetPool.getProductAttributes().size());
         assertTrue(targetPool.hasProductAttribute("A1"));

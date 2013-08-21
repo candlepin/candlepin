@@ -28,6 +28,7 @@ import java.util.List;
 import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
@@ -59,6 +60,7 @@ public class PoolRulesInstanceTest {
     @Mock private ProductServiceAdapter productAdapterMock;
     @Mock private PoolManager poolManagerMock;
     @Mock private Config configMock;
+    @Mock private EntitlementCurator entCurMock;
 
     private ProductCache productCache;
 
@@ -74,7 +76,7 @@ public class PoolRulesInstanceTest {
         when(configMock.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
         productCache = new ProductCache(configMock, productAdapterMock);
 
-        poolRules = new PoolRules(poolManagerMock, productCache, configMock);
+        poolRules = new PoolRules(poolManagerMock, productCache, configMock, entCurMock);
     }
 
     @Test

@@ -24,6 +24,7 @@ import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.Table;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.codehaus.jackson.map.annotate.JsonFilter;
 
@@ -63,13 +64,26 @@ public class ProductPoolAttribute extends AbstractPoolAttribute {
         return productId;
     }
 
+//    @Override
+//    public boolean equals(Object anObject) {
+//        if (!(anObject instanceof ProductPoolAttribute)) {
+//            return false;
+//        }
+//        ProductPoolAttribute another = (ProductPoolAttribute) anObject;
+//        return super.equals(anObject) && getProductId().equals(another.getProductId());
+//    }
     @Override
     public boolean equals(Object anObject) {
-        if (!(anObject instanceof ProductPoolAttribute)) {
-            return false;
+        if (this == anObject) {
+            return true;
         }
-        ProductPoolAttribute another = (ProductPoolAttribute) anObject;
-        return super.equals(anObject) && getProductId().equals(another.getProductId());
+        if (anObject instanceof ProductPoolAttribute) {
+            ProductPoolAttribute that = (ProductPoolAttribute) anObject;
+            return new EqualsBuilder().append(this.name, that.getName())
+                .append(this.value, that.getValue())
+                .isEquals();
+        }
+        return false;
     }
 
     @Override

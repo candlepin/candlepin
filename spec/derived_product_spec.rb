@@ -83,10 +83,12 @@ describe 'Sub-pool Subscriptions Should' do
     derived_prod_pool = guest_pools[0]
     derived_prod_pool['quantity'].should == -1 # unlimited
 
+    derived_prod_pool['sourceConsumer']['uuid'].should == @physical_sys.uuid
+    derived_prod_pool['sourceStackId'].should == "stackme"
+
     pool_attrs = flatten_attributes(derived_prod_pool['attributes'])
     verify_attribute(pool_attrs, "requires_consumer_type", 'system')
     verify_attribute(pool_attrs, "requires_host", @physical_sys.uuid)
-    verify_attribute(pool_attrs, "source_pool_id", @main_pool.id)
     verify_attribute(pool_attrs, "virt_only", "true")
     verify_attribute(pool_attrs, "pool_derived", "true")
 

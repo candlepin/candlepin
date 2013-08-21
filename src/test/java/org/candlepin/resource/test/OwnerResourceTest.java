@@ -726,7 +726,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         when(akc.lookupForOwner(eq("testKey"), eq(o))).thenReturn(akOld);
         when(oc.lookupByKey(eq("testOwner"))).thenReturn(o);
 
-        OwnerResource or = new OwnerResource(oc, null,
+        OwnerResource or = new OwnerResource(oc,
             null, akc, null, null, i18n, null, null, null,
             null, null, null, null, null, null, null,
             null, null, null, null, null, null, null);
@@ -803,7 +803,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         throws IOException, ImporterException {
         Importer importer = mock(Importer.class);
         EventSink es = mock(EventSink.class);
-        OwnerResource thisOwnerResource = new OwnerResource(ownerCurator, null, null,
+        OwnerResource thisOwnerResource = new OwnerResource(ownerCurator, null,
             null, null, null, i18n, es, null, null, null, importer, null, null,
             null, importRecordCurator, null, null, null, null, null,
             null, null, null);
@@ -838,7 +838,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         EventSink es = mock(EventSink.class);
         ExporterMetadataCurator ec = mock(ExporterMetadataCurator.class);
         SubscriptionCurator sc = mock(SubscriptionCurator.class);
-        OwnerResource thisOwnerResource = new OwnerResource(ownerCurator, null, sc,
+        OwnerResource thisOwnerResource = new OwnerResource(ownerCurator, sc,
             null, null, null, i18n, es, null, null, null, null, null, ec,
             null, importRecordCurator, null, null, null, null, null,
             null, null, null);
@@ -861,7 +861,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         throws IOException, ImporterException {
         Importer importer = mock(Importer.class);
         EventSink es = mock(EventSink.class);
-        OwnerResource thisOwnerResource = new OwnerResource(ownerCurator, null, null,
+        OwnerResource thisOwnerResource = new OwnerResource(ownerCurator, null,
             null, null, null, i18n, es, null, null, null, importer, null, null,
             null, importRecordCurator, null, null, null, null, null,
             null, null, null);
@@ -902,7 +902,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerCurator oc = mock(OwnerCurator.class);
         UpstreamConsumer upstream = mock(UpstreamConsumer.class);
         Owner owner = mock(Owner.class);
-        OwnerResource ownerres = new OwnerResource(oc, null, null,
+        OwnerResource ownerres = new OwnerResource(oc, null,
             null, null, null, i18n, null, null, null, null, null, null, null,
             null, null, null, null, null, null, null, null, null, null);
 

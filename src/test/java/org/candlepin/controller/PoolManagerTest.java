@@ -57,6 +57,8 @@ import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.Subscription;
+import org.candlepin.paging.Page;
+import org.candlepin.paging.PageRequest;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.autobind.AutobindRules;
@@ -75,6 +77,7 @@ import org.candlepin.util.Util;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
@@ -151,8 +154,9 @@ public class PoolManagerTest {
             dummyComplianceStatus);
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Test
-    public void testRefreshPoolsForDeactivatingPools() {
+    public void testRefreshPoolsForDeletingPools() {
         List<Subscription> subscriptions = Util.newList();
         List<Pool> pools = Util.newList();
         Pool p = TestUtil.createPool(TestUtil.createProduct());
@@ -160,12 +164,44 @@ public class PoolManagerTest {
         pools.add(p);
         when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
             subscriptions);
+
+        Page page = mock(Page.class);
+        when(page.getPageData()).thenReturn(pools);
+
         when(
             mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
                 any(Owner.class), anyString(), any(Date.class),
-                anyBoolean(), anyBoolean())).thenReturn(pools);
+                anyBoolean(), any(PageRequest.class))).thenReturn(page);
         this.manager.getRefresher().add(getOwner()).run();
         verify(this.manager).deletePool(same(p));
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Test
+    public void testRefreshPoolsSortsStackDerivedPools() {
+        List<Subscription> subscriptions = Util.newList();
+        List<Pool> pools = Util.newList();
+
+        // Pool has no subscription ID:
+        Pool p = TestUtil.createPool(TestUtil.createProduct());
+        p.setSourceStackId("a");
+
+        pools.add(p);
+        when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
+            subscriptions);
+
+        Page page = mock(Page.class);
+        when(page.getPageData()).thenReturn(pools);
+        when(
+            mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
+                any(Owner.class), anyString(), any(Date.class),
+                anyBoolean(), any(PageRequest.class))).thenReturn(page);
+
+        this.manager.getRefresher().add(getOwner()).run();
+        ArgumentCaptor<List> poolCaptor = ArgumentCaptor.forClass(List.class);
+        verify(this.poolRulesMock).updatePools(poolCaptor.capture());
+        assertEquals(1, poolCaptor.getValue().size());
+        assertEquals(p, poolCaptor.getValue().get(0));
     }
 
     @Test
@@ -177,10 +213,14 @@ public class PoolManagerTest {
         subscriptions.add(s);
         when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
             subscriptions);
+
+        Page page = mock(Page.class);
+        when(page.getPageData()).thenReturn(pools);
+
         when(
             mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
                 any(Owner.class), anyString(), any(Date.class),
-                anyBoolean(), anyBoolean())).thenReturn(pools);
+                anyBoolean(), any(PageRequest.class))).thenReturn(page);
 
         List<Pool> newPools = new LinkedList<Pool>();
         Pool p = TestUtil.createPool(s.getProduct());
@@ -192,6 +232,7 @@ public class PoolManagerTest {
         verify(this.mockPoolCurator, times(1)).create(any(Pool.class));
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Test
     public void refreshPoolsCleanupPoolThatLostVirtLimit() {
         List<Subscription> subscriptions = Util.newList();
@@ -207,10 +248,14 @@ public class PoolManagerTest {
 
         when(mockSubAdapter.getSubscriptions(any(Owner.class))).thenReturn(
             subscriptions);
+
+        Page page = mock(Page.class);
+        when(page.getPageData()).thenReturn(pools);
+
         when(
             mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
                 any(Owner.class), anyString(), any(Date.class),
-                anyBoolean(), anyBoolean())).thenReturn(pools);
+                anyBoolean(), any(PageRequest.class))).thenReturn(page);
 
         List<PoolUpdate> updates = new LinkedList();
         PoolUpdate u = new PoolUpdate(p);
@@ -329,7 +374,7 @@ public class PoolManagerTest {
         verify(entitlementCurator).delete(e);
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Test
     public void testEntitleWithADate() throws Exception {
         Product product = TestUtil.createProduct();
@@ -342,10 +387,12 @@ public class PoolManagerTest {
 
 
         ValidationResult result = mock(ValidationResult.class);
+        Page page = mock(Page.class);
 
+        when(page.getPageData()).thenReturn(pools);
         when(mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
             any(Owner.class), any(String.class), eq(now), anyBoolean(),
-            anyBoolean())).thenReturn(pools);
+            any(PageRequest.class))).thenReturn(page);
         when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(pool1);
         when(enforcerMock.preEntitlement(any(Consumer.class), any(Pool.class), anyInt(),
             any(CallerType.class))).thenReturn(result);
@@ -366,6 +413,7 @@ public class PoolManagerTest {
         assertEquals(e.size(), 1);
     }
 
+    @SuppressWarnings("rawtypes")
     @Test
     public void testRefreshPoolsRemovesExpiredSubscriptionsAlongWithItsPoolsAndEnts() {
         PreUnbindHelper preHelper =  mock(PreUnbindHelper.class);
@@ -393,11 +441,14 @@ public class PoolManagerTest {
         p.setConsumed(1L);
         pools.add(p);
 
+        Page page = mock(Page.class);
+        when(page.getPageData()).thenReturn(pools);
+
         when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(p);
 
         when(mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
             any(Owner.class), anyString(), any(Date.class),
-            anyBoolean(), anyBoolean())).thenReturn(pools);
+            anyBoolean(), any(PageRequest.class))).thenReturn(page);
 
         List<Entitlement> poolEntitlements = Util.newList();
         Entitlement ent = TestUtil.createEntitlement();
@@ -465,6 +516,7 @@ public class PoolManagerTest {
         return newPool;
     }
 
+    @SuppressWarnings("rawtypes")
     @Test
     public void testEntitleByProductsEmptyArray() throws Exception {
         Product product = TestUtil.createProduct();
@@ -483,9 +535,13 @@ public class PoolManagerTest {
         when(complianceRules.getStatus(any(Consumer.class),
             any(Date.class))).thenReturn(mockCompliance);
 
+
+        Page page = mock(Page.class);
+        when(page.getPageData()).thenReturn(pools);
+
         when(mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class),
             any(Owner.class), anyString(), eq(now),
-            anyBoolean(), anyBoolean())).thenReturn(pools);
+            anyBoolean(), any(PageRequest.class))).thenReturn(page);
 
         when(mockPoolCurator.lockAndLoad(any(Pool.class))).thenReturn(pool1);
         when(enforcerMock.preEntitlement(any(Consumer.class), any(Pool.class), anyInt(),

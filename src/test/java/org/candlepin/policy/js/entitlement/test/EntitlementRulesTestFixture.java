@@ -27,9 +27,11 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolAttribute;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
@@ -66,6 +68,12 @@ public class EntitlementRulesTestFixture {
     protected ComplianceStatus compliance;
     @Mock
     protected PoolManager poolManagerMock;
+    @Mock
+    protected EntitlementCurator entCurMock;
+
+    @Mock
+    protected PoolCurator poolCurator;
+
     protected Owner owner;
     protected Consumer consumer;
     protected String productId = "a-product";
@@ -92,7 +100,7 @@ public class EntitlementRulesTestFixture {
         JsRunner jsRules = new JsRunnerProvider(rulesCurator).get();
         enforcer = new EntitlementRules(new DateSourceImpl(), jsRules,
             productCache, I18nFactory.getI18n(getClass(), Locale.US,
-                I18nFactory.FALLBACK), config, consumerCurator);
+                I18nFactory.FALLBACK), config, consumerCurator, poolCurator);
 
         owner = new Owner();
         consumer = new Consumer("test consumer", "test user", owner,
@@ -100,7 +108,8 @@ public class EntitlementRulesTestFixture {
 
         attrHelper = new AttributeHelper();
 
-        poolRules = new PoolRules(poolManagerMock, productCache, config);
+        poolRules = new PoolRules(poolManagerMock, productCache, config,
+            entCurMock);
     }
 
     protected Subscription createVirtLimitSub(String productId, int quantity,

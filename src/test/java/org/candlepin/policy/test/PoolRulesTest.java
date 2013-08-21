@@ -36,6 +36,7 @@ import org.candlepin.config.Config;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Entitlement;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolAttribute;
@@ -45,7 +46,6 @@ import org.candlepin.model.ProductPoolAttribute;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
-import org.candlepin.model.DerivedProductPoolAttribute;
 import org.candlepin.model.Subscription;
 import org.candlepin.policy.js.ProductCache;
 import org.candlepin.policy.js.pool.PoolRules;
@@ -72,6 +72,7 @@ public class PoolRulesTest {
     @Mock private ProductServiceAdapter productAdapterMock;
     @Mock private PoolManager poolManagerMock;
     @Mock private Config configMock;
+    @Mock private EntitlementCurator entCurMock;
 
     private ProductCache productCache;
     private UserPrincipal principal;
@@ -91,35 +92,9 @@ public class PoolRulesTest {
         when(configMock.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
         productCache = new ProductCache(configMock, productAdapterMock);
 
-        poolRules = new PoolRules(poolManagerMock, productCache, configMock);
+        poolRules = new PoolRules(poolManagerMock, productCache, configMock, entCurMock);
         principal = TestUtil.createOwnerPrincipal();
         owner = principal.getOwners().get(0);
-    }
-
-    private Pool copyFromSub(Subscription sub) {
-        Pool p = new Pool(sub.getOwner(), sub.getProduct().getId(),
-            sub.getProduct().getName(), new HashSet<ProvidedProduct>(),
-            sub.getQuantity(), sub.getStartDate(),
-            sub.getEndDate(), sub.getContractNumber(), sub.getAccountNumber(),
-            sub.getOrderNumber());
-        p.setSubscriptionId(sub.getId());
-
-        for (ProductAttribute attr : sub.getProduct().getAttributes()) {
-            p.addProductAttribute(new ProductPoolAttribute(attr.getName(), attr.getValue(),
-                sub.getProduct().getId()));
-        }
-
-        // Copy sub-product data if there is any:
-        if (sub.getDerivedProduct() != null) {
-            p.setDerivedProductId(sub.getDerivedProduct().getId());
-            p.setDerivedProductName(sub.getDerivedProduct().getName());
-            for (ProductAttribute attr : sub.getDerivedProduct().getAttributes()) {
-                p.addSubProductAttribute(new DerivedProductPoolAttribute(attr.getName(),
-                    attr.getValue(), sub.getProduct().getId()));
-            }
-        }
-
-        return p;
     }
 
     @Test
@@ -158,7 +133,7 @@ public class PoolRulesTest {
         s.getProvidedProducts().add(product2);
 
         // Setup a pool with a single (different) provided product:
-        Pool p = copyFromSub(s);
+        Pool p = TestUtil.copyFromSub(s);
         p.getProvidedProducts().clear();
         p.getProvidedProducts().add(
             new ProvidedProduct(product3.getId(), product3.getName(), p));
@@ -178,7 +153,7 @@ public class PoolRulesTest {
         Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
 
         // Setup a pool with a single (different) provided product:
-        Pool p = copyFromSub(s);
+        Pool p = TestUtil.copyFromSub(s);
         p.setProductName("somethingelse");
 
         List<Pool> existingPools = Arrays.asList(p);
@@ -197,7 +172,7 @@ public class PoolRulesTest {
         Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
 
         // Setup a pool with a single (different) provided product:
-        Pool p = copyFromSub(s);
+        Pool p = TestUtil.copyFromSub(s);
         p.setEndDate(new Date());
 
         List<Pool> existingPools = Arrays.asList(p);
@@ -216,7 +191,7 @@ public class PoolRulesTest {
         Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
 
         // Setup a pool with a single (different) provided product:
-        Pool p = copyFromSub(s);
+        Pool p = TestUtil.copyFromSub(s);
         p.setQuantity(2000L);
 
         List<Pool> existingPools = Arrays.asList(p);
@@ -237,7 +212,7 @@ public class PoolRulesTest {
         s.setQuantity(10L);
 
         // Setup a pool with a single (different) provided product:
-        Pool p = copyFromSub(s);
+        Pool p = TestUtil.copyFromSub(s);
         p.addAttribute(new PoolAttribute("virt_only", "true"));
         p.addAttribute(new PoolAttribute("pool_derived", "true"));
         p.setQuantity(40L);
@@ -256,7 +231,7 @@ public class PoolRulesTest {
     @Test
     public void updatePoolWithNewProductAttributes() {
         Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
-        Pool p = copyFromSub(s);
+        Pool p = TestUtil.copyFromSub(s);
 
         // Update the subscription's product.
         String testAttributeKey = "multi-entitlement";
@@ -276,7 +251,7 @@ public class PoolRulesTest {
     @Test
     public void updatePoolWithNewSubProductAttributes() {
         Subscription s = createSubscriptionWithSubProduct();
-        Pool p = copyFromSub(s);
+        Pool p = TestUtil.copyFromSub(s);
 
         // Update the subscription's sub-product:
         s.getDerivedProduct().setAttribute("a", "new value");
@@ -293,7 +268,7 @@ public class PoolRulesTest {
     @Test
     public void updateDerivedPoolWithNewSubProductAttributes() {
         Subscription s = createSubscriptionWithSubProduct();
-        Pool p = copyFromSub(s);
+        Pool p = TestUtil.copyFromSub(s);
 
         // Simulate that this is a derived pool. When we add a new sub-product attribute
         // to the subscription, it should show up as a primary product attribute on a
@@ -316,7 +291,7 @@ public class PoolRulesTest {
     @Test
     public void updatePoolWithModifiedProductAttributes() {
         Subscription s = TestUtil.createSubscription(owner, TestUtil.createProduct());
-        Pool p = copyFromSub(s);
+        Pool p = TestUtil.copyFromSub(s);
 
         String testAttributeKey = "multi-entitlement";
         String expectedAttributeValue = "yes";
@@ -346,7 +321,7 @@ public class PoolRulesTest {
     public void updatePoolWithModifiedSubProductAttributes() {
         Subscription s = createSubscriptionWithSubProduct();
         s.getDerivedProduct().setAttribute("a", "orig value");
-        Pool p = copyFromSub(s);
+        Pool p = TestUtil.copyFromSub(s);
 
         // Update the subscription's sub-product:
         String newVal = "new value";
@@ -376,7 +351,7 @@ public class PoolRulesTest {
     @Test
     public void updateDerivedPoolWithModifiedSubProductAttributes() {
         Subscription s = createSubscriptionWithSubProduct();
-        Pool p = copyFromSub(s);
+        Pool p = TestUtil.copyFromSub(s);
         p.setAttribute("pool_derived", "true");
 
         s.getDerivedProduct().setAttribute("a", "orig value");
@@ -410,7 +385,7 @@ public class PoolRulesTest {
         s.getDerivedProvidedProducts().add(product2);
 
         // Setup a pool with a single (different) provided product:
-        Pool p = copyFromSub(s);
+        Pool p = TestUtil.copyFromSub(s);
         p.getProvidedProducts().clear();
         p.getProvidedProducts().add(
             new ProvidedProduct(product3.getId(), product3.getName(), p));
@@ -429,7 +404,7 @@ public class PoolRulesTest {
         String testAttributeKey = "multi-entitlement";
         s.getProduct().setAttribute(testAttributeKey, "yes");
 
-        Pool p = copyFromSub(s);
+        Pool p = TestUtil.copyFromSub(s);
         p.setProductAttribute(testAttributeKey, "yes", s.getProduct().getId());
 
         // Change the sub's product's ID
@@ -753,7 +728,7 @@ public class PoolRulesTest {
 
         // Now make a pool that would have been created for guests only after a host
         // bound to the parent pool:
-        Pool consumerSpecificPool = copyFromSub(s);
+        Pool consumerSpecificPool = TestUtil.copyFromSub(s);
         consumerSpecificPool.setAttribute("requires_host", "FAKEUUID");
         consumerSpecificPool.setAttribute("pool_derived", "true");
         consumerSpecificPool.setAttribute("virt_only", "true");
@@ -777,7 +752,7 @@ public class PoolRulesTest {
 
         // Now make a pool that would have been created for guests only after a host
         // bound to the parent pool:
-        Pool consumerSpecificPool = copyFromSub(s);
+        Pool consumerSpecificPool = TestUtil.copyFromSub(s);
         consumerSpecificPool.setAttribute("requires_host", "FAKEUUID");
         consumerSpecificPool.setAttribute("pool_derived", "true");
         consumerSpecificPool.setAttribute("virt_only", "true");
@@ -803,7 +778,7 @@ public class PoolRulesTest {
             .thenReturn(s.getProduct());
 
         // Setup a pool with a single (different) provided product:
-        Pool p = copyFromSub(s);
+        Pool p = TestUtil.copyFromSub(s);
         p.addAttribute(new PoolAttribute("virt_only", "true"));
         p.addAttribute(new PoolAttribute("pool_derived", "true"));
         p.setQuantity(10L);
@@ -822,7 +797,7 @@ public class PoolRulesTest {
         s.setQuantity(10L);
 
         // Setup a pool with a single (different) provided product:
-        Pool p = copyFromSub(s);
+        Pool p = TestUtil.copyFromSub(s);
         p.addAttribute(new PoolAttribute("virt_only", "true"));
         p.addAttribute(new PoolAttribute("pool_derived", "true"));
         p.setQuantity(20L);
@@ -845,7 +820,7 @@ public class PoolRulesTest {
         s.setContractNumber("123");
 
         // Setup a pool with a single (different) provided product:
-        Pool p = copyFromSub(s);
+        Pool p = TestUtil.copyFromSub(s);
         p.setQuantity(2000L);
         p.setContractNumber("ABC");
 
@@ -865,7 +840,7 @@ public class PoolRulesTest {
         s.setOrderNumber("123");
 
         // Setup a pool with a single (different) provided product:
-        Pool p = copyFromSub(s);
+        Pool p = TestUtil.copyFromSub(s);
         p.setQuantity(2000L);
         p.setOrderNumber("ABC");
 
@@ -885,7 +860,7 @@ public class PoolRulesTest {
         s.setAccountNumber("123");
 
         // Setup a pool with a single (different) provided product:
-        Pool p = copyFromSub(s);
+        Pool p = TestUtil.copyFromSub(s);
         p.setQuantity(2000L);
         p.setAccountNumber("ABC");
 
@@ -898,4 +873,5 @@ public class PoolRulesTest {
         assertTrue(update.getOrderChanged());
         assertEquals("123", update.getPool().getAccountNumber());
     }
+
 }

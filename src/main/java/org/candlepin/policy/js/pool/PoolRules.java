@@ -14,6 +14,7 @@
  */
 package org.candlepin.policy.js.pool;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -21,12 +22,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.candlepin.config.Config;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.model.Consumer;
+import org.candlepin.model.Entitlement;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductAttribute;
+import org.candlepin.model.ProductPoolAttribute;
 import org.candlepin.model.ProvidedProduct;
 import org.candlepin.model.DerivedProvidedProduct;
 import org.candlepin.model.Subscription;
@@ -44,13 +50,16 @@ public class PoolRules {
     private PoolManager poolManager;
     private ProductCache productCache;
     private Config config;
+    private EntitlementCurator entCurator;
 
 
     @Inject
-    public PoolRules(PoolManager poolManager, ProductCache productCache, Config config) {
+    public PoolRules(PoolManager poolManager, ProductCache productCache, Config config,
+        EntitlementCurator entCurator) {
         this.poolManager = poolManager;
         this.productCache = productCache;
         this.config = config;
+        this.entCurator = entCurator;
     }
 
     private long calculateQuantity(Subscription sub) {
@@ -168,6 +177,37 @@ public class PoolRules {
         return pools;
     }
 
+    /**
+     * Refresh pools which have no subscription tied (directly) to them.
+     *
+     * @param floatingPools ools with no subscription ID
+     * @return pool updates
+     */
+    public List<PoolUpdate> updatePools(List<Pool> floatingPools) {
+        List<PoolUpdate> updates = new LinkedList<PoolUpdate>();
+        for (Pool p : floatingPools) {
+
+            if (p.getSubscriptionId() != null) {
+                // Should be filtered out before calling, but just in case we skip it:
+                continue;
+            }
+
+            if (p.getSourceStackId() != null) {
+                Consumer c = p.getSourceConsumer();
+                if (c == null) {
+                    log.error("Stack derived pool has no source consumer: " + p.getId());
+                }
+                else {
+                    PoolUpdate update = updatePoolFromStack(p, c, p.getSourceStackId());
+                    if (update.changed()) {
+                        updates.add(update);
+                    }
+                }
+            }
+        }
+        return updates;
+    }
+
     public List<PoolUpdate> updatePools(Subscription sub, List<Pool> existingPools) {
         log.info("Refreshing pools for existing subscription: " + sub);
         log.info("  existing pools: " + existingPools.size());
@@ -183,7 +223,8 @@ public class PoolRules {
             // Used to track if anything has changed:
             PoolUpdate update = new PoolUpdate(existingPool);
 
-            update.setDatesChanged(checkForDateChange(sub, existingPool));
+            update.setDatesChanged(checkForDateChange(sub.getStartDate(),
+                sub.getEndDate(), existingPool));
             update.setQuantityChanged(
                 checkForQuantityChange(sub, existingPool, existingPools, attributes));
 
@@ -192,10 +233,13 @@ public class PoolRules {
             // separately.
             // TODO: should they be separate? ^^
             update.setProductsChanged(
-                checkForChangedProducts(sub, existingPool));
+                checkForChangedProducts(sub.getProduct().getId(),
+                    sub.getProduct().getName(),
+                    getExpectedProvidedProducts(sub, existingPool),
+                    existingPool));
 
             update.setDerivedProductsChanged(
-                checkForChangedSubProducts(sub, existingPool));
+                checkForChangedDerivedProducts(sub, existingPool));
 
             update.setProductAttributesChanged(checkForProductAttributeChanges(sub,
                 helper, existingPool));
@@ -215,6 +259,112 @@ public class PoolRules {
         }
 
         return poolsUpdated;
+    }
+
+
+    /**
+     * Updates the pool based on the entitlements in the specified stack.
+     * @param pool
+     * @param consumer
+     * @param stackId
+     *
+     * @return pool update specifics
+     */
+    public PoolUpdate updatePoolFromStack(Pool pool, Consumer consumer, String stackId) {
+        List<Entitlement> stackedEnts = this.entCurator.findByStackId(consumer,
+            stackId);
+        return this.updatePoolFromStackedEntitlements(pool, consumer, stackId, stackedEnts);
+    }
+
+    public PoolUpdate updatePoolFromStackedEntitlements(Pool pool,
+            Consumer consumer, String stackId,
+            List<Entitlement> stackedEnts) {
+
+        PoolUpdate update = new PoolUpdate(pool);
+
+        // Nothing to do if there were no entitlements found.
+        if (stackedEnts.isEmpty()) {
+            return update;
+        }
+
+        pool.setSourceStackId(stackId);
+        pool.setSourceEntitlement(null);
+        pool.setSourceConsumer(consumer);
+        pool.setSubscriptionId(null);
+
+        StackedSubPoolValueAccumulator acc =
+            new StackedSubPoolValueAccumulator(pool, stackedEnts);
+
+        // Check if the quantity should be changed. If there was no
+        // virt limiting entitlement, then we leave the quantity alone,
+        // else, we set the quantity to that of the eldest virt limiting
+        // entitlement pool.
+        Entitlement eldestWithVirtLimit = acc.getEldestWithVirtLimit();
+        if (eldestWithVirtLimit != null) {
+            // Quantity may have changed, lets see.
+            String virtLimit =
+                eldestWithVirtLimit.getPool().getProductAttributeValue("virt_limit");
+
+            Long quantity = virtLimit.equalsIgnoreCase("unlimited") ?
+                -1L : Long.parseLong(virtLimit);
+
+            if (!quantity.equals(pool.getQuantity())) {
+                pool.setQuantity(quantity);
+                update.setQuantityChanged(true);
+            }
+        }
+
+        update.setDatesChanged(checkForDateChange(acc.getStartDate(), acc.getEndDate(),
+            pool));
+
+        // We use the "oldest" entitlement as the master for determining values that
+        // could have come from the various subscriptions.
+        Entitlement eldest = acc.getEldest();
+        Pool eldestEntPool = eldest.getPool();
+        boolean useDerived = eldestEntPool.getDerivedProductId() != null;
+        String prodId = useDerived ?
+            eldestEntPool.getDerivedProductId() : eldestEntPool.getProductId();
+        String prodName = useDerived ?
+            eldestEntPool.getDerivedProductName() : eldestEntPool.getProductName();
+
+        // Check if product ID, name, or provided products have changed.
+        update.setProductsChanged(checkForChangedProducts(prodId, prodName,
+            acc.getExpectedProvidedProds(), pool));
+
+        // Check if product attributes have changed.
+        Set<ProductPoolAttribute> expectedAttrs = acc.getExpectedAttributes();
+        if (!pool.getProductAttributes().equals(
+            new HashSet<ProductPoolAttribute>(expectedAttrs))) {
+            // Make sure each attribute has correct product ID on it,
+            // and update the pool.
+            pool.getProductAttributes().clear();
+            for (ProductPoolAttribute attr : expectedAttrs) {
+                attr.setProductId(pool.getProductId());
+                pool.addProductAttribute(attr);
+            }
+            update.setProductAttributesChanged(true);
+        }
+
+        if (!StringUtils.equals(eldestEntPool.getContractNumber(),
+            pool.getContractNumber()) ||
+            !StringUtils.equals(eldestEntPool.getOrderNumber(), pool.getOrderNumber()) ||
+            !StringUtils.equals(eldestEntPool.getAccountNumber(),
+                pool.getAccountNumber())) {
+
+            pool.setContractNumber(eldestEntPool.getContractNumber());
+            pool.setAccountNumber(eldestEntPool.getAccountNumber());
+            pool.setOrderNumber(eldestEntPool.getOrderNumber());
+            update.setOrderChanged(true);
+        }
+
+        // If there are any changes made, then mark all the entitlements as dirty
+        // so that they get regenerated on next checkin.
+        if (update.changed()) {
+            for (Entitlement ent : pool.getEntitlements()) {
+                ent.setDirty(true);
+            }
+        }
+        return update;
     }
 
     private boolean checkForOrderDataChanges(Subscription sub,
@@ -261,15 +411,8 @@ public class PoolRules {
         return subProdAttrsChanged;
     }
 
-    private boolean checkForChangedProducts(Subscription sub, Pool existingPool) {
-
-        boolean productsChanged =
-            !sub.getProduct().getId().equals(existingPool.getProductId());
-        productsChanged = productsChanged ||
-            !sub.getProduct().getName().equals(existingPool.getProductName());
-
-        // Build expected set of ProvidedProducts and compare:
-        Set<ProvidedProduct> currentProvided = existingPool.getProvidedProducts();
+    private Set<ProvidedProduct> getExpectedProvidedProducts(Subscription sub,
+        Pool existingPool) {
         Set<ProvidedProduct> incomingProvided = new HashSet<ProvidedProduct>();
         if (sub.getProvidedProducts() != null) {
             for (Product p : sub.getProvidedProducts()) {
@@ -277,19 +420,33 @@ public class PoolRules {
                     existingPool));
             }
         }
+        return incomingProvided;
+    }
+
+    private boolean checkForChangedProducts(String incomingProductId,
+        String incomingProductName, Set<ProvidedProduct> incomingProvided,
+        Pool existingPool) {
+
+        boolean productsChanged =
+            !incomingProductId.equals(existingPool.getProductId());
+        productsChanged = productsChanged ||
+            !incomingProductName.equals(existingPool.getProductName());
+
+        // Build expected set of ProvidedProducts and compare:
+        Set<ProvidedProduct> currentProvided = existingPool.getProvidedProducts();
         productsChanged = productsChanged || !currentProvided.equals(incomingProvided);
 
         if (productsChanged) {
             log.info("   Subscription products changed.");
-            existingPool.setProductName(sub.getProduct().getName());
-            existingPool.setProductId(sub.getProduct().getId());
+            existingPool.setProductId(incomingProductId);
+            existingPool.setProductName(incomingProductName);
             existingPool.getProvidedProducts().clear();
             existingPool.getProvidedProducts().addAll(incomingProvided);
         }
         return productsChanged;
     }
 
-    private boolean checkForChangedSubProducts(Subscription sub,
+    private boolean checkForChangedDerivedProducts(Subscription sub,
         Pool existingPool) {
 
         boolean productsChanged = false;
@@ -324,16 +481,16 @@ public class PoolRules {
         return productsChanged;
     }
 
-    private boolean checkForDateChange(Subscription sub, Pool existingPool) {
+    private boolean checkForDateChange(Date start, Date end, Pool existingPool) {
 
-        boolean datesChanged = (!sub.getStartDate().equals(
+        boolean datesChanged = (!start.equals(
             existingPool.getStartDate())) ||
-            (!sub.getEndDate().equals(existingPool.getEndDate()));
+            (!end.equals(existingPool.getEndDate()));
 
         if (datesChanged) {
             log.info("   Subscription dates changed.");
-            existingPool.setStartDate(sub.getStartDate());
-            existingPool.setEndDate(sub.getEndDate());
+            existingPool.setStartDate(start);
+            existingPool.setEndDate(end);
         }
         return datesChanged;
     }
@@ -344,7 +501,7 @@ public class PoolRules {
         // Expected quantity is normally the subscription's quantity, but for
         // virt only pools we expect it to be sub quantity * virt_limit:
         long expectedQuantity = calculateQuantity(sub);
-        expectedQuantity = processHostedVirtLimitPools(existingPools,
+        expectedQuantity = processVirtLimitPools(existingPools,
             attributes, existingPool, expectedQuantity);
 
 
@@ -358,7 +515,7 @@ public class PoolRules {
         return quantityChanged;
     }
 
-    private long processHostedVirtLimitPools(List<Pool> existingPools,
+    private long processVirtLimitPools(List<Pool> existingPools,
         Map<String, String> attributes, Pool existingPool, long expectedQuantity) {
         /*
          *  WARNING: when updating pools, we have the added complication of having to
@@ -428,6 +585,5 @@ public class PoolRules {
         }
         return expectedQuantity;
     }
-
 
 }
