@@ -103,9 +103,16 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     private static final String CONTENT_LABEL = "label";
     private static final String CONTENT_ID = "1234";
+    private static final String CONTENT_ID_FILE = "2456";
+    private static final String CONTENT_ID_KICKSTART = "2457";
+    private static final String CONTENT_ID_UNKNOWN = "2458";
     private static final String CONTENT_TYPE = "yum";
+    private static final String CONTENT_TYPE_KICKSTART = "kickstart";
+    private static final String CONTENT_TYPE_FILE = "file";
+    private static final String CONTENT_TYPE_UNKNOWN = "unknown content type";
     private static final String CONTENT_GPG_URL = "gpgUrl";
     private static final String CONTENT_URL = "/content/dist/rhel/$releasever/$basearch/os";
+    private static final String CONTENT_URL_UNKNOWN_TYPE = "/unknown/content/type";
     private static final String CONTENT_VENDOR = "vendor";
     private static final String CONTENT_NAME = "name";
     private static final Long CONTENT_METADATA_EXPIRE = 3200L;
@@ -139,6 +146,9 @@ public class DefaultEntitlementCertServiceAdapterTest {
     private Pool pool;
     private Pool largeContentPool;
     private Content content;
+    private Content kickstartContent;
+    private Content fileContent;
+    private Content unknownTypeContent;
     private Content noArchContent;
     private Owner owner;
     private Set<Content> superContent;
@@ -175,6 +185,23 @@ public class DefaultEntitlementCertServiceAdapterTest {
             CONTENT_TYPE, CONTENT_VENDOR, CONTENT_URL, CONTENT_GPG_URL, ARCH_LABEL);
         content.setMetadataExpire(CONTENT_METADATA_EXPIRE);
         content.setRequiredTags(REQUIRED_TAGS);
+
+        kickstartContent = createContent(CONTENT_NAME, CONTENT_ID_KICKSTART,
+            CONTENT_LABEL, CONTENT_TYPE_KICKSTART, CONTENT_VENDOR, CONTENT_URL,
+            CONTENT_GPG_URL, ARCH_LABEL);
+        kickstartContent.setMetadataExpire(CONTENT_METADATA_EXPIRE);
+        kickstartContent.setRequiredTags(REQUIRED_TAGS);
+
+        fileContent = createContent(CONTENT_NAME, CONTENT_ID_FILE, CONTENT_LABEL,
+            CONTENT_TYPE_FILE, CONTENT_VENDOR, CONTENT_URL, CONTENT_GPG_URL, ARCH_LABEL);
+        fileContent.setMetadataExpire(CONTENT_METADATA_EXPIRE);
+        fileContent.setRequiredTags(REQUIRED_TAGS);
+
+        unknownTypeContent = createContent(CONTENT_NAME, CONTENT_ID_UNKNOWN, CONTENT_LABEL,
+            CONTENT_TYPE_UNKNOWN, CONTENT_VENDOR, CONTENT_URL_UNKNOWN_TYPE,
+            CONTENT_GPG_URL, ARCH_LABEL);
+        unknownTypeContent.setMetadataExpire(CONTENT_METADATA_EXPIRE);
+        unknownTypeContent.setRequiredTags(REQUIRED_TAGS);
 
         String emptyArches = "";
         noArchContent = createContent(CONTENT_NAME, CONTENT_ID, CONTENT_LABEL,
@@ -746,6 +773,11 @@ public class DefaultEntitlementCertServiceAdapterTest {
         }
     }
 
+    private Boolean extMapHasContentType(Content cont, Map<String, String> extMap,
+        String contentType) {
+        return extMap.containsKey("1.3.6.1.4.1.2312.9.2." +
+            cont.getId() + "." + contentType + ".1");
+    }
 
     @Test
     public void testPrepareV1Extensions() throws IOException,
@@ -759,10 +791,14 @@ public class DefaultEntitlementCertServiceAdapterTest {
             certServiceAdapter.prepareV1Extensions(products, entitlement, "",
                 null);
         Map<String, X509ExtensionWrapper> map = getEncodedContent(extensions);
+        Map<String, String> extMap = getEncodedContentMap(extensions);
 
         assertTrue(isEncodedContentValid(map));
 
         assertTrue(map.containsKey(CONTENT_URL));
+        // do we have a yum content type oid
+        assertTrue(extMapHasContentType(content, extMap, "1"));
+        assertFalse(extMapHasContentType(content, extMap, "2"));
     }
 
     @Test
@@ -788,10 +824,159 @@ public class DefaultEntitlementCertServiceAdapterTest {
             certServiceAdapter.prepareV1Extensions(products, entitlement, "",
                 null);
         Map<String, X509ExtensionWrapper> map = getEncodedContent(extensions);
+        Map<String, String> extMap = getEncodedContentMap(extensions);
 
         assertFalse(isEncodedContentValid(map));
-
         assertFalse(map.containsKey(CONTENT_URL));
+        // make sure we don't set content type to "null"
+        assertFalse(extMapHasContentType(kickstartContent, extMap, "null"));
+    }
+
+    @Test
+    public void testPrepareV1ExtensionsKickstartContent() throws IOException,
+        GeneralSecurityException {
+        Set<Product> products = new HashSet<Product>();
+
+        // product with a kickstart content
+        Product kickstartProduct = new Product("12345", "a product",
+            "variant", "version", "ALL", "SVC");
+
+        kickstartProduct.setContent(Collections.singleton(kickstartContent));
+        products.clear();
+        products.add(kickstartProduct);
+        setupEntitlements(ARCH_LABEL, "1.0");
+
+        Set<X509ExtensionWrapper> extensions =
+            certServiceAdapter.prepareV1Extensions(products, entitlement, "",
+                null);
+        Map<String, X509ExtensionWrapper> map = getEncodedContent(extensions);
+        Map<String, String> extMap = getEncodedContentMap(extensions);
+
+        assertTrue(isEncodedContentValid(map));
+        assertTrue(map.containsKey(CONTENT_TYPE_KICKSTART));
+        assertTrue(map.containsKey(CONTENT_URL));
+
+        assertFalse(extMapHasContentType(kickstartContent, extMap, "1"));
+        assertFalse(extMapHasContentType(kickstartContent, extMap, "2"));
+        assertTrue(extMapHasContentType(kickstartContent, extMap, "3"));
+        // make sure we don't set content type to "null"
+        assertFalse(extMapHasContentType(kickstartContent, extMap, "null"));
+    }
+
+    @Test
+    public void testPrepareV1ExtensionsFileContent() throws IOException,
+        GeneralSecurityException {
+        Set<Product> products = new HashSet<Product>();
+
+        // product with a kickstart content
+        Product fileProduct = new Product("12345", "a product",
+            "variant", "version", "ALL", "SVC");
+
+        fileProduct.setContent(Collections.singleton(fileContent));
+        products.clear();
+        products.add(fileProduct);
+        setupEntitlements(ARCH_LABEL, "1.0");
+
+        Set<X509ExtensionWrapper> extensions =
+            certServiceAdapter.prepareV1Extensions(products, entitlement, "",
+                null);
+        Map<String, X509ExtensionWrapper> map = getEncodedContent(extensions);
+        Map<String, String> extMap = getEncodedContentMap(extensions);
+
+        assertTrue(isEncodedContentValid(map));
+        assertTrue(map.containsKey(CONTENT_TYPE_FILE));
+        assertTrue(map.containsKey(CONTENT_URL));
+
+        assertFalse(extMapHasContentType(fileContent, extMap, "1"));
+        assertTrue(extMapHasContentType(fileContent, extMap, "2"));
+        assertFalse(extMapHasContentType(fileContent, extMap, "3"));
+        // make sure we don't set content type to "null"
+        assertFalse(extMapHasContentType(fileContent, extMap, "null"));
+    }
+
+
+    @Test
+    public void testPrepareV1ExtensionsFileUnknownContentType() throws IOException,
+        GeneralSecurityException {
+        Set<Product> products = new HashSet<Product>();
+
+        // product with a kickstart content
+        Product unknownContentTypeProduct = new Product("12345", "a product",
+            "variant", "version", ARCH_LABEL, "SVC");
+
+        unknownContentTypeProduct.setContent(Collections.singleton(unknownTypeContent));
+        products.clear();
+        products.add(unknownContentTypeProduct);
+        setupEntitlements(ARCH_LABEL, "1.0");
+
+        Set<X509ExtensionWrapper> extensions =
+            certServiceAdapter.prepareV1Extensions(products, entitlement, "",
+                null);
+        Map<String, X509ExtensionWrapper> map = getEncodedContent(extensions);
+        Map<String, String> extMap = getEncodedContentMap(extensions);
+
+        // we skip content of unknown type for v1 certs
+        assertFalse(isEncodedContentValid(map));
+        assertFalse(map.containsKey(CONTENT_URL_UNKNOWN_TYPE));
+        assertFalse(map.containsKey(CONTENT_TYPE_UNKNOWN));
+
+        assertFalse(extMapHasContentType(unknownTypeContent, extMap, "1"));
+        assertFalse(extMapHasContentType(unknownTypeContent, extMap, "2"));
+        assertFalse(extMapHasContentType(unknownTypeContent, extMap, "3"));
+
+        // make sure we don't set content type to "null"
+        assertFalse(extMapHasContentType(unknownTypeContent, extMap, "null"));
+    }
+
+    @Test
+    public void testPrepareV1ExtensionsKnownAndUnknownContentTypes() throws IOException,
+        GeneralSecurityException {
+        Set<Product> products = new HashSet<Product>();
+
+        // product with a kickstart content
+        Product product = new Product("12345", "a product",
+            "variant", "version", ARCH_LABEL, "SVC");
+
+        Set<Content> multipleContents = new HashSet<Content>();
+        multipleContents.add(content);
+        multipleContents.add(fileContent);
+        multipleContents.add(kickstartContent);
+        multipleContents.add(unknownTypeContent);
+
+        product.setContent(multipleContents);
+        products.clear();
+        products.add(product);
+        setupEntitlements(ARCH_LABEL, "1.0");
+
+        Set<X509ExtensionWrapper> extensions =
+            certServiceAdapter.prepareV1Extensions(products, entitlement, "",
+                null);
+        Map<String, X509ExtensionWrapper> map = getEncodedContent(extensions);
+        Map<String, String> extMap = getEncodedContentMap(extensions);
+
+        // we skip content of unknown type for v1 certs, but other
+        // content should still get added
+        assertTrue(isEncodedContentValid(map));
+
+        // other contents are in there
+        assertTrue(map.containsKey(CONTENT_URL));
+
+        // unknown is not
+        assertFalse(map.containsKey(CONTENT_TYPE_UNKNOWN));
+        assertFalse(map.containsKey(CONTENT_URL_UNKNOWN_TYPE));
+
+        // we have a yum,file, and kickstart content and
+        // we do not have any unknown content types
+        assertTrue(extMapHasContentType(content, extMap, "1"));
+        assertTrue(extMapHasContentType(fileContent, extMap, "2"));
+        assertTrue(extMapHasContentType(kickstartContent, extMap, "3"));
+
+        assertFalse(extMapHasContentType(unknownTypeContent, extMap, "1"));
+        assertFalse(extMapHasContentType(unknownTypeContent, extMap, "2"));
+        assertFalse(extMapHasContentType(unknownTypeContent, extMap, "3"));
+
+        // make sure we don't set content type to "null"
+        assertFalse(extMapHasContentType(unknownTypeContent, extMap, "null"));
     }
 
     @Test
@@ -1560,6 +1745,18 @@ public class DefaultEntitlementCertServiceAdapterTest {
         return encodedContent;
     }
 
+    private Map<String, String> getEncodedContentMap(
+        Set<X509ExtensionWrapper> contentExtensions) {
+        Map<String, String> encodedContentMap =
+            new HashMap<String, String>();
+
+        for (X509ExtensionWrapper ext : contentExtensions) {
+            encodedContentMap.put(ext.getOid(), ext.getValue());
+        }
+        return encodedContentMap;
+
+    }
+
     private boolean isEncodedContentValid(Set<X509ExtensionWrapper> contentExtensions) {
         Map<String, X509ExtensionWrapper> encodedContent =
             getEncodedContent(contentExtensions);
@@ -1714,6 +1911,28 @@ public class DefaultEntitlementCertServiceAdapterTest {
             super(value, "1.3.6.1.4.1.2312.9.2." + contentID + ".1.6");
         }
     }
+
+    static class ListContainsContentTypeYum extends OidMatcher {
+
+        public ListContainsContentTypeYum(String value, String contentID) {
+            super(value, "1.3.6.1.4.1.2312.9.2." + contentID + ".1");
+        }
+    }
+
+    static class ListContainsContentTypeFile extends OidMatcher {
+
+        public ListContainsContentTypeFile(String value, String contentID) {
+            super(value, "1.3.6.1.4.1.2312.9.2." + contentID + ".2");
+        }
+    }
+
+    static class ListContainsContentTypeKickstart extends OidMatcher {
+
+        public ListContainsContentTypeKickstart(String value, String contentID) {
+            super(value, "1.3.6.1.4.1.2312.9.2." + contentID + ".3");
+        }
+    }
+
 
     abstract static class OidAbsentMatcher extends
         ArgumentMatcher<Set<X509ExtensionWrapper>> {
