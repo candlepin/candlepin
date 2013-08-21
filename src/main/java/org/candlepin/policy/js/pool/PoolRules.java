@@ -27,7 +27,6 @@ import org.apache.log4j.Logger;
 import org.candlepin.config.Config;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.DerivedProductPoolAttribute;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Pool;
@@ -293,86 +292,14 @@ public class PoolRules {
         pool.setSourceConsumer(consumer);
         pool.setSubscriptionId(null);
 
-        // Accumulate the expected values before we set anything on the pool:
-        Entitlement eldest = null;
-        Entitlement eldestWithVirtLimit = null;
-        Date startDate = null;
-        Date endDate = null;
-        Set<ProvidedProduct> expectedProvidedProds = new HashSet<ProvidedProduct>();
-
-        // Store the product pool attributes in a map by name so that
-        // we don't end up with multiple attributes with the same name.
-        Map<String, ProductPoolAttribute> expectedAttrs =
-            new HashMap<String, ProductPoolAttribute>();
-
-        for (Entitlement nextStacked : stackedEnts) {
-            if (eldest == null || nextStacked.getCreated().before(eldest.getCreated())) {
-                eldest = nextStacked;
-            }
-
-            // the pool should be updated to have the earliest start date.
-            if (startDate == null || nextStacked.getStartDate().before(startDate)) {
-                startDate = nextStacked.getStartDate();
-            }
-
-            // The pool should be updated to have the latest end date.
-            if (endDate == null || nextStacked.getEndDate().after(endDate)) {
-                endDate = nextStacked.getEndDate();
-            }
-
-            // Update the provided products
-            Pool nextStackedPool = nextStacked.getPool();
-
-            // Keep track of the eldest with virt limit so that we can change the
-            // quantity of the sub pool.
-            if (nextStackedPool.hasProductAttribute("virt_limit")) {
-                if (eldestWithVirtLimit == null ||
-                    nextStacked.getCreated().before(eldestWithVirtLimit.getCreated())) {
-                    eldestWithVirtLimit = nextStacked;
-                }
-            }
-
-            if (nextStackedPool.getDerivedProductId() == null) {
-                for (ProvidedProduct pp : nextStackedPool.getProvidedProducts()) {
-                    expectedProvidedProds.add(
-                        new ProvidedProduct(pp.getProductId(), pp.getProductName(), pool));
-                }
-            }
-            else {
-                for (DerivedProvidedProduct pp :
-                    nextStackedPool.getDerivedProvidedProducts()) {
-                    expectedProvidedProds.add(
-                        new ProvidedProduct(pp.getProductId(), pp.getProductName(), pool));
-                }
-            }
-
-            // Update the product pool attributes - we need to be sure to check for any
-            // derived products for the sub pool. If it exists, then we need to use the
-            // derived product pool attributes.
-            //
-            // Using the pool's *current* product ID here, we may have to change it later
-            // if if changes.
-            if (nextStackedPool.getDerivedProductId() == null) {
-                for (ProductPoolAttribute attr : nextStackedPool.getProductAttributes()) {
-                    expectedAttrs.put(attr.getName(),
-                        new ProductPoolAttribute(attr.getName(), attr.getValue(),
-                            pool.getProductId()));
-                }
-            }
-            else {
-                for (DerivedProductPoolAttribute attr :
-                    nextStackedPool.getDerivedProductAttributes()) {
-                    expectedAttrs.put(attr.getName(),
-                        new ProductPoolAttribute(attr.getName(), attr.getValue(),
-                            pool.getProductId()));
-                }
-            }
-        }
+        StackedSubPoolValueAccumulator acc =
+            new StackedSubPoolValueAccumulator(pool, stackedEnts);
 
         // Check if the quantity should be changed. If there was no
         // virt limiting entitlement, then we leave the quantity alone,
         // else, we set the quantity to that of the eldest virt limiting
         // entitlement pool.
+        Entitlement eldestWithVirtLimit = acc.getEldestWithVirtLimit();
         if (eldestWithVirtLimit != null) {
             // Quantity may have changed, lets see.
             String virtLimit =
@@ -387,11 +314,12 @@ public class PoolRules {
             }
         }
 
-        update.setDatesChanged(checkForDateChange(startDate,
-            endDate, pool));
+        update.setDatesChanged(checkForDateChange(acc.getStartDate(), acc.getEndDate(),
+            pool));
 
         // We use the "oldest" entitlement as the master for determining values that
         // could have come from the various subscriptions.
+        Entitlement eldest = acc.getEldest();
         Pool eldestEntPool = eldest.getPool();
         boolean useDerived = eldestEntPool.getDerivedProductId() != null;
         String prodId = useDerived ?
@@ -400,17 +328,17 @@ public class PoolRules {
             eldestEntPool.getDerivedProductName() : eldestEntPool.getProductName();
 
         // Check if product ID, name, or provided products have changed.
-        update.setProductsChanged(
-            checkForChangedProducts(prodId, prodName, expectedProvidedProds, pool));
+        update.setProductsChanged(checkForChangedProducts(prodId, prodName,
+            acc.getExpectedProvidedProds(), pool));
 
         // Check if product attributes have changed.
-        // NOTE: Can't compare a set to a list here.
+        Set<ProductPoolAttribute> expectedAttrs = acc.getExpectedAttributes();
         if (!pool.getProductAttributes().equals(
-            new HashSet<ProductPoolAttribute>(expectedAttrs.values()))) {
+            new HashSet<ProductPoolAttribute>(expectedAttrs))) {
             // Make sure each attribute has correct product ID on it,
             // and update the pool.
             pool.getProductAttributes().clear();
-            for (ProductPoolAttribute attr : expectedAttrs.values()) {
+            for (ProductPoolAttribute attr : expectedAttrs) {
                 attr.setProductId(pool.getProductId());
                 pool.addProductAttribute(attr);
             }
