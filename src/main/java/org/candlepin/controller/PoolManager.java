@@ -180,7 +180,7 @@ public interface PoolManager {
      * @param pool look for entitlements from this Pool.
      * @return a list of entitlements
      */
-    List<Entitlement> findEntitlementsForPool(Pool pool);
+    List<Entitlement> findEntitlements(Pool pool);
 
     /**
      * Find the Ueber pool for this owner

@@ -1141,7 +1141,7 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Override
-    public List<Entitlement> findEntitlementsForPool(Pool pool) {
+    public List<Entitlement> findEntitlements(Pool pool) {
         return poolCurator.entitlementsIn(pool);
     }
 
