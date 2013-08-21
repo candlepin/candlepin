@@ -16,11 +16,8 @@ package org.candlepin.model;
 
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
-import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.criteria.CriteriaRules;
 import org.candlepin.policy.js.ProductCache;
-import org.candlepin.policy.js.entitlement.Enforcer;
-import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -54,7 +51,6 @@ import java.util.TreeSet;
 public class PoolCurator extends AbstractHibernateCurator<Pool> {
 
     private static Logger log = Logger.getLogger(PoolCurator.class);
-    private Enforcer enforcer;
     private CriteriaRules poolCriteria;
     @Inject
     protected Injector injector;
@@ -63,9 +59,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     protected ProductCache productCache;
 
     @Inject
-    protected PoolCurator(Enforcer enforcer, CriteriaRules poolCriteria) {
+    protected PoolCurator(CriteriaRules poolCriteria) {
         super(Pool.class);
-        this.enforcer = enforcer;
         this.poolCriteria = poolCriteria;
     }
 
@@ -101,7 +96,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      */
     @Transactional
     public List<Pool> listByOwner(Owner o, Date activeOn) {
-        return listAvailableEntitlementPools(null, o, null, activeOn, true, false);
+        return listAvailableEntitlementPools(null, o, null, activeOn, true);
     }
 
     /**
@@ -119,7 +114,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return results;
     }
 
-
     /**
      * Returns list of pools available to the consumer.
      *
@@ -129,7 +123,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     @Transactional
     public List<Pool> listByConsumer(Consumer c) {
         return listAvailableEntitlementPools(c, c.getOwner(), (String) null, null,
-            true, false);
+            true);
     }
 
     /**
@@ -142,15 +136,27 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     @Transactional
     public List<Pool> listByOwnerAndProduct(Owner owner,
             String productId) {
-        return listAvailableEntitlementPools(null, owner, productId, null, false, false);
+        return listAvailableEntitlementPools(null, owner, productId, null, false);
     }
 
     @SuppressWarnings("unchecked")
     @Transactional
     public List<Pool> listAvailableEntitlementPools(Consumer c, Owner o,
-            String productId, Date activeOn, boolean activeOnly, boolean includeWarnings) {
+            String productId, Date activeOn, boolean activeOnly) {
         return listAvailableEntitlementPools(c, o, productId, activeOn, activeOnly,
-            includeWarnings, null).getPageData();
+            null).getPageData();
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Pool> listExpiredPools() {
+        Date today = new Date();
+        Criteria crit = currentSession().createCriteria(Pool.class).add(
+            Restrictions.lt("endDate", today));
+        List<Pool> results = crit.list();
+        if (results == null) {
+            results = new LinkedList<Pool>();
+        }
+        return results;
     }
 
     /**
@@ -158,24 +164,19 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
      *
      * Pools will be refreshed from the underlying subscription service.
      *
-     * If a consumer is specified, a pass through the rules will be done for
-     * each potentially usable pool.
-     *
      * @param c Consumer being entitled.
      * @param o Owner whose subscriptions should be inspected.
      * @param productId only entitlements which provide this product are included.
      * @param activeOn Indicates to return only pools valid on this date.
      *        Set to null for no date filtering.
      * @param activeOnly if true, only active entitlements are included.
-     * @param includeWarnings When filtering by consumer, include pools that
-     *        triggered a rule warning. (errors will still be excluded)
+     * @param pageRequest used to specify paging criteria.
      * @return List of entitlement pools.
      */
     @SuppressWarnings("unchecked")
     @Transactional
     public Page<List<Pool>> listAvailableEntitlementPools(Consumer c, Owner o,
-            String productId, Date activeOn, boolean activeOnly, boolean includeWarnings,
-            PageRequest pageRequest) {
+            String productId, Date activeOn, boolean activeOnly, PageRequest pageRequest) {
         if (o == null && c != null) {
             o = c.getOwner();
         }
@@ -242,32 +243,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                     newResults.add(p);
                     if (log.isDebugEnabled()) {
                         log.debug("Pool provides " + productId + ": " + p);
-                    }
-                }
-            }
-            results = newResults;
-        }
-
-        // If querying for pools available to a specific consumer, we need
-        // to do a rules pass to verify the entitlement will be granted.
-        // Note that something could change between the time we list a pool as
-        // available, and the consumer requests the actual entitlement, and the
-        // request still could fail.
-        if (c != null) {
-            List<Pool> newResults = new LinkedList<Pool>();
-            for (Pool p : results) {
-                ValidationResult result = enforcer.preEntitlement(
-                    c, p, 1, CallerType.LIST_POOLS);
-                if (result.isSuccessful() && (!result.hasWarnings() || includeWarnings)) {
-                    newResults.add(p);
-                }
-                else {
-                    log.info("Omitting pool due to failed rule check: " + p.getId());
-                    if (result.hasErrors()) {
-                        log.info("\tErrors: " + result.getErrors());
-                    }
-                    if (result.hasWarnings()) {
-                        log.info("\tWarnings: " + result.getWarnings());
                     }
                 }
             }
@@ -374,6 +349,10 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             pp.setPool(pool);
         }
 
+        for (DerivedProvidedProduct dpp : pool.getDerivedProvidedProducts()) {
+            dpp.setPool(pool);
+        }
+
         for (PoolAttribute pa : pool.getAttributes()) {
             pa.setPool(pool);
         }
@@ -382,6 +361,11 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             ppa.setPool(pool);
         }
 
+        for (DerivedProductPoolAttribute dppa : pool.getDerivedProductAttributes()) {
+            dppa.setPool(pool);
+        }
+
+        // Looks like this is restored in MigrateOwnerJob.replicateEntitlements:
         pool.setSourceEntitlement(null);
 
         this.currentSession().replicate(pool, ReplicationMode.EXCEPTION);
@@ -567,5 +551,18 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         entity.getAttributes().clear();
 
         currentSession().delete(toDelete);
+    }
+
+    /**
+     * @param consumer
+     * @param stackId
+     * @return Number of derived pools which exist for the given consumer and stack
+     */
+    public Pool getSubPoolForStackId(Consumer consumer, String stackId) {
+        Criteria getCount = currentSession().createCriteria(Pool.class)
+            .add(Restrictions.eq("sourceConsumer", consumer))
+            .add(Restrictions.and(Restrictions.isNotNull("sourceStackId"),
+                                  Restrictions.eq("sourceStackId", stackId)));
+        return (Pool) getCount.uniqueResult();
     }
 }

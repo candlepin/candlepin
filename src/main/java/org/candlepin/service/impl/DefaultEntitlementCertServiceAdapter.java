@@ -58,7 +58,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
 
@@ -134,6 +133,8 @@ public class DefaultEntitlementCertServiceAdapter extends
 
     private Set<Product> getProvidedProducts(Pool pool, Subscription sub) {
         Set<Product> providedProducts = new HashSet<Product>();
+        // TODO: eliminate the use of subscription here by looking up products in a batch
+        // somehow, and we can eliminate all use of subscriptions during bind.
         if (sub != null) {
             // need to use the sub provided products if creating an
             // entitlement for derived pool who's sub specifies a
@@ -147,14 +148,14 @@ public class DefaultEntitlementCertServiceAdapter extends
             // lookup all the Product objects manually:
             for (ProvidedProduct providedProduct : pool.getProvidedProducts()) {
                 providedProducts.add(
-                    productAdapter.getProductById(providedProduct.getId()));
+                    productAdapter.getProductById(providedProduct.getProductId()));
             }
         }
         return providedProducts;
     }
 
     public X509Certificate createX509Certificate(Entitlement ent,
-        Subscription sub, Product product, BigInteger serialNumber,
+        Product product, Set<Product> products, BigInteger serialNumber,
         KeyPair keyPair, boolean useContentPrefix)
         throws GeneralSecurityException, IOException {
 
@@ -162,8 +163,6 @@ public class DefaultEntitlementCertServiceAdapter extends
         Set<X509ExtensionWrapper> extensions;
         Set<X509ByteExtensionWrapper> byteExtensions =
             new LinkedHashSet<X509ByteExtensionWrapper>();
-        Set<Product> products = new HashSet<Product>(getProvidedProducts(ent
-            .getPool(), sub));
         products.add(product);
 
         Map<String, EnvironmentContent> promotedContent = getPromotedContent(ent);
@@ -171,19 +170,18 @@ public class DefaultEntitlementCertServiceAdapter extends
 
 
         if (shouldGenerateV3(ent)) {
-            extensions = prepareV3Extensions(products, ent, contentPrefix,
-                promotedContent, sub);
+            extensions = prepareV3Extensions(ent, contentPrefix, promotedContent);
             byteExtensions = prepareV3ByteExtensions(products, ent, contentPrefix,
-                promotedContent, sub);
+                promotedContent);
         }
         else {
             extensions = prepareV1Extensions(products, ent, contentPrefix,
-                promotedContent, sub);
+                promotedContent);
         }
 
         X509Certificate x509Cert =  this.pki.createX509Certificate(
-                createDN(ent), extensions, byteExtensions, sub.getStartDate(),
-                ent.getEndDate(), keyPair, serialNumber, null);
+                createDN(ent), extensions, byteExtensions, ent.getPool().getStartDate(),
+                ent.getPool().getEndDate(), keyPair, serialNumber, null);
         return x509Cert;
     }
 
@@ -249,7 +247,7 @@ public class DefaultEntitlementCertServiceAdapter extends
 
     public Set<X509ExtensionWrapper> prepareV1Extensions(Set<Product> products,
         Entitlement ent, String contentPrefix,
-        Map<String, EnvironmentContent> promotedContent, Subscription sub) {
+        Map<String, EnvironmentContent> promotedContent) {
         Set<X509ExtensionWrapper> result =  new LinkedHashSet<X509ExtensionWrapper>();
 
         int contentCounter = 0;
@@ -282,9 +280,7 @@ public class DefaultEntitlementCertServiceAdapter extends
             throw new CertificateSizeException(cause);
         }
 
-        if (sub != null) {
-            result.addAll(extensionUtil.subscriptionExtensions(sub, ent));
-        }
+        result.addAll(extensionUtil.subscriptionExtensions(ent));
 
         result.addAll(extensionUtil.entitlementExtensions(ent));
         result.addAll(extensionUtil.consumerExtensions(ent.getConsumer()));
@@ -298,20 +294,19 @@ public class DefaultEntitlementCertServiceAdapter extends
         return result;
     }
 
-    public Set<X509ExtensionWrapper> prepareV3Extensions(Set<Product> products,
-        Entitlement ent, String contentPrefix,
-        Map<String, EnvironmentContent> promotedContent, Subscription sub) {
-        Set<X509ExtensionWrapper> result =  v3extensionUtil.getExtensions(products,
-            ent, contentPrefix, promotedContent, sub);
+    public Set<X509ExtensionWrapper> prepareV3Extensions(Entitlement ent,
+        String contentPrefix, Map<String, EnvironmentContent> promotedContent) {
+        Set<X509ExtensionWrapper> result =  v3extensionUtil.getExtensions(ent,
+            contentPrefix, promotedContent);
         return result;
     }
 
     public Set<X509ByteExtensionWrapper> prepareV3ByteExtensions(Set<Product> products,
         Entitlement ent, String contentPrefix,
-        Map<String, EnvironmentContent> promotedContent, Subscription sub)
+        Map<String, EnvironmentContent> promotedContent)
         throws IOException {
         Set<X509ByteExtensionWrapper> result =  v3extensionUtil.getByteExtensions(products,
-            ent, contentPrefix, promotedContent, sub);
+            ent, contentPrefix, promotedContent);
         return result;
     }
 
@@ -338,14 +333,6 @@ public class DefaultEntitlementCertServiceAdapter extends
         log.debug("Generating entitlement cert for:");
         log.debug("   consumer: {}", entitlement.getConsumer().getUuid());
         log.debug("   product: {}" , product.getId());
-        log.debug("entitlement's endDt == subs endDt? {} == {} ?",
-            entitlement.getEndDate(), sub.getEndDate());
-        Preconditions
-            .checkArgument(
-                entitlement.getEndDate().getTime() == sub.getEndDate().getTime(),
-                "Entitlement #%s 's endDt[%s] must equal Subscription #%s 's endDt[%s]",
-                entitlement.getId(), entitlement.getEndDate(), sub.getId(),
-                sub.getEndDate());
 
         KeyPair keyPair = keyPairCurator.getConsumerKeyPair(entitlement.getConsumer());
         CertificateSerial serial = new CertificateSerial(entitlement.getEndDate());
@@ -353,15 +340,16 @@ public class DefaultEntitlementCertServiceAdapter extends
         // otherwise we could have used cascading create
         serial = serialCurator.create(serial);
 
-        X509Certificate x509Cert = createX509Certificate(entitlement, sub,
-            product, BigInteger.valueOf(serial.getId()), keyPair, !thisIsUeberCert);
+        Set<Product> products = new HashSet<Product>(getProvidedProducts(entitlement
+            .getPool(), sub));
+        X509Certificate x509Cert = createX509Certificate(entitlement,
+            product, products, BigInteger.valueOf(serial.getId()), keyPair,
+            !thisIsUeberCert);
 
         EntitlementCertificate cert = new EntitlementCertificate();
         cert.setSerial(serial);
         cert.setKeyAsBytes(pki.getPemEncoded(keyPair.getPrivate()));
 
-        Set<Product> products = new HashSet<Product>(getProvidedProducts(entitlement
-            .getPool(), sub));
         products.add(product);
         Map<String, EnvironmentContent> promotedContent = getPromotedContent(entitlement);
         String contentPrefix = getContentPrefix(entitlement, !thisIsUeberCert);
@@ -370,7 +358,7 @@ public class DefaultEntitlementCertServiceAdapter extends
 
         if (shouldGenerateV3(entitlement)) {
             byte[] payloadBytes = v3extensionUtil.createEntitlementDataPayload(products,
-                entitlement, contentPrefix, promotedContent, sub);
+                entitlement, contentPrefix, promotedContent);
             String payload = "-----BEGIN ENTITLEMENT DATA-----\n";
             payload += Util.toBase64(payloadBytes);
             payload += "-----END ENTITLEMENT DATA-----\n";

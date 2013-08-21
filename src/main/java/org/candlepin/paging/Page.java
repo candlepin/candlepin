@@ -49,4 +49,5 @@ public class Page<T extends Collection<?>> {
     public void setPageRequest(PageRequest pageRequest) {
         this.pageRequest = pageRequest;
     }
+
 }

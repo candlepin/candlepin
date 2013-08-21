@@ -22,6 +22,7 @@ import org.candlepin.config.Config;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.policy.ValidationError;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.AttributeHelper;
@@ -42,7 +43,8 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
     public EntitlementRules(DateSource dateSource,
         JsRunner jsRules,
         ProductCache productCache,
-        I18n i18n, Config config, ConsumerCurator consumerCurator) {
+        I18n i18n, Config config, ConsumerCurator consumerCurator,
+        PoolCurator poolCurator) {
 
         this.jsRules = jsRules;
         this.dateSource = dateSource;
@@ -51,6 +53,7 @@ public class EntitlementRules extends AbstractEntitlementRules implements Enforc
         this.attributesToRules = null;
         this.config = config;
         this.consumerCurator = consumerCurator;
+        this.poolCurator = poolCurator;
 
         log = Logger.getLogger(EntitlementRules.class);
     }

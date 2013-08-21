@@ -93,7 +93,14 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
     @Column(nullable = true)
     private String subscriptionSubKey;
 
-    /* Indicates this pool was created as a result of granting an entitlement.
+    /**
+     * Signifies that this pool is a derived pool linked to this stack (only one
+     * sub pool per stack allowed)
+     */
+    @Column(nullable = true)
+    private String sourceStackId;
+
+    /** Indicates this pool was created as a result of granting an entitlement.
      * Allows us to know that we need to clean this pool up if that entitlement
      * if ever revoked. */
     @ManyToOne
@@ -101,6 +108,16 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
     @JoinColumn(nullable = true)
     @Index(name = "cp_pool_entitlement_fk_idx")
     private Entitlement sourceEntitlement;
+
+    /**
+     * Derived pools belong to a consumer who owns the entitlement(s) which created them.
+     * In cases where a pool is linked to a stack of entitlements, the consumer is only
+     * loosely linked in the database, so instead we will link directly for any derived
+     * pool.
+     */
+    @ManyToOne
+    @JoinColumn(nullable = true)
+    private Consumer sourceConsumer;
 
     @Column(nullable = false)
     private Long quantity;
@@ -486,6 +503,14 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
         this.subscriptionId = subscriptionId;
     }
 
+    public String getSourceStackId() {
+        return sourceStackId;
+    }
+
+    public void setSourceStackId(String sourceStackId) {
+        this.sourceStackId = sourceStackId;
+    }
+
     /**
      * @return true if this pool represents an active subscription.
      */
@@ -661,6 +686,10 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
         return findAttribute(this.productAttributes, name);
     }
 
+    public String getProductAttributeValue(String name) {
+        return findAttributeValue(this.productAttributes, name);
+    }
+
     public DerivedProductPoolAttribute getDerivedProductAttribute(String name) {
         return findAttribute(this.derivedProductAttributes, name);
     }
@@ -744,5 +773,13 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
 
     public void setDerivedProductName(String subProductName) {
         this.derivedProductName = subProductName;
+    }
+
+    public Consumer getSourceConsumer() {
+        return sourceConsumer;
+    }
+
+    public void setSourceConsumer(Consumer sourceConsumer) {
+        this.sourceConsumer = sourceConsumer;
     }
 }

@@ -114,7 +114,7 @@ public class ConsumerResourceCreationTest {
         this.resource = new ConsumerResource(this.consumerCurator,
             this.consumerTypeCurator, null, this.subscriptionService, null,
             this.idCertService, null, this.i18n, this.sink, null, null, null,
-            this.userService, null, null, null, null, this.ownerCurator,
+            this.userService, null, null, null, this.ownerCurator,
             this.activationKeyCurator,
             null, this.complianceRules, this.deletedConsumerCurator,
             null, null, this.config);

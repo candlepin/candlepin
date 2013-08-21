@@ -96,13 +96,22 @@ public class PoolHelper extends AttributeHelper {
         consumerSpecificPool.setAttribute("pool_derived", "true");
         consumerSpecificPool.setAttribute("virt_only", "true");
 
-        // attribute per 795431, useful for rolling up pool info in headpin
-        consumerSpecificPool.setAttribute("source_pool_id", pool.getId());
-
-
-        consumerSpecificPool.setSubscriptionId(pool.getSubscriptionId());
         this.copyProductAttributesOntoPool(consumerSpecificPool.getProductId(),
             consumerSpecificPool);
+
+        // If the originating pool is stacked, we want to create the derived pool based on
+        // the entitlements in the stack, instead of just the parent pool.
+        String stackId = pool.getProductAttributeValue("stacking_id");
+        if (stackId != null && !stackId.isEmpty()) {
+            poolManager.updatePoolFromStack(consumerSpecificPool,
+                sourceEntitlement.getConsumer(), stackId);
+        }
+        else {
+            // attribute per 795431, useful for rolling up pool info in headpin
+            consumerSpecificPool.setAttribute("source_pool_id", pool.getId());
+            consumerSpecificPool.setSubscriptionId(pool.getSubscriptionId());
+        }
+
         poolManager.createPool(consumerSpecificPool);
         return consumerSpecificPool;
     }
@@ -264,7 +273,10 @@ public class PoolHelper extends AttributeHelper {
                 new ProvidedProduct(pp.getProductId(), pp.getProductName()));
         }
 
-        pool.setSourceEntitlement(sourceEntitlement);
+        if (sourceEntitlement != null) {
+            pool.setSourceEntitlement(sourceEntitlement);
+            pool.setSourceConsumer(sourceEntitlement.getConsumer());
+        }
 
         // temp - we need a way to specify this on the product
         pool.setAttribute("requires_consumer_type", "system");

@@ -5,14 +5,15 @@ describe 'Environments' do
   include CandlepinScenarios
 
   before(:each) do
+    @expected_env_id = random_string('testenv1')
     @owner = create_owner random_string('test_owner')
     @org_admin = user_client(@owner, random_string('guy'))
-    @env = @org_admin.create_environment(@owner['key'], 'testenv1',
+    @env = @org_admin.create_environment(@owner['key'], @expected_env_id,
       "My Test Env 1", "For test systems only.")
   end
 
   it 'can be created by owner admin' do
-    @env['id'].should == 'testenv1'
+    @env['id'].should == @expected_env_id
     @env['owner']['key'].should == @owner['key']
     @org_admin.list_environments(@owner['key']).length.should == 1
   end

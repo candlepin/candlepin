@@ -26,9 +26,9 @@ import org.candlepin.config.Config;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EnvironmentContent;
+import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
-import org.candlepin.model.Subscription;
 import org.candlepin.pki.X509ExtensionWrapper;
 
 import com.google.inject.Inject;
@@ -65,8 +65,8 @@ public class X509ExtensionUtil  extends X509Util{
         return toReturn;
     }
 
-    public Set<X509ExtensionWrapper> subscriptionExtensions(Subscription sub,
-        Entitlement ent) {
+    public Set<X509ExtensionWrapper> subscriptionExtensions(Entitlement ent) {
+        Pool pool = ent.getPool();
         SimpleDateFormat iso8601DateFormat = Util.getUTCDateFormat();
         Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<X509ExtensionWrapper>();
         // Subscription/order info
@@ -74,30 +74,23 @@ public class X509ExtensionUtil  extends X509Util{
         // NOTE: order ~= subscription
         // entitlement == entitlement
 
-        // Need to be sure that we get the correct product here. If pool
-        // is derived and we have a sub product on the sub, then we must
-        // use that product so that the appropriate bits of data are copied.
-        boolean derivedPool = ent.getPool().hasAttribute("pool_derived");
-        Product product = derivedPool && sub.getDerivedProduct() != null ?
-            sub.getDerivedProduct() : sub.getProduct();
-
         String subscriptionOid = OIDUtil.REDHAT_OID + "." +
             OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ORDER_NAMESPACE_KEY);
-        if (product.getId() != null) {
+        if (pool.getProductId() != null) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_NAME_KEY), false, ent
                 .getPool().getProductName()));
         }
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-            OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_NUMBER_KEY), false, sub
+            OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_NUMBER_KEY), false, pool
             .getOrderNumber()));
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
             OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SKU_KEY), false,
-            product.getId().toString()));
+            pool.getProductId().toString()));
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
-            OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_QUANTITY_KEY), false, sub
+            OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_QUANTITY_KEY), false, pool
             .getQuantity().toString()));
-        String socketLimit = product.getAttributeValue("sockets");
+        String socketLimit = pool.getProductAttributeValue("sockets");
         if (socketLimit != null) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SOCKETLIMIT_KEY), false,
@@ -105,12 +98,12 @@ public class X509ExtensionUtil  extends X509Util{
         }
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
             OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_STARTDATE_KEY), false,
-            iso8601DateFormat.format(sub.getStartDate())));
+            iso8601DateFormat.format(pool.getStartDate())));
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
             OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_ENDDATE_KEY), false,
-            iso8601DateFormat.format(sub.getEndDate())));
+            iso8601DateFormat.format(pool.getEndDate())));
         // TODO : use keys
-        String warningPeriod = product.getAttributeValue(
+        String warningPeriod = pool.getProductAttributeValue(
             "warning_period");
         if (warningPeriod == null) {
             warningPeriod = "0";
@@ -118,27 +111,27 @@ public class X509ExtensionUtil  extends X509Util{
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
             OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_WARNING_PERIOD), false,
             warningPeriod));
-        if (sub.getContractNumber() != null) {
+        if (pool.getContractNumber() != null) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_CONTRACT_NUMBER_KEY),
-                false, sub.getContractNumber()));
+                false, pool.getContractNumber()));
         }
         // Add the account number
-        if (sub.getAccountNumber() != null) {
+        if (pool.getAccountNumber() != null) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_ACCOUNT_NUMBER_KEY),
-                false, sub.getAccountNumber()));
+                false, pool.getAccountNumber()));
         }
         // Add Smart Management, default to "not managed"
-        String mgmt = product.getAttributeValue("management_enabled");
+        String mgmt = pool.getProductAttributeValue("management_enabled");
         mgmt = (mgmt == null) ? "0" : mgmt;
         toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
             OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_PROVIDES_MANAGEMENT_KEY),
             false, mgmt));
 
-        String supportLevel = product.getAttributeValue(
+        String supportLevel = pool.getProductAttributeValue(
             "support_level");
-        String supportType = product.getAttributeValue("support_type");
+        String supportType = pool.getProductAttributeValue("support_type");
         if (supportLevel != null) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SUPPORT_LEVEL), false,
@@ -149,7 +142,7 @@ public class X509ExtensionUtil  extends X509Util{
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_SUPPORT_TYPE), false,
                 supportType));
         }
-        String stackingId = product.getAttributeValue("stacking_id");
+        String stackingId = pool.getProductAttributeValue("stacking_id");
         if (stackingId != null) {
             toReturn.add(new X509ExtensionWrapper(subscriptionOid + "." +
                 OIDUtil.ORDER_OIDS.get(OIDUtil.ORDER_STACKING_ID), false,
