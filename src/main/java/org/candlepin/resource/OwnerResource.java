@@ -305,10 +305,13 @@ public class OwnerResource {
             }
         }
 
-        // FIXME Actual consumer deletion had to me moved out of
-        //       the loop above since all entitlements needed to
-        //       be removed before the deletion occured. Perhaps
-        //       this can be handled a little better.
+        // Actual consumer deletion had to be moved out of
+        // the loop above since all entitlements needed to
+        // be removed before the deletion occured. This is
+        // due to the sourceConsumer that was added to Pool.
+        // Deleting an entitlement may result in the deletion
+        // of a sub pool, which would cause issues.
+        // FIXME  Perhaps this can be handled a little better.
         for (Consumer consumer : consumers) {
             // need to check if this has been removed due to a
             // parent being deleted
