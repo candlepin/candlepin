@@ -31,7 +31,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.8.20
+Version: 0.8.21
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -323,6 +323,11 @@ fi
 
 
 %changelog
+* Wed Aug 21 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.21-1
+- 990639: date ranges for partial products (ckozak@redhat.com)
+- 997970: For v1 certs, skip unknown content types (alikins@redhat.com)
+- Feature: One sub pool per stack (mstead@redhat.com)
+- Increased autobind performance (ckozak@redhat.com)
 * Wed Aug 14 2013 Devan Goodwin <dgoodwin@rm-rf.ca> 0.8.20-1
 - extract and merge strings (jesusr@redhat.com)
 - 994711: protect against consuming other org ents (jesusr@redhat.com)
