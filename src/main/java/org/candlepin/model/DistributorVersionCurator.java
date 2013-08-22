@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -38,6 +39,26 @@ public class DistributorVersionCurator
             return dvList.get(0);
         }
         return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<DistributorVersion> findByNameSearch(String name) {
+        return currentSession()
+            .createCriteria(DistributorVersion.class)
+            .add(Restrictions.like("name", "%" + name + "%")).list();
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<DistributorVersion> findByCapability(String capability) {
+        List<DistributorVersionCapability> caps = currentSession()
+            .createCriteria(DistributorVersionCapability.class)
+            .add(Restrictions.eq("name", capability)).list();
+        List<DistributorVersion> distVers = new ArrayList<DistributorVersion>();
+
+        for (DistributorVersionCapability dvc : caps) {
+            distVers.add(dvc.getDistributorVersion());
+        }
+        return distVers;
     }
 
     @SuppressWarnings("unchecked")
