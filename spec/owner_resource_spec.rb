@@ -298,7 +298,7 @@ describe 'Owner Resource' do
     system.update_consumer({:installedProducts => installed})
 
     job = user.autoheal_org(owner['key'])
-    wait_for_job(job[0]['id'], 30)
+    wait_for_job(job['id'], 30)
     c = @cp.get_consumer(system.uuid)
     c['entitlementCount'].should == 1
 
@@ -306,7 +306,7 @@ describe 'Owner Resource' do
     @cp.refresh_pools(owner['key'])
 
     job = user.autoheal_org(owner['key'])
-    wait_for_job(job[0]['id'], 30)
+    wait_for_job(job['id'], 30)
     c = @cp.get_consumer(system.uuid)
     c['entitlementCount'].should == 1
   end

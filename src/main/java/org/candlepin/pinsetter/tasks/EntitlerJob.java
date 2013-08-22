@@ -32,6 +32,7 @@ import org.quartz.JobExecutionException;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 /**
  * EntitlerJob
@@ -65,6 +66,10 @@ public class EntitlerJob implements Job {
                 List<Entitlement> ents = entitler.bindByProducts(prodIds, uuid,
                     entitleDate);
                 entitler.sendEvents(ents);
+            }
+            else if (map.containsKey("consumers")) {
+                Set<String> consumers = (Set<String>) map.get("consumers");
+                executeHealEntireOrg(consumers, entitleDate);
             }
 
             ctx.setResult("Entitlements created for owner");
@@ -109,5 +114,38 @@ public class EntitlerJob implements Job {
             .build();
 
         return detail;
+    }
+
+    public static JobDetail healEntireOrg(Set<String> consumers, Date entitleDate) {
+        JobDataMap map = new JobDataMap();
+        map.put("consumers", consumers);
+        map.put(JobStatus.TARGET_TYPE, JobStatus.TargetType.OWNER);
+        map.put(JobStatus.TARGET_ID, "target_id"); // unnecessary, but prevents exception
+        map.put("quantity", 1);
+        map.put("entitle_date", entitleDate);
+        JobDetail detail = newJob(EntitlerJob.class)
+            .withIdentity("heal_entire_org_" + Util.generateUUID())
+            .usingJobData(map)
+            .build();
+
+        return detail;
+    }
+
+    private void executeHealEntireOrg(Set<String> consumers, Date entitleDate) {
+        for (String consumerUuid : consumers) {
+            // Do not send in product ids.  CandlepinPoolManager will take care
+            // of looking up the non or partially compliant products to bind.
+            try {
+                List<Entitlement> ents = entitler.bindByProducts(null, consumerUuid,
+                    entitleDate);
+                entitler.sendEvents(ents);
+            }
+            // We want to catch everything and continue.
+            // Perhaps add something to surface errors later
+            catch (Exception e) {
+                log.debug("Healing failed for UUID " + consumerUuid +
+                    " with message: " + e.getMessage());
+            }
+        }
     }
 }

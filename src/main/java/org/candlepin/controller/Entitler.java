@@ -217,6 +217,26 @@ public class Entitler {
     public List<Entitlement> bindByProducts(String[] productIds,
         Consumer consumer, Date entitleDate) {
 
+        // If the consumer is a guest, and has a host, try to heal the host first
+        if (consumer.hasFact("virt.uuid")) {
+            String guestUuid = consumer.getFact("virt.uuid");
+            Consumer host = consumerCurator.getHost(guestUuid);
+            if (host != null && host.isAutoheal()) {
+                log.debug("Healing host machine with UUID " + host.getUuid());
+                try {
+                    List<Entitlement> hostEntitlements =
+                        bindByProducts(null, host, entitleDate);
+                    sendEvents(hostEntitlements);
+                }
+                catch (Exception e) {
+                    log.debug("Healing failed for UUID " + host.getUuid() +
+                        " with message: " + e.getMessage());
+                }
+                // Consumer is stale at this point.
+                consumer = consumerCurator.getConsumer(consumer.getUuid());
+            }
+        }
+
         // Attempt to create entitlements:
         try {
             List<Entitlement> entitlements = poolManager.entitleByProducts(
