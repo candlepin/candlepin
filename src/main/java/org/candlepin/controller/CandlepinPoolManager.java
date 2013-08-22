@@ -178,7 +178,9 @@ public class CandlepinPoolManager implements PoolManager {
         // delete pools whose subscription disappeared:
         for (Entry<String, List<Pool>> entry : subToPoolMap.entrySet()) {
             for (Pool p : entry.getValue()) {
-                deletePool(p);
+                if (!p.hasAttribute("pool_derived")) {
+                    deletePool(p);
+                }
             }
         }
 

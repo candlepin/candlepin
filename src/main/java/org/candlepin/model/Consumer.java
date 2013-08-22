@@ -146,7 +146,6 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     @OneToMany(mappedBy = "consumer", targetEntity = ConsumerInstalledProduct.class)
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
-        org.hibernate.annotations.CascadeType.MERGE,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     private Set<ConsumerInstalledProduct> installedProducts;
 
@@ -155,13 +154,11 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     @OneToMany(mappedBy = "consumer", targetEntity = GuestId.class)
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
-        org.hibernate.annotations.CascadeType.MERGE,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     private List<GuestId> guestIds;
 
     @OneToMany(mappedBy = "consumer", targetEntity = ConsumerCapability.class)
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
-        org.hibernate.annotations.CascadeType.MERGE,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     private Set<ConsumerCapability> capabilities;
 

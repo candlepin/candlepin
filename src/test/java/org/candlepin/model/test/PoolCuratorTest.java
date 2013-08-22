@@ -634,4 +634,26 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Pool pool = poolCurator.getSubPoolForStackId(consumer, expectedStackId);
         assertNotNull(pool);
     }
+
+    @Test (expected = IllegalArgumentException.class)
+    public void confirmExceptionOnBonusPoolDelete() {
+        Subscription sub = new Subscription(owner, product, new HashSet<Product>(), 16L,
+            TestUtil.createDate(2006, 10, 21), TestUtil.createDate(2020, 1, 1), new Date());
+        subCurator.create(sub);
+
+        Pool sourcePool = poolManager.createPoolsForSubscription(sub).get(0);
+        poolCurator.create(sourcePool);
+        Entitlement e = new Entitlement(sourcePool, consumer, sourcePool.getStartDate(),
+            sourcePool.getEndDate(), 1);
+        entitlementCurator.create(e);
+
+        Pool pool2 = TestUtil.createPool(owner, product);
+        pool2.setSourceEntitlement(e);
+        pool2.setSubscriptionId(sourcePool.getSubscriptionId());
+        poolCurator.create(pool2);
+
+        assertTrue(poolCurator.lookupBySubscriptionId(sub.getId()).size() == 2);
+        poolManager.deletePool(sourcePool);
+        poolManager.deletePool(pool2);
+    }
 }

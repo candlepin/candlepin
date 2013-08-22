@@ -136,7 +136,6 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
 
     @OneToMany(targetEntity = ProvidedProduct.class)
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
-        org.hibernate.annotations.CascadeType.MERGE,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     @JoinColumn(name = "pool_id", insertable = false, updatable = false)
     @Where(clause = "dtype='provided'")
@@ -144,31 +143,27 @@ public class Pool extends AbstractHibernateObject implements Persisted, Owned {
 
     @OneToMany(targetEntity = DerivedProvidedProduct.class)
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
-        org.hibernate.annotations.CascadeType.MERGE,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     @JoinColumn(name = "pool_id", insertable = false, updatable = false)
     @Where(clause = "dtype='derived'")
     private Set<DerivedProvidedProduct> derivedProvidedProducts =
         new HashSet<DerivedProvidedProduct>();
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "pool")
+    @OneToMany(mappedBy = "pool")
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
-        org.hibernate.annotations.CascadeType.MERGE,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     private Set<PoolAttribute> attributes = new HashSet<PoolAttribute>();
 
-    @OneToMany(cascade = CascadeType.ALL)
+    @OneToMany
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
-        org.hibernate.annotations.CascadeType.MERGE,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     @JoinColumn(name = "pool_id", insertable = false, updatable = false)
     @Where(clause = "dtype='product'")
     private Set<ProductPoolAttribute> productAttributes =
         new HashSet<ProductPoolAttribute>();
 
-    @OneToMany(cascade = CascadeType.ALL)
+    @OneToMany
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
-        org.hibernate.annotations.CascadeType.MERGE,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     @JoinColumn(name = "pool_id", insertable = false, updatable = false)
     @Where(clause = "dtype='derived'")
