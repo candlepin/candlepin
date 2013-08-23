@@ -604,7 +604,8 @@ public class ConsumerResource {
         }
 
         if (user == null) {
-            throw new NotFoundException(i18n.tr("User with ID ''{0}'' could not be found."));
+            throw new NotFoundException(
+                i18n.tr("User with ID ''{0}'' could not be found."));
         }
 
         // When registering person consumers we need to be sure the username
