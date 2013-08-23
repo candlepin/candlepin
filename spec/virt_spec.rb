@@ -168,6 +168,31 @@ describe 'Standalone Virt-Limit Subscriptions' do
     @guest2_client.list_entitlements.length.should == 1
   end
 
+  it 'should heal the host before healing itself' do
+    @second_product = create_product()
+    @cp.create_subscription(@owner['key'], @second_product.id, 1)
+    @cp.refresh_pools(@owner['key'])
+
+    @installed_product_list = [
+    {'productId' => @virt_limit_product.id, 'productName' => @virt_limit_product.name},
+    {'productId' => @second_product.id, 'productName' => @second_product.name}]
+
+    @guest1_client.update_consumer({:installedProducts => [@installed_product_list[0]]})
+    @host1_client.update_consumer({:guestIds => [{'guestId' => @uuid1}]});
+    @host1_client.update_consumer({:installedProducts => [@installed_product_list[1]]})
+
+    @host1_client.update_consumer({:autoheal => true})
+    for ent in @host1_client.list_entitlements do
+        @host1_client.unbind_entitlement(ent.id)
+    end
+    @host1_client.list_entitlements.length.should == 0
+    @guest1_client.list_entitlements.length.should == 0
+    @guest1_client.consume_product()
+    # After the guest autobinds, the host should also be healed 
+    @guest1_client.list_entitlements.length.should == 1
+    @host1_client.list_entitlements.length.should == 1
+  end
+
   it 'should not change the quantity on sub-pool when the source entitlement quantity changes' do
     # Create a sub for a virt limited product:
     product = create_product(random_string('product'), random_string('product'),
