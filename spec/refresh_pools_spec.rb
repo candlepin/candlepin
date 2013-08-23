@@ -125,5 +125,58 @@ describe 'Refresh Pools' do
     @cp.get_consumer(consumer.uuid).entitlementCount.should == 1
   end
 
+  it 'handle derived products being removed' do
+   # 998317: is caused by refresh pools dying with an NPE
+   # this happens when subscriptions no longer have
+   # derived products resulting in a null during the refresh
+   # which we didn't handle in all cases.
+
+    owner = create_owner random_string
+    # create subscription with sub-pool data:
+    datacenter_product = create_product(nil, nil, {
+      :attributes => {
+        :virt_limit => "unlimited",
+        :stacking_id => "stackme",
+        :sockets => "2",
+        'multi-entitlement' => "yes"
+      }
+    })
+    derived_product = create_product(nil, nil, {
+      :attributes => {
+          :cores => 2,
+          :sockets=>4
+      }
+    })
+    eng_product = create_product('300')
+
+    sub1 = @cp.create_subscription(owner['key'], datacenter_product.id,
+      10, [], '', '', '', nil, nil,
+      {
+        'derived_product_id' => derived_product['id'],
+        'derived_provided_products' => ['300']
+      })
+    # refresh so the owner has it
+    @cp.refresh_pools(owner['key'])
+    pools = @cp.list_pools :owner => owner.id, \
+      :product => datacenter_product.id
+    pools.size.should == 1
+    pools[0]['derivedProvidedProducts'].length.should == 1
+
+    # let's remove the derivedProducts - this simulates
+    # the scenario that caues the bug
+    sub1['derivedProduct'] = nil
+    sub1['derivedProvidedProducts'] = nil
+    puts "updating subscription"
+    @cp.update_subscription(sub1)
+
+    # this is the refresh we are actually testing
+    # it should succeed
+    @cp.refresh_pools(owner['key'])
+
+    # let's verify it removed them correctly
+    pools = @cp.list_pools({:owner => owner.id})
+    pools.length.should == 1
+    pools[0]['derivedProvidedProducts'].length.should == 0
+  end
 
 end
