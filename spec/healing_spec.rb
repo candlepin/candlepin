@@ -14,6 +14,7 @@ describe 'Healing' do
 
     @product1 = create_product()
     @product2 = create_product()
+    @product3 = create_product()
     installed = [
         {'productId' => @product1['id'], 'productName' => @product1['name']},
         {'productId' => @product2['id'], 'productName' => @product2['name']}]
@@ -104,6 +105,27 @@ describe 'Healing' do
     ents.size.should == 1
     ents[0]['pool']['id'].should == pool['id']
     ents[0]['quantity'].should == 4
+  end
+
+  it 'can complete partial stacks with no installed prod' do
+    stack_id = 'mystack'
+    parent_prod = create_product(nil, nil, :attributes => {
+      :sockets => '2', :'multi-entitlement' => 'yes', :stacking_id => stack_id})
+    current_sub = @cp.create_subscription(@owner['key'], parent_prod['id'],
+      10, [@product3['id']])
+
+    @cp.refresh_pools(@owner['key'])
+    pool = find_pool(@owner['id'], current_sub['id'])
+
+    # Consume 2 of the four required
+    @consumer_cp.consume_pool(pool['id'], {:quantity => 2})
+    # Now we have a partial stack that covers no installed products
+
+    ents = @consumer_cp.consume_product()
+    # Should have added one entitlement, quantity 2
+    ents.size.should == 1
+    ents[0]['pool']['id'].should == pool['id']
+    ents[0]['quantity'].should == 2
   end
 
   it 'can multi-entitle stacked entitlements across pools' do
