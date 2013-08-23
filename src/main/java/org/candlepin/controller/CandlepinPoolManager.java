@@ -463,10 +463,19 @@ public class CandlepinPoolManager implements PoolManager {
 
         for (Pool pool : allOwnerPools) {
             boolean providesProduct = false;
-            for (String productId : productIds) {
-                if (pool.provides(productId)) {
-                    providesProduct = true;
-                    break;
+            // If We want to complete partial stacks if possible,
+            // even if they do not provide any products
+            if (pool.hasProductAttribute("stacking_id") &&
+                    compliance.getPartialStacks().containsKey(
+                        pool.getProductAttribute("stacking_id").getValue())) {
+                providesProduct = true;
+            }
+            else {
+                for (String productId : productIds) {
+                    if (pool.provides(productId)) {
+                        providesProduct = true;
+                        break;
+                    }
                 }
             }
             if (providesProduct) {
