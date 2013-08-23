@@ -604,14 +604,15 @@ public class ConsumerResource {
         }
 
         if (user == null) {
-            throw new NotFoundException(i18n.tr("No such user: {0}"));
+            throw new NotFoundException(
+                i18n.tr("User with ID ''{0}'' could not be found."));
         }
 
         // When registering person consumers we need to be sure the username
         // has some association with the owner the consumer is destined for:
         if (!user.hasOwnerAccess(owner, Access.ALL) && !user.isSuperAdmin()) {
             throw new ForbiddenException(i18n.tr(
-                "User {0} has no roles for organization {1}",
+                "User ''{0}'' has no roles for organization ''{1}''",
                 user.getUsername(), owner.getKey()));
         }
 
@@ -623,7 +624,7 @@ public class ConsumerResource {
                 existing.getType().isType(ConsumerTypeEnum.PERSON)) {
                 // TODO: This is not the correct error code for this situation!
                 throw new BadRequestException(i18n.tr(
-                    "User {0} has already registered a personal consumer",
+                    "User ''{0}'' has already registered a personal consumer",
                     user.getUsername()));
             }
             consumer.setName(user.getUsername());
@@ -659,7 +660,7 @@ public class ConsumerResource {
             !principal.canAccess(owner, Access.ALL)) {
 
             throw new ForbiddenException(i18n.tr(
-                "User {0} cannot access organization {1}",
+                "User ''{0}'' cannot access organization ''{1}''.",
                 principal.getPrincipalName(), owner.getKey()));
         }
 
@@ -720,8 +721,8 @@ public class ConsumerResource {
         ConsumerType type = consumerTypeCurator.lookupByLabel(label);
 
         if (type == null) {
-            throw new BadRequestException(i18n.tr("No such unit type: {0}",
-                label));
+            throw new BadRequestException(i18n.tr(
+                "Unit type ''{0}'' could not be found.", label));
         }
         return type;
     }
@@ -806,8 +807,8 @@ public class ConsumerResource {
                     !toUpdate.getEnvironment().getId().equals(environmentId))) {
             Environment e = environmentCurator.find(environmentId);
             if (e == null) {
-                throw new NotFoundException(i18n.tr("No such environment: {0}",
-                                            environmentId));
+                throw new NotFoundException(i18n.tr(
+                    "Environment with ID ''{0}'' could not be found.", environmentId));
             }
             toUpdate.setEnvironment(e);
 
@@ -1458,8 +1459,8 @@ public class ConsumerResource {
         Consumer consumer = consumerCurator.findByUuid(consumerUuid);
 
         if (consumer == null) {
-            throw new NotFoundException(i18n.tr("No such unit: {0}",
-                consumerUuid));
+            throw new NotFoundException(i18n.tr(
+                "Unit with ID ''{0}'' could not be found.", consumerUuid));
         }
         return consumer;
     }
@@ -1468,8 +1469,8 @@ public class ConsumerResource {
         Entitlement entitlement = entitlementCurator.find(entitlementId);
 
         if (entitlement == null) {
-            throw new NotFoundException(i18n.tr("No such subscription: {0}",
-                entitlementId));
+            throw new NotFoundException(i18n.tr(
+                "Entitlement with ID ''{0}'' could not be found.", entitlementId));
         }
         return entitlement;
     }
@@ -1494,8 +1495,8 @@ public class ConsumerResource {
         if (productId != null) {
             Product p = productAdapter.getProductById(productId);
             if (p == null) {
-                throw new BadRequestException(i18n.tr("No such product: {0}",
-                    productId));
+                throw new BadRequestException(i18n.tr(
+                    "Product with ID ''{0}'' could not be found.", productId));
             }
             entitlementsPage = entitlementCurator.listByConsumerAndProduct(consumer,
                 productId, pageRequest);
@@ -1547,8 +1548,8 @@ public class ConsumerResource {
         Consumer consumer = verifyAndLookupConsumer(consumerUuid);
 
         if (consumer == null) {
-            throw new NotFoundException(i18n.tr("Unit with ID " +
-                consumerUuid + " could not be found."));
+            throw new NotFoundException(i18n.tr(
+                "Unit with ID ''{0}'' could not be found.", consumerUuid));
         }
 
         int total = poolManager.revokeAllEntitlements(consumer);
@@ -1607,10 +1608,9 @@ public class ConsumerResource {
             poolManager.revokeEntitlement(toDelete);
             return;
         }
-        throw new NotFoundException(
-            i18n.tr(
-                "Entitlement Certificate with serial number {0} could not be found.",
-                serial.toString())); // prevent serial number formatting.
+        throw new NotFoundException(i18n.tr(
+            "Entitlement Certificate with serial number ''{0}'' could not be found.",
+            serial.toString())); // prevent serial number formatting.
     }
 
     /**
@@ -1904,8 +1904,8 @@ public class ConsumerResource {
     public void removeDeletionRecord(@PathParam("consumer_uuid") String uuid) {
         DeletedConsumer dc = deletedConsumerCurator.findByConsumerUuid(uuid);
         if (dc == null) {
-            throw new NotFoundException("Deletion record for hypervisor " +
-                            uuid + " not found.");
+            throw new NotFoundException(i18n.tr(
+                "Deletion record for hypervisor ''{0}'' not found.", uuid));
         }
         deletedConsumerCurator.delete(dc);
     }
