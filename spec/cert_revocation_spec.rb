@@ -18,8 +18,9 @@ describe 'Certificate Revocation List' do
     @cp.refresh_pools(@owner['key'])
 
     #create consumer
-    @user = create_user(@owner, 'billy', 'password')
-    user = Candlepin.new('billy', 'password')
+    username = random_string('billy')
+    @user = create_user(@owner, username, 'password')
+    user = Candlepin.new(username, 'password')
     @system = consumer_client(user, 'system6')
   end
 
