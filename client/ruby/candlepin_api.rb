@@ -967,8 +967,13 @@ class Candlepin
     delete("/distributor_versions/#{id}")
   end
 
-  def get_distributor_versions()
-    get("/distributor_versions")
+  def get_distributor_versions(name_search = nil, capability = nil)
+    query = "/distributor_versions"
+    query << "?" if name_search or capability
+    query << "name_search=#{name_search}" if name_search
+    query << "&" if name_search and capability
+    query << "capability=#{capability}" if capability
+    get(query)
   end
 
   # Assumes a zip archive currently. Returns filename (random#.zip) of the

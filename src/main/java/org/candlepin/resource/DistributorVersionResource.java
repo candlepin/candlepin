@@ -24,9 +24,11 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.commons.lang.StringUtils;
 import org.candlepin.auth.Principal;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
@@ -58,7 +60,17 @@ public class DistributorVersionResource {
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<DistributorVersion> getVersions() {
+    public List<DistributorVersion> getVersions(
+        @QueryParam("name_search") String nameSearch,
+        @QueryParam("capability") String capability,
+        @Context Principal principal) {
+
+        if (!StringUtils.isBlank(nameSearch)) {
+            return curator.findByNameSearch(nameSearch);
+        }
+        if (!StringUtils.isBlank(capability)) {
+            return curator.findByCapability(capability);
+        }
         return curator.findAll();
     }
 
