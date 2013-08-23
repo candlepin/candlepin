@@ -472,11 +472,24 @@ public class PoolRules {
         productsChanged = productsChanged || !currentProvided.equals(incomingProvided);
 
         if (productsChanged) {
+            // 998317: NPE during refresh causes refresh to abort.
+            // Above we check getDerivedProduct for null, but here
+            // we ignore the fact that it may be null. So we will
+            // now check for null to avoid blowing up.
             log.info("   Subscription sub-products changed.");
-            existingPool.setDerivedProductName(sub.getDerivedProduct().getName());
-            existingPool.setDerivedProductId(sub.getDerivedProduct().getId());
+            if (sub.getDerivedProduct() != null) {
+                existingPool.setDerivedProductName(sub.getDerivedProduct().getName());
+                existingPool.setDerivedProductId(sub.getDerivedProduct().getId());
+            }
+            else {
+                // subscription no longer has a derived product
+                existingPool.setDerivedProductName(null);
+                existingPool.setDerivedProductId(null);
+            }
             existingPool.getDerivedProvidedProducts().clear();
-            existingPool.getDerivedProvidedProducts().addAll(incomingProvided);
+            if (incomingProvided != null && !incomingProvided.isEmpty()) {
+                existingPool.getDerivedProvidedProducts().addAll(incomingProvided);
+            }
         }
         return productsChanged;
     }
