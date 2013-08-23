@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -420,24 +421,14 @@ public class OwnerResource {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Path("{owner_key}/entitlements")
-    public JobDetail[] healEntire(
+    public JobDetail healEntire(
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey) {
-
-        List<JobDetail> details = new LinkedList<JobDetail>();
         Owner owner = findOwner(ownerKey);
-        Set<Consumer> consumers = owner.getConsumers();
-
-        for (Consumer consumer : consumers) {
-            // Do not send in product ids.  CandlepinPoolManager will take care
-            // of looking up the non or partially compliant products to bind.
-            details.add(
-                EntitlerJob.bindByProducts(null, consumer.getUuid(), new Date()));
+        Set<String> uuids = new HashSet<String>();
+        for (Consumer consumer : owner.getConsumers()) {
+            uuids.add(consumer.getUuid());
         }
-
-        // Convert to an array so PinsetterAsyncInterceptor can run instanceof
-        // on the ServerResponse entity object.  This won't work on Lists because
-        // of type erasure.
-        return details.toArray(new JobDetail[details.size()]);
+        return EntitlerJob.healEntireOrg(uuids, new Date());
     }
 
     /**
