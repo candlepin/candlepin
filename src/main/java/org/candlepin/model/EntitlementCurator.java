@@ -351,14 +351,14 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     public List<Entitlement> findByStackId(Consumer consumer, String stackId) {
         DetachedCriteria stackCriteria = DetachedCriteria.forClass(
             ProductPoolAttribute.class, "attr")
-                .add(Restrictions.and(Restrictions.eq("name", "stacking_id"),
-                    Restrictions.eq("value", stackId)))
-                .add(Property.forName("pool.id").eqProperty("attr.pool.id"))
+                .add(Restrictions.eq("name", "stacking_id"))
+                .add(Restrictions.eq("value", stackId))
+                .add(Property.forName("ent_pool.id").eqProperty("attr.pool.id"))
                 .setProjection(Projections.property("attr.id"));
 
         Criteria activeNowQuery = currentSession().createCriteria(Entitlement.class)
             .add(Restrictions.eq("consumer", consumer))
-            .createCriteria("pool")
+            .createCriteria("pool", "ent_pool")
                 .add(Restrictions.isNull("sourceEntitlement"))
                 .add(Restrictions.isNull("sourceStackId"))
                 .add(Subqueries.exists(stackCriteria));
