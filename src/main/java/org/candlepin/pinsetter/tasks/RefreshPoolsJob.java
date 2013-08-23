@@ -25,6 +25,7 @@ import org.candlepin.util.Util;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
+import org.apache.log4j.Logger;
 import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -36,6 +37,7 @@ import org.quartz.JobExecutionException;
  * {@link Owner}.
  */
 public class RefreshPoolsJob implements Job {
+    private static Logger log = Logger.getLogger(RefreshPoolsJob.class);
 
     private OwnerCurator ownerCurator;
     private PoolManager poolManager;
@@ -59,18 +61,28 @@ public class RefreshPoolsJob implements Job {
     @Override
     @Transactional
     public void execute(JobExecutionContext context) throws JobExecutionException {
-        String ownerKey = context.getMergedJobDataMap().getString(JobStatus.TARGET_ID);
-        Boolean lazy = context.getMergedJobDataMap().getBoolean(LAZY_REGEN);
-        Owner owner = ownerCurator.lookupByKey(ownerKey);
-        if (owner == null) {
-            context.setResult("Nothing to do. Owner no longer exists");
-            return;
+        try {
+            JobDataMap map = context.getMergedJobDataMap();
+            String ownerKey = map.getString(JobStatus.TARGET_ID);
+            Boolean lazy = map.getBoolean(LAZY_REGEN);
+            Owner owner = ownerCurator.lookupByKey(ownerKey);
+            if (owner == null) {
+                context.setResult("Nothing to do. Owner no longer exists");
+                return;
+            }
+
+            // Assume that we verified the request in the resource layer:
+            poolManager.getRefresher(lazy).add(owner).run();
+            context.setResult("Pools refreshed for owner " + owner.getDisplayName());
         }
-
-        // Assume that we verified the request in the resource layer:
-        poolManager.getRefresher(lazy).add(owner).run();
-
-        context.setResult("Pools refreshed for owner " + owner.getDisplayName());
+        // Catch any exception that is fired and re-throw as a
+        // JobExecutionException so that the job will be properly
+        // cleaned up on failure.
+        catch (Exception e) {
+            log.error("RefreshPoolsJob encountered a problem.", e);
+            context.setResult(e.getMessage());
+            throw new JobExecutionException(e.getMessage(), e, false);
+        }
     }
 
     /**
