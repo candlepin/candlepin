@@ -162,7 +162,8 @@ class Candlepin
   # Can pass an owner key, or an href to follow:
   def get_owner(owner)
     # Looks like a path to follow:
-    if owner[0,1] == "/"
+    # Convert owner to a string in case someone gave us a numeric key
+    if owner.to_s[0] == "/"
       return get(owner)
     end
 
