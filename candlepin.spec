@@ -31,7 +31,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.8.21
+Version: 0.8.22
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -323,6 +323,15 @@ fi
 
 
 %changelog
+* Fri Aug 23 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.22-1
+- 750872: complete partial stacks with no installed products (ckozak@redhat.com)
+- 876758 - String Updates: Entitlement -> Subscription updates (wpoteat@redhat.com)
+- 998317: NPE in refreshpools prevents refreshing pools (jesusr@redhat.com)
+- Pushing latest strings (jesusr@redhat.com)
+- Fix autoheal entire org (ckozak@redhat.com)
+- Filter distributor versions when querying  (wpoteat@redhat.com)
+- Fix bug in get_owner() (awood@redhat.com)
+
 * Wed Aug 21 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.21-1
 - 990639: date ranges for partial products (ckozak@redhat.com)
 - 997970: For v1 certs, skip unknown content types (alikins@redhat.com)
