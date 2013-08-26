@@ -151,7 +151,7 @@ describe 'Pool Resource' do
     pools = @cp.list_pools
     pool = pools.select { |p| p['owner']['key'] == owner['key'] }.first
 
-    user = user_client(owner, 'billy')
+    user = user_client(owner, random_string('billy'))
     system = consumer_client(user, 'system')
 
     @cp.get_pool(pool.id, system.uuid)['calculatedAttributes']['suggested_quantity'].should == "1"

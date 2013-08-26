@@ -17,7 +17,7 @@ describe 'Entitlement Resource' do
     @cp.refresh_pools(@owner['key'])
 
     #create consumer
-    user = user_client(@owner, 'billy')
+    user = user_client(@owner, random_string('billy'))
     @system = consumer_client(user, 'system6')
 
     #separate for quantity adjust tests - here for cleanup

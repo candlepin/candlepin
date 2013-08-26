@@ -276,7 +276,7 @@ describe 'Owner Resource' do
     @cp.create_subscription(owner['key'], product.id, 10)
     @cp.refresh_pools(owner['key'])
 
-    user = user_client(owner, "billy")
+    user = user_client(owner, random_string("billy"))
     system = consumer_client(user, "system")
 
     pools = @cp.list_owner_pools(owner['key'], {:consumer => system.uuid})
