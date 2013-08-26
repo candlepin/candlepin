@@ -214,10 +214,11 @@ describe 'Entitlement Certificate V3' do
   end
 
   it 'generates a version 3.2 certificate on distributors with a cert_v3 capability' do
-    dist_version = create_distributor_version("SAMvBillion",
+    dist_name = random_string("SAMvBillion")
+    dist_version = create_distributor_version(dist_name,
       "Subscription Asset Manager Billion",
       ["cert_v3"])
-    facts = { 'distributor_version' => 'SAMvBillion'}
+    facts = { 'distributor_version' => dist_name}
 
     consumer = @user.register(random_string('v3_system'), :candlepin, nil, facts, nil, nil)
     v3_system = Candlepin.new(nil, nil, consumer.idCert.cert, consumer.idCert['key'])
