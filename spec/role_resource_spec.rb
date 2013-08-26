@@ -10,15 +10,12 @@ describe 'Role Resource' do
     @test_owner = create_owner(test_owner_key)
     @username = random_string 'user'
     @user_cp = user_client(@test_owner, @username)
-
   end
 
   it 'should create roles' do
-    orig_count = @cp.list_roles().size
-
-    new_role = create_role(nil, @test_owner['key'], 'ALL')
-
-    @cp.list_roles().size.should == orig_count + 1
+    role_name = random_string("created_role")
+    new_role = create_role(role_name, @test_owner['key'], 'ALL')
+    new_role['name'].should == role_name
   end
 
   it 'should not expose roles to other owners' do
