@@ -16,7 +16,7 @@ module CandlepinScenarios
         @dist_versions = []
         @users = []
         @roles = []
-        @rules = Base64.encode64("")
+        @rules = nil
       end
 
       after do
