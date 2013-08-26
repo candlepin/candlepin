@@ -395,7 +395,6 @@ module ExportMethods
   def cleanup_candlepin_export_update
     Dir.chdir(@orig_working_dir)
     FileUtils.rm_rf(@tmp_dir)
-    FileUtils.rm_rf(@tmp_dir_update)
     @cp.delete_owner(@owner['key'])
   end
 

@@ -18,6 +18,10 @@ describe 'Candlepin Import Update' do
     cleanup_candlepin_export_update()
   end
 
+  after(:each) do
+    FileUtils.rm_rf(@tmp_dir_update)
+  end
+
   it 'should successfully update the import' do
     create_candlepin_export_update()
     @cp.import(@import_owner['key'], @export_filename_update)
