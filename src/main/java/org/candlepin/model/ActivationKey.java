@@ -14,14 +14,9 @@
  */
 package org.candlepin.model;
 
-import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Index;
-
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -34,6 +29,11 @@ import javax.persistence.UniqueConstraint;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Index;
 
 /**
  * ActivationKey
@@ -61,8 +61,10 @@ public class ActivationKey extends AbstractHibernateObject implements Owned {
     @Index(name = "cp_activation_key_owner_fk_idx")
     private Owner owner;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "key")
-    @org.hibernate.annotations.Cascade(org.hibernate.annotations.CascadeType.DELETE_ORPHAN)
+    @OneToMany(mappedBy = "key")
+    @Cascade({org.hibernate.annotations.CascadeType.ALL,
+        org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
+
     private Set<ActivationKeyPool> pools = new HashSet<ActivationKeyPool>();
 
     public ActivationKey() {
