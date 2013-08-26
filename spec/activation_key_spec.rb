@@ -8,7 +8,7 @@ describe 'Activation Keys' do
 
   before(:each) do
     @owner = create_owner random_string('test_owner')
-    @some_product = create_product(name=random_string('some_product'))
+    @some_product = create_product(nil, random_string('some_product'))
 
     #this owner is used to test restrictions
     mallory = create_owner random_string('test_owner')

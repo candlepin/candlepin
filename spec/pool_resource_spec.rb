@@ -144,7 +144,7 @@ describe 'Pool Resource' do
 
   it 'should return calculated attributes' do
     owner = create_owner random_string('test_owner')
-    product = create_product(name=random_string('some_product'))
+    product = create_product(nil, random_string('some_product'))
 
     @cp.create_subscription(owner['key'], product.id, 25)
     @cp.refresh_pools(owner['key'])

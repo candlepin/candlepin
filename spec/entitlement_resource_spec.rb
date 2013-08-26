@@ -7,8 +7,8 @@ describe 'Entitlement Resource' do
 
   before do
     @owner = create_owner random_string 'test_owner'
-    @monitoring_prod = create_product(name='monitoring')
-    @virt_prod= create_product(name='virtualization')
+    @monitoring_prod = create_product(nil, 'monitoring')
+    @virt_prod= create_product(nil, 'virtualization')
 
     #entitle owner for the virt and monitoring products.
     @cp.create_subscription(@owner['key'], @monitoring_prod.id, 6)
