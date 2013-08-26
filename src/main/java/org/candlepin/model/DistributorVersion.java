@@ -61,7 +61,6 @@ public class DistributorVersion extends AbstractHibernateObject {
     @OneToMany(mappedBy = "distributorVersion", targetEntity =
         DistributorVersionCapability.class)
     @Cascade({org.hibernate.annotations.CascadeType.ALL,
-        org.hibernate.annotations.CascadeType.MERGE,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN})
     private Set<DistributorVersionCapability> capabilities;
 

@@ -17,7 +17,6 @@ package org.candlepin.model;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -68,9 +67,8 @@ public class Product extends AbstractHibernateObject implements Linkable {
     // NOTE: we need a product "type" so we can tell what class of
     // product we are...
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "product")
+    @OneToMany(mappedBy = "product")
     @Cascade({ org.hibernate.annotations.CascadeType.ALL,
-        org.hibernate.annotations.CascadeType.MERGE,
         org.hibernate.annotations.CascadeType.DELETE_ORPHAN })
     private Set<ProductAttribute> attributes;
 
