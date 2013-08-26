@@ -67,6 +67,18 @@ describe 'One Sub Pool Per Stack Feature' do
     })
     @derived_provided_product = create_product()
 
+    # Create a different stackable product but with a different stack id.
+    @stack_id2 = "diff-stack-id"
+    @stacked_product_diff_id = create_product(nil, nil, {
+        :attributes => {
+            'stacking_id' => @stack_id2,
+            'multi-entitlement' => 'yes',
+            'sockets' => 6
+        }
+    })
+
+    @stacked_provided_product2 =  create_product()
+
 
     @stacked_virt_sub1 = @cp.create_subscription(@owner['key'],
       @virt_limit_product.id, 10, [@virt_limit_provided_product.id], "123", "321", "333")
@@ -84,13 +96,15 @@ describe 'One Sub Pool Per Stack Feature' do
         'derived_product_id' => @derived_product.id,
         'derived_provided_products' => [@derived_provided_product.id]
       })
+    @stacked_non_virt_sub_diff_stack_id = @cp.create_subscription(@owner['key'],
+      @stacked_product_diff_id.id, 2, [], "888")
     @cp.refresh_pools(@owner['key'])
     
     # Determine our pools by matching on contract number.
     pools = @user.list_pools :owner => @owner.id
     
     @initial_pool_count = pools.size
-    @initial_pool_count.should == 6
+    @initial_pool_count.should == 7
     
     @stacked_virt_pool1 = pools.detect { |p| p['contractNumber'] == "123" }
     @stacked_virt_pool1.should_not be_nil
@@ -109,6 +123,9 @@ describe 'One Sub Pool Per Stack Feature' do
     
     @datacenter_pool = pools.detect { |p| p['contractNumber'] == '222' }
     @datacenter_pool.should_not be_nil
+    
+    @regular_stacked_with_diff_stackid = pools.detect { |p| p['contractNumber'] == '888' }
+    @regular_stacked_with_diff_stackid.should_not be_nil
     
     # Setup two a guest consumer:
     @guest_uuid = random_string('system.uuid')
@@ -152,6 +169,18 @@ describe 'One Sub Pool Per Stack Feature' do
     sub_pool = sub_pools[0]
     sub_pool['sourceStackId'].should == @stack_id
     sub_pool['sourceConsumer']['uuid'].should == @host['uuid']
+  end
+
+  it 'should not include host entitlements from another stack' do
+    ent1 = @host_client.consume_pool(@regular_stacked_with_diff_stackid['id'])[0]
+    ent2 = @host_client.consume_pool(@stacked_virt_pool1['id'])[0]
+   
+    sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
+    sub_pool.should_not be_nil
+    find_product_attribute(sub_pool, "sockets").should be_nil
+    
+    sub_pool['startDate'].should == ent1['startDate']
+    sub_pool['endDate'].should == ent1['endDate']
   end
 
   it 'should delete sub pool when all host entitlements are removed from the stack' do
@@ -222,7 +251,7 @@ describe 'One Sub Pool Per Stack Feature' do
     ent1 = @host_client.consume_pool(@datacenter_pool['id'])[0]
     ent1.should_not be_nil
 
-    @guest_client.list_pools(:consumer => @guest['uuid']).size.should == 7
+    @guest_client.list_pools(:consumer => @guest['uuid']).size.should == 8
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
     sub_pool['productId'].should == @derived_product.id
