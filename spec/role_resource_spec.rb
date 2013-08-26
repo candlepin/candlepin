@@ -40,7 +40,7 @@ describe 'Role Resource' do
     updatedrole.permissions[0].access.should == 'ALL'
   end
 
-  it 'should delete roles' do
+  it 'should delete roles', :serial => true do
     orig_count = @cp.list_roles().size
 
     perms = [{

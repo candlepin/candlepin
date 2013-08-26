@@ -68,7 +68,7 @@ describe 'Certificate Revocation List' do
     revoked_serials.should_not include(serials)
   end
 
-  it 'should regenerate the on-disk crl and revoke' do
+  it 'should regenerate the on-disk crl and revoke', :serial => true do
     crl = OpenSSL::X509::CRL.new File.read "/var/lib/candlepin/candlepin-crl.crl"
     oldlen = crl.revoked.length
     old_time = File.mtime("/var/lib/candlepin/candlepin-crl.crl")
