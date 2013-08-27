@@ -73,15 +73,20 @@ module CandlepinMethods
   def create_product(id=nil, name=nil, params={})
     # For purposes of testing, you can omit id and name to create with
     # random strings.
-    id ||= rand(100000).to_s #id has to be a number. OID encoding fails otherwise
+    id ||= random_string(nil, true) #id has to be a number. OID encoding fails otherwise
     name ||= random_string('testproduct')
+    params ||= {}
+
+    #Product IDs are 32 characters or less
+    id = id[0..31]
+
     product = @cp.create_product(id, name, params)
     @products <<  product
     return product
   end
 
   def create_content(params={})
-    random_str = rand(1000000)
+    random_str = random_string(nil, true).to_i
     # Apologies, passing optional params straight through to prevent just pulling
     # each one out and putting it into a new hash.
     @cp.create_content(random_str, random_str, random_str, "yum",
@@ -174,11 +179,19 @@ module CandlepinMethods
     Candlepin.new(username, nil, nil, nil, "localhost", "8443", nil, nil, true)
   end
 
-  def random_string(prefix=nil)
+  def random_string(prefix=nil, numeric_only=false)
     if prefix
       prefix = "#{prefix}-"
     end
-    "#{prefix}#{rand(100000)}"
+
+    if numeric_only
+      suffix = rand(9999999)
+    else
+      # This is actually a bit faster than using SecureRandom.  Go figure.
+      o = [('a'..'z'), ('A'..'Z'), ('0'..'9')].map { |i| i.to_a }.flatten
+      suffix = (0..7).map { o[rand(o.length)] }.join
+    end
+    "#{prefix}#{suffix}"
   end
 
   def check_for_hateoas(json)
@@ -240,7 +253,7 @@ module ExportMethods
 
     @derived_product = @cp.create_product(random_string('sub-prov-prod'), random_string(),
         {"sockets" => "2"})
-    @derived_provided_prod = @cp.create_product(random_string(), random_string());
+    @derived_provided_prod = @cp.create_product(random_string(nil, true), random_string());
 
     #this is for the update process
     @product_up = @cp.create_product(random_string('product_up'), random_string('product_up'))
@@ -320,8 +333,8 @@ module ExportMethods
     ## use the process for creating the import above to make one that is an update
     ## You must execute the create_candlepin_export method in the same test before
     ## this one.
-    product1 = @cp.create_product(random_string(), random_string())
-    product2 = @cp.create_product(random_string(), random_string())
+    product1 = @cp.create_product(random_string(nil, true), random_string())
+    product2 = @cp.create_product(random_string(nil, true), random_string())
     content = create_content({:metadata_expire => 6000,
                               :required_tags => "TAG1,TAG2"})
     arch_content = create_content({:metadata_expire => 6000,
