@@ -4,7 +4,7 @@ describe 'Product Certificate' do
   include CandlepinMethods
   include CandlepinScenarios
 
-  before(:all) do
+  before(:each) do
     # Static map of extension labels to OID values
     @oid_map = {
       'name' => '1',
@@ -12,9 +12,6 @@ describe 'Product Certificate' do
       'arch' => '3',
       'version' => '4'
     }
-  end
-
-  before(:each) do
     @product = create_product(nil, random_string('test-product'))
 
     cert_data = @cp.get_product_cert(@product.id)
