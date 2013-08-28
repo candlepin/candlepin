@@ -31,7 +31,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.8.23
+Version: 0.8.24
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -323,6 +323,9 @@ fi
 
 
 %changelog
+* Wed Aug 28 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.24-1
+- 996925 - Exception while deleting manifest (wpoteat@redhat.com)
+
 * Mon Aug 26 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.23-1
 - 1000444: Fixed find by stack id query (mstead@redhat.com)
 
