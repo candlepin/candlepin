@@ -12,7 +12,7 @@ describe 'Owner Resource' do
 
   it 'allows consumers to view their service levels' do
     owner = create_owner random_string('owner1')
-    owner_admin = user_client(owner, 'bill')
+    owner_admin = user_client(owner, random_string('bill'))
     owner2 = create_owner random_string('owner2')
 
     consumer = owner_admin.register('somesystem')
@@ -239,7 +239,7 @@ describe 'Owner Resource' do
 
   it 'allows service level exempt service levels to be filtered out' do
     owner = create_owner random_string('owner1')
-    owner_admin = user_client(owner, 'bill')
+    owner_admin = user_client(owner, random_string('bill'))
 
     consumer = owner_admin.register('somesystem')
     consumer_client = Candlepin.new(username=nil, password=nil,

@@ -30,7 +30,7 @@ describe 'Environments' do
 
   it 'cannot be created by foreign owner admin' do
     foreign_owner = create_owner(random_string('test_owner'))
-    foreign_admin = user_client(foreign_owner, 'bill')
+    foreign_admin = user_client(foreign_owner, random_string('bill'))
     lambda {
       env = foreign_admin.create_environment(@owner['key'], 'testenv2',
         "My test env 2")
@@ -39,7 +39,7 @@ describe 'Environments' do
 
   it 'cannot be accessed by foreign owner admin' do
     foreign_owner = create_owner(random_string('test_owner'))
-    foreign_admin = user_client(foreign_owner, 'bill')
+    foreign_admin = user_client(foreign_owner, random_string('bill'))
 
     lambda {
       foreign_admin.list_environments(@owner['key'])

@@ -112,7 +112,7 @@ describe 'Consumer Resource' do
   end
 
   it 'lets a super admin filter consumers by owner' do
-    @cp.list_consumers.size.should > 1
+    @cp.list_consumers.size.should be > 1
     @cp.list_consumers({:owner => @owner1['key']}).size.should == 1
   end
 
@@ -208,27 +208,27 @@ describe 'Consumer Resource' do
   end
 
   it "does not let an owner register with UUID of another owner's consumer" do
-    linux_net = create_owner 'linux_net'
-    greenfield = create_owner 'greenfield_consulting'
+    linux_net = create_owner(random_string('linux_net'))
+    greenfield = create_owner(random_string('greenfield_consulting'))
 
-    linux_bill = user_client(linux_net, 'bill')
-    green_ralph = user_client(greenfield, 'ralph')
+    linux_bill = user_client(linux_net, random_string('bill'))
+    green_ralph = user_client(greenfield, random_string('ralph'))
 
-    system1 = linux_bill.register('system1')
+    system1 = linux_bill.register(random_string('system1'))
 
     lambda do
-      green_ralph.register('system2', :system, system1.uuid)
+      green_ralph.register(random_string('system2'), :system, system1.uuid)
     end.should raise_exception(RestClient::BadRequest)
   end
 
   it "does not let an owner reregister another owner's consumer" do
-    linux_net = create_owner 'linux_net'
-    greenfield = create_owner 'greenfield_consulting'
+    linux_net = create_owner(random_string('linux_net'))
+    greenfield = create_owner(random_string('greenfield_consulting'))
 
-    linux_bill = user_client(linux_net, 'bill')
+    linux_bill = user_client(linux_net, random_string('bill'))
     green_ralph = user_client(greenfield, 'ralph')
 
-    system1 = linux_bill.register('system1')
+    system1 = linux_bill.register(random_string('system1'))
 
     lambda do
       green_ralph.regenerate_identity_certificate(system1.uuid)
@@ -291,7 +291,7 @@ describe 'Consumer Resource' do
     owner = create_owner random_string('owner')
     user = user_client(owner, random_string('billy'))
 
-    consumer = user.register('machine1', :system, 'custom-uuid')
+    consumer = user.register(random_string('machine1'), :system, 'custom-uuid')
     consumer.uuid.should == 'custom-uuid'
   end
 
@@ -311,7 +311,7 @@ describe 'Consumer Resource' do
     key1 = @cp.create_activation_key(owner['key'], 'key1')
     @cp.add_pool_to_key(key1['id'], pool1['id'], 3)
     @cp.create_activation_key(owner['key'], 'key2')
-    consumer = client.register('machine1', :system, nil, {}, nil,
+    consumer = client.register(random_string('machine1'), :system, nil, {}, nil,
       owner['key'], ["key1", "key2"])
     consumer.uuid.should_not be_nil
 
@@ -345,7 +345,7 @@ describe 'Consumer Resource' do
     @cp.list_consumers({:owner => owner['key']}).size.should == 1
 
     lambda do
-      consumer = client.register('machine1', :system, nil, {}, nil,
+      consumer = client.register(random_string('machine1'), :system, nil, {}, nil,
         owner['key'], ["key1"])
     end.should raise_exception(RestClient::Forbidden)
 
@@ -374,7 +374,7 @@ describe 'Consumer Resource' do
     facts = {
       'system.machine' => 'x86_64',
     }
-    consumer = user.register('machine1', :system, nil, facts, nil, nil, [], installed)
+    consumer = user.register(random_string('machine1'), :system, nil, facts, nil, nil, [], installed)
     verify_installed_pids(consumer, [pid1, pid2])
 
     # Now update the installed packages:
@@ -663,19 +663,19 @@ describe 'Consumer Resource' do
     user = user_client(owner, random_string('willy'))
 
     # Register the UUID initially
-    user.register('machine1', :system, 'ALF')
+    user.register(random_string('machine1'), :system, 'ALF')
 
     # Second registration should be denied
     lambda do
-      user.register('machine2', :system, 'ALF')
+      user.register(random_string('machine2'), :system, 'ALF')
     end.should raise_exception(RestClient::BadRequest)
   end
 
   it 'should allow a consumer to unregister and free up the pool' do
-    owner = create_owner('zowner')
-    user = user_client(owner, 'cukebuster')
+    owner = create_owner(random_string('zowner'))
+    user = user_client(owner, random_string('cukebuster'))
     # performs the register for us
-    consumer = consumer_client(user, 'machine1')
+    consumer = consumer_client(user, random_string('machine1'))
     product = create_product()
     @cp.create_subscription(owner['key'], product.id, 2)
     @cp.refresh_pools(owner['key'])
