@@ -68,9 +68,8 @@ describe 'Certificate Revocation List' do
     revoked_serials.should_not include(serials)
   end
 
-  it 'should regenerate the on-disk crl and revoke', :serial => true do
+  it 'should regenerate the on-disk crl and revoke' do
     crl = OpenSSL::X509::CRL.new File.read "/var/lib/candlepin/candlepin-crl.crl"
-    oldlen = crl.revoked.length
     old_time = File.mtime("/var/lib/candlepin/candlepin-crl.crl")
     #consume an entitlement, revoke it and check that CRL contains the new serial.
     @system.consume_product(@monitoring_prod.id)
@@ -83,7 +82,7 @@ describe 'Certificate Revocation List' do
     new_time = File.mtime("/var/lib/candlepin/candlepin-crl.crl")
     new_time.should_not == old_time
     crl = OpenSSL::X509::CRL.new File.read "/var/lib/candlepin/candlepin-crl.crl"
-    crl.revoked.length.should == oldlen + 1
+    crl.revoked.map { |i| i.serial }.should include(serial)
   end
 
   it 'should regenerate the on-disk crl' do

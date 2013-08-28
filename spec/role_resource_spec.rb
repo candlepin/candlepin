@@ -40,18 +40,16 @@ describe 'Role Resource' do
     updatedrole.permissions[0].access.should == 'ALL'
   end
 
-  it 'should delete roles', :serial => true do
-    orig_count = @cp.list_roles().size
-
+  it 'should delete roles' do
     perms = [{
       :owner => {:key => @test_owner['key']},
       :access => 'ALL',
     }]
-    new_role = @cp.create_role(random_string('testrole'), perms)
-
-    @cp.list_roles().size.should == orig_count + 1
+    role_name = random_string("role_to_delete")
+    new_role = @cp.create_role(role_name, perms)
+    @cp.list_roles().map { |i| i['name'] }.should include(role_name)
     @cp.delete_role(new_role['id'])
-    @cp.list_roles().size.should == orig_count
+    @cp.list_roles().map { |i| i['name'] }.should_not include(role_name)
   end
 
   it 'should add users to a role, then delete user from the role' do
