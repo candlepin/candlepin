@@ -14,8 +14,8 @@ describe 'Role Resource' do
 
   it 'should create roles' do
     role_name = random_string("created_role")
-    new_role = create_role(role_name, @test_owner['key'], 'ALL')
-    new_role['name'].should == role_name
+    create_role(role_name, @test_owner['key'], 'ALL')
+    @cp.list_roles().map { |i| i['name'] }.should include(role_name)
   end
 
   it 'should not expose roles to other owners' do
