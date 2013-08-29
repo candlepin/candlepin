@@ -1,5 +1,5 @@
 # encoding: utf-8
-
+require 'spec_helper'
 require 'candlepin_scenarios'
 
 require 'rubygems'
@@ -8,7 +8,6 @@ require 'rest_client'
 describe 'Owner Resource' do
 
   include CandlepinMethods
-  include CandlepinScenarios
 
   it 'allows consumers to view their service levels' do
     owner = create_owner random_string('owner1')

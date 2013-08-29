@@ -1,10 +1,10 @@
+require 'spec_helper'
 require 'candlepin_scenarios'
 
 describe 'Candlepin Import Update', :serial => true do
 
   include CandlepinMethods
   include ExportMethods
-  include CandlepinScenarios
 
   it 'should be able to maintain multiple imported entitlements from the same pool' do
     cp = Candlepin.new('admin', 'admin')

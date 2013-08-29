@@ -1,9 +1,9 @@
+require 'spec_helper'
 require 'candlepin_scenarios'
 
 describe 'Role Resource' do
 
   include CandlepinMethods
-  include CandlepinScenarios
 
   before(:each) do
     test_owner_key = random_string('testowner')

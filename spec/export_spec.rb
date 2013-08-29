@@ -1,3 +1,4 @@
+require 'spec_helper'
 require 'candlepin_scenarios'
 require 'tmpdir'
 require 'openssl'
@@ -6,7 +7,6 @@ describe 'Candlepin Export', :serial => true do
 
   include CandlepinMethods
   include ExportMethods
-  include CandlepinScenarios
 
   before(:all) do
     create_candlepin_export()

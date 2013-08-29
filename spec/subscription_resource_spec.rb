@@ -1,9 +1,9 @@
+require 'spec_helper'
 require 'candlepin_scenarios'
 
 describe 'Subscription Resource' do
 
   include CandlepinMethods
-  include CandlepinScenarios
 
   before do
     @owner = create_owner random_string('test_owner')

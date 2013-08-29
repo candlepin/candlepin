@@ -1,8 +1,8 @@
+require 'spec_helper'
 require 'candlepin_scenarios'
 
 describe 'Sub-pool Subscriptions Should' do
   include CandlepinMethods
-  include CandlepinScenarios
   include SpecUtils
 
   before(:each) do

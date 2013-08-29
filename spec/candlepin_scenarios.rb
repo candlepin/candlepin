@@ -4,38 +4,6 @@ require 'pp'
 require 'zip/zip'
 require 'base64'
 
-# Provides initialization and cleanup of data that was used in the scenario
-module CandlepinScenarios
-
-  def self.included(base)
-    base.class_eval do
-      before(:each) do
-        @cp = Candlepin.new('admin', 'admin')
-        @owners = []
-        @products = []
-        @dist_versions = []
-        @users = []
-        @roles = []
-        @rules = nil
-      end
-
-      after do
-        @roles.reverse_each { |r| @cp.delete_role r['id'] }
-        @owners.reverse_each { |owner| @cp.delete_owner owner['key'] }
-        @users.reverse_each { |user| @cp.delete_user user['username'] }
-        @products.reverse_each { |product| @cp.delete_product product['id'] }
-        @dist_versions.reverse_each { |dist_version| @cp.delete_distributor_version dist_version['id'] }
-
-        # restore the original rules
-        if (@rules)
-          @cp.delete_rules
-        end
-        # TODO:  delete products?
-      end
-    end
-  end
-end
-
 module CandlepinMethods
 
   # Wrapper for ruby API so we can track all owners we created and clean them

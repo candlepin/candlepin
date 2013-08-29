@@ -1,9 +1,9 @@
+require 'spec_helper'
 require 'candlepin_scenarios'
 
 describe 'Product Resource' do
 
   include CandlepinMethods
-  include CandlepinScenarios
 
   it 'updates individual product fields' do
     prod = create_product(nil, 'tacos', {:multiplier => 2, :dependentProductIds => [2, 4]})

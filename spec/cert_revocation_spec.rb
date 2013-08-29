@@ -1,10 +1,10 @@
+require 'spec_helper'
 require 'candlepin_scenarios'
 require 'openssl'
 
 describe 'Certificate Revocation List' do
 
   include CandlepinMethods
-  include CandlepinScenarios
 
   before do
     @owner = create_owner random_string('test_owner')

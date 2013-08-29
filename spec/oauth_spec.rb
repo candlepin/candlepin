@@ -1,3 +1,4 @@
+require 'spec_helper'
 require 'candlepin_scenarios'
 
 require 'rubygems'
@@ -6,7 +7,6 @@ require 'oauth'
 
 describe 'OAuth' do
   include CandlepinMethods
-  include CandlepinScenarios
 
   # XXX you must set these in your candlepin.conf
   oauth_consumer = "rspec"

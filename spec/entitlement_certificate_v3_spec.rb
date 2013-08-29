@@ -1,10 +1,10 @@
+require 'spec_helper'
 require 'candlepin_scenarios'
 require 'unpack'
 
 describe 'Entitlement Certificate V3' do
   include CandlepinMethods
   include CertificateMethods
-  include CandlepinScenarios
   include Unpack
 
   class String

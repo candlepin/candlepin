@@ -1,8 +1,8 @@
+require 'spec_helper'
 require 'candlepin_scenarios'
 
 describe 'Job Status' do
   include CandlepinMethods
-  include CandlepinScenarios
 
   before(:each) do
     @owner = create_owner(random_string("test_owner"))

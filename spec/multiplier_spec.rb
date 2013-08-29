@@ -1,8 +1,8 @@
+require 'spec_helper'
 require 'candlepin_scenarios'
 
 describe 'Multiplier Products' do
   include CandlepinMethods
-  include CandlepinScenarios
 
   before(:each) do
     @owner = create_owner random_string('some_owner')

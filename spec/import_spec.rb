@@ -1,3 +1,4 @@
+require 'spec_helper'
 require 'candlepin_scenarios'
 require 'json'
 
@@ -5,7 +6,6 @@ describe 'Candlepin Import', :serial => true do
 
   include CandlepinMethods
   include ExportMethods
-  include CandlepinScenarios
 
   before(:all) do
     @users = []

@@ -1,3 +1,4 @@
+require 'spec_helper'
 require 'candlepin_scenarios'
 require 'candlepin_api'
 require 'pp'
@@ -5,7 +6,6 @@ require 'base64'
 
 describe 'Rules Import', :serial => true do
 
-  include CandlepinScenarios
   #include CandlepinMethods
 
   it 'gets rules' do

@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
+require 'spec_helper'
 require 'candlepin_scenarios'
 
 describe 'Consumer Resource' do
 
   include CandlepinMethods
-  include CandlepinScenarios
 
   before(:each) do
     @owner1 = create_owner random_string('test_owner1')

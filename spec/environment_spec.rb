@@ -1,8 +1,8 @@
+require 'spec_helper'
 require 'candlepin_scenarios'
 
 describe 'Environments' do
   include CandlepinMethods
-  include CandlepinScenarios
 
   before(:each) do
     @expected_env_id = random_string('testenv1')

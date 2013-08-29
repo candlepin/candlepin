@@ -1,9 +1,9 @@
+require 'spec_helper'
 require 'candlepin_scenarios'
 
 describe 'Consumer serialization' do
 
   include CandlepinMethods
-  include CandlepinScenarios
 
   before(:each) do
     @owner = create_owner(random_string("test_owner"))
@@ -23,7 +23,6 @@ end
 describe 'Pool serialization' do
 
   include CandlepinMethods
-  include CandlepinScenarios
 
   before(:each) do
     @owner = create_owner(random_string("test_owner"))
@@ -51,7 +50,6 @@ end
 describe 'Entitlement serialization' do
 
   include CandlepinMethods
-  include CandlepinScenarios
 
   before(:each) do
     @owner = create_owner(random_string("test_owner"))
