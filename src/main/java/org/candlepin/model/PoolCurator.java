@@ -550,7 +550,12 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         }
         entity.getAttributes().clear();
 
-        currentSession().delete(toDelete);
+        if (toDelete != null) {
+            currentSession().delete(toDelete);
+        }
+        else {
+            log.info("Pool " + entity.getId() + " not found. Skipping deletion. noop");
+        }
     }
 
     /**
