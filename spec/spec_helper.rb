@@ -1,3 +1,6 @@
+require 'base64'
+require 'zip/zip'
+
 RSpec.configure do |config|
   # TODO: The "should" method has been deprecated in RSpec 2.11 and replaced with "expect".
   # Our current version of Buildr uses RSpec 2.9.0, but newer Buildr versions use the
@@ -78,5 +81,40 @@ module VirtHelper
   def find_guest_virt_pool(guest_client, guest_uuid)
     pools = guest_client.list_pools :consumer => guest_uuid
     return pools.find_all { |i| !i['sourceEntitlement'].nil? }[0]
+  end
+end
+
+module CertificateMethods
+  def extract_payload(certificate)
+    payload = certificate.split("-----BEGIN ENTITLEMENT DATA-----\n")[1]
+    payload = payload.split("-----END ENTITLEMENT DATA-----")[0]
+    asn1_body = Base64.decode64(payload)
+    body = Zlib::Inflate.inflate(asn1_body)
+    JSON.parse(body)
+  end
+end
+
+module SpecUtils
+  def flatten_attributes(attributes)
+    attrs = {}
+    attributes.each do |attribute| attrs[attribute['name']] = attribute['value'] end
+    return attrs
+  end
+end
+
+# This allows for dot notation instead of using hashes for everything
+class Hash
+  # Not sure if this is a great idea
+  # Override Ruby's id method to access our id attribute
+  def id
+    self['id']
+  end
+
+  def method_missing(method, *args)
+    if ((method.to_s =~ /=$/) != nil)
+        self[method.to_s.gsub(/=$/, '')] = args[0]
+    else
+        self[method.to_s]
+    end
   end
 end
