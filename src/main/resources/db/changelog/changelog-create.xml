@@ -1130,4 +1130,5 @@
     <include file="db/changelog/20130717133146-ownerkey-and-displayname-in-deletedconsumer.xml" />
     <include file="db/changelog/20130723134939-add-linked-stack-id-to-pool.xml" />
     <include file="db/changelog/20130725093910-add-source-consumer-to-pool.xml" />
+    <include file="db/changelog/20130829085043-add-sat-5.6-dist-version.xml" />
 </databaseChangeLog>
