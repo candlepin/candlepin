@@ -2,7 +2,7 @@ require 'candlepin_scenarios'
 require 'tmpdir'
 require 'openssl'
 
-describe 'Candlepin Export' do
+describe 'Candlepin Export', :serial => true do
 
   include CandlepinMethods
   include ExportMethods

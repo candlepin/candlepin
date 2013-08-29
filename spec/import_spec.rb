@@ -1,7 +1,7 @@
 require 'candlepin_scenarios'
 require 'json'
 
-describe 'Candlepin Import' do
+describe 'Candlepin Import', :serial => true do
 
   include CandlepinMethods
   include ExportMethods

@@ -83,7 +83,8 @@ describe 'Consumer Resource' do
     end.should raise_exception(RestClient::Gone)
   end
 
-  it 'allows super admins to see all consumers' do
+  #TODO Get this working in parallel
+  it 'allows super admins to see all consumers', :serial => true do
     uuids = []
     @cp.list_consumers.each do |c|
       uuids << c['uuid']
@@ -111,7 +112,8 @@ describe 'Consumer Resource' do
     @user2.list_consumers({:owner => @owner2['key']}).length.should == 1
   end
 
-  it 'lets a super admin filter consumers by owner' do
+  #TODO Get this working in parallel
+  it 'lets a super admin filter consumers by owner', :serial => true do
     @cp.list_consumers.size.should be > 1
     @cp.list_consumers({:owner => @owner1['key']}).size.should == 1
   end

@@ -3,7 +3,7 @@ require 'candlepin_api'
 require 'pp'
 require 'base64'
 
-describe 'Rules Import' do
+describe 'Rules Import', :serial => true do
 
   include CandlepinScenarios
   #include CandlepinMethods

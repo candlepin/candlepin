@@ -1,6 +1,6 @@
 require 'candlepin_scenarios'
 
-describe 'Candlepin Import Update' do
+describe 'Candlepin Import Update', :serial => true do
 
   include CandlepinMethods
   include ExportMethods
