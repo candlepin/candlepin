@@ -1,4 +1,14 @@
 RSpec.configure do |config|
+  # TODO: The "should" method has been deprecated in RSpec 2.11 and replaced with "expect".
+  # Our current version of Buildr uses RSpec 2.9.0, but newer Buildr versions use the
+  # newer RSpec.  Next time we upgrade Buildr, uncomment the block below to catch all
+  # instances of "should". (Both syntaxes can exist side-by-side by setting c.syntax = [:should, :expect])
+  # See also http://myronmars.to/n/dev-blog/2012/06/rspecs-new-expectation-syntax
+  #
+  #config.expect_with :rspec do |c|
+  #  c.syntax = :expect
+  #end
+
   config.before(:each) do
     @cp = Candlepin.new('admin', 'admin')
     @owners = []
