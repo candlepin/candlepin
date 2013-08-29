@@ -1291,7 +1291,8 @@ public class ConsumerResource {
     @Path("/{consumer_uuid}/entitlements")
     public Response bind(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-        @QueryParam("pool") @Verify(Pool.class) String poolIdString,
+        @QueryParam("pool") @Verify(value = Pool.class, nullable = true)
+            String poolIdString,
         @QueryParam("product") String[] productIds,
         @QueryParam("quantity") @DefaultValue("1") Integer quantity,
         @QueryParam("email") String email,
