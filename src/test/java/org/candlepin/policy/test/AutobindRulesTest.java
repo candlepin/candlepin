@@ -686,4 +686,21 @@ public class AutobindRulesTest {
         assertEquals(new Integer(1), q.getQuantity());
     }
 
+    @Test
+    public void unlimitedPoolIsPickedUp() {
+        Product product = new Product(productId, "my-prod");
+        product.setAttribute("sockets", "2");
+        Pool pool = TestUtil.createPool(owner, product, -1);
+        pool.setId("POOL-ID");
+        when(this.prodAdapter.getProductById(product.getId())).thenReturn(product);
+
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{ product.getId() }, pools, compliance, null,
+            new HashSet<String>());
+        assertEquals(1, bestPools.size());
+    }
+
 }
