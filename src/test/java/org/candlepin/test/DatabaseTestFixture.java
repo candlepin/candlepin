@@ -14,12 +14,13 @@
  */
 package org.candlepin.test;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Module;
-import com.google.inject.persist.PersistFilter;
-import com.google.inject.persist.UnitOfWork;
-import com.google.inject.util.Modules;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashSet;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.servlet.http.HttpServletRequest;
 
 import org.candlepin.CandlepinCommonTestingModule;
 import org.candlepin.CandlepinNonServletEnvironmentTestingModule;
@@ -76,20 +77,16 @@ import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.util.DateSource;
-import org.hibernate.ejb.HibernateEntityManagerImplementor;
 import org.junit.After;
 import org.junit.Before;
 import org.xnap.commons.i18n.I18n;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashSet;
-
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.servlet.http.HttpServletRequest;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Module;
+import com.google.inject.persist.PersistFilter;
+import com.google.inject.persist.UnitOfWork;
+import com.google.inject.util.Modules;
 
 /**
  * Test fixture for test classes requiring access to the database.
@@ -216,20 +213,12 @@ public class DatabaseTestFixture {
     public void shutdown() {
         try {
             injector.getInstance(PersistFilter.class).destroy();
-
-            HibernateEntityManagerImplementor hem =
-                (HibernateEntityManagerImplementor) entityManager();
-            Connection connection = hem.getSession().connection();
-            try {
-                connection.createStatement().execute("SHUTDOWN");
+            if (entityManager().isOpen()) {
+                entityManager().close();
             }
-            catch (SQLException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+            if (emf.isOpen()) {
+                emf.close();
             }
-
-            entityManager().close();
-            emf.close();
         }
         finally {
             cpSingletonScope.exit();

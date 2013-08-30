@@ -49,7 +49,6 @@ public class Rules extends AbstractHibernateObject {
     @Column(length = 32)
     private String id;
 
-    @Lob
     @Basic(fetch = FetchType.LAZY)
     @Column(name = "rules_blob")
     private String rules;

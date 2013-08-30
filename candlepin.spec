@@ -61,12 +61,12 @@ BuildRequires: scl-utils-build
 BuildRequires: candlepin-scl
 
 BuildRequires: bouncycastle
-BuildRequires: hibernate3 >= 3.3.2
-BuildRequires: hibernate3-annotations >= 0:3.4.0
+BuildRequires: hibernate4 >= 4.2.5
+BuildRequires: hibernate4-annotations >= 0:4.2.5
 
 # for schema
-BuildRequires: hibernate3-entitymanager >= 0:3.4.0
-BuildRequires: hibernate3-commons-annotations
+BuildRequires: hibernate4-entitymanager >= 0:4.2.5
+BuildRequires: hibernate4-commons-annotations
 
 BuildRequires: google-collections >= 0:1.0
 BuildRequires: resteasy >= 0:2.3.1
@@ -115,9 +115,9 @@ Requires: postgresql-jdbc
 %if !0%{?reqcpdeps}
 # candlepin webapp requires
 Requires: bouncycastle
-Requires: hibernate3 >= 3.3.2
-Requires: hibernate3-annotations >= 0:3.4.0
-Requires: hibernate3-entitymanager >= 0:3.4.0
+Requires: hibernate4 >= 4.2.5
+Requires: hibernate4-annotations >= 0:4.2.5
+Requires: hibernate4-entitymanager >= 0:4.2.5
 Requires: candlepin-scl
 Requires: c3p0
 Requires: resteasy >= 0:2.3.1
