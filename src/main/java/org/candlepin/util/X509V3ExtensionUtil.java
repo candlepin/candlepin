@@ -297,6 +297,10 @@ public class X509V3ExtensionUtil extends X509Util{
             product.getAttributeValue("version") : "";
         toReturn.setVersion(version);
 
+        String os  = product.hasAttribute("os") ?
+            product.getAttributeValue("os") : "";
+        toReturn.setOs(os);
+
         String productArches = product.getAttributeValue("arch");
         Set<String> productArchSet = Arch.parseArches(productArches);
 

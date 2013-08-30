@@ -194,6 +194,11 @@ public class X509ExtensionUtil  extends X509Util{
         toReturn.add(new X509ExtensionWrapper(productOid + "." +
             OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_VERSION_KEY), false, version));
 
+        String osName = product.hasAttribute("os") ?
+            product.getAttributeValue("os") : "";
+        toReturn.add(new X509ExtensionWrapper(productOid + "." +
+            OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_OS_NAME_KEY), false, osName));
+
         // XXX include provides here (after defined in attributes)
 
         // dummy provides i used for testing
