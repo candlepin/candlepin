@@ -182,6 +182,9 @@ function createPool(pool) {
         }
         return this.product_list;
     };
+
+    //attribute to be modified in autobind
+    pool.currently_available = pool.quantity - pool.consumed;
     return pool;
 }
 
@@ -1868,7 +1871,7 @@ var Autobind = {
                     //entitlement index matches pool index
                     var current_ent = ents[i];
 
-                    for (var j = increment; j <= (pool.quantity - pool.consumed); j += increment) {
+                    for (var j = increment; j <= pool.currently_available; j += increment) {
                         current_ent.quantity = j;
                         //can probably do this part better.  ex: get compliance once, use compliance reasons to calculate the number required
 
@@ -1906,7 +1909,7 @@ var Autobind = {
                     pool: pool,
                     startDate: pool.startDate,
                     endDate: pool.endDate,
-                    quantity: pool.quantity - pool.consumed,
+                    quantity: pool.currently_available,
                     consumer: consumer,
                     owner: consumer.owner
                 };
@@ -2025,7 +2028,11 @@ var Autobind = {
     },
 
     is_pool_not_empty: function(pool) {
-        if (pool.quantity == -1 || pool.quantity - pool.consumed > 0) {
+        if (pool.quantity == -1) {
+            // Should be sufficiently high for 'unlimited'
+            pool.currently_available = 1000000;
+        }
+        if (pool.currently_available > 0) {
             return true;
         }
         log.debug("Skipping pool " + pool.id + " since all entitlements have been consumed.");
@@ -2066,20 +2073,14 @@ var Autobind = {
             // Since pool.quantity may change, track initial unlimited state here.
             var pool_not_empty = this.is_pool_not_empty(pool);
 
-            //probably not necessary at this point
-            if (pool.hasProductAttribute("instance_multiplier") && !isGuest) {
-                var increment = parseInt(pool.getProductAttribute("instance_multiplier"));
-                pool.quantity -= (pool.quantity % increment);
-            }
-
             if (this.is_pool_arch_valid(context, pool, consumerArch) &&
                     this.is_pool_virt_valid(pool, isGuest) &&
                     this.is_pool_sla_valid(context, pool, consumerSLA) &&
                     this.is_pool_date_valid(pool, context.compliance["date"]) &&
                     pool_not_empty) {
-                //if it doesn't support multi-entitlement, we set quantity to 1 more than consumed
+                //if it doesn't support multi-entitlement, we set available quantity to 1
                 if (!Quantity.allows_multi_entitlement(pool)) {
-                    pool.quantity = pool.consumed + 1; //stops us from accidentally adding too many
+                    pool.currently_available = 1; //stops us from accidentally adding too many
                 }
                 valid_pools.push(pool);
             }
