@@ -635,8 +635,8 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertNotNull(pool);
     }
 
-    @Test (expected = IllegalArgumentException.class)
-    public void confirmExceptionOnBonusPoolDelete() {
+    @Test
+    public void confirmBonusPoolDeleted() {
         Subscription sub = new Subscription(owner, product, new HashSet<Product>(), 16L,
             TestUtil.createDate(2006, 10, 21), TestUtil.createDate(2020, 1, 1), new Date());
         subCurator.create(sub);
@@ -654,6 +654,21 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         assertTrue(poolCurator.lookupBySubscriptionId(sub.getId()).size() == 2);
         poolManager.deletePool(sourcePool);
-        poolManager.deletePool(pool2);
+
+        // because we check for null now, we want to verify the
+        // subpool gets deleted when the original pool is deleted.
+        Pool gone = poolCurator.find(pool2.getId());
+        assertEquals(gone, null);
+    }
+
+    @Test
+    public void handleNull() {
+        Pool noexist = new Pool(owner, product.getId(), product.getName(),
+            new HashSet<ProvidedProduct>(), 1L, TestUtil.createDate(2011, 3, 2),
+            TestUtil.createDate(2055, 3, 2),
+            "", "", "");
+        noexist.setId("betternotexist");
+
+        poolCurator.delete(noexist);
     }
 }
