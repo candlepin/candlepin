@@ -199,6 +199,17 @@ public class SecurityInterceptor implements MethodInterceptor {
                     List entities = new ArrayList();
 
                     Object argument = invocation.getArguments()[i];
+
+                    // if the argument is null, we don't have to check anything
+                    if (argument == null && ((Verify) a).nullable()) {
+                        continue;
+                    }
+                    else if (argument == null) {
+                        log.info("null argument is not allowed");
+                        throw new NotFoundException(i18n.tr(
+                            "{0} with id {1} could not be found.",
+                            Util.getClassName(verifyType), null));
+                    }
                     if (argument instanceof String) {
                         String verifyParam = (String) argument;
                         log.debug("Verifying " + requiredAccess +

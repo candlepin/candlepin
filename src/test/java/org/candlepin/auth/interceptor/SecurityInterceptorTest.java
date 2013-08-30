@@ -25,6 +25,7 @@ import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.IseException;
+import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.guice.I18nProvider;
 import org.candlepin.model.User;
 
@@ -121,6 +122,23 @@ public class SecurityInterceptorTest implements Provider<Principal> {
         assertEquals(l, t.verifyListMethod(l));
     }
 
+    @Test(expected = NotFoundException.class)
+    public void invokeWithNullListNonNullable() {
+        when(principal.canAccess(
+            any(User.class), any(Access.class))).thenReturn(true);
+        TestClass t = injector.getInstance(TestClass.class);
+        List<String> l = null;
+        assertEquals(l, t.verifyListMethodNonNullable(l));
+    }
+
+    @Test(expected = NotFoundException.class)
+    public void invokeWithNullArg() {
+        when(principal.canAccess(
+            any(User.class), any(Access.class))).thenReturn(true);
+        TestClass t = injector.getInstance(TestClass.class);
+        t.verifyMethod(null);
+    }
+
     @Test(expected = IseException.class)
     public void invalidVerify() {
         TestClass t = injector.getInstance(TestClass.class);
@@ -162,7 +180,13 @@ public class SecurityInterceptorTest implements Provider<Principal> {
             return username;
         }
 
-        public List<String> verifyListMethod(@Verify(User.class) List<String> usernames) {
+        public List<String> verifyListMethod(@Verify(value = User.class,
+                nullable = true) List<String> usernames) {
+            return usernames;
+        }
+
+        public List<String> verifyListMethodNonNullable(@Verify(User.class)
+                List<String> usernames) {
             return usernames;
         }
 

@@ -1305,7 +1305,8 @@ public class ConsumerResource {
     @Path("/{consumer_uuid}/entitlements")
     public Response bind(
         @PathParam("consumer_uuid") @Verify(Consumer.class) String consumerUuid,
-        @QueryParam("pool") @Verify(Pool.class) String poolIdString,
+        @QueryParam("pool") @Verify(value = Pool.class, nullable = true)
+                String poolIdString,
         @QueryParam("product") String[] productIds,
         @QueryParam("quantity") @DefaultValue("1") Integer quantity,
         @QueryParam("email") String email,
@@ -1854,8 +1855,10 @@ public class ConsumerResource {
     @Path("/compliance")
     @Transactional
     public Map<String, ComplianceStatus> getComplianceStatusList(
-        @QueryParam("uuid") @Verify(Consumer.class) List<String> uuids) {
-        List<Consumer> consumers = consumerCurator.findByUuids(uuids);
+        @QueryParam("uuid") @Verify(value = Consumer.class, nullable = true)
+            List<String> uuids) {
+        List<Consumer> consumers = uuids == null ? new LinkedList<Consumer>() :
+            consumerCurator.findByUuids(uuids);
         Map<String, ComplianceStatus> results = new HashMap<String, ComplianceStatus>();
 
         Date now = Calendar.getInstance().getTime();
