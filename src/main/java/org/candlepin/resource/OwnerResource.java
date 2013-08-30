@@ -571,7 +571,8 @@ public class OwnerResource {
         @PathParam("owner_key") @Verify(Owner.class) String ownerKey,
         @QueryParam("username") String userName,
         @QueryParam("type") String typeLabel,
-        @QueryParam("uuid") @Verify(Consumer.class) List<String> uuids,
+        @QueryParam("uuid") @Verify(value = Consumer.class, nullable = true)
+            List<String> uuids,
         @Context PageRequest pageRequest) {
 
         Owner owner = findOwner(ownerKey);
