@@ -21,6 +21,20 @@ describe 'Role Resource' do
     @cp.list_roles().size.should == orig_count + 1
   end
 
+  it 'should not expose roles to other owners' do
+      other_owner_key = random_string('testowner')
+      @other_owner = create_owner(other_owner_key)
+      @other_username = random_string 'other_user'
+      @other_user_cp = user_client(@other_owner, @other_username)
+
+      role_list = @user_cp.list_roles()
+      other_role_list = @other_user_cp.list_roles()
+
+      puts role_list
+      puts other_role_list
+  end
+
+
   it 'should update just the name' do
     new_role = create_role('testrole', @test_owner['key'], 'ALL')
     new_role['name'] = 'testroleupdated'
