@@ -1610,7 +1610,7 @@ var Autobind = {
             installed: installed_ids,
             consumer: consumer,
             attached_ents: attached_ents,
-    
+
             /*
              * Method returns whether or not it is possible for the entitlement
              * group to be valid.
@@ -1817,7 +1817,7 @@ var Autobind = {
                         this.pools.push(temp);
                     }
                 }
-                log.debug("removed " + (prior_pool_size - this.pools.length) + " of " + prior_pool_size + " pools"); 
+                log.debug("removed " + (prior_pool_size - this.pools.length) + " of " + prior_pool_size + " pools");
             },
 
             /*
@@ -1871,7 +1871,7 @@ var Autobind = {
                     for (var j = increment; j <= (pool.quantity - pool.consumed); j += increment) {
                         current_ent.quantity = j;
                         //can probably do this part better.  ex: get compliance once, use compliance reasons to calculate the number required
-                        
+
                         if (this.stackable) {
                             if (Compliance.getStackCoverage(this.consumer, this.stack_id, ents.concat(this.attached_ents)).covered) {
                                 result.put(pool.id, j);
@@ -1887,7 +1887,7 @@ var Autobind = {
                 }
                 return result;
             },
-    
+
             get_all_ents: function(in_pools) {
                 var ents = [];
                 for (var i = 0; i < in_pools.length; i++) {
@@ -1896,7 +1896,7 @@ var Autobind = {
                 }
                 return ents;
             },
-    
+
             add_pool: function(pool) {
                 this.pools.push(pool);
             },
@@ -1934,7 +1934,7 @@ var Autobind = {
             }
         };
     },
-    
+
     create_autobind_context: function() {
         var context = JSON.parse(json_context);
 
@@ -1998,7 +1998,11 @@ var Autobind = {
     is_pool_virt_valid: function(pool, isGuest) {
         // if physical, and pool is virt_only, invalid.
         if (!isGuest && pool.hasProductAttribute(VIRT_ONLY)) {
-            return !Utils.equalsIgnoreCase('true', pool.getProductAttribute(VIRT_ONLY));
+            var valid = !Utils.equalsIgnoreCase('true', pool.getProductAttribute(VIRT_ONLY));
+            if (!valid) {
+                log.debug("Skipping pool " + pool.id + " since a physical system can not consume from a virt-only pool.");
+            }
+            return valid;
         }
         return true;
     },
@@ -2021,9 +2025,10 @@ var Autobind = {
     },
 
     is_pool_not_empty: function(pool) {
-        if (pool.quantity - pool.consumed > 0) {
+        if (pool.quantity == -1 || pool.quantity - pool.consumed > 0) {
             return true;
         }
+        log.debug("Skipping pool " + pool.id + " since all entitlements have been consumed.");
         return false;
     },
 
@@ -2053,6 +2058,14 @@ var Autobind = {
         for (var i = 0; i < context.pools.length ; i++) {
             var pool = context.pools[i];
 
+            // FIXME Not sure that we should be changing pool.quantity
+            //       as this value shouldn't be changing. We should be able to
+            //       check that value with confidence throughout the code.
+            //       Perhaps there is a better way that we can track this change.
+
+            // Since pool.quantity may change, track initial unlimited state here.
+            var pool_not_empty = this.is_pool_not_empty(pool);
+
             //probably not necessary at this point
             if (pool.hasProductAttribute("instance_multiplier") && !isGuest) {
                 var increment = parseInt(pool.getProductAttribute("instance_multiplier"));
@@ -2063,7 +2076,7 @@ var Autobind = {
                     this.is_pool_virt_valid(pool, isGuest) &&
                     this.is_pool_sla_valid(context, pool, consumerSLA) &&
                     this.is_pool_date_valid(pool, context.compliance["date"]) &&
-                    this.is_pool_not_empty(pool)) {
+                    pool_not_empty) {
                 //if it doesn't support multi-entitlement, we set quantity to 1 more than consumed
                 if (!Quantity.allows_multi_entitlement(pool)) {
                     pool.quantity = pool.consumed + 1; //stops us from accidentally adding too many
@@ -2174,7 +2187,7 @@ var Autobind = {
 
     get_best_entitlement_groups: function(all_groups, installed, compliance) {
         var best = [];
-        
+
         var partial_stacks = [];
         for (var stack_id in compliance["partialStacks"]) {
             if (compliance["partialStacks"].hasOwnProperty(stack_id)) {
@@ -2188,7 +2201,7 @@ var Autobind = {
                                                                 // other stacks
                                                                 // are handling
                         best.push(current_group);
- 
+
                         for (var j = installed.length - 1; j >= 0; j--) {
                             var current= installed[j];
                             if (in_common.indexOf(current) != -1) {
@@ -2254,7 +2267,7 @@ var Autobind = {
         var context = this.create_autobind_context();
 
         var attached_ents = this.get_attached_ents(context.compliance);
-        
+
         var valid_pools = this.get_valid_pools(context);
 
         var installed = context.products;
