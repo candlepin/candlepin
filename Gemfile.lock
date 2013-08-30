@@ -35,6 +35,9 @@ GEM
       net-ssh (>= 2.0.9)
     net-ssh (2.3.0)
     oauth (0.4.6)
+    parallel (0.7.1)
+    parallel_tests (0.15.2)
+      parallel
     rake (0.9.2.2)
     rest-client (1.6.7)
       mime-types (>= 1.16)
@@ -58,5 +61,6 @@ PLATFORMS
 DEPENDENCIES
   buildr (= 1.4.7)
   oauth
+  parallel_tests
   rest-client
   rspec
