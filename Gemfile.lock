@@ -28,6 +28,7 @@ GEM
     hoe (2.3.3)
       rake (>= 0.8.7)
       rubyforge (>= 1.0.4)
+    iconv (1.0.3)
     json_pure (1.4.3)
     mime-types (1.19)
     minitar (0.5.3)
@@ -60,6 +61,7 @@ PLATFORMS
 
 DEPENDENCIES
   buildr (= 1.4.7)
+  iconv
   oauth
   parallel_tests
   rest-client
