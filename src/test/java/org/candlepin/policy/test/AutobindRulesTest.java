@@ -701,6 +701,28 @@ public class AutobindRulesTest {
             new String[]{ product.getId() }, pools, compliance, null,
             new HashSet<String>());
         assertEquals(1, bestPools.size());
+        assertEquals(new Integer(1), bestPools.get(0).getQuantity());
+        assertEquals("POOL-ID", bestPools.get(0).getPool().getId());
+    }
+
+    @Test
+    public void unlimitedStackedPoolIsPickedUp() {
+        consumer.setFact("cpu.cpu_socket(s)", "8");
+        Product product = mockStackingProduct(productId, "my-prod", "stackid", "2");
+        Pool pool = TestUtil.createPool(owner, product, -1);
+        pool.setId("POOL-ID");
+
+        when(this.prodAdapter.getProductById(product.getId())).thenReturn(product);
+
+        List<Pool> pools = new LinkedList<Pool>();
+        pools.add(pool);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{ product.getId() }, pools, compliance, null,
+            new HashSet<String>());
+        assertEquals(1, bestPools.size());
+        assertEquals(new Integer(4), bestPools.get(0).getQuantity());
+        assertEquals("POOL-ID", bestPools.get(0).getPool().getId());
     }
 
 }

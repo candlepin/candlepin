@@ -2025,7 +2025,11 @@ var Autobind = {
     },
 
     is_pool_not_empty: function(pool) {
-        if (pool.quantity == -1 || pool.quantity - pool.consumed > 0) {
+        if (pool.quantity == -1) {
+            // Should be sufficiently high for 'unlimited'
+            pool.quantity = pool.consumed + 1000000;
+        }
+        if (pool.quantity - pool.consumed > 0) {
             return true;
         }
         log.debug("Skipping pool " + pool.id + " since all entitlements have been consumed.");
@@ -2065,12 +2069,6 @@ var Autobind = {
 
             // Since pool.quantity may change, track initial unlimited state here.
             var pool_not_empty = this.is_pool_not_empty(pool);
-
-            //probably not necessary at this point
-            if (pool.hasProductAttribute("instance_multiplier") && !isGuest) {
-                var increment = parseInt(pool.getProductAttribute("instance_multiplier"));
-                pool.quantity -= (pool.quantity % increment);
-            }
 
             if (this.is_pool_arch_valid(context, pool, consumerArch) &&
                     this.is_pool_virt_valid(pool, isGuest) &&
