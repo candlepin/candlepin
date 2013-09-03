@@ -1,4 +1,4 @@
-// Version: 4.1
+// Version: 4.2
 
 /*
  * Default Candlepin rule set.
@@ -790,7 +790,7 @@ var CoverageCalculator = {
             }
 
             // Don't try to take more than the pool has available:
-            if (maxQuantity > pool.quantity - pool.consumed) {
+            if (maxQuantity > pool.quantity - pool.consumed && pool.quantity != -1) {
                 maxQuantity = pool.quantity - pool.consumed;
             }
 
@@ -1868,7 +1868,7 @@ var Autobind = {
                     //entitlement index matches pool index
                     var current_ent = ents[i];
 
-                    for (var j = increment; j <= (pool.quantity - pool.consumed); j += increment) {
+                    for (var j = increment; j <= pool.currently_available; j += increment) {
                         current_ent.quantity = j;
                         //can probably do this part better.  ex: get compliance once, use compliance reasons to calculate the number required
 
@@ -1906,7 +1906,7 @@ var Autobind = {
                     pool: pool,
                     startDate: pool.startDate,
                     endDate: pool.endDate,
-                    quantity: pool.quantity - pool.consumed,
+                    quantity: pool.currently_available,
                     consumer: consumer,
                     owner: consumer.owner
                 };
@@ -1940,6 +1940,17 @@ var Autobind = {
 
         for (var i = 0; i < context.pools.length; i++) {
             context.pools[i] = createPool(context.pools[i]);
+            var pool = context.pools[i];
+            if (pool.quantity == -1) {
+                // In the unlimited case, we need at most the number required to cover the system
+                pool.currently_available = Quantity.get_suggested_pool_quantity(pool, context.consumer);
+            } else {
+                pool.currently_available = pool.quantity - pool.consumed;
+            }
+            // If the pool is not multi-entitlable, only one may be used
+            if (pool.currently_available > 0 && !Quantity.allows_multi_entitlement(pool)) {
+                pool.currently_available = 1;
+            }
         }
 
         // Also need to convert all pools reported in compliance.
@@ -2007,25 +2018,8 @@ var Autobind = {
         return true;
     },
 
-    /*
-     * If onDate is null, bypass the check
-     * date comes from compliance.
-     */
-    is_pool_date_valid: function(pool, onDate) {
-        if (onDate == null) {
-            return true;
-        }
-        var startDate = new Date(pool.startDate);
-        var endDate = new Date(pool.endDate);
-        if (Utils.date_compare(startDate, onDate) <= 0 && Utils.date_compare(endDate, onDate) >= 0) {
-            return true;
-        }
-        log.debug("Skipping pool " + pool.id + " since the date isn't valid");
-        return false;
-    },
-
     is_pool_not_empty: function(pool) {
-        if (pool.quantity == -1 || pool.quantity - pool.consumed > 0) {
+        if (pool.currently_available > 0) {
             return true;
         }
         log.debug("Skipping pool " + pool.id + " since all entitlements have been consumed.");
@@ -2058,29 +2052,13 @@ var Autobind = {
         for (var i = 0; i < context.pools.length ; i++) {
             var pool = context.pools[i];
 
-            // FIXME Not sure that we should be changing pool.quantity
-            //       as this value shouldn't be changing. We should be able to
-            //       check that value with confidence throughout the code.
-            //       Perhaps there is a better way that we can track this change.
-
             // Since pool.quantity may change, track initial unlimited state here.
             var pool_not_empty = this.is_pool_not_empty(pool);
-
-            //probably not necessary at this point
-            if (pool.hasProductAttribute("instance_multiplier") && !isGuest) {
-                var increment = parseInt(pool.getProductAttribute("instance_multiplier"));
-                pool.quantity -= (pool.quantity % increment);
-            }
 
             if (this.is_pool_arch_valid(context, pool, consumerArch) &&
                     this.is_pool_virt_valid(pool, isGuest) &&
                     this.is_pool_sla_valid(context, pool, consumerSLA) &&
-                    this.is_pool_date_valid(pool, context.compliance["date"]) &&
                     pool_not_empty) {
-                //if it doesn't support multi-entitlement, we set quantity to 1 more than consumed
-                if (!Quantity.allows_multi_entitlement(pool)) {
-                    pool.quantity = pool.consumed + 1; //stops us from accidentally adding too many
-                }
                 valid_pools.push(pool);
             }
         }
@@ -2713,6 +2691,14 @@ var Quantity = {
         return pool.hasProductAttribute("multi-entitlement") &&
             Utils.equalsIgnoreCase(pool.getProductAttribute("multi-entitlement"),
             "yes");
+    },
+
+    get_suggested_pool_quantity: function(pool, consumer) {
+        if (Quantity.allows_multi_entitlement(pool) && pool.hasProductAttribute("stacking_id")) {
+            var stackTracker = createStackTrackerFromPool(pool, consumer);
+            return CoverageCalculator.getQuantityToCoverStack(stackTracker, pool, consumer);
+        }
+        return 1;
     }
 }
 
