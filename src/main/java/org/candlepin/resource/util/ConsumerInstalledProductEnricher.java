@@ -123,7 +123,8 @@ public class ConsumerInstalledProductEnricher {
             return null;
         }
 
-        List<Entitlement> possible = getEntitlementsSpanningStatusDate(allEntitlements);
+        List<Entitlement> possible = getSortedEntitlementsSpanningStatusDate(
+            allEntitlements);
         if (possible.isEmpty()) {
             return null;
         }
@@ -146,7 +147,6 @@ public class ConsumerInstalledProductEnricher {
         Date startDate = null;
         Date endDate = null;
         Entitlement lastProcessed = null;
-        possible = sortByStartDate(possible);
         for (int i = 0; i < possible.size(); i++) {
             boolean last = i == possible.size() - 1;
             Entitlement next = possible.get(i);
@@ -285,7 +285,7 @@ public class ConsumerInstalledProductEnricher {
      * @param allEntitlements all entitlements to check.
      * @return a list of all entitlements making up a span across status.date.
      */
-    private List<Entitlement> getEntitlementsSpanningStatusDate(
+    private List<Entitlement> getSortedEntitlementsSpanningStatusDate(
         List<Entitlement> allEntitlements) {
         List<Entitlement> sorted = sortByStartDate(allEntitlements);
 

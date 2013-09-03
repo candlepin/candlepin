@@ -536,11 +536,11 @@ public class InstalledProductStatusCalculatorTest {
 
         // Two entitlements make us green right now, one has a later start date,
         // but an earlier end date:
+        c.addEntitlement(mockStackedEntitlement(c, range3, STACK_ID_1, PRODUCT_1, 1,
+            PRODUCT_1));
         c.addEntitlement(mockStackedEntitlement(c, range1, STACK_ID_1, PRODUCT_1, 1,
             PRODUCT_1));
         c.addEntitlement(mockStackedEntitlement(c, range2, STACK_ID_1, PRODUCT_1, 1,
-            PRODUCT_1));
-        c.addEntitlement(mockStackedEntitlement(c, range3, STACK_ID_1, PRODUCT_1, 1,
             PRODUCT_1));
 
         List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
@@ -591,13 +591,13 @@ public class InstalledProductStatusCalculatorTest {
         DateRange range3 = rangeRelativeToDate(now, -3, -1);
         DateRange range4 = rangeRelativeToDate(range1.getEndDate(), 0, 10);
 
+        c.addEntitlement(mockStackedEntitlement(c, range4, STACK_ID_1, PRODUCT_1, 1,
+            PRODUCT_1));
         c.addEntitlement(mockStackedEntitlement(c, range1, STACK_ID_1, PRODUCT_1, 1,
             PRODUCT_1));
         c.addEntitlement(mockStackedEntitlement(c, range2, STACK_ID_1, PRODUCT_1, 1,
             PRODUCT_1));
         c.addEntitlement(mockStackedEntitlement(c, range3, STACK_ID_1, PRODUCT_1, 1,
-            PRODUCT_1));
-        c.addEntitlement(mockStackedEntitlement(c, range4, STACK_ID_1, PRODUCT_1, 1,
             PRODUCT_1));
 
         List<Entitlement> ents = new LinkedList<Entitlement>(c.getEntitlements());
