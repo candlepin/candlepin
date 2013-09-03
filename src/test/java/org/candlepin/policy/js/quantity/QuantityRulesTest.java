@@ -203,6 +203,15 @@ public class QuantityRulesTest {
     }
 
     @Test
+    public void testUnlimitedQuantity() {
+        consumer.setFact(SOCKET_FACT, "8");
+        pool.setProductAttribute(SOCKET_ATTRIBUTE, "2", product.getId());
+        pool.setQuantity(new Long(-1));
+        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool, consumer);
+        assertEquals(new Long(4), suggested.getSuggested());
+    }
+
+    @Test
     public void testIsNotVirtWhenFactIsFalse() {
         consumer.setFact(IS_VIRT, "false");
         consumer.setFact(SOCKET_FACT, "4");
