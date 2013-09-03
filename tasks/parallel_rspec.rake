@@ -24,6 +24,11 @@ module ParallelRSpec
       CANDLEPIN_API = File.join(project.base_dir, "client/ruby")
       RSpec::Core::RakeTask.new('serial_rspec') do |task|
         task.rspec_opts = %W{-I #{CANDLEPIN_API} --tag serial --color -fd}
+        # Running buildr parall_rspec all_tests=true will cause all the tests
+        # to run even if a test fails during the run.
+        if not ENV['all_tests'].nil?
+          task.fail_on_error = false
+        end
       end
 
       project.task('parallel_rspec' => 'serial_rspec') do |task|
