@@ -101,6 +101,13 @@ public class ConsumerInstalledProductEnricher {
      * @return the valid date range of the product.
      */
     protected DateRange getValidDateRange(Product product) {
+        // TODO: This date range's meaning changes depending if you are green or yellow
+        // currently. If green, the range is the time you are green. If yellow, the range
+        // is the time you are yellow or better. The valid date range should always mean
+        // the same thing, either it's the range of time you're green, or the range of
+        // time you're yellow or better. i.e. if I'm green now and then going to be yellow,
+        // the date range should show me the whole span of time until I go red.
+
         // We only return a DateRange for valid products.
         String status = getStatus(product.getId());
 
@@ -109,14 +116,15 @@ public class ConsumerInstalledProductEnricher {
             return null;
         }
 
-        // The status is GREEN_STATUS so we should definatly get entitlements from the
+        // The status is GREEN_STATUS so we should definitely get entitlements from the
         // consumer. Check to make sure.
         List<Entitlement> allEntitlements = getEntitlementsForProduct(product);
         if (allEntitlements.isEmpty()) {
             return null;
         }
 
-        List<Entitlement> possible = getEntitlementsSpanningStatusDate(allEntitlements);
+        List<Entitlement> possible = getSortedEntitlementsSpanningStatusDate(
+            allEntitlements);
         if (possible.isEmpty()) {
             return null;
         }
@@ -130,7 +138,7 @@ public class ConsumerInstalledProductEnricher {
          *
          * this is where this method gets interesting. We want to loop through
          * the sorted list of possible entitlements, checking each one is valid
-         * for its start and end dates. Also, comparing the current entitlemnt
+         * for its start and end dates. Also, comparing the current entitlement
          * with the previous entitlement processed.
          *
          * We adjust the end date to match the end date of the latest
@@ -139,7 +147,6 @@ public class ConsumerInstalledProductEnricher {
         Date startDate = null;
         Date endDate = null;
         Entitlement lastProcessed = null;
-        possible = sortByStartDate(possible);
         for (int i = 0; i < possible.size(); i++) {
             boolean last = i == possible.size() - 1;
             Entitlement next = possible.get(i);
@@ -164,7 +171,9 @@ public class ConsumerInstalledProductEnricher {
             // next) is not valid within the date range of the previous
             // entitlement, we have found a gap and need to adjust the start
             // date.
-            if (lastProcessed != null && !last) {
+            if (lastProcessed != null && !last &&
+                lastProcessed.getEndDate().before(next.getEndDate())) {
+
                 Date afterLastProcessed = getDatePlusOneSecond(lastProcessed.getEndDate());
 
                 if (status == GREEN_STATUS) {
@@ -276,7 +285,7 @@ public class ConsumerInstalledProductEnricher {
      * @param allEntitlements all entitlements to check.
      * @return a list of all entitlements making up a span across status.date.
      */
-    private List<Entitlement> getEntitlementsSpanningStatusDate(
+    private List<Entitlement> getSortedEntitlementsSpanningStatusDate(
         List<Entitlement> allEntitlements) {
         List<Entitlement> sorted = sortByStartDate(allEntitlements);
 
