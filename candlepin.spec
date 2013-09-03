@@ -31,7 +31,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.8.24
+Version: 0.8.25
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -323,6 +323,17 @@ fi
 
 
 %changelog
+* Tue Sep 03 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.25-1
+- 994853: Fix installed product date range. (dgoodwin@redhat.com)
+- 998317: check delete for null (jesusr@redhat.com)
+- 1003079: Allow autobind to select pools with unlimited quantity (mstead@redhat.com)
+- Simplify spec test for role listing by user. (alikins@redhat.com)
+- Remove double sorting in get installed product date range.  (dgoodwin@redhat.com)
+- Fix unlimited stackable pool autobinding, fix unlimited pool quantity (ckozak@redhat.com)
+- fix validation of null params (ckozak@redhat.com)
+- Add os oid to Product certificates (alikins@redhat.com)
+- Added Satellite version 5.6 to distributor versions (wpoteat@redhat.com)
+
 * Wed Aug 28 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.24-1
 - 996925 - Exception while deleting manifest (wpoteat@redhat.com)
 
