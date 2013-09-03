@@ -21,3 +21,7 @@ blacklist =
 [katello-thirdparty-candlepin-fedora18]
 disttag = .fc18
 blacklist =
+
+[katello-thirdparty-candlepin-fedora19]
+disttag = .fc19
+blacklist =
