@@ -19,7 +19,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
-import java.util.Date;
 import java.util.HashMap;
 
 import org.candlepin.model.Consumer;
@@ -41,8 +40,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         Product product = new Product(productId, "A product for testing");
         Pool pool = createPool(owner, product);
 
-        Entitlement e = new Entitlement(pool, consumer, new Date(), new Date(),
-            1);
+        Entitlement e = new Entitlement(pool, consumer, 1);
         consumer.addEntitlement(e);
 
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
@@ -75,8 +73,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         product.addAttribute(new ProductAttribute("multi-entitlement", "yes"));
         Pool pool = createPool(owner, product);
 
-        Entitlement e = new Entitlement(pool, consumer, new Date(), new Date(),
-            1);
+        Entitlement e = new Entitlement(pool, consumer, 1);
         consumer.addEntitlement(e);
 
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);
@@ -93,8 +90,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         Pool pool = TestUtil.createPool(owner, product, 0);
         pool.setId("fakeid" + TestUtil.randomInt());
 
-        Entitlement e = new Entitlement(pool, consumer, new Date(), new Date(),
-            1);
+        Entitlement e = new Entitlement(pool, consumer, 1);
         consumer.addEntitlement(e);
 
         when(this.prodAdapter.getProductById(productId)).thenReturn(product);

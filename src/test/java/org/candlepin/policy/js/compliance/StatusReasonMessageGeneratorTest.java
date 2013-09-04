@@ -178,7 +178,7 @@ public class StatusReasonMessageGeneratorTest {
         Pool p = new Pool(owner, productId, name, null,
             new Long(1000), TestUtil.createDate(2000, 1, 1),
             TestUtil.createDate(2050, 1, 1), "1000", "1000", "1000");
-        Entitlement e = new Entitlement(p, consumer, p.getStartDate(), p.getEndDate(), 1);
+        Entitlement e = new Entitlement(p, consumer, 1);
         return e;
     }
 }

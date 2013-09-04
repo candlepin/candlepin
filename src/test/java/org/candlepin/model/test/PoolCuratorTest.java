@@ -215,8 +215,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         Pool sourcePool = TestUtil.createPool(owner, product);
         poolCurator.create(sourcePool);
-        Entitlement e = new Entitlement(sourcePool, consumer, sourcePool.getStartDate(),
-            sourcePool.getEndDate(), 1);
+        Entitlement e = new Entitlement(sourcePool, consumer, 1);
         entitlementCurator.create(e);
 
         Pool pool2 = TestUtil.createPool(owner, product);
@@ -240,15 +239,13 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         String subid = pool.getSubscriptionId();
         assertEquals(1, poolCurator.lookupBySubscriptionId(subid).size());
 
-        Entitlement e = new Entitlement(pool, consumer, pool.getStartDate(),
-            pool.getEndDate(), 1);
+        Entitlement e = new Entitlement(pool, consumer, 1);
         entitlementCurator.create(e);
 
         assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionId(
             subid, e).size());
 
-        e = new Entitlement(pool, consumer, pool.getStartDate(),
-            pool.getEndDate(), 1);
+        e = new Entitlement(pool, consumer, 1);
         entitlementCurator.create(e);
         assertEquals(1, poolCurator.lookupOversubscribedBySubscriptionId(
             subid, e).size());
@@ -263,8 +260,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         String subid = pool.getSubscriptionId();
 
-        Entitlement sourceEnt = new Entitlement(pool, consumer, pool.getStartDate(),
-            pool.getEndDate(), 1);
+        Entitlement sourceEnt = new Entitlement(pool, consumer, 1);
         entitlementCurator.create(sourceEnt);
 
         // Create derived pool referencing the entitlement just made:
@@ -281,7 +277,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         // Oversubscribe to the derived pool:
         Entitlement derivedEnt = new Entitlement(derivedPool, consumer,
-            derivedPool.getStartDate(), derivedPool.getEndDate(), 2);
+            2);
         entitlementCurator.create(derivedEnt);
 
         // Passing the source entitlement should find the oversubscribed derived pool:
@@ -303,15 +299,13 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertEquals(1, poolCurator.lookupBySubscriptionId(subid).size());
 
 
-        Entitlement e = new Entitlement(pool, consumer, pool.getStartDate(),
-            pool.getEndDate(), 1);
+        Entitlement e = new Entitlement(pool, consumer, 1);
         entitlementCurator.create(e);
 
         assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionId(
             subid, e).size());
 
-        e = new Entitlement(pool, consumer, pool.getStartDate(),
-            pool.getEndDate(), 1);
+        e = new Entitlement(pool, consumer, 1);
         entitlementCurator.create(e);
         assertEquals(0, poolCurator.lookupOversubscribedBySubscriptionId(
             subid, e).size());
@@ -643,8 +637,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         Pool sourcePool = poolManager.createPoolsForSubscription(sub).get(0);
         poolCurator.create(sourcePool);
-        Entitlement e = new Entitlement(sourcePool, consumer, sourcePool.getStartDate(),
-            sourcePool.getEndDate(), 1);
+        Entitlement e = new Entitlement(sourcePool, consumer, 1);
         entitlementCurator.create(e);
 
         Pool pool2 = TestUtil.createPool(owner, product);

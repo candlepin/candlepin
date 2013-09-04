@@ -21,7 +21,7 @@ describe 'One Sub Pool Per Stack Feature' do
             'multi-entitlement' => 'yes'
         }
     })
-    
+
     @virt_limit_product2 = create_product(nil, nil, {
         :attributes => {
             'virt_limit' => 6,
@@ -29,7 +29,7 @@ describe 'One Sub Pool Per Stack Feature' do
             'multi-entitlement' => 'yes'
         }
     })
-    
+
     @virt_limit_provided_product = create_product()
 
     @regular_stacked_product = create_product(nil, nil, {
@@ -58,7 +58,7 @@ describe 'One Sub Pool Per Stack Feature' do
         'multi-entitlement' => "yes"
       }
     })
-    
+
     @derived_product = create_product(nil, nil, {
       :attributes => {
           :cores => '6',
@@ -99,19 +99,19 @@ describe 'One Sub Pool Per Stack Feature' do
     @stacked_non_virt_sub_diff_stack_id = @cp.create_subscription(@owner['key'],
       @stacked_product_diff_id.id, 2, [], "888")
     @cp.refresh_pools(@owner['key'])
-    
+
     # Determine our pools by matching on contract number.
     pools = @user.list_pools :owner => @owner.id
-    
+
     @initial_pool_count = pools.size
     @initial_pool_count.should == 7
-    
+
     @stacked_virt_pool1 = pools.detect { |p| p['contractNumber'] == "123" }
     @stacked_virt_pool1.should_not be_nil
 
     @stacked_virt_pool2 = pools.detect { |p| p['contractNumber'] == "456" }
     @stacked_virt_pool2.should_not be_nil
-    
+
     @stacked_virt_pool3 = pools.detect { |p| p['contractNumber'] == "444" }
     @stacked_virt_pool3.should_not be_nil
 
@@ -120,13 +120,13 @@ describe 'One Sub Pool Per Stack Feature' do
 
     @non_stacked_pool = pools.detect { |p| p['contractNumber'] == "234" }
     @non_stacked_pool.should_not be_nil
-    
+
     @datacenter_pool = pools.detect { |p| p['contractNumber'] == '222' }
     @datacenter_pool.should_not be_nil
-    
+
     @regular_stacked_with_diff_stackid = pools.detect { |p| p['contractNumber'] == '888' }
     @regular_stacked_with_diff_stackid.should_not be_nil
-    
+
     # Setup two a guest consumer:
     @guest_uuid = random_string('system.uuid')
     @guest = @user.register(random_string('guest'), :system, nil,
@@ -174,11 +174,11 @@ describe 'One Sub Pool Per Stack Feature' do
   it 'should not include host entitlements from another stack' do
     ent1 = @host_client.consume_pool(@regular_stacked_with_diff_stackid['id'])[0]
     ent2 = @host_client.consume_pool(@stacked_virt_pool1['id'])[0]
-   
+
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
     find_product_attribute(sub_pool, "sockets").should be_nil
-    
+
     sub_pool['startDate'].should == ent1['startDate']
     sub_pool['endDate'].should == ent1['endDate']
   end
@@ -188,22 +188,22 @@ describe 'One Sub Pool Per Stack Feature' do
     ent2 = @host_client.consume_pool(@stacked_virt_pool2['id'])[0]
     ent3 = @host_client.consume_pool(@stacked_non_virt_pool['id'])[0]
     @host_client.list_entitlements.length.should == 3
-    
+
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
-    
+
     @host_client.unbind_entitlement(ent1['id'])
     @host_client.unbind_entitlement(ent2['id'])
     @host_client.unbind_entitlement(ent3['id'])
     @host_client.list_entitlements.length.should == 0
-    
+
     find_sub_pool(@guest_client, @guest['uuid'], @stack_id).should be_nil
   end
 
   it 'should update sub pool date range when another stacked entitlement is added' do
     ent1 = @host_client.consume_pool(@stacked_virt_pool1['id'])[0]
     ent2 = @host_client.consume_pool(@stacked_virt_pool2['id'])[0]
-   
+
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
 
@@ -217,14 +217,14 @@ describe 'One Sub Pool Per Stack Feature' do
 
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
-    
+
     # Check that the product data was copied.
     check_product_attr_value(sub_pool, "virt_limit", '3')
     check_product_attr_value(sub_pool, "multi-entitlement", 'yes')
     check_product_attr_value(sub_pool, "sockets", "6")
     check_product_attr_value(sub_pool, "stacking_id", @stack_id)
   end
-  
+
   it 'should update provided products when stacked entitlements change' do
     ent1 = @host_client.consume_pool(@stacked_virt_pool1['id'])[0]
 
@@ -238,15 +238,15 @@ describe 'One Sub Pool Per Stack Feature' do
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
     sub_pool['providedProducts'].length.should == 2
-    
+
     @host_client.unbind_entitlement(ent1['id'])
-    
+
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
     sub_pool['providedProducts'].length.should == 1
     sub_pool['providedProducts'][0]['productId'].should == @regular_stacked_provided_product.id
   end
-  
+
   it 'should incude derived provided products if supporting entitlements are in stack' do
     ent1 = @host_client.consume_pool(@datacenter_pool['id'])[0]
     ent1.should_not be_nil
@@ -263,23 +263,23 @@ describe 'One Sub Pool Per Stack Feature' do
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
     sub_pool['providedProducts'].length.should == 2
-    
+
     @host_client.unbind_entitlement(ent1['id'])
-    
+
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
     sub_pool['providedProducts'].length.should == 1
     sub_pool['providedProducts'][0]['productId'].should == @regular_stacked_provided_product.id
   end
-  
+
   it 'should update product data on removing entitlement of same stack' do
     ent1 = @host_client.consume_pool(@stacked_virt_pool1['id'])[0]
     ent2 = @host_client.consume_pool(@stacked_non_virt_pool['id'])[0]
     @host_client.unbind_entitlement(ent1['id'])
-    
+
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
-    
+
     find_product_attribute(sub_pool, "virt_limit").should be_nil
     check_product_attr_value(sub_pool, "multi-entitlement", 'yes')
     check_product_attr_value(sub_pool, "sockets", "6")
@@ -288,92 +288,92 @@ describe 'One Sub Pool Per Stack Feature' do
 
   it 'should not update product data from products not in the stack' do
     ent1 = @host_client.consume_pool(@stacked_virt_pool1['id'])[0]
-    ent2 = @host_client.consume_pool(@non_stacked_pool['id'])[0]	
+    ent2 = @host_client.consume_pool(@non_stacked_pool['id'])[0]
     ent2.should_not be_nil
-    
+
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
-    
+
     # Check that cores was not added from the non stacked ent.
     find_product_attribute(sub_pool, "cores").should be_nil
   end
-  
+
   it 'should revoke guest entitlement from sub pool when last host ent in stack is removed' do
     ent1 = @host_client.consume_pool(@stacked_virt_pool1['id'])[0]
     ent2 = @host_client.consume_pool(@stacked_virt_pool2['id'])[0]
     ent3 = @host_client.consume_pool(@stacked_non_virt_pool['id'])[0]
     @host_client.list_entitlements.length.should == 3
-    
+
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
-    
+
     @guest_client.consume_pool(sub_pool['id'])
     @guest_client.list_entitlements.length.should == 1
-    
+
     @host_client.unbind_entitlement(ent1['id'])
     @host_client.unbind_entitlement(ent2['id'])
     @host_client.unbind_entitlement(ent3['id'])
     @host_client.list_entitlements.length.should == 0
-    
+
     # Guest entitlement should now be revoked.
     @guest_client.list_entitlements.length.should == 0
   end
-  
+
   it 'should remove guest entitlement when host unregisters' do
     ent1 = @host_client.consume_pool(@stacked_virt_pool1['id'])[0]
     ent2 = @host_client.consume_pool(@stacked_virt_pool2['id'])[0]
     ent3 = @host_client.consume_pool(@stacked_non_virt_pool['id'])[0]
     @host_client.list_entitlements.length.should == 3
-    
+
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
-    
+
     @guest_client.consume_pool(sub_pool['id'])
     @guest_client.list_entitlements.length.should == 1
-    
+
     @host_client.unregister
-    
+
     # Guest entitlement should now be revoked.
     @guest_client.list_entitlements.length.should == 0
   end
-  
+
   it 'should remove guest entitlement when guest is migrated' do
     ent1 = @host_client.consume_pool(@stacked_virt_pool1['id'])[0]
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
-    
+
     @guest_client.consume_pool(sub_pool['id'])
     @guest_client.list_entitlements.length.should == 1
-    
+
     # Simulate migration
     @host2_client.update_consumer({:guestIds => [{'guestId' => @guest_uuid}]})
-    
+
     # Guest entitlement should now be revoked.
     @guest_client.list_entitlements.length.should == 0
   end
-  
+
   it 'should update guest sub pool ent when product is updated' do
     # Attach sub to host and ensure sub pool is created.
     host_ent = @host_client.consume_pool(@stacked_virt_pool1['id'])[0]
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
-    
+
     # Consumer ent for guest
     initial_guest_ent = @guest_client.consume_pool(sub_pool['id'])[0]
     initial_guest_ent.should_not be_nil
     find_product_attribute(initial_guest_ent.pool, "sockets").should be_nil
-    
+
     attrs = @virt_limit_product['attributes']
     attrs << {"name" => "sockets", "value" => "4"}
     @cp.update_product(@virt_limit_product.id, :attributes => attrs)
     updated_product = @cp.get_product(@virt_limit_product.id)
-    
+
     @cp.refresh_pools(@owner['key'])
-    
+
     updated_ent = @guest_client.list_entitlements[0]
     check_product_attr_value(updated_ent.pool, "sockets", "4")
   end
-  
+
   it 'should update guest sub pool ent as host stack is updated' do
     @host_client.consume_pool(@stacked_virt_pool1['id'])
     ent = @host_client.consume_pool(@stacked_non_virt_pool['id'])[0]
@@ -381,10 +381,10 @@ describe 'One Sub Pool Per Stack Feature' do
     sub_pool = find_sub_pool(@guest_client, @guest['uuid'], @stack_id)
     sub_pool.should_not be_nil
     initial_guest_ent = @guest_client.consume_pool(sub_pool['id'])[0]
-    
+
     # Remove an ent from the host so that the guest ent will be updated.
     @host_client.unbind_entitlement(ent['id'])
-    
+
     # Check that the product data was copied.
     updated_ent = @guest_client.list_entitlements[0]
     check_product_attr_value(updated_ent.pool, "virt_limit", '3')
@@ -392,7 +392,7 @@ describe 'One Sub Pool Per Stack Feature' do
     check_product_attr_value(updated_ent.pool, "stacking_id", @stack_id)
     find_product_attribute(updated_ent.pool, "sockets").should be_nil
   end
-  
+
   it 'should update quantity of sub pool when stack changes' do
     ent1 = @host_client.consume_pool(@stacked_virt_pool1['id'])[0]
     ent2 = @host_client.consume_pool(@stacked_non_virt_pool['id'])[0]
@@ -413,7 +413,7 @@ describe 'One Sub Pool Per Stack Feature' do
     # specifying virt_limit -- use the last instead.
     sub_pool['quantity'].should == 6
   end
-  
+
   it 'should regenerate ent certs when sub pool is update and client checks in' do
     @host_client.consume_pool(@stacked_virt_pool1['id'])
 
@@ -423,10 +423,10 @@ describe 'One Sub Pool Per Stack Feature' do
     initial_guest_ent.should_not be_nil
     initial_guest_ent["certificates"].length.should == 1
     initial_guest_cert = initial_guest_ent['certificates'][0]
-    
+
     # Grab another ent for the host to force a change in the guest's cert.
     @host_client.consume_pool(@stacked_virt_pool2['id'])[0]
-    
+
     # Listing the certs will cause a regeneration of dirty ents before
     # returning them (simulate client checkin).
     guest_certs = @guest_client.list_certificates()
@@ -434,6 +434,12 @@ describe 'One Sub Pool Per Stack Feature' do
     regenerated_cert = guest_certs[0]
     # Make sure that it was regenerated.
     regenerated_cert['id'].should_not == initial_guest_cert['id']
+
+    # Make sure the entitlement picked up the pool's date change:
+    initial_guest_ent = @guest_client.get_entitlement(initial_guest_ent['id'])
+    sub_pool = @guest_client.get_pool(sub_pool['id'])
+    initial_guest_ent['startDate'].should == sub_pool['startDate']
+    initial_guest_ent['endDate'].should == sub_pool['endDate']
   end
 
   it 'should not regenerate certs on refresh pools when sub pool has not been changed' do
@@ -445,10 +451,10 @@ describe 'One Sub Pool Per Stack Feature' do
     initial_guest_ent.should_not be_nil
     initial_guest_ent["certificates"].length.should == 1
     initial_guest_cert = initial_guest_ent['certificates'][0]
-    
+
     # Perform refresh pools -- an old bug marked sub pool as dirty
     @cp.refresh_pools(@owner['key'])
-    
+
     # Listing the certs will cause a regeneration of dirty ents before
     # returning them (simulate client checkin).
     guest_certs = @guest_client.list_certificates()
@@ -461,16 +467,16 @@ describe 'One Sub Pool Per Stack Feature' do
   def find_product_attribute(pool, attribute_name)
     return pool['productAttributes'].detect { |a| a['name'] == attribute_name }
   end
-  
+
   def check_product_attr_value(pool, attribute_name, expected_value)
     attribute = find_product_attribute(pool, attribute_name)
     attribute.should_not be_nil
     attribute['value'].should == expected_value
   end
-  
+
   def find_sub_pool(guest_client, guest_uuid, stack_id)
     guest_pools = guest_client.list_pools(:consumer => guest_uuid)
     return guest_pools.detect { |i| i['sourceStackId'] == stack_id }
   end
-  
+
 end

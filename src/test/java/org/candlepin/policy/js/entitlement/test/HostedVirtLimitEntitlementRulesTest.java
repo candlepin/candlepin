@@ -25,7 +25,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import org.candlepin.model.ConsumerType;
@@ -45,8 +44,7 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
     @Test
     public void hostedParentConsumerPostCreatesNoPool() {
         Pool pool = setupVirtLimitPool();
-        Entitlement e = new Entitlement(pool, consumer, new Date(), new Date(),
-            1);
+        Entitlement e = new Entitlement(pool, consumer, 1);
 
         PoolHelper postHelper = mock(PoolHelper.class);
         when(config.standalone()).thenReturn(false);
@@ -77,8 +75,7 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         assertEquals("true", virtBonusPool.getAttributeValue("virt_only"));
         assertEquals("10", virtBonusPool.getProductAttribute("virt_limit").getValue());
 
-        Entitlement e = new Entitlement(physicalPool, consumer, new Date(), new Date(),
-            1);
+        Entitlement e = new Entitlement(physicalPool, consumer, 1);
         PoolHelper postHelper = new PoolHelper(poolManagerMock, productCache, e);
         List<Pool> poolList = new ArrayList<Pool>();
         poolList.add(virtBonusPool);
@@ -110,8 +107,7 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         assertEquals(new Long(10), physicalPool.getQuantity());
         assertEquals(0, physicalPool.getAttributes().size());
 
-        Entitlement e = new Entitlement(physicalPool, consumer, new Date(), new Date(),
-            1);
+        Entitlement e = new Entitlement(physicalPool, consumer, 1);
         PoolHelper postHelper = new PoolHelper(poolManagerMock, productCache, e);
 
         enforcer.postEntitlement(consumer, postHelper, e);
@@ -139,8 +135,7 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         assertEquals("unlimited", virtBonusPool.getProductAttribute("virt_limit")
             .getValue());
 
-        Entitlement e = new Entitlement(physicalPool, consumer, new Date(), new Date(),
-            1);
+        Entitlement e = new Entitlement(physicalPool, consumer, 1);
         PoolHelper postHelper = new PoolHelper(poolManagerMock, productCache, e);
         List<Pool> poolList = new ArrayList<Pool>();
         poolList.add(virtBonusPool);
@@ -179,8 +174,7 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         assertEquals("unlimited", virtBonusPool.getProductAttribute("virt_limit")
             .getValue());
 
-        Entitlement e = new Entitlement(physicalPool, consumer, new Date(), new Date(),
-            1);
+        Entitlement e = new Entitlement(physicalPool, consumer, 1);
         PoolHelper postHelper = new PoolHelper(poolManagerMock, productCache, e);
 
         enforcer.postEntitlement(consumer, postHelper, e);
@@ -214,8 +208,7 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         assertEquals("unlimited", virtBonusPool.getProductAttribute("virt_limit")
             .getValue());
 
-        Entitlement e = new Entitlement(physicalPool, consumer, new Date(), new Date(),
-            10);
+        Entitlement e = new Entitlement(physicalPool, consumer, 10);
         physicalPool.setConsumed(10L);
         physicalPool.setExported(10L);
         PoolHelper postHelper = new PoolHelper(poolManagerMock, productCache, e);
@@ -244,8 +237,7 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         virtBonusPool.setAttribute("virt_limit", "10");
         virtBonusPool.setAttribute("pool_derived", "true");
 
-        Entitlement e = new Entitlement(virtBonusPool, consumer, new Date(), new Date(),
-            1);
+        Entitlement e = new Entitlement(virtBonusPool, consumer, 1);
         PoolHelper postHelper = new PoolHelper(poolManagerMock, productCache, e);
         List<Pool> poolList = new ArrayList<Pool>();
         poolList.add(virtBonusPool);
