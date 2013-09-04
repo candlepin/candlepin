@@ -1,9 +1,9 @@
+require 'spec_helper'
 require 'candlepin_scenarios'
 
 describe 'Custom Product' do
 
   include CandlepinMethods
-  include CandlepinScenarios
 
 
   before(:each) do

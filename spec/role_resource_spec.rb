@@ -1,24 +1,21 @@
+require 'spec_helper'
 require 'candlepin_scenarios'
 
 describe 'Role Resource' do
 
   include CandlepinMethods
-  include CandlepinScenarios
 
   before(:each) do
     test_owner_key = random_string('testowner')
     @test_owner = create_owner(test_owner_key)
     @username = random_string 'user'
     @user_cp = user_client(@test_owner, @username)
-
   end
 
   it 'should create roles' do
-    orig_count = @cp.list_roles().size
-
-    new_role = create_role(nil, @test_owner['key'], 'ALL')
-
-    @cp.list_roles().size.should == orig_count + 1
+    role_name = random_string("created_role")
+    create_role(role_name, @test_owner['key'], 'ALL')
+    @cp.list_roles().map { |i| i['name'] }.should include(role_name)
   end
 
   it 'should not expose roles to other owners' do
@@ -44,17 +41,15 @@ describe 'Role Resource' do
   end
 
   it 'should delete roles' do
-    orig_count = @cp.list_roles().size
-
     perms = [{
       :owner => {:key => @test_owner['key']},
       :access => 'ALL',
     }]
-    new_role = @cp.create_role(random_string('testrole'), perms)
-
-    @cp.list_roles().size.should == orig_count + 1
+    role_name = random_string("role_to_delete")
+    new_role = @cp.create_role(role_name, perms)
+    @cp.list_roles().map { |i| i['name'] }.should include(role_name)
     @cp.delete_role(new_role['id'])
-    @cp.list_roles().size.should == orig_count
+    @cp.list_roles().map { |i| i['name'] }.should_not include(role_name)
   end
 
   it 'should add users to a role, then delete user from the role' do

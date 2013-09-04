@@ -1,9 +1,9 @@
+require 'spec_helper'
 require 'candlepin_scenarios'
 
 describe 'Status Resource' do
 
   include CandlepinMethods
-  include CandlepinScenarios
 
   it 'should return a valid candlepin version and release' do
     json = @cp.get_status()

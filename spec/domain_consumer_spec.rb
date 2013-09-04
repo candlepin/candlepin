@@ -1,14 +1,14 @@
+require 'spec_helper'
 require 'candlepin_scenarios'
 
 describe 'Domain Consumer' do
   include CandlepinMethods
-  include CandlepinScenarios
 
   before(:each) do
     @owner = create_owner(random_string("test_owner"))
     @user = user_client(@owner, random_string("test_user"))
     @monitoring = create_product()
-    @domain_product = create_product(rand(10000).to_s, random_string("test_product"), {
+    @domain_product = create_product(nil, random_string("test_product"), {
         :attributes => { :requires_consumer_type => :domain }
     })
 

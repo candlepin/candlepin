@@ -1,13 +1,13 @@
+require 'spec_helper'
 require 'candlepin_scenarios'
 
 describe 'Subscription Resource' do
 
   include CandlepinMethods
-  include CandlepinScenarios
 
   before do
     @owner = create_owner random_string('test_owner')
-    @some_product = create_product(name='some_product')
+    @some_product = create_product('some_product')
     @another_product = create_product('another_product')
     @one_more_product = create_product('one_more_product')
     @monitoring_product = create_product('monitoring')

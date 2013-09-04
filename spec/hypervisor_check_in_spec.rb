@@ -1,11 +1,9 @@
+require 'spec_helper'
 require 'candlepin_scenarios'
-require 'virt_fixture'
 
-describe 'Hypervisor Resource' do
-
+describe 'Hypervisor Resource', :type => :virt do
   include CandlepinMethods
-  include CandlepinScenarios
-  include VirtFixture
+  include VirtHelper
 
   before(:each) do
     pending("candlepin running in standalone mode") if is_hosted?

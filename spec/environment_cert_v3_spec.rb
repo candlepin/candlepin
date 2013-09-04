@@ -1,9 +1,9 @@
+require 'spec_helper'
 require 'candlepin_scenarios'
 
 describe 'Environments Certificate V3' do
   include CandlepinMethods
   include CertificateMethods
-  include CandlepinScenarios
 
   before(:each) do
     @owner = create_owner random_string('test_owner')

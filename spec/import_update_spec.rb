@@ -1,10 +1,10 @@
+require 'spec_helper'
 require 'candlepin_scenarios'
 
-describe 'Candlepin Import Update' do
+describe 'Candlepin Import Update', :serial => true do
 
   include CandlepinMethods
   include ExportMethods
-  include CandlepinScenarios
 
   before(:all) do
     create_candlepin_export()
@@ -16,6 +16,10 @@ describe 'Candlepin Import Update' do
 
   after(:all) do
     cleanup_candlepin_export_update()
+  end
+
+  after(:each) do
+    FileUtils.rm_rf(@tmp_dir_update)
   end
 
   it 'should successfully update the import' do

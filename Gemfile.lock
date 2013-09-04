@@ -28,6 +28,7 @@ GEM
     hoe (2.3.3)
       rake (>= 0.8.7)
       rubyforge (>= 1.0.4)
+    iconv (1.0.3)
     json_pure (1.4.3)
     mime-types (1.19)
     minitar (0.5.3)
@@ -35,6 +36,9 @@ GEM
       net-ssh (>= 2.0.9)
     net-ssh (2.3.0)
     oauth (0.4.6)
+    parallel (0.7.1)
+    parallel_tests (0.15.2)
+      parallel
     rake (0.9.2.2)
     rest-client (1.6.7)
       mime-types (>= 1.16)
@@ -57,6 +61,8 @@ PLATFORMS
 
 DEPENDENCIES
   buildr (= 1.4.7)
+  iconv
   oauth
+  parallel_tests
   rest-client
   rspec

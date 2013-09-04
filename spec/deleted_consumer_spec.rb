@@ -1,3 +1,4 @@
+require 'spec_helper'
 # encoding: utf-8
 
 require 'candlepin_scenarios'
@@ -9,7 +10,6 @@ require 'time'
 describe 'Deleted Consumer Resource' do
 
   include CandlepinMethods
-  include CandlepinScenarios
 
   it 'find all deleted consumers' do
     date = Time.now.utc.iso8601
