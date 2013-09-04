@@ -1,11 +1,11 @@
+require 'spec_helper'
 require 'candlepin_scenarios'
-require 'virt_fixture'
 
 # This spec tests virt limited products in a standalone Candlepin deployment.
 # (which we assume to be testing against)
 describe 'One Sub Pool Per Stack Feature' do
   include CandlepinMethods
-  include CandlepinScenarios
+  include VirtHelper
 
   before(:each) do
     pending("candlepin running in standalone mode") if is_hosted?

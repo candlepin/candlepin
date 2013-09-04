@@ -1,3 +1,4 @@
+require 'spec_helper'
 require 'candlepin_scenarios'
 
 class OpenSSL::X509::Certificate
@@ -18,7 +19,6 @@ end
 describe 'Identity Certificate' do
 
   include CandlepinMethods
-  include CandlepinScenarios
 
   before(:each) do
     owner = create_owner random_string('test_owner')

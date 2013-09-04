@@ -1,14 +1,14 @@
+require 'spec_helper'
 require 'candlepin_scenarios'
 
 describe 'Entitlement Resource' do
 
   include CandlepinMethods
-  include CandlepinScenarios
 
   before do
     @owner = create_owner random_string 'test_owner'
-    @monitoring_prod = create_product(name='monitoring')
-    @virt_prod= create_product(name='virtualization')
+    @monitoring_prod = create_product(nil, 'monitoring')
+    @virt_prod= create_product(nil, 'virtualization')
 
     #entitle owner for the virt and monitoring products.
     @cp.create_subscription(@owner['key'], @monitoring_prod.id, 6)
@@ -17,7 +17,7 @@ describe 'Entitlement Resource' do
     @cp.refresh_pools(@owner['key'])
 
     #create consumer
-    user = user_client(@owner, 'billy')
+    user = user_client(@owner, random_string('billy'))
     @system = consumer_client(user, 'system6')
 
     #separate for quantity adjust tests - here for cleanup

@@ -1,9 +1,9 @@
+require 'spec_helper'
 require 'candlepin_scenarios'
 
 describe 'Pool Resource' do
 
   include CandlepinMethods
-  include CandlepinScenarios
 
   it 'lets consumers view pools' do
     owner1 = create_owner random_string('test_owner')
@@ -144,14 +144,14 @@ describe 'Pool Resource' do
 
   it 'should return calculated attributes' do
     owner = create_owner random_string('test_owner')
-    product = create_product(name='some_product')
+    product = create_product(nil, random_string('some_product'))
 
     @cp.create_subscription(owner['key'], product.id, 25)
     @cp.refresh_pools(owner['key'])
     pools = @cp.list_pools
     pool = pools.select { |p| p['owner']['key'] == owner['key'] }.first
 
-    user = user_client(owner, 'billy')
+    user = user_client(owner, random_string('billy'))
     system = consumer_client(user, 'system')
 
     @cp.get_pool(pool.id, system.uuid)['calculatedAttributes']['suggested_quantity'].should == "1"

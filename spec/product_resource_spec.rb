@@ -1,13 +1,13 @@
+require 'spec_helper'
 require 'candlepin_scenarios'
 
 describe 'Product Resource' do
 
   include CandlepinMethods
-  include CandlepinScenarios
 
   it 'updates individual product fields' do
-    prod = create_product(id=nil, name='tacos', {:multiplier => 2, :dependentProductIds => [2, 4]})
-    prod2 = create_product(id=nil, name='enchiladas', {:multiplier => 4})
+    prod = create_product(nil, 'tacos', {:multiplier => 2, :dependentProductIds => [2, 4]})
+    prod2 = create_product(nil, 'enchiladas', {:multiplier => 4})
 
     prod.name.should_not == prod2.name
     prod.multiplier.should_not == prod2.multiplier
@@ -37,8 +37,8 @@ describe 'Product Resource' do
   end
 
   it 'does not update product name' do
-    prod = create_product(id=nil, name='iron maiden')
-    prod2 = create_product(id=nil, name=nil)
+    prod = create_product(nil, 'iron maiden')
+    prod2 = create_product(nil, nil)
 
     prod.name.should == 'iron maiden'
 
@@ -60,15 +60,15 @@ describe 'Product Resource' do
   end
 
   it 'allows regular users to view products' do
-    owner = @cp.create_owner random_string('test')
+    owner = create_owner random_string('test')
     user_cp = user_client(owner, random_string('testuser'), true)
     prod = create_product
     user_cp.get_product(prod['id'])
   end
 
   it 'create two products with the same name' do
-    product1 = create_product(id=nil, name='doppelganger')
-    product2 = create_product(id=nil, name='doppelganger')
+    product1 = create_product(nil, 'doppelganger')
+    product2 = create_product(nil, 'doppelganger')
     product1.id.should_not  == product2.id
     product1.name.should == product2.name
   end
