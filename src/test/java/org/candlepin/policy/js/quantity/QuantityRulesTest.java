@@ -103,7 +103,7 @@ public class QuantityRulesTest {
         Date dayAgo = cal.getTime();
 
         e.setCreated(dayAgo);
-        e.setEndDate(dayFromNow);
+        p.setEndDate(dayFromNow);
         return e;
     }
 
@@ -329,7 +329,7 @@ public class QuantityRulesTest {
 
         Entitlement e = TestUtil.createEntitlement(owner, consumer, pool, null);
         e.setCreated(TestUtil.createDate(9000, 1, 1));
-        e.setEndDate(TestUtil.createDate(9001, 1, 1));
+        pool.setEndDate(TestUtil.createDate(9001, 1, 1));
         e.setQuantity(2);
 
         Set<Entitlement> ents = new HashSet<Entitlement>();

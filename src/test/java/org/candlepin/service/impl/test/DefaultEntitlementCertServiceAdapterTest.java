@@ -244,15 +244,11 @@ public class DefaultEntitlementCertServiceAdapterTest {
         entitlement = new Entitlement();
         entitlement.setQuantity(new Integer(ENTITLEMENT_QUANTITY));
         entitlement.setConsumer(consumer);
-        entitlement.setStartDate(subscription.getStartDate());
-        entitlement.setEndDate(subscription.getEndDate());
         entitlement.setPool(pool);
         entitlement.setOwner(owner);
         largeContentEntitlement = new Entitlement();
         largeContentEntitlement.setQuantity(new Integer(ENTITLEMENT_QUANTITY));
         largeContentEntitlement.setConsumer(consumer);
-        largeContentEntitlement.setStartDate(largeContentSubscription.getStartDate());
-        largeContentEntitlement.setEndDate(largeContentSubscription.getEndDate());
         largeContentEntitlement.setPool(largeContentPool);
         largeContentEntitlement.setOwner(owner);
 

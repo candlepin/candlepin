@@ -722,7 +722,7 @@ public class InstalledProductStatusCalculatorTest {
         Pool p = new Pool(owner, productId, productId, provided,
             new Long(1000), range.getStartDate(), range.getEndDate(), "1000", "1000",
             "1000");
-        Entitlement e = new Entitlement(p, consumer, p.getStartDate(), p.getEndDate(), 1);
+        Entitlement e = new Entitlement(p, consumer, 1);
 
         Random gen = new Random();
         int id = gen.nextInt(Integer.MAX_VALUE);

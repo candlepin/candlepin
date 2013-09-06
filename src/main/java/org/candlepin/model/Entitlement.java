@@ -89,9 +89,6 @@ public class Entitlement extends AbstractHibernateObject implements Linkable, Ow
     @Index(name = "cp_entitlement_pool_fk_idx")
     private Pool pool;
 
-    private Date startDate;
-    private Date endDate;
-
     // Not positive this should be mapped here, not all entitlements will have
     // certificates.
     @OneToMany(mappedBy = "entitlement", cascade = CascadeType.ALL)
@@ -128,15 +125,11 @@ public class Entitlement extends AbstractHibernateObject implements Linkable, Ow
      * ctor
      * @param poolIn pool associated with the entitlement
      * @param consumerIn consumer associated with the entitlement
-     * @param startDateIn when the entitlement starts.
      */
-    public Entitlement(Pool poolIn, Consumer consumerIn, Date startDateIn,
-            Date endDateIn, Integer quantityIn) {
+    public Entitlement(Pool poolIn, Consumer consumerIn, Integer quantityIn) {
         pool = poolIn;
         owner = consumerIn.getOwner();
         consumer = consumerIn;
-        startDate = startDateIn;
-        endDate = endDateIn;
         quantity = quantityIn == null || quantityIn.intValue() < 1 ?
             1 : quantityIn;
     }
@@ -185,28 +178,28 @@ public class Entitlement extends AbstractHibernateObject implements Linkable, Ow
      * @return Returns the startDate.
      */
     public Date getStartDate() {
-        return startDate;
+        if (pool == null) {
+            return null;
+        }
+        return pool.getStartDate();
     }
 
-    /**
-     * @param startDateIn The startDate to set.
-     */
-    public void setStartDate(Date startDateIn) {
-        startDate = startDateIn;
+    public void setStartDate(Date date) {
+        // Only for serialization, start date lives on pool now.
     }
 
     /**
      * @return Returns the endDate.
      */
     public Date getEndDate() {
-        return endDate;
+        if (pool == null) {
+            return null;
+        }
+        return pool.getEndDate();
     }
 
-    /**
-     * @param endDateIn The endDate to set.
-     */
-    public void setEndDate(Date endDateIn) {
-        endDate = endDateIn;
+    public void setEndDate(Date date) {
+        // Only for serialization, end date lives on pool now.
     }
 
     /**
