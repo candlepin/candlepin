@@ -289,15 +289,6 @@ public class CandlepinPoolManager implements PoolManager {
                 updatedPool.getProductsChanged()) {
                 List<Entitlement> entitlements = poolCurator
                     .retrieveFreeEntitlementsOfPool(existingPool, true);
-
-                // when subscription dates change, entitlement dates should
-                // change as well
-                for (Entitlement entitlement : entitlements) {
-                    entitlement.setStartDate(updatedPool.getPool().getStartDate());
-                    entitlement.setEndDate(updatedPool.getPool().getEndDate());
-                    // TODO: perhaps optimize it to use hibernate query?
-                    this.entitlementCurator.merge(entitlement);
-                }
                 entitlementsToRegen.addAll(entitlements);
             }
             // save changes for the pool
@@ -1031,7 +1022,7 @@ public class CandlepinPoolManager implements PoolManager {
         public Entitlement handleEntitlement(Consumer consumer, Pool pool,
             Entitlement entitlement, int quantity) {
             Entitlement newEntitlement = new Entitlement(pool, consumer,
-                pool.getStartDate(), pool.getEndDate(), quantity);
+                quantity);
             consumer.addEntitlement(newEntitlement);
             pool.getEntitlements().add(newEntitlement);
             return newEntitlement;

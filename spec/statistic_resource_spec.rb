@@ -1,9 +1,9 @@
+require 'spec_helper'
 require 'candlepin_scenarios'
 
 describe 'Statistic Resource' do
 
   include CandlepinMethods
-  include CandlepinScenarios
 
   it 'view statistics for created pool and product' do
     owner1 = create_owner random_string('test_owner')

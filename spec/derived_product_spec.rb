@@ -1,15 +1,18 @@
+require 'spec_helper'
 require 'candlepin_scenarios'
 
 describe 'Sub-pool Subscriptions Should' do
   include CandlepinMethods
-  include CandlepinScenarios
   include SpecUtils
 
   before(:each) do
     @owner = create_owner random_string('instance_owner')
     @user = user_client(@owner, random_string('virt_user'))
 
-    installed_prods = [{'productId' => '300', 'productName' => '300'}]
+    #create_product() creates products with numeric IDs by default
+    @eng_product = create_product()
+    installed_prods = [{'productId' => @eng_product['id'],
+      'productName' => @eng_product['name']}]
 
     # For linking the host and the guest:
     @uuid = random_string('system.uuid')
@@ -42,13 +45,12 @@ describe 'Sub-pool Subscriptions Should' do
           :sockets=>4
       }
     })
-    @eng_product = create_product('300')
 
     @sub1 = @cp.create_subscription(@owner['key'], @datacenter_product.id,
       10, [], '', '', '', nil, nil,
       {
         'derived_product_id' => @derived_product['id'],
-        'derived_provided_products' => ['300']
+        'derived_provided_products' => [@eng_product['id']]
       })
     @cp.refresh_pools(@owner['key'])
     @pools = @cp.list_pools :owner => @owner.id, \

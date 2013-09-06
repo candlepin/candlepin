@@ -293,7 +293,7 @@ public class PoolManagerTest {
         s.setId("testSubId");
         pool.setSubscriptionId(s.getId());
         Entitlement e = new Entitlement(pool, TestUtil.createConsumer(o),
-            pool.getStartDate(), pool.getEndDate(), 1);
+            1);
         e.setDirty(true);
 
         when(mockSubAdapter.getSubscription(pool.getSubscriptionId())).thenReturn(s);
@@ -335,9 +335,9 @@ public class PoolManagerTest {
         Consumer c = TestUtil.createConsumer(o);
 
         Entitlement e1 = new Entitlement(pool, c,
-            pool.getStartDate(), pool.getEndDate(), 1);
+            1);
         Entitlement e2 = new Entitlement(pool, c,
-            pool.getStartDate(), pool.getEndDate(), 1);
+            1);
         List<Entitlement> entitlementList = new ArrayList<Entitlement>();
         entitlementList.add(e1);
         entitlementList.add(e2);
@@ -358,7 +358,7 @@ public class PoolManagerTest {
     @Test
     public void testRevokeCleansUpPoolsWithSourceEnt() throws Exception {
         Entitlement e = new Entitlement(pool, TestUtil.createConsumer(o),
-            pool.getStartDate(), pool.getEndDate(), 1);
+            1);
         List<Pool> poolsWithSource = createPoolsWithSourceEntitlement(e, product);
         when(mockPoolCurator.listBySourceEntitlement(e)).thenReturn(poolsWithSource);
         PreUnbindHelper preHelper =  mock(PreUnbindHelper.class);
@@ -504,11 +504,11 @@ public class PoolManagerTest {
     private Pool createPoolWithEntitlements() {
         Pool newPool = TestUtil.createPool(o, product);
         Entitlement e1 = new Entitlement(newPool, TestUtil.createConsumer(o),
-            newPool.getStartDate(), newPool.getEndDate(), 1);
+            1);
         e1.setId("1");
 
         Entitlement e2 = new Entitlement(newPool, TestUtil.createConsumer(o),
-            newPool.getStartDate(), newPool.getEndDate(), 1);
+            1);
         e2.setId("2");
 
         newPool.getEntitlements().add(e1);

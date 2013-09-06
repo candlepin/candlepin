@@ -1,3 +1,4 @@
+require 'spec_helper'
 require 'candlepin_scenarios'
 
 require 'rubygems'
@@ -5,7 +6,6 @@ require 'rest_client'
 
 describe 'Refresh Pools' do
   include CandlepinMethods
-  include CandlepinScenarios
 
   it 'creates a valid job' do
     owner = create_owner random_string('test_owner')

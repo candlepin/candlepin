@@ -107,20 +107,22 @@ public class JobStatus extends AbstractHibernateObject {
         long runTime = context.getJobRunTime();
 
         if (this.startTime != null) {
-            this.state = JobState.RUNNING;
+            setState(JobState.RUNNING);
 
             if (runTime > -1) {
                 this.finishTime = new Date(startTime.getTime() + runTime);
-                this.state = JobState.FINISHED;
+                setState(JobState.FINISHED);
             }
         }
         else {
-            this.state = JobState.PENDING;
+            setState(JobState.PENDING);
         }
 
         Object jobResult = context.getResult();
         if (jobResult != null) {
-            this.result = jobResult.toString();
+            // BZ1004780: setResult truncates long strings
+            // setting result directly causes database issues.
+            setResult(jobResult.toString());
         }
     }
 

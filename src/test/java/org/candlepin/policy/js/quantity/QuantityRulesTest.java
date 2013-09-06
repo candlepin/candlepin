@@ -103,7 +103,7 @@ public class QuantityRulesTest {
         Date dayAgo = cal.getTime();
 
         e.setCreated(dayAgo);
-        e.setEndDate(dayFromNow);
+        p.setEndDate(dayFromNow);
         return e;
     }
 
@@ -200,6 +200,15 @@ public class QuantityRulesTest {
 
         SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool, consumer);
         assertEquals(new Long(2), suggested.getSuggested());
+    }
+
+    @Test
+    public void testUnlimitedQuantity() {
+        consumer.setFact(SOCKET_FACT, "8");
+        pool.setProductAttribute(SOCKET_ATTRIBUTE, "2", product.getId());
+        pool.setQuantity(new Long(-1));
+        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool, consumer);
+        assertEquals(new Long(4), suggested.getSuggested());
     }
 
     @Test
@@ -320,7 +329,7 @@ public class QuantityRulesTest {
 
         Entitlement e = TestUtil.createEntitlement(owner, consumer, pool, null);
         e.setCreated(TestUtil.createDate(9000, 1, 1));
-        e.setEndDate(TestUtil.createDate(9001, 1, 1));
+        pool.setEndDate(TestUtil.createDate(9001, 1, 1));
         e.setQuantity(2);
 
         Set<Entitlement> ents = new HashSet<Entitlement>();

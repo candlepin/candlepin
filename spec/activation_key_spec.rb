@@ -1,14 +1,14 @@
+require 'spec_helper'
 require 'candlepin_scenarios'
 
 # XXX: all these tests need work (but so do tokens)
 describe 'Activation Keys' do
 
   include CandlepinMethods
-  include CandlepinScenarios
 
   before(:each) do
     @owner = create_owner random_string('test_owner')
-    @some_product = create_product(name='some_product')
+    @some_product = create_product(nil, random_string('some_product'))
 
     #this owner is used to test restrictions
     mallory = create_owner random_string('test_owner')

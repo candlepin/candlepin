@@ -1,3 +1,4 @@
+require 'spec_helper'
 require 'candlepin_scenarios'
 
 require 'rubygems'
@@ -6,13 +7,12 @@ require 'oauth'
 
 describe 'OAuth' do
   include CandlepinMethods
-  include CandlepinScenarios
 
   # XXX you must set these in your candlepin.conf
   oauth_consumer = "rspec"
   oauth_secret = "rspec-oauth-secret"
 
-  before(:all) do
+  before(:each) do
     @site = "https://localhost:8443"
     @oauth_params = {
      :site => @site,
@@ -21,9 +21,6 @@ describe 'OAuth' do
      :authorize_path => "",
      :access_token_path => "",
     }
-  end
-
-  before(:each) do
     @owner = create_owner "oauth-owner"
     @user = create_user(@owner, "oauth-user", 'password')
     @consumer = @cp.register("oauth-consumer", :system, nil, {},

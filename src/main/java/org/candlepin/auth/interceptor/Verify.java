@@ -32,4 +32,6 @@ public @interface Verify {
     Class value();
 
     Access require() default Access.NONE;
+
+    boolean nullable() default false;
 }

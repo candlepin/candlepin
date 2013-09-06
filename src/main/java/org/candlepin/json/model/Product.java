@@ -30,6 +30,7 @@ public class Product {
     private String id;
     private String name;
     private String version;
+    private String os;
     private List<String> architectures;
     private List<Content> content;
 
@@ -54,6 +55,12 @@ public class Product {
         this.version = version;
     }
 
+    /**
+     * @param isOs
+     */
+    public void setOs(String os) {
+        this.os = os;
+    }
     /**
      * @param archList
      */

@@ -1,14 +1,17 @@
+require 'spec_helper'
 require 'candlepin_scenarios'
 
 describe 'Instance Based Subscriptions' do
   include CandlepinMethods
-  include CandlepinScenarios
 
   before(:each) do
     @owner = create_owner random_string('instance_owner')
     @user = user_client(@owner, random_string('virt_user'))
 
-    installed_prods = [{'productId' => '300', 'productName' => '300'}]
+    #create_product() creates products with numeric IDs by default
+    @eng_product = create_product()
+    installed_prods = [{'productId' => @eng_product['id'],
+      'productName' => @eng_product['name']}]
 
     # For linking the host and the guest:
     @uuid = random_string('system.uuid')
@@ -37,10 +40,9 @@ describe 'Instance Based Subscriptions' do
         'multi-entitlement' => "yes"
       }
     })
-    @eng_product = create_product('300')
 
     @sub1 = @cp.create_subscription(@owner['key'], @instance_product.id,
-      10, ['300'])
+      10, [@eng_product['id']])
     @cp.refresh_pools(@owner['key'])
     @pools = @cp.list_pools :owner => @owner.id, \
       :product => @instance_product.id

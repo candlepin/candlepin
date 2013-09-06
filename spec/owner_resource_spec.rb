@@ -1,5 +1,5 @@
 # encoding: utf-8
-
+require 'spec_helper'
 require 'candlepin_scenarios'
 
 require 'rubygems'
@@ -8,11 +8,10 @@ require 'rest_client'
 describe 'Owner Resource' do
 
   include CandlepinMethods
-  include CandlepinScenarios
 
   it 'allows consumers to view their service levels' do
     owner = create_owner random_string('owner1')
-    owner_admin = user_client(owner, 'bill')
+    owner_admin = user_client(owner, random_string('bill'))
     owner2 = create_owner random_string('owner2')
 
     consumer = owner_admin.register('somesystem')
@@ -239,7 +238,7 @@ describe 'Owner Resource' do
 
   it 'allows service level exempt service levels to be filtered out' do
     owner = create_owner random_string('owner1')
-    owner_admin = user_client(owner, 'bill')
+    owner_admin = user_client(owner, random_string('bill'))
 
     consumer = owner_admin.register('somesystem')
     consumer_client = Candlepin.new(username=nil, password=nil,
@@ -276,7 +275,7 @@ describe 'Owner Resource' do
     @cp.create_subscription(owner['key'], product.id, 10)
     @cp.refresh_pools(owner['key'])
 
-    user = user_client(owner, "billy")
+    user = user_client(owner, random_string("billy"))
     system = consumer_client(user, "system")
 
     pools = @cp.list_owner_pools(owner['key'], {:consumer => system.uuid})

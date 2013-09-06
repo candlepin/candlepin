@@ -1,4 +1,4 @@
-// Version: 4.1
+// Version: 4.2
 
 /*
  * Default Candlepin rule set.
@@ -790,7 +790,7 @@ var CoverageCalculator = {
             }
 
             // Don't try to take more than the pool has available:
-            if (maxQuantity > pool.quantity - pool.consumed) {
+            if (maxQuantity > pool.quantity - pool.consumed && pool.quantity != -1) {
                 maxQuantity = pool.quantity - pool.consumed;
             }
 
@@ -1610,7 +1610,7 @@ var Autobind = {
             installed: installed_ids,
             consumer: consumer,
             attached_ents: attached_ents,
-    
+
             /*
              * Method returns whether or not it is possible for the entitlement
              * group to be valid.
@@ -1817,7 +1817,7 @@ var Autobind = {
                         this.pools.push(temp);
                     }
                 }
-                log.debug("removed " + (prior_pool_size - this.pools.length) + " of " + prior_pool_size + " pools"); 
+                log.debug("removed " + (prior_pool_size - this.pools.length) + " of " + prior_pool_size + " pools");
             },
 
             /*
@@ -1868,10 +1868,10 @@ var Autobind = {
                     //entitlement index matches pool index
                     var current_ent = ents[i];
 
-                    for (var j = increment; j <= (pool.quantity - pool.consumed); j += increment) {
+                    for (var j = increment; j <= pool.currently_available; j += increment) {
                         current_ent.quantity = j;
                         //can probably do this part better.  ex: get compliance once, use compliance reasons to calculate the number required
-                        
+
                         if (this.stackable) {
                             if (Compliance.getStackCoverage(this.consumer, this.stack_id, ents.concat(this.attached_ents)).covered) {
                                 result.put(pool.id, j);
@@ -1887,7 +1887,7 @@ var Autobind = {
                 }
                 return result;
             },
-    
+
             get_all_ents: function(in_pools) {
                 var ents = [];
                 for (var i = 0; i < in_pools.length; i++) {
@@ -1896,7 +1896,7 @@ var Autobind = {
                 }
                 return ents;
             },
-    
+
             add_pool: function(pool) {
                 this.pools.push(pool);
             },
@@ -1906,7 +1906,7 @@ var Autobind = {
                     pool: pool,
                     startDate: pool.startDate,
                     endDate: pool.endDate,
-                    quantity: pool.quantity - pool.consumed,
+                    quantity: pool.currently_available,
                     consumer: consumer,
                     owner: consumer.owner
                 };
@@ -1934,12 +1934,23 @@ var Autobind = {
             }
         };
     },
-    
+
     create_autobind_context: function() {
         var context = JSON.parse(json_context);
 
         for (var i = 0; i < context.pools.length; i++) {
             context.pools[i] = createPool(context.pools[i]);
+            var pool = context.pools[i];
+            if (pool.quantity == -1) {
+                // In the unlimited case, we need at most the number required to cover the system
+                pool.currently_available = Quantity.get_suggested_pool_quantity(pool, context.consumer);
+            } else {
+                pool.currently_available = pool.quantity - pool.consumed;
+            }
+            // If the pool is not multi-entitlable, only one may be used
+            if (pool.currently_available > 0 && !Quantity.allows_multi_entitlement(pool)) {
+                pool.currently_available = 1;
+            }
         }
 
         // Also need to convert all pools reported in compliance.
@@ -1998,32 +2009,20 @@ var Autobind = {
     is_pool_virt_valid: function(pool, isGuest) {
         // if physical, and pool is virt_only, invalid.
         if (!isGuest && pool.hasProductAttribute(VIRT_ONLY)) {
-            return !Utils.equalsIgnoreCase('true', pool.getProductAttribute(VIRT_ONLY));
+            var valid = !Utils.equalsIgnoreCase('true', pool.getProductAttribute(VIRT_ONLY));
+            if (!valid) {
+                log.debug("Skipping pool " + pool.id + " since a physical system can not consume from a virt-only pool.");
+            }
+            return valid;
         }
         return true;
     },
 
-    /*
-     * If onDate is null, bypass the check
-     * date comes from compliance.
-     */
-    is_pool_date_valid: function(pool, onDate) {
-        if (onDate == null) {
-            return true;
-        }
-        var startDate = new Date(pool.startDate);
-        var endDate = new Date(pool.endDate);
-        if (Utils.date_compare(startDate, onDate) <= 0 && Utils.date_compare(endDate, onDate) >= 0) {
-            return true;
-        }
-        log.debug("Skipping pool " + pool.id + " since the date isn't valid");
-        return false;
-    },
-
     is_pool_not_empty: function(pool) {
-        if (pool.quantity - pool.consumed > 0) {
+        if (pool.currently_available > 0) {
             return true;
         }
+        log.debug("Skipping pool " + pool.id + " since all entitlements have been consumed.");
         return false;
     },
 
@@ -2053,21 +2052,13 @@ var Autobind = {
         for (var i = 0; i < context.pools.length ; i++) {
             var pool = context.pools[i];
 
-            //probably not necessary at this point
-            if (pool.hasProductAttribute("instance_multiplier") && !isGuest) {
-                var increment = parseInt(pool.getProductAttribute("instance_multiplier"));
-                pool.quantity -= (pool.quantity % increment);
-            }
+            // Since pool.quantity may change, track initial unlimited state here.
+            var pool_not_empty = this.is_pool_not_empty(pool);
 
             if (this.is_pool_arch_valid(context, pool, consumerArch) &&
                     this.is_pool_virt_valid(pool, isGuest) &&
                     this.is_pool_sla_valid(context, pool, consumerSLA) &&
-                    this.is_pool_date_valid(pool, context.compliance["date"]) &&
-                    this.is_pool_not_empty(pool)) {
-                //if it doesn't support multi-entitlement, we set quantity to 1 more than consumed
-                if (!Quantity.allows_multi_entitlement(pool)) {
-                    pool.quantity = pool.consumed + 1; //stops us from accidentally adding too many
-                }
+                    pool_not_empty) {
                 valid_pools.push(pool);
             }
         }
@@ -2174,7 +2165,7 @@ var Autobind = {
 
     get_best_entitlement_groups: function(all_groups, installed, compliance) {
         var best = [];
-        
+
         var partial_stacks = [];
         for (var stack_id in compliance["partialStacks"]) {
             if (compliance["partialStacks"].hasOwnProperty(stack_id)) {
@@ -2188,7 +2179,7 @@ var Autobind = {
                                                                 // other stacks
                                                                 // are handling
                         best.push(current_group);
- 
+
                         for (var j = installed.length - 1; j >= 0; j--) {
                             var current= installed[j];
                             if (in_common.indexOf(current) != -1) {
@@ -2254,7 +2245,7 @@ var Autobind = {
         var context = this.create_autobind_context();
 
         var attached_ents = this.get_attached_ents(context.compliance);
-        
+
         var valid_pools = this.get_valid_pools(context);
 
         var installed = context.products;
@@ -2700,6 +2691,14 @@ var Quantity = {
         return pool.hasProductAttribute("multi-entitlement") &&
             Utils.equalsIgnoreCase(pool.getProductAttribute("multi-entitlement"),
             "yes");
+    },
+
+    get_suggested_pool_quantity: function(pool, consumer) {
+        if (Quantity.allows_multi_entitlement(pool) && pool.hasProductAttribute("stacking_id")) {
+            var stackTracker = createStackTrackerFromPool(pool, consumer);
+            return CoverageCalculator.getQuantityToCoverStack(stackTracker, pool, consumer);
+        }
+        return 1;
     }
 }
 
