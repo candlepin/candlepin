@@ -28,6 +28,7 @@ import org.candlepin.pinsetter.core.model.JobStatus.JobState;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.util.Util;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.quartz.JobDataMap;
@@ -39,7 +40,7 @@ import java.util.List;
 /**
  * JobCuratorTest
  */
-public class JobCuratorTest extends DatabaseTestFixture{
+public class JobCuratorTest extends DatabaseTestFixture {
 
     private JobCurator curator;
 
@@ -126,6 +127,19 @@ public class JobCuratorTest extends DatabaseTestFixture{
         assertNotNull(job);
         assertEquals(jobid, job.getId());
         assertEquals(JobStatus.JobState.CANCELED, job.getState());
+    }
+
+    @Test
+    public void updateWithLargeResult() {
+        String longstr = RandomStringUtils.randomAlphanumeric(300);
+        JobExecutionContext ctx = mock(JobExecutionContext.class);
+        when(ctx.getFireTime()).thenReturn(new Date());
+        when(ctx.getJobRunTime()).thenReturn(1000L);
+        when(ctx.getResult()).thenReturn(longstr);
+
+        JobStatus status = newJobStatus().owner("terps").create();
+        status.update(ctx);
+        curator.merge(status);
     }
 
     private JobStatusBuilder newJobStatus() {
