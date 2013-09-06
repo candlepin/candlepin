@@ -178,7 +178,7 @@ public class PoolResource {
         if (c != null) {
             for (Pool p : poolList) {
                 p.setCalculatedAttributes(
-                    calculatedAttributesUtil.buildCalculatedAttributes(p, c));
+                    calculatedAttributesUtil.buildCalculatedAttributes(p, c, activeOnDate));
             }
         }
 
@@ -220,7 +220,8 @@ public class PoolResource {
 
         if (toReturn != null) {
             toReturn.setCalculatedAttributes(
-                calculatedAttributesUtil.buildCalculatedAttributes(toReturn, c));
+                calculatedAttributesUtil.buildCalculatedAttributes(toReturn, c,
+                    new Date()));
             return toReturn;
         }
 

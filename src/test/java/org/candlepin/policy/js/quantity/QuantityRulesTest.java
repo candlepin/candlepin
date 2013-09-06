@@ -19,7 +19,6 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
-import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
@@ -79,13 +78,7 @@ public class QuantityRulesTest {
         pool = TestUtil.createPool(owner, product);
 
         consumer = TestUtil.createConsumer(owner);
-        Entitlement e = TestUtil.createEntitlement(owner, consumer, pool,
-            new EntitlementCertificate());
 
-        Set<Entitlement> entSet = new HashSet<Entitlement>();
-        entSet.add(e);
-
-        pool.setEntitlements(entSet);
         pool.setProductAttribute("multi-entitlement", "yes", product.getId());
         pool.setProductAttribute("stacking_id", "1", product.getId());
     }
@@ -144,8 +137,64 @@ public class QuantityRulesTest {
 
         consumer.setEntitlements(ents);
 
-        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool, consumer);
+        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool, consumer,
+            new Date());
         assertEquals(new Long(2), suggested.getSuggested());
+    }
+
+    @Test
+    public void testPhysicalIgnoresFutureConsumed() {
+        // Setup a future pool for the same product:
+        Pool futurePool = TestUtil.createPool(owner, product);
+        futurePool.setStartDate(TestUtil.createDate(2050, 1, 1));
+        futurePool.setEndDate(TestUtil.createDate(2060, 1, 1));
+
+        pool.setProductAttribute("multi-entitlement", "yes", product.getId());
+        pool.setProductAttribute("stacking_id", "1", product.getId());
+        pool.setProductAttribute(SOCKET_ATTRIBUTE, "1", product.getId());
+        futurePool.setProductAttribute("multi-entitlement", "yes", product.getId());
+        futurePool.setProductAttribute("stacking_id", "1", product.getId());
+        futurePool.setProductAttribute(SOCKET_ATTRIBUTE, "1", product.getId());
+
+        consumer.setFact(SOCKET_FACT, "4");
+
+        // Green in future but we have nothing now:
+        Entitlement e = createValidEntitlement(futurePool);
+        e.setQuantity(4);
+
+        Set<Entitlement> ents = new HashSet<Entitlement>();
+        ents.add(e);
+
+        consumer.setEntitlements(ents);
+
+        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool, consumer);
+        assertEquals(new Long(4), suggested.getSuggested());
+    }
+
+    @Test
+    public void testPhysicalIgnoresPastConsumed() {
+        pool.setProductAttribute("multi-entitlement", "yes", product.getId());
+        pool.setProductAttribute("stacking_id", "1", product.getId());
+        pool.setProductAttribute(SOCKET_ATTRIBUTE, "1", product.getId());
+
+        consumer.setFact(SOCKET_FACT, "4");
+
+        // Green now, but we will ask for suggested quantity on a date in the future:
+        Entitlement e = createValidEntitlement(pool);
+        e.setQuantity(4);
+
+        Set<Entitlement> ents = new HashSet<Entitlement>();
+        ents.add(e);
+
+        consumer.setEntitlements(ents);
+
+        // Ask for quantity in the future, past the end of the current pool:
+        Calendar c = Calendar.getInstance();
+        c.setTime(pool.getEndDate());
+        Date futureDate = TestUtil.createDate(c.get(Calendar.YEAR) + 1, 1, 1);
+        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(pool, consumer,
+            futureDate);
+        assertEquals(new Long(4), suggested.getSuggested());
     }
 
     @Test
@@ -328,7 +377,7 @@ public class QuantityRulesTest {
         pool.setProductAttribute(SOCKET_ATTRIBUTE, "2", product.getId());
 
         Entitlement e = TestUtil.createEntitlement(owner, consumer, pool, null);
-        e.setCreated(TestUtil.createDate(9000, 1, 1));
+        pool.setStartDate(TestUtil.createDate(9000, 1, 1));
         pool.setEndDate(TestUtil.createDate(9001, 1, 1));
         e.setQuantity(2);
 

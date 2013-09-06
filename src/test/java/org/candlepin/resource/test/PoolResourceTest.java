@@ -21,6 +21,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import java.util.Date;
 import java.util.List;
 
 import org.candlepin.auth.Access;
@@ -173,7 +174,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
         assertEquals(1, pools.size());
 
         verify(attrUtil).buildCalculatedAttributes(any(Pool.class),
-            eq(passConsumer));
+            eq(passConsumer), any(Date.class));
     }
 
     @Test(expected = ForbiddenException.class)
@@ -199,7 +200,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
         assertEquals(2, pools.size());
 
         verify(attrUtil, times(2)).buildCalculatedAttributes(any(Pool.class),
-            eq(passConsumer));
+            eq(passConsumer), any(Date.class));
     }
 
     @Test(expected = NotFoundException.class)

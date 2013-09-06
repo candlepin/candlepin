@@ -47,11 +47,15 @@ public class QuantityRules {
     }
 
     public SuggestedQuantity getSuggestedQuantity(Pool p, Consumer c) {
+        return getSuggestedQuantity(p, c, new Date());
+    }
+
+    public SuggestedQuantity getSuggestedQuantity(Pool p, Consumer c, Date onDate) {
         JsonJsContext args = new JsonJsContext(mapper);
 
         Set<Entitlement> validEntitlements = new HashSet<Entitlement>();
         for (Entitlement e : c.getEntitlements()) {
-            if (e.getProductId().equals(p.getProductId()) && isValid(e)) {
+            if (e.getProductId().equals(p.getProductId()) && isValid(e, onDate)) {
                 validEntitlements.add(e);
             }
         }
@@ -66,8 +70,7 @@ public class QuantityRules {
         return dto;
     }
 
-    private boolean isValid(Entitlement e) {
-        Date now = new Date();
-        return now.after(e.getCreated()) && now.before(e.getEndDate());
+    private boolean isValid(Entitlement e, Date onDate) {
+        return onDate.after(e.getStartDate()) && onDate.before(e.getEndDate());
     }
 }
