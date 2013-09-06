@@ -24,6 +24,8 @@ import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.config.CandlepinCommonTestConfig;
+import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.exceptions.CandlepinException;
 import org.candlepin.model.ActivationKeyCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -59,6 +61,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+
+import javax.ws.rs.core.Response.Status;
 
 @RunWith(MockitoJUnitRunner.class)
 public class HypervisorResourceTest {
@@ -120,7 +124,7 @@ public class HypervisorResourceTest {
             null, null, new CandlepinCommonTestConfig());
 
         hypervisorResource = new HypervisorResource(consumerResource,
-            consumerCurator, this.deletedConsumerCurator, i18n);
+            consumerCurator, this.deletedConsumerCurator, ownerCurator, i18n);
 
         // Ensure that we get the consumer that was passed in back from the create call.
         when(consumerCurator.create(any(Consumer.class))).thenAnswer(new Answer<Object>() {
@@ -131,6 +135,33 @@ public class HypervisorResourceTest {
         });
         when(complianceRules.getStatus(any(Consumer.class), any(Date.class)))
             .thenReturn(new ComplianceStatus(new Date()));
+    }
+
+    @Test(expected=BadRequestException.class)
+    public void userPrincipalMustSpecifyOwner() {
+        when(ownerCurator.lookupByKey(any(String.class))).thenReturn(null);
+        hypervisorResource.hypervisorCheckIn(new HashMap<String, List<GuestId>>(),
+            principal, "");
+    }
+
+    @Test
+    public void userPrincipalMustHaveAccessToTargetOwner() {
+
+    }
+
+    @Test
+    public void consumerPrincipalsOwnerIsUsedWhenNotSpecified() {
+
+    }
+
+    @Test
+    public void consumerPrincipalMustMatchTargetOwnerIfSpecified() {
+
+    }
+
+    @Test
+    public void failEntireTransactionIfMappedHostWasAlreadyCreatedInDifferentOrg() {
+
     }
 
     @Test
@@ -167,15 +198,15 @@ public class HypervisorResourceTest {
     @Test
     public void hypervisorCheckInUpdatesGuestIdsWhenHostConsumerExists() throws Exception {
         Owner owner = new Owner("admin");
+        when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
+        when(principal.canAccess(eq(owner), eq(Access.ALL))).thenReturn(true);
 
         Map<String, List<GuestId>> hostGuestMap = new HashMap<String, List<GuestId>>();
         hostGuestMap.put("test-host", Arrays.asList(new GuestId("GUEST_B")));
 
-        Owner o = new Owner();
-        o.setId("owner-id");
         Consumer existing = new Consumer();
         existing.setUuid("test-host");
-        existing.setOwner(o);
+        existing.setOwner(owner);
         existing.addGuestId(new GuestId("GUEST_A"));
 
         when(consumerCurator.findByUuid(eq("test-host"))).thenReturn(existing);
@@ -194,6 +225,8 @@ public class HypervisorResourceTest {
     @Test
     public void hypervisorCheckInReportsFailuresOnCreateFailure() {
         Owner owner = new Owner("admin");
+        when(principal.canAccess(eq(owner), eq(Access.ALL))).thenReturn(true);
+        when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
 
         Map<String, List<GuestId>> hostGuestMap = new HashMap<String, List<GuestId>>();
         String expectedHostVirtId = "test-host-id";
@@ -204,9 +237,14 @@ public class HypervisorResourceTest {
         when(consumerCurator.findByUuid(eq(expectedHostVirtId))).thenReturn(null);
 
         String expectedMessage = "Forced Exception.";
-        RuntimeException exception = new RuntimeException(expectedMessage);
-        // Simulate failure  when checking the owner
-        when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenThrow(exception);
+        CandlepinException exception = new CandlepinException(Status.INTERNAL_SERVER_ERROR,
+            expectedMessage);
+
+        // Simulate failure  when creating the host consumer.
+        when(consumerCurator.create(any(Consumer.class))).thenThrow(exception);
+
+        when(consumerTypeCurator.lookupByLabel(
+            eq(ConsumerTypeEnum.HYPERVISOR.getLabel()))).thenReturn(hypervisorType);
 
         HypervisorCheckInResult result = hypervisorResource.hypervisorCheckIn(hostGuestMap,
             principal, owner.getKey());
@@ -220,6 +258,8 @@ public class HypervisorResourceTest {
     @Test
     public void hypervisorCheckInReportsFailureWhenGuestIdUpdateFails() throws Exception {
         Owner owner = new Owner("admin");
+        when(principal.canAccess(eq(owner), eq(Access.ALL))).thenReturn(true);
+        when(ownerCurator.lookupByKey(eq(owner.getKey()))).thenReturn(owner);
 
         Map<String, List<GuestId>> hostGuestMap = new HashMap<String, List<GuestId>>();
         String expectedHostVirtId = "test-host";
@@ -228,6 +268,7 @@ public class HypervisorResourceTest {
         Consumer existing = new Consumer();
         existing.setUuid(expectedHostVirtId);
         existing.addGuestId(new GuestId("GUEST_A"));
+        existing.setOwner(owner);
 
         // Force update
         when(consumerCurator.findByUuid(eq(expectedHostVirtId))).thenReturn(existing);

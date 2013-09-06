@@ -14,16 +14,24 @@
  */
 package org.candlepin.resource;
 
+import org.candlepin.auth.Access;
+import org.candlepin.auth.ConsumerPrincipal;
+import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.auth.Principal;
+import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.interceptor.SecurityHole;
+import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.GoneException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
+import org.candlepin.model.Owner;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.DeletedConsumer;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.GuestId;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.resource.dto.HypervisorCheckInResult;
 import org.xnap.commons.i18n.I18n;
 
@@ -54,15 +62,17 @@ public class HypervisorResource {
     private ConsumerCurator consumerCurator;
     private ConsumerResource consumerResource;
     private DeletedConsumerCurator deletedConsumerCurator;
+    private OwnerCurator ownerCurator;
     private I18n i18n;
 
     @Inject
     public HypervisorResource(ConsumerResource consumerResource,
         ConsumerCurator consumerCurator, DeletedConsumerCurator deletedConsumerCurator,
-        I18n i18n) {
+        OwnerCurator ownerCurator, I18n i18n) {
         this.consumerResource = consumerResource;
         this.consumerCurator = consumerCurator;
         this.deletedConsumerCurator = deletedConsumerCurator;
+        this.ownerCurator = ownerCurator;
         this.i18n = i18n;
     }
 
@@ -90,6 +100,45 @@ public class HypervisorResource {
     public HypervisorCheckInResult hypervisorCheckIn(
         Map<String, List<GuestId>> hostGuestMap, @Context Principal principal,
         @QueryParam("owner") String ownerKey) {
+
+        Owner targetOwner = null;
+        if (principal instanceof ConsumerPrincipal) {
+            ConsumerPrincipal consumerPrincipal = (ConsumerPrincipal) principal;
+            targetOwner = consumerPrincipal.getConsumer().getOwner();
+            if (ownerKey != null && !ownerKey.isEmpty()
+                && !ownerKey.equalsIgnoreCase(targetOwner.getKey())) {
+                throw new BadRequestException(i18n.tr(
+                    "The specified owner key {0} does not match that of the registered" +
+                    " consumer.", ownerKey));
+            }
+        }
+        else if (principal instanceof UserPrincipal) {
+            if (ownerKey == null || ownerKey.isEmpty()) {
+                throw new BadRequestException("An owner key must be specified");
+            }
+
+            targetOwner = ownerCurator.lookupByKey(ownerKey);
+            if (targetOwner == null) {
+                throw new BadRequestException(i18n.tr(
+                    "Organization {0} does not exist.", ownerKey));
+            }
+
+            // Check permissions for current principal on the owner.
+            if (!principal.canAccess(targetOwner, Access.ALL)) {
+                throw new ForbiddenException(i18n.tr(
+                    "User ''{0}'' cannot access organization ''{1}''.",
+                    principal.getPrincipalName(), targetOwner.getKey()));
+            }
+        }
+        else {
+            throw new ForbiddenException(i18n.tr("Insufficient permissions"));
+        }
+
+        // We need to make sure that we check if a host was already created
+        // in a different org. This is possible if 2 different consumers/users
+        // are reporting a host/guest mapping from the same hypervisor, and target
+        // a different org.
+        boolean hostHasDifferentOwner = false;
         HypervisorCheckInResult result = new HypervisorCheckInResult();
         for (Entry<String, List<GuestId>> hostEntry : hostGuestMap.entrySet()) {
             try {
@@ -117,6 +166,12 @@ public class HypervisorResource {
                         null);
                     hostConsumerCreated = true;
                 }
+                else if (!targetOwner.equals(consumer.getOwner())){
+                    // If the consumer's owner does not match the one specified,
+                    // checkin has already occured, targeting a different owner.
+                    hostHasDifferentOwner = true;
+                    break;
+                }
 
                 Consumer withIds = new Consumer();
                 withIds.setGuestIds(guestIds);
@@ -141,6 +196,13 @@ public class HypervisorResource {
                 result.failed(hostEntry.getKey(), e.getMessage());
             }
         }
+
+        // Fail the transaction if a single host has already been registered in
+        // another organization.
+        if (hostHasDifferentOwner) {
+            throw new ForbiddenException(i18n.tr("Hosts are already registered in another organization."));
+        }
+
         return result;
     }
 }
