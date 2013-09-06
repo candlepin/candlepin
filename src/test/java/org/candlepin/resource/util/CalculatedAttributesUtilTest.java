@@ -17,6 +17,7 @@ package org.candlepin.resource.util;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -29,12 +30,12 @@ import org.candlepin.policy.js.quantity.QuantityRules;
 import org.candlepin.policy.js.quantity.SuggestedQuantity;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.util.Date;
 import java.util.Map;
 
 /**
@@ -73,12 +74,15 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
         SuggestedQuantity suggested = new SuggestedQuantity();
         suggested.setSuggested(1L);
         suggested.setIncrement(1L);
-        when(quantityRules.getSuggestedQuantity(any(Pool.class), any(Consumer.class))).
+        when(quantityRules.getSuggestedQuantity(any(Pool.class), any(Consumer.class),
+            any(Date.class))).
             thenReturn(suggested);
 
-        Map<String, String> attrs = attrUtil.buildCalculatedAttributes(pool1, consumer);
+        Map<String, String> attrs = attrUtil.buildCalculatedAttributes(pool1, consumer,
+            new Date());
         assertTrue(attrs.containsKey("suggested_quantity"));
-        verify(quantityRules).getSuggestedQuantity(pool1, consumer);
+        verify(quantityRules).getSuggestedQuantity(eq(pool1), eq(consumer),
+            any(Date.class));
     }
 
     @Test
@@ -93,11 +97,14 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
         SuggestedQuantity suggested = new SuggestedQuantity();
         suggested.setSuggested(1L);
         suggested.setIncrement(12L);
-        when(quantityRules.getSuggestedQuantity(any(Pool.class), any(Consumer.class))).
+        when(quantityRules.getSuggestedQuantity(any(Pool.class), any(Consumer.class),
+            any(Date.class))).
             thenReturn(suggested);
 
-        Map<String, String> attrs = attrUtil.buildCalculatedAttributes(pool2, consumer);
+        Map<String, String> attrs = attrUtil.buildCalculatedAttributes(pool2, consumer,
+            new Date());
         assertEquals("12", attrs.get("quantity_increment"));
-        verify(quantityRules).getSuggestedQuantity(pool2, consumer);
+        verify(quantityRules).getSuggestedQuantity(eq(pool2), eq(consumer),
+            any(Date.class));
     }
 }
