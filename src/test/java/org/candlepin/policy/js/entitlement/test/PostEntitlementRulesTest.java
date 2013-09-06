@@ -23,8 +23,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.Date;
-
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Entitlement;
@@ -44,8 +42,7 @@ public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
     @Test
     public void virtLimitSubPool() {
         Pool pool = setupVirtLimitPool();
-        Entitlement e = new Entitlement(pool, consumer, new Date(), new Date(),
-            5);
+        Entitlement e = new Entitlement(pool, consumer, 5);
 
         PoolHelper postHelper = mock(PoolHelper.class);
         when(postHelper.getFlattenedAttributes(eq(pool))).thenReturn(
@@ -62,8 +59,7 @@ public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
     public void unlimitedVirtLimitSubPool() {
         Pool pool = setupVirtLimitPool();
         pool.setAttribute("virt_limit", "unlimited");
-        Entitlement e = new Entitlement(pool, consumer, new Date(), new Date(),
-            5);
+        Entitlement e = new Entitlement(pool, consumer, 5);
 
         PoolHelper postHelper = mock(PoolHelper.class);
         when(postHelper.getFlattenedAttributes(eq(pool))).thenReturn(
@@ -82,8 +78,7 @@ public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
         when(config.standalone()).thenReturn(true);
         consumer.setType(new ConsumerType(ConsumerTypeEnum.CANDLEPIN));
         Pool pool = setupVirtLimitPool();
-        Entitlement e = new Entitlement(pool, consumer, new Date(), new Date(),
-            1);
+        Entitlement e = new Entitlement(pool, consumer, 1);
 
         PoolHelper postHelper = new PoolHelper(poolManagerMock, productCache, e);
 
@@ -102,8 +97,7 @@ public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
         when(config.standalone()).thenReturn(true);
         Pool pool = setupVirtLimitPool();
         consumer.setFact("virt.is_guest", "true");
-        Entitlement e = new Entitlement(pool, consumer, new Date(), new Date(),
-            1);
+        Entitlement e = new Entitlement(pool, consumer, 1);
 
         PoolHelper postHelper = new PoolHelper(poolManagerMock, productCache, e);
 
