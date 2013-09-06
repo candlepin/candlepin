@@ -31,7 +31,7 @@ Name: candlepin
 Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 License: GPLv2
-Version: 0.8.25
+Version: 0.8.26
 Release: 1%{?dist}
 URL: http://fedorahosted.org/candlepin
 # Source0: https://fedorahosted.org/releases/c/a/candlepin/%{name}-%{version}.tar.gz
@@ -323,6 +323,13 @@ fi
 
 
 %changelog
+* Fri Sep 06 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.26-1
+- 1004780: truncate result string to fit in db (jesusr@redhat.com)
+- 1002946: Fix entitlement dates not being updated when pool dates change.  (dgoodwin@redhat.com)
+- Run spec tests in parallel (awood@redhat.com)
+- Numerous spec test changes to work in parallel (awood@redhat.com)
+- adding f19 for katello (jesusr@redhat.com)
+
 * Tue Sep 03 2013 jesus m. rodriguez <jesusr@redhat.com> 0.8.25-1
 - 994853: Fix installed product date range. (dgoodwin@redhat.com)
 - 998317: check delete for null (jesusr@redhat.com)
