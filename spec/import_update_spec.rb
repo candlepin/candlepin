@@ -4,27 +4,27 @@ require 'candlepin_scenarios'
 describe 'Candlepin Import Update', :serial => true do
 
   include CandlepinMethods
-  include ExportMethods
 
   before(:all) do
-    create_candlepin_export()
+    @cp = Candlepin.new('admin', 'admin')
+    @exporter = StandardExporter.new
+    base_export = @exporter.create_candlepin_export()
+
     @import_owner = @cp.create_owner(random_string("test_owner"))
     @import_owner_client = user_client(@import_owner, random_string('testuser'))
-    @cp.import(@import_owner['key'], @export_filename)
+    @cp.import(@import_owner['key'], base_export.export_filename)
     @sublist = @cp.list_subscriptions(@import_owner['key'])
   end
 
   after(:all) do
-    cleanup_candlepin_export_update()
-  end
-
-  after(:each) do
-    FileUtils.rm_rf(@tmp_dir_update)
+    @exporter.cleanup()
+    @cp.delete_owner(@import_owner['key'])
   end
 
   it 'should successfully update the import' do
-    create_candlepin_export_update()
-    @cp.import(@import_owner['key'], @export_filename_update)
+    updated_export = @exporter.create_candlepin_export_update()
+
+    @cp.import(@import_owner['key'], updated_export.export_filename)
 
     @sublist.size().should == 5
     new_sublist = @cp.list_subscriptions(@import_owner['key'])
@@ -33,7 +33,7 @@ describe 'Candlepin Import Update', :serial => true do
     hasChanged = false
     new_sublist.each do |new_sub|
       @sublist.each do |sub|
-	if(sub.id == new_sub.id)
+        if(sub.id == new_sub.id)
           if(sub.certificate.serial.id != new_sub.certificate.serial.id)
             hasChanged = true
           end
@@ -41,15 +41,16 @@ describe 'Candlepin Import Update', :serial => true do
       end
     end
 
-    hasChanged.should == true
+    hasChanged.should be_true
   end
 
 
   it 'should remove all imported subscriptions if import has no entitlements' do
-    create_candlepin_export_update_no_ent()
-    @cp.import(@import_owner['key'], @export_filename_update)
+    no_ent_export = @exporter.create_candlepin_export_update_no_ent()
+
+    @cp.import(@import_owner['key'], no_ent_export.export_filename)
     # manifest consumer
-    @candlepin_client.list_entitlements().size.should == 0
+    @exporter.candlepin_client.list_entitlements().size.should == 0
     # import owner 
     @cp.list_subscriptions(@import_owner['key']).size.should == 0
   end

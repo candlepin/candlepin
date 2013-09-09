@@ -100,6 +100,14 @@ module SpecUtils
     attributes.each do |attribute| attrs[attribute['name']] = attribute['value'] end
     return attrs
   end
+
+  def parse_file(filename)
+    JSON.parse File.read(filename)
+  end
+
+  def files_in_dir(dir_name)
+    Dir.entries(dir_name).select {|e| e != '.' and e != '..' }
+  end
 end
 
 # This allows for dot notation instead of using hashes for everything
