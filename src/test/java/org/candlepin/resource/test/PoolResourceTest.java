@@ -21,6 +21,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import java.util.Date;
 import java.util.List;
 
 import org.candlepin.auth.Access;
@@ -173,7 +174,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
         assertEquals(1, pools.size());
 
         verify(attrUtil).buildCalculatedAttributes(any(Pool.class),
-            eq(passConsumer));
+            eq(passConsumer), any(Date.class));
     }
 
     @Test(expected = ForbiddenException.class)
@@ -199,7 +200,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
         assertEquals(2, pools.size());
 
         verify(attrUtil, times(2)).buildCalculatedAttributes(any(Pool.class),
-            eq(passConsumer));
+            eq(passConsumer), any(Date.class));
     }
 
     @Test(expected = NotFoundException.class)
@@ -276,7 +277,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testCalculatedAttributesEmpty() {
-        Pool p = poolResource.getPool(pool1.getId(), null, adminPrincipal);
+        Pool p = poolResource.getPool(pool1.getId(), null, null, adminPrincipal);
         assertTrue(p.getCalculatedAttributes().isEmpty());
     }
 
@@ -285,12 +286,12 @@ public class PoolResourceTest extends DatabaseTestFixture {
         Owner owner2 = createOwner();
         ownerCurator.create(owner2);
         poolResource.getPool(pool1.getId(), passConsumer.getUuid(),
-            setupPrincipal(owner2, Access.NONE));
+            null, setupPrincipal(owner2, Access.NONE));
     }
 
     @Test(expected = NotFoundException.class)
     public void testUnknownConsumerRequestingPool() {
-        poolResource.getPool(pool1.getId(), "xyzzy", adminPrincipal);
+        poolResource.getPool(pool1.getId(), "xyzzy", null, adminPrincipal);
     }
 
     public void testEmptyEntitlementList() {

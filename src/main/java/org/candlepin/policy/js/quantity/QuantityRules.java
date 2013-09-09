@@ -46,12 +46,12 @@ public class QuantityRules {
         jsRules.init("quantity_name_space");
     }
 
-    public SuggestedQuantity getSuggestedQuantity(Pool p, Consumer c) {
+    public SuggestedQuantity getSuggestedQuantity(Pool p, Consumer c, Date date) {
         JsonJsContext args = new JsonJsContext(mapper);
 
         Set<Entitlement> validEntitlements = new HashSet<Entitlement>();
         for (Entitlement e : c.getEntitlements()) {
-            if (e.getProductId().equals(p.getProductId()) && isValid(e)) {
+            if (e.isValidOnDate(date)) {
                 validEntitlements.add(e);
             }
         }
@@ -64,10 +64,5 @@ public class QuantityRules {
         String json = jsRules.runJsFunction(String.class, "get_suggested_quantity", args);
         SuggestedQuantity dto = mapper.toObject(json, SuggestedQuantity.class);
         return dto;
-    }
-
-    private boolean isValid(Entitlement e) {
-        Date now = new Date();
-        return now.after(e.getCreated()) && now.before(e.getEndDate());
     }
 }

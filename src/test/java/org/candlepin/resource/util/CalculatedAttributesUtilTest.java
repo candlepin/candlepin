@@ -29,12 +29,12 @@ import org.candlepin.policy.js.quantity.QuantityRules;
 import org.candlepin.policy.js.quantity.SuggestedQuantity;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.util.Date;
 import java.util.Map;
 
 /**
@@ -73,12 +73,15 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
         SuggestedQuantity suggested = new SuggestedQuantity();
         suggested.setSuggested(1L);
         suggested.setIncrement(1L);
-        when(quantityRules.getSuggestedQuantity(any(Pool.class), any(Consumer.class))).
+        when(quantityRules.getSuggestedQuantity(any(Pool.class),
+            any(Consumer.class), any(Date.class))).
             thenReturn(suggested);
 
-        Map<String, String> attrs = attrUtil.buildCalculatedAttributes(pool1, consumer);
+        Date date = new Date();
+        Map<String, String> attrs =
+            attrUtil.buildCalculatedAttributes(pool1, consumer, date);
         assertTrue(attrs.containsKey("suggested_quantity"));
-        verify(quantityRules).getSuggestedQuantity(pool1, consumer);
+        verify(quantityRules).getSuggestedQuantity(pool1, consumer, date);
     }
 
     @Test
@@ -93,11 +96,14 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
         SuggestedQuantity suggested = new SuggestedQuantity();
         suggested.setSuggested(1L);
         suggested.setIncrement(12L);
-        when(quantityRules.getSuggestedQuantity(any(Pool.class), any(Consumer.class))).
+        when(quantityRules.getSuggestedQuantity(any(Pool.class),
+            any(Consumer.class), any(Date.class))).
             thenReturn(suggested);
 
-        Map<String, String> attrs = attrUtil.buildCalculatedAttributes(pool2, consumer);
+        Date date = new Date();
+        Map<String, String> attrs =
+            attrUtil.buildCalculatedAttributes(pool2, consumer, date);
         assertEquals("12", attrs.get("quantity_increment"));
-        verify(quantityRules).getSuggestedQuantity(pool2, consumer);
+        verify(quantityRules).getSuggestedQuantity(pool2, consumer, date);
     }
 }
