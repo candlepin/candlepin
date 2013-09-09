@@ -21,6 +21,7 @@ import org.candlepin.policy.js.quantity.SuggestedQuantity;
 
 import com.google.inject.Inject;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,14 +36,14 @@ public class CalculatedAttributesUtil {
         this.quantityRules = quantityRules;
     }
 
-    public Map<String, String> buildCalculatedAttributes(Pool p, Consumer c) {
+    public Map<String, String> buildCalculatedAttributes(Pool p, Consumer c, Date date) {
         Map<String, String> attrMap = new HashMap<String, String>();
 
         if (c == null) {
             return attrMap;
         }
 
-        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(p, c);
+        SuggestedQuantity suggested = quantityRules.getSuggestedQuantity(p, c, date);
 
         attrMap.put("suggested_quantity",
             String.valueOf(suggested.getSuggested()));

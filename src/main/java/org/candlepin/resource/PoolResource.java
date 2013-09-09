@@ -178,7 +178,7 @@ public class PoolResource {
         if (c != null) {
             for (Pool p : poolList) {
                 p.setCalculatedAttributes(
-                    calculatedAttributesUtil.buildCalculatedAttributes(p, c));
+                    calculatedAttributesUtil.buildCalculatedAttributes(p, c, activeOnDate));
             }
         }
 
@@ -201,6 +201,7 @@ public class PoolResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Pool getPool(@PathParam("pool_id") @Verify(Pool.class) String id,
         @QueryParam("consumer") String consumerUuid,
+        @QueryParam("activeon") String activeOn,
         @Context Principal principal) {
         Pool toReturn = poolManager.find(id);
 
@@ -219,8 +220,13 @@ public class PoolResource {
         }
 
         if (toReturn != null) {
+            Date activeOnDate = new Date();
+            if (activeOn != null) {
+                activeOnDate = ResourceDateParser.parseDateString(activeOn);
+            }
             toReturn.setCalculatedAttributes(
-                calculatedAttributesUtil.buildCalculatedAttributes(toReturn, c));
+                calculatedAttributesUtil
+                    .buildCalculatedAttributes(toReturn, c, activeOnDate));
             return toReturn;
         }
 
