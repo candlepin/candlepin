@@ -77,7 +77,10 @@ describe 'Owner Resource' do
   it "lets owners be created and refreshed at the same time" do
     owner_key = random_string("new_owner1")
     @cp.refresh_pools(owner_key, false, true)
+
     new_owner = @cp.get_owner(owner_key)
+    @owners << new_owner # this will clean up new_owner at the end of the test.
+
     new_owner['key'].should == owner_key
     pools = @cp.list_owner_pools(owner_key)
     pools.length.should == 0
