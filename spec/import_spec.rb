@@ -16,13 +16,19 @@ describe 'Candlepin Import', :serial => true do
     @cp.unregister @candlepin_consumer['uuid']
 
     @import_owner = @cp.create_owner(random_string("test_owner"))
-    @import_owner_client = user_client(@import_owner, random_string('testuser'))
+    @import_username = random_string("import-user")
+    @import_owner_client = user_client(@import_owner, @import_username)
     @cp.import(@import_owner['key'], @cp_export.export_filename)
+
+    @exporters = [@cp_export]
   end
 
   after(:all) do
-    @cp_export.cleanup()
+    @cp.delete_user(@import_username)
     @cp.delete_owner(@import_owner['key'])
+    @exporters.each do |e|
+      e.cleanup()
+    end
   end
 
   it 'creates pools' do
@@ -60,7 +66,7 @@ describe 'Candlepin Import', :serial => true do
   it 'can be undone' do
     # Make a custom subscription so we can be sure it does not get wiped
     # out during either the undo or a subsequent re-import:
-    custom_product = @cp.create_product(random_string(), random_string())
+    custom_product = create_product(random_string(), random_string())
     custom_sub = @cp.create_subscription(@import_owner['key'], custom_product['id'])
 
     job = @import_owner_client.undo_import(@import_owner['key'])
@@ -140,22 +146,22 @@ describe 'Candlepin Import', :serial => true do
 
   it 'should allow importing older manifests into another owner' do
     old_exporter = StandardExporter.new
+    @exporters << old_exporter
     older = old_exporter.create_candlepin_export().export_filename
 
     new_exporter = StandardExporter.new
+    @exporters << new_exporter
     newer = new_exporter.create_candlepin_export().export_filename
 
     owner1 = create_owner(random_string("owner1"))
     owner2 = create_owner(random_string("owner2"))
     @cp.import(owner1['key'], newer)
     @cp.import(owner2['key'], older)
-
-    old_exporter.cleanup()
-    new_exporter.cleanup()
   end
 
   it 'should return 409 when importing manifest from different subscription management application' do
     exporter = StandardExporter.new
+    @exporters << exporter
     another = exporter.create_candlepin_export().export_filename
 
     old_upstream_uuid = @cp.get_owner(@import_owner['key'])['upstreamConsumer']['uuid']
@@ -180,11 +186,11 @@ describe 'Candlepin Import', :serial => true do
         json["conflicts"].size.should == 1
         json["conflicts"].include?("DISTRIBUTOR_CONFLICT").should be_true
     end
-    exporter.cleanup()
   end
 
   it 'should allow forcing a manifest from a different subscription management application' do
     exporter = StandardExporter.new
+    @exporters << exporter
     another = exporter.create_candlepin_export().export_filename
 
     old_upstream_uuid = @cp.get_owner(@import_owner['key'])['upstreamConsumer']['uuid']
@@ -197,7 +203,6 @@ describe 'Candlepin Import', :serial => true do
     new_pool_ids = pools.collect { |p| p['id'] }
     # compare without considering order, pools should have changed completely:
     new_pool_ids.should_not =~ pool_ids
-    exporter.cleanup()
   end
 
   it 'should import arch content correctly' do

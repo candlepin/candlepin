@@ -11,14 +11,16 @@ describe 'Candlepin Import Update', :serial => true do
     base_export = @exporter.create_candlepin_export()
 
     @import_owner = @cp.create_owner(random_string("test_owner"))
-    @import_owner_client = user_client(@import_owner, random_string('testuser'))
+    @import_username = random_string("import-user")
+    @import_owner_client = user_client(@import_owner, @import_username)
     @cp.import(@import_owner['key'], base_export.export_filename)
     @sublist = @cp.list_subscriptions(@import_owner['key'])
   end
 
   after(:all) do
-    @exporter.cleanup()
+    @cp.delete_user(@import_username)
     @cp.delete_owner(@import_owner['key'])
+    @exporter.cleanup()
   end
 
   it 'should successfully update the import' do

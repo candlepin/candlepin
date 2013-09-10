@@ -48,7 +48,7 @@ module CandlepinMethods
     id = id[0..31]
 
     product = @cp.create_product(id, name, params)
-    @products <<  product
+    @created_products <<  product
     return product
   end
 
@@ -229,25 +229,27 @@ end
 
 class Exporter
   include CandlepinMethods
+  include CleanupHooks
 
   attr_reader :candlepin_client
 
+  # Creating an export is fairly expensive, so we generally build them
+  # in before(:all) blocks and use them throughout the various tests.
+  #
+  # One thing to keep in mind is that the exporter attempts to clean up
+  # any products it created.  If you have imported an export, when the exporter
+  # attempts to clean up it will fail to delete the product if the import
+  # has subscriptions to the product.  The best way to deal with this is to
+  # allow the after(:each) block in spec_helper.rb to clean up the import
+  # owner and then clean up all the exporters in an after(:all) block.
   def initialize
-    @cp = Candlepin.new('admin', 'admin')
+    cleanup_before()
     @orig_working_dir = Dir.pwd()
     @exports = []
 
-    # WARNING: Creating export is fairly expensive, so using a before all to
-    # create one and use it for all tests. Because before(:all) runs before
-    # any before(:each), we cannot use the normal helper methods. :( As such,
-    # creating one owner, and cleaning it up manually:
-    user = @cp.create_user(random_string('test_user'), 'password')
-
     # Create a role for user to administer the given owner:
-    @owner = @cp.create_owner(random_string('CPExport_owner'))
-
-    role = create_role(nil, @owner['key'], 'ALL')
-    @cp.add_role_user(role['id'], user['username'])
+    @owner = create_owner(random_string('CPExport_owner'))
+    user = create_user(@owner, random_string('CPExport_user'), 'password')
 
     owner_client = Candlepin.new(user['username'], 'password')
 
@@ -276,8 +278,7 @@ class Exporter
     @exports.each do |export|
       export.cleanup()
     end
-    #this will also delete the owner's users
-    @cp.delete_owner(@owner['key'])
+    cleanup_after()
   end
 
   #Convenience methods to get the file name and directory of the most recent
@@ -298,23 +299,23 @@ class StandardExporter < Exporter
     super()
     @products = {}
     # the before(:each) is not initialized yet, call create_product sans wrapper
-    @products[:product1] = @cp.create_product(random_string('prod1'), random_string(),
+    @products[:product1] = create_product(random_string('prod1'), random_string(),
                               {:multiplier => 2})
-    @products[:product2] = @cp.create_product(random_string('prod2'), random_string())
-    @products[:virt_product] = @cp.create_product(random_string('virt_product'),
+    @products[:product2] = create_product(random_string('prod2'), random_string())
+    @products[:virt_product] = create_product(random_string('virt_product'),
                                   random_string('virt_product'),
                                   {:attributes => {:virt_only => true}})
 
-    @products[:product3] = @cp.create_product(random_string('sub-prod'), random_string(), {
+    @products[:product3] = create_product(random_string('sub-prod'), random_string(), {
         :attributes => { :arch => "x86_64", :virt_limit => "unlimited"}
     })
 
-    @products[:derived_product] = @cp.create_product(random_string('sub-prov-prod'), random_string(),
+    @products[:derived_product] = create_product(random_string('sub-prov-prod'), random_string(),
         {"sockets" => "2"})
-    @products[:derived_provided_prod] = @cp.create_product(random_string(nil, true), random_string());
+    @products[:derived_provided_prod] = create_product(random_string(nil, true), random_string());
 
     #this is for the update process
-    @products[:product_up] = @cp.create_product(random_string('product_up'), random_string('product_up'))
+    @products[:product_up] = create_product(random_string('product_up'), random_string('product_up'))
 
     content = create_content({:metadata_expire => 6000,
                               :required_tags => "TAG1,TAG2"})
@@ -367,8 +368,8 @@ class StandardExporter < Exporter
     ## use the process for creating the import above to make one that is an update
     ## You must execute the create_candlepin_export method in the same test before
     ## this one.
-    product1 = @cp.create_product(random_string(nil, true), random_string())
-    product2 = @cp.create_product(random_string(nil, true), random_string())
+    product1 = create_product(random_string(nil, true), random_string())
+    product2 = create_product(random_string(nil, true), random_string())
     content = create_content({:metadata_expire => 6000,
                               :required_tags => "TAG1,TAG2"})
     arch_content = create_content({:metadata_expire => 6000,

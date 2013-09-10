@@ -11,7 +11,7 @@ describe 'Candlepin Import Update', :serial => true do
 
     def initialize
       super()
-      product = @cp.create_product(random_string(), random_string())
+      product = create_product(random_string(), random_string())
       end_date = Date.new(2025, 5, 29)
       @cp.create_subscription(@owner['key'], product.id, 200, [], '', '12345', '6789', nil, end_date)
 
@@ -21,11 +21,11 @@ describe 'Candlepin Import Update', :serial => true do
     end
   end
 
-  before(:each) do
+  before(:all) do
     @exporter = ImportUpdateExporter.new
   end
 
-  after(:each) do
+  after(:all) do
     @exporter.cleanup()
   end
 
