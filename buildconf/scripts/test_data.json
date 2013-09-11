@@ -539,7 +539,7 @@
             "attributes": {
                 "sockets": 2,
                 "warning_period": 30,
-                "os": "OS"
+                "brand_type": "OS"
             },
             "content": [
                 [1111, false],
@@ -556,7 +556,7 @@
             "attributes": {
                 "sockets": 2,
                 "warning_period": 30,
-                "os": "OS"
+                "brand_type": "OS"
             },
             "content": [
                 [1111, false],
@@ -573,7 +573,7 @@
             "attributes": {
                 "sockets": 2,
                 "warning_period": 30,
-                "os": "OS"
+                "brand_type": "OS"
 
             },
             "content": [
@@ -702,7 +702,7 @@
                 "management_enabled" : 0,
                 "support_level" : "Standard",
                 "support_type" : "L1-L3",
-                "os" : "OS"
+                "brand_type" : "OS"
             }
         },
         {
@@ -776,7 +776,7 @@
             "attributes": {
                 "sockets": 128,
                 "warning_period": 30,
-                "os": "OS"
+                "brand_type": "OS"
             },
             "content": [
                 [11113, false],
@@ -806,7 +806,7 @@
             "attributes": {
                 "sockets": 128,
                 "warning_period": 30,
-                "os": "OS"
+                "brand_type": "OS"
             },
             "content": [
                 [11113, false],
@@ -836,7 +836,7 @@
             "attributes": {
                 "sockets": 128,
                 "warning_period": 30,
-                "os": "OS"
+                "brand_type": "OS"
             },
             "content": [
                 [11113, false],
@@ -867,7 +867,7 @@
                 "sockets": 128,
                 "warning_period": 30,
                 "virt_only": "true",
-                "os": "OS"
+                "brand_type": "OS"
             },
             "content": [
                 [11113, false],
@@ -898,7 +898,7 @@
             "attributes": {
                 "sockets": 128,
                 "warning_period": 30,
-                "os": "OS"
+                "brand_type": "OS"
             },
             "content": [
                 [11113, false],
@@ -930,7 +930,7 @@
                 "warning_period": 30,
                 "stacking_id": 1,
                 "multi-entitlement": "yes",
-                "os": "OS"
+                "brand_type": "OS"
             },
             "content": [
                 [11113, false],
@@ -964,7 +964,7 @@
                 "warning_period": 30,
                 "stacking_id": 1,
                 "multi-entitlement": "yes",
-                "os": "OS"
+                "brand_type": "OS"
             },
             "content": [
                 [68064, false],
@@ -1000,7 +1000,7 @@
                 "warning_period": 30,
                 "stacking_id": 1,
                 "multi-entitlement": "yes",
-                "os": "OS"
+                "brand_type": "OS"
             },
             "content": [
                 [6401, false],
@@ -1038,7 +1038,7 @@
                 "warning_period": 30,
                 "stacking_id": 1,
                 "multi-entitlement": "yes",
-                "os": "OS"
+                "brand_type": "OS"
             },
             "content": [
                 [38664, false],
@@ -1071,7 +1071,7 @@
                 "warning_period": 30,
                 "stacking_id": 1,
                 "multi-entitlement": "yes",
-                "os": "OS"
+                "brand_type": "OS"
             },
             "content": [
                 [6401, false],
@@ -1135,7 +1135,7 @@
                 "warning_period": 30,
                 "stacking_id": 2,
                 "multi-entitlement": "yes",
-                "os": "OS"
+                "brand_type": "OS"
             },
             "content": [
                 [11113, false],
@@ -1167,7 +1167,7 @@
             "attributes": {
                 "sockets": 128,
                 "warning_period": 30,
-                "os": "OS"
+                "brand_type": "OS"
             },
             "content": [
                 [11113, false],
@@ -1197,7 +1197,7 @@
             "attributes": {
                 "sockets": 128,
                 "warning_period": 30,
-                "os": "OS"
+                "brand_type": "OS"
             },
             "content": [
                 [11113, false],
@@ -1227,7 +1227,7 @@
             "attributes": {
                 "sockets": 128,
                 "warning_period": 30,
-                "os": "OS"
+                "brand_type": "OS"
             },
             "content": [
                 [11113, false],
