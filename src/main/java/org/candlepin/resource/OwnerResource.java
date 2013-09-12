@@ -670,7 +670,7 @@ public class OwnerResource {
         if (c != null) {
             for (Pool p : poolList) {
                 p.setCalculatedAttributes(
-                    calculatedAttributesUtil.buildCalculatedAttributes(p, c));
+                    calculatedAttributesUtil.buildCalculatedAttributes(p, c, activeOnDate));
             }
         }
 
