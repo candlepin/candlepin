@@ -1,6 +1,31 @@
 require 'base64'
 require 'zip/zip'
 
+module CleanupHooks
+  def cleanup_before
+    @cp = Candlepin.new('admin', 'admin')
+    @owners = []
+    @created_products = []
+    @dist_versions = []
+    @users = []
+    @roles = []
+    @rules = nil
+  end
+
+  def cleanup_after
+    @roles.reverse_each { |r| @cp.delete_role r['id'] }
+    @owners.reverse_each { |owner| @cp.delete_owner owner['key'] }
+    @users.reverse_each { |user| @cp.delete_user user['username'] }
+    @created_products.reverse_each { |product| @cp.delete_product product['id'] }
+    @dist_versions.reverse_each { |dist_version| @cp.delete_distributor_version dist_version['id'] }
+
+    # restore the original rules
+    if (@rules)
+      @cp.delete_rules
+    end
+  end
+end
+
 RSpec.configure do |config|
   # TODO: The "should" method has been deprecated in RSpec 2.11 and replaced with "expect".
   # Our current version of Buildr uses RSpec 2.9.0, but newer Buildr versions use the
@@ -12,14 +37,10 @@ RSpec.configure do |config|
   #  c.syntax = :expect
   #end
 
+  include CleanupHooks
+
   config.before(:each) do
-    @cp = Candlepin.new('admin', 'admin')
-    @owners = []
-    @products = []
-    @dist_versions = []
-    @users = []
-    @roles = []
-    @rules = nil
+    cleanup_before()
   end
 
   config.before(:each, :type => :virt) do
@@ -63,17 +84,7 @@ RSpec.configure do |config|
   end
 
   config.after(:each) do
-    @roles.reverse_each { |r| @cp.delete_role r['id'] }
-    @owners.reverse_each { |owner| @cp.delete_owner owner['key'] }
-    @users.reverse_each { |user| @cp.delete_user user['username'] }
-    @products.reverse_each { |product| @cp.delete_product product['id'] }
-    @dist_versions.reverse_each { |dist_version| @cp.delete_distributor_version dist_version['id'] }
-
-    # restore the original rules
-    if (@rules)
-      @cp.delete_rules
-    end
-    # TODO:  delete products?
+    cleanup_after()
   end
 end
 
@@ -99,6 +110,14 @@ module SpecUtils
     attrs = {}
     attributes.each do |attribute| attrs[attribute['name']] = attribute['value'] end
     return attrs
+  end
+
+  def parse_file(filename)
+    JSON.parse File.read(filename)
+  end
+
+  def files_in_dir(dir_name)
+    Dir.entries(dir_name).select {|e| e != '.' and e != '..' }
   end
 end
 
