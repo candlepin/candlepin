@@ -21,7 +21,7 @@ package org.candlepin.util;
 public class ManagerCapability {
 
     private static String[] capabilities = {"cores", "ram", "instance_multiplier",
-        "derived_product", "cert_v3"};
+        "derived_product", "cert_v3", "guest_limit"};
 
     private ManagerCapability() {
         // Quiet checkstyle

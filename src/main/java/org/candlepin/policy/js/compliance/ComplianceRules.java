@@ -102,9 +102,12 @@ public class ComplianceRules {
     }
 
     public boolean isEntitlementCompliant(Consumer consumer, Entitlement ent) {
+        List<Entitlement> ents = entCurator.listByConsumer(consumer);
+
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("consumer", consumer);
         args.put("entitlement", ent);
+        args.put("entitlements", ents);
         args.put("log", log, false);
         return jsRules.runJsFunction(Boolean.class, "is_ent_compliant", args);
     }
